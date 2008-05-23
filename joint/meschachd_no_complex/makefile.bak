@@ -1,0 +1,117 @@
+BINDIR = d:/programs/visc60/vc98/bin
+CC = $(BINDIR)/cl
+CFLAGS = /nologo /G6 /O2 /Op /DANSI_C
+LD =  $(BINDIR)/link
+LDFLAGS = /DLL /subsystem:console
+PROG = meschachd
+INSTALL = e:/home/maurer/bin
+PUBLIC = t:/scratch/maurer/bin
+
+OBJS= \
+	bdfactor.obj \
+	bkpfacto.obj \
+	chfactor.obj \
+	copy.obj \
+	err.obj \
+	extras.obj \
+	fft.obj \
+	givens.obj \
+	hessen.obj \
+	hsehldr.obj \
+	init.obj \
+	iter0.obj \
+	iternsym.obj \
+	itersym.obj \
+	ivecop.obj \
+	lufactor.obj \
+	machine.obj \
+	matlab.obj \
+	matop.obj \
+	matrixio.obj \
+	meminfo.obj \
+	memory.obj \
+	memstat.obj \
+	mfunc.obj \
+	norm.obj \
+	otherio.obj \
+	pxop.obj \
+	qrfactor.obj \
+	schur.obj \
+	solve.obj \
+	sparse.obj \
+	sparseio.obj \
+	spbkp.obj \
+	spchfctr.obj \
+	splufctr.obj \
+	sprow.obj \
+	spswap.obj \
+	submat.obj \
+	svd.obj \
+	symmeig.obj \
+	update.obj \
+	vecop.obj \
+	version.obj 
+
+SRCS= \
+	bdfactor.c \
+	bkpfacto.c \
+	chfactor.c \
+	copy.c \
+	err.c \
+	extras.c \
+	fft.c \
+	givens.c \
+	hessen.c \
+	hsehldr.c \
+	init.c \
+	iter0.c \
+	iternsym.c \
+	itersym.c \
+	ivecop.c \
+	lufactor.c \
+	machine.c \
+	matlab.c \
+	matop.c \
+	matrixio.c \
+	meminfo.c \
+	memory.c \
+	memstat.c \
+	mfunc.c \
+	norm.c \
+	otherio.c \
+	pxop.c \
+	qrfactor.c \
+	schur.c \
+	solve.c \
+	sparse.c \
+	sparseio.c \
+	spbkp.c \
+	spchfctr.c \
+	splufctr.c \
+	sprow.c \
+	spswap.c \
+	submat.c \
+	svd.c \
+	symmeig.c \
+	update.c \
+	vecop.c \
+	version.c 
+
+
+all:	$(PROG)
+
+$(PROG):	$(OBJS)
+		$(LD) $(LDFLAGS) /DEF:$(PROG).def  /OUT:$(PROG).dll $(OBJS)
+
+
+$(OBJS):	$(SRCS)
+		$(CC) $(CFLAGS) /c $(SRCS)
+
+clean:;		/bin/rm -f $(OBJS) $(PROG).dll $(PROG).lib $(PROG).exp *~ #*#
+
+public:;	@echo "Installing $(PROGRAM) in $(INSTALL)"
+		@cp $(PROG).dll $(INSTALL)/.
+		@echo "Installing $(PROGRAM) in $(PUBLIC)"
+		@cp $(PROG).dll $(PUBLIC)/.
+		@echo "done"
+

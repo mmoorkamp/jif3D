@@ -1,0 +1,361 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: meschach - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\bheincke\LOCALS~1\Temp\RSP10F.tmp" with contents
+[
+/nologo /MLd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /Fp"Debug/meschach.pch" /YX /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\bdfactor.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\bkpfacto.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\chfactor.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\copy.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\err.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\extras.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\fft.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\givens.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\hessen.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\hsehldr.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\init.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\iter0.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\iternsym.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\itersym.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\ivecop.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\lufactor.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\machine.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\matlab.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\matop.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\matrixio.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\meminfo.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\memory.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\memstat.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\mfunc.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\norm.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\otherio.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\pxop.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\qrfactor.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\schur.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\solve.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\sparse.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\sparseio.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\spbkp.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\spchfctr.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\splufctr.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\sprow.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\spswap.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\submat.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\svd.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\symmeig.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\update.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\vecop.c"
+"F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\version.c"
+]
+Creating command line "cl.exe @C:\DOCUME~1\bheincke\LOCALS~1\Temp\RSP10F.tmp" 
+Creating temporary file "C:\DOCUME~1\bheincke\LOCALS~1\Temp\RSP110.tmp" with contents
+[
+/nologo /out:"Debug\meschach.lib" 
+".\Debug\bdfactor.obj"
+".\Debug\bkpfacto.obj"
+".\Debug\chfactor.obj"
+".\Debug\copy.obj"
+".\Debug\err.obj"
+".\Debug\extras.obj"
+".\Debug\fft.obj"
+".\Debug\givens.obj"
+".\Debug\hessen.obj"
+".\Debug\hsehldr.obj"
+".\Debug\init.obj"
+".\Debug\iter0.obj"
+".\Debug\iternsym.obj"
+".\Debug\itersym.obj"
+".\Debug\ivecop.obj"
+".\Debug\lufactor.obj"
+".\Debug\machine.obj"
+".\Debug\matlab.obj"
+".\Debug\matop.obj"
+".\Debug\matrixio.obj"
+".\Debug\meminfo.obj"
+".\Debug\memory.obj"
+".\Debug\memstat.obj"
+".\Debug\mfunc.obj"
+".\Debug\norm.obj"
+".\Debug\otherio.obj"
+".\Debug\pxop.obj"
+".\Debug\qrfactor.obj"
+".\Debug\schur.obj"
+".\Debug\solve.obj"
+".\Debug\sparse.obj"
+".\Debug\sparseio.obj"
+".\Debug\spbkp.obj"
+".\Debug\spchfctr.obj"
+".\Debug\splufctr.obj"
+".\Debug\sprow.obj"
+".\Debug\spswap.obj"
+".\Debug\submat.obj"
+".\Debug\svd.obj"
+".\Debug\symmeig.obj"
+".\Debug\update.obj"
+".\Debug\vecop.obj"
+".\Debug\version.obj"
+]
+Creating command line "link.exe -lib @C:\DOCUME~1\bheincke\LOCALS~1\Temp\RSP110.tmp"
+<h3>Output Window</h3>
+Compiling...
+bdfactor.c
+f:\inv3d\new-code-2\meschachd_no_complex\bdfactor.c(105) : warning C4018: '>' : signed/unsigned mismatch
+f:\inv3d\new-code-2\meschachd_no_complex\bdfactor.c(108) : warning C4018: '==' : signed/unsigned mismatch
+f:\inv3d\new-code-2\meschachd_no_complex\bdfactor.c(119) : warning C4018: '<' : signed/unsigned mismatch
+f:\inv3d\new-code-2\meschachd_no_complex\bdfactor.c(168) : warning C4018: '!=' : signed/unsigned mismatch
+f:\inv3d\new-code-2\meschachd_no_complex\bdfactor.c(384) : warning C4018: '!=' : signed/unsigned mismatch
+bkpfacto.c
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\bkpfacto.c(218) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\bkpfacto.c(241) : warning C4018: '!=' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\bkpfacto.c(241) : warning C4018: '!=' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\bkpfacto.c(241) : warning C4018: '!=' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\bkpfacto.c(254) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\bkpfacto.c(266) : warning C4018: '==' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\bkpfacto.c(294) : warning C4018: '>' : signed/unsigned mismatch
+chfactor.c
+copy.c
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\copy.c(117) : warning C4018: '>' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\copy.c(117) : warning C4018: '>' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\copy.c(122) : warning C4018: '>' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\copy.c(122) : warning C4018: '>' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\copy.c(123) : warning C4018: '>' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\copy.c(123) : warning C4018: '>' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\copy.c(143) : warning C4018: '>' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\copy.c(146) : warning C4018: '>' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\copy.c(169) : warning C4018: '>' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\copy.c(169) : warning C4018: '>' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\copy.c(173) : warning C4018: '>' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\copy.c(197) : warning C4018: '>' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\copy.c(203) : warning C4018: '>' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\copy.c(203) : warning C4018: '>' : signed/unsigned mismatch
+err.c
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\err.c(251) : warning C4018: '>=' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\err.c(328) : warning C4113: 'void (__cdecl *)()' differs in parameter lists from 'void (__cdecl *)(int )'
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\err.c(337) : warning C4113: 'void (__cdecl *)()' differs in parameter lists from 'void (__cdecl *)(int )'
+extras.c
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\extras.c(438) : warning C4101: 'j' : unreferenced local variable
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\extras.c(438) : warning C4101: 'k' : unreferenced local variable
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\extras.c(457) : warning C4101: 'i' : unreferenced local variable
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\extras.c(457) : warning C4101: 'j' : unreferenced local variable
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\extras.c(475) : warning C4101: 'j' : unreferenced local variable
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\extras.c(475) : warning C4101: 'k' : unreferenced local variable
+fft.c
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\fft.c(59) : warning C4018: '>' : signed/unsigned mismatch
+givens.c
+hessen.c
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\hessen.c(95) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\hessen.c(95) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\hessen.c(106) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\hessen.c(109) : warning C4018: '<' : signed/unsigned mismatch
+hsehldr.c
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\hsehldr.c(118) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\hsehldr.c(168) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\hsehldr.c(172) : warning C4018: '<' : signed/unsigned mismatch
+init.c
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\init.c(62) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\init.c(245) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\init.c(263) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\init.c(278) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\init.c(279) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\init.c(294) : warning C4018: '<' : signed/unsigned mismatch
+iter0.c
+iternsym.c
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\iternsym.c(390) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\iternsym.c(426) : warning C4018: '==' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\iternsym.c(482) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\iternsym.c(500) : warning C4018: '==' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\iternsym.c(682) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\iternsym.c(692) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\iternsym.c(758) : warning C4018: '>=' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\iternsym.c(980) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\iternsym.c(991) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\iternsym.c(1082) : warning C4018: '>=' : signed/unsigned mismatch
+itersym.c
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\itersym.c(226) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\itersym.c(241) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\itersym.c(293) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\itersym.c(304) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\itersym.c(336) : warning C4018: '>=' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\itersym.c(342) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\itersym.c(414) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\itersym.c(424) : warning C4113: 'int (__cdecl *)()' differs in parameter lists from 'int (__cdecl *)(const void *,const void *)'
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\itersym.c(435) : warning C4018: '<' : signed/unsigned mismatch
+ivecop.c
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\ivecop.c(107) : warning C4018: '==' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\ivecop.c(110) : warning C4018: '>' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\ivecop.c(121) : warning C4018: '<=' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\ivecop.c(139) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\ivecop.c(156) : warning C4018: '>' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\ivecop.c(159) : warning C4018: '>' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\ivecop.c(231) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\ivecop.c(339) : warning C4018: '<' : signed/unsigned mismatch
+lufactor.c
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\lufactor.c(106) : warning C4018: '!=' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\lufactor.c(202) : warning C4018: '<' : signed/unsigned mismatch
+machine.c
+matlab.c
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\matlab.c(68) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\matlab.c(168) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\matlab.c(186) : warning C4018: '<' : signed/unsigned mismatch
+matop.c
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\matop.c(149) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\matop.c(150) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\matop.c(185) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\matop.c(186) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\matop.c(315) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\matop.c(316) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\matop.c(319) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\matop.c(339) : warning C4018: '>=' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\matop.c(339) : warning C4018: '>=' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\matop.c(342) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\matop.c(364) : warning C4018: '>=' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\matop.c(364) : warning C4018: '>=' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\matop.c(367) : warning C4018: '<' : signed/unsigned mismatch
+matrixio.c
+meminfo.c
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\meminfo.c(189) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\meminfo.c(240) : warning C4018: '>=' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\meminfo.c(254) : warning C4018: '>=' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\meminfo.c(324) : warning C4018: '>=' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\meminfo.c(370) : warning C4018: '>=' : signed/unsigned mismatch
+memory.c
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\memory.c(275) : warning C4018: '==' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\memory.c(275) : warning C4018: '==' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\memory.c(279) : warning C4018: '>' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\memory.c(290) : warning C4018: '>' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\memory.c(291) : warning C4018: '>' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\memory.c(295) : warning C4018: '>' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\memory.c(411) : warning C4018: '==' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\memory.c(414) : warning C4018: '>' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\memory.c(425) : warning C4018: '<=' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\memory.c(452) : warning C4018: '==' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\memory.c(458) : warning C4018: '>' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\memory.c(471) : warning C4018: '>' : signed/unsigned mismatch
+memstat.c
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\memstat.c(163) : warning C4018: '>=' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\memstat.c(294) : warning C4018: '<' : signed/unsigned mismatch
+mfunc.c
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\mfunc.c(174) : warning C4244: '=' : conversion from 'double ' to 'int ', possible loss of data
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\mfunc.c(215) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\mfunc.c(263) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\mfunc.c(335) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\mfunc.c(341) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\mfunc.c(363) : warning C4018: '<' : signed/unsigned mismatch
+norm.c
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\norm.c(52) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\norm.c(88) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\norm.c(100) : warning C4005: 'max' : macro redefinition
+        d:\programs\vc98\include\stdlib.h(427) : see previous definition of 'max'
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\norm.c(119) : warning C4018: '<' : signed/unsigned mismatch
+otherio.c
+pxop.c
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\pxop.c(62) : warning C4018: '>=' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\pxop.c(305) : warning C4018: '!=' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\pxop.c(305) : warning C4018: '!=' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\pxop.c(342) : warning C4018: '!=' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\pxop.c(342) : warning C4018: '!=' : signed/unsigned mismatch
+qrfactor.c
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\qrfactor.c(196) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\qrfactor.c(250) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\qrfactor.c(304) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\qrfactor.c(351) : warning C4018: '!=' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\qrfactor.c(353) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\qrfactor.c(372) : warning C4018: '<' : signed/unsigned mismatch
+schur.c
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\schur.c(76) : warning C4018: '>' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\schur.c(127) : warning C4018: '>' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\schur.c(416) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\schur.c(419) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\schur.c(158) : warning C4101: 't' : unreferenced local variable
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\schur.c(521) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\schur.c(523) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\schur.c(550) : warning C4018: '<' : signed/unsigned mismatch
+solve.c
+sparse.c
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\sparse.c(136) : warning C4018: '!=' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\sparse.c(138) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\sparse.c(172) : warning C4018: '!=' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\sparse.c(174) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\sparse.c(450) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\sparse.c(450) : warning C4018: '<' : signed/unsigned mismatch
+sparseio.c
+spbkp.c
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\spbkp.c(425) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\spbkp.c(586) : warning C4018: '!=' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\spbkp.c(666) : warning C4018: '>=' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\spbkp.c(669) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\spbkp.c(699) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\spbkp.c(838) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\spbkp.c(841) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\spbkp.c(844) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\spbkp.c(851) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\spbkp.c(868) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\spbkp.c(988) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\spbkp.c(991) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\spbkp.c(994) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\spbkp.c(997) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\spbkp.c(1003) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\spbkp.c(1042) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\spbkp.c(1075) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\spbkp.c(1244) : warning C4113: 'int (__cdecl *)()' differs in parameter lists from 'int (__cdecl *)(const void *,const void *)'
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\spbkp.c(1269) : warning C4018: '!=' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\spbkp.c(1269) : warning C4018: '!=' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\spbkp.c(1269) : warning C4018: '!=' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\spbkp.c(1287) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\spbkp.c(1318) : warning C4018: '==' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\spbkp.c(1348) : warning C4018: '>' : signed/unsigned mismatch
+spchfctr.c
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\spchfctr.c(323) : warning C4018: '!=' : signed/unsigned mismatch
+splufctr.c
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\splufctr.c(63) : warning C4018: '<=' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\splufctr.c(176) : warning C4018: '!=' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\splufctr.c(176) : warning C4018: '!=' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\splufctr.c(178) : warning C4018: '!=' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\splufctr.c(231) : warning C4018: '!=' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\splufctr.c(231) : warning C4018: '!=' : signed/unsigned mismatch
+sprow.c
+spswap.c
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\spswap.c(64) : warning C4018: '<' : signed/unsigned mismatch
+submat.c
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\submat.c(162) : warning C4018: '<' : signed/unsigned mismatch
+svd.c
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\svd.c(57) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\svd.c(62) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\svd.c(91) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\svd.c(98) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\svd.c(107) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\svd.c(114) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\svd.c(154) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\svd.c(154) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\svd.c(311) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\svd.c(318) : warning C4018: '>=' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\svd.c(327) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\svd.c(334) : warning C4018: '>=' : signed/unsigned mismatch
+symmeig.c
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\symmeig.c(201) : warning C4018: '<' : signed/unsigned mismatch
+update.c
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\update.c(117) : warning C4018: '<' : signed/unsigned mismatch
+vecop.c
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\vecop.c(364) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\vecop.c(386) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\vecop.c(412) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\vecop.c(442) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\vecop.c(554) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\vecop.c(575) : warning C4018: '<' : signed/unsigned mismatch
+F:\INV3D\NEW-CODE-2\MESCHACHD_NO_COMPLEX\vecop.c(597) : warning C4018: '<' : signed/unsigned mismatch
+version.c
+Creating library...
+
+
+
+<h3>Results</h3>
+meschach.lib - 0 error(s), 202 warning(s)
+</pre>
+</body>
+</html>

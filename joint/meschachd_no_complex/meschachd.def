@@ -1,0 +1,31 @@
+; meschachd.def : Declares the module parameters.
+
+LIBRARY      "meschachd.dll"
+
+EXPORTS
+	v_free
+	m_free
+	sp_free
+	v_get
+	m_get
+	sp_get
+	sp_set_val
+	sp_get_val
+	sp_compact
+	sp_zero
+	v_max
+	CHsolve
+	CHfactor
+	m_zero
+	iter_splsqr
+	sp_finput
+	sp_foutput
+	sp_dump
+	v_zero
+	iter_free
+	iter_lsqr
+	vm_mlt
+	mv_mlt
+	iter_get
+	svd
+	m_inverse

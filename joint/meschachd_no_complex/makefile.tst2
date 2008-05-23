@@ -1,0 +1,25 @@
+cflags     = -ggdb -DANSI_C  -I 
+ld = gcc
+ldflags  =  $(cflags)
+
+
+LIBS          = 
+
+PROGRAM       = meschachd
+
+HDRS          = 
+
+SRCS	      = bdfactor.c
+
+
+OBJS          = bdfacor.o
+all:		$(PROGRAM)
+
+$(PROGRAM):	$(OBJS)
+		@echo "Linking $(PROGRAM) ..."
+		$(ld) -o $(PROGRAM) $(ldflags) $(OBJS) $(LIBS)
+		@echo "done"
+
+bdfactor.o:	bdfactor.c
+		$(ld) $(cflags) -c bdfactor.c
+
