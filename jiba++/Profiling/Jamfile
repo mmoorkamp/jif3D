@@ -1,0 +1,7 @@
+import testing ; 
+
+project
+    : usage-requirements <include>../Gravity
+    ;
+    
+exe time_gravity_old : time_gravity_old.cpp ../Gravity//gravity ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ;

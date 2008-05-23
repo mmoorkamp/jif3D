@@ -1,0 +1,30 @@
+project 
+    : requirements <include>/usr/local/include <threading>multi 
+    ;
+    
+
+use-project /Gravity : Gravity ;
+use-project /ModelBase : ModelBase ;
+use-project /Profiling : Profiling ;
+
+
+lib boost_filesystem : : <name>boost_filesystem-gcc41-mt ;
+lib levmar : : <name>levmar ;
+lib gsl : : <name>gsl ;
+lib lapack : : <name>lapack ;
+lib f77blas : : <name>f77blas ;
+lib cblas : : <name>cblas ;
+lib atlas : : <name>atlas ;
+lib antlr : : <name>antlr ;
+lib netcdf : : <name>netcdf ;
+lib netcdf_c++ : : <name>netcdf_c++ ;
+lib gfortran : : <name>gfortran ;
+lib gplib :  : <name>gplib <search>/home/mmoorkamp/workspace/gplib ;
+ 
+
+build-project Gravity ;
+build-project MT ;
+build-project Tomo ;
+build-project ModelBase ;
+build-project Profiling ;
+build-project Hacks ;

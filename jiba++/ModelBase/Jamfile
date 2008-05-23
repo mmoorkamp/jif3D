@@ -1,0 +1,4 @@
+import testing ; 
+lib modelbase : ThreeDModelBase.cpp : <include>boost : : <include>. ;
+
+unit-test gravity_test : test_ThreeDModelBase.cpp modelbase ..//netcdf_c++ ..//netcdf : <include>. ;
