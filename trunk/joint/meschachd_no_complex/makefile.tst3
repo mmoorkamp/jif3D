@@ -1,0 +1,113 @@
+# Generated automatically from makefile.in by configure.
+#
+# Makefile for Meschach via autoconf
+#
+# Copyright (C) David Stewart & Zbigniew Leyk 1993
+#
+# $Id: makefile.in,v 1.4 1994/03/14 01:24:06 des Exp $
+#
+
+srcdir = .
+VPATH = .
+
+CC = cl
+
+DEFS = /D=HAVE_CONFIG_H /D=ANSI_C
+LIBS =  
+
+
+CFLAGS =
+
+
+.c.obj:
+	$(CC) -c $(CFLAGS) $(DEFS) $<
+
+SHELL = /bin/sh
+MES_PAK = mesch12b
+TAR = tar
+SHAR = stree -u
+ZIP = zip -r -l
+FLIST = FILELIST
+
+###############################
+
+LIST1 = copy.obj err.obj matrixio.obj memory.obj vecop.obj matop.obj pxop.obj \
+	submat.obj init.obj otherio.obj machine.obj matlab.obj ivecop.obj version.obj \
+	meminfo.obj memstat.obj
+LIST2 = lufactor.obj bkpfacto.obj chfactor.obj qrfactor.obj solve.obj hsehldr.obj \
+	givens.obj update.obj norm.obj hessen.obj symmeig.obj schur.obj svd.obj fft.obj \
+	mfunc.obj bdfactor.obj
+LIST3 = sparse.obj sprow.obj sparseio.obj spchfctr.obj splufctr.obj \
+	spbkp.obj spswap.obj iter0.obj itersym.obj iternsym.obj
+ZLIST1 = zmachine.obj zcopy.obj zmatio.obj zmemory.obj zvecop.obj zmatop.obj znorm.obj \
+	 zfunc.obj 
+ZLIST2 = zlufctr.obj zsolve.obj zmatlab.obj zhsehldr.obj zqrfctr.obj \
+         zgivens.obj  zhessen.obj zschur.obj
+
+# they are no longer supported
+# if you use them add oldpart to all and sparse
+OLDLIST = conjgrad.obj lanczos.obj arnoldi.obj
+
+ALL_LISTS = $(LIST1) $(LIST2) $(LIST3) $(ZLIST1) $(ZLIST2) $(OLDLIST)
+
+HBASE = err.h meminfo.h machine.h matrix.h
+
+HLIST = $(HBASE) iter.h matlab.h matrix2.h  oldnames.h sparse.h \
+	sparse2.h  zmatrix.h zmatrix2.h
+
+TORTURE = torture.obj sptort.obj ztorture.obj memtort.obj itertort.obj \
+	 mfuntort.obj iotort.obj
+
+OTHERS = dmacheps.c extras.c fmacheps.c maxint.c  makefile.in \
+	 README configure configure.in machine.h.in copyright \
+	 tutorial.c tutadv.c rk4.dat ls.dat makefile $(FLIST)
+
+
+# Different configurations
+# the dependencies **between** the parts are for dmake
+all:  part1 part2 part3 zpart1 zpart2 
+part2: part1
+part3: part2
+basic: part1 part2
+sparse: part1 part2 part3 
+zpart2: zpart1
+complex: part1 part2 zpart1 zpart2
+
+
+$(LIST1): $(HBASE)
+part1: $(LIST1)
+	ar ru meschach.a $(LIST1)
+	$(RANLIB) meschach.a
+
+$(LIST2): $(HBASE) matrix2.h
+part2: $(LIST2)
+	ar ru meschach.a $(LIST2)
+	$(RANLIB) meschach.a
+
+$(LIST3): $(HBASE) sparse.h sparse2.h
+part3: $(LIST3)
+	ar ru meschach.a $(LIST3)
+	$(RANLIB) meschach.a
+
+$(ZLIST1): $(HBASDE) zmatrix.h
+zpart1: $(ZLIST1)
+	ar ru meschach.a $(ZLIST1)
+	$(RANLIB) meschach.a
+
+$(ZLIST2): $(HBASE) zmatrix.h zmatrix2.h 
+zpart2: $(ZLIST2)
+	ar ru meschach.a $(ZLIST2)
+	$(RANLIB) meschach.a
+
+$(OLDLIST): $(HBASE) sparse.h sparse2.h 
+oldpart: $(OLDLIST)
+	ar ru meschach.a $(OLDLIST)
+	$(RANLIB) meschach.a
+
+
+
+
+clean:
+	/bin/rm -f *.obj core asx5213a.mat iotort.dat 
+
+

@@ -1,0 +1,3 @@
+#!/bin/bash
+gfortran -c /home/mm/geomar/joint/*.for
+ar rc libmtforward.a B_epol1.o B_hpol.o
