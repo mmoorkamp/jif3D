@@ -1,0 +1,8 @@
+import testing ; 
+
+project
+    : usage-requirements <include>../../gplib/include
+    ;
+    
+exe levjoint : levjoint.cpp ..//gplib ..//gsl ..//netcdf_c++ ..//netcdf ..//antlr ..//levmar ..//boost_filesystem ..//cblas ..//atlas ..//lapack  
+	: <include>/home/mmoorkamp/workspace/gplib/include ;

@@ -1,0 +1,191 @@
+//============================================================================
+// Name        : ThreeDGravityModel.h
+// Author      : Max Moorkamp
+// Version     :
+// Copyright   : 2008, MM
+//============================================================================
+
+#ifndef THREEDGRAVITYMODEL_H_
+#define THREEDGRAVITYMODEL_H_
+
+#include <string>
+#include <boost/numeric/ublas/vector.hpp>
+#include "../ModelBase/ThreeDModelBase.h"
+#include "../Global/VecMat.h"
+
+/*! \file This file contains the class ThreeDGravityModel and associated helper functions and constants
+ * 
+ */
+namespace jiba
+  {
+
+    //! The constant of gravity
+    static const double Grav_const = 6.67428e-8; // in units cm^3/g s
+
+    //! We store the 3x3 matrix for gravimetric measurements in a ublas matrix with real entries
+    typedef rmat GravimetryMatrix;
+
+    //! Calculate a single geometric term for the graviational acceleration due to a rectangular prism
+    /*! The various terms all have the form \f$ x * log(y +r) + y * log(x+r) + z*atan2(z*r, x*y) \f$
+     * where x,y and z are distances in x, y and z-direction for the current corner, respectively and
+     * \f$ r = \sqrt{x^2 +y^2 +z^2} \f$.
+     * */
+    double CalcGravTerm(const double x, const double y, const double z);
+    //! Calculate the gravitational acceleration due to a rectangular prism
+    /*! Given the coordinates of the measurements (meas_x, meas_y and meas_z), the 
+     * coordinates of the upper front left corner (ul_corner_x etc.), the size
+     * in the three directions (x_size, y_size and z_size) and the density, we calculate
+     * the acceleration caused by a prism with these parameters. All dimensions are in meters, density is
+     * in \f$ kg/m^3 \f$ and the acceleration in \f$m/s^2\f$ 
+     * 
+     * This equation works as long as the measurement point is not on one of the corners or edges of the box.
+     */
+    double CalcGravBox(const double meas_x, const double meas_y,
+        const double meas_z, const double ul_corner_x,
+        const double ul_corner_y, const double ul_corner_z,
+        const double x_size, const double y_size, const double z_size,
+        const double density);
+
+    //! Calculate the gravimetry matrix for a single rectangular prism
+    GravimetryMatrix CalcTensorBox(const double meas_x, const double meas_y,
+        const double meas_z, const double ul_corner_x,
+        const double ul_corner_y, const double ul_corner_z,
+        const double x_size, const double y_size, const double z_size,
+        const double density);
+
+    double CalcUxx(const double meas_x, const double meas_y,
+        const double meas_z, const double ul_corner_x,
+        const double ul_corner_y, const double ul_corner_z,
+        const double x_size, const double y_size, const double z_size,
+        const double density);
+
+    double CalcUxy(const double meas_x, const double meas_y,
+        const double meas_z, const double ul_corner_x,
+        const double ul_corner_y, const double ul_corner_z,
+        const double x_size, const double y_size, const double z_size,
+        const double density);
+
+    //! the gravitational acceleration of an semi-infinite slab
+    double CalcGravSemiInfSheet(const double hor_dist, const double ver_dist,
+        const double thick, const double density);
+    //! Calculate one of the terms of diagonal elements of the gravimetric matrxi 
+    /*! The terms \f$ U_{xx}, U_{yy} \f$ and \f$ U_{zz} \f$  of the gravimetric matrix 
+     * all are sums of terms of the form \f$ atan \frac{a *b}{c *r } \f$
+     */
+    double CalcFTGDiagonalTerm(const double a, const double b, const double c);
+    //! Calculate one of the terms of off-diagonal elements of the gravimetric matrxi 
+    /*! The terms \f$ U_{xy}, U_{xz} \f$ and \f$ U_{yz} \f$  of the gravimetric matrix 
+     * all are sums of terms of the form \f$ \log (x +r) \f$
+     */
+    double CalcFTGOffDiagonalTerm(const double value, const double x,
+        const double y, const double z);
+    //! the gravitational acceleration of an infinite slab
+    inline double CalcInfSheet(const double thick, const double density)
+      {
+        return 2.0 * M_PI * Grav_const * thick * density;
+      }
+
+    //! We store the 3x3 matrix for gravimetric measurements in a ublas matrix with real entries
+    typedef rmat GravimetryMatrix;
+
+    //! The class used to store the gravity model and calculate the gravity values at the measurement points
+    class ThreeDGravityModel : public ThreeDModelBase
+      {
+  public:
+      typedef std::vector<double> tScalarMeasVec;
+      typedef std::vector<GravimetryMatrix> tTensorMeasVec;
+      typedef std::vector<double> tMeasPosVec;
+  private:
+      //! Calculate the response of the 1D background
+      double CalcBackground(const double xmeas, const double ymeas,
+          const double zmeas, const double xwidth, const double ywidth, const double zwidth,
+          const size_t meas_index);
+      //! For the given model, calculate the gravity at measurement points x, y and z due to the discretized part of the mesh
+      double CalcScalarMeas(const double x_meas, const double y_meas,
+          const double z_meas, const size_t meas_index);
+      //! For the given model, calculate the gravimetric matrix at points x,y, and z
+      GravimetryMatrix CalcTensorMeas(const double x_meas, const double y_meas,
+          const double z_meas, const size_t meas_index);
+      //! Correct for the fact that the grid does not go to infinity
+      GravimetryMatrix AdjustTensorBackground(const double x_meas,
+          const double y_meas, const double z_meas, const double xwidth,
+          const double ywidth, const double zwidth, const size_t meas_index);
+      //! the x-coordinates of the measurement points
+      tMeasPosVec MeasPosX;
+      //! the y-coordinates of the measurement points
+      tMeasPosVec MeasPosY;
+      //! the z-coordinates of the measurement points
+      tMeasPosVec MeasPosZ;
+      //! The densities of the background layers
+      tScalarMeasVec bg_densities;
+      //! The thicknesses of the background layers
+      tScalarMeasVec bg_thicknesses;
+      //! Do we want to store the sensitivity matrix for scalar gravity
+      const bool StoreScalarSensitivities;
+      //! Do we want to store the sensitivity matrix for tensor gravity
+      const bool StoreTensorSensitivities;
+      //! Have we already calculated the scalar sensitivities
+      bool HaveCalculatedScalarSensitivities;
+      //! Have we already calculated the tensor sensitivities
+      bool HaveCalculatedTensorSensitivities;
+      //! The Matrix for the scalar sensitivities
+      rmat ScalarSensitivities;
+      //! The Matrix for the tensor sensitivities
+      rmat TensorSensitivities;
+      //! We implement this virtual function to make sure sensitivities are recalculated when the cell sizes change
+      virtual void SetCellSizesAction(t3DModelDim &sizes)
+        {
+          HaveCalculatedScalarSensitivities = false;
+          HaveCalculatedTensorSensitivities = false;
+        }
+  public:
+      //! For the given model, calculate the scalar gravity at all measurement points 
+      tScalarMeasVec CalcGravity();
+      tTensorMeasVec CalcTensorGravity();
+      //! return read only access to the stored density values 
+      const t3DModelData &GetDensities() const
+        {
+          return ThreeDModelBase::GetData();
+        }
+      //! return a reference to stored densities
+      t3DModelData &SetDensities()
+        {
+          return ThreeDModelBase::SetData();
+        }
+      //! Set the density of the background, it extends to infinity in horizontal directions and to the depth of the model in z-direction
+      void SetBackgroundDensities(const tScalarMeasVec value)
+        {
+          bg_densities.clear();
+          copy(value.begin(), value.end(), back_inserter(bg_densities));
+        }
+      void SetBackgroundThicknesses(const tScalarMeasVec value)
+        {
+          bg_thicknesses.clear();
+          copy(value.begin(), value.end(), back_inserter(bg_thicknesses));
+        }
+      //! Add a measurement point to the model
+      void AddMeasurementPoint(const double xcoord, const double ycoord,
+          const double zcoord)
+        {
+          MeasPosX.push_back(xcoord);
+          MeasPosY.push_back(ycoord);
+          MeasPosZ.push_back(zcoord);
+          HaveCalculatedScalarSensitivities = false; // we have to recalculate
+          HaveCalculatedTensorSensitivities = false;
+        }
+      const rmat &GetScalarSensitivities() const
+        {
+          return ScalarSensitivities;
+        }
+      //! Write the density model and all associated information in a netcdf file
+      void WriteNetCDF(const std::string filename);
+      //! Read the density model and all associated information from a netcdf file
+      void ReadNetCDF(const std::string filename);
+      ThreeDGravityModel(const bool storescalar = false,
+          const bool storetensor = false);
+      virtual ~ThreeDGravityModel();
+      };
+
+  }
+
+#endif /*THREEDGRAVITYMODEL_H_*/

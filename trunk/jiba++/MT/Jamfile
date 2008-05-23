@@ -1,0 +1,8 @@
+import testing ; 
+using gfortran ;
+
+lib mt : B_epol1.for B_hpol.for  ;
+
+
+
+unit-test 2DMT_test : test_Tarits2DMT.cpp mt ..//gfortran : <include>. ;
