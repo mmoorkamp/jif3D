@@ -1,3 +1,10 @@
+//============================================================================
+// Name        : VecMat.h
+// Author      : Max Moorkamp
+// Version     :
+// Copyright   : 2008, MM
+//============================================================================
+
 #ifndef VECMAT_H_
 #define VECMAT_H_
 /*! \file This file provides the basic includes for all matrix and vector operations. We store the matrices in column major format to

@@ -1,3 +1,10 @@
+//============================================================================
+// Name        : convert.h
+// Author      : Max Moorkamp
+// Version     :
+// Copyright   : 2008, MM
+//============================================================================
+
 #ifndef CONVERT_H_
 #define CONVERT_H_
 
@@ -8,6 +15,10 @@
 #include <typeinfo>
 #include <stdexcept>
 #include <locale>
+
+/*! \file This file contains routines to convert streamable types to a string and versions of toupper and tolower that
+ * are easier to handle in generic algorithms like transform etc.
+ */
 
 class BadConversion : public std::runtime_error
   {

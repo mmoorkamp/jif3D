@@ -1,3 +1,10 @@
+//============================================================================
+// Name        : FatalException.h
+// Author      : Max Moorkamp
+// Version     :
+// Copyright   : 2008, MM
+//============================================================================
+
 #ifndef FATALEXCEPTION_H_
 #define FATALEXCEPTION_H_
 #include <stdexcept>
