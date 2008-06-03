@@ -19,4 +19,23 @@ int sign (NumericType n)
    return -1;
 }
 
+//! Generate a sequence of integers, for use with generate and generate_n algorithms, taken from Josuttis, p. 296
+/*! The constructor takes the starting value and each call to operator() returns the current value and increases
+ * it by 1. 
+ */
+class IntSequence
+  {
+private:
+    int value;
+public:
+    IntSequence(int start) :
+      value(start)
+      {
+      }
+    int operator()()
+      {
+        return value++;
+      }
+  };
+
 #endif /*NUMUTIL_H_*/

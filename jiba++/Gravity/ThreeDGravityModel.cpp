@@ -1,8 +1,19 @@
+//============================================================================
+// Name        : ThreeDGravityModel.cpp
+// Author      : Max Moorkamp
+// Version     :
+// Copyright   : 2008, MM
+//============================================================================
+
 #include "ThreeDGravityModel.h"
 #include "../Global/NumUtil.h"
 #include <iostream>
 #include <algorithm>
 #include <boost/bind.hpp>
+#include <cassert>
+#include <netcdfcpp.h>
+#include <fstream>
+#include <iomanip>
 
 namespace jiba
   {
@@ -478,7 +489,7 @@ ThreeDGravityModel::~ThreeDGravityModel()
   {
   }
 
-void ThreeDGravityModel::WriteNetCDF(const std::string filename)
+void ThreeDGravityModel::WriteNetCDF(const std::string filename) const
   {
     NcFile DataFile(filename.c_str(), NcFile::Replace);
     WriteDataToNetCDF(DataFile, GravDataName, GravDataUnit);
@@ -490,4 +501,140 @@ void ThreeDGravityModel::ReadNetCDF(const std::string filename)
     ReadDataFromNetCDF(DataFile, GravDataName, GravDataUnit);
   }
 
+
+NcDim *ThreeDGravityModel::WriteDimensionToNetCDF(NcFile &NetCDFFile,
+              const std::string &SizeName, const tMeasPosVec &Position) const
+              {
+                
+                       // Add a dimension and a variable with the same name to the netcdf file
+                       NcDim *SizeDim = NetCDFFile.add_dim(SizeName.c_str(), Position.size());
+                       NcVar *SizeVar =
+                           NetCDFFile.add_var(SizeName.c_str(), ncDouble, SizeDim);
+                       //All length is measured in meters
+                       SizeVar->add_att("units", "m");
+                       //We also store the name
+                       SizeVar->add_att("long_name", (SizeName+" coordinate").c_str());
+                       // we store the coordinates of the cells in the netcdf file
+                     
+                       //Write the values
+                       SizeVar->put(&Position[0], Position.size());
+                       // We return the NcDim object, because we need it to write the model data
+                       return SizeDim;
+              }
+
+void ThreeDGravityModel::ReadDimensionFromNetCDF(NcFile &NetCDFFile,
+              const std::string &DimName, tMeasPosVec &Position)
+  {
+
+    //create a netcdf dimension with the chosen name
+     NcDim *Dim = NetCDFFile.get_dim(DimName.c_str());
+     //determine the size of that dimension
+     const size_t nvalues = Dim->size();
+            
+     //allocate memory in the class variable
+     Position.assign(nvalues,0.0);
+     // create netcdf variable with the same name as the dimension
+     NcVar *SizeVar = NetCDFFile.get_var(DimName.c_str());
+     //read coordinate values from netcdf file
+     SizeVar->get(&Position[0], nvalues);       
+  }
+
+void ThreeDGravityModel::SaveScalarMeasurements(const std::string filename)
+  {
+    tScalarMeasVec Data = CalcGravity();
+    
+    assert(Data.size() == MeasPosX.size());
+    assert(Data.size() == MeasPosY.size());
+    assert(Data.size() == MeasPosZ.size());
+    const size_t nmeas = MeasPosX.size();
+    NcFile DataFile(filename.c_str(), NcFile::Replace);
+    std::vector<int> StationNumber;
+    std::generate_n(back_inserter(StationNumber),nmeas,IntSequence(0));
+    NcDim *StatNumDim = DataFile.add_dim("StationNumber", nmeas);
+    NcVar *StatNumVar = DataFile.add_var("StationNumber", ncInt, StatNumDim);
+    StatNumVar->put(&StationNumber[0],nmeas);
+    NcVar *XPosVar = DataFile.add_var("xpos", ncDouble,StatNumDim);
+    XPosVar->add_att("units", "m");
+    XPosVar->put(&MeasPosX[0],nmeas);
+    NcVar *YPosVar = DataFile.add_var("ypos", ncDouble,StatNumDim);
+    YPosVar->add_att("units", "m");
+    YPosVar->put(&MeasPosY[0],nmeas);
+    NcVar *ZPosVar = DataFile.add_var("zpos", ncDouble,StatNumDim);
+    ZPosVar->add_att("units", "m");
+    ZPosVar->put(&MeasPosZ[0],nmeas);
+    //Write the measurements
+    NcVar *DataVar = DataFile.add_var("Scalar_gravity", ncDouble,StatNumDim);
+    DataVar->add_att("units", "m/s^2");
+    DataVar->add_att("_FillValue",-1.0);
+    
+    DataVar->put(&Data[0], StatNumDim->size());
+  }
+
+void ThreeDGravityModel::PlotScalarMeasurements(const std::string filename)
+  {
+    tScalarMeasVec Data = CalcGravity();
+    
+    std::ofstream outfile(filename.c_str());
+    const size_t nmeas = Data.size();
+    assert(nmeas == MeasPosX.size());
+    assert(nmeas == MeasPosY.size());
+    assert(nmeas == MeasPosZ.size());
+    for (size_t i =0; i < nmeas; ++i)
+      {
+        outfile << std::setw(15) << std::setprecision(5) << MeasPosX.at(i) << " ";
+        outfile << std::setw(15) << std::setprecision(5) << MeasPosY.at(i) << " ";
+        outfile << std::setw(15) << std::setprecision(5) << MeasPosZ.at(i) << " ";
+        outfile << std::setw(15) << std::setprecision(5) << Data.at(i);
+        outfile << std::endl;
+      }
+//    const size_t nmeas = MeasPosX.size();
+//        assert(Data.size() == MeasPosX.size());
+//        assert(Data.size() == MeasPosY.size());
+//        
+//        
+//        NcFile DataFile(filename.c_str(), NcFile::Replace);
+//        // Write the size information in x,y, and z-direction
+//        NcDim *XSizeDim = WriteDimensionToNetCDF(DataFile, "x", MeasPosX);
+//        NcDim *YSizeDim = WriteDimensionToNetCDF(DataFile, "y", MeasPosY);
+//        
+//        NcVar *DataVar = DataFile.add_var("Scalar_gravity", ncDouble,
+//                    XSizeDim, YSizeDim);
+//        DataVar->add_att("units", "m/s^2");
+//        DataVar->add_att("_FillValue",-1.0);
+//        //Write the measurements
+//        tScalarMeasVec WrittenData(nmeas*nmeas,-1.0);
+//            for (size_t i = 0; i < nmeas; ++i)
+//              {
+//              WrittenData.at(i + nmeas*i ) = Data.at(i);
+//              }
+//            DataVar->put(&WrittenData[0], XSizeDim->size(), YSizeDim->size());
+  }
+
+void ThreeDGravityModel::ReadMeasPosNetCDF(const std::string filename)
+  {
+    NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
+    ReadDimensionFromNetCDF(DataFile, "Measx",MeasPosX);
+    ReadDimensionFromNetCDF(DataFile, "Measy",MeasPosY);
+    ReadDimensionFromNetCDF(DataFile, "Measz",MeasPosZ);
+    assert(MeasPosX.size() == MeasPosY.size());
+    assert(MeasPosX.size() == MeasPosZ.size());
+  }
+
+void ThreeDGravityModel::ReadMeasPosAscii(const std::string filename)
+  {
+    std::ifstream infile(filename.c_str());
+    double posx, posy, posz;
+    while (infile.good())
+      {
+        infile >> posx >>  posy >> posz;
+        if (infile.good())
+          {
+            MeasPosX.push_back(posx);
+            MeasPosY.push_back(posy);
+            MeasPosZ.push_back(posz);
+          }
+      }
+    assert(MeasPosX.size() == MeasPosY.size());
+    assert(MeasPosX.size() == MeasPosZ.size());
+  }
 }

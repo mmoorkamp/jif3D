@@ -73,7 +73,7 @@ namespace jiba
         }
       const t3DModelDim &GetXCoordinates()
         {
-          if (XCellSizesChanged)
+          if (XCellSizesChanged && XCellSizes.size() > 0)
             {
               GridXCoordinates.resize(boost::extents[XCellSizes.size()]);
               std::partial_sum(XCellSizes.begin(), XCellSizes.end(),
@@ -87,7 +87,7 @@ namespace jiba
         }
       const t3DModelDim &GetYCoordinates()
         {
-          if (YCellSizesChanged)
+          if (YCellSizesChanged && YCellSizes.size() > 0)
             {
               GridYCoordinates.resize(boost::extents[YCellSizes.size()]);
               std::partial_sum(YCellSizes.begin(), YCellSizes.end(),
@@ -101,7 +101,7 @@ namespace jiba
         }
       const t3DModelDim &GetZCoordinates()
         {
-          if (ZCellSizesChanged)
+          if (ZCellSizesChanged && ZCellSizes.size() > 0)
             {
               GridZCoordinates.resize(boost::extents[ZCellSizes.size()]);
               std::partial_sum(ZCellSizes.begin(), ZCellSizes.end(),
@@ -117,7 +117,7 @@ namespace jiba
           const std::string &DataName, const std::string &UnitsName);
       //! Write data and associated cell sizes to a netcdf file
       void WriteDataToNetCDF(NcFile &NetCDFFile, const std::string &DataName,
-          const std::string &UnitsName);
+          const std::string &UnitsName) const;
   public:
       //! read-only access to the cell size in x-direction in m
       const t3DModelDim &GetXCellSizes() const
