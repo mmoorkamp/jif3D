@@ -3,3 +3,6 @@ lib gravity : ThreeDGravityModel.cpp : <include>boost : : <include>. ;
 
 
 unit-test gravity_test : test_ThreeDGravityModel.cpp gravity ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf : : <include>. ;
+
+exe gravforward : gravforward.cpp gravity ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf : <include>. ;
+exe gravgrid : gravgrid.cpp gravity ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf : <include>. ;

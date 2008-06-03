@@ -110,6 +110,12 @@ namespace jiba
       GravimetryMatrix AdjustTensorBackground(const double x_meas,
           const double y_meas, const double z_meas, const double xwidth,
           const double ywidth, const double zwidth, const size_t meas_index);
+      //! Create a dimension for the measurement positions in a netcdf file
+      NcDim *WriteDimensionToNetCDF(NcFile &NetCDFFile,
+              const std::string &SizeName, const tMeasPosVec &Position) const;
+      //! Read one measurement position coordinate from a netcdf file
+      void ReadDimensionFromNetCDF(NcFile &NetCDFFile,
+              const std::string &DimName, tMeasPosVec &Position);
       //! the x-coordinates of the measurement points
       tMeasPosVec MeasPosX;
       //! the y-coordinates of the measurement points
@@ -178,9 +184,17 @@ namespace jiba
           return ScalarSensitivities;
         }
       //! Write the density model and all associated information in a netcdf file
-      void WriteNetCDF(const std::string filename);
+      void WriteNetCDF(const std::string filename) const;
       //! Read the density model and all associated information from a netcdf file
       void ReadNetCDF(const std::string filename);
+      //! Save all Synthetic data in a netcdf file
+      void SaveScalarMeasurements(const std::string filename);
+      //! Write all Synthetic data in a netcdf file without z information for spatial plotting in gmt
+      void PlotScalarMeasurements(const std::string filename);
+      //! Read the Measurement positions from a netcdf file
+      void ReadMeasPosNetCDF(const std::string filename);
+      //! Read the Measurement positions from an ascii file
+      void ReadMeasPosAscii(const std::string filename);
       ThreeDGravityModel(const bool storescalar = false,
           const bool storetensor = false);
       virtual ~ThreeDGravityModel();

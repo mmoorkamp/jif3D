@@ -12,8 +12,8 @@ namespace jiba
   {
 
     ThreeDModelBase::ThreeDModelBase() :
-      XCellSizesChanged(false), YCellSizesChanged(false),
-          ZCellSizesChanged(false)
+      XCellSizesChanged(true), YCellSizesChanged(true),
+          ZCellSizesChanged(true)
       {
       }
 
@@ -57,7 +57,7 @@ namespace jiba
         //All length is measured in meters
         SizeVar->add_att("units", "m");
         //We also store the name
-        SizeVar->add_att("long_name", (SizeName+" -coordinate").c_str());
+        SizeVar->add_att("long_name", (SizeName+" coordinate").c_str());
         // we store the coordinates of the cells in the netcdf file
         t3DModelDim CellCoordinates(boost::extents[CellSize.size()]);
         std::partial_sum(CellSize.begin(), CellSize.end(),
@@ -94,7 +94,7 @@ namespace jiba
       }
 
     void ThreeDModelBase::WriteDataToNetCDF(NcFile &NetCDFFile,
-        const std::string &DataName, const std::string &UnitsName)
+        const std::string &DataName, const std::string &UnitsName) const
       {
         //Make sure our data has the right dimensions and we have size information for each cell
         assert(Data.num_dimensions() == 3);
