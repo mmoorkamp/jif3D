@@ -7,13 +7,14 @@
 
 #include "ThreeDModelBase.h"
 #include <cassert>
+#include <fstream>
+#include "../Global/FatalException.h"
 
 namespace jiba
   {
 
     ThreeDModelBase::ThreeDModelBase() :
-      XCellSizesChanged(true), YCellSizesChanged(true),
-          ZCellSizesChanged(true)
+      XCellSizesChanged(true), YCellSizesChanged(true), ZCellSizesChanged(true)
       {
       }
 
@@ -112,4 +113,59 @@ namespace jiba
         DataVar->put(Data.origin(), XSizeDim->size(), YSizeDim->size(),
             ZSizeDim->size());
       }
+
+    void ThreeDModelBase::WriteVTK(std::string filename)
+      {
+        assert(Data.num_dimensions() == 3);
+        assert(Data.shape()[0] == XCellSizes.size());
+        assert(Data.shape()[1] == YCellSizes.size());
+        assert(Data.shape()[2] == ZCellSizes.size());
+
+        const size_t nxvalues = XCellSizes.size();
+        const size_t nyvalues = YCellSizes.size();
+        const size_t nzvalues = ZCellSizes.size();
+
+        std::ofstream outfile(filename.c_str());
+        outfile << "# vtk DataFile Version 2.0" << std::endl;
+        outfile << "3D Model data" << std::endl;
+        outfile << "ASCII" << std::endl;
+        outfile << "DATASET RECTILINEAR_GRID" << std::endl;
+        outfile << "DIMENSIONS " << nxvalues+1 << " " <<nyvalues+1 << " "
+            << nzvalues +1 << std::endl;
+
+        outfile << "X_COORDINATES "<< nxvalues+1 << " double" << std::endl;
+        outfile << 0.0 << " ";
+        std::partial_sum(GetXCellSizes().begin(), GetXCellSizes().end(), std::ostream_iterator<double>(outfile, " "));
+        outfile << std::endl;
+
+        outfile << "Y_COORDINATES "<< nyvalues+1 << " double" << std::endl;
+        outfile << 0.0 << " ";
+        std::partial_sum(GetYCellSizes().begin(), GetYCellSizes().end(), std::ostream_iterator<double>(outfile, " "));
+        outfile << std::endl;
+
+        outfile << "Z_COORDINATES "<< nzvalues+1 << " double" << std::endl;
+        outfile << 0.0 << " ";
+        std::partial_sum(GetZCellSizes().begin(), GetZCellSizes().end(), std::ostream_iterator<double>(outfile, " "));
+        outfile << std::endl;
+
+        
+        outfile << "CELL_DATA " << nxvalues * nyvalues * nzvalues
+            << std::endl;
+        outfile << "SCALARS Resistivity double" << std::endl;
+        outfile << "LOOKUP_TABLE default" << std::endl;
+        for (size_t i = 0; i < nzvalues; ++i)
+          {
+            for (size_t j = 0; j < nyvalues; ++j)
+              {
+                for (size_t k = 0; k < nxvalues; ++k)
+                  {
+                    outfile << Data[k][j][i] << " ";
+                  }
+                outfile << std::endl;
+              }
+          }
+        if (outfile.fail())
+          throw FatalException("Problem writing vtk  file");
+      }
+
   }
