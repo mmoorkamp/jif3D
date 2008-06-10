@@ -29,7 +29,9 @@ namespace jiba
       typedef boost::multi_array<double, 1> t3DModelDim;
   private:
       //! If a derived class needs to perform some action when one the cell size changes, this can be done here 
-      virtual void SetCellSizesAction(t3DModelDim &sizes){}
+      virtual void SetCellSizesAction(t3DModelDim &sizes)
+        {
+        }
       bool XCellSizesChanged;
       bool YCellSizesChanged;
       bool ZCellSizesChanged;
@@ -57,6 +59,19 @@ namespace jiba
       //! Write the length of the model cell along a single dimension to the file
       NcDim *WriteSizesToNetCDF(NcFile &NetCDFFile,
           const std::string &SizeName, const t3DModelDim &CellSize) const;
+      void CalcCoordinates(t3DModelDim &Coordinates, const t3DModelDim Sizes,
+          bool &ChangeFlag)
+        {
+          Coordinates.resize(boost::extents[Sizes.size()]);
+          if (Sizes.size() > 0)
+            {
+              std::partial_sum(Sizes.begin(), Sizes.end(), Coordinates.begin());
+              std::rotate(Coordinates.begin(), Coordinates.end()-1,
+                  Coordinates.end());
+              Coordinates[0] = 0.0;
+            }
+          ChangeFlag = false;
+        }
   protected:
       //The access to the data is protected, this requires the derived class
       // to provide an access function and allows to add initial checks and 
@@ -75,13 +90,7 @@ namespace jiba
         {
           if (XCellSizesChanged && XCellSizes.size() > 0)
             {
-              GridXCoordinates.resize(boost::extents[XCellSizes.size()]);
-              std::partial_sum(XCellSizes.begin(), XCellSizes.end(),
-                  GridXCoordinates.begin());
-              std::rotate(GridXCoordinates.begin(), GridXCoordinates.end()-1,
-                  GridXCoordinates.end());
-              GridXCoordinates[0] = 0.0;
-              XCellSizesChanged = false;
+              CalcCoordinates(GridXCoordinates,XCellSizes,XCellSizesChanged);
             }
           return GridXCoordinates;
         }
@@ -89,13 +98,7 @@ namespace jiba
         {
           if (YCellSizesChanged && YCellSizes.size() > 0)
             {
-              GridYCoordinates.resize(boost::extents[YCellSizes.size()]);
-              std::partial_sum(YCellSizes.begin(), YCellSizes.end(),
-                  GridYCoordinates.begin());
-              std::rotate(GridYCoordinates.begin(), GridYCoordinates.end()-1,
-                  GridYCoordinates.end());
-              GridYCoordinates[0] = 0.0;
-              YCellSizesChanged = false;
+              CalcCoordinates(GridYCoordinates,YCellSizes,YCellSizesChanged);
             }
           return GridYCoordinates;
         }
@@ -103,12 +106,7 @@ namespace jiba
         {
           if (ZCellSizesChanged && ZCellSizes.size() > 0)
             {
-              GridZCoordinates.resize(boost::extents[ZCellSizes.size()]);
-              std::partial_sum(ZCellSizes.begin(), ZCellSizes.end(),
-                  GridZCoordinates.begin());
-              std::rotate(GridZCoordinates.begin(), GridZCoordinates.end()-1,
-                  GridZCoordinates.end());
-              GridZCoordinates[0] = 0.0;
+              CalcCoordinates(GridZCoordinates,ZCellSizes,ZCellSizesChanged);
             }
           return GridZCoordinates;
         }
@@ -118,6 +116,8 @@ namespace jiba
       //! Write data and associated cell sizes to a netcdf file
       void WriteDataToNetCDF(NcFile &NetCDFFile, const std::string &DataName,
           const std::string &UnitsName) const;
+      //! Write the data and cell sizes to a VTK file for plotting in Paraview or Visit etc.
+      void WriteVTK(std::string filename, const std::string &DataName);
   public:
       //! read-only access to the cell size in x-direction in m
       const t3DModelDim &GetXCellSizes() const
