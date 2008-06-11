@@ -55,4 +55,6 @@ int main(int argc, char *argv[])
     GravForward.ReadNetCDF(ModelFilename);
     GravForward.SaveScalarMeasurements(ModelFilename+".out.nc");
     GravForward.PlotScalarMeasurements(ModelFilename+".plot");
+    GravForward.PlotTensorMeasurements(ModelFilename);
+    GravForward.WriteVTK(ModelFilename+".vtk");
   }
