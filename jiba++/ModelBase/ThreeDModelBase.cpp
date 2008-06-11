@@ -114,7 +114,7 @@ namespace jiba
             ZSizeDim->size());
       }
 
-    void ThreeDModelBase::WriteVTK(std::string filename)
+    void ThreeDModelBase::WriteVTK(std::string filename, const std::string &DataName)
       {
         assert(Data.num_dimensions() == 3);
         assert(Data.shape()[0] == XCellSizes.size());
@@ -151,7 +151,7 @@ namespace jiba
         
         outfile << "CELL_DATA " << nxvalues * nyvalues * nzvalues
             << std::endl;
-        outfile << "SCALARS Resistivity double" << std::endl;
+        outfile << "SCALARS " << DataName << " double" << std::endl;
         outfile << "LOOKUP_TABLE default" << std::endl;
         for (size_t i = 0; i < nzvalues; ++i)
           {
