@@ -20,7 +20,8 @@
 using namespace boost::assign;
 
 BOOST_AUTO_TEST_SUITE( Gravity_Test_Suite )
-//a helper function
+
+//a helper function to create a model dimension of randon size
 jiba::ThreeDModelBase::t3DModelDim GenerateDimension()
   {
 
@@ -33,6 +34,36 @@ jiba::ThreeDModelBase::t3DModelDim GenerateDimension()
     return TestDim;
   }
 
+//create a random density model
+void MakeRandomModel(jiba::ThreeDGravityModel &Model, const size_t nmeas)
+  {
+    srand(time(NULL));
+
+    jiba::ThreeDModelBase::t3DModelDim XDim = GenerateDimension();
+    jiba::ThreeDModelBase::t3DModelDim YDim = GenerateDimension();
+    jiba::ThreeDModelBase::t3DModelDim ZDim = GenerateDimension();
+    const size_t xsize = XDim.size();
+    const size_t ysize = YDim.size();
+    const size_t zsize = ZDim.size();
+    Model.SetXCellSizes().resize(boost::extents[xsize]);
+    Model.SetXCellSizes() = XDim;
+    Model.SetYCellSizes().resize(boost::extents[ysize]);
+    Model.SetYCellSizes() = YDim;
+    Model.SetZCellSizes().resize(boost::extents[zsize]);
+    Model.SetZCellSizes() = ZDim;
+
+    Model.SetDensities().resize(boost::extents[xsize][ysize][zsize]);
+
+    for (size_t i = 0; i < xsize; ++i)
+      for (size_t j = 0; j < ysize; ++j)
+        for (size_t k = 0; k < zsize; ++k)
+          Model.SetDensities()[i][j][k] = double(rand() % 50)/10.0 + 1.0;
+
+    for (size_t i = 0; i < nmeas; ++i)
+      Model.AddMeasurementPoint(rand() % 100 + 100.1, rand() % 100 + 100.1,
+          (rand() % 100 + 100.1));
+  }
+
 //Test the default state of the object
 BOOST_AUTO_TEST_CASE(constructors_test)
   {
@@ -43,10 +74,13 @@ BOOST_AUTO_TEST_CASE(constructors_test)
     BOOST_CHECK_EQUAL(ConstBaseTest.GetDensities().size(), (size_t)0 );
   }
 
+//Check whether storing the model in a netcdf file and reading it in again creates the same model
 BOOST_AUTO_TEST_CASE(netcdf_read_write_test)
   {
-    srand(time(NULL));
     jiba::ThreeDGravityModel GravityTest;
+
+    srand(time(NULL));
+
     jiba::ThreeDModelBase::t3DModelDim XDim = GenerateDimension();
     jiba::ThreeDModelBase::t3DModelDim YDim = GenerateDimension();
     jiba::ThreeDModelBase::t3DModelDim ZDim = GenerateDimension();
@@ -59,18 +93,20 @@ BOOST_AUTO_TEST_CASE(netcdf_read_write_test)
     GravityTest.SetYCellSizes() = YDim;
     GravityTest.SetZCellSizes().resize(boost::extents[zsize]);
     GravityTest.SetZCellSizes() = ZDim;
-    BOOST_CHECK(std::equal(XDim.begin(), XDim.end(), GravityTest.GetXCellSizes().begin()));
-    BOOST_CHECK(std::equal(YDim.begin(), YDim.end(), GravityTest.GetYCellSizes().begin()));
-    BOOST_CHECK(std::equal(ZDim.begin(), ZDim.end(), GravityTest.GetZCellSizes().begin()));
 
     GravityTest.SetDensities().resize(boost::extents[xsize][ysize][zsize]);
+
     jiba::ThreeDModelBase::t3DModelData TestData(
         boost::extents[xsize][ysize][zsize]);
     for (size_t i = 0; i < xsize; ++i)
       for (size_t j = 0; j < ysize; ++j)
         for (size_t k = 0; k < zsize; ++k)
-          TestData[i][j][k] = rand() % 50;
+          TestData[i][j][k] = (double(rand() % 50)/10.0 + 1.0);
     GravityTest.SetDensities() = TestData;
+    BOOST_CHECK(std::equal(XDim.begin(), XDim.end(), GravityTest.GetXCellSizes().begin()));
+    BOOST_CHECK(std::equal(YDim.begin(), YDim.end(), GravityTest.GetYCellSizes().begin()));
+    BOOST_CHECK(std::equal(ZDim.begin(), ZDim.end(), GravityTest.GetZCellSizes().begin()));
+
     GravityTest.WriteNetCDF("test.nc");
     jiba::ThreeDGravityModel NetCDFReadTest;
     NetCDFReadTest.ReadNetCDF("test.nc");
@@ -87,6 +123,7 @@ BOOST_AUTO_TEST_CASE(netcdf_read_write_test)
         NetCDFReadTest.GetDensities().begin()));
   }
 
+//compare calculations for a single prims with known values
 BOOST_AUTO_TEST_CASE(box_gravity_calc_test)
   {
     //the gravity in the center of the cube should be 0
@@ -112,10 +149,13 @@ BOOST_AUTO_TEST_CASE(box_gravity_calc_test)
         2e6, 2e6, 1.0)) < std::numeric_limits<double>::epsilon());
   }
 
+//check that for a box the results are independent of the discretization
 BOOST_AUTO_TEST_CASE(model_gravity_boxcomp_test)
   {
     double boxtopofcube = jiba::CalcGravBox(11.0, 11.0, 0.0, 0.0, 0.0, 0.0,
         20.0, 20.0, 20.0, 1.0);
+    jiba::GravimetryMatrix tensorbox = jiba::CalcTensorBox(11.0, 11.0, 0.0,
+        0.0, 0.0, 0.0, 20.0, 20.0, 20.0, 1.0);
     jiba::ThreeDGravityModel GravityTest(true); // store sensitivities
     //create a model of 10x10x10 cells with 2m length in each dimension
     const size_t ncells = 10;
@@ -141,8 +181,20 @@ BOOST_AUTO_TEST_CASE(model_gravity_boxcomp_test)
     GravityTest.AddMeasurementPoint(11.0, 11.0, 0.0);
     jiba::ThreeDGravityModel::tScalarMeasVec
         gravmeas(GravityTest.CalcGravity());
+    jiba::ThreeDGravityModel::tTensorMeasVec
+        tensmeas(GravityTest.CalcTensorGravity());
     double gridcube = gravmeas[0];
+
     GravityTest.WriteNetCDF("cube.nc");
+    // Check FTG calculation
+    for (size_t i = 0; i < 2; ++i)
+      for (size_t j = 0; j < 2; ++j)
+        {
+        BOOST_CHECK_CLOSE(tensmeas[0](i, j), tensorbox(i, j),
+            std::numeric_limits<float>::epsilon());
+        }
+    BOOST_CHECK_CLOSE(tensmeas[0](0, 0) + tensmeas[0](1, 1),
+                        -tensmeas[0](2, 2), std::numeric_limits< float>::epsilon());
     BOOST_CHECK_CLOSE(boxtopofcube, gridcube,
         std::numeric_limits<float>::epsilon());
     //Check scalar sensitivity calculation
@@ -154,6 +206,7 @@ BOOST_AUTO_TEST_CASE(model_gravity_boxcomp_test)
         std::numeric_limits<float>::epsilon());
   }
 
+//check that the 1D background calculation gives correct results
 BOOST_AUTO_TEST_CASE(background_test)
   {
     jiba::ThreeDGravityModel GravityTest;
@@ -163,8 +216,8 @@ BOOST_AUTO_TEST_CASE(background_test)
     for (size_t i = 0; i < nmeas; ++i)
       GravityTest.AddMeasurementPoint(rand() % 50000 + 2e4, rand() % 50000
           + 2e4, 0.0);
-    bg_dens += 1.0,1.0,5.0,5.0;
-    bg_thick += 200.0,300.0,3500.0,1000.0;
+    bg_dens += 1.0, 1.0, 5.0, 5.0;
+    bg_thick += 200.0, 300.0, 3500.0, 1000.0;
     GravityTest.SetBackgroundDensities(bg_dens);
     GravityTest.SetBackgroundThicknesses(bg_thick);
     jiba::ThreeDGravityModel::tScalarMeasVec
@@ -176,6 +229,7 @@ BOOST_AUTO_TEST_CASE(background_test)
       }
   }
 
+//compare the 3D solution with the analytic solution for a 1D layered structure
 BOOST_AUTO_TEST_CASE(model_gravity_1danaly_test)
   {
     jiba::ThreeDGravityModel GravityTest(true);
@@ -218,7 +272,7 @@ BOOST_AUTO_TEST_CASE(model_gravity_1danaly_test)
     std::vector<double> bg_dens, bg_thick;
     bg_dens += 1.0, 1.0, 5.0, 5.0;
     bg_thick += 200.0, 300.0, 3500.0, 2000.0;
-    
+
     DensityVector(nhorcells*nhorcells*nzcells) = 1.0;
     DensityVector(nhorcells*nhorcells*nzcells+1) = 1.0;
     DensityVector(nhorcells*nhorcells*nzcells+2) = 5.0;
@@ -243,60 +297,22 @@ BOOST_AUTO_TEST_CASE(model_gravity_1danaly_test)
         BOOST_CHECK_CLOSE(analytic, SensValues[i], 0.01);
         BOOST_CHECK_CLOSE(scalarmeas[0], scalarmeas[i], 0.01);
         // The  tensorial elements should all be zero
-        BOOST_CHECK(fabs(tensormeas[i](0, 0))
-            < std::numeric_limits<double>::epsilon());
-        BOOST_CHECK(fabs(tensormeas[i](1, 1))
-            < std::numeric_limits<double>::epsilon());
-        BOOST_CHECK(fabs(tensormeas[i](2, 2))
-            < std::numeric_limits<double>::epsilon());
-        BOOST_CHECK(fabs(tensormeas[i](0, 1))
-            < std::numeric_limits<double>::epsilon());
-        BOOST_CHECK(fabs(tensormeas[i](0, 2))
-            < std::numeric_limits<double>::epsilon());
-        BOOST_CHECK(fabs(tensormeas[i](1, 0))
-            < std::numeric_limits<double>::epsilon());
-        BOOST_CHECK(fabs(tensormeas[i](1, 2))
-            < std::numeric_limits<double>::epsilon());
-        BOOST_CHECK(fabs(tensormeas[i](2, 1))
-            < std::numeric_limits<double>::epsilon());
-        BOOST_CHECK(fabs(tensormeas[i](2, 0))
-            < std::numeric_limits<double>::epsilon());
+        for (size_t i = 0; i < 2; ++i)
+          for (size_t j = 0; j < 2; ++j)
+            {
+              BOOST_CHECK(fabs(tensormeas[i](i, j)) < std::numeric_limits<
+                  double>::epsilon());
+            }
       }
   }
 
-BOOST_AUTO_TEST_CASE(caching_test)
+//check whether calculation by the sensitivity matrix yields the same results
+BOOST_AUTO_TEST_CASE(scalar_caching_test)
   {
-    srand(time(NULL));
-    jiba::ThreeDGravityModel GravityTest(true, true);
-    jiba::ThreeDModelBase::t3DModelDim XDim = GenerateDimension();
-    jiba::ThreeDModelBase::t3DModelDim YDim = GenerateDimension();
-    jiba::ThreeDModelBase::t3DModelDim ZDim = GenerateDimension();
-    const size_t xsize = XDim.size();
-    const size_t ysize = YDim.size();
-    const size_t zsize = ZDim.size();
-    GravityTest.SetXCellSizes().resize(boost::extents[xsize]);
-    GravityTest.SetXCellSizes() = XDim;
-    GravityTest.SetYCellSizes().resize(boost::extents[ysize]);
-    GravityTest.SetYCellSizes() = YDim;
-    GravityTest.SetZCellSizes().resize(boost::extents[zsize]);
-    GravityTest.SetZCellSizes() = ZDim;
-    std::vector<double> bg_dens, bg_thick;
-    bg_dens += 1.0, 1.0, 5.0, 5.0;
-    bg_thick += 200.0, 300.0, 3500.0, 2000.0;
-    GravityTest.SetBackgroundDensities(bg_dens);
-    GravityTest.SetBackgroundThicknesses(bg_thick);
-    
-    GravityTest.SetDensities().resize(boost::extents[xsize][ysize][zsize]);
-    jiba::ThreeDModelBase::t3DModelData TestData(
-        boost::extents[xsize][ysize][zsize]);
-    for (size_t i = 0; i < xsize; ++i)
-      for (size_t j = 0; j < ysize; ++j)
-        for (size_t k = 0; k < zsize; ++k)
-          TestData[i][j][k] = rand() % 50 + 1;
-    GravityTest.SetDensities() = TestData;
+    jiba::ThreeDGravityModel GravityTest(true, false);
     const size_t nmeas = 10;
-    for (size_t i = 0; i < nmeas; ++i)
-      GravityTest.AddMeasurementPoint(rand() % 100 + 100, rand() % 100 + 100, (rand() % 100 + 100));
+    MakeRandomModel(GravityTest, nmeas);
+
     //Calculate twice, once with normal calculation, once cached
     jiba::ThreeDGravityModel::tScalarMeasVec
         scalarmeas1(GravityTest.CalcGravity());
@@ -304,7 +320,33 @@ BOOST_AUTO_TEST_CASE(caching_test)
         scalarmeas2(GravityTest.CalcGravity());
     for (size_t i = 0; i < nmeas; ++i)
       {
-        BOOST_CHECK_CLOSE(scalarmeas1[i],scalarmeas2[i],std::numeric_limits<float>::epsilon());
+        BOOST_CHECK_CLOSE(scalarmeas1[i], scalarmeas2[i], std::numeric_limits<
+            float>::epsilon());
       }
   }
+
+//check some general properties of the FTG tensor that hold in any environment
+BOOST_AUTO_TEST_CASE(random_tensor_test)
+  {
+    jiba::ThreeDGravityModel GravityTest;
+    const size_t nmeas = 10;
+    MakeRandomModel(GravityTest, nmeas);
+
+    jiba::ThreeDGravityModel::tTensorMeasVec
+        tensormeas(GravityTest.CalcTensorGravity());
+    for (size_t i = 0; i < nmeas; ++i)
+      {
+        // check that tensor is traceless
+        //BOOST_CHECK_CLOSE(tensormeas[i](0, 0) + tensormeas[i](1, 1),
+         //   -tensormeas[i](2, 2), std::numeric_limits< float>::epsilon());
+        //check that tensor is symmetric
+        BOOST_CHECK_CLOSE(tensormeas[i](0, 1), tensormeas[i](1, 0),
+            std::numeric_limits< float>::epsilon());
+        BOOST_CHECK_CLOSE(tensormeas[i](0, 2), tensormeas[i](2, 0),
+            std::numeric_limits< float>::epsilon());
+        BOOST_CHECK_CLOSE(tensormeas[i](1, 2), tensormeas[i](2, 1),
+            std::numeric_limits< float>::epsilon());
+      }
+  }
+
 BOOST_AUTO_TEST_SUITE_END()
