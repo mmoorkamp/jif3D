@@ -98,8 +98,8 @@ namespace jiba
   private:
       //! Calculate the response of the 1D background
       double CalcBackground(const double xmeas, const double ymeas,
-          const double zmeas, const double xwidth, const double ywidth, const double zwidth,
-          const size_t meas_index);
+          const double zmeas, const double xwidth, const double ywidth,
+          const double zwidth, const size_t meas_index);
       //! For the given model, calculate the gravity at measurement points x, y and z due to the discretized part of the mesh
       double CalcScalarMeas(const double x_meas, const double y_meas,
           const double z_meas, const size_t meas_index);
@@ -112,10 +112,10 @@ namespace jiba
           const double ywidth, const double zwidth, const size_t meas_index);
       //! Create a dimension for the measurement positions in a netcdf file
       NcDim *WriteDimensionToNetCDF(NcFile &NetCDFFile,
-              const std::string &SizeName, const tMeasPosVec &Position) const;
+          const std::string &SizeName, const tMeasPosVec &Position) const;
       //! Read one measurement position coordinate from a netcdf file
       void ReadDimensionFromNetCDF(NcFile &NetCDFFile,
-              const std::string &DimName, tMeasPosVec &Position);
+          const std::string &DimName, tMeasPosVec &Position);
       //! the x-coordinates of the measurement points
       tMeasPosVec MeasPosX;
       //! the y-coordinates of the measurement points
@@ -144,6 +144,7 @@ namespace jiba
           HaveCalculatedScalarSensitivities = false;
           HaveCalculatedTensorSensitivities = false;
         }
+      void PlotSingleMeasAscii(const std::string &filename, tScalarMeasVec &Data) const;
   public:
       //! For the given model, calculate the scalar gravity at all measurement points 
       tScalarMeasVec CalcGravity();
@@ -185,12 +186,18 @@ namespace jiba
         }
       //! Write the density model and all associated information in a netcdf file
       void WriteNetCDF(const std::string filename) const;
+      void WriteVTK(const std::string filename)
+        {
+         ThreeDModelBase::WriteVTK(filename,"Density");
+        }
       //! Read the density model and all associated information from a netcdf file
       void ReadNetCDF(const std::string filename);
       //! Save all Synthetic data in a netcdf file
       void SaveScalarMeasurements(const std::string filename);
-      //! Write all Synthetic data in a netcdf file without z information for spatial plotting in gmt
+      //! Write all scalar synthetic data in an ascii file for spatial plotting in gmt
       void PlotScalarMeasurements(const std::string filename);
+      //! Write all tensor synthetic data in an ascii file for spatial plotting in gmt
+      void PlotTensorMeasurements(const std::string filename_root);
       //! Read the Measurement positions from a netcdf file
       void ReadMeasPosNetCDF(const std::string filename);
       //! Read the Measurement positions from an ascii file

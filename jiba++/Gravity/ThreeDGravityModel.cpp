@@ -14,6 +14,7 @@
 #include <netcdfcpp.h>
 #include <fstream>
 #include <iomanip>
+#include <cmath>
 
 namespace jiba
   {
@@ -23,20 +24,13 @@ namespace jiba
     //! Calculate one term for the gravitational potential of a box, we use the nomenclature of eq. 4-6 in Li and Chouteau
     double CalcGravTerm(const double x, const double y, const double z)
       {
-        //assert(fabs(x*y)> std::numeric_limits<double>::epsilon());
-        const double r = sqrt(x*x+y*y+z*z);
+        //if the distance r between the measurement point and one of the border points is very small
+        //the log(...) expressions become undefined, so we shift the measurement point by a tiny amount
+        const double r = std::max(sqrt(x*x+y*y+z*z),
+            std::numeric_limits<double>::epsilon());
         double rvalue = x * log(y +r) + y * log(x+r);
-        if (fabs(x*y)> std::numeric_limits<double>::epsilon())
-          {
-            rvalue += z*atan2(z*r, x*y);
-          }
-        else
-          {
-            if (sign(x*y) == sign(z*r))
-              rvalue += z* M_PI/2.0;
-            else
-              rvalue -= z* M_PI/2.0;
-          }
+        // atan2 takes care of small denominators
+        rvalue += z*atan2(z*r, x*y);
 
         return rvalue;
       }
@@ -179,13 +173,21 @@ namespace jiba
 
     double CalcFTGDiagonalTerm(const double a, const double b, const double c)
       {
-        return -atan2(a * b, c *sqrt(a*a+b*b+c*c));
+        return atan2(a * b, c *sqrt(a*a+b*b+c*c));
+//        const double r = sqrt(a*a+b*b+c*c);
+//        
+//        double returnvalue = atan2(a * b, c *r);
+//        returnvalue += a*b*c*r/(c*c*r*r + a*a*b*b);
+//        returnvalue += pow(c,3) * b * a/(c*c*pow(r,3)+b*b*a*a*r);
+//        returnvalue += a*c/(b*r+r*r) + b*c/(a*r+r*r);
+//        return returnvalue;
       }
 
     double CalcFTGOffDiagonalTerm(const double value, const double x,
         const double y, const double z)
       {
-        return log(value + sqrt(x*x+y*y+z*z));
+        return log(value + std::max(sqrt(x*x+y*y+z*z), std::numeric_limits<
+            double>::epsilon()));
       }
 
     double ThreeDGravityModel::CalcScalarMeas(const double x_meas,
@@ -570,23 +572,31 @@ void ThreeDGravityModel::SaveScalarMeasurements(const std::string filename)
     DataVar->put(&Data[0], StatNumDim->size());
   }
 
+void ThreeDGravityModel::PlotSingleMeasAscii(const std::string &filename, tScalarMeasVec &Data) const
+{
+  std::ofstream outfile(filename.c_str());
+  
+  const size_t nmeas = Data.size();
+  assert(nmeas == MeasPosX.size());
+  assert(nmeas == MeasPosY.size());
+  assert(nmeas == MeasPosZ.size());
+  for (size_t i =0; i < nmeas; ++i)
+    {
+       outfile << std::setw(15) << std::setprecision(5) << MeasPosX.at(i) << " ";
+       outfile << std::setw(15) << std::setprecision(5) << MeasPosY.at(i) << " ";
+       outfile << std::setw(15) << std::setprecision(5) << MeasPosZ.at(i) << " ";
+       outfile << std::setw(15) << std::setprecision(5) << Data.at(i);
+       outfile << std::endl;
+    }
+}
+
 void ThreeDGravityModel::PlotScalarMeasurements(const std::string filename)
   {
-    tScalarMeasVec Data = CalcGravity();
+    tScalarMeasVec Data(CalcGravity());
     
-    std::ofstream outfile(filename.c_str());
-    const size_t nmeas = Data.size();
-    assert(nmeas == MeasPosX.size());
-    assert(nmeas == MeasPosY.size());
-    assert(nmeas == MeasPosZ.size());
-    for (size_t i =0; i < nmeas; ++i)
-      {
-        outfile << std::setw(15) << std::setprecision(5) << MeasPosX.at(i) << " ";
-        outfile << std::setw(15) << std::setprecision(5) << MeasPosY.at(i) << " ";
-        outfile << std::setw(15) << std::setprecision(5) << MeasPosZ.at(i) << " ";
-        outfile << std::setw(15) << std::setprecision(5) << Data.at(i);
-        outfile << std::endl;
-      }
+    PlotSingleMeasAscii(filename,Data);
+    
+  
 //    const size_t nmeas = MeasPosX.size();
 //        assert(Data.size() == MeasPosX.size());
 //        assert(Data.size() == MeasPosY.size());
@@ -608,6 +618,25 @@ void ThreeDGravityModel::PlotScalarMeasurements(const std::string filename)
 //              WrittenData.at(i + nmeas*i ) = Data.at(i);
 //              }
 //            DataVar->put(&WrittenData[0], XSizeDim->size(), YSizeDim->size());
+  }
+
+
+void ThreeDGravityModel::PlotTensorMeasurements(const std::string filename_root)
+  {
+    tTensorMeasVec Data(CalcTensorGravity());
+    
+    tScalarMeasVec Uxx,Uyy,Uzz;
+    const size_t nmeas = Data.size();
+    for (size_t i = 0; i < nmeas; ++i)
+      {
+        Uxx.push_back(Data.at(i)(0,0));
+        Uyy.push_back(Data.at(i)(1,1));
+        Uzz.push_back(Data.at(i)(2,2));
+      }
+    PlotSingleMeasAscii(filename_root+".uxx.plot",Uxx);
+    PlotSingleMeasAscii(filename_root+".uyy.plot",Uyy);
+    PlotSingleMeasAscii(filename_root+".uzz.plot",Uzz);
+    
   }
 
 void ThreeDGravityModel::ReadMeasPosNetCDF(const std::string filename)
