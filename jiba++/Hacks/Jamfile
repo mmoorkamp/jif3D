@@ -4,5 +4,5 @@ project
     : usage-requirements <include>../../gplib/include
     ;
     
-exe levjoint : levjoint.cpp ..//gplib ..//gsl ..//netcdf_c++ ..//netcdf ..//antlr ..//levmar ..//boost_filesystem ..//cblas ..//atlas ..//lapack  
+exe levjoint : levjoint.cpp ..//gplib ..//gsl ..//netcdf_c++ ..//netcdf ..//antlr ..//levmar ..//boost_filesystem ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran   
 	: <include>/home/mmoorkamp/workspace/gplib/include ;
