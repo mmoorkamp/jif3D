@@ -11,6 +11,7 @@
 #include <boost/random/lagged_fibonacci.hpp>
 #include <boost/random/normal_distribution.hpp>
 #include <boost/random/variate_generator.hpp>
+#include <ctime>
 
 using namespace std;
 using namespace boost::assign;
