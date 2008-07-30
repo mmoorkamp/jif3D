@@ -14,7 +14,7 @@
 #include "../Global/VecMat.h"
 
 /*! \file This file contains the class ThreeDGravityModel and associated helper functions and constants
- * 
+ *
  */
 namespace jiba
   {
@@ -32,12 +32,12 @@ namespace jiba
      * */
     double CalcGravTerm(const double x, const double y, const double z);
     //! Calculate the gravitational acceleration due to a rectangular prism
-    /*! Given the coordinates of the measurements (meas_x, meas_y and meas_z), the 
+    /*! Given the coordinates of the measurements (meas_x, meas_y and meas_z), the
      * coordinates of the upper front left corner (ul_corner_x etc.), the size
      * in the three directions (x_size, y_size and z_size) and the density, we calculate
      * the acceleration caused by a prism with these parameters. All dimensions are in meters, density is
-     * in \f$ kg/m^3 \f$ and the acceleration in \f$m/s^2\f$ 
-     * 
+     * in \f$ kg/m^3 \f$ and the acceleration in \f$m/s^2\f$
+     *
      * This equation works as long as the measurement point is not on one of the corners or edges of the box.
      */
     double CalcGravBox(const double meas_x, const double meas_y,
@@ -68,13 +68,13 @@ namespace jiba
     //! the gravitational acceleration of an semi-infinite slab
     double CalcGravSemiInfSheet(const double hor_dist, const double ver_dist,
         const double thick, const double density);
-    //! Calculate one of the terms of diagonal elements of the gravimetric matrxi 
-    /*! The terms \f$ U_{xx}, U_{yy} \f$ and \f$ U_{zz} \f$  of the gravimetric matrix 
+    //! Calculate one of the terms of diagonal elements of the gravimetric matrxi
+    /*! The terms \f$ U_{xx}, U_{yy} \f$ and \f$ U_{zz} \f$  of the gravimetric matrix
      * all are sums of terms of the form \f$ atan \frac{a *b}{c *r } \f$
      */
     double CalcFTGDiagonalTerm(const double a, const double b, const double c);
-    //! Calculate one of the terms of off-diagonal elements of the gravimetric matrxi 
-    /*! The terms \f$ U_{xy}, U_{xz} \f$ and \f$ U_{yz} \f$  of the gravimetric matrix 
+    //! Calculate one of the terms of off-diagonal elements of the gravimetric matrxi
+    /*! The terms \f$ U_{xy}, U_{xz} \f$ and \f$ U_{yz} \f$  of the gravimetric matrix
      * all are sums of terms of the form \f$ \log (x +r) \f$
      */
     double CalcFTGOffDiagonalTerm(const double value, const double x,
@@ -144,12 +144,13 @@ namespace jiba
           HaveCalculatedScalarSensitivities = false;
           HaveCalculatedTensorSensitivities = false;
         }
-      void PlotSingleMeasAscii(const std::string &filename, tScalarMeasVec &Data) const;
+      //! Write out the values for a the measurement to an ascii file
+      void PlotMeasAscii(const std::string &filename, tScalarMeasVec &Data) const;
   public:
-      //! For the given model, calculate the scalar gravity at all measurement points 
+      //! For the given model, calculate the scalar gravity at all measurement points
       tScalarMeasVec CalcGravity();
       tTensorMeasVec CalcTensorGravity();
-      //! return read only access to the stored density values 
+      //! return read only access to the stored density values
       const t3DModelData &GetDensities() const
         {
           return ThreeDModelBase::GetData();
@@ -180,12 +181,14 @@ namespace jiba
           HaveCalculatedScalarSensitivities = false; // we have to recalculate
           HaveCalculatedTensorSensitivities = false;
         }
+      //! Get the sensitivity matrix for scalar gravity measurements
       const rmat &GetScalarSensitivities() const
         {
           return ScalarSensitivities;
         }
       //! Write the density model and all associated information in a netcdf file
       void WriteNetCDF(const std::string filename) const;
+      //! Write the density model in VTK format, at the moment the best format for plotting
       void WriteVTK(const std::string filename)
         {
          ThreeDModelBase::WriteVTK(filename,"Density");
@@ -202,6 +205,14 @@ namespace jiba
       void ReadMeasPosNetCDF(const std::string filename);
       //! Read the Measurement positions from an ascii file
       void ReadMeasPosAscii(const std::string filename);
+      //! When we create the object we have to specify whether we want to store scalar and/or tensor sensitivities
+      /*! The constructor takes two parameters
+       * @param storescalar Store the sensitivities for scalar gravity calculations
+       * @param storetensor Store the tensor for scalar gravity calculations
+       * Storing sensitivities greatly accelerates all but the first calculation as long as the model
+       * geometry is left unchanged. The code will detect changes in geometry and recalculate the sensitivities if
+       * necessary. However storing the sensitivities takes up a lot of memory.
+       */
       ThreeDGravityModel(const bool storescalar = false,
           const bool storetensor = false);
       virtual ~ThreeDGravityModel();
