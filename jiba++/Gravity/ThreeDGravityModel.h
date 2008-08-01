@@ -89,13 +89,13 @@ namespace jiba
     typedef rmat GravimetryMatrix;
 
     //! The class used to store the gravity model and calculate the gravity values at the measurement points
-    class ThreeDGravityModel : public ThreeDModelBase
+    class ThreeDGravityModel: public ThreeDModelBase
       {
-  public:
+    public:
       typedef std::vector<double> tScalarMeasVec;
       typedef std::vector<GravimetryMatrix> tTensorMeasVec;
       typedef std::vector<double> tMeasPosVec;
-  private:
+    private:
       //! Calculate the response of the 1D background
       double CalcBackground(const double xmeas, const double ymeas,
           const double zmeas, const double xwidth, const double ywidth,
@@ -145,8 +145,9 @@ namespace jiba
           HaveCalculatedTensorSensitivities = false;
         }
       //! Write out the values for a the measurement to an ascii file
-      void PlotMeasAscii(const std::string &filename, tScalarMeasVec &Data) const;
-  public:
+      void
+          PlotMeasAscii(const std::string &filename, tScalarMeasVec &Data) const;
+    public:
       //! For the given model, calculate the scalar gravity at all measurement points
       tScalarMeasVec CalcGravity();
       tTensorMeasVec CalcTensorGravity();
@@ -181,6 +182,16 @@ namespace jiba
           HaveCalculatedScalarSensitivities = false; // we have to recalculate
           HaveCalculatedTensorSensitivities = false;
         }
+      //! remove all information about measurement points
+      void ClearMeasurementPoints()
+        {
+          MeasPosX.clear();
+          MeasPosY.clear();
+          MeasPosZ.clear();
+          //the sensitivities will no longer be valid
+          HaveCalculatedScalarSensitivities = false;
+          HaveCalculatedTensorSensitivities = false;
+        }
       //! Get the sensitivity matrix for scalar gravity measurements
       const rmat &GetScalarSensitivities() const
         {
@@ -191,7 +202,7 @@ namespace jiba
       //! Write the density model in VTK format, at the moment the best format for plotting
       void WriteVTK(const std::string filename)
         {
-         ThreeDModelBase::WriteVTK(filename,"Density");
+          ThreeDModelBase::WriteVTK(filename, "Density");
         }
       //! Read the density model and all associated information from a netcdf file
       void ReadNetCDF(const std::string filename);

@@ -28,12 +28,15 @@ namespace jiba
       //! A shorthand for the dimensions, i.e. cell-sizes for the 3D models
       typedef boost::multi_array<double, 1> t3DModelDim;
   private:
-      //! If a derived class needs to perform some action when one the cell size changes, this can be done here 
+      //! If a derived class needs to perform some action when one the cell size changes, this can be done here
       virtual void SetCellSizesAction(t3DModelDim &sizes)
         {
         }
+      //! Have the cell sizes for the x-coordinate changed
       bool XCellSizesChanged;
+      //! Have the cell sizes for the y-coordinate changed
       bool YCellSizesChanged;
+      //! Have the cell sizes for the z-coordinate changed
       bool ZCellSizesChanged;
       //! The object containing the actual value, e.g. conductivity, velocity
       t3DModelData Data;
@@ -59,6 +62,13 @@ namespace jiba
       //! Write the length of the model cell along a single dimension to the file
       NcDim *WriteSizesToNetCDF(NcFile &NetCDFFile,
           const std::string &SizeName, const t3DModelDim &CellSize) const;
+      //! Calculate the coordinates of the model cells from the sizes of each cell
+      /*! This functions assumes that the coordinate of the upper left front corner of the model is
+       * is (0,0,0).
+       * @param Coordinates This vector will contain the coordinates of the left upper front corner of each cell
+       * @param Sizes The size of each cell in m
+       * @param ChangeFlag The flag that stores whether this coordinate has been changed
+       */
       void CalcCoordinates(t3DModelDim &Coordinates, const t3DModelDim Sizes,
           bool &ChangeFlag)
         {
@@ -74,9 +84,9 @@ namespace jiba
         }
   protected:
       //The access to the data is protected, this requires the derived class
-      // to provide an access function and allows to add initial checks and 
+      // to provide an access function and allows to add initial checks and
       // meaningfull names
-      //! return read only access to the stored data 
+      //! return read only access to the stored data
       const t3DModelData &GetData() const
         {
           return Data;

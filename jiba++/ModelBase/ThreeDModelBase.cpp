@@ -26,6 +26,11 @@ namespace jiba
         const std::string &SizeName, t3DModelDim &CellSize,
         t3DModelDim CellCoordinates)
       {
+        //we store the information about the grid in a different way to
+        //which we use it, we assume the first cell to have the upper left front corner at (0,0,0)
+        //and store the right back lower coordinate for each cell
+        //internally however we work with the upper left front corner and use the size
+        //of the last cell to complete the geometry of the model
         //Make sure we are reading into a one-dimensional entry
         assert(CellSize.num_dimensions() == 1);
         //create a netcdf dimension with the chosen name
@@ -116,20 +121,25 @@ namespace jiba
 
     void ThreeDModelBase::WriteVTK(std::string filename, const std::string &DataName)
       {
+        //do some consistency checkes
         assert(Data.num_dimensions() == 3);
         assert(Data.shape()[0] == XCellSizes.size());
         assert(Data.shape()[1] == YCellSizes.size());
         assert(Data.shape()[2] == ZCellSizes.size());
 
+        //get the size of each model direction
         const size_t nxvalues = XCellSizes.size();
         const size_t nyvalues = YCellSizes.size();
         const size_t nzvalues = ZCellSizes.size();
 
         std::ofstream outfile(filename.c_str());
+        //first we have to write some general information about the file format
         outfile << "# vtk DataFile Version 2.0" << std::endl;
         outfile << "3D Model data" << std::endl;
         outfile << "ASCII" << std::endl;
         outfile << "DATASET RECTILINEAR_GRID" << std::endl;
+        //we write the left and right boundaries of each cell, but only store the left
+        //so we have to write one extra value
         outfile << "DIMENSIONS " << nxvalues+1 << " " <<nyvalues+1 << " "
             << nzvalues +1 << std::endl;
 
@@ -148,7 +158,7 @@ namespace jiba
         std::partial_sum(GetZCellSizes().begin(), GetZCellSizes().end(), std::ostream_iterator<double>(outfile, " "));
         outfile << std::endl;
 
-        
+
         outfile << "CELL_DATA " << nxvalues * nyvalues * nzvalues
             << std::endl;
         outfile << "SCALARS " << DataName << " double" << std::endl;

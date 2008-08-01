@@ -1,9 +1,10 @@
 #ifndef MODELING_SEISMIC_H
 #define MODELING_SEISMIC_H
-#include <../Global/convert.h>
+#include "../Global/convert.h"
 #include "meschachd_no_complex/sparse.h"
 #include "inv3d.h"
-/*! \file 
+#include <string>
+/*! \file
  * The file containing all the function declarations */
 /*--------------------------------------------------------------*/
 /* Define function:*/
@@ -19,22 +20,22 @@ char *memory (char *prev_addr, size_t n, size_t size, std::string progname)
         std::cerr << "\n\n!!!WARNING!!!: In " << progname << ", no memory was allocated, n = " << n << std::endl << std::endl;
         return((char *) NULL); /* Take care of n = 0 */
       }
-    
+
     char *tmp;
     if (prev_addr) // if we have to reallocate
       {
         if ((tmp = (char *)realloc ( prev_addr, n * size)) == NULL)
           {
-            std::string ErrorString = "Fatal Error: " + progname + " could not reallocate more memory, n = " + stringify(n); 
+            std::string ErrorString = "Fatal Error: " + progname + " could not reallocate more memory, n = " + stringify(n);
             throw std::runtime_error(ErrorString);
-            
+
           }
       }
     else //if we allocate new memory
       {
         if ((tmp = (char *)calloc ( n, size)) == NULL)
           {
-            std::string ErrorString = "Fatal Error: " + progname + " could not allocate more memory, n = " + stringify(n); 
+            std::string ErrorString = "Fatal Error: " + progname + " could not allocate more memory, n = " + stringify(n);
             throw std::runtime_error(ErrorString);
           }
       }
