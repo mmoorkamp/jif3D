@@ -21,7 +21,7 @@ namespace jiba
     static const std::string GravDataName = "density";
     static const std::string GravDataUnit = "g/cm^3";
 
-    //! Calculate one term for the gravitational potential of a box, we use the nomenclature of eq. 4-6 in Li and Chouteau
+
     /*! Calculate one term for the gravitational potential of a box, we use the nomenclature of eq. 4-6 in Li and Chouteau.
      * The parameters x,y and z are the distances to the corners of the box, we will call this functions with different
      * permutations of real world x,y and z coordinates, so only in some cases x corresponds to the x-axis.
@@ -39,7 +39,7 @@ namespace jiba
         return rvalue;
       }
 
-    //! Calculate the gravitational potential of a rectangular prism at a point meas_{x,y,z}
+
     /*! Calculate the gravitational potential of a rectangular prism at a point meas_{x,y,z}
      *  The calculation is based on equation 4 in Li and Chouteau, Surveys in Geophysics, 19, 339-368, 1998
      * @param meas_x x-coordinate of the measurement in m
@@ -83,7 +83,7 @@ namespace jiba
         // we multiply the geometric term by the gravitational constant and the density
         return -returnvalue * Grav_const * density;
       }
-    //! Calculate the xx-element of the second order derivative tensor
+
     /*! Calculate the xx-element of the second order derivative tensor, we use the same
      * function with permutated parameters to calculate the other two diagonal elements.
      * The description of the parameters is for the Uxx calculation.
@@ -128,7 +128,7 @@ namespace jiba
 
         return returnvalue * Grav_const * density;
       }
-    //! Calculate the xy-element of the second order derivative tensor
+
     /*! Calculate the xy-element of the second order derivative tensor, we use the same
      * function with permutated parameters to calculate the other off-diagonal elements.
      * The description of the parameters is for the Uxy calculation.
@@ -180,7 +180,7 @@ namespace jiba
 
         return -returnvalue * Grav_const * density;
       }
-    //! Calculate the second order derivative tensor for a box shaped element
+
     /*! Calculate FTG tensor for a rectangular prism
      * @param meas_x x-coordinate of the measurement in m
      * @param meas_y y-coordinate of the measurement in m
@@ -224,7 +224,7 @@ namespace jiba
 
         return returnvalue;
       }
-    //! Calculate the effect of a semi-infinite sheet
+
     /*! Calculate the effect of a semi-infinite sheet with constant density
      * @param hor_dist Horizontal distance of the sheet from the measurement site in m
      * @param ver_dist Vertical distance of the sheet from the measurement site in m
@@ -238,7 +238,7 @@ namespace jiba
         return (2.0 * Grav_const * density * thick) * ((M_PI / 2.0) - atan2(
             hor_dist, ver_dist));
       }
-    //! Calculate a single term of the equation for a  diagonal  FTG element
+    // Calculate a single term of the equation for a  diagonal  FTG element
     double CalcFTGDiagonalTerm(const double a, const double b, const double c)
       {
         return atan2(a * b, c * sqrt(a * a + b * b + c * c));
@@ -259,7 +259,7 @@ namespace jiba
             std::numeric_limits<double>::epsilon()));
       }
 
-    //! Calculate the gravitational effect of the 3D model at a single measurement site
+
     /*! Calculate the gravitational effect of the 3D model at a single measurement site. The way we calculate
      * the sensitivity matrix at the moment, the model cannot contain densities of 0 if we
      * store the sensitivity matrix
@@ -286,6 +286,7 @@ namespace jiba
               {
                 for (size_t k = 0; k < zsize; ++k)
                   {
+                    //we store the current value for possible sensitivity calculations
                     currvalue = CalcGravBox(x_meas, y_meas, z_meas,
                         GetXCoordinates()[i], GetYCoordinates()[j],
                         GetZCoordinates()[k], GetXCellSizes()[i],
@@ -335,6 +336,7 @@ namespace jiba
                         GetYCellSizes()[j], GetZCellSizes()[k],
                         GetDensities()[i][j][k]);
                     returnvalue += currvalue;
+                    //if we want to store sensitivities for tensor measurements
                     if (StoreTensorSensitivities)
                       {
                         boost::numeric::ublas::matrix_column<rmat> column(
@@ -351,11 +353,22 @@ namespace jiba
           }
         if (StoreScalarSensitivities)
           {
+            //remember that we have already calculated these values
             HaveCalculatedScalarSensitivities = true;
           }
         return returnvalue;
       }
 
+    /*!  Calculate the contribution of a layered background to a scalar gravity measurement.
+     * @param xmeas The x-coordinate of the measurement point in m
+     * @param ymeas The y-coordinate of the measurement point in m
+     * @param zmeas The z-coordinate of the measurement point in m
+     * @param xwidth The total width of the discretized model area in x-direction in m
+     * @param ywidth The total width of the discretized model area in y-direction in m
+     * @param zwidth The total width of the discretized model area in z-direction in m
+     * @param meas_index The index of the measurement
+     * @return The gravitational acceleration in m/s^2 due to the background
+     */
     double ThreeDGravityModel::CalcBackground(const double xmeas,
         const double ymeas, const double zmeas, const double xwidth,
         const double ywidth, const double zwidth, const size_t meas_index)
@@ -380,7 +393,8 @@ namespace jiba
             if (currtop < zwidth && (currbottom <= zwidth))
 
               {
-                currvalue -= CalcGravBox(xmeas, ymeas, zmeas, 0.0, 0.0, currtop,
+                currvalue
+                    -= CalcGravBox(xmeas, ymeas, zmeas, 0.0, 0.0, currtop,
                         xwidth, ywidth, bg_thicknesses[j], bg_densities[j]);
               }
             //if some of the background coincides and some is below
@@ -391,6 +405,7 @@ namespace jiba
                     currtop, xwidth, ywidth, (zwidth - currtop),
                     bg_densities[j]);
               }
+            //we also store the sensitivities for the background
             if (StoreScalarSensitivities)
               {
                 ScalarSensitivities(meas_index, modelsize + j) = currvalue
@@ -402,6 +417,17 @@ namespace jiba
         return result;
       }
 
+
+    /*!  Calculate the contribution of a layered background to a tensor gravity measurement.
+     * @param xmeas The x-coordinate of the measurement point in m
+     * @param ymeas The y-coordinate of the measurement point in m
+     * @param zmeas The z-coordinate of the measurement point in m
+     * @param xwidth The total width of the discretized model area in x-direction in m
+     * @param ywidth The total width of the discretized model area in y-direction in m
+     * @param zwidth The total width of the discretized model area in z-direction in m
+     * @param meas_index The index of the measurement
+     * @return The gravitational tensor due to the background
+     */
     GravimetryMatrix ThreeDGravityModel::AdjustTensorBackground(
         const double x_meas, const double y_meas, const double z_meas,
         const double xwidth, const double ywidth, const double zwidth,
@@ -450,13 +476,14 @@ namespace jiba
           }
         return result;
       }
-
+    //! Calculate scalar synthetic data for all measurement points
     ThreeDGravityModel::tScalarMeasVec ThreeDGravityModel::CalcGravity()
       {
+        //get the amount of cells in each direction
         const size_t xsize = GetData().shape()[0];
         const size_t ysize = GetData().shape()[1];
         const size_t zsize = GetData().shape()[2];
-
+        //do some sanity checks
         assert(xsize == GetXCoordinates().shape()[0]);
         assert(ysize == GetYCoordinates().shape()[0]);
         assert(zsize == GetZCoordinates().shape()[0]);
@@ -473,6 +500,7 @@ namespace jiba
         // if we have already stored the ScalarSensitivity we can do it very fast
         if (HaveCalculatedScalarSensitivities)
           {
+            //we just construct a vector of densities
             rvec DensityVector(xsize * ysize * zsize + bg_densities.size());
             for (size_t i = 0; i < xsize; ++i)
               {
@@ -485,24 +513,22 @@ namespace jiba
                       }
                   }
               }
+            //including the background
             copy(bg_densities.begin(), bg_densities.end(),
                 DensityVector.begin() + xsize * ysize * zsize);
-
+            //and do a Matrix Vector multiplication
             rvec MeasVec(prec_prod(ScalarSensitivities, DensityVector));
             copy(MeasVec.begin(), MeasVec.end(), results.begin());
             return results;
           }
         // we only get here if we didn't store the sensitivities previously
-        //check if store sensitivities and allocate memory
+        //check if we want to store sensitivities and allocate memory
         if (StoreScalarSensitivities && !HaveCalculatedScalarSensitivities)
           {
             ScalarSensitivities.resize(MeasPosX.size(), xsize * ysize * zsize
                 + bg_densities.size());
           }
-        if (StoreTensorSensitivities && !HaveCalculatedTensorSensitivities)
-          {
-            TensorSensitivities.resize(nmeas * 9, xsize * ysize * zsize); // we have 9 tensor elements for each measurement points
-          }
+
         // calculate the size of the modelling domain for the background adjustment
         const double modelxwidth = std::accumulate(GetXCellSizes().begin(),
             GetXCellSizes().end(), 0.0);
@@ -523,6 +549,7 @@ namespace jiba
         return results;
       }
 
+    //! Calculate tensor synthetic data for all measurement points
     ThreeDGravityModel::tTensorMeasVec ThreeDGravityModel::CalcTensorGravity()
       {
         const size_t xsize = GetData().shape()[0];
@@ -567,7 +594,7 @@ namespace jiba
             copy(bg_densities.begin(), bg_densities.end(),
                 DensityVector.begin() + xsize * ysize * zsize);
 
-            rvec MeasVec(prec_prod(ScalarSensitivities, DensityVector));
+            rvec MeasVec(prec_prod(TensorSensitivities, DensityVector));
             for (size_t i = 0; i < nmeas; ++i)
               {
                 copy(MeasVec.begin() + i * 9, MeasVec.begin() + (i + 1) * 9,
@@ -575,7 +602,12 @@ namespace jiba
               }
             return results;
           }
-        // for all measurement points add the respones of the discretized part and the 1D background
+        //we only get here if we didn't use the stored sensitivities
+        if (StoreTensorSensitivities && !HaveCalculatedTensorSensitivities)
+          {
+            TensorSensitivities.resize(nmeas * 9, xsize * ysize * zsize+ bg_densities.size()); // we have 9 tensor elements for each measurement points
+          }
+        // for all measurement points add the responses of the discretized part and the 1D background
         for (size_t i = 0; i < nmeas; ++i)
           {
             results[i] = CalcTensorMeas(MeasPosX[i], MeasPosY[i], MeasPosZ[i],
@@ -709,7 +741,7 @@ namespace jiba
       {
         tScalarMeasVec Data(CalcGravity());
 
-        PlotSingleMeasAscii(filename, Data);
+        PlotMeasAscii(filename, Data);
 
         //    const size_t nmeas = MeasPosX.size();
         //        assert(Data.size() == MeasPosX.size());
@@ -747,9 +779,9 @@ namespace jiba
             Uyy.push_back(Data.at(i)(1, 1));
             Uzz.push_back(Data.at(i)(2, 2));
           }
-        PlotSingleMeasAscii(filename_root + ".uxx.plot", Uxx);
-        PlotSingleMeasAscii(filename_root + ".uyy.plot", Uyy);
-        PlotSingleMeasAscii(filename_root + ".uzz.plot", Uzz);
+        PlotMeasAscii(filename_root + ".uxx.plot", Uxx);
+        PlotMeasAscii(filename_root + ".uyy.plot", Uyy);
+        PlotMeasAscii(filename_root + ".uzz.plot", Uzz);
       }
 
     void ThreeDGravityModel::ReadMeasPosNetCDF(const std::string filename)

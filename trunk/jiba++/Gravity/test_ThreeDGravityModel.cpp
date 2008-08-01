@@ -37,7 +37,7 @@ jiba::ThreeDModelBase::t3DModelDim GenerateDimension()
 //create a random density model
 void MakeRandomModel(jiba::ThreeDGravityModel &Model, const size_t nmeas)
   {
-    srand( time(NULL));
+    srand(time(NULL));
 
     jiba::ThreeDModelBase::t3DModelDim XDim = GenerateDimension();
     jiba::ThreeDModelBase::t3DModelDim YDim = GenerateDimension();
@@ -58,10 +58,12 @@ void MakeRandomModel(jiba::ThreeDGravityModel &Model, const size_t nmeas)
       for (size_t j = 0; j < ysize; ++j)
         for (size_t k = 0; k < zsize; ++k)
           Model.SetDensities()[i][j][k] = double(rand() % 50) / 10.0 + 1.0;
-
+    //generate measurement  points
+    //the z-axis is positive down, so we choose negative z-coordinates
+    // => we are measuring above the surface
     for (size_t i = 0; i < nmeas; ++i)
       Model.AddMeasurementPoint(rand() % 100 + 100.1, rand() % 100 + 100.1,
-          rand() % 100 + 100.1);
+          -(rand() % 100 + 100.1));
   }
 
 //Test the default state of the object
@@ -79,7 +81,7 @@ BOOST_AUTO_TEST_CASE(netcdf_read_write_test)
   {
     jiba::ThreeDGravityModel GravityTest;
 
-    srand( time(NULL));
+    srand(time(NULL));
 
     jiba::ThreeDModelBase::t3DModelDim XDim = GenerateDimension();
     jiba::ThreeDModelBase::t3DModelDim YDim = GenerateDimension();
@@ -157,7 +159,7 @@ BOOST_AUTO_TEST_CASE(model_gravity_boxcomp_test)
   {
     const double measx = 9.0;
     const double measy = 8.0;
-    const double measz = 0.1;
+    const double measz = -0.1;
     double boxtopofcube = jiba::CalcGravBox(measx, measy, measz, 0.0, 0.0, 0.0,
         20.0, 20.0, 20.0, 1.0);
     jiba::GravimetryMatrix tensorbox = jiba::CalcTensorBox(measx, measy, measz,
@@ -319,6 +321,7 @@ BOOST_AUTO_TEST_CASE(model_gravity_1danaly_test)
   }
 
 //check whether calculation by the sensitivity matrix yields the same results
+//for scalar calculations
 BOOST_AUTO_TEST_CASE(scalar_caching_test)
   {
     jiba::ThreeDGravityModel GravityTest(true, false);
@@ -337,7 +340,7 @@ BOOST_AUTO_TEST_CASE(scalar_caching_test)
       }
   }
 
-//check some general properties of the FTG tensor that hold in any environment
+//check some general properties of the FTG tensor that hold for any measurement above the surface
 BOOST_AUTO_TEST_CASE(random_tensor_test)
   {
     jiba::ThreeDGravityModel GravityTest;
@@ -361,4 +364,76 @@ BOOST_AUTO_TEST_CASE(random_tensor_test)
       }
   }
 
+//compare the result from the tensor calculation with finite difference scalar calculations
+BOOST_AUTO_TEST_CASE(fd_tensor_test)
+  {
+    jiba::ThreeDGravityModel GravityTest;
+    //we want to control the position of the measurements ourselves
+    const size_t nmeas = 0;
+    const double delta = 0.0001;
+    //the value of delta in %
+    const double precision = 0.01;
+    MakeRandomModel(GravityTest, nmeas);
+    //setup points for finite differencing in vertical and horizontal directions
+    GravityTest.AddMeasurementPoint(50, 70, -5);
+    GravityTest.AddMeasurementPoint(50, 70, -5 - delta);
+    GravityTest.AddMeasurementPoint(50, 70, -5 + delta);
+    GravityTest.AddMeasurementPoint(50, 70-delta, -5);
+    GravityTest.AddMeasurementPoint(50, 70+delta, -5);
+    GravityTest.AddMeasurementPoint(50-delta, 70, -5);
+    GravityTest.AddMeasurementPoint(50+delta, 70, -5);
+    //perform the calculations
+    jiba::ThreeDGravityModel::tTensorMeasVec tensormeas(
+        GravityTest.CalcTensorGravity());
+    jiba::ThreeDGravityModel::tScalarMeasVec scalarmeas(
+        GravityTest.CalcGravity());
+    //extract the tensor components
+    double uzz = tensormeas.at(1)(2, 2);
+    double uzy = tensormeas.at(1)(2, 1);
+    double uzx = tensormeas.at(1)(2, 0);
+    //calculate the same components through finite differencing
+    double fduzz = (scalarmeas.at(2) - scalarmeas.at(1)) / (2 * delta);
+    double fduzy = (scalarmeas.at(4) - scalarmeas.at(3)) / (2 * delta);
+    double fduzx = (scalarmeas.at(6) - scalarmeas.at(5)) / (2 * delta);
+    //check that they match within the precision of delta
+    BOOST_CHECK_CLOSE(uzz, fduzz, precision);
+    BOOST_CHECK_CLOSE(uzy, fduzy, precision);
+    BOOST_CHECK_CLOSE(uzx, fduzx, precision);
+  }
+
+//check whether calculation by the sensitivity matrix yields the same results
+//for tensor calculations
+BOOST_AUTO_TEST_CASE(tensor_caching_test)
+  {
+    jiba::ThreeDGravityModel GravityTest(false, true);
+    const size_t nmeas = 10;
+    MakeRandomModel(GravityTest, nmeas);
+
+    //Calculate twice, once with normal calculation, once cached
+    jiba::ThreeDGravityModel::tTensorMeasVec tensormeas1(
+        GravityTest.CalcTensorGravity());
+    jiba::ThreeDGravityModel::tTensorMeasVec tensormeas2(
+        GravityTest.CalcTensorGravity());
+    for (size_t i = 0; i < nmeas; ++i)
+      {
+        BOOST_CHECK_CLOSE(tensormeas1[i](0,0), tensormeas2[i](0,0), std::numeric_limits<
+            float>::epsilon());
+        BOOST_CHECK_CLOSE(tensormeas1[i](1,0), tensormeas2[i](1,0), std::numeric_limits<
+                    float>::epsilon());
+        BOOST_CHECK_CLOSE(tensormeas1[i](2,0), tensormeas2[i](2,0), std::numeric_limits<
+                    float>::epsilon());
+        BOOST_CHECK_CLOSE(tensormeas1[i](0,1), tensormeas2[i](0,1), std::numeric_limits<
+                    float>::epsilon());
+        BOOST_CHECK_CLOSE(tensormeas1[i](1,1), tensormeas2[i](1,1), std::numeric_limits<
+                    float>::epsilon());
+        BOOST_CHECK_CLOSE(tensormeas1[i](2,1), tensormeas2[i](2,1), std::numeric_limits<
+                    float>::epsilon());
+        BOOST_CHECK_CLOSE(tensormeas1[i](0,2), tensormeas2[i](0,2), std::numeric_limits<
+                    float>::epsilon());
+        BOOST_CHECK_CLOSE(tensormeas1[i](1,2), tensormeas2[i](1,2), std::numeric_limits<
+                    float>::epsilon());
+        BOOST_CHECK_CLOSE(tensormeas1[i](2,2), tensormeas2[i](2,2), std::numeric_limits<
+                            float>::epsilon());
+      }
+  }
 BOOST_AUTO_TEST_SUITE_END()
