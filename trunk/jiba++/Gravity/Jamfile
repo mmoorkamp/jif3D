@@ -1,5 +1,5 @@
 import testing ; 
-lib gravity : ThreeDGravityModel.cpp : <include>boost : : <include>. ;
+lib gravity : ThreeDGravityModel.cpp GravityInterface.cpp : <include>boost : : <include>. ;
 
 
 unit-test gravity_test : test_ThreeDGravityModel.cpp gravity ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf : : <include>. ;
