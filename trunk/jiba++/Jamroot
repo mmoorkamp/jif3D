@@ -1,5 +1,5 @@
 project 
-    : requirements <include>/usr/local/include <threading>multi 
+    : requirements <include>/usr/local/include <include>/usr/local/R-2.6.2/include <threading>multi 
     ;
     
 
