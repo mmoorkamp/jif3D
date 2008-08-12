@@ -13,6 +13,7 @@
 #include <boost/test/included/unit_test.hpp>
 #include <stdlib.h>
 #include <time.h>
+#include <fstream>
 #include "ThreeDGravityModel.h"
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/assign/std/vector.hpp>
@@ -34,7 +35,9 @@ jiba::ThreeDModelBase::t3DModelDim GenerateDimension()
     return TestDim;
   }
 
-//create a random density model
+//create a random density model without any background layers
+//this is necessary to test the R interface, which does not allow
+//for background layers, yet
 void MakeRandomModel(jiba::ThreeDGravityModel &Model, const size_t nmeas)
   {
     srand(time(NULL));
@@ -372,16 +375,16 @@ BOOST_AUTO_TEST_CASE(fd_tensor_test)
     const size_t nmeas = 0;
     const double delta = 0.0001;
     //the value of delta in %
-    const double precision = 0.01;
+    const double precision = 0.02;
     MakeRandomModel(GravityTest, nmeas);
     //setup points for finite differencing in vertical and horizontal directions
     GravityTest.AddMeasurementPoint(50, 70, -5);
     GravityTest.AddMeasurementPoint(50, 70, -5 - delta);
     GravityTest.AddMeasurementPoint(50, 70, -5 + delta);
-    GravityTest.AddMeasurementPoint(50, 70-delta, -5);
-    GravityTest.AddMeasurementPoint(50, 70+delta, -5);
-    GravityTest.AddMeasurementPoint(50-delta, 70, -5);
-    GravityTest.AddMeasurementPoint(50+delta, 70, -5);
+    GravityTest.AddMeasurementPoint(50, 70 - delta, -5);
+    GravityTest.AddMeasurementPoint(50, 70 + delta, -5);
+    GravityTest.AddMeasurementPoint(50 - delta, 70, -5);
+    GravityTest.AddMeasurementPoint(50 + delta, 70, -5);
     //perform the calculations
     jiba::ThreeDGravityModel::tTensorMeasVec tensormeas(
         GravityTest.CalcTensorGravity());
@@ -416,24 +419,153 @@ BOOST_AUTO_TEST_CASE(tensor_caching_test)
         GravityTest.CalcTensorGravity());
     for (size_t i = 0; i < nmeas; ++i)
       {
-        BOOST_CHECK_CLOSE(tensormeas1[i](0,0), tensormeas2[i](0,0), std::numeric_limits<
-            float>::epsilon());
-        BOOST_CHECK_CLOSE(tensormeas1[i](1,0), tensormeas2[i](1,0), std::numeric_limits<
-                    float>::epsilon());
-        BOOST_CHECK_CLOSE(tensormeas1[i](2,0), tensormeas2[i](2,0), std::numeric_limits<
-                    float>::epsilon());
-        BOOST_CHECK_CLOSE(tensormeas1[i](0,1), tensormeas2[i](0,1), std::numeric_limits<
-                    float>::epsilon());
-        BOOST_CHECK_CLOSE(tensormeas1[i](1,1), tensormeas2[i](1,1), std::numeric_limits<
-                    float>::epsilon());
-        BOOST_CHECK_CLOSE(tensormeas1[i](2,1), tensormeas2[i](2,1), std::numeric_limits<
-                    float>::epsilon());
-        BOOST_CHECK_CLOSE(tensormeas1[i](0,2), tensormeas2[i](0,2), std::numeric_limits<
-                    float>::epsilon());
-        BOOST_CHECK_CLOSE(tensormeas1[i](1,2), tensormeas2[i](1,2), std::numeric_limits<
-                    float>::epsilon());
-        BOOST_CHECK_CLOSE(tensormeas1[i](2,2), tensormeas2[i](2,2), std::numeric_limits<
-                            float>::epsilon());
+        BOOST_CHECK_CLOSE(tensormeas1[i](0, 0), tensormeas2[i](0, 0),
+            std::numeric_limits<float>::epsilon());
+        BOOST_CHECK_CLOSE(tensormeas1[i](1, 0), tensormeas2[i](1, 0),
+            std::numeric_limits<float>::epsilon());
+        BOOST_CHECK_CLOSE(tensormeas1[i](2, 0), tensormeas2[i](2, 0),
+            std::numeric_limits<float>::epsilon());
+        BOOST_CHECK_CLOSE(tensormeas1[i](0, 1), tensormeas2[i](0, 1),
+            std::numeric_limits<float>::epsilon());
+        BOOST_CHECK_CLOSE(tensormeas1[i](1, 1), tensormeas2[i](1, 1),
+            std::numeric_limits<float>::epsilon());
+        BOOST_CHECK_CLOSE(tensormeas1[i](2, 1), tensormeas2[i](2, 1),
+            std::numeric_limits<float>::epsilon());
+        BOOST_CHECK_CLOSE(tensormeas1[i](0, 2), tensormeas2[i](0, 2),
+            std::numeric_limits<float>::epsilon());
+        BOOST_CHECK_CLOSE(tensormeas1[i](1, 2), tensormeas2[i](1, 2),
+            std::numeric_limits<float>::epsilon());
+        BOOST_CHECK_CLOSE(tensormeas1[i](2, 2), tensormeas2[i](2, 2),
+            std::numeric_limits<float>::epsilon());
       }
+  }
+
+//write a C++ vectorial quantity into a file so that R can understand the values
+template<typename VectorType>
+void WriteVectorToScript(std::ofstream &file, VectorType thevector,
+    std::string Name)
+  {
+    file << Name << "<-c(";
+    copy(thevector.begin(), thevector.end() - 1, std::ostream_iterator<double>(
+        file, ","));
+    file << thevector[thevector.size() - 1];
+    file << ")\n";
+  }
+
+//Make a random model without background layers and write the information
+//about the model into a file so that R can understand it
+void PrepareModelForR(jiba::ThreeDGravityModel &GravityTest,
+    std::ofstream &scriptfile)
+  {
+    //first we setup our local model with some test measurements
+
+    const size_t nmeas = 10;
+    MakeRandomModel(GravityTest, nmeas);
+    //we generate a script file for R that produces the same model
+
+    //the build environment has copied these libraries in the right path
+    scriptfile << "dyn.load(\"libmodelbase.so\") \n";
+    scriptfile << "dyn.load(\"libgravity.so\") \n";
+    scriptfile << "source(\"Gravity/GravForward.R\") \n";
+    WriteVectorToScript(scriptfile, GravityTest.GetXCellSizes(), "XSizes");
+    WriteVectorToScript(scriptfile, GravityTest.GetYCellSizes(), "YSizes");
+    WriteVectorToScript(scriptfile, GravityTest.GetZCellSizes(), "ZSizes");
+    WriteVectorToScript(scriptfile, GravityTest.GetMeasPosX(), "XMeasPos");
+    WriteVectorToScript(scriptfile, GravityTest.GetMeasPosY(), "YMeasPos");
+    WriteVectorToScript(scriptfile, GravityTest.GetMeasPosZ(), "ZMeasPos");
+    const size_t xsize = GravityTest.GetDensities().shape()[0];
+    const size_t ysize = GravityTest.GetDensities().shape()[1];
+    const size_t zsize = GravityTest.GetDensities().shape()[2];
+    jiba::rvec DensityVector(xsize * ysize * zsize);
+    for (size_t i = 0; i < xsize; ++i)
+      {
+        for (size_t j = 0; j < ysize; ++j)
+          {
+            for (size_t k = 0; k < zsize; ++k)
+              {
+                DensityVector(i * (ysize * zsize) + j * zsize + k)
+                    = GravityTest.GetDensities()[i][j][k];
+              }
+          }
+      }
+    WriteVectorToScript(scriptfile, DensityVector, "Densities");
+  }
+
+//test the scalar forward interface for R
+//this needs the current svn of boost test, as boost test in 1.35.0 has problems with the system call
+BOOST_AUTO_TEST_CASE(R_scalar_interface_test)
+  {
+    jiba::ThreeDGravityModel GravityTest(false, false);
+
+    std::ofstream Rscript("scalar_test.R");
+    PrepareModelForR(GravityTest,Rscript);
+    jiba::ThreeDGravityModel::tScalarMeasVec scalarmeas(
+             GravityTest.CalcGravity());
+    Rscript
+        << " result<-gravforward(XSizes,YSizes,ZSizes,Densities,XMeasPos,YMeasPos,ZMeasPos)\n";
+    Rscript << " sink(\"scalar_output\")\n";
+    Rscript << " cat(result$GravAcceleration)\n";
+    Rscript << " q()\n";
+    Rscript << std::flush;
+    //execute R with the script
+    system("R --vanilla --slave -f scalar_test.R");
+    //read in the output R has generated
+    std::ifstream routput("scalar_output");
+    std::vector<double> rvalues;
+    //this is simply an ascii file with a bunch of numbers
+    copy(std::istream_iterator<double>(routput), std::istream_iterator<double>(),
+        back_inserter(rvalues));
+    //first of all we should have values for each measurement
+    BOOST_CHECK_EQUAL(rvalues.size(), scalarmeas.size());
+    //and they should be equal, the tolerance is 0.01% as writing to the file truncates the numbers
+    for (size_t i = 0; i < scalarmeas.size(); ++i)
+      {
+        BOOST_CHECK_CLOSE(scalarmeas.at(i), rvalues.at(i), 0.01);
+      }
+
+  }
+
+//test the tensor forward interface for R
+//this needs the current svn of boost test, as boost test in 1.35.0 has problems with the system call
+BOOST_AUTO_TEST_CASE(R_tensor_interface_test)
+  {
+    jiba::ThreeDGravityModel GravityTest(false, false);
+
+    std::ofstream Rscript("tensor_test.R");
+    PrepareModelForR(GravityTest,Rscript);
+    jiba::ThreeDGravityModel::tTensorMeasVec tensormeas(
+                GravityTest.CalcTensorGravity());
+    Rscript
+        << " result<-gravtensorforward(XSizes,YSizes,ZSizes,Densities,XMeasPos,YMeasPos,ZMeasPos)\n";
+    Rscript << " sink(\"tensor_output\")\n";
+    Rscript << " cat(result$GravAcceleration)\n";
+    Rscript << " q()\n";
+    Rscript << std::flush;
+    //execute R with the script
+    system("R --vanilla --slave -f tensor_test.R");
+    //read in the output R has generated
+    std::ifstream routput("tensor_output");
+    std::vector<double> rvalues;
+    //this is simply an ascii file with a bunch of numbers
+    copy(std::istream_iterator<double>(routput), std::istream_iterator<double>(),
+        back_inserter(rvalues));
+    //first of all we should have values for each measurement
+    //tensormeas is a vector of matrices while rvalues is just a vector where 9 consecutive elements
+    //correspond to 1 FTG matrix
+    BOOST_CHECK_EQUAL(rvalues.size(), tensormeas.size() * 9);
+    //and they should be equal, the tolerance is 0.01% as writing to the file truncates the numbers
+    for (size_t i = 0; i < tensormeas.size(); ++i)
+      {
+        BOOST_CHECK_CLOSE(tensormeas.at(i)(0,0), rvalues.at(i*9), 0.01);
+        BOOST_CHECK_CLOSE(tensormeas.at(i)(0,1), rvalues.at(i*9+1), 0.01);
+        BOOST_CHECK_CLOSE(tensormeas.at(i)(0,2), rvalues.at(i*9+2), 0.01);
+        BOOST_CHECK_CLOSE(tensormeas.at(i)(1,0), rvalues.at(i*9+3), 0.01);
+        BOOST_CHECK_CLOSE(tensormeas.at(i)(1,1), rvalues.at(i*9+4), 0.01);
+        BOOST_CHECK_CLOSE(tensormeas.at(i)(1,2), rvalues.at(i*9+5), 0.01);
+        BOOST_CHECK_CLOSE(tensormeas.at(i)(2,0), rvalues.at(i*9+6), 0.01);
+        BOOST_CHECK_CLOSE(tensormeas.at(i)(2,1), rvalues.at(i*9+7), 0.01);
+        BOOST_CHECK_CLOSE(tensormeas.at(i)(2,2), rvalues.at(i*9+8), 0.01);
+      }
+
   }
 BOOST_AUTO_TEST_SUITE_END()

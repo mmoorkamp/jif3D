@@ -192,6 +192,19 @@ namespace jiba
           HaveCalculatedScalarSensitivities = false;
           HaveCalculatedTensorSensitivities = false;
         }
+      //! Return the x-coordinates of all measurement points read-only
+      /*! This function provides read-only access to the x-coordinates
+       * of the measurement points. The only way to modify the position of
+       * the measurements is to delete them with ClearMeasurementPoints and
+       * add new ones with AddMeasurementPoint. This ensures that we have all
+       * three coordinate values for all points.
+       * @return A vector with the x-coordinates of all measurement points in m
+       */
+      const tMeasPosVec &GetMeasPosX(){return MeasPosX;}
+      //! Return the y-coordinates of all measurement points read-only
+      const tMeasPosVec &GetMeasPosY(){return MeasPosY;}
+      //! Return the z-coordinates of all measurement points read-only
+      const tMeasPosVec &GetMeasPosZ(){return MeasPosZ;}
       //! Get the sensitivity matrix for scalar gravity measurements
       const rmat &GetScalarSensitivities() const
         {

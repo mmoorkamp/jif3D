@@ -2,12 +2,13 @@ project
     : requirements <include>/usr/local/include <include>/usr/local/R-2.6.2/include <threading>multi 
     ;
     
+path-constant TOP : . ;
 
 use-project /Gravity : Gravity ;
 use-project /ModelBase : ModelBase ;
 use-project /Profiling : Profiling ;
 
-
+local BOOST_TEST_LOG_LEVEL = all ;
 lib boost_filesystem : : <name>boost_filesystem-gcc41-mt ;
 lib levmar : : <name>levmar ;
 lib gsl : : <name>gsl ;
