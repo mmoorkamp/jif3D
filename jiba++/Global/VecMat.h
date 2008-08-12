@@ -10,12 +10,11 @@
 /*! \file This file provides the basic includes for all matrix and vector operations. We store the matrices in column major format to
  * enable interfacing with fortran codes for blas, lapack etc.
  */
- 
+
 #include <boost/numeric/ublas/vector.hpp>
 #include <boost/numeric/ublas/vector_expression.hpp>
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/matrix_proxy.hpp>
-#ifdef HAVEUBLASTRAITS
 #include <boost/numeric/bindings/lapack/lapack.hpp>
 #include <boost/numeric/bindings/lapack/geev.hpp>
 #include <boost/numeric/bindings/traits/ublas_matrix.hpp>
@@ -23,7 +22,6 @@
 #include <boost/numeric/bindings/traits/vector_traits.hpp>
 #include <boost/numeric/ublas/io.hpp>
 #include <boost/numeric/ublas/lu.hpp>
-#endif
 #include <complex>
 
 namespace jiba {

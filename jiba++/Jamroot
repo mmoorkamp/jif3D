@@ -7,6 +7,7 @@ path-constant TOP : . ;
 use-project /Gravity : Gravity ;
 use-project /ModelBase : ModelBase ;
 use-project /Profiling : Profiling ;
+use-project /Inversion : Inversion ;
 
 local BOOST_TEST_LOG_LEVEL = all ;
 lib boost_filesystem : : <name>boost_filesystem-gcc41-mt ;
@@ -27,5 +28,6 @@ build-project Gravity ;
 build-project MT ;
 build-project Tomo ;
 build-project ModelBase ;
+build-project Inversion ;
 build-project Profiling ;
 build-project Hacks ;
