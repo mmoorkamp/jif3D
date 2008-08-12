@@ -1,6 +1,10 @@
 import testing ; 
 lib gravity : ThreeDGravityModel.cpp GravityInterface.cpp ..//netcdf_c++ ..//netcdf ../ModelBase//modelbase : <include>boost : : <include>. ;
 
+install $(TOP) : gravity
+           : <install-dependencies>on <install-type>LIB
+           ;
+
 
 unit-test gravity_test : test_ThreeDGravityModel.cpp gravity ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf : : <include>. ;
 
