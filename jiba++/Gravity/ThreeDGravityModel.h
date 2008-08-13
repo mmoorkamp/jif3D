@@ -40,30 +40,26 @@ namespace jiba
      *
      * This equation works as long as the measurement point is not on one of the corners or edges of the box.
      */
-    double CalcGravBox(const double meas_x, const double meas_y,
+    double CalcGravBoxTerm(const double meas_x, const double meas_y,
         const double meas_z, const double ul_corner_x,
         const double ul_corner_y, const double ul_corner_z,
-        const double x_size, const double y_size, const double z_size,
-        const double density);
+        const double x_size, const double y_size, const double z_size);
 
     //! Calculate the gravimetry matrix for a single rectangular prism
-    GravimetryMatrix CalcTensorBox(const double meas_x, const double meas_y,
+    GravimetryMatrix CalcTensorBoxTerm(const double meas_x, const double meas_y,
         const double meas_z, const double ul_corner_x,
         const double ul_corner_y, const double ul_corner_z,
-        const double x_size, const double y_size, const double z_size,
-        const double density);
+        const double x_size, const double y_size, const double z_size);
 
-    double CalcUxx(const double meas_x, const double meas_y,
+    double CalcUxxTerm(const double meas_x, const double meas_y,
         const double meas_z, const double ul_corner_x,
         const double ul_corner_y, const double ul_corner_z,
-        const double x_size, const double y_size, const double z_size,
-        const double density);
+        const double x_size, const double y_size, const double z_size);
 
-    double CalcUxy(const double meas_x, const double meas_y,
+    double CalcUxyTerm(const double meas_x, const double meas_y,
         const double meas_z, const double ul_corner_x,
         const double ul_corner_y, const double ul_corner_z,
-        const double x_size, const double y_size, const double z_size,
-        const double density);
+        const double x_size, const double y_size, const double z_size);
 
     //! the gravitational acceleration of an semi-infinite slab
     double CalcGravSemiInfSheet(const double hor_dist, const double ver_dist,
@@ -80,9 +76,9 @@ namespace jiba
     double CalcFTGOffDiagonalTerm(const double value, const double x,
         const double y, const double z);
     //! the gravitational acceleration of an infinite slab
-    inline double CalcInfSheet(const double thick, const double density)
+    inline double CalcInfSheetTerm(const double thick)
       {
-        return 2.0 * M_PI * Grav_const * thick * density;
+        return 2.0 * M_PI * Grav_const * thick;
       }
 
     //! We store the 3x3 matrix for gravimetric measurements in a ublas matrix with real entries
@@ -113,9 +109,6 @@ namespace jiba
       //! Create a dimension for the measurement positions in a netcdf file
       NcDim *WriteDimensionToNetCDF(NcFile &NetCDFFile,
           const std::string &SizeName, const tMeasPosVec &Position) const;
-      //! Read one measurement position coordinate from a netcdf file
-      void ReadDimensionFromNetCDF(NcFile &NetCDFFile,
-          const std::string &DimName, tMeasPosVec &Position);
       //! the x-coordinates of the measurement points
       tMeasPosVec MeasPosX;
       //! the y-coordinates of the measurement points
@@ -200,11 +193,20 @@ namespace jiba
        * three coordinate values for all points.
        * @return A vector with the x-coordinates of all measurement points in m
        */
-      const tMeasPosVec &GetMeasPosX(){return MeasPosX;}
+      const tMeasPosVec &GetMeasPosX()
+        {
+          return MeasPosX;
+        }
       //! Return the y-coordinates of all measurement points read-only
-      const tMeasPosVec &GetMeasPosY(){return MeasPosY;}
+      const tMeasPosVec &GetMeasPosY()
+        {
+          return MeasPosY;
+        }
       //! Return the z-coordinates of all measurement points read-only
-      const tMeasPosVec &GetMeasPosZ(){return MeasPosZ;}
+      const tMeasPosVec &GetMeasPosZ()
+        {
+          return MeasPosZ;
+        }
       //! Get the sensitivity matrix for scalar gravity measurements
       const rmat &GetScalarSensitivities() const
         {
@@ -242,6 +244,17 @@ namespace jiba
       virtual ~ThreeDGravityModel();
       };
 
+    void ReadScalarGravityMeasurements(const std::string &filename,
+        ThreeDGravityModel::tScalarMeasVec &Data,
+        ThreeDGravityModel::tMeasPosVec &PosX,
+        ThreeDGravityModel::tMeasPosVec &PosY,
+        ThreeDGravityModel::tMeasPosVec &PosZ);
+
+    void SaveScalarGravityMeasurements(const std::string &filename,
+        ThreeDGravityModel::tScalarMeasVec &Data,
+        ThreeDGravityModel::tMeasPosVec &PosX,
+        ThreeDGravityModel::tMeasPosVec &PosY,
+        ThreeDGravityModel::tMeasPosVec &PosZ);
   }
 
 #endif /*THREEDGRAVITYMODEL_H_*/

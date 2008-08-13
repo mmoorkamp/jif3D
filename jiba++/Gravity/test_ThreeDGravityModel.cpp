@@ -135,26 +135,27 @@ BOOST_AUTO_TEST_CASE(netcdf_read_write_test)
 BOOST_AUTO_TEST_CASE(box_gravity_calc_test)
   {
     //the gravity in the center of the cube should be 0
-    BOOST_CHECK(fabs(jiba::CalcGravBox(0.0, 0.0, 0.0, -10.0, -10.0, -10.0,
-        20.0, 20.0, 20.0, 1.0)) < std::numeric_limits<double>::epsilon());
+    //the density is 1 in all calculations here so do not have to multiply the term
+    BOOST_CHECK(fabs(jiba::CalcGravBoxTerm(0.0, 0.0, 0.0, -10.0, -10.0, -10.0,
+        20.0, 20.0, 20.0)) < std::numeric_limits<double>::epsilon());
     //compare with the reported value of li and chouteau within a precision of 0.1%
-    double topofcube = jiba::CalcGravBox(0.0, 0.0, 10.0, -10.0, -10.0, -10.0,
-        20.0, 20.0, 20.0, 1.0);
+    double topofcube = jiba::CalcGravBoxTerm(0.0, 0.0, 10.0, -10.0, -10.0, -10.0,
+        20.0, 20.0, 20.0);
     BOOST_CHECK_CLOSE(topofcube, -3.46426e-6, 0.1);
-    double bottomofcube = jiba::CalcGravBox(0.0, 0.0, -10.0, -10.0, -10.0,
-        -10.0, 20.0, 20.0, 20.0, 1.0);
+    double bottomofcube = jiba::CalcGravBoxTerm(0.0, 0.0, -10.0, -10.0, -10.0,
+        -10.0, 20.0, 20.0, 20.0);
     //check symmetry of results
     BOOST_CHECK_CLOSE(topofcube, -bottomofcube,
         std::numeric_limits<float>::epsilon());
-    double away1 = jiba::CalcGravBox(1e5, 10.0, 10.0, -10.0, -10.0, -10.0,
-        20.0, 20.0, 20.0, 1.0);
+    double away1 = jiba::CalcGravBoxTerm(1e5, 10.0, 10.0, -10.0, -10.0, -10.0,
+        20.0, 20.0, 20.0);
     BOOST_CHECK(away1 < std::numeric_limits<double>::epsilon());
-    double away2 = jiba::CalcGravBox(100.0, 100.0, 10.0, -10.0, -10.0, -10.0,
-        20.0, 20.0, 20.0, 1.0);
+    double away2 = jiba::CalcGravBoxTerm(100.0, 100.0, 10.0, -10.0, -10.0, -10.0,
+        20.0, 20.0, 20.0);
     BOOST_CHECK_CLOSE(away2, -1.873178e-9, 0.1);
     //check also for a very large cube
-    BOOST_CHECK(fabs(jiba::CalcGravBox(0.0, 0.0, 0.0, -1e6, -1e6, -1e6, 2e6,
-        2e6, 2e6, 1.0)) < std::numeric_limits<double>::epsilon());
+    BOOST_CHECK(fabs(jiba::CalcGravBoxTerm(0.0, 0.0, 0.0, -1e6, -1e6, -1e6, 2e6,
+        2e6, 2e6)) < std::numeric_limits<double>::epsilon());
   }
 
 //check that for a box the results are independent of the discretization
@@ -163,10 +164,11 @@ BOOST_AUTO_TEST_CASE(model_gravity_boxcomp_test)
     const double measx = 9.0;
     const double measy = 8.0;
     const double measz = -0.1;
-    double boxtopofcube = jiba::CalcGravBox(measx, measy, measz, 0.0, 0.0, 0.0,
-        20.0, 20.0, 20.0, 1.0);
-    jiba::GravimetryMatrix tensorbox = jiba::CalcTensorBox(measx, measy, measz,
-        0.0, 0.0, 0.0, 20.0, 20.0, 20.0, 1.0);
+    //again density is 1
+    double boxtopofcube = jiba::CalcGravBoxTerm(measx, measy, measz, 0.0, 0.0, 0.0,
+        20.0, 20.0, 20.0);
+    jiba::GravimetryMatrix tensorbox = jiba::CalcTensorBoxTerm(measx, measy, measz,
+        0.0, 0.0, 0.0, 20.0, 20.0, 20.0);
     jiba::ThreeDGravityModel GravityTest(true); // store sensitivities
     //create a model of 10x10x10 cells with 2m length in each dimension
     const size_t ncells = 10;

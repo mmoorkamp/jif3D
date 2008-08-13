@@ -10,3 +10,7 @@ unit-test gravity_test : test_ThreeDGravityModel.cpp gravity ../ModelBase//model
 
 exe gravforward : gravforward.cpp gravity ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf : <include>. ;
 exe gravgrid : gravgrid.cpp gravity ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf : <include>. ;
+exe gravinv : gravinv.cpp gravity ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ../Inversion//inversion
+              ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran : <include>. ;
+
+exe gravnoise : gravnoise.cpp gravity ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf : <include>. ;

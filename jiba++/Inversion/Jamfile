@@ -1,4 +1,6 @@
 import testing ; 
 
-unit-test inversion_test : test_inversion.cpp ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran  : : <include>. ;
+lib inversion : MatrixTools.cpp  : <include>boost : : <include>. ;
+
+unit-test inversion_test : test_inversion.cpp inversion ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran  : : <include>. ;
 

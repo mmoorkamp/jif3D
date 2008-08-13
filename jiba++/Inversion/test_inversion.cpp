@@ -45,13 +45,35 @@ BOOST_AUTO_TEST_CASE(invert_matrix_test)
     srand(time(NULL));
     for (size_t i = 0; i < msize; ++i)
       for (size_t j = 0; j < msize; ++j)
-        TestMatrix(i,j) = double(rand());
+        TestMatrix(i, j) = double(rand());
 
-    jiba::InvertMatrix(TestMatrix,InverseMatrix);
-    jiba::rmat MultMatrix(boost::numeric::ublas::prec_prod(TestMatrix,InverseMatrix));
+    jiba::InvertMatrix(TestMatrix, InverseMatrix);
+    jiba::rmat MultMatrix(boost::numeric::ublas::prec_prod(TestMatrix,
+        InverseMatrix));
     for (size_t i = 0; i < msize; ++i)
       {
-        BOOST_CHECK_CLOSE(MultMatrix(i,i),1.0,std::numeric_limits<float>::epsilon());
+        BOOST_CHECK_CLOSE(MultMatrix(i, i), 1.0,
+            std::numeric_limits<float>::epsilon());
+      }
+  }
+
+BOOST_AUTO_TEST_CASE(generelized_inverse_test)
+  {
+    const size_t msize = 4;
+    jiba::rmat TestMatrix(msize, msize);
+    jiba::rmat InverseMatrix(msize, msize);
+    srand(time(NULL));
+    for (size_t i = 0; i < msize; ++i)
+      for (size_t j = 0; j < msize; ++j)
+        TestMatrix(i, j) = double(rand());
+
+    jiba::GeneralizedInverse(TestMatrix, InverseMatrix);
+    jiba::rmat MultMatrix(boost::numeric::ublas::prec_prod(TestMatrix,
+        InverseMatrix));
+    for (size_t i = 0; i < msize; ++i)
+      {
+        BOOST_CHECK_CLOSE(MultMatrix(i, i), 1.0,
+            std::numeric_limits<float>::epsilon());
       }
   }
 
