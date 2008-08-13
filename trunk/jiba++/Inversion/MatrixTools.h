@@ -23,34 +23,15 @@ namespace jiba
       {
         const size_t size1 = SensitivityMatrix.size1();
         const size_t size2 = SensitivityMatrix.size2();
-        s.resize(size2);
+        s.resize(std::min(size1,size2));
         vt.resize(size2, size2);
         u.resize(size1, size1);
         boost::numeric::bindings::lapack::gesvd(SensitivityMatrix, s, u, vt);
       }
 
-    bool InvertMatrix(const jiba::rmat& input, jiba::rmat& inverse)
-      {
-        using namespace boost::numeric::ublas;
-        typedef permutation_matrix<std::size_t> pmatrix;
-        // create a working copy of the input
-        jiba::rmat A(input);
-        // create a permutation matrix for the LU-factorization
-        pmatrix pm(A.size1());
+    bool InvertMatrix(const jiba::rmat& input, jiba::rmat& inverse);
 
-        // perform LU-factorization
-        int res = lu_factorize(A, pm);
-        if (res != 0)
-          return false;
-
-        // create identity matrix of "inverse"
-        inverse.assign( boost::numeric::ublas::identity_matrix<double>(A.size1()));
-
-        // backsubstitute to get the inverse
-        lu_substitute(A, pm, inverse);
-
-        return true;
-      }
+    void GeneralizedInverse(const rmat &Input, rmat &Inverse, const double lowthresh = 0.0, const double upthresh = 1.0);
 
   }
 

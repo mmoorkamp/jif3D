@@ -21,6 +21,11 @@ namespace jiba
     static const std::string GravDataName = "density";
     static const std::string GravDataUnit = "g/cm^3";
 
+    static const std::string MeasPosXName = "MeasPosX";
+    static const std::string MeasPosYName = "MeasPosY";
+    static const std::string MeasPosZName = "MeasPosZ";
+    static const std::string ScalarGravityName = "Scalar_gravity";
+    static const std::string StationNumberName = "StationNumber";
 
     /*! Calculate one term for the gravitational potential of a box, we use the nomenclature of eq. 4-6 in Li and Chouteau.
      * The parameters x,y and z are the distances to the corners of the box, we will call this functions with different
@@ -39,7 +44,6 @@ namespace jiba
         return rvalue;
       }
 
-
     /*! Calculate the gravitational potential of a rectangular prism at a point meas_{x,y,z}
      *  The calculation is based on equation 4 in Li and Chouteau, Surveys in Geophysics, 19, 339-368, 1998
      * @param meas_x x-coordinate of the measurement in m
@@ -51,14 +55,12 @@ namespace jiba
      * @param x_size size of the prism in x-direction in m
      * @param y_size size of the prism in y-direction in m
      * @param z_size size of the prism in z-direction in m
-     * @param density density of the prism in g/cm^3
      * @return Gravitational acceleration in m/s^2
      */
-    double CalcGravBox(const double meas_x, const double meas_y,
+    double CalcGravBoxTerm(const double meas_x, const double meas_y,
         const double meas_z, const double ul_corner_x,
         const double ul_corner_y, const double ul_corner_z,
-        const double x_size, const double y_size, const double z_size,
-        const double density)
+        const double x_size, const double y_size, const double z_size)
       {
         //we need 8 terms, one for each corner of the prism, they have varying signs
         double returnvalue = -CalcGravTerm(meas_x - ul_corner_x, meas_y
@@ -81,7 +83,7 @@ namespace jiba
         returnvalue += CalcGravTerm(meas_x - (ul_corner_x + x_size), meas_y
             - (ul_corner_y + y_size), meas_z - (ul_corner_z + z_size));
         // we multiply the geometric term by the gravitational constant and the density
-        return -returnvalue * Grav_const * density;
+        return -returnvalue * Grav_const;
       }
 
     /*! Calculate the xx-element of the second order derivative tensor, we use the same
@@ -96,14 +98,12 @@ namespace jiba
      * @param x_size size of the prism in x-direction in m
      * @param y_size size of the prism in y-direction in m
      * @param z_size size of the prism in z-direction in m
-     * @param density density of the prism in g/cm^3
      * @return The Uxx element of the FTG tensor
      */
-    double CalcUxx(const double meas_x, const double meas_y,
+    double CalcUxxTerm(const double meas_x, const double meas_y,
         const double meas_z, const double ul_corner_x,
         const double ul_corner_y, const double ul_corner_z,
-        const double x_size, const double y_size, const double z_size,
-        const double density)
+        const double x_size, const double y_size, const double z_size)
       {
         //we need 8 terms, one for each corner of the prism, they have varying signs
         double returnvalue = -CalcFTGDiagonalTerm(meas_y - ul_corner_y, meas_z
@@ -126,7 +126,7 @@ namespace jiba
         returnvalue += CalcFTGDiagonalTerm(meas_y - (ul_corner_y + y_size),
             meas_z - (ul_corner_z + z_size), meas_x - (ul_corner_x + x_size));
 
-        return returnvalue * Grav_const * density;
+        return returnvalue * Grav_const;
       }
 
     /*! Calculate the xy-element of the second order derivative tensor, we use the same
@@ -144,11 +144,10 @@ namespace jiba
      * @param density density of the prism in g/cm^3
      * @return The Uxx element of the FTG tensor
      */
-    double CalcUxy(const double meas_x, const double meas_y,
+    double CalcUxyTerm(const double meas_x, const double meas_y,
         const double meas_z, const double ul_corner_x,
         const double ul_corner_y, const double ul_corner_z,
-        const double x_size, const double y_size, const double z_size,
-        const double density)
+        const double x_size, const double y_size, const double z_size)
       {
         //we need 8 terms, one for each corner of the prism, they have varying signs
         double returnvalue = -CalcFTGOffDiagonalTerm(meas_z - ul_corner_z,
@@ -178,7 +177,7 @@ namespace jiba
             meas_y - (ul_corner_y + y_size), meas_z - (ul_corner_z + z_size),
             meas_x - (ul_corner_x + x_size));
 
-        return -returnvalue * Grav_const * density;
+        return -returnvalue * Grav_const;
       }
 
     /*! Calculate FTG tensor for a rectangular prism
@@ -191,35 +190,33 @@ namespace jiba
      * @param x_size size of the prism in x-direction in m
      * @param y_size size of the prism in y-direction in m
      * @param z_size size of the prism in z-direction in m
-     * @param density density of the prism in g/cm^3
      * @return The tensor response of the prism at the measurement site
      */
-    GravimetryMatrix CalcTensorBox(const double meas_x, const double meas_y,
-        const double meas_z, const double ul_corner_x,
+    GravimetryMatrix CalcTensorBoxTerm(const double meas_x,
+        const double meas_y, const double meas_z, const double ul_corner_x,
         const double ul_corner_y, const double ul_corner_z,
-        const double x_size, const double y_size, const double z_size,
-        const double density)
+        const double x_size, const double y_size, const double z_size)
       {
         GravimetryMatrix returnvalue(3, 3);
         //Calculate the first diagonal element
-        returnvalue(0, 0) = CalcUxx(meas_x, meas_y, meas_z, ul_corner_x,
-            ul_corner_y, ul_corner_z, x_size, y_size, z_size, density);
+        returnvalue(0, 0) = CalcUxxTerm(meas_x, meas_y, meas_z, ul_corner_x,
+            ul_corner_y, ul_corner_z, x_size, y_size, z_size);
         // The other two diagonal elements can be calculated from permutations of the above equation
-        returnvalue(1, 1) = CalcUxx(meas_y, meas_x, meas_z, ul_corner_y,
-            ul_corner_x, ul_corner_z, y_size, x_size, z_size, density);
-        returnvalue(2, 2) = CalcUxx(meas_z, meas_x, meas_y, ul_corner_z,
-            ul_corner_x, ul_corner_y, z_size, x_size, y_size, density);
+        returnvalue(1, 1) = CalcUxxTerm(meas_y, meas_x, meas_z, ul_corner_y,
+            ul_corner_x, ul_corner_z, y_size, x_size, z_size);
+        returnvalue(2, 2) = CalcUxxTerm(meas_z, meas_x, meas_y, ul_corner_z,
+            ul_corner_x, ul_corner_y, z_size, x_size, y_size);
         //Calculate the first off-diagonal element
-        returnvalue(0, 1) = CalcUxy(meas_x, meas_y, meas_z, ul_corner_x,
-            ul_corner_y, ul_corner_z, x_size, y_size, z_size, density);
+        returnvalue(0, 1) = CalcUxyTerm(meas_x, meas_y, meas_z, ul_corner_x,
+            ul_corner_y, ul_corner_z, x_size, y_size, z_size);
         //the gravimetry matrix is symmetric
         returnvalue(1, 0) = returnvalue(0, 1);
         //The other off-diagonal can be calculated from permutations of the above equation
-        returnvalue(0, 2) = CalcUxy(meas_x, meas_z, meas_y, ul_corner_x,
-            ul_corner_z, ul_corner_y, x_size, z_size, y_size, density);
+        returnvalue(0, 2) = CalcUxyTerm(meas_x, meas_z, meas_y, ul_corner_x,
+            ul_corner_z, ul_corner_y, x_size, z_size, y_size);
         returnvalue(2, 0) = returnvalue(0, 2);
-        returnvalue(1, 2) = CalcUxy(meas_z, meas_y, meas_x, ul_corner_z,
-            ul_corner_y, ul_corner_x, z_size, y_size, x_size, density);
+        returnvalue(1, 2) = CalcUxyTerm(meas_z, meas_y, meas_x, ul_corner_z,
+            ul_corner_y, ul_corner_x, z_size, y_size, x_size);
         returnvalue(2, 1) = returnvalue(1, 2);
 
         return returnvalue;
@@ -259,7 +256,6 @@ namespace jiba
             std::numeric_limits<double>::epsilon()));
       }
 
-
     /*! Calculate the gravitational effect of the 3D model at a single measurement site. The way we calculate
      * the sensitivity matrix at the moment, the model cannot contain densities of 0 if we
      * store the sensitivity matrix
@@ -287,19 +283,18 @@ namespace jiba
                 for (size_t k = 0; k < zsize; ++k)
                   {
                     //we store the current value for possible sensitivity calculations
-                    currvalue = CalcGravBox(x_meas, y_meas, z_meas,
+                    currvalue = CalcGravBoxTerm(x_meas, y_meas, z_meas,
                         GetXCoordinates()[i], GetYCoordinates()[j],
                         GetZCoordinates()[k], GetXCellSizes()[i],
-                        GetYCellSizes()[j], GetZCellSizes()[k],
-                        GetDensities()[i][j][k]);
-                    returnvalue += currvalue;
+                        GetYCellSizes()[j], GetZCellSizes()[k]);
+                    returnvalue += currvalue * GetDensities()[i][j][k];
                     // if we want to store the sensitivity matrix
                     if (StoreScalarSensitivities)
                       {
                         //we calculate the sensitivity by dividing through density
                         //therefore density cannot be zero
                         ScalarSensitivities(meas_index, i * (ysize * zsize) + j
-                            * zsize + k) = currvalue / GetDensities()[i][j][k];
+                            * zsize + k) = currvalue;
                       }
                   }
               }
@@ -330,23 +325,20 @@ namespace jiba
               {
                 for (size_t k = 0; k < zsize; ++k)
                   {
-                    currvalue = CalcTensorBox(x_meas, y_meas, z_meas,
+                    currvalue = CalcTensorBoxTerm(x_meas, y_meas, z_meas,
                         GetXCoordinates()[i], GetYCoordinates()[j],
                         GetZCoordinates()[k], GetXCellSizes()[i],
-                        GetYCellSizes()[j], GetZCellSizes()[k],
-                        GetDensities()[i][j][k]);
-                    returnvalue += currvalue;
+                        GetYCellSizes()[j], GetZCellSizes()[k]);
+                    returnvalue += currvalue * GetDensities()[i][j][k];
                     //if we want to store sensitivities for tensor measurements
                     if (StoreTensorSensitivities)
                       {
                         boost::numeric::ublas::matrix_column<rmat> column(
                             TensorSensitivities, i * (ysize * zsize) + j
                                 * zsize + k); // extract the right column of the sensitivity matrix
-                        std::transform(currvalue.data().begin(),
+                        std::copy(currvalue.data().begin(),
                             currvalue.data().end(), // assign the elements to the right part of the column
-                            column.begin() + meas_index * 9, boost::bind(
-                                std::divides<double>(), _1,
-                                GetDensities()[i][j][k]));
+                            column.begin() + meas_index * 9);
                       }
                   }
               }
@@ -386,37 +378,33 @@ namespace jiba
         for (size_t j = 0; j < nbglayers; ++j)
           {
             // first assume an infinite sheet for the current layer
-            currvalue = CalcInfSheet(bg_thicknesses[j], bg_densities[j]);
+            currvalue = CalcInfSheetTerm(bg_thicknesses[j]);
             currbottom = currtop + bg_thicknesses[j];
             // and then subtract the value for the modelling domain, as this is already calculated in the discretized routine
             // if the background layer complete coincides with the discretized area
             if (currtop < zwidth && (currbottom <= zwidth))
 
               {
-                currvalue
-                    -= CalcGravBox(xmeas, ymeas, zmeas, 0.0, 0.0, currtop,
-                        xwidth, ywidth, bg_thicknesses[j], bg_densities[j]);
+                currvalue -= CalcGravBoxTerm(xmeas, ymeas, zmeas, 0.0, 0.0,
+                    currtop, xwidth, ywidth, bg_thicknesses[j]);
               }
             //if some of the background coincides and some is below
             if (currtop < zwidth && currbottom > zwidth)
 
               {
-                currvalue -= CalcGravBox(xmeas, ymeas, zmeas, 0.0, 0.0,
-                    currtop, xwidth, ywidth, (zwidth - currtop),
-                    bg_densities[j]);
+                currvalue -= CalcGravBoxTerm(xmeas, ymeas, zmeas, 0.0, 0.0,
+                    currtop, xwidth, ywidth, (zwidth - currtop));
               }
             //we also store the sensitivities for the background
             if (StoreScalarSensitivities)
               {
-                ScalarSensitivities(meas_index, modelsize + j) = currvalue
-                    / bg_densities[j];
+                ScalarSensitivities(meas_index, modelsize + j) = currvalue;
               }
-            result += currvalue;
+            result += currvalue * bg_densities[j];
             currtop += bg_thicknesses[j];
           }
         return result;
       }
-
 
     /*!  Calculate the contribution of a layered background to a tensor gravity measurement.
      * @param xmeas The x-coordinate of the measurement point in m
@@ -451,27 +439,24 @@ namespace jiba
 
               {
                 // We only have to substract the effect of the gridding box, the effect of an inifite sheet is zero
-                currvalue
-                    = -CalcTensorBox(x_meas, y_meas, z_meas, 0.0, 0.0, currtop,
-                        xwidth, ywidth, bg_thicknesses[j], bg_densities[j]);
+                currvalue = -CalcTensorBoxTerm(x_meas, y_meas, z_meas, 0.0,
+                    0.0, currtop, xwidth, ywidth, bg_thicknesses[j]);
+
               }
             if (currtop < zwidth && currbottom > zwidth) //if some of the background coincides and some is below
 
               {
-                currvalue = -CalcTensorBox(x_meas, y_meas, z_meas, 0.0, 0.0,
-                    currtop, xwidth, ywidth, (zwidth - currtop),
-                    bg_densities[j]);
+                currvalue = -CalcTensorBoxTerm(x_meas, y_meas, z_meas, 0.0,
+                    0.0, currtop, xwidth, ywidth, (zwidth - currtop));
               }
             if (StoreTensorSensitivities)
               {
                 boost::numeric::ublas::matrix_column<rmat> column(
                     TensorSensitivities, modelsize + j); // extract the right column of the sensitivity matrix
-                std::transform(currvalue.data().begin(),
-                    currvalue.data().end(), // assign the elements to the right part of the column
-                    column.begin() + meas_index * 9, boost::bind(
-                        std::divides<double>(), _1, bg_densities[j]));
+                std::copy(currvalue.data().begin(), currvalue.data().end(), // assign the elements to the right part of the column
+                    column.begin() + meas_index * 9);
               }
-            result += currvalue;
+            result += currvalue * bg_densities[j];
             currtop += bg_thicknesses[j];
           }
         return result;
@@ -605,7 +590,8 @@ namespace jiba
         //we only get here if we didn't use the stored sensitivities
         if (StoreTensorSensitivities && !HaveCalculatedTensorSensitivities)
           {
-            TensorSensitivities.resize(nmeas * 9, xsize * ysize * zsize+ bg_densities.size()); // we have 9 tensor elements for each measurement points
+            TensorSensitivities.resize(nmeas * 9, xsize * ysize * zsize
+                + bg_densities.size()); // we have 9 tensor elements for each measurement points
           }
         // for all measurement points add the responses of the discretized part and the 1D background
         for (size_t i = 0; i < nmeas; ++i)
@@ -664,9 +650,9 @@ namespace jiba
         // We return the NcDim object, because we need it to write the model data
         return SizeDim;
       }
-
-    void ThreeDGravityModel::ReadDimensionFromNetCDF(NcFile &NetCDFFile,
-        const std::string &DimName, tMeasPosVec &Position)
+    //! Read one measurement position coordinate from a netcdf file
+    void ReadDimensionFromNetCDF(NcFile &NetCDFFile,
+        const std::string &DimName, ThreeDGravityModel::tMeasPosVec &Position)
       {
 
         //create a netcdf dimension with the chosen name
@@ -685,34 +671,8 @@ namespace jiba
     void ThreeDGravityModel::SaveScalarMeasurements(const std::string filename)
       {
         tScalarMeasVec Data = CalcGravity();
+        SaveScalarGravityMeasurements(filename,Data,MeasPosX,MeasPosY,MeasPosZ);
 
-        assert(Data.size() == MeasPosX.size());
-        assert(Data.size() == MeasPosY.size());
-        assert(Data.size() == MeasPosZ.size());
-        const size_t nmeas = MeasPosX.size();
-        NcFile DataFile(filename.c_str(), NcFile::Replace);
-        std::vector<int> StationNumber;
-        std::generate_n(back_inserter(StationNumber), nmeas, IntSequence(0));
-        NcDim *StatNumDim = DataFile.add_dim("StationNumber", nmeas);
-        NcVar *StatNumVar =
-            DataFile.add_var("StationNumber", ncInt, StatNumDim);
-        StatNumVar->put(&StationNumber[0], nmeas);
-        NcVar *XPosVar = DataFile.add_var("xpos", ncDouble, StatNumDim);
-        XPosVar->add_att("units", "m");
-        XPosVar->put(&MeasPosX[0], nmeas);
-        NcVar *YPosVar = DataFile.add_var("ypos", ncDouble, StatNumDim);
-        YPosVar->add_att("units", "m");
-        YPosVar->put(&MeasPosY[0], nmeas);
-        NcVar *ZPosVar = DataFile.add_var("zpos", ncDouble, StatNumDim);
-        ZPosVar->add_att("units", "m");
-        ZPosVar->put(&MeasPosZ[0], nmeas);
-        //Write the measurements
-        NcVar *DataVar = DataFile.add_var("Scalar_gravity", ncDouble,
-            StatNumDim);
-        DataVar->add_att("units", "m/s^2");
-        DataVar->add_att("_FillValue", -1.0);
-
-        DataVar->put(&Data[0], StatNumDim->size());
       }
 
     void ThreeDGravityModel::PlotMeasAscii(const std::string &filename,
@@ -753,7 +713,7 @@ namespace jiba
         //        NcDim *XSizeDim = WriteDimensionToNetCDF(DataFile, "x", MeasPosX);
         //        NcDim *YSizeDim = WriteDimensionToNetCDF(DataFile, "y", MeasPosY);
         //
-        //        NcVar *DataVar = DataFile.add_var("Scalar_gravity", ncDouble,
+        //        NcVar *DataVar = DataFile.add_var(ScalarGravityName, ncDouble,
         //                    XSizeDim, YSizeDim);
         //        DataVar->add_att("units", "m/s^2");
         //        DataVar->add_att("_FillValue",-1.0);
@@ -787,9 +747,9 @@ namespace jiba
     void ThreeDGravityModel::ReadMeasPosNetCDF(const std::string filename)
       {
         NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
-        ReadDimensionFromNetCDF(DataFile, "Measx", MeasPosX);
-        ReadDimensionFromNetCDF(DataFile, "Measy", MeasPosY);
-        ReadDimensionFromNetCDF(DataFile, "Measz", MeasPosZ);
+        ReadDimensionFromNetCDF(DataFile, MeasPosXName, MeasPosX);
+        ReadDimensionFromNetCDF(DataFile, MeasPosYName, MeasPosY);
+        ReadDimensionFromNetCDF(DataFile, MeasPosZName, MeasPosZ);
         assert(MeasPosX.size() == MeasPosY.size());
         assert(MeasPosX.size() == MeasPosZ.size());
       }
@@ -810,5 +770,68 @@ namespace jiba
           }
         assert(MeasPosX.size() == MeasPosY.size());
         assert(MeasPosX.size() == MeasPosZ.size());
+      }
+
+    void SaveScalarGravityMeasurements(const std::string &filename,
+        ThreeDGravityModel::tScalarMeasVec &Data,
+        ThreeDGravityModel::tMeasPosVec &PosX,
+        ThreeDGravityModel::tMeasPosVec &PosY,
+        ThreeDGravityModel::tMeasPosVec &PosZ)
+      {
+        assert(Data.size() == PosX.size());
+        assert(Data.size() == PosY.size());
+        assert(Data.size() == PosZ.size());
+        const size_t nmeas = PosX.size();
+        NcFile DataFile(filename.c_str(), NcFile::Replace);
+        std::vector<int> StationNumber;
+        std::generate_n(back_inserter(StationNumber), nmeas, IntSequence(0));
+        NcDim *StatNumDim = DataFile.add_dim(StationNumberName.c_str(), nmeas);
+        NcVar *StatNumVar =
+            DataFile.add_var("StationNumber", ncInt, StatNumDim);
+        StatNumVar->put(&StationNumber[0], nmeas);
+        NcVar *XPosVar = DataFile.add_var(MeasPosXName.c_str(), ncDouble,
+            StatNumDim);
+        XPosVar->add_att("units", "m");
+        XPosVar->put(&PosX[0], nmeas);
+        NcVar *YPosVar = DataFile.add_var(MeasPosYName.c_str(), ncDouble,
+            StatNumDim);
+        YPosVar->add_att("units", "m");
+        YPosVar->put(&PosY[0], nmeas);
+        NcVar *ZPosVar = DataFile.add_var(MeasPosZName.c_str(), ncDouble,
+            StatNumDim);
+        ZPosVar->add_att("units", "m");
+        ZPosVar->put(&PosZ[0], nmeas);
+        //Write the measurements
+        NcVar *DataVar = DataFile.add_var(ScalarGravityName.c_str(), ncDouble,
+            StatNumDim);
+        DataVar->add_att("units", "m/s^2");
+        DataVar->add_att("_FillValue", -1.0);
+
+        DataVar->put(&Data[0], StatNumDim->size());
+      }
+
+    void ReadScalarGravityMeasurements(const std::string &filename,
+        ThreeDGravityModel::tScalarMeasVec &Data,
+        ThreeDGravityModel::tMeasPosVec &PosX,
+        ThreeDGravityModel::tMeasPosVec &PosY,
+        ThreeDGravityModel::tMeasPosVec &PosZ)
+      {
+        NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
+        NcDim *StationNumber = DataFile.get_dim(StationNumberName.c_str());
+        const size_t nvalues = StationNumber->size();
+        PosX.resize(nvalues);
+        PosY.resize(nvalues);
+        PosZ.resize(nvalues);
+        NcVar *PosXVar = DataFile.get_var(MeasPosXName.c_str());
+        NcVar *PosYVar = DataFile.get_var(MeasPosYName.c_str());
+        NcVar *PosZVar = DataFile.get_var(MeasPosZName.c_str());
+        PosXVar->get(&PosX[0], nvalues);
+        PosYVar->get(&PosY[0], nvalues);
+        PosZVar->get(&PosZ[0], nvalues);
+        NcVar *DataVar = DataFile.get_var(ScalarGravityName.c_str());
+
+        //allocate memory in the class variable
+        Data.assign(nvalues, 0.0);
+        DataVar->get(&Data[0], nvalues);
       }
   }
