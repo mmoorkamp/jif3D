@@ -46,8 +46,8 @@ namespace jiba
         const double x_size, const double y_size, const double z_size);
 
     //! Calculate the gravimetry matrix for a single rectangular prism
-    GravimetryMatrix CalcTensorBoxTerm(const double meas_x, const double meas_y,
-        const double meas_z, const double ul_corner_x,
+    GravimetryMatrix CalcTensorBoxTerm(const double meas_x,
+        const double meas_y, const double meas_z, const double ul_corner_x,
         const double ul_corner_y, const double ul_corner_z,
         const double x_size, const double y_size, const double z_size);
 
@@ -221,7 +221,7 @@ namespace jiba
         }
       //! Read the density model and all associated information from a netcdf file
       void ReadNetCDF(const std::string filename);
-      //! Save all Synthetic data in a netcdf file
+      //! Save all scalar Synthetic data in a netcdf file
       void SaveScalarMeasurements(const std::string filename);
       //! Write all scalar synthetic data in an ascii file for spatial plotting in gmt
       void PlotScalarMeasurements(const std::string filename);
@@ -244,17 +244,7 @@ namespace jiba
       virtual ~ThreeDGravityModel();
       };
 
-    void ReadScalarGravityMeasurements(const std::string &filename,
-        ThreeDGravityModel::tScalarMeasVec &Data,
-        ThreeDGravityModel::tMeasPosVec &PosX,
-        ThreeDGravityModel::tMeasPosVec &PosY,
-        ThreeDGravityModel::tMeasPosVec &PosZ);
 
-    void SaveScalarGravityMeasurements(const std::string &filename,
-        ThreeDGravityModel::tScalarMeasVec &Data,
-        ThreeDGravityModel::tMeasPosVec &PosX,
-        ThreeDGravityModel::tMeasPosVec &PosY,
-        ThreeDGravityModel::tMeasPosVec &PosZ);
   }
 
 #endif /*THREEDGRAVITYMODEL_H_*/

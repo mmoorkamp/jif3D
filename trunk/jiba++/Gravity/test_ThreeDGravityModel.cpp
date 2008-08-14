@@ -65,8 +65,8 @@ void MakeRandomModel(jiba::ThreeDGravityModel &Model, const size_t nmeas)
     //the z-axis is positive down, so we choose negative z-coordinates
     // => we are measuring above the surface
     for (size_t i = 0; i < nmeas; ++i)
-      Model.AddMeasurementPoint(rand() % 100 + 100.1, rand() % 100 + 100.1,
-          -(rand() % 100 + 100.1));
+      Model.AddMeasurementPoint(rand() % 100 + 100.0, rand() % 100 + 100.0,
+          -(rand() % 100 + 1.0));
   }
 
 //Test the default state of the object
@@ -139,8 +139,8 @@ BOOST_AUTO_TEST_CASE(box_gravity_calc_test)
     BOOST_CHECK(fabs(jiba::CalcGravBoxTerm(0.0, 0.0, 0.0, -10.0, -10.0, -10.0,
         20.0, 20.0, 20.0)) < std::numeric_limits<double>::epsilon());
     //compare with the reported value of li and chouteau within a precision of 0.1%
-    double topofcube = jiba::CalcGravBoxTerm(0.0, 0.0, 10.0, -10.0, -10.0, -10.0,
-        20.0, 20.0, 20.0);
+    double topofcube = jiba::CalcGravBoxTerm(0.0, 0.0, 10.0, -10.0, -10.0,
+        -10.0, 20.0, 20.0, 20.0);
     BOOST_CHECK_CLOSE(topofcube, -3.46426e-6, 0.1);
     double bottomofcube = jiba::CalcGravBoxTerm(0.0, 0.0, -10.0, -10.0, -10.0,
         -10.0, 20.0, 20.0, 20.0);
@@ -150,12 +150,12 @@ BOOST_AUTO_TEST_CASE(box_gravity_calc_test)
     double away1 = jiba::CalcGravBoxTerm(1e5, 10.0, 10.0, -10.0, -10.0, -10.0,
         20.0, 20.0, 20.0);
     BOOST_CHECK(away1 < std::numeric_limits<double>::epsilon());
-    double away2 = jiba::CalcGravBoxTerm(100.0, 100.0, 10.0, -10.0, -10.0, -10.0,
-        20.0, 20.0, 20.0);
+    double away2 = jiba::CalcGravBoxTerm(100.0, 100.0, 10.0, -10.0, -10.0,
+        -10.0, 20.0, 20.0, 20.0);
     BOOST_CHECK_CLOSE(away2, -1.873178e-9, 0.1);
     //check also for a very large cube
-    BOOST_CHECK(fabs(jiba::CalcGravBoxTerm(0.0, 0.0, 0.0, -1e6, -1e6, -1e6, 2e6,
-        2e6, 2e6)) < std::numeric_limits<double>::epsilon());
+    BOOST_CHECK(fabs(jiba::CalcGravBoxTerm(0.0, 0.0, 0.0, -1e6, -1e6, -1e6,
+        2e6, 2e6, 2e6)) < std::numeric_limits<double>::epsilon());
   }
 
 //check that for a box the results are independent of the discretization
@@ -165,10 +165,10 @@ BOOST_AUTO_TEST_CASE(model_gravity_boxcomp_test)
     const double measy = 8.0;
     const double measz = -0.1;
     //again density is 1
-    double boxtopofcube = jiba::CalcGravBoxTerm(measx, measy, measz, 0.0, 0.0, 0.0,
-        20.0, 20.0, 20.0);
-    jiba::GravimetryMatrix tensorbox = jiba::CalcTensorBoxTerm(measx, measy, measz,
-        0.0, 0.0, 0.0, 20.0, 20.0, 20.0);
+    double boxtopofcube = jiba::CalcGravBoxTerm(measx, measy, measz, 0.0, 0.0,
+        0.0, 20.0, 20.0, 20.0);
+    jiba::GravimetryMatrix tensorbox = jiba::CalcTensorBoxTerm(measx, measy,
+        measz, 0.0, 0.0, 0.0, 20.0, 20.0, 20.0);
     jiba::ThreeDGravityModel GravityTest(true); // store sensitivities
     //create a model of 10x10x10 cells with 2m length in each dimension
     const size_t ncells = 10;
@@ -369,6 +369,60 @@ BOOST_AUTO_TEST_CASE(random_tensor_test)
       }
   }
 
+//compare with the ubc gravity forward code
+BOOST_AUTO_TEST_CASE(ubc_test)
+  {
+    jiba::ThreeDGravityModel GravityTest;
+    const size_t nmeas = 10;
+    MakeRandomModel(GravityTest, nmeas);
+    jiba::ThreeDGravityModel::tScalarMeasVec scalarmeas(
+        GravityTest.CalcGravity());
+
+    std::ofstream meshfile("testmesh");
+    meshfile << GravityTest.GetXCellSizes().size() << " ";
+    meshfile << GravityTest.GetYCellSizes().size() << " ";
+    meshfile << GravityTest.GetZCellSizes().size() << "\n";
+    meshfile << " 0 0 0 \n";
+    std::copy(GravityTest.GetXCellSizes().begin(),
+        GravityTest.GetXCellSizes().end(), std::ostream_iterator<double>(
+            meshfile, " "));
+    meshfile << "\n";
+    std::copy(GravityTest.GetYCellSizes().begin(),
+        GravityTest.GetYCellSizes().end(), std::ostream_iterator<double>(
+            meshfile, " "));
+    meshfile << "\n";
+    std::copy(GravityTest.GetZCellSizes().begin(),
+        GravityTest.GetZCellSizes().end(), std::ostream_iterator<double>(
+            meshfile, " "));
+    meshfile << "\n" << std::flush;
+
+    std::ofstream obsfile("testobs");
+    obsfile << nmeas << "\n";
+    for (size_t i = 0; i < nmeas; ++i)
+      {
+        obsfile << GravityTest.GetMeasPosX().at(i) << " "
+            << GravityTest.GetMeasPosY().at(i) << " "
+            << -GravityTest.GetMeasPosZ().at(i) << "\n";
+      }
+    obsfile << std::flush;
+    std::ofstream densfile("testdens");
+    std::copy(GravityTest.GetDensities().origin(),
+        GravityTest.GetDensities().origin() + GravityTest.GetDensities().num_elements(), std::ostream_iterator<double>(
+            densfile, "\n"));
+    densfile << std::flush;
+    system("wine gzfor3d.exe testmesh testobs testdens");
+    std::ifstream resultfile("gzfor3d.grv");
+    char dummy[255];
+    resultfile.getline(dummy,255);
+    std::vector<double> ubcresults;
+    std::copy(std::istream_iterator<double>(resultfile),
+        std::istream_iterator<double>(), std::back_inserter(ubcresults));
+    for (size_t i = 0; i < nmeas; ++i)
+      {
+        BOOST_CHECK_CLOSE(scalarmeas[i]*100000.0 , ubcresults[(i+1)*4-1], 1);
+      }
+  }
+
 //compare the result from the tensor calculation with finite difference scalar calculations
 BOOST_AUTO_TEST_CASE(fd_tensor_test)
   {
@@ -500,9 +554,9 @@ BOOST_AUTO_TEST_CASE(R_scalar_interface_test)
     jiba::ThreeDGravityModel GravityTest(false, false);
 
     std::ofstream Rscript("scalar_test.R");
-    PrepareModelForR(GravityTest,Rscript);
+    PrepareModelForR(GravityTest, Rscript);
     jiba::ThreeDGravityModel::tScalarMeasVec scalarmeas(
-             GravityTest.CalcGravity());
+        GravityTest.CalcGravity());
     Rscript
         << " result<-gravforward(XSizes,YSizes,ZSizes,Densities,XMeasPos,YMeasPos,ZMeasPos)\n";
     Rscript << " sink(\"scalar_output\")\n";
@@ -534,9 +588,9 @@ BOOST_AUTO_TEST_CASE(R_tensor_interface_test)
     jiba::ThreeDGravityModel GravityTest(false, false);
 
     std::ofstream Rscript("tensor_test.R");
-    PrepareModelForR(GravityTest,Rscript);
+    PrepareModelForR(GravityTest, Rscript);
     jiba::ThreeDGravityModel::tTensorMeasVec tensormeas(
-                GravityTest.CalcTensorGravity());
+        GravityTest.CalcTensorGravity());
     Rscript
         << " result<-gravtensorforward(XSizes,YSizes,ZSizes,Densities,XMeasPos,YMeasPos,ZMeasPos)\n";
     Rscript << " sink(\"tensor_output\")\n";
@@ -558,15 +612,15 @@ BOOST_AUTO_TEST_CASE(R_tensor_interface_test)
     //and they should be equal, the tolerance is 0.01% as writing to the file truncates the numbers
     for (size_t i = 0; i < tensormeas.size(); ++i)
       {
-        BOOST_CHECK_CLOSE(tensormeas.at(i)(0,0), rvalues.at(i*9), 0.01);
-        BOOST_CHECK_CLOSE(tensormeas.at(i)(0,1), rvalues.at(i*9+1), 0.01);
-        BOOST_CHECK_CLOSE(tensormeas.at(i)(0,2), rvalues.at(i*9+2), 0.01);
-        BOOST_CHECK_CLOSE(tensormeas.at(i)(1,0), rvalues.at(i*9+3), 0.01);
-        BOOST_CHECK_CLOSE(tensormeas.at(i)(1,1), rvalues.at(i*9+4), 0.01);
-        BOOST_CHECK_CLOSE(tensormeas.at(i)(1,2), rvalues.at(i*9+5), 0.01);
-        BOOST_CHECK_CLOSE(tensormeas.at(i)(2,0), rvalues.at(i*9+6), 0.01);
-        BOOST_CHECK_CLOSE(tensormeas.at(i)(2,1), rvalues.at(i*9+7), 0.01);
-        BOOST_CHECK_CLOSE(tensormeas.at(i)(2,2), rvalues.at(i*9+8), 0.01);
+        BOOST_CHECK_CLOSE(tensormeas.at(i)(0, 0), rvalues.at(i * 9), 0.01);
+        BOOST_CHECK_CLOSE(tensormeas.at(i)(0, 1), rvalues.at(i * 9 + 1), 0.01);
+        BOOST_CHECK_CLOSE(tensormeas.at(i)(0, 2), rvalues.at(i * 9 + 2), 0.01);
+        BOOST_CHECK_CLOSE(tensormeas.at(i)(1, 0), rvalues.at(i * 9 + 3), 0.01);
+        BOOST_CHECK_CLOSE(tensormeas.at(i)(1, 1), rvalues.at(i * 9 + 4), 0.01);
+        BOOST_CHECK_CLOSE(tensormeas.at(i)(1, 2), rvalues.at(i * 9 + 5), 0.01);
+        BOOST_CHECK_CLOSE(tensormeas.at(i)(2, 0), rvalues.at(i * 9 + 6), 0.01);
+        BOOST_CHECK_CLOSE(tensormeas.at(i)(2, 1), rvalues.at(i * 9 + 7), 0.01);
+        BOOST_CHECK_CLOSE(tensormeas.at(i)(2, 2), rvalues.at(i * 9 + 8), 0.01);
       }
 
   }

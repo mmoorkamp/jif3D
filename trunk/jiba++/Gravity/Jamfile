@@ -1,5 +1,6 @@
 import testing ; 
-lib gravity : ThreeDGravityModel.cpp GravityInterface.cpp ..//netcdf_c++ ..//netcdf ../ModelBase//modelbase : <include>boost : : <include>. ;
+lib gravity : ThreeDGravityModel.cpp GravityInterface.cpp ReadWriteGravityData.cpp 
+              ..//netcdf_c++ ..//netcdf ../ModelBase//modelbase : <include>boost : : <include>. ;
 
 install $(TOP) : gravity
            : <install-dependencies>on <install-type>LIB
@@ -14,3 +15,4 @@ exe gravinv : gravinv.cpp gravity ../ModelBase//modelbase ..//netcdf_c++ ..//net
               ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran : <include>. ;
 
 exe gravnoise : gravnoise.cpp gravity ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf : <include>. ;
+exe makegravmesh : makegravmesh.cpp gravity ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf : <include>. ;
