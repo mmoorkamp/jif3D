@@ -20,8 +20,6 @@ namespace jiba
         rmat u, vt;
         rmat G(Input);
         SVD(G, s, u, vt);
-        rmat sinv(Input.size2(), Input.size1());
-        sinv *= 0.0;
         const double maxeval = *std::max_element(s.begin(), s.end());
         const double absupper = maxeval * upthresh;
         const double abslower = maxeval * lowthresh;
@@ -32,17 +30,19 @@ namespace jiba
               {
                 column(u, i) *= 0.0;
                 row(vt, i) *= 0.0;
-                sinv(i, i) = 0.0;
               }
             else
               {
-                sinv(i, i) = 1./s(i);
+                row(vt, i) *= 1. / s(i);
               }
           }
+
+        boost::numeric::ublas::matrix_range<jiba::rmat> nonzero(vt,
+            boost::numeric::ublas::range(0, neval),
+            boost::numeric::ublas::range(0, vt.size1()));
+
         Inverse.resize(Input.size2(), Input.size1());
-        atlas::gemm(CblasTrans, CblasNoTrans, 1.0, vt, sinv, 0.0, Inverse);
-        rmat temp(Inverse);
-        atlas::gemm(CblasNoTrans, CblasTrans, 1.0, temp, u, 0.0, Inverse);
+        atlas::gemm(CblasTrans, CblasTrans, 1.0, nonzero, u, 0.0, Inverse);
       }
 
     bool InvertMatrix(const jiba::rmat& input, jiba::rmat& inverse)
