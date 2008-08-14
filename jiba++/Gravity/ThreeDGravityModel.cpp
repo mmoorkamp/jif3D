@@ -7,6 +7,7 @@
 
 #include "ThreeDGravityModel.h"
 #include "../Global/NumUtil.h"
+#include "ReadWriteGravityData.h"
 #include <iostream>
 #include <algorithm>
 #include <boost/bind.hpp>
@@ -21,11 +22,6 @@ namespace jiba
     static const std::string GravDataName = "density";
     static const std::string GravDataUnit = "g/cm^3";
 
-    static const std::string MeasPosXName = "MeasPosX";
-    static const std::string MeasPosYName = "MeasPosY";
-    static const std::string MeasPosZName = "MeasPosZ";
-    static const std::string ScalarGravityName = "Scalar_gravity";
-    static const std::string StationNumberName = "StationNumber";
 
     /*! Calculate one term for the gravitational potential of a box, we use the nomenclature of eq. 4-6 in Li and Chouteau.
      * The parameters x,y and z are the distances to the corners of the box, we will call this functions with different
@@ -650,23 +646,7 @@ namespace jiba
         // We return the NcDim object, because we need it to write the model data
         return SizeDim;
       }
-    //! Read one measurement position coordinate from a netcdf file
-    void ReadDimensionFromNetCDF(NcFile &NetCDFFile,
-        const std::string &DimName, ThreeDGravityModel::tMeasPosVec &Position)
-      {
 
-        //create a netcdf dimension with the chosen name
-        NcDim *Dim = NetCDFFile.get_dim(DimName.c_str());
-        //determine the size of that dimension
-        const size_t nvalues = Dim->size();
-
-        //allocate memory in the class variable
-        Position.assign(nvalues, 0.0);
-        // create netcdf variable with the same name as the dimension
-        NcVar *SizeVar = NetCDFFile.get_var(DimName.c_str());
-        //read coordinate values from netcdf file
-        SizeVar->get(&Position[0], nvalues);
-      }
 
     void ThreeDGravityModel::SaveScalarMeasurements(const std::string filename)
       {
@@ -700,30 +680,7 @@ namespace jiba
     void ThreeDGravityModel::PlotScalarMeasurements(const std::string filename)
       {
         tScalarMeasVec Data(CalcGravity());
-
         PlotMeasAscii(filename, Data);
-
-        //    const size_t nmeas = MeasPosX.size();
-        //        assert(Data.size() == MeasPosX.size());
-        //        assert(Data.size() == MeasPosY.size());
-        //
-        //
-        //        NcFile DataFile(filename.c_str(), NcFile::Replace);
-        //        // Write the size information in x,y, and z-direction
-        //        NcDim *XSizeDim = WriteDimensionToNetCDF(DataFile, "x", MeasPosX);
-        //        NcDim *YSizeDim = WriteDimensionToNetCDF(DataFile, "y", MeasPosY);
-        //
-        //        NcVar *DataVar = DataFile.add_var(ScalarGravityName, ncDouble,
-        //                    XSizeDim, YSizeDim);
-        //        DataVar->add_att("units", "m/s^2");
-        //        DataVar->add_att("_FillValue",-1.0);
-        //        //Write the measurements
-        //        tScalarMeasVec WrittenData(nmeas*nmeas,-1.0);
-        //            for (size_t i = 0; i < nmeas; ++i)
-        //              {
-        //              WrittenData.at(i + nmeas*i ) = Data.at(i);
-        //              }
-        //            DataVar->put(&WrittenData[0], XSizeDim->size(), YSizeDim->size());
       }
 
     void ThreeDGravityModel::PlotTensorMeasurements(
@@ -746,12 +703,7 @@ namespace jiba
 
     void ThreeDGravityModel::ReadMeasPosNetCDF(const std::string filename)
       {
-        NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
-        ReadDimensionFromNetCDF(DataFile, MeasPosXName, MeasPosX);
-        ReadDimensionFromNetCDF(DataFile, MeasPosYName, MeasPosY);
-        ReadDimensionFromNetCDF(DataFile, MeasPosZName, MeasPosZ);
-        assert(MeasPosX.size() == MeasPosY.size());
-        assert(MeasPosX.size() == MeasPosZ.size());
+        jiba::ReadMeasPosNetCDF(filename,MeasPosX,MeasPosY,MeasPosZ);
       }
 
     void ThreeDGravityModel::ReadMeasPosAscii(const std::string filename)
@@ -772,66 +724,5 @@ namespace jiba
         assert(MeasPosX.size() == MeasPosZ.size());
       }
 
-    void SaveScalarGravityMeasurements(const std::string &filename,
-        ThreeDGravityModel::tScalarMeasVec &Data,
-        ThreeDGravityModel::tMeasPosVec &PosX,
-        ThreeDGravityModel::tMeasPosVec &PosY,
-        ThreeDGravityModel::tMeasPosVec &PosZ)
-      {
-        assert(Data.size() == PosX.size());
-        assert(Data.size() == PosY.size());
-        assert(Data.size() == PosZ.size());
-        const size_t nmeas = PosX.size();
-        NcFile DataFile(filename.c_str(), NcFile::Replace);
-        std::vector<int> StationNumber;
-        std::generate_n(back_inserter(StationNumber), nmeas, IntSequence(0));
-        NcDim *StatNumDim = DataFile.add_dim(StationNumberName.c_str(), nmeas);
-        NcVar *StatNumVar =
-            DataFile.add_var("StationNumber", ncInt, StatNumDim);
-        StatNumVar->put(&StationNumber[0], nmeas);
-        NcVar *XPosVar = DataFile.add_var(MeasPosXName.c_str(), ncDouble,
-            StatNumDim);
-        XPosVar->add_att("units", "m");
-        XPosVar->put(&PosX[0], nmeas);
-        NcVar *YPosVar = DataFile.add_var(MeasPosYName.c_str(), ncDouble,
-            StatNumDim);
-        YPosVar->add_att("units", "m");
-        YPosVar->put(&PosY[0], nmeas);
-        NcVar *ZPosVar = DataFile.add_var(MeasPosZName.c_str(), ncDouble,
-            StatNumDim);
-        ZPosVar->add_att("units", "m");
-        ZPosVar->put(&PosZ[0], nmeas);
-        //Write the measurements
-        NcVar *DataVar = DataFile.add_var(ScalarGravityName.c_str(), ncDouble,
-            StatNumDim);
-        DataVar->add_att("units", "m/s^2");
-        DataVar->add_att("_FillValue", -1.0);
 
-        DataVar->put(&Data[0], StatNumDim->size());
-      }
-
-    void ReadScalarGravityMeasurements(const std::string &filename,
-        ThreeDGravityModel::tScalarMeasVec &Data,
-        ThreeDGravityModel::tMeasPosVec &PosX,
-        ThreeDGravityModel::tMeasPosVec &PosY,
-        ThreeDGravityModel::tMeasPosVec &PosZ)
-      {
-        NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
-        NcDim *StationNumber = DataFile.get_dim(StationNumberName.c_str());
-        const size_t nvalues = StationNumber->size();
-        PosX.resize(nvalues);
-        PosY.resize(nvalues);
-        PosZ.resize(nvalues);
-        NcVar *PosXVar = DataFile.get_var(MeasPosXName.c_str());
-        NcVar *PosYVar = DataFile.get_var(MeasPosYName.c_str());
-        NcVar *PosZVar = DataFile.get_var(MeasPosZName.c_str());
-        PosXVar->get(&PosX[0], nvalues);
-        PosYVar->get(&PosY[0], nvalues);
-        PosZVar->get(&PosZ[0], nvalues);
-        NcVar *DataVar = DataFile.get_var(ScalarGravityName.c_str());
-
-        //allocate memory in the class variable
-        Data.assign(nvalues, 0.0);
-        DataVar->get(&Data[0], nvalues);
-      }
   }

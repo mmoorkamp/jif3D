@@ -11,6 +11,7 @@
 #include <string>
 #include "ThreeDGravityModel.h"
 #include "../Inversion/MatrixTools.h"
+#include "ReadWriteGravityData.h"
 #include <boost/numeric/bindings/atlas/cblas2.hpp>
 
 namespace atlas = boost::numeric::bindings::atlas;
