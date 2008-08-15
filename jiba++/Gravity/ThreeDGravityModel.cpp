@@ -637,6 +637,12 @@ namespace jiba
             MeasPosY, MeasPosZ);
       }
 
+    void ThreeDGravityModel::SaveTensorMeasurements(const std::string filename)
+      {
+        SaveTensorGravityMeasurements(filename, TensorResults, MeasPosX,
+                    MeasPosY, MeasPosZ);
+      }
+
     void ThreeDGravityModel::PlotMeasAscii(const std::string &filename,
         tScalarMeasVec &Data) const
       {

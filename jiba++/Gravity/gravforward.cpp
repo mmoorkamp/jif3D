@@ -56,7 +56,9 @@ int main(int argc, char *argv[])
       }
     //read the model from the netcdf file
     GravForward.ReadNetCDF(ModelFilename);
-    //the saving and plotting routines also recalculate the data if necessary
+    GravForward.CalcGravity();
+    GravForward.CalcTensorGravity();
+
     GravForward.SaveScalarMeasurements(ModelFilename + ".out.nc");
     GravForward.PlotScalarMeasurements(ModelFilename + ".plot");
     GravForward.PlotTensorMeasurements(ModelFilename);
