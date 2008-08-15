@@ -219,6 +219,11 @@ namespace jiba
         {
           return ScalarSensitivities;
         }
+      //! Get the sensitivity matrix for tensor gravity measurements
+      const rmat &GetTensorSensitivities() const
+        {
+          return TensorSensitivities;
+        }
       //! Write the density model and all associated information in a netcdf file
       void WriteNetCDF(const std::string filename) const;
       //! Write the density model in VTK format, at the moment the best format for plotting
@@ -230,6 +235,8 @@ namespace jiba
       void ReadNetCDF(const std::string filename);
       //! Save all scalar Synthetic data in a netcdf file
       void SaveScalarMeasurements(const std::string filename);
+      //! Save all tensor Synthetic data in a netcdf file
+      void SaveTensorMeasurements(const std::string filename);
       //! Write all scalar synthetic data in an ascii file for spatial plotting in gmt
       void PlotScalarMeasurements(const std::string filename);
       //! Write all tensor synthetic data in an ascii file for spatial plotting in gmt
@@ -250,7 +257,6 @@ namespace jiba
           const bool storetensor = false);
       virtual ~ThreeDGravityModel();
       };
-
 
   }
 

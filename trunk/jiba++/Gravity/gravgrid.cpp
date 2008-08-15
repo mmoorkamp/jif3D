@@ -63,10 +63,8 @@ int main(int argc, char *argv[])
     GravForward.CalcGravity();
     GravForward.CalcTensorGravity();
     GravForward.SaveScalarMeasurements(ModelFilename + ".out.nc");
+    GravForward.SaveTensorMeasurements(ModelFilename + ".ftg.nc");
     GravForward.PlotScalarMeasurements(ModelFilename + ".plot");
     GravForward.PlotTensorMeasurements(ModelFilename);
-    jiba::SaveTensorGravityMeasurements(ModelFilename + "ftg.nc",
-        GravForward.CalcTensorGravity(), GravForward.GetMeasPosX(),
-        GravForward.GetMeasPosY(), GravForward.GetMeasPosZ());
     GravForward.WriteVTK(ModelFilename + ".vtk");
   }
