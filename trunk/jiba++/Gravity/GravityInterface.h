@@ -21,6 +21,14 @@
 
 
 extern "C" {
+  //! This function allocates storage for the model and has to be called before any calculations
+  /*! In order to allow to specify the storage of sensitivity matrices and the associated accelerations,
+   * we allocate the model object dynamically through this function.
+   * @param storescalar If > 0 we store the sensitivites for scalar calculations. Increases memory usage, but accelerates calculations
+   * @param storetensor If > 0 we store the sensitivites for tensor calculations. Increases memory usage, but accelerates calculations
+   */
+  void AllocateModel(const int *storescalar, const int *storetensor);
+
   //! Perform a forward calculation for scalar gravity data
   /*! Calculate the scalar gravity response of the specified model
    * @param XSizes The sizes of the model cells in x-direction in m

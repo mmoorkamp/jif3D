@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
     const size_t nmeas = Data.size();
     for (size_t i = 0; i < nmeas; ++i)
       {
-        boost::normal_distribution<> dist(Data.at(i), Data.at(i) * noiselevel);
+        boost::normal_distribution<> dist(Data.at(i), fabs(Data.at(i) * noiselevel));
         boost::variate_generator<boost::lagged_fibonacci607&, boost::normal_distribution<> >
             Sample(generator, dist);
         Data.at(i) = Sample();

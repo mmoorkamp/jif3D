@@ -14,6 +14,7 @@
 #include <iostream>
 #include <string>
 #include "ThreeDGravityModel.h"
+#include "ReadWriteGravityData.h"
 
 using namespace std;
 
@@ -45,9 +46,9 @@ int main(int argc, char *argv[])
     //setup the measurements in the forward modelling code
     const size_t nmeasx = (maxx - minx) / deltax;
     const size_t nmeasy = (maxy - miny) / deltay;
-    for (size_t i = 0; i < nmeasx; ++i)
+    for (size_t i = 0; i <= nmeasx; ++i)
       {
-        for (size_t j = 0; j < nmeasy; ++j)
+        for (size_t j = 0; j <= nmeasy; ++j)
           {
             GravForward.AddMeasurementPoint(minx + i * deltax, miny + j
                 * deltay, z);
@@ -59,8 +60,13 @@ int main(int argc, char *argv[])
     //read in the file
     GravForward.ReadNetCDF(ModelFilename);
     //save the measurements and some plots
+    GravForward.CalcGravity();
+    GravForward.CalcTensorGravity();
     GravForward.SaveScalarMeasurements(ModelFilename + ".out.nc");
     GravForward.PlotScalarMeasurements(ModelFilename + ".plot");
     GravForward.PlotTensorMeasurements(ModelFilename);
+    jiba::SaveTensorGravityMeasurements(ModelFilename + "ftg.nc",
+        GravForward.CalcTensorGravity(), GravForward.GetMeasPosX(),
+        GravForward.GetMeasPosY(), GravForward.GetMeasPosZ());
     GravForward.WriteVTK(ModelFilename + ".vtk");
   }

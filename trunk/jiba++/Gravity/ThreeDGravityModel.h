@@ -31,12 +31,13 @@ namespace jiba
      * \f$ r = \sqrt{x^2 +y^2 +z^2} \f$.
      * */
     double CalcGravTerm(const double x, const double y, const double z);
-    //! Calculate the gravitational acceleration due to a rectangular prism
+    //! Calculate the geometric term  due to a rectangular prism
     /*! Given the coordinates of the measurements (meas_x, meas_y and meas_z), the
      * coordinates of the upper front left corner (ul_corner_x etc.), the size
      * in the three directions (x_size, y_size and z_size) and the density, we calculate
-     * the acceleration caused by a prism with these parameters. All dimensions are in meters, density is
-     * in \f$ kg/m^3 \f$ and the acceleration in \f$m/s^2\f$
+     * the geometric part caused by a prism with these parameters. All dimensions are in meters.
+     * If we multiply the result of this function with density
+     * in \f$ g/cm^3 \f$ we get the acceleration in \f$m/s^2\f$.
      *
      * This equation works as long as the measurement point is not on one of the corners or edges of the box.
      */
@@ -45,7 +46,7 @@ namespace jiba
         const double ul_corner_y, const double ul_corner_z,
         const double x_size, const double y_size, const double z_size);
 
-    //! Calculate the gravimetry matrix for a single rectangular prism
+    //! Calculate the geometic part of the gravimetry matrix for a single rectangular prism
     GravimetryMatrix CalcTensorBoxTerm(const double meas_x,
         const double meas_y, const double meas_z, const double ul_corner_x,
         const double ul_corner_y, const double ul_corner_z,
@@ -131,6 +132,10 @@ namespace jiba
       rmat ScalarSensitivities;
       //! The Matrix for the tensor sensitivities
       rmat TensorSensitivities;
+      //!We store the synthetic tensor data so we can plot or save it without recalculation
+      tTensorMeasVec TensorResults;
+      //!We store the synthetic scalar data so we can plot or save it without recalculation
+      tScalarMeasVec ScalarResults;
       //! We implement this virtual function to make sure sensitivities are recalculated when the cell sizes change
       virtual void SetCellSizesAction(t3DModelDim &sizes)
         {
@@ -143,6 +148,7 @@ namespace jiba
     public:
       //! For the given model, calculate the scalar gravity at all measurement points
       tScalarMeasVec CalcGravity();
+      //! For the given model, calculate the FTG matrix at all measurement points
       tTensorMeasVec CalcTensorGravity();
       //! return read only access to the stored density values
       const t3DModelData &GetDensities() const
@@ -160,6 +166,7 @@ namespace jiba
           bg_densities.clear();
           copy(value.begin(), value.end(), back_inserter(bg_densities));
         }
+      //! Set the thicknesses of the background layers, the individual thicknesses are given in m
       void SetBackgroundThicknesses(const tScalarMeasVec value)
         {
           bg_thicknesses.clear();

@@ -8,7 +8,6 @@
 #include "ThreeDGravityModel.h"
 #include "../Global/NumUtil.h"
 #include "ReadWriteGravityData.h"
-#include <iostream>
 #include <algorithm>
 #include <boost/bind.hpp>
 #include <cassert>
@@ -19,9 +18,8 @@
 
 namespace jiba
   {
-    static const std::string GravDataName = "density";
-    static const std::string GravDataUnit = "g/cm^3";
-
+    static const std::string DensityName = "density";
+    static const std::string DensityUnit = "g/cm3";
 
     /*! Calculate one term for the gravitational potential of a box, we use the nomenclature of eq. 4-6 in Li and Chouteau.
      * The parameters x,y and z are the distances to the corners of the box, we will call this functions with different
@@ -295,12 +293,7 @@ namespace jiba
                   }
               }
           }
-        // if we store the sensitivity matrix
-        if (StoreScalarSensitivities)
-          {
-            //we remember that we have it so we can accelerate the next calculations
-            HaveCalculatedScalarSensitivities = true;
-          }
+
         return returnvalue;
       }
 
@@ -339,11 +332,7 @@ namespace jiba
                   }
               }
           }
-        if (StoreScalarSensitivities)
-          {
-            //remember that we have already calculated these values
-            HaveCalculatedScalarSensitivities = true;
-          }
+
         return returnvalue;
       }
 
@@ -457,7 +446,7 @@ namespace jiba
           }
         return result;
       }
-    //! Calculate scalar synthetic data for all measurement points
+
     ThreeDGravityModel::tScalarMeasVec ThreeDGravityModel::CalcGravity()
       {
         //get the amount of cells in each direction
@@ -476,31 +465,23 @@ namespace jiba
         const size_t nmeas = MeasPosX.size();
         assert(nmeas == MeasPosY.size());
         assert(nmeas == MeasPosZ.size());
-        tScalarMeasVec results(nmeas);
+        ScalarResults.assign(nmeas, 0.0);
 
         // if we have already stored the ScalarSensitivity we can do it very fast
         if (HaveCalculatedScalarSensitivities)
           {
             //we just construct a vector of densities
             rvec DensityVector(xsize * ysize * zsize + bg_densities.size());
-            for (size_t i = 0; i < xsize; ++i)
-              {
-                for (size_t j = 0; j < ysize; ++j)
-                  {
-                    for (size_t k = 0; k < zsize; ++k)
-                      {
-                        DensityVector(i * (ysize * zsize) + j * zsize + k)
-                            = GetDensities()[i][j][k];
-                      }
-                  }
-              }
+            copy(GetDensities().origin(), GetDensities().origin()
+                + GetDensities().num_elements(), DensityVector.begin());
+
             //including the background
             copy(bg_densities.begin(), bg_densities.end(),
                 DensityVector.begin() + xsize * ysize * zsize);
             //and do a Matrix Vector multiplication
             rvec MeasVec(prec_prod(ScalarSensitivities, DensityVector));
-            copy(MeasVec.begin(), MeasVec.end(), results.begin());
-            return results;
+            copy(MeasVec.begin(), MeasVec.end(), ScalarResults.begin());
+            return ScalarResults;
           }
         // we only get here if we didn't store the sensitivities previously
         //check if we want to store sensitivities and allocate memory
@@ -521,16 +502,21 @@ namespace jiba
         // for all measurement points add the respones of the discretized part and the 1D background
         for (size_t i = 0; i < nmeas; ++i)
           {
-            results[i] = CalcScalarMeas(MeasPosX[i], MeasPosY[i], MeasPosZ[i],
-                i);
-            results[i] += CalcBackground(MeasPosX[i], MeasPosY[i], MeasPosZ[i],
-                modelxwidth, modelywidth, modelzwidth, i);
+            ScalarResults[i] = CalcScalarMeas(MeasPosX[i], MeasPosY[i],
+                MeasPosZ[i], i);
+            ScalarResults[i] += CalcBackground(MeasPosX[i], MeasPosY[i],
+                MeasPosZ[i], modelxwidth, modelywidth, modelzwidth, i);
 
           }
-        return results;
+        // if we store the sensitivity matrix
+        if (StoreScalarSensitivities)
+          {
+            //we remember that we have it so we can accelerate the next calculations
+            HaveCalculatedScalarSensitivities = true;
+          }
+        return ScalarResults;
       }
 
-    //! Calculate tensor synthetic data for all measurement points
     ThreeDGravityModel::tTensorMeasVec ThreeDGravityModel::CalcTensorGravity()
       {
         const size_t xsize = GetData().shape()[0];
@@ -543,10 +529,10 @@ namespace jiba
         assert(xsize == GetXCellSizes().shape()[0]);
         assert(ysize == GetYCellSizes().shape()[0]);
         assert(zsize == GetZCellSizes().shape()[0]);
-
-        assert(MeasPosX.size() == MeasPosY.size());
+        const size_t nmeas = MeasPosX.size();
+        assert(nmeas == MeasPosY.size());
         // make sure we have coordinates for all sites
-        assert(MeasPosX.size() == MeasPosZ.size());
+        assert(nmeas == MeasPosZ.size());
         // calculate the size of the modelling domain for the background adjustment
         const double modelxwidth = std::accumulate(GetXCellSizes().begin(),
             GetXCellSizes().end(), 0.0);
@@ -555,33 +541,25 @@ namespace jiba
         const double modelzwidth = std::accumulate(GetZCellSizes().begin(),
             GetZCellSizes().end(), 0.0);
 
-        const size_t nmeas = MeasPosX.size();
-        tTensorMeasVec results(nmeas, rmat(3, 3));
+        TensorResults.assign(nmeas, rmat(3, 3));
         // if we have already stored the ScalarSensitivity we can do it very fast
         if (HaveCalculatedTensorSensitivities)
           {
+            //create a vector of discretized densities and background densities
             rvec DensityVector(xsize * ysize * zsize + bg_densities.size());
-            for (size_t i = 0; i < xsize; ++i)
-              {
-                for (size_t j = 0; j < ysize; ++j)
-                  {
-                    for (size_t k = 0; k < zsize; ++k)
-                      {
-                        DensityVector(i * (ysize * zsize) + j * zsize + k)
-                            = GetDensities()[i][j][k];
-                      }
-                  }
-              }
+            copy(GetDensities().origin(), GetDensities().origin()
+                + GetDensities().num_elements(), DensityVector.begin());
             copy(bg_densities.begin(), bg_densities.end(),
                 DensityVector.begin() + xsize * ysize * zsize);
-
+            //do a vector matrix multiplication
             rvec MeasVec(prec_prod(TensorSensitivities, DensityVector));
+            //and copy the resulting vector in the right format for the return value
             for (size_t i = 0; i < nmeas; ++i)
               {
                 copy(MeasVec.begin() + i * 9, MeasVec.begin() + (i + 1) * 9,
-                    results.at(i).data().begin());
+                    TensorResults.at(i).data().begin());
               }
-            return results;
+            return TensorResults;
           }
         //we only get here if we didn't use the stored sensitivities
         if (StoreTensorSensitivities && !HaveCalculatedTensorSensitivities)
@@ -592,14 +570,20 @@ namespace jiba
         // for all measurement points add the responses of the discretized part and the 1D background
         for (size_t i = 0; i < nmeas; ++i)
           {
-            results[i] = CalcTensorMeas(MeasPosX[i], MeasPosY[i], MeasPosZ[i],
-                i);
+            TensorResults[i] = CalcTensorMeas(MeasPosX[i], MeasPosY[i],
+                MeasPosZ[i], i);
             //adjust for the effects of finite extents of the grid
-            results[i] += AdjustTensorBackground(MeasPosX[i], MeasPosY[i],
-                MeasPosZ[i], modelxwidth, modelywidth, modelzwidth, i);
+            TensorResults[i] += AdjustTensorBackground(MeasPosX[i],
+                MeasPosY[i], MeasPosZ[i], modelxwidth, modelywidth,
+                modelzwidth, i);
 
           }
-        return results;
+        if (StoreTensorSensitivities)
+          {
+            //remember that we have already calculated these values
+            HaveCalculatedTensorSensitivities = true;
+          }
+        return TensorResults;
 
       }
 
@@ -618,13 +602,13 @@ namespace jiba
     void ThreeDGravityModel::WriteNetCDF(const std::string filename) const
       {
         NcFile DataFile(filename.c_str(), NcFile::Replace);
-        WriteDataToNetCDF(DataFile, GravDataName, GravDataUnit);
+        WriteDataToNetCDF(DataFile, DensityName, DensityUnit);
       }
 
     void ThreeDGravityModel::ReadNetCDF(const std::string filename)
       {
         NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
-        ReadDataFromNetCDF(DataFile, GravDataName, GravDataUnit);
+        ReadDataFromNetCDF(DataFile, DensityName, DensityUnit);
       }
 
     NcDim *ThreeDGravityModel::WriteDimensionToNetCDF(NcFile &NetCDFFile,
@@ -647,12 +631,10 @@ namespace jiba
         return SizeDim;
       }
 
-
     void ThreeDGravityModel::SaveScalarMeasurements(const std::string filename)
       {
-        tScalarMeasVec Data = CalcGravity();
-        SaveScalarGravityMeasurements(filename,Data,MeasPosX,MeasPosY,MeasPosZ);
-
+        SaveScalarGravityMeasurements(filename, ScalarResults, MeasPosX,
+            MeasPosY, MeasPosZ);
       }
 
     void ThreeDGravityModel::PlotMeasAscii(const std::string &filename,
@@ -679,22 +661,20 @@ namespace jiba
 
     void ThreeDGravityModel::PlotScalarMeasurements(const std::string filename)
       {
-        tScalarMeasVec Data(CalcGravity());
-        PlotMeasAscii(filename, Data);
+        PlotMeasAscii(filename, ScalarResults);
       }
 
     void ThreeDGravityModel::PlotTensorMeasurements(
         const std::string filename_root)
       {
-        tTensorMeasVec Data(CalcTensorGravity());
-
+        //at the moment we only write out the diagonal elements
         tScalarMeasVec Uxx, Uyy, Uzz;
-        const size_t nmeas = Data.size();
+        const size_t nmeas = TensorResults.size();
         for (size_t i = 0; i < nmeas; ++i)
           {
-            Uxx.push_back(Data.at(i)(0, 0));
-            Uyy.push_back(Data.at(i)(1, 1));
-            Uzz.push_back(Data.at(i)(2, 2));
+            Uxx.push_back(TensorResults.at(i)(0, 0));
+            Uyy.push_back(TensorResults.at(i)(1, 1));
+            Uzz.push_back(TensorResults.at(i)(2, 2));
           }
         PlotMeasAscii(filename_root + ".uxx.plot", Uxx);
         PlotMeasAscii(filename_root + ".uyy.plot", Uyy);
@@ -703,7 +683,7 @@ namespace jiba
 
     void ThreeDGravityModel::ReadMeasPosNetCDF(const std::string filename)
       {
-        jiba::ReadMeasPosNetCDF(filename,MeasPosX,MeasPosY,MeasPosZ);
+        jiba::ReadMeasPosNetCDF(filename, MeasPosX, MeasPosY, MeasPosZ);
       }
 
     void ThreeDGravityModel::ReadMeasPosAscii(const std::string filename)
@@ -723,6 +703,5 @@ namespace jiba
         assert(MeasPosX.size() == MeasPosY.size());
         assert(MeasPosX.size() == MeasPosZ.size());
       }
-
 
   }

@@ -17,6 +17,7 @@
 #include <iostream>
 #include <string>
 #include "ThreeDGravityModel.h"
+#include "ReadWriteGravityData.h"
 
 //get the name of the input files
 void PromptForFiles(std::string &ModelFilename, std::string &MeasPosFilename)
@@ -59,6 +60,9 @@ int main(int argc, char *argv[])
     GravForward.SaveScalarMeasurements(ModelFilename + ".out.nc");
     GravForward.PlotScalarMeasurements(ModelFilename + ".plot");
     GravForward.PlotTensorMeasurements(ModelFilename);
+    jiba::SaveTensorGravityMeasurements(ModelFilename + "ftg.nc",
+        GravForward.CalcTensorGravity(), GravForward.GetMeasPosX(),
+        GravForward.GetMeasPosY(), GravForward.GetMeasPosZ());
     //write the model in .vtk format, at the moment the best plotting option
     GravForward.WriteVTK(ModelFilename + ".vtk");
   }
