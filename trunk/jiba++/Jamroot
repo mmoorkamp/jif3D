@@ -10,7 +10,7 @@ use-project /Profiling : Profiling ;
 use-project /Inversion : Inversion ;
 
 local BOOST_TEST_LOG_LEVEL = all ;
-lib boost_filesystem : : <name>boost_filesystem-gcc41-mt ;
+lib boost_filesystem : : <name>boost_filesystem-gcc43-mt ;
 lib levmar : : <name>levmar ;
 lib gsl : : <name>gsl ;
 lib lapack : : <name>lapack ;
