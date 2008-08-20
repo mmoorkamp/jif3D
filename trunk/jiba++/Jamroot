@@ -4,6 +4,7 @@ project
     
 path-constant TOP : . ;
 
+use-project /Global : Global ;
 use-project /Gravity : Gravity ;
 use-project /ModelBase : ModelBase ;
 use-project /Profiling : Profiling ;
@@ -24,6 +25,7 @@ lib gfortran : : <name>gfortran ;
 lib gplib :  : <name>gplib <search>/home/mmoorkamp/workspace/gplib ;
  
 
+build-project Global ;
 build-project Gravity ;
 build-project MT ;
 build-project Tomo ;
