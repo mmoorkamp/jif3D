@@ -63,7 +63,7 @@ namespace jiba
         //All length is measured in meters
         SizeVar->add_att("units", "m");
         //We also store the name
-        SizeVar->add_att("long_name", (SizeName+" coordinate").c_str());
+        SizeVar->add_att("long_name", (SizeName + " coordinate").c_str());
         // we store the coordinates of the cells in the netcdf file
         t3DModelDim CellCoordinates(boost::extents[CellSize.size()]);
         std::partial_sum(CellSize.begin(), CellSize.end(),
@@ -94,7 +94,8 @@ namespace jiba
         std::string UnitInFile = Unit_Att->as_string(0);
         // if the units in the file are different from what we expect|
         if (UnitInFile.compare(UnitsName) != 0)
-          throw std::runtime_error("Units in file do not match expected units !");
+          throw std::runtime_error(
+              "Units in file do not match expected units !");
         //read netcdf data from file
         DataVar->get(Data.origin(), nxvalues, nyvalues, nzvalues);
       }
@@ -118,8 +119,22 @@ namespace jiba
         DataVar->put(Data.origin(), XSizeDim->size(), YSizeDim->size(),
             ZSizeDim->size());
       }
+    //! A helper function to write the Coordinates for the 3 axes into a .vtk file
+    void WriteCoordinatesToVTK(std::ofstream &file, const std::string &name,
+        const ThreeDModelBase::t3DModelDim &CellSizes)
+      {
+        //write the coordinate name, the number of cell boundary values and its type
+        file << name << " " << CellSizes.size() + 1 << " double" << std::endl;
+        //our setup implies a (0,0,0) coordinate origin
+        file << 0.0 << " ";
+        //calculate the coordinates from the cell sizes and write to file
+        std::partial_sum(CellSizes.begin(), CellSizes.end(),
+            std::ostream_iterator<double>(file, " "));
+        file << "\n";
+      }
 
-    void ThreeDModelBase::WriteVTK(std::string filename, const std::string &DataName)
+    void ThreeDModelBase::WriteVTK(std::string filename,
+        const std::string &DataName)
       {
         //do some consistency checkes
         assert(Data.num_dimensions() == 3);
@@ -140,29 +155,17 @@ namespace jiba
         outfile << "DATASET RECTILINEAR_GRID" << std::endl;
         //we write the left and right boundaries of each cell, but only store the left
         //so we have to write one extra value
-        outfile << "DIMENSIONS " << nxvalues+1 << " " <<nyvalues+1 << " "
-            << nzvalues +1 << std::endl;
-
-        outfile << "X_COORDINATES "<< nxvalues+1 << " double" << std::endl;
-        outfile << 0.0 << " ";
-        std::partial_sum(GetXCellSizes().begin(), GetXCellSizes().end(), std::ostream_iterator<double>(outfile, " "));
-        outfile << std::endl;
-
-        outfile << "Y_COORDINATES "<< nyvalues+1 << " double" << std::endl;
-        outfile << 0.0 << " ";
-        std::partial_sum(GetYCellSizes().begin(), GetYCellSizes().end(), std::ostream_iterator<double>(outfile, " "));
-        outfile << std::endl;
-
-        outfile << "Z_COORDINATES "<< nzvalues+1 << " double" << std::endl;
-        outfile << 0.0 << " ";
-        std::partial_sum(GetZCellSizes().begin(), GetZCellSizes().end(), std::ostream_iterator<double>(outfile, " "));
-        outfile << std::endl;
-
-
-        outfile << "CELL_DATA " << nxvalues * nyvalues * nzvalues
-            << std::endl;
+        outfile << "DIMENSIONS " << nxvalues + 1 << " " << nyvalues + 1 << " "
+            << nzvalues + 1 << std::endl;
+        //write information about the coordinate axes
+        WriteCoordinatesToVTK(outfile,"X_COORDINATES",GetXCellSizes());
+        WriteCoordinatesToVTK(outfile,"Y_COORDINATES",GetYCellSizes());
+        WriteCoordinatesToVTK(outfile,"Z_COORDINATES",GetZCellSizes());
+        //write some information about the data itself
+        outfile << "CELL_DATA " << nxvalues * nyvalues * nzvalues << std::endl;
         outfile << "SCALARS " << DataName << " double" << std::endl;
         outfile << "LOOKUP_TABLE default" << std::endl;
+        //and then just the density values
         for (size_t i = 0; i < nzvalues; ++i)
           {
             for (size_t j = 0; j < nyvalues; ++j)

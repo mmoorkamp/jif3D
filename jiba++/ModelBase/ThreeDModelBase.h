@@ -85,7 +85,7 @@ namespace jiba
   protected:
       //The access to the data is protected, this requires the derived class
       // to provide an access function and allows to add initial checks and
-      // meaningfull names
+      // meaningful names
       //! return read only access to the stored data
       const t3DModelData &GetData() const
         {
@@ -96,6 +96,7 @@ namespace jiba
         {
           return Data;
         }
+      //!Get the x (north) coordinates of the cells
       const t3DModelDim &GetXCoordinates()
         {
           if (XCellSizesChanged && XCellSizes.size() > 0)
@@ -104,6 +105,7 @@ namespace jiba
             }
           return GridXCoordinates;
         }
+      //!Get the y (east) coordinates of the cells
       const t3DModelDim &GetYCoordinates()
         {
           if (YCellSizesChanged && YCellSizes.size() > 0)
@@ -112,6 +114,7 @@ namespace jiba
             }
           return GridYCoordinates;
         }
+      //!Get the z (depth) coordinates of the cells
       const t3DModelDim &GetZCoordinates()
         {
           if (ZCellSizesChanged && ZCellSizes.size() > 0)
