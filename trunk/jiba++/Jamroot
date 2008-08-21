@@ -4,6 +4,10 @@ project
     
 path-constant TOP : . ;
 
+using gcc : 4.1 : g++-4.1 ;
+
+
+
 use-project /Global : Global ;
 use-project /Gravity : Gravity ;
 use-project /ModelBase : ModelBase ;
