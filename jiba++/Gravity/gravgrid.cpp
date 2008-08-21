@@ -15,6 +15,7 @@
 #include <string>
 #include "ThreeDGravityModel.h"
 #include "ReadWriteGravityData.h"
+#include "../ModelBase/VTKTools.h"
 
 using namespace std;
 
@@ -60,11 +61,14 @@ int main(int argc, char *argv[])
     //read in the file
     GravForward.ReadNetCDF(ModelFilename);
     //save the measurements and some plots
-    GravForward.CalcGravity();
+    jiba::ThreeDGravityModel::tScalarMeasVec Data(GravForward.CalcGravity());
     GravForward.CalcTensorGravity();
     GravForward.SaveScalarMeasurements(ModelFilename + ".out.nc");
     GravForward.SaveTensorMeasurements(ModelFilename + ".ftg.nc");
     GravForward.PlotScalarMeasurements(ModelFilename + ".plot");
     GravForward.PlotTensorMeasurements(ModelFilename);
     GravForward.WriteVTK(ModelFilename + ".vtk");
+    jiba::Write3DDataToVTK(ModelFilename + ".data.vtk", "grav_accel", Data,
+        GravForward.GetMeasPosX(), GravForward.GetMeasPosY(),
+        GravForward.GetMeasPosZ());
   }
