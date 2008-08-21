@@ -13,7 +13,11 @@ exe gravforward : gravforward.cpp gravity ../ModelBase//modelbase ..//netcdf_c++
 exe gravgrid : gravgrid.cpp gravity ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf : <include>. ;
 exe gravinv : gravinv.cpp gravity ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ../Inversion//inversion
               ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran : <include>. ;
+exe gravsens : gravsens.cpp gravity ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ../Inversion//inversion
+              ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran : <include>. ;              
+exe gravnoise : gravnoise.cpp gravity ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf : <include>. ;
+
 exe ftginv : ftginv.cpp gravity ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ../Inversion//inversion
               ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran : <include>. ;
-exe gravnoise : gravnoise.cpp gravity ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf : <include>. ;
+
 exe makegravmesh : makegravmesh.cpp gravity ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf : <include>. ;

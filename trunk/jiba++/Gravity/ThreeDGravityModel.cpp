@@ -24,6 +24,9 @@ namespace jiba
     /*! Calculate one term for the gravitational potential of a box, we use the nomenclature of eq. 4-6 in Li and Chouteau.
      * The parameters x,y and z are the distances to the corners of the box, we will call this functions with different
      * permutations of real world x,y and z coordinates, so only in some cases x corresponds to the x-axis.
+     * The various terms all have the form \f$ x * log(y +r) + y * log(x+r) + z*atan2(z*r, x*y) \f$
+     * where x,y and z are distances in x, y and z-direction for the current corner, respectively and
+     * \f$ r = \sqrt{x^2 +y^2 +z^2} \f$.
      */
     double CalcGravTerm(const double x, const double y, const double z)
       {
@@ -38,8 +41,16 @@ namespace jiba
         return rvalue;
       }
 
-    /*! Calculate the gravitational potential of a rectangular prism at a point meas_{x,y,z}
+    /*! Calculate the geometric term for the gravitational potential of a rectangular prism at a point meas_{x,y,z}
      *  The calculation is based on equation 4 in Li and Chouteau, Surveys in Geophysics, 19, 339-368, 1998
+     * Given the coordinates of the measurements (meas_x, meas_y and meas_z), the
+     * coordinates of the upper front left corner (ul_corner_x etc.), the size
+     * in the three directions (x_size, y_size and z_size) and the density, we calculate
+     * the geometric part caused by a prism with these parameters. All dimensions are in meters.
+     * If we multiply the result of this function with density
+     * in \f$ g/cm^3 \f$ we get the acceleration in \f$m/s^2\f$.
+     *
+     * This equation works as long as the measurement point is not on one of the corners or edges of the box.
      * @param meas_x x-coordinate of the measurement in m
      * @param meas_y y-coordinate of the measurement in m
      * @param meas_z z-coordinate of the measurement in m
@@ -80,7 +91,7 @@ namespace jiba
         return -returnvalue * Grav_const;
       }
 
-    /*! Calculate the xx-element of the second order derivative tensor, we use the same
+    /*! Calculate the geometric term of the xx-element of the second order derivative tensor, we use the same
      * function with permutated parameters to calculate the other two diagonal elements.
      * The description of the parameters is for the Uxx calculation.
      * @param meas_x x-coordinate of the measurement in m
@@ -123,7 +134,7 @@ namespace jiba
         return returnvalue * Grav_const;
       }
 
-    /*! Calculate the xy-element of the second order derivative tensor, we use the same
+    /*! Calculate the geometric term of the xy-element of the second order derivative tensor, we use the same
      * function with permutated parameters to calculate the other off-diagonal elements.
      * The description of the parameters is for the Uxy calculation.
      * @param meas_x x-coordinate of the measurement in m
@@ -135,7 +146,6 @@ namespace jiba
      * @param x_size size of the prism in x-direction in m
      * @param y_size size of the prism in y-direction in m
      * @param z_size size of the prism in z-direction in m
-     * @param density density of the prism in g/cm^3
      * @return The Uxx element of the FTG tensor
      */
     double CalcUxyTerm(const double meas_x, const double meas_y,
@@ -229,7 +239,9 @@ namespace jiba
         return (2.0 * Grav_const * density * thick) * ((M_PI / 2.0) - atan2(
             hor_dist, ver_dist));
       }
-    // Calculate a single term of the equation for a  diagonal  FTG element
+    /*! The terms \f$ U_{xx}, U_{yy} \f$ and \f$ U_{zz} \f$  of the gravimetric matrix
+     * all are sums of terms of the form \f$ atan \frac{a *b}{c *r } \f$
+     */
     double CalcFTGDiagonalTerm(const double a, const double b, const double c)
       {
         return atan2(a * b, c * sqrt(a * a + b * b + c * c));
@@ -242,7 +254,9 @@ namespace jiba
         //        returnvalue += a*c/(b*r+r*r) + b*c/(a*r+r*r);
         //        return returnvalue;
       }
-    //! Calculate a single term of the equation for an off-diagonal FTG element
+    /*! The terms \f$ U_{xy}, U_{xz} \f$ and \f$ U_{yz} \f$  of the gravimetric matrix
+     * all are sums of terms of the form \f$ \log (x +r) \f$
+     */
     double CalcFTGOffDiagonalTerm(const double value, const double x,
         const double y, const double z)
       {
@@ -392,9 +406,9 @@ namespace jiba
       }
 
     /*!  Calculate the contribution of a layered background to a tensor gravity measurement.
-     * @param xmeas The x-coordinate of the measurement point in m
-     * @param ymeas The y-coordinate of the measurement point in m
-     * @param zmeas The z-coordinate of the measurement point in m
+     * @param x_meas The x-coordinate of the measurement point in m
+     * @param y_meas The y-coordinate of the measurement point in m
+     * @param z_meas The z-coordinate of the measurement point in m
      * @param xwidth The total width of the discretized model area in x-direction in m
      * @param ywidth The total width of the discretized model area in y-direction in m
      * @param zwidth The total width of the discretized model area in z-direction in m
@@ -587,6 +601,13 @@ namespace jiba
 
       }
 
+    /*! The constructor takes two parameters
+     * @param storescalar Store the sensitivities for scalar gravity calculations
+     * @param storetensor Store the tensor for scalar gravity calculations
+     * Storing sensitivities greatly accelerates all but the first calculation as long as the model
+     * geometry is left unchanged. The code will detect changes in geometry and recalculate the sensitivities if
+     * necessary. However storing the sensitivities takes up a lot of memory.
+     */
     ThreeDGravityModel::ThreeDGravityModel(const bool storescalar,
         const bool storetensor) :
       StoreScalarSensitivities(storescalar), StoreTensorSensitivities(
@@ -640,7 +661,7 @@ namespace jiba
     void ThreeDGravityModel::SaveTensorMeasurements(const std::string filename)
       {
         SaveTensorGravityMeasurements(filename, TensorResults, MeasPosX,
-                    MeasPosY, MeasPosZ);
+            MeasPosY, MeasPosZ);
       }
 
     void ThreeDGravityModel::PlotMeasAscii(const std::string &filename,

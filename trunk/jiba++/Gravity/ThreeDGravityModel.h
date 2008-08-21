@@ -26,21 +26,8 @@ namespace jiba
     typedef rmat GravimetryMatrix;
 
     //! Calculate a single geometric term for the graviational acceleration due to a rectangular prism
-    /*! The various terms all have the form \f$ x * log(y +r) + y * log(x+r) + z*atan2(z*r, x*y) \f$
-     * where x,y and z are distances in x, y and z-direction for the current corner, respectively and
-     * \f$ r = \sqrt{x^2 +y^2 +z^2} \f$.
-     * */
     double CalcGravTerm(const double x, const double y, const double z);
     //! Calculate the geometric term  due to a rectangular prism
-    /*! Given the coordinates of the measurements (meas_x, meas_y and meas_z), the
-     * coordinates of the upper front left corner (ul_corner_x etc.), the size
-     * in the three directions (x_size, y_size and z_size) and the density, we calculate
-     * the geometric part caused by a prism with these parameters. All dimensions are in meters.
-     * If we multiply the result of this function with density
-     * in \f$ g/cm^3 \f$ we get the acceleration in \f$m/s^2\f$.
-     *
-     * This equation works as long as the measurement point is not on one of the corners or edges of the box.
-     */
     double CalcGravBoxTerm(const double meas_x, const double meas_y,
         const double meas_z, const double ul_corner_x,
         const double ul_corner_y, const double ul_corner_z,
@@ -66,14 +53,8 @@ namespace jiba
     double CalcGravSemiInfSheet(const double hor_dist, const double ver_dist,
         const double thick, const double density);
     //! Calculate one of the terms of diagonal elements of the gravimetric matrxi
-    /*! The terms \f$ U_{xx}, U_{yy} \f$ and \f$ U_{zz} \f$  of the gravimetric matrix
-     * all are sums of terms of the form \f$ atan \frac{a *b}{c *r } \f$
-     */
     double CalcFTGDiagonalTerm(const double a, const double b, const double c);
     //! Calculate one of the terms of off-diagonal elements of the gravimetric matrxi
-    /*! The terms \f$ U_{xy}, U_{xz} \f$ and \f$ U_{yz} \f$  of the gravimetric matrix
-     * all are sums of terms of the form \f$ \log (x +r) \f$
-     */
     double CalcFTGOffDiagonalTerm(const double value, const double x,
         const double y, const double z);
     //! the gravitational acceleration of an infinite slab
@@ -246,13 +227,6 @@ namespace jiba
       //! Read the Measurement positions from an ascii file
       void ReadMeasPosAscii(const std::string filename);
       //! When we create the object we have to specify whether we want to store scalar and/or tensor sensitivities
-      /*! The constructor takes two parameters
-       * @param storescalar Store the sensitivities for scalar gravity calculations
-       * @param storetensor Store the tensor for scalar gravity calculations
-       * Storing sensitivities greatly accelerates all but the first calculation as long as the model
-       * geometry is left unchanged. The code will detect changes in geometry and recalculate the sensitivities if
-       * necessary. However storing the sensitivities takes up a lot of memory.
-       */
       ThreeDGravityModel(const bool storescalar = false,
           const bool storetensor = false);
       virtual ~ThreeDGravityModel();

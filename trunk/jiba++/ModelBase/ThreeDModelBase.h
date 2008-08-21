@@ -22,12 +22,12 @@ namespace jiba
      */
     class ThreeDModelBase
       {
-  public:
+    public:
       //! A shorthand for the type of the stored model data for 3D models
       typedef boost::multi_array<double, 3> t3DModelData;
       //! A shorthand for the dimensions, i.e. cell-sizes for the 3D models
       typedef boost::multi_array<double, 1> t3DModelDim;
-  private:
+    private:
       //! If a derived class needs to perform some action when one the cell size changes, this can be done here
       virtual void SetCellSizesAction(t3DModelDim &sizes)
         {
@@ -52,16 +52,6 @@ namespace jiba
       t3DModelDim GridYCoordinates;
       //! The x-coordinate of the upper left front corner
       t3DModelDim GridZCoordinates;
-      //! Read a single CellSize variable from a netcdf file
-      /*! This is a helper function that reads the cell length for a single
-       * dimension from the file.
-       */
-      size_t ReadSizesFromNetCDF(const NcFile &NetCDFFile,
-          const std::string &SizeName, t3DModelDim &CellSize,
-          t3DModelDim CellCoordinates);
-      //! Write the length of the model cell along a single dimension to the file
-      NcDim *WriteSizesToNetCDF(NcFile &NetCDFFile,
-          const std::string &SizeName, const t3DModelDim &CellSize) const;
       //! Calculate the coordinates of the model cells from the sizes of each cell
       /*! This functions assumes that the coordinate of the upper left front corner of the model is
        * is (0,0,0).
@@ -72,17 +62,22 @@ namespace jiba
       void CalcCoordinates(t3DModelDim &Coordinates, const t3DModelDim Sizes,
           bool &ChangeFlag)
         {
-          Coordinates.resize(boost::extents[Sizes.size()]);
-          if (Sizes.size() > 0)
+          const size_t nelements = Sizes.size();
+          if (ChangeFlag &&  nelements > 0)
             {
-              std::partial_sum(Sizes.begin(), Sizes.end(), Coordinates.begin());
-              std::rotate(Coordinates.begin(), Coordinates.end()-1,
-                  Coordinates.end());
-              Coordinates[0] = 0.0;
+              Coordinates.resize(boost::extents[nelements]);
+              if (nelements > 0)
+                {
+                  std::partial_sum(Sizes.begin(), Sizes.end(),
+                      Coordinates.begin());
+                  std::rotate(Coordinates.begin(), Coordinates.end() - 1,
+                      Coordinates.end());
+                  Coordinates[0] = 0.0;
+                }
+              ChangeFlag = false;
             }
-          ChangeFlag = false;
         }
-  protected:
+    protected:
       //The access to the data is protected, this requires the derived class
       // to provide an access function and allows to add initial checks and
       // meaningful names
@@ -99,28 +94,19 @@ namespace jiba
       //!Get the x (north) coordinates of the cells
       const t3DModelDim &GetXCoordinates()
         {
-          if (XCellSizesChanged && XCellSizes.size() > 0)
-            {
-              CalcCoordinates(GridXCoordinates,XCellSizes,XCellSizesChanged);
-            }
+          CalcCoordinates(GridXCoordinates, XCellSizes, XCellSizesChanged);
           return GridXCoordinates;
         }
       //!Get the y (east) coordinates of the cells
       const t3DModelDim &GetYCoordinates()
         {
-          if (YCellSizesChanged && YCellSizes.size() > 0)
-            {
-              CalcCoordinates(GridYCoordinates,YCellSizes,YCellSizesChanged);
-            }
+          CalcCoordinates(GridYCoordinates, YCellSizes, YCellSizesChanged);
           return GridYCoordinates;
         }
       //!Get the z (depth) coordinates of the cells
       const t3DModelDim &GetZCoordinates()
         {
-          if (ZCellSizesChanged && ZCellSizes.size() > 0)
-            {
-              CalcCoordinates(GridZCoordinates,ZCellSizes,ZCellSizesChanged);
-            }
+          CalcCoordinates(GridZCoordinates, ZCellSizes, ZCellSizesChanged);
           return GridZCoordinates;
         }
       //! Read data and associated cell sizes from a netcdf file
@@ -131,7 +117,7 @@ namespace jiba
           const std::string &UnitsName) const;
       //! Write the data and cell sizes to a VTK file for plotting in Paraview or Visit etc.
       void WriteVTK(std::string filename, const std::string &DataName);
-  public:
+    public:
       //! read-only access to the cell size in x-direction in m
       const t3DModelDim &GetXCellSizes() const
         {

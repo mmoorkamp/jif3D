@@ -18,6 +18,7 @@
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/assign/std/vector.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/numeric/conversion/cast.hpp>
 
 using namespace boost::assign;
 
@@ -55,8 +56,8 @@ void MakeRandomModel(jiba::ThreeDGravityModel &Model, const size_t nmeas)
     Model.SetYCellSizes() = YDim;
     Model.SetZCellSizes().resize(boost::extents[zsize]);
     Model.SetZCellSizes() = ZDim;
-    int xlength = std::accumulate(XDim.begin(), XDim.end(), 0.0);
-    int ylength = std::accumulate(YDim.begin(), YDim.end(), 0.0);
+    int xlength = boost::numeric_cast<int>(floor(std::accumulate(XDim.begin(), XDim.end(), 0.0)));
+    int ylength = boost::numeric_cast<int>(floor(std::accumulate(YDim.begin(), YDim.end(), 0.0)));
 
     Model.SetDensities().resize(boost::extents[xsize][ysize][zsize]);
 

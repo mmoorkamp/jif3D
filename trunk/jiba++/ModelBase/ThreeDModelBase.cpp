@@ -8,8 +8,8 @@
 #include "ThreeDModelBase.h"
 #include <cassert>
 #include <fstream>
-#include "../Global/FatalException.h"
-
+#include "NetCDFTools.h"
+#include "VTKTools.h"
 namespace jiba
   {
 
@@ -22,163 +22,25 @@ namespace jiba
       {
       }
 
-    size_t ThreeDModelBase::ReadSizesFromNetCDF(const NcFile &NetCDFFile,
-        const std::string &SizeName, t3DModelDim &CellSize,
-        t3DModelDim CellCoordinates)
-      {
-        //we store the information about the grid in a different way to
-        //which we use it, we assume the first cell to have the upper left front corner at (0,0,0)
-        //and store the right back lower coordinate for each cell
-        //internally however we work with the upper left front corner and use the size
-        //of the last cell to complete the geometry of the model
-        //Make sure we are reading into a one-dimensional entry
-        assert(CellSize.num_dimensions() == 1);
-        //create a netcdf dimension with the chosen name
-        NcDim *SizeDim = NetCDFFile.get_dim(SizeName.c_str());
-        //determine the size of that dimension
-        const size_t nvalues = SizeDim->size();
-        //allocate memory in the class variable
-        CellSize.resize(boost::extents[nvalues]);
-        CellCoordinates.resize(boost::extents[nvalues]);
-        // create netcdf variable with the same name as the dimension
-        NcVar *SizeVar = NetCDFFile.get_var(SizeName.c_str());
-        //read coordinate values from netcdf file
-        SizeVar->get(CellCoordinates.origin(), nvalues);
-        // transform coordinates to cell sizes, assuming the start is at 0
-        std::adjacent_difference(CellCoordinates.begin(),
-            CellCoordinates.end(), CellSize.begin());
-        //return the size of the current dimension
-        return nvalues;
-      }
-
-    NcDim *ThreeDModelBase::WriteSizesToNetCDF(NcFile &NetCDFFile,
-        const std::string &SizeName, const t3DModelDim &CellSize) const
-      {
-        //Make sure we are writing a one-dimensional entry
-        assert(CellSize.num_dimensions() == 1);
-        // Add a dimension and a variable with the same name to the netcdf file
-        NcDim *SizeDim = NetCDFFile.add_dim(SizeName.c_str(), CellSize.size());
-        NcVar *SizeVar =
-            NetCDFFile.add_var(SizeName.c_str(), ncDouble, SizeDim);
-        //All length is measured in meters
-        SizeVar->add_att("units", "m");
-        //We also store the name
-        SizeVar->add_att("long_name", (SizeName + " coordinate").c_str());
-        // we store the coordinates of the cells in the netcdf file
-        t3DModelDim CellCoordinates(boost::extents[CellSize.size()]);
-        std::partial_sum(CellSize.begin(), CellSize.end(),
-            CellCoordinates.begin());
-        //Write the values
-        SizeVar->put(CellCoordinates.origin(), CellCoordinates.size());
-        // We return the NcDim object, because we need it to write the model data
-        return SizeDim;
-      }
 
     void ThreeDModelBase::ReadDataFromNetCDF(const NcFile &NetCDFFile,
         const std::string &DataName, const std::string &UnitsName)
       {
-
-        //Read the sizes of the blocks in x,y and z-direction from the file
-        const size_t nxvalues = ReadSizesFromNetCDF(NetCDFFile, "x",
-            XCellSizes, GridXCoordinates);
-        const size_t nyvalues = ReadSizesFromNetCDF(NetCDFFile, "y",
-            YCellSizes, GridYCoordinates);
-        const size_t nzvalues = ReadSizesFromNetCDF(NetCDFFile, "z",
-            ZCellSizes, GridZCoordinates);
-        //allocate memory for the data
-        Data.resize(boost::extents[nxvalues][nyvalues][nzvalues]);
-        //create netcdf variable for data
-        NcVar *DataVar = NetCDFFile.get_var(DataName.c_str());
-        //make sure we have the right units
-        NcAtt *Unit_Att = DataVar->get_att("units");
-        std::string UnitInFile = Unit_Att->as_string(0);
-        // if the units in the file are different from what we expect|
-        if (UnitInFile.compare(UnitsName) != 0)
-          throw std::runtime_error(
-              "Units in file do not match expected units !");
-        //read netcdf data from file
-        DataVar->get(Data.origin(), nxvalues, nyvalues, nzvalues);
+        Read3DDataFromNetCDF(NetCDFFile,DataName,UnitsName,XCellSizes,YCellSizes,ZCellSizes,Data);
       }
 
     void ThreeDModelBase::WriteDataToNetCDF(NcFile &NetCDFFile,
         const std::string &DataName, const std::string &UnitsName) const
       {
-        //Make sure our data has the right dimensions and we have size information for each cell
-        assert(Data.num_dimensions() == 3);
-        assert(Data.shape()[0] == XCellSizes.size());
-        assert(Data.shape()[1] == YCellSizes.size());
-        assert(Data.shape()[2] == ZCellSizes.size());
-        // Write the size information in x,y, and z-direction
-        NcDim *XSizeDim = WriteSizesToNetCDF(NetCDFFile, "x", XCellSizes);
-        NcDim *YSizeDim = WriteSizesToNetCDF(NetCDFFile, "y", YCellSizes);
-        NcDim *ZSizeDim = WriteSizesToNetCDF(NetCDFFile, "z", ZCellSizes);
-        NcVar *DataVar = NetCDFFile.add_var(DataName.c_str(), ncDouble,
-            XSizeDim, YSizeDim, ZSizeDim);
-        DataVar->add_att("units", UnitsName.c_str());
-        //Write the model data itself
-        DataVar->put(Data.origin(), XSizeDim->size(), YSizeDim->size(),
-            ZSizeDim->size());
+        Write3DDataToNetCDF(NetCDFFile,DataName,UnitsName,XCellSizes,YCellSizes,ZCellSizes,Data);
       }
-    //! A helper function to write the Coordinates for the 3 axes into a .vtk file
-    void WriteCoordinatesToVTK(std::ofstream &file, const std::string &name,
-        const ThreeDModelBase::t3DModelDim &CellSizes)
-      {
-        //write the coordinate name, the number of cell boundary values and its type
-        file << name << " " << CellSizes.size() + 1 << " double" << std::endl;
-        //our setup implies a (0,0,0) coordinate origin
-        file << 0.0 << " ";
-        //calculate the coordinates from the cell sizes and write to file
-        std::partial_sum(CellSizes.begin(), CellSizes.end(),
-            std::ostream_iterator<double>(file, " "));
-        file << "\n";
-      }
+
+
 
     void ThreeDModelBase::WriteVTK(std::string filename,
         const std::string &DataName)
       {
-        //do some consistency checkes
-        assert(Data.num_dimensions() == 3);
-        assert(Data.shape()[0] == XCellSizes.size());
-        assert(Data.shape()[1] == YCellSizes.size());
-        assert(Data.shape()[2] == ZCellSizes.size());
-
-        //get the size of each model direction
-        const size_t nxvalues = XCellSizes.size();
-        const size_t nyvalues = YCellSizes.size();
-        const size_t nzvalues = ZCellSizes.size();
-
-        std::ofstream outfile(filename.c_str());
-        //first we have to write some general information about the file format
-        outfile << "# vtk DataFile Version 2.0" << std::endl;
-        outfile << "3D Model data" << std::endl;
-        outfile << "ASCII" << std::endl;
-        outfile << "DATASET RECTILINEAR_GRID" << std::endl;
-        //we write the left and right boundaries of each cell, but only store the left
-        //so we have to write one extra value
-        outfile << "DIMENSIONS " << nxvalues + 1 << " " << nyvalues + 1 << " "
-            << nzvalues + 1 << std::endl;
-        //write information about the coordinate axes
-        WriteCoordinatesToVTK(outfile,"X_COORDINATES",GetXCellSizes());
-        WriteCoordinatesToVTK(outfile,"Y_COORDINATES",GetYCellSizes());
-        WriteCoordinatesToVTK(outfile,"Z_COORDINATES",GetZCellSizes());
-        //write some information about the data itself
-        outfile << "CELL_DATA " << nxvalues * nyvalues * nzvalues << std::endl;
-        outfile << "SCALARS " << DataName << " double" << std::endl;
-        outfile << "LOOKUP_TABLE default" << std::endl;
-        //and then just the density values
-        for (size_t i = 0; i < nzvalues; ++i)
-          {
-            for (size_t j = 0; j < nyvalues; ++j)
-              {
-                for (size_t k = 0; k < nxvalues; ++k)
-                  {
-                    outfile << Data[k][j][i] << " ";
-                  }
-                outfile << std::endl;
-              }
-          }
-        if (outfile.fail())
-          throw FatalException("Problem writing vtk  file");
+        Write3DModelToVTK(filename,DataName,GetXCellSizes(),GetYCellSizes(),GetZCellSizes(),GetData());
       }
 
   }
