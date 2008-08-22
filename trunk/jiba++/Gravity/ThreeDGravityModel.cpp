@@ -21,6 +21,37 @@ namespace jiba
     static const std::string DensityName = "density";
     static const std::string DensityUnit = "g/cm3";
 
+    double CalcDepthTerm(const double top, const double bottom, const double z0)
+      {
+        return 0.25 * (pow(bottom - z0,-2) - pow(top - z0,-2));
+      }
+
+    /*! Construct a weighting matrix that counteracts the decay of the sensitivities of gravity data
+     *  to facilitate inversion.
+     * @param XSizes The sizes of the model cells in x-direction in m
+     * @param YSizes The sizes of the model cells in y-direction in m
+     * @param ZSizes The sizes of the model cells in z-direction in m
+     * @param z0 The scaling depth
+     * @param WeightMatrix The resulting weight matrix
+     */
+    void ConstructDepthWeighting(const ThreeDModelBase::t3DModelDim &XSizes, const ThreeDModelBase::t3DModelDim &YSizes,
+            const ThreeDModelBase::t3DModelDim &ZSizes, const double z0, rvec &WeightVector)
+      {
+        const size_t nz = ZSizes.size();
+
+        if (WeightVector.size() != nz)
+          {
+            WeightVector.resize(nz);
+          }
+        double currtop = 0.0;
+        for (size_t i = 0; i< nz; ++i)
+          {
+            WeightVector(i) = CalcDepthTerm(currtop,currtop+ZSizes[i],z0);
+            currtop +=ZSizes[i];
+          }
+
+      }
+
     /*! Calculate one term for the gravitational potential of a box, we use the nomenclature of eq. 4-6 in Li and Chouteau.
      * The parameters x,y and z are the distances to the corners of the box, we will call this functions with different
      * permutations of real world x,y and z coordinates, so only in some cases x corresponds to the x-axis.

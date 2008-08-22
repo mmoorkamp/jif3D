@@ -9,6 +9,9 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <boost/bind.hpp>
+#include <boost/lambda/lambda.hpp>
+#include "../Global/convert.h"
 #include "ThreeDGravityModel.h"
 #include "ReadWriteGravityData.h"
 #include "../Inversion/MatrixTools.h"
@@ -51,14 +54,23 @@ int main(int argc, char *argv[])
     std::ofstream evalfile((modelfilename + ".eval").c_str());
     std::copy(s.begin(), s.end(), std::ostream_iterator<double>(evalfile, "\n"));
     std::cout << "There are " << s.size() << " eigenvalues.\n";
-    int index = 0;
-    std::cout << "Enter an index for the eigenvalue to plot: ";
-    std::cin >> index;
+    int startindex = 0;
+    std::cout << "Enter the first index for the eigenvalues to plot: ";
+    std::cin >> startindex;
+    int endindex = 0;
+    std::cout << "Enter the last index for the eigenvalues to plot: ";
+    std::cin >> endindex;
     const size_t xsize = Model.GetDensities().shape()[0];
     const size_t ysize = Model.GetDensities().shape()[1];
     const size_t zsize = Model.GetDensities().shape()[2];
-    jiba::ThreeDModelBase::t3DModelData sens(boost::extents[xsize][ysize][zsize]);
-    std::copy(row(vt, index).begin(),row(vt, index).end(),sens.data());
-    jiba::Write3DModelToVTK(modelfilename + ".sens.vtk", "scalar_sens", Model.GetXCellSizes(),
-        Model.GetYCellSizes(), Model.GetZCellSizes(), sens);
+    jiba::ThreeDModelBase::t3DModelData sens(
+        boost::extents[xsize][ysize][zsize]);
+    for (int currindex = startindex; currindex < endindex; ++currindex)
+      {
+        const double maxvalue = *std::max_element(row(vt, currindex).begin(), row(vt, currindex).end(),boost::bind(fabs,_1) < boost::bind(fabs,_2));
+        std::transform(row(vt, currindex).begin(), row(vt, currindex).end(), sens.data(),boost::bind(std::multiplies<double>(),_1,1./maxvalue));
+        jiba::Write3DModelToVTK(modelfilename + ".sens."+stringify(currindex)+".vtk", "scalar_sens",
+            Model.GetXCellSizes(), Model.GetYCellSizes(),
+            Model.GetZCellSizes(), sens);
+      }
   }

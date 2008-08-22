@@ -13,9 +13,10 @@
 #include "../Inversion/MatrixTools.h"
 #include "ReadWriteGravityData.h"
 #include <boost/numeric/bindings/atlas/cblas2.hpp>
+#include <boost/numeric/bindings/atlas/cblas3.hpp>
 
 namespace atlas = boost::numeric::bindings::atlas;
-
+namespace ublas = boost::numeric::ublas;
 int main(int argc, char *argv[])
   {
     jiba::ThreeDGravityModel Model(true);
@@ -45,21 +46,55 @@ int main(int argc, char *argv[])
     Model.SaveScalarMeasurements(modelfilename + ".new.nc");
     jiba::rmat Sensitivities(Model.GetScalarSensitivities());
 
+    double z0;
+    std::cout << "Enter z0: ";
+    std::cin >> z0;
+
+    const size_t xsize = Model.GetDensities().shape()[0];
+    const size_t ysize = Model.GetDensities().shape()[1];
+    const size_t zsize = Model.GetDensities().shape()[2];
+    const size_t nmod = xsize * ysize * zsize;
+    jiba::rvec WeightVector(zsize);
+    jiba::ConstructDepthWeighting(Model.GetXCellSizes(), Model.GetYCellSizes(),
+        Model.GetZCellSizes(), z0, WeightVector);
+
+    jiba::rvec ModelCovar(nmod);
+    ModelCovar *= 0.0;
+    std::copy(WeightVector.begin(), WeightVector.end(), ModelCovar.begin());
+    jiba::rmat FilteredSens(nmod, nmeas);
+    for (size_t i = 0; i < nmod; ++i)
+      {
+        boost::numeric::ublas::matrix_row<jiba::rmat>
+            CurrentRow(FilteredSens, i);
+
+        atlas::gemv(CblasNoTrans, 1.0, Sensitivities, ModelCovar, 0.0,
+            CurrentRow);
+        std::rotate(ModelCovar.begin(), ModelCovar.end() - zsize,
+            ModelCovar.end());
+      }
+
+    jiba::rmat Gamma(nmeas, nmeas);
+    atlas::gemm(CblasNoTrans, CblasNoTrans, 1.0, Sensitivities, FilteredSens,
+        0.0, Gamma);
     //we can play around with the threshold for the included eigenvalues
     double upthresh, lowthresh;
     std::cout << "Upper threshold: ";
     std::cin >> upthresh;
     std::cout << "Lower threshold: ";
     std::cin >> lowthresh;
-    jiba::rmat Inverse(Sensitivities.size2(), Sensitivities.size1());
-    jiba::GeneralizedInverse(Sensitivities, Inverse, lowthresh, upthresh);
-    const size_t xsize = Model.GetDensities().shape()[0];
-    const size_t ysize = Model.GetDensities().shape()[1];
-    const size_t zsize = Model.GetDensities().shape()[2];
-    jiba::rvec InvModel(xsize * ysize * zsize);
-    atlas::gemv(Inverse, Data, InvModel);
 
-    std::copy(InvModel.begin(),InvModel.end(),Model.SetDensities().origin());
+    jiba::rmat DataInverse(nmeas, nmeas);
+    jiba::GeneralizedInverse(Gamma, DataInverse, lowthresh, upthresh);
+
+    jiba::rvec InvModel(xsize * ysize * zsize);
+
+    jiba::rmat ModelInverse(nmod, nmeas);
+    atlas::gemm(CblasNoTrans, CblasNoTrans, 1.0, FilteredSens, DataInverse,
+        0.0, ModelInverse);
+
+    atlas::gemv(ModelInverse, Data, InvModel);
+
+    std::copy(InvModel.begin(), InvModel.end(), Model.SetDensities().origin());
     Model.CalcGravity();
     Model.SaveScalarMeasurements(modelfilename + ".inv_data.nc");
     Model.PlotScalarMeasurements(modelfilename + ".inv.plot");

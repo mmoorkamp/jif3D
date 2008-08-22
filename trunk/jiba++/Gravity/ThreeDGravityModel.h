@@ -63,6 +63,8 @@ namespace jiba
         return 2.0 * M_PI * Grav_const * thick;
       }
 
+    void ConstructDepthWeighting(const ThreeDModelBase::t3DModelDim &XSizes, const ThreeDModelBase::t3DModelDim &YSizes,
+        const ThreeDModelBase::t3DModelDim &ZSizes, const double z0, rvec &WeightVector);
     //! We store the 3x3 matrix for gravimetric measurements in a ublas matrix with real entries
     typedef rmat GravimetryMatrix;
 
