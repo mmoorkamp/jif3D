@@ -19,7 +19,7 @@ namespace jiba
      * @param u The n*n transformation matrix
      * @param vt The m*m transformation matrix
      */
-    void SVD(rmat &SensitivityMatrix, rvec &s, rmat &u, rmat &vt)
+    inline void SVD(rmat &SensitivityMatrix, rvec &s, rmat &u, rmat &vt)
       {
         const size_t size1 = SensitivityMatrix.size1();
         const size_t size2 = SensitivityMatrix.size2();

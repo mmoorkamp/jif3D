@@ -10,13 +10,9 @@
 #include <fstream>
 #include <string>
 #include "ThreeDGravityModel.h"
-#include "../Inversion/MatrixTools.h"
 #include "ReadWriteGravityData.h"
-#include <boost/numeric/bindings/atlas/cblas2.hpp>
-#include <boost/numeric/bindings/atlas/cblas3.hpp>
-
-namespace atlas = boost::numeric::bindings::atlas;
-namespace ublas = boost::numeric::ublas;
+#include "../Inversion/LinearInversion.h"
+#include "../ModelBase/VTKTools.h"
 int main(int argc, char *argv[])
   {
     jiba::ThreeDGravityModel Model(true);
@@ -54,39 +50,38 @@ int main(int argc, char *argv[])
     const size_t ysize = Model.GetDensities().shape()[1];
     const size_t zsize = Model.GetDensities().shape()[2];
     const size_t nmod = xsize * ysize * zsize;
-    jiba::rvec WeightVector(zsize);
+    jiba::rvec WeightVector(zsize), ModelWeight(nmod), SummedSens(nmod);
+    SummedSens *= 0.0;
+    for (size_t i = 0; i < nmeas; ++i)
+      {
+        SummedSens += boost::numeric::ublas::matrix_row<jiba::rmat>(Sensitivities, i);
+      }
+    jiba::ThreeDModelBase::t3DModelData SensModel(
+            boost::extents[xsize][ysize][zsize]);
+    std::copy(SummedSens.begin(),SummedSens.end(),SensModel.data());
+
+    jiba::Write3DModelToVTK(modelfilename + ".sens.vtk", "summed_sens",
+                Model.GetXCellSizes(), Model.GetYCellSizes(),
+                Model.GetZCellSizes(), SensModel);
+
     jiba::ConstructDepthWeighting(Model.GetXCellSizes(), Model.GetYCellSizes(),
         Model.GetZCellSizes(), z0, WeightVector);
-
-    jiba::rmat FilteredSens(trans(Sensitivities));
+    std::ofstream weightfile("weights.out");
+    std::copy(WeightVector.begin(),WeightVector.end(),std::ostream_iterator<double>(weightfile,"\n"));
     for (size_t i = 0; i < nmod; ++i)
       {
-        boost::numeric::ublas::matrix_row<jiba::rmat>
-            CurrentRow(FilteredSens, i);
-
-        CurrentRow *= WeightVector(i % zsize);
+        ModelWeight(i) =WeightVector(i % zsize);
       }
 
-    jiba::rmat Gamma(nmeas, nmeas);
-    atlas::gemm(CblasNoTrans, CblasNoTrans, 1.0, Sensitivities, FilteredSens,
-        0.0, Gamma);
     //we can play around with the threshold for the included eigenvalues
-    double upthresh, lowthresh;
-    std::cout << "Upper threshold: ";
-    std::cin >> upthresh;
-    std::cout << "Lower threshold: ";
-    std::cin >> lowthresh;
+    double evalthresh;
 
-    jiba::rmat DataInverse(nmeas, nmeas);
-    jiba::GeneralizedInverse(Gamma, DataInverse, lowthresh, upthresh);
-
-    jiba::rvec InvModel(xsize * ysize * zsize);
-
-    jiba::rmat ModelInverse(nmod, nmeas);
-    atlas::gemm(CblasNoTrans, CblasNoTrans, 1.0, FilteredSens, DataInverse,
-        0.0, ModelInverse);
-
-    atlas::gemv(ModelInverse, Data, InvModel);
+    std::cout << "Eigenvalue threshold: ";
+    std::cin >> evalthresh;
+    jiba::rvec InvModel;
+    jiba::rvec DataVec(Data.size());
+    std::copy(Data.begin(),Data.end(),DataVec.begin());
+    jiba::DataSpaceInversion(Sensitivities,DataVec,ModelWeight,evalthresh,InvModel);
 
     std::copy(InvModel.begin(), InvModel.end(), Model.SetDensities().origin());
     Model.CalcGravity();
