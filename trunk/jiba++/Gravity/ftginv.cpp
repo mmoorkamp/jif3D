@@ -13,6 +13,7 @@
 #include "../Inversion/MatrixTools.h"
 #include "ReadWriteGravityData.h"
 #include <boost/numeric/bindings/atlas/cblas2.hpp>
+#include "../Inversion/LinearInversion.h"
 
 namespace atlas = boost::numeric::bindings::atlas;
 
@@ -35,11 +36,12 @@ int main(int argc, char *argv[])
     jiba::rvec DataVector(Data.size() * 9);
     for (size_t i = 0; i < Data.size(); ++i)
       {
-        copy(Data.at(i).data().begin(),
-            Data.at(i).data().end(), DataVector.begin()+i*9);
+        copy(Data.at(i).data().begin(), Data.at(i).data().end(),
+            DataVector.begin() + i * 9);
       }
 
     const size_t nmeas = PosX.size();
+
     //set the measurement points in the model to those of the data
     Model.ClearMeasurementPoints();
     for (size_t i = 0; i < nmeas; ++i)
@@ -51,20 +53,31 @@ int main(int argc, char *argv[])
     Model.CalcTensorGravity();
     Model.SaveTensorMeasurements(modelfilename + ".new.nc");
     jiba::rmat Sensitivities(Model.GetTensorSensitivities());
+    //depth weighting
+    double z0;
+    std::cout << "Enter z0: ";
+    std::cin >> z0;
+    const size_t nmod = Sensitivities.size2();
+    const size_t zsize = Model.GetDensities().shape()[2];
+    jiba::rvec WeightVector(zsize), ModelWeight(nmod);
+    jiba::ConstructDepthWeighting(Model.GetXCellSizes(), Model.GetYCellSizes(),
+        Model.GetZCellSizes(), z0, WeightVector);
+    std::ofstream weightfile("weights.out");
+    std::copy(WeightVector.begin(), WeightVector.end(),
+        std::ostream_iterator<double>(weightfile, "\n"));
+    for (size_t i = 0; i < nmod; ++i)
+      {
+        ModelWeight(i) =WeightVector(i % zsize);
+      }
 
     //we can play around with the threshold for the included eigenvalues
-    double upthresh, lowthresh;
-    std::cout << "Upper threshold: ";
-    std::cin >> upthresh;
-    std::cout << "Lower threshold: ";
-    std::cin >> lowthresh;
-    jiba::rmat Inverse(Sensitivities.size2(), Sensitivities.size1());
-    jiba::GeneralizedInverse(Sensitivities, Inverse, lowthresh, upthresh);
-    const size_t xsize = Model.GetDensities().shape()[0];
-    const size_t ysize = Model.GetDensities().shape()[1];
-    const size_t zsize = Model.GetDensities().shape()[2];
-    jiba::rvec InvModel(xsize * ysize * zsize);
-    atlas::gemv(Inverse, DataVector, InvModel);
+    double evalthresh;
+    std::cout << "Eigenvalue threshold: ";
+    std::cin >> evalthresh;
+    jiba::rvec InvModel;
+
+    jiba::DataSpaceInversion(Sensitivities, DataVector, ModelWeight,
+        evalthresh, InvModel);
 
     std::copy(InvModel.begin(), InvModel.end(), Model.SetDensities().origin());
     Model.CalcTensorGravity();
