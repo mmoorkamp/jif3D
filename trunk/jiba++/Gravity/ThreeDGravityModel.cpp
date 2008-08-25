@@ -23,7 +23,8 @@ namespace jiba
 
     double CalcDepthTerm(const double top, const double bottom, const double z0)
       {
-        return 0.25 * (pow(bottom - z0,-2) - pow(top - z0,-2));
+        return fabs(1. / (bottom - top) * (1. / pow(top - z0, 3) - 1.
+            / pow(bottom - z0, 3)));
       }
 
     /*! Construct a weighting matrix that counteracts the decay of the sensitivities of gravity data
@@ -34,8 +35,10 @@ namespace jiba
      * @param z0 The scaling depth
      * @param WeightMatrix The resulting weight matrix
      */
-    void ConstructDepthWeighting(const ThreeDModelBase::t3DModelDim &XSizes, const ThreeDModelBase::t3DModelDim &YSizes,
-            const ThreeDModelBase::t3DModelDim &ZSizes, const double z0, rvec &WeightVector)
+    void ConstructDepthWeighting(const ThreeDModelBase::t3DModelDim &XSizes,
+        const ThreeDModelBase::t3DModelDim &YSizes,
+        const ThreeDModelBase::t3DModelDim &ZSizes, const double z0,
+        rvec &WeightVector)
       {
         const size_t nz = ZSizes.size();
 
@@ -44,11 +47,15 @@ namespace jiba
             WeightVector.resize(nz);
           }
         double currtop = 0.0;
-        for (size_t i = 0; i< nz; ++i)
+        for (size_t i = 0; i < nz; ++i)
           {
             WeightVector(i) = CalcDepthTerm(currtop,currtop+ZSizes[i],z0);
-            currtop +=ZSizes[i];
+            currtop += ZSizes[i];
           }
+        //normalize
+        std::transform(WeightVector.begin(), WeightVector.end(),
+            WeightVector.begin(), boost::bind(std::divides<double>(), _1,
+                *std::max_element(WeightVector.begin(), WeightVector.end())));
 
       }
 
