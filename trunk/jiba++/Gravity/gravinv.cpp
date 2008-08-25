@@ -58,19 +58,13 @@ int main(int argc, char *argv[])
     jiba::ConstructDepthWeighting(Model.GetXCellSizes(), Model.GetYCellSizes(),
         Model.GetZCellSizes(), z0, WeightVector);
 
-    jiba::rvec ModelCovar(nmod);
-    ModelCovar *= 0.0;
-    std::copy(WeightVector.begin(), WeightVector.end(), ModelCovar.begin());
-    jiba::rmat FilteredSens(nmod, nmeas);
+    jiba::rmat FilteredSens(trans(Sensitivities));
     for (size_t i = 0; i < nmod; ++i)
       {
         boost::numeric::ublas::matrix_row<jiba::rmat>
             CurrentRow(FilteredSens, i);
 
-        atlas::gemv(CblasNoTrans, 1.0, Sensitivities, ModelCovar, 0.0,
-            CurrentRow);
-        std::rotate(ModelCovar.begin(), ModelCovar.end() - zsize,
-            ModelCovar.end());
+        CurrentRow *= WeightVector(i % zsize);
       }
 
     jiba::rmat Gamma(nmeas, nmeas);
