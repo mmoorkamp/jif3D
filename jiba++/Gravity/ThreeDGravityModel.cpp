@@ -23,8 +23,10 @@ namespace jiba
 
     double CalcDepthTerm(const double top, const double bottom, const double z0)
       {
-        return fabs(1. / (bottom - top) * (1. / pow(top - z0, 3) - 1.
-            / pow(bottom - z0, 3)));
+        return pow(bottom + z0, -1.5);
+
+        //return sqrt(fabs(1. / (bottom - top) * (1. / pow(top + z0, 3) - 1.
+        //    / pow(bottom + z0, 3))));
       }
 
     /*! Construct a weighting matrix that counteracts the decay of the sensitivities of gravity data
