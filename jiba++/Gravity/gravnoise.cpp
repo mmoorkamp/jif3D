@@ -5,6 +5,9 @@
 // Copyright   : 2008, MM
 //============================================================================
 
+/*! \file Add random gaussian noise to a netcdf file with gravity measurements.
+ */
+
 #include <iostream>
 #include "ThreeDGravityModel.h"
 #include <boost/random/lagged_fibonacci.hpp>
@@ -15,22 +18,26 @@
 
 int main(int argc, char *argv[])
   {
+    //create the generator object for the random number generator
     boost::lagged_fibonacci607 generator(
         static_cast<unsigned int> (std::time(0)));
 
     jiba::ThreeDGravityModel::tScalarMeasVec Data;
     jiba::ThreeDGravityModel::tMeasPosVec PosX, PosY, PosZ;
 
+    //read in the netcdf file with the data
     std::string datafilename;
     std::cout << "Data Filename: ";
     std::cin >> datafilename;
     jiba::ReadScalarGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
 
+    //get the relative noise level
     double noiselevel;
     std::cout << "Relative noise level: ";
     std::cin >> noiselevel;
 
     const size_t nmeas = Data.size();
+    //create a gaussian distribution for each datum and draw a sample from it
     for (size_t i = 0; i < nmeas; ++i)
       {
         boost::normal_distribution<> dist(Data.at(i), fabs(Data.at(i) * noiselevel));
@@ -38,5 +45,6 @@ int main(int argc, char *argv[])
             Sample(generator, dist);
         Data.at(i) = Sample();
       }
+    //write noisy data to a file
     jiba::SaveScalarGravityMeasurements(datafilename+".noise.nc", Data, PosX, PosY, PosZ);
   }
