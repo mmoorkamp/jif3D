@@ -78,6 +78,27 @@ namespace jiba
           throw FatalException("Problem writing vtk  file");
       }
 
+    void WriteDataHeader(std::ofstream &outfile,
+        const ThreeDGravityModel::tMeasPosVec &PosX,
+        const ThreeDGravityModel::tMeasPosVec &PosY,
+        const ThreeDGravityModel::tMeasPosVec &PosZ)
+      {
+        const size_t ndata = PosX.size();
+        outfile << "# vtk DataFile Version 2.0" << std::endl;
+        outfile << "3D Data" << std::endl;
+        outfile << "ASCII" << std::endl;
+        outfile << "DATASET UNSTRUCTURED_GRID" << std::endl;
+        //we write the number of measurement points
+        outfile << "POINTS " << ndata << " double" << std::endl;
+        //write the coordinates of each point
+        for (size_t i = 0; i < ndata; ++i)
+          {
+            outfile << PosX.at(i) << " " << PosY.at(i) << " " << PosZ.at(i)
+                << "\n";
+          }
+        outfile << "POINT_DATA " << ndata << std::endl;
+      }
+
     void Write3DDataToVTK(const std::string &filename,
         const std::string &DataName,
         const ThreeDGravityModel::tScalarMeasVec &Data,
@@ -93,26 +114,46 @@ namespace jiba
 
         std::ofstream outfile(filename.c_str());
         //first we have to write some general information about the file format
-        outfile << "# vtk DataFile Version 2.0" << std::endl;
-        outfile << "3D Data" << std::endl;
-        outfile << "ASCII" << std::endl;
-        outfile << "DATASET UNSTRUCTURED_GRID" << std::endl;
-        //we write the number of measurement points
-        outfile << "POINTS " << ndata << " double" << std::endl;
-        //write the coordinates of each point
-        for (size_t i = 0; i < ndata; ++i)
-          {
-            outfile << PosX.at(i) << " " << PosY.at(i) << " " << PosZ.at(i)
-                << "\n";
-          }
-        outfile << "POINT_DATA " << ndata << std::endl;
+        WriteDataHeader(outfile, PosX, PosY, PosZ);
+
         outfile << "SCALARS " << DataName << " double" << std::endl;
         outfile << "LOOKUP_TABLE default" << std::endl;
         //and then just the data values
-        std::copy(Data.begin(),Data.end(),std::ostream_iterator<double>(outfile," "));
+        std::copy(Data.begin(), Data.end(), std::ostream_iterator<double>(
+            outfile, " "));
         outfile << std::endl;
         if (outfile.fail())
           throw FatalException("Problem writing vtk  file");
       }
 
+    void Write3DTensorDataToVTK(const std::string &filename,
+        const std::string &DataName,
+        const ThreeDGravityModel::tTensorMeasVec &Data,
+        const ThreeDGravityModel::tMeasPosVec &PosX,
+        const ThreeDGravityModel::tMeasPosVec &PosY,
+        const ThreeDGravityModel::tMeasPosVec &PosZ)
+      {
+        //do some consistency checks
+        const size_t ndata = Data.size();
+        assert(ndata == PosX.size());
+        assert(ndata == PosY.size());
+        assert(ndata == PosZ.size());
+
+        std::ofstream outfile(filename.c_str());
+        //first we have to write some general information about the file format
+        WriteDataHeader(outfile, PosX, PosY, PosZ);
+
+        outfile << "TENSORS " << DataName << " double" << std::endl;
+        //and then just the data values
+        for (size_t i = 0; i < ndata; ++i)
+          {
+            outfile << Data.at(i)(0,0) << " " << Data.at(i)(0,1) << " " << Data.at(i)(0,2) << "\n";
+            outfile << Data.at(i)(1,0) << " " << Data.at(i)(1,1) << " " << Data.at(i)(2,2) << "\n";
+            outfile << Data.at(i)(2,0) << " " << Data.at(i)(2,1) << " " << Data.at(i)(2,2) << "\n";
+            outfile << "\n\n";
+          }
+        outfile << std::endl;
+        if (outfile.fail())
+          throw FatalException("Problem writing vtk  file");
+      }
   }

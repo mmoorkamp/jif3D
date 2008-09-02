@@ -26,5 +26,13 @@ namespace jiba
         const ThreeDGravityModel::tMeasPosVec &PosX,
         const ThreeDGravityModel::tMeasPosVec &PosY,
         const ThreeDGravityModel::tMeasPosVec &PosZ);
+
+    void Write3DTensorDataToVTK(const std::string &filename,
+        const std::string &DataName,
+        const ThreeDGravityModel::tTensorMeasVec &Data,
+        const ThreeDGravityModel::tMeasPosVec &PosX,
+        const ThreeDGravityModel::tMeasPosVec &PosY,
+        const ThreeDGravityModel::tMeasPosVec &PosZ);
+
   }
 #endif /* VTKTOOLS_H_ */
