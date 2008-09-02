@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
     GravForward.ReadNetCDF(ModelFilename);
     //save the measurements and some plots
     jiba::ThreeDGravityModel::tScalarMeasVec Data(GravForward.CalcGravity());
-    GravForward.CalcTensorGravity();
+    jiba::ThreeDGravityModel::tTensorMeasVec FTGData(GravForward.CalcTensorGravity());
     GravForward.SaveScalarMeasurements(ModelFilename + ".out.nc");
     GravForward.SaveTensorMeasurements(ModelFilename + ".ftg.nc");
     GravForward.PlotScalarMeasurements(ModelFilename + ".plot");
@@ -71,4 +71,8 @@ int main(int argc, char *argv[])
     jiba::Write3DDataToVTK(ModelFilename + ".data.vtk", "grav_accel", Data,
         GravForward.GetMeasPosX(), GravForward.GetMeasPosY(),
         GravForward.GetMeasPosZ());
+    jiba::Write3DTensorDataToVTK(ModelFilename + ".ftgdata.vtk", "U", FTGData,
+        GravForward.GetMeasPosX(), GravForward.GetMeasPosY(),
+        GravForward.GetMeasPosZ());
+
   }
