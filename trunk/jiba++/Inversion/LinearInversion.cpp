@@ -41,14 +41,9 @@ namespace jiba
         jiba::rmat Gamma(nmeas, nmeas);
         atlas::gemm(CblasNoTrans, CblasNoTrans, 1.0, Sensitivities,
             FilteredSens, 0.0, Gamma);
-        //very crude data covariance treatment
-        //for (size_t i = 0; i < nmeas; ++i)
-        //  {
-        //    Gamma(i,i) += 0.02 * 1e-3 * Data(i);
-        //  }
 
         jiba::rmat DataInverse(nmeas, nmeas);
-        jiba::GeneralizedInverse(Gamma, DataInverse, evalthresh, 1.0);
+        jiba::GeneralizedInverse()(Gamma, DataInverse, evalthresh, 1.0);
 
         InvModel.resize(nparm);
 

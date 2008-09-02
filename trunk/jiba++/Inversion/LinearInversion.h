@@ -13,6 +13,10 @@
 
 namespace jiba
   {
+    /** \addtogroup inversion General routines for inversion */
+    /* @{ */
+
+    //! Invert data described by a linear relationship using the dataspace method
     class DataSpaceInversion
       {
     private:
@@ -22,9 +26,10 @@ namespace jiba
         {
           return FilteredSens;
         }
-      void operator()(rmat &Sensitivities, rvec &Data,
-          const rvec &WeightVector, const rvec &DataError,
-          const double evalthresh, rvec &InvModel);
+      void operator()(rmat &Sensitivities, rvec &Data, const rvec &WeightVector,
+          const rvec &DataError, const double evalthresh, rvec &InvModel);
       };
+  /* @} */
   }
+
 #endif /* LINEARINVERSION_H_ */

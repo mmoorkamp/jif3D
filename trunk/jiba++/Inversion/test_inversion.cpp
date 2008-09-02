@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(generelized_inverse_test)
       for (size_t j = 0; j < msize; ++j)
         TestMatrix(i, j) = double(rand());
 
-    jiba::GeneralizedInverse(TestMatrix, InverseMatrix);
+    jiba::GeneralizedInverse()(TestMatrix, InverseMatrix);
     jiba::rmat MultMatrix(boost::numeric::ublas::prec_prod(TestMatrix,
         InverseMatrix));
     for (size_t i = 0; i < msize; ++i)
