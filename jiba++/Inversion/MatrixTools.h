@@ -13,6 +13,7 @@
 
 namespace jiba
   {
+    namespace ublas = boost::numeric::ublas;
     /** \addtogroup inversion General routines for inversion */
     /* @{ */
 
@@ -34,7 +35,8 @@ namespace jiba
       }
     //! Invert a square Matrix using LU-Factorization
     bool InvertMatrix(const jiba::rmat& input, jiba::rmat& inverse);
-
+    //! Calculate the determinant of a real square matrix
+    double Determinant(const jiba::rmat &Matrix);
     //! Implements the generalized inverse through truncated SVD
     class GeneralizedInverse
       {
@@ -50,6 +52,9 @@ namespace jiba
       const rmat &GetDataVectors() const {return u;}
       //! return the model eigenvectors after application of the thresholds
       const rmat &GetModelVectors() const {return vt;}
+      //! Return the resolution matrix after application of the thresholds
+      rmat GetModelResolution() const {return ublas::prec_prod(ublas::trans(vt),vt);}
+      //rmat GetModelCovariance() const {return ublas::prec_prod(SensitivityInv,ublas::trans(SensitivityInv));}
       //! The core calculation routine to calculate the generalized inverse
       void operator()(const rmat &Input, rmat &Inverse, const double lowthresh = 0.0,
           const double upthresh = 1.0);
