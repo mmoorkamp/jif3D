@@ -27,7 +27,20 @@ namespace jiba
           return FilteredSens;
         }
       void operator()(rmat &Sensitivities, rvec &Data, const rvec &WeightVector,
-          const rvec &DataError, const double evalthresh, rvec &InvModel);
+          const rvec &DataError, const double evalthresh, const double lambda, rvec &InvModel);
+      };
+
+    class ModelSpaceInversion
+      {
+    private:
+      jiba::rmat FilteredSens;
+    public:
+      const jiba::rmat &GetFilteredSens()
+        {
+          return FilteredSens;
+        }
+      void operator()(rmat &Sensitivities, rvec &Data, const rvec &WeightVector,
+          const rvec &DataError, const double evalthresh,const double lambda, rvec &InvModel);
       };
   /* @} */
   }
