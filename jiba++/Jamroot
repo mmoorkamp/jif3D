@@ -1,10 +1,12 @@
 project 
     : requirements <include>/usr/local/include <include>/usr/local/R-2.6.2/include <threading>multi 
+    	<variant>release:<define>NDEBUG
     ;
     
 path-constant TOP : . ;
 
 using gcc : 4.1 : g++-4.1 ;
+
 
 
 
