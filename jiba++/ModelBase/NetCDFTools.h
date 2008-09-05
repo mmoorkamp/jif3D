@@ -23,15 +23,15 @@ namespace jiba
     //! Write the length of the model cell along a single dimension to the file
     NcDim *WriteSizesToNetCDF(NcFile &NetCDFFile, const std::string &SizeName,
         const ThreeDModelBase::t3DModelDim &CellSize);
-
-    void Read3DDataFromNetCDF(const NcFile &NetCDFFile,
+    //! Read a 3D model from netcdf, this is the preferred storage format
+    void Read3DModelFromNetCDF(const NcFile &NetCDFFile,
         const std::string &DataName, const std::string &UnitsName,
         ThreeDModelBase::t3DModelDim &XCellSizes,
         ThreeDModelBase::t3DModelDim &YCellSizes,
         ThreeDModelBase::t3DModelDim &ZCellSizes,
         ThreeDModelBase::t3DModelData &Data);
-
-    void Write3DDataToNetCDF(NcFile &NetCDFFile, const std::string &DataName,
+    //! Write a 3D model to a netcdf file, this is the preferred storage format
+    void Write3DModelToNetCDF(NcFile &NetCDFFile, const std::string &DataName,
         const std::string &UnitsName,const ThreeDModelBase::t3DModelDim &XCellSizes,
         const ThreeDModelBase::t3DModelDim &YCellSizes,
         const ThreeDModelBase::t3DModelDim &ZCellSizes,

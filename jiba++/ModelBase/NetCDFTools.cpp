@@ -61,8 +61,16 @@ namespace jiba
         // We return the NcDim object, because we need it to write the model data
         return SizeDim;
       }
-
-    void Read3DDataFromNetCDF(const NcFile &NetCDFFile,
+    /*! Read a  rectangular mesh  3D Model from a netcdf file
+     * @param NetCDFFile An open NcFile object
+     * @param DataName The name of the model data to retrieve, this allows several different models in one file
+     * @param UnitsName The units of the model data, has to match the information in the file
+     * @param XCellSizes The sizes of the cells in x-direction in m (set by this routine)
+     * @param YCellSizes The sizes of the cells in y-direction in m (set by this routine)
+     * @param ZCellSizes The sizes of the cells in z-direction in m (set by this routine)
+     * @param Data The model data (set by this routine)
+     */
+    void Read3DModelFromNetCDF(const NcFile &NetCDFFile,
         const std::string &DataName, const std::string &UnitsName,
         ThreeDModelBase::t3DModelDim &XCellSizes,
         ThreeDModelBase::t3DModelDim &YCellSizes,
@@ -91,8 +99,16 @@ namespace jiba
         //read netcdf data from file
         DataVar->get(Data.origin(), nxvalues, nyvalues, nzvalues);
       }
-
-    void Write3DDataToNetCDF(NcFile &NetCDFFile, const std::string &DataName,
+    /*! Write the information about a rectangular mesh 3D model to a netcdf file
+     * @param NetCDFFile An open NcFile object that allows writing
+     * @param DataName The name of the model data (e.g. density, resistivity)
+     * @param UnitsName The units of the model data
+     * @param XCellSizes The sizes of the cells in x-direction in m
+     * @param YCellSizes The sizes of the cells in y-direction in m
+     * @param ZCellSizes The sizes of the cells in z-direction in m
+     * @param Data The model data, the shape has to match the length of the cell size vectors
+     */
+    void Write3DModelToNetCDF(NcFile &NetCDFFile, const std::string &DataName,
         const std::string &UnitsName,const ThreeDModelBase::t3DModelDim &XCellSizes,
         const ThreeDModelBase::t3DModelDim &YCellSizes,
         const ThreeDModelBase::t3DModelDim &ZCellSizes,

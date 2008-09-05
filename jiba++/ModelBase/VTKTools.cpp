@@ -25,7 +25,14 @@ namespace jiba
             std::ostream_iterator<double>(file, " "));
         file << "\n";
       }
-
+    /*! Write a .vtk file to plot a 3D model
+     * @param filename The name of the output file, should contain the ending .vtk
+     * @param DataName The name of the model data, for information for plotting programs
+     * @param XCellSizes The sizes of the cells in x-direction in m
+     * @param YCellSizes The sizes of the cells in y-direction in m
+     * @param ZCellSizes The sizes of the cells in z-direction in m
+     * @param Data The model values within each cell, shape has to match the  cell sizes
+     */
     void Write3DModelToVTK(const std::string &filename,
         const std::string &DataName,
         const ThreeDModelBase::t3DModelDim &XCellSizes,
@@ -63,21 +70,30 @@ namespace jiba
         outfile << "SCALARS " << DataName << " double" << std::endl;
         outfile << "LOOKUP_TABLE default" << std::endl;
         //and then just the data values
+
+        typedef boost::multi_array_types::index_range range;
+        ThreeDModelBase::t3DModelData::index_gen indices;
+
         for (size_t i = 0; i < nzvalues; ++i)
           {
             for (size_t j = 0; j < nyvalues; ++j)
               {
-                for (size_t k = 0; k < nxvalues; ++k)
-                  {
-                    outfile << Data[k][j][i] << " ";
-                  }
-                outfile << std::endl;
+                ThreeDModelBase::t3DModelData::const_array_view<1>::type
+                    myview = Data[indices[range(0, nxvalues)][j][i]];
+                std::copy(myview.begin(), myview.end(),
+                    std::ostream_iterator<double>(outfile, " "));
+                //for (size_t k = 0; k < nxvalues; ++k)
+                // {
+                //  outfile << Data[k][j][i] << " ";
+                // }
+                outfile << "\n";
               }
           }
         if (outfile.fail())
           throw FatalException("Problem writing vtk  file");
       }
-
+    //helper function that writes the common header information
+    //for scalar and tensor data
     void WriteDataHeader(std::ofstream &outfile,
         const ThreeDGravityModel::tMeasPosVec &PosX,
         const ThreeDGravityModel::tMeasPosVec &PosY,
@@ -98,7 +114,14 @@ namespace jiba
           }
         outfile << "POINT_DATA " << ndata << std::endl;
       }
-
+    /*! Write a collection of scalar measurements to a .vtk file for plotting
+     * @param filename The name of the file, should contain the ending .vtk
+     * @param DataName The name of the data for information in the plotting program
+     * @param Data The vector of data points, 1 datum per position
+     * @param PosX The position of the measurement points in x-direction in m
+     * @param PosY The position of the measurement points in y-direction in m
+     * @param PosZ The position of the measurement points in z-direction in m
+     */
     void Write3DDataToVTK(const std::string &filename,
         const std::string &DataName,
         const ThreeDGravityModel::tScalarMeasVec &Data,
@@ -111,7 +134,6 @@ namespace jiba
         assert(ndata == PosX.size());
         assert(ndata == PosY.size());
         assert(ndata == PosZ.size());
-
         std::ofstream outfile(filename.c_str());
         //first we have to write some general information about the file format
         WriteDataHeader(outfile, PosX, PosY, PosZ);
@@ -125,7 +147,14 @@ namespace jiba
         if (outfile.fail())
           throw FatalException("Problem writing vtk  file");
       }
-
+    /*! Write a collection of tensor measurements to a .vtk file for plotting
+         * @param filename The name of the file, should contain the ending .vtk
+         * @param DataName The name of the data for information in the plotting program
+         * @param Data The vector of data tensors, 1 tensor per position
+         * @param PosX The position of the measurement points in x-direction in m
+         * @param PosY The position of the measurement points in y-direction in m
+         * @param PosZ The position of the measurement points in z-direction in m
+         */
     void Write3DTensorDataToVTK(const std::string &filename,
         const std::string &DataName,
         const ThreeDGravityModel::tTensorMeasVec &Data,
@@ -145,11 +174,18 @@ namespace jiba
 
         outfile << "TENSORS " << DataName << " double" << std::endl;
         //and then just the data values
+        //each line should contain three tensor components
+        //and each tensor separated by two line breaks
         for (size_t i = 0; i < ndata; ++i)
           {
-            outfile << Data.at(i)(0,0) << " " << Data.at(i)(0,1) << " " << Data.at(i)(0,2) << "\n";
-            outfile << Data.at(i)(1,0) << " " << Data.at(i)(1,1) << " " << Data.at(i)(2,2) << "\n";
-            outfile << Data.at(i)(2,0) << " " << Data.at(i)(2,1) << " " << Data.at(i)(2,2) << "\n";
+            assert(Data.at(i).size1() == 3);
+            assert(Data.at(i).size2() == 3);
+            outfile << Data.at(i)(0, 0) << " " << Data.at(i)(0, 1) << " "
+                << Data.at(i)(0, 2) << "\n";
+            outfile << Data.at(i)(1, 0) << " " << Data.at(i)(1, 1) << " "
+                << Data.at(i)(2, 2) << "\n";
+            outfile << Data.at(i)(2, 0) << " " << Data.at(i)(2, 1) << " "
+                << Data.at(i)(2, 2) << "\n";
             outfile << "\n\n";
           }
         outfile << std::endl;
