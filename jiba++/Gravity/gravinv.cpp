@@ -25,11 +25,11 @@
 
 double DepthTerm(const double z, const double z0)
   {
-    return pow(z + z0, -1.5);
+    return pow(z + z0, -3);
   }
 double DerivTerm(const double z, const double z0)
   {
-    return -1.5 * pow(z + z0, -2.5);
+    return -3 * pow(z + z0, -4);
   }
 
 double FitZ0(const jiba::rvec &SummedSens,
@@ -56,12 +56,14 @@ double FitZ0(const jiba::rvec &SummedSens,
     jiba::rvec InvModel(1), DeltaModel(1);
     weights(0) = 1.0;
     InvModel(0) = startz;
-    const size_t iterations = 10;
+    const size_t iterations = 100;
     jiba::rvec error(ndata), delta(ndata), calculated(ndata);
     std::fill_n(error.begin(), zsize, 1.0);
     const double evalthresh = 1e-6;
     std::ofstream outfile("match.out");
-    for (size_t i = 0; i < iterations; ++i)
+    double stepsize = 1e6;
+    size_t i = 0;
+    while (stepsize > 0.1 && i < iterations)
       {
         for (size_t j = 0; j < zsize; ++j)
           {
@@ -77,20 +79,22 @@ double FitZ0(const jiba::rvec &SummedSens,
             sens(j, 0) = DerivTerm(zvalues(j), InvModel(0)) / maximum;
             delta(j) = sensprofile(j) - calculated(j);
           }
-        for (size_t i = 0; i < zsize; ++i)
+        for (size_t j = 0; j < zsize; ++j)
           {
-            outfile << zvalues(i) << " " << sensprofile(i) << " "
-                << calculated(i) << std::endl;
+            outfile << zvalues(j) << " " << sensprofile(j) << " "
+                << calculated(j) << std::endl;
           }
 
-        jiba::DataSpaceInversion()(sens, delta, weights, error, evalthresh,
+        jiba::DataSpaceInversion()(sens, delta, weights, error, evalthresh,0.0,
             DeltaModel);
-        double stepsize = 1.0;
-        InvModel -= stepsize * DeltaModel;
+
+        stepsize = boost::numeric::ublas::norm_2(DeltaModel);
+        InvModel -= DeltaModel;
         std::cout << InvModel << " " << DeltaModel << " " << stepsize
             << std::endl;
 
         outfile << std::endl << std::endl;
+        ++i;
       }
 
     return InvModel(0);
@@ -139,7 +143,7 @@ int main(int argc, char *argv[])
     std::copy(Data.begin(), Data.end(), DataVec.begin());
     //here we calculate the sensitivity summed over all data
     //this is to find an appropriate depth scaling and might be removed in the future
-    SummedSens *= 0.0;
+    std::fill_n(SummedSens.begin(),nmod,0.0);
     for (size_t i = 0; i < nmeas; ++i)
       {
         DataError(i) = 0.02 * DataVec(i);
@@ -181,11 +185,11 @@ int main(int argc, char *argv[])
     //here comes the core inversion
     jiba::rvec InvModel;
     jiba::DataSpaceInversion Inversion;
-    Inversion(Sensitivities, DataVec, ModelWeight, DataError, evalthresh,
+    Inversion(Sensitivities, DataVec, ModelWeight, DataError, evalthresh,1.0,
         InvModel);
 
     //write out the scaled sensitivities
-    SummedSens *= 0.0;
+    std::fill_n(SummedSens.begin(),nmod,0.0);
     for (size_t i = 0; i < nmeas; ++i)
       {
         SummedSens += boost::numeric::ublas::matrix_column<const jiba::rmat>(

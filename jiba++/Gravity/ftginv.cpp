@@ -25,8 +25,7 @@ void SumSensitivitiesAndPlot(const jiba::rmat &Sens, const size_t startindex,
     const size_t nmod = Sens.size2();
     const size_t ndata = Sens.size1();
     jiba::rvec SummedSens(nmod);
-
-    SummedSens *= 0.0;
+    std::fill_n(SummedSens.begin(),nmod,0.0);
     for (size_t i = startindex; i < ndata; i += 9)
       {
         SummedSens += boost::numeric::ublas::matrix_row<const jiba::rmat>(Sens,
@@ -111,7 +110,7 @@ int main(int argc, char *argv[])
     jiba::rvec InvModel;
 
     jiba::DataSpaceInversion()(Sensitivities, DataVector, ModelWeight,DataError,
-        evalthresh, InvModel);
+        evalthresh, 1.0, InvModel);
 
     std::copy(InvModel.begin(), InvModel.end(), Model.SetDensities().origin());
     Model.CalcTensorGravity();
