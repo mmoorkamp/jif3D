@@ -26,13 +26,13 @@ namespace jiba
     void ThreeDModelBase::ReadDataFromNetCDF(const NcFile &NetCDFFile,
         const std::string &DataName, const std::string &UnitsName)
       {
-        Read3DDataFromNetCDF(NetCDFFile,DataName,UnitsName,XCellSizes,YCellSizes,ZCellSizes,Data);
+        Read3DModelFromNetCDF(NetCDFFile,DataName,UnitsName,XCellSizes,YCellSizes,ZCellSizes,Data);
       }
 
     void ThreeDModelBase::WriteDataToNetCDF(NcFile &NetCDFFile,
         const std::string &DataName, const std::string &UnitsName) const
       {
-        Write3DDataToNetCDF(NetCDFFile,DataName,UnitsName,XCellSizes,YCellSizes,ZCellSizes,Data);
+        Write3DModelToNetCDF(NetCDFFile,DataName,UnitsName,XCellSizes,YCellSizes,ZCellSizes,Data);
       }
 
 
