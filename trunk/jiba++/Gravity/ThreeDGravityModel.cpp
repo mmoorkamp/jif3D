@@ -23,7 +23,7 @@ namespace jiba
 
     double CalcDepthTerm(const double top, const double bottom, const double z0)
       {
-        return pow(bottom + z0, -1.5);
+        return pow(bottom + z0, -3);
 
         //return sqrt(fabs(1. / (bottom - top) * (1. / pow(top + z0, 3) - 1.
         //    / pow(bottom + z0, 3))));
@@ -359,7 +359,7 @@ namespace jiba
         const size_t zsize = GetData().shape()[2];
 
         GravimetryMatrix returnvalue(3, 3);
-        returnvalue *= 0.0;
+        std::fill_n(returnvalue.data().begin(),9,0.0);
         GravimetryMatrix currvalue(3, 3);
         //sum up the contributions of all prisms
         for (size_t i = 0; i < xsize; ++i)
@@ -465,7 +465,7 @@ namespace jiba
         const size_t nbglayers = bg_densities.size();
         GravimetryMatrix result(3, 3);
         GravimetryMatrix currvalue(3, 3);
-        result *= 0.0;
+        std::fill_n(result.data().begin(),9,0.0);
         double currtop = 0.0;
         double currbottom = 0.0;
         const size_t modelsize = GetData().shape()[0] * GetData().shape()[1]

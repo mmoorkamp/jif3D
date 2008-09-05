@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
     jiba::rvec InvModel;
 
     jiba::DataSpaceInversion()(JointSensitivities, DataVector, ModelWeight,DataError,
-        evalthresh, InvModel);
+        evalthresh, 1.0,InvModel);
 
     std::copy(InvModel.begin(), InvModel.end(), Model.SetDensities().origin());
     Model.CalcTensorGravity();
