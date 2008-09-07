@@ -12,7 +12,7 @@
 #define BOOST_TEST_MAIN ...
 #include <boost/test/included/unit_test.hpp>
 
-#include <ThreeDModelBase.h>
+#include "ThreeDModelBase.h"
 
 //Test the default state of the object
 BOOST_AUTO_TEST_CASE(constructors_test)
