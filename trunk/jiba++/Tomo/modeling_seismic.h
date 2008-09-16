@@ -9,7 +9,8 @@
 /*--------------------------------------------------------------*/
 /* Define function:*/
 
-
+namespace jiba
+  {
 /*in file toolbox2.c:*/
 /*! Allocate new memory with additional safeguards and error information in case of failure */
 char *memory (char *prev_addr, size_t n, size_t size, std::string progname)
@@ -64,5 +65,5 @@ int ResortRays(RP_STRUCT *raypath,DATA_STRUCT data,GRID_STRUCT grid);
 /*in podvin-lecomte-3D.c*/
 int time_3d(float *HS,float *T,int NX,int NY,int NZ,float XS,float YS,float ZS,float HS_EPS_INIT,int MSG);
 /* @} */
-
+  }
 #endif

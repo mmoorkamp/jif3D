@@ -11,7 +11,8 @@
 
 /*REMARK: The Podvin&Lecomte forward modeling calculates the traveltimes at the grid cell edges; The number of grid cell edges is in each direction one higher than the number of grid cell centers*/
 /*		Therefore the grid have to be readjusted*/
-
+namespace jiba
+  {
 int ForwardModFatRay(GEOMETRY geo,GRID_STRUCT grid, DATA_STRUCT *data, F_RP_STRUCT *fat_rays, time_t time_start)
 {
 	int count							/*Number of active receivers for a shot*/;
@@ -20,10 +21,10 @@ int ForwardModFatRay(GEOMETRY geo,GRID_STRUCT grid, DATA_STRUCT *data, F_RP_STRU
 	long *nact_datapos;					/*Position of the active receivers in the data structure*/
 	long counter_index,*rec_counter;	/*Vector of the location numbers of receivers for which the traveltimes models are already calculated*/
 	long *rec_num_counter;				/* Counter of shots for each receiver, for which the calculation is already performed*/
-	long nx,ny,nz,nx3,ny3,nz3,nyz3;		
+	long nx,ny,nz,nx3,ny3,nz3,nyz3;
 	long max_num;
 
-	float *tt_shot,*tt_rec,*tmp_slow; 
+	float *tt_shot,*tt_rec,*tmp_slow;
 	float Xs,Ys,Zs,*Xr,*Yr,*Zr;			/*Normalized positions of the shots and receivers (referring to the grid cell nodes and NOT of the grid cell centers)*/
 	float org[3];
 	float delta_num = (float)0.001;
@@ -109,8 +110,8 @@ int ForwardModFatRay(GEOMETRY geo,GRID_STRUCT grid, DATA_STRUCT *data, F_RP_STRU
 				Xr = (float *) memory(NULL,1,sizeof(float),"ForwardModFatRay");
 				Yr = (float *) memory(NULL,1,sizeof(float),"ForwardModFatRay");
 				Zr = (float *) memory(NULL,1,sizeof(float),"ForwardModFatRay");
-	
-				
+
+
 				for(j=0; j<data->ndata_seis; j++)
 				{
 					if(data->shots[i] == data->sno[j])
@@ -120,17 +121,17 @@ int ForwardModFatRay(GEOMETRY geo,GRID_STRUCT grid, DATA_STRUCT *data, F_RP_STRU
 						Xr = (float *) memory((char *)Xr,count+1,sizeof(float),"ForwardModFatRay");
 						Yr = (float *) memory((char *)Yr,count+1,sizeof(float),"ForwardModFatRay");
 						Zr = (float *) memory((char *)Zr,count+1,sizeof(float),"ForwardModFatRay");
-	
+
 						nact_rec[count]		= data->rno[j];
 						nact_datapos[count]	= j;
-	
-						count++;	
+
+						count++;
 					}
 				}
-	
+
 				if(count != data->lshots[i])
 				{
-					printf("The number of active receivers of shot number %d is not correct\n", data->shots[i]); 
+					printf("The number of active receivers of shot number %d is not correct\n", data->shots[i]);
 					exit(0);
 				}
 
@@ -141,8 +142,8 @@ int ForwardModFatRay(GEOMETRY geo,GRID_STRUCT grid, DATA_STRUCT *data, F_RP_STRU
 					Xr[j] = ((geo.x[nact_rec[j]-1] - org[0])/grid.h + (float)nborder); /*normalized x-coordinate of the receiver locations according to grid cell nodes*/
 					Yr[j] = ((geo.y[nact_rec[j]-1] - org[1])/grid.h + (float)nborder); /*normalized y-coordinate of the receiver locations according to grid cell nodes*/
 					Zr[j] = ((geo.z[nact_rec[j]-1] - org[2])/grid.h + (float)nborder); /*normalized z-coordinate of the receiver locations according to grid cell nodes*/
-	
-					data->tcalc[nact_datapos[j]] = (double)(1000.0 * interpolate(Xr[j],Yr[j],Zr[j],&grid,tt_shot)); 
+
+					data->tcalc[nact_datapos[j]] = (double)(1000.0 * interpolate(Xr[j],Yr[j],Zr[j],&grid,tt_shot));
 
 					if(nact_datapos[j] >= data->ndata_seis)
 					 {
@@ -152,10 +153,10 @@ int ForwardModFatRay(GEOMETRY geo,GRID_STRUCT grid, DATA_STRUCT *data, F_RP_STRU
 				}
 
 
-	
+
 				time(&time_relative);
 				zeit_angabe_sekunden = difftime(time_relative, time_start);
-	
+
 				printf(" For shot-nr. %d all traveltimes are calculated\n",data->shots[i]);
 				printf("   (x=%f,y=%f,z=%f)\n",geo.x[(data->shots[i])-1], geo.y[(data->shots[i])-1], geo.z[(data->shots[i])-1]);
 				printf("   Number of found receiver positions for the shot: %d\n",count);
@@ -202,13 +203,13 @@ int ForwardModFatRay(GEOMETRY geo,GRID_STRUCT grid, DATA_STRUCT *data, F_RP_STRU
 
 						 /*Add the receiver to the "list of calculated traveltime models"*/
 						 counter_index++;
-						 rec_counter = (long *)memory((char *)rec_counter, counter_index, sizeof(long),"ForwardModFatRay"); 
+						 rec_counter = (long *)memory((char *)rec_counter, counter_index, sizeof(long),"ForwardModFatRay");
 					     rec_counter[counter_index - 1] = nact_rec[j];
 
 
 						 time(&time_relative);
 						 zeit_angabe_sekunden = difftime(time_relative, time_start);
-	
+
 						 printf(" For rec-nr. %d all traveltimes are calculated\n",nact_rec[j]);
 						 printf("   (x=%f,y=%f,z=%f)\n",geo.x[nact_rec[j]-1], geo.y[nact_rec[j]-1], geo.z[nact_rec[j]-1]);
 						 printf("   Computing time:%fh\n\n",zeit_angabe_sekunden/3600);
@@ -224,7 +225,7 @@ int ForwardModFatRay(GEOMETRY geo,GRID_STRUCT grid, DATA_STRUCT *data, F_RP_STRU
 					/*Check, if the receiver-position is used for following shots*/
 					rec_num_counter[nact_rec[j]]++;
 
-					
+
 					/*Take the number of active shots for the considered receiver from the data structure*/
 					max_num = 0;
 					for(k=0;k<geo.nrec;k++)
@@ -237,7 +238,7 @@ int ForwardModFatRay(GEOMETRY geo,GRID_STRUCT grid, DATA_STRUCT *data, F_RP_STRU
 					}
 
 					/*This is the last shot location for which the receiver location was active*/
-					if(rec_num_counter[nact_rec[j]] == max_num) 
+					if(rec_num_counter[nact_rec[j]] == max_num)
 					{
 						strcpy(s1_tmp,s1);
 						sprintf(s2,"%d",nact_rec[j]);
@@ -258,8 +259,8 @@ int ForwardModFatRay(GEOMETRY geo,GRID_STRUCT grid, DATA_STRUCT *data, F_RP_STRU
 				/*End of the loop over the receivers belonging to a shot*/
 				/****************************************************************************************/
 				/****************************************************************************************/
-			
-				free(Xr); 
+
+				free(Xr);
 				free(Yr);
 				free(Zr);
 				free(nact_rec);
@@ -314,7 +315,7 @@ int ForwardModFatRay(GEOMETRY geo,GRID_STRUCT grid, DATA_STRUCT *data, F_RP_STRU
 	printf("----------------\n\n\n\n\n");
 
 	return(1);
-}	
+}
 
 /*-------------------------------------------------------------*/
 /*Calculate the fat-rays*/
@@ -329,7 +330,7 @@ int FatRayCalc(float *tt1,float *tt2, long nx, long ny,long nz, float tcalc,F_RP
 	long a,b,c,nxyz,nyz,nyz1,nx1,ny1,nz1,nxyz1,count;
 	double dval; /*traveltime differences in ms*/
 	double *tmp_fr_weight,dsum, sum_all;
-	
+
 	nx1=nx-1;
 	ny1=ny-1;
 	nz1=nz-1;
@@ -348,7 +349,7 @@ int FatRayCalc(float *tt1,float *tt2, long nx, long ny,long nz, float tcalc,F_RP
 
 	for(a=0;a<nxyz;a++)
 	{
-		dval = fabs(tt1[a] + tt2[a] - (tcalc/1000)); 
+		dval = fabs(tt1[a] + tt2[a] - (tcalc/1000));
 
 		/*Weights of the fat rays at the nodes*/
 		if(dval < (fr->fatthres/1000))
@@ -365,7 +366,7 @@ int FatRayCalc(float *tt1,float *tt2, long nx, long ny,long nz, float tcalc,F_RP
 
 	/*"Interpolate" the data (mean value) from the nodes to determine the value in the center*/
 	#define tmp_fr(x,y,z) tmp_fr_weight[nyz*(x) + nz*(y) + (z)]
-	#define slowness(x,y,z) slow[nyz*(x) + nz*(y) + (z)] 
+	#define slowness(x,y,z) slow[nyz*(x) + nz*(y) + (z)]
 
 	count= 0;
 	dsum = 0;
@@ -377,7 +378,7 @@ int FatRayCalc(float *tt1,float *tt2, long nx, long ny,long nz, float tcalc,F_RP
 				dval  = (tmp_fr(a,b,c) + tmp_fr(a,b,c+1) + tmp_fr(a,b+1,c) + tmp_fr(a,b+1,c+1) +
 					     tmp_fr(a+1,b,c) + tmp_fr(a+1,b,c+1) + tmp_fr(a+1,b+1,c) + tmp_fr(a+1,b+1,c+1))/8.0;
 
-		
+
 
 				if(dval>0.0)
 				{
@@ -387,7 +388,7 @@ int FatRayCalc(float *tt1,float *tt2, long nx, long ny,long nz, float tcalc,F_RP
 					fr->weight[count] = dval;			 /*Value of the weight*/
 					fr->ele[count] = nyz1*a + nz1*b + c;	 /*corresponding cell number*/
 
-					
+
 					dsum = dsum + (slowness(a,b,c)*dval);	/*Calculate the normalization*/
 
 					count++;
@@ -403,7 +404,7 @@ int FatRayCalc(float *tt1,float *tt2, long nx, long ny,long nz, float tcalc,F_RP
 	free(tmp_fr_weight);
 
 	#undef tmp_fr
-	#undef slowness 
+	#undef slowness
 
 	return(1);
 }
@@ -419,7 +420,7 @@ int FatRayCalc(float *tt1,float *tt2, long nx, long ny,long nz, float tcalc,F_RP
 /*				*raypaths := Vector of the raypath structures (number of elements = number of shot-receiver combinations)*/
 /*              time_start := Time when inv3d starts*/
 
-/*REMARK: The Podvin&Lecomte forward modeling calculates the traveltimes at the grid cell nodes; The number of grid cell nodes is in each*/ 
+/*REMARK: The Podvin&Lecomte forward modeling calculates the traveltimes at the grid cell nodes; The number of grid cell nodes is in each*/
 /*		direction one higher than the number of grid cell centers.*/
 /*		Therefore the grid have to be readjusted*/
 
@@ -468,7 +469,7 @@ int ForwardModRay(GEOMETRY geo,GRID_STRUCT grid, DATA_STRUCT *data, RP_STRUCT *r
 			data->tcalc[i] = -1.0;
 
 		/*Allocate memory for the travel-times that will be calculated by the forward algorithm*/
-		tt = (float *)memory(NULL,nx3*ny3*nz3,sizeof(float),"ForwardModRay");	
+		tt = (float *)memory(NULL,nx3*ny3*nz3,sizeof(float),"ForwardModRay");
 
 
 		if(data->ndata_seis == 0)
@@ -522,8 +523,8 @@ int ForwardModRay(GEOMETRY geo,GRID_STRUCT grid, DATA_STRUCT *data, RP_STRUCT *r
 				Xr = (float *) memory(NULL,1,sizeof(float),"ForwardModRay");
 				Yr = (float *) memory(NULL,1,sizeof(float),"ForwardModRay");
 				Zr = (float *) memory(NULL,1,sizeof(float),"ForwardModRay");
-	
-				
+
+
 				for(j=0; j<data->ndata_seis; j++)
 				{
 					if(data->shots[i] == data->sno[j])
@@ -533,20 +534,20 @@ int ForwardModRay(GEOMETRY geo,GRID_STRUCT grid, DATA_STRUCT *data, RP_STRUCT *r
 						Xr = (float *) memory((char *)Xr,count+1,sizeof(float),"ForwardModRay");
 						Yr = (float *) memory((char *)Yr,count+1,sizeof(float),"ForwardModRay");
 						Zr = (float *) memory((char *)Zr,count+1,sizeof(float),"ForwardModRay");
-	
+
 						nact_rec[count]		= data->rno[j];
 						nact_datapos[count]	= j;
-	
-						count++;	
+
+						count++;
 					}
 				}
-	
+
 				if(count != data->lshots[i])
 				{
-					printf("The number of active receivers of shot number %d is not correct\n", data->shots[i]); 
+					printf("The number of active receivers of shot number %d is not correct\n", data->shots[i]);
 					exit(0);
 				}
-	
+
 				/***************************************************************************************/
 				/*Determine the accurate traveltimes at the receiver-locations (by trilinear interpolation of the traveltimes at the grid cell edges)*/
 				for(j=0;j<count;j++)
@@ -554,8 +555,8 @@ int ForwardModRay(GEOMETRY geo,GRID_STRUCT grid, DATA_STRUCT *data, RP_STRUCT *r
 					Xr[j] = ((geo.x[nact_rec[j]-1] - org[0])/grid.h + (float)nborder); /*normalized x-coordinate of the receiver locations according to grid cell EDGES*/
 					Yr[j] = ((geo.y[nact_rec[j]-1] - org[1])/grid.h + (float)nborder); /*normalized y-coordinate of the receiver locations according to grid cell EDGES*/
 					Zr[j] = ((geo.z[nact_rec[j]-1] - org[2])/grid.h + (float)nborder); /*normalized z-coordinate of the receiver locations according to grid cell EDGES*/
-	
-					 data->tcalc[nact_datapos[j]] = (double)(1000.0 * interpolate(Xr[j],Yr[j],Zr[j],&grid,tt)); 
+
+					 data->tcalc[nact_datapos[j]] = (double)(1000.0 * interpolate(Xr[j],Yr[j],Zr[j],&grid,tt));
 
 					 if(nact_datapos[j] >= data->ndata_seis)
 					 {
@@ -564,38 +565,38 @@ int ForwardModRay(GEOMETRY geo,GRID_STRUCT grid, DATA_STRUCT *data, RP_STRUCT *r
 					 }
 
 				}
-	
+
 				time(&time_relative);
 				zeit_angabe_sekunden = difftime(time_relative, time_start);
-	
+
 				printf(" For shot-nr. %d all traveltimes are calculated\n",data->shots[i]);
 				printf("   (x=%f,y=%f,z=%f)\n",geo.x[(data->shots[i])-1], geo.y[(data->shots[i])-1], geo.z[(data->shots[i])-1]);
 				printf("   Number of found receiver positions for the shot: %d\n",count);
 				printf("   Computing time:%fh\n\n",zeit_angabe_sekunden/3600);
-	
+
 				/***************************************/
 		   		/*Write out the traveltime cube*/
 				/*out = fopen("tcalc.txt","wt");
 					for(c=0; c<nz3;c++)
 						for(b=0; b<ny3;b++)
 							for(a=0; a<nx3; a++)
-								fprintf(out,"%f\n",travel_t(a,b,c));			
+								fprintf(out,"%f\n",travel_t(a,b,c));
 				fclose(out);*/
 				/***************************************/
-			
+
 
 				/***************************************************************************************/
 				/*Ray calculations (3-D version of the Aldridge&Oldenburg raypath-generation, 1993, Journal of seismic exploration,Vol.2,pages 257-274)*/
 
 				/*Allocate temporary ray-structures for the specific shot*/
 				raypath_tmp =(RP_STRUCT *)memory(NULL,data->lshots[i],sizeof(RP_STRUCT),"ForwardModRay");
-			
+
 				for(j=0;j<count;j++)
 					raypath_tmp[j].n = nact_datapos[j];
-	
+
 				/*Calculate the rays*/
 					RayCalc(tt,nx3,ny3,nz3, Xs,Ys,Zs,Xr,Yr,Zr,count,raypath_tmp);
-	
+
 				/*Copy the temporary raypath structures in structures that fit with the data structure*/
 				for(j=0;j<count;j++)
 				{
@@ -615,7 +616,7 @@ int ForwardModRay(GEOMETRY geo,GRID_STRUCT grid, DATA_STRUCT *data, RP_STRUCT *r
 					raypath[nact_datapos[j]].x = (double *) memory(NULL,raypath[nact_datapos[j]].nray + 1,sizeof(double),"ForwardModRay");
 					raypath[nact_datapos[j]].y = (double *) memory(NULL,raypath[nact_datapos[j]].nray + 1,sizeof(double),"ForwardModRay");
 					raypath[nact_datapos[j]].z = (double *) memory(NULL,raypath[nact_datapos[j]].nray + 1,sizeof(double),"ForwardModRay");
-					
+
 					for(k=0;k<raypath_tmp[j].nray;k++)
 					{
 						raypath[nact_datapos[j]].len[k] = raypath_tmp[j].len[k];
@@ -628,7 +629,7 @@ int ForwardModRay(GEOMETRY geo,GRID_STRUCT grid, DATA_STRUCT *data, RP_STRUCT *r
 					raypath[nact_datapos[j]].y[k] = raypath_tmp[j].y[k];
 					raypath[nact_datapos[j]].z[k] = raypath_tmp[j].z[k];
 				}
-	
+
 				for(j=0;j<count;j++)
 				{
 					free(raypath_tmp[j].len);
@@ -637,20 +638,20 @@ int ForwardModRay(GEOMETRY geo,GRID_STRUCT grid, DATA_STRUCT *data, RP_STRUCT *r
 					free(raypath_tmp[j].z);
 					free(raypath_tmp[j].ele);
 				}
-	
+
 				free(raypath_tmp);
-	
+
 				/****************************************************************************************/
-		
-				free(Xr); 
+
+				free(Xr);
 				free(Yr);
 				free(Zr);
 				free(nact_rec);
 				free(nact_datapos);
-	
+
 			}
 		}
-		
+
 		/*End of the loop over all shots*/
 		free(tmp_slow);
 		free(tt);
@@ -679,10 +680,10 @@ int ForwardModRay(GEOMETRY geo,GRID_STRUCT grid, DATA_STRUCT *data, RP_STRUCT *r
 	 out = fopen("tcalc.txt","wt");
 	 fprintf(out,"Shot-number    Tcalc(ms)\n");
 		for(i=0; i<data->ndata_seis;i++)
-					fprintf(out,"%d %d %d %f\n", i ,data->sno[i], data->rno[i], data->tcalc[i]);			
+					fprintf(out,"%d %d %d %f\n", i ,data->sno[i], data->rno[i], data->tcalc[i]);
 	fclose(out);
 	/***************************************/
-	
+
 	/****************************************************************************/
 	/*Resort rays (If the ray runs along the boundary between to cells, the cell with the higher velocity will be considered)*/
 	ResortRays(raypath,*data, grid);
@@ -739,7 +740,7 @@ float interpolate(float x,float y,float z,GRID_STRUCT *grid,float *data)
    nx2 = grid->nx +1 + 2*grid->nborder;
    ny2 = grid->ny +1 + 2*grid->nborder;
    nz2 = grid->nz +1 + 2*grid->nborder;
-   nyz2 = ny2*nz2; 
+   nyz2 = ny2*nz2;
 
    /* Check, if point is in grid */
    ok = 1;
@@ -802,7 +803,7 @@ int RayCalc(float *tt, int nx,int ny,int nz, float Xs, float Ys, float Zs,float 
 	double *gradient; /*Components of the gradient*/
 	CELL_STRUCT next_cell,cell;
 
-	nx1=nx-1; /* nx:Number of nodes; nx1= number of cells in x-direction*/ 
+	nx1=nx-1; /* nx:Number of nodes; nx1= number of cells in x-direction*/
 	ny1=ny-1;
 	nz1=nz-1;
 	nyz1=ny1*nz1;
@@ -813,18 +814,18 @@ int RayCalc(float *tt, int nx,int ny,int nz, float Xs, float Ys, float Zs,float 
 	{
 
 		ray_cell_index = (int *)memory(NULL,(nx1)*(ny1)*(nz1),sizeof(int),"RayCalc");
-			
+
 		/*Set "boundary-index" to 1 for all grid cells:*/
 		for(a=0; a<nx1; a++)
 			for(b=0; b<ny1;b++)
 				for(c=0; c<nz1;c++)
 				{
-					cell_index(a,b,c) = 0; 
+					cell_index(a,b,c) = 0;
 				}
 
 		/****************************************************/
 		/*Determine the rays starting at the receiver position:*/
-		
+
 		/*Check, if shot and receiver are in the same cell*/
 		if(floor((double)Xs) == floor((double)Xr[i]) && floor((double) Ys) == floor((double) Yr[i]) && floor((double)Zs) == floor((double) Zr[i]))
 		{
@@ -867,7 +868,7 @@ int RayCalc(float *tt, int nx,int ny,int nz, float Xs, float Ys, float Zs,float 
 		/*Calculate the traveltime gradient*/
 		gradient = TimeGrad(cell.xno,cell.yno,cell.zno,tt,ny,nz);
 
-		/*Calculate the ray segment through the first grid cell*/			
+		/*Calculate the ray segment through the first grid cell*/
 		 next_cell = RayBackTrace(gradient[0],gradient[1],gradient[2], cell, tt, ny, nz);
 		 free(gradient);
 
@@ -880,17 +881,17 @@ int RayCalc(float *tt, int nx,int ny,int nz, float Xs, float Ys, float Zs,float 
 				rp[i].len[0] = sqrt((next_cell.xpos + next_cell.xno - cell.xpos -cell.xno)*(next_cell.xpos + next_cell.xno - cell.xpos - cell.xno) + (next_cell.ypos + next_cell.yno - cell.ypos -cell.yno)*(next_cell.ypos + next_cell.yno - cell.ypos - cell.yno) + (next_cell.zpos + next_cell.zno - cell.zpos - cell.zno)*(next_cell.zpos + next_cell.zno - cell.zpos -cell.zno)); /*Ray segment length*/
 				rp[i].x[0] = (double) Xr[i];
 				rp[i].y[0] = (double) Yr[i];
-				rp[i].z[0] = (double) Zr[i];	
+				rp[i].z[0] = (double) Zr[i];
 				rp[i].ele[0] = nyz1*cell.xno + nz1*cell.yno + cell.zno; /*Determine the position number of the cell, which the ray intersects*/
 
 				cell_index(cell.xno,cell.yno,cell.zno) = 1;
-				
+
 				/*Check, if the ray leave the cell*/
 				if(next_cell.xno == 0 || next_cell.xno == nx1 || next_cell.yno == 0 || next_cell.yno == ny1 || next_cell.zno == 0 || next_cell.zno == nz1)
 				{
 					printf("The ray from the shot-receiver\ncombination %d leaves the model\n\n", rp[i].n +1);
 					rp[i].nray = 0;
-					goto fertig;	
+					goto fertig;
 				}
 
 				count =1;
@@ -904,7 +905,7 @@ int RayCalc(float *tt, int nx,int ny,int nz, float Xs, float Ys, float Zs,float 
 						/*Calculate the traveltime gradient*/
 						gradient = TimeGrad(cell.xno,cell.yno,cell.zno,tt,ny,nz);
 
-						/*Calculate the ray segment through the corresponding grid cell*/			
+						/*Calculate the ray segment through the corresponding grid cell*/
 						next_cell = RayBackTrace(gradient[0],gradient[1],gradient[2], cell, tt, ny, nz);
 						free(gradient);
 
@@ -917,11 +918,11 @@ int RayCalc(float *tt, int nx,int ny,int nz, float Xs, float Ys, float Zs,float 
 						rp[i].len[count] = sqrt((next_cell.xpos + next_cell.xno - cell.xpos -cell.xno)*(next_cell.xpos + next_cell.xno - cell.xpos - cell.xno) + (next_cell.ypos + next_cell.yno - cell.ypos -cell.yno)*(next_cell.ypos + next_cell.yno - cell.ypos - cell.yno) + (next_cell.zpos + next_cell.zno - cell.zpos - cell.zno)*(next_cell.zpos + next_cell.zno - cell.zpos -cell.zno)); /*Ray segment length*/
 						rp[i].x[count] = (double) cell.xpos + cell.xno;
 						rp[i].y[count] = (double) cell.ypos + cell.yno;
-						rp[i].z[count] = (double) cell.zpos + cell.zno;	
+						rp[i].z[count] = (double) cell.zpos + cell.zno;
 						rp[i].ele[count] = nyz1*cell.xno + nz1*cell.yno + cell.zno; /*Determine the position number of the cell, which the ray intersects*/
 
 						cell_index(cell.xno,cell.yno,cell.zno) = 1;
-				
+
 						/*Check, if the ray leave the cell*/
 						if(next_cell.xno == 0 || next_cell.xno == nx1 || next_cell.yno == 0 || next_cell.yno == ny1 || next_cell.zno == 0 || next_cell.zno == nz1)
 						{
@@ -929,14 +930,14 @@ int RayCalc(float *tt, int nx,int ny,int nz, float Xs, float Ys, float Zs,float 
 							rp[i].nray = 0;
 							goto fertig;
 						}
-				
+
 						/*The ray will not be traced back, if the number of ray segments become too large; the ray is "fallen" probably in a local minima*/
 						if(count >= max_nr_of_ray_seg)
 						{
 							printf("The discretized traveltime field of the ray from the shot-receiver\ncombination %d had a probably local minima\n\n",rp[i].n+1);
 							rp[i].nray = 0;
 							goto fertig;
-						} 
+						}
 
 
 						count++;
@@ -993,13 +994,13 @@ double *TimeGrad(int x, int y, int z, float *tt, int ny, int nz)
 
 	grad = (double *)memory(NULL,3,sizeof(double),"TimeGrad");
 
-	grad[0] = (- Traveltimes(x+1,y,z) - Traveltimes(x+1,y,z+1) - Traveltimes(x+1,y+1,z) - Traveltimes(x+1,y+1,z+1) 
+	grad[0] = (- Traveltimes(x+1,y,z) - Traveltimes(x+1,y,z+1) - Traveltimes(x+1,y+1,z) - Traveltimes(x+1,y+1,z+1)
 		      + Traveltimes(x,y,z) + Traveltimes(x,y,z+1) + Traveltimes(x,y+1,z) + Traveltimes(x,y+1,z+1))/4;		/*x-component*/
 
-	grad[1] = (- Traveltimes(x,y+1,z) - Traveltimes(x,y+1,z+1) - Traveltimes(x+1,y+1,z) - Traveltimes(x+1,y+1,z+1) 
+	grad[1] = (- Traveltimes(x,y+1,z) - Traveltimes(x,y+1,z+1) - Traveltimes(x+1,y+1,z) - Traveltimes(x+1,y+1,z+1)
 		      + Traveltimes(x,y,z) + Traveltimes(x,y,z+1) + Traveltimes(x+1,y,z) + Traveltimes(x+1,y,z+1))/4;		/*y-component*/
 
-	grad[2] = (- Traveltimes(x,y,z+1) - Traveltimes(x,y+1,z+1) - Traveltimes(x+1,y,z+1) - Traveltimes(x+1,y+1,z+1) 
+	grad[2] = (- Traveltimes(x,y,z+1) - Traveltimes(x,y+1,z+1) - Traveltimes(x+1,y,z+1) - Traveltimes(x+1,y+1,z+1)
 		      + Traveltimes(x,y,z) + Traveltimes(x,y+1,z) + Traveltimes(x+1,y,z) + Traveltimes(x+1,y+1,z))/4;		/*z-component*/
 
 	return(grad);
@@ -1039,13 +1040,13 @@ CELL_STRUCT RayBackTrace(double gradx, double grady, double gradz, CELL_STRUCT c
 		cell.zpos = cell.zpos - eps;
 
 
-	/*Ray enter the cell from the upper/lower x-plane*/ 
+	/*Ray enter the cell from the upper/lower x-plane*/
 	/*CASE I: The ray run into the cell*/
 	if(cell.dirx_i == 0 || (cell.dirx_i == 1 && gradx <= 0) || (cell.dirx_i == -1 && gradx >= 0))
 	{
 		if(gradx > 0)
 		{
-	
+
 				tmp_ypos = cell.ypos - ((cell.xpos - 1)*(grady/gradx));
 				tmp_zpos = cell.zpos - ((cell.xpos - 1)*(gradz/gradx));
 
@@ -1082,15 +1083,15 @@ CELL_STRUCT RayBackTrace(double gradx, double grady, double gradz, CELL_STRUCT c
 				next_cell.xno = cell.xno - 1;
 				next_cell.yno = cell.yno;
 				next_cell.zno = cell.zno;
-				
-				goto bestimmt;				
+
+				goto bestimmt;
 			}
 
 		}
 	}
 
-	
-	/*Ray enter the cell from the positive or negative y-plane*/ 
+
+	/*Ray enter the cell from the positive or negative y-plane*/
 	/*CASE I: The ray run into the cell*/
 	if(cell.diry_i == 0 || (cell.diry_i == 1 && grady <= 0) || (cell.diry_i == -1 && grady >= 0))
 	{
@@ -1114,7 +1115,7 @@ CELL_STRUCT RayBackTrace(double gradx, double grady, double gradz, CELL_STRUCT c
 				goto bestimmt;
 			}
 		}
-		
+
 		if(grady < 0)
 		{
 				tmp_xpos = cell.xpos - (cell.ypos *(gradx/grady));
@@ -1131,12 +1132,12 @@ CELL_STRUCT RayBackTrace(double gradx, double grady, double gradz, CELL_STRUCT c
 				next_cell.xno = cell.xno;
 				next_cell.yno = cell.yno - 1;
 				next_cell.zno = cell.zno;
-				
-				goto bestimmt;				
+
+				goto bestimmt;
 			}
 
 		}
-		
+
 	}
 
 
@@ -1164,7 +1165,7 @@ CELL_STRUCT RayBackTrace(double gradx, double grady, double gradz, CELL_STRUCT c
 				goto bestimmt;
 			}
 		}
-		
+
 		if(gradz < 0)
 		{
 				tmp_xpos = cell.xpos - (cell.zpos *(gradx/gradz));
@@ -1181,8 +1182,8 @@ CELL_STRUCT RayBackTrace(double gradx, double grady, double gradz, CELL_STRUCT c
 				next_cell.xno = cell.xno;
 				next_cell.yno = cell.yno;
 				next_cell.zno = cell.zno -1;
-				
-				goto bestimmt;				
+
+				goto bestimmt;
 			}
 
 		}
@@ -1222,7 +1223,7 @@ CELL_STRUCT RayBackTrace(double gradx, double grady, double gradz, CELL_STRUCT c
 				next_cell.dirz_i = 0;
 				if(diff>0)
 					next_cell.xno = cell.xno + cell.dirx_i;
-				else 
+				else
 					next_cell.xno = cell.xno;
 				next_cell.yno = cell.yno -1;
 				next_cell.zno = cell.zno;
@@ -1240,7 +1241,7 @@ CELL_STRUCT RayBackTrace(double gradx, double grady, double gradz, CELL_STRUCT c
 
 			if(1 >= tmp_zpos && tmp_zpos >= 0)
 			{
-				
+
 				/*Comparison of the gradients(in the neighboring cells) to determine the next cell:*/
 				/*Calculate the traveltime gradient*/
 				gradient1 = TimeGrad(cell.xno + cell.dirx_i,cell.yno +1,cell.zno,tt,ny,nz);
@@ -1299,9 +1300,9 @@ CELL_STRUCT RayBackTrace(double gradx, double grady, double gradz, CELL_STRUCT c
 				next_cell.diry_i = 0;
 				next_cell.dirz_i = 1;
 
-				if(diff>0)				
+				if(diff>0)
 					next_cell.xno = cell.xno + cell.dirx_i;
-				else 
+				else
 					next_cell.xno = cell.xno;
 				next_cell.yno = cell.yno;
 				next_cell.zno = cell.zno -1;
@@ -1337,7 +1338,7 @@ CELL_STRUCT RayBackTrace(double gradx, double grady, double gradz, CELL_STRUCT c
 				next_cell.dirx_i = 0;
 				next_cell.diry_i = 0;
 				next_cell.dirz_i = -1;
-				if(diff>0)				
+				if(diff>0)
 					next_cell.xno = cell.xno + cell.dirx_i;
 				else
 					next_cell.xno = cell.xno;
@@ -1384,9 +1385,9 @@ CELL_STRUCT RayBackTrace(double gradx, double grady, double gradz, CELL_STRUCT c
 				next_cell.diry_i = 0;
 				next_cell.dirz_i = 0;
 				next_cell.xno = cell.xno -1;
-				if(diff>0)				
+				if(diff>0)
 					next_cell.yno = cell.yno + cell.diry_i;
-				else 
+				else
 					next_cell.yno = cell.yno;
 				next_cell.zno = cell.zno;
 
@@ -1422,7 +1423,7 @@ CELL_STRUCT RayBackTrace(double gradx, double grady, double gradz, CELL_STRUCT c
 				next_cell.diry_i = 0;
 				next_cell.dirz_i = 0;
 				next_cell.xno = cell.xno +1;
-				if(diff>0)			
+				if(diff>0)
 					next_cell.yno = cell.yno + cell.diry_i;
 				else
 					next_cell.yno = cell.yno;
@@ -1479,7 +1480,7 @@ CELL_STRUCT RayBackTrace(double gradx, double grady, double gradz, CELL_STRUCT c
 
 			if(1 >= tmp_xpos && tmp_xpos >= 0)
 			{
-				
+
 
 				/*Comparison of the gradients(in the neighboring cells) to determine the next cell:*/
 				/*Calculate the traveltime gradient*/
@@ -1537,7 +1538,7 @@ CELL_STRUCT RayBackTrace(double gradx, double grady, double gradz, CELL_STRUCT c
 				else
 					diff = -cell.dirz_i;
 
-				next_cell.xpos = 1;				
+				next_cell.xpos = 1;
 				next_cell.ypos = tmp_ypos;
 				if(gradient1[2] + gradient2[2] >= 0)
 					next_cell.zpos = 0;
@@ -1549,11 +1550,11 @@ CELL_STRUCT RayBackTrace(double gradx, double grady, double gradz, CELL_STRUCT c
 
 				next_cell.xno = cell.xno -1;
 				next_cell.yno = cell.yno;
-				if(diff>0)				
+				if(diff>0)
 					next_cell.zno = cell.zno + cell.dirz_i;
 				else
 					next_cell.zno = cell.zno;
-			
+
 				free(gradient1);
 				free(gradient2);
 
@@ -1588,7 +1589,7 @@ CELL_STRUCT RayBackTrace(double gradx, double grady, double gradz, CELL_STRUCT c
 				next_cell.dirz_i = 0;
 				next_cell.xno = cell.xno +1;
 				next_cell.yno = cell.yno;
-				if(diff>0)				
+				if(diff>0)
 					next_cell.zno = cell.zno + cell.dirz_i;
 				else
 					next_cell.zno = cell.zno;
@@ -1615,7 +1616,7 @@ CELL_STRUCT RayBackTrace(double gradx, double grady, double gradz, CELL_STRUCT c
 					diff = -cell.dirz_i;
 
 				next_cell.xpos = tmp_xpos;
-				next_cell.ypos = 1; 
+				next_cell.ypos = 1;
 				if(gradient1[2] + gradient2[2] >= 0)
 					next_cell.zpos = 0;
 				else
@@ -1669,7 +1670,7 @@ CELL_STRUCT RayBackTrace(double gradx, double grady, double gradz, CELL_STRUCT c
 
 				next_cell.xno = cell.xno;
 				next_cell.yno = cell.yno +1;
-				if(diff>0)				
+				if(diff>0)
 					next_cell.zno = cell.zno + cell.dirz_i;
 				else
 					next_cell.zno = cell.zno;
@@ -1745,7 +1746,7 @@ int ResortRays(RP_STRUCT *raypath,DATA_STRUCT data,GRID_STRUCT grid)
 								raypath[a].ele[b] = ((c+1)*nyz + d*nz + e);
 							}
 						}
-									
+
 						if(raypath[a].y[b]- (double)d <= eps && raypath[a].y[b+1] - (double)d <= eps)
 						{
 							if(grid.slow[c*nyz1 +d*nz1 +e] > grid.slow[c*nyz1 +(d-1)*nz1 +e])
@@ -1776,7 +1777,7 @@ int ResortRays(RP_STRUCT *raypath,DATA_STRUCT data,GRID_STRUCT grid)
 								raypath[a].ele[b] = (c*nyz + d*nz + (e+1));
 							}
 						}
-		
+
 						goto slutt;
 					}
 			slutt:;
@@ -1784,4 +1785,5 @@ int ResortRays(RP_STRUCT *raypath,DATA_STRUCT data,GRID_STRUCT grid)
 
 
 	return(1);
+}
 }
