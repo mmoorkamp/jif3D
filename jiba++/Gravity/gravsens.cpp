@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
       {
         const double maxvalue = *std::max_element(row(vt, currindex).begin(), row(vt, currindex).end(),boost::bind(fabs,_1) < boost::bind(fabs,_2));
         std::transform(row(vt, currindex).begin(), row(vt, currindex).end(), sens.data(),boost::bind(std::multiplies<double>(),_1,1./maxvalue));
-        jiba::Write3DModelToVTK(modelfilename + ".sens."+stringify(currindex)+".vtk", "scalar_sens",
+        jiba::Write3DModelToVTK(modelfilename + ".sens."+jiba::stringify(currindex)+".vtk", "scalar_sens",
             Model.GetXCellSizes(), Model.GetYCellSizes(),
             Model.GetZCellSizes(), sens);
       }

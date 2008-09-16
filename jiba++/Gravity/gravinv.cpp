@@ -206,11 +206,11 @@ int main(int argc, char *argv[])
         boost::numeric::ublas::matrix_row<jiba::rmat> senscolumn(Sensitivities,
             i);
         std::copy(filcolumn.begin(), filcolumn.end(), SensModel.data());
-        jiba::Write3DModelToVTK(modelfilename + ".sensfil_data" + stringify(i)
+        jiba::Write3DModelToVTK(modelfilename + ".sensfil_data" + jiba::stringify(i)
             + ".vtk", "filtered_sens", Model.GetXCellSizes(),
             Model.GetYCellSizes(), Model.GetZCellSizes(), SensModel);
         std::copy(senscolumn.begin(), senscolumn.end(), SensModel.data());
-        jiba::Write3DModelToVTK(modelfilename + ".sens_data" + stringify(i)
+        jiba::Write3DModelToVTK(modelfilename + ".sens_data" + jiba::stringify(i)
             + ".vtk", "filtered_sens", Model.GetXCellSizes(),
             Model.GetYCellSizes(), Model.GetZCellSizes(), SensModel);
       }

@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
     //write out sensitivities for the 9 tensor elements
     for (size_t i = 0; i < 9; ++i)
       {
-        SumSensitivitiesAndPlot(Sensitivities, i, modelfilename + stringify(i)
+        SumSensitivitiesAndPlot(Sensitivities, i, modelfilename + jiba::stringify(i)
             + ".vtk", Model);
       }
     //depth weighting
