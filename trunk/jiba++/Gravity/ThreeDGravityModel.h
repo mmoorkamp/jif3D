@@ -216,6 +216,8 @@ namespace jiba
         }
       //! Read the density model and all associated information from a netcdf file
       void ReadNetCDF(const std::string filename);
+      //! Read an igmas xyz model file
+      void ReadIgmas(const std::string filename);
       //! Save all scalar Synthetic data in a netcdf file
       void SaveScalarMeasurements(const std::string filename);
       //! Save all tensor Synthetic data in a netcdf file
