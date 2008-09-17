@@ -16,6 +16,8 @@
 #include "ThreeDGravityModel.h"
 #include "ReadWriteGravityData.h"
 #include "../ModelBase/VTKTools.h"
+#include "../Global/FileUtil.h"
+#include <boost/cast.hpp>
 
 using namespace std;
 
@@ -45,8 +47,8 @@ int main(int argc, char *argv[])
     cout << "Z-level: ";
     cin >> z;
     //setup the measurements in the forward modelling code
-    const size_t nmeasx = (maxx - minx) / deltax;
-    const size_t nmeasy = (maxy - miny) / deltay;
+    const size_t nmeasx = boost::numeric_cast<size_t>((maxx - minx) / deltax);
+    const size_t nmeasy = boost::numeric_cast<size_t>((maxy - miny) / deltay);
     for (size_t i = 0; i <= nmeasx; ++i)
       {
         for (size_t j = 0; j <= nmeasy; ++j)
@@ -58,11 +60,22 @@ int main(int argc, char *argv[])
     //ask for the name of the netcdf file containing the model
     cout << "Model Filename: ";
     cin >> ModelFilename;
+    //determine the extension to find out the type
+    std::string extension = jiba::GetFileExtension(ModelFilename);
     //read in the file
-    GravForward.ReadNetCDF(ModelFilename);
+    if (extension == ".nc")
+      {
+        GravForward.ReadNetCDF(ModelFilename);
+      }
+    else
+      {
+        GravForward.ReadIgmas(ModelFilename);
+        GravForward.WriteNetCDF(ModelFilename + ".nc");
+      }
     //save the measurements and some plots
     jiba::ThreeDGravityModel::tScalarMeasVec Data(GravForward.CalcGravity());
-    jiba::ThreeDGravityModel::tTensorMeasVec FTGData(GravForward.CalcTensorGravity());
+    jiba::ThreeDGravityModel::tTensorMeasVec FTGData(
+        GravForward.CalcTensorGravity());
     GravForward.SaveScalarMeasurements(ModelFilename + ".out.nc");
     GravForward.SaveTensorMeasurements(ModelFilename + ".ftg.nc");
     GravForward.PlotScalarMeasurements(ModelFilename + ".plot");
