@@ -13,6 +13,8 @@
 
 namespace jiba
   {
+    /** \addtogroup gravity Gravity forward modelling, display and inversion */
+     /* @{ */
     //!Read a collection of scalar gravity measurements and associated positions from a netcdf file
     void ReadScalarGravityMeasurements(const std::string &filename,
         ThreeDGravityModel::tScalarMeasVec &Data,
@@ -42,5 +44,6 @@ namespace jiba
         ThreeDGravityModel::tMeasPosVec &PosX,
         ThreeDGravityModel::tMeasPosVec &PosY,
         ThreeDGravityModel::tMeasPosVec &PosZ);
+  /* @} */
   }
 #endif /* READWRITEGRAVITYDATA_H_ */

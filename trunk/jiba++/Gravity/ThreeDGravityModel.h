@@ -19,6 +19,9 @@
 namespace jiba
   {
 
+    /** \addtogroup gravity Gravity forward modelling, display and inversion */
+    /* @{ */
+
     //! The constant of gravity
     static const double Grav_const = 6.67428e-8; // in units cm^3/g s
 
@@ -57,14 +60,12 @@ namespace jiba
     //! Calculate one of the terms of off-diagonal elements of the gravimetric matrxi
     double CalcFTGOffDiagonalTerm(const double value, const double x,
         const double y, const double z);
-    //! the gravitational acceleration of an infinite slab
+    //! the "geometric term" for gravitational acceleration of an infinite slab
     inline double CalcInfSheetTerm(const double thick)
       {
         return 2.0 * M_PI * Grav_const * thick;
       }
 
-    void ConstructDepthWeighting(const ThreeDModelBase::t3DModelDim &XSizes, const ThreeDModelBase::t3DModelDim &YSizes,
-        const ThreeDModelBase::t3DModelDim &ZSizes, const double z0, rvec &WeightVector);
     //! We store the 3x3 matrix for gravimetric measurements in a ublas matrix with real entries
     typedef rmat GravimetryMatrix;
 
@@ -235,7 +236,7 @@ namespace jiba
           const bool storetensor = false);
       virtual ~ThreeDGravityModel();
       };
-
+  /* @} */
   }
 
 #endif /*THREEDGRAVITYMODEL_H_*/
