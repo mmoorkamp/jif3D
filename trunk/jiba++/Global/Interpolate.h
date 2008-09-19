@@ -13,6 +13,9 @@
 namespace jiba
   {
 
+    /** \addtogroup util General utility routines */
+    /* @{ */
+
     double QuadraticInterpolation(const double x1, const double y1,
         const double x2, const double y2, const double x3, const double y3)
       {
@@ -23,5 +26,6 @@ namespace jiba
         return value;
 
       }
+  /* @} */
   }
 #endif /* INTERPOLATE_H_ */

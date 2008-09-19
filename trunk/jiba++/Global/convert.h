@@ -22,6 +22,9 @@
 
 namespace jiba
   {
+    /** \addtogroup util General utility routines */
+    /* @{ */
+
     class BadConversion: public std::runtime_error
       {
     public:
@@ -78,5 +81,6 @@ namespace jiba
           return std::tolower(lowc, loc);
         }
       };
+  /* @} */
   }
 #endif /*CONVERT_H_*/

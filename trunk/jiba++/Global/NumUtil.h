@@ -12,6 +12,9 @@
  */
 namespace jiba
   {
+    /** \addtogroup util General utility routines */
+    /* @{ */
+
     //! Determine the sign of a numeric type by comparing it with zero
     template<class NumericType>
     int sign(NumericType n)
@@ -39,5 +42,6 @@ namespace jiba
           return value++;
         }
       };
+  /* @} */
   }
 #endif /*NUMUTIL_H_*/
