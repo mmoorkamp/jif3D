@@ -22,46 +22,6 @@ namespace jiba
     static const std::string DensityName = "density";
     static const std::string DensityUnit = "g/cm3";
 
-    double CalcDepthTerm(const double top, const double bottom, const double z0)
-      {
-        return pow(bottom + z0, -3);
-
-        //return sqrt(fabs(1. / (bottom - top) * (1. / pow(top + z0, 3) - 1.
-        //    / pow(bottom + z0, 3))));
-      }
-
-    /*! Construct a weighting matrix that counteracts the decay of the sensitivities of gravity data
-     *  to facilitate inversion.
-     * @param XSizes The sizes of the model cells in x-direction in m
-     * @param YSizes The sizes of the model cells in y-direction in m
-     * @param ZSizes The sizes of the model cells in z-direction in m
-     * @param z0 The scaling depth
-     * @param WeightMatrix The resulting weight matrix
-     */
-    void ConstructDepthWeighting(const ThreeDModelBase::t3DModelDim &XSizes,
-        const ThreeDModelBase::t3DModelDim &YSizes,
-        const ThreeDModelBase::t3DModelDim &ZSizes, const double z0,
-        rvec &WeightVector)
-      {
-        const size_t nz = ZSizes.size();
-
-        if (WeightVector.size() != nz)
-          {
-            WeightVector.resize(nz);
-          }
-        double currtop = 0.0;
-        for (size_t i = 0; i < nz; ++i)
-          {
-            WeightVector(i) = CalcDepthTerm(currtop,currtop+ZSizes[i],z0);
-            currtop += ZSizes[i];
-          }
-        //normalize
-        std::transform(WeightVector.begin(), WeightVector.end(),
-            WeightVector.begin(), boost::bind(std::divides<double>(), _1,
-                *std::max_element(WeightVector.begin(), WeightVector.end())));
-
-      }
-
     /*! Calculate one term for the gravitational potential of a box, we use the nomenclature of eq. 4-6 in Li and Chouteau.
      * The parameters x,y and z are the distances to the corners of the box, we will call this functions with different
      * permutations of real world x,y and z coordinates, so only in some cases x corresponds to the x-axis.
@@ -333,6 +293,7 @@ namespace jiba
                 for (size_t k = 0; k < zsize; ++k)
                   {
                     //we store the current value for possible sensitivity calculations
+                    //currvalue contains the geometric term, i.e. the sensitivity
                     currvalue = CalcGravBoxTerm(x_meas, y_meas, z_meas,
                         GetXCoordinates()[i], GetYCoordinates()[j],
                         GetZCoordinates()[k], GetXCellSizes()[i],
@@ -341,8 +302,6 @@ namespace jiba
                     // if we want to store the sensitivity matrix
                     if (StoreScalarSensitivities)
                       {
-                        //we calculate the sensitivity by dividing through density
-                        //therefore density cannot be zero
                         ScalarSensitivities(meas_index, i * (ysize * zsize) + j
                             * zsize + k) = currvalue;
                       }

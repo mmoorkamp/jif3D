@@ -1,25 +1,29 @@
 import testing ; 
-lib gravity : ThreeDGravityModel.cpp GravityInterface.cpp ReadWriteGravityData.cpp 
-              ..//netcdf_c++ ..//netcdf ../ModelBase//modelbase : <include>boost : : <include>. ;
+lib gravity : ThreeDGravityModel.cpp GravityInterface.cpp ReadWriteGravityData.cpp
+              ..//netcdf_c++ ..//netcdf ../ModelBase//modelbase
+              : <include>boost : : <include>. ;
 
 install $(TOP) : gravity
            : <install-dependencies>on <install-type>LIB
            ;
 
+obj DepthWeighting.o : DepthWeighting.cpp : <include>. ;
 
 unit-test gravity_test : test_ThreeDGravityModel.cpp gravity ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf : : <include>. ;
+unit-test weighting_test : test_weighting.cpp DepthWeighting.o gravity ../Inversion//inversion ../ModelBase//modelbase  : : <include>. ;
 
 exe gravforward : gravforward.cpp gravity ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf : <include>. ;
-exe gravgrid : gravgrid.cpp gravity ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf : <include>. ;
-exe gravinv : gravinv.cpp gravity ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ../Inversion//inversion
+exe gravgrid : gravgrid.cpp gravity ../ModelBase//modelbase
+              ..//netcdf_c++ ..//netcdf : <include>. ;
+exe gravinv : gravinv.cpp DepthWeighting.o gravity ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ../Inversion//inversion
               ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran : <include>. ;
 exe gravsens : gravsens.cpp gravity ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ../Inversion//inversion
               ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran : <include>. ;              
 exe gravnoise : gravnoise.cpp gravity ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf : <include>. ;
 
-exe ftginv : ftginv.cpp gravity ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ../Inversion//inversion
+exe ftginv : ftginv.cpp  DepthWeighting.o gravity ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ../Inversion//inversion
               ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran : <include>. ;
-exe ftgjointinv : ftgjointinv.cpp gravity ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ../Inversion//inversion
+exe ftgjointinv : ftgjointinv.cpp  DepthWeighting.o gravity ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ../Inversion//inversion
               ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran : <include>. ;
               
 exe makegravmesh : makegravmesh.cpp gravity ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf : <include>. ;
