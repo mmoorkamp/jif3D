@@ -15,6 +15,9 @@
 #include <boost/bind.hpp>
 namespace jiba
   {
+    /** \addtogroup modelbase Basic classes and routines for 3D models */
+    /* @{ */
+
     //! The basic storage classe for three-dimensional models
     /*! This class provides the storage and general functionality
      * for types all of three-dimensional models. Any other class
@@ -63,7 +66,7 @@ namespace jiba
           bool &ChangeFlag)
         {
           const size_t nelements = Sizes.size();
-          if (ChangeFlag &&  nelements > 0)
+          if (ChangeFlag && nelements > 0)
             {
               Coordinates.resize(boost::extents[nelements]);
               if (nelements > 0)
@@ -157,7 +160,7 @@ namespace jiba
       ThreeDModelBase();
       virtual ~ThreeDModelBase();
       };
-
+  /* @} */
   }
 
 #endif /*THREEDMODELBASE_H_*/

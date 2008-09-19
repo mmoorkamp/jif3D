@@ -10,6 +10,9 @@
 #include <stdexcept>
 namespace jiba
   {
+    /** \addtogroup util General utility routines */
+    /* @{ */
+
     /*! The FatalException class is thrown when there is a problem that cannot be fixed within the program
      * It is derived from runtime_error to make error message handling easier.
      */
@@ -27,5 +30,6 @@ namespace jiba
         }
       ;
       };
+  /* @} */
   }
 #endif /*CFATALEXCEPTION_H_*/

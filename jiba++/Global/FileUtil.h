@@ -11,6 +11,9 @@
 #include <string>
 namespace jiba
   {
+    /** \addtogroup util General utility routines */
+    /* @{ */
+
     //! Given a filename, return the file extension including the dot, i.e. for test.t it will return .t
     inline std::string GetFileExtension(const std::string &filename)
       {
@@ -20,5 +23,6 @@ namespace jiba
           ending = filename.substr(dotpos);
         return ending;
       }
+  /* @} */
   }
 #endif /* FILEUTIL_H_ */

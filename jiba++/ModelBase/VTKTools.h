@@ -13,6 +13,9 @@
 #include <string>
 namespace jiba
   {
+    /** \addtogroup modelbase Basic classes and routines for 3D models */
+    /* @{ */
+
     //! Write a 3D model and its geometry in a .vtk file for plotting
     void Write3DModelToVTK(const std::string &filename,
         const std::string &DataName,
@@ -36,6 +39,7 @@ namespace jiba
         const ThreeDGravityModel::tMeasPosVec &PosX,
         const ThreeDGravityModel::tMeasPosVec &PosY,
         const ThreeDGravityModel::tMeasPosVec &PosZ);
+  /* @} */
 
   }
 #endif /* VTKTOOLS_H_ */
