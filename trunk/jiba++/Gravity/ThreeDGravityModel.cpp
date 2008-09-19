@@ -296,33 +296,32 @@ namespace jiba
         const t3DModelDim ZSizes(GetZCellSizes());
 
         //sum up the contributions of all prisms in an openmp parallel loop
-        #pragma omp parallel default(shared) private(currvalue) reduction(+:returnvalue)
-        {
-          #pragma omp for
-          for (int i = 0; i < xsize; ++i)
+#pragma omp parallel default(shared) private(currvalue) reduction(+:returnvalue)
           {
-            for (size_t j = 0; j < ysize; ++j)
+#pragma omp for
+            for (int i = 0; i < xsize; ++i)
               {
-                for (size_t k = 0; k < zsize; ++k)
+                for (size_t j = 0; j < ysize; ++j)
                   {
-                    //we store the current value for possible sensitivity calculations
-                    //currvalue contains the geometric term, i.e. the sensitivity
-                    currvalue = CalcGravBoxTerm(x_meas, y_meas, z_meas,
-                        XCoord[i], YCoord[j],
-                        ZCoord[k], XSizes[i],
-                        YSizes[j], ZSizes[k]);
-                    returnvalue += currvalue * GetDensities()[i][j][k];
-                    // if we want to store the sensitivity matrix
-                    if (StoreScalarSensitivities)
+                    for (size_t k = 0; k < zsize; ++k)
                       {
-                        ScalarSensitivities(meas_index, i * (ysize * zsize) + j
-                            * zsize + k) = currvalue;
+                        //we store the current value for possible sensitivity calculations
+                        //currvalue contains the geometric term, i.e. the sensitivity
+                        currvalue = CalcGravBoxTerm(x_meas, y_meas, z_meas,
+                            XCoord[i], YCoord[j], ZCoord[k], XSizes[i],
+                            YSizes[j], ZSizes[k]);
+                        returnvalue += currvalue * GetDensities()[i][j][k];
+                        // if we want to store the sensitivity matrix
+                        if (StoreScalarSensitivities)
+                          {
+                            ScalarSensitivities(meas_index, i * (ysize * zsize)
+                                + j * zsize + k) = currvalue;
+                          }
                       }
                   }
               }
-          }
 
-        }//end of parallel section
+          }//end of parallel section
         return returnvalue;
       }
 
@@ -336,32 +335,62 @@ namespace jiba
         GravimetryMatrix returnvalue(3, 3);
         std::fill_n(returnvalue.data().begin(), 9, 0.0);
         GravimetryMatrix currvalue(3, 3);
+
+        const t3DModelDim XCoord(GetXCoordinates());
+        const t3DModelDim YCoord(GetYCoordinates());
+        const t3DModelDim ZCoord(GetZCoordinates());
+        //we cannot add up a user defined quantity in parallel
+        //so break up the tensor into its component with different variables
+        //and assign the results after the parallel loop
+        double U0 = 0.0, U1 = 0.0, U2 = 0.0, U3 = 0.0, U4 = 0.0, U5 = 0.0, U6 =
+            0.0, U7 = 0.0, U8 = 0.0;
         //sum up the contributions of all prisms
-        for (size_t i = 0; i < xsize; ++i)
+#pragma omp parallel default(shared) private(currvalue) reduction(+:U0,U1,U2,U3,U4,U5,U6,U7,U8)
           {
-            for (size_t j = 0; j < ysize; ++j)
+#pragma omp for
+            for (int i = 0; i < xsize; ++i)
               {
-                for (size_t k = 0; k < zsize; ++k)
+                for (size_t j = 0; j < ysize; ++j)
                   {
-                    currvalue = CalcTensorBoxTerm(x_meas, y_meas, z_meas,
-                        GetXCoordinates()[i], GetYCoordinates()[j],
-                        GetZCoordinates()[k], GetXCellSizes()[i],
-                        GetYCellSizes()[j], GetZCellSizes()[k]);
-                    returnvalue += currvalue * GetDensities()[i][j][k];
-                    //if we want to store sensitivities for tensor measurements
-                    if (StoreTensorSensitivities)
+                    for (size_t k = 0; k < zsize; ++k)
                       {
-                        boost::numeric::ublas::matrix_column<rmat> column(
-                            TensorSensitivities, i * (ysize * zsize) + j
-                                * zsize + k); // extract the right column of the sensitivity matrix
-                        std::copy(currvalue.data().begin(),
-                            currvalue.data().end(), // assign the elements to the right part of the column
-                            column.begin() + meas_index * 9);
+                        currvalue = CalcTensorBoxTerm(x_meas, y_meas, z_meas,
+                            XCoord[i], YCoord[j], ZCoord[k],
+                            GetXCellSizes()[i], GetYCellSizes()[j],
+                            GetZCellSizes()[k]);
+                        U0 += currvalue(0, 0) * GetDensities()[i][j][k];
+                        U1 += currvalue(0, 1) * GetDensities()[i][j][k];
+                        U2 += currvalue(0, 2) * GetDensities()[i][j][k];
+                        U3 += currvalue(1, 0) * GetDensities()[i][j][k];
+                        U4 += currvalue(1, 1) * GetDensities()[i][j][k];
+                        U5 += currvalue(1, 2) * GetDensities()[i][j][k];
+                        U6 += currvalue(2, 0) * GetDensities()[i][j][k];
+                        U7 += currvalue(2, 1) * GetDensities()[i][j][k];
+                        U8 += currvalue(2, 2) * GetDensities()[i][j][k];
+
+                        //if we want to store sensitivities for tensor measurements
+                        if (StoreTensorSensitivities)
+                          {
+                            boost::numeric::ublas::matrix_column<rmat> column(
+                                TensorSensitivities, i * (ysize * zsize) + j
+                                    * zsize + k); // extract the right column of the sensitivity matrix
+                            std::copy(currvalue.data().begin(),
+                                currvalue.data().end(), // assign the elements to the right part of the column
+                                column.begin() + meas_index * 9);
+                          }
                       }
                   }
               }
-          }
-
+          }//end of parallel region
+        returnvalue(0, 0) = U0;
+        returnvalue(0, 1) = U1;
+        returnvalue(0, 2) = U2;
+        returnvalue(1, 0) = U3;
+        returnvalue(1, 1) = U4;
+        returnvalue(1, 2) = U5;
+        returnvalue(2, 0) = U6;
+        returnvalue(2, 1) = U7;
+        returnvalue(2, 2) = U8;
         return returnvalue;
       }
 
