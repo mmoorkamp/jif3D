@@ -285,8 +285,21 @@ namespace jiba
 
         double returnvalue = 0.0;
         double currvalue = 0.0;
-        //sum up the contributions of all prisms
-        for (size_t i = 0; i < xsize; ++i)
+        //creating constant arrays instead of having function calls in the loop below
+        //greatly speeds up the parallel section
+        //also Get?Coordinates are not thread-safe
+        const t3DModelDim XCoord(GetXCoordinates());
+        const t3DModelDim YCoord(GetYCoordinates());
+        const t3DModelDim ZCoord(GetZCoordinates());
+        const t3DModelDim XSizes(GetXCellSizes());
+        const t3DModelDim YSizes(GetYCellSizes());
+        const t3DModelDim ZSizes(GetZCellSizes());
+
+        //sum up the contributions of all prisms in an openmp parallel loop
+        #pragma omp parallel default(shared) private(currvalue) reduction(+:returnvalue)
+        {
+          #pragma omp for
+          for (int i = 0; i < xsize; ++i)
           {
             for (size_t j = 0; j < ysize; ++j)
               {
@@ -295,9 +308,9 @@ namespace jiba
                     //we store the current value for possible sensitivity calculations
                     //currvalue contains the geometric term, i.e. the sensitivity
                     currvalue = CalcGravBoxTerm(x_meas, y_meas, z_meas,
-                        GetXCoordinates()[i], GetYCoordinates()[j],
-                        GetZCoordinates()[k], GetXCellSizes()[i],
-                        GetYCellSizes()[j], GetZCellSizes()[k]);
+                        XCoord[i], YCoord[j],
+                        ZCoord[k], XSizes[i],
+                        YSizes[j], ZSizes[k]);
                     returnvalue += currvalue * GetDensities()[i][j][k];
                     // if we want to store the sensitivity matrix
                     if (StoreScalarSensitivities)
@@ -309,6 +322,7 @@ namespace jiba
               }
           }
 
+        }//end of parallel section
         return returnvalue;
       }
 

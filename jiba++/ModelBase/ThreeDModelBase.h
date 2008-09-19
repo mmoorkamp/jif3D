@@ -94,19 +94,19 @@ namespace jiba
         {
           return Data;
         }
-      //!Get the x (north) coordinates of the cells
+      //!Get the x (north) coordinates of the cells, might perform calculations and write operation so it is not thread-safe
       const t3DModelDim &GetXCoordinates()
         {
           CalcCoordinates(GridXCoordinates, XCellSizes, XCellSizesChanged);
           return GridXCoordinates;
         }
-      //!Get the y (east) coordinates of the cells
+      //!Get the y (east) coordinates of the cells, might perform calculations and write operation so it is not thread-safe
       const t3DModelDim &GetYCoordinates()
         {
           CalcCoordinates(GridYCoordinates, YCellSizes, YCellSizesChanged);
           return GridYCoordinates;
         }
-      //!Get the z (depth) coordinates of the cells
+      //!Get the z (depth) coordinates of the cells, might perform calculations and write operation so it is not thread-safe
       const t3DModelDim &GetZCoordinates()
         {
           CalcCoordinates(GridZCoordinates, ZCellSizes, ZCellSizesChanged);
