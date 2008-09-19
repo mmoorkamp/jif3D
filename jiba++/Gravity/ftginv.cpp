@@ -16,6 +16,7 @@
 #include <boost/numeric/bindings/atlas/cblas2.hpp>
 #include "../Inversion/LinearInversion.h"
 #include "../ModelBase/VTKTools.h"
+#include "DepthWeighting.h"
 
 namespace atlas = boost::numeric::bindings::atlas;
 
@@ -25,7 +26,7 @@ void SumSensitivitiesAndPlot(const jiba::rmat &Sens, const size_t startindex,
     const size_t nmod = Sens.size2();
     const size_t ndata = Sens.size1();
     jiba::rvec SummedSens(nmod);
-    std::fill_n(SummedSens.begin(),nmod,0.0);
+    std::fill_n(SummedSens.begin(), nmod, 0.0);
     for (size_t i = startindex; i < ndata; i += 9)
       {
         SummedSens += boost::numeric::ublas::matrix_row<const jiba::rmat>(Sens,
@@ -83,18 +84,20 @@ int main(int argc, char *argv[])
     //write out sensitivities for the 9 tensor elements
     for (size_t i = 0; i < 9; ++i)
       {
-        SumSensitivitiesAndPlot(Sensitivities, i, modelfilename + jiba::stringify(i)
-            + ".vtk", Model);
+        SumSensitivitiesAndPlot(Sensitivities, i, modelfilename
+            + jiba::stringify(i) + ".vtk", Model);
       }
     //depth weighting
-    double z0;
-    std::cout << "Enter z0: ";
-    std::cin >> z0;
+    jiba::rvec MiddleSens(boost::numeric::ublas::matrix_row<jiba::rmat>(
+        Sensitivities, nmeas / 2 * 9));
+    const double decayexponent = -4.0;
+    double z0 = FitZ0(MiddleSens, Model, jiba::WeightingTerm(decayexponent));
+    std::cout << "Estimated z0: " << z0 << std::endl;
     const size_t nmod = Sensitivities.size2();
     const size_t zsize = Model.GetDensities().shape()[2];
     jiba::rvec WeightVector(zsize), ModelWeight(nmod);
     jiba::ConstructDepthWeighting(Model.GetXCellSizes(), Model.GetYCellSizes(),
-        Model.GetZCellSizes(), z0, WeightVector);
+        Model.GetZCellSizes(), z0, WeightVector, jiba::WeightingTerm(decayexponent));
     std::ofstream weightfile("weights.out");
     std::copy(WeightVector.begin(), WeightVector.end(),
         std::ostream_iterator<double>(weightfile, "\n"));
@@ -109,13 +112,18 @@ int main(int argc, char *argv[])
     std::cin >> evalthresh;
     jiba::rvec InvModel;
 
-    jiba::DataSpaceInversion()(Sensitivities, DataVector, ModelWeight,DataError,
-        evalthresh, 1.0, InvModel);
+    jiba::DataSpaceInversion()(Sensitivities, DataVector, ModelWeight,
+        DataError, evalthresh, 1.0, InvModel);
 
     std::copy(InvModel.begin(), InvModel.end(), Model.SetDensities().origin());
-    Model.CalcTensorGravity();
+    //we want to save the resulting predicted data
+    jiba::ThreeDGravityModel::tTensorMeasVec FTGData(Model.CalcTensorGravity());
     Model.SaveTensorMeasurements(modelfilename + ".inv_data.nc");
     Model.PlotTensorMeasurements(modelfilename + ".inv.plot");
     Model.WriteVTK(modelfilename + ".inv.vtk");
     Model.WriteNetCDF(modelfilename + ".inv.nc");
+
+    jiba::Write3DTensorDataToVTK(modelfilename + ".ftgdata.vtk", "U", FTGData,
+        Model.GetMeasPosX(), Model.GetMeasPosY(),
+        Model.GetMeasPosZ());
   }
