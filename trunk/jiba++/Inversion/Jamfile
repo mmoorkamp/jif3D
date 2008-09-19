@@ -1,6 +1,8 @@
 import testing ; 
 
-lib inversion : MatrixTools.cpp  LinearInversion.cpp : <include>boost : : <include>. ;
+lib inversion : MatrixTools.cpp  LinearInversion.cpp 
+                ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran
+                 : <include>boost : : <include>. ;
 
 unit-test inversion_test : test_inversion.cpp inversion ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran  : : <include>. ;
 
