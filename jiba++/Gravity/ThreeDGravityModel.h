@@ -184,17 +184,17 @@ namespace jiba
        * three coordinate values for all points.
        * @return A vector with the x-coordinates of all measurement points in m
        */
-      const tMeasPosVec &GetMeasPosX()
+      const tMeasPosVec &GetMeasPosX() const
         {
           return MeasPosX;
         }
       //! Return the y-coordinates of all measurement points read-only
-      const tMeasPosVec &GetMeasPosY()
+      const tMeasPosVec &GetMeasPosY() const
         {
           return MeasPosY;
         }
       //! Return the z-coordinates of all measurement points read-only
-      const tMeasPosVec &GetMeasPosZ()
+      const tMeasPosVec &GetMeasPosZ() const
         {
           return MeasPosZ;
         }
