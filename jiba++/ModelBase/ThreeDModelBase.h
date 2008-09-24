@@ -36,11 +36,17 @@ namespace jiba
         {
         }
       //! Have the cell sizes for the x-coordinate changed
-      bool XCellSizesChanged;
+      /*! This is basically a flag for caching, we could recalculate the Grid coordinates
+       * every time from the cell sizes. This is slow and the coordinates are often needed.
+       * Therefore we store whether the sizes have changed and only recalculate then, otherwise
+       * we take the values from GridXCoordinates. This should also be possible for const
+       * objects, even though the object is not bitwise constant any more. Thus it is mutable.
+       */
+      mutable bool XCellSizesChanged;
       //! Have the cell sizes for the y-coordinate changed
-      bool YCellSizesChanged;
+      mutable bool YCellSizesChanged;
       //! Have the cell sizes for the z-coordinate changed
-      bool ZCellSizesChanged;
+      mutable bool ZCellSizesChanged;
       //! The object containing the actual value, e.g. conductivity, velocity
       t3DModelData Data;
       //! The size of the cells in x-direction
@@ -50,11 +56,13 @@ namespace jiba
       //! The size of the cells in z-direction
       t3DModelDim ZCellSizes;
       //! The x-coordinate of the upper left front corner
-      t3DModelDim GridXCoordinates;
+      /*! See the explanation for XCellSizesChanged why this is mutable
+       */
+      mutable t3DModelDim GridXCoordinates;
       //! The x-coordinate of the upper left front corner
-      t3DModelDim GridYCoordinates;
+      mutable t3DModelDim GridYCoordinates;
       //! The x-coordinate of the upper left front corner
-      t3DModelDim GridZCoordinates;
+      mutable t3DModelDim GridZCoordinates;
       //! Calculate the coordinates of the model cells from the sizes of each cell
       /*! This functions assumes that the coordinate of the upper left front corner of the model is
        * is (0,0,0).
@@ -63,7 +71,7 @@ namespace jiba
        * @param ChangeFlag The flag that stores whether this coordinate has been changed
        */
       void CalcCoordinates(t3DModelDim &Coordinates, const t3DModelDim Sizes,
-          bool &ChangeFlag)
+          bool &ChangeFlag) const
         {
           const size_t nelements = Sizes.size();
           if (ChangeFlag && nelements > 0)
@@ -93,24 +101,6 @@ namespace jiba
       t3DModelData &SetData()
         {
           return Data;
-        }
-      //!Get the x (north) coordinates of the cells, might perform calculations and write operation so it is not thread-safe
-      const t3DModelDim &GetXCoordinates()
-        {
-          CalcCoordinates(GridXCoordinates, XCellSizes, XCellSizesChanged);
-          return GridXCoordinates;
-        }
-      //!Get the y (east) coordinates of the cells, might perform calculations and write operation so it is not thread-safe
-      const t3DModelDim &GetYCoordinates()
-        {
-          CalcCoordinates(GridYCoordinates, YCellSizes, YCellSizesChanged);
-          return GridYCoordinates;
-        }
-      //!Get the z (depth) coordinates of the cells, might perform calculations and write operation so it is not thread-safe
-      const t3DModelDim &GetZCoordinates()
-        {
-          CalcCoordinates(GridZCoordinates, ZCellSizes, ZCellSizesChanged);
-          return GridZCoordinates;
         }
       //! Read data and associated cell sizes from a netcdf file
       void ReadDataFromNetCDF(const NcFile &NetCDFFile,
@@ -157,6 +147,27 @@ namespace jiba
           ZCellSizesChanged = true;
           return ZCellSizes;
         }
+      //!Get the x (north) coordinates of the cells, might perform calculations and write operation so it is not thread-safe
+      const t3DModelDim &GetXCoordinates() const
+        {
+          CalcCoordinates(GridXCoordinates, XCellSizes, XCellSizesChanged);
+          return GridXCoordinates;
+        }
+      //!Get the y (east) coordinates of the cells, might perform calculations and write operation so it is not thread-safe
+      const t3DModelDim &GetYCoordinates() const
+        {
+          CalcCoordinates(GridYCoordinates, YCellSizes, YCellSizesChanged);
+          return GridYCoordinates;
+        }
+      //!Get the z (depth) coordinates of the cells, might perform calculations and write operation so it is not thread-safe
+      const t3DModelDim &GetZCoordinates() const
+        {
+          CalcCoordinates(GridZCoordinates, ZCellSizes, ZCellSizesChanged);
+          return GridZCoordinates;
+        }
+      boost::array<ThreeDModelBase::t3DModelData::index,3>
+          FindAssociatedIndices(const double xcoord, const double ycoord,
+              const double zcoord) const;
       ThreeDModelBase();
       virtual ~ThreeDModelBase();
       };
