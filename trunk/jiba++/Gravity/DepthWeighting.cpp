@@ -5,10 +5,10 @@
 // Copyright   : 2008, mmoorkamp
 //============================================================================
 
-#include "DepthWeighting.h"
-#include "../Inversion/LinearInversion.h"
 #include <fstream>
 #include <iostream>
+#include "DepthWeighting.h"
+#include "../Inversion/LinearInversion.h"
 
 namespace jiba
   {
@@ -25,26 +25,34 @@ namespace jiba
       {
         return 1./((z2-z1)*(n+1)) * (pow(z2 + z0, n+1) - pow(z1 + z0, n+1));
       }
-
-    double FitZ0(const jiba::rvec &SummedSens,
-        const jiba::ThreeDGravityModel &Model, const jiba::WeightingTerm &WeightFunction)
+    /*!
+     * @param SensProfile A vector with nz elements that contains the sensitivity (for a single measurement) with depth
+     * @param ZSizes The size of each cell in z-direction
+     * @param WeightFunction The function object that gives the form of the weighting terms and it derivatives
+     * @return An estimate of z0 for which the weighting function matches the sensitivity decay most closely
+     */
+    double FitZ0(const jiba::rvec &SensProfile,
+        const ThreeDModelBase::t3DModelDim &ZSizes, const jiba::WeightingTerm &WeightFunction)
       {
-        const size_t xsize = Model.GetXCellSizes().shape()[0];
-        const size_t ysize = Model.GetYCellSizes().shape()[0];
-        const size_t zsize = Model.GetZCellSizes().shape()[0];
-        //the index of the center horizontal cell
-        size_t startindex = zsize * (ysize -1) * xsize /2;
-        jiba::rvec sensprofile(zsize), zvalues(zsize);
-        partial_sum(Model.GetZCellSizes().begin(), Model.GetZCellSizes().end(),
+
+
+        const size_t zsize = SensProfile.size();
+        jiba::rvec profile(SensProfile), zvalues(zsize);
+        //we need the depth to the interfaces
+        partial_sum(ZSizes.begin(), ZSizes.end(),
             zvalues.begin());
-        copy(SummedSens.begin() + startindex, SummedSens.begin() + startindex
-            + zsize, sensprofile.begin());
-        transform(sensprofile.begin(), sensprofile.end(), sensprofile.begin(),
+        //the sensitivities can be negative, so we examine the absolute value
+        transform(profile.begin(),profile.end(),profile.begin(),std::abs<double>);
+
+
+        //then we normalize so the largest element (usually the top cell) has value 1
+        transform(profile.begin(), profile.end(), profile.begin(),
             boost::bind(std::divides<double>(), _1, *std::max_element(
-                    sensprofile.begin(), sensprofile.end())));
-        transform(sensprofile.begin(), sensprofile.end(), sensprofile.begin(),std::abs<double>);
+                    profile.begin(), profile.end())));
+        // we guess a value for z0, we take it slightly larger than the bottom of the model
         double startz = zvalues(zsize - 1) * 1.1;
 
+        //setup the "inversion"
         const size_t ndata = zvalues.size();
         jiba::rmat sens(zsize, 1);
         jiba::rvec weights(1);
@@ -58,31 +66,34 @@ namespace jiba
         std::ofstream outfile("match.out");
         double stepsize = 1e6;
         size_t i = 0;
+        //while we are still making progress, but don't use too many iterations
         while (stepsize> 0.1 && i < iterations)
           {
+            //get the predicted data
             for (size_t j = 0; j < zsize; ++j)
               {
                 calculated(j) = WeightFunction(zvalues(j),InvModel(0));
-                delta(j) = sensprofile(j) - calculated(j);
               }
             double maximum = *std::max_element(calculated.begin(),
                 calculated.end());
+            //normalize the predicted data just like the sensitivities
             transform(calculated.begin(), calculated.end(), calculated.begin(),
                 boost::bind(std::divides<double>(), _1, maximum));
+            //calculate the derivatives and the misfit
             for (size_t j = 0; j < zsize; ++j)
               {
                 sens(j, 0) = WeightFunction.deriv(zvalues(j), InvModel(0)) / maximum;
-                delta(j) = sensprofile(j) - calculated(j);
+                delta(j) = profile(j) - calculated(j);
               }
             for (size_t j = 0; j < zsize; ++j)
               {
-                outfile << zvalues(j) << " " << sensprofile(j) << " "
+                outfile << zvalues(j) << " " << profile(j) << " "
                 << calculated(j) << std::endl;
               }
-
+            // do one step of the inversion
             jiba::DataSpaceInversion()(sens, delta, weights, error, evalthresh,
                 0.0, DeltaModel);
-
+            //and adjust the model (no fancy line search here)
             stepsize = boost::numeric::ublas::norm_2(DeltaModel);
             InvModel -= DeltaModel;
 
