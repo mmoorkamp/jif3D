@@ -69,6 +69,9 @@ int main(int argc, char *argv[])
         DataError(i) = 0.02 * DataVector(i);
       }
     const size_t nmeas = PosX.size();
+    const size_t xsize = Model.GetDensities().shape()[0];
+    const size_t ysize = Model.GetDensities().shape()[1];
+    const size_t zsize = Model.GetDensities().shape()[2];
 
     //set the measurement points in the model to those of the data
     Model.ClearMeasurementPoints();
@@ -88,13 +91,37 @@ int main(int argc, char *argv[])
             + jiba::stringify(i) + ".vtk", Model);
       }
     //depth weighting
+    const double midx = Model.GetXCoordinates()[Model.GetXCoordinates().size()
+        - 1] / 2.0;
+    const double midy = Model.GetYCoordinates()[Model.GetYCoordinates().size()
+        - 1] / 2.0;
+
+    jiba::rvec distances(nmeas);
+    for (size_t i = 0; i < nmeas; ++i)
+      {
+        distances(i) = sqrt(pow(Model.GetMeasPosX()[i] - midx,2)+pow(Model.GetMeasPosY()[i] - midy,2));
+      }
+    const size_t midindex = distance(distances.begin(), std::min_element(
+        distances.begin(), distances.end()));
+
+    boost::array<jiba::ThreeDModelBase::t3DModelData::index,3> modelindex(
+        Model.FindAssociatedIndices(Model.GetMeasPosX()[midindex],
+            Model.GetMeasPosY()[midindex], 0.0));
+
     jiba::rvec MiddleSens(boost::numeric::ublas::matrix_row<jiba::rmat>(
-        Sensitivities, nmeas / 2 * 9));
+        Sensitivities, midindex / 2 * 9));
+
+    jiba::rvec SensProfile(zsize);
+    for (size_t i = 0; i < zsize; ++i)
+      {
+        SensProfile(i) = MiddleSens(zsize*modelindex[1] + (zsize*ysize)*modelindex[0] + i );
+      }
+
     const double decayexponent = -4.0;
-    double z0 = FitZ0(MiddleSens, Model, jiba::WeightingTerm(decayexponent));
+    double z0 = FitZ0(SensProfile, Model.GetZCellSizes(), jiba::WeightingTerm(decayexponent));
     std::cout << "Estimated z0: " << z0 << std::endl;
     const size_t nmod = Sensitivities.size2();
-    const size_t zsize = Model.GetDensities().shape()[2];
+
     jiba::rvec WeightVector(zsize), ModelWeight(nmod);
     jiba::ConstructDepthWeighting(Model.GetXCellSizes(), Model.GetYCellSizes(),
         Model.GetZCellSizes(), z0, WeightVector, jiba::WeightingTerm(decayexponent));
