@@ -42,6 +42,7 @@ BOOST_AUTO_TEST_CASE    (weightingterm_test)
         Model.SetZCellSizes().resize(boost::extents[nz]);
         Model.SetXCellSizes()[0] = 10.0;
         Model.SetYCellSizes()[0] = 10.0;
+        Model.AddMeasurementPoint(5,5,-1);
         //we make up some "sensitivities"
         jiba::rvec PseudoSens(nz);
         //we want to get back this number
@@ -57,7 +58,7 @@ BOOST_AUTO_TEST_CASE    (weightingterm_test)
             PseudoSens[i] = jiba::WeightingTerm(exponent)(currdepth,z0);
           }
         //FitZ0 should find z0 specified above
-        double foundz0 = jiba::FitZ0(PseudoSens,Model,jiba::WeightingTerm(exponent));
+        double foundz0 = jiba::FitZ0(PseudoSens,Model.GetZCellSizes(),jiba::WeightingTerm(exponent));
         //in reality the gradient is small at the end, so we can have 1% difference
         BOOST_CHECK_CLOSE(z0, foundz0, 1);
       }

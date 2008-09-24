@@ -23,6 +23,7 @@
 #include "../Inversion/LinearInversion.h"
 #include "../ModelBase/VTKTools.h"
 #include "DepthWeighting.h"
+#include "../Global/FatalException.h"
 
 namespace ublas = boost::numeric::ublas;
 
@@ -60,10 +61,10 @@ int main(int argc, char *argv[])
     const size_t nmod = xsize * ysize * zsize;
     jiba::rmat AllSens(Model.GetScalarSensitivities());
     jiba::rmat Sensitivities(ublas::matrix_range<jiba::rmat>(AllSens,
-            ublas::range(0, nmeas), ublas::range(0, nmod)));
+        ublas::range(0, nmeas), ublas::range(0, nmod)));
 
-
-    jiba::rvec WeightVector(zsize), ModelWeight(AllSens.size2()), DataError(nmeas);
+    jiba::rvec WeightVector(zsize), ModelWeight(AllSens.size2()), DataError(
+        nmeas);
     jiba::rvec DataVec(nmeas);
     std::copy(Data.begin(), Data.end(), DataVec.begin());
     //here we calculate the sensitivity summed over all data
@@ -73,9 +74,41 @@ int main(int argc, char *argv[])
       {
         DataError(i) = 0.02 * DataVec(i);
       }
+
+    if (Model.GetMeasPosX().empty())
+      throw jiba::FatalException("No measurements defined");
+    const double midx = Model.GetXCoordinates()[Model.GetXCoordinates().size()
+        - 1] / 2.0;
+    const double midy = Model.GetYCoordinates()[Model.GetYCoordinates().size()
+        - 1] / 2.0;
+
+    jiba::rvec distances(nmeas);
+    for (size_t i = 0; i < nmeas; ++i)
+      {
+        distances(i) = sqrt(pow(Model.GetMeasPosX()[i] - midx,2)+pow(Model.GetMeasPosY()[i] - midy,2));
+      }
+    const size_t midindex = distance(distances.begin(), std::min_element(
+        distances.begin(), distances.end()));
+    std::cout << "Midindex: " << midindex << " "
+        << Model.GetMeasPosX()[midindex] << " "
+        << Model.GetMeasPosY()[midindex] << std::endl;
+    boost::array<jiba::ThreeDModelBase::t3DModelData::index,3> modelindex(
+        Model.FindAssociatedIndices(Model.GetMeasPosX()[midindex],
+            Model.GetMeasPosY()[midindex], 0.0));
+
+    std::cout << "Model index: " << modelindex[0] << " " << modelindex[1]
+        << " " << modelindex[2] << std::endl;
+
     jiba::rvec MiddleSens(boost::numeric::ublas::matrix_row<jiba::rmat>(
-        Sensitivities, nmeas / 2));
-    double z0 = FitZ0(MiddleSens, Model, jiba::WeightingTerm(-3));
+        Sensitivities, midindex));
+
+    jiba::rvec SensProfile(zsize);
+    for (size_t i = 0; i < zsize; ++i)
+      {
+        SensProfile(i) = MiddleSens(zsize*modelindex[1] + (zsize*ysize)*modelindex[0] + i );
+      }
+
+    double z0 = FitZ0(SensProfile, Model.GetZCellSizes(), jiba::WeightingTerm(-3));
     std::cout << "Estimated z0: " << z0 << std::endl;
 
     //calculate the depth scaling
@@ -88,7 +121,7 @@ int main(int argc, char *argv[])
     //the WeightVector only has length zsize, one entry for each depth level
     //the inversion routine needs a vector with a weight for each model parameter
     // the weights only depend on the depth of the cell
-    std::fill_n(ModelWeight.begin(),ModelWeight.size(),0.0);
+    std::fill_n(ModelWeight.begin(), ModelWeight.size(), 0.0);
     for (size_t i = 0; i < nmod; ++i)
       {
         ModelWeight(i) =WeightVector(i % zsize);
@@ -106,7 +139,7 @@ int main(int argc, char *argv[])
         InvModel);
 
     jiba::ThreeDModelBase::t3DModelData SensModel(
-            boost::extents[xsize][ysize][zsize]);
+        boost::extents[xsize][ysize][zsize]);
     for (size_t i = 0; i < nmeas; ++i)
       {
         boost::numeric::ublas::matrix_column<const jiba::rmat> filcolumn(
@@ -125,13 +158,13 @@ int main(int argc, char *argv[])
       }
 
     //copy the inversion model in the Model class for plotting
-    std::copy(InvModel.begin(), InvModel.begin() + nmod, Model.SetDensities().origin());
+    std::copy(InvModel.begin(), InvModel.begin() + nmod,
+        Model.SetDensities().origin());
     //calculate the predicted data
     jiba::ThreeDGravityModel::tScalarMeasVec InvData(Model.CalcGravity());
     //and write out the data and model
-    jiba::Write3DDataToVTK(modelfilename + ".inv_data.vtk", "grav_accel", InvData,
-        Model.GetMeasPosX(), Model.GetMeasPosY(),
-        Model.GetMeasPosZ());
+    jiba::Write3DDataToVTK(modelfilename + ".inv_data.vtk", "grav_accel",
+        InvData, Model.GetMeasPosX(), Model.GetMeasPosY(), Model.GetMeasPosZ());
     Model.SaveScalarMeasurements(modelfilename + ".inv_data.nc");
     Model.PlotScalarMeasurements(modelfilename + ".inv.plot");
     Model.WriteVTK(modelfilename + ".inv.vtk");
