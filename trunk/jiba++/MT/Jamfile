@@ -1,7 +1,7 @@
 import testing ; 
 using gfortran ;
 
-lib mt : B_epol1.for B_hpol.for  ;
+lib mt : B_epol1.for B_hpol.for  MT2DForward.cpp ;
 
 
 
