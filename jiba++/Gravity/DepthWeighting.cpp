@@ -106,8 +106,6 @@ namespace jiba
 
     /*! Construct a weighting vector that counteracts the decay of the sensitivities of gravity data
      *  to facilitate inversion.
-     * @param XSizes The sizes of the model cells in x-direction in m
-     * @param YSizes The sizes of the model cells in y-direction in m
      * @param ZSizes The sizes of the model cells in z-direction in m
      * @param z0 The scaling depth
      * @param WeightVector The resulting weight vector
