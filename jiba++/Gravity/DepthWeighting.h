@@ -43,8 +43,7 @@ namespace jiba
     double FitZ0(const jiba::rvec &SensProfile,
         const ThreeDModelBase::t3DModelDim &ZSizes, const jiba::WeightingTerm &WeightFunction);
     //! Given a z0 and the model geometry, construct a vector of weights
-    void ConstructDepthWeighting(const ThreeDModelBase::t3DModelDim &XSizes,
-        const ThreeDModelBase::t3DModelDim &YSizes,
+    void ConstructDepthWeighting(
         const ThreeDModelBase::t3DModelDim &ZSizes, const double z0,
         rvec &WeightVector, const jiba::WeightingTerm &WeightFunction);
     /* @} */

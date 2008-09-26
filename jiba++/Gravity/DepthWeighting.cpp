@@ -115,8 +115,7 @@ namespace jiba
      * The resulting weight vector has only nz elements, where nz is the number of vertical layers
      * the inversion algorithm has to take care to apply these values to the appropriate matrix elements
      */
-    void ConstructDepthWeighting(const ThreeDModelBase::t3DModelDim &XSizes,
-        const ThreeDModelBase::t3DModelDim &YSizes,
+    void ConstructDepthWeighting(
         const ThreeDModelBase::t3DModelDim &ZSizes, const double z0,
         rvec &WeightVector, const jiba::WeightingTerm &WeightFunction)
       {
@@ -130,7 +129,7 @@ namespace jiba
         for (size_t i = 0; i < nz; ++i)
           {
             currbottom += ZSizes[i];
-            WeightVector(i) = WeightFunction(currbottom,z0);
+            WeightVector(i) = 1./WeightFunction(currbottom,z0);
 
           }
         //normalize

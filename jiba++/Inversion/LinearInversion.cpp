@@ -35,7 +35,7 @@ namespace jiba
             boost::numeric::ublas::matrix_row<jiba::rmat> CurrentRow(
                 FilteredSens, i);
 
-            CurrentRow /= WeightVector(i);
+            CurrentRow *= WeightVector(i);
           }
 
         jiba::rmat Gamma(nmeas, nmeas);
