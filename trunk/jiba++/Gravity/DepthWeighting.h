@@ -46,6 +46,9 @@ namespace jiba
     void ConstructDepthWeighting(
         const ThreeDModelBase::t3DModelDim &ZSizes, const double z0,
         rvec &WeightVector, const jiba::WeightingTerm &WeightFunction);
+
+    void ExtractMiddleSens(const jiba::ThreeDGravityModel &Model,
+        const jiba::rmat &Sensitivities, const size_t MeasPerPos, jiba::rvec &SensProfile);
     /* @} */
   }
 #endif /* DEPTHWEIGHTING_H_ */
