@@ -4,6 +4,7 @@
 #include "meschachd_no_complex/sparse.h"
 #include "inv3d.h"
 #include <string>
+#include "Podvin.h"
 /*! \file
  * The file containing all the function declarations */
 /*--------------------------------------------------------------*/
@@ -63,7 +64,7 @@ double *TimeGrad(int x, int y, int z, float *tt,int ny, int nz);
 CELL_STRUCT RayBackTrace(double gradx, double grady, double gradz, CELL_STRUCT cell, float *tt,int ny,int nz);
 int ResortRays(RP_STRUCT *raypath,DATA_STRUCT data,GRID_STRUCT grid);
 /*in podvin-lecomte-3D.c*/
-int time_3d(float *HS,float *T,int NX,int NY,int NZ,float XS,float YS,float ZS,float HS_EPS_INIT,int MSG);
+
 /* @} */
   }
 #endif
