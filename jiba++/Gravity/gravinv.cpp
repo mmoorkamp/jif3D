@@ -35,14 +35,16 @@ int main(int argc, char *argv[])
     jiba::ThreeDGravityModel::tMeasPosVec PosX, PosY, PosZ;
 
     std::string modelfilename, datafilename;
-    std::cout << "Mesh Filename: ";
+    std::cout << "Starting model Filename: ";
     std::cin >> modelfilename;
-    //we read in a complete modelfile, but we only use the mesh information
+    //we read in the starting modelfile
     Model.ReadNetCDF(modelfilename);
     //get the name of the file containing the data and read it in
     std::cout << "Data Filename: ";
     std::cin >> datafilename;
     jiba::ReadScalarGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
+    if (Data.empty())
+      throw jiba::FatalException("No measurements defined");
     const size_t nmeas = PosX.size();
     //set the measurement points in the model to those of the data
     Model.ClearMeasurementPoints();
@@ -50,70 +52,36 @@ int main(int argc, char *argv[])
       {
         Model.AddMeasurementPoint(PosX.at(i), PosY.at(i), PosZ.at(i));
       }
-    //calculate the response, we don't actually care about the densities
-    //and the model response, but we need the sensitivity matrix
-    Model.CalcGravity();
-    Model.SaveScalarMeasurements(modelfilename + ".new.nc");
+    //calculate the response of the starting model
+    jiba::ThreeDGravityModel::tScalarMeasVec StartingData(Model.CalcGravity());
 
     const size_t xsize = Model.GetDensities().shape()[0];
     const size_t ysize = Model.GetDensities().shape()[1];
     const size_t zsize = Model.GetDensities().shape()[2];
     const size_t nmod = xsize * ysize * zsize;
+
     jiba::rmat AllSens(Model.GetScalarSensitivities());
     jiba::rmat Sensitivities(ublas::matrix_range<jiba::rmat>(AllSens,
         ublas::range(0, nmeas), ublas::range(0, nmod)));
+    std::cout << "Gridded model size: " << nmod << " Complete size: "
+        << AllSens.size2() << std::endl;
+    jiba::rvec WeightVector(zsize), ModelWeight(AllSens.size2());
+    jiba::rvec DataDiffVec(nmeas), DataError(nmeas);
+    std::transform(Data.begin(), Data.end(), StartingData.begin(),
+        DataDiffVec.begin(), std::minus<double>());
+    const double errorlevel = 0.02;
+    std::transform(Data.begin(), Data.end(), DataError.begin(), boost::bind(
+        std::multiplies<double>(), _1, errorlevel));
 
-    jiba::rvec WeightVector(zsize), ModelWeight(AllSens.size2()), DataError(
-        nmeas);
-    jiba::rvec DataVec(nmeas);
-    std::copy(Data.begin(), Data.end(), DataVec.begin());
-    //here we calculate the sensitivity summed over all data
-    //this is to find an appropriate depth scaling and might be removed in the future
-
-    for (size_t i = 0; i < nmeas; ++i)
-      {
-        DataError(i) = 0.02 * DataVec(i);
-      }
-
-    if (Model.GetMeasPosX().empty())
-      throw jiba::FatalException("No measurements defined");
-    const double midx = Model.GetXCoordinates()[Model.GetXCoordinates().size()
-        - 1] / 2.0;
-    const double midy = Model.GetYCoordinates()[Model.GetYCoordinates().size()
-        - 1] / 2.0;
-
-    jiba::rvec distances(nmeas);
-    for (size_t i = 0; i < nmeas; ++i)
-      {
-        distances(i) = sqrt(pow(Model.GetMeasPosX()[i] - midx,2)+pow(Model.GetMeasPosY()[i] - midy,2));
-      }
-    const size_t midindex = distance(distances.begin(), std::min_element(
-        distances.begin(), distances.end()));
-    std::cout << "Midindex: " << midindex << " "
-        << Model.GetMeasPosX()[midindex] << " "
-        << Model.GetMeasPosY()[midindex] << std::endl;
-    boost::array<jiba::ThreeDModelBase::t3DModelData::index,3> modelindex(
-        Model.FindAssociatedIndices(Model.GetMeasPosX()[midindex],
-            Model.GetMeasPosY()[midindex], 0.0));
-
-    std::cout << "Model index: " << modelindex[0] << " " << modelindex[1]
-        << " " << modelindex[2] << std::endl;
-
-    jiba::rvec MiddleSens(boost::numeric::ublas::matrix_row<jiba::rmat>(
-        Sensitivities, midindex));
-
-    jiba::rvec SensProfile(zsize);
-    for (size_t i = 0; i < zsize; ++i)
-      {
-        SensProfile(i) = MiddleSens(zsize*modelindex[1] + (zsize*ysize)*modelindex[0] + i );
-      }
-
-    double z0 = FitZ0(SensProfile, Model.GetZCellSizes(), jiba::WeightingTerm(-3));
+    jiba::rvec SensProfile;
+    jiba::ExtractMiddleSens(Model,Sensitivities,1,SensProfile);
+    double z0 = FitZ0(SensProfile, Model.GetZCellSizes(), jiba::WeightingTerm(
+        -3));
     std::cout << "Estimated z0: " << z0 << std::endl;
 
     //calculate the depth scaling
-    jiba::ConstructDepthWeighting(Model.GetXCellSizes(), Model.GetYCellSizes(),
-        Model.GetZCellSizes(), z0, WeightVector, jiba::WeightingTerm(-3));
+    jiba::ConstructDepthWeighting(Model.GetZCellSizes(), z0, WeightVector,
+        jiba::WeightingTerm(-3));
     //and output the scaling weights
     std::ofstream weightfile("weights.out");
     std::copy(WeightVector.begin(), WeightVector.end(),
@@ -121,7 +89,8 @@ int main(int argc, char *argv[])
     //the WeightVector only has length zsize, one entry for each depth level
     //the inversion routine needs a vector with a weight for each model parameter
     // the weights only depend on the depth of the cell
-    std::fill_n(ModelWeight.begin(), ModelWeight.size(), 0.0);
+    // we also have the background layers, which get a weight of 0, so they are not changed in the inversion
+    std::fill_n(ModelWeight.begin(), ModelWeight.size(), 0);
     for (size_t i = 0; i < nmod; ++i)
       {
         ModelWeight(i) =WeightVector(i % zsize);
@@ -135,31 +104,14 @@ int main(int argc, char *argv[])
     //here comes the core inversion
     jiba::rvec InvModel;
     jiba::DataSpaceInversion Inversion;
-    Inversion(AllSens, DataVec, ModelWeight, DataError, evalthresh, 1.0,
+    Inversion(AllSens, DataDiffVec, ModelWeight, DataError, evalthresh, 1.0,
         InvModel);
 
-    jiba::ThreeDModelBase::t3DModelData SensModel(
-        boost::extents[xsize][ysize][zsize]);
-    for (size_t i = 0; i < nmeas; ++i)
-      {
-        boost::numeric::ublas::matrix_column<const jiba::rmat> filcolumn(
-            Inversion.GetFilteredSens(), i);
-        boost::numeric::ublas::matrix_row<jiba::rmat> senscolumn(Sensitivities,
-            i);
-        std::copy(filcolumn.begin(), filcolumn.end(), SensModel.data());
-        jiba::Write3DModelToVTK(modelfilename + ".sensfil_data"
-            + jiba::stringify(i) + ".vtk", "filtered_sens",
-            Model.GetXCellSizes(), Model.GetYCellSizes(),
-            Model.GetZCellSizes(), SensModel);
-        std::copy(senscolumn.begin(), senscolumn.end(), SensModel.data());
-        jiba::Write3DModelToVTK(modelfilename + ".sens_data" + jiba::stringify(
-            i) + ".vtk", "filtered_sens", Model.GetXCellSizes(),
-            Model.GetYCellSizes(), Model.GetZCellSizes(), SensModel);
-      }
-
-    //copy the inversion model in the Model class for plotting
-    std::copy(InvModel.begin(), InvModel.begin() + nmod,
-        Model.SetDensities().origin());
+    //add the result of the inversion to the starting model
+    //we only add the gridded part, the  background is always 0 due to the weighting
+    std::transform(InvModel.begin(), InvModel.begin() + nmod,
+        Model.SetDensities().origin(), Model.SetDensities().origin(),
+        std::plus<double>());
     //calculate the predicted data
     jiba::ThreeDGravityModel::tScalarMeasVec InvData(Model.CalcGravity());
     //and write out the data and model
@@ -169,4 +121,27 @@ int main(int argc, char *argv[])
     Model.PlotScalarMeasurements(modelfilename + ".inv.plot");
     Model.WriteVTK(modelfilename + ".inv.vtk");
     Model.WriteNetCDF(modelfilename + ".inv.nc");
+
+    std::cout << std::endl;
+    jiba::ThreeDModelBase::t3DModelData SensModel(
+        boost::extents[xsize][ysize][zsize]);
+    for (size_t i = 0; i < nmeas; ++i)
+      {
+        //the filtered sensitivities include the background layers
+        boost::numeric::ublas::matrix_column<const jiba::rmat> filcolumn(
+            Inversion.GetFilteredSens(), i);
+        boost::numeric::ublas::matrix_row<jiba::rmat> senscolumn(Sensitivities,
+            i);
+        //we are only interested in the sensitivities for the gridded part
+        std::copy(filcolumn.begin(), filcolumn.begin() + nmod, SensModel.data());
+        jiba::Write3DModelToVTK(modelfilename + ".sensfil_data"
+            + jiba::stringify(i) + ".vtk", "filtered_sens",
+            Model.GetXCellSizes(), Model.GetYCellSizes(),
+            Model.GetZCellSizes(), SensModel);
+        std::copy(senscolumn.begin(), senscolumn.begin() + nmod,
+            SensModel.data());
+        jiba::Write3DModelToVTK(modelfilename + ".sens_data" + jiba::stringify(
+            i) + ".vtk", "raw_sens", Model.GetXCellSizes(),
+            Model.GetYCellSizes(), Model.GetZCellSizes(), SensModel);
+      }
   }

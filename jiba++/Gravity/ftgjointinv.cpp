@@ -1,5 +1,5 @@
 //============================================================================
-// Name        : ftginv.cpp
+// Name        : ftgjointinv.cpp
 // Author      : Max Moorkamp
 // Version     :
 // Copyright   : 2008, MM

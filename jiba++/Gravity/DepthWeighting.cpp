@@ -35,7 +35,6 @@ namespace jiba
         const ThreeDModelBase::t3DModelDim &ZSizes, const jiba::WeightingTerm &WeightFunction)
       {
 
-
         const size_t zsize = SensProfile.size();
         jiba::rvec profile(SensProfile), zvalues(zsize);
         //we need the depth to the interfaces
@@ -43,7 +42,6 @@ namespace jiba
             zvalues.begin());
         //the sensitivities can be negative, so we examine the absolute value
         transform(profile.begin(),profile.end(),profile.begin(),std::abs<double>);
-
 
         //then we normalize so the largest element (usually the top cell) has value 1
         transform(profile.begin(), profile.end(), profile.begin(),
@@ -137,4 +135,35 @@ namespace jiba
 
       }
 
+    void ExtractMiddleSens(const jiba::ThreeDGravityModel &Model, const jiba::rmat &Sensitivities, const size_t MeasPerPos, jiba::rvec &SensProfile)
+      {
+        const double midx = Model.GetXCoordinates()[Model.GetXCoordinates().size()
+        - 1] / 2.0;
+        const double midy = Model.GetYCoordinates()[Model.GetYCoordinates().size()
+        - 1] / 2.0;
+
+        const size_t nmeas = Sensitivities.size1();
+        jiba::rvec distances(nmeas);
+        for (size_t i = 0; i < nmeas; ++i)
+          {
+            distances(i) = sqrt(pow(Model.GetMeasPosX()[i] - midx,2)+pow(Model.GetMeasPosY()[i] - midy,2));
+          }
+        const size_t midindex = distance(distances.begin(), std::min_element(
+                distances.begin(), distances.end()));
+        boost::array<jiba::ThreeDModelBase::t3DModelData::index,3> modelindex(
+            Model.FindAssociatedIndices(Model.GetMeasPosX()[midindex],
+                Model.GetMeasPosY()[midindex], 0.0));
+        jiba::rvec MiddleSens(boost::numeric::ublas::matrix_row<const jiba::rmat>(
+                Sensitivities, midindex * MeasPerPos));
+
+        const size_t ysize = Model.GetDensities().shape()[1];
+        const size_t zsize = Model.GetDensities().shape()[2];
+
+        SensProfile.resize(zsize);
+        const size_t startindex = (zsize * ysize) * modelindex[0] + zsize
+        * modelindex[1];
+        std::copy(MiddleSens.begin() + startindex, MiddleSens.begin() + startindex
+            + zsize, SensProfile.begin());
+
+      }
   }
