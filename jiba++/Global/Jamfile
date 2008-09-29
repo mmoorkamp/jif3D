@@ -2,4 +2,4 @@ import testing ;
 
 
 unit-test interpolate_test : test_interpolate.cpp   : : <include>. ;
-
+unit-test wavelet_test : Wavelet.cpp test_wavelet.cpp   : : <include>. ;
