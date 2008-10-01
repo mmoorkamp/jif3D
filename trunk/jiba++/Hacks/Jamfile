@@ -8,3 +8,4 @@ exe levjoint : levjoint.cpp ..//gplib ..//gsl ..//netcdf_c++ ..//netcdf ..//antl
 	: <include>/home/mmoorkamp/workspace/gplib/include ;
 	
 exe fittingtest : fittingtest.cpp ../Inversion//inversion ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran : <include>. ;
+exe sparsetest : sparsetest.cpp ../Inversion//inversion ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran : <include>. ;
