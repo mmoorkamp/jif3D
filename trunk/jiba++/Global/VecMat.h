@@ -15,6 +15,7 @@
 #include <boost/numeric/ublas/vector_expression.hpp>
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/matrix_proxy.hpp>
+#include <boost/numeric/ublas/matrix_sparse.hpp>
 #include <boost/numeric/bindings/lapack/lapack.hpp>
 #include <boost/numeric/bindings/lapack/geev.hpp>
 #include <boost/numeric/bindings/traits/ublas_matrix.hpp>
@@ -24,14 +25,20 @@
 #include <boost/numeric/ublas/lu.hpp>
 #include <complex>
 
-namespace jiba {
-//! A matrix with complex entries
-typedef boost::numeric::ublas::matrix<std::complex<double>,boost::numeric::ublas::column_major > cmat;
-//! A matrix with real entries
-typedef boost::numeric::ublas::matrix<double,boost::numeric::ublas::column_major > rmat;
-//! A complex vector
-typedef boost::numeric::ublas::vector<std::complex<double> > cvec;
-//! A real vector
-typedef boost::numeric::ublas::vector<double> rvec;
-}
+namespace jiba
+  {
+    //! A matrix with complex entries
+    typedef boost::numeric::ublas::matrix<std::complex<double>,boost::numeric::ublas::column_major>
+        cmat;
+    //! A matrix with real entries
+    typedef boost::numeric::ublas::matrix<double,boost::numeric::ublas::column_major>
+        rmat;
+    //! A sparse matrix with real valued entries
+    typedef boost::numeric::ublas::compressed_matrix<double,boost::numeric::ublas::column_major>
+        rsparse;
+    //! A complex vector
+    typedef boost::numeric::ublas::vector<std::complex<double> > cvec;
+    //! A real vector
+    typedef boost::numeric::ublas::vector<double> rvec;
+  }
 #endif /*VECMAT_H_*/
