@@ -62,33 +62,6 @@ namespace jiba
         atlas::gemm(CblasNoTrans, CblasTrans, 1.0, lambdavt, u, 0.0, Inverse);
       }
 
-    /*! This function inverts a square real matrix using LU-factorization
-     * @param input The original matrix
-     * @param inverse The inverse
-     * @return True if success, false otherwise
-     */
-    bool InvertMatrix(const jiba::rmat& input, jiba::rmat& inverse)
-      {
-        using namespace boost::numeric::ublas;
-        typedef permutation_matrix<std::size_t> pmatrix;
-        // create a working copy of the input
-        jiba::rmat A(input);
-        // create a permutation matrix for the LU-factorization
-        pmatrix pm(A.size1());
-
-        // perform LU-factorization
-        int res = lu_factorize(A, pm);
-        if (res != 0)
-        return false;
-
-        // create identity matrix of "inverse"
-        inverse.assign(boost::numeric::ublas::identity_matrix<double>(A.size1()));
-
-        // backsubstitute to get the inverse
-        lu_substitute(A, pm, inverse);
-
-        return true;
-      }
     /*!
      * returns the determinant of a real square Matrix
      * @param Matrix The real square matrix
