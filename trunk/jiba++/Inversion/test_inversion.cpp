@@ -71,8 +71,7 @@ BOOST_AUTO_TEST_CASE  (basic_svd_test)
       jiba::rmat u,vt;
       jiba::SVD(TestMatrix,s,u,vt);
       double sdet = std::accumulate(s.begin(),s.end(),1.0,std::multiplies<double>());
-      std::cout << det << " " << sdet << std::endl;
-      BOOST_CHECK_CLOSE(det, fabs(sdet),
+      BOOST_CHECK_CLOSE(fabs(det), sdet,
           1e-4);
     }
 
@@ -85,7 +84,8 @@ BOOST_AUTO_TEST_CASE  (basic_svd_test)
       for (size_t j = 0; j < msize; ++j)
       TestMatrix(i, j) = double(rand());
 
-      jiba::InvertMatrix(TestMatrix, InverseMatrix);
+      jiba::rmat MatrixCopy(TestMatrix);
+      jiba::InvertMatrix(MatrixCopy, InverseMatrix);
       jiba::rmat MultMatrix(boost::numeric::ublas::prec_prod(TestMatrix,
               InverseMatrix));
       for (size_t i = 0; i < msize; ++i)
@@ -118,22 +118,29 @@ BOOST_AUTO_TEST_CASE  (basic_svd_test)
   BOOST_AUTO_TEST_CASE(compare_inversions_test)
     {
       const size_t ndata =5;
-      const size_t nparam = 7;
+      const size_t nparam = 5;
       jiba::rmat Sensitivities(ndata,nparam);
       jiba::rvec DataVec(ndata), DataError(ndata);
       jiba::rvec ModelWeight(nparam), DataSpaceInvModel(nparam), ModelSpaceInvModel(nparam);
-      const double evalthresh = 0.0001;
-      std::fill_n(DataVec.begin(),ndata,double(rand()));
-      std::fill_n(DataError.begin(),ndata,double(rand()));
-      std::fill_n(ModelWeight.begin(),nparam,double(rand()));
-      std::fill_n(Sensitivities.data().begin(),ndata*nparam,double(rand()));
-      jiba::DataSpaceInversion()(Sensitivities, DataVec, ModelWeight, DataError, evalthresh,0.0,
+      const double evalthresh = 0.000;
+      std::generate_n(DataVec.begin(),ndata,rand);
+      std::generate_n(DataError.begin(),ndata,rand);
+      std::generate_n(ModelWeight.begin(),nparam,rand);
+
+      for (size_t i = 0; i < ndata* nparam; ++i)
+        {
+          Sensitivities.data()[i] = rand() ;
+        }
+
+      jiba::rmat DataSens(Sensitivities);
+      jiba::rvec OrigData(DataVec);
+      jiba::DataSpaceInversion()(DataSens, DataVec, ModelWeight, DataError, evalthresh,1.0,
           DataSpaceInvModel);
-      jiba::ModelSpaceInversion()(Sensitivities, DataVec, ModelWeight, DataError, evalthresh,0.0,
+      jiba::ModelSpaceInversion()(Sensitivities, OrigData, ModelWeight, DataError, evalthresh,1.0,
           ModelSpaceInvModel);
       for (size_t i = 0; i < nparam; ++i)
         {
-          BOOST_CHECK_CLOSE(DataSpaceInvModel(i),ModelSpaceInvModel(i),std::numeric_limits<float>::epsilon());
+          BOOST_CHECK_CLOSE(DataSpaceInvModel(i),ModelSpaceInvModel(i),0.01);
         }
     }
   BOOST_AUTO_TEST_SUITE_END()
