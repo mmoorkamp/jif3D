@@ -6,6 +6,7 @@
 //============================================================================
 
 #include "NetCDFTools.h"
+#include <boost/assign/std/vector.hpp>
 
 namespace jiba
   {
@@ -39,28 +40,48 @@ namespace jiba
       }
 
     NcDim *WriteSizesToNetCDF(NcFile &NetCDFFile, const std::string &SizeName,
-        const ThreeDModelBase::t3DModelDim &CellSize)
+        const ThreeDModelBase::t3DModelDim &CellSize, NcDim *BoundaryDim)
       {
         //Make sure we are writing a one-dimensional entry
         assert(CellSize.num_dimensions() == 1);
+        const size_t nvalues = CellSize.size();
         // Add a dimension and a variable with the same name to the netcdf file
-        NcDim *SizeDim = NetCDFFile.add_dim(SizeName.c_str(), CellSize.size());
+        NcDim *SizeDim = NetCDFFile.add_dim(SizeName.c_str(), nvalues);
         NcVar *SizeVar =
             NetCDFFile.add_var(SizeName.c_str(), ncDouble, SizeDim);
         //All length is measured in meters
         SizeVar->add_att("units", "m");
         //We also store the name
         SizeVar->add_att("long_name", (SizeName + " coordinate").c_str());
+        //we have to store the boundary values of the cells for plotting
+        const std::string boundary_name = SizeName + "_bnds";
+        SizeVar->add_att("bounds", boundary_name.c_str());
         // we store the coordinates of the cells in the netcdf file
-        ThreeDModelBase::t3DModelDim CellCoordinates(
-            boost::extents[CellSize.size()]);
+        ThreeDModelBase::t3DModelDim CellCoordinates(boost::extents[nvalues]);
         std::partial_sum(CellSize.begin(), CellSize.end(),
             CellCoordinates.begin());
         //Write the values
-        SizeVar->put(CellCoordinates.origin(), CellCoordinates.size());
+        SizeVar->put(CellCoordinates.origin(), nvalues);
+        //create the boundary variable
+        NcVar *BoundaryVar = NetCDFFile.add_var(boundary_name.c_str(),
+            ncDouble, SizeDim, BoundaryDim);
+        BoundaryVar->add_att("units", "m");
+
+        //the boundary variable contains two values per cell, the lower and upper boundary
+        std::vector<double> BoundaryValues(nvalues * 2, 0);
+        BoundaryValues.at(0) = 0.0;
+        BoundaryValues.at(1) = CellCoordinates[0];
+
+        for (size_t i = 1; i < CellCoordinates.size(); ++i)
+          {
+            BoundaryValues.at(2 * i) = CellCoordinates[i - 1];
+            BoundaryValues.at(2 * i + 1) = CellCoordinates[i];
+          }
+        BoundaryVar->put(BoundaryValues.data(), nvalues, 2);
         // We return the NcDim object, because we need it to write the model data
         return SizeDim;
       }
+
     /*! Read a  rectangular mesh  3D Model from a netcdf file
      * @param NetCDFFile An open NcFile object
      * @param DataName The name of the model data to retrieve, this allows several different models in one file
@@ -109,20 +130,33 @@ namespace jiba
      * @param Data The model data, the shape has to match the length of the cell size vectors
      */
     void Write3DModelToNetCDF(NcFile &NetCDFFile, const std::string &DataName,
-        const std::string &UnitsName,const ThreeDModelBase::t3DModelDim &XCellSizes,
+        const std::string &UnitsName,
+        const ThreeDModelBase::t3DModelDim &XCellSizes,
         const ThreeDModelBase::t3DModelDim &YCellSizes,
         const ThreeDModelBase::t3DModelDim &ZCellSizes,
         const ThreeDModelBase::t3DModelData &Data)
       {
+        using namespace boost::assign;
         //Make sure our data has the right dimensions and we have size information for each cell
         assert(Data.num_dimensions() == 3);
         assert(Data.shape()[0] == XCellSizes.size());
         assert(Data.shape()[1] == YCellSizes.size());
         assert(Data.shape()[2] == ZCellSizes.size());
+
+        //add information about boundary values
+        NcDim *BoundaryDim = NetCDFFile.add_dim("nbound", 2);
+        NcVar *BoundaryVar = NetCDFFile.add_var("nbound", ncInt, BoundaryDim);
+        std::vector<int> BIndices;
+        BIndices += 1, 2;
+        BoundaryVar->put(&BIndices[0], 2);
         // Write the size information in x,y, and z-direction
-        NcDim *XSizeDim = WriteSizesToNetCDF(NetCDFFile, "x", XCellSizes);
-        NcDim *YSizeDim = WriteSizesToNetCDF(NetCDFFile, "y", YCellSizes);
-        NcDim *ZSizeDim = WriteSizesToNetCDF(NetCDFFile, "z", ZCellSizes);
+        NcDim *XSizeDim = WriteSizesToNetCDF(NetCDFFile, "x", XCellSizes,
+            BoundaryDim);
+        NcDim *YSizeDim = WriteSizesToNetCDF(NetCDFFile, "y", YCellSizes,
+            BoundaryDim);
+        NcDim *ZSizeDim = WriteSizesToNetCDF(NetCDFFile, "z", ZCellSizes,
+            BoundaryDim);
+
         NcVar *DataVar = NetCDFFile.add_var(DataName.c_str(), ncDouble,
             XSizeDim, YSizeDim, ZSizeDim);
         DataVar->add_att("units", UnitsName.c_str());
