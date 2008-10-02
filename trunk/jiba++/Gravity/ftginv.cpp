@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
     jiba::rvec SensProfile;
     jiba::ExtractMiddleSens(Model, Sensitivities, 9, SensProfile);
 
-    const double decayexponent = -4.0;
+    const double decayexponent = -3.0;
     double z0 = FitZ0(SensProfile, Model.GetZCellSizes(), jiba::WeightingTerm(
         decayexponent));
     std::cout << "Estimated z0: " << z0 << std::endl;
@@ -135,10 +135,13 @@ int main(int argc, char *argv[])
     double evalthresh;
     std::cout << "Eigenvalue threshold: ";
     std::cin >> evalthresh;
+    double lambda = 1.0;
+    std::cout << "Lambda: ";
+    std::cin >>lambda;
     jiba::rvec InvModel;
 
     jiba::DataSpaceInversion()(AllSens, DataDiffVector, ModelWeight, DataError,
-        evalthresh, 1.0, InvModel);
+        evalthresh, lambda, InvModel);
 
     //add the result of the inversion to the starting model
     //we only add the gridded part, the  background is always 0 due to the weighting

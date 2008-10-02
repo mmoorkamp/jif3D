@@ -100,11 +100,14 @@ int main(int argc, char *argv[])
     double evalthresh;
     std::cout << "Eigenvalue threshold: ";
     std::cin >> evalthresh;
+    double lambda = 1.0;
+    std::cout << "Lambda: ";
+    std::cin >>lambda;
 
     //here comes the core inversion
     jiba::rvec InvModel;
     jiba::DataSpaceInversion Inversion;
-    Inversion(AllSens, DataDiffVec, ModelWeight, DataError, evalthresh, 1.0,
+    Inversion(AllSens, DataDiffVec, ModelWeight, DataError, evalthresh, lambda,
         InvModel);
 
     //add the result of the inversion to the starting model
@@ -129,7 +132,7 @@ int main(int argc, char *argv[])
       {
         //the filtered sensitivities include the background layers
         boost::numeric::ublas::matrix_column<const jiba::rmat> filcolumn(
-            Inversion.GetFilteredSens(), i);
+            AllSens, i);
         boost::numeric::ublas::matrix_row<jiba::rmat> senscolumn(Sensitivities,
             i);
         //we are only interested in the sensitivities for the gridded part
