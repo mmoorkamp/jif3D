@@ -8,7 +8,7 @@
 
 /*---------------------------------------------------------------------------*/
 /* Set flags from the input parameters*/
-/* parameters:  par       := Structure of input parameters */                                     
+/* parameters:  par       := Structure of input parameters */
 /*				*flag	  := flag structure*/
 
 int set_flags(PAR par,FLAG_STRUCT *flag)
@@ -40,7 +40,7 @@ int set_flags(PAR par,FLAG_STRUCT *flag)
 
    if(flag->index_tseis_grav != 0 || flag->index_tseis_mt != 0 || flag->index_grav_mt != 0 || flag->index_tseis_grav_mt != 0)
 	   flag->index_joint = 1;
-   else	
+   else
 	   flag->index_joint = 0;
 
    if(flag->index_grav != 0 && flag->index_tseis != 0)
@@ -58,7 +58,7 @@ int set_flags(PAR par,FLAG_STRUCT *flag)
 
 	/*Specifing the seismic tomography related flags*/
    flag->kind_of_rays = par.ray_index;
-   flag->balance_para_rays = par.para_rays_index; 
+   flag->balance_para_rays = par.para_rays_index;
    flag->ray_density = par.ray_density_index;
    flag->ray_density2 = par.ray_density_index2;
 
@@ -70,7 +70,7 @@ int set_flags(PAR par,FLAG_STRUCT *flag)
    else if(par.dimension_mt == 2)
 		flag->dimension_mt = 2;
 		/*2-D MT forward modeling and 1-D inversion*/
-   else if(par.dimension_mt == 2)
+   else if(par.dimension_mt == 3)
 	   flag->dimension_mt = 3;
 		/*2-D MT forward modeling and 1-D inversion using RRI (see Smith and Booker; Journal of Geophysical Research; 1991)*/
    else
@@ -78,7 +78,7 @@ int set_flags(PAR par,FLAG_STRUCT *flag)
 
 
    flag->kind_of_data_mt = par.kind_of_data_mt;
-   flag->index_mt_weighting = par.index_mt_weighting; 
+   flag->index_mt_weighting = par.index_mt_weighting;
 
    if(flag->dimension_mt != 1)
    {
@@ -89,14 +89,14 @@ int set_flags(PAR par,FLAG_STRUCT *flag)
    /*Specifying the inversion related flags*/
    if(par.damp == 0.0 || par.smoothfac == 0.0)
 	   flag->do_damp = 0;
-   else 
+   else
 	   flag->do_damp = 1;
-   if(par.damp == 0.0 || par.smoothfac == 1.0) 
+   if(par.damp == 0.0 || par.smoothfac == 1.0)
 	   flag->do_smooth = 0;
-   else 
+   else
 	   flag->do_smooth = 1;
    flag->flex_grid_size = par.flex_grid_size;
-   
+
    /*Jin Chen changed new*/
    /*Specify the value of do_extra_smooth, yes=1, no=0.*/
    if(par.extra_smooth == 0)
@@ -112,7 +112,7 @@ int set_flags(PAR par,FLAG_STRUCT *flag)
 
 /*---------------------------------------------------------------------------*/
 /* Set regularization from the input parameters*/
-/* parameters:  par       := Structure of input parameters */                                     
+/* parameters:  par       := Structure of input parameters */
 /*				*regu	  := Regularization structure*/
 
 int set_regu(PAR par,REGU_STRUCT  *regu)
@@ -135,25 +135,25 @@ int set_regu(PAR par,REGU_STRUCT  *regu)
 
 /*---------------------------------------------------------------------------*/
 /* Set inversion parameters from the input parameters*/
-/* parameters:  par       := Structure of input parameters */                                     
+/* parameters:  par       := Structure of input parameters */
 /*				*inv	  := Inversion structure*/
 
 int set_inv(PAR par, INV *inv)
 {
 	inv->ninv = 0;
 	inv->ninv_max = par.inv_max;
-	
+
 	/*Velocity*/
 	if(par.vmina <= 0.0)
 		inv->vmin = 0.0;
 	else
 		inv->vmin = par.vmina;
-	
+
 	if(par.vmaxa <= 0.0)
 		inv->vmax = 1.0e+12;
 	else
 		inv->vmax = par.vmaxa;
-	
+
 	if(par.maxadj <= 0.0)
 		inv->maxadj = 1.0e+12;
 	else
@@ -188,7 +188,7 @@ int set_inv(PAR par, INV *inv)
 	inv->rel_scal_seis = 1;
 	inv->rel_scal_grav = 1;
 	inv->rel_scal_mt = 1;
-	
+
 	/*extra cell for the gravity inversion (BJOERN_MOD)*/
 	inv->dens_extra_cell = 0; /*Set the initial density value of the extra cell.*/
 
