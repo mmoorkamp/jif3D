@@ -10,8 +10,8 @@
 
 /*Filenames of geo/dat-files*/
 #ifndef  _FILENAME_
-typedef struct _FILENAME_ 
-{ 
+typedef struct _FILENAME_
+{
 	  char name[128];  /* Input-filenames of geo-files */
 
 } FILENAME;
@@ -32,7 +32,7 @@ typedef struct _PARAMETER_
          int nx;			    /*Number of grid cells in x-direction*/
 	 int ny;			    /*Number of grid cells in y-direction*/
 	 int nz;			    /*Number of grid cells in z-direction*/
-		
+
 	 float h;			    /*Size of the grid cells in m*/
 
 	 float org[3];		    /*components of the origin of the grid in m*/
@@ -54,10 +54,10 @@ typedef struct _PARAMETER_
 	 float vborder;		    /*velocity of the boundaries m/s*/
 	 float v_air_water;	    /*velocity in the air or water layer*/
 
-	 
+
 	 short ray_index;		/*Kind of rays used (normal rays = 1; fat rays = 2)*/
 	 float fatthres;		/*Threshold for the fat-ray in ms*/
-	 float fatb;			/*Exponent governing the decrease of the weight with increasing "difference"-time in 1/ms*/	
+	 float fatb;			/*Exponent governing the decrease of the weight with increasing "difference"-time in 1/ms*/
 
 	 int ray_density_index;	 /*Determine the hit matrix and the derivative weighted sum(DWS) for (fat-)rays (yes=1/no=0)*/
 	 int ray_density_index2; /*Determine the ray density tensor (yes=1/no=0)*/
@@ -167,7 +167,7 @@ typedef struct _GRID_STRUCT_
 		float h;			/*Size of the grid cells in m (!The same in all three directions!)*/
 
 	    float org[3];		/*Components of the origin (center of the first cell in the upper left corner) of the grid in m*/
-						
+
 		short topo_index;   /*The index governs if the topography will be ignored(0) or introduced by means of triangulation(1)*/
 
 		int grid_cell_factor[3]; /*Sizes of "inversion" grid cell dimensions compared to the forward" grid cell dimensions*/
@@ -191,7 +191,7 @@ typedef struct _GRID_STRUCT_
 
 		/*Electromagnetical parameters*/
 		float res_air_water; /*resistivity [ohmm] of the air or the water layer*/
-		
+
 		double *res;			/*resistivity model used for the forward calculation*/
 		GRADIENT grad_res;	/*Structure including the parameters of the initial (gradient) elc. resistivity model*/
 
@@ -208,12 +208,12 @@ typedef struct _GEOMETRY_
 		int nstat;      /*Number of receiver/shot stations and fixpoints*/
 		int *coor_info; /*Coordinate information used for the topography (yes=1,no=0)*/
 	    float *x,*y,*z; /*Positions of the shot/receiver locations and fixpoints in m*/
-		float eps;      /*Maximum distance between two coordinates location in m so 
+		float eps;      /*Maximum distance between two coordinates location in m so
 						  that they are assigned to the same shot resp. receiver location */
 		/* seismic parameters*/
 		int nshot;      /*Number of shot positions*/
 		int nrec;       /*Number of receiver positions*/
-		
+
 		/*gravimetric parameters*/
 		int nstat_grav;	/*Number of gravimetric stations*/
 		/*MT parameters*/
@@ -263,7 +263,7 @@ typedef struct _DATA_STRUCT_
 
 	    int *shots;     /*List of all shot positions used (number of elements: nshot)*/
 		int *recs;		/*List of all receiver positions used (number of elements: nrec)*/
-        
+
 		int *lshots;    /*Number of active receivers for the corresponding shot position number (related to shots)*/
 		int *lrecs;     /*Number of used shots for the corresponding receicer position number (related to recs)*/
 
@@ -277,11 +277,11 @@ typedef struct _DATA_STRUCT_
 	double rms_grav;	/*RMS value of the gravity residuals in mgal*/
 
 	  int  *gno;		 /*List of gravity position numbers (in the data files)*/
-	double *obs_grav; 	 /*Observed gravity data (in mgal) */ 
+	double *obs_grav; 	 /*Observed gravity data (in mgal) */
 	double *calc_grav;	 /*Calculated gravity data (in mgal)*/
 						 /*REMARK: gno, obs_grav and calc_grav have the same number of elements (ndata_grav) and are linked to each other*/
 
-	  int  *gravs;		 /*List of all gravity stations used*/	
+	  int  *gravs;		 /*List of all gravity stations used*/
 
 	double *weigth_grav; /*Weighting of the gravity measurements (1.0 = is the usually weighting)*/
 
@@ -291,7 +291,7 @@ typedef struct _DATA_STRUCT_
 
 	double rms_mt_real;	 /*RMS value of the real part of the MT residuals of Z*/
 	double rms_mt_imag;	 /*RMS value of the imaginary part of the MT residuals of Z*/
-    
+
      int  *mno;			 /*List of MT position numbers (in the data files)*/
 
 	 int  *mts;		 /*List of all MT stations used*/
@@ -299,21 +299,21 @@ typedef struct _DATA_STRUCT_
 	 int *nfreq_mt;		 /*Number of MT frequency for each station*/
 
 	double **freq_mt;	 /*Frequencies of the MT measurements (HZ)*/
-    
+
 			/*TE-response for 2D or common response for 1-D*/
-	double **real_mt_TE;	 /*Obs.real part of the  MT impedance E_y/H_x (Ohmm)*/ 
+	double **real_mt_TE;	 /*Obs.real part of the  MT impedance E_y/H_x (Ohmm)*/
 	double **imag_mt_TE;	 /*Obs.imaginary part of the MT impedance E_y/H_x (Ohmm) */
 	double **calc_real_mt_TE; /*Calc.real part of the MT impedance E_y/H_x (Ohmm)*/
 	double **calc_imag_mt_TE; /*Calc.imag part of the MT impedance E_y/H_x (Ohmm)*/
 			/*TM-response for 2D; NO influence on 1D modelling*/
-	double **real_mt_TM;	 /*Obs.real part of the  MT impedance E_x/H_y (Ohmm)*/ 
+	double **real_mt_TM;	 /*Obs.real part of the  MT impedance E_x/H_y (Ohmm)*/
 	double **imag_mt_TM;	 /*Obs.imaginary part of the MT impedance E_x/H_y (Ohmm) */
 	double **calc_real_mt_TM; /*Calc.real part of the MT impedance E_x/H_y (Ohmm)*/
 	double **calc_imag_mt_TM; /*Calc.imag part of the MT impedance E_x/H_y (Ohmm)*/
-    
+
 	double **weigth_mt;	 /*Weighting of the MT measurements; every frequency for its own (1.0 = is the usually weighting)*/
 
-} DATA_STRUCT; 
+} DATA_STRUCT;
 #define  _DATA_STRUCT_
 #endif
 
@@ -323,7 +323,7 @@ typedef struct _CALC_2D_MT_
 {
 	    long nr_cells_2d_mt;	 /*Specify the thickness of the slices for the individual 2-D MT models in numbers of forward cells*/
 		double min_y, max_y; /*Minimum and maximum y-coordinates of the slice (vertical to the 2-D plane)*/
-	
+
 		double *org[2];		/*Components of the origin (upper-left corner of the first cell(upper-left)) of the slice in m*/
 		long *nx,*nz;			 /*Number of cells in horizontal and vertical direction within the 2D plane (without border cells and grid refinement)*/
 		double **hx,**hz;			 /*Grid sizes in x- and z-direction m*/
@@ -346,7 +346,7 @@ typedef struct _CALC_2D_MT_
 		double **Ey_r,**Ey_i;	/*The electric fields at the stations (y-component; real and imaginary part)*/
 		double **Hx_r,**Hx_i;	/*The magnetic fields at the stations (x-component; real and imaginary part)*/
 		double **Hy_r,**Hy_i;	/*The magnetic fields at the stations (y-component; real and imaginary part)*/
-		
+
 		int    **index_slice; /*Index that specify if the cell is active (==1) or NOT (==0)*/
 		double **res_slice;	  /*Resistivity values within the cells of the slices*/
 
@@ -365,7 +365,7 @@ typedef struct _REL_VDR_STRUCT_
 					/*		= 1: Linear relationship v[m/s] = a + rho*b
 							= 2: v-res relationship (Dell' Aversana, 2001, First Break, 19,335-341)
 								v[m/s] = a(ln(ln(res[ohmm]))) + b
-							= 9: table of densities[mgal](resistivities[ohmm]) and velocities [m/s]   */             
+							= 9: table of densities[mgal](resistivities[ohmm]) and velocities [m/s]   */
 
 		/*Linear relationship*/
 		float lin_para_a;	/*First free parameter of the equation*/
@@ -395,7 +395,7 @@ typedef struct _RP_STRUCT_
 		double *y;			/*		Forward grid: y-position of the begin of the ray-path segment*/
 							/*BUT:	Inversion grid: y-component of the ray in the cell*/
 		double *z;			/*		Forward grid: z-position of the begin of the ray-path segment*/
-							/*BUT:	Inversion grid: x-component of the ray in the cell*/
+							/*BUT:	Inversion grid: z-component of the ray in the cell*/
 		double *len;		/*Length of the ray-path segment*/
 		long *ele;			/*Grid cell position in the grid*/
 
@@ -410,7 +410,7 @@ typedef struct _F_RP_STRUCT_
 		long n;				/*Number specifying the row in the matrix for the shot-receiver combination*/
 		long ncell;			/*Number of cells which contribute to the fat ray*/
 		float fatthres;		/*Threshold for the fat-ray in ms*/
-		float fatb;			/*Exponent governing the decrease of the weight with increasing "difference"-time in 1/ms*/	
+		float fatb;			/*Exponent governing the decrease of the weight with increasing "difference"-time in 1/ms*/
 		double *weight;		/*Normalized contribution of the cell to the fat-ray*/
 		long *ele;			/*Grid cell position in the grid*/
 
@@ -455,10 +455,10 @@ typedef struct _CELL_STRUCT_
 		int dirx_i;			/*The ray runs in negative x-direction into the cell = 1; the ray runs in positive x-direction into the cell = 1; else=0 */
 		int diry_i;			/*The ray runs in negative y-direction into the cell = 1; the ray runs in positive y-direction into the cell = 1; else=0 */
 		int dirz_i;			/*The ray runs in negative z-direction into the cell = 1; the ray runs in positive z-direction into the cell = 1; else=0 */
-		double xpos;		/*The position of the starting point of the ray in x-direction (normalized by the position in the grid)*/ 
+		double xpos;		/*The position of the starting point of the ray in x-direction (normalized by the position in the grid)*/
 		double ypos;        /*The position of the starting point of the ray in y-direction (normalized by the position in the grid)*/
 		double zpos;        /*The position of the starting point of the ray in z-direction (normalized by the position in the grid)*/
-	
+
 } CELL_STRUCT;
 #define _CELL_STRUCT_
 #endif
@@ -518,11 +518,11 @@ typedef struct _INV_
 
 		long y_front_border_nr;  /*the number of the actived front y_border cells.*/
 		long y_back_border_nr;  /*the number of the actived back y_border cells.*/
-		
+
 		/*extra cell (BJOERN_MOD)*/
 		double dens_extra_cell; /*density [g/cm^3] of the extra cell below the model*/
 
-		
+
 } INV;
 #define  _INV_
 #endif
@@ -631,10 +631,10 @@ typedef struct _FLAG_STRUCT_
 
 		int dimension_mt;    /*Specify the dimension of the MT forward calculation (1=1D/2=2D)*/
 		int kind_of_data_mt; /*Specify the kind of input data used: 1= TE-Mode, 2= TM-Mode, 3= 1D: Berdichewsky average/2D: Both Modes*/
-		int nr_of_modes;	 /*Specify the number of modes that will be inverted: Only: TM or TE ==1 , Both ==2*/	
+		int nr_of_modes;	 /*Specify the number of modes that will be inverted: Only: TM or TE ==1 , Both ==2*/
 		int direc_2D_mt;     /*Specify for the 2D measurements along which horizontal direction the modelling will be performed (x=1/y=2)*/
 		int nr_cells_2d_mt;	 /*Specify the thickness of the slices for the individual 2-D MT models in numbers of forward cells*/
-	
+
 		int index_mt_weighting; /*Using impedances that are individually weighted for different frequencies */
 
 		int flex_grid_size;		/*spatially invariant grid size (yes=1/no=0)*/
