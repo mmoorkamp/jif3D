@@ -16,23 +16,45 @@
 
 BOOST_AUTO_TEST_SUITE( Gravity_DepthWeighting_Suite )
 
-BOOST_AUTO_TEST_CASE    (weightingterm_test)
+BOOST_AUTO_TEST_CASE(weightingderiv_test)
       {
         //this value is arbitrary
         const double z0 = acos(-1.0);
         const double exponent = -2.0;
         const double z = 0.4;
-        double value1 = jiba::WeightingTerm(exponent)(z,z0);
+        //we compare the analytical derivative to a numerical derivative
+        double value1 = jiba::WeightingTerm(exponent)(z, z0);
         const double delta = std::numeric_limits<float>::epsilon();
-        double value2 = jiba::WeightingTerm(exponent)(z+2.0*delta,z0);
-        double deriv = jiba::WeightingTerm(exponent).deriv(z+delta,z0);
+        double value2 = jiba::WeightingTerm(exponent)(z + 2.0 * delta, z0);
+        double deriv = jiba::WeightingTerm(exponent).deriv(z + delta, z0);
         BOOST_CHECK_CLOSE(deriv, (value2-value1)/(2.0*delta), 0.1);
       }
-
+    BOOST_AUTO_TEST_CASE(weightingaverage_test)
+      {
+        //we want to check the correctness of the average
+        //we choose z0, and the two boundaries for the average
+        //so that the function is relatively constant over the intervall
+        //that makes it easy to compare to a numerical average
+        const double z0 = 1.0;
+        const double exponent = -3.0;
+        const double z1 = 200.0;
+        const double z2 = 201.0;
+        //out analytical average
+        const double WeightingAverage = jiba::WeightingTerm(exponent).average(
+            z1, z2, z0);
+        const double eps = 0.001;
+        const int steps = (z2 - z1) / eps;
+        double myavg = 0.0;
+        //sum up values in the interval and divide by the number of interval
+        for (int i = 0; i < steps; ++i)
+          myavg += jiba::WeightingTerm(exponent)(z1 + i * eps, z0);
+        myavg /= steps;
+        BOOST_CHECK_CLOSE(WeightingAverage, myavg, 0.001);
+      }
     BOOST_AUTO_TEST_CASE(fitz0_test)
       {
         jiba::ThreeDGravityModel Model;
-        const size_t nz =20;
+        const size_t nz = 20;
         //we only need the model to make FitZ0 happy
         //all it does is determine the starting index
         //we are only interested in z dependence
@@ -42,7 +64,7 @@ BOOST_AUTO_TEST_CASE    (weightingterm_test)
         Model.SetZCellSizes().resize(boost::extents[nz]);
         Model.SetXCellSizes()[0] = 10.0;
         Model.SetYCellSizes()[0] = 10.0;
-        Model.AddMeasurementPoint(5,5,-1);
+        Model.AddMeasurementPoint(5, 5, -1);
         //we make up some "sensitivities"
         jiba::rvec PseudoSens(nz);
         //we want to get back this number
@@ -55,12 +77,12 @@ BOOST_AUTO_TEST_CASE    (weightingterm_test)
           {
             Model.SetZCellSizes()[i] = nz * i;
             currdepth += Model.GetZCellSizes()[i];
-            PseudoSens[i] = jiba::WeightingTerm(exponent)(currdepth,z0);
+            PseudoSens[i] = jiba::WeightingTerm(exponent)(currdepth, z0);
           }
         //FitZ0 should find z0 specified above
-        double foundz0 = jiba::FitZ0(PseudoSens,Model.GetZCellSizes(),jiba::WeightingTerm(exponent));
+        double foundz0 = jiba::FitZ0(PseudoSens, Model.GetZCellSizes(),
+            jiba::WeightingTerm(exponent));
         //in reality the gradient is small at the end, so we can have 1% difference
         BOOST_CHECK_CLOSE(z0, foundz0, 1);
       }
-
     BOOST_AUTO_TEST_SUITE_END()
