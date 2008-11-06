@@ -6,7 +6,8 @@
 //============================================================================
 
 
-/*! \file A simple program to calculate gravity data from a model stored in a netcdf file.
+/*! \file gravforward.cpp
+ * A simple program to calculate gravity data from a model stored in a netcdf file.
  * Measurement positions are also taken from a file. If one argument is given to the program,
  * the positions are taken from the netcdf file. If two arguments are given the first file is
  * a netcdf file containing the model, the second file an ascii file containing lines in the

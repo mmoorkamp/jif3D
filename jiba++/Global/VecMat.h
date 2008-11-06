@@ -7,7 +7,8 @@
 
 #ifndef VECMAT_H_
 #define VECMAT_H_
-/*! \file This file provides the basic includes for all matrix and vector operations. We store the matrices in column major format to
+/*! \file VecMat.h
+ * This file provides the basic includes for all matrix and vector operations. We store the matrices in column major format to
  * enable interfacing with fortran codes for blas, lapack etc.
  */
 

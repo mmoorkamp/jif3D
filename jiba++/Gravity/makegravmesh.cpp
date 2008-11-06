@@ -5,7 +5,8 @@
 // Copyright   : 2008, MM
 //============================================================================
 
-/*! \file Make a netcdf gravity model file with a specified mesh. The densities in this file are all zero.
+/*! \file makegravmesh.cpp
+ * Make a netcdf gravity model file with a specified mesh. The densities in this file are all zero.
  */
 
 

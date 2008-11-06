@@ -6,7 +6,8 @@
 //============================================================================
 
 
-/*! \file Invert scalar gravity data. The program reads in a model file that specifies the inversion mesh and
+/*! \file gravinv.cpp
+ * Invert scalar gravity data. The program reads in a model file that specifies the inversion mesh and
  * a file with the input data. Two parameters have to be specified for the inversion: z0 determines the depth scaling
  * applied to counteract the decay of the sensisitivities. The eigenvalue threshold is the relative threshold with respect
  * to the largest eigenvalue of the sensitivity matrix below which the eigenvalues are considered 0.

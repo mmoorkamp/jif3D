@@ -16,7 +16,8 @@
 #include <stdexcept>
 #include <locale>
 
-/*! \file This file contains routines to convert streamable types to a string and versions of toupper and tolower that
+/*! \file convert.h
+ * This file contains routines to convert streamable types to a string and versions of toupper and tolower that
  * are easier to handle in generic algorithms like transform etc.
  */
 

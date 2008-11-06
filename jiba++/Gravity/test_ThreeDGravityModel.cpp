@@ -6,7 +6,8 @@
 //============================================================================
 
 /*!
- * \file This file contains all the tests necessary to verify the functionality of ThreeDGravityModel.h
+ * \file test_ThreeDGravityModel.cpp
+ * This file contains all the tests necessary to verify the functionality of ThreeDGravityModel.h
  */
 #define BOOST_TEST_MODULE ThreeDGravityModel test
 #define BOOST_TEST_MAIN ...

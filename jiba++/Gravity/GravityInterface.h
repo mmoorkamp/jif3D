@@ -8,7 +8,8 @@
 #ifndef GRAVITYINTERFACE_H_
 #define GRAVITYINTERFACE_H_
 
-/*! \file Here we declare the interface to the 3D Gravity code for use with R. This has to be done
+/*! \file GravityInterface.h
+ * Here we declare the interface to the 3D Gravity code for use with R. This has to be done
  * by declaring C-style functions that pass all parameters by reference. As we cannot determine
  * the size of vectorial quantities we cannot perform any consistency checking whatsoever. It is
  * completely up to the caller to ensure that all structures have been allocated and the dimensions match.
@@ -16,9 +17,9 @@
  * Also we us a static object internally to perform these calculations. This means that these functions are not
  * thread safe !.
  */
-
+#ifdef HAVER
 #include <R.h>
-
+#endif
 extern "C"
   {
 

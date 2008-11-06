@@ -17,7 +17,7 @@ namespace jiba
 
     /*! Given the sensitivities, data, weights and data error, perform a linear dataspace inversion.
      * See Siripurnvaraporn and Egbert, Geophysics 65, 2000
-     * @param Sensitivities The \f$ n \times m\F$ sensitivity matrix, after the call contains the filtered sensitivities
+     * @param Sensitivities The \f$ n \times m\f$ sensitivity matrix, after the call contains the filtered sensitivities
      * @param Data The n component vector containing the data, after the call conatins the error weighted data
      * @param WeightVector The m-component vector of model weights, the diagonal elements of the model covariance
      * @param DataError The n component vector of error estimates for the data, each element must be > 0

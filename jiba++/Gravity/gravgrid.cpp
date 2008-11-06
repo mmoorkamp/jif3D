@@ -6,7 +6,8 @@
 //============================================================================
 
 
-/*! \file A simple program to calculate evenly spaced gravity data from a model stored in a netcdf file.
+/*! \file gravgrid.cpp
+ * A simple program to calculate evenly spaced gravity data from a model stored in a netcdf file.
  * The spacing and region for the measurements is specified interactively. The model is taken from
  * a netcdf file.
  */
