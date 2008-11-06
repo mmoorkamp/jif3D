@@ -5,7 +5,8 @@
 // Copyright   : 2008, MM
 //============================================================================
 
-/*! \file Calculate the sensitivity matrix for a given model and data geometry and write out the model eigenvectors.
+/*! \file gravsens.cpp
+ * Calculate the sensitivity matrix for a given model and data geometry and write out the model eigenvectors.
  */
 
 #include <iostream>

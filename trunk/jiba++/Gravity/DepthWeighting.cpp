@@ -107,6 +107,7 @@ namespace jiba
      * @param ZSizes The sizes of the model cells in z-direction in m
      * @param z0 The scaling depth
      * @param WeightVector The resulting weight vector
+     * @param WeightFunction The function object that determines the assumes form of the decay
      *
      * The resulting weight vector has only nz elements, where nz is the number of vertical layers
      * the inversion algorithm has to take care to apply these values to the appropriate matrix elements
@@ -134,7 +135,14 @@ namespace jiba
                 *std::max_element(WeightVector.begin(), WeightVector.end())));
 
       }
-
+    /*! For depth weighting we need the sensitivities below a site to match with our weighting function.
+     * We somewhat arbitrarily chose the site closest to the middle, as here the effects of the finite modeling domain
+     * should be smallest. The function extracts the row from the matrix that corresponds to this location
+     * @param Model The model object, needed for the grid information
+     * @param Sensitivities The sensitivity matrix that we want to extract the profile from
+     * @param MeasPerPos How many measurements per site,e.g. 1 for only scalar and 9 for only FTG
+     * @param SensProfile The depth profile of the sensitivity below the site
+     */
     void ExtractMiddleSens(const jiba::ThreeDGravityModel &Model, const jiba::rmat &Sensitivities, const size_t MeasPerPos, jiba::rvec &SensProfile)
       {
         const double midx = Model.GetXCoordinates()[Model.GetXCoordinates().size()

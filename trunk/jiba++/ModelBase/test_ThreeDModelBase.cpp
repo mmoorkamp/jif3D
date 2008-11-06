@@ -6,7 +6,8 @@
 //============================================================================
 
 /*!
- * \file This file contains all the tests necessary to verify the functionality of ThreeDModelBase.h
+ * \file test_ThreeDModelBase.cpp
+ * This file contains all the tests necessary to verify the functionality of ThreeDModelBase.h
  */
 #define BOOST_TEST_MODULE ThreeDModelBase test
 #define BOOST_TEST_MAIN ...

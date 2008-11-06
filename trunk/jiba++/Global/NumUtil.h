@@ -8,7 +8,8 @@
 #ifndef NUMUTIL_H_
 #define NUMUTIL_H_
 
-/*! \file This file contains a collection of various simple numerical routines.
+/*! \file NumUtil.h
+ * This file contains a collection of various simple numerical routines.
  */
 namespace jiba
   {

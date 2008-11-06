@@ -13,7 +13,8 @@
 #include "../ModelBase/ThreeDModelBase.h"
 #include "../Global/VecMat.h"
 
-/*! \file This file contains the class ThreeDGravityModel and associated helper functions and constants
+/*! \file ThreeDGravityModel.h
+ * This file contains the class ThreeDGravityModel and associated helper functions and constants
  *
  */
 namespace jiba
