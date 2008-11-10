@@ -1,6 +1,6 @@
 import testing ; 
 lib gravity : ThreeDGravityModel.cpp GravityInterface.cpp ReadWriteGravityData.cpp
-              ..//netcdf_c++ ..//netcdf ../ModelBase//modelbase
+              ..//netcdf_c++ ..//netcdf ../ModelBase//modelbase ../Inversion//inversion
               : <include>boost : : <include>. ;
 
 install $(TOP) : gravity
