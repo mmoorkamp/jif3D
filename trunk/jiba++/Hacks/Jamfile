@@ -9,3 +9,4 @@ exe levjoint : levjoint.cpp ..//gplib ..//gsl ..//netcdf_c++ ..//netcdf ..//antl
 	
 exe fittingtest : fittingtest.cpp ../Inversion//inversion ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran : <include>. ;
 exe sparsetest : sparsetest.cpp ../Inversion//inversion ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran : <include>. ;
+exe wcompress : wcompress.cpp  ../Gravity ../Global : <include>. ;

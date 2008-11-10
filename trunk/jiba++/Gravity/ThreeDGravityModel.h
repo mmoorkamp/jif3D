@@ -151,11 +151,21 @@ namespace jiba
           bg_densities.clear();
           copy(value.begin(), value.end(), back_inserter(bg_densities));
         }
+      //! Return the densities of the background layers
+      const tScalarMeasVec &GetBackgroundDensities()
+        {
+          return bg_densities;
+        }
       //! Set the thicknesses of the background layers, the individual thicknesses are given in m
       void SetBackgroundThicknesses(const tScalarMeasVec value)
         {
           bg_thicknesses.clear();
           copy(value.begin(), value.end(), back_inserter(bg_thicknesses));
+        }
+      //! Return the thicknesses of the background layers in m
+      const tScalarMeasVec &GetBackgroundThicknesses()
+        {
+          return bg_thicknesses;
         }
       //! Add a measurement point to the model
       void AddMeasurementPoint(const double xcoord, const double ycoord,
