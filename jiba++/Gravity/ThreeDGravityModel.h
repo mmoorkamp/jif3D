@@ -77,11 +77,11 @@ namespace jiba
       typedef std::vector<double> tScalarMeasVec;
       typedef std::vector<GravimetryMatrix> tTensorMeasVec;
       typedef std::vector<double> tMeasPosVec;
-    private:
       //! Calculate the response of the 1D background
       double CalcBackground(const double xmeas, const double ymeas,
           const double zmeas, const double xwidth, const double ywidth,
           const double zwidth, const size_t meas_index);
+    private:
       //! For the given model, calculate the gravity at measurement points x, y and z due to the discretized part of the mesh
       double CalcScalarMeas(const double x_meas, const double y_meas,
           const double z_meas, const size_t meas_index);

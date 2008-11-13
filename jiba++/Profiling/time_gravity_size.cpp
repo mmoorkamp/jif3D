@@ -17,7 +17,7 @@ void MakeRandomModel(jiba::ThreeDGravityModel &Model, const size_t size)
     Model.SetDensities().resize(boost::extents[size][size][size]);
     for (size_t i = 0; i < size; ++i)
       for (size_t j = 0; j < size; ++j)
-        for (int k = 0; k < size; ++k)
+        for (size_t k = 0; k < size; ++k)
           {
             Model.SetDensities()[i][j][k] = double(rand() % 1000)/300.0;
           }
@@ -55,15 +55,15 @@ int main()
 
         boost::posix_time::ptime firstendtime =
             boost::posix_time::microsec_clock::local_time();
-        
+
         boost::posix_time::ptime secondstarttime =
                    boost::posix_time::microsec_clock::local_time();
         jiba::ThreeDGravityModel::tScalarMeasVec
             gravmeas2(GravityTest.CalcGravity());
         boost::posix_time::ptime secondendtime =
                    boost::posix_time::microsec_clock::local_time();
-        
-        std::cout << modelsize * modelsize * modelsize << " "  
+
+        std::cout << modelsize * modelsize * modelsize << " "
             << (firstendtime - firststarttime).total_microseconds() << " " << (secondendtime - secondstarttime).total_microseconds() << std::endl;
 
       }

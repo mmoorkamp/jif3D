@@ -111,6 +111,19 @@ namespace jiba
       //! Write the data and cell sizes to a VTK file for plotting in Paraview or Visit etc.
       void WriteVTK(std::string filename, const std::string &DataName);
     public:
+      //! From the three spatial indices, calculate the offset in memory
+      int IndexToOffset(int xi, int yi, int zi)
+        {
+          return Data.shape()[2] * (xi * Data.shape()[1] + yi) + zi;
+        }
+      //! Form a memory offset, calculate the associated spatial indices
+      void OffsetToIndex(int offset, int &xi, int &yi, int &zi)
+        {
+          zi = offset % Data.shape()[2];
+          xi = (offset - zi) / Data.shape()[2];
+          yi = xi % Data.shape()[1];
+          xi = (xi-yi) / Data.shape()[1];
+        }
       //! read-only access to the cell size in x-direction in m
       const t3DModelDim &GetXCellSizes() const
         {

@@ -2,4 +2,4 @@ import testing ;
 lib modelbase : ThreeDModelBase.cpp NetCDFTools.cpp VTKTools.cpp 
                 ..//netcdf_c++ ..//netcdf : <include>boost : : <include>. ;
 
-unit-test gravity_test : test_ThreeDModelBase.cpp modelbase ..//netcdf_c++ ..//netcdf : <include>. ;
+unit-test base_test : test_ThreeDModelBase.cpp modelbase ..//netcdf_c++ ..//netcdf : <include>. ;
