@@ -298,26 +298,26 @@ namespace jiba
         //sum up the contributions of all prisms in an openmp parallel loop
 #pragma omp parallel default(shared) private(currvalue) reduction(+:returnvalue)
           {
+            //instead of nested loops over each dimension, we have one big
+            //loop over all elements, this allows for a nearly infinite number
+            //of parallel processors
 #pragma omp for
-            for (int i = 0; i < xsize; ++i)
+            for (int offset = 0; offset < xsize * ysize * zsize; ++offset)
               {
-                for (size_t j = 0; j < ysize; ++j)
+
+                //we store the current value for possible sensitivity calculations
+                //currvalue contains the geometric term, i.e. the sensitivity
+                int xindex, yindex, zindex;
+                OffsetToIndex(offset, xindex, yindex, zindex);
+                currvalue = CalcGravBoxTerm(x_meas, y_meas, z_meas,
+                    XCoord[xindex], YCoord[yindex], ZCoord[zindex],
+                    XSizes[xindex], YSizes[yindex], ZSizes[zindex]);
+                returnvalue += currvalue
+                    * GetDensities()[xindex][yindex][zindex];
+                // if we want to store the sensitivity matrix
+                if (StoreScalarSensitivities)
                   {
-                    for (size_t k = 0; k < zsize; ++k)
-                      {
-                        //we store the current value for possible sensitivity calculations
-                        //currvalue contains the geometric term, i.e. the sensitivity
-                        currvalue = CalcGravBoxTerm(x_meas, y_meas, z_meas,
-                            XCoord[i], YCoord[j], ZCoord[k], XSizes[i],
-                            YSizes[j], ZSizes[k]);
-                        returnvalue += currvalue * GetDensities()[i][j][k];
-                        // if we want to store the sensitivity matrix
-                        if (StoreScalarSensitivities)
-                          {
-                            ScalarSensitivities(meas_index, i * (ysize * zsize)
-                                + j * zsize + k) = currvalue;
-                          }
-                      }
+                    ScalarSensitivities(meas_index, offset) = currvalue;
                   }
               }
 
@@ -347,38 +347,40 @@ namespace jiba
         //sum up the contributions of all prisms
 #pragma omp parallel default(shared) private(currvalue) reduction(+:U0,U1,U2,U3,U4,U5,U6,U7,U8)
           {
+            //instead of nested loops over each dimension, we have one big
+            //loop over all elements, this allows for a nearly infinite number
+            //of parallel processors
 #pragma omp for
-            for (int i = 0; i < xsize; ++i)
+            for (int offset = 0; offset < xsize * ysize * zsize; ++offset)
               {
-                for (size_t j = 0; j < ysize; ++j)
-                  {
-                    for (size_t k = 0; k < zsize; ++k)
-                      {
-                        currvalue = CalcTensorBoxTerm(x_meas, y_meas, z_meas,
-                            XCoord[i], YCoord[j], ZCoord[k],
-                            GetXCellSizes()[i], GetYCellSizes()[j],
-                            GetZCellSizes()[k]);
-                        U0 += currvalue(0, 0) * GetDensities()[i][j][k];
-                        U1 += currvalue(0, 1) * GetDensities()[i][j][k];
-                        U2 += currvalue(0, 2) * GetDensities()[i][j][k];
-                        U3 += currvalue(1, 0) * GetDensities()[i][j][k];
-                        U4 += currvalue(1, 1) * GetDensities()[i][j][k];
-                        U5 += currvalue(1, 2) * GetDensities()[i][j][k];
-                        U6 += currvalue(2, 0) * GetDensities()[i][j][k];
-                        U7 += currvalue(2, 1) * GetDensities()[i][j][k];
-                        U8 += currvalue(2, 2) * GetDensities()[i][j][k];
+                int xindex, yindex, zindex;
+                //we still need the indices for each dimension
+                //so we have to convert our loop variable
+                OffsetToIndex(offset, xindex, yindex, zindex);
+                //currvalue contains only the geometric term
+                currvalue = CalcTensorBoxTerm(x_meas, y_meas, z_meas,
+                    XCoord[xindex], YCoord[yindex], ZCoord[zindex],
+                    GetXCellSizes()[xindex], GetYCellSizes()[yindex],
+                    GetZCellSizes()[zindex]);
+                //to we have to multiply each element by the density
+                const double Density = GetDensities()[xindex][yindex][zindex];
+                U0 += currvalue(0, 0) * Density;
+                U1 += currvalue(0, 1) * Density;
+                U2 += currvalue(0, 2) * Density;
+                U3 += currvalue(1, 0) * Density;
+                U4 += currvalue(1, 1) * Density;
+                U5 += currvalue(1, 2) * Density;
+                U6 += currvalue(2, 0) * Density;
+                U7 += currvalue(2, 1) * Density;
+                U8 += currvalue(2, 2) * Density;
 
-                        //if we want to store sensitivities for tensor measurements
-                        if (StoreTensorSensitivities)
-                          {
-                            boost::numeric::ublas::matrix_column<rmat> column(
-                                TensorSensitivities, i * (ysize * zsize) + j
-                                    * zsize + k); // extract the right column of the sensitivity matrix
-                            std::copy(currvalue.data().begin(),
-                                currvalue.data().end(), // assign the elements to the right part of the column
-                                column.begin() + meas_index * 9);
-                          }
-                      }
+                //if we want to store sensitivities for tensor measurements
+                if (StoreTensorSensitivities)
+                  {
+                    boost::numeric::ublas::matrix_column<rmat> column(
+                        TensorSensitivities, offset); // extract the right column of the sensitivity matrix
+                    std::copy(currvalue.data().begin(), currvalue.data().end(), // assign the elements to the right part of the column
+                        column.begin() + meas_index * 9);
                   }
               }
           }//end of parallel region
@@ -726,8 +728,8 @@ namespace jiba
         std::ifstream infile(filename.c_str());
         //first we read all values without any formatting into the vector values
         std::vector<double> values;
-        std::copy(std::istream_iterator<double>(infile),
-            std::istream_iterator<double>(), back_inserter(values));
+        std::copy(std::istream_iterator<double>(infile), std::istream_iterator<
+            double>(), back_inserter(values));
         //if we don't have a multiple of 4 values there is a problem with the file
         if (values.size() % 4 != 0)
           {
