@@ -684,11 +684,16 @@ namespace jiba
             std::generate_n(back_inserter(layerindex), bg_thicknesses.size(),
                 IntSequence(0));
             BackgroundVar->put(&layerindex[0], layerindex.size());
+            BackgroundVar->add_att("long_name","Layer Index");
             //now we can write the actual parameters for the layers
             NcVar *bgDensVar = DataFile.add_var("bg_densities", ncDouble,
                 BackgroundDim);
+            bgDensVar->add_att("long_name","Background Densities");
+            bgDensVar->add_att("units",DensityUnit.c_str());
             NcVar *bgThickVar = DataFile.add_var("bg_thicknesses", ncDouble,
                 BackgroundDim);
+            bgThickVar->add_att("long_name","Background Thicknesses");
+            bgThickVar->add_att("units","m");
             bgDensVar->put(&bg_densities[0], bg_densities.size());
             bgThickVar->put(&bg_thicknesses[0], bg_thicknesses.size());
           }

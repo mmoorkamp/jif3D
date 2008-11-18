@@ -219,6 +219,18 @@ namespace jiba
         {
           return TensorSensitivities;
         }
+      //! Delete the stored tensor sensitivities to free memory
+      void ClearTensorSensitivities()
+        {
+          TensorSensitivities.resize(0,0);
+          HaveCalculatedTensorSensitivities = false;
+        }
+      //! Delete the stored scalar sensitivities to free memory
+      void ClearScalarSensitivities()
+        {
+          ScalarSensitivities.resize(0,0);
+          HaveCalculatedScalarSensitivities = false;
+        }
       //! Write the density model and all associated information in a netcdf file
       void WriteNetCDF(const std::string filename) const;
       //! Write the density model in VTK format, at the moment the best format for plotting
