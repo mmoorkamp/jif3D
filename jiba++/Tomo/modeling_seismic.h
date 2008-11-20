@@ -1,7 +1,6 @@
 #ifndef MODELING_SEISMIC_H
 #define MODELING_SEISMIC_H
 #include "../Global/convert.h"
-#include "meschachd_no_complex/sparse.h"
 #include "inv3d.h"
 #include <string>
 #include "Podvin.h"
@@ -46,12 +45,12 @@ char *memory (char *prev_addr, size_t n, size_t size, std::string progname)
 //int GetNext(char *line,FILE *inf);
 
 
-int WriteModSeisOut(int ninv, DATA_STRUCT data, GEOMETRY geo, GRID_STRUCT grid);
-int WriteRayOut(RP_STRUCT *rp, DATA_STRUCT data, GRID_STRUCT grid);
-int WriteFatRayOut(F_RP_STRUCT *fr,DATA_STRUCT data,GRID_STRUCT grid);
-int WriteTravelTimeModOut(float *tt, int loc,int nx,int ny,int nz);
-float *ReadTravelTimeModIn(char *fname);
-int WriteRayDenseOut(GRID_STRUCT grid, int ninv, long ninv_cell, long *nrays, double *length, BIDX_STRUCT *inv_cell);
+//int WriteModSeisOut(int ninv, DATA_STRUCT data, GEOMETRY geo, GRID_STRUCT grid);
+//int WriteRayOut(RP_STRUCT *rp, DATA_STRUCT data, GRID_STRUCT grid);
+//int WriteFatRayOut(F_RP_STRUCT *fr,DATA_STRUCT data,GRID_STRUCT grid);
+//int WriteTravelTimeModOut(float *tt, int loc,int nx,int ny,int nz);
+//float *ReadTravelTimeModIn(char *fname);
+//int WriteRayDenseOut(GRID_STRUCT grid, int ninv, long ninv_cell, long *nrays, double *length, BIDX_STRUCT *inv_cell);
 
 /** \addtogroup seismod Seismic tomography modelling */
 /* @{ */

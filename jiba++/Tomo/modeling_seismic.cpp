@@ -319,7 +319,7 @@ namespace jiba
         ResortRays(raypath, *data, grid);
 
         /*Write out the raypath*/
-        WriteRayOut(raypath, *data, grid);
+        //WriteRayOut(raypath, *data, grid);
 
         /*Determine the number of ACTIVE rays and the RMS-value*/
         data->ndata_seis_act = 0;
