@@ -21,28 +21,6 @@
 namespace atlas = boost::numeric::bindings::atlas;
 namespace ublas = boost::numeric::ublas;
 
-void SumSensitivitiesAndPlot(const jiba::rmat &Sens, const size_t startindex,
-    const std::string &filename, const jiba::ThreeDGravityModel &Model)
-  {
-    const size_t nmod = Sens.size2();
-    const size_t ndata = Sens.size1();
-    jiba::rvec SummedSens(nmod);
-    std::fill_n(SummedSens.begin(), nmod, 0.0);
-    for (size_t i = startindex; i < ndata; i += 9)
-      {
-        SummedSens += boost::numeric::ublas::matrix_row<const jiba::rmat>(Sens,
-            i);
-      }
-    //for output we copy the summed sensitivities into a model type structure
-    jiba::ThreeDModelBase::t3DModelData
-        SensModel(
-            boost::extents[Model.GetDensities().shape()[0]][Model.GetDensities().shape()[1]][Model.GetDensities().shape()[2]]);
-    std::copy(SummedSens.begin(), SummedSens.end(), SensModel.data());
-
-    jiba::Write3DModelToVTK(filename, "summed_sens", Model.GetXCellSizes(),
-        Model.GetYCellSizes(), Model.GetZCellSizes(), SensModel);
-  }
-
 double CalcInvariant(const jiba::GravimetryMatrix &Matrix)
   {
     return Matrix(0, 0) * Matrix(1, 1) + Matrix(1, 1) * Matrix(2, 2) + Matrix(
@@ -66,13 +44,9 @@ int main(int argc, char *argv[])
     std::cout << "Data Filename: ";
     std::cin >> datafilename;
     jiba::ReadTensorGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
-    double evalthresh;
-    std::cout << "Eigenvalue threshold: ";
-    std::cin >> evalthresh;
     double lambda = 1.0;
     std::cout << "Lambda: ";
     std::cin >> lambda;
-    jiba::rvec InvModel;
     const size_t ndata = Data.size();
     jiba::rvec DataVector(ndata), DataError(ndata);
     for (size_t i = 0; i < ndata; ++i)
@@ -84,8 +58,14 @@ int main(int argc, char *argv[])
     const size_t xsize = Model.GetDensities().shape()[0];
     const size_t ysize = Model.GetDensities().shape()[1];
     const size_t zsize = Model.GetDensities().shape()[2];
-    const size_t nmod = xsize * ysize * zsize;
-
+    const size_t ngrid = xsize * ysize * zsize;
+    const size_t nmod = ngrid + Model.GetBackgroundDensities().size();
+    jiba::rvec InvModel(nmod), StartingModel(nmod);
+    std::fill_n(InvModel.begin(), nmod, 0.0);
+    std::copy(Model.GetDensities().origin(), Model.GetDensities().origin()
+        + ngrid, StartingModel.begin());
+    std::copy(Model.GetBackgroundDensities().begin(),
+        Model.GetBackgroundDensities().end(), StartingModel.begin() + ngrid);
     //set the measurement points in the model to those of the data
     Model.ClearMeasurementPoints();
     for (size_t i = 0; i < nmeas; ++i)
@@ -158,7 +138,7 @@ int main(int argc, char *argv[])
         //depth weighting
         jiba::rvec SensProfile;
         jiba::ExtractMiddleSens(Model, ublas::matrix_range<jiba::rmat>(
-            InvarSens, ublas::range(0, nmeas), ublas::range(0, nmod)), 1,
+            InvarSens, ublas::range(0, nmeas), ublas::range(0, ngrid)), 1,
             SensProfile);
 
         const double decayexponent = -3.0;
@@ -170,34 +150,45 @@ int main(int argc, char *argv[])
         jiba::ConstructDepthWeighting(Model.GetZCellSizes(), z0, WeightVector,
             jiba::WeightingTerm(decayexponent));
 
-        std::fill_n(ModelWeight.begin(), ModelWeight.size(), 1.0);
+        std::fill_n(ModelWeight.begin(), ModelWeight.size(), 0.0);
         for (size_t i = 0; i < nmod; ++i)
           {
             ModelWeight( i) = WeightVector(i % zsize);
           }
 
         jiba::DataSpaceInversion()(InvarSens, DataDiffVector, ModelWeight,
-            DataError, evalthresh, lambda, InvModel);
+            DataError, lambda, InvModel);
 
         gradnorm = sqrt(boost::numeric::ublas::norm_2(InvModel));
         std::cout << "Stepsize: " << gradnorm << std::endl;
         std::cout << "Data Error: " << minmisfit << std::endl;
         //add the result of the inversion to the starting model
         //we only add the gridded part, the  background is always 0 due to the weighting
-        std::transform(InvModel.begin(), InvModel.begin() + nmod,
+        std::transform(InvModel.begin(), InvModel.begin() + ngrid,
             Model.SetDensities().origin(), Model.SetDensities().origin(),
             std::plus<double>());
+        std::fill(InvModel.begin(), InvModel.end(), 0.0);
         iter++;
       }
     //we want to save the resulting predicted data
     jiba::ThreeDGravityModel::tTensorMeasVec FTGData(Model.CalcTensorGravity());
+    for (size_t i = 0; i < ndata; ++i)
+      {
+        StartingDataVector( i) = CalcInvariant(FTGData.at(i));
+      }
+    std::transform(DataVector.begin(), DataVector.end(),
+        StartingDataVector.begin(), DataDiffVector.begin(),
+        std::minus<double>());
+    std::transform(DataDiffVector.begin(), DataDiffVector.end(),
+        DataError.begin(), DataDiffVector.begin(), std::divides<double>());
     Model.SaveTensorMeasurements(modelfilename + ".inv_ftgdata.nc");
     Model.PlotTensorMeasurements(modelfilename + ".inv_ftgdata.plot");
     Model.WriteVTK(modelfilename + ".inv_ftg.vtk");
     Model.WriteNetCDF(modelfilename + ".inv_ftg.nc");
 
     std::vector<double> relerror;
-    std::copy(DataDiffVector.begin(), DataDiffVector.end(),std::back_inserter(relerror));
+    std::copy(DataDiffVector.begin(), DataDiffVector.end(), std::back_inserter(
+        relerror));
     jiba::Write3DDataToVTK(modelfilename + ".inv_ftgmisfit.vtk",
         "MisfitInvariant", relerror, Model.GetMeasPosX(), Model.GetMeasPosY(),
         Model.GetMeasPosZ());
