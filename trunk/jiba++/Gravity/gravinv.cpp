@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
         std::multiplies<double>(), _1, errorlevel));
 
     jiba::rvec SensProfile;
-    jiba::ExtractMiddleSens(Model,Sensitivities,1,SensProfile);
+    jiba::ExtractMiddleSens(Model, Sensitivities, 1, SensProfile);
     double z0 = FitZ0(SensProfile, Model.GetZCellSizes(), jiba::WeightingTerm(
         -3));
     std::cout << "Estimated z0: " << z0 << std::endl;
@@ -85,8 +85,8 @@ int main(int argc, char *argv[])
         jiba::WeightingTerm(-3));
     //and output the scaling weights
     std::ofstream weightfile("weights.out");
-    std::copy(WeightVector.begin(), WeightVector.end(),
-        std::ostream_iterator<double>(weightfile, "\n"));
+    std::copy(WeightVector.begin(), WeightVector.end(), std::ostream_iterator<
+        double>(weightfile, "\n"));
     //the WeightVector only has length zsize, one entry for each depth level
     //the inversion routine needs a vector with a weight for each model parameter
     // the weights only depend on the depth of the cell
@@ -94,21 +94,18 @@ int main(int argc, char *argv[])
     std::fill_n(ModelWeight.begin(), ModelWeight.size(), 0);
     for (size_t i = 0; i < nmod; ++i)
       {
-        ModelWeight(i) =WeightVector(i % zsize);
+        ModelWeight( i) = WeightVector(i % zsize);
       }
 
-    //we can play around with the threshold for the included eigenvalues
-    double evalthresh;
-    std::cout << "Eigenvalue threshold: ";
-    std::cin >> evalthresh;
     double lambda = 1.0;
     std::cout << "Lambda: ";
-    std::cin >>lambda;
+    std::cin >> lambda;
 
     //here comes the core inversion
-    jiba::rvec InvModel;
+    jiba::rvec InvModel(AllSens.size2());
+    std::fill(InvModel.begin(), InvModel.end(), 0.0);
     jiba::DataSpaceInversion Inversion;
-    Inversion(AllSens, DataDiffVec, ModelWeight, DataError, evalthresh, lambda,
+    Inversion(AllSens, DataDiffVec, ModelWeight, DataError, lambda,
         InvModel);
 
     //add the result of the inversion to the starting model
@@ -132,18 +129,15 @@ int main(int argc, char *argv[])
     for (size_t i = 0; i < nmeas; ++i)
       {
         //the filtered sensitivities include the background layers
-        boost::numeric::ublas::matrix_column<const jiba::rmat> filcolumn(
-            AllSens, i);
-        boost::numeric::ublas::matrix_row<jiba::rmat> senscolumn(Sensitivities,
-            i);
+        boost::numeric::ublas::matrix_row<jiba::rmat> filrow(AllSens, i);
+        boost::numeric::ublas::matrix_row<jiba::rmat> sensrow(Sensitivities, i);
         //we are only interested in the sensitivities for the gridded part
-        std::copy(filcolumn.begin(), filcolumn.begin() + nmod, SensModel.data());
+        std::copy(filrow.begin(), filrow.begin() + nmod, SensModel.data());
         jiba::Write3DModelToVTK(modelfilename + ".sensfil_data"
             + jiba::stringify(i) + ".vtk", "filtered_sens",
             Model.GetXCellSizes(), Model.GetYCellSizes(),
             Model.GetZCellSizes(), SensModel);
-        std::copy(senscolumn.begin(), senscolumn.begin() + nmod,
-            SensModel.data());
+        std::copy(sensrow.begin(), sensrow.begin() + nmod, SensModel.data());
         jiba::Write3DModelToVTK(modelfilename + ".sens_data" + jiba::stringify(
             i) + ".vtk", "raw_sens", Model.GetXCellSizes(),
             Model.GetYCellSizes(), Model.GetZCellSizes(), SensModel);

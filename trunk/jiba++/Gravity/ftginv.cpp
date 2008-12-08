@@ -90,27 +90,24 @@ int main(int argc, char *argv[])
       }
 
     std::transform(DataVector.begin(), DataVector.end(),
-        StartingDataVector.begin(), DataDiffVector.begin(), std::minus<double>());
+        StartingDataVector.begin(), DataDiffVector.begin(),
+        std::minus<double>());
     const double errorlevel = 0.02;
     std::transform(DataVector.begin(), DataVector.end(), DataError.begin(),
-        boost::bind(std::abs<double>,boost::bind(std::multiplies<double>(), _1, errorlevel)));
+        boost::bind(std::abs<double>, boost::bind(std::multiplies<double>(),
+            _1, errorlevel)));
     for (size_t i = 0; i < DataError.size(); ++i)
       {
-        DataError(i) = std::max(DataError(i),1e-12);
+        DataError( i) = std::max(DataError(i), 1e-12);
       }
-
+    //we have to make a copy of the sensitivity matrix
+    //because the inversion algorithm changes the matrix
     jiba::rmat AllSens(Model.GetTensorSensitivities());
-    jiba::rmat Sensitivities(ublas::matrix_range<jiba::rmat>(AllSens,
-        ublas::range(0, nmeas * 9), ublas::range(0, nmod)));
-    //write out sensitivities for the 9 tensor elements
-    for (size_t i = 0; i < 9; ++i)
-      {
-        SumSensitivitiesAndPlot(Sensitivities, i, modelfilename
-            + jiba::stringify(i) + ".vtk", Model);
-      }
+    Model.ClearTensorSensitivities();
     //depth weighting
     jiba::rvec SensProfile;
-    jiba::ExtractMiddleSens(Model, Sensitivities, 9, SensProfile);
+    jiba::ExtractMiddleSens(Model, ublas::matrix_range<jiba::rmat>(AllSens,
+        ublas::range(0, nmeas * 9), ublas::range(0, nmod)), 9, SensProfile);
 
     const double decayexponent = -3.0;
     double z0 = FitZ0(SensProfile, Model.GetZCellSizes(), jiba::WeightingTerm(
@@ -124,24 +121,20 @@ int main(int argc, char *argv[])
     std::fill_n(ModelWeight.begin(), ModelWeight.size(), 0.0);
     for (size_t i = 0; i < nmod; ++i)
       {
-        ModelWeight(i) =WeightVector(i % zsize);
+        ModelWeight( i) = WeightVector(i % zsize);
       }
 
     std::ofstream weightfile("weights.out");
-    std::copy(ModelWeight.begin(), ModelWeight.end(),
-        std::ostream_iterator<double>(weightfile, "\n"));
+    std::copy(ModelWeight.begin(), ModelWeight.end(), std::ostream_iterator<
+        double>(weightfile, "\n"));
 
-    //we can play around with the threshold for the included eigenvalues
-    double evalthresh;
-    std::cout << "Eigenvalue threshold: ";
-    std::cin >> evalthresh;
     double lambda = 1.0;
     std::cout << "Lambda: ";
-    std::cin >>lambda;
-    jiba::rvec InvModel;
-
+    std::cin >> lambda;
+    jiba::rvec InvModel(AllSens.size2());
+    std::fill(InvModel.begin(), InvModel.end(), 0.0);
     jiba::DataSpaceInversion()(AllSens, DataDiffVector, ModelWeight, DataError,
-        evalthresh, lambda, InvModel);
+        lambda, InvModel);
 
     //add the result of the inversion to the starting model
     //we only add the gridded part, the  background is always 0 due to the weighting
@@ -150,11 +143,11 @@ int main(int argc, char *argv[])
         std::plus<double>());
     //we want to save the resulting predicted data
     jiba::ThreeDGravityModel::tTensorMeasVec FTGData(Model.CalcTensorGravity());
-    Model.SaveTensorMeasurements(modelfilename + ".inv_data.nc");
-    Model.PlotTensorMeasurements(modelfilename + ".inv.plot");
-    Model.WriteVTK(modelfilename + ".inv.vtk");
-    Model.WriteNetCDF(modelfilename + ".inv.nc");
+    Model.SaveTensorMeasurements(modelfilename + ".inv_ftgdata.nc");
+    Model.PlotTensorMeasurements(modelfilename + ".inv_ftgdata.plot");
+    Model.WriteVTK(modelfilename + ".inv_ftg.vtk");
+    Model.WriteNetCDF(modelfilename + ".inv_ftg.nc");
 
-    jiba::Write3DTensorDataToVTK(modelfilename + ".ftgdata.vtk", "U", FTGData,
-        Model.GetMeasPosX(), Model.GetMeasPosY(), Model.GetMeasPosZ());
+    jiba::Write3DTensorDataToVTK(modelfilename + ".inv_ftgdata.vtk", "U",
+        FTGData, Model.GetMeasPosX(), Model.GetMeasPosY(), Model.GetMeasPosZ());
   }

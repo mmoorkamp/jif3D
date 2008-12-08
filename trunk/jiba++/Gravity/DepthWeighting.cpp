@@ -57,6 +57,7 @@ namespace jiba
         jiba::rvec InvModel(1), DeltaModel(1);
         weights(0) = 1.0;
         InvModel(0) = startz;
+        DeltaModel(0) = 0.0;
         const size_t iterations = 100;
         jiba::rvec error(ndata), delta(ndata), calculated(ndata);
         std::fill_n(error.begin(), zsize, 1.0);
@@ -89,12 +90,14 @@ namespace jiba
                 << calculated(j) << std::endl;
               }
             // do one step of the inversion
-            jiba::DataSpaceInversion()(sens, delta, weights, error, evalthresh,
+            jiba::ModelSpaceInversion()(sens, delta, weights, error, evalthresh,
                 0.0, DeltaModel);
             //and adjust the model (no fancy line search here)
             stepsize = boost::numeric::ublas::norm_2(DeltaModel);
             InvModel -= DeltaModel;
-
+            //Delta model will be used for regularizing the next iteration
+            //we don't want this so we set it to zero
+            DeltaModel(0) = 0.0;
             outfile << std::endl << std::endl;
             ++i;
           }

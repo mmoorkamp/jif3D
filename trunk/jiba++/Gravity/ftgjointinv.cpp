@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
     //transform(DataVector.begin(),DataVector.end(),DataError.begin(),boost::bind(std::multiplies<double>(),_1,0.02));
     for (size_t i = 0; i < nmeas * 10; ++i)
       {
-        DataError(i) = 0.02 * DataVector(i);
+        DataError( i) = 0.02 * DataVector(i);
       }
     //set the measurement points in the model to those of the data
     Model.ClearMeasurementPoints();
@@ -79,8 +79,8 @@ int main(int argc, char *argv[])
     jiba::rmat JointSensitivities(DataVector.size(), nmod);
     ublas::matrix_range<jiba::rmat> FTGPart(JointSensitivities, ublas::range(0,
         FTGSensitivities.size1()), ublas::range(0, nmod));
-    ublas::matrix_range<jiba::rmat> ScalarPart(JointSensitivities, ublas::range(
-        nmeas * 9, nmeas * 10), ublas::range(0, nmod));
+    ublas::matrix_range<jiba::rmat> ScalarPart(JointSensitivities,
+        ublas::range(nmeas * 9, nmeas * 10), ublas::range(0, nmod));
 
     FTGPart = FTGSensitivities;
     ScalarPart = ScalarSensitivities;
@@ -88,17 +88,13 @@ int main(int argc, char *argv[])
     jiba::rvec ModelWeight(nmod);
     for (size_t i = 0; i < nmod; ++i)
       {
-        ModelWeight(i) = 1.0;
+        ModelWeight( i) = 1.0;
       }
 
-    //we can play around with the threshold for the included eigenvalues
-    double evalthresh;
-    std::cout << "Eigenvalue threshold: ";
-    std::cin >> evalthresh;
     jiba::rvec InvModel;
 
-    jiba::DataSpaceInversion()(JointSensitivities, DataVector, ModelWeight,DataError,
-        evalthresh, 1.0,InvModel);
+    jiba::DataSpaceInversion()(JointSensitivities, DataVector, ModelWeight,
+        DataError, 1.0, InvModel);
 
     std::copy(InvModel.begin(), InvModel.end(), Model.SetDensities().origin());
     Model.CalcTensorGravity();
