@@ -14,7 +14,7 @@
 
 namespace jiba
   {
-
+	class ThreeDGravityCalculator;
     class ThreeDGravityImplementation
       {
     public:
@@ -23,10 +23,11 @@ namespace jiba
       virtual rvec CalcBackground(const double xmeas, const double ymeas,
           const double zmeas, const double xwidth, const double ywidth,
           const double zwidth, const ThreeDGravityModel &Model,
-          ublas::matrix_range<rmat> &Sensitivities) = 0;
+          rmat &Sensitivities) = 0;
       virtual rvec CalcGridded(const double x_meas, const double y_meas,
           const double z_meas, const ThreeDGravityModel &Model,
-          ublas::matrix_range<rmat> &Sensitivities) = 0;
+          rmat &Sensitivities) = 0;
+      virtual rvec Calculate(const ThreeDGravityModel &Model,ThreeDGravityCalculator &Calculator);
       ThreeDGravityImplementation();
       virtual ~ThreeDGravityImplementation();
       };
