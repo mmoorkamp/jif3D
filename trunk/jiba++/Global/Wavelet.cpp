@@ -8,7 +8,7 @@
 #include "Wavelet.h"
 namespace jiba
   {
-    //calcualte the coefficient for the wavelet filter
+    //calculate the coefficient for the wavelet filter
     static const double c0 = (1.0 + sqrt(3.0)) / (4.0 * sqrt(2.0));
     static const double c1 = (3.0 + sqrt(3.0)) / (4.0 * sqrt(2));
     static const double c2 = (3.0 - sqrt(3.0)) / (4.0 * sqrt(2.0));
@@ -64,26 +64,122 @@ namespace jiba
           }
         std::copy(Temp.begin(), Temp.begin() + maxindex, Invec.begin());
       }
+
+    /*! The classes ForwardWaveletDriver and InverseWaveletDriver capture the
+     * code that is different for the forward and inverse transforms in one
+     * and multidimensional transformations. They are basically the one-dimensional transforms.
+     */
+    class ForwardWaveletDriver
+      {
+    public:
+      /*! The function operator takes two arguments
+       * @param WorkVector The vector with the input data, will contain the transformed data
+       * @param DimSize The maximum length the transform will be performed on
+       */
+      void operator()(rvec &WorkVector, size_t DimSize)
+        {
+          for (size_t n = DimSize; n >= 4; n >>= 1)
+            {
+              Daub4(WorkVector, n);
+            }
+        }
+      };
+
+    class InverseWaveletDriver
+      {
+    public:
+      /*! The function operator takes two arguments
+       * @param WorkVector The vector with the input data, will contain the transformed data
+       * @param DimSize The maximum length the transform will be performed on
+       */
+      void operator()(rvec &WorkVector, size_t DimSize)
+        {
+          for (size_t n = 4; n <= DimSize; n <<= 1)
+            {
+              InvDaub4(WorkVector, n);
+            }
+        }
+      };
+
     /*! Perform a forward wavelet transform on the input vector
      * @param Invec The input vector, will contain the result, size must be power of 2
      */
     void WaveletTransform(jiba::rvec &Invec)
       {
-        const size_t length = Invec.size();
-        for (size_t i = length; i >= 4; i /= 2)
-          {
-            Daub4(Invec, i);
-          }
+        ForwardWaveletDriver()(Invec, Invec.size());
       }
+
     /*! Perform an inverse wavelet transform on the input vector
      * @param Invec The input vector, will contain the result, size must be power of 2
      */
     void InvWaveletTransform(jiba::rvec &Invec)
       {
-        const size_t length = Invec.size();
-        for (size_t i = 4; i <= length; i *= 2)
+        InverseWaveletDriver()(Invec, Invec.size());
+      }
+
+    /*! The structure of the multidimensional wavelet transform is identical
+     * for forward and inverse. We therefore put the difference in a separate
+     * function object and pass this as a parameter. For effectivity and because
+     * we know at compile time whether its inverse or forward we make it a template.
+     * @param InArray The array with the input values, contains the output afterwards
+     * @param DimSizes The size of each dimension, InArray must contain the product of DimSizes elements
+     * @param ndim The number of dimensions DimSizes must contain ndim elements
+     * @param Driver The function object that determines whether we do forward or inverse
+     */
+    template<class WaveletDriverType>
+    void WaveletTransformImp(double *InArray, const size_t *DimSizes,
+        size_t ndim, WaveletDriverType Driver)
+      {
+        const size_t nElements = std::accumulate(DimSizes, DimSizes + ndim, 1,
+            std::multiplies<size_t>());
+        jiba::rvec WorkVector(nElements);
+        size_t Stride = 1;
+        size_t preStride = 1;
+        for (size_t i = 0; i < ndim; ++i)
           {
-            InvDaub4(Invec, i);
+            size_t DimSize = DimSizes[i];
+            Stride = DimSize * preStride;
+            if (DimSize > 4)
+              {
+                for (size_t j = 0; j < nElements; j += Stride)
+                  {
+                    for (size_t k = 0; k < preStride; ++k)
+                      {
+                        for (size_t l = j + k, m = 0; m < DimSize; ++m, l
+                            += preStride)
+                          {
+                            WorkVector( m) = InArray[l];
+                          }
+
+                        Driver(WorkVector, DimSize);
+
+                        for (size_t l = j + k, m = 0; m < DimSize; ++m, l
+                            += preStride)
+                          {
+                            InArray[l] = WorkVector(m);
+                          }
+                      }
+                  }
+              }
+            preStride = Stride;
           }
       }
+    /*! Perform a multidimensional wavelet transform on the input data. InArray is a one dimensional array
+     * of DimSizes[0]*DimSizes[1]* ... *DimSizes[ndim-1] elements. We assume that the last dimension varies
+     * fastest (c storage order).
+     * @param InArray The array with the input values, contains the output afterwards
+     * @param DimSizes The size of each dimension, InArray must contain the product of DimSizes elements
+     * @param ndim The number of dimensions DimSizes must contain ndim elements
+     */
+    void WaveletTransform(double *InArray, const size_t *DimSizes, size_t ndim)
+      {
+        WaveletTransformImp(InArray, DimSizes, ndim, ForwardWaveletDriver());
+      }
+
+    void InvWaveletTransform(double *InArray, const size_t *DimSizes,
+        size_t ndim)
+      {
+        WaveletTransformImp(InArray, DimSizes, ndim, InverseWaveletDriver());
+      }
+
   }
