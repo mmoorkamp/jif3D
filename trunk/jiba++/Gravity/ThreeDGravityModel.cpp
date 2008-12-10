@@ -60,9 +60,9 @@ namespace jiba
           }
         // we only get here if we didn't store the sensitivities previously
         //check if we want to store sensitivities and allocate memory
-        //if (StoreScalarSensitivities && !HaveCalculatedScalarSensitivities)
+        if (StoreScalarSensitivities && !HaveCalculatedScalarSensitivities)
           {
-            ScalarSensitivities.resize(MeasPosX.size(), xsize * ysize * zsize
+            ScalarSensitivities.resize(nmeas, xsize * ysize * zsize
                 + bg_densities.size());
           }
 
@@ -146,7 +146,7 @@ namespace jiba
             return TensorResults;
           }
         //we only get here if we didn't use the stored sensitivities
-        //if (StoreTensorSensitivities && !HaveCalculatedTensorSensitivities)
+        if (StoreTensorSensitivities && !HaveCalculatedTensorSensitivities)
           {
             TensorSensitivities.resize(nmeas * 9, xsize * ysize * zsize
                 + bg_densities.size()); // we have 9 tensor elements for each measurement points

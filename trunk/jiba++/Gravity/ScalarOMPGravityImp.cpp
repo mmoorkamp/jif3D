@@ -36,7 +36,8 @@ namespace jiba
     rvec ScalarOMPGravityImp::CalcBackground(const double xmeas,
         const double ymeas, const double zmeas, const double xwidth,
         const double ywidth, const double zwidth,
-        const ThreeDGravityModel &Model, ublas::matrix_range<rmat> &Sensitivities)
+        const ThreeDGravityModel &Model,
+        ublas::matrix_range<rmat> &Sensitivities)
       {
         //make sure we have thicknesses and densities for all layers
         assert(Model.GetBackgroundDensities().size() == Model.GetBackgroundThicknesses().size());
@@ -47,6 +48,8 @@ namespace jiba
         double currbottom = 0.0;
         const size_t modelsize = Model.GetDensities().shape()[0]
             * Model.GetDensities().shape()[1] * Model.GetDensities().shape()[2];
+        const bool storesens = (Sensitivities.size1() >= ndatapermeas)
+            && (Sensitivities.size2() >= modelsize + nbglayers);
         // for all layers of the background
         for (size_t j = 0; j < nbglayers; ++j)
           {
@@ -69,9 +72,10 @@ namespace jiba
                 currvalue -= CalcGravBoxTerm(xmeas, ymeas, zmeas, 0.0, 0.0,
                     currtop, xwidth, ywidth, (zwidth - currtop));
               }
-
-            Sensitivities(0,modelsize + j) = currvalue;
-
+            if (storesens)
+              {
+                Sensitivities(0, modelsize + j) = currvalue;
+              }
             result += currvalue * Model.GetBackgroundDensities()[j];
             currtop += currthick;
           }
@@ -91,14 +95,16 @@ namespace jiba
      */
     rvec ScalarOMPGravityImp::CalcGridded(const double x_meas,
         const double y_meas, const double z_meas,
-        const ThreeDGravityModel &Model, ublas::matrix_range<rmat> &Sensitivities)
+        const ThreeDGravityModel &Model,
+        ublas::matrix_range<rmat> &Sensitivities)
       {
         //get the dimensions of the model
         const size_t xsize = Model.GetDensities().shape()[0];
         const size_t ysize = Model.GetDensities().shape()[1];
         const size_t zsize = Model.GetDensities().shape()[2];
         const size_t nmod = xsize * ysize * zsize;
-
+        const bool storesens = (Sensitivities.size1() >= ndatapermeas)
+            && (Sensitivities.size2() >= nmod);
         double returnvalue = 0.0;
         double currvalue = 0.0;
         //creating constant arrays instead of having function calls in the loop below
@@ -130,7 +136,10 @@ namespace jiba
                     XSizes[xindex], YSizes[yindex], ZSizes[zindex]);
                 returnvalue += currvalue
                     * Model.GetDensities()[xindex][yindex][zindex];
-                Sensitivities(0,offset) = currvalue;
+                if (storesens)
+                  {
+                    Sensitivities(0, offset) = currvalue;
+                  }
               }
 
           }//end of parallel section

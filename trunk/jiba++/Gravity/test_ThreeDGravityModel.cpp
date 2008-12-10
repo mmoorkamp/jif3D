@@ -17,10 +17,12 @@
 #include <fstream>
 #include "ThreeDGravityModel.h"
 #include "BasicGravElements.h"
+#include "MinMemGravityCalculator.h"
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/assign/std/vector.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/numeric/conversion/cast.hpp>
+#include "ScalarOMPGravityImp.h"
 
 using namespace boost::assign;
 
@@ -383,6 +385,13 @@ jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension()
       for (size_t i = 0; i < nmeas; ++i)
         {
           BOOST_CHECK_CLOSE(scalarmeas1[i], scalarmeas2[i], std::numeric_limits<
+              float>::epsilon());
+        }
+      jiba::ScalarOMPGravityImp Implementation;
+      jiba::rvec NewResult(jiba::MinMemGravityCalculator().Calculate(GravityTest,Implementation));
+      for (size_t i = 0; i < nmeas; ++i)
+        {
+          BOOST_CHECK_CLOSE(scalarmeas1[i], NewResult[i], std::numeric_limits<
               float>::epsilon());
         }
     }

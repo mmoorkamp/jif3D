@@ -46,8 +46,10 @@ namespace jiba
         std::fill_n(result.data().begin(), ndatapermeas, 0.0);
         double currtop = 0.0;
         double currbottom = 0.0;
-        const size_t modelsize = Model.GetDensities().shape()[0]
+        const size_t nmod = Model.GetDensities().shape()[0]
             * Model.GetDensities().shape()[1] * Model.GetDensities().shape()[2];
+        const bool storesens = (Sensitivities.size1() >= ndatapermeas)
+            && (Sensitivities.size2() >= nmod);
         // for all layers of the background
         for (size_t j = 0; j < nbglayers; ++j)
           {
@@ -67,10 +69,11 @@ namespace jiba
                 currvalue = -CalcTensorBoxTerm(xmeas, ymeas, zmeas, 0.0, 0.0,
                     currtop, xwidth, ywidth, (zwidth - currtop));
               }
-
-            for (size_t i = 0; i < ndatapermeas; ++i)
-              Sensitivities(i,modelsize + j) = currvalue.data()[i];
-
+            if (storesens)
+              {
+                for (size_t i = 0; i < ndatapermeas; ++i)
+                  Sensitivities(i, nmod + j) = currvalue.data()[i];
+              }
             result += currvalue * Model.GetBackgroundDensities()[j];
             currtop += currthick;
           }
@@ -89,6 +92,8 @@ namespace jiba
         const size_t ysize = Model.GetDensities().shape()[1];
         const size_t zsize = Model.GetDensities().shape()[2];
         const int nmod = xsize * ysize * zsize;
+        const bool storesens = (Sensitivities.size1() >= ndatapermeas)
+            && (Sensitivities.size2() >= nmod);
         GravimetryMatrix currvalue(3, 3);
 
         const ThreeDGravityModel::t3DModelDim XCoord(Model.GetXCoordinates());
@@ -130,10 +135,11 @@ namespace jiba
                 U6 += currvalue(2, 0) * Density;
                 U7 += currvalue(2, 1) * Density;
                 U8 += currvalue(2, 2) * Density;
-
-                for (size_t i = 0; i < ndatapermeas; ++i)
-                  Sensitivities(i,offset) = currvalue.data()[i];
-
+                if (storesens)
+                  {
+                    for (size_t i = 0; i < ndatapermeas; ++i)
+                      Sensitivities(i, offset) = currvalue.data()[i];
+                  }
               }
           }//end of parallel region
 
