@@ -112,12 +112,12 @@ namespace jiba
       void WriteVTK(std::string filename, const std::string &DataName);
     public:
       //! From the three spatial indices, calculate the offset in memory
-      int IndexToOffset(int xi, int yi, int zi)
+      int IndexToOffset(int xi, int yi, int zi) const
         {
           return Data.shape()[2] * (xi * Data.shape()[1] + yi) + zi;
         }
       //! Form a memory offset, calculate the associated spatial indices
-      void OffsetToIndex(int offset, int &xi, int &yi, int &zi)
+      void OffsetToIndex(int offset, int &xi, int &yi, int &zi) const
         {
           zi = offset % Data.shape()[2];
           xi = (offset - zi) / Data.shape()[2];
