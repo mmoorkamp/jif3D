@@ -26,7 +26,7 @@ namespace jiba
       virtual rvec CalcBackground(const double xmeas, const double ymeas,
           const double zmeas, const double xwidth, const double ywidth,
           const double zwidth, const ThreeDGravityModel &Model,
-          ublas::matrix_range<rmat> &sSensitivities);
+          ublas::matrix_range<rmat> &Sensitivities);
       virtual rvec CalcGridded(const double x_meas, const double y_meas,
           const double z_meas, const ThreeDGravityModel &Model,
           ublas::matrix_range<rmat> &Sensitivities);
