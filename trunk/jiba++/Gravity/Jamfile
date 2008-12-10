@@ -1,6 +1,7 @@
 import testing ; 
 lib gravity : ThreeDGravityModel.cpp GravityInterface.cpp ReadWriteGravityData.cpp DepthWeighting.cpp
-              BasicGravElements.cpp ScalarOMPGravityImp.cpp TensorOMPGravityImp.cpp ThreeDGravityImplementation.cpp
+              BasicGravElements.cpp ScalarOMPGravityImp.cpp TensorOMPGravityImp.cpp 
+              ThreeDGravityImplementation.cpp ScalarCudaGravityImp.cpp
               ThreeDGravityCalculator.cpp MinMemGravityCalculator.cpp
               ..//netcdf_c++ ..//netcdf ../ModelBase//modelbase ../Inversion//inversion
               : <include>boost : : <include>. ;

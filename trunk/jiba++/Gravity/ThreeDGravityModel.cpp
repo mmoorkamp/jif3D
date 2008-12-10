@@ -77,20 +77,21 @@ namespace jiba
         // for all measurement points add the respones of the discretized part and the 1D background
         for (size_t i = 0; i < nmeas; ++i)
           {
+        	rmat CurrSens(1,ScalarSensitivities.size2());
             ublas::matrix_range<rmat> mr(ScalarSensitivities, ublas::range(i, i
                 + 1), ublas::range(0, ScalarSensitivities.size2()));
             rvec result(1);
 
             result = ScalarOMPGravityImp().CalcGridded(MeasPosX[i],
-                MeasPosY[i], MeasPosZ[i], *this, mr);
+                MeasPosY[i], MeasPosZ[i], *this, CurrSens);
 
             //adjust for the effects of finite extents of the grid
             result += ScalarOMPGravityImp().CalcBackground(MeasPosX[i],
                 MeasPosY[i], MeasPosZ[i], modelxwidth, modelywidth,
-                modelzwidth, *this, mr);
+                modelzwidth, *this,  CurrSens);
 
             ScalarResults[i] = result(0);
-
+            mr = CurrSens;
           }
         // if we store the sensitivity matrix
         if (StoreScalarSensitivities)
@@ -154,19 +155,20 @@ namespace jiba
         // for all measurement points add the responses of the discretized part and the 1D background
         for (size_t i = 0; i < nmeas; ++i)
           {
+        	rmat CurrSens(9,TensorSensitivities.size2());
             ublas::matrix_range<rmat>
                 mr(TensorSensitivities, ublas::range(i * 9, (i + 1) * 9),
                     ublas::range(0, TensorSensitivities.size2()));
             rvec result(9);
 
             result = TensorOMPGravityImp().CalcGridded(MeasPosX[i],
-                MeasPosY[i], MeasPosZ[i], *this, mr);
+                MeasPosY[i], MeasPosZ[i], *this, CurrSens);
 
             //adjust for the effects of finite extents of the grid
             result += TensorOMPGravityImp().CalcBackground(MeasPosX[i],
                 MeasPosY[i], MeasPosZ[i], modelxwidth, modelywidth,
-                modelzwidth, *this, mr);
-
+                modelzwidth, *this, CurrSens);
+            mr = CurrSens;
             copy(result.begin(), result.end(), TensorResults[i].data().begin());
 
           }

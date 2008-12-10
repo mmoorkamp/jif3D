@@ -23,6 +23,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include "ScalarOMPGravityImp.h"
+#include "TensorOMPGravityImp.h"
 
 using namespace boost::assign;
 
@@ -405,6 +406,8 @@ jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension()
 
       jiba::ThreeDGravityModel::tTensorMeasVec tensormeas(
           GravityTest.CalcTensorGravity());
+      jiba::TensorOMPGravityImp TensorImp;
+      jiba::rvec newmeas(jiba::MinMemGravityCalculator().Calculate(GravityTest,TensorImp));
       for (size_t i = 0; i < nmeas; ++i)
         {
           // check that tensor is traceless
@@ -417,6 +420,10 @@ jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension()
               std::numeric_limits<float>::epsilon());
           BOOST_CHECK_CLOSE(tensormeas[i](1, 2), tensormeas[i](2, 1),
               std::numeric_limits<float>::epsilon());
+          BOOST_CHECK_CLOSE(tensormeas[i](0, 0), newmeas(i*9),
+                        std::numeric_limits<float>::epsilon());
+          BOOST_CHECK_CLOSE(tensormeas[i](0, 1), newmeas(i*9+1),
+                                  std::numeric_limits<float>::epsilon());
         }
     }
 
@@ -616,7 +623,7 @@ jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension()
 
   //test the scalar forward interface for R
   //this needs the current svn of boost test, as boost test in 1.35.0 has problems with the system call
-  BOOST_AUTO_TEST_CASE(R_scalar_interface_test)
+ /* BOOST_AUTO_TEST_CASE(R_scalar_interface_test)
     {
       //create a 3D Gravity object
       jiba::ThreeDGravityModel GravityTest(false, false);
@@ -656,10 +663,10 @@ jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension()
         }
 
     }
-
+*/
   //test the tensor forward interface for R
   //this needs the current svn of boost test, as boost test in 1.35.0 has problems with the system call
-  BOOST_AUTO_TEST_CASE(R_tensor_interface_test)
+/*  BOOST_AUTO_TEST_CASE(R_tensor_interface_test)
     {
       jiba::ThreeDGravityModel GravityTest(false, false);
 
@@ -700,4 +707,5 @@ jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension()
         }
 
     }
+    */
   BOOST_AUTO_TEST_SUITE_END()
