@@ -23,49 +23,6 @@ namespace jiba
     /** \addtogroup gravity Gravity forward modelling, display and inversion */
     /* @{ */
 
-    //! The constant of gravity
-    static const double Grav_const = 6.67428e-8; // in units cm^3/g s
-
-    //! We store the 3x3 matrix for gravimetric measurements in a ublas matrix with real entries
-    typedef rmat GravimetryMatrix;
-
-    //! Calculate a single geometric term for the graviational acceleration due to a rectangular prism
-    double CalcGravTerm(const double x, const double y, const double z);
-    //! Calculate the geometric term  due to a rectangular prism
-    double CalcGravBoxTerm(const double meas_x, const double meas_y,
-        const double meas_z, const double ul_corner_x,
-        const double ul_corner_y, const double ul_corner_z,
-        const double x_size, const double y_size, const double z_size);
-
-    //! Calculate the geometic part of the gravimetry matrix for a single rectangular prism
-    GravimetryMatrix CalcTensorBoxTerm(const double meas_x,
-        const double meas_y, const double meas_z, const double ul_corner_x,
-        const double ul_corner_y, const double ul_corner_z,
-        const double x_size, const double y_size, const double z_size);
-
-    double CalcUxxTerm(const double meas_x, const double meas_y,
-        const double meas_z, const double ul_corner_x,
-        const double ul_corner_y, const double ul_corner_z,
-        const double x_size, const double y_size, const double z_size);
-
-    double CalcUxyTerm(const double meas_x, const double meas_y,
-        const double meas_z, const double ul_corner_x,
-        const double ul_corner_y, const double ul_corner_z,
-        const double x_size, const double y_size, const double z_size);
-
-    //! the gravitational acceleration of an semi-infinite slab
-    double CalcGravSemiInfSheet(const double hor_dist, const double ver_dist,
-        const double thick, const double density);
-    //! Calculate one of the terms of diagonal elements of the gravimetric matrxi
-    double CalcFTGDiagonalTerm(const double a, const double b, const double c);
-    //! Calculate one of the terms of off-diagonal elements of the gravimetric matrxi
-    double CalcFTGOffDiagonalTerm(const double value, const double x,
-        const double y, const double z);
-    //! the "geometric term" for gravitational acceleration of an infinite slab
-    inline double CalcInfSheetTerm(const double thick)
-      {
-        return 2.0 * M_PI * Grav_const * thick;
-      }
 
     //! We store the 3x3 matrix for gravimetric measurements in a ublas matrix with real entries
     typedef rmat GravimetryMatrix;
@@ -77,14 +34,7 @@ namespace jiba
       typedef std::vector<double> tScalarMeasVec;
       typedef std::vector<GravimetryMatrix> tTensorMeasVec;
       typedef std::vector<double> tMeasPosVec;
-      //! Calculate the response of the 1D background
-      double CalcBackground(const double xmeas, const double ymeas,
-          const double zmeas, const double xwidth, const double ywidth,
-          const double zwidth, const size_t meas_index);
     private:
-      //! For the given model, calculate the gravity at measurement points x, y and z due to the discretized part of the mesh
-      double CalcScalarMeas(const double x_meas, const double y_meas,
-          const double z_meas, const size_t meas_index);
       //! For the given model, calculate the gravimetric matrix at points x,y, and z
       GravimetryMatrix CalcTensorMeas(const double x_meas, const double y_meas,
           const double z_meas, const size_t meas_index);
@@ -152,7 +102,7 @@ namespace jiba
           copy(value.begin(), value.end(), back_inserter(bg_densities));
         }
       //! Return the densities of the background layers
-      const tScalarMeasVec &GetBackgroundDensities()
+      const tScalarMeasVec &GetBackgroundDensities() const
         {
           return bg_densities;
         }
@@ -163,7 +113,7 @@ namespace jiba
           copy(value.begin(), value.end(), back_inserter(bg_thicknesses));
         }
       //! Return the thicknesses of the background layers in m
-      const tScalarMeasVec &GetBackgroundThicknesses()
+      const tScalarMeasVec &GetBackgroundThicknesses() const
         {
           return bg_thicknesses;
         }

@@ -7,505 +7,20 @@
 
 #include "ThreeDGravityModel.h"
 #include "../Global/NumUtil.h"
+#include "TensorOMPGravityImp.h"
+#include "ScalarOMPGravityImp.h"
 #include "ReadWriteGravityData.h"
-#include <algorithm>
 #include <boost/bind.hpp>
 #include <cassert>
 #include <netcdfcpp.h>
 #include <fstream>
 #include <iomanip>
-#include <cmath>
 #include <iterator>
 
 namespace jiba
   {
     static const std::string DensityName = "density";
     static const std::string DensityUnit = "g/cm3";
-
-    /*! Calculate one term for the gravitational potential of a box, we use the nomenclature of eq. 4-6 in Li and Chouteau.
-     * The parameters x,y and z are the distances to the corners of the box, we will call this functions with different
-     * permutations of real world x,y and z coordinates, so only in some cases x corresponds to the x-axis.
-     * The various terms all have the form \f$ x * log(y +r) + y * log(x+r) + z*atan2(z*r, x*y) \f$
-     * where x,y and z are distances in x, y and z-direction for the current corner, respectively and
-     * \f$ r = \sqrt{x^2 +y^2 +z^2} \f$.
-     */
-    double CalcGravTerm(const double x, const double y, const double z)
-      {
-        //if the distance r between the measurement point and one of the border points is very small
-        //the log(...) expressions become undefined, so we shift the measurement point by a tiny amount
-        const double r = std::max(sqrt(x * x + y * y + z * z),
-            std::numeric_limits<double>::epsilon());
-        double rvalue = x * log(y + r) + y * log(x + r);
-        // atan2 takes care of small denominators
-        rvalue += z * atan2(z * r, x * y);
-
-        return rvalue;
-      }
-
-    /*! Calculate the geometric term for the gravitational potential of a rectangular prism at a point meas_{x,y,z}
-     *  The calculation is based on equation 4 in Li and Chouteau, Surveys in Geophysics, 19, 339-368, 1998
-     * Given the coordinates of the measurements (meas_x, meas_y and meas_z), the
-     * coordinates of the upper front left corner (ul_corner_x etc.), the size
-     * in the three directions (x_size, y_size and z_size) and the density, we calculate
-     * the geometric part caused by a prism with these parameters. All dimensions are in meters.
-     * If we multiply the result of this function with density
-     * in \f$ g/cm^3 \f$ we get the acceleration in \f$m/s^2\f$.
-     *
-     * This equation works as long as the measurement point is not on one of the corners or edges of the box.
-     * @param meas_x x-coordinate of the measurement in m
-     * @param meas_y y-coordinate of the measurement in m
-     * @param meas_z z-coordinate of the measurement in m
-     * @param ul_corner_x x-coordinate of the upper left front corner of the density element
-     * @param ul_corner_y y-coordinate of the upper left front corner of the density element
-     * @param ul_corner_z z-coordinate of the upper left front corner of the density element
-     * @param x_size size of the prism in x-direction in m
-     * @param y_size size of the prism in y-direction in m
-     * @param z_size size of the prism in z-direction in m
-     * @return Gravitational acceleration in m/s^2
-     */
-    double CalcGravBoxTerm(const double meas_x, const double meas_y,
-        const double meas_z, const double ul_corner_x,
-        const double ul_corner_y, const double ul_corner_z,
-        const double x_size, const double y_size, const double z_size)
-      {
-        //we need 8 terms, one for each corner of the prism, they have varying signs
-        double returnvalue = -CalcGravTerm(meas_x - ul_corner_x, meas_y
-            - ul_corner_y, meas_z - ul_corner_z);
-        // one corner shifted -> positive sign
-        returnvalue += CalcGravTerm(meas_x - (ul_corner_x + x_size), meas_y
-            - ul_corner_y, meas_z - ul_corner_z);
-        returnvalue += CalcGravTerm(meas_x - ul_corner_x, meas_y - (ul_corner_y
-            + y_size), meas_z - ul_corner_z);
-        returnvalue += CalcGravTerm(meas_x - ul_corner_x, meas_y - ul_corner_y,
-            meas_z - (ul_corner_z + z_size));
-        // two corners shifted -> negative sign
-        returnvalue -= CalcGravTerm(meas_x - (ul_corner_x + x_size), meas_y
-            - (ul_corner_y + y_size), meas_z - ul_corner_z);
-        returnvalue -= CalcGravTerm(meas_x - (ul_corner_x + x_size), meas_y
-            - ul_corner_y, meas_z - (ul_corner_z + z_size));
-        returnvalue -= CalcGravTerm(meas_x - ul_corner_x, meas_y - (ul_corner_y
-            + y_size), meas_z - (ul_corner_z + z_size));
-        //three corners shifted -> positive sign
-        returnvalue += CalcGravTerm(meas_x - (ul_corner_x + x_size), meas_y
-            - (ul_corner_y + y_size), meas_z - (ul_corner_z + z_size));
-        // we multiply the geometric term by the gravitational constant and the density
-        return -returnvalue * Grav_const;
-      }
-
-    /*! Calculate the geometric term of the xx-element of the second order derivative tensor, we use the same
-     * function with permutated parameters to calculate the other two diagonal elements.
-     * The description of the parameters is for the Uxx calculation.
-     * @param meas_x x-coordinate of the measurement in m
-     * @param meas_y y-coordinate of the measurement in m
-     * @param meas_z z-coordinate of the measurement in m
-     * @param ul_corner_x x-coordinate of the upper left front corner of the density element
-     * @param ul_corner_y y-coordinate of the upper left front corner of the density element
-     * @param ul_corner_z z-coordinate of the upper left front corner of the density element
-     * @param x_size size of the prism in x-direction in m
-     * @param y_size size of the prism in y-direction in m
-     * @param z_size size of the prism in z-direction in m
-     * @return The Uxx element of the FTG tensor
-     */
-    double CalcUxxTerm(const double meas_x, const double meas_y,
-        const double meas_z, const double ul_corner_x,
-        const double ul_corner_y, const double ul_corner_z,
-        const double x_size, const double y_size, const double z_size)
-      {
-        //we need 8 terms, one for each corner of the prism, they have varying signs
-        double returnvalue = -CalcFTGDiagonalTerm(meas_y - ul_corner_y, meas_z
-            - ul_corner_z, meas_x - ul_corner_x);
-        // one corner shifted -> positive sign
-        returnvalue += CalcFTGDiagonalTerm(meas_y - ul_corner_y, meas_z
-            - ul_corner_z, meas_x - (ul_corner_x + x_size));
-        returnvalue += CalcFTGDiagonalTerm(meas_y - (ul_corner_y + y_size),
-            meas_z - ul_corner_z, meas_x - ul_corner_x);
-        returnvalue += CalcFTGDiagonalTerm(meas_y - ul_corner_y, meas_z
-            - (ul_corner_z + z_size), meas_x - ul_corner_x);
-        // two corners shifted -> negative sign
-        returnvalue -= CalcFTGDiagonalTerm(meas_y - (ul_corner_y + y_size),
-            meas_z - ul_corner_z, meas_x - (ul_corner_x + x_size));
-        returnvalue -= CalcFTGDiagonalTerm(meas_y - ul_corner_y, meas_z
-            - (ul_corner_z + z_size), meas_x - (ul_corner_x + x_size));
-        returnvalue -= CalcFTGDiagonalTerm(meas_y - (ul_corner_y + y_size),
-            meas_z - (ul_corner_z + z_size), meas_x - ul_corner_x);
-        //three corners shifted -> positive sign
-        returnvalue += CalcFTGDiagonalTerm(meas_y - (ul_corner_y + y_size),
-            meas_z - (ul_corner_z + z_size), meas_x - (ul_corner_x + x_size));
-
-        return returnvalue * Grav_const;
-      }
-
-    /*! Calculate the geometric term of the xy-element of the second order derivative tensor, we use the same
-     * function with permutated parameters to calculate the other off-diagonal elements.
-     * The description of the parameters is for the Uxy calculation.
-     * @param meas_x x-coordinate of the measurement in m
-     * @param meas_y y-coordinate of the measurement in m
-     * @param meas_z z-coordinate of the measurement in m
-     * @param ul_corner_x x-coordinate of the upper left front corner of the density element
-     * @param ul_corner_y y-coordinate of the upper left front corner of the density element
-     * @param ul_corner_z z-coordinate of the upper left front corner of the density element
-     * @param x_size size of the prism in x-direction in m
-     * @param y_size size of the prism in y-direction in m
-     * @param z_size size of the prism in z-direction in m
-     * @return The Uxx element of the FTG tensor
-     */
-    double CalcUxyTerm(const double meas_x, const double meas_y,
-        const double meas_z, const double ul_corner_x,
-        const double ul_corner_y, const double ul_corner_z,
-        const double x_size, const double y_size, const double z_size)
-      {
-        //we need 8 terms, one for each corner of the prism, they have varying signs
-        double returnvalue = -CalcFTGOffDiagonalTerm(meas_z - ul_corner_z,
-            meas_y - ul_corner_y, meas_z - ul_corner_z, meas_x - ul_corner_x);
-        // one corner shifted -> positive sign
-        returnvalue += CalcFTGOffDiagonalTerm(meas_z - ul_corner_z, meas_y
-            - ul_corner_y, meas_z - ul_corner_z, meas_x
-            - (ul_corner_x + x_size));
-        returnvalue += CalcFTGOffDiagonalTerm(meas_z - ul_corner_z, meas_y
-            - (ul_corner_y + y_size), meas_z - ul_corner_z, meas_x
-            - ul_corner_x);
-        returnvalue += CalcFTGOffDiagonalTerm(meas_z - (ul_corner_z + z_size),
-            meas_y - ul_corner_y, meas_z - (ul_corner_z + z_size), meas_x
-                - ul_corner_x);
-        // two corners shifted -> negative sign
-        returnvalue -= CalcFTGOffDiagonalTerm(meas_z - ul_corner_z, meas_y
-            - (ul_corner_y + y_size), meas_z - ul_corner_z, meas_x
-            - (ul_corner_x + x_size));
-        returnvalue -= CalcFTGOffDiagonalTerm(meas_z - (ul_corner_z + z_size),
-            meas_y - ul_corner_y, meas_z - (ul_corner_z + z_size), meas_x
-                - (ul_corner_x + x_size));
-        returnvalue -= CalcFTGOffDiagonalTerm(meas_z - (ul_corner_z + z_size),
-            meas_y - (ul_corner_y + y_size), meas_z - (ul_corner_z + z_size),
-            meas_x - ul_corner_x);
-        //three corners shifted -> positive sign
-        returnvalue += CalcFTGOffDiagonalTerm(meas_z - (ul_corner_z + z_size),
-            meas_y - (ul_corner_y + y_size), meas_z - (ul_corner_z + z_size),
-            meas_x - (ul_corner_x + x_size));
-
-        return -returnvalue * Grav_const;
-      }
-
-    /*! Calculate FTG tensor for a rectangular prism
-     * @param meas_x x-coordinate of the measurement in m
-     * @param meas_y y-coordinate of the measurement in m
-     * @param meas_z z-coordinate of the measurement in m
-     * @param ul_corner_x x-coordinate of the upper left front corner of the density element
-     * @param ul_corner_y y-coordinate of the upper left front corner of the density element
-     * @param ul_corner_z z-coordinate of the upper left front corner of the density element
-     * @param x_size size of the prism in x-direction in m
-     * @param y_size size of the prism in y-direction in m
-     * @param z_size size of the prism in z-direction in m
-     * @return The tensor response of the prism at the measurement site
-     */
-    GravimetryMatrix CalcTensorBoxTerm(const double meas_x,
-        const double meas_y, const double meas_z, const double ul_corner_x,
-        const double ul_corner_y, const double ul_corner_z,
-        const double x_size, const double y_size, const double z_size)
-      {
-        GravimetryMatrix returnvalue(3, 3);
-        //Calculate the first diagonal element
-        returnvalue(0, 0) = CalcUxxTerm(meas_x, meas_y, meas_z, ul_corner_x,
-            ul_corner_y, ul_corner_z, x_size, y_size, z_size);
-        // The other two diagonal elements can be calculated from permutations of the above equation
-        returnvalue(1, 1) = CalcUxxTerm(meas_y, meas_x, meas_z, ul_corner_y,
-            ul_corner_x, ul_corner_z, y_size, x_size, z_size);
-        returnvalue(2, 2) = CalcUxxTerm(meas_z, meas_x, meas_y, ul_corner_z,
-            ul_corner_x, ul_corner_y, z_size, x_size, y_size);
-        //Calculate the first off-diagonal element
-        returnvalue(0, 1) = CalcUxyTerm(meas_x, meas_y, meas_z, ul_corner_x,
-            ul_corner_y, ul_corner_z, x_size, y_size, z_size);
-        //the gravimetry matrix is symmetric
-        returnvalue(1, 0) = returnvalue(0, 1);
-        //The other off-diagonal can be calculated from permutations of the above equation
-        returnvalue(0, 2) = CalcUxyTerm(meas_x, meas_z, meas_y, ul_corner_x,
-            ul_corner_z, ul_corner_y, x_size, z_size, y_size);
-        returnvalue(2, 0) = returnvalue(0, 2);
-        returnvalue(1, 2) = CalcUxyTerm(meas_z, meas_y, meas_x, ul_corner_z,
-            ul_corner_y, ul_corner_x, z_size, y_size, x_size);
-        returnvalue(2, 1) = returnvalue(1, 2);
-
-        return returnvalue;
-      }
-
-    /*! Calculate the effect of a semi-infinite sheet with constant density
-     * @param hor_dist Horizontal distance of the sheet from the measurement site in m
-     * @param ver_dist Vertical distance of the sheet from the measurement site in m
-     * @param thick Thickness of the sheet in m
-     * @param density Density of the sheet in g/cm^3
-     * @return Gravitational acceleration in m/s^2
-     */
-    double CalcGravSemiInfSheet(const double hor_dist, const double ver_dist,
-        const double thick, const double density)
-      {
-        return (2.0 * Grav_const * density * thick) * ((M_PI / 2.0) - atan2(
-            hor_dist, ver_dist));
-      }
-    /*! The terms \f$ U_{xx}, U_{yy} \f$ and \f$ U_{zz} \f$  of the gravimetric matrix
-     * all are sums of terms of the form \f$ atan \frac{a *b}{c *r } \f$
-     */
-    double CalcFTGDiagonalTerm(const double a, const double b, const double c)
-      {
-        return atan2(a * b, c * sqrt(a * a + b * b + c * c));
-        // this is an alternative formula to check the correctness
-        //        const double r = sqrt(a*a+b*b+c*c);
-        //
-        //        double returnvalue = atan2(a * b, c *r);
-        //        returnvalue += a*b*c*r/(c*c*r*r + a*a*b*b);
-        //        returnvalue += pow(c,3) * b * a/(c*c*pow(r,3)+b*b*a*a*r);
-        //        returnvalue += a*c/(b*r+r*r) + b*c/(a*r+r*r);
-        //        return returnvalue;
-      }
-    /*! The terms \f$ U_{xy}, U_{xz} \f$ and \f$ U_{yz} \f$  of the gravimetric matrix
-     * all are sums of terms of the form \f$ \log (x +r) \f$
-     */
-    double CalcFTGOffDiagonalTerm(const double value, const double x,
-        const double y, const double z)
-      {
-        //if the logarithmic term becomes really small we cheat
-        return log(std::max(value + sqrt(x * x + y * y + z * z),
-            std::numeric_limits<double>::epsilon()));
-      }
-
-    /*! Calculate the gravitational effect of the 3D model at a single measurement site. The way we calculate
-     * the sensitivity matrix at the moment, the model cannot contain densities of 0 if we
-     * store the sensitivity matrix
-     * @param x_meas x-coordinate of the measurement site in m
-     * @param y_meas y-coordinate of the measurement site in m
-     * @param z_meas z-coordinate of the measurement site in m
-     * @param meas_index index of the measurement site among all measurements, this is only for storing sensitivities
-     * @return The gravitational acceleration in m/s^2 due to the model at this site
-     */
-    double ThreeDGravityModel::CalcScalarMeas(const double x_meas,
-        const double y_meas, const double z_meas, const size_t meas_index)
-      {
-        //get the dimensions of the model
-        const size_t xsize = GetData().shape()[0];
-        const size_t ysize = GetData().shape()[1];
-        const size_t zsize = GetData().shape()[2];
-
-        double returnvalue = 0.0;
-        double currvalue = 0.0;
-        //creating constant arrays instead of having function calls in the loop below
-        //greatly speeds up the parallel section
-        //also Get?Coordinates are not thread-safe
-        const t3DModelDim XCoord(GetXCoordinates());
-        const t3DModelDim YCoord(GetYCoordinates());
-        const t3DModelDim ZCoord(GetZCoordinates());
-        const t3DModelDim XSizes(GetXCellSizes());
-        const t3DModelDim YSizes(GetYCellSizes());
-        const t3DModelDim ZSizes(GetZCellSizes());
-
-        //sum up the contributions of all prisms in an openmp parallel loop
-#pragma omp parallel default(shared) private(currvalue) reduction(+:returnvalue)
-          {
-            //instead of nested loops over each dimension, we have one big
-            //loop over all elements, this allows for a nearly infinite number
-            //of parallel processors
-#pragma omp for
-            for (int offset = 0; offset < xsize * ysize * zsize; ++offset)
-              {
-
-                //we store the current value for possible sensitivity calculations
-                //currvalue contains the geometric term, i.e. the sensitivity
-                int xindex, yindex, zindex;
-                OffsetToIndex(offset, xindex, yindex, zindex);
-                currvalue = CalcGravBoxTerm(x_meas, y_meas, z_meas,
-                    XCoord[xindex], YCoord[yindex], ZCoord[zindex],
-                    XSizes[xindex], YSizes[yindex], ZSizes[zindex]);
-                returnvalue += currvalue
-                    * GetDensities()[xindex][yindex][zindex];
-                // if we want to store the sensitivity matrix
-                if (StoreScalarSensitivities)
-                  {
-                    ScalarSensitivities(meas_index, offset) = currvalue;
-                  }
-              }
-
-          }//end of parallel section
-        return returnvalue;
-      }
-
-    GravimetryMatrix ThreeDGravityModel::CalcTensorMeas(const double x_meas,
-        const double y_meas, const double z_meas, const size_t meas_index)
-      {
-        const size_t xsize = GetData().shape()[0];
-        const size_t ysize = GetData().shape()[1];
-        const size_t zsize = GetData().shape()[2];
-
-        GravimetryMatrix returnvalue(3, 3);
-        std::fill_n(returnvalue.data().begin(), 9, 0.0);
-        GravimetryMatrix currvalue(3, 3);
-
-        const t3DModelDim XCoord(GetXCoordinates());
-        const t3DModelDim YCoord(GetYCoordinates());
-        const t3DModelDim ZCoord(GetZCoordinates());
-        //we cannot add up a user defined quantity in parallel
-        //so break up the tensor into its component with different variables
-        //and assign the results after the parallel loop
-        double U0 = 0.0, U1 = 0.0, U2 = 0.0, U3 = 0.0, U4 = 0.0, U5 = 0.0, U6 =
-            0.0, U7 = 0.0, U8 = 0.0;
-        //sum up the contributions of all prisms
-#pragma omp parallel default(shared) private(currvalue) reduction(+:U0,U1,U2,U3,U4,U5,U6,U7,U8)
-          {
-            //instead of nested loops over each dimension, we have one big
-            //loop over all elements, this allows for a nearly infinite number
-            //of parallel processors
-#pragma omp for
-            for (int offset = 0; offset < xsize * ysize * zsize; ++offset)
-              {
-                int xindex, yindex, zindex;
-                //we still need the indices for each dimension
-                //so we have to convert our loop variable
-                OffsetToIndex(offset, xindex, yindex, zindex);
-                //currvalue contains only the geometric term
-                currvalue = CalcTensorBoxTerm(x_meas, y_meas, z_meas,
-                    XCoord[xindex], YCoord[yindex], ZCoord[zindex],
-                    GetXCellSizes()[xindex], GetYCellSizes()[yindex],
-                    GetZCellSizes()[zindex]);
-                //to we have to multiply each element by the density
-                const double Density = GetDensities()[xindex][yindex][zindex];
-                U0 += currvalue(0, 0) * Density;
-                U1 += currvalue(0, 1) * Density;
-                U2 += currvalue(0, 2) * Density;
-                U3 += currvalue(1, 0) * Density;
-                U4 += currvalue(1, 1) * Density;
-                U5 += currvalue(1, 2) * Density;
-                U6 += currvalue(2, 0) * Density;
-                U7 += currvalue(2, 1) * Density;
-                U8 += currvalue(2, 2) * Density;
-
-                //if we want to store sensitivities for tensor measurements
-                if (StoreTensorSensitivities)
-                  {
-                    boost::numeric::ublas::matrix_column<rmat> column(
-                        TensorSensitivities, offset); // extract the right column of the sensitivity matrix
-                    std::copy(currvalue.data().begin(), currvalue.data().end(), // assign the elements to the right part of the column
-                        column.begin() + meas_index * 9);
-                  }
-              }
-          }//end of parallel region
-        returnvalue(0, 0) = U0;
-        returnvalue(0, 1) = U1;
-        returnvalue(0, 2) = U2;
-        returnvalue(1, 0) = U3;
-        returnvalue(1, 1) = U4;
-        returnvalue(1, 2) = U5;
-        returnvalue(2, 0) = U6;
-        returnvalue(2, 1) = U7;
-        returnvalue(2, 2) = U8;
-        return returnvalue;
-      }
-
-    /*!  Calculate the contribution of a layered background to a scalar gravity measurement.
-     * @param xmeas The x-coordinate of the measurement point in m
-     * @param ymeas The y-coordinate of the measurement point in m
-     * @param zmeas The z-coordinate of the measurement point in m
-     * @param xwidth The total width of the discretized model area in x-direction in m
-     * @param ywidth The total width of the discretized model area in y-direction in m
-     * @param zwidth The total width of the discretized model area in z-direction in m
-     * @param meas_index The index of the measurement
-     * @return The gravitational acceleration in m/s^2 due to the background
-     */
-    double ThreeDGravityModel::CalcBackground(const double xmeas,
-        const double ymeas, const double zmeas, const double xwidth,
-        const double ywidth, const double zwidth, const size_t meas_index)
-      {
-        //make sure we have thicknesses and densities for all layers
-        assert(bg_densities.size() == bg_thicknesses.size());
-        const size_t nbglayers = bg_densities.size();
-        double result = 0.0;
-        double currtop = 0.0;
-        double currvalue = 0.0;
-        double currbottom = 0.0;
-        const size_t modelsize = GetData().shape()[0] * GetData().shape()[1]
-            * GetData().shape()[2];
-        // for all layers of the background
-        for (size_t j = 0; j < nbglayers; ++j)
-          {
-            // first assume an infinite sheet for the current layer
-            currvalue = CalcInfSheetTerm(bg_thicknesses[j]);
-            currbottom = currtop + bg_thicknesses[j];
-            // and then subtract the value for the modelling domain, as this is already calculated in the discretized routine
-            // if the background layer complete coincides with the discretized area
-            if (currtop < zwidth && (currbottom <= zwidth))
-
-              {
-                currvalue -= CalcGravBoxTerm(xmeas, ymeas, zmeas, 0.0, 0.0,
-                    currtop, xwidth, ywidth, bg_thicknesses[j]);
-              }
-            //if some of the background coincides and some is below
-            if (currtop < zwidth && currbottom > zwidth)
-
-              {
-                currvalue -= CalcGravBoxTerm(xmeas, ymeas, zmeas, 0.0, 0.0,
-                    currtop, xwidth, ywidth, (zwidth - currtop));
-              }
-            //we also store the sensitivities for the background
-            if (StoreScalarSensitivities)
-              {
-                ScalarSensitivities(meas_index, modelsize + j) = currvalue;
-              }
-            result += currvalue * bg_densities[j];
-            currtop += bg_thicknesses[j];
-          }
-        return result;
-      }
-
-    /*!  Calculate the contribution of a layered background to a tensor gravity measurement.
-     * @param x_meas The x-coordinate of the measurement point in m
-     * @param y_meas The y-coordinate of the measurement point in m
-     * @param z_meas The z-coordinate of the measurement point in m
-     * @param xwidth The total width of the discretized model area in x-direction in m
-     * @param ywidth The total width of the discretized model area in y-direction in m
-     * @param zwidth The total width of the discretized model area in z-direction in m
-     * @param meas_index The index of the measurement
-     * @return The gravitational tensor due to the background
-     */
-    GravimetryMatrix ThreeDGravityModel::AdjustTensorBackground(
-        const double x_meas, const double y_meas, const double z_meas,
-        const double xwidth, const double ywidth, const double zwidth,
-        const size_t meas_index)
-      {
-        //make sure we have thicknesses and densities for all layers
-        assert(bg_densities.size() == bg_thicknesses.size());
-        const size_t nbglayers = bg_densities.size();
-        GravimetryMatrix result(3, 3);
-        GravimetryMatrix currvalue(3, 3);
-        std::fill_n(result.data().begin(), 9, 0.0);
-        double currtop = 0.0;
-        double currbottom = 0.0;
-        const size_t modelsize = GetData().shape()[0] * GetData().shape()[1]
-            * GetData().shape()[2];
-        // for all layers of the background
-        for (size_t j = 0; j < nbglayers; ++j)
-          {
-            currbottom = currtop + bg_thicknesses[j];
-            if (currtop < zwidth && (currbottom <= zwidth)) // if the background layer complete coincides with the discretized area
-
-              {
-                // We only have to substract the effect of the gridding box, the effect of an inifite sheet is zero
-                currvalue = -CalcTensorBoxTerm(x_meas, y_meas, z_meas, 0.0,
-                    0.0, currtop, xwidth, ywidth, bg_thicknesses[j]);
-
-              }
-            if (currtop < zwidth && currbottom > zwidth) //if some of the background coincides and some is below
-
-              {
-                currvalue = -CalcTensorBoxTerm(x_meas, y_meas, z_meas, 0.0,
-                    0.0, currtop, xwidth, ywidth, (zwidth - currtop));
-              }
-            if (StoreTensorSensitivities)
-              {
-                boost::numeric::ublas::matrix_column<rmat> column(
-                    TensorSensitivities, modelsize + j); // extract the right column of the sensitivity matrix
-                std::copy(currvalue.data().begin(), currvalue.data().end(), // assign the elements to the right part of the column
-                    column.begin() + meas_index * 9);
-              }
-            result += currvalue * bg_densities[j];
-            currtop += bg_thicknesses[j];
-          }
-        return result;
-      }
 
     ThreeDGravityModel::tScalarMeasVec ThreeDGravityModel::CalcGravity()
       {
@@ -545,7 +60,7 @@ namespace jiba
           }
         // we only get here if we didn't store the sensitivities previously
         //check if we want to store sensitivities and allocate memory
-        if (StoreScalarSensitivities && !HaveCalculatedScalarSensitivities)
+        //if (StoreScalarSensitivities && !HaveCalculatedScalarSensitivities)
           {
             ScalarSensitivities.resize(MeasPosX.size(), xsize * ysize * zsize
                 + bg_densities.size());
@@ -562,10 +77,19 @@ namespace jiba
         // for all measurement points add the respones of the discretized part and the 1D background
         for (size_t i = 0; i < nmeas; ++i)
           {
-            ScalarResults[i] = CalcScalarMeas(MeasPosX[i], MeasPosY[i],
-                MeasPosZ[i], i);
-            ScalarResults[i] += CalcBackground(MeasPosX[i], MeasPosY[i],
-                MeasPosZ[i], modelxwidth, modelywidth, modelzwidth, i);
+            ublas::matrix_range<rmat> mr(ScalarSensitivities, ublas::range(i, i
+                + 1), ublas::range(0, ScalarSensitivities.size2()));
+            rvec result(1);
+
+            result = ScalarOMPGravityImp().CalcGridded(MeasPosX[i],
+                MeasPosY[i], MeasPosZ[i], *this, mr);
+
+            //adjust for the effects of finite extents of the grid
+            result += ScalarOMPGravityImp().CalcBackground(MeasPosX[i],
+                MeasPosY[i], MeasPosZ[i], modelxwidth, modelywidth,
+                modelzwidth, *this, mr);
+
+            ScalarResults[i] = result(0);
 
           }
         // if we store the sensitivity matrix
@@ -622,7 +146,7 @@ namespace jiba
             return TensorResults;
           }
         //we only get here if we didn't use the stored sensitivities
-        if (StoreTensorSensitivities && !HaveCalculatedTensorSensitivities)
+        //if (StoreTensorSensitivities && !HaveCalculatedTensorSensitivities)
           {
             TensorSensitivities.resize(nmeas * 9, xsize * ysize * zsize
                 + bg_densities.size()); // we have 9 tensor elements for each measurement points
@@ -630,12 +154,20 @@ namespace jiba
         // for all measurement points add the responses of the discretized part and the 1D background
         for (size_t i = 0; i < nmeas; ++i)
           {
-            TensorResults[i] = CalcTensorMeas(MeasPosX[i], MeasPosY[i],
-                MeasPosZ[i], i);
+            ublas::matrix_range<rmat>
+                mr(TensorSensitivities, ublas::range(i * 9, (i + 1) * 9),
+                    ublas::range(0, TensorSensitivities.size2()));
+            rvec result(9);
+
+            result = TensorOMPGravityImp().CalcGridded(MeasPosX[i],
+                MeasPosY[i], MeasPosZ[i], *this, mr);
+
             //adjust for the effects of finite extents of the grid
-            TensorResults[i] += AdjustTensorBackground(MeasPosX[i],
+            result += TensorOMPGravityImp().CalcBackground(MeasPosX[i],
                 MeasPosY[i], MeasPosZ[i], modelxwidth, modelywidth,
-                modelzwidth, i);
+                modelzwidth, *this, mr);
+
+            copy(result.begin(), result.end(), TensorResults[i].data().begin());
 
           }
         if (StoreTensorSensitivities)
@@ -684,16 +216,16 @@ namespace jiba
             std::generate_n(back_inserter(layerindex), bg_thicknesses.size(),
                 IntSequence(0));
             BackgroundVar->put(&layerindex[0], layerindex.size());
-            BackgroundVar->add_att("long_name","Layer Index");
+            BackgroundVar->add_att("long_name", "Layer Index");
             //now we can write the actual parameters for the layers
             NcVar *bgDensVar = DataFile.add_var("bg_densities", ncDouble,
                 BackgroundDim);
-            bgDensVar->add_att("long_name","Background Densities");
-            bgDensVar->add_att("units",DensityUnit.c_str());
+            bgDensVar->add_att("long_name", "Background Densities");
+            bgDensVar->add_att("units", DensityUnit.c_str());
             NcVar *bgThickVar = DataFile.add_var("bg_thicknesses", ncDouble,
                 BackgroundDim);
-            bgThickVar->add_att("long_name","Background Thicknesses");
-            bgThickVar->add_att("units","m");
+            bgThickVar->add_att("long_name", "Background Thicknesses");
+            bgThickVar->add_att("units", "m");
             bgDensVar->put(&bg_densities[0], bg_densities.size());
             bgThickVar->put(&bg_thicknesses[0], bg_thicknesses.size());
           }

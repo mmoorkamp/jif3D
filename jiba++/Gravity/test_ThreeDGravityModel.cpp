@@ -16,6 +16,7 @@
 #include <time.h>
 #include <fstream>
 #include "ThreeDGravityModel.h"
+#include "BasicGravElements.h"
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/assign/std/vector.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>

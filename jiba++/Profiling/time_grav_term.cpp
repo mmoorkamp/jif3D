@@ -4,7 +4,8 @@
  *  Created on: Sep 5, 2008
  *      Author: mmoorkamp
  */
-#include "ThreeDGravityModel.h"
+#include "../Gravity/ThreeDGravityModel.h"
+#include "../Gravity/BasicGravElements.h"
 #include <iostream>
 #include <boost/date_time/posix_time/posix_time.hpp>
 /* Compute gravity effect of a single model element block.
