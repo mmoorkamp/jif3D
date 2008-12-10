@@ -26,6 +26,8 @@
 #include <boost/numeric/ublas/lu.hpp>
 #include <complex>
 
+namespace ublas = boost::numeric::ublas;
+
 namespace jiba
   {
     //! A matrix with complex entries
