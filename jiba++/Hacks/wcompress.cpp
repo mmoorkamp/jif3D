@@ -176,12 +176,12 @@ int main(int argc, char *argv[])
       {
         jiba::rmat Sens(xsize * ysize * zsize + nbglayers, 1);
         jiba::rvec BackResult(1);
-        ublas::matrix_range<jiba::rmat> mr(Sens,
-                        ublas::range(0, Sens.size1()), ublas::range(0, Sens.size2()));
+        jiba::rmat dummy(0,0);
+
         BackResult = jiba::ScalarOMPGravityImp().CalcBackground(
             GravForward.GetMeasPosX()[i], GravForward.GetMeasPosY()[i],
             GravForward.GetMeasPosZ()[i], modelxwidth, modelywidth,
-            modelzwidth, GravForward, mr);
+            modelzwidth, GravForward, dummy);
         SparseResult(i) += BackResult(0);
         std::cout << FullResult.at(i) << " " << SparseResult(i)
             << "Rel. Error: " << (FullResult.at(i) - SparseResult(i))
