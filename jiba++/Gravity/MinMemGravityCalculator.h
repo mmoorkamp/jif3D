@@ -17,15 +17,12 @@ namespace jiba
     class MinMemGravityCalculator: public jiba::ThreeDGravityCalculator
       {
     public:
-<<<<<<< .mine
+
       virtual rvec Calculate(const ThreeDGravityModel &Model);
       MinMemGravityCalculator(ThreeDGravityImplementation &TheImp);
-=======
-      virtual rvec Calculate(const ThreeDGravityModel &Model,
-          ThreeDGravityImplementation &Imp);
-      virtual void HandleSensitivities(){};
+
+      virtual void HandleSensitivities(const size_t measindex){};
       MinMemGravityCalculator();
->>>>>>> .r123
       virtual ~MinMemGravityCalculator();
       };
 

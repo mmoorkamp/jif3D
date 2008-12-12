@@ -56,7 +56,7 @@ namespace jiba
     	            currresult += CalcBackground(Model.GetMeasPosX()[i],
     	                Model.GetMeasPosY()[i], Model.GetMeasPosZ()[i], modelxwidth, modelywidth,
     	                modelzwidth, Model, Calculator.SetCurrentSensitivities());
-    	            Calculator.HandleSensitivities();
+    	            Calculator.HandleSensitivities(i);
     	            std::copy(currresult.begin(), currresult.end(), result.begin() + (i* GetDataPerMeasurement()));
 
     	          }
