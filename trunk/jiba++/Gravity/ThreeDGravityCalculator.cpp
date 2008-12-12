@@ -11,9 +11,9 @@
 namespace jiba
   {
 
-    ThreeDGravityCalculator::ThreeDGravityCalculator()
+    ThreeDGravityCalculator::ThreeDGravityCalculator(ThreeDGravityImplementation &TheImp):
+      Imp(TheImp)
       {
-        // TODO Auto-generated constructor stub
 
       }
 
