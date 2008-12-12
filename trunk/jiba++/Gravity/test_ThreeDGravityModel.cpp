@@ -389,7 +389,7 @@ jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension()
               float>::epsilon());
         }
       jiba::ScalarOMPGravityImp Implementation;
-      jiba::rvec NewResult(jiba::MinMemGravityCalculator().Calculate(GravityTest,Implementation));
+      jiba::rvec NewResult(jiba::MinMemGravityCalculator(Implementation).Calculate(GravityTest));
       for (size_t i = 0; i < nmeas; ++i)
         {
           BOOST_CHECK_CLOSE(scalarmeas1[i], NewResult[i], std::numeric_limits<
@@ -407,7 +407,7 @@ jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension()
       jiba::ThreeDGravityModel::tTensorMeasVec tensormeas(
           GravityTest.CalcTensorGravity());
       jiba::TensorOMPGravityImp TensorImp;
-      jiba::rvec newmeas(jiba::MinMemGravityCalculator().Calculate(GravityTest,TensorImp));
+      jiba::rvec newmeas(jiba::MinMemGravityCalculator(TensorImp).Calculate(GravityTest));
       for (size_t i = 0; i < nmeas; ++i)
         {
           // check that tensor is traceless
