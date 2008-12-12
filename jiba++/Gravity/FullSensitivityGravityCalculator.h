@@ -22,7 +22,7 @@ namespace jiba
       virtual rvec CalculateCachedResult(const ThreeDGravityModel &Model);
     public:
       virtual void HandleSensitivities(const size_t measindex);
-      FullSensitivityGravityCalculator(ThreeDGravityImplementation &TheImp);
+      FullSensitivityGravityCalculator(boost::shared_ptr<ThreeDGravityImplementation> TheImp);
       virtual ~FullSensitivityGravityCalculator();
       };
 

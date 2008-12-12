@@ -11,7 +11,7 @@
 namespace jiba
   {
 
-    MinMemGravityCalculator::MinMemGravityCalculator(ThreeDGravityImplementation &TheImp):
+    MinMemGravityCalculator::MinMemGravityCalculator(boost::shared_ptr<ThreeDGravityImplementation> TheImp):
       ThreeDGravityCalculator(TheImp)
       {
 
@@ -27,7 +27,7 @@ namespace jiba
     	SetCurrentSensitivities().resize(0,0);
         CheckModelConsistency(Model);
 
-        return Imp.Calculate(Model,*this);
+        return Imp->Calculate(Model,*this);
 
       }
 

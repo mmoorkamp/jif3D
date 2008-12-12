@@ -15,7 +15,7 @@ namespace jiba
 
     namespace atlas = boost::numeric::bindings::atlas;
     FullSensitivityGravityCalculator::FullSensitivityGravityCalculator(
-        ThreeDGravityImplementation &TheImp) :
+        boost::shared_ptr<ThreeDGravityImplementation> TheImp) :
       CachedGravityCalculator(TheImp)
       {
 
@@ -29,8 +29,8 @@ namespace jiba
     void FullSensitivityGravityCalculator::HandleSensitivities(
         const size_t measindex)
       {
-        const size_t startindex = measindex * Imp.GetDataPerMeasurement();
-        const size_t endindex = (measindex + 1) * Imp.GetDataPerMeasurement();
+        const size_t startindex = measindex * Imp.get()->GetDataPerMeasurement();
+        const size_t endindex = (measindex + 1) * Imp.get()->GetDataPerMeasurement();
         ublas::matrix_range<jiba::rmat> mr(Sensitivities, ublas::range(
             startindex, endindex), ublas::range(0, Sensitivities.size2()));
         mr = SetCurrentSensitivities();
@@ -42,16 +42,16 @@ namespace jiba
         const size_t nmeas = Model.GetMeasPosX().size();
         const size_t ngrid = Model.GetDensities().num_elements();
         const size_t nmod = ngrid + Model.GetBackgroundThicknesses().size();
-        Sensitivities.resize(nmeas * Imp.GetDataPerMeasurement(), nmod);
+        Sensitivities.resize(nmeas * Imp.get()->GetDataPerMeasurement(), nmod);
 
-        return Imp.Calculate(Model, *this);
+        return Imp.get()->Calculate(Model, *this);
       }
 
     rvec FullSensitivityGravityCalculator::FullSensitivityGravityCalculator::CalculateCachedResult(
         const ThreeDGravityModel &Model)
       {
         const size_t nmeas = Model.GetMeasPosX().size();
-        rvec result(nmeas * Imp.GetDataPerMeasurement());
+        rvec result(nmeas * Imp.get()->GetDataPerMeasurement());
         const size_t ngrid = Model.GetDensities().num_elements();
         const size_t nmod = ngrid + Model.GetBackgroundThicknesses().size();
 

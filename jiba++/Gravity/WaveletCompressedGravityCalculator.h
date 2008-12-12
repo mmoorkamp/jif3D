@@ -33,7 +33,7 @@ namespace jiba
     public:
       virtual void HandleSensitivities(const size_t measindex);
 
-      WaveletCompressedGravityCalculator(ThreeDGravityImplementation &TheImp);
+      WaveletCompressedGravityCalculator(boost::shared_ptr<ThreeDGravityImplementation> TheImp);
       virtual ~WaveletCompressedGravityCalculator();
       };
 
