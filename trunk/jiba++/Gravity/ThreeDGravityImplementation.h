@@ -17,6 +17,13 @@ namespace jiba
     class ThreeDGravityCalculator;
     class ThreeDGravityImplementation
       {
+    protected:
+      ThreeDGravityModel::t3DModelDim XCoord;
+      ThreeDGravityModel::t3DModelDim YCoord;
+      ThreeDGravityModel::t3DModelDim ZCoord;
+      ThreeDGravityModel::t3DModelDim XSizes;
+      ThreeDGravityModel::t3DModelDim YSizes;
+      ThreeDGravityModel::t3DModelDim ZSizes;
     public:
       virtual size_t GetDataPerMeasurement() = 0;
       //! Calculate the response of the 1D background

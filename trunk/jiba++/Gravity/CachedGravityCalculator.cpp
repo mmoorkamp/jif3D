@@ -12,7 +12,7 @@ namespace jiba
   {
 
     CachedGravityCalculator::CachedGravityCalculator(
-        ThreeDGravityImplementation &TheImp) :
+        boost::shared_ptr<ThreeDGravityImplementation> TheImp) :
       ThreeDGravityCalculator(TheImp), HaveCache(false)
       {
 
@@ -85,6 +85,7 @@ namespace jiba
           }
         //we only get here if we need to recalculate
         //we have to make sure the calculation finishes properly before we can guarantee the cache and return the result
+        SetCurrentSensitivities().resize(Imp.get()->GetDataPerMeasurement(),Model.GetDensities().num_elements()+Model.GetBackgroundDensities().size());
         rvec result = CalculateNewModel(Model);
         HaveCache = true;
 

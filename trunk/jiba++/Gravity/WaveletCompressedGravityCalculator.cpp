@@ -13,7 +13,7 @@ namespace jiba
   {
 
     WaveletCompressedGravityCalculator::WaveletCompressedGravityCalculator(
-        ThreeDGravityImplementation &TheImp) :
+        boost::shared_ptr<ThreeDGravityImplementation> TheImp) :
       CachedGravityCalculator(TheImp)
       {
 
@@ -38,9 +38,9 @@ namespace jiba
 
         boost::multi_array_types::size_type denssize[3];
 
-        denssize[0] = xsize;
+        denssize[0] = xsize + 1;
         denssize[1] = ysize;
-        denssize[2] = zsize + nbglayers;
+        denssize[2] = zsize;
         std::fill_n(transformsize, 3, 1.0);
         for (size_t i = 0; i < 3; ++i)
           {
@@ -48,16 +48,14 @@ namespace jiba
               {
                 transformsize[i] *= 2;
               }
-            std::cout << "Transformsize Dim: " << i << " Size: "
-                << transformsize[i] << std::endl;
           }
 
         CurrRow.resize(
             boost::extents[transformsize[0]][transformsize[1]][transformsize[2]]);
-        SparseSens.resize(nmeas * Imp.GetDataPerMeasurement(),
-            CurrRow.num_elements());
+        SparseSens.resize(nmeas * Imp.get()->GetDataPerMeasurement(),
+            CurrRow.num_elements(), false);
 
-        return Imp.Calculate(Model, *this);
+        return Imp->Calculate(Model, *this);
       }
 
     rvec WaveletCompressedGravityCalculator::CalculateCachedResult(
@@ -67,11 +65,13 @@ namespace jiba
         std::fill_n(CurrRow.origin(), CurrRow.num_elements(), 0.0);
         for (size_t j = 0; j < xsize; ++j)
           for (size_t k = 0; k < ysize; ++k)
-            for (size_t l = 0; l < zsize; ++l)
-              CurrRow[j][k][l] = Model.GetDensities()[j][k][l];
+            {
+              for (size_t l = 0; l < zsize; ++l)
+                CurrRow[j][k][l] = Model.GetDensities()[j][k][l];
+            }
 
-        for (size_t j = 0; j < nbglayers; ++j)
-          CurrRow[0][0][j] = Model.GetBackgroundDensities().at(j);
+        for (size_t l = 0; l < nbglayers; ++l)
+          CurrRow[xsize + 1][0][l] = Model.GetBackgroundDensities().at(l);
         jiba::WaveletTransform(CurrRow);
 
         jiba::rvec TransDens(CurrRow.num_elements());
@@ -82,22 +82,27 @@ namespace jiba
         jiba::rvec SparseResult(boost::numeric::ublas::prec_prod(SparseSens,
             TransDens));
         return SparseResult;
+
       }
 
     void WaveletCompressedGravityCalculator::HandleSensitivities(
         const size_t measindex)
       {
-        for (size_t i = 0; i < Imp.GetDataPerMeasurement(); ++i)
+        for (size_t i = 0; i < Imp->GetDataPerMeasurement(); ++i)
           {
             std::fill_n(CurrRow.origin(), CurrRow.num_elements(), 0.0);
             for (size_t j = 0; j < xsize; ++j)
               for (size_t k = 0; k < ysize; ++k)
-                for (size_t l = 0; l < zsize; ++l)
-                  CurrRow[j][k][l] = SetCurrentSensitivities()(i,j * (ysize
-                      * zsize) + k * zsize + l);
-            for (size_t j = 0; j < nbglayers; ++j)
-              CurrRow[0][0][j] = SetCurrentSensitivities()(i,xsize * ysize
-                  * zsize + j);
+                {
+                  for (size_t l = 0; l < zsize; ++l)
+                    CurrRow[j][k][l] = SetCurrentSensitivities()(i, j * (ysize
+                        * zsize) + k * zsize + l);
+
+                }
+
+            for (size_t l = 0; l < nbglayers; ++l)
+              CurrRow[xsize + 1][0][l] = SetCurrentSensitivities()(i, xsize
+                  * ysize * zsize + l);
             jiba::WaveletTransform(CurrRow);
             size_t currn = 0;
             double relthresh = 1e-1;
@@ -116,7 +121,8 @@ namespace jiba
                   {
                     if (fabs(*(CurrRow.origin() + j)) > absthresh)
                       {
-                        SparseSens(i*Imp.GetDataPerMeasurement(), j) = *(CurrRow.origin() + j);
+                        SparseSens(measindex + i * Imp.get()->GetDataPerMeasurement(),
+                            j) = *(CurrRow.origin() + j);
                         currn++;
                       }
                     else
@@ -125,9 +131,6 @@ namespace jiba
                       }
                   }
                 relthresh /= 2.0;
-                std::cout << "Measurement: " << i << " Threshold: "
-                    << relthresh << " Normratio: " << normdiscarded / normall
-                    << std::endl;
               }
           }
       }

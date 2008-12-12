@@ -388,13 +388,14 @@ jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension()
           BOOST_CHECK_CLOSE(scalarmeas1[i], scalarmeas2[i], std::numeric_limits<
               float>::epsilon());
         }
-      jiba::ScalarOMPGravityImp Implementation;
-      jiba::rvec NewResult(jiba::MinMemGravityCalculator(Implementation).Calculate(GravityTest));
+      jiba::MinMemGravityCalculator *Calculator = jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeScalar();
+      jiba::rvec NewResult(Calculator->Calculate(GravityTest));
       for (size_t i = 0; i < nmeas; ++i)
         {
           BOOST_CHECK_CLOSE(scalarmeas1[i], NewResult[i], std::numeric_limits<
               float>::epsilon());
         }
+      delete Calculator;
     }
 
   //check some general properties of the FTG tensor that hold for any measurement above the surface
@@ -406,8 +407,8 @@ jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension()
 
       jiba::ThreeDGravityModel::tTensorMeasVec tensormeas(
           GravityTest.CalcTensorGravity());
-      jiba::TensorOMPGravityImp TensorImp;
-      jiba::rvec newmeas(jiba::MinMemGravityCalculator(TensorImp).Calculate(GravityTest));
+      jiba::MinMemGravityCalculator *Calculator = jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeTensor();
+      jiba::rvec newmeas(Calculator->Calculate(GravityTest));
       for (size_t i = 0; i < nmeas; ++i)
         {
           // check that tensor is traceless
@@ -421,9 +422,9 @@ jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension()
           BOOST_CHECK_CLOSE(tensormeas[i](1, 2), tensormeas[i](2, 1),
               std::numeric_limits<float>::epsilon());
           BOOST_CHECK_CLOSE(tensormeas[i](0, 0), newmeas(i*9),
-                        std::numeric_limits<float>::epsilon());
+              std::numeric_limits<float>::epsilon());
           BOOST_CHECK_CLOSE(tensormeas[i](0, 1), newmeas(i*9+1),
-                                  std::numeric_limits<float>::epsilon());
+              std::numeric_limits<float>::epsilon());
         }
     }
 
@@ -623,89 +624,89 @@ jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension()
 
   //test the scalar forward interface for R
   //this needs the current svn of boost test, as boost test in 1.35.0 has problems with the system call
- /* BOOST_AUTO_TEST_CASE(R_scalar_interface_test)
-    {
-      //create a 3D Gravity object
-      jiba::ThreeDGravityModel GravityTest(false, false);
-      //create a random model and write the information into the R-script file
-      std::ofstream Rscript("scalar_test.R");
-      PrepareModelForR(GravityTest, Rscript);
-      //calculate our results
-      jiba::ThreeDGravityModel::tScalarMeasVec scalarmeas(
-          GravityTest.CalcGravity());
-      //finish the R script
-      //call the R interface function
-      Rscript
-      << " raw<-system.time(result<-gravforward(XSizes,YSizes,ZSizes,Densities,XMeasPos,YMeasPos,ZMeasPos))\n";
-      Rscript
-      << " cached<-system.time(result2<-gravforward(XSizes,YSizes,ZSizes,Densities,XMeasPos,YMeasPos,ZMeasPos))\n";
-      Rscript << " sink(\"scalar_output\")\n";
-      Rscript << " cat(result$GravAcceleration)\n";
-      Rscript << " sink(\"r_timing\")\n";
-      Rscript << " cat(raw)\n";
-      Rscript << " cat(cached)\n";
-      Rscript << " q()\n";
-      Rscript << std::flush;
-      //execute R with the script
-      system("R --vanilla --slave -f scalar_test.R");
-      //read in the output R has generated
-      std::ifstream routput("scalar_output");
-      std::vector<double> rvalues;
-      //this is simply an ascii file with a bunch of numbers
-      copy(std::istream_iterator<double>(routput), std::istream_iterator<double>(),
-          back_inserter(rvalues));
-      //first of all we should have values for each measurement
-      BOOST_CHECK_EQUAL(rvalues.size(), scalarmeas.size());
-      //and they should be equal, the tolerance is 0.01% as writing to the file truncates the numbers
-      for (size_t i = 0; i < scalarmeas.size(); ++i)
-        {
-          BOOST_CHECK_CLOSE(scalarmeas.at(i), rvalues.at(i), 0.01);
-        }
+  /* BOOST_AUTO_TEST_CASE(R_scalar_interface_test)
+   {
+   //create a 3D Gravity object
+   jiba::ThreeDGravityModel GravityTest(false, false);
+   //create a random model and write the information into the R-script file
+   std::ofstream Rscript("scalar_test.R");
+   PrepareModelForR(GravityTest, Rscript);
+   //calculate our results
+   jiba::ThreeDGravityModel::tScalarMeasVec scalarmeas(
+   GravityTest.CalcGravity());
+   //finish the R script
+   //call the R interface function
+   Rscript
+   << " raw<-system.time(result<-gravforward(XSizes,YSizes,ZSizes,Densities,XMeasPos,YMeasPos,ZMeasPos))\n";
+   Rscript
+   << " cached<-system.time(result2<-gravforward(XSizes,YSizes,ZSizes,Densities,XMeasPos,YMeasPos,ZMeasPos))\n";
+   Rscript << " sink(\"scalar_output\")\n";
+   Rscript << " cat(result$GravAcceleration)\n";
+   Rscript << " sink(\"r_timing\")\n";
+   Rscript << " cat(raw)\n";
+   Rscript << " cat(cached)\n";
+   Rscript << " q()\n";
+   Rscript << std::flush;
+   //execute R with the script
+   system("R --vanilla --slave -f scalar_test.R");
+   //read in the output R has generated
+   std::ifstream routput("scalar_output");
+   std::vector<double> rvalues;
+   //this is simply an ascii file with a bunch of numbers
+   copy(std::istream_iterator<double>(routput), std::istream_iterator<double>(),
+   back_inserter(rvalues));
+   //first of all we should have values for each measurement
+   BOOST_CHECK_EQUAL(rvalues.size(), scalarmeas.size());
+   //and they should be equal, the tolerance is 0.01% as writing to the file truncates the numbers
+   for (size_t i = 0; i < scalarmeas.size(); ++i)
+   {
+   BOOST_CHECK_CLOSE(scalarmeas.at(i), rvalues.at(i), 0.01);
+   }
 
-    }
-*/
+   }
+   */
   //test the tensor forward interface for R
   //this needs the current svn of boost test, as boost test in 1.35.0 has problems with the system call
-/*  BOOST_AUTO_TEST_CASE(R_tensor_interface_test)
-    {
-      jiba::ThreeDGravityModel GravityTest(false, false);
+  /*  BOOST_AUTO_TEST_CASE(R_tensor_interface_test)
+   {
+   jiba::ThreeDGravityModel GravityTest(false, false);
 
-      std::ofstream Rscript("tensor_test.R");
-      PrepareModelForR(GravityTest, Rscript);
-      jiba::ThreeDGravityModel::tTensorMeasVec tensormeas(
-          GravityTest.CalcTensorGravity());
-      Rscript
-      << " result<-gravtensorforward(XSizes,YSizes,ZSizes,Densities,XMeasPos,YMeasPos,ZMeasPos)\n";
-      Rscript << " sink(\"tensor_output\")\n";
-      Rscript << " cat(result$GravAcceleration)\n";
-      Rscript << " q()\n";
-      Rscript << std::flush;
-      //execute R with the script
-      system("R --vanilla --slave -f tensor_test.R");
-      //read in the output R has generated
-      std::ifstream routput("tensor_output");
-      std::vector<double> rvalues;
-      //this is simply an ascii file with a bunch of numbers
-      copy(std::istream_iterator<double>(routput), std::istream_iterator<double>(),
-          back_inserter(rvalues));
-      //first of all we should have values for each measurement
-      //tensormeas is a vector of matrices while rvalues is just a vector where 9 consecutive elements
-      //correspond to 1 FTG matrix
-      BOOST_CHECK_EQUAL(rvalues.size(), tensormeas.size() * 9);
-      //and they should be equal, the tolerance is 0.01% as writing to the file truncates the numbers
-      for (size_t i = 0; i < tensormeas.size(); ++i)
-        {
-          BOOST_CHECK_CLOSE(tensormeas.at(i)(0, 0), rvalues.at(i * 9), 0.01);
-          BOOST_CHECK_CLOSE(tensormeas.at(i)(0, 1), rvalues.at(i * 9 + 1), 0.01);
-          BOOST_CHECK_CLOSE(tensormeas.at(i)(0, 2), rvalues.at(i * 9 + 2), 0.01);
-          BOOST_CHECK_CLOSE(tensormeas.at(i)(1, 0), rvalues.at(i * 9 + 3), 0.01);
-          BOOST_CHECK_CLOSE(tensormeas.at(i)(1, 1), rvalues.at(i * 9 + 4), 0.01);
-          BOOST_CHECK_CLOSE(tensormeas.at(i)(1, 2), rvalues.at(i * 9 + 5), 0.01);
-          BOOST_CHECK_CLOSE(tensormeas.at(i)(2, 0), rvalues.at(i * 9 + 6), 0.01);
-          BOOST_CHECK_CLOSE(tensormeas.at(i)(2, 1), rvalues.at(i * 9 + 7), 0.01);
-          BOOST_CHECK_CLOSE(tensormeas.at(i)(2, 2), rvalues.at(i * 9 + 8), 0.01);
-        }
+   std::ofstream Rscript("tensor_test.R");
+   PrepareModelForR(GravityTest, Rscript);
+   jiba::ThreeDGravityModel::tTensorMeasVec tensormeas(
+   GravityTest.CalcTensorGravity());
+   Rscript
+   << " result<-gravtensorforward(XSizes,YSizes,ZSizes,Densities,XMeasPos,YMeasPos,ZMeasPos)\n";
+   Rscript << " sink(\"tensor_output\")\n";
+   Rscript << " cat(result$GravAcceleration)\n";
+   Rscript << " q()\n";
+   Rscript << std::flush;
+   //execute R with the script
+   system("R --vanilla --slave -f tensor_test.R");
+   //read in the output R has generated
+   std::ifstream routput("tensor_output");
+   std::vector<double> rvalues;
+   //this is simply an ascii file with a bunch of numbers
+   copy(std::istream_iterator<double>(routput), std::istream_iterator<double>(),
+   back_inserter(rvalues));
+   //first of all we should have values for each measurement
+   //tensormeas is a vector of matrices while rvalues is just a vector where 9 consecutive elements
+   //correspond to 1 FTG matrix
+   BOOST_CHECK_EQUAL(rvalues.size(), tensormeas.size() * 9);
+   //and they should be equal, the tolerance is 0.01% as writing to the file truncates the numbers
+   for (size_t i = 0; i < tensormeas.size(); ++i)
+   {
+   BOOST_CHECK_CLOSE(tensormeas.at(i)(0, 0), rvalues.at(i * 9), 0.01);
+   BOOST_CHECK_CLOSE(tensormeas.at(i)(0, 1), rvalues.at(i * 9 + 1), 0.01);
+   BOOST_CHECK_CLOSE(tensormeas.at(i)(0, 2), rvalues.at(i * 9 + 2), 0.01);
+   BOOST_CHECK_CLOSE(tensormeas.at(i)(1, 0), rvalues.at(i * 9 + 3), 0.01);
+   BOOST_CHECK_CLOSE(tensormeas.at(i)(1, 1), rvalues.at(i * 9 + 4), 0.01);
+   BOOST_CHECK_CLOSE(tensormeas.at(i)(1, 2), rvalues.at(i * 9 + 5), 0.01);
+   BOOST_CHECK_CLOSE(tensormeas.at(i)(2, 0), rvalues.at(i * 9 + 6), 0.01);
+   BOOST_CHECK_CLOSE(tensormeas.at(i)(2, 1), rvalues.at(i * 9 + 7), 0.01);
+   BOOST_CHECK_CLOSE(tensormeas.at(i)(2, 2), rvalues.at(i * 9 + 8), 0.01);
+   }
 
-    }
-    */
+   }
+   */
   BOOST_AUTO_TEST_SUITE_END()

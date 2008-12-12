@@ -29,7 +29,7 @@ namespace jiba
       virtual rvec CalculateCachedResult(const ThreeDGravityModel &Model) = 0;
     public:
       virtual rvec Calculate(const ThreeDGravityModel &Model);
-      CachedGravityCalculator(ThreeDGravityImplementation &TheImp);
+      CachedGravityCalculator(boost::shared_ptr<ThreeDGravityImplementation> TheImp);
       virtual ~CachedGravityCalculator();
       };
 

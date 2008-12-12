@@ -19,7 +19,7 @@ namespace jiba
     public:
 
       virtual rvec Calculate(const ThreeDGravityModel &Model);
-      MinMemGravityCalculator(ThreeDGravityImplementation &TheImp);
+      MinMemGravityCalculator(boost::shared_ptr<ThreeDGravityImplementation> TheImp);
 
       virtual void HandleSensitivities(const size_t measindex){};
       MinMemGravityCalculator();

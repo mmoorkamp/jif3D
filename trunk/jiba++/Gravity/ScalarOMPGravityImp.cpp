@@ -107,15 +107,7 @@ namespace jiba
             && (Sensitivities.size2() >= nmod);
         double returnvalue = 0.0;
         double currvalue = 0.0;
-        //creating constant arrays instead of having function calls in the loop below
-        //greatly speeds up the parallel section
-        //also Get?Coordinates are not thread-safe
-        const ThreeDGravityModel::t3DModelDim XCoord(Model.GetXCoordinates());
-        const ThreeDGravityModel::t3DModelDim YCoord(Model.GetYCoordinates());
-        const ThreeDGravityModel::t3DModelDim ZCoord(Model.GetZCoordinates());
-        const ThreeDGravityModel::t3DModelDim XSizes(Model.GetXCellSizes());
-        const ThreeDGravityModel::t3DModelDim YSizes(Model.GetYCellSizes());
-        const ThreeDGravityModel::t3DModelDim ZSizes(Model.GetZCellSizes());
+
 
         //sum up the contributions of all prisms in an openmp parallel loop
 #pragma omp parallel default(shared) private(currvalue) reduction(+:returnvalue)
