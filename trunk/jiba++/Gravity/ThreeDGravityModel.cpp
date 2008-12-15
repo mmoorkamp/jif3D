@@ -31,10 +31,7 @@ namespace jiba
      * necessary. However storing the sensitivities takes up a lot of memory.
      */
     ThreeDGravityModel::ThreeDGravityModel(const bool storescalar,
-        const bool storetensor) :
-      StoreScalarSensitivities(storescalar), StoreTensorSensitivities(
-          storetensor), HaveCalculatedScalarSensitivities(false),
-          HaveCalculatedTensorSensitivities(false)
+        const bool storetensor)
       {
       }
 
@@ -146,9 +143,9 @@ namespace jiba
         std::transform(ycoord.begin(), ycoord.end(), ycoord.begin(),
             boost::bind(std::minus<double>(), _1, *std::min_element(
                 ycoord.begin(), ycoord.end())));
-        const int nx = xcoord.size();
-        const int ny = ycoord.size();
-        const int nz = zcoord.size();
+        const size_t nx = xcoord.size();
+        const size_t ny = ycoord.size();
+        const size_t nz = zcoord.size();
         //check that the coordinate system and the densities are consistent
         if (nx * ny * nz != density.size())
           throw std::runtime_error(
@@ -166,7 +163,7 @@ namespace jiba
         std::adjacent_difference(zcoord.rbegin() + 1, zcoord.rend(),
             SetZCellSizes().begin());
         //we need z varying fastest, but it is x varying fastest
-        for (int i = 0; i < nvalues; ++i)
+        for (size_t i = 0; i < nvalues; ++i)
           {
             SetDensities()[i % nx][(i / nx) % ny][nz - 1 - ((i / (nx * ny))
                 % nz)] = density.at(i);
@@ -193,17 +190,6 @@ namespace jiba
         return SizeDim;
       }
 
-    void ThreeDGravityModel::SaveScalarMeasurements(const std::string filename)
-      {
-        SaveScalarGravityMeasurements(filename, ScalarResults, MeasPosX,
-            MeasPosY, MeasPosZ);
-      }
-
-    void ThreeDGravityModel::SaveTensorMeasurements(const std::string filename)
-      {
-        SaveTensorGravityMeasurements(filename, TensorResults, MeasPosX,
-            MeasPosY, MeasPosZ);
-      }
 
     void ThreeDGravityModel::PlotMeasAscii(const std::string &filename,
         tScalarMeasVec &Data) const
@@ -225,28 +211,6 @@ namespace jiba
             outfile << std::setw(15) << std::setprecision(5) << Data.at(i);
             outfile << std::endl;
           }
-      }
-
-    void ThreeDGravityModel::PlotScalarMeasurements(const std::string filename)
-      {
-        PlotMeasAscii(filename, ScalarResults);
-      }
-
-    void ThreeDGravityModel::PlotTensorMeasurements(
-        const std::string filename_root)
-      {
-        //at the moment we only write out the diagonal elements
-        tScalarMeasVec Uxx, Uyy, Uzz;
-        const size_t nmeas = TensorResults.size();
-        for (size_t i = 0; i < nmeas; ++i)
-          {
-            Uxx.push_back(TensorResults.at(i)(0, 0));
-            Uyy.push_back(TensorResults.at(i)(1, 1));
-            Uzz.push_back(TensorResults.at(i)(2, 2));
-          }
-        PlotMeasAscii(filename_root + ".uxx.plot", Uxx);
-        PlotMeasAscii(filename_root + ".uyy.plot", Uyy);
-        PlotMeasAscii(filename_root + ".uzz.plot", Uzz);
       }
 
     void ThreeDGravityModel::ReadMeasPosNetCDF(const std::string filename)

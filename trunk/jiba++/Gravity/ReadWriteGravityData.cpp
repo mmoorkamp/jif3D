@@ -28,8 +28,9 @@ namespace jiba
     static const std::string UzzName = "Uzz";
 
     //! Read one measurement position coordinate from a netcdf file
+    template<class VectorType>
     void ReadVec(NcFile &NetCDFFile, const std::string &MeasPosName,
-        ThreeDGravityModel::tMeasPosVec &Position)
+        VectorType &Position)
       {
         //create a netcdf dimension for the Station number
         NcDim *Dim = NetCDFFile.get_dim(StationNumberName.c_str());
@@ -37,7 +38,7 @@ namespace jiba
         const size_t nvalues = Dim->size();
 
         //allocate memory in the class variable
-        Position.assign(nvalues, 0.0);
+        Position.resize(nvalues);
         // create netcdf variable with the same name as the dimension
         NcVar *SizeVar = NetCDFFile.get_var(MeasPosName.c_str());
         //read coordinate values from netcdf file
@@ -45,18 +46,16 @@ namespace jiba
       }
     //! Read a component of an FTG matrix for all measurement positions
     void ReadMatComp(NcFile &NetCDFFile, const std::string &CompName,
-        ThreeDGravityModel::tTensorMeasVec &MatVec, const size_t n,
-        const size_t m)
+        rvec &MatVec, size_t n)
       {
         //read in the component from the netcdf file
-        ThreeDGravityModel::tScalarMeasVec tempdata(MatVec.size());
+        ThreeDGravityModel::tScalarMeasVec tempdata(MatVec.size()/9);
         ReadVec(NetCDFFile, CompName, tempdata);
-        //make sure we have a consistent setup
-        assert(tempdata.size() == MatVec.size());
         //copy to the right location in the matrix
         for (size_t i = 0; i < tempdata.size(); ++i)
-          MatVec.at(i)(n, m) = tempdata.at(i);
+          MatVec(i*9 +n) = tempdata.at(i);
       }
+
     //! Write a vectorial quantity to a netcdf file
     void WriteVec(NcFile &NetCDFFile, const std::string &MeasPosName,
         const ThreeDGravityModel::tMeasPosVec &Position, NcDim *Dimension, const std::string unit)
@@ -69,12 +68,12 @@ namespace jiba
       }
 
     void WriteMatComp(NcFile &NetCDFFile, const std::string &CompName,
-        const ThreeDGravityModel::tTensorMeasVec &MatVec, const size_t n,
-        const size_t m, NcDim *Dimension)
+        const rvec &MatVec, const size_t n,
+        NcDim *Dimension)
       {
-        ThreeDGravityModel::tScalarMeasVec tempdata(MatVec.size());
+        ThreeDGravityModel::tScalarMeasVec tempdata(MatVec.size()/9);
         for (size_t i = 0; i < tempdata.size(); ++i)
-          tempdata.at(i) = MatVec.at(i)(n, m);
+          tempdata.at(i) = MatVec(i+n);
         WriteVec(NetCDFFile, CompName, tempdata, Dimension,"1/s2");
       }
 
@@ -95,7 +94,7 @@ namespace jiba
       }
 
     void SaveScalarGravityMeasurements(const std::string &filename,
-        const ThreeDGravityModel::tScalarMeasVec &Data,
+        const jiba::rvec &Data,
         const ThreeDGravityModel::tMeasPosVec &PosX,
         const ThreeDGravityModel::tMeasPosVec &PosY,
         const ThreeDGravityModel::tMeasPosVec &PosZ)
@@ -131,7 +130,7 @@ namespace jiba
       }
 
     void ReadScalarGravityMeasurements(const std::string &filename,
-        ThreeDGravityModel::tScalarMeasVec &Data,
+        jiba::rvec &Data,
         ThreeDGravityModel::tMeasPosVec &PosX,
         ThreeDGravityModel::tMeasPosVec &PosY,
         ThreeDGravityModel::tMeasPosVec &PosZ)
@@ -144,7 +143,7 @@ namespace jiba
       }
 
     void ReadTensorGravityMeasurements(const std::string &filename,
-        ThreeDGravityModel::tTensorMeasVec &Data,
+        jiba::rvec &Data,
         ThreeDGravityModel::tMeasPosVec &PosX,
         ThreeDGravityModel::tMeasPosVec &PosY,
         ThreeDGravityModel::tMeasPosVec &PosZ)
@@ -156,21 +155,21 @@ namespace jiba
         assert(PosX.size() == PosY.size());
         assert(PosX.size() == PosZ.size());
 
-        rmat GravMat(3, 3);
-        Data.assign(PosX.size(), GravMat);
-        ReadMatComp(DataFile, UxxName, Data, 0, 0);
-        ReadMatComp(DataFile, UxyName, Data, 0, 1);
-        ReadMatComp(DataFile, UxzName, Data, 0, 2);
-        ReadMatComp(DataFile, UyxName, Data, 1, 0);
-        ReadMatComp(DataFile, UyyName, Data, 1, 1);
-        ReadMatComp(DataFile, UyzName, Data, 1, 2);
-        ReadMatComp(DataFile, UzxName, Data, 2, 0);
-        ReadMatComp(DataFile, UzyName, Data, 2, 1);
-        ReadMatComp(DataFile, UzzName, Data, 2, 2);
+
+        Data.resize(PosX.size()*9);
+        ReadMatComp(DataFile, UxxName, Data, 0);
+        ReadMatComp(DataFile, UxyName, Data, 1);
+        ReadMatComp(DataFile, UxzName, Data, 2);
+        ReadMatComp(DataFile, UyxName, Data, 3);
+        ReadMatComp(DataFile, UyyName, Data, 4);
+        ReadMatComp(DataFile, UyzName, Data, 5);
+        ReadMatComp(DataFile, UzxName, Data, 6);
+        ReadMatComp(DataFile, UzyName, Data, 7);
+        ReadMatComp(DataFile, UzzName, Data, 8);
       }
 
     void SaveTensorGravityMeasurements(const std::string &filename,
-        const ThreeDGravityModel::tTensorMeasVec &Data,
+        const jiba::rvec &Data,
         const ThreeDGravityModel::tMeasPosVec &PosX,
         const ThreeDGravityModel::tMeasPosVec &PosY,
         const ThreeDGravityModel::tMeasPosVec &PosZ)
@@ -193,14 +192,14 @@ namespace jiba
         WriteVec(DataFile, MeasPosYName, PosY, StatNumDim,"m");
         WriteVec(DataFile, MeasPosZName, PosZ, StatNumDim,"m");
 
-        WriteMatComp(DataFile, UxxName, Data, 0, 0, StatNumDim);
-        WriteMatComp(DataFile, UxyName, Data, 0, 1, StatNumDim);
-        WriteMatComp(DataFile, UxzName, Data, 0, 2, StatNumDim);
-        WriteMatComp(DataFile, UyxName, Data, 1, 0, StatNumDim);
-        WriteMatComp(DataFile, UyyName, Data, 1, 1, StatNumDim);
-        WriteMatComp(DataFile, UyzName, Data, 1, 2, StatNumDim);
-        WriteMatComp(DataFile, UzxName, Data, 2, 0, StatNumDim);
-        WriteMatComp(DataFile, UzyName, Data, 2, 1, StatNumDim);
-        WriteMatComp(DataFile, UzzName, Data, 2, 2, StatNumDim);
+        WriteMatComp(DataFile, UxxName, Data, 0, StatNumDim);
+        WriteMatComp(DataFile, UxyName, Data, 1, StatNumDim);
+        WriteMatComp(DataFile, UxzName, Data, 2, StatNumDim);
+        WriteMatComp(DataFile, UyxName, Data, 3, StatNumDim);
+        WriteMatComp(DataFile, UyyName, Data, 4, StatNumDim);
+        WriteMatComp(DataFile, UyzName, Data, 5, StatNumDim);
+        WriteMatComp(DataFile, UzxName, Data, 6, StatNumDim);
+        WriteMatComp(DataFile, UzyName, Data, 7, StatNumDim);
+        WriteMatComp(DataFile, UzzName, Data, 8, StatNumDim);
       }
   }

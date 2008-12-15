@@ -21,6 +21,7 @@
 #include "../Global/convert.h"
 #include "ThreeDGravityModel.h"
 #include "ReadWriteGravityData.h"
+#include "FullSensitivityGravityCalculator.h"
 #include "../Inversion/LinearInversion.h"
 #include "../ModelBase/VTKTools.h"
 #include "DepthWeighting.h"
@@ -32,7 +33,7 @@ int main(int argc, char *argv[])
   {
     jiba::ThreeDGravityModel Model(true);
 
-    jiba::ThreeDGravityModel::tScalarMeasVec Data;
+    jiba::rvec Data;
     jiba::ThreeDGravityModel::tMeasPosVec PosX, PosY, PosZ;
 
     std::string modelfilename, datafilename;
@@ -54,14 +55,17 @@ int main(int argc, char *argv[])
         Model.AddMeasurementPoint(PosX.at(i), PosY.at(i), PosZ.at(i));
       }
     //calculate the response of the starting model
-    jiba::ThreeDGravityModel::tScalarMeasVec StartingData(Model.CalcGravity());
+    boost::shared_ptr<jiba::FullSensitivityGravityCalculator>
+        ScalarCalculator(jiba::CreateGravityCalculator<
+            jiba::FullSensitivityGravityCalculator>::MakeScalar());
+    jiba::rvec StartingData(ScalarCalculator->Calculate(Model));
 
     const size_t xsize = Model.GetDensities().shape()[0];
     const size_t ysize = Model.GetDensities().shape()[1];
     const size_t zsize = Model.GetDensities().shape()[2];
     const size_t nmod = xsize * ysize * zsize;
 
-    jiba::rmat AllSens(Model.GetScalarSensitivities());
+    jiba::rmat AllSens(ScalarCalculator->GetSensitivities());
     jiba::rmat Sensitivities(ublas::matrix_range<jiba::rmat>(AllSens,
         ublas::range(0, nmeas), ublas::range(0, nmod)));
     std::cout << "Gridded model size: " << nmod << " Complete size: "
@@ -114,12 +118,13 @@ int main(int argc, char *argv[])
         Model.SetDensities().origin(), Model.SetDensities().origin(),
         std::plus<double>());
     //calculate the predicted data
-    jiba::ThreeDGravityModel::tScalarMeasVec InvData(Model.CalcGravity());
+    jiba::rvec InvData(ScalarCalculator->Calculate(Model));
     //and write out the data and model
     jiba::Write3DDataToVTK(modelfilename + ".inv_data.vtk", "grav_accel",
         InvData, Model.GetMeasPosX(), Model.GetMeasPosY(), Model.GetMeasPosZ());
-    Model.SaveScalarMeasurements(modelfilename + ".inv_data.nc");
-    Model.PlotScalarMeasurements(modelfilename + ".inv.plot");
+    jiba::SaveScalarGravityMeasurements(modelfilename + ".inv_data.nc",
+        InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
+        Model.GetMeasPosZ());
     Model.WriteVTK(modelfilename + ".inv.vtk");
     Model.WriteNetCDF(modelfilename + ".inv.nc");
 

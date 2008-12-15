@@ -17,25 +17,25 @@ namespace jiba
      /* @{ */
     //!Read a collection of scalar gravity measurements and associated positions from a netcdf file
     void ReadScalarGravityMeasurements(const std::string &filename,
-        ThreeDGravityModel::tScalarMeasVec &Data,
+        jiba::rvec &Data,
         ThreeDGravityModel::tMeasPosVec &PosX,
         ThreeDGravityModel::tMeasPosVec &PosY,
         ThreeDGravityModel::tMeasPosVec &PosZ);
     //!Save a collection of scalar gravity measurements and associated positions to a netcdf file
     void SaveScalarGravityMeasurements(const std::string &filename,
-        const ThreeDGravityModel::tScalarMeasVec &Data,
+        const jiba::rvec &Data,
         const ThreeDGravityModel::tMeasPosVec &PosX,
         const ThreeDGravityModel::tMeasPosVec &PosY,
         const ThreeDGravityModel::tMeasPosVec &PosZ);
     //!Read a collection of tensor gravity measurements and associated positions from a netcdf file
     void ReadTensorGravityMeasurements(const std::string &filename,
-        ThreeDGravityModel::tTensorMeasVec &Data,
+        jiba::rvec &Data,
         ThreeDGravityModel::tMeasPosVec &PosX,
         ThreeDGravityModel::tMeasPosVec &PosY,
         ThreeDGravityModel::tMeasPosVec &PosZ);
     //!Save a collection of tensor gravity measurements and associated positions to a netcdf file
     void SaveTensorGravityMeasurements(const std::string &filename,
-        const ThreeDGravityModel::tTensorMeasVec &Data,
+        const jiba::rvec &Data,
         const ThreeDGravityModel::tMeasPosVec &PosX,
         const ThreeDGravityModel::tMeasPosVec &PosY,
         const ThreeDGravityModel::tMeasPosVec &PosZ);

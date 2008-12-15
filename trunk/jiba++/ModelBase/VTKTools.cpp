@@ -124,7 +124,7 @@ namespace jiba
      */
     void Write3DDataToVTK(const std::string &filename,
         const std::string &DataName,
-        const ThreeDGravityModel::tScalarMeasVec &Data,
+        const jiba::rvec &Data,
         const ThreeDGravityModel::tMeasPosVec &PosX,
         const ThreeDGravityModel::tMeasPosVec &PosY,
         const ThreeDGravityModel::tMeasPosVec &PosZ)
@@ -157,7 +157,7 @@ namespace jiba
          */
     void Write3DTensorDataToVTK(const std::string &filename,
         const std::string &DataName,
-        const ThreeDGravityModel::tTensorMeasVec &Data,
+        const jiba::rvec &Data,
         const ThreeDGravityModel::tMeasPosVec &PosX,
         const ThreeDGravityModel::tMeasPosVec &PosY,
         const ThreeDGravityModel::tMeasPosVec &PosZ)
@@ -178,14 +178,12 @@ namespace jiba
         //and each tensor separated by two line breaks
         for (size_t i = 0; i < ndata; ++i)
           {
-            assert(Data.at(i).size1() == 3);
-            assert(Data.at(i).size2() == 3);
-            outfile << Data.at(i)(0, 0) << " " << Data.at(i)(0, 1) << " "
-                << Data.at(i)(0, 2) << "\n";
-            outfile << Data.at(i)(1, 0) << " " << Data.at(i)(1, 1) << " "
-                << Data.at(i)(2, 2) << "\n";
-            outfile << Data.at(i)(2, 0) << " " << Data.at(i)(2, 1) << " "
-                << Data.at(i)(2, 2) << "\n";
+            outfile << Data(i*9) << " " << Data(i*9+1) << " "
+                << Data(i*9+2) << "\n";
+            outfile << Data(i*9+3) << " " << Data(i*9+4) << " "
+                << Data(i*9+5) << "\n";
+            outfile << Data(i*9+6) << " " << Data(i*9+7) << " "
+                << Data(i*9+8) << "\n";
             outfile << "\n\n";
           }
         outfile << std::endl;

@@ -6,22 +6,29 @@
 //============================================================================
 #include "GravityInterface.h"
 #include "ThreeDGravityModel.h"
+#include "../Gravity/MinMemGravityCalculator.h"
 #include <algorithm>
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 #include <iostream>
 
-static boost::shared_ptr<jiba::ThreeDGravityModel> GravForward;
-
-typedef boost::function<jiba::ThreeDGravityModel::t3DModelDim & ()> tcoordinatefunc;
+static boost::shared_ptr<jiba::ThreeDGravityModel> GravModel;
+static boost::shared_ptr<jiba::ThreeDGravityCalculator> ScalarGravCalculator;
+static boost::shared_ptr<jiba::ThreeDGravityCalculator> TensorGravCalculator;
+typedef boost::function<jiba::ThreeDGravityModel::t3DModelDim & ()>
+    tcoordinatefunc;
 
 void AllocateModel(const int *storescalar, const int *storetensor)
   {
     bool wantscalar = (storescalar > 0);
     bool wanttensor = (storetensor > 0);
-    GravForward = boost::shared_ptr<jiba::ThreeDGravityModel>(
+    GravModel = boost::shared_ptr<jiba::ThreeDGravityModel>(
         new jiba::ThreeDGravityModel(wantscalar, wanttensor));
+    ScalarGravCalculator = jiba::CreateGravityCalculator<
+        jiba::MinMemGravityCalculator>::MakeScalar();
+    TensorGravCalculator = jiba::CreateGravityCalculator<
+        jiba::MinMemGravityCalculator>::MakeTensor();
   }
 
 //Check whether a mesh coordinate has changed and copy values if necessary
@@ -65,28 +72,28 @@ void SetupModel(const double *XSizes, const unsigned int *nx,
 
     //we check whether the geometry has changed to take advantage of possible accelerations
     //through sensitivity matrix storage
-    CheckGridCoordinate(XSizes, nx, GravForward->GetXCellSizes(), boost::bind(
-        &jiba::ThreeDGravityModel::SetXCellSizes, GravForward));
-    CheckGridCoordinate(YSizes, ny, GravForward->GetYCellSizes(), boost::bind(
-        &jiba::ThreeDGravityModel::SetYCellSizes, GravForward));
-    CheckGridCoordinate(ZSizes, nz, GravForward->GetZCellSizes(), boost::bind(
-        &jiba::ThreeDGravityModel::SetZCellSizes, GravForward));
+    CheckGridCoordinate(XSizes, nx, GravModel->GetXCellSizes(), boost::bind(
+        &jiba::ThreeDGravityModel::SetXCellSizes, GravModel));
+    CheckGridCoordinate(YSizes, ny, GravModel->GetYCellSizes(), boost::bind(
+        &jiba::ThreeDGravityModel::SetYCellSizes, GravModel));
+    CheckGridCoordinate(ZSizes, nz, GravModel->GetZCellSizes(), boost::bind(
+        &jiba::ThreeDGravityModel::SetZCellSizes, GravModel));
     //allocates space for densities
-    GravForward->SetDensities().resize(boost::extents[*nx][*ny][*nz]);
+    GravModel->SetDensities().resize(boost::extents[*nx][*ny][*nz]);
     //and copy as well
     std::copy(Densities, Densities + *nx * *ny * *nz,
-        GravForward->SetDensities().origin());
+        GravModel->SetDensities().origin());
     //we have to check whether the measurement points changed
-    bool changed = CheckMeasPos(XMeasPos, nmeas, GravForward->GetMeasPosX())
-        || CheckMeasPos(YMeasPos, nmeas, GravForward->GetMeasPosY())
-        || CheckMeasPos(ZMeasPos, nmeas, GravForward->GetMeasPosZ());
+    bool changed = CheckMeasPos(XMeasPos, nmeas, GravModel->GetMeasPosX())
+        || CheckMeasPos(YMeasPos, nmeas, GravModel->GetMeasPosY())
+        || CheckMeasPos(ZMeasPos, nmeas, GravModel->GetMeasPosZ());
     if (changed)
       {
         //we are using a static object, so we have to clear possible old measurement points
-        GravForward->ClearMeasurementPoints();
+        GravModel->ClearMeasurementPoints();
         for (size_t i = 0; i < *nmeas; ++i)
           {
-            GravForward->AddMeasurementPoint(XMeasPos[i], YMeasPos[i],
+            GravModel->AddMeasurementPoint(XMeasPos[i], YMeasPos[i],
                 ZMeasPos[i]);
           }
       }
@@ -100,8 +107,7 @@ void CalcScalarForward(const double *XSizes, const unsigned int *nx,
   {
     SetupModel(XSizes, nx, YSizes, ny, ZSizes, nz, Densities, XMeasPos,
         YMeasPos, ZMeasPos, nmeas);
-    jiba::ThreeDGravityModel::tScalarMeasVec scalarmeas(
-        GravForward->CalcGravity());
+    jiba::rvec scalarmeas(ScalarGravCalculator->Calculate(*GravModel.get()));
     std::copy(scalarmeas.begin(), scalarmeas.end(), GravAcceleration);
   }
 
@@ -113,10 +119,8 @@ void CalcTensorForward(const double *XSizes, const unsigned int *nx,
   {
     SetupModel(XSizes, nx, YSizes, ny, ZSizes, nz, Densities, XMeasPos,
         YMeasPos, ZMeasPos, nmeas);
-    jiba::ThreeDGravityModel::tTensorMeasVec tensormeas(
-        GravForward->CalcTensorGravity());
-    for (size_t i = 0; i < *nmeas; ++i)
-      std::copy(tensormeas.at(i).data().begin(), tensormeas.at(i).data().end(),
-          GravTensor + i * 9);
+    jiba::rvec tensormeas(TensorGravCalculator->Calculate(*GravModel.get()));
+
+    std::copy(tensormeas.begin(), tensormeas.end(), GravTensor);
   }
 

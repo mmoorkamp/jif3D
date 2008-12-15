@@ -18,6 +18,7 @@
 #include "ThreeDGravityModel.h"
 #include "BasicGravElements.h"
 #include "MinMemGravityCalculator.h"
+#include "FullSensitivityGravityCalculator.h"
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/assign/std/vector.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -227,32 +228,27 @@ jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension()
           DensityVector(i * (ncells * ncells) + j * ncells + k) = 1.0;
         }
       GravityTest.AddMeasurementPoint(measx, measy, measz);
-      jiba::ThreeDGravityModel::tScalarMeasVec
-      gravmeas(GravityTest.CalcGravity());
-      jiba::ThreeDGravityModel::tTensorMeasVec tensmeas(
-          GravityTest.CalcTensorGravity());
+      boost::shared_ptr<jiba::MinMemGravityCalculator> TensorCalculator(jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeTensor());
+      boost::shared_ptr<jiba::FullSensitivityGravityCalculator> ScalarCalculator(jiba::CreateGravityCalculator<jiba::FullSensitivityGravityCalculator>::MakeScalar());
+      jiba::rvec gravmeas(ScalarCalculator->Calculate(GravityTest));
+      jiba::rvec tensmeas(TensorCalculator->Calculate(GravityTest));
       double gridcube = gravmeas[0];
 
       GravityTest.WriteNetCDF("cube.nc");
       // Check that FTG calculation does not depend on discretization
-      for (size_t i = 0; i < 2; ++i)
-      for (size_t j = 0; j < 2; ++j)
+      for (size_t i = 0; i < 9; ++i)
         {
-          BOOST_CHECK_CLOSE(tensmeas[0](i, j), tensorbox(i, j),
+          BOOST_CHECK_CLOSE(tensmeas(i), tensorbox.data()[i],
               std::numeric_limits<float>::epsilon());
         }
 
       //check some tensor properties
-      BOOST_CHECK_CLOSE(tensmeas[0](0, 0) + tensmeas[0](1, 1),
-          -tensmeas[0](2, 2), std::numeric_limits<float>::epsilon());
-      BOOST_CHECK_CLOSE(tensmeas[0](1, 1) + tensmeas[0](2, 2),
-          -tensmeas[0](0, 0), std::numeric_limits<float>::epsilon());
-      BOOST_CHECK_CLOSE(tensmeas[0](0, 0) + tensmeas[0](2, 2),
-          -tensmeas[0](1, 1), std::numeric_limits<float>::epsilon());
+      BOOST_CHECK_CLOSE(tensmeas(0) + tensmeas(4),
+          -tensmeas(8), std::numeric_limits<float>::epsilon());
       BOOST_CHECK_CLOSE(boxtopofcube, gridcube,
           std::numeric_limits<float>::epsilon());
       //Check scalar sensitivity calculation
-      jiba::rmat ScalarSensitivities(GravityTest.GetScalarSensitivities());
+      jiba::rmat ScalarSensitivities(ScalarCalculator->GetSensitivities());
       jiba::rvec SensValues(boost::numeric::ublas::prec_prod(ScalarSensitivities,
               DensityVector));
       BOOST_CHECK_CLOSE(gridcube, SensValues(0),
@@ -273,8 +269,8 @@ jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension()
       bg_thick += 200.0, 300.0, 3500.0, 1000.0;
       GravityTest.SetBackgroundDensities(bg_dens);
       GravityTest.SetBackgroundThicknesses(bg_thick);
-      jiba::ThreeDGravityModel::tScalarMeasVec
-      gravmeas(GravityTest.CalcGravity());
+      boost::shared_ptr<jiba::MinMemGravityCalculator> ScalarCalculator(jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeScalar());
+      jiba::rvec gravmeas(ScalarCalculator->Calculate(GravityTest));
       for (size_t i = 0; i < nmeas; ++i)
         {
           BOOST_CHECK_CLOSE(analytic, gravmeas[i], 0.01);
@@ -334,28 +330,26 @@ jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension()
       DensityVector(nhorcells * nhorcells * nzcells + 3) = 5.0;
       GravityTest.SetBackgroundDensities(bg_dens);
       GravityTest.SetBackgroundThicknesses(bg_thick);
-      jiba::ThreeDGravityModel::tScalarMeasVec scalarmeas(
-          GravityTest.CalcGravity());
-      jiba::ThreeDGravityModel::tTensorMeasVec tensormeas(
-          GravityTest.CalcTensorGravity());
+
+      boost::shared_ptr<jiba::MinMemGravityCalculator> TensorCalculator(jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeTensor());
+      boost::shared_ptr<jiba::FullSensitivityGravityCalculator> ScalarCalculator(jiba::CreateGravityCalculator<jiba::FullSensitivityGravityCalculator>::MakeScalar());
+      jiba::rvec scalarmeas(ScalarCalculator->Calculate(GravityTest));
+      jiba::rvec tensormeas(TensorCalculator->Calculate(GravityTest));
       GravityTest.WriteNetCDF("layer.nc");
       double analytic = 2 * M_PI * jiba::Grav_const * (500.0 + 5.0 * 5500.0);
-      jiba::rmat ScalarSensitivities(GravityTest.GetScalarSensitivities());
+      jiba::rmat ScalarSensitivities(ScalarCalculator->GetSensitivities());
       jiba::rvec SensValues(prec_prod(ScalarSensitivities, DensityVector));
       //The second time the measurements will also be calculated from the sensitivities internally
-      jiba::ThreeDGravityModel::tScalarMeasVec scalarmeas2(
-          GravityTest.CalcGravity());
+      jiba::rvec scalarmeas2(ScalarCalculator->Calculate(GravityTest));
       for (size_t i = 0; i < nmeas; ++i)
         {
           BOOST_CHECK_CLOSE(analytic, scalarmeas[i], 0.01);
-          BOOST_CHECK_CLOSE(scalarmeas[i], scalarmeas2[i], 0.001);
+          BOOST_CHECK_CLOSE(analytic, scalarmeas2[i], 0.001);
           BOOST_CHECK_CLOSE(analytic, SensValues[i], 0.01);
-          BOOST_CHECK_CLOSE(scalarmeas[0], scalarmeas[i], 0.01);
           // The  tensorial elements should all be zero
-          for (size_t i = 0; i < 2; ++i)
-          for (size_t j = 0; j < 2; ++j)
+          for (size_t j = 0; j < 9; ++j)
             {
-              BOOST_CHECK(fabs(tensormeas[i](i, j)) < std::numeric_limits<
+              BOOST_CHECK(fabs(tensormeas(i*9+j)) < std::numeric_limits<
                   double>::epsilon());
             }
         }
@@ -368,17 +362,18 @@ jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension()
       jiba::ThreeDGravityModel GravityTest(true, false);
       const size_t nmeas = 10;
       MakeRandomModel(GravityTest, nmeas);
+      boost::shared_ptr<jiba::FullSensitivityGravityCalculator> ScalarCalculator(jiba::CreateGravityCalculator<jiba::FullSensitivityGravityCalculator>::MakeScalar());
 
       //Calculate twice, once with normal calculation, once cached
       //and record the times
       boost::posix_time::ptime startfirst =
       boost::posix_time::microsec_clock::local_time();
-      jiba::ThreeDGravityModel::tScalarMeasVec scalarmeas1(
-          GravityTest.CalcGravity());
+      jiba::rvec scalarmeas1(
+          ScalarCalculator->Calculate(GravityTest));
       boost::posix_time::ptime endfirst =
       boost::posix_time::microsec_clock::local_time();
-      jiba::ThreeDGravityModel::tScalarMeasVec scalarmeas2(
-          GravityTest.CalcGravity());
+      jiba::rvec scalarmeas2(
+          ScalarCalculator->Calculate(GravityTest));
       boost::posix_time::ptime endsecond =
       boost::posix_time::microsec_clock::local_time();
       //the second time it should be much faster
@@ -388,14 +383,6 @@ jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension()
           BOOST_CHECK_CLOSE(scalarmeas1[i], scalarmeas2[i], std::numeric_limits<
               float>::epsilon());
         }
-      jiba::MinMemGravityCalculator *Calculator = jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeScalar();
-      jiba::rvec NewResult(Calculator->Calculate(GravityTest));
-      for (size_t i = 0; i < nmeas; ++i)
-        {
-          BOOST_CHECK_CLOSE(scalarmeas1[i], NewResult[i], std::numeric_limits<
-              float>::epsilon());
-        }
-      delete Calculator;
     }
 
   //check some general properties of the FTG tensor that hold for any measurement above the surface
@@ -405,25 +392,19 @@ jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension()
       const size_t nmeas = 10;
       MakeRandomModel(GravityTest, nmeas);
 
-      jiba::ThreeDGravityModel::tTensorMeasVec tensormeas(
-          GravityTest.CalcTensorGravity());
-      jiba::MinMemGravityCalculator *Calculator = jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeTensor();
-      jiba::rvec newmeas(Calculator->Calculate(GravityTest));
+      boost::shared_ptr<jiba::MinMemGravityCalculator> Calculator(jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeTensor());
+      jiba::rvec tensormeas(Calculator->Calculate(GravityTest));
       for (size_t i = 0; i < nmeas; ++i)
         {
           // check that tensor is traceless
-          BOOST_CHECK_CLOSE(tensormeas[i](0, 0) + tensormeas[i](1, 1),
-              -tensormeas[i](2, 2), std::numeric_limits<float>::epsilon());
+          BOOST_CHECK_CLOSE(tensormeas[i*9] + tensormeas[i*9+4],
+              -tensormeas[i*9+8], std::numeric_limits<float>::epsilon());
           //check that tensor is symmetric
-          BOOST_CHECK_CLOSE(tensormeas[i](0, 1), tensormeas[i](1, 0),
+          BOOST_CHECK_CLOSE(tensormeas[i*9+1], tensormeas[i*9+3],
               std::numeric_limits<float>::epsilon());
-          BOOST_CHECK_CLOSE(tensormeas[i](0, 2), tensormeas[i](2, 0),
+          BOOST_CHECK_CLOSE(tensormeas[i*9+2], tensormeas[i*9+6],
               std::numeric_limits<float>::epsilon());
-          BOOST_CHECK_CLOSE(tensormeas[i](1, 2), tensormeas[i](2, 1),
-              std::numeric_limits<float>::epsilon());
-          BOOST_CHECK_CLOSE(tensormeas[i](0, 0), newmeas(i*9),
-              std::numeric_limits<float>::epsilon());
-          BOOST_CHECK_CLOSE(tensormeas[i](0, 1), newmeas(i*9+1),
+          BOOST_CHECK_CLOSE(tensormeas[i*9+5], tensormeas[i*9+7],
               std::numeric_limits<float>::epsilon());
         }
     }
@@ -515,18 +496,20 @@ jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension()
       GravityTest.AddMeasurementPoint(50 - delta, 70, -5);
       GravityTest.AddMeasurementPoint(50 + delta, 70, -5);
       //perform the calculations
-      jiba::ThreeDGravityModel::tTensorMeasVec tensormeas(
-          GravityTest.CalcTensorGravity());
-      jiba::ThreeDGravityModel::tScalarMeasVec scalarmeas(
-          GravityTest.CalcGravity());
+      boost::shared_ptr<jiba::MinMemGravityCalculator> ScalarCalculator(jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeScalar());
+      boost::shared_ptr<jiba::MinMemGravityCalculator> TensorCalculator(jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeTensor());
+      jiba::rvec tensormeas(
+          TensorCalculator->Calculate(GravityTest));
+      jiba::rvec scalarmeas(
+          ScalarCalculator->Calculate(GravityTest));
       //extract the tensor components
-      double uzz = tensormeas.at(1)(2, 2);
-      double uzy = tensormeas.at(1)(2, 1);
-      double uzx = tensormeas.at(1)(2, 0);
+      double uzz = tensormeas(17);
+      double uzy = tensormeas(16);
+      double uzx = tensormeas(15);
       //calculate the same components through finite differencing
-      double fduzz = (scalarmeas.at(2) - scalarmeas.at(1)) / (2 * delta);
-      double fduzy = (scalarmeas.at(4) - scalarmeas.at(3)) / (2 * delta);
-      double fduzx = (scalarmeas.at(6) - scalarmeas.at(5)) / (2 * delta);
+      double fduzz = (scalarmeas(2) - scalarmeas(1)) / (2 * delta);
+      double fduzy = (scalarmeas(4) - scalarmeas(3)) / (2 * delta);
+      double fduzx = (scalarmeas(6) - scalarmeas(5)) / (2 * delta);
       //check that they match within the precision of delta
       BOOST_CHECK_CLOSE(uzz, fduzz, precision);
       BOOST_CHECK_CLOSE(uzy, fduzy, precision);
@@ -540,41 +523,27 @@ jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension()
       jiba::ThreeDGravityModel GravityTest(false, true);
       const size_t nmeas = 10;
       MakeRandomModel(GravityTest, nmeas);
+      boost::shared_ptr<jiba::FullSensitivityGravityCalculator> TensorCalculator(jiba::CreateGravityCalculator<jiba::FullSensitivityGravityCalculator>::MakeTensor());
 
       //Calculate twice, once with normal calculation, once cached
       boost::posix_time::ptime startfirst =
       boost::posix_time::microsec_clock::local_time();
-      jiba::ThreeDGravityModel::tTensorMeasVec tensormeas1(
-          GravityTest.CalcTensorGravity());
+      jiba::rvec tensormeas1(
+          TensorCalculator->Calculate(GravityTest));
       boost::posix_time::ptime endfirst =
       boost::posix_time::microsec_clock::local_time();
-      jiba::ThreeDGravityModel::tTensorMeasVec tensormeas2(
-          GravityTest.CalcTensorGravity());
+      jiba::rvec tensormeas2(
+          TensorCalculator->Calculate(GravityTest));
       boost::posix_time::ptime endsecond =
       boost::posix_time::microsec_clock::local_time();
       //the second time it should be much faster
       BOOST_CHECK(endfirst - startfirst> (endsecond - endfirst));
       //compare all tensor elements
-      for (size_t i = 0; i < nmeas; ++i)
+      for (size_t i = 0; i < tensormeas1.size(); ++i)
         {
-          BOOST_CHECK_CLOSE(tensormeas1[i](0, 0), tensormeas2[i](0, 0),
+          BOOST_CHECK_CLOSE(tensormeas1(i), tensormeas2(i),
               std::numeric_limits<float>::epsilon());
-          BOOST_CHECK_CLOSE(tensormeas1[i](1, 0), tensormeas2[i](1, 0),
-              std::numeric_limits<float>::epsilon());
-          BOOST_CHECK_CLOSE(tensormeas1[i](2, 0), tensormeas2[i](2, 0),
-              std::numeric_limits<float>::epsilon());
-          BOOST_CHECK_CLOSE(tensormeas1[i](0, 1), tensormeas2[i](0, 1),
-              std::numeric_limits<float>::epsilon());
-          BOOST_CHECK_CLOSE(tensormeas1[i](1, 1), tensormeas2[i](1, 1),
-              std::numeric_limits<float>::epsilon());
-          BOOST_CHECK_CLOSE(tensormeas1[i](2, 1), tensormeas2[i](2, 1),
-              std::numeric_limits<float>::epsilon());
-          BOOST_CHECK_CLOSE(tensormeas1[i](0, 2), tensormeas2[i](0, 2),
-              std::numeric_limits<float>::epsilon());
-          BOOST_CHECK_CLOSE(tensormeas1[i](1, 2), tensormeas2[i](1, 2),
-              std::numeric_limits<float>::epsilon());
-          BOOST_CHECK_CLOSE(tensormeas1[i](2, 2), tensormeas2[i](2, 2),
-              std::numeric_limits<float>::epsilon());
+
         }
     }
 

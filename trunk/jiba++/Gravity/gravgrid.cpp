@@ -16,6 +16,7 @@
 #include <string>
 #include "ThreeDGravityModel.h"
 #include "ReadWriteGravityData.h"
+#include "MinMemGravityCalculator.h"
 #include "../ModelBase/VTKTools.h"
 #include "../Global/FileUtil.h"
 #include <boost/cast.hpp>
@@ -26,7 +27,7 @@ int main(int argc, char *argv[])
   {
     std::string ModelFilename;
 
-    jiba::ThreeDGravityModel GravForward;
+    jiba::ThreeDGravityModel GravModel;
 
     double minx, miny, maxx, maxy, deltax, deltay, z;
     //ask for the measurement grid specifications
@@ -54,7 +55,7 @@ int main(int argc, char *argv[])
       {
         for (size_t j = 0; j <= nmeasy; ++j)
           {
-            GravForward.AddMeasurementPoint(minx + i * deltax, miny + j
+            GravModel.AddMeasurementPoint(minx + i * deltax, miny + j
                 * deltay, z);
           }
       }
@@ -66,27 +67,37 @@ int main(int argc, char *argv[])
     //read in the file
     if (extension == ".nc")
       {
-        GravForward.ReadNetCDF(ModelFilename);
+        GravModel.ReadNetCDF(ModelFilename);
       }
     else
       {
-        GravForward.ReadIgmas(ModelFilename);
-        GravForward.WriteNetCDF(ModelFilename + ".nc");
+        GravModel.ReadIgmas(ModelFilename);
+        GravModel.WriteNetCDF(ModelFilename + ".nc");
       }
     //save the measurements and some plots
-    jiba::ThreeDGravityModel::tScalarMeasVec Data(GravForward.CalcGravity());
-    jiba::ThreeDGravityModel::tTensorMeasVec FTGData(
-        GravForward.CalcTensorGravity());
-    GravForward.SaveScalarMeasurements(ModelFilename + ".out.nc");
-    GravForward.SaveTensorMeasurements(ModelFilename + ".ftg.nc");
-    GravForward.PlotScalarMeasurements(ModelFilename + ".plot");
-    GravForward.PlotTensorMeasurements(ModelFilename);
-    GravForward.WriteVTK(ModelFilename + ".vtk");
-    jiba::Write3DDataToVTK(ModelFilename + ".data.vtk", "grav_accel", Data,
-        GravForward.GetMeasPosX(), GravForward.GetMeasPosY(),
-        GravForward.GetMeasPosZ());
-    jiba::Write3DTensorDataToVTK(ModelFilename + ".ftgdata.vtk", "U", FTGData,
-        GravForward.GetMeasPosX(), GravForward.GetMeasPosY(),
-        GravForward.GetMeasPosZ());
+    boost::shared_ptr<jiba::MinMemGravityCalculator>
+        TensorCalculator(jiba::CreateGravityCalculator<
+            jiba::MinMemGravityCalculator>::MakeTensor());
+    boost::shared_ptr<jiba::MinMemGravityCalculator>
+        ScalarCalculator(jiba::CreateGravityCalculator<
+            jiba::MinMemGravityCalculator>::MakeScalar());
+    jiba::rvec ScalarResults(ScalarCalculator->Calculate(GravModel));
+    jiba::rvec TensorResults(TensorCalculator->Calculate(GravModel));
+
+    jiba::SaveScalarGravityMeasurements(ModelFilename + ".out.nc",
+        ScalarResults, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
+        GravModel.GetMeasPosZ());
+    jiba::SaveTensorGravityMeasurements(ModelFilename + ".ftg.nc",
+        TensorResults, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
+        GravModel.GetMeasPosZ());
+    //write the model in .vtk format, at the moment the best plotting option
+    GravModel.WriteVTK(ModelFilename + ".vtk");
+
+    jiba::Write3DDataToVTK(ModelFilename + ".data.vtk", "grav_accel", ScalarResults,
+        GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
+        GravModel.GetMeasPosZ());
+    jiba::Write3DTensorDataToVTK(ModelFilename + ".ftgdata.vtk", "U", TensorResults,
+        GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
+        GravModel.GetMeasPosZ());
 
   }

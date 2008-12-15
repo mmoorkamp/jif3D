@@ -11,8 +11,8 @@
 namespace jiba
   {
 
-    CachedGravityCalculator::CachedGravityCalculator(
-        boost::shared_ptr<ThreeDGravityImplementation> TheImp) :
+    CachedGravityCalculator::CachedGravityCalculator(boost::shared_ptr<
+        ThreeDGravityImplementation> TheImp) :
       ThreeDGravityCalculator(TheImp), HaveCache(false)
       {
 
@@ -36,6 +36,51 @@ namespace jiba
         std::copy(NewXSizes.begin(), NewXSizes.end(), OldXSizes.begin());
         std::copy(NewYSizes.begin(), NewYSizes.end(), OldYSizes.begin());
         std::copy(NewZSizes.begin(), NewZSizes.end(), OldZSizes.begin());
+      }
+    void CachedGravityCalculator::CopyMeasPos(
+        const ThreeDGravityModel::tMeasPosVec &NewMeasPosX,
+        const ThreeDGravityModel::tMeasPosVec &NewMeasPosY,
+        const ThreeDGravityModel::tMeasPosVec &NewMeasPosZ)
+      {
+        OldMeasPosX.resize(NewMeasPosX.size());
+        OldMeasPosY.resize(NewMeasPosY.size());
+        OldMeasPosZ.resize(NewMeasPosZ.size());
+        std::copy(NewMeasPosX.begin(), NewMeasPosX.end(), OldMeasPosX.begin());
+        std::copy(NewMeasPosY.begin(), NewMeasPosY.end(), OldMeasPosY.begin());
+        std::copy(NewMeasPosZ.begin(), NewMeasPosZ.end(), OldMeasPosZ.begin());
+      }
+
+    bool CachedGravityCalculator::CheckMeasPosChange(
+        const ThreeDGravityModel &Model)
+      {
+        bool change = true;
+        // if all the sizes are the same as before then nothing has changed
+        change = !(OldMeasPosX.size() == Model.GetMeasPosX().size()
+            && OldMeasPosY.size() == Model.GetMeasPosY().size()
+            && OldMeasPosZ.size() == Model.GetMeasPosZ().size());
+        // if we already know that something has changed we do not need to perform the more expensive tests
+        if (change)
+          {
+            //copy the new information into the cache
+            CopyMeasPos(Model.GetMeasPosX(), Model.GetMeasPosY(),
+                Model.GetMeasPosZ());
+            return change;
+          }
+        //check whether any of the cell coordinates have changed
+        bool xsame = std::equal(OldMeasPosX.begin(), OldMeasPosX.end(),
+            Model.GetMeasPosX().begin());
+        bool ysame = std::equal(OldMeasPosY.begin(), OldMeasPosY.end(),
+            Model.GetMeasPosY().begin());
+        bool zsame = std::equal(OldMeasPosZ.begin(), OldMeasPosZ.end(),
+            Model.GetMeasPosZ().begin());
+        //only if they are all the same we know that nothing has changed
+        change = !(xsame && ysame && zsame);
+        if (change)
+          {
+            CopyMeasPos(Model.GetMeasPosX(), Model.GetMeasPosY(),
+                Model.GetMeasPosZ());
+          }
+        return change;
       }
 
     bool CachedGravityCalculator::CheckGeometryChange(
@@ -77,7 +122,7 @@ namespace jiba
         //check that all modeling information is consistent
         CheckModelConsistency(Model);
         //check whether the model geometry has changed since the last calculation
-        bool HasChanged = CheckGeometryChange(Model);
+        bool HasChanged = CheckGeometryChange(Model) && CheckMeasPosChange(Model);
         //if we have cached information and nothing has changed, we use the cache
         if (HaveCache && !HasChanged)
           {
@@ -85,7 +130,9 @@ namespace jiba
           }
         //we only get here if we need to recalculate
         //we have to make sure the calculation finishes properly before we can guarantee the cache and return the result
-        SetCurrentSensitivities().resize(Imp.get()->GetDataPerMeasurement(),Model.GetDensities().num_elements()+Model.GetBackgroundDensities().size());
+        SetCurrentSensitivities().resize(Imp.get()->GetDataPerMeasurement(),
+            Model.GetDensities().num_elements()
+                + Model.GetBackgroundDensities().size());
         rvec result = CalculateNewModel(Model);
         HaveCache = true;
 

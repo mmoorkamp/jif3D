@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
     boost::lagged_fibonacci607 generator(
         static_cast<unsigned int> (std::time(0)));
 
-    jiba::ThreeDGravityModel::tScalarMeasVec Data;
+    jiba::rvec Data;
     jiba::ThreeDGravityModel::tMeasPosVec PosX, PosY, PosZ;
 
     //read in the netcdf file with the data
@@ -41,10 +41,10 @@ int main(int argc, char *argv[])
     //create a gaussian distribution for each datum and draw a sample from it
     for (size_t i = 0; i < nmeas; ++i)
       {
-        boost::normal_distribution<> dist(Data.at(i), fabs(Data.at(i) * noiselevel));
+        boost::normal_distribution<> dist(Data(i), fabs(Data(i) * noiselevel));
         boost::variate_generator<boost::lagged_fibonacci607&, boost::normal_distribution<> >
             Sample(generator, dist);
-        Data.at(i) = Sample();
+        Data(i) = Sample();
       }
     //write noisy data to a file
     jiba::SaveScalarGravityMeasurements(datafilename+".noise.nc", Data, PosX, PosY, PosZ);

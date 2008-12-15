@@ -21,7 +21,7 @@ namespace jiba
       {
     public:
       void operator()(rmat &Sensitivities, rvec &Data, const rvec &WeightVector,
-          const rvec &DataError, const double evalthresh, const double lambda,
+          const rvec &DataError, const double lambda,
           rvec &InvModel);
       };
 

@@ -4,7 +4,6 @@ project
     : usage-requirements <include>../Gravity
     ;
     
-exe time_gravity_old : time_gravity_old.cpp ../Gravity//gravity ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ;
-exe time_gravity_size : time_gravity_size.cpp ../Gravity//gravity ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ;
-exe time_grav_term : time_grav_term.cpp ../Gravity//gravity ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ;
-exe comp_grav_moment : comp_grav_moment.cpp ../Gravity//gravity ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ;
+exe time_gravity_size : time_gravity_size.cpp ../Gravity//gravity ../Global ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ;
+exe time_grav_term : time_grav_term.cpp ../Gravity//gravity ../Global ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ;
+exe comp_grav_moment : comp_grav_moment.cpp ../Gravity//gravity ../Global ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ;

@@ -10,6 +10,7 @@
 #include <fstream>
 #include <string>
 #include "../Global/convert.h"
+#include "../Global/Interpolate.h"
 #include "ThreeDGravityModel.h"
 #include "../Inversion/MatrixTools.h"
 #include "ReadWriteGravityData.h"
@@ -26,6 +27,64 @@ double CalcInvariant(const jiba::GravimetryMatrix &Matrix)
     return Matrix(0, 0) * Matrix(1, 1) + Matrix(1, 1) * Matrix(2, 2) + Matrix(
         0, 0) * Matrix(2, 2) - Matrix(0, 1) * Matrix(0, 1) - Matrix(1, 2)
         * Matrix(1, 2) - Matrix(0, 2) * Matrix(0, 2);
+  }
+
+void LineSearch(jiba::rvec &DeltaModel, jiba::ThreeDGravityModel &Model,
+    jiba::rvec &DataVector)
+  {
+    const size_t nmod = Model.GetDensities().size();
+    jiba::rvec LastModel(nmod);
+    std::copy(Model.GetDensities().origin(),
+        Model.GetDensities().origin() + nmod,LastModel.begin());
+    std::transform(DeltaModel.begin(), DeltaModel.begin() + nmod,
+        Model.SetDensities().origin(), Model.SetDensities().origin(),
+        std::plus<double>());
+    jiba::ThreeDGravityModel::tTensorMeasVec FTGData(Model.CalcTensorGravity());
+
+    size_t ndata = DataVector.size();
+    jiba::rvec CurrData(ndata), DiffVector(ndata);
+    for (size_t i = 0; i < ndata; ++i)
+      {
+        CurrData( i) = CalcInvariant(FTGData.at(i));
+      }
+    std::transform(DataVector.begin(), DataVector.end(), CurrData.begin(),
+        DiffVector.begin(), std::minus<double>());
+    double misfit = sqrt(boost::numeric::ublas::norm_2(DiffVector));
+    double mu1 = 2;
+    std::transform(DeltaModel.begin(), DeltaModel.begin() + nmod,
+        LastModel.begin(), Model.SetDensities().origin(), boost::bind(
+            std::plus<double>(), _1, boost::bind(std::multiplies<double>(), _2,
+                mu1)));
+
+    FTGData = Model.CalcTensorGravity();
+    for (size_t i = 0; i < ndata; ++i)
+      {
+        CurrData( i) = CalcInvariant(FTGData.at(i));
+      }
+    std::transform(DataVector.begin(), DataVector.end(), CurrData.begin(),
+        DiffVector.begin(), std::minus<double>());
+    double misfit2 = sqrt(boost::numeric::ublas::norm_2(DiffVector));
+
+    double mu2 = 0.5;
+    std::transform(DeltaModel.begin(), DeltaModel.begin() + nmod,
+        LastModel.begin(), Model.SetDensities().origin(), boost::bind(
+            std::plus<double>(), _1, boost::bind(std::multiplies<double>(), _2,
+                mu2)));
+    FTGData = Model.CalcTensorGravity();
+    for (size_t i = 0; i < ndata; ++i)
+      {
+        CurrData( i) = CalcInvariant(FTGData.at(i));
+      }
+    std::transform(DataVector.begin(), DataVector.end(), CurrData.begin(),
+        DiffVector.begin(), std::minus<double>());
+    double misfit3 = sqrt(boost::numeric::ublas::norm_2(DiffVector));
+    double optstep = jiba::QuadraticInterpolation(1.0,misfit,mu1,misfit2,mu2,misfit3);
+    std::cout << "In Line search: ";
+    std::cout << misfit << " " << misfit2 << " " << misfit3 << std::endl;
+    std::cout << "Optimum step length: " << optstep << std::endl;
+
+    std::transform(DeltaModel.begin(), DeltaModel.begin() + nmod,
+        DeltaModel.begin(), boost::bind(std::multiplies<double>(),_1,optstep));
   }
 
 int main(int argc, char *argv[])
@@ -80,6 +139,7 @@ int main(int argc, char *argv[])
     for (size_t i = 0; i < DataError.size(); ++i)
       {
         DataError( i) = std::max(DataError(i), 1e-25);
+        DataError(i) *= DataError(i);
       }
 
     const size_t maxiter = 30;
@@ -151,7 +211,7 @@ int main(int argc, char *argv[])
             jiba::WeightingTerm(decayexponent));
 
         std::fill_n(ModelWeight.begin(), ModelWeight.size(), 0.0);
-        for (size_t i = 0; i < nmod; ++i)
+        for (size_t i = 0; i < ngrid; ++i)
           {
             ModelWeight( i) = WeightVector(i % zsize);
           }
@@ -162,16 +222,18 @@ int main(int argc, char *argv[])
         gradnorm = sqrt(boost::numeric::ublas::norm_2(InvModel));
         std::cout << "Stepsize: " << gradnorm << std::endl;
         std::cout << "Data Error: " << minmisfit << std::endl;
+        LineSearch(InvModel,Model,DataVector);
         //add the result of the inversion to the starting model
         //we only add the gridded part, the  background is always 0 due to the weighting
         std::transform(InvModel.begin(), InvModel.begin() + ngrid,
             Model.SetDensities().origin(), Model.SetDensities().origin(),
             std::plus<double>());
-        std::fill(InvModel.begin(), InvModel.end(), 0.0);
+        //std::fill(InvModel.begin(), InvModel.end(), 0.0);
         iter++;
       }
     //we want to save the resulting predicted data
     jiba::ThreeDGravityModel::tTensorMeasVec FTGData(Model.CalcTensorGravity());
+    std::vector<double> relerror;
     for (size_t i = 0; i < ndata; ++i)
       {
         StartingDataVector( i) = CalcInvariant(FTGData.at(i));
@@ -180,18 +242,16 @@ int main(int argc, char *argv[])
         StartingDataVector.begin(), DataDiffVector.begin(),
         std::minus<double>());
     std::transform(DataDiffVector.begin(), DataDiffVector.end(),
-        DataError.begin(), DataDiffVector.begin(), std::divides<double>());
-    Model.SaveTensorMeasurements(modelfilename + ".inv_ftgdata.nc");
-    Model.PlotTensorMeasurements(modelfilename + ".inv_ftgdata.plot");
-    Model.WriteVTK(modelfilename + ".inv_ftg.vtk");
-    Model.WriteNetCDF(modelfilename + ".inv_ftg.nc");
+        DataError.begin(), std::back_inserter(relerror), std::divides<double>());
 
-    std::vector<double> relerror;
-    std::copy(DataDiffVector.begin(), DataDiffVector.end(), std::back_inserter(
-        relerror));
     jiba::Write3DDataToVTK(modelfilename + ".inv_ftgmisfit.vtk",
         "MisfitInvariant", relerror, Model.GetMeasPosX(), Model.GetMeasPosY(),
         Model.GetMeasPosZ());
+
+    //and we save the models and the tensor elements
+    Model.SaveTensorMeasurements(modelfilename + ".inv_ftgdata.nc");
+    Model.WriteVTK(modelfilename + ".inv_ftg.vtk");
+    Model.WriteNetCDF(modelfilename + ".inv_ftg.nc");
 
     jiba::Write3DTensorDataToVTK(modelfilename + ".inv_ftgdata.vtk", "U",
         FTGData, Model.GetMeasPosX(), Model.GetMeasPosY(), Model.GetMeasPosZ());
