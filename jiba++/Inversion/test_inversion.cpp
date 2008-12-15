@@ -75,6 +75,9 @@ BOOST_AUTO_TEST_CASE  (basic_svd_test)
           1e-4);
     }
 
+  //check that matrix inversion works
+  //by generating a random matrix M
+  //and checking M^-1M=I
   BOOST_AUTO_TEST_CASE(invert_matrix_test)
     {
       const size_t msize = 4;
@@ -95,6 +98,8 @@ BOOST_AUTO_TEST_CASE  (basic_svd_test)
         }
     }
 
+  //the test for the generalized inverse is more tricky
+  //so far we apply the same test as for the regular inverse
   BOOST_AUTO_TEST_CASE(generalized_inverse_test)
     {
       const size_t msize = 4;
@@ -115,6 +120,8 @@ BOOST_AUTO_TEST_CASE  (basic_svd_test)
         }
     }
 
+  //compare the results of data space inversion and model space inversion
+  //they should give identical results
   BOOST_AUTO_TEST_CASE(compare_inversions_test)
     {
       const size_t ndata =5;
@@ -122,6 +129,8 @@ BOOST_AUTO_TEST_CASE  (basic_svd_test)
       jiba::rmat Sensitivities(ndata,nparam);
       jiba::rvec DataVec(ndata), DataError(ndata);
       jiba::rvec ModelWeight(nparam), DataSpaceInvModel(nparam), ModelSpaceInvModel(nparam);
+      std::fill_n(DataSpaceInvModel.begin(),nparam,1.0);
+      std::fill_n(ModelSpaceInvModel.begin(),nparam,1.0);
       const double evalthresh = 0.000;
       std::generate_n(DataVec.begin(),ndata,rand);
       std::generate_n(DataError.begin(),ndata,rand);
@@ -134,7 +143,7 @@ BOOST_AUTO_TEST_CASE  (basic_svd_test)
 
       jiba::rmat DataSens(Sensitivities);
       jiba::rvec OrigData(DataVec);
-      jiba::DataSpaceInversion()(DataSens, DataVec, ModelWeight, DataError, evalthresh,1.0,
+      jiba::DataSpaceInversion()(DataSens, DataVec, ModelWeight, DataError,1.0,
           DataSpaceInvModel);
       jiba::ModelSpaceInversion()(Sensitivities, OrigData, ModelWeight, DataError, evalthresh,1.0,
           ModelSpaceInvModel);

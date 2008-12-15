@@ -27,7 +27,7 @@ namespace jiba
     //! Write scalar data with 3D coordinate information in a .vtk file for plotting
     void Write3DDataToVTK(const std::string &filename,
         const std::string &DataName,
-        const ThreeDGravityModel::tScalarMeasVec &Data,
+        const jiba::rvec &Data,
         const ThreeDGravityModel::tMeasPosVec &PosX,
         const ThreeDGravityModel::tMeasPosVec &PosY,
         const ThreeDGravityModel::tMeasPosVec &PosZ);
@@ -35,7 +35,7 @@ namespace jiba
     //! Write \f$ 3 \times 3\f$ tensor data with 3D coordinate information in a .vtk file for plotting
     void Write3DTensorDataToVTK(const std::string &filename,
         const std::string &DataName,
-        const ThreeDGravityModel::tTensorMeasVec &Data,
+        const jiba::rvec &Data,
         const ThreeDGravityModel::tMeasPosVec &PosX,
         const ThreeDGravityModel::tMeasPosVec &PosY,
         const ThreeDGravityModel::tMeasPosVec &PosZ);

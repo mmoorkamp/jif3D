@@ -22,24 +22,25 @@ namespace jiba
     class CreateGravityCalculator
       {
     public:
-      static CalculatorClass *MakeScalar();
-      static CalculatorClass *MakeTensor();
+      typedef boost::shared_ptr<CalculatorClass> sp_CalculatorClass;
+      static boost::shared_ptr<CalculatorClass> MakeScalar();
+      static boost::shared_ptr<CalculatorClass> MakeTensor();
       };
 
     template<class CalculatorClass>
-    CalculatorClass *CreateGravityCalculator<CalculatorClass>::MakeScalar()
+    boost::shared_ptr<CalculatorClass> CreateGravityCalculator<CalculatorClass>::MakeScalar()
       {
         boost::shared_ptr<ThreeDGravityImplementation> Imp(
             new ScalarOMPGravityImp);
-        return new CalculatorClass(Imp);
+        return boost::shared_ptr<CalculatorClass>(new CalculatorClass(Imp));
       }
 
     template<class CalculatorClass>
-    CalculatorClass *CreateGravityCalculator<CalculatorClass>::MakeTensor()
+    boost::shared_ptr<CalculatorClass> CreateGravityCalculator<CalculatorClass>::MakeTensor()
       {
         boost::shared_ptr<ThreeDGravityImplementation> Imp(
             new TensorOMPGravityImp);
-        return new CalculatorClass(Imp);
+        return boost::shared_ptr<CalculatorClass>(new CalculatorClass(Imp));
       }
 
     class ThreeDGravityCalculator

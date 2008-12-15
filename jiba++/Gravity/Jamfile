@@ -23,9 +23,4 @@ exe gravsens : gravsens.cpp gravity ../ModelBase//modelbase ../Global//global ..
               ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran : <include>. ;              
 exe gravnoise : gravnoise.cpp gravity ../ModelBase//modelbase ../Global//global ..//netcdf_c++ ..//netcdf : <include>. ;
 
-exe ftginv : ftginv.cpp  gravity ../ModelBase//modelbase ../Global//global ..//netcdf_c++ ..//netcdf ../Inversion//inversion
-              ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran : <include>. ;
-exe ftgjointinv : ftgjointinv.cpp  gravity ../ModelBase//modelbase ../Global//global ..//netcdf_c++ ..//netcdf ../Inversion//inversion
-              ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran : <include>. ;
-              
 exe makegravmesh : makegravmesh.cpp gravity ../ModelBase//modelbase ../Global ..//netcdf_c++ ..//netcdf : <include>. ;

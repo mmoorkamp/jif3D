@@ -21,15 +21,23 @@ namespace jiba
       ThreeDGravityModel::t3DModelDim OldXSizes;
       ThreeDGravityModel::t3DModelDim OldYSizes;
       ThreeDGravityModel::t3DModelDim OldZSizes;
+      ThreeDGravityModel::tMeasPosVec OldMeasPosX;
+      ThreeDGravityModel::tMeasPosVec OldMeasPosY;
+      ThreeDGravityModel::tMeasPosVec OldMeasPosZ;
       void CopySizes(const ThreeDGravityModel::t3DModelDim &NewXSizes,
           const ThreeDGravityModel::t3DModelDim &NewYSizes,
           const ThreeDGravityModel::t3DModelDim &NewZSizes);
+      void CopyMeasPos(const ThreeDGravityModel::tMeasPosVec &NewMeasPosX,
+          const ThreeDGravityModel::tMeasPosVec &NewMeasPosY,
+          const ThreeDGravityModel::tMeasPosVec &NewMeasPosZ);
       bool CheckGeometryChange(const ThreeDGravityModel &Model);
+      bool CheckMeasPosChange(const ThreeDGravityModel &Model);
       virtual rvec CalculateNewModel(const ThreeDGravityModel &Model) = 0;
       virtual rvec CalculateCachedResult(const ThreeDGravityModel &Model) = 0;
     public:
       virtual rvec Calculate(const ThreeDGravityModel &Model);
-      CachedGravityCalculator(boost::shared_ptr<ThreeDGravityImplementation> TheImp);
+      CachedGravityCalculator(
+          boost::shared_ptr<ThreeDGravityImplementation> TheImp);
       virtual ~CachedGravityCalculator();
       };
 

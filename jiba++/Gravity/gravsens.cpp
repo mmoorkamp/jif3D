@@ -21,6 +21,7 @@
 #include "../Inversion/MatrixTools.h"
 #include <boost/numeric/bindings/atlas/cblas2.hpp>
 #include "../ModelBase/VTKTools.h"
+#include "FullSensitivityGravityCalculator.h"
 namespace atlas = boost::numeric::bindings::atlas;
 
 int main(int argc, char *argv[])
@@ -35,7 +36,7 @@ int main(int argc, char *argv[])
     Model.ReadNetCDF(modelfilename);
 
     //we also read in data, but we only use the information about the measurements
-    jiba::ThreeDGravityModel::tScalarMeasVec Data;
+    jiba::rvec Data;
     jiba::ThreeDGravityModel::tMeasPosVec PosX, PosY, PosZ;
     std::cout << "Data Filename: ";
     std::cin >> datafilename;
@@ -50,8 +51,11 @@ int main(int argc, char *argv[])
 
     //calculate the response, we don't actually care about the densities
     //and the model response, but we need the sensitivity matrix
-    Model.CalcGravity();
-    jiba::rmat Sensitivities(Model.GetScalarSensitivities());
+    boost::shared_ptr<jiba::FullSensitivityGravityCalculator>
+            ScalarCalculator(jiba::CreateGravityCalculator<
+                jiba::FullSensitivityGravityCalculator>::MakeScalar());
+    ScalarCalculator->Calculate(Model);
+    jiba::rmat Sensitivities(ScalarCalculator->GetSensitivities());
     //do the SVD to get the eigenvalues and eigenvectors
     jiba::rvec s;
     jiba::rmat u, vt;

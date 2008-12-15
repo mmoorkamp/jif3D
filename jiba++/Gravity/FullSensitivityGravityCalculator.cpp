@@ -58,8 +58,8 @@ namespace jiba
         rvec DensVector(nmod);
         std::copy(Model.GetDensities().origin(), Model.GetDensities().origin()
             + ngrid, DensVector.begin());
-        std::copy(Model.GetBackgroundThicknesses().begin(),
-            Model.GetBackgroundThicknesses().end(), DensVector.begin() + ngrid);
+        std::copy(Model.GetBackgroundDensities().begin(),
+            Model.GetBackgroundDensities().end(), DensVector.begin() + ngrid);
         atlas::gemv(1.0, Sensitivities, DensVector, 0.0, result);
         return result;
       }

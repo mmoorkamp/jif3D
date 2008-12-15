@@ -35,13 +35,6 @@ namespace jiba
       typedef std::vector<GravimetryMatrix> tTensorMeasVec;
       typedef std::vector<double> tMeasPosVec;
     private:
-      //! For the given model, calculate the gravimetric matrix at points x,y, and z
-      GravimetryMatrix CalcTensorMeas(const double x_meas, const double y_meas,
-          const double z_meas, const size_t meas_index);
-      //! Correct for the fact that the grid does not go to infinity
-      GravimetryMatrix AdjustTensorBackground(const double x_meas,
-          const double y_meas, const double z_meas, const double xwidth,
-          const double ywidth, const double zwidth, const size_t meas_index);
       //! Create a dimension for the measurement positions in a netcdf file
       NcDim *WriteDimensionToNetCDF(NcFile &NetCDFFile,
           const std::string &SizeName, const tMeasPosVec &Position) const;
@@ -55,36 +48,10 @@ namespace jiba
       tScalarMeasVec bg_densities;
       //! The thicknesses of the background layers
       tScalarMeasVec bg_thicknesses;
-      //! Do we want to store the sensitivity matrix for scalar gravity
-      const bool StoreScalarSensitivities;
-      //! Do we want to store the sensitivity matrix for tensor gravity
-      const bool StoreTensorSensitivities;
-      //! Have we already calculated the scalar sensitivities
-      bool HaveCalculatedScalarSensitivities;
-      //! Have we already calculated the tensor sensitivities
-      bool HaveCalculatedTensorSensitivities;
-      //! The Matrix for the scalar sensitivities
-      rmat ScalarSensitivities;
-      //! The Matrix for the tensor sensitivities
-      rmat TensorSensitivities;
-      //!We store the synthetic tensor data so we can plot or save it without recalculation
-      tTensorMeasVec TensorResults;
-      //!We store the synthetic scalar data so we can plot or save it without recalculation
-      tScalarMeasVec ScalarResults;
-      //! We implement this virtual function to make sure sensitivities are recalculated when the cell sizes change
-      virtual void SetCellSizesAction(t3DModelDim &sizes)
-        {
-          HaveCalculatedScalarSensitivities = false;
-          HaveCalculatedTensorSensitivities = false;
-        }
       //! Write out the values for a the measurement to an ascii file
       void
           PlotMeasAscii(const std::string &filename, tScalarMeasVec &Data) const;
     public:
-      //! For the given model, calculate the scalar gravity at all measurement points
-      tScalarMeasVec CalcGravity();
-      //! For the given model, calculate the FTG matrix at all measurement points
-      tTensorMeasVec CalcTensorGravity();
       //! return read only access to the stored density values
       const t3DModelData &GetDensities() const
         {
@@ -124,8 +91,6 @@ namespace jiba
           MeasPosX.push_back(xcoord);
           MeasPosY.push_back(ycoord);
           MeasPosZ.push_back(zcoord);
-          HaveCalculatedScalarSensitivities = false; // we have to recalculate
-          HaveCalculatedTensorSensitivities = false;
         }
       //! remove all information about measurement points
       void ClearMeasurementPoints()
@@ -133,9 +98,6 @@ namespace jiba
           MeasPosX.clear();
           MeasPosY.clear();
           MeasPosZ.clear();
-          //the sensitivities will no longer be valid
-          HaveCalculatedScalarSensitivities = false;
-          HaveCalculatedTensorSensitivities = false;
         }
       //! Return the x-coordinates of all measurement points read-only
       /*! This function provides read-only access to the x-coordinates
@@ -158,28 +120,6 @@ namespace jiba
       const tMeasPosVec &GetMeasPosZ() const
         {
           return MeasPosZ;
-        }
-      //! Get the sensitivity matrix for scalar gravity measurements
-      const rmat &GetScalarSensitivities() const
-        {
-          return ScalarSensitivities;
-        }
-      //! Get the sensitivity matrix for tensor gravity measurements
-      const rmat &GetTensorSensitivities() const
-        {
-          return TensorSensitivities;
-        }
-      //! Delete the stored tensor sensitivities to free memory
-      void ClearTensorSensitivities()
-        {
-          TensorSensitivities.resize(0,0);
-          HaveCalculatedTensorSensitivities = false;
-        }
-      //! Delete the stored scalar sensitivities to free memory
-      void ClearScalarSensitivities()
-        {
-          ScalarSensitivities.resize(0,0);
-          HaveCalculatedScalarSensitivities = false;
         }
       //! Write the density model and all associated information in a netcdf file
       void WriteNetCDF(const std::string filename) const;
