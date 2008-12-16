@@ -1,26 +1,27 @@
 import testing ; 
 lib gravity : ThreeDGravityModel.cpp GravityInterface.cpp ReadWriteGravityData.cpp DepthWeighting.cpp
-              BasicGravElements.cpp ScalarOMPGravityImp.cpp TensorOMPGravityImp.cpp 
+              BasicGravElements.cpp ScalarOMPGravityImp.cpp ScalarCudaGravityImp.cpp TensorOMPGravityImp.cpp 
               ThreeDGravityImplementation.cpp CachedGravityCalculator.cpp FullSensitivityGravityCalculator.cpp
               ThreeDGravityCalculator.cpp MinMemGravityCalculator.cpp WaveletCompressedGravityCalculator.cpp
-              ..//netcdf_c++ ..//netcdf ../ModelBase//modelbase ../Inversion//inversion 
+              gravcuda.cu
+              ..//netcdf_c++ ..//netcdf ../ModelBase//modelbase ../Inversion//inversion ..//cudart
               : <include>boost : : <include>. ;
 
 install $(TOP) : gravity
            : <install-dependencies>on <install-type>LIB
            ;
 
+alias core :  ../ModelBase//modelbase ../Global ..//netcdf_c++ ..//netcdf ..//cudart ;
 
-unit-test gravity_test : test_ThreeDGravityModel.cpp gravity ../ModelBase//modelbase ../Global ..//netcdf_c++ ..//netcdf : : <include>. ;
-unit-test weighting_test : test_weighting.cpp gravity ../Inversion//inversion ../Global ../ModelBase//modelbase  : : <include>. ;
+unit-test gravity_test : test_ThreeDGravityModel.cpp gravity  core : : <include>. ;
+unit-test weighting_test : test_weighting.cpp gravity ../Inversion//inversion core  : : <include>. ;
 
-exe gravforward : gravforward.cpp gravity ../ModelBase//modelbase ../Global//global ..//netcdf_c++ ..//netcdf : <include>. ;
-exe gravgrid : gravgrid.cpp gravity ../ModelBase//modelbase ../Global//global
-              ..//netcdf_c++ ..//netcdf : <include>. ;
-exe gravinv : gravinv.cpp gravity ../ModelBase//modelbase ../Global//global ..//netcdf_c++ ..//netcdf ../Inversion//inversion
+exe gravforward : gravforward.cpp gravity core : <include>. ;
+exe gravgrid : gravgrid.cpp gravity core : <include>. ;
+exe gravinv : gravinv.cpp gravity core ../Inversion//inversion
               ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran : <include>. ;
-exe gravsens : gravsens.cpp gravity ../ModelBase//modelbase ../Global//global ..//netcdf_c++ ..//netcdf ../Inversion//inversion
+exe gravsens : gravsens.cpp gravity core ../Inversion//inversion
               ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran : <include>. ;              
-exe gravnoise : gravnoise.cpp gravity ../ModelBase//modelbase ../Global//global ..//netcdf_c++ ..//netcdf : <include>. ;
+exe gravnoise : gravnoise.cpp gravity core : <include>. ;
 
-exe makegravmesh : makegravmesh.cpp gravity ../ModelBase//modelbase ../Global ..//netcdf_c++ ..//netcdf : <include>. ;
+exe makegravmesh : makegravmesh.cpp gravity core : <include>. ;

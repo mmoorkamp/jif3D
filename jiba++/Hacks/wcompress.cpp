@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
   {
     std::string ModelFilename, MeasPosFilename;
 
-    jiba::ThreeDGravityModel GravForward(true);
+    jiba::ThreeDGravityModel GravForward;
     //depending on the number of calling arguments
     switch (argc)
       {

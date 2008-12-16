@@ -5,11 +5,10 @@ project
     
 path-constant TOP : . ;
 
+import cuda ;
+
 using gcc : 4.3 : g++-4.3 ;
-
-
-
-
+using intel-linux : 11.0 : icpc ; 
 use-project /Global : Global ;
 use-project /Gravity : Gravity ;
 use-project /ModelBase : ModelBase ;
@@ -29,7 +28,7 @@ lib netcdf : : <name>netcdf ;
 lib netcdf_c++ : : <name>netcdf_c++ ;
 lib gfortran : : <name>gfortran ;
 lib gplib :  : <name>gplib <search>/home/mmoorkamp/workspace/gplib ;
- 
+lib cudart : : <name>cudart <search>/usr/local/cuda/lib ;
 
 build-project Global ;
 build-project Gravity ;

@@ -47,13 +47,13 @@ int main()
         const size_t modelsize = (i + 1) * 2;
         boost::posix_time::ptime firststarttime =
             boost::posix_time::microsec_clock::local_time();
-        jiba::ThreeDGravityModel GravityTest(true, true);
+        jiba::ThreeDGravityModel GravityTest;
 
         MakeRandomModel(GravityTest, modelsize);
 
         boost::shared_ptr<jiba::FullSensitivityGravityCalculator> Calculator =
             jiba::CreateGravityCalculator<
-                jiba::FullSensitivityGravityCalculator>::MakeScalar();
+                jiba::FullSensitivityGravityCalculator>::MakeScalar(true);
         jiba::rvec gravmeas(Calculator->Calculate(GravityTest));
 
         boost::posix_time::ptime firstendtime =

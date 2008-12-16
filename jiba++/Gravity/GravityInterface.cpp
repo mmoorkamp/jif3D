@@ -24,7 +24,7 @@ void AllocateModel(const int *storescalar, const int *storetensor)
     bool wantscalar = (storescalar > 0);
     bool wanttensor = (storetensor > 0);
     GravModel = boost::shared_ptr<jiba::ThreeDGravityModel>(
-        new jiba::ThreeDGravityModel(wantscalar, wanttensor));
+        new jiba::ThreeDGravityModel);
     ScalarGravCalculator = jiba::CreateGravityCalculator<
         jiba::MinMemGravityCalculator>::MakeScalar();
     TensorGravCalculator = jiba::CreateGravityCalculator<
