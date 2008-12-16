@@ -12,6 +12,7 @@
 #include "ThreeDGravityModel.h"
 #include "ThreeDGravityImplementation.h"
 #include "ScalarOMPGravityImp.h"
+#include "ScalarCudaGravityImp.h"
 #include "TensorOMPGravityImp.h"
 #include <boost/shared_ptr.hpp>
 
@@ -23,15 +24,26 @@ namespace jiba
       {
     public:
       typedef boost::shared_ptr<CalculatorClass> sp_CalculatorClass;
-      static boost::shared_ptr<CalculatorClass> MakeScalar();
+      static boost::shared_ptr<CalculatorClass> MakeScalar(bool wantcuda =
+          false);
       static boost::shared_ptr<CalculatorClass> MakeTensor();
       };
 
     template<class CalculatorClass>
-    boost::shared_ptr<CalculatorClass> CreateGravityCalculator<CalculatorClass>::MakeScalar()
+    boost::shared_ptr<CalculatorClass> CreateGravityCalculator<CalculatorClass>::MakeScalar(
+        bool wantcuda)
       {
-        boost::shared_ptr<ThreeDGravityImplementation> Imp(
-            new ScalarOMPGravityImp);
+        boost::shared_ptr<ThreeDGravityImplementation> Imp;
+        if (wantcuda)
+          {
+            Imp = boost::shared_ptr<ThreeDGravityImplementation>(
+                new ScalarCudaGravityImp);
+          }
+        else
+          {
+            Imp = boost::shared_ptr<ThreeDGravityImplementation>(
+                new ScalarOMPGravityImp);
+          }
         return boost::shared_ptr<CalculatorClass>(new CalculatorClass(Imp));
       }
 

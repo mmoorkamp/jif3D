@@ -31,7 +31,7 @@ namespace ublas = boost::numeric::ublas;
 
 int main(int argc, char *argv[])
   {
-    jiba::ThreeDGravityModel Model(true);
+    jiba::ThreeDGravityModel Model;
 
     jiba::rvec Data;
     jiba::ThreeDGravityModel::tMeasPosVec PosX, PosY, PosZ;

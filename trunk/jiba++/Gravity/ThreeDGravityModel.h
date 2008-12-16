@@ -144,9 +144,7 @@ namespace jiba
       void ReadMeasPosNetCDF(const std::string filename);
       //! Read the Measurement positions from an ascii file
       void ReadMeasPosAscii(const std::string filename);
-      //! When we create the object we have to specify whether we want to store scalar and/or tensor sensitivities
-      ThreeDGravityModel(const bool storescalar = false,
-          const bool storetensor = false);
+      ThreeDGravityModel();
       virtual ~ThreeDGravityModel();
       };
   /* @} */

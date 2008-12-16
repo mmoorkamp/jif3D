@@ -1,11 +1,6 @@
 #include <cutil.h>
 #include "gravcuda_kernel.cu"
 
-extern "C" void CalcScalarMeas(const float x_meas, const float y_meas,
-		const float z_meas, const float *XCoord,
-		const float *YCoord, const float *ZCoord, const float *XSizes,
-		const float *YSizes, const float *ZSizes, const float *Densities,
-		const int nx, const int ny, const int nz, float *returnvalue);
 
 extern "C" void FreeData(double *d_xcoord, double *d_ycoord, double *d_zcoord,
 		double *d_xsize, double *d_ysize, double *d_zsize, double *d_result)
@@ -17,7 +12,7 @@ extern "C" void FreeData(double *d_xcoord, double *d_ycoord, double *d_zcoord,
 	CUDA_SAFE_CALL(cudaFree(d_xsize));
 	CUDA_SAFE_CALL(cudaFree(d_ysize));
 	CUDA_SAFE_CALL(cudaFree(d_zsize));
-	CUDA_SAFE_CALL(cudaFree(density));
+	CUDA_SAFE_CALL(cudaFree(d_result));
 }
 
 extern "C" void PrepareData(double *d_xcoord, double *d_ycoord, double *d_zcoord,
@@ -68,6 +63,6 @@ extern "C" void SingleScalarMeas(const double x_meas, const double y_meas,
 	CalcScalarMeas<<< grid, threads >>>(x_meas, y_meas, z_meas, d_xcoord, d_ycoord, d_zcoord,
 			d_xsize, d_ysize, d_zsize, nx, ny,
 			nz, d_result);
-	cudaMemcpy(returnvalue, d_result, xmem_size * ymem_size * zmem_size,
+	cudaMemcpy(returnvalue, d_result, nx * sizeof(double)*ny * sizeof(double)*nz * sizeof(double),
 			cudaMemcpyDeviceToHost);
 }

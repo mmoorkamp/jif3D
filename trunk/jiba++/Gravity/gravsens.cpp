@@ -26,7 +26,7 @@ namespace atlas = boost::numeric::bindings::atlas;
 
 int main(int argc, char *argv[])
   {
-    jiba::ThreeDGravityModel Model(true);
+    jiba::ThreeDGravityModel Model;
 
     std::string modelfilename, datafilename;
     //get the name of the file containing the mesh information

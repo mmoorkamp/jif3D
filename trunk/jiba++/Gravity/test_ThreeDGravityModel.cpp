@@ -205,7 +205,7 @@ jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension()
           0.0, 20.0, 20.0, 20.0);
       jiba::GravimetryMatrix tensorbox = jiba::CalcTensorBoxTerm(measx, measy,
           measz, 0.0, 0.0, 0.0, 20.0, 20.0, 20.0);
-      jiba::ThreeDGravityModel GravityTest(true); // store sensitivities
+      jiba::ThreeDGravityModel GravityTest;
       //create a model of 10x10x10 cells with 2m length in each dimension
       const size_t ncells = 10;
       const double cellsize = 2.0;
@@ -281,7 +281,7 @@ jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension()
   //compare the 3D solution with the analytic solution for a 1D layered structure
   BOOST_AUTO_TEST_CASE(model_gravity_1danaly_test)
     {
-      jiba::ThreeDGravityModel GravityTest(true);
+      jiba::ThreeDGravityModel GravityTest;
       //create a model with a random number of cells in each direction
       const size_t nhorcells = rand() % 50 + 10;
       const size_t nzcells = 10;
@@ -359,7 +359,7 @@ jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension()
   //for scalar calculations
   BOOST_AUTO_TEST_CASE(scalar_caching_test)
     {
-      jiba::ThreeDGravityModel GravityTest(true, false);
+      jiba::ThreeDGravityModel GravityTest;
       const size_t nmeas = 10;
       MakeRandomModel(GravityTest, nmeas);
       boost::shared_ptr<jiba::FullSensitivityGravityCalculator> ScalarCalculator(jiba::CreateGravityCalculator<jiba::FullSensitivityGravityCalculator>::MakeScalar());
@@ -520,7 +520,7 @@ jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension()
   //for tensor calculations
   BOOST_AUTO_TEST_CASE(tensor_caching_test)
     {
-      jiba::ThreeDGravityModel GravityTest(false, true);
+      jiba::ThreeDGravityModel GravityTest;
       const size_t nmeas = 10;
       MakeRandomModel(GravityTest, nmeas);
       boost::shared_ptr<jiba::FullSensitivityGravityCalculator> TensorCalculator(jiba::CreateGravityCalculator<jiba::FullSensitivityGravityCalculator>::MakeTensor());

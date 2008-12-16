@@ -23,15 +23,9 @@ namespace jiba
     static const std::string DensityUnit = "g/cm3";
 
 
-    /*! The constructor takes two parameters
-     * @param storescalar Store the sensitivities for scalar gravity calculations
-     * @param storetensor Store the tensor for scalar gravity calculations
-     * Storing sensitivities greatly accelerates all but the first calculation as long as the model
-     * geometry is left unchanged. The code will detect changes in geometry and recalculate the sensitivities if
-     * necessary. However storing the sensitivities takes up a lot of memory.
+    /*! The constructor does not take any parameters.
      */
-    ThreeDGravityModel::ThreeDGravityModel(const bool storescalar,
-        const bool storetensor)
+    ThreeDGravityModel::ThreeDGravityModel()
       {
       }
 

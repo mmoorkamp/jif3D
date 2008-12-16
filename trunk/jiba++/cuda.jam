@@ -1,0 +1,8 @@
+import type ;
+type.register CUDA : cu ;
+import generators ;
+generators.register-standard cuda.cu2o : CUDA : OBJ ;
+actions cu2o
+{
+    "nvcc" -c -Xcompiler -fPIC -deviceemu -I/usr/local/NVIDIA_CUDA_SDK/common/inc  $(>) -o $(<)
+}
