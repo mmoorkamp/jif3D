@@ -19,13 +19,13 @@ void      SingleScalarMeas(const double x_meas, const double y_meas,
           double *d_result, const int nx, const int ny, const int nz,
           double *returnvalue);
 
-      extern "C" void PrepareData(double *d_xcoord, double *d_ycoord, double *d_zcoord,
-          double *d_xsize, double *d_ysize, double *d_zsize, double *d_result,
+      extern "C" void PrepareData(double **d_xcoord, double **d_ycoord, double **d_zcoord,
+          double **d_xsize, double **d_ysize, double **d_zsize, double **d_result,
           const double *xcoord,const double *ycoord,const double *zcoord,
           const double *xsize,const double *ysize,const double *zsize, unsigned int nx,unsigned int ny,unsigned int nz);
 
-      extern "C" void FreeData(double *d_xcoord, double *d_ycoord, double *d_zcoord,
-          double *d_xsize, double *d_ysize, double *d_zsize, double *d_result);
+      extern "C" void FreeData(double **d_xcoord, double **d_ycoord, double **d_zcoord,
+          double **d_xsize, double **d_ysize, double **d_zsize, double **d_result);
 
       ScalarCudaGravityImp::ScalarCudaGravityImp()
         {
@@ -51,9 +51,9 @@ void      SingleScalarMeas(const double x_meas, const double y_meas,
           double currvalue = 0.0;
           double currbottom = 0.0;
           const size_t modelsize = Model.GetDensities().shape()[0]
-              * Model.GetDensities().shape()[1] * Model.GetDensities().shape()[2];
+          * Model.GetDensities().shape()[1] * Model.GetDensities().shape()[2];
           const bool storesens = (Sensitivities.size1() >= ndatapermeas)
-              && (Sensitivities.size2() >= modelsize + nbglayers);
+          && (Sensitivities.size2() >= modelsize + nbglayers);
           // for all layers of the background
           for (size_t j = 0; j < nbglayers; ++j)
             {
@@ -70,7 +70,7 @@ void      SingleScalarMeas(const double x_meas, const double y_meas,
                       currtop, xwidth, ywidth, currthick);
                 }
               //if some of the background coincides and some is below
-              if (currtop < zwidth && currbottom > zwidth)
+              if (currtop < zwidth && currbottom> zwidth)
 
                 {
                   currvalue -= CalcGravBoxTerm(xmeas, ymeas, zmeas, 0.0, 0.0,
@@ -92,11 +92,14 @@ void      SingleScalarMeas(const double x_meas, const double y_meas,
           const double z_meas, const ThreeDGravityModel &Model,
           rmat &Sensitivities)
         {
+
           SingleScalarMeas(x_meas,y_meas,z_meas,d_xcoord,d_ycoord,d_zcoord,d_xsize,d_ysize,d_zsize,d_result,
               Model.GetDensities().shape()[0],Model.GetDensities().shape()[1],Model.GetDensities().shape()[2],&Sensitivities.data()[0]);
           rvec result(1);
+
           result(0) = std::inner_product(Sensitivities.data().begin(),
               Sensitivities.data().end(),Model.GetDensities().origin(),0.0);
+
           return result;
         }
 
@@ -107,18 +110,29 @@ void      SingleScalarMeas(const double x_meas, const double y_meas,
           const unsigned int ny = Model.GetDensities().shape()[1];
           const unsigned int nz = Model.GetDensities().shape()[2];
           const unsigned int nelements = nx * ny * nz;
-          PrepareData(d_xcoord,d_ycoord,d_zcoord,d_xsize,d_ysize,d_zsize,d_result,Model.GetXCoordinates().data(),Model.GetYCoordinates().data(),
+          const double modelxwidth = std::accumulate(
+              Model.GetXCellSizes().begin(), Model.GetXCellSizes().end(), 0.0);
+          const double modelywidth = std::accumulate(
+              Model.GetYCellSizes().begin(), Model.GetYCellSizes().end(), 0.0);
+          const double modelzwidth = std::accumulate(
+              Model.GetZCellSizes().begin(), Model.GetZCellSizes().end(), 0.0);
+          PrepareData(&d_xcoord,&d_ycoord,&d_zcoord,&d_xsize,&d_ysize,&d_zsize,&d_result,Model.GetXCoordinates().data(),Model.GetYCoordinates().data(),
               Model.GetZCoordinates().data(),Model.GetXCellSizes().data(),Model.GetYCellSizes().data(),Model.GetZCellSizes().data(),nx,ny,nz);
           const unsigned int nmeas = Model.GetMeasPosX().size();
           rvec result(nmeas);
           for (size_t i = 0; i < nmeas; ++i)
             {
-              rvec currresult = CalcGridded(Model.GetMeasPosX()[i],Model.GetMeasPosY()[i],Model.GetMeasPosZ()[i],Model,Calculator.SetCurrentSensitivities());
-
+              rvec currresult = CalcGridded(Model.GetMeasPosX()[i],Model.GetMeasPosY()[i],Model.GetMeasPosZ()[i],
+                  Model,Calculator.SetCurrentSensitivities());
+              currresult += CalcBackground(Model.GetMeasPosX()[i],
+                  Model.GetMeasPosY()[i], Model.GetMeasPosZ()[i], modelxwidth,
+                  modelywidth, modelzwidth, Model,
+                  Calculator.SetCurrentSensitivities());
+              Calculator.HandleSensitivities(i);
               result(i) = currresult(0);
 
             }
-          FreeData(d_xcoord,d_ycoord,d_zcoord,d_xsize,d_ysize,d_zsize,d_result);
+          FreeData(&d_xcoord,&d_ycoord,&d_zcoord,&d_xsize,&d_ysize,&d_zsize,&d_result);
           return result;
         }
 

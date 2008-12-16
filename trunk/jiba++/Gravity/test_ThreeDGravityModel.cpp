@@ -333,8 +333,10 @@ jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension()
 
       boost::shared_ptr<jiba::MinMemGravityCalculator> TensorCalculator(jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeTensor());
       boost::shared_ptr<jiba::FullSensitivityGravityCalculator> ScalarCalculator(jiba::CreateGravityCalculator<jiba::FullSensitivityGravityCalculator>::MakeScalar());
+      boost::shared_ptr<jiba::FullSensitivityGravityCalculator> CudaCalculator(jiba::CreateGravityCalculator<jiba::FullSensitivityGravityCalculator>::MakeScalar(true));
       jiba::rvec scalarmeas(ScalarCalculator->Calculate(GravityTest));
       jiba::rvec tensormeas(TensorCalculator->Calculate(GravityTest));
+      jiba::rvec cudameas(CudaCalculator->Calculate(GravityTest));
       GravityTest.WriteNetCDF("layer.nc");
       double analytic = 2 * M_PI * jiba::Grav_const * (500.0 + 5.0 * 5500.0);
       jiba::rmat ScalarSensitivities(ScalarCalculator->GetSensitivities());
@@ -346,6 +348,7 @@ jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension()
           BOOST_CHECK_CLOSE(analytic, scalarmeas[i], 0.01);
           BOOST_CHECK_CLOSE(analytic, scalarmeas2[i], 0.001);
           BOOST_CHECK_CLOSE(analytic, SensValues[i], 0.01);
+          BOOST_CHECK_CLOSE(analytic, cudameas[i], 0.01);
           // The  tensorial elements should all be zero
           for (size_t j = 0; j < 9; ++j)
             {
