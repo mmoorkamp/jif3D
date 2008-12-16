@@ -42,7 +42,7 @@ namespace jiba
         const size_t nmeas = Model.GetMeasPosX().size();
         const size_t ngrid = Model.GetDensities().num_elements();
         const size_t nmod = ngrid + Model.GetBackgroundThicknesses().size();
-        Sensitivities.resize(nmeas * Imp.get()->GetDataPerMeasurement(), nmod);
+        Sensitivities.resize(nmeas * Imp.get()->GetDataPerMeasurement(), nmod,false);
 
         return Imp.get()->Calculate(Model, *this);
       }
