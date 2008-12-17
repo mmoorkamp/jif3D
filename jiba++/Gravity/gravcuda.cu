@@ -1,4 +1,5 @@
 #include <cutil.h>
+#include <stdio.h>
 #include "gravcuda_kernel.cu"
 
 

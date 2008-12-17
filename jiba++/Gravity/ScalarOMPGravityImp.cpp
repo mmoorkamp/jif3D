@@ -24,23 +24,24 @@ namespace jiba
       }
 
     /*!  Calculate the contribution of a layered background to a scalar gravity measurement.
-     * @param xmeas The x-coordinate of the measurement point in m
-     * @param ymeas The y-coordinate of the measurement point in m
-     * @param zmeas The z-coordinate of the measurement point in m
+     * @param measindex the index of the measurement
      * @param xwidth The total width of the discretized model area in x-direction in m
      * @param ywidth The total width of the discretized model area in y-direction in m
      * @param zwidth The total width of the discretized model area in z-direction in m
-     * @param meas_index The index of the measurement
+     * @param Model The gravity model
+     * @param Sensitivities If the matrix hold enough elements the sensitivities for the background are stored for a single measurement
      * @return The gravitational acceleration in m/s^2 due to the background
      */
-    rvec ScalarOMPGravityImp::CalcBackground(const double xmeas,
-        const double ymeas, const double zmeas, const double xwidth,
+    rvec ScalarOMPGravityImp::CalcBackground(const size_t measindex, const double xwidth,
         const double ywidth, const double zwidth,
         const ThreeDGravityModel &Model,
         rmat &Sensitivities)
       {
         //make sure we have thicknesses and densities for all layers
         assert(Model.GetBackgroundDensities().size() == Model.GetBackgroundThicknesses().size());
+        const double x_meas = Model.GetMeasPosX()[measindex];
+        const double y_meas = Model.GetMeasPosY()[measindex];
+        const double z_meas = Model.GetMeasPosZ()[measindex];
         const size_t nbglayers = Model.GetBackgroundThicknesses().size();
         double result = 0.0;
         double currtop = 0.0;
@@ -62,14 +63,14 @@ namespace jiba
             if (currtop < zwidth && (currbottom <= zwidth))
 
               {
-                currvalue -= CalcGravBoxTerm(xmeas, ymeas, zmeas, 0.0, 0.0,
+                currvalue -= CalcGravBoxTerm(x_meas, y_meas, z_meas, 0.0, 0.0,
                     currtop, xwidth, ywidth, currthick);
               }
             //if some of the background coincides and some is below
             if (currtop < zwidth && currbottom > zwidth)
 
               {
-                currvalue -= CalcGravBoxTerm(xmeas, ymeas, zmeas, 0.0, 0.0,
+                currvalue -= CalcGravBoxTerm(x_meas, y_meas, z_meas, 0.0, 0.0,
                     currtop, xwidth, ywidth, (zwidth - currtop));
               }
             if (storesens)
@@ -84,17 +85,13 @@ namespace jiba
         return returnvector;
       }
 
-    /*! Calculate the gravitational effect of the 3D model at a single measurement site. The way we calculate
-     * the sensitivity matrix at the moment, the model cannot contain densities of 0 if we
-     * store the sensitivity matrix
-     * @param x_meas x-coordinate of the measurement site in m
-     * @param y_meas y-coordinate of the measurement site in m
-     * @param z_meas z-coordinate of the measurement site in m
-     * @param meas_index index of the measurement site among all measurements, this is only for storing sensitivities
+    /*! Calculate the gravitational effect of the 3D model at a single measurement site.
+     * @param measindex The index of the measurement
+     * @param Model The gravity model
+     * @param Sensitivities If the matrix hold enough elements the sensitivities for the background are stored for a single measurement
      * @return The gravitational acceleration in m/s^2 due to the model at this site
      */
-    rvec ScalarOMPGravityImp::CalcGridded(const double x_meas,
-        const double y_meas, const double z_meas,
+    rvec ScalarOMPGravityImp::CalcGridded(const size_t measindex,
         const ThreeDGravityModel &Model,
         rmat &Sensitivities)
       {
@@ -102,9 +99,12 @@ namespace jiba
         const size_t xsize = Model.GetDensities().shape()[0];
         const size_t ysize = Model.GetDensities().shape()[1];
         const size_t zsize = Model.GetDensities().shape()[2];
-        const size_t nmod = xsize * ysize * zsize;
+        const double x_meas = Model.GetMeasPosX()[measindex];
+        const double y_meas = Model.GetMeasPosY()[measindex];
+        const double z_meas = Model.GetMeasPosZ()[measindex];
+        const int nmod = xsize * ysize * zsize;
         const bool storesens = (Sensitivities.size1() >= ndatapermeas)
-            && (Sensitivities.size2() >= nmod);
+            && (Sensitivities.size2() >= size_t(nmod));
         double returnvalue = 0.0;
         double currvalue = 0.0;
 

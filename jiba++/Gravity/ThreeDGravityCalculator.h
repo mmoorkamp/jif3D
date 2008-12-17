@@ -18,17 +18,68 @@
 
 namespace jiba
   {
+    /** \addtogroup gravity Gravity forward modelling, display and inversion */
+    /* @{ */
+    /*! The ThreeDGravityCalculator class is the base class that provides
+     * the user interface to the gravity forward calculation. It uses a
+     * ThreeDGravityImplementation object to do the actual forward calculation.
+     * The derived classes determine how the sensitivity information
+     * is handled, whether it is discarded to save memory, fully stored, or
+     * compressed in some way. Also they decide in how far calculations are
+     * cached using sensitivity information.
+     */
+    class ThreeDGravityCalculator
+      {
+    private:
+      // We need a structure to hold the sensitivities for
+      // the current measurement that can be passed to
+      // the implementation object. The derived classes
+      // decide how to handle this information
+      rmat CurrentSensitivities;
+    protected:
+      // The shared pointer to the implementation object
+      // that does the actual calculation
+      boost::shared_ptr<ThreeDGravityImplementation> Imp;
+      // check the information in the model is consistent
+      void CheckModelConsistency(const ThreeDGravityModel &Model);
+    public:
+      //! Calculate the forward response of the given model, has to be implemented in a derived class
+      virtual rvec Calculate(const ThreeDGravityModel &Model) = 0;
+      //! Read and write access to the sensitivity information for the current measurement, only intended for implementation classes
+      rmat &SetCurrentSensitivities()
+        {
+          return CurrentSensitivities;
+        }
+      //! Process the sensitivity information for the current measurement, called from the implementation class
+      virtual void HandleSensitivities(const size_t measindex) = 0;
+      //! This class is useless without an implementation object so we have to pass one to the constructor
+      ThreeDGravityCalculator(boost::shared_ptr<ThreeDGravityImplementation> TheImp);
+      virtual ~ThreeDGravityCalculator();
+      };
 
+    /*! This class provides a simple way to create a calculator object
+     * with an appropriate implementation object without major user
+     * interaction. This is the standard way of creating new calculator
+     * classes. We implement it as a template, because the type of
+     * calculator object should be known at compile time.
+     */
     template<class CalculatorClass>
     class CreateGravityCalculator
       {
     public:
       typedef boost::shared_ptr<CalculatorClass> sp_CalculatorClass;
+      //! Make a new calculator object to calculate scalar gravity data
       static boost::shared_ptr<CalculatorClass> MakeScalar(bool wantcuda =
           false);
+      //! Make a new calculator object to calculate FTG data
       static boost::shared_ptr<CalculatorClass> MakeTensor();
       };
 
+    /*! Creates a new shared pointer to a calculator object for scalar gravity of the type specified in
+     * the template parameter.
+     * @param wantcuda Do we want to use NVidia CUDA for the calculation, might be ignored if no appropriate devive found
+     * @return A shared pointer to a calculator object
+     */
     template<class CalculatorClass>
     boost::shared_ptr<CalculatorClass> CreateGravityCalculator<CalculatorClass>::MakeScalar(
         bool wantcuda)
@@ -46,7 +97,10 @@ namespace jiba
           }
         return boost::shared_ptr<CalculatorClass>(new CalculatorClass(Imp));
       }
-
+    /*! Creates a new shared pointer to a calculator object for tensorial gravity of the type specified in
+     * the template parameter.
+     * @return A shared pointer to a calculator object
+     */
     template<class CalculatorClass>
     boost::shared_ptr<CalculatorClass> CreateGravityCalculator<CalculatorClass>::MakeTensor()
       {
@@ -55,28 +109,7 @@ namespace jiba
         return boost::shared_ptr<CalculatorClass>(new CalculatorClass(Imp));
       }
 
-    class ThreeDGravityCalculator
-      {
-    private:
-      rmat CurrentSensitivities;
-    protected:
-      boost::shared_ptr<ThreeDGravityImplementation> Imp;
-
-      void CheckModelConsistency(const ThreeDGravityModel &Model);
-    public:
-
-      virtual rvec Calculate(const ThreeDGravityModel &Model) = 0;
-      ThreeDGravityCalculator(
-          boost::shared_ptr<ThreeDGravityImplementation> TheImp);
-      rmat &SetCurrentSensitivities()
-        {
-          return CurrentSensitivities;
-        }
-      virtual void HandleSensitivities(const size_t measindex) = 0;
-      ThreeDGravityCalculator();
-      virtual ~ThreeDGravityCalculator();
-      };
-
+  /* @} */
   }
 
 #endif /* THREEDGRAVITYCALCULATOR_H_ */

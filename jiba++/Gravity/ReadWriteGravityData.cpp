@@ -49,16 +49,17 @@ namespace jiba
         rvec &MatVec, size_t n)
       {
         //read in the component from the netcdf file
-        ThreeDGravityModel::tScalarMeasVec tempdata(MatVec.size()/9);
+        rvec tempdata(MatVec.size()/9);
         ReadVec(NetCDFFile, CompName, tempdata);
         //copy to the right location in the matrix
         for (size_t i = 0; i < tempdata.size(); ++i)
-          MatVec(i*9 +n) = tempdata.at(i);
+          MatVec(i*9 +n) = tempdata(i);
       }
 
     //! Write a vectorial quantity to a netcdf file
+    template<class VectorType>
     void WriteVec(NcFile &NetCDFFile, const std::string &MeasPosName,
-        const ThreeDGravityModel::tMeasPosVec &Position, NcDim *Dimension, const std::string unit)
+        const VectorType &Position, NcDim *Dimension, const std::string unit)
       {
         const size_t nmeas = Position.size();
         NcVar *PosVar = NetCDFFile.add_var(MeasPosName.c_str(), ncDouble,
@@ -71,9 +72,9 @@ namespace jiba
         const rvec &MatVec, const size_t n,
         NcDim *Dimension)
       {
-        ThreeDGravityModel::tScalarMeasVec tempdata(MatVec.size()/9);
+        rvec tempdata(MatVec.size()/9);
         for (size_t i = 0; i < tempdata.size(); ++i)
-          tempdata.at(i) = MatVec(i+n);
+          tempdata(i) = MatVec(i+n);
         WriteVec(NetCDFFile, CompName, tempdata, Dimension,"1/s2");
       }
 

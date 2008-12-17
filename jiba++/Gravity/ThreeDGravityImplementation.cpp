@@ -14,24 +14,23 @@ namespace jiba
 
     ThreeDGravityImplementation::ThreeDGravityImplementation()
       {
-        // TODO Auto-generated constructor stub
 
       }
 
     ThreeDGravityImplementation::~ThreeDGravityImplementation()
       {
-        // TODO Auto-generated destructor stub
       }
 
     rvec ThreeDGravityImplementation::Calculate(
         const ThreeDGravityModel &Model, ThreeDGravityCalculator &Calculator)
       {
 
-        // make sure we have coordinates for all sites
+        // get the number of measurements
+        // this class is only called from a calculator object
+        // which performs consistency check
         const size_t nmeas = Model.GetMeasPosX().size();
-        //creating constant arrays instead of having function calls in the loop below
-        //greatly speeds up the parallel section
-        //also Get?Coordinates are not thread-safe
+        //Cache the coordinate and size information
+        //to avoid problems with thread safety
         XCoord.resize(boost::extents[Model.GetXCoordinates().size()]);
         YCoord.resize(boost::extents[Model.GetYCoordinates().size()]);
         ZCoord.resize(boost::extents[Model.GetZCoordinates().size()]);
@@ -45,39 +44,38 @@ namespace jiba
         std::copy(Model.GetYCellSizes().begin(),Model.GetYCellSizes().end(),YSizes.begin());
         std::copy(Model.GetZCellSizes().begin(),Model.GetZCellSizes().end(),ZSizes.begin());
 
-
+        //allocate enough memory for all datapoints in the result vector
         rvec result(nmeas * GetDataPerMeasurement());
 
         // calculate the size of the modelling domain for the background adjustment
+        // this way we do not have to recalculate within the loop
         const double modelxwidth = std::accumulate(
             Model.GetXCellSizes().begin(), Model.GetXCellSizes().end(), 0.0);
         const double modelywidth = std::accumulate(
             Model.GetYCellSizes().begin(), Model.GetYCellSizes().end(), 0.0);
         const double modelzwidth = std::accumulate(
             Model.GetZCellSizes().begin(), Model.GetZCellSizes().end(), 0.0);
-        const size_t nmod = Model.GetDensities().shape()[0]
-            * Model.GetDensities().shape()[1] * Model.GetDensities().shape()[2]
-            + Model.GetBackgroundDensities().size();
+        //the total number of model parameters, gridded domain + background
+        const size_t nmod = Model.GetDensities().num_elements() + Model.GetBackgroundDensities().size();
 
         // for all measurement points add the responses of the discretized part and the 1D background
         for (size_t i = 0; i < nmeas; ++i)
           {
-
+            // the vector to hold the result for the current measurement
             rvec currresult(GetDataPerMeasurement());
 
-            currresult = CalcGridded(Model.GetMeasPosX()[i],
-                Model.GetMeasPosY()[i], Model.GetMeasPosZ()[i], Model,
+            currresult = CalcGridded(i, Model,
                 Calculator.SetCurrentSensitivities());
 
             //adjust for the effects of finite extents of the grid
-            currresult += CalcBackground(Model.GetMeasPosX()[i],
-                Model.GetMeasPosY()[i], Model.GetMeasPosZ()[i], modelxwidth,
+            currresult += CalcBackground(i, modelxwidth,
                 modelywidth, modelzwidth, Model,
                 Calculator.SetCurrentSensitivities());
+            //give the calculator object the chance to handle the sensitivities
+            //for the current measurement
             Calculator.HandleSensitivities(i);
             std::copy(currresult.begin(), currresult.end(), result.begin() + (i
                 * GetDataPerMeasurement()));
-
           }
         return result;
       }

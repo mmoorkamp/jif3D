@@ -13,7 +13,8 @@
 
 namespace jiba
   {
-
+    /** \addtogroup gravity Gravity forward modelling, display and inversion */
+      /* @{ */
     class CachedGravityCalculator: public jiba::ThreeDGravityCalculator
       {
     private:
@@ -40,7 +41,7 @@ namespace jiba
           boost::shared_ptr<ThreeDGravityImplementation> TheImp);
       virtual ~CachedGravityCalculator();
       };
-
+    /* @} */
   }
 
 #endif /* CACHEDGRAVITYCALCULATOR_H_ */

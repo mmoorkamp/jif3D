@@ -18,7 +18,7 @@ namespace jiba
     //! This class implements the depth weighting function necessary to counter-act the decay of the sensitivities for gravity data
     /*! Both scalar and tensor gravity data have sensitivity kernels that strongly decay with depth. The result
      * is that in an inversion all structure is concentrated at the top. This class implements functions of the form
-     * \f$ \frac{1}{(z-z_0)^n} \f$ and its derivatives. For scalar data we choose \f$n=3\f$ and fit \f$ z_0\f$ so we match
+     * \f$ (z-z_0)^n \f$ and its derivatives. For scalar data we choose \f$n=-3\f$ and fit \f$ z_0\f$ so we match
      * the decay of the kernel with depth.
      */
     class WeightingTerm

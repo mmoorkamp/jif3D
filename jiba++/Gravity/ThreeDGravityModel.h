@@ -27,12 +27,11 @@ namespace jiba
     //! We store the 3x3 matrix for gravimetric measurements in a ublas matrix with real entries
     typedef rmat GravimetryMatrix;
 
-    //! The class used to store the gravity model and calculate the gravity values at the measurement points
+    //! The class used to store the gravity model and the location of the measurement points
     class ThreeDGravityModel: public ThreeDModelBase
       {
     public:
-      typedef std::vector<double> tScalarMeasVec;
-      typedef std::vector<GravimetryMatrix> tTensorMeasVec;
+      typedef std::vector<double> tBackgroundVec;
       typedef std::vector<double> tMeasPosVec;
     private:
       //! Create a dimension for the measurement positions in a netcdf file
@@ -45,12 +44,12 @@ namespace jiba
       //! the z-coordinates of the measurement points
       tMeasPosVec MeasPosZ;
       //! The densities of the background layers
-      tScalarMeasVec bg_densities;
+      tBackgroundVec bg_densities;
       //! The thicknesses of the background layers
-      tScalarMeasVec bg_thicknesses;
+      tBackgroundVec bg_thicknesses;
       //! Write out the values for a the measurement to an ascii file
       void
-          PlotMeasAscii(const std::string &filename, tScalarMeasVec &Data) const;
+          PlotMeasAscii(const std::string &filename, rvec &Data) const;
     public:
       //! return read only access to the stored density values
       const t3DModelData &GetDensities() const
@@ -62,25 +61,25 @@ namespace jiba
         {
           return ThreeDModelBase::SetData();
         }
-      //! Set the density of the background, it extends to infinity in horizontal directions and to the depth of the model in z-direction
-      void SetBackgroundDensities(const tScalarMeasVec value)
+      //! Set the density of the background, it extends to infinity in horizontal directions and to the depth specified by the thicknesses in vertical direction
+      void SetBackgroundDensities(const tBackgroundVec value)
         {
           bg_densities.clear();
           copy(value.begin(), value.end(), back_inserter(bg_densities));
         }
       //! Return the densities of the background layers
-      const tScalarMeasVec &GetBackgroundDensities() const
+      const tBackgroundVec &GetBackgroundDensities() const
         {
           return bg_densities;
         }
-      //! Set the thicknesses of the background layers, the individual thicknesses are given in m
-      void SetBackgroundThicknesses(const tScalarMeasVec value)
+      //! Set the thicknesses of the background layers, the individual thicknesses are given in m the total thickness of the background layers does not need to coincide with the gridded domain
+      void SetBackgroundThicknesses(const tBackgroundVec value)
         {
           bg_thicknesses.clear();
           copy(value.begin(), value.end(), back_inserter(bg_thicknesses));
         }
       //! Return the thicknesses of the background layers in m
-      const tScalarMeasVec &GetBackgroundThicknesses() const
+      const tBackgroundVec &GetBackgroundThicknesses() const
         {
           return bg_thicknesses;
         }
