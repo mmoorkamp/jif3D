@@ -13,7 +13,8 @@
 
 namespace jiba
   {
-
+    /** \addtogroup gravity Gravity forward modelling, display and inversion */
+      /* @{ */
     class FullSensitivityGravityCalculator: public jiba::CachedGravityCalculator
       {
     private:
@@ -26,7 +27,7 @@ namespace jiba
       FullSensitivityGravityCalculator(boost::shared_ptr<ThreeDGravityImplementation> TheImp);
       virtual ~FullSensitivityGravityCalculator();
       };
-
+    /* @} */
   }
 
 #endif /* FULLSENSITIVITYGRAVITYCALCULATOR_H_ */

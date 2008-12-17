@@ -42,13 +42,13 @@ namespace jiba {
      * If we multiply the result of this function with density
      * in \f$ g/cm^3 \f$ we get the acceleration in \f$m/s^2\f$.
      *
-     * This equation works as long as the measurement point is not on one of the corners or edges of the box.
+     * This equation works as long as the measurement point is not on one of the corners of the box.
      * @param meas_x x-coordinate of the measurement in m
      * @param meas_y y-coordinate of the measurement in m
      * @param meas_z z-coordinate of the measurement in m
-     * @param ul_corner_x x-coordinate of the upper left front corner of the density element
-     * @param ul_corner_y y-coordinate of the upper left front corner of the density element
-     * @param ul_corner_z z-coordinate of the upper left front corner of the density element
+     * @param ul_corner_x x-coordinate of the upper left front corner of the density element in m
+     * @param ul_corner_y y-coordinate of the upper left front corner of the density element in m
+     * @param ul_corner_z z-coordinate of the upper left front corner of the density element in m
      * @param x_size size of the prism in x-direction in m
      * @param y_size size of the prism in y-direction in m
      * @param z_size size of the prism in z-direction in m
@@ -89,9 +89,9 @@ namespace jiba {
      * @param meas_x x-coordinate of the measurement in m
      * @param meas_y y-coordinate of the measurement in m
      * @param meas_z z-coordinate of the measurement in m
-     * @param ul_corner_x x-coordinate of the upper left front corner of the density element
-     * @param ul_corner_y y-coordinate of the upper left front corner of the density element
-     * @param ul_corner_z z-coordinate of the upper left front corner of the density element
+     * @param ul_corner_x x-coordinate of the upper left front corner of the density element in m
+     * @param ul_corner_y y-coordinate of the upper left front corner of the density element in m
+     * @param ul_corner_z z-coordinate of the upper left front corner of the density element in m
      * @param x_size size of the prism in x-direction in m
      * @param y_size size of the prism in y-direction in m
      * @param z_size size of the prism in z-direction in m
@@ -132,9 +132,9 @@ namespace jiba {
      * @param meas_x x-coordinate of the measurement in m
      * @param meas_y y-coordinate of the measurement in m
      * @param meas_z z-coordinate of the measurement in m
-     * @param ul_corner_x x-coordinate of the upper left front corner of the density element
-     * @param ul_corner_y y-coordinate of the upper left front corner of the density element
-     * @param ul_corner_z z-coordinate of the upper left front corner of the density element
+     * @param ul_corner_x x-coordinate of the upper left front corner of the density element in m
+     * @param ul_corner_y y-coordinate of the upper left front corner of the density element in m
+     * @param ul_corner_z z-coordinate of the upper left front corner of the density element in m
      * @param x_size size of the prism in x-direction in m
      * @param y_size size of the prism in y-direction in m
      * @param z_size size of the prism in z-direction in m
@@ -180,9 +180,9 @@ namespace jiba {
      * @param meas_x x-coordinate of the measurement in m
      * @param meas_y y-coordinate of the measurement in m
      * @param meas_z z-coordinate of the measurement in m
-     * @param ul_corner_x x-coordinate of the upper left front corner of the density element
-     * @param ul_corner_y y-coordinate of the upper left front corner of the density element
-     * @param ul_corner_z z-coordinate of the upper left front corner of the density element
+     * @param ul_corner_x x-coordinate of the upper left front corner of the density element in m
+     * @param ul_corner_y y-coordinate of the upper left front corner of the density element in m
+     * @param ul_corner_z z-coordinate of the upper left front corner of the density element in m
      * @param x_size size of the prism in x-direction in m
      * @param y_size size of the prism in y-direction in m
      * @param z_size size of the prism in z-direction in m
@@ -218,7 +218,7 @@ namespace jiba {
         return returnvalue;
       }
 
-    /*! Calculate the effect of a semi-infinite sheet with constant density
+    /*! Calculate the vertical accelerational effect of a semi-infinite sheet with constant density
      * @param hor_dist Horizontal distance of the sheet from the measurement site in m
      * @param ver_dist Vertical distance of the sheet from the measurement site in m
      * @param thick Thickness of the sheet in m

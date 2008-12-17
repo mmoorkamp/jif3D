@@ -1,6 +1,6 @@
 project 
     : requirements <include>/usr/local/include <include>/usr/local/R-2.6.2/include <threading>multi 
-    	<variant>release:<define>NDEBUG <cxxflags>-fopenmp <linkflags>-fopenmp
+    	<variant>release:<define>NDEBUG  <cxxflags>-fopenmp <linkflags>-fopenmp
     ;
     
 path-constant TOP : . ;
@@ -8,7 +8,10 @@ path-constant TOP : . ;
 import cuda ;
 
 using gcc : 4.3 : g++-4.3 ;
-using intel-linux : 11.0 : icpc ; 
+using intel-linux : 11.0 : icpc : <cxxflags>-mssse3 ; 
+using sun :  : CC : <compileflags>-library=stlport4 <linkflags>-library=stlport4 
+                   <define>BOOST_UBLAS_UNSUPPORTED_COMPILER=0 <define>BIND_FORTRAN_LOWERCASE_UNDERSCORE ;
+
 use-project /Global : Global ;
 use-project /Gravity : Gravity ;
 use-project /ModelBase : ModelBase ;
@@ -29,6 +32,7 @@ lib netcdf_c++ : : <name>netcdf_c++ ;
 lib gfortran : : <name>gfortran ;
 lib gplib :  : <name>gplib <search>/home/mmoorkamp/workspace/gplib ;
 lib cudart : : <name>cudart <search>/usr/local/cuda/lib ;
+lib cutil : : <name>cutil <search>/home/mmoorkamp/NVIDIA_CUDA_SDK/lib ;
 
 build-project Global ;
 build-project Gravity ;

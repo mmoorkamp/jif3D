@@ -11,47 +11,64 @@
 #include "BasicGravElements.h"
 namespace jiba
   {
+    // These are forward calculations for the functions declared in gravcuda.cu that
+    // need to be called from here, they provide the interface to CUDA and purely
+    // operate with basic C types
 
+    // Calculate the effect of a single measurement, it return the gridded part of the sensitivities
     extern "C"
 void      SingleScalarMeas(const double x_meas, const double y_meas,
           const double z_meas, double *d_xcoord, double *d_ycoord,
           double *d_zcoord, double *d_xsize, double *d_ysize, double *d_zsize,
           double *d_result, const int nx, const int ny, const int nz,
           double *returnvalue);
-
+    //Perform the allocation of arrays on the GPU and copy the values
       extern "C" void PrepareData(double **d_xcoord, double **d_ycoord, double **d_zcoord,
           double **d_xsize, double **d_ysize, double **d_zsize, double **d_result,
           const double *xcoord,const double *ycoord,const double *zcoord,
           const double *xsize,const double *ysize,const double *zsize, unsigned int nx,unsigned int ny,unsigned int nz);
-
+       // Free the allocated data on the GPU
       extern "C" void FreeData(double **d_xcoord, double **d_ycoord, double **d_zcoord,
           double **d_xsize, double **d_ysize, double **d_zsize, double **d_result);
 
       ScalarCudaGravityImp::ScalarCudaGravityImp()
         {
-          // TODO Auto-generated constructor stub
-
+          // we have to do some raw pointer operations for handling sensitivities with CUDA
+          currsens = NULL;
+          currsenssize = 0;
         }
 
       ScalarCudaGravityImp::~ScalarCudaGravityImp()
         {
-          // TODO Auto-generated destructor stub
+          //if we allocated memory we have to free it
+          if (currsens != NULL)
+            {
+              delete currsens;
+            }
+          currsens = NULL;
         }
-
-      rvec ScalarCudaGravityImp::CalcBackground(const double xmeas, const double ymeas,
-          const double zmeas, const double xwidth, const double ywidth,
+      /*! Calculate the effect of the background layers for a single measurement
+       * @param measindex The index of the measurement in the Model
+       * @param xwidth The total width of the gridded domain in x-direction in m
+       * @param ywidth The total width of the gridded domain in y-direction in m
+       * @param zwidth The total width of the gridded domain in z-direction in m
+       * @param Model The Gravity model
+       * @param Sensitivities If the matrix passed here holds \f$ 1 \times nbg+ngrid \f$ or more elements, store sensitivity information in the right fields
+       * @return A vector with a single component that contains the gravitational effect of the background
+       */
+      rvec ScalarCudaGravityImp::CalcBackground(const size_t measindex, const double xwidth, const double ywidth,
           const double zwidth, const ThreeDGravityModel &Model,
           rmat &Sensitivities)
         {
-          //make sure we have thicknesses and densities for all layers
-          assert(Model.GetBackgroundDensities().size() == Model.GetBackgroundThicknesses().size());
+          const double x_meas = Model.GetMeasPosX()[measindex];
+          const double y_meas = Model.GetMeasPosY()[measindex];
+          const double z_meas = Model.GetMeasPosZ()[measindex];
           const size_t nbglayers = Model.GetBackgroundThicknesses().size();
           double result = 0.0;
           double currtop = 0.0;
           double currvalue = 0.0;
           double currbottom = 0.0;
-          const size_t modelsize = Model.GetDensities().shape()[0]
-          * Model.GetDensities().shape()[1] * Model.GetDensities().shape()[2];
+          const size_t modelsize = Model.GetDensities().num_elements();
           const bool storesens = (Sensitivities.size1() >= ndatapermeas)
           && (Sensitivities.size2() >= modelsize + nbglayers);
           // for all layers of the background
@@ -66,14 +83,14 @@ void      SingleScalarMeas(const double x_meas, const double y_meas,
               if (currtop < zwidth && (currbottom <= zwidth))
 
                 {
-                  currvalue -= CalcGravBoxTerm(xmeas, ymeas, zmeas, 0.0, 0.0,
+                  currvalue -= CalcGravBoxTerm(x_meas, y_meas, z_meas, 0.0, 0.0,
                       currtop, xwidth, ywidth, currthick);
                 }
               //if some of the background coincides and some is below
               if (currtop < zwidth && currbottom> zwidth)
 
                 {
-                  currvalue -= CalcGravBoxTerm(xmeas, ymeas, zmeas, 0.0, 0.0,
+                  currvalue -= CalcGravBoxTerm(x_meas, y_meas, z_meas, 0.0, 0.0,
                       currtop, xwidth, ywidth, (zwidth - currtop));
                 }
               if (storesens)
@@ -88,50 +105,67 @@ void      SingleScalarMeas(const double x_meas, const double y_meas,
           return returnvector;
         }
 
-      rvec ScalarCudaGravityImp::CalcGridded(const double x_meas, const double y_meas,
-          const double z_meas, const ThreeDGravityModel &Model,
+      /*! Calculate the effect of the gridded domain on the GPU for a single measurement
+       * @param measindex The index of the measurement
+       * @param Model The gravity model
+       * @param Sensitivities If this parameters has \f$ 1 \times nbg+ngrid \f$ or more elements, store sensitivity information
+       * @return A single component vector with the accelerational effect of the gridded domain
+       */
+      rvec ScalarCudaGravityImp::CalcGridded(const size_t measindex, const ThreeDGravityModel &Model,
           rmat &Sensitivities)
         {
-
+          //first we define some constants and abbreviations
+          const double x_meas = Model.GetMeasPosX()[measindex];
+          const double y_meas = Model.GetMeasPosY()[measindex];
+          const double z_meas = Model.GetMeasPosZ()[measindex];
+          const size_t nbglayers = Model.GetBackgroundThicknesses().size();
+          const size_t ngrid = Model.GetDensities().num_elements();
+          // we determine whether there are enough elements in the sensitivity matrix
+          const bool storesens = (Sensitivities.size1() >= ndatapermeas)
+          && (Sensitivities.size2() >= ngrid + nbglayers);
+          //if currsens does not have sufficient size
+          if (currsenssize != ngrid)
+            {
+              //check whether it has been allocated before
+              if (currsens != NULL)
+                {
+                  delete currsens;
+                }
+              //allocate memory and store how much
+              currsens = new double[ngrid];
+              currsenssize = ngrid;
+            }
+          //This call goes into the GPU, implementation in gravcuda.cu
           SingleScalarMeas(x_meas,y_meas,z_meas,d_xcoord,d_ycoord,d_zcoord,d_xsize,d_ysize,d_zsize,d_result,
-              Model.GetDensities().shape()[0],Model.GetDensities().shape()[1],Model.GetDensities().shape()[2],&Sensitivities.data()[0]);
+              Model.GetDensities().shape()[0],Model.GetDensities().shape()[1],Model.GetDensities().shape()[2],currsens);
           rvec result(1);
-
-          result(0) = std::inner_product(Sensitivities.data().begin(),
-              Sensitivities.data().end(),Model.GetDensities().origin(),0.0);
+          //the GPU only calculates the sensitivities, we calculate the acceleration with the densities
+          result(0) = std::inner_product(currsens,
+              currsens+ngrid,Model.GetDensities().origin(),0.0);
+          if (storesens)
+            {
+              std::copy(currsens,currsens+ngrid,Sensitivities.data().begin());
+            }
 
           return result;
         }
-
+      /*! The reimplementation for CUDA mainly manages the allocation of memory on the GPU
+       * @param Model The gravity model
+       * @param Calculator The calculator object
+       * @return The vector holding the gravitational acceleration at each measurement site
+       */
       rvec ScalarCudaGravityImp::Calculate(const ThreeDGravityModel &Model,ThreeDGravityCalculator &Calculator)
         {
 
           const unsigned int nx = Model.GetDensities().shape()[0];
           const unsigned int ny = Model.GetDensities().shape()[1];
           const unsigned int nz = Model.GetDensities().shape()[2];
-          const unsigned int nelements = nx * ny * nz;
-          const double modelxwidth = std::accumulate(
-              Model.GetXCellSizes().begin(), Model.GetXCellSizes().end(), 0.0);
-          const double modelywidth = std::accumulate(
-              Model.GetYCellSizes().begin(), Model.GetYCellSizes().end(), 0.0);
-          const double modelzwidth = std::accumulate(
-              Model.GetZCellSizes().begin(), Model.GetZCellSizes().end(), 0.0);
+          //allocate memory
           PrepareData(&d_xcoord,&d_ycoord,&d_zcoord,&d_xsize,&d_ysize,&d_zsize,&d_result,Model.GetXCoordinates().data(),Model.GetYCoordinates().data(),
               Model.GetZCoordinates().data(),Model.GetXCellSizes().data(),Model.GetYCellSizes().data(),Model.GetZCellSizes().data(),nx,ny,nz);
-          const unsigned int nmeas = Model.GetMeasPosX().size();
-          rvec result(nmeas);
-          for (size_t i = 0; i < nmeas; ++i)
-            {
-              rvec currresult = CalcGridded(Model.GetMeasPosX()[i],Model.GetMeasPosY()[i],Model.GetMeasPosZ()[i],
-                  Model,Calculator.SetCurrentSensitivities());
-              currresult += CalcBackground(Model.GetMeasPosX()[i],
-                  Model.GetMeasPosY()[i], Model.GetMeasPosZ()[i], modelxwidth,
-                  modelywidth, modelzwidth, Model,
-                  Calculator.SetCurrentSensitivities());
-              Calculator.HandleSensitivities(i);
-              result(i) = currresult(0);
-
-            }
+          // call the base class that coordinates the calculation of gridded and background parts
+          rvec result(ThreeDGravityImplementation::Calculate(Model,Calculator));
+          // free memory
           FreeData(&d_xcoord,&d_ycoord,&d_zcoord,&d_xsize,&d_ysize,&d_zsize,&d_result);
           return result;
         }

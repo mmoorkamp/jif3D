@@ -186,7 +186,7 @@ namespace jiba
 
 
     void ThreeDGravityModel::PlotMeasAscii(const std::string &filename,
-        tScalarMeasVec &Data) const
+        rvec &Data) const
       {
         std::ofstream outfile(filename.c_str());
 
@@ -202,7 +202,7 @@ namespace jiba
                 << " ";
             outfile << std::setw(15) << std::setprecision(5) << MeasPosZ.at(i)
                 << " ";
-            outfile << std::setw(15) << std::setprecision(5) << Data.at(i);
+            outfile << std::setw(15) << std::setprecision(5) << Data(i);
             outfile << std::endl;
           }
       }

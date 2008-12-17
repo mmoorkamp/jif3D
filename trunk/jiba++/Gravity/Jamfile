@@ -11,7 +11,7 @@ install $(TOP) : gravity
            : <install-dependencies>on <install-type>LIB
            ;
 
-alias core :  ../ModelBase//modelbase ../Global ..//netcdf_c++ ..//netcdf ..//cudart ;
+alias core :  ../ModelBase//modelbase ../Global ..//netcdf_c++ ..//netcdf ..//cudart ..//cutil ;
 
 unit-test gravity_test : test_ThreeDGravityModel.cpp gravity  core : : <include>. ;
 unit-test weighting_test : test_weighting.cpp gravity ../Inversion//inversion core  : : <include>. ;

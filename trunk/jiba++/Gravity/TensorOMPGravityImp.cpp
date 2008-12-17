@@ -32,15 +32,16 @@ namespace jiba
      * @param meas_index The index of the measurement
      * @return The gravitational tensor due to the background
      */
-    rvec TensorOMPGravityImp::CalcBackground(const double xmeas,
-        const double ymeas, const double zmeas, const double xwidth,
-        const double ywidth, const double zwidth,
-        const ThreeDGravityModel &Model,
-        rmat &Sensitivities)
+    rvec TensorOMPGravityImp::CalcBackground(const size_t measindex,
+        const double xwidth, const double ywidth, const double zwidth,
+        const ThreeDGravityModel &Model, rmat &Sensitivities)
       {
         //make sure we have thicknesses and densities for all layers
         assert(Model.GetBackgroundDensities().size() == Model.GetBackgroundThicknesses().size());
         const size_t nbglayers = Model.GetBackgroundDensities().size();
+        const double x_meas = Model.GetMeasPosX()[measindex];
+        const double y_meas = Model.GetMeasPosY()[measindex];
+        const double z_meas = Model.GetMeasPosZ()[measindex];
         GravimetryMatrix result(3, 3);
         GravimetryMatrix currvalue(3, 3);
         std::fill_n(result.data().begin(), ndatapermeas, 0.0);
@@ -59,14 +60,14 @@ namespace jiba
 
               {
                 // We only have to substract the effect of the gridding box, the effect of an inifite sheet is zero
-                currvalue = -CalcTensorBoxTerm(xmeas, ymeas, zmeas, 0.0, 0.0,
+                currvalue = -CalcTensorBoxTerm(x_meas, y_meas, z_meas, 0.0, 0.0,
                     currtop, xwidth, ywidth, currthick);
 
               }
             if (currtop < zwidth && currbottom > zwidth) //if some of the background coincides and some is below
 
               {
-                currvalue = -CalcTensorBoxTerm(xmeas, ymeas, zmeas, 0.0, 0.0,
+                currvalue = -CalcTensorBoxTerm(x_meas, y_meas, z_meas, 0.0, 0.0,
                     currtop, xwidth, ywidth, (zwidth - currtop));
               }
             if (storesens)
@@ -83,22 +84,20 @@ namespace jiba
         return resultvector;
       }
 
-    rvec TensorOMPGravityImp::CalcGridded(const double x_meas,
-        const double y_meas, const double z_meas,
-        const ThreeDGravityModel &Model,
-        rmat &Sensitivities)
+    rvec TensorOMPGravityImp::CalcGridded(const size_t measindex,
+        const ThreeDGravityModel &Model, rmat &Sensitivities)
       {
         const size_t xsize = Model.GetDensities().shape()[0];
         const size_t ysize = Model.GetDensities().shape()[1];
         const size_t zsize = Model.GetDensities().shape()[2];
+        const double x_meas = Model.GetMeasPosX()[measindex];
+        const double y_meas = Model.GetMeasPosY()[measindex];
+        const double z_meas = Model.GetMeasPosZ()[measindex];
         const int nmod = xsize * ysize * zsize;
         const bool storesens = (Sensitivities.size1() >= ndatapermeas)
             && (Sensitivities.size2() >= nmod);
         GravimetryMatrix currvalue(3, 3);
 
-        const ThreeDGravityModel::t3DModelDim XCoord(Model.GetXCoordinates());
-        const ThreeDGravityModel::t3DModelDim YCoord(Model.GetYCoordinates());
-        const ThreeDGravityModel::t3DModelDim ZCoord(Model.GetZCoordinates());
         //we cannot add up a user defined quantity in parallel
         //so break up the tensor into its component with different variables
         //and assign the results after the parallel loop
@@ -120,9 +119,7 @@ namespace jiba
                 //currvalue contains only the geometric term
                 currvalue = CalcTensorBoxTerm(x_meas, y_meas, z_meas,
                     XCoord[xindex], YCoord[yindex], ZCoord[zindex],
-                    Model.GetXCellSizes()[xindex],
-                    Model.GetYCellSizes()[yindex],
-                    Model.GetZCellSizes()[zindex]);
+                    XSizes[xindex], YSizes[yindex], ZSizes[zindex]);
                 //to we have to multiply each element by the density
                 const double Density =
                     Model.GetDensities()[xindex][yindex][zindex];

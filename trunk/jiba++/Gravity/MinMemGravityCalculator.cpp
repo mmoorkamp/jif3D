@@ -19,9 +19,14 @@ namespace jiba
 
     MinMemGravityCalculator::~MinMemGravityCalculator()
       {
-        // TODO Auto-generated destructor stub
+
       }
 
+    /*! For this simple case the calculator class only checks the model for consistency,
+     * then calls the implementation object to do the calculation and returns the result
+     * @param Model The Gravity model for the forward calculation
+     * @return The resulting measurements (scalar or tensorial)
+     */
     rvec MinMemGravityCalculator::Calculate(const ThreeDGravityModel &Model)
       {
     	SetCurrentSensitivities().resize(0,0);

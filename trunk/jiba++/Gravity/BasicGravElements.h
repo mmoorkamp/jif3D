@@ -13,6 +13,8 @@
 
 namespace jiba
   {
+    /** \addtogroup gravity Gravity forward modelling, display and inversion */
+    /* @{ */
     //! The constant of gravity
     static const double Grav_const = 6.67428e-8; // in units cm^3/g s
 
@@ -29,12 +31,12 @@ namespace jiba
         const double meas_y, const double meas_z, const double ul_corner_x,
         const double ul_corner_y, const double ul_corner_z,
         const double x_size, const double y_size, const double z_size);
-
+    //! Calculate the Uxx geometric term for a single rectangular prism, is also used for the other diagonal elements with permuted arguments
     double CalcUxxTerm(const double meas_x, const double meas_y,
         const double meas_z, const double ul_corner_x,
         const double ul_corner_y, const double ul_corner_z,
         const double x_size, const double y_size, const double z_size);
-
+    //! Calculate the Uxy geometric term for a single rectangular prism, is also used for the other off-diagonal elements with permuted arguments
     double CalcUxyTerm(const double meas_x, const double meas_y,
         const double meas_z, const double ul_corner_x,
         const double ul_corner_y, const double ul_corner_z,
@@ -43,7 +45,7 @@ namespace jiba
     //! the gravitational acceleration of an semi-infinite slab
     double CalcGravSemiInfSheet(const double hor_dist, const double ver_dist,
         const double thick, const double density);
-    //! Calculate one of the terms of diagonal elements of the gravimetric matrxi
+    //! Calculate one of the terms in the calculation of diagonal elements of the gravimetric matrxi
     double CalcFTGDiagonalTerm(const double a, const double b, const double c);
     //! Calculate one of the terms of off-diagonal elements of the gravimetric matrxi
     double CalcFTGOffDiagonalTerm(const double value, const double x,
@@ -53,6 +55,7 @@ namespace jiba
       {
         return 2.0 * M_PI * Grav_const * thick;
       }
+  /* @} */
   //end of namespace jiba
   }
 #endif /* BASICGRAVELEMENTS_H_ */

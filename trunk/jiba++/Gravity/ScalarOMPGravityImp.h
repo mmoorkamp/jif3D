@@ -13,27 +13,33 @@
 
 namespace jiba
   {
-
+    /** \addtogroup gravity Gravity forward modelling, display and inversion */
+    /* @{ */
+    /*! Calculation of scalar gravity acceleration using parallelization with openmp.
+     * This is the standard implementation and as openmp uses pragma directives can
+     * also be used in serial with a compiler that does not understand openmp.
+     */
     class ScalarOMPGravityImp: public jiba::ThreeDGravityImplementation
       {
     private:
+      // we calculate scalar data, so we have one data point per site
       static const size_t ndatapermeas = 1;
+      //! Implement the calculation of the background repsonse
+      virtual rvec CalcBackground(const size_t measindex, const double xwidth, const double ywidth,
+          const double zwidth, const ThreeDGravityModel &Model,
+          rmat &Sensitivities);
+      //! Calculate the response of the gridded part
+      virtual rvec CalcGridded(const size_t measindex, const ThreeDGravityModel &Model,
+          rmat &Sensitivities);
     public:
       virtual size_t GetDataPerMeasurement()
         {
           return ndatapermeas;
         }
-      virtual rvec CalcBackground(const double xmeas, const double ymeas,
-          const double zmeas, const double xwidth, const double ywidth,
-          const double zwidth, const ThreeDGravityModel &Model,
-          rmat &Sensitivities);
-      virtual rvec CalcGridded(const double x_meas, const double y_meas,
-          const double z_meas, const ThreeDGravityModel &Model,
-          rmat &Sensitivities);
       ScalarOMPGravityImp();
       virtual ~ScalarOMPGravityImp();
       };
-
+  /* @} */
   }
 
 #endif /* SCALAROMPGRAVITYIMP_H_ */

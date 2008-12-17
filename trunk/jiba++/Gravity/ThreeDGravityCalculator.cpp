@@ -29,9 +29,6 @@ namespace jiba
         const size_t ysize = Model.GetDensities().shape()[1];
         const size_t zsize = Model.GetDensities().shape()[2];
         //do some sanity checks
-        assert(xsize == Model.GetXCoordinates().shape()[0]);
-        assert(ysize == Model.GetYCoordinates().shape()[0]);
-        assert(zsize == Model.GetZCoordinates().shape()[0]);
         assert(xsize == Model.GetXCellSizes().shape()[0]);
         assert(ysize == Model.GetYCellSizes().shape()[0]);
         assert(zsize == Model.GetZCellSizes().shape()[0]);
