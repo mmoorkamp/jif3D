@@ -35,6 +35,13 @@ namespace jiba
         }
       };
     //! Convert a streamable type into a string
+    /*! This function can be used to make a string from any type
+     * that has an overload for the streaming operator <<. This is
+     * very useful for the conversion of numbers to strings to construct
+     * filenames, for example.
+     * @param x The input value that should be converted to a string
+     * @return The string containing "x"
+     */
     template<typename T> inline std::string stringify(const T& x)
       {
         std::ostringstream o;
@@ -44,6 +51,11 @@ namespace jiba
       }
 
     //! Convert from string to a streamable type
+    /*! Convert a string to a type T that has the streaming operator >> overloaded.
+     * @param s The string that should be converted
+     * @param x The variable that holds the result of the conversion
+     * @param failIfLeftoverChars Is it an error if there are more characters in the string than can be converted ? Default is true.
+     */
     template<typename T> inline void convert(const std::string& s, T& x,
         bool failIfLeftoverChars = true)
       {
@@ -53,30 +65,48 @@ namespace jiba
           throw BadConversion(s);
       }
     //! Convert a character to upper case
+    /*! The standard toupper function needs a locale
+     * specified in the call that makes it awkward to
+     * use with algorithms like transform. This class
+     * simply takes the locale as an arguments to the
+     * constructor and provides a unary overload of operator()
+     * that is ready for use with standard algorithms.
+     */
     class mytoupper
       {
     private:
       const std::locale& loc;
     public:
+      //! The constructor needs the locale to convert special characters properly
       mytoupper(const std::locale& l) :
         loc(l)
         {
         }
+      //! Convert the character lowc to upper case given the locale of the constructor
       char operator()(const char lowc)
         {
           return std::toupper(lowc, loc);
         }
       };
     //! Convert a character to lower case
+    /*! The standard tolower function needs a locale
+     * specified in the call that makes it awkward to
+     * use with algorithms like transform. This class
+     * simply takes the locale as an arguments to the
+     * constructor and provides a unary overload of operator()
+     * that is ready for use with standard algorithms.
+     */
     class mytolower
       {
     private:
       const std::locale& loc;
     public:
+      //! The constructor needs the locale to convert special characters properly
       mytolower(const std::locale& l) :
         loc(l)
         {
         }
+      //! Convert the character lowc to lower case given the locale of the constructor
       char operator()(const char lowc)
         {
           return std::tolower(lowc, loc);
