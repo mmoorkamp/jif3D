@@ -17,10 +17,7 @@ namespace jiba
     /** \addtogroup modelbase Basic classes and routines for 3D models */
     /* @{ */
 
-    //! Read a single CellSize variable from a netcdf file
-    /*! This is a helper function that reads the cell length for a single
-     * dimension from the file.
-     */
+    //! Read a single CellSize variable from a netcdf files
     size_t ReadSizesFromNetCDF(const NcFile &NetCDFFile,
         const std::string &SizeName, ThreeDModelBase::t3DModelDim &CellSize);
     //! Write the length of the model cell along a single dimension to the file

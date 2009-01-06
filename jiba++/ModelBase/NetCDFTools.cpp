@@ -10,7 +10,13 @@
 
 namespace jiba
   {
-
+    /*! This is a helper function that reads the cell length for a single
+     * dimension from the file.
+     * @param NetCDFFile A netcdf file object ready for reading
+     * @param SizeName The name of the dimension that specifies the cell sizes, e.g. "Northing"
+     * @param CellSize This will contain the cell sizes after the call
+     * @return The number of cells
+     */
     size_t ReadSizesFromNetCDF(const NcFile &NetCDFFile,
         const std::string &SizeName, ThreeDModelBase::t3DModelDim &CellSize)
       {
@@ -39,6 +45,14 @@ namespace jiba
         return nvalues;
       }
 
+    /*! A helper function to write the cell sizes and the corresponding
+     * dimension to a netcdf file.
+     * @param NetCDFFile A netcdf file object ready for writing
+     * @param SizeName  The name of the cell size variable, e.g. "Northing"
+     * @param CellSize The vector of cell sizes
+     * @param BoundaryDim For plotting we also create a boundary variable for each cell size variable, as the dimension for this is shared by all cell sizes, we create it once and pass it to this function
+     * @return A pointer to the netcdf dimension object for the cell size variable
+     */
     NcDim *WriteSizesToNetCDF(NcFile &NetCDFFile, const std::string &SizeName,
         const ThreeDModelBase::t3DModelDim &CellSize, NcDim *BoundaryDim)
       {
