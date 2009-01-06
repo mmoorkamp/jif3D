@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
     jiba::rvec TensorResults(TensorCalculator->Calculate(GravModel));
 
 
-    jiba::SaveScalarGravityMeasurements(ModelFilename + ".out.nc", ScalarResults, GravModel.GetMeasPosX(),
+    jiba::SaveScalarGravityMeasurements(ModelFilename + ".sgd.nc", ScalarResults, GravModel.GetMeasPosX(),
         GravModel.GetMeasPosY(), GravModel.GetMeasPosZ());
     jiba::SaveTensorGravityMeasurements(ModelFilename + ".ftg.nc", TensorResults, GravModel.GetMeasPosX(),
         GravModel.GetMeasPosY(), GravModel.GetMeasPosZ());
