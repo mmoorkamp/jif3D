@@ -7,10 +7,8 @@
 
 
 /*! \file gravinv.cpp
- * Invert scalar gravity data. The program reads in a model file that specifies the inversion mesh and
- * a file with the input data. Two parameters have to be specified for the inversion: z0 determines the depth scaling
- * applied to counteract the decay of the sensisitivities. The eigenvalue threshold is the relative threshold with respect
- * to the largest eigenvalue of the sensitivity matrix below which the eigenvalues are considered 0.
+ * Invert scalar or ftg gravity data. The program reads in a model file that specifies the starting model and
+ * a file with the input data.
  *
  * The program outputs the calculated data and inversion model in netcdf and vtk file format.
  */
@@ -44,7 +42,33 @@ int main(int argc, char *argv[])
     //get the name of the file containing the data and read it in
     std::cout << "Data Filename: ";
     std::cin >> datafilename;
-    jiba::ReadScalarGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
+    jiba::GravityDataType DataType = jiba::IdentifyGravityDatafileType(
+        datafilename);
+
+    boost::shared_ptr<jiba::FullSensitivityGravityCalculator> GravityCalculator;
+    switch (DataType)
+      {
+    case jiba::scalar:
+      jiba::ReadScalarGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
+      GravityCalculator
+          = boost::shared_ptr<jiba::FullSensitivityGravityCalculator>(
+              jiba::CreateGravityCalculator<
+                  jiba::FullSensitivityGravityCalculator>::MakeScalar());
+      break;
+    case jiba::ftg:
+      jiba::ReadTensorGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
+      GravityCalculator
+          = boost::shared_ptr<jiba::FullSensitivityGravityCalculator>(
+              jiba::CreateGravityCalculator<
+                  jiba::FullSensitivityGravityCalculator>::MakeTensor());
+      break;
+    default:
+      std::cerr << "Cannot determine the type of data to invert. Aborting."
+          << std::endl;
+      exit(100);
+      break;
+      }
+
     if (Data.empty())
       throw jiba::FatalException("No measurements defined");
     const size_t nmeas = PosX.size();
@@ -55,23 +79,20 @@ int main(int argc, char *argv[])
         Model.AddMeasurementPoint(PosX.at(i), PosY.at(i), PosZ.at(i));
       }
     //calculate the response of the starting model
-    boost::shared_ptr<jiba::FullSensitivityGravityCalculator>
-        ScalarCalculator(jiba::CreateGravityCalculator<
-            jiba::FullSensitivityGravityCalculator>::MakeScalar());
-    jiba::rvec StartingData(ScalarCalculator->Calculate(Model));
+    jiba::rvec StartingData(GravityCalculator->Calculate(Model));
 
     const size_t xsize = Model.GetDensities().shape()[0];
     const size_t ysize = Model.GetDensities().shape()[1];
     const size_t zsize = Model.GetDensities().shape()[2];
     const size_t nmod = xsize * ysize * zsize;
-
-    jiba::rmat AllSens(ScalarCalculator->GetSensitivities());
+    const size_t ndata = Data.size();
+    jiba::rmat AllSens(GravityCalculator->GetSensitivities());
     jiba::rmat Sensitivities(ublas::matrix_range<jiba::rmat>(AllSens,
-        ublas::range(0, nmeas), ublas::range(0, nmod)));
+        ublas::range(0, ndata), ublas::range(0, nmod)));
     std::cout << "Gridded model size: " << nmod << " Complete size: "
         << AllSens.size2() << std::endl;
     jiba::rvec WeightVector(zsize), ModelWeight(AllSens.size2());
-    jiba::rvec DataDiffVec(nmeas), DataError(nmeas);
+    jiba::rvec DataDiffVec(ndata), DataError(ndata);
     std::transform(Data.begin(), Data.end(), StartingData.begin(),
         DataDiffVec.begin(), std::minus<double>());
     const double errorlevel = 0.02;
@@ -79,7 +100,8 @@ int main(int argc, char *argv[])
         std::multiplies<double>(), _1, errorlevel));
 
     jiba::rvec SensProfile;
-    jiba::ExtractMiddleSens(Model, Sensitivities, 1, SensProfile);
+    jiba::ExtractMiddleSens(Model, Sensitivities,
+        GravityCalculator->GetDataPerMeasurement(), SensProfile);
     double z0 = FitZ0(SensProfile, Model.GetZCellSizes(), jiba::WeightingTerm(
         -3));
     std::cout << "Estimated z0: " << z0 << std::endl;
@@ -109,8 +131,7 @@ int main(int argc, char *argv[])
     jiba::rvec InvModel(AllSens.size2());
     std::fill(InvModel.begin(), InvModel.end(), 0.0);
     jiba::DataSpaceInversion Inversion;
-    Inversion(AllSens, DataDiffVec, ModelWeight, DataError, lambda,
-        InvModel);
+    Inversion(AllSens, DataDiffVec, ModelWeight, DataError, lambda, InvModel);
 
     //add the result of the inversion to the starting model
     //we only add the gridded part, the  background is always 0 due to the weighting
@@ -118,20 +139,35 @@ int main(int argc, char *argv[])
         Model.SetDensities().origin(), Model.SetDensities().origin(),
         std::plus<double>());
     //calculate the predicted data
-    jiba::rvec InvData(ScalarCalculator->Calculate(Model));
+    jiba::rvec InvData(GravityCalculator->Calculate(Model));
     //and write out the data and model
-    jiba::Write3DDataToVTK(modelfilename + ".inv_data.vtk", "grav_accel",
-        InvData, Model.GetMeasPosX(), Model.GetMeasPosY(), Model.GetMeasPosZ());
-    jiba::SaveScalarGravityMeasurements(modelfilename + ".inv_data.nc",
-        InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
-        Model.GetMeasPosZ());
+    switch (DataType)
+      {
+    case jiba::scalar:
+      jiba::Write3DDataToVTK(modelfilename + ".inv_sgd.vtk", "grav_accel",
+          InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
+          Model.GetMeasPosZ());
+      jiba::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc",
+          InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
+          Model.GetMeasPosZ());
+      break;
+    case jiba::ftg:
+      jiba::Write3DTensorDataToVTK(modelfilename + ".inv_ftg.vtk", "grav_accel",
+          InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
+          Model.GetMeasPosZ());
+      jiba::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc",
+          InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
+          Model.GetMeasPosZ());
+      break;
+      }
+
     Model.WriteVTK(modelfilename + ".inv.vtk");
     Model.WriteNetCDF(modelfilename + ".inv.nc");
 
     std::cout << std::endl;
     jiba::ThreeDModelBase::t3DModelData SensModel(
         boost::extents[xsize][ysize][zsize]);
-    for (size_t i = 0; i < nmeas; ++i)
+    for (size_t i = 0; i < ndata; ++i)
       {
         //the filtered sensitivities include the background layers
         boost::numeric::ublas::matrix_row<jiba::rmat> filrow(AllSens, i);

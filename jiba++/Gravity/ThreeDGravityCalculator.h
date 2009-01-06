@@ -57,6 +57,8 @@ namespace jiba
         {
           return CurrentSensitivities;
         }
+      //! In some cases we need to know the amount of data we get per measurement, this information is stored in the implementation class
+      size_t GetDataPerMeasurement(){return Imp->GetDataPerMeasurement();}
       //! Process the sensitivity information for the current measurement, called from the implementation class
       virtual void HandleSensitivities(const size_t measindex) = 0;
       //! This class is useless without an implementation object so we have to pass one to the constructor

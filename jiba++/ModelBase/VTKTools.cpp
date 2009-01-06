@@ -164,9 +164,10 @@ namespace jiba
       {
         //do some consistency checks
         const size_t ndata = Data.size();
-        assert(ndata == PosX.size());
-        assert(ndata == PosY.size());
-        assert(ndata == PosZ.size());
+        const size_t nmeas = PosX.size();
+        assert(ndata == nmeas*9);
+        assert(ndata == PosY.size()*9);
+        assert(ndata == PosZ.size()*9);
 
         std::ofstream outfile(filename.c_str());
         //first we have to write some general information about the file format
@@ -176,7 +177,7 @@ namespace jiba
         //and then just the data values
         //each line should contain three tensor components
         //and each tensor separated by two line breaks
-        for (size_t i = 0; i < ndata; ++i)
+        for (size_t i = 0; i < nmeas; ++i)
           {
             outfile << Data(i*9) << " " << Data(i*9+1) << " "
                 << Data(i*9+2) << "\n";
