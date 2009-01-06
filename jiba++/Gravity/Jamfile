@@ -4,7 +4,7 @@ lib gravity : ThreeDGravityModel.cpp GravityInterface.cpp ReadWriteGravityData.c
               ThreeDGravityImplementation.cpp CachedGravityCalculator.cpp FullSensitivityGravityCalculator.cpp
               ThreeDGravityCalculator.cpp MinMemGravityCalculator.cpp WaveletCompressedGravityCalculator.cpp
               gravcuda.cu
-              ..//netcdf_c++ ..//netcdf ../ModelBase//modelbase ../Inversion//inversion ..//cudart
+              ..//netcdf_c++ ..//netcdf ../ModelBase//modelbase ../Inversion//inversion ..//cudart 
               : <include>boost : : <include>. ;
 
 install $(TOP) : gravity

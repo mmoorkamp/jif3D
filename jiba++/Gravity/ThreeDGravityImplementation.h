@@ -18,7 +18,7 @@ namespace jiba
     /* @{ */
     //this is just a forward declaration to avoid circular inclusions
     class ThreeDGravityCalculator;
-
+    //! The base class that provides the interface for the numerical implementation of the gravity forward
     /*! The calculation of the forward response is split into two class hierarchies that
      * have to be used in conjunction. The classes derived from ThreeDGravityImplementation
      * are responsible for the numerical implementation details of the calculation, i.e. using

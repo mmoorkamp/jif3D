@@ -18,8 +18,9 @@
 
 namespace jiba
   {
-    /** \addtogroup gravity Gravity forward modelling, display and inversion */
+    /** \addtogroup gravity Gravity forward modeling, display and inversion */
     /* @{ */
+    //! The base class for all calculator objects, these handle how the sensitivities are stored and processed
     /*! The ThreeDGravityCalculator class is the base class that provides
      * the user interface to the gravity forward calculation. It uses a
      * ThreeDGravityImplementation object to do the actual forward calculation.
@@ -27,6 +28,12 @@ namespace jiba
      * is handled, whether it is discarded to save memory, fully stored, or
      * compressed in some way. Also they decide in how far calculations are
      * cached using sensitivity information.
+     *
+     * Within the forward calculation for each measurement the implementation class
+     * calls the member function HandleSensitivities() with the index for the measurement
+     * to give the calculator class the possibility to store, process or discard the
+     * current row of the sensitivity matrix. This avoids having to store the complete matrix
+     * in cases where some compression is applied.
      */
     class ThreeDGravityCalculator
       {
@@ -56,7 +63,7 @@ namespace jiba
       ThreeDGravityCalculator(boost::shared_ptr<ThreeDGravityImplementation> TheImp);
       virtual ~ThreeDGravityCalculator();
       };
-
+    //! Create a new calculator object that is ready to use
     /*! This class provides a simple way to create a calculator object
      * with an appropriate implementation object without major user
      * interaction. This is the standard way of creating new calculator
@@ -75,9 +82,10 @@ namespace jiba
       static boost::shared_ptr<CalculatorClass> MakeTensor();
       };
 
+
     /*! Creates a new shared pointer to a calculator object for scalar gravity of the type specified in
      * the template parameter.
-     * @param wantcuda Do we want to use NVidia CUDA for the calculation, might be ignored if no appropriate devive found
+     * @param wantcuda Do we want to use NVidia CUDA for the calculation, might be ignored if no appropriate device found
      * @return A shared pointer to a calculator object
      */
     template<class CalculatorClass>

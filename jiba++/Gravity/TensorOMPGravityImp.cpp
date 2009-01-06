@@ -23,13 +23,12 @@ namespace jiba
       }
 
     /*!  Calculate the contribution of a layered background to a tensor gravity measurement.
-     * @param x_meas The x-coordinate of the measurement point in m
-     * @param y_meas The y-coordinate of the measurement point in m
-     * @param z_meas The z-coordinate of the measurement point in m
+     * @param measindex The index of the measurement
      * @param xwidth The total width of the discretized model area in x-direction in m
      * @param ywidth The total width of the discretized model area in y-direction in m
      * @param zwidth The total width of the discretized model area in z-direction in m
-     * @param meas_index The index of the measurement
+     * @param Model The gravity model
+     * @param Sensitivities The \f$ 9 \times m\f$ matrix of sensitivities for the current measurement
      * @return The gravitational tensor due to the background
      */
     rvec TensorOMPGravityImp::CalcBackground(const size_t measindex,
@@ -83,7 +82,12 @@ namespace jiba
             resultvector.begin());
         return resultvector;
       }
-
+    /*! Calculate the FTG response of the gridded domain.
+     * @param measindex The index of the measurement
+     * @param Model The gravity model
+     * @param Sensitivities The \f$ 9 \times m\f$ matrix of sensitivities for the current measurement
+     * @return A 9 component vector with the FTG matrix components
+     */
     rvec TensorOMPGravityImp::CalcGridded(const size_t measindex,
         const ThreeDGravityModel &Model, rmat &Sensitivities)
       {

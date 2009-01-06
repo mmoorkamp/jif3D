@@ -9,25 +9,26 @@
 #include <numeric>
 #include "ThreeDGravityCalculator.h"
 #include "BasicGravElements.h"
+#include <cuda_runtime.h>
 namespace jiba
   {
     // These are forward calculations for the functions declared in gravcuda.cu that
     // need to be called from here, they provide the interface to CUDA and purely
     // operate with basic C types
 
-    // Calculate the effect of a single measurement, it return the gridded part of the sensitivities
+    // Calculate the effect of a single measurement, it returns the gridded part of the sensitivities
     extern "C"
 void      SingleScalarMeas(const double x_meas, const double y_meas,
           const double z_meas, double *d_xcoord, double *d_ycoord,
           double *d_zcoord, double *d_xsize, double *d_ysize, double *d_zsize,
-          double *d_result, const int nx, const int ny, const int nz,
+          double *d_result, const unsigned int nx, const unsigned int ny, const unsigned int nz,
           double *returnvalue);
-    //Perform the allocation of arrays on the GPU and copy the values
+      //Perform the allocation of arrays on the GPU and copy the values
       extern "C" void PrepareData(double **d_xcoord, double **d_ycoord, double **d_zcoord,
           double **d_xsize, double **d_ysize, double **d_zsize, double **d_result,
           const double *xcoord,const double *ycoord,const double *zcoord,
           const double *xsize,const double *ysize,const double *zsize, unsigned int nx,unsigned int ny,unsigned int nz);
-       // Free the allocated data on the GPU
+      // Free the allocated data on the GPU
       extern "C" void FreeData(double **d_xcoord, double **d_ycoord, double **d_zcoord,
           double **d_xsize, double **d_ysize, double **d_zsize, double **d_result);
 
@@ -43,8 +44,10 @@ void      SingleScalarMeas(const double x_meas, const double y_meas,
           //if we allocated memory we have to free it
           if (currsens != NULL)
             {
-              delete currsens;
+              cudaFreeHost( currsens );
+              //delete []currsens;
             }
+          cudaThreadExit();
           currsens = NULL;
         }
       /*! Calculate the effect of the background layers for a single measurement
@@ -129,12 +132,13 @@ void      SingleScalarMeas(const double x_meas, const double y_meas,
               //check whether it has been allocated before
               if (currsens != NULL)
                 {
-                  delete currsens;
+                  cudaFreeHost( currsens );
                 }
               //allocate memory and store how much
-              currsens = new double[ngrid];
+              cudaMallocHost( (void**) &currsens, ngrid *sizeof(double) );
               currsenssize = ngrid;
             }
+          std::fill_n(currsens,currsenssize,0.0);
           //This call goes into the GPU, implementation in gravcuda.cu
           SingleScalarMeas(x_meas,y_meas,z_meas,d_xcoord,d_ycoord,d_zcoord,d_xsize,d_ysize,d_zsize,d_result,
               Model.GetDensities().shape()[0],Model.GetDensities().shape()[1],Model.GetDensities().shape()[2],currsens);
