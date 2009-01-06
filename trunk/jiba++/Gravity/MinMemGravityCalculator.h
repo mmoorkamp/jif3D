@@ -16,6 +16,12 @@ namespace jiba
     /** \addtogroup gravity Gravity forward modelling, display and inversion */
       /* @{ */
     //! A calculator class that uses the minimum amount of memory, no caching, no sensitivity information
+    /*! This is a calculator class that uses only the minimum amount of memory. It is suitable
+     * when the forward response for a certain model geometry only has to be calculated once
+     * or if the model is so big that the sensitivity matrix cannot be stored in memory any more
+     * and/or wavelet compression is not efficient.
+     *
+     */
     class MinMemGravityCalculator: public jiba::ThreeDGravityCalculator
       {
     public:

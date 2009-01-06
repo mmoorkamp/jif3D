@@ -14,6 +14,7 @@ namespace jiba
   {
     /** \addtogroup gravity Gravity forward modelling, display and inversion */
     /* @{ */
+    //! Calculate a scalar gravity response using Nvidia's CUDA API
     /*! This implementation class uses Nvidia's CUDA api to perform
      * the forward calculation on a Nvidia graphics card. It needs
      * a card with compute capability 1.3 or more to perform double

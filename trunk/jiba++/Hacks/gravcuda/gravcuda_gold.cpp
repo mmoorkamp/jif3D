@@ -38,22 +38,22 @@
 
 #include <math.h>
 extern "C"
-float CalcGrav(const float *x, const float *y, const float *z, const unsigned int nx);
+double CalcGrav(const double *x, const double *y, const double *z, const unsigned int nx);
 
-extern "C" 
-float CalcGravTerm(const float x, const float y, const float z);
+extern "C"
+double CalcGravTerm(const double x, const double y, const double z);
 
-float CalcGrav(const float *x, const float *y, const float *z, const unsigned int nx)
+double CalcGrav(const double *x, const double *y, const double *z, const unsigned int nx)
 {
-	float result = 0.0;
+	double result = 0.0;
 	for (unsigned int i = 0; i < nx; ++i)
 		result += CalcGravTerm(x[i],y[i],z[i]);
 }
 
-float CalcGravTerm(const float x, const float y, const float z)
+double CalcGravTerm(const double x, const double y, const double z)
   {
-    const float r = sqrt(x * x + y * y + z * z);
-    float rvalue = x * log(y + r) + y * log(x + r);
+    const double r = sqrt(x * x + y * y + z * z);
+    double rvalue = x * log(y + r) + y * log(x + r);
     // atan2 takes care of small denominators
     rvalue += z * atan2(z * r, x * y);
 

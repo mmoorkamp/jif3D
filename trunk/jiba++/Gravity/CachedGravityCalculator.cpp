@@ -117,12 +117,53 @@ namespace jiba
         return change;
       }
 
+    bool CachedGravityCalculator::CheckBackgroundChange(
+        const ThreeDGravityModel &Model)
+      {
+        // by default we assume a change
+        bool change = true;
+        change = !(OldBackgroundDens.size()
+            == Model.GetBackgroundDensities().size()
+            && OldBackgroundThick.size()
+                == Model.GetBackgroundThicknesses().size());
+        if (change)
+          {
+            OldBackgroundDens.resize(Model.GetBackgroundDensities().size(), 0.0);
+            OldBackgroundThick.resize(Model.GetBackgroundThicknesses().size(),
+                0.0);
+            std::copy(Model.GetBackgroundDensities().begin(),
+                Model.GetBackgroundDensities().end(), OldBackgroundDens.begin());
+            std::copy(Model.GetBackgroundThicknesses().begin(),
+                Model.GetBackgroundThicknesses().end(),
+                OldBackgroundThick.begin());
+            return change;
+          }
+        bool denssame = std::equal(OldBackgroundDens.begin(),
+            OldBackgroundDens.end(), Model.GetBackgroundDensities().begin());
+        bool thicksame = std::equal(OldBackgroundThick.begin(),
+            OldBackgroundThick.end(), Model.GetBackgroundThicknesses().begin());
+        change = !(denssame && thicksame);
+        if (change)
+          {
+            OldBackgroundDens.resize(Model.GetBackgroundDensities().size(), 0.0);
+            OldBackgroundThick.resize(Model.GetBackgroundThicknesses().size(),
+                0.0);
+            std::copy(Model.GetBackgroundDensities().begin(),
+                Model.GetBackgroundDensities().end(), OldBackgroundDens.begin());
+            std::copy(Model.GetBackgroundThicknesses().begin(),
+                Model.GetBackgroundThicknesses().end(),
+                OldBackgroundThick.begin());
+          }
+        return change;
+      }
+
     rvec CachedGravityCalculator::Calculate(const ThreeDGravityModel &Model)
       {
         //check that all modeling information is consistent
         CheckModelConsistency(Model);
         //check whether the model geometry has changed since the last calculation
-        bool HasChanged = CheckGeometryChange(Model) && CheckMeasPosChange(Model);
+        bool HasChanged = CheckGeometryChange(Model) && CheckMeasPosChange(
+            Model) && CheckBackgroundChange(Model);
         //if we have cached information and nothing has changed, we use the cache
         if (HaveCache && !HasChanged)
           {

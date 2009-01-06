@@ -11,23 +11,23 @@ __device__ void OffsetToIndex(const int offset,const int ny,const int nz, int &x
 	xi = (xi-yi) / ny;
 }
 
-__device__ float CalcGravTerm(const float x, const float y, const float z) {
+__device__ double CalcGravTerm(const double x, const double y, const double z) {
 	//if the distance r between the measurement point and one of the border points is very small
 	//the log(...) expressions become undefined, so we shift the measurement point by a tiny amount
-	const float r = sqrt(x * x + y * y + z * z);
-	float rvalue = x * log(y + r) + y * log(x + r);
+	const double r = sqrt(x * x + y * y + z * z);
+	double rvalue = x * log(y + r) + y * log(x + r);
 	// atan2 takes care of small denominators
 	rvalue += z * atan2(z * r, x * y);
 
 	return rvalue;
 }
 
-__device__ float CalcGravBoxTerm(const float meas_x, const float meas_y,
-		const float meas_z, const float ul_corner_x, const float ul_corner_y,
-		const float ul_corner_z, const float x_size, const float y_size,
-		const float z_size) {
+__device__ double CalcGravBoxTerm(const double meas_x, const double meas_y,
+		const double meas_z, const double ul_corner_x, const double ul_corner_y,
+		const double ul_corner_z, const double x_size, const double y_size,
+		const double z_size) {
 	//we need 8 terms, one for each corner of the prism, they have varying signs
-	float returnvalue = -CalcGravTerm(meas_x - ul_corner_x, meas_y
+	double returnvalue = -CalcGravTerm(meas_x - ul_corner_x, meas_y
 			- ul_corner_y, meas_z - ul_corner_z);
 	// one corner shifted -> positive sign
 	returnvalue += CalcGravTerm(meas_x - (ul_corner_x + x_size), meas_y
@@ -50,11 +50,11 @@ __device__ float CalcGravBoxTerm(const float meas_x, const float meas_y,
 	return -returnvalue * Grav_const;
 }
 
-__global__ void CalcScalarMeas(const float x_meas, const float y_meas,
-		const float z_meas, const float *XCoord, const float *YCoord,
-		const float *ZCoord, const float *XSizes, const float *YSizes,
-		const float *ZSizes, const float *Densities, const int nx,
-		const int ny, const int nz, float *returnvalue) {
+__global__ void CalcScalarMeas(const double x_meas, const double y_meas,
+		const double z_meas, const double *XCoord, const double *YCoord,
+		const double *ZCoord, const double *XSizes, const double *YSizes,
+		const double *ZSizes, const double *Densities, const int nx,
+		const int ny, const int nz, double *returnvalue) {
 	const unsigned int offset = blockIdx.x * blockDim.x + threadIdx.x;
 	int xindex, yindex, zindex;
 
@@ -63,7 +63,7 @@ __global__ void CalcScalarMeas(const float x_meas, const float y_meas,
 		//we store the current value for possible sensitivity calculations
 		//currvalue contains the geometric term, i.e. the sensitivity
 
-		float currvalue = CalcGravBoxTerm(x_meas, y_meas, z_meas,
+		double currvalue = CalcGravBoxTerm(x_meas, y_meas, z_meas,
 				XCoord[xindex], YCoord[yindex], ZCoord[zindex], XSizes[xindex],
 				YSizes[yindex], ZSizes[zindex]);
 		returnvalue[offset] = currvalue * Densities[offset];

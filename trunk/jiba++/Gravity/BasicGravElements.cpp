@@ -11,16 +11,17 @@
 #include <limits>
 #include "BasicGravElements.h"
 
-namespace jiba {
-
- /*! Calculate one term for the gravitational potential of a box, we use the nomenclature of eq. 4-6 in Li and Chouteau.
+namespace jiba
+  {
+    //! Calculate a single geometric term for the graviational acceleration due to a rectangular prism
+    /*! Calculate one term for the gravitational potential of a box, we use the nomenclature of eq. 4-6 in Li and Chouteau.
      * The parameters x,y and z are the distances to the corners of the box, we will call this functions with different
      * permutations of real world x,y and z coordinates, so only in some cases x corresponds to the x-axis.
      * The various terms all have the form \f$ x * log(y +r) + y * log(x+r) + z*atan2(z*r, x*y) \f$
      * where x,y and z are distances in x, y and z-direction for the current corner, respectively and
      * \f$ r = \sqrt{x^2 +y^2 +z^2} \f$.
      */
-    double CalcGravTerm(const double x, const double y, const double z)
+    inline double CalcGravTerm(const double x, const double y, const double z)
       {
         //if the distance r between the measurement point and one of the border points is very small
         //the log(...) expressions become undefined, so we shift the measurement point by a tiny amount
@@ -31,6 +32,36 @@ namespace jiba {
         rvalue += z * atan2(z * r, x * y);
 
         return rvalue;
+      }
+
+    //! Calculate one of the terms in the calculation of diagonal elements of the gravimetric matrxi
+    /*! The terms \f$ U_{xx}, U_{yy} \f$ and \f$ U_{zz} \f$  of the gravimetric matrix
+     * all are sums of terms of the form \f$ atan \frac{a *b}{c *r } \f$
+     */
+    inline double CalcFTGDiagonalTerm(const double a, const double b,
+        const double c)
+      {
+        return atan2(a * b, c * sqrt(a * a + b * b + c * c));
+        // this is an alternative formula to check the correctness
+        //        const double r = sqrt(a*a+b*b+c*c);
+        //
+        //        double returnvalue = atan2(a * b, c *r);
+        //        returnvalue += a*b*c*r/(c*c*r*r + a*a*b*b);
+        //        returnvalue += pow(c,3) * b * a/(c*c*pow(r,3)+b*b*a*a*r);
+        //        returnvalue += a*c/(b*r+r*r) + b*c/(a*r+r*r);
+        //        return returnvalue;
+      }
+
+    //! Calculate one of the terms of off-diagonal elements of the gravimetric matrxi
+    /*! The terms \f$ U_{xy}, U_{xz} \f$ and \f$ U_{yz} \f$  of the gravimetric matrix
+     * all are sums of terms of the form \f$ \log (x +r) \f$
+     */
+    inline double CalcFTGOffDiagonalTerm(const double value, const double x,
+        const double y, const double z)
+      {
+        //if the logarithmic term becomes really small we cheat
+        return log(std::max(value + sqrt(x * x + y * y + z * z),
+            std::numeric_limits<double>::epsilon()));
       }
 
     /*! Calculate the geometric term for the gravitational potential of a rectangular prism at a point meas_{x,y,z}
@@ -231,30 +262,5 @@ namespace jiba {
         return (2.0 * Grav_const * density * thick) * ((M_PI / 2.0) - atan2(
             hor_dist, ver_dist));
       }
-    /*! The terms \f$ U_{xx}, U_{yy} \f$ and \f$ U_{zz} \f$  of the gravimetric matrix
-     * all are sums of terms of the form \f$ atan \frac{a *b}{c *r } \f$
-     */
-    double CalcFTGDiagonalTerm(const double a, const double b, const double c)
-      {
-        return atan2(a * b, c * sqrt(a * a + b * b + c * c));
-        // this is an alternative formula to check the correctness
-        //        const double r = sqrt(a*a+b*b+c*c);
-        //
-        //        double returnvalue = atan2(a * b, c *r);
-        //        returnvalue += a*b*c*r/(c*c*r*r + a*a*b*b);
-        //        returnvalue += pow(c,3) * b * a/(c*c*pow(r,3)+b*b*a*a*r);
-        //        returnvalue += a*c/(b*r+r*r) + b*c/(a*r+r*r);
-        //        return returnvalue;
-      }
-    /*! The terms \f$ U_{xy}, U_{xz} \f$ and \f$ U_{yz} \f$  of the gravimetric matrix
-     * all are sums of terms of the form \f$ \log (x +r) \f$
-     */
-    double CalcFTGOffDiagonalTerm(const double value, const double x,
-        const double y, const double z)
-      {
-        //if the logarithmic term becomes really small we cheat
-        return log(std::max(value + sqrt(x * x + y * y + z * z),
-            std::numeric_limits<double>::epsilon()));
-      }
 
-}
+  }

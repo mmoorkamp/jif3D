@@ -42,32 +42,42 @@ void MakeRandomModel(jiba::ThreeDGravityModel &Model, const size_t size)
 int main()
   {
     const size_t nruns = 100;
+    const size_t nrunspersize = 5;
     for (size_t i = 0; i < nruns; ++i)
       {
         const size_t modelsize = (i + 1) * 2;
-        boost::posix_time::ptime firststarttime =
-            boost::posix_time::microsec_clock::local_time();
+
         jiba::ThreeDGravityModel GravityTest;
 
-        MakeRandomModel(GravityTest, modelsize);
+        double rawruntime = 0.0;
+        double cachedruntime = 0.0;
+        for (size_t j = 0; j < nrunspersize; ++j)
+          {
+            MakeRandomModel(GravityTest, modelsize);
 
-        boost::shared_ptr<jiba::FullSensitivityGravityCalculator> Calculator =
-            jiba::CreateGravityCalculator<
-                jiba::FullSensitivityGravityCalculator>::MakeScalar(true);
-        jiba::rvec gravmeas(Calculator->Calculate(GravityTest));
+            boost::shared_ptr<jiba::FullSensitivityGravityCalculator>
+                Calculator = jiba::CreateGravityCalculator<
+                    jiba::FullSensitivityGravityCalculator>::MakeScalar(true);
+            boost::posix_time::ptime firststarttime =
+                        boost::posix_time::microsec_clock::local_time();
+            jiba::rvec gravmeas(Calculator->Calculate(GravityTest));
 
-        boost::posix_time::ptime firstendtime =
-            boost::posix_time::microsec_clock::local_time();
+            boost::posix_time::ptime firstendtime =
+                boost::posix_time::microsec_clock::local_time();
 
-        boost::posix_time::ptime secondstarttime =
-            boost::posix_time::microsec_clock::local_time();
-        jiba::rvec gravmeas2(Calculator->Calculate(GravityTest));
-        boost::posix_time::ptime secondendtime =
-            boost::posix_time::microsec_clock::local_time();
-
-        std::cout << modelsize * modelsize * modelsize << " " << (firstendtime
-            - firststarttime).total_microseconds() << " " << (secondendtime
-            - secondstarttime).total_microseconds() << std::endl;
+            boost::posix_time::ptime secondstarttime =
+                boost::posix_time::microsec_clock::local_time();
+            jiba::rvec gravmeas2(Calculator->Calculate(GravityTest));
+            boost::posix_time::ptime secondendtime =
+                boost::posix_time::microsec_clock::local_time();
+            rawruntime += (firstendtime
+                - firststarttime).total_microseconds();
+            cachedruntime += (secondendtime
+                - secondstarttime).total_microseconds();
+          }
+        rawruntime /= nrunspersize;
+        cachedruntime /= nrunspersize;
+        std::cout << modelsize * modelsize * modelsize << " " << rawruntime << " " << cachedruntime << std::endl;
 
       }
 

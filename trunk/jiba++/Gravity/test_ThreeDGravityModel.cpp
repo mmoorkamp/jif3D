@@ -319,7 +319,7 @@ jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension()
       const size_t nmeas = 10;
       for (size_t i = 0; i < nmeas; ++i)
       GravityTest.AddMeasurementPoint(rand() % 50000 + 2e4, rand() % 50000
-          + 2e4, 0.0);
+          + 2e4, -1.0);
       std::vector<double> bg_dens, bg_thick;
       bg_dens += 1.0, 1.0, 5.0, 5.0;
       bg_thick += 200.0, 300.0, 3500.0, 2000.0;
@@ -336,7 +336,9 @@ jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension()
       boost::shared_ptr<jiba::FullSensitivityGravityCalculator> CudaCalculator(jiba::CreateGravityCalculator<jiba::FullSensitivityGravityCalculator>::MakeScalar(true));
       jiba::rvec scalarmeas(ScalarCalculator->Calculate(GravityTest));
       jiba::rvec tensormeas(TensorCalculator->Calculate(GravityTest));
+      std::cout << "Calculating CUDA " << std::endl;
       jiba::rvec cudameas(CudaCalculator->Calculate(GravityTest));
+      std::cout << "Finished CUDA " << std::endl;
       GravityTest.WriteNetCDF("layer.nc");
       double analytic = 2 * M_PI * jiba::Grav_const * (500.0 + 5.0 * 5500.0);
       jiba::rmat ScalarSensitivities(ScalarCalculator->GetSensitivities());

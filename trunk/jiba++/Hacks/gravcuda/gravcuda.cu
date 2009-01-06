@@ -48,11 +48,11 @@
 // includes, project
 #include <cutil.h>
 
-extern "C" void CalcScalarMeas(const float x_meas, const float y_meas,
-		const float z_meas, const float *XCoord,
-		const float *YCoord, const float *ZCoord, const float *XSizes,
-		const float *YSizes, const float *ZSizes, const float *Densities,
-		const int nx, const int ny, const int nz, float *returnvalue);
+extern "C" void CalcScalarMeas(const double x_meas, const double y_meas,
+		const double z_meas, const double *XCoord,
+		const double *YCoord, const double *ZCoord, const double *XSizes,
+		const double *YSizes, const double *ZSizes, const double *Densities,
+		const int nx, const int ny, const int nz, double *returnvalue);
 // includes, kernels
 #include <gravcuda_kernel.cu>
 
@@ -77,44 +77,44 @@ void runTest(int argc, char** argv) {
 	unsigned int nx = 100;
 	unsigned int ny = 60;
 	unsigned int nz = 60;
-	unsigned int xmem_size = sizeof(float) * nx;
-	unsigned int ymem_size = sizeof(float) * ny;
-	unsigned int zmem_size = sizeof(float) * nz;
-	unsigned int grid_size = sizeof(float) * nx * ny * nz;
+	unsigned int xmem_size = sizeof(double) * nx;
+	unsigned int ymem_size = sizeof(double) * ny;
+	unsigned int zmem_size = sizeof(double) * nz;
+	unsigned int grid_size = sizeof(double) * nx * ny * nz;
 	// allocate host memory
-	float* xcoord = (float*) malloc(xmem_size);
-	float* ycoord = (float*) malloc(ymem_size);
-	float* zcoord = (float*) malloc(zmem_size);
-	float* xsize = (float*) malloc(xmem_size);
-	float* ysize = (float*) malloc(ymem_size);
-	float* zsize = (float*) malloc(zmem_size);
-	float* density = (float*) malloc(grid_size);
-	float* result = (float*) malloc(grid_size);
-	float returnvalue;
+	double* xcoord = (double*) malloc(xmem_size);
+	double* ycoord = (double*) malloc(ymem_size);
+	double* zcoord = (double*) malloc(zmem_size);
+	double* xsize = (double*) malloc(xmem_size);
+	double* ysize = (double*) malloc(ymem_size);
+	double* zsize = (double*) malloc(zmem_size);
+	double* density = (double*) malloc(grid_size);
+	double* result = (double*) malloc(grid_size);
+	double returnvalue;
 	// initalize the memory
 	for (unsigned int i = 0; i < nx; ++i) {
-		xcoord[i] = (float) i;
+		xcoord[i] = (double) i;
 		xsize[i] = 1.0;
 	}
 	for (unsigned int i = 0; i < ny; ++i) {
-		ycoord[i] = (float) i;
+		ycoord[i] = (double) i;
 		ysize[i] = 1.0;
 	}
 	for (unsigned int i = 0; i < nz; ++i) {
-		zcoord[i] = (float) i;
+		zcoord[i] = (double) i;
 		zsize[i] = 1.0;
 	}
 	for (unsigned int i = 0; i < nx * ny * nz; ++i)
 		density[i] = 1.0;
-	float x_meas = -1.5;
-	float y_meas = 1.5;
-	float z_meas = -1.0;
+	double x_meas = -1.5;
+	double y_meas = 1.5;
+	double z_meas = -1.0;
 
 	returnvalue = 0.0;
 	// allocate device memory
-	float *d_xcoord, *d_ycoord, *d_zcoord;
-	float *d_xsize, *d_ysize, *d_zsize;
-	float *d_density, *d_result;
+	double *d_xcoord, *d_ycoord, *d_zcoord;
+	double *d_xsize, *d_ysize, *d_zsize;
+	double *d_density, *d_result;
 
 	CUDA_SAFE_CALL(cudaMalloc( (void**) &d_xcoord, xmem_size));
 	CUDA_SAFE_CALL(cudaMalloc( (void**) &d_ycoord, ymem_size));
@@ -157,7 +157,7 @@ void runTest(int argc, char** argv) {
 	CUT_CHECK_ERROR("Kernel execution failed");
 
 	printf("Result: %e \n", returnvalue);
-	//float reduceTime = cutGetAverageTimerValue(timer);
+	//double reduceTime = cutGetAverageTimerValue(timer);
 	//printf("Average time: %f ms\n", reduceTime);
 	// cleanup memory
 	free(xcoord);

@@ -15,6 +15,7 @@ namespace jiba
   {
     /** \addtogroup gravity Gravity forward modelling, display and inversion */
     /* @{ */
+    //! Calculate a scalar gravity response using OpenMP parallelization
     /*! Calculation of scalar gravity acceleration using parallelization with openmp.
      * This is the standard implementation and as openmp uses pragma directives can
      * also be used in serial with a compiler that does not understand openmp.
@@ -24,7 +25,7 @@ namespace jiba
     private:
       // we calculate scalar data, so we have one data point per site
       static const size_t ndatapermeas = 1;
-      //! Implement the calculation of the background repsonse
+      //! Implement the calculation of the background response
       virtual rvec CalcBackground(const size_t measindex, const double xwidth, const double ywidth,
           const double zwidth, const ThreeDGravityModel &Model,
           rmat &Sensitivities);
