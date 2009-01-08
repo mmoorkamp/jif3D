@@ -11,87 +11,110 @@
 #include <string>
 #include "../Global/convert.h"
 #include "../Global/Interpolate.h"
-#include "ThreeDGravityModel.h"
+#include "../Gravity/ThreeDGravityModel.h"
 #include "../Inversion/MatrixTools.h"
-#include "ReadWriteGravityData.h"
+#include "../Gravity/ReadWriteGravityData.h"
 #include <boost/numeric/bindings/atlas/cblas2.hpp>
+#include <boost/bind.hpp>
 #include "../Inversion/LinearInversion.h"
 #include "../ModelBase/VTKTools.h"
-#include "DepthWeighting.h"
+#include "../Gravity/DepthWeighting.h"
+#include "../Gravity/FullSensitivityGravityCalculator.h"
 
 namespace atlas = boost::numeric::bindings::atlas;
 namespace ublas = boost::numeric::ublas;
 
-double CalcInvariant(const jiba::GravimetryMatrix &Matrix)
+double CalcInvariant(const jiba::rvec &Data, const size_t index)
   {
-    return Matrix(0, 0) * Matrix(1, 1) + Matrix(1, 1) * Matrix(2, 2) + Matrix(
-        0, 0) * Matrix(2, 2) - Matrix(0, 1) * Matrix(0, 1) - Matrix(1, 2)
-        * Matrix(1, 2) - Matrix(0, 2) * Matrix(0, 2);
+    return Data(index) * Data(index + 4) + Data(index + 4) * Data(index + 8)
+        + Data(index) * Data(index + 8) - Data(index + 3) * Data(index + 1)
+        - Data(index + 7) * Data(index + 5) - Data(index + 2) * Data(index + 6);
+  }
+
+double CalcMisfit(const jiba::rvec &MeasData, const jiba::rvec &CurrData,
+    const jiba::rvec &Model, const double lambda)
+  {
+    jiba::rvec DiffVector(MeasData.size());
+    std::transform(MeasData.begin(), MeasData.end(), CurrData.begin(),
+        DiffVector.begin(), std::minus<double>());
+
+    return sqrt(boost::numeric::ublas::norm_2(DiffVector) + lambda
+        * boost::numeric::ublas::norm_2(Model));
   }
 
 void LineSearch(jiba::rvec &DeltaModel, jiba::ThreeDGravityModel &Model,
-    jiba::rvec &DataVector)
+    jiba::rvec &DataVector, boost::shared_ptr<
+        jiba::FullSensitivityGravityCalculator> GravityCalculator,
+    const double lambda)
   {
     const size_t nmod = Model.GetDensities().size();
     jiba::rvec LastModel(nmod);
-    std::copy(Model.GetDensities().origin(),
-        Model.GetDensities().origin() + nmod,LastModel.begin());
+    std::copy(Model.GetDensities().origin(), Model.GetDensities().origin()
+        + nmod, LastModel.begin());
     std::transform(DeltaModel.begin(), DeltaModel.begin() + nmod,
         Model.SetDensities().origin(), Model.SetDensities().origin(),
         std::plus<double>());
-    jiba::ThreeDGravityModel::tTensorMeasVec FTGData(Model.CalcTensorGravity());
+    jiba::rvec FTGData(GravityCalculator->Calculate(Model));
 
+    jiba::rvec CurrModel(nmod);
+    std::copy(Model.SetDensities().origin(), Model.SetDensities().origin()
+        + nmod, CurrModel.begin());
     size_t ndata = DataVector.size();
     jiba::rvec CurrData(ndata), DiffVector(ndata);
     for (size_t i = 0; i < ndata; ++i)
       {
-        CurrData( i) = CalcInvariant(FTGData.at(i));
+        CurrData( i) = CalcInvariant(FTGData, i * 9);
       }
-    std::transform(DataVector.begin(), DataVector.end(), CurrData.begin(),
-        DiffVector.begin(), std::minus<double>());
-    double misfit = sqrt(boost::numeric::ublas::norm_2(DiffVector));
+
+    double misfit = CalcMisfit(DataVector, CurrData, CurrModel, lambda);
+
     double mu1 = 2;
     std::transform(DeltaModel.begin(), DeltaModel.begin() + nmod,
         LastModel.begin(), Model.SetDensities().origin(), boost::bind(
             std::plus<double>(), _1, boost::bind(std::multiplies<double>(), _2,
                 mu1)));
+    std::copy(Model.SetDensities().origin(), Model.SetDensities().origin()
+        + nmod, CurrModel.begin());
 
-    FTGData = Model.CalcTensorGravity();
+    FTGData = GravityCalculator->Calculate(Model);
     for (size_t i = 0; i < ndata; ++i)
       {
-        CurrData( i) = CalcInvariant(FTGData.at(i));
+        CurrData( i) = CalcInvariant(FTGData, i * 9);
       }
-    std::transform(DataVector.begin(), DataVector.end(), CurrData.begin(),
-        DiffVector.begin(), std::minus<double>());
-    double misfit2 = sqrt(boost::numeric::ublas::norm_2(DiffVector));
+    double misfit2 = CalcMisfit(DataVector, CurrData, CurrModel, lambda);
 
-    double mu2 = 0.5;
+    double mu2 = 0.1;
     std::transform(DeltaModel.begin(), DeltaModel.begin() + nmod,
         LastModel.begin(), Model.SetDensities().origin(), boost::bind(
             std::plus<double>(), _1, boost::bind(std::multiplies<double>(), _2,
                 mu2)));
-    FTGData = Model.CalcTensorGravity();
+    FTGData = GravityCalculator->Calculate(Model);
     for (size_t i = 0; i < ndata; ++i)
       {
-        CurrData( i) = CalcInvariant(FTGData.at(i));
+        CurrData( i) = CalcInvariant(FTGData, i * 9);
       }
-    std::transform(DataVector.begin(), DataVector.end(), CurrData.begin(),
-        DiffVector.begin(), std::minus<double>());
-    double misfit3 = sqrt(boost::numeric::ublas::norm_2(DiffVector));
-    double optstep = jiba::QuadraticInterpolation(1.0,misfit,mu1,misfit2,mu2,misfit3);
+    std::copy(Model.SetDensities().origin(), Model.SetDensities().origin()
+        + nmod, CurrModel.begin());
+
+    double misfit3 = CalcMisfit(DataVector, CurrData, CurrModel, lambda);
+    double optstep = jiba::QuadraticInterpolation(mu2, misfit3, 1.0, misfit,
+        mu1, misfit2);
     std::cout << "In Line search: ";
-    std::cout << misfit << " " << misfit2 << " " << misfit3 << std::endl;
+    std::cout << mu2 << " " << 1.0 << " " << mu1 << std::endl;
+    std::cout << misfit3 << " " << misfit << " " << misfit2 << std::endl;
     std::cout << "Optimum step length: " << optstep << std::endl;
 
     std::transform(DeltaModel.begin(), DeltaModel.begin() + nmod,
-        DeltaModel.begin(), boost::bind(std::multiplies<double>(),_1,optstep));
+        DeltaModel.begin(), boost::bind(std::multiplies<double>(), _1, optstep));
   }
 
 int main(int argc, char *argv[])
   {
-    jiba::ThreeDGravityModel Model(false, true);
-
-    jiba::ThreeDGravityModel::tTensorMeasVec Data;
+    jiba::ThreeDGravityModel Model;
+    boost::shared_ptr<jiba::FullSensitivityGravityCalculator>
+        GravityCalculator(jiba::CreateGravityCalculator<
+            jiba::FullSensitivityGravityCalculator>::MakeTensor());
+    jiba::rvec Data;
     jiba::ThreeDGravityModel::tMeasPosVec PosX, PosY, PosZ;
 
     std::string modelfilename, datafilename;
@@ -107,24 +130,24 @@ int main(int argc, char *argv[])
     std::cout << "Lambda: ";
     std::cin >> lambda;
     const size_t ndata = Data.size();
-    jiba::rvec DataVector(ndata), DataError(ndata);
-    for (size_t i = 0; i < ndata; ++i)
+    const size_t nmeas = Data.size() / 9;
+    jiba::rvec DataVector(nmeas), DataError(nmeas);
+    for (size_t i = 0; i < nmeas; ++i)
       {
-        DataVector( i) = CalcInvariant(Data.at(i));
+        DataVector( i) = CalcInvariant(Data, i * 9);
       }
 
-    const size_t nmeas = PosX.size();
     const size_t xsize = Model.GetDensities().shape()[0];
     const size_t ysize = Model.GetDensities().shape()[1];
     const size_t zsize = Model.GetDensities().shape()[2];
     const size_t ngrid = xsize * ysize * zsize;
     const size_t nmod = ngrid + Model.GetBackgroundDensities().size();
-    jiba::rvec InvModel(nmod), StartingModel(nmod);
+    jiba::rvec InvModel(nmod);
     std::fill_n(InvModel.begin(), nmod, 0.0);
     std::copy(Model.GetDensities().origin(), Model.GetDensities().origin()
-        + ngrid, StartingModel.begin());
+        + ngrid, InvModel.begin());
     std::copy(Model.GetBackgroundDensities().begin(),
-        Model.GetBackgroundDensities().end(), StartingModel.begin() + ngrid);
+        Model.GetBackgroundDensities().end(), InvModel.begin() + ngrid);
     //set the measurement points in the model to those of the data
     Model.ClearMeasurementPoints();
     for (size_t i = 0; i < nmeas; ++i)
@@ -146,55 +169,51 @@ int main(int argc, char *argv[])
     size_t iter = 0;
     double gradnorm = 1e10;
     const double mingradnorm = 0.1;
-    double misfit = 1e10;
+    double datamisfit = 1e10;
     const double minmisfit = sqrt(boost::numeric::ublas::norm_2(DataError));
-    jiba::rmat InvarSens(ndata, nmod);
+    jiba::rmat InvarSens(nmeas, nmod);
     jiba::rvec StartingDataVector(nmeas), DataDiffVector(nmeas);
 
     std::ofstream misfitfile("misfit.out");
-    while (iter < maxiter && gradnorm > mingradnorm && misfit > minmisfit)
+    while (iter < maxiter && gradnorm > mingradnorm && datamisfit > minmisfit)
       {
         std::cout << "\n\n";
         std::cout << " Iteration: " << iter << std::endl;
         //calculate the response of the starting model
-        jiba::ThreeDGravityModel::tTensorMeasVec StartingData(
-            Model.CalcTensorGravity());
-
-        for (size_t i = 0; i < ndata; ++i)
+        jiba::rvec StartingData(GravityCalculator->Calculate(Model));
+        jiba::rmat AllSens(GravityCalculator->GetSensitivities());
+        for (size_t i = 0; i < nmeas; ++i)
           {
-            StartingDataVector( i) = CalcInvariant(StartingData.at(i));
+            StartingDataVector( i) = CalcInvariant(StartingData, i * 9);
             for (size_t j = 0; j < nmod; ++j)
               {
-                InvarSens(i, j) = Model.GetTensorSensitivities()(i * 9, j)
-                    * StartingData.at(i)(1, 1)
-                    + Model.GetTensorSensitivities()(i * 9 + 4, j)
-                        * StartingData.at(i)(0, 0)
+                InvarSens(i, j) = AllSens(i * 9, j) * StartingData(i * 9 + 4)
+                    + AllSens(i * 9 + 4, j) * StartingData(i * 9)
 
-                + Model.GetTensorSensitivities()(i * 9 + 4, j)
-                    * StartingData.at(i)(2, 2)
-                    + Model.GetTensorSensitivities()(i * 9 + 8, j)
-                        * StartingData.at(i)(1, 1)
+                + AllSens(i * 9 + 4, j) * StartingData(i * 9 + 8) + AllSens(i
+                    * 9 + 8, j) * StartingData(i * 9 + 4)
 
-                + Model.GetTensorSensitivities()(i * 9, j)
-                    * StartingData.at(i)(2, 2)
-                    + Model.GetTensorSensitivities()(i * 9 + 8, j)
-                        * StartingData.at(i)(0, 0)
+                + AllSens(i * 9, j) * StartingData(i * 9 + 8) + AllSens(i * 9
+                    + 8, j) * StartingData(i * 9)
 
-                - 2 * Model.GetTensorSensitivities()(i * 9 + 1, j)
-                    * StartingData.at(i)(0, 1) - 2
-                    * Model.GetTensorSensitivities()(i * 9 + 7, j)
-                    * StartingData.at(i)(1, 2) - 2
-                    * Model.GetTensorSensitivities()(i * 9 + 2, j)
-                    * StartingData.at(i)(0, 2);
+                - 2 * AllSens(i * 9 + 1, j) * StartingData(i * 9 + 3) - 2
+                    * AllSens(i * 9 + 7, j) * StartingData(i * 9 + 7) - 2
+                    * AllSens(i * 9 + 2, j) * StartingData(i * 9 + 2);
               }
           }
 
         std::transform(DataVector.begin(), DataVector.end(),
             StartingDataVector.begin(), DataDiffVector.begin(), std::minus<
                 double>());
-        misfit = sqrt(boost::numeric::ublas::norm_2(DataDiffVector));
-        std::cout << "Misfit: " << misfit << std::endl;
-        misfitfile << iter << " " << misfit << std::endl;
+        datamisfit = sqrt(boost::numeric::ublas::norm_2(DataDiffVector));
+        std::cout << "Data Misfit: " << datamisfit << std::endl;
+        jiba::rvec CurrModel(ngrid);
+        std::copy(Model.SetDensities().origin(),Model.SetDensities().origin()+ngrid,CurrModel.begin());
+        double totalmisfit = CalcMisfit(DataVector, StartingDataVector,
+            CurrModel, lambda);
+        std::cout << "Total Misfit: " << totalmisfit << std::endl;
+        misfitfile << iter << " " << datamisfit << " " << totalmisfit
+            << std::endl;
         //depth weighting
         jiba::rvec SensProfile;
         jiba::ExtractMiddleSens(Model, ublas::matrix_range<jiba::rmat>(
@@ -222,34 +241,37 @@ int main(int argc, char *argv[])
         gradnorm = sqrt(boost::numeric::ublas::norm_2(InvModel));
         std::cout << "Stepsize: " << gradnorm << std::endl;
         std::cout << "Data Error: " << minmisfit << std::endl;
-        LineSearch(InvModel,Model,DataVector);
+        LineSearch(InvModel, Model, DataVector, GravityCalculator, lambda);
         //add the result of the inversion to the starting model
         //we only add the gridded part, the  background is always 0 due to the weighting
         std::transform(InvModel.begin(), InvModel.begin() + ngrid,
             Model.SetDensities().origin(), Model.SetDensities().origin(),
             std::plus<double>());
-        //std::fill(InvModel.begin(), InvModel.end(), 0.0);
+        //std::copy(Model.SetDensities().origin(),Model.SetDensities().origin()+ngrid,InvModel.begin());
+        std::fill(InvModel.begin(), InvModel.end(), 0.0);
         iter++;
       }
     //we want to save the resulting predicted data
-    jiba::ThreeDGravityModel::tTensorMeasVec FTGData(Model.CalcTensorGravity());
-    std::vector<double> relerror;
-    for (size_t i = 0; i < ndata; ++i)
+    jiba::rvec FTGData(GravityCalculator->Calculate(Model));
+    jiba::rvec relerror(nmeas);
+    for (size_t i = 0; i < nmeas; ++i)
       {
-        StartingDataVector( i) = CalcInvariant(FTGData.at(i));
+        StartingDataVector( i) = CalcInvariant(FTGData, i * 9);
       }
     std::transform(DataVector.begin(), DataVector.end(),
         StartingDataVector.begin(), DataDiffVector.begin(),
         std::minus<double>());
     std::transform(DataDiffVector.begin(), DataDiffVector.end(),
-        DataError.begin(), std::back_inserter(relerror), std::divides<double>());
+        DataError.begin(), relerror.begin(), std::divides<double>());
 
     jiba::Write3DDataToVTK(modelfilename + ".inv_ftgmisfit.vtk",
         "MisfitInvariant", relerror, Model.GetMeasPosX(), Model.GetMeasPosY(),
         Model.GetMeasPosZ());
 
     //and we save the models and the tensor elements
-    Model.SaveTensorMeasurements(modelfilename + ".inv_ftgdata.nc");
+    jiba::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc", FTGData,
+        Model.GetMeasPosX(), Model.GetMeasPosY(), Model.GetMeasPosZ());
+
     Model.WriteVTK(modelfilename + ".inv_ftg.vtk");
     Model.WriteNetCDF(modelfilename + ".inv_ftg.nc");
 

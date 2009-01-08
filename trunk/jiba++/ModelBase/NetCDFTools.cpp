@@ -114,12 +114,12 @@ namespace jiba
       {
 
         //Read the sizes of the blocks in x,y and z-direction from the file
-        const size_t nxvalues =
-            ReadSizesFromNetCDF(NetCDFFile, "Northing", XCellSizes);
-        const size_t nyvalues =
-            ReadSizesFromNetCDF(NetCDFFile, "Easting", YCellSizes);
-        const size_t nzvalues =
-            ReadSizesFromNetCDF(NetCDFFile, "Depth", ZCellSizes);
+        const size_t nxvalues = ReadSizesFromNetCDF(NetCDFFile, "Northing",
+            XCellSizes);
+        const size_t nyvalues = ReadSizesFromNetCDF(NetCDFFile, "Easting",
+            YCellSizes);
+        const size_t nzvalues = ReadSizesFromNetCDF(NetCDFFile, "Depth",
+            ZCellSizes);
         //allocate memory for the data
         Data.resize(boost::extents[nxvalues][nyvalues][nzvalues]);
         //create netcdf variable for data
@@ -132,7 +132,17 @@ namespace jiba
           throw std::runtime_error(
               "Units in file do not match expected units !");
         //read netcdf data from file
-        DataVar->get(Data.origin(), nxvalues, nyvalues, nzvalues);
+        //we store the data in the order Depth, Easting, Northing
+        //but internally we work with x,y,z storage ordering
+        double *databuffer = new double[nxvalues * nyvalues * nzvalues];
+
+        DataVar->get(databuffer, nzvalues, nyvalues, nxvalues);
+        for (size_t i = 0; i < nzvalues; ++i)
+          for (size_t j = 0; j < nyvalues; ++j)
+            for (size_t k = 0; k < nxvalues; ++k)
+              Data[k][j][i] = databuffer[k + j * nxvalues + i * (nxvalues
+                  * nyvalues)];
+        delete[] databuffer;
       }
     /*! Write the information about a rectangular mesh 3D model to a netcdf file
      * @param NetCDFFile An open NcFile object that allows writing
@@ -160,25 +170,38 @@ namespace jiba
         //add information about boundary values
         NcDim *BoundaryDim = NetCDFFile.add_dim("nbound", 2);
         NcVar *BoundaryVar = NetCDFFile.add_var("nbound", ncInt, BoundaryDim);
-        BoundaryVar->add_att("long_name","Boundary index variable");
+        BoundaryVar->add_att("long_name", "Boundary index variable");
         std::vector<int> BIndices;
         BIndices += 1, 2;
         BoundaryVar->put(&BIndices[0], 2);
         // Write the size information in x,y, and z-direction
-        NcDim *XSizeDim = WriteSizesToNetCDF(NetCDFFile, "Northing", XCellSizes,
-            BoundaryDim);
+        NcDim *XSizeDim = WriteSizesToNetCDF(NetCDFFile, "Northing",
+            XCellSizes, BoundaryDim);
         NcDim *YSizeDim = WriteSizesToNetCDF(NetCDFFile, "Easting", YCellSizes,
             BoundaryDim);
         NcDim *ZSizeDim = WriteSizesToNetCDF(NetCDFFile, "Depth", ZCellSizes,
             BoundaryDim);
 
         NcVar *DataVar = NetCDFFile.add_var(DataName.c_str(), ncDouble,
-            XSizeDim, YSizeDim, ZSizeDim);
+            ZSizeDim, YSizeDim, XSizeDim);
         DataVar->add_att("units", UnitsName.c_str());
-        DataVar->add_att("long_name",DataName.c_str());
+        DataVar->add_att("long_name", DataName.c_str());
         //Write the model data itself
-        DataVar->put(Data.origin(), XSizeDim->size(), YSizeDim->size(),
-            ZSizeDim->size());
-        NetCDFFile.add_att("Conventions","CF-1.3");
+        //we store the data in the order Depth, Easting, Northing
+        //but internally we work with x,y,z storage ordering
+        //so we allocate a temporary buffer
+        double *databuffer = new double[Data.num_elements()];
+        //change the storage order
+        for (size_t i = 0; i < ZSizeDim->size(); ++i)
+          for (size_t j = 0; j < YSizeDim->size(); ++j)
+            for (size_t k = 0; k < XSizeDim->size(); ++k)
+              databuffer[k + j * XSizeDim->size() + i * (XSizeDim->size()
+                  * YSizeDim->size())] = Data[k][j][i];
+        //write the buffer to the file
+        DataVar->put(databuffer, ZSizeDim->size(), YSizeDim->size(),
+            XSizeDim->size());
+        //and delete it
+        delete[] databuffer;
+        NetCDFFile.add_att("Conventions", "CF-1.3");
       }
   }

@@ -10,5 +10,5 @@ project
 exe fittingtest : fittingtest.cpp ../Inversion//inversion ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran : <include>. ;
 exe sparsetest : sparsetest.cpp ../Inversion//inversion ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran : <include>. ;
 exe wcompress : wcompress.cpp  ../Gravity ../Global : <include>. ;
-#exe invariantftginv : invariantftginv.cpp  ../Gravity//gravity ../Global ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ../Inversion//inversion
-#              ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran : <include>. ;
+exe invariantftginv : invariantftginv.cpp  ../Gravity//gravity ../Global ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ../Inversion//inversion
+              ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran : <include>. ;
