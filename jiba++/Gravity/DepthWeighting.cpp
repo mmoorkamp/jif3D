@@ -98,11 +98,6 @@ namespace jiba
                     / maximum;
                 delta( j) = profile(j) - calculated(j);
               }
-            for (size_t j = 0; j < zsize; ++j)
-              {
-                outfile << zvalues(j) << " " << profile(j) << " "
-                    << calculated(j) << std::endl;
-              }
             // do one step of the inversion
             jiba::ModelSpaceInversion()(sens, delta, weights, error,
                 evalthresh, 0.0, DeltaModel);
@@ -115,7 +110,11 @@ namespace jiba
             outfile << std::endl << std::endl;
             ++i;
           }
-
+        for (size_t j = 0; j < zsize; ++j)
+          {
+            outfile << zvalues(j) << " " << profile(j) << " " << calculated(j)
+                << std::endl;
+          }
         return InvModel(0);
       }
 

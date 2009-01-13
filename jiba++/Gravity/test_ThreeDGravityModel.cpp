@@ -12,6 +12,11 @@
 #define BOOST_TEST_MODULE ThreeDGravityModel test
 #define BOOST_TEST_MAIN ...
 #include <boost/test/included/unit_test.hpp>
+#include <boost/test/floating_point_comparison.hpp>
+#include <boost/assign/std/vector.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/numeric/conversion/cast.hpp>
+
 #include <stdlib.h>
 #include <time.h>
 #include <fstream>
@@ -19,10 +24,6 @@
 #include "BasicGravElements.h"
 #include "MinMemGravityCalculator.h"
 #include "FullSensitivityGravityCalculator.h"
-#include <boost/test/floating_point_comparison.hpp>
-#include <boost/assign/std/vector.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/numeric/conversion/cast.hpp>
 #include "ScalarOMPGravityImp.h"
 #include "TensorOMPGravityImp.h"
 
@@ -46,7 +47,7 @@ jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension()
   //create a random density model without any background layers
   //this is necessary to test the R interface, which does not allow
   //for background layers, yet
-  void MakeRandomModel(jiba::ThreeDGravityModel &Model, const size_t nmeas)
+  void MakeRandomModel(jiba::ThreeDGravityModel &Model, const size_t nmeas, const bool withbackground = true)
     {
       srand(time(NULL));
 
@@ -82,6 +83,20 @@ jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension()
       for (size_t i = 0; i < nmeas; ++i)
       Model.AddMeasurementPoint(rand() % xlength + 1, rand() % ylength + 1,
           -(rand() % 100 + 1.0));
+      if (withbackground)
+        {
+          //generate a random background
+          const size_t nbglayers = rand() % 20;
+          std::vector<double> bg_dens(nbglayers,0.0), bg_thick(nbglayers,0.0);
+          for (size_t k = 0; k < nbglayers; ++k)
+            {
+
+              bg_dens.at(k) = double(rand() % 50) / 10.0 + 1.0;
+              bg_thick.at(k) = rand() % 50 + 1.0;
+            }
+          Model.SetBackgroundDensities(bg_dens);
+          Model.SetBackgroundThicknesses(bg_thick);
+        }
     }
 
   //Test the default state of the object
@@ -415,72 +430,73 @@ jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension()
     }
 
   //compare with the ubc gravity forward code
-  //BOOST_AUTO_TEST_CASE(ubc_test)
-  //  {
-  //    //create a random model
-  //    jiba::ThreeDGravityModel GravityTest;
-  //    const size_t nmeas = 10;
-  //    MakeRandomModel(GravityTest, nmeas);
-  //    //and compute the results for our code
-  //    jiba::ThreeDGravityModel::tScalarMeasVec scalarmeas(
-  //        GravityTest.CalcGravity());
-  //    //set the mesh for the ubc code, they have the x-axis in east direction
-  //    std::ofstream meshfile("testmesh");
-  //    meshfile << GravityTest.GetYCellSizes().size() << " ";
-  //    meshfile << GravityTest.GetXCellSizes().size() << " ";
-  //    meshfile << GravityTest.GetZCellSizes().size() << "\n";
-  //    meshfile << " 0 0 0 \n";
-  //    //so we have to swap x and y in the grid coordinate system
-  //    std::copy(GravityTest.GetYCellSizes().begin(),
-  //        GravityTest.GetYCellSizes().end(), std::ostream_iterator<double>(
-  //            meshfile, " "));
-  //    meshfile << "\n";
-  //    std::copy(GravityTest.GetXCellSizes().begin(),
-  //        GravityTest.GetXCellSizes().end(), std::ostream_iterator<double>(
-  //            meshfile, " "));
-  //    meshfile << "\n";
-  //    std::copy(GravityTest.GetZCellSizes().begin(),
-  //        GravityTest.GetZCellSizes().end(), std::ostream_iterator<double>(
-  //            meshfile, " "));
-  //    meshfile << "\n" << std::flush;
-  //    //write the observation points
-  //    //again we have to switch x and y and z is positive up
-  //    std::ofstream obsfile("testobs");
-  //    obsfile << nmeas << "\n";
-  //    for (size_t i = 0; i < nmeas; ++i)
-  //      {
-  //        obsfile << GravityTest.GetMeasPosY().at(i) << " "
-  //            << GravityTest.GetMeasPosX().at(i) << " "
-  //            << -GravityTest.GetMeasPosZ().at(i) << "\n";
-  //      }
-  //    obsfile << std::flush;
-  //    //write out the densities, we can write them in the same order we store them
-  //    std::ofstream densfile("testdens");
-  //    std::copy(GravityTest.GetDensities().origin(),
-  //        GravityTest.GetDensities().origin()
-  //            + GravityTest.GetDensities().num_elements(),
-  //        std::ostream_iterator<double>(densfile, "\n"));
-  //    densfile << std::flush;
-  //    //call the ubc code using wine
-  //    system("wine gzfor3d.exe testmesh testobs testdens");
-  //    //read in the results
-  //    std::ifstream resultfile("gzfor3d.grv");
-  //    //the first line contains some extra information we don't want
-  //    char dummy[255];
-  //    resultfile.getline(dummy, 255);
-  //    //read in all numbers in the file into a vector
-  //    //this includes coordinate information etc.
-  //    std::vector<double> ubcresults;
-  //    std::copy(std::istream_iterator<double>(resultfile),
-  //        std::istream_iterator<double>(), std::back_inserter(ubcresults));
-  //    for (size_t i = 0; i < nmeas; ++i)
-  //      {
-  //        //compare our results with the right component of the vector
-  //        //the tolerance of 0.1% is OK considering truncation effect from writing to ascii
-  //        BOOST_CHECK_CLOSE(scalarmeas[i] * 100000.0,
-  //            ubcresults[(i + 1) * 4 - 1], 0.1);
-  //      }
-  //  }
+  BOOST_AUTO_TEST_CASE(ubc_test)
+    {
+      //create a random model
+      jiba::ThreeDGravityModel GravityTest;
+      const size_t nmeas = 10;
+      MakeRandomModel(GravityTest, nmeas,false);
+      //and compute the results for our code
+      boost::shared_ptr<jiba::MinMemGravityCalculator> ScalarCalculator(jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeScalar());
+      jiba::rvec scalarmeas(
+          ScalarCalculator->Calculate(GravityTest));
+      //set the mesh for the ubc code, they have the x-axis in east direction
+      std::ofstream meshfile("testmesh");
+      meshfile << GravityTest.GetYCellSizes().size() << " ";
+      meshfile << GravityTest.GetXCellSizes().size() << " ";
+      meshfile << GravityTest.GetZCellSizes().size() << "\n";
+      meshfile << " 0 0 0 \n";
+      //so we have to swap x and y in the grid coordinate system
+      std::copy(GravityTest.GetYCellSizes().begin(),
+          GravityTest.GetYCellSizes().end(), std::ostream_iterator<double>(
+              meshfile, " "));
+      meshfile << "\n";
+      std::copy(GravityTest.GetXCellSizes().begin(),
+          GravityTest.GetXCellSizes().end(), std::ostream_iterator<double>(
+              meshfile, " "));
+      meshfile << "\n";
+      std::copy(GravityTest.GetZCellSizes().begin(),
+          GravityTest.GetZCellSizes().end(), std::ostream_iterator<double>(
+              meshfile, " "));
+      meshfile << "\n" << std::flush;
+      //write the observation points
+      //again we have to switch x and y and z is positive up
+      std::ofstream obsfile("testobs");
+      obsfile << nmeas << "\n";
+      for (size_t i = 0; i < nmeas; ++i)
+        {
+          obsfile << GravityTest.GetMeasPosY().at(i) << " "
+          << GravityTest.GetMeasPosX().at(i) << " "
+          << -GravityTest.GetMeasPosZ().at(i) << "\n";
+        }
+      obsfile << std::flush;
+      //write out the densities, we can write them in the same order we store them
+      std::ofstream densfile("testdens");
+      std::copy(GravityTest.GetDensities().origin(),
+          GravityTest.GetDensities().origin()
+          + GravityTest.GetDensities().num_elements(),
+          std::ostream_iterator<double>(densfile, "\n"));
+      densfile << std::flush;
+      //call the ubc code using wine
+      system("wine gzfor3d.exe testmesh testobs testdens");
+      //read in the results
+      std::ifstream resultfile("gzfor3d.grv");
+      //the first line contains some extra information we don't want
+      char dummy[255];
+      resultfile.getline(dummy, 255);
+      //read in all numbers in the file into a vector
+      //this includes coordinate information etc.
+      std::vector<double> ubcresults;
+      std::copy(std::istream_iterator<double>(resultfile),
+          std::istream_iterator<double>(), std::back_inserter(ubcresults));
+      for (size_t i = 0; i < nmeas; ++i)
+        {
+          //compare our results with the right component of the vector
+          //the tolerance of 0.1% is OK considering truncation effect from writing to ascii
+          BOOST_CHECK_CLOSE(scalarmeas[i] * 100000.0,
+              ubcresults[(i + 1) * 4 - 1], 0.1);
+        }
+    }
 
   //compare the result from the tensor calculation with finite difference scalar calculations
   BOOST_AUTO_TEST_CASE(fd_tensor_test)
@@ -488,18 +504,21 @@ jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension()
       jiba::ThreeDGravityModel GravityTest;
       //we want to control the position of the measurements ourselves
       const size_t nmeas = 0;
-      const double delta = 0.0001;
+      const double delta = 0.000001;
       //the value of delta in %
       const double precision = 0.05;
       MakeRandomModel(GravityTest, nmeas);
       //setup points for finite differencing in vertical and horizontal directions
-      GravityTest.AddMeasurementPoint(50, 70, -5);
-      GravityTest.AddMeasurementPoint(50, 70, -5 - delta);
-      GravityTest.AddMeasurementPoint(50, 70, -5 + delta);
-      GravityTest.AddMeasurementPoint(50, 70 - delta, -5);
-      GravityTest.AddMeasurementPoint(50, 70 + delta, -5);
-      GravityTest.AddMeasurementPoint(50 - delta, 70, -5);
-      GravityTest.AddMeasurementPoint(50 + delta, 70, -5);
+      const double xpos = 50.0;
+      const double ypos = 70.0;
+      const double zpos = -5.1;
+      GravityTest.AddMeasurementPoint(xpos, ypos, zpos);
+      GravityTest.AddMeasurementPoint(xpos, ypos, zpos - delta);
+      GravityTest.AddMeasurementPoint(xpos, ypos, zpos + delta);
+      GravityTest.AddMeasurementPoint(xpos, ypos - delta, zpos);
+      GravityTest.AddMeasurementPoint(xpos, ypos + delta, zpos);
+      GravityTest.AddMeasurementPoint(xpos - delta, ypos, zpos);
+      GravityTest.AddMeasurementPoint(xpos + delta, ypos, zpos);
       //perform the calculations
       boost::shared_ptr<jiba::MinMemGravityCalculator> ScalarCalculator(jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeScalar());
       boost::shared_ptr<jiba::MinMemGravityCalculator> TensorCalculator(jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeTensor());
@@ -508,9 +527,9 @@ jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension()
       jiba::rvec scalarmeas(
           ScalarCalculator->Calculate(GravityTest));
       //extract the tensor components
-      double uzz = tensormeas(17);
-      double uzy = tensormeas(16);
-      double uzx = tensormeas(15);
+      double uzz = tensormeas(8);
+      double uzy = tensormeas(7);
+      double uzx = tensormeas(6);
       //calculate the same components through finite differencing
       double fduzz = (scalarmeas(2) - scalarmeas(1)) / (2 * delta);
       double fduzy = (scalarmeas(4) - scalarmeas(3)) / (2 * delta);
@@ -550,6 +569,47 @@ jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension()
               std::numeric_limits<float>::epsilon());
 
         }
+    }
+
+  //check whether the diagonal elements of the tensor obey the poisson equation
+  BOOST_AUTO_TEST_CASE(tensor_poisson_test)
+    {
+      jiba::ThreeDGravityModel GravityTest;
+      const size_t nhorcells = 10;
+      const size_t nzcells = 10;
+      GravityTest.SetXCellSizes().resize(boost::extents[nhorcells]);
+      GravityTest.SetYCellSizes().resize(boost::extents[nhorcells]);
+      GravityTest.SetZCellSizes().resize(boost::extents[nzcells]);
+      for (size_t i = 0; i < nhorcells; ++i) // set the values of the inner cells
+
+        {
+          GravityTest.SetXCellSizes()[i] = 10;
+          GravityTest.SetYCellSizes()[i] = 10;
+        }
+      std::fill_n(GravityTest.SetZCellSizes().origin(),nzcells,10.0);
+      GravityTest.SetDensities().resize(
+          boost::extents[nhorcells][nhorcells][nzcells]);
+      const double density = 2.1;
+      std::fill_n(GravityTest.SetDensities().origin(),GravityTest.SetDensities().num_elements(),density);
+
+      GravityTest.AddMeasurementPoint(5,5, -1);
+      GravityTest.AddMeasurementPoint(5,5,50);
+
+      std::vector<double> bg_dens(1,density), bg_thick(1,100.0);
+      GravityTest.SetBackgroundDensities(bg_dens);
+      GravityTest.SetBackgroundThicknesses(bg_thick);
+      boost::shared_ptr<jiba::MinMemGravityCalculator> TensorCalculator(jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeTensor());
+      jiba::rvec TensorMeas(TensorCalculator->Calculate(GravityTest));
+      const double PoissTerm = -4.0 * M_PI * jiba::Grav_const * density;
+
+      const double Trace1 = TensorMeas(0) + TensorMeas(4) + TensorMeas(8);
+      const double Trace2 = TensorMeas(9) + TensorMeas(13) + TensorMeas(17);
+
+      BOOST_CHECK_CLOSE(PoissTerm, Trace1-Trace2,
+          std::numeric_limits<float>::epsilon());
+      BOOST_CHECK_CLOSE(density, Trace2/(4.0 * M_PI * jiba::Grav_const),
+          std::numeric_limits<float>::epsilon());
+
     }
 
   //write a C++ vectorial quantity into a file so that R can understand the values
@@ -598,47 +658,49 @@ jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension()
 
   //test the scalar forward interface for R
   //this needs the current svn of boost test, as boost test in 1.35.0 has problems with the system call
-  /* BOOST_AUTO_TEST_CASE(R_scalar_interface_test)
-   {
-   //create a 3D Gravity object
-   jiba::ThreeDGravityModel GravityTest(false, false);
-   //create a random model and write the information into the R-script file
-   std::ofstream Rscript("scalar_test.R");
-   PrepareModelForR(GravityTest, Rscript);
-   //calculate our results
-   jiba::ThreeDGravityModel::tScalarMeasVec scalarmeas(
-   GravityTest.CalcGravity());
-   //finish the R script
-   //call the R interface function
-   Rscript
-   << " raw<-system.time(result<-gravforward(XSizes,YSizes,ZSizes,Densities,XMeasPos,YMeasPos,ZMeasPos))\n";
-   Rscript
-   << " cached<-system.time(result2<-gravforward(XSizes,YSizes,ZSizes,Densities,XMeasPos,YMeasPos,ZMeasPos))\n";
-   Rscript << " sink(\"scalar_output\")\n";
-   Rscript << " cat(result$GravAcceleration)\n";
-   Rscript << " sink(\"r_timing\")\n";
-   Rscript << " cat(raw)\n";
-   Rscript << " cat(cached)\n";
-   Rscript << " q()\n";
-   Rscript << std::flush;
-   //execute R with the script
-   system("R --vanilla --slave -f scalar_test.R");
-   //read in the output R has generated
-   std::ifstream routput("scalar_output");
-   std::vector<double> rvalues;
-   //this is simply an ascii file with a bunch of numbers
-   copy(std::istream_iterator<double>(routput), std::istream_iterator<double>(),
-   back_inserter(rvalues));
-   //first of all we should have values for each measurement
-   BOOST_CHECK_EQUAL(rvalues.size(), scalarmeas.size());
-   //and they should be equal, the tolerance is 0.01% as writing to the file truncates the numbers
-   for (size_t i = 0; i < scalarmeas.size(); ++i)
-   {
-   BOOST_CHECK_CLOSE(scalarmeas.at(i), rvalues.at(i), 0.01);
-   }
+ /* BOOST_AUTO_TEST_CASE(R_scalar_interface_test)
+    {
+      //create a 3D Gravity object
+      jiba::ThreeDGravityModel GravityTest;
+      //create a random model and write the information into the R-script file
+      std::ofstream Rscript("scalar_test.R");
+      PrepareModelForR(GravityTest, Rscript);
+      //calculate our results
+      boost::shared_ptr<jiba::MinMemGravityCalculator> ScalarCalculator(jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeScalar());
+      jiba::rvec scalarmeas(
+          ScalarCalculator->Calculate(GravityTest));
 
-   }
-   */
+      //finish the R script
+      //call the R interface function
+      Rscript
+      << " raw<-system.time(result<-gravforward(XSizes,YSizes,ZSizes,Densities,XMeasPos,YMeasPos,ZMeasPos))\n";
+      Rscript
+      << " cached<-system.time(result2<-gravforward(XSizes,YSizes,ZSizes,Densities,XMeasPos,YMeasPos,ZMeasPos))\n";
+      Rscript << " sink(\"scalar_output\")\n";
+      Rscript << " cat(result$GravAcceleration)\n";
+      Rscript << " sink(\"r_timing\")\n";
+      Rscript << " cat(raw)\n";
+      Rscript << " cat(cached)\n";
+      Rscript << " q()\n";
+      Rscript << std::flush;
+      //execute R with the script
+      system("R --vanilla --slave -f scalar_test.R");
+      //read in the output R has generated
+      std::ifstream routput("scalar_output");
+      std::vector<double> rvalues;
+      //this is simply an ascii file with a bunch of numbers
+      copy(std::istream_iterator<double>(routput), std::istream_iterator<double>(),
+          back_inserter(rvalues));
+      //first of all we should have values for each measurement
+      BOOST_CHECK_EQUAL(rvalues.size(), scalarmeas.size());
+      //and they should be equal, the tolerance is 0.01% as writing to the file truncates the numbers
+      for (size_t i = 0; i < scalarmeas.size(); ++i)
+        {
+          BOOST_CHECK_CLOSE(scalarmeas(i), rvalues.at(i), 0.01);
+        }
+
+    }
+*/
   //test the tensor forward interface for R
   //this needs the current svn of boost test, as boost test in 1.35.0 has problems with the system call
   /*  BOOST_AUTO_TEST_CASE(R_tensor_interface_test)

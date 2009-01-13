@@ -53,11 +53,13 @@ int main()
         double cachedruntime = 0.0;
         for (size_t j = 0; j < nrunspersize; ++j)
           {
+            rawruntime = 0.0;
+            cachedruntime = 0.0;
             MakeRandomModel(GravityTest, modelsize);
 
             boost::shared_ptr<jiba::FullSensitivityGravityCalculator>
                 Calculator = jiba::CreateGravityCalculator<
-                    jiba::FullSensitivityGravityCalculator>::MakeScalar(true);
+                    jiba::FullSensitivityGravityCalculator>::MakeScalar(false);
             boost::posix_time::ptime firststarttime =
                         boost::posix_time::microsec_clock::local_time();
             jiba::rvec gravmeas(Calculator->Calculate(GravityTest));

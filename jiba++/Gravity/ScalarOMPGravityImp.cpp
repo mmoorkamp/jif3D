@@ -56,8 +56,8 @@ namespace jiba
           {
             const double currthick = Model.GetBackgroundThicknesses()[j];
             // first assume an infinite sheet for the current layer
-            currvalue = CalcInfSheetTerm(currthick);
             currbottom = currtop + currthick;
+            currvalue = CalcInfSheetTerm(z_meas,currtop,currbottom);
             // and then subtract the value for the modelling domain, as this is already calculated in the discretized routine
             // if the background layer complete coincides with the discretized area
             if (currtop < zwidth && (currbottom <= zwidth))

@@ -5,16 +5,13 @@ lib gravity : ThreeDGravityModel.cpp GravityInterface.cpp ReadWriteGravityData.c
               ThreeDGravityCalculator.cpp MinMemGravityCalculator.cpp WaveletCompressedGravityCalculator.cpp
               gravcuda.cu
               ..//netcdf_c++ ..//netcdf ../ModelBase//modelbase ../Inversion//inversion ..//cudart 
-              : <include>boost : : <include>. ;
-
-install $(TOP) : gravity
-           : <install-dependencies>on <install-type>LIB
-           ;
+              : <include>boost : : <include>. ; 
 
 alias core :  ../ModelBase//modelbase ../Global ..//netcdf_c++ ..//netcdf ..//cudart ..//cutil ;
 
 unit-test gravity_test : test_ThreeDGravityModel.cpp gravity  core : : <include>. ;
 unit-test weighting_test : test_weighting.cpp gravity ../Inversion//inversion core  : : <include>. ;
+unit-test readwrite_test : test_readwritedata.cpp gravity ../Inversion//inversion core  : : <include>. ;
 
 exe gravforward : gravforward.cpp gravity core : <include>. ;
 exe gravgrid : gravgrid.cpp gravity core : <include>. ;

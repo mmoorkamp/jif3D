@@ -4,10 +4,6 @@ obj Wavelet.o : Wavelet.cpp : <include>. ;
 
 lib global : Wavelet.o
               : <include>boost : : <include>. ;
-
-install $(TOP) : global
-           : <install-dependencies>on <install-type>LIB
-           ;
            
 unit-test interpolate_test : test_interpolate.cpp   : : <include>. ;
 unit-test wavelet_test : Wavelet.o test_wavelet.cpp   : : <include>. ;

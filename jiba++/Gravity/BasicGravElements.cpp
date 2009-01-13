@@ -46,10 +46,11 @@ namespace jiba
         //        const double r = sqrt(a*a+b*b+c*c);
         //
         //        double returnvalue = atan2(a * b, c *r);
-        //        returnvalue += a*b*c*r/(c*c*r*r + a*a*b*b);
-        //        returnvalue += pow(c,3) * b * a/(c*c*pow(r,3)+b*b*a*a*r);
-        //        returnvalue += a*c/(b*r+r*r) + b*c/(a*r+r*r);
-        //        return returnvalue;
+        //       returnvalue += a*b*c*r/(c*c*r*r + a*a*b*b);
+        //      returnvalue += pow(c,3) * b * a/(c*c*pow(r,3)+b*b*a*a*r);
+        //     returnvalue += a*c/(b*r+r*r) + b*c/(a*r+r*r);
+        // assert(value1==returnvalue);
+        //   return returnvalue;
       }
 
     //! Calculate one of the terms of off-diagonal elements of the gravimetric matrxi

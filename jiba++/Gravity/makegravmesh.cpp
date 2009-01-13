@@ -6,7 +6,7 @@
 //============================================================================
 
 /*! \file makegravmesh.cpp
- * Make a netcdf gravity model file with a specified mesh. The densities in this file are all zero.
+ * Make a netcdf gravity model file with a specified mesh. The densities in this file are all identical to the specified value.
  */
 
 
@@ -39,7 +39,10 @@ int main(int argc, char *argv[])
     Model.SetYCellSizes().resize(boost::extents[ny]);
     Model.SetZCellSizes().resize(boost::extents[nz]);
     Model.SetDensities().resize(boost::extents[nx][ny][nz]);
-
+    double defaultdensity = 0.0;
+    std::cout << "Density: ";
+    std::cin >> defaultdensity;
+    fill_n(Model.SetDensities().origin(),Model.GetDensities().num_elements(),defaultdensity);
     fill_n(Model.SetXCellSizes().begin(),nx,deltax);
     fill_n(Model.SetYCellSizes().begin(),ny,deltay);
     fill_n(Model.SetZCellSizes().begin(),nz,deltaz);

@@ -10,7 +10,7 @@
 #define BASICGRAVELEMENTS_H_
 
 #include "ThreeDGravityModel.h"
-
+#include "../Global/NumUtil.h"
 namespace jiba
   {
     /** \addtogroup gravity Gravity forward modelling, display and inversion */
@@ -45,9 +45,25 @@ namespace jiba
         const double thick, const double density);
 
     //! Calculate the "geometric term" for gravitational acceleration of an infinite slab
-    inline double CalcInfSheetTerm(const double thick)
+    inline double CalcInfSheetTerm(const double measz, const double top,
+        const double bottom)
       {
-        return 2.0 * M_PI * Grav_const * thick;
+        const double thick = bottom - top;
+        if ((measz <= top) || (measz >= bottom))
+          {
+            return 2.0 * M_PI * Grav_const * thick * jiba::sign(top - measz);
+          }
+        return 2.0 * M_PI * Grav_const * (thick - 2.0 * (measz - top));
+      }
+
+    inline double CalcUzzInfSheetTerm(const double measz, const double top,
+        const double bottom)
+      {
+        if ((measz <= top) || (measz >= bottom))
+          {
+            return 0.0;
+          }
+        return 4.0 * M_PI * Grav_const;
       }
   /* @} */
   //end of namespace jiba

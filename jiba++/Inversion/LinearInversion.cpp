@@ -26,8 +26,7 @@ namespace jiba
      * @param InvModel On input: The a priori model, On output The m component vector with the inversion result
      */
     void DataSpaceInversion::operator()(rmat &Sensitivities, rvec &Data, const rvec &WeightVector,
-        const rvec &DataError, const double lambda,
-        rvec &InvModel)
+        const rvec &DataError, const double lambda, rvec &InvModel)
       {
         //check that all lengths are consistent
         assert(Data.size() == Sensitivities.size1());
@@ -49,14 +48,14 @@ namespace jiba
         jiba::rmat Gamma(nmeas, nmeas);
         atlas::gemm(CblasNoTrans, CblasTrans, 1.0, Sensitivities,
             Sensitivities, 0.0, Gamma);
-        //apply regularization
+        //apply damping
         for (size_t i = 0; i < nmeas; ++i)
           {
             Gamma(i, i) += lambda * DataError(i);
           }
         //invert the data space matrix by solving
         //a linear system, the result is in Data
-        lapack::gesv(Gamma,Data);
+        lapack::gesv(Gamma, Data);
         //project the inverted matrix back into model space
         //equation 9 in Siripurnvaraporn and Egbert
         for (size_t i = 0; i < nparm; ++i)
@@ -66,7 +65,7 @@ namespace jiba
             CurrentColumn *= sqrt(WeightVector(i));
           }
         //calculate the inversion model
-        atlas::gemv(CblasTrans,1.0,Sensitivities, Data,0.0, InvModel);
+        atlas::gemv(CblasTrans, 1.0, Sensitivities, Data, 0.0, InvModel);
       }
 
     /*! Given the sensitivities, data, weights and data error, perform a linear classic model space inversion.
@@ -99,7 +98,35 @@ namespace jiba
           {
             Gamma(i, i) += lambda * 1. / WeightVector(i);
           }
-        atlas::gemv(CblasTrans,1.0,Sensitivities, Data,0.0, InvModel);
-        lapack::gesv(Gamma,InvModel);
+        atlas::gemv(CblasTrans, 1.0, Sensitivities, Data, 0.0, InvModel);
+        lapack::gesv(Gamma, InvModel);
       }
-  }
+
+    void QuasiNewtonInversion::operator()(rmat &Sensitivities, rvec &Data, const rvec &WeightVector,
+        const rvec &DataError, const double lambda, rvec &InvModel)
+      {
+        const size_t nmeas = Data.size();
+        const size_t nparm = Sensitivities.size2();
+        for (size_t i = 0; i < nmeas; ++i)
+          {
+            boost::numeric::ublas::matrix_row<jiba::rmat>(Sensitivities, i)
+                /= sqrt(DataError(i));
+            Data(i) /= sqrt(DataError(i));
+          }
+        jiba::rmat Gamma(nparm, nparm);
+        atlas::gemm(CblasTrans, CblasNoTrans, 1.0, Sensitivities,
+            Sensitivities, 0.0, Gamma);
+        for (size_t i = 0; i < nparm; ++i)
+          {
+            Gamma(i, i) += lambda * 1. / WeightVector(i);
+          }
+        jiba::rvec y(nparm);
+        atlas::gemv(CblasTrans, 1.0, Sensitivities, Data, 0.0, y);
+        for (size_t i = 0; i < nparm; ++i)
+          {
+            y(i) += lambda * 1. / WeightVector(i) * InvModel(i);
+          }
+        lapack::gesv(Gamma, y);
+        InvModel = y;
+      }
+}

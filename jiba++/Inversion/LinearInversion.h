@@ -21,8 +21,7 @@ namespace jiba
       {
     public:
       void operator()(rmat &Sensitivities, rvec &Data, const rvec &WeightVector,
-          const rvec &DataError, const double lambda,
-          rvec &InvModel);
+          const rvec &DataError, const double lambda, rvec &InvModel);
       };
 
     class ModelSpaceInversion
@@ -31,6 +30,13 @@ namespace jiba
       void operator()(rmat &Sensitivities, rvec &Data, const rvec &WeightVector,
           const rvec &DataError, const double evalthresh, const double lambda,
           rvec &InvModel);
+      };
+
+    class QuasiNewtonInversion
+      {
+    public:
+      void operator()(rmat &Sensitivities, rvec &Data, const rvec &WeightVector,
+          const rvec &DataError, const double lambda, rvec &InvModel);
       };
   /* @} */
   }

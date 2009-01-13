@@ -45,6 +45,7 @@ int main(int argc, char *argv[])
     jiba::GravityDataType DataType = jiba::IdentifyGravityDatafileType(
         datafilename);
 
+    double DepthExponent = -2.0;
     boost::shared_ptr<jiba::FullSensitivityGravityCalculator> GravityCalculator;
     switch (DataType)
       {
@@ -61,6 +62,7 @@ int main(int argc, char *argv[])
           = boost::shared_ptr<jiba::FullSensitivityGravityCalculator>(
               jiba::CreateGravityCalculator<
                   jiba::FullSensitivityGravityCalculator>::MakeTensor());
+      DepthExponent = -4.0;
       break;
     default:
       std::cerr << "Cannot determine the type of data to invert. Aborting."
@@ -72,6 +74,12 @@ int main(int argc, char *argv[])
     if (Data.empty())
       throw jiba::FatalException("No measurements defined");
     const size_t nmeas = PosX.size();
+    const size_t ndata = Data.size();
+    const size_t xsize = Model.GetDensities().shape()[0];
+    const size_t ysize = Model.GetDensities().shape()[1];
+    const size_t zsize = Model.GetDensities().shape()[2];
+    const size_t nmod = xsize * ysize * zsize;
+
     //set the measurement points in the model to those of the data
     Model.ClearMeasurementPoints();
     for (size_t i = 0; i < nmeas; ++i)
@@ -81,11 +89,6 @@ int main(int argc, char *argv[])
     //calculate the response of the starting model
     jiba::rvec StartingData(GravityCalculator->Calculate(Model));
 
-    const size_t xsize = Model.GetDensities().shape()[0];
-    const size_t ysize = Model.GetDensities().shape()[1];
-    const size_t zsize = Model.GetDensities().shape()[2];
-    const size_t nmod = xsize * ysize * zsize;
-    const size_t ndata = Data.size();
     jiba::rmat AllSens(GravityCalculator->GetSensitivities());
     jiba::rmat Sensitivities(ublas::matrix_range<jiba::rmat>(AllSens,
         ublas::range(0, ndata), ublas::range(0, nmod)));
@@ -95,20 +98,29 @@ int main(int argc, char *argv[])
     jiba::rvec DataDiffVec(ndata), DataError(ndata);
     std::transform(Data.begin(), Data.end(), StartingData.begin(),
         DataDiffVec.begin(), std::minus<double>());
+    std::transform(DataDiffVec.begin(), DataDiffVec.end(), Data.begin(),
+        DataDiffVec.begin(), std::divides<double>());
     const double errorlevel = 0.02;
-    std::transform(Data.begin(), Data.end(), DataError.begin(), boost::bind(
-        std::multiplies<double>(), _1, errorlevel));
+    std::fill(DataError.begin(), DataError.end(), errorlevel);
+    for (size_t i = 0; i < ndata; ++i)
+      {
+        boost::numeric::ublas::matrix_row<jiba::rmat> CurrentRow(AllSens, i);
+        CurrentRow /= Data(i);
+      }
+    //std::transform(Data.begin(), Data.end(), DataError.begin(), boost::bind(
+    //    std::multiplies<double>(), _1, errorlevel));
 
     jiba::rvec SensProfile;
     jiba::ExtractMiddleSens(Model, Sensitivities,
         GravityCalculator->GetDataPerMeasurement(), SensProfile);
+
     double z0 = FitZ0(SensProfile, Model.GetZCellSizes(), jiba::WeightingTerm(
-        -3));
+        DepthExponent));
     std::cout << "Estimated z0: " << z0 << std::endl;
 
     //calculate the depth scaling
     jiba::ConstructDepthWeighting(Model.GetZCellSizes(), z0, WeightVector,
-        jiba::WeightingTerm(-3));
+        jiba::WeightingTerm(DepthExponent));
     //and output the scaling weights
     std::ofstream weightfile("weights.out");
     std::copy(WeightVector.begin(), WeightVector.end(), std::ostream_iterator<
@@ -152,8 +164,8 @@ int main(int argc, char *argv[])
           Model.GetMeasPosZ());
       break;
     case jiba::ftg:
-      jiba::Write3DTensorDataToVTK(modelfilename + ".inv_ftg.vtk", "grav_accel",
-          InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
+      jiba::Write3DTensorDataToVTK(modelfilename + ".inv_ftg.vtk",
+          "grav_accel", InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
           Model.GetMeasPosZ());
       jiba::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc",
           InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
