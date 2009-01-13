@@ -73,7 +73,7 @@ namespace jiba
       {
         rvec tempdata(MatVec.size() / 9);
         for (size_t i = 0; i < tempdata.size(); ++i)
-          tempdata( i) = MatVec(i + n);
+          tempdata( i) = MatVec(i*9 + n);
         WriteVec(NetCDFFile, CompName, tempdata, Dimension, "1/s2");
       }
 
@@ -194,20 +194,22 @@ namespace jiba
         const ThreeDGravityModel::tMeasPosVec &PosY,
         const ThreeDGravityModel::tMeasPosVec &PosZ)
       {
-        assert(PosX.size() == PosY.size());
-        assert(PosX.size() == PosZ.size());
-        assert(PosX.size()*9 == Data.size());
+        const size_t nmeas = PosX.size();
+        const size_t ndata = Data.size();
+        assert(nmeas == PosY.size());
+        assert(nmeas == PosZ.size());
+        assert(nmeas*9 == ndata);
 
         NcFile DataFile(filename.c_str(), NcFile::Replace);
 
         NcDim *StatNumDim = DataFile.add_dim(StationNumberName.c_str(),
-            Data.size());
+            nmeas);
         std::vector<int> StationNumber;
-        std::generate_n(back_inserter(StationNumber), Data.size(), IntSequence(
+        std::generate_n(back_inserter(StationNumber), nmeas, IntSequence(
             0));
         NcVar *StatNumVar = DataFile.add_var(StationNumberName.c_str(), ncInt,
             StatNumDim);
-        StatNumVar->put(&StationNumber[0], Data.size());
+        StatNumVar->put(&StationNumber[0], nmeas);
 
         WriteVec(DataFile, MeasPosXName, PosX, StatNumDim, "m");
         WriteVec(DataFile, MeasPosYName, PosY, StatNumDim, "m");

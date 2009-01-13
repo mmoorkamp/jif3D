@@ -11,9 +11,9 @@ path-constant TOP : . ;
 import cuda ;
 
 using gcc : 4.3 : g++-4.3 ;
-using intel-linux : 11.0 : icpc : <cxxflags>-mssse3 ; 
-using sun :  : CC : <compileflags>-library=stlport4 <linkflags>-library=stlport4 
-                   <define>BOOST_UBLAS_UNSUPPORTED_COMPILER=0 <define>BIND_FORTRAN_LOWERCASE_UNDERSCORE ;
+#using intel-linux : 11.0 : icpc : <cxxflags>-mssse3 ; 
+#using sun : 5.10 : CC : <compileflags>-library=stlport4 <linkflags>-library=stlport4 
+#                   <define>BOOST_UBLAS_UNSUPPORTED_COMPILER=0 <define>BIND_FORTRAN_LOWERCASE_UNDERSCORE ;
 
 use-project /Global : Global ;
 use-project /Gravity : Gravity ;

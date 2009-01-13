@@ -44,30 +44,28 @@ namespace jiba
         GravimetryMatrix result(3, 3);
         GravimetryMatrix currvalue(3, 3);
         std::fill_n(result.data().begin(), ndatapermeas, 0.0);
+        std::fill_n(currvalue.data().begin(), ndatapermeas, 0.0);
         double currtop = 0.0;
         double currbottom = 0.0;
-        const size_t nmod = Model.GetDensities().shape()[0]
-            * Model.GetDensities().shape()[1] * Model.GetDensities().shape()[2];
+        const size_t nmod = Model.GetDensities().num_elements();
         const bool storesens = (Sensitivities.size1() >= ndatapermeas)
             && (Sensitivities.size2() >= nmod);
         // for all layers of the background
         for (size_t j = 0; j < nbglayers; ++j)
           {
+            std::fill_n(currvalue.data().begin(), ndatapermeas, 0.0);
             const double currthick = Model.GetBackgroundThicknesses()[j];
             currbottom = currtop + currthick;
+            currvalue(2, 2) = CalcUzzInfSheetTerm(z_meas, currtop, currbottom);
             if (currtop < zwidth && (currbottom <= zwidth)) // if the background layer complete coincides with the discretized area
-
               {
-                // We only have to substract the effect of the gridding box, the effect of an inifite sheet is zero
-                currvalue = -CalcTensorBoxTerm(x_meas, y_meas, z_meas, 0.0, 0.0,
-                    currtop, xwidth, ywidth, currthick);
-
+                currvalue -= CalcTensorBoxTerm(x_meas, y_meas, z_meas, 0.0,
+                    0.0, currtop, xwidth, ywidth, currthick);
               }
             if (currtop < zwidth && currbottom > zwidth) //if some of the background coincides and some is below
-
               {
-                currvalue = -CalcTensorBoxTerm(x_meas, y_meas, z_meas, 0.0, 0.0,
-                    currtop, xwidth, ywidth, (zwidth - currtop));
+                currvalue -= CalcTensorBoxTerm(x_meas, y_meas, z_meas, 0.0,
+                    0.0, currtop, xwidth, ywidth, (zwidth - currtop));
               }
             if (storesens)
               {

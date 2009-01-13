@@ -78,9 +78,9 @@ void      SingleScalarMeas(const double x_meas, const double y_meas,
           for (size_t j = 0; j < nbglayers; ++j)
             {
               const double currthick = Model.GetBackgroundThicknesses()[j];
-              // first assume an infinite sheet for the current layer
-              currvalue = CalcInfSheetTerm(currthick);
               currbottom = currtop + currthick;
+              // first assume an infinite sheet for the current layer
+              currvalue = CalcInfSheetTerm(z_meas,currtop,currbottom);
               // and then subtract the value for the modelling domain, as this is already calculated in the discretized routine
               // if the background layer complete coincides with the discretized area
               if (currtop < zwidth && (currbottom <= zwidth))
