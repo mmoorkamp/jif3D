@@ -37,7 +37,7 @@ namespace jiba
     typedef boost::numeric::ublas::matrix<double,boost::numeric::ublas::column_major>
         rmat;
     //! A sparse matrix with real valued entries
-    typedef boost::numeric::ublas::compressed_matrix<double,boost::numeric::ublas::column_major>
+    typedef boost::numeric::ublas::mapped_matrix<double,boost::numeric::ublas::column_major>
         rsparse;
     //! A complex vector
     typedef boost::numeric::ublas::vector<std::complex<double> > cvec;
