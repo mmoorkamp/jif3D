@@ -87,7 +87,7 @@ void  SingleScalarMeas(const double x_meas, const double y_meas,
       double *d_result, const unsigned int nx, const unsigned int ny, const unsigned int nz,
       double *returnvalue)
     {
-      const int BLOCK_SIZE = 16;
+      const int BLOCK_SIZE = 128;
       dim3 threads( BLOCK_SIZE);
       const unsigned int nelements = nx * ny * nz;
       const unsigned int nblocks = nelements / threads.x+1;
