@@ -13,7 +13,7 @@ int main()
     jiba::rsparse SparseMat(n, n), Inverse(n, n);
     for (size_t i = 0; i < n; ++i)
       {
-        SparseMat.push_back(i, i, 4);
+        SparseMat(i, i) =  4.0;
       }
 
     jiba::InvertMatrix(SparseMat, Inverse);
