@@ -8,13 +8,16 @@
 
 #include "WaveletCompressedGravityCalculator.h"
 #include "../Global/Wavelet.h"
+#include "../Global/NumUtil.h"
+#include "../Global/convert.h"
+#include "../ModelBase/VTKTools.h"
 
 namespace jiba
   {
 
     WaveletCompressedGravityCalculator::WaveletCompressedGravityCalculator(
         boost::shared_ptr<ThreeDGravityImplementation> TheImp) :
-      CachedGravityCalculator(TheImp)
+      CachedGravityCalculator(TheImp), accuracy(0.01)
       {
 
       }
@@ -54,6 +57,7 @@ namespace jiba
             boost::extents[transformsize[0]][transformsize[1]][transformsize[2]]);
         SparseSens.resize(nmeas * Imp.get()->GetDataPerMeasurement(),
             CurrRow.num_elements(), false);
+        SparseSens.clear();
 
         return Imp->Calculate(Model, *this);
       }
@@ -63,6 +67,9 @@ namespace jiba
       {
 
         std::fill_n(CurrRow.origin(), CurrRow.num_elements(), 0.0);
+        //CurrRow and the Model have different sizes, but we have to
+        //consider the spatial structure of the model, so we have
+        //to use loops for copying and NOT std::copy
         for (size_t j = 0; j < xsize; ++j)
           for (size_t k = 0; k < ysize; ++k)
             {
@@ -88,50 +95,82 @@ namespace jiba
     void WaveletCompressedGravityCalculator::HandleSensitivities(
         const size_t measindex)
       {
+        const size_t sparserowoffset = measindex
+            * Imp->GetDataPerMeasurement();
         for (size_t i = 0; i < Imp->GetDataPerMeasurement(); ++i)
           {
+            boost::numeric::ublas::matrix_row<jiba::rmat> SensRow(
+                SetCurrentSensitivities(), i);
+
+            //SensRow and CurrRow have different sizes, but we have to
+            //consider the spatial structure of the underlying model, so we have
+            //to use loops for copying and NOT std::copy
             std::fill_n(CurrRow.origin(), CurrRow.num_elements(), 0.0);
             for (size_t j = 0; j < xsize; ++j)
               for (size_t k = 0; k < ysize; ++k)
                 {
                   for (size_t l = 0; l < zsize; ++l)
-                    CurrRow[j][k][l] = SetCurrentSensitivities()(i, j * (ysize
-                        * zsize) + k * zsize + l);
-
+                    CurrRow[j][k][l] = SensRow(j * (ysize * zsize) + k * zsize
+                        + l);
                 }
 
             for (size_t l = 0; l < nbglayers; ++l)
               CurrRow[xsize + 1][0][l] = SetCurrentSensitivities()(i, xsize
                   * ysize * zsize + l);
             jiba::WaveletTransform(CurrRow);
-            size_t currn = 0;
-            double relthresh = 1e-1;
+
+            //debug code start
+            jiba::ThreeDGravityModel::t3DModelDim FakeSizeX(
+                boost::extents[CurrRow.shape()[0]]), FakeSizeY(
+                boost::extents[CurrRow.shape()[1]]), FakeSizeZ(
+                boost::extents[CurrRow.shape()[2]]);
+            std::fill_n(FakeSizeX.origin(),CurrRow.shape()[0],1.0);
+            std::fill_n(FakeSizeY.origin(),
+                CurrRow.shape()[1], 1.0);
+            std::fill_n(FakeSizeZ.origin(),
+                CurrRow.shape()[2], 1.0);
+            jiba::Write3DModelToVTK(
+                "waveletsens" + jiba::stringify(i) + ".vtk", "WaveletSens",
+                FakeSizeX, FakeSizeY, FakeSizeZ, CurrRow);
+            //debug code end
+
             double normall = std::inner_product(CurrRow.origin(),
                 CurrRow.origin() + CurrRow.num_elements(), CurrRow.origin(),
                 0.0);
             double normdiscarded = normall;
-            const double maximum = *std::max_element(CurrRow.origin(),
-                CurrRow.origin() + CurrRow.num_elements());
-            while (normdiscarded / normall > 1e-2)
+            const double maximum = fabs(*std::max_element(CurrRow.origin(),
+                CurrRow.origin() + CurrRow.num_elements(),absLess<double,double>()));
+            //this is our initial estimate of the threshold
+            double absthresh = 0.5 * maximum; //maximum * 2.0 * accuracy;
+
+            while (normdiscarded / normall > accuracy)
               {
-                currn = 0;
+                absthresh /= 2.0;
                 normdiscarded = 0.0;
-                const double absthresh = maximum * relthresh;
                 for (size_t j = 0; j < CurrRow.num_elements(); ++j)
                   {
-                    if (fabs(*(CurrRow.origin() + j)) > absthresh)
-                      {
-                        SparseSens(measindex + i * Imp.get()->GetDataPerMeasurement(),
-                            j) = *(CurrRow.origin() + j);
-                        currn++;
-                      }
-                    else
+                    if (fabs(*(CurrRow.origin() + j)) <= absthresh)
+
                       {
                         normdiscarded += pow(*(CurrRow.origin() + j), 2);
                       }
                   }
-                relthresh /= 2.0;
+                std::cout << "Normall: " << normall << " Normdiscarded: " << normdiscarded << std::endl;
               }
+            std::cout << "Abs thresh: " << absthresh << " "
+                << maximum << std::endl;
+            //now that we have determined the threshold we can assign the
+            //elements to the sparse matrix
+            for (size_t j = 0; j < CurrRow.num_elements(); ++j)
+              {
+                const double currelement = *(CurrRow.origin() + j);
+                if (fabs(currelement) > absthresh)
+                  {
+                    SparseSens(sparserowoffset + i, j) = currelement;
+                  }
+              }
+            //now we have thresholded this row of the sensitivity matrix
+            //and we can do the next component (if we work with FTG data)
           }
       }
   }
