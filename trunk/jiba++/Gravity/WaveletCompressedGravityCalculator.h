@@ -31,6 +31,8 @@ namespace jiba
       size_t xsize ;
       size_t ysize ;
       size_t zsize ;
+      // the desired accuracy for the cached calculations
+      double accuracy;
       //we map the sensitivities on a 3D structure with the same arrangement as the model
       //however each dimension has have a size of power of 2, this structure
       //accomodates this
@@ -38,11 +40,19 @@ namespace jiba
       //and here are the smallest powers of two that can store the model
       boost::multi_array_types::size_type transformsize[3];
       //the sparse matrix that holds the compressed sensitivities
-      boost::numeric::ublas::mapped_matrix<double,
-          boost::numeric::ublas::column_major> SparseSens;
+      jiba::rsparse SparseSens;
       virtual rvec CalculateNewModel(const ThreeDGravityModel &Model);
       virtual rvec CalculateCachedResult(const ThreeDGravityModel &Model);
     public:
+      const jiba::rsparse &GetSensitivities() const {return SparseSens;}
+      //! Set the desired accuracy for the cached calculations
+      /*! More precisely accuracy determines the ratio of the norms of the discarded
+       * elements in each row of the sensitivity matrix to the norm of the original
+       * row in the sensitivity matrix. Unless the density variations are very large
+       * however, this is roughly the accuracy of the result.
+       * @param acc The desired relative accuracy, 0.01 corresponds to 1%
+       */
+      void SetAccuracy(const double acc){accuracy = acc;}
       virtual void HandleSensitivities(const size_t measindex);
       WaveletCompressedGravityCalculator(boost::shared_ptr<ThreeDGravityImplementation> TheImp);
       virtual ~WaveletCompressedGravityCalculator();
