@@ -7,9 +7,11 @@
 
 #define BOOST_TEST_MODULE Interpolation test
 #define BOOST_TEST_MAIN ...
-#include <boost/test/included/unit_test.hpp>
-#include <stdlib.h>
+
 #include "Wavelet.h"
+#include <stdlib.h>
+#include <boost/multi_array.hpp>
+#include <boost/test/included/unit_test.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 
 BOOST_AUTO_TEST_SUITE( Wavelet_Test_Suite )

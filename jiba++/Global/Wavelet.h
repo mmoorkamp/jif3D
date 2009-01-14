@@ -6,7 +6,6 @@
 //============================================================================
 
 #include "VecMat.h"
-#include <boost/multi_array.hpp>
 
 /*! \file Wavelet.h
  * Simple implementations of the discrete wavelet transform and its inverse based on Daubechies-4 wavelets.
