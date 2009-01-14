@@ -51,11 +51,6 @@ namespace jiba
                 column(lambdavt, i) = 1. / s(i) * row(vt,i);
               }
           }
-        //only take the part that is left after multiplication with lambda^-1
-        //we do not do proper matrix multiplication, so we have to cut the right range
-        //boost::numeric::ublas::matrix_range<jiba::rmat> nonzero(vt,
-        //   boost::numeric::ublas::range(0, neval),
-        //  boost::numeric::ublas::range(0, vt.size1()));
         //alocate space for the inverse
         Inverse.resize(Input.size2(), Input.size1());
         //do the multiplication (v lambda^-1) * uT
@@ -63,7 +58,9 @@ namespace jiba
       }
 
     /*!
-     * returns the determinant of a real square Matrix
+     * Returns the determinant of a real square Matrix. This is
+     * a general method that uses LU-factorization and therefore
+     * work for any square matrix.
      * @param Matrix The real square matrix
      * @return det(Matrix)
      */

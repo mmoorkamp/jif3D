@@ -16,13 +16,13 @@ namespace jiba
     /** \addtogroup gravity Gravity forward modelling, display and inversion */
       /* @{ */
     //! The base class for all calculator classes that use sensitivity information to accelerate consecutive model calculations
-    /*! This class analyses the geometry of the model and measurement each time Calculate() is called.
+    /*! This class analyses the geometry of the model and measurements each time Calculate() is called.
      * If the geometries have not changed since the last call CalculateCachedResult() is called where a derived
      * class can implement an accelerated forward calculation using information acquired during the previous
      * calculation. Otherwise CalculateNewModel() is called and the derived class has to calculate a new
      * model and rebuild the caching information.
      *
-     * Examples for a derived classes are FullSensitivityGravityCalculator and WaveletCompressedGravityCalculator.
+     * Examples for derived classes are FullSensitivityGravityCalculator and WaveletCompressedGravityCalculator.
      */
     class CachedGravityCalculator: public jiba::ThreeDGravityCalculator
       {
@@ -51,6 +51,7 @@ namespace jiba
       virtual rvec CalculateNewModel(const ThreeDGravityModel &Model) = 0;
       virtual rvec CalculateCachedResult(const ThreeDGravityModel &Model) = 0;
     public:
+      //! Calculate the data fpr the given gravity model
       virtual rvec Calculate(const ThreeDGravityModel &Model);
       CachedGravityCalculator(
           boost::shared_ptr<ThreeDGravityImplementation> TheImp);

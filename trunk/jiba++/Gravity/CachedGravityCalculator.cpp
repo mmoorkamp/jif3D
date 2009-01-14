@@ -20,7 +20,6 @@ namespace jiba
 
     CachedGravityCalculator::~CachedGravityCalculator()
       {
-        // TODO Auto-generated destructor stub
       }
 
     void CachedGravityCalculator::CopySizes(
@@ -156,7 +155,13 @@ namespace jiba
           }
         return change;
       }
-
+    /*! This function compares the geometry and measurements of the passed
+     * model with the information stored during the last call and either
+     * calls CalculateCachedResult or CalculateNewModel which have to
+     * be implemented in a derived class.
+     * @param Model The 3D gravity model
+     * @return The vector of measurements
+     */
     rvec CachedGravityCalculator::Calculate(const ThreeDGravityModel &Model)
       {
         //check that all modeling information is consistent

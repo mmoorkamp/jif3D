@@ -24,6 +24,7 @@ namespace jiba
           const rvec &DataError, const double lambda, rvec &InvModel);
       };
 
+    //! Invert data described by a linear relationship using the model space method
     class ModelSpaceInversion
       {
     public:
@@ -31,7 +32,7 @@ namespace jiba
           const rvec &DataError, const double evalthresh, const double lambda,
           rvec &InvModel);
       };
-
+    //! Calculate a model update using Quasi-Newton Inversion
     class QuasiNewtonInversion
       {
     public:

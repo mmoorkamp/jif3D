@@ -6,6 +6,8 @@
 //============================================================================
 
 #include "Wavelet.h"
+#include <numeric>
+
 namespace jiba
   {
     //calculate the coefficient for the wavelet filter
@@ -42,7 +44,7 @@ namespace jiba
       }
     /*! Apply a 4 coefficient inverse Daubechies wavelet filter to the input vector.
      * @param Invec The vector with the input data, will contain the result of the transform. Size must be a power of 2
-     * @param maxindex The maximum index to which to apply the filter, must be a power of 2
+     * @param maxindex The maximum index to which to apply the filter, must be a power of 2 and less than the size of Invec
      */
     void InvDaub4(jiba::rvec &Invec, const size_t maxindex)
       {

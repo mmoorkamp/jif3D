@@ -47,7 +47,7 @@ namespace jiba
         return Imp.get()->Calculate(Model, *this);
       }
 
-    rvec FullSensitivityGravityCalculator::FullSensitivityGravityCalculator::CalculateCachedResult(
+    rvec FullSensitivityGravityCalculator::CalculateCachedResult(
         const ThreeDGravityModel &Model)
       {
         const size_t nmeas = Model.GetMeasPosX().size();

@@ -17,7 +17,8 @@ namespace jiba
     /* @{ */
 
     //! Calculate the singular value decomposition for a given matrix
-    /*! Calculate the singular value decomposition using lapack
+    /*! Calculate the singular value decomposition \f$ M = uSv^T \f$ using lapack. As \f$ S\f$ has diagonal
+     * non-zero elements only, it is stored as a vector.
      * @param SensitivityMatrix The n*m input matrix, will be modified during the calculation
      * @param s The vector of singular values
      * @param u The n*n transformation matrix

@@ -20,7 +20,28 @@
 namespace jiba
   {
 
-    /** \addtogroup gravity Gravity forward modelling, display and inversion */
+    /** \addtogroup gravity Gravity forward modelling, display and inversion
+     *
+     * This module contains a library of functions and some programs for scalar gravity and FTG
+     * forward modelling and inversion.
+     *
+     * There are three big building blocks for the gravity forward modelling. The class ThreeDGravityModel
+     * stores a gridded density model including its geometry, a 1D layered background and the position of measurements.
+     * In addition it contains some functionality to read and write models to and from files for storage and plotting.
+     *
+     * There are two class hierarchies that work together to manage the calculation of gravity data. The classes
+     * derived from ThreeDGravityImplementation determine what kind of data is calculated, e.g. scalar or FTG, and
+     * how it is calculated, e.g. on the CPU using parallelization or on a GPU using the CUDA interface. These classes
+     * are not intended for direct use however, but wrapped by the classes derived from ThreeDGravityCalculator.
+     *
+     * This hierarchy of classes manages what kind of additional data is stored to accelerate the
+     * forward calculation. For example, MinMemGravityCalculator just forwards to its Implementation class
+     * and does not store any sensitivities. This means that at every call the data is calculated completely new.
+     * The classes derived from CachedGravityCalculator in contrast store the sensitivity matrix or a processed version.
+     * At each forward calculation they examine the model and whether it requires new sensitivities. If it does they forward
+     * the call to the Implementation object, otherwise they perform a simple matrix-vector product to quickly obtain
+     * the data.
+     */
     /* @{ */
 
 

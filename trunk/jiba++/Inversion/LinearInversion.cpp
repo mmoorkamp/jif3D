@@ -69,6 +69,7 @@ namespace jiba
       }
 
     /*! Given the sensitivities, data, weights and data error, perform a linear classic model space inversion.
+     * See Siripurnvaraporn and Egbert, Geophysics 65, 2000
      * @param Sensitivities The \f$ n \times m\f$ sensitivity matrix, after the call contains the filtered sensitivities
      * @param Data The n component vector containing the data, after the call conatins the error weighted data
      * @param WeightVector The m-component vector of model weights, the diagonal elements of the model covariance
@@ -102,6 +103,17 @@ namespace jiba
         lapack::gesv(Gamma, InvModel);
       }
 
+    /*! Given the sensitivities, data, weights and data error, perform a Quasi-Newton Model update.
+     * This procedure is very similar to ModelSpaceInversion, it differs however in the way the regularization
+     * is applied. For details see Tarrantolla eq. 6.319, page 216
+     * @param Sensitivities The \f$ n \times m\f$ sensitivity matrix, after the call contains the filtered sensitivities
+     * @param Data The n component vector containing the data, after the call conatins the error weighted data
+     * @param WeightVector The m-component vector of model weights, the diagonal elements of the model covariance
+     * @param DataError The n component vector of error estimates for the data, each element must be > 0
+     * @param evalthresh The relative threshold for the eigenvalues to be used for inverting the matrix
+     * @param lambda The lagrangian multiplier to adjust the level of regularivation
+     * @param InvModel The m component vector with the inversion result
+     */
     void QuasiNewtonInversion::operator()(rmat &Sensitivities, rvec &Data, const rvec &WeightVector,
         const rvec &DataError, const double lambda, rvec &InvModel)
       {

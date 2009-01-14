@@ -34,6 +34,12 @@ namespace jiba
      * to give the calculator class the possibility to store, process or discard the
      * current row of the sensitivity matrix. This avoids having to store the complete matrix
      * in cases where some compression is applied.
+     *
+     * Note also that the calculator class hierarchy is independent of whether
+     * scalar or FTG data is calculated. This is purely determined by the Implementation object.
+     * Therefore the data is returned as a single vector. If we calculate scalar data it has one entry
+     * per measurement point in the model. For FTG data it contains 9 consecutive entries with the matrix
+     * elements per measurement.
      */
     class ThreeDGravityCalculator
       {
@@ -57,7 +63,7 @@ namespace jiba
         {
           return CurrentSensitivities;
         }
-      //! In some cases we need to know the amount of data we get per measurement, this information is stored in the implementation class
+      //! In some cases we need to know the amount of data we get per measurement, this information is stored in the implementation class. It is 1 for scalar and at the moment 9 for FTG data
       size_t GetDataPerMeasurement(){return Imp->GetDataPerMeasurement();}
       //! Process the sensitivity information for the current measurement, called from the implementation class
       virtual void HandleSensitivities(const size_t measindex) = 0;

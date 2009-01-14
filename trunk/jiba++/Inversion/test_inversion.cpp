@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE  (basic_svd_test)
         }
 
     }
-  //test that the determinant of and identity matrix is 1
+  //test that the determinant of an identity matrix is 1
   BOOST_AUTO_TEST_CASE (basic_determinant_test)
     {
       const size_t msize = 4;
