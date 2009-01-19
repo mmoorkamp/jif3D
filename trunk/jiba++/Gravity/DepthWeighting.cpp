@@ -61,6 +61,7 @@ namespace jiba
             std::divides<double>(), _1, *std::max_element(profile.begin(),
                 profile.end())));
         // we guess a value for z0, we take it slightly larger than the bottom of the model
+        //it shouldn't be on a cell boundary to avoid numerical problems
         double startz = zvalues(zsize - 1) * 1.1;
 
         //setup the "inversion"
@@ -79,7 +80,7 @@ namespace jiba
         double stepsize = 1e6;
         size_t i = 0;
         //while we are still making progress, but don't use too many iterations
-        while (stepsize > 0.1 && i < iterations)
+        while (stepsize > 0.01 && i < iterations)
           {
             //get the predicted data
             for (size_t j = 0; j < zsize; ++j)
@@ -107,7 +108,6 @@ namespace jiba
             //Delta model will be used for regularizing the next iteration
             //we don't want this so we set it to zero
             DeltaModel(0) = 0.0;
-            outfile << std::endl << std::endl;
             ++i;
           }
         for (size_t j = 0; j < zsize; ++j)
