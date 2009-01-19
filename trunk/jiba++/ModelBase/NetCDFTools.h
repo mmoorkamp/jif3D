@@ -30,13 +30,25 @@ namespace jiba
         ThreeDModelBase::t3DModelDim &YCellSizes,
         ThreeDModelBase::t3DModelDim &ZCellSizes,
         ThreeDModelBase::t3DModelData &Data);
-    //! Write a 3D model to a netcdf file, this is the preferred storage format
+    //! Write a 3D model to a netcdf file using an opened NcFile, this is the preferred storage format
     void Write3DModelToNetCDF(NcFile &NetCDFFile, const std::string &DataName,
         const std::string &UnitsName,
         const ThreeDModelBase::t3DModelDim &XCellSizes,
         const ThreeDModelBase::t3DModelDim &YCellSizes,
         const ThreeDModelBase::t3DModelDim &ZCellSizes,
         const ThreeDModelBase::t3DModelData &Data);
+    //! Write a 3D model to a netcdf file, this version creates the necessary NcFile object
+    inline void Write3DModelToNetCDF(const std::string filename, const std::string &DataName,
+            const std::string &UnitsName,
+            const ThreeDModelBase::t3DModelDim &XCellSizes,
+            const ThreeDModelBase::t3DModelDim &YCellSizes,
+            const ThreeDModelBase::t3DModelDim &ZCellSizes,
+            const ThreeDModelBase::t3DModelData &Data)
+      {
+        NcFile DataFile(filename.c_str(), NcFile::Replace);
+        Write3DModelToNetCDF(DataFile,DataName,UnitsName,XCellSizes,YCellSizes,ZCellSizes,Data);
+      }
+
     /* @} */
   }
 #endif /*NETCDFTOOLS_H_*/
