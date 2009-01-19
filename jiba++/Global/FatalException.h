@@ -8,6 +8,10 @@
 #ifndef FATALEXCEPTION_H_
 #define FATALEXCEPTION_H_
 #include <stdexcept>
+
+/*! \file FatalException.h
+ * The general include file for exceptions within jiba++.
+ */
 namespace jiba
   {
     /** \addtogroup util General utility routines */

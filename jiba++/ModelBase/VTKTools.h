@@ -11,6 +11,10 @@
 #include "ThreeDModelBase.h"
 #include "../Gravity/ThreeDGravityModel.h"
 #include <string>
+/*! \file VTKTools.h
+ * A collection of function to write 3D models and data with 3D positioning information
+ * to files in simple .vtk format for plotting with Paraview or Visit
+ */
 namespace jiba
   {
     /** \addtogroup modelbase Basic classes and routines for 3D models */
