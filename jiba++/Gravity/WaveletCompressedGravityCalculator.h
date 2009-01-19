@@ -18,6 +18,13 @@ namespace jiba
      * the forward calculation for each measurement. It then analyzes the tranformed elements and discards
      * small elements. This decreases the precision of cached forward calculations but greatly reduces the
      * storage requirements.
+     *
+     * \attention This algorithm can fail spectacularly. There is no threshold value for which a certain
+     * precision is guaranteed. In other words even for extremely small threshold values there are some
+     * models for which the difference between the exact and approximate result is arbitrarily large (as
+     * long as we throw away at least one element). This happens when the transformed and thresholded
+     * sensitivities occupy completely different coefficient in the wavelet domain than the model. Use with
+     * extreme care !
      */
     class WaveletCompressedGravityCalculator: public jiba::CachedGravityCalculator
       {
@@ -41,19 +48,29 @@ namespace jiba
       boost::multi_array_types::size_type transformsize[3];
       //the sparse matrix that holds the compressed sensitivities
       jiba::rsparse SparseSens;
+      //we try depth weighting to solve some numerical problems
+      jiba::rvec WhiteningVector;
       virtual rvec CalculateNewModel(const ThreeDGravityModel &Model);
       virtual rvec CalculateCachedResult(const ThreeDGravityModel &Model);
     public:
+      //! Get the compressed matrix of sensitivities in the wavelet domain
       const jiba::rsparse &GetSensitivities() const {return SparseSens;}
       //! Set the desired accuracy for the cached calculations
       /*! More precisely accuracy determines the ratio of the norms of the discarded
        * elements in each row of the sensitivity matrix to the norm of the original
-       * row in the sensitivity matrix. Unless the density variations are very large
-       * however, this is roughly the accuracy of the result.
+       * row in the sensitivity matrix.
        * @param acc The desired relative accuracy, 0.01 corresponds to 1%
        */
       void SetAccuracy(const double acc){accuracy = acc;}
+      //! Set the vector to even out the differences in magnitude between different elements of the sensitivity matrix
+      /*! Li and Oldenburg suggest to improve the properties of the compressed matrix
+       * to apply the depth weighting before the wavelet transformation. In our
+       * experience this does not work.
+       * @return A reference to the WhiteningVector
+       */
+      jiba::rvec &SetWitheningVector(){return WhiteningVector;}
       virtual void HandleSensitivities(const size_t measindex);
+      //! The constructor takes a shared pointer to an implementation object
       WaveletCompressedGravityCalculator(boost::shared_ptr<ThreeDGravityImplementation> TheImp);
       virtual ~WaveletCompressedGravityCalculator();
       };

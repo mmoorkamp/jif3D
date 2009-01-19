@@ -13,7 +13,7 @@
 
 namespace jiba
   {
-    /** \addtogroup gravity Gravity forward modelling, display and inversion */
+    /** \addtogroup gravity Gravity forward modeling, display and inversion */
     /* @{ */
     //! Calculate a scalar gravity response using OpenMP parallelization
     /*! Calculation of scalar gravity acceleration using parallelization with openmp.

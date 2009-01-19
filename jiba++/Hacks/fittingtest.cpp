@@ -57,7 +57,7 @@ int main()
             sens(j, 0) = deriv(zvalues(j), InvModel(0));
             delta(j) = observed(j) - func(zvalues(j),InvModel(0));
           }
-        jiba::ModelSpaceInversion()(sens, delta, weights, error,1e-5, 1e-10,
+        jiba::ModelSpaceInversion()(sens, delta, weights, error, 1e-10,
             DeltaModel);
         double stepsize = 1.0;
         //jiba::rvec TryModel1 = InvModel - stepsize * DeltaModel;

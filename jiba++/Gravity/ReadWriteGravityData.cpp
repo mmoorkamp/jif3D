@@ -73,7 +73,7 @@ namespace jiba
       {
         rvec tempdata(MatVec.size() / 9);
         for (size_t i = 0; i < tempdata.size(); ++i)
-          tempdata( i) = MatVec(i*9 + n);
+          tempdata( i) = MatVec(i * 9 + n);
         WriteVec(NetCDFFile, CompName, tempdata, Dimension, "1/s2");
       }
 
@@ -117,6 +117,13 @@ namespace jiba
         return unknown;;
       }
 
+    /*! Write the scalar gravity measurements and their position to a netcdf file
+     * @param filename The name of the file including ending
+     * @param Data The vector of scalar gravity measurements in m/s2
+     * @param PosX The x-coordinate (Northing) of each measurement in m
+     * @param PosY The y-coordinate (Easting) of each measurement in m
+     * @param PosZ The z-coordinate (Depth) of each measurement in m
+     */
     void SaveScalarGravityMeasurements(const std::string &filename,
         const jiba::rvec &Data, const ThreeDGravityModel::tMeasPosVec &PosX,
         const ThreeDGravityModel::tMeasPosVec &PosY,
@@ -153,6 +160,13 @@ namespace jiba
         DataVar->put(&Data[0], StatNumDim->size());
       }
 
+    /*! Read scalar gravity measurements and their position from a netcdf file
+     * @param filename The name of the file including ending
+     * @param Data The vector of scalar gravity measurements in m/s2
+     * @param PosX The x-coordinate (Northing) of each measurement in m
+     * @param PosY The y-coordinate (Easting) of each measurement in m
+     * @param PosZ The z-coordinate (Depth) of each measurement in m
+     */
     void ReadScalarGravityMeasurements(const std::string &filename,
         jiba::rvec &Data, ThreeDGravityModel::tMeasPosVec &PosX,
         ThreeDGravityModel::tMeasPosVec &PosY,
@@ -165,6 +179,14 @@ namespace jiba
         ReadVec(DataFile, ScalarGravityName, Data);
       }
 
+    /*! Read FTG measurements and their position from a netcdf file. Data will have
+     * 9 consecutive entries (the nine components of the tensor) per element in PosX,PosY and PosZ.
+     * @param filename The name of the file including ending
+     * @param Data The vector of FTG measurements in 1/s2
+     * @param PosX The x-coordinate (Northing) of each measurement in m
+     * @param PosY The y-coordinate (Easting) of each measurement in m
+     * @param PosZ The z-coordinate (Depth) of each measurement in m
+     */
     void ReadTensorGravityMeasurements(const std::string &filename,
         jiba::rvec &Data, ThreeDGravityModel::tMeasPosVec &PosX,
         ThreeDGravityModel::tMeasPosVec &PosY,
@@ -189,6 +211,14 @@ namespace jiba
         ReadMatComp(DataFile, UzzName, Data, 8);
       }
 
+    /*! Write FTG measurements and their position to a netcdf file. Data has to have
+     * 9 consecutive entries (the nine components of the tensor) per element in PosX,PosY and PosZ.
+     * @param filename The name of the file including ending
+     * @param Data The vector of FTG measurements in 1/s2
+     * @param PosX The x-coordinate (Northing) of each measurement in m
+     * @param PosY The y-coordinate (Easting) of each measurement in m
+     * @param PosZ The z-coordinate (Depth) of each measurement in m
+     */
     void SaveTensorGravityMeasurements(const std::string &filename,
         const jiba::rvec &Data, const ThreeDGravityModel::tMeasPosVec &PosX,
         const ThreeDGravityModel::tMeasPosVec &PosY,
@@ -202,11 +232,9 @@ namespace jiba
 
         NcFile DataFile(filename.c_str(), NcFile::Replace);
 
-        NcDim *StatNumDim = DataFile.add_dim(StationNumberName.c_str(),
-            nmeas);
+        NcDim *StatNumDim = DataFile.add_dim(StationNumberName.c_str(), nmeas);
         std::vector<int> StationNumber;
-        std::generate_n(back_inserter(StationNumber), nmeas, IntSequence(
-            0));
+        std::generate_n(back_inserter(StationNumber), nmeas, IntSequence(0));
         NcVar *StatNumVar = DataFile.add_var(StationNumberName.c_str(), ncInt,
             StatNumDim);
         StatNumVar->put(&StationNumber[0], nmeas);

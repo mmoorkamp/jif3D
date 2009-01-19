@@ -35,6 +35,7 @@ namespace jiba
     private:
       int value;
     public:
+      //! The constructor takes the first value of the sequence
       IntSequence(int start) :
         value(start)
         {

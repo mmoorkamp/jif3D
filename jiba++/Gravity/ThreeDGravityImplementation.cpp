@@ -21,6 +21,20 @@ namespace jiba
       {
       }
 
+    /*! This function implements the grand structure of gravity forward calculation, i.e. processing
+     * geometric information, looping over all measurements and combining the response
+     * of the gridded part and the layered background. The details of the calculation,
+     * the type of data (scalar or FTG) and platform specific code are implemented in derived classes
+     * through the virtual functions CalcGridded and CalcBackground.
+     *
+     * This function also gets the calling calculator object as an argument. This way it can, if required, copy
+     * the current row of the sensitivity matrix to the calculator object and
+     * call the HandleSensitivity method that allows the calculator class to store, process
+     * or discard the sensitivity information.
+     * @param Model The gravity model for which to calculate the data
+     * @param Calculator A derived class of ThreeDGravityCalculator
+     * @return A vector of measurements
+     */
     rvec ThreeDGravityImplementation::Calculate(
         const ThreeDGravityModel &Model, ThreeDGravityCalculator &Calculator)
       {

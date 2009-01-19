@@ -6,11 +6,13 @@
 //============================================================================
 
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <numeric>
 #include "../Gravity/ScalarOMPGravityImp.h"
 #include "../Gravity/ThreeDGravityModel.h"
 #include "../Gravity/ReadWriteGravityData.h"
+#include "../Gravity/DepthWeighting.h"
 #include "../Global/Wavelet.h"
 #include "../ModelBase/VTKTools.h"
 #include "../Global/convert.h"
@@ -51,18 +53,35 @@ int main(int argc, char *argv[])
       GravModel.ReadMeasPosAscii(MeasPosFilename);
       break;
       }
+
     //read the model from the netcdf file
     std::cout << "Reading model " << std::endl;
     GravModel.ReadNetCDF(ModelFilename);
     double accuracy = 0.1;
     const size_t nruns = 10;
+    std::ofstream outfile("accur.out");
     for (size_t i = 0; i < nruns; ++i)
       {
         boost::shared_ptr<jiba::WaveletCompressedGravityCalculator>
             WCalculator(jiba::CreateGravityCalculator<
                 jiba::WaveletCompressedGravityCalculator>::MakeTensor());
 
+        const double z0 = 5.0;
+        const double DepthExponent = -3.0;
+        const size_t zsize = GravModel.GetDensities().shape()[2];
+        jiba::rvec WeightVector(zsize);
 
+        jiba::ConstructDepthWeighting(GravModel.GetZCellSizes(), z0,
+            WeightVector, jiba::WeightingTerm(DepthExponent));
+        jiba::rvec ModelWeight(GravModel.GetDensities().num_elements());
+        ;
+        std::fill_n(ModelWeight.begin(), ModelWeight.size(), 0);
+        for (size_t i = 0; i < GravModel.GetDensities().num_elements(); ++i)
+          {
+            ModelWeight( i) = WeightVector(i % zsize);
+          }
+        WCalculator->SetWitheningVector().resize(ModelWeight.size());
+        std::copy(ModelWeight.begin(),ModelWeight.end(),WCalculator->SetWitheningVector().begin());
         WCalculator->SetAccuracy(accuracy);
         jiba::rvec Wavelet1(WCalculator->Calculate(GravModel));
         jiba::rvec Wavelet2(WCalculator->Calculate(GravModel));
@@ -73,16 +92,28 @@ int main(int argc, char *argv[])
           {
             for (size_t j = 0; j < ndata; ++j)
               {
-                const size_t index = i*ndata+j;
-                std::cout << Wavelet1(index) << " " << Wavelet2(index) << " Accuracy "
-                    << accuracy << " Rel. Error: " << (Wavelet1(index)
-                    - Wavelet2(index)) / Wavelet1(index) << std::endl;
+                const size_t index = i * ndata + j;
+                std::cout << Wavelet1(index) << " " << Wavelet2(index)
+                    << " Accuracy " << accuracy << " Rel. Error: "
+                    << (Wavelet1(index) - Wavelet2(index)) / Wavelet1(index)
+                    << std::endl;
               }
-            std::cout << " Compression: "
-                << double(WCalculator->GetSensitivities().nnz())
-                    / double(GravModel.GetDensities().num_elements())
-                << std::endl << std::endl;
+            std::cout << "Non zero: " << WCalculator->GetSensitivities().nnz()
+                << std::endl;
+            const double compression =
+                double(WCalculator->GetSensitivities().nnz())
+                    / double(GravModel.GetDensities().num_elements() * ndata
+                        * nmeas);
+            outfile << accuracy << " " << boost::numeric::ublas::norm_2(
+                Wavelet1 - Wavelet2) / boost::numeric::ublas::norm_2(Wavelet1)
+                << " " << compression << std::endl;
+            std::cout << " Compression: " << compression << std::endl
+                << std::endl;
           }
         accuracy /= 10.0;
+
+
+
       }
+
   }

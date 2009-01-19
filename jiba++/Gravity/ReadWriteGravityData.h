@@ -13,7 +13,7 @@
 
 namespace jiba
   {
-    /** \addtogroup gravity Gravity forward modelling, display and inversion */
+    /** \addtogroup gravity Gravity forward modeling, display and inversion */
      /* @{ */
     //! This type is used to specify which kind of data a file contains
     enum GravityDataType {scalar, ftg, unknown};

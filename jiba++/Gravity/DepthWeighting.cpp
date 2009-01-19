@@ -13,6 +13,8 @@
 namespace jiba
   {
     /*! Calculate the value of the function f
+     * @param z The depth value
+     * @param z0 The parametric depth value
      * @return \f$ (z + z_0)^n \f$
      */
     double WeightingTerm::operator()(const double z, const double z0) const
@@ -20,6 +22,8 @@ namespace jiba
         return pow(z + z0, n);
       }
     /*! Calculate the derivative of the function f at  given z and z0
+     * @param z The depth value
+     * @param z0 The parametric depth value
      */
     double WeightingTerm::deriv(const double z, const double z0) const
       {
@@ -75,7 +79,7 @@ namespace jiba
         const size_t iterations = 100;
         jiba::rvec error(ndata), delta(ndata), calculated(ndata);
         std::fill_n(error.begin(), zsize, 1.0);
-        const double evalthresh = 1e-6;
+
         std::ofstream outfile("match.out");
         double stepsize = 1e6;
         size_t i = 0;
@@ -100,8 +104,7 @@ namespace jiba
                 delta( j) = profile(j) - calculated(j);
               }
             // do one step of the inversion
-            jiba::ModelSpaceInversion()(sens, delta, weights, error,
-                evalthresh, 0.0, DeltaModel);
+            jiba::ModelSpaceInversion()(sens, delta, weights, error, 0.0, DeltaModel);
             //and adjust the model (no fancy line search here)
             stepsize = boost::numeric::ublas::norm_2(DeltaModel);
             InvModel -= DeltaModel;

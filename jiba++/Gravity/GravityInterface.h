@@ -23,7 +23,7 @@
 extern "C"
   {
 
-    /** \addtogroup gravity Gravity forward modelling, display and inversion  */
+    /** \addtogroup gravity Gravity forward modeling, display and inversion  */
     /* @{ */
 
     //! This function allocates storage for the model and has to be called before any calculations

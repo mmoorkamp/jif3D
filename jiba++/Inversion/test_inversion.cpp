@@ -132,7 +132,6 @@ BOOST_AUTO_TEST_CASE  (basic_svd_test)
       std::fill_n(DataSpaceInvModel.begin(),nparam,1.0);
       std::fill_n(ModelSpaceInvModel.begin(),nparam,1.0);
       std::fill_n(QuasiNewtonInvModel.begin(),nparam,1.0);
-      const double evalthresh = 0.000;
       std::generate_n(DataVec.begin(),ndata,rand);
       std::generate_n(DataError.begin(),ndata,rand);
       std::generate_n(ModelWeight.begin(),nparam,rand);
@@ -149,7 +148,7 @@ BOOST_AUTO_TEST_CASE  (basic_svd_test)
           DataSpaceInvModel);
       DataVec = OrigData;
       Sensitivities = OrigSens;
-      jiba::ModelSpaceInversion()(Sensitivities, DataVec, ModelWeight, DataError, evalthresh,1.0,
+      jiba::ModelSpaceInversion()(Sensitivities, DataVec, ModelWeight, DataError,1.0,
           ModelSpaceInvModel);
       DataVec = OrigData;
       Sensitivities = OrigSens;
@@ -181,7 +180,6 @@ BOOST_AUTO_TEST_CASE  (basic_svd_test)
           Sensitivities.data()[i] = rand();
         }
       DataVec = boost::numeric::ublas::prec_prod(Sensitivities,TrueModel);
-      const double evalthresh = 0.000;
       jiba::rvec OrigData(DataVec);
       jiba::rmat OrigSens(Sensitivities);
       jiba::rvec StartingModel(QuasiNewtonInvModel);
@@ -190,7 +188,7 @@ BOOST_AUTO_TEST_CASE  (basic_svd_test)
 
       DataVec = OrigData;
       Sensitivities = OrigSens;
-      jiba::ModelSpaceInversion()(Sensitivities, DataVec, ModelWeight, DataError, evalthresh,0.0,
+      jiba::ModelSpaceInversion()(Sensitivities, DataVec, ModelWeight, DataError,0.0,
           ModelSpaceInvModel);
 
       DataVec = OrigData;

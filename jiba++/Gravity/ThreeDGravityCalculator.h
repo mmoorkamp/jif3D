@@ -53,7 +53,7 @@ namespace jiba
       // The shared pointer to the implementation object
       // that does the actual calculation
       boost::shared_ptr<ThreeDGravityImplementation> Imp;
-      // check the information in the model is consistent
+      //! Check the the information in the model is consistent, i.e. corresponding vectors have the same size
       void CheckModelConsistency(const ThreeDGravityModel &Model);
     public:
       //! Calculate the forward response of the given model, has to be implemented in a derived class
@@ -82,7 +82,6 @@ namespace jiba
     class CreateGravityCalculator
       {
     public:
-      typedef boost::shared_ptr<CalculatorClass> sp_CalculatorClass;
       //! Make a new calculator object to calculate scalar gravity data
       static boost::shared_ptr<CalculatorClass> MakeScalar(bool wantcuda =
           false);

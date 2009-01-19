@@ -13,8 +13,8 @@
 
 namespace jiba
   {
-    /** \addtogroup gravity Gravity forward modelling, display and inversion */
-      /* @{ */
+    /** \addtogroup gravity Gravity forward modeling, display and inversion */
+    /* @{ */
     //! A calculator class that stores the full sensitivity matrix for inversion or fast consecutive forward calculations
     /*! This class stores the complete sensitivity matrix with all entries.
      * This allows to perform direct linear inversion and makes series of forward calculations
@@ -31,14 +31,25 @@ namespace jiba
       virtual rvec CalculateNewModel(const ThreeDGravityModel &Model);
       virtual rvec CalculateCachedResult(const ThreeDGravityModel &Model);
     public:
-      //! return a read only copy of the sensitivity matrix
-      const rmat &GetSensitivities(){return Sensitivities;}
+      //! return a read only copy of the sensitivity matrix, this guarantees that cache information is preserved
+      const rmat &GetSensitivities() const
+        {
+          return Sensitivities;
+        }
+      //! For efficiency we sometimes operate directly on the sensitivities, as we don't have guaranteed cache information, we enforce recalculation
+      rmat &SetSensitivities()
+        {
+          InvalidateCache();
+          return Sensitivities;
+        }
       //! This function is called by the implementation classes and allows to integrate the results from a single measurement
       virtual void HandleSensitivities(const size_t measindex);
-      FullSensitivityGravityCalculator(boost::shared_ptr<ThreeDGravityImplementation> TheImp);
+      //! The constructor takes a shared pointer to an implementation object
+      FullSensitivityGravityCalculator(boost::shared_ptr<
+          ThreeDGravityImplementation> TheImp);
       virtual ~FullSensitivityGravityCalculator();
       };
-    /* @} */
+  /* @} */
   }
 
 #endif /* FULLSENSITIVITYGRAVITYCALCULATOR_H_ */

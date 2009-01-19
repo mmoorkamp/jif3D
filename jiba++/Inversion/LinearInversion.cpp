@@ -74,12 +74,11 @@ namespace jiba
      * @param Data The n component vector containing the data, after the call conatins the error weighted data
      * @param WeightVector The m-component vector of model weights, the diagonal elements of the model covariance
      * @param DataError The n component vector of error estimates for the data, each element must be > 0
-     * @param evalthresh The relative threshold for the eigenvalues to be used for inverting the matrix
      * @param lambda The lagrangian multiplier to adjust the level of regularivation
      * @param InvModel The m component vector with the inversion result
      */
     void ModelSpaceInversion::operator()(rmat &Sensitivities, rvec &Data, const rvec &WeightVector,
-        const rvec &DataError, const double evalthresh, const double lambda,
+        const rvec &DataError,  const double lambda,
         rvec &InvModel)
       {
         const size_t nmeas = Data.size();
@@ -110,7 +109,6 @@ namespace jiba
      * @param Data The n component vector containing the data, after the call conatins the error weighted data
      * @param WeightVector The m-component vector of model weights, the diagonal elements of the model covariance
      * @param DataError The n component vector of error estimates for the data, each element must be > 0
-     * @param evalthresh The relative threshold for the eigenvalues to be used for inverting the matrix
      * @param lambda The lagrangian multiplier to adjust the level of regularivation
      * @param InvModel The m component vector with the inversion result
      */
