@@ -20,12 +20,12 @@
 namespace jiba
   {
 
-    /** \addtogroup gravity Gravity forward modelling, display and inversion
+    /** \addtogroup gravity Gravity forward modeling, display and inversion
      *
      * This module contains a library of functions and some programs for scalar gravity and FTG
-     * forward modelling and inversion.
+     * forward modeling and inversion.
      *
-     * There are three big building blocks for the gravity forward modelling. The class ThreeDGravityModel
+     * There are three big building blocks for the gravity forward modeling. The class ThreeDGravityModel
      * stores a gridded density model including its geometry, a 1D layered background and the position of measurements.
      * In addition it contains some functionality to read and write models to and from files for storage and plotting.
      *
@@ -41,6 +41,9 @@ namespace jiba
      * At each forward calculation they examine the model and whether it requires new sensitivities. If it does they forward
      * the call to the Implementation object, otherwise they perform a simple matrix-vector product to quickly obtain
      * the data.
+     *
+     * The inversion code for gravity data provides a good example of the forward calculation and inversion methods
+     * in use \see gravinv.cpp.  \example gravinv.cpp
      */
     /* @{ */
 
@@ -52,7 +55,9 @@ namespace jiba
     class ThreeDGravityModel: public ThreeDModelBase
       {
     public:
+      //! The type of the background thickness and density vector, this is a std::vector because we want to easily append elements
       typedef std::vector<double> tBackgroundVec;
+      //! The type of the measurement position vector, this is a std::vector because we want to easily append elements
       typedef std::vector<double> tMeasPosVec;
     private:
       //! Create a dimension for the measurement positions in a netcdf file

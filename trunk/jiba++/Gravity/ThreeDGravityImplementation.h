@@ -14,7 +14,7 @@
 
 namespace jiba
   {
-    /** \addtogroup gravity Gravity forward modelling, display and inversion */
+    /** \addtogroup gravity Gravity forward modeling, display and inversion */
     /* @{ */
     //this is just a forward declaration to avoid circular inclusions
     class ThreeDGravityCalculator;
@@ -29,7 +29,7 @@ namespace jiba
      * information is processed and stored.
      *
      * This type of design resembles the bridge pattern and allows to freely combine optimized implementations
-     * for different plattforms with different sensitivity handlings.
+     * for different platforms with different sensitivity handlings.
      */
     class ThreeDGravityImplementation
       {
@@ -55,8 +55,7 @@ namespace jiba
     public:
       //! We can implement tensor and scalar calculations in the derived classes, this function returns how many data values a single measurement yields
       virtual size_t GetDataPerMeasurement() = 0;
-      //! For a given Model calculate the forward response for all measurements and return it as a real vector, the calculator object is passed
-      //! to process the sensitivity information
+      //! For a given Model calculate the forward response for all measurements and return it as a real vector, the calculator object is passed to process the sensitivity information
       virtual rvec Calculate(const ThreeDGravityModel &Model,
           ThreeDGravityCalculator &Calculator);
       ThreeDGravityImplementation();

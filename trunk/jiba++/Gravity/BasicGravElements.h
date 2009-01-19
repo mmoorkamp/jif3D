@@ -13,7 +13,7 @@
 #include "../Global/NumUtil.h"
 namespace jiba
   {
-    /** \addtogroup gravity Gravity forward modelling, display and inversion */
+    /** \addtogroup gravity Gravity forward modeling, display and inversion */
     /* @{ */
     //! The constant of gravity
     static const double Grav_const = 6.67428e-8; // in units cm^3/g s
@@ -55,7 +55,7 @@ namespace jiba
           }
         return 2.0 * M_PI * Grav_const * (thick - 2.0 * (measz - top));
       }
-
+    //! An infinite sheet has only an effect on \f$ U_{zz}\f$ if the measurement is take within the boundaries of that layer
     inline double CalcUzzInfSheetTerm(const double measz, const double top,
         const double bottom)
       {

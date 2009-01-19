@@ -13,12 +13,12 @@
 
 namespace jiba
   {
-    /** \addtogroup gravity Gravity forward modelling, display and inversion */
+    /** \addtogroup gravity Gravity forward modeling, display and inversion */
     /* @{ */
     //! Calculate a FTG gravity response using OpenMP parallelization
     /*! This class is the tensorial counterpart to ScalarOMPGravityImp.
      * It calculates the 9 elements of second derivatives of the gravitational potential.
-     * It only implements the calculation of the backgroud and the gridded part.
+     * It only implements the calculation of the background and the gridded part.
      * The assembly of the two parts is performed by the base class ThreeDGravityImplementation.
      */
     class TensorOMPGravityImp: public jiba::ThreeDGravityImplementation

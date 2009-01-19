@@ -6,7 +6,7 @@
 //============================================================================
 
 /*! \file gravnoise.cpp
- * Add random gaussian noise to a netcdf file with gravity measurements.
+ * Add random gaussian noise to a netcdf file with scalar gravity measurements.
  */
 
 #include <iostream>

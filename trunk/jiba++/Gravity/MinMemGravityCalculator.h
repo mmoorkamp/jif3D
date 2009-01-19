@@ -13,7 +13,7 @@
 
 namespace jiba
   {
-    /** \addtogroup gravity Gravity forward modelling, display and inversion */
+    /** \addtogroup gravity Gravity forward modeling, display and inversion */
       /* @{ */
     //! A calculator class that uses the minimum amount of memory, no caching, no sensitivity information
     /*! This is a calculator class that uses only the minimum amount of memory. It is suitable
@@ -27,10 +27,10 @@ namespace jiba
     public:
       //! The implementation of the forward calculation
       virtual rvec Calculate(const ThreeDGravityModel &Model);
+      //! The constructor takes a shared pointer to an implementation object
       MinMemGravityCalculator(boost::shared_ptr<ThreeDGravityImplementation> TheImp);
       //! We have to implement this function even though it does not do anything
       virtual void HandleSensitivities(const size_t measindex){};
-      MinMemGravityCalculator();
       virtual ~MinMemGravityCalculator();
       };
     /* @} */

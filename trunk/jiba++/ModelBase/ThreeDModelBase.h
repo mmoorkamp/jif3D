@@ -178,6 +178,7 @@ namespace jiba
           CalcCoordinates(GridZCoordinates, ZCellSizes, ZCellSizesChanged);
           return GridZCoordinates;
         }
+      //! Given three coordinates in m, find the indices of the model cell that correponds to these coordinates
       boost::array<ThreeDModelBase::t3DModelData::index,3>
           FindAssociatedIndices(const double xcoord, const double ycoord,
               const double zcoord) const;

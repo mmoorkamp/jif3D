@@ -13,7 +13,7 @@
 
 namespace jiba
   {
-    /** \addtogroup gravity Gravity forward modelling, display and inversion */
+    /** \addtogroup gravity Gravity forward modeling, display and inversion */
     /* @{ */
     //! This class implements the depth weighting function necessary to counter-act the decay of the sensitivities for gravity data
     /*! Both scalar and tensor gravity data have sensitivity kernels that strongly decay with depth. The result
