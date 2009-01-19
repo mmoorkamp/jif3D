@@ -10,7 +10,9 @@
 
 namespace jiba
   {
-    /*! This is a helper function that reads the cell length for a single
+//This internal function should not appear in the doxygen documentation
+     // Read a single CellSize variable from a netcdf file
+    /* This is a helper function that reads the cell length for a single
      * dimension from the file.
      * @param NetCDFFile A netcdf file object ready for reading
      * @param SizeName The name of the dimension that specifies the cell sizes, e.g. "Northing"
@@ -44,8 +46,9 @@ namespace jiba
         //return the size of the current dimension
         return nvalues;
       }
-
-    /*! A helper function to write the cell sizes and the corresponding
+    //This internal function should not appear in the doxygen documentation
+    // Write the length of the model cell along a single dimension to the file
+    /* A helper function to write the cell sizes and the corresponding
      * dimension to a netcdf file.
      * @param NetCDFFile A netcdf file object ready for writing
      * @param SizeName  The name of the cell size variable, e.g. "Northing"

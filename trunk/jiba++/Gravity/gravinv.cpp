@@ -139,15 +139,12 @@ int main(int argc, char *argv[])
     std::cout << "Calculating response of starting model." << std::endl;
     jiba::rvec StartingData(GravityCalculator->Calculate(Model));
 
-    //create a reference to the sensitivities of the gridded part
-    ublas::matrix_range<const jiba::rmat> GridSens(GravityCalculator->GetSensitivities(), ublas::range(0, ndata),
-        ublas::range(0, ngrid));
     std::cout << "Gridded model size: " << ngrid << " Complete size: " << nmod
         << std::endl;
     //we use this code to examine the behaviour of the sensitivities
     //so we write out the raw sensitivities for each measurement
     std::cout << "Writing out raw sensitivities." << std::endl;
-   // WriteSensitivities(modelfilename,"raw_sens",GridSens,Model);
+    WriteSensitivities(modelfilename,"raw_sens",GridSens,Model);
 
     //create objects for the depth weighting
     jiba::rvec WeightVector(zsize), ModelWeight(nmod);
@@ -156,15 +153,15 @@ int main(int argc, char *argv[])
 
     //we create a simple error estimate by assuming 2% error
     //for each measurement
-    std::cout << "Equalizing sensitivity matrix." << std::endl;
+    std::cout << "Equalising sensitivity matrix." << std::endl;
     const double errorlevel = 0.02;
     std::transform(Data.begin(), Data.end(), StartingData.begin(),
         DataDiffVec.begin(), std::minus<double>());
-    //we normalize the misfit by the observed data
+    //we normalise the misfit by the observed data
     std::transform(DataDiffVec.begin(), DataDiffVec.end(), Data.begin(),
         DataDiffVec.begin(), std::divides<double>());
     std::fill(DataError.begin(), DataError.end(), errorlevel);
-    //and also equalize the sensitivity matrix
+    //and also equalise the sensitivity matrix
     for (size_t i = 0; i < ndata; ++i)
       {
         boost::numeric::ublas::matrix_row<jiba::rmat> CurrentRow(GravityCalculator->SetSensitivities(), i);
@@ -173,9 +170,9 @@ int main(int argc, char *argv[])
     std::cout << "Calculating depth weighting." << std::endl;
     //now we perform the depth weighting for the sensitivities
     jiba::rvec SensProfile;
-    //we find a measurement site close to the center of the model and extract the
+    //we find a measurement site close to the centre of the model and extract the
     //sensitivity variation with depth
-    jiba::ExtractMiddleSens(Model, GridSens,
+    jiba::ExtractMiddleSens(Model, GravityCalculator->GetSensitivities(),
         GravityCalculator->GetDataPerMeasurement(), SensProfile);
     //we fit a curve of the form 1/(z+z0)^n to the extracted sensitivities
     double z0 = FitZ0(SensProfile, Model.GetZCellSizes(), jiba::WeightingTerm(
@@ -243,6 +240,6 @@ int main(int argc, char *argv[])
 
     Model.WriteVTK(modelfilename + ".inv.vtk");
     Model.WriteNetCDF(modelfilename + ".inv.nc");
-  //  WriteSensitivities(modelfilename,"fil_sens",GridSens,Model);
+    WriteSensitivities(modelfilename,"fil_sens",GridSens,Model);
     std::cout << std::endl;
   }

@@ -166,12 +166,13 @@ namespace jiba
         const jiba::rmat &Sensitivities, const size_t MeasPerPos,
         jiba::rvec &SensProfile)
       {
+    	const size_t nmeas = Model.GetMeasPosX().size();
         const double midx =
             Model.GetXCoordinates()[Model.GetXCoordinates().size() - 1] / 2.0;
         const double midy =
             Model.GetYCoordinates()[Model.GetYCoordinates().size() - 1] / 2.0;
 
-        const size_t nmeas = Sensitivities.size1();
+
         jiba::rvec distances(nmeas);
         for (size_t i = 0; i < nmeas; ++i)
           {
@@ -183,13 +184,16 @@ namespace jiba
         boost::array<jiba::ThreeDModelBase::t3DModelData::index, 3> modelindex(
             Model.FindAssociatedIndices(Model.GetMeasPosX()[midindex],
                 Model.GetMeasPosY()[midindex], 0.0));
-        jiba::rvec MiddleSens(boost::numeric::ublas::matrix_row<
-            const jiba::rmat>(Sensitivities, midindex * MeasPerPos));
+        //we store the sensitivities for the background at the end of the matrix
+        //so we can ignore it here
+        boost::numeric::ublas::matrix_row<const jiba::rmat> MiddleSens(Sensitivities, midindex * MeasPerPos);
 
         const size_t ysize = Model.GetDensities().shape()[1];
         const size_t zsize = Model.GetDensities().shape()[2];
 
         SensProfile.resize(zsize);
+        //the same here, if we operate on the first ngrid elements
+        //the background does not matter
         const size_t startindex = (zsize * ysize) * modelindex[0] + zsize
             * modelindex[1];
         std::copy(MiddleSens.begin() + startindex, MiddleSens.begin()

@@ -8,17 +8,30 @@
 
 #ifndef THREEDMODELBASE_H_
 #define THREEDMODELBASE_H_
-#include <boost/multi_array.hpp>
+
 #include <netcdfcpp.h>
 #include <string>
 #include <functional>
 #include <boost/bind.hpp>
+#include <boost/multi_array.hpp>
+
+/*! \file ThreeDModelBase.h
+ * Contains the base class for all 3D models.
+ */
 namespace jiba
   {
-    /** \addtogroup modelbase Basic classes and routines for 3D models */
+    /** \addtogroup modelbase Basic classes and routines for 3D models
+     * This module contains classes that are associated with 3D rectilinear gridded models in general
+     * without restriction to a certain method. Currently the functionality
+     * is only used by ThreeDGravityModel, but eventually we will have derived
+     * classes for MT and seismic data. This unified approach allows a transparent
+     * handling of model information within all codes. Furthermore it is easy
+     * to convert a model for one method into a model for another method, e.g.
+     * to realize a fixed relationship between model parameters.
+     */
     /* @{ */
 
-    //! The basic storage classe for three-dimensional models
+    //! The basic storage class for three-dimensional models
     /*! This class provides the storage and general functionality
      * for types all of three-dimensional models. Any other class
      * that needs to store a three-dimensional model should be derived from it.

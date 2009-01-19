@@ -10,6 +10,9 @@
 
 #include "VecMat.h"
 
+/*! \file Interpolate.h
+ * This file contains routines for interpolation and extrapolation.
+ */
 namespace jiba
   {
 

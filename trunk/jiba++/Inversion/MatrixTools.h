@@ -10,6 +10,12 @@
 
 #include "../Global/VecMat.h"
 
+/*! \file MatrixTools.h
+ * This file includes various mathematical operations on matrices
+ * like singular value decomposition, matrix inversion, calculation
+ * of the determinant and a generalised inverse.
+ *
+ */
 namespace jiba
   {
     namespace ublas = boost::numeric::ublas;

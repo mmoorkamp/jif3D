@@ -12,17 +12,17 @@
 #include <netcdfcpp.h>
 #include "ThreeDModelBase.h"
 
+/*! \file NetCDFTools.h
+ * This file contains various functions to read and write 3D gridded models to and from
+ * netcdf files. These functions are used by ThreeDModelBase and derived classes, but
+ * are also useful on their own.
+ */
+
 namespace jiba
   {
     /** \addtogroup modelbase Basic classes and routines for 3D models */
     /* @{ */
 
-    //! Read a single CellSize variable from a netcdf files
-    size_t ReadSizesFromNetCDF(const NcFile &NetCDFFile,
-        const std::string &SizeName, ThreeDModelBase::t3DModelDim &CellSize);
-    //! Write the length of the model cell along a single dimension to the file
-    NcDim *WriteSizesToNetCDF(NcFile &NetCDFFile, const std::string &SizeName,
-        const ThreeDModelBase::t3DModelDim &CellSize);
     //! Read a 3D model from netcdf, this is the preferred storage format
     void Read3DModelFromNetCDF(const NcFile &NetCDFFile,
         const std::string &DataName, const std::string &UnitsName,

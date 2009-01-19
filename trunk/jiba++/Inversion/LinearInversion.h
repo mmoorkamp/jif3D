@@ -1,5 +1,5 @@
 //============================================================================
-// Name        : gravgrid.cpp
+// Name        : LinearInversion.h
 // Author      : Max Moorkamp
 // Version     :
 // Copyright   : 2008, MM
@@ -11,9 +11,19 @@
 
 #include "../Global/VecMat.h"
 
+/*! \file LinearInversion.h
+ * Linear inversion routines for general use.
+ */
 namespace jiba
   {
-    /** \addtogroup inversion General routines for inversion */
+    /** \addtogroup inversion General routines for inversion
+     * These are all general inversion classes that implement standard
+     * inversion methods. These classes know nothing about the type of
+     * data or specific method involved, but purely implement the mathematical
+     * operations. It is up to the inversion program or more specific classes
+     * to provide a link and accommodate the peculiarities of the geophysical
+     * measurements we want to invert.
+     */
     /* @{ */
 
     //! Invert data described by a linear relationship using the dataspace method
