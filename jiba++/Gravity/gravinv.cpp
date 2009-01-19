@@ -22,6 +22,7 @@
 #include "FullSensitivityGravityCalculator.h"
 #include "../Inversion/LinearInversion.h"
 #include "../ModelBase/VTKTools.h"
+#include "../ModelBase/NetCDFTools.h"
 #include "DepthWeighting.h"
 #include "../Global/FatalException.h"
 
@@ -190,9 +191,17 @@ int main(int argc, char *argv[])
             + jiba::stringify(i) + ".vtk", "filtered_sens",
             Model.GetXCellSizes(), Model.GetYCellSizes(),
             Model.GetZCellSizes(), SensModel);
+        jiba::Write3DModelToNetCDF(modelfilename + ".sensfil_data"
+            + jiba::stringify(i) + ".nc", "filtered_sens", " ",
+            Model.GetXCellSizes(), Model.GetYCellSizes(),
+            Model.GetZCellSizes(), SensModel);
         std::copy(sensrow.begin(), sensrow.begin() + nmod, SensModel.data());
         jiba::Write3DModelToVTK(modelfilename + ".sens_data" + jiba::stringify(
             i) + ".vtk", "raw_sens", Model.GetXCellSizes(),
             Model.GetYCellSizes(), Model.GetZCellSizes(), SensModel);
+        jiba::Write3DModelToNetCDF(modelfilename + ".sens_data"
+            + jiba::stringify(i) + ".nc", "raw_sens", " ",
+            Model.GetXCellSizes(), Model.GetYCellSizes(),
+            Model.GetZCellSizes(), SensModel);
       }
   }

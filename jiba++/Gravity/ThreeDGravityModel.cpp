@@ -143,7 +143,7 @@ namespace jiba
         //check that the coordinate system and the densities are consistent
         if (nx * ny * nz != density.size())
           throw std::runtime_error(
-              "Mesh and density values are not consisten !");
+              "Mesh and density values are not consistent !");
         //reserve space and copy
         SetXCellSizes().resize(boost::extents[nx]);
         SetYCellSizes().resize(boost::extents[ny]);
