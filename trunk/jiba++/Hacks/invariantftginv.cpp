@@ -9,20 +9,50 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <boost/numeric/bindings/atlas/cblas2.hpp>
+#include <boost/bind.hpp>
 #include "../Global/convert.h"
 #include "../Global/Interpolate.h"
+#include "../ModelBase/VTKTools.h"
+#include "../ModelBase/NetCDFTools.h"
 #include "../Gravity/ThreeDGravityModel.h"
 #include "../Inversion/MatrixTools.h"
 #include "../Gravity/ReadWriteGravityData.h"
-#include <boost/numeric/bindings/atlas/cblas2.hpp>
-#include <boost/bind.hpp>
 #include "../Inversion/LinearInversion.h"
-#include "../ModelBase/VTKTools.h"
+
 #include "../Gravity/DepthWeighting.h"
 #include "../Gravity/FullSensitivityGravityCalculator.h"
 
 namespace atlas = boost::numeric::bindings::atlas;
 namespace ublas = boost::numeric::ublas;
+
+//write the sensitivities for each measurement to a file
+void WriteSensitivities(const std::string &nameroot,
+    const std::string &sensname, const jiba::rmat &Sens,
+    const jiba::ThreeDGravityModel &Model)
+  {
+    //create a data structure that mimics the geometry of the models
+    jiba::ThreeDModelBase::t3DModelData
+        SensModel(
+            boost::extents[Model.GetDensities().shape()[0]][Model.GetDensities().shape()[1]][Model.GetDensities().shape()[2]]);
+    const size_t ngrid = Model.GetDensities().num_elements();
+    //for each measurement
+    for (size_t i = 0; i < Model.GetMeasPosX().size(); ++i)
+      {
+        //extract the corresponding row of the sensitivity matrix
+        boost::numeric::ublas::matrix_row<const jiba::rmat> sensrow(Sens, i);
+        //copy to the Model structure to map to its geometric position
+        std::copy(sensrow.begin(), sensrow.begin() + ngrid, SensModel.data());
+        //write out a .vtk and a netcdf file
+        jiba::Write3DModelToVTK(nameroot + sensname + jiba::stringify(i)
+            + ".vtk", sensname, Model.GetXCellSizes(), Model.GetYCellSizes(),
+            Model.GetZCellSizes(), SensModel);
+        jiba::Write3DModelToNetCDF(nameroot + sensname + jiba::stringify(i)
+            + ".nc", sensname, " ", Model.GetXCellSizes(),
+            Model.GetYCellSizes(), Model.GetZCellSizes(), SensModel);
+      }
+
+  }
 
 double CalcInvariant(const jiba::rvec &Data, const size_t index)
   {
@@ -37,7 +67,7 @@ double CalcMisfit(const jiba::rvec &MeasData, const jiba::rvec &CurrData,
     jiba::rvec DiffVector(MeasData.size());
     std::transform(MeasData.begin(), MeasData.end(), CurrData.begin(),
         DiffVector.begin(), std::minus<double>());
-
+    std::transform(DiffVector.begin(),DiffVector.end(),MeasData.begin(),DiffVector.begin(),std::divides<double>());
     return sqrt(boost::numeric::ublas::norm_2(DiffVector) + lambda
         * boost::numeric::ublas::norm_2(Model));
   }
@@ -174,11 +204,12 @@ int main(int argc, char *argv[])
 
     while (iter < maxiter && gradnorm > mingradnorm && datamisfit > minmisfit)
       {
+
         std::cout << "\n\n";
         std::cout << " Iteration: " << iter << std::endl;
         //calculate the response of the starting model
         jiba::rvec StartingData(GravityCalculator->Calculate(Model));
-        jiba::rmat AllSens(GravityCalculator->GetSensitivities());
+        const jiba::rmat &AllSens = GravityCalculator->GetSensitivities();
 
         for (size_t i = 0; i < nmeas; ++i)
           {
@@ -203,7 +234,8 @@ int main(int argc, char *argv[])
                                        InvarSens, i);
             CurrentRow /= DataVector(i);
           }
-
+        WriteSensitivities(modelfilename, "raw_sens",
+                            InvarSens, Model);
         std::transform(DataVector.begin(), DataVector.end(),
             StartingDataVector.begin(), DataDiffVector.begin(), std::minus<
                 double>());
@@ -219,9 +251,7 @@ int main(int argc, char *argv[])
             << std::endl;
         //depth weighting
         jiba::rvec SensProfile;
-        jiba::ExtractMiddleSens(Model, ublas::matrix_range<jiba::rmat>(
-            InvarSens, ublas::range(0, nmeas), ublas::range(0, ngrid)), 1,
-            SensProfile);
+        jiba::ExtractMiddleSens(Model, InvarSens, 1,SensProfile);
 
         const double decayexponent = -3.0;
         double z0 = FitZ0(SensProfile, Model.GetZCellSizes(),
@@ -250,6 +280,8 @@ int main(int argc, char *argv[])
         std::cout << "Data Error: " << minmisfit << std::endl;
         std::copy(InvModel.begin(), InvModel.begin() + ngrid,
             Model.SetDensities().origin());
+        WriteSensitivities(modelfilename, "fill_sens",
+                            InvarSens, Model);
         //std::fill(InvModel.begin(), InvModel.end(), 0.0);
 
         iter++;
@@ -265,7 +297,7 @@ int main(int argc, char *argv[])
         StartingDataVector.begin(), DataDiffVector.begin(),
         std::minus<double>());
     std::transform(DataDiffVector.begin(), DataDiffVector.end(),
-        DataError.begin(), relerror.begin(), std::divides<double>());
+        DataVector.begin(), relerror.begin(), std::divides<double>());
 
     jiba::SaveScalarGravityMeasurements(modelfilename + ".meas_invariant.nc",
         DataVector, Model.GetMeasPosX(), Model.GetMeasPosY(),

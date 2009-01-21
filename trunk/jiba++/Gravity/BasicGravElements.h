@@ -15,10 +15,10 @@ namespace jiba
   {
     /** \addtogroup gravity Gravity forward modeling, display and inversion */
     /* @{ */
-    //! The constant of gravity
+    //! The constant of gravity  in units cm^3/g s
     static const double Grav_const = 6.67428e-8; // in units cm^3/g s
 
-    //! Calculate the geometric term  due to a rectangular prism
+    //! Calculate the geometric term for scalar gravity for a rectangular prism
     double CalcGravBoxTerm(const double meas_x, const double meas_y,
         const double meas_z, const double ul_corner_x,
         const double ul_corner_y, const double ul_corner_z,
@@ -40,11 +40,11 @@ namespace jiba
         const double ul_corner_y, const double ul_corner_z,
         const double x_size, const double y_size, const double z_size);
 
-    //! Calculate the "geometric term" for gravitational acceleration of an semi-infinite slab
+    //! Calculate the scalar geometric term for gravitational acceleration of an semi-infinite slab
     double CalcGravSemiInfSheet(const double hor_dist, const double ver_dist,
         const double thick, const double density);
 
-    //! Calculate the "geometric term" for gravitational acceleration of an infinite slab
+    //! Calculate the scalar geometric term for gravitational acceleration of an infinite slab
     inline double CalcInfSheetTerm(const double measz, const double top,
         const double bottom)
       {

@@ -87,18 +87,6 @@ namespace jiba
           CurrRow[xsize + 1][0][l] = Model.GetBackgroundDensities().at(l);
         jiba::WaveletTransform(CurrRow);
 
-        //debug code start
-        jiba::ThreeDGravityModel::t3DModelDim FakeSizeX(
-            boost::extents[CurrRow.shape()[0]]), FakeSizeY(
-            boost::extents[CurrRow.shape()[1]]), FakeSizeZ(
-            boost::extents[CurrRow.shape()[2]]);
-        std::fill_n(FakeSizeX.origin(), CurrRow.shape()[0], 1.0);
-        std::fill_n(FakeSizeY.origin(), CurrRow.shape()[1], 1.0);
-        std::fill_n(FakeSizeZ.origin(), CurrRow.shape()[2], 1.0);
-        jiba::Write3DModelToVTK("waveletmod.vtk", "WaveletMod", FakeSizeX,
-            FakeSizeY, FakeSizeZ, CurrRow);
-        //debug code end
-
         jiba::rvec TransDens(CurrRow.num_elements());
         std::fill_n(TransDens.begin(), CurrRow.num_elements(), 0.0);
         std::copy(CurrRow.origin(), CurrRow.origin() + CurrRow.num_elements(),
@@ -106,28 +94,6 @@ namespace jiba
 
         jiba::rvec SparseResult(boost::numeric::ublas::prec_prod(SparseSens,
             TransDens));
-
-        //bad model identification start
-        const size_t nelements = SparseSens.size2();
-        jiba::rvec BadModel(nelements);
-        for (size_t j = nelements/2; j < nelements; ++j)
-          {
-            if (SparseSens(0, j) != 0.0)
-              {
-                BadModel( j) = 0.0;
-              }
-            else
-              {
-                BadModel( j) = 1.0;
-              }
-          }
-        std::copy(BadModel.begin(),BadModel.end(),CurrRow.origin());
-        jiba::InvWaveletTransform(CurrRow);
-        jiba::Write3DModelToVTK("badmod.vtk", "BadMod", Model.GetXCellSizes(),
-            Model.GetYCellSizes(),  Model.GetZCellSizes(), CurrRow);
-        jiba::Write3DModelToNetCDF("badmod.nc", "density","g/cm3", Model.GetXCellSizes(),
-            Model.GetYCellSizes(),  Model.GetZCellSizes(), CurrRow);
-        //bad model identification end
 
         return SparseResult;
 
@@ -166,19 +132,6 @@ namespace jiba
                   * ysize * zsize + l);
             jiba::WaveletTransform(CurrRow);
 
-            //debug code start
-            jiba::ThreeDGravityModel::t3DModelDim FakeSizeX(
-                boost::extents[CurrRow.shape()[0]]), FakeSizeY(
-                boost::extents[CurrRow.shape()[1]]), FakeSizeZ(
-                boost::extents[CurrRow.shape()[2]]);
-            std::fill_n(FakeSizeX.origin(), CurrRow.shape()[0], 1.0);
-            std::fill_n(FakeSizeY.origin(), CurrRow.shape()[1], 1.0);
-            std::fill_n(FakeSizeZ.origin(), CurrRow.shape()[2], 1.0);
-            jiba::Write3DModelToVTK(
-                "waveletsens" + jiba::stringify(i) + ".vtk", "WaveletSens",
-                FakeSizeX, FakeSizeY, FakeSizeZ, CurrRow);
-            //debug code end
-
             double normall = std::inner_product(CurrRow.origin(),
                 CurrRow.origin() + CurrRow.num_elements(), CurrRow.origin(),
                 0.0);
@@ -201,11 +154,7 @@ namespace jiba
                         normdiscarded += pow(*(CurrRow.origin() + j), 2);
                       }
                   }
-                std::cout << "Normall: " << normall << " Normdiscarded: "
-                    << normdiscarded << std::endl;
               }
-            std::cout << "Abs thresh: " << absthresh << " " << maximum
-                << std::endl;
             //now that we have determined the threshold we can assign the
             //elements to the sparse matrix
             for (size_t j = 0; j < CurrRow.num_elements(); ++j)

@@ -27,6 +27,9 @@ namespace jiba
     /* @{ */
 
     //! Invert data described by a linear relationship using the dataspace method
+    /*! This class implements the data space inversion method as described in
+     * Siripunvaraporn and Egbert, Geophysics 65, 2000.
+     */
     class DataSpaceInversion
       {
     public:
@@ -35,6 +38,9 @@ namespace jiba
       };
 
     //! Invert data described by a linear relationship using the model space method
+    /*! This class implements the model space inversion method as described in
+     * Siripunvaraporn and Egbert, Geophysics 65, 2000.
+     */
     class ModelSpaceInversion
       {
     public:
@@ -43,6 +49,9 @@ namespace jiba
           rvec &InvModel);
       };
     //! Calculate a model update using Quasi-Newton Inversion
+    /*! This is an implementation of the classical Quasi-Newton inversion algorithm.
+     * It is based on  the description in Tarrantolla eq. 6.319, page 216.
+     */
     class QuasiNewtonInversion
       {
     public:

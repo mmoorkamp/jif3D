@@ -23,14 +23,13 @@
 
 namespace jiba
   {
-    /** \addtogroup util General utility routines
-     *
+    /*! \addtogroup util General utility routines
      * These routines are of very general use and do not belong to a certain geophysical method. This includes
      * general mathematical methods such as wavelet transform or interpolation, but also small helper functions
      * and classes for conversion and comparison.
      */
     /* @{ */
-	//! This exception signals that something went wrong during string conversion.
+    //! This exception signals that something went wrong during string conversion.
     class BadConversion: public std::runtime_error
       {
     public:

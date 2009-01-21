@@ -1,0 +1,11 @@
+#!/bin/bash
+
+find -name "*.h" > distfiles
+find -name "*.hpp" >> distfiles
+find -name "*.cpp" >> distfiles
+find -name "*.cu" >> distfiles
+find -name "Jam*" >> distfiles
+find -name "*.jam" >> distfiles
+find -name "*.for" >> distfiles
+
+tar cf jiba.tar -T distfiles 

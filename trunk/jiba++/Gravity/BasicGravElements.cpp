@@ -13,7 +13,7 @@
 
 namespace jiba
   {
-    //! Calculate a single geometric term for the graviational acceleration due to a rectangular prism
+    //! Calculate a single geometric term for the gravitational acceleration due to a rectangular prism
     /*! Calculate one term for the gravitational potential of a box, we use the nomenclature of eq. 4-6 in Li and Chouteau.
      * The parameters x,y and z are the distances to the corners of the box, we will call this functions with different
      * permutations of real world x,y and z coordinates, so only in some cases x corresponds to the x-axis.
@@ -53,7 +53,7 @@ namespace jiba
         //   return returnvalue;
       }
 
-    //! Calculate one of the terms of off-diagonal elements of the gravimetric matrxi
+    //! Calculate one of the terms of off-diagonal elements of the gravimetric matrixs
     /*! The terms \f$ U_{xy}, U_{xz} \f$ and \f$ U_{yz} \f$  of the gravimetric matrix
      * all are sums of terms of the form \f$ \log (x +r) \f$
      */
