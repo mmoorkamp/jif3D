@@ -47,12 +47,14 @@ namespace jiba
       };
 
     //! Compare number1 and number2 and return true if the absolute value of number1 is smaller than the absolute value of number2, otherwise return false.
-    /*! This template is useful in conjunction with the standard library.
+    /*! This template is useful in conjunction with the standard library. For example we can write
+     * std::sort(Vector.begin(),Vector.end(),absLess<double>()) to sort a vector of numbers by their absolute values.
      *
      */
     template<class N1, class N2> struct absLess: public std::binary_function<
         N1, N2, bool>
       {
+      //! Functors for the standard library have their functionality in operator()
       bool operator()(N1 number1, N2 number2) const
         {
           return std::abs(number1) < std::abs(number2);

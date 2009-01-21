@@ -71,12 +71,18 @@ namespace jiba
       ThreeDGravityCalculator(boost::shared_ptr<ThreeDGravityImplementation> TheImp);
       virtual ~ThreeDGravityCalculator();
       };
+
     //! Create a new calculator object that is ready to use
     /*! This class provides a simple way to create a calculator object
      * with an appropriate implementation object without major user
      * interaction. This is the standard way of creating new calculator
      * classes. We implement it as a template, because the type of
-     * calculator object should be known at compile time.
+     * calculator object should be known at compile time. Possible
+     * template parameters are MinMemGravityCalculator, FullSensitivityGravityCalculator and
+     * WaveletCompressedGravityCalculator.
+     *
+     * Returning boost::shared_ptr objects eases memory management for the user, as they
+     * automatically delete their argument when no more shared pointers reference it.
      */
     template<class CalculatorClass>
     class CreateGravityCalculator
@@ -90,8 +96,8 @@ namespace jiba
       };
 
 
-    /*! Creates a new shared pointer to a calculator object for scalar gravity of the type specified in
-     * the template parameter.
+    /*! Creates a new shared pointer to a calculator object for scalar gravity.We specify
+     * the way the sensitivities are handled through the calculator class in the template parameter. \see ThreeDGravityCalculator
      * @param wantcuda Do we want to use NVidia CUDA for the calculation, might be ignored if no appropriate device found
      * @return A shared pointer to a calculator object
      */
@@ -112,8 +118,8 @@ namespace jiba
           }
         return boost::shared_ptr<CalculatorClass>(new CalculatorClass(Imp));
       }
-    /*! Creates a new shared pointer to a calculator object for tensorial gravity of the type specified in
-     * the template parameter.
+    /*! Creates a new shared pointer to a calculator object for tensorial gravity. We specify
+     * the way the sensitivities are handled through the calculator class in the template parameter. \see ThreeDGravityCalculator
      * @return A shared pointer to a calculator object
      */
     template<class CalculatorClass>

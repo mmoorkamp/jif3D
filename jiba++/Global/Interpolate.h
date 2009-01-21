@@ -18,6 +18,7 @@ namespace jiba
 
     /** \addtogroup util General utility routines */
     /* @{ */
+    //! Find the minimum of a function through quadratic interpolation
     /*! Perform quadratic interpolation for the minimum given three
      * pairs of function values \f$ x_i, y_i=f(x_i)\f$
      * @param x1 The first x-value

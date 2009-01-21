@@ -23,8 +23,8 @@ namespace jiba
     /* @{ */
 
     //! Calculate the singular value decomposition for a given matrix
-    /*! Calculate the singular value decomposition \f$ M = uSv^T \f$ using lapack. As \f$ S\f$ has diagonal
-     * non-zero elements only, it is stored as a vector.
+    /*! Calculate the singular value decomposition \f$ M = uSv^T \f$ using lapack. As \f$ S\f$ only has non-zero
+     * elements on its  diagonal, it is stored as a vector.
      * @param SensitivityMatrix The n*m input matrix, will be modified during the calculation
      * @param s The vector of singular values
      * @param u The n*n transformation matrix
@@ -69,7 +69,12 @@ namespace jiba
       }
     //! Calculate the determinant of a real square matrix
     double Determinant(const jiba::rmat &Matrix);
+
     //! Implements the generalized inverse through truncated SVD
+    /*! This class provides the functionality to calculate a
+     * generalized inverse based on the truncated SVD and related
+     * quantities such as model resolution and covariance.
+     */
     class GeneralizedInverse
       {
     private:

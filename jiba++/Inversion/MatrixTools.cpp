@@ -60,7 +60,7 @@ namespace jiba
     /*!
      * Returns the determinant of a real square Matrix. This is
      * a general method that uses LU-factorization and therefore
-     * work for any square matrix.
+     * works for any square matrix.
      * @param Matrix The real square matrix
      * @return det(Matrix)
      */

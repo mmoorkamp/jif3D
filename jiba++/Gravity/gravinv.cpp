@@ -31,18 +31,25 @@
 
 namespace ublas = boost::numeric::ublas;
 
+//write the sensitivities for each measurement to a file
 void WriteSensitivities(const std::string &nameroot,
     const std::string &sensname, const jiba::rmat &Sens,
     const jiba::ThreeDGravityModel &Model)
   {
+    //create a data structure that mimics the geometry of the models
     jiba::ThreeDModelBase::t3DModelData
-        SensModel(boost::extents[Model.GetDensities().shape()[0]]
-                                [Model.GetDensities().shape()[1]]
-                                [Model.GetDensities().shape()[2]]);
-    for (size_t i = 0; i < Model.GetMeasPosX().size(); ++i)
+        SensModel(
+            boost::extents[Model.GetDensities().shape()[0]][Model.GetDensities().shape()[1]][Model.GetDensities().shape()[2]]);
+    const size_t ngrid = Model.GetDensities().num_elements();
+    const size_t ndata = Sens.size1();
+    //for each measurement
+    for (size_t i = 0; i < ndata; ++i)
       {
+        //extract the corresponding row of the sensitivity matrix
         boost::numeric::ublas::matrix_row<const jiba::rmat> sensrow(Sens, i);
-        std::copy(sensrow.begin(), sensrow.end(), SensModel.data());
+        //copy to the Model structure to map to its geometric position
+        std::copy(sensrow.begin(), sensrow.begin() + ngrid, SensModel.data());
+        //write out a .vtk and a netcdf file
         jiba::Write3DModelToVTK(nameroot + sensname + jiba::stringify(i)
             + ".vtk", sensname, Model.GetXCellSizes(), Model.GetYCellSizes(),
             Model.GetZCellSizes(), SensModel);
@@ -51,6 +58,18 @@ void WriteSensitivities(const std::string &nameroot,
             Model.GetYCellSizes(), Model.GetZCellSizes(), SensModel);
       }
 
+  }
+
+//calculate the normalized misfit between observed and synthetic data
+double CalcMisfit(const jiba::rvec &ObservedData,
+    const jiba::rvec &SyntheticData, jiba::rvec &Misfit)
+  {
+    std::transform(ObservedData.begin(), ObservedData.end(),
+        SyntheticData.begin(), Misfit.begin(), std::minus<double>());
+    //we normalise the misfit by the observed data
+    std::transform(Misfit.begin(), Misfit.end(), ObservedData.begin(),
+        Misfit.begin(), std::divides<double>());
+    return ublas::norm_2(Misfit);
   }
 
 int main(int argc, char *argv[])
@@ -144,7 +163,8 @@ int main(int argc, char *argv[])
     //we use this code to examine the behaviour of the sensitivities
     //so we write out the raw sensitivities for each measurement
     std::cout << "Writing out raw sensitivities." << std::endl;
-    WriteSensitivities(modelfilename,"raw_sens",GridSens,Model);
+    WriteSensitivities(modelfilename, "raw_sens",
+        GravityCalculator->GetSensitivities(), Model);
 
     //create objects for the depth weighting
     jiba::rvec WeightVector(zsize), ModelWeight(nmod);
@@ -155,16 +175,15 @@ int main(int argc, char *argv[])
     //for each measurement
     std::cout << "Equalising sensitivity matrix." << std::endl;
     const double errorlevel = 0.02;
-    std::transform(Data.begin(), Data.end(), StartingData.begin(),
-        DataDiffVec.begin(), std::minus<double>());
-    //we normalise the misfit by the observed data
-    std::transform(DataDiffVec.begin(), DataDiffVec.end(), Data.begin(),
-        DataDiffVec.begin(), std::divides<double>());
+    double misfit = CalcMisfit(Data, StartingData, DataDiffVec);
+    std::cout << "Initial misfit: " << misfit << std::endl;
+
     std::fill(DataError.begin(), DataError.end(), errorlevel);
     //and also equalise the sensitivity matrix
     for (size_t i = 0; i < ndata; ++i)
       {
-        boost::numeric::ublas::matrix_row<jiba::rmat> CurrentRow(GravityCalculator->SetSensitivities(), i);
+        boost::numeric::ublas::matrix_row<jiba::rmat> CurrentRow(
+            GravityCalculator->SetSensitivities(), i);
         CurrentRow /= Data(i);
       }
     std::cout << "Calculating depth weighting." << std::endl;
@@ -186,11 +205,16 @@ int main(int argc, char *argv[])
     std::ofstream weightfile("weights.out");
     std::copy(WeightVector.begin(), WeightVector.end(), std::ostream_iterator<
         double>(weightfile, "\n"));
+
+    //we can choose the influence of the background on the inversion
+    double backgroundweight = 1.0;
+    std::cout << "Weight for background: ";
+    std::cin >> backgroundweight;
+    std::fill_n(ModelWeight.begin(), ModelWeight.size(), backgroundweight);
+
     //the WeightVector only has length zsize, one entry for each depth level
     //the inversion routine needs a vector with a weight for each model parameter
     // the weights only depend on the depth of the cell
-    // we also have the background layers, which get a weight of 0, so they are not changed in the inversion
-    std::fill_n(ModelWeight.begin(), ModelWeight.size(), 0);
     for (size_t i = 0; i < ngrid; ++i)
       {
         ModelWeight( i) = WeightVector(i % zsize);
@@ -206,17 +230,26 @@ int main(int argc, char *argv[])
     std::cout << "Performing inversion." << std::endl;
     jiba::rvec InvModel(nmod);
     std::fill(InvModel.begin(), InvModel.end(), 0.0);
-    jiba::DataSpaceInversion()(GravityCalculator->SetSensitivities(), DataDiffVec, ModelWeight, DataError, lambda, InvModel);
+    jiba::DataSpaceInversion()(GravityCalculator->SetSensitivities(),
+        DataDiffVec, ModelWeight, DataError, lambda, InvModel);
 
     //add the result of the inversion to the starting model
     //we only add the gridded part, the  background is always 0 due to the weighting
     std::transform(InvModel.begin(), InvModel.begin() + ngrid,
         Model.SetDensities().origin(), Model.SetDensities().origin(),
         std::plus<double>());
+    jiba::ThreeDGravityModel::tBackgroundVec Background(
+        Model.GetBackgroundDensities());
+    std::transform(InvModel.begin() + ngrid, InvModel.end(),
+        Background.begin(), Background.begin(), std::plus<double>());
+    Model.SetBackgroundDensities(Background);
     //calculate the predicted data
     std::cout << "Calculating response of inversion model." << std::endl;
     jiba::rvec InvData(GravityCalculator->Calculate(Model));
+    misfit = CalcMisfit(Data, InvData, DataDiffVec);
+    std::cout << "Final misfit: " << misfit << std::endl;
     //and write out the data and model
+    //here we have to distinguish again between scalar and ftg data
     std::cout << "Writing out inversion results." << std::endl;
     switch (DataType)
       {
@@ -236,10 +269,16 @@ int main(int argc, char *argv[])
           InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
           Model.GetMeasPosZ());
       break;
+    default:
+      std::cerr << " We should never reach this part. Fatal Error !"
+          << std::endl;
+      exit(100);
+      break;
       }
 
     Model.WriteVTK(modelfilename + ".inv.vtk");
     Model.WriteNetCDF(modelfilename + ".inv.nc");
-    WriteSensitivities(modelfilename,"fil_sens",GridSens,Model);
+    WriteSensitivities(modelfilename, "fil_sens",
+        GravityCalculator->GetSensitivities(), Model);
     std::cout << std::endl;
   }

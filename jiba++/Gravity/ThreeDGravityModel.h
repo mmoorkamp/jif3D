@@ -34,11 +34,14 @@ namespace jiba
      * how it is calculated, e.g. on the CPU using parallelization or on a GPU using the CUDA interface. These classes
      * are not intended for direct use however, but wrapped by the classes derived from ThreeDGravityCalculator.
      *
-     * This hierarchy of classes manages what kind of additional data is stored to accelerate the
-     * forward calculation. For example, MinMemGravityCalculator just forwards to its Implementation class
-     * and does not store any sensitivities. This means that at every call the data is calculated completely new.
-     * The classes derived from CachedGravityCalculator in contrast store the sensitivity matrix or a processed version.
-     * At each forward calculation they examine the model and whether it requires new sensitivities. If it does they forward
+     * The hierarchy of classes derived from  ThreeDGravityCalculator manages what kind of additional data is stored to accelerate the
+     * forward calculation and provides the user interface for gravity forward calculations.
+     * For example, MinMemGravityCalculator just forwards calls to Calculate to its Implementation class
+     * and does not store any sensitivities. This means that at every call the data is calculated completely new and saves
+     * memory at the expense of longer run times for calls with identical geometries but differing densities.
+     *
+     * The classes derived from CachedGravityCalculator, in contrast, store the sensitivity matrix or a processed version.
+     * At each call to Calculate they examine the model and whether it requires new sensitivities. If it does they forward
      * the call to the Implementation object, otherwise they perform a simple matrix-vector product to quickly obtain
      * the data.
      *
@@ -52,6 +55,12 @@ namespace jiba
     typedef rmat GravimetryMatrix;
 
     //! The class used to store the gravity model and the location of the measurement points
+    /*! This class stores all information needed for the forward calculation of gravimetric data.
+     * This includes the geometry of the rectangular grid and the 1D layered background, the densities
+     * in each cell and the position of the measurements. It also manages the storage and retrieval
+     * of this information in files of different formats. The preferred format for storage is netcdf, while
+     * the preferred format for visualization is VTK.
+     */
     class ThreeDGravityModel: public ThreeDModelBase
       {
     public:
@@ -124,7 +133,7 @@ namespace jiba
           MeasPosY.clear();
           MeasPosZ.clear();
         }
-      //! Return the x-coordinates of all measurement points read-only
+      //! Return the x-coordinates (Northing) of all measurement points read-only
       /*! This function provides read-only access to the x-coordinates
        * of the measurement points. The only way to modify the position of
        * the measurements is to delete them with ClearMeasurementPoints and
@@ -136,12 +145,12 @@ namespace jiba
         {
           return MeasPosX;
         }
-      //! Return the y-coordinates of all measurement points read-only
+      //! Return the y-coordinates (Easting)of all measurement points read-only
       const tMeasPosVec &GetMeasPosY() const
         {
           return MeasPosY;
         }
-      //! Return the z-coordinates of all measurement points read-only
+      //! Return the z-coordinates (Depth) of all measurement points read-only
       const tMeasPosVec &GetMeasPosZ() const
         {
           return MeasPosZ;

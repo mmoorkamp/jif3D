@@ -20,7 +20,7 @@ namespace jiba
     /** \addtogroup modelbase Basic classes and routines for 3D models */
     /* @{ */
 
-    //! Write a 3D model and its geometry in a .vtk file for plotting
+    //! Write a 3D model and its geometry into a .vtk file for plotting
     void Write3DModelToVTK(const std::string &filename,
         const std::string &DataName,
         const ThreeDModelBase::t3DModelDim &XCellSizes,
@@ -28,7 +28,7 @@ namespace jiba
         const ThreeDModelBase::t3DModelDim &ZCellSizes,
         const ThreeDModelBase::t3DModelData &Data);
 
-    //! Write scalar data with 3D coordinate information in a .vtk file for plotting
+    //! Write scalar data with 3D coordinate information into a .vtk file for plotting
     void Write3DDataToVTK(const std::string &filename,
         const std::string &DataName,
         const jiba::rvec &Data,
@@ -36,7 +36,7 @@ namespace jiba
         const ThreeDGravityModel::tMeasPosVec &PosY,
         const ThreeDGravityModel::tMeasPosVec &PosZ);
 
-    //! Write \f$ 3 \times 3\f$ tensor data with 3D coordinate information in a .vtk file for plotting
+    //! Write \f$ 3 \times 3\f$ tensor data with 3D coordinate information into a .vtk file for plotting
     void Write3DTensorDataToVTK(const std::string &filename,
         const std::string &DataName,
         const jiba::rvec &Data,

@@ -160,7 +160,7 @@ namespace jiba
      * calls CalculateCachedResult or CalculateNewModel which have to
      * be implemented in a derived class.
      * @param Model The 3D gravity model
-     * @return The vector of measurements
+     * @return The forward response for this model
      */
     rvec CachedGravityCalculator::Calculate(const ThreeDGravityModel &Model)
       {

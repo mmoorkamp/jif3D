@@ -17,7 +17,7 @@ namespace jiba
     /* @{ */
     //! The base class for all calculator classes that use sensitivity information to accelerate consecutive model calculations
     /*! This class analyzes the geometry of the model and measurements each time Calculate() is called.
-     * If the geometries have not changed since the last call CalculateCachedResult() is called where a derived
+     * If the geometries have not changed since the last call, CalculateCachedResult() is called where a derived
      * class can implement an accelerated forward calculation using information acquired during the previous
      * calculation. Otherwise CalculateNewModel() is called and the derived class has to calculate a new
      * model and rebuild the caching information.
@@ -48,7 +48,9 @@ namespace jiba
       bool CheckGeometryChange(const ThreeDGravityModel &Model);
       bool CheckMeasPosChange(const ThreeDGravityModel &Model);
       bool CheckBackgroundChange(const ThreeDGravityModel &Model);
+      //! The function declaration for the calculation of a new sensitivity matrix and rebuilding of caching information
       virtual rvec CalculateNewModel(const ThreeDGravityModel &Model) = 0;
+      //! The function declaration for the calculation of gravity data using the cached information
       virtual rvec CalculateCachedResult(const ThreeDGravityModel &Model) = 0;
     protected:
       //! Through this function derived classes can signal that the sensitivity information is not valid any more

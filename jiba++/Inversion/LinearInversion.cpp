@@ -17,7 +17,7 @@ namespace jiba
     namespace ublas = boost::numeric::ublas;
 
     /*! Given the sensitivities, data, weights and data error, perform a linear dataspace inversion.
-     * See Siripurnvaraporn and Egbert, Geophysics 65, 2000
+     * See Siripunvaraporn and Egbert, Geophysics 65, 2000 equations 9-11
      * @param Sensitivities The \f$ n \times m\f$ sensitivity matrix, after the call contains the filtered sensitivities
      * @param Data The n component vector containing the data or misfit, invalid after the call
      * @param WeightVector The m-component vector of model weights, the diagonal elements of the model covariance
@@ -69,7 +69,7 @@ namespace jiba
       }
 
     /*! Given the sensitivities, data, weights and data error, perform a linear classic model space inversion.
-     * See Siripurnvaraporn and Egbert, Geophysics 65, 2000
+     * See Siripurnvaraporn and Egbert, Geophysics 65, 2000 equation 7
      * @param Sensitivities The \f$ n \times m\f$ sensitivity matrix, after the call contains the filtered sensitivities
      * @param Data The n component vector containing the data, after the call conatins the error weighted data
      * @param WeightVector The m-component vector of model weights, the diagonal elements of the model covariance
