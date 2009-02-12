@@ -223,8 +223,9 @@ BOOST_AUTO_TEST_CASE  (box_gravity_calc_test)
   BOOST_AUTO_TEST_CASE(scalar_caching_test)
     {
       jiba::ThreeDGravityModel GravityTest;
+      const size_t ncells = 10;
       const size_t nmeas = 10;
-      MakeRandomModel(GravityTest, nmeas);
+      MakeRandomModel(GravityTest,ncells, nmeas);
       boost::shared_ptr<jiba::FullSensitivityGravityCalculator> ScalarCalculator(jiba::CreateGravityCalculator<jiba::FullSensitivityGravityCalculator>::MakeScalar());
 
       //Calculate twice, once with normal calculation, once cached
@@ -255,7 +256,8 @@ BOOST_AUTO_TEST_CASE  (box_gravity_calc_test)
       //create a random model
       jiba::ThreeDGravityModel GravityTest;
       const size_t nmeas = 10;
-      MakeRandomModel(GravityTest, nmeas,false);
+      const size_t ncells = 16;
+      MakeRandomModel(GravityTest,ncells, nmeas);
       //and compute the results for our code
       boost::shared_ptr<jiba::MinMemGravityCalculator> ScalarCalculator(jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeScalar());
       jiba::rvec scalarmeas(
