@@ -53,6 +53,7 @@ void  PrepareData(double **d_xcoord, double **d_ycoord, double **d_zcoord,
         }
 
       cudaSetDevice(dev);
+      cudaGetLastError();
 
       size_t xmem_size = sizeof(double) * nx;
       size_t ymem_size = sizeof(double) * ny;

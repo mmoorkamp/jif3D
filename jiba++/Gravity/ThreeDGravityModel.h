@@ -69,9 +69,6 @@ namespace jiba
       //! The type of the measurement position vector, this is a std::vector because we want to easily append elements
       typedef std::vector<double> tMeasPosVec;
     private:
-      //! Create a dimension for the measurement positions in a netcdf file
-      NcDim *WriteDimensionToNetCDF(NcFile &NetCDFFile,
-          const std::string &SizeName, const tMeasPosVec &Position) const;
       //! the x-coordinates of the measurement points
       tMeasPosVec MeasPosX;
       //! the y-coordinates of the measurement points
@@ -166,14 +163,6 @@ namespace jiba
       void ReadNetCDF(const std::string filename);
       //! Read an igmas xyz model file
       void ReadIgmas(const std::string filename);
-      //! Save all scalar Synthetic data in a netcdf file
-      void SaveScalarMeasurements(const std::string filename);
-      //! Save all tensor Synthetic data in a netcdf file
-      void SaveTensorMeasurements(const std::string filename);
-      //! Write all scalar synthetic data in an ascii file for spatial plotting in gmt
-      void PlotScalarMeasurements(const std::string filename);
-      //! Write all tensor synthetic data in an ascii file for spatial plotting in gmt
-      void PlotTensorMeasurements(const std::string filename_root);
       //! Read the Measurement positions from a netcdf file
       void ReadMeasPosNetCDF(const std::string filename);
       //! Read the Measurement positions from an ascii file

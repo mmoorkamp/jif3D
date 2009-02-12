@@ -23,14 +23,10 @@
 #include "test_common.h"
 #include "ThreeDGravityModel.h"
 
-
-
-
 BOOST_AUTO_TEST_SUITE( GravityModel_Test_Suite )
 
-
-  //Test the default state of the object
-  BOOST_AUTO_TEST_CASE(constructors_test)
+//Test the default state of the object
+BOOST_AUTO_TEST_CASE  (constructors_test)
     {
       const jiba::ThreeDGravityModel ConstBaseTest; // 1 //
       BOOST_CHECK_EQUAL(ConstBaseTest.GetXCellSizes().size(), (size_t) 0);
@@ -88,6 +84,13 @@ BOOST_AUTO_TEST_SUITE( GravityModel_Test_Suite )
       for (size_t j = 0; j < ysize; ++j)
       for (size_t k = 0; k < zsize; ++k)
       TestData[i][j][k] = (double(rand() % 50) / 10.0 + 1.0);
+
+      const size_t nbglayers = rand() % 50;
+      std::vector<double> bg_thick, bg_dens;
+      std::generate_n(back_inserter(bg_thick),nbglayers,rand);
+      std::generate_n(back_inserter(bg_dens),nbglayers,rand);
+      GravityTest.SetBackgroundDensities(bg_dens);
+      GravityTest.SetBackgroundThicknesses(bg_thick);
       GravityTest.SetDensities() = TestData;
       BOOST_CHECK(std::equal(XDim.begin(), XDim.end(),
               GravityTest.GetXCellSizes().begin()));
@@ -107,13 +110,43 @@ BOOST_AUTO_TEST_SUITE( GravityModel_Test_Suite )
               NetCDFReadTest.GetZCellSizes().begin()));
       BOOST_CHECK(std::equal(TestData.begin(), TestData.end(),
               NetCDFReadTest.GetDensities().begin()));
+      BOOST_CHECK(std::equal(bg_thick.begin(),bg_thick.end(),NetCDFReadTest.GetBackgroundThicknesses().begin()));
+      BOOST_CHECK(std::equal(bg_dens.begin(),bg_dens.end(),NetCDFReadTest.GetBackgroundDensities().begin()));
       TestData[0][0][0] += 1.0;
       BOOST_CHECK(!std::equal(TestData.begin(), TestData.end(),
               NetCDFReadTest.GetDensities().begin()));
     }
 
+  BOOST_AUTO_TEST_CASE(ascii_measpos_test)
+    {
+      std::ofstream outfile;
+      const size_t nmeas = 20;
+      std::string filename = "meas.test";
+      outfile.open(filename.c_str());
+      std::vector<double> posx,posy,posz;
+      for (size_t i = 0; i < nmeas; ++i)
+        {
+          posx.push_back(rand()%1000);
+          posy.push_back(rand()%1000);
+          posz.push_back(rand()%1000);
+          outfile << posx.at(i) << " " << posy.at(i) << " " << posz.at(i) << "\n";
+        }
+      outfile.close();
+      jiba::ThreeDGravityModel TestModel;
+      TestModel.ReadMeasPosAscii(filename);
+      for (size_t i = 0; i < nmeas; ++i)
+        {
+          BOOST_CHECK_EQUAL(posx.at(i),TestModel.GetMeasPosX()[i]);
+          BOOST_CHECK_EQUAL(posy.at(i),TestModel.GetMeasPosY()[i]);
+          BOOST_CHECK_EQUAL(posz.at(i),TestModel.GetMeasPosZ()[i]);
+        }
+    }
 
-
-
+  BOOST_AUTO_TEST_CASE(netcdf_measpos_test)
+    {
+      jiba::ThreeDGravityModel GravityTest;
+      const size_t nmeas = 10;
+      MakeRandomModel(GravityTest, nmeas);
+    }
 
   BOOST_AUTO_TEST_SUITE_END()

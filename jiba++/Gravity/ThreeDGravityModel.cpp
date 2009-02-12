@@ -164,26 +164,6 @@ namespace jiba
           }
       }
 
-    NcDim *ThreeDGravityModel::WriteDimensionToNetCDF(NcFile &NetCDFFile,
-        const std::string &SizeName, const tMeasPosVec &Position) const
-      {
-
-        // Add a dimension and a variable with the same name to the netcdf file
-        NcDim *SizeDim = NetCDFFile.add_dim(SizeName.c_str(), Position.size());
-        NcVar *SizeVar =
-            NetCDFFile.add_var(SizeName.c_str(), ncDouble, SizeDim);
-        //All length is measured in meters
-        SizeVar->add_att("units", "m");
-        //We also store the name
-        SizeVar->add_att("long_name", (SizeName + " coordinate").c_str());
-        // we store the coordinates of the cells in the netcdf file
-
-        //Write the values
-        SizeVar->put(&Position[0], Position.size());
-        // We return the NcDim object, because we need it to write the model data
-        return SizeDim;
-      }
-
 
     void ThreeDGravityModel::PlotMeasAscii(const std::string &filename,
         rvec &Data) const
