@@ -2,17 +2,20 @@ project
     : requirements <include>/usr/local/include <include>/usr/local/R-2.6.2/include 
         <include>/usr/local/cuda/include
         <threading>multi 
-    	<variant>release:<define>NDEBUG  <cxxflags>"-fopenmp" 
-        <linkflags>"-fopenmp"
+    	<variant>release:<define>NDEBUG  
+    	<toolset>gcc:<cflags>" -ansi -fopenmp  "
+    	<toolset>gcc:<linkflags>" -fopenmp  "
+    	<toolset>intel:<cxxflags>" -openmp"
+    	<toolset>intel:<linkflags>" -openmp"
     ;
     
 path-constant TOP : . ;
 
 import cuda ;
 
-using gcc : 4.3 : g++-4.3 ;
+#using gcc :  :  : <variant>debug:<cflags>" -ansi " <variant>release:<cflags>"-fopenmp " <variant>release:<linkflags>"-fopenmp" ;
 #using intel-linux : 11.0 : icpc : <cxxflags>-mssse3 ; 
-#using sun : 5.10 : CC : <compileflags>-library=stlport4 <linkflags>-library=stlport4 
+#using sun :  : CC : <compileflags>-library=stlport4 <linkflags>-library=stlport4 
 #                   <define>BOOST_UBLAS_UNSUPPORTED_COMPILER=0 <define>BIND_FORTRAN_LOWERCASE_UNDERSCORE ;
 
 use-project /Global : Global ;
@@ -23,17 +26,13 @@ use-project /Inversion : Inversion ;
 
 local BOOST_TEST_LOG_LEVEL = all ;
 lib boost_filesystem : : <name>boost_filesystem-gcc43-mt ;
-lib levmar : : <name>levmar ;
-lib gsl : : <name>gsl ;
 lib lapack : : <name>lapack ;
 lib f77blas : : <name>f77blas ;
 lib cblas : : <name>cblas ;
 lib atlas : : <name>atlas ;
-lib antlr : : <name>antlr ;
 lib netcdf : : <name>netcdf ;
 lib netcdf_c++ : : <name>netcdf_c++ ;
 lib gfortran : : <name>gfortran ;
-lib gplib :  : <name>gplib <search>/home/mmoorkamp/workspace/gplib ;
 lib cudart : : <name>cudart <search>/usr/local/cuda/lib ;
 lib cutil : : <name>cutil <search>/usr/local/CUDA_SDK/lib ;
 

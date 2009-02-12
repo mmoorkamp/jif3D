@@ -1,0 +1,219 @@
+//============================================================================
+// Name        : TensorCudaGravityImp.cpp
+// Author      : Feb 11, 2009
+// Version     :
+// Copyright   : 2009, mmoorkamp
+//============================================================================
+
+#include <numeric>
+#include <cuda_runtime.h>
+#include "TensorCudaGravityImp.h"
+#include "BasicGravElements.h"
+
+namespace jiba
+  {
+
+    // These are forward calculations for the functions declared in gravcuda.cu that
+    // need to be called from here, they provide the interface to CUDA and purely
+    // operate with basic C types
+
+    // Calculate the effect of a single measurement, it returns the gridded part of the sensitivities
+    extern "C"
+void      SingleFTGMeas(const double x_meas, const double y_meas,
+          const double z_meas, double *d_xcoord, double *d_ycoord,
+          double *d_zcoord, double *d_xsize, double *d_ysize, double *d_zsize,
+          double *d_result, const unsigned int nx, const unsigned int ny, const unsigned int nz,
+          double *returnvalue);
+      //Perform the allocation of arrays on the GPU and copy the values
+      extern "C" void PrepareData(double **d_xcoord, double **d_ycoord, double **d_zcoord,
+          double **d_xsize, double **d_ysize, double **d_zsize, double **d_result,
+          const double *xcoord,const double *ycoord,const double *zcoord,
+          const double *xsize,const double *ysize,const double *zsize, unsigned int nx,unsigned int ny,unsigned int nz);
+      // Free the allocated data on the GPU
+      extern "C" void FreeData(double **d_xcoord, double **d_ycoord, double **d_zcoord,
+          double **d_xsize, double **d_ysize, double **d_zsize, double **d_result);
+
+      TensorCudaGravityImp::TensorCudaGravityImp()
+        {
+          // we have to do some raw pointer operations for handling sensitivities with CUDA
+          currsens = NULL;
+          currsenssize = 0;
+        }
+
+      TensorCudaGravityImp::~TensorCudaGravityImp()
+        {
+          //if we allocated memory we have to free it
+          if (currsens != NULL)
+            {
+              cudaFreeHost( currsens );
+            }
+          cudaThreadExit();
+          currsens = NULL;
+        }
+
+      /*! Calculate the effect of the gridded domain on the GPU for a single measurement
+       * @param measindex The index of the measurement
+       * @param Model The gravity model
+       * @param Sensitivities If this parameters has \f$ 1 \times nbg+ngrid \f$ or more elements, store sensitivity information
+       * @return A single component vector with the accelerational effect of the gridded domain
+       */
+      rvec TensorCudaGravityImp::CalcGridded(const size_t measindex, const ThreeDGravityModel &Model,
+          rmat &Sensitivities)
+        {
+          //first we define some constants and abbreviations
+          const double x_meas = Model.GetMeasPosX()[measindex];
+          const double y_meas = Model.GetMeasPosY()[measindex];
+          const double z_meas = Model.GetMeasPosZ()[measindex];
+          const size_t nbglayers = Model.GetBackgroundThicknesses().size();
+          const size_t ngrid = Model.GetDensities().num_elements();
+          //the CUDA routines return the 6 independent elements of the FTG tensor (we consider Uzz independent)
+          const size_t nreturnelements = 6;
+          // we determine whether there are enough elements in the sensitivity matrix
+          const bool storesens = (Sensitivities.size1() >= ndatapermeas)
+          && (Sensitivities.size2() >= ngrid + nbglayers);
+          //if currsens does not have sufficient size
+          if (currsenssize != ngrid )
+            {
+              //check whether it has been allocated before
+              if (currsens != NULL)
+                {
+                  cudaFreeHost( currsens );
+                }
+              //allocate memory and store how much
+              cudaMallocHost( (void**) &currsens, ngrid *sizeof(double) *nreturnelements);
+              currsenssize = ngrid;
+            }
+          std::fill_n(currsens,currsenssize,0.0);
+          //This call goes into the GPU, implementation in gravcuda.cu
+          SingleFTGMeas(x_meas,y_meas,z_meas,d_xcoord,d_ycoord,d_zcoord,d_xsize,d_ysize,d_zsize,d_result,
+              Model.GetDensities().shape()[0],Model.GetDensities().shape()[1],Model.GetDensities().shape()[2],currsens);
+          rvec result(ndatapermeas);
+          //the GPU only calculates the sensitivities, we calculate the acceleration with the densities
+          result(0) = std::inner_product(currsens,
+              currsens+ngrid,Model.GetDensities().origin(),0.0);
+          result(1) = std::inner_product(currsens+ngrid,
+              currsens+2*ngrid,Model.GetDensities().origin(),0.0);
+          result(3) = result(1);
+          result(2) = std::inner_product(currsens+2*ngrid,
+              currsens+3*ngrid,Model.GetDensities().origin(),0.0);
+          result(6) = result(2);
+          result(4) = std::inner_product(currsens+3*ngrid,
+              currsens+4*ngrid,Model.GetDensities().origin(),0.0);
+          result(5) = std::inner_product(currsens+4*ngrid,
+              currsens+5*ngrid,Model.GetDensities().origin(),0.0);
+          result(7) = result(5);
+          result(8) = std::inner_product(currsens+5*ngrid,
+              currsens+6*ngrid,Model.GetDensities().origin(),0.0);
+          if (storesens)
+            {
+              for (size_t i = 0; i < ngrid; ++i)
+                {
+                  Sensitivities(0,i) = currsens[i];
+
+                  Sensitivities(1,i) = currsens[i+ngrid];
+                  Sensitivities(3,i) = currsens[i+ngrid];
+
+                  Sensitivities(2,i) = currsens[i+2*ngrid];
+                  Sensitivities(6,i) = currsens[i+2*ngrid];
+
+                  Sensitivities(4,i) = currsens[i+3*ngrid];
+
+                  Sensitivities(5,i) = currsens[i+4*ngrid];
+                  Sensitivities(7,i) = currsens[i+4*ngrid];
+
+                  Sensitivities(8,i) = currsens[i+5*ngrid];
+                }
+
+            }
+
+          return result;
+        }
+
+      /*! The reimplementation for CUDA mainly manages the allocation of memory on the GPU
+       * @param Model The gravity model
+       * @param Calculator The calculator object
+       * @return The vector holding the gravitational acceleration at each measurement site
+       */
+      rvec TensorCudaGravityImp::Calculate(const ThreeDGravityModel &Model,
+          ThreeDGravityCalculator &Calculator)
+        {
+
+          const unsigned int nx = Model.GetDensities().shape()[0];
+          const unsigned int ny = Model.GetDensities().shape()[1];
+          const unsigned int nz = Model.GetDensities().shape()[2];
+          //allocate memory
+          PrepareData(&d_xcoord, &d_ycoord, &d_zcoord, &d_xsize, &d_ysize,
+              &d_zsize, &d_result, Model.GetXCoordinates().data(),
+              Model.GetYCoordinates().data(), Model.GetZCoordinates().data(),
+              Model.GetXCellSizes().data(), Model.GetYCellSizes().data(),
+              Model.GetZCellSizes().data(), nx, ny, nz);
+          // call the base class that coordinates the calculation of gridded and background parts
+          rvec result(ThreeDGravityImplementation::Calculate(Model, Calculator));
+          // free memory
+          FreeData(&d_xcoord, &d_ycoord, &d_zcoord, &d_xsize, &d_ysize, &d_zsize,
+              &d_result);
+          return result;
+        }
+
+      /*!  Calculate the contribution of a layered background to a tensor gravity measurement.
+       * @param measindex The index of the measurement
+       * @param xwidth The total width of the discretized model area in x-direction in m
+       * @param ywidth The total width of the discretized model area in y-direction in m
+       * @param zwidth The total width of the discretized model area in z-direction in m
+       * @param Model The gravity model
+       * @param Sensitivities The \f$ 9 \times m\f$ matrix of sensitivities for the current measurement
+       * @return The gravitational tensor due to the background
+       */
+      rvec TensorCudaGravityImp::CalcBackground(const size_t measindex,
+          const double xwidth, const double ywidth, const double zwidth,
+          const ThreeDGravityModel &Model, rmat &Sensitivities)
+        {
+          //make sure we have thicknesses and densities for all layers
+          assert(Model.GetBackgroundDensities().size() == Model.GetBackgroundThicknesses().size());
+          const size_t nbglayers = Model.GetBackgroundDensities().size();
+          const double x_meas = Model.GetMeasPosX()[measindex];
+          const double y_meas = Model.GetMeasPosY()[measindex];
+          const double z_meas = Model.GetMeasPosZ()[measindex];
+          GravimetryMatrix result(3, 3);
+          GravimetryMatrix currvalue(3, 3);
+          std::fill_n(result.data().begin(), ndatapermeas, 0.0);
+          std::fill_n(currvalue.data().begin(), ndatapermeas, 0.0);
+          double currtop = 0.0;
+          double currbottom = 0.0;
+          const size_t nmod = Model.GetDensities().num_elements();
+          const bool storesens = (Sensitivities.size1() >= ndatapermeas)
+          && (Sensitivities.size2() >= nmod);
+          // for all layers of the background
+          for (size_t j = 0; j < nbglayers; ++j)
+            {
+              std::fill_n(currvalue.data().begin(), ndatapermeas, 0.0);
+              const double currthick = Model.GetBackgroundThicknesses()[j];
+              currbottom = currtop + currthick;
+              currvalue(2, 2) = CalcUzzInfSheetTerm(z_meas, currtop, currbottom);
+              if (currtop < zwidth && (currbottom <= zwidth)) // if the background layer complete coincides with the discretized area
+
+                {
+                  currvalue -= CalcTensorBoxTerm(x_meas, y_meas, z_meas, 0.0,
+                      0.0, currtop, xwidth, ywidth, currthick);
+                }
+              if (currtop < zwidth && currbottom> zwidth) //if some of the background coincides and some is below
+
+                {
+                  currvalue -= CalcTensorBoxTerm(x_meas, y_meas, z_meas, 0.0,
+                      0.0, currtop, xwidth, ywidth, (zwidth - currtop));
+                }
+              if (storesens)
+                {
+                  for (size_t i = 0; i < ndatapermeas; ++i)
+                  Sensitivities(i, nmod + j) = currvalue.data()[i];
+                }
+              result += currvalue * Model.GetBackgroundDensities()[j];
+              currtop += currthick;
+            }
+          rvec resultvector(ndatapermeas);
+          std::copy(result.data().begin(), result.data().end(),
+              resultvector.begin());
+          return resultvector;
+        }
+
+    }

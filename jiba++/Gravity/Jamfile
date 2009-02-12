@@ -1,6 +1,7 @@
 import testing ; 
 lib gravity : ThreeDGravityModel.cpp GravityInterface.cpp ReadWriteGravityData.cpp DepthWeighting.cpp
               BasicGravElements.cpp ScalarOMPGravityImp.cpp ScalarCudaGravityImp.cpp TensorOMPGravityImp.cpp 
+              TensorCudaGravityImp.cpp
               ThreeDGravityImplementation.cpp CachedGravityCalculator.cpp FullSensitivityGravityCalculator.cpp
               ThreeDGravityCalculator.cpp MinMemGravityCalculator.cpp WaveletCompressedGravityCalculator.cpp
               gravcuda.cu
@@ -9,7 +10,10 @@ lib gravity : ThreeDGravityModel.cpp GravityInterface.cpp ReadWriteGravityData.c
 
 alias core :  ../ModelBase//modelbase ../Global ..//netcdf_c++ ..//netcdf ..//cudart ..//cutil ;
 
-unit-test gravity_test : test_ThreeDGravityModel.cpp gravity  core : : <include>. ;
+unit-test Model_test : test_ThreeDGravityModel.cpp gravity  core : : <include>. ;
+unit-test scalar_test : test_ScalarCalculation.cpp gravity  core : : <include>. ;
+unit-test tensor_test : test_TensorCalculation.cpp gravity  core : : <include>. ;
+unit-test R_test : test_Rinterface.cpp gravity  core : : <include>. ;
 unit-test weighting_test : test_weighting.cpp gravity ../Inversion//inversion core  : : <include>. ;
 unit-test readwrite_test : test_readwritedata.cpp gravity ../Inversion//inversion core  : : <include>. ;
 
