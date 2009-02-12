@@ -1,26 +1,20 @@
 //============================================================================
-// Name        : ScalarCudaGravityImp.h
-// Author      : Dec 10, 2008
+// Name        : TensorCudaGravityImp.h
+// Author      : Feb 11, 2009
 // Version     :
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-#ifndef SCALARCUDAGRAVITYIMP_H_
-#define SCALARCUDAGRAVITYIMP_H_
+
+#ifndef TENSORCUDAGRAVITYIMP_H_
+#define TENSORCUDAGRAVITYIMP_H_
 
 #include "ThreeDGravityImplementation.h"
 
 namespace jiba
   {
-    /** \addtogroup gravity Gravity forward modeling, display and inversion */
-    /* @{ */
-    //! Calculate a scalar gravity response using Nvidia's CUDA API
-    /*! This implementation class uses Nvidia's CUDA API to perform
-     * the forward calculation on a Nvidia graphics card. It needs
-     * a card with compute capability 1.3 or more to perform double
-     * length floating point calculations
-     */
-    class ScalarCudaGravityImp: public jiba::ThreeDGravityImplementation
+
+    class TensorCudaGravityImp: public jiba::ThreeDGravityImplementation
       {
     private:
       // These pointers hold the memory on the graphics card as allocated
@@ -34,15 +28,15 @@ namespace jiba
       // the current measurements, see CalcGridded
       double *currsens;
       size_t currsenssize;
-      // This is a scalar calculation so we get one value per measurement
-      static const size_t ndatapermeas = 1;
+      // This is a tensor calculation for any outside call we return 9 data per measurement
+      static const size_t ndatapermeas = 9;
       //! Calculate the response of the background, currently this is done on the CPU
-      virtual rvec CalcBackground(const size_t measindex, const double xwidth, const double ywidth,
-          const double zwidth, const ThreeDGravityModel &Model,
-          rmat &Sensitivities);
+      virtual rvec CalcBackground(const size_t measindex, const double xwidth,
+          const double ywidth, const double zwidth,
+          const ThreeDGravityModel &Model, rmat &Sensitivities);
       //! Calculate the response of the gridded part, this is done on the GPU with CUDA
-      virtual rvec CalcGridded(const size_t measindex, const ThreeDGravityModel &Model,
-          rmat &Sensitivities);
+      virtual rvec CalcGridded(const size_t measindex,
+          const ThreeDGravityModel &Model, rmat &Sensitivities);
     public:
       virtual size_t GetDataPerMeasurement()
         {
@@ -51,10 +45,10 @@ namespace jiba
       //! We reimplement the Calculate method to accommodate some specific CUDA issues
       virtual rvec Calculate(const ThreeDGravityModel &Model,
           ThreeDGravityCalculator &Calculator);
-      ScalarCudaGravityImp();
-      virtual ~ScalarCudaGravityImp();
+      TensorCudaGravityImp();
+      virtual ~TensorCudaGravityImp();
       };
-  /* @} */
+
   }
 
-#endif /* SCALARCUDAGRAVITYIMP_H_ */
+#endif /* TENSORCUDAGRAVITYIMP_H_ */

@@ -1,15 +1,16 @@
-/*
- * ScalarCudaGravityImp.cpp
- *
- *  Created on: Dec 10, 2008
- *      Author: mmoorkamp
- */
+//============================================================================
+// Name        : ScalarCudaGravityImp.cpp
+// Author      : Dec 10, 2008
+// Version     :
+// Copyright   : 2009, mmoorkamp
+//============================================================================
 
-#include "ScalarCudaGravityImp.h"
 #include <numeric>
+#include <cuda_runtime.h>
+#include "ScalarCudaGravityImp.h"
 #include "ThreeDGravityCalculator.h"
 #include "BasicGravElements.h"
-#include <cuda_runtime.h>
+
 namespace jiba
   {
     // These are forward calculations for the functions declared in gravcuda.cu that
@@ -142,7 +143,7 @@ void      SingleScalarMeas(const double x_meas, const double y_meas,
           //This call goes into the GPU, implementation in gravcuda.cu
           SingleScalarMeas(x_meas,y_meas,z_meas,d_xcoord,d_ycoord,d_zcoord,d_xsize,d_ysize,d_zsize,d_result,
               Model.GetDensities().shape()[0],Model.GetDensities().shape()[1],Model.GetDensities().shape()[2],currsens);
-          rvec result(1);
+          rvec result(ndatapermeas);
           //the GPU only calculates the sensitivities, we calculate the acceleration with the densities
           result(0) = std::inner_product(currsens,
               currsens+ngrid,Model.GetDensities().origin(),0.0);

@@ -1,0 +1,47 @@
+jiba++ Joint inversion code
+
+Copyright 2008-2009 Max Moorkamp  All rights reserved.
+
+
+This file describes the dependencies and compilation steps for the
+jiba++ joint inversion code.
+
+
+Requirements
+
+The code uses a number of libraries and tools all of which are freely available, 
+but have to be installed before compilation. Please refer to the respective 
+documentation on how to install these components.
+
+* Boost Jam
+* Boost
+These two are available from http://www.boost.org/users/download/
+
+* netcdf from http://www.unidata.ucar.edu/software/netcdf/
+* atlas from http://math-atlas.sourceforge.net/
+* lapack from http://www.netlib.org/lapack/
+* cuda from http://www.nvidia.com/object/cuda_home.html#
+
+Alternatively you can install all but cuda through the package manager on ubuntu 08/10.
+Depending on the path you chose to install the libraries to, you might
+have to modify the Jamroot file. Refer to http://www.boost.org/doc/tools/build/index.html
+for a description of the syntax.
+
+Compilation
+
+Once you have installed everything and set the correct path you should only
+have to run "bjam" from the jiba++ directory. Depending on your compiler
+and whether you are doing a debug or release compilation, the programs and
+libraries will be put in different directories. These will be output during
+compilation.
+
+This code has been compiled with
+
+gcc 4.2 under SuSE Linux 10.1 and 11.0
+gcc 4.3 under ubuntu 8/10
+intel 11.0 under ubuntu 8/10
+
+Sun 5.10 is known to fail, this is an issue with partial template spezialization in
+the boost libraries.
+
+No tests have been performed under Windows.

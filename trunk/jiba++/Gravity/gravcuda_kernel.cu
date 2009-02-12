@@ -1,16 +1,7 @@
-#ifndef _TEMPLATE_KERNEL_H_
-#define _TEMPLATE_KERNEL_H_
+#ifndef _GRAVCUDA_KERNEL_H_
+#define _GRAVCUDA_KERNEL_H_
 
-#define Grav_const 6.67428e-8
-
-__device__ void OffsetToIndex(const unsigned int offset, const int ny,
-    const int nz, int &xi, int &yi, int &zi)
-  {
-    zi = offset % nz;
-    xi = (offset - zi) / nz;
-    yi = xi % ny;
-    xi = (xi - yi) / ny;
-  }
+#include "common.cu"
 
 __device__ double CalcGravTerm(const double x, const double y, const double z)
   {
@@ -74,4 +65,4 @@ __global__ void CalcScalarMeas(const double x_meas, const double y_meas,
       }
   }
 
-#endif // #ifndef _TEMPLATE_KERNEL_H_
+#endif // #ifndef _GRAVCUDA_KERNEL_H_
