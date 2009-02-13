@@ -10,8 +10,8 @@
 
 namespace jiba
   {
-//This internal function should not appear in the doxygen documentation
-     // Read a single CellSize variable from a netcdf file
+    //This internal function should not appear in the doxygen documentation
+    // Read a single CellSize variable from a netcdf file
     /* This is a helper function that reads the cell length for a single
      * dimension from the file.
      * @param NetCDFFile A netcdf file object ready for reading
@@ -206,5 +206,22 @@ namespace jiba
         //and delete it
         delete[] databuffer;
         NetCDFFile.add_att("Conventions", "CF-1.3");
+      }
+
+    void ReadMeasPosNetCDF(const std::string filename,
+        ThreeDModelBase::tMeasPosVec &PosX,
+        ThreeDModelBase::tMeasPosVec &PosY,
+        ThreeDModelBase::tMeasPosVec &PosZ)
+      {
+
+        //open the file
+        NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
+        //read the three coordinates for the measurements
+        ReadVec(DataFile, MeasPosXName, PosX);
+        ReadVec(DataFile, MeasPosYName, PosY);
+        ReadVec(DataFile, MeasPosZName, PosZ);
+        //and make sure everything is consistent
+        assert(PosX.size() == PosY.size());
+        assert(PosX.size() == PosZ.size());
       }
   }

@@ -88,9 +88,9 @@ namespace jiba
         // by default we assume a change
         bool change = true;
         // if all the sizes are the same as before then nothing has changed
-        change = !(OldXSizes.size() == Model.GetXCellSizes().size()
-            && OldYSizes.size() == Model.GetYCellSizes().size()
-            && OldZSizes.size() == Model.GetZCellSizes().size());
+        change = (OldXSizes.size() != Model.GetXCellSizes().size()
+            || OldYSizes.size() != Model.GetYCellSizes().size()
+            || OldZSizes.size() != Model.GetZCellSizes().size());
         // if we already know that something has changed we do not need to perform the more expensive tests
         if (change)
           {
@@ -121,10 +121,10 @@ namespace jiba
       {
         // by default we assume a change
         bool change = true;
-        change = !(OldBackgroundDens.size()
-            == Model.GetBackgroundDensities().size()
-            && OldBackgroundThick.size()
-                == Model.GetBackgroundThicknesses().size());
+        change = (OldBackgroundDens.size()
+            != Model.GetBackgroundDensities().size()
+            || OldBackgroundThick.size()
+                != Model.GetBackgroundThicknesses().size());
         if (change)
           {
             OldBackgroundDens.resize(Model.GetBackgroundDensities().size(), 0.0);
@@ -167,8 +167,11 @@ namespace jiba
         //check that all modeling information is consistent
         CheckModelConsistency(Model);
         //check whether the model geometry has changed since the last calculation
-        bool HasChanged = CheckGeometryChange(Model) && CheckMeasPosChange(
-            Model) && CheckBackgroundChange(Model);
+        //we have to do them separately to ensure that all functions are executed
+        bool HasGeometryChanged = CheckGeometryChange(Model);
+        bool HasMeasPosChanged = CheckMeasPosChange( Model);
+        bool HasBGCHanged = CheckBackgroundChange(Model);
+        bool HasChanged = HasGeometryChanged || HasMeasPosChanged || HasBGCHanged;
         //if we have cached information and nothing has changed, we use the cache
         if (HaveCache && !HasChanged)
           {
@@ -185,7 +188,8 @@ namespace jiba
         return result;
       }
 
-    rvec CachedGravityCalculator::LQDerivative(const ThreeDGravityModel &Model, const rvec &Misfit)
+    rvec CachedGravityCalculator::LQDerivative(const ThreeDGravityModel &Model,
+        const rvec &Misfit)
       {
         //check that all modeling information is consistent
         CheckModelConsistency(Model);
@@ -195,14 +199,14 @@ namespace jiba
         //if we have cached information and nothing has changed, we use the cache
         if (HaveCache && !HasChanged)
           {
-            return CachedLQDerivative(Model,Misfit);
+            return CachedLQDerivative(Model, Misfit);
           }
         //we only get here if we need to recalculate
         //we have to make sure the calculation finishes properly before we can guarantee the cache and return the result
         SetCurrentSensitivities().resize(Imp.get()->GetDataPerMeasurement(),
             Model.GetDensities().num_elements()
                 + Model.GetBackgroundDensities().size());
-        return ThreeDGravityCalculator::LQDerivative(Model,Misfit);
+        return ThreeDGravityCalculator::LQDerivative(Model, Misfit);
 
       }
   }

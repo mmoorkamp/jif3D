@@ -43,11 +43,6 @@ namespace jiba
         const ThreeDGravityModel::tMeasPosVec &PosX,
         const ThreeDGravityModel::tMeasPosVec &PosY,
         const ThreeDGravityModel::tMeasPosVec &PosZ);
-    //! A helper function that reads only measurement positions from a netcdf file regardless of data type
-    void ReadMeasPosNetCDF(const std::string filename,
-        ThreeDGravityModel::tMeasPosVec &PosX,
-        ThreeDGravityModel::tMeasPosVec &PosY,
-        ThreeDGravityModel::tMeasPosVec &PosZ);
   /* @} */
   }
 #endif /* READWRITEGRAVITYDATA_H_ */
