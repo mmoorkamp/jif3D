@@ -59,7 +59,8 @@ namespace jiba
       //! For a given Model calculate the forward response for all measurements and return it as a real vector, the calculator object is passed to process the sensitivity information
       virtual rvec Calculate(const ThreeDGravityModel &Model,
           ThreeDGravityCalculator &Calculator);
-      virtual rvec LQDerivative(const ThreeDGravityModel &Model, const rvec &Misfit,ThreeDGravityCalculator &Calculator);
+      //! Calculate the least-squres derivative vector for the given model and vector
+      virtual rvec LQDerivative(const ThreeDGravityModel &Model, const rvec &Misfit);
       ThreeDGravityImplementation();
       virtual ~ThreeDGravityImplementation();
       };

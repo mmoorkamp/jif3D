@@ -71,8 +71,11 @@ namespace jiba
       {
         const size_t ngrid = Model.GetDensities().num_elements();
         const size_t nmod = ngrid + Model.GetBackgroundThicknesses().size();
+
+        assert(Misfit.size() == Sensitivities.size1());
+        assert(Sensitivities.size2() == nmod);
         rvec result(nmod);
-        atlas::gemv(CblasTrans,1,Sensitivities,Misfit,0,result);
+        atlas::gemv(CblasTrans, 1.0, Sensitivities, Misfit, 0.0, result);
         return result;
       }
   }

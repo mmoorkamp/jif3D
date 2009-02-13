@@ -20,7 +20,6 @@ namespace jiba
 
     ThreeDGravityCalculator::~ThreeDGravityCalculator()
       {
-        // TODO Auto-generated destructor stub
       }
 
     void ThreeDGravityCalculator::CheckModelConsistency(
@@ -41,13 +40,24 @@ namespace jiba
         assert(nmeas == Model.GetMeasPosZ().size());
       }
 
+    /*! The least squares derivative is the building block for most types of objective functions, here we define
+     * the abstract interface. The implementation depends on the type of data and whether we have sensitivity information or not
+     * @param Model The 3D gravity model
+     * @param Misfit The misfit at which we need the derivative, has to match the type of data in the derived class
+     * @return The partial derivative of the objective function, size and storage order depends on the type of data
+     */
     rvec ThreeDGravityCalculator::LQDerivative(const ThreeDGravityModel &Model,
         const rvec &Misfit)
       {
         CheckModelConsistency(Model);
-        return Imp->LQDerivative(Model, Misfit, *this);
+        return Imp->LQDerivative(Model, Misfit);
       }
 
+    /*! Given a 3D model this routine calculates the forward response. The type of data is determined
+     * by the derived class, e.g. scalar gravity, FTG
+     * @param Model The model for which we want the response
+     * @return The calculated data, the length of the vector and the order of the data depends on the derived class
+     */
     rvec ThreeDGravityCalculator::Calculate(const ThreeDGravityModel &Model)
       {
         CheckModelConsistency(Model);
