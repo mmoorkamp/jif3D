@@ -214,7 +214,7 @@ BOOST_AUTO_TEST_CASE  (random_tensor_test)
       boost::shared_ptr<jiba::FullSensitivityGravityCalculator> Calculator(jiba::CreateGravityCalculator<jiba::FullSensitivityGravityCalculator>::MakeTensor(true));
       jiba::rvec meas1(Calculator->Calculate(GravityTest));
       GravityTest.ClearMeasurementPoints();
-      MakeRandomModel(GravityTest,nmeas/2);
+      MakeRandomModel(GravityTest,nmeas*2);
       BOOST_CHECK_NO_THROW( jiba::rvec meas2(Calculator->Calculate(GravityTest)));
     }
 

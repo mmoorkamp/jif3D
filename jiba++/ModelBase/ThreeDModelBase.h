@@ -43,7 +43,21 @@ namespace jiba
       typedef boost::multi_array<double, 3> t3DModelData;
       //! A shorthand for the dimensions, i.e. cell-sizes for the 3D models
       typedef boost::multi_array<double, 1> t3DModelDim;
+      //! The type of the measurement position vector, this is a std::vector because we want to easily append elements
+      typedef std::vector<double> tMeasPosVec;
     private:
+      //! The origin of the coordinate system in x-direction in m
+      double XOrigin;
+      //! The rigin of the coordinate system in y-direction in m
+      double YOrigin;
+      //! The origin of the coordinate system in z-direction in m
+      double ZOrigin;
+      //! the x-coordinates of the measurement points
+      tMeasPosVec MeasPosX;
+      //! the y-coordinates of the measurement points
+      tMeasPosVec MeasPosY;
+      //! the z-coordinates of the measurement points
+      tMeasPosVec MeasPosZ;
       //! If a derived class needs to perform some action when one the cell size changes, this can be done here
       virtual void SetCellSizesAction(t3DModelDim &sizes)
         {
@@ -124,6 +138,45 @@ namespace jiba
       //! Write the data and cell sizes to a VTK file for plotting in Paraview or Visit etc.
       void WriteVTK(std::string filename, const std::string &DataName);
     public:
+      //! Add a measurement point to the model
+      void AddMeasurementPoint(const double xcoord, const double ycoord,
+          const double zcoord)
+        {
+          MeasPosX.push_back(xcoord+XOrigin);
+          MeasPosY.push_back(ycoord+YOrigin);
+          MeasPosZ.push_back(zcoord+ZOrigin);
+        }
+      //! remove all information about measurement points
+      void ClearMeasurementPoints()
+        {
+          MeasPosX.clear();
+          MeasPosY.clear();
+          MeasPosZ.clear();
+        }
+      //! Return the x-coordinates (Northing) of all measurement points read-only
+      /*! This function provides read-only access to the x-coordinates
+       * of the measurement points. The only way to modify the position of
+       * the measurements is to delete them with ClearMeasurementPoints and
+       * add new ones with AddMeasurementPoint. This ensures that we have all
+       * three coordinate values for all points.
+       * @return A vector with the x-coordinates of all measurement points in m
+       */
+      const tMeasPosVec &GetMeasPosX() const
+        {
+          return MeasPosX;
+        }
+      //! Return the y-coordinates (Easting)of all measurement points read-only
+      const tMeasPosVec &GetMeasPosY() const
+        {
+          return MeasPosY;
+        }
+      //! Return the z-coordinates (Depth) of all measurement points read-only
+      const tMeasPosVec &GetMeasPosZ() const
+        {
+          return MeasPosZ;
+        }
+      //! Set the origin of the coordinate system
+      void SetOrigin(const double x, const double y, const double z);
       //! From the three spatial indices, calculate the offset in memory
       int IndexToOffset(int xi, int yi, int zi) const
         {
@@ -135,7 +188,7 @@ namespace jiba
           zi = offset % Data.shape()[2];
           xi = (offset - zi) / Data.shape()[2];
           yi = xi % Data.shape()[1];
-          xi = (xi-yi) / Data.shape()[1];
+          xi = (xi - yi) / Data.shape()[1];
         }
       //! read-only access to the cell size in x-direction in m
       const t3DModelDim &GetXCellSizes() const
@@ -192,9 +245,13 @@ namespace jiba
           return GridZCoordinates;
         }
       //! Given three coordinates in m, find the indices of the model cell that correponds to these coordinates
-      boost::array<ThreeDModelBase::t3DModelData::index,3>
+      boost::array<ThreeDModelBase::t3DModelData::index, 3>
           FindAssociatedIndices(const double xcoord, const double ycoord,
               const double zcoord) const;
+      //! Read the Measurement positions from a netcdf file
+      void ReadMeasPosNetCDF(const std::string filename);
+      //! Read the Measurement positions from an ascii file
+      void ReadMeasPosAscii(const std::string filename);
       ThreeDModelBase();
       virtual ~ThreeDModelBase();
       };

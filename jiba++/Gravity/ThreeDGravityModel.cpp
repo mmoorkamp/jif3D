@@ -171,43 +171,21 @@ namespace jiba
         std::ofstream outfile(filename.c_str());
 
         const size_t nmeas = Data.size();
-        assert(nmeas == MeasPosX.size());
-        assert(nmeas == MeasPosY.size());
-        assert(nmeas == MeasPosZ.size());
+        assert(nmeas == GetMeasPosX().size());
+        assert(nmeas == GetMeasPosY().size());
+        assert(nmeas == GetMeasPosZ().size());
         for (size_t i = 0; i < nmeas; ++i)
           {
-            outfile << std::setw(15) << std::setprecision(5) << MeasPosX.at(i)
+            outfile << std::setw(15) << std::setprecision(5) << GetMeasPosX().at(i)
                 << " ";
-            outfile << std::setw(15) << std::setprecision(5) << MeasPosY.at(i)
+            outfile << std::setw(15) << std::setprecision(5) << GetMeasPosY().at(i)
                 << " ";
-            outfile << std::setw(15) << std::setprecision(5) << MeasPosZ.at(i)
+            outfile << std::setw(15) << std::setprecision(5) << GetMeasPosZ().at(i)
                 << " ";
             outfile << std::setw(15) << std::setprecision(5) << Data(i);
             outfile << std::endl;
           }
       }
 
-    void ThreeDGravityModel::ReadMeasPosNetCDF(const std::string filename)
-      {
-        jiba::ReadMeasPosNetCDF(filename, MeasPosX, MeasPosY, MeasPosZ);
-      }
-
-    void ThreeDGravityModel::ReadMeasPosAscii(const std::string filename)
-      {
-        std::ifstream infile(filename.c_str());
-        double posx, posy, posz;
-        while (infile.good())
-          {
-            infile >> posx >> posy >> posz;
-            if (infile.good())
-              {
-                MeasPosX.push_back(posx);
-                MeasPosY.push_back(posy);
-                MeasPosZ.push_back(posz);
-              }
-          }
-        assert(MeasPosX.size() == MeasPosY.size());
-        assert(MeasPosX.size() == MeasPosZ.size());
-      }
 
   }

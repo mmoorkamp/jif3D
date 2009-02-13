@@ -66,15 +66,7 @@ namespace jiba
     public:
       //! The type of the background thickness and density vector, this is a std::vector because we want to easily append elements
       typedef std::vector<double> tBackgroundVec;
-      //! The type of the measurement position vector, this is a std::vector because we want to easily append elements
-      typedef std::vector<double> tMeasPosVec;
     private:
-      //! the x-coordinates of the measurement points
-      tMeasPosVec MeasPosX;
-      //! the y-coordinates of the measurement points
-      tMeasPosVec MeasPosY;
-      //! the z-coordinates of the measurement points
-      tMeasPosVec MeasPosZ;
       //! The densities of the background layers
       tBackgroundVec bg_densities;
       //! The thicknesses of the background layers
@@ -115,43 +107,6 @@ namespace jiba
         {
           return bg_thicknesses;
         }
-      //! Add a measurement point to the model
-      void AddMeasurementPoint(const double xcoord, const double ycoord,
-          const double zcoord)
-        {
-          MeasPosX.push_back(xcoord);
-          MeasPosY.push_back(ycoord);
-          MeasPosZ.push_back(zcoord);
-        }
-      //! remove all information about measurement points
-      void ClearMeasurementPoints()
-        {
-          MeasPosX.clear();
-          MeasPosY.clear();
-          MeasPosZ.clear();
-        }
-      //! Return the x-coordinates (Northing) of all measurement points read-only
-      /*! This function provides read-only access to the x-coordinates
-       * of the measurement points. The only way to modify the position of
-       * the measurements is to delete them with ClearMeasurementPoints and
-       * add new ones with AddMeasurementPoint. This ensures that we have all
-       * three coordinate values for all points.
-       * @return A vector with the x-coordinates of all measurement points in m
-       */
-      const tMeasPosVec &GetMeasPosX() const
-        {
-          return MeasPosX;
-        }
-      //! Return the y-coordinates (Easting)of all measurement points read-only
-      const tMeasPosVec &GetMeasPosY() const
-        {
-          return MeasPosY;
-        }
-      //! Return the z-coordinates (Depth) of all measurement points read-only
-      const tMeasPosVec &GetMeasPosZ() const
-        {
-          return MeasPosZ;
-        }
       //! Write the density model and all associated information in a netcdf file
       void WriteNetCDF(const std::string filename) const;
       //! Write the density model in VTK format, at the moment the best format for plotting
@@ -163,10 +118,6 @@ namespace jiba
       void ReadNetCDF(const std::string filename);
       //! Read an igmas xyz model file
       void ReadIgmas(const std::string filename);
-      //! Read the Measurement positions from a netcdf file
-      void ReadMeasPosNetCDF(const std::string filename);
-      //! Read the Measurement positions from an ascii file
-      void ReadMeasPosAscii(const std::string filename);
       ThreeDGravityModel();
       virtual ~ThreeDGravityModel();
       };

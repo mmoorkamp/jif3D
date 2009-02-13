@@ -14,7 +14,8 @@ namespace jiba
   {
 
     ThreeDModelBase::ThreeDModelBase() :
-      XCellSizesChanged(true), YCellSizesChanged(true), ZCellSizesChanged(true)
+      XCellSizesChanged(true), YCellSizesChanged(true),
+          ZCellSizesChanged(true), XOrigin(0.0), YOrigin(0.0), ZOrigin(0.0)
       {
       }
 
@@ -22,7 +23,7 @@ namespace jiba
       {
       }
 
-    boost::array<ThreeDModelBase::t3DModelData::index,3> ThreeDModelBase::FindAssociatedIndices(
+    boost::array<ThreeDModelBase::t3DModelData::index, 3> ThreeDModelBase::FindAssociatedIndices(
         const double xcoord, const double ycoord, const double zcoord) const
       {
         const int xindex = std::distance(GetXCoordinates().begin(),
@@ -34,10 +35,34 @@ namespace jiba
         const int zindex = std::distance(GetZCoordinates().begin(),
             std::lower_bound(GetZCoordinates().begin(),
                 GetZCoordinates().end(), zcoord));
-        boost::array<t3DModelData::index,3> idx =
+        boost::array<t3DModelData::index, 3> idx =
           {
-            { std::max(xindex-1,0), std::max(yindex-1,0), std::max(zindex-1,0) } };
+            { std::max(xindex - 1, 0), std::max(yindex - 1, 0), std::max(zindex
+                - 1, 0) } };
         return idx;
+      }
+
+    void ThreeDModelBase::SetOrigin(const double x, const double y,
+        const double z)
+      {
+        //transform the measurement coordinates from old model to real coordinates
+        std::transform(MeasPosX.begin(), MeasPosX.end(), MeasPosX.begin(),
+            boost::bind(std::plus<double>(), _1, XOrigin));
+        std::transform(MeasPosY.begin(), MeasPosY.end(), MeasPosY.begin(),
+            boost::bind(std::plus<double>(), _1, YOrigin));
+        std::transform(MeasPosZ.begin(), MeasPosZ.end(), MeasPosZ.begin(),
+            boost::bind(std::plus<double>(), _1, ZOrigin));
+        //now transform from real to new model coordinates
+        std::transform(MeasPosX.begin(), MeasPosX.end(), MeasPosX.begin(),
+            boost::bind(std::minus<double>(), _1, x));
+        std::transform(MeasPosY.begin(), MeasPosY.end(), MeasPosY.begin(),
+            boost::bind(std::minus<double>(), _1, y));
+        std::transform(MeasPosZ.begin(), MeasPosZ.end(), MeasPosZ.begin(),
+            boost::bind(std::minus<double>(), _1, z));
+        XOrigin = x;
+        YOrigin = y;
+        ZOrigin = z;
+
       }
 
     void ThreeDModelBase::ReadDataFromNetCDF(const NcFile &NetCDFFile,
@@ -59,6 +84,29 @@ namespace jiba
       {
         Write3DModelToVTK(filename, DataName, GetXCellSizes(), GetYCellSizes(),
             GetZCellSizes(), GetData());
+      }
+
+    void ThreeDModelBase::ReadMeasPosNetCDF(const std::string filename)
+      {
+        jiba::ReadMeasPosNetCDF(filename, MeasPosX, MeasPosY, MeasPosZ);
+      }
+
+    void ThreeDModelBase::ReadMeasPosAscii(const std::string filename)
+      {
+        std::ifstream infile(filename.c_str());
+        double posx, posy, posz;
+        while (infile.good())
+          {
+            infile >> posx >> posy >> posz;
+            if (infile.good())
+              {
+                MeasPosX.push_back(posx);
+                MeasPosY.push_back(posy);
+                MeasPosZ.push_back(posz);
+              }
+          }
+        assert(MeasPosX.size() == MeasPosY.size());
+        assert(MeasPosX.size() == MeasPosZ.size());
       }
 
   }

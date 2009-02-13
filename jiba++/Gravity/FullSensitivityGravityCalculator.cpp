@@ -53,11 +53,13 @@ namespace jiba
     rvec FullSensitivityGravityCalculator::CalculateCachedResult(
         const ThreeDGravityModel &Model)
       {
-        const size_t nmeas = Model.GetMeasPosX().size();
-        rvec result(nmeas * Imp.get()->GetDataPerMeasurement());
+        const size_t nmeas = Model.GetMeasPosX().size() * Imp.get()->GetDataPerMeasurement();
         const size_t ngrid = Model.GetDensities().num_elements();
         const size_t nmod = ngrid + Model.GetBackgroundThicknesses().size();
 
+        assert(Sensitivities.size1() == nmeas);
+        assert(Sensitivities.size2() == nmod);
+        rvec result(nmeas );
         rvec DensVector(nmod);
         std::copy(Model.GetDensities().origin(), Model.GetDensities().origin()
             + ngrid, DensVector.begin());
@@ -66,6 +68,7 @@ namespace jiba
         atlas::gemv(1.0, Sensitivities, DensVector, 0.0, result);
         return result;
       }
+
     rvec FullSensitivityGravityCalculator::CachedLQDerivative(
         const ThreeDGravityModel &Model, const rvec &Misfit)
       {

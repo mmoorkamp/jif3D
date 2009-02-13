@@ -81,9 +81,6 @@ namespace jiba
             Model.GetYCellSizes().begin(), Model.GetYCellSizes().end(), 0.0);
         const double modelzwidth = std::accumulate(
             Model.GetZCellSizes().begin(), Model.GetZCellSizes().end(), 0.0);
-        //the total number of model parameters, gridded domain + background
-        const size_t nmod = Model.GetDensities().num_elements()
-            + Model.GetBackgroundDensities().size();
 
         // for all measurement points add the responses of the discretized part and the 1D background
         for (size_t i = 0; i < nmeas; ++i)
@@ -105,6 +102,7 @@ namespace jiba
           }
         return result;
       }
+
     /*! This is the default implementation for the least squares derivatives. Derived classes can choose
      * to override this if the forward engine requires a different approach. However, the scheme is fairly
      * general and should work with most implementations.

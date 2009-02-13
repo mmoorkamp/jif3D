@@ -5,18 +5,16 @@
 // Copyright   : 2008, MM
 //============================================================================
 
-#include "ReadWriteGravityData.h"
 #include <netcdfcpp.h>
-#include "../Global/NumUtil.h"
 #include <boost/bind.hpp>
+#include "ReadWriteGravityData.h"
+#include "../Global/NumUtil.h"
+#include "../ModelBase/NetCDFTools.h"
 
 namespace jiba
   {
-    static const std::string MeasPosXName = "MeasPosX";
-    static const std::string MeasPosYName = "MeasPosY";
-    static const std::string MeasPosZName = "MeasPosZ";
+
     static const std::string ScalarGravityName = "Scalar_gravity";
-    static const std::string StationNumberName = "StationNumber";
     static const std::string UxxName = "Uxx";
     static const std::string UxyName = "Uxy";
     static const std::string UxzName = "Uxz";
@@ -27,23 +25,7 @@ namespace jiba
     static const std::string UzyName = "Uzy";
     static const std::string UzzName = "Uzz";
 
-    //! Read one measurement position coordinate from a netcdf file
-    template<class VectorType>
-    void ReadVec(NcFile &NetCDFFile, const std::string &MeasPosName,
-        VectorType &Position)
-      {
-        //create a netcdf dimension for the Station number
-        NcDim *Dim = NetCDFFile.get_dim(StationNumberName.c_str());
-        //determine the size of that dimension
-        const size_t nvalues = Dim->size();
 
-        //allocate memory in the class variable
-        Position.resize(nvalues);
-        // create netcdf variable with the same name as the dimension
-        NcVar *SizeVar = NetCDFFile.get_var(MeasPosName.c_str());
-        //read coordinate values from netcdf file
-        SizeVar->get(&Position[0], nvalues);
-      }
     //! Read a component of an FTG matrix for all measurement positions
     void ReadMatComp(NcFile &NetCDFFile, const std::string &CompName,
         rvec &MatVec, size_t n)
@@ -77,21 +59,7 @@ namespace jiba
         WriteVec(NetCDFFile, CompName, tempdata, Dimension, "1/s2");
       }
 
-    void ReadMeasPosNetCDF(const std::string filename,
-        ThreeDGravityModel::tMeasPosVec &PosX,
-        ThreeDGravityModel::tMeasPosVec &PosY,
-        ThreeDGravityModel::tMeasPosVec &PosZ)
-      {
-        //open the file
-        NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
-        //read the three coordinates for the measurements
-        ReadVec(DataFile, MeasPosXName, PosX);
-        ReadVec(DataFile, MeasPosYName, PosY);
-        ReadVec(DataFile, MeasPosZName, PosZ);
-        //and make sure everything is consistent
-        assert(PosX.size() == PosY.size());
-        assert(PosX.size() == PosZ.size());
-      }
+
     /*! This function inspects the contents of a netcdf file to determine which kind
      * of gravity data is stored in it. If it encounters a variable called "Scalar_gravity"
      * it returns scalar, if it encounters a variable called "Uxx" it returns ftg. If none
