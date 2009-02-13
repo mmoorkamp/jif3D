@@ -52,6 +52,7 @@ namespace jiba
       jiba::rvec WhiteningVector;
       virtual rvec CalculateNewModel(const ThreeDGravityModel &Model);
       virtual rvec CalculateCachedResult(const ThreeDGravityModel &Model);
+      virtual rvec CachedLQDerivative(const ThreeDGravityModel &Model, const rvec &Misfit);
     public:
       //! Get the compressed matrix of sensitivities in the wavelet domain
       const jiba::rsparse &GetSensitivities() const {return SparseSens;}

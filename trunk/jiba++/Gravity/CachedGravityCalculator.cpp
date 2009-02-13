@@ -184,4 +184,25 @@ namespace jiba
 
         return result;
       }
+
+    rvec CachedGravityCalculator::LQDerivative(const ThreeDGravityModel &Model, const rvec &Misfit)
+      {
+        //check that all modeling information is consistent
+        CheckModelConsistency(Model);
+        //check whether the model geometry has changed since the last calculation
+        bool HasChanged = CheckGeometryChange(Model) && CheckMeasPosChange(
+            Model) && CheckBackgroundChange(Model);
+        //if we have cached information and nothing has changed, we use the cache
+        if (HaveCache && !HasChanged)
+          {
+            return CachedLQDerivative(Model,Misfit);
+          }
+        //we only get here if we need to recalculate
+        //we have to make sure the calculation finishes properly before we can guarantee the cache and return the result
+        SetCurrentSensitivities().resize(Imp.get()->GetDataPerMeasurement(),
+            Model.GetDensities().num_elements()
+                + Model.GetBackgroundDensities().size());
+        return ThreeDGravityCalculator::LQDerivative(Model,Misfit);
+
+      }
   }

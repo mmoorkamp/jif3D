@@ -30,6 +30,7 @@ namespace jiba
       rmat Sensitivities;
       virtual rvec CalculateNewModel(const ThreeDGravityModel &Model);
       virtual rvec CalculateCachedResult(const ThreeDGravityModel &Model);
+      virtual rvec CachedLQDerivative(const ThreeDGravityModel &Model, const rvec &Misfit);
     public:
       //! return a read only copy of the sensitivity matrix, this guarantees that cache information is preserved
       const rmat &GetSensitivities() const

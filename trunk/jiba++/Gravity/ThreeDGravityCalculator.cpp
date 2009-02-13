@@ -11,7 +11,8 @@
 namespace jiba
   {
 
-    ThreeDGravityCalculator::ThreeDGravityCalculator(boost::shared_ptr<ThreeDGravityImplementation> TheImp):
+    ThreeDGravityCalculator::ThreeDGravityCalculator(boost::shared_ptr<
+        ThreeDGravityImplementation> TheImp) :
       Imp(TheImp)
       {
 
@@ -22,7 +23,8 @@ namespace jiba
         // TODO Auto-generated destructor stub
       }
 
-    void ThreeDGravityCalculator::CheckModelConsistency(const ThreeDGravityModel &Model)
+    void ThreeDGravityCalculator::CheckModelConsistency(
+        const ThreeDGravityModel &Model)
       {
         //get the amount of cells in each direction
         const size_t xsize = Model.GetDensities().shape()[0];
@@ -37,5 +39,18 @@ namespace jiba
         const size_t nmeas = Model.GetMeasPosX().size();
         assert(nmeas == Model.GetMeasPosY().size());
         assert(nmeas == Model.GetMeasPosZ().size());
+      }
+
+    rvec ThreeDGravityCalculator::LQDerivative(const ThreeDGravityModel &Model,
+        const rvec &Misfit)
+      {
+        CheckModelConsistency(Model);
+        return Imp->LQDerivative(Model, Misfit, *this);
+      }
+
+    rvec ThreeDGravityCalculator::Calculate(const ThreeDGravityModel &Model)
+      {
+        CheckModelConsistency(Model);
+        return Imp->Calculate(Model, *this);
       }
   }

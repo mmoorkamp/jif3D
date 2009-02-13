@@ -21,6 +21,30 @@ namespace jiba
       {
       }
 
+    void ThreeDGravityImplementation::CacheGeometry(
+        const ThreeDGravityModel &Model)
+      {
+        XCoord.resize(boost::extents[Model.GetXCoordinates().size()]);
+        YCoord.resize(boost::extents[Model.GetYCoordinates().size()]);
+        ZCoord.resize(boost::extents[Model.GetZCoordinates().size()]);
+        XSizes.resize(boost::extents[Model.GetXCellSizes().size()]);
+        YSizes.resize(boost::extents[Model.GetYCellSizes().size()]);
+        ZSizes.resize(boost::extents[Model.GetZCellSizes().size()]);
+        std::copy(Model.GetXCoordinates().begin(),
+            Model.GetXCoordinates().end(), XCoord.begin());
+        std::copy(Model.GetYCoordinates().begin(),
+            Model.GetYCoordinates().end(), YCoord.begin());
+        std::copy(Model.GetZCoordinates().begin(),
+            Model.GetZCoordinates().end(), ZCoord.begin());
+        std::copy(Model.GetXCellSizes().begin(), Model.GetXCellSizes().end(),
+            XSizes.begin());
+        std::copy(Model.GetYCellSizes().begin(), Model.GetYCellSizes().end(),
+            YSizes.begin());
+        std::copy(Model.GetZCellSizes().begin(), Model.GetZCellSizes().end(),
+            ZSizes.begin());
+
+      }
+
     /*! This function implements the grand structure of gravity forward calculation, i.e. processing
      * geometric information, looping over all measurements and combining the response
      * of the gridded part and the layered background. The details of the calculation,
@@ -45,19 +69,7 @@ namespace jiba
         const size_t nmeas = Model.GetMeasPosX().size();
         //Cache the coordinate and size information
         //to avoid problems with thread safety
-        XCoord.resize(boost::extents[Model.GetXCoordinates().size()]);
-        YCoord.resize(boost::extents[Model.GetYCoordinates().size()]);
-        ZCoord.resize(boost::extents[Model.GetZCoordinates().size()]);
-        XSizes.resize(boost::extents[Model.GetXCellSizes().size()]);
-        YSizes.resize(boost::extents[Model.GetYCellSizes().size()]);
-        ZSizes.resize(boost::extents[Model.GetZCellSizes().size()]);
-        std::copy(Model.GetXCoordinates().begin(),Model.GetXCoordinates().end(),XCoord.begin());
-        std::copy(Model.GetYCoordinates().begin(),Model.GetYCoordinates().end(),YCoord.begin());
-        std::copy(Model.GetZCoordinates().begin(),Model.GetZCoordinates().end(),ZCoord.begin());
-        std::copy(Model.GetXCellSizes().begin(),Model.GetXCellSizes().end(),XSizes.begin());
-        std::copy(Model.GetYCellSizes().begin(),Model.GetYCellSizes().end(),YSizes.begin());
-        std::copy(Model.GetZCellSizes().begin(),Model.GetZCellSizes().end(),ZSizes.begin());
-
+        CacheGeometry(Model);
         //allocate enough memory for all datapoints in the result vector
         rvec result(nmeas * GetDataPerMeasurement());
 
@@ -70,7 +82,8 @@ namespace jiba
         const double modelzwidth = std::accumulate(
             Model.GetZCellSizes().begin(), Model.GetZCellSizes().end(), 0.0);
         //the total number of model parameters, gridded domain + background
-        const size_t nmod = Model.GetDensities().num_elements() + Model.GetBackgroundDensities().size();
+        const size_t nmod = Model.GetDensities().num_elements()
+            + Model.GetBackgroundDensities().size();
 
         // for all measurement points add the responses of the discretized part and the 1D background
         for (size_t i = 0; i < nmeas; ++i)
@@ -82,9 +95,8 @@ namespace jiba
                 Calculator.SetCurrentSensitivities());
 
             //adjust for the effects of finite extents of the grid
-            currresult += CalcBackground(i, modelxwidth,
-                modelywidth, modelzwidth, Model,
-                Calculator.SetCurrentSensitivities());
+            currresult += CalcBackground(i, modelxwidth, modelywidth,
+                modelzwidth, Model, Calculator.SetCurrentSensitivities());
             //give the calculator object the chance to handle the sensitivities
             //for the current measurement
             Calculator.HandleSensitivities(i);
@@ -92,5 +104,50 @@ namespace jiba
                 * GetDataPerMeasurement()));
           }
         return result;
+      }
+
+    rvec ThreeDGravityImplementation::LQDerivative(
+        const ThreeDGravityModel &Model, const rvec &Misfit,
+        ThreeDGravityCalculator &Calculator)
+      {
+        // get the number of measurements
+        // this class is only called from a calculator object
+        // which performs consistency check
+        const size_t nmeas = Model.GetMeasPosX().size();
+        const size_t DataPerMeas = GetDataPerMeasurement();
+        assert(Misfit.size() == nmeas * DataPerMeas);
+        //Cache the coordinate and size information
+        //to avoid problems with thread safety
+        CacheGeometry(Model);
+        // calculate the size of the modelling domain for the background adjustment
+        // this way we do not have to recalculate within the loop
+        const double modelxwidth = std::accumulate(
+            Model.GetXCellSizes().begin(), Model.GetXCellSizes().end(), 0.0);
+        const double modelywidth = std::accumulate(
+            Model.GetYCellSizes().begin(), Model.GetYCellSizes().end(), 0.0);
+        const double modelzwidth = std::accumulate(
+            Model.GetZCellSizes().begin(), Model.GetZCellSizes().end(), 0.0);
+        //the total number of model parameters, gridded domain + background
+        const size_t nmod = Model.GetDensities().num_elements()
+            + Model.GetBackgroundDensities().size();
+        //allocate enough memory for all derivatives in the result vector
+        rvec DerivMod(nmod);
+        std::fill(DerivMod.begin(),DerivMod.end(),0.0);
+
+
+        rmat CurrentSensitivities(DataPerMeas, nmod);
+
+        for (size_t i = 0; i < nmeas; ++i)
+          {
+            CalcGridded(i, Model, CurrentSensitivities);
+            CalcBackground(i, modelxwidth, modelywidth, modelzwidth, Model,
+                CurrentSensitivities);
+            for (size_t j = 0; j < DataPerMeas; ++j )
+              {
+                boost::numeric::ublas::matrix_row<rmat> CurrRow(CurrentSensitivities,j);
+                DerivMod += Misfit(i*DataPerMeas + j) * CurrRow;
+              }
+          }
+        return DerivMod;
       }
   }
