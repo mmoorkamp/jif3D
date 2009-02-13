@@ -34,6 +34,7 @@ namespace jiba
     class ThreeDGravityImplementation
       {
     private:
+      void CacheGeometry(const ThreeDGravityModel &Model);
       //! Calculate the response of the 1D background for a single measurement, this function has to be implemented in the derived class.
       virtual rvec CalcBackground(const size_t measindex, const double xwidth, const double ywidth,
           const double zwidth, const ThreeDGravityModel &Model,
@@ -58,6 +59,7 @@ namespace jiba
       //! For a given Model calculate the forward response for all measurements and return it as a real vector, the calculator object is passed to process the sensitivity information
       virtual rvec Calculate(const ThreeDGravityModel &Model,
           ThreeDGravityCalculator &Calculator);
+      virtual rvec LQDerivative(const ThreeDGravityModel &Model, const rvec &Misfit,ThreeDGravityCalculator &Calculator);
       ThreeDGravityImplementation();
       virtual ~ThreeDGravityImplementation();
       };

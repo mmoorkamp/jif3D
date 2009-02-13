@@ -58,7 +58,20 @@ namespace jiba
       void CheckModelConsistency(const ThreeDGravityModel &Model);
     public:
       //! Calculate the forward response of the given model, has to be implemented in a derived class
-      virtual rvec Calculate(const ThreeDGravityModel &Model) = 0;
+      /*! Given a 3D model this routine calculates the forward response. The type of data is determined
+       * by the derived class, e.g. scalar gravity, FTG
+       * @param Model The model for which we want the response
+       * @return The calculated data, the length of the vector and the order of the data depends on the derived class
+       */
+      virtual rvec Calculate(const ThreeDGravityModel &Model);
+      //! Get the least squares derivative \f$ \partial O/ \partial \f$ of a least squares objective function \f$ O = \sum (d^{obs) - d^(pred))^2 \f$
+      /*! The least squares derivative is the building block for most types of objective functions, here we define
+       * the abstract interface. The implementation depends on the type of data and whether we have sensitivity information or not
+       * @param Model The 3D gravity model
+       * @param Misfit The misfit at which we need the derivative, has to match the type of data in the derived class
+       * @return The partial derivative of the objective function, size and storage order depends on the type of data
+       */
+      virtual rvec LQDerivative(const ThreeDGravityModel &Model, const rvec &Misfit);
       //! Read and write access to the sensitivity information for the current measurement, only intended for implementation classes
       rmat &SetCurrentSensitivities()
         {

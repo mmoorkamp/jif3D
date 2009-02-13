@@ -20,7 +20,6 @@
 #include "FullSensitivityGravityCalculator.h"
 #include "ScalarOMPGravityImp.h"
 
-
 using namespace boost::assign;
 
 BOOST_AUTO_TEST_SUITE( ScalarGravity_Test_Suite )
@@ -245,6 +244,29 @@ BOOST_AUTO_TEST_CASE  (box_gravity_calc_test)
       for (size_t i = 0; i < nmeas; ++i)
         {
           BOOST_CHECK_CLOSE(scalarmeas1[i], scalarmeas2[i], std::numeric_limits<
+              float>::epsilon());
+        }
+    }
+
+  BOOST_AUTO_TEST_CASE (lqderivative_test)
+    {
+      jiba::ThreeDGravityModel GravityTest;
+      const size_t ncells = 10;
+      const size_t nmeas = 10;
+      MakeRandomModel(GravityTest,ncells, nmeas);
+      boost::shared_ptr<jiba::FullSensitivityGravityCalculator> ScalarCalculator(jiba::CreateGravityCalculator<jiba::FullSensitivityGravityCalculator>::MakeScalar());
+      jiba::rvec Misfit(nmeas);
+      std::generate(Misfit.begin(),Misfit.end(),rand);
+      jiba::rvec Deriv(ScalarCalculator->LQDerivative(GravityTest,Misfit));
+      ScalarCalculator->Calculate(GravityTest);
+      jiba::rvec Compare(boost::numeric::ublas::prec_prod(ublas::trans(ScalarCalculator->GetSensitivities()),Misfit));
+      //and test the caching, too
+      jiba::rvec Deriv2(ScalarCalculator->LQDerivative(GravityTest,Misfit));
+      for (size_t i = 0; i < nmeas; ++i)
+        {
+          BOOST_CHECK_CLOSE(Deriv(i), Compare(i), std::numeric_limits<
+              float>::epsilon());
+          BOOST_CHECK_CLOSE(Deriv2(i), Compare(i), std::numeric_limits<
               float>::epsilon());
         }
     }

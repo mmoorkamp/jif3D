@@ -52,6 +52,7 @@ namespace jiba
       virtual rvec CalculateNewModel(const ThreeDGravityModel &Model) = 0;
       //! The function declaration for the calculation of gravity data using the cached information
       virtual rvec CalculateCachedResult(const ThreeDGravityModel &Model) = 0;
+      virtual rvec CachedLQDerivative(const ThreeDGravityModel &Model, const rvec &Misfit) = 0;
     protected:
       //! Through this function derived classes can signal that the sensitivity information is not valid any more
       void InvalidateCache()
@@ -61,6 +62,8 @@ namespace jiba
     public:
       //! Calculate the data for the given gravity model
       virtual rvec Calculate(const ThreeDGravityModel &Model);
+      //! We overwrite the base class method to use the caching information
+      virtual rvec LQDerivative(const ThreeDGravityModel &Model, const rvec &Misfit);
       //! The constructor takes a shared pointer to an implementation object
       CachedGravityCalculator(
           boost::shared_ptr<ThreeDGravityImplementation> TheImp);

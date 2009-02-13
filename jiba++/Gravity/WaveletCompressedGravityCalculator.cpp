@@ -99,6 +99,16 @@ namespace jiba
 
       }
 
+    rvec WaveletCompressedGravityCalculator::CachedLQDerivative(
+        const ThreeDGravityModel &Model, const rvec &Misfit)
+      {
+        const size_t ngrid = Model.GetDensities().num_elements();
+        const size_t nmod = ngrid + Model.GetBackgroundThicknesses().size();
+        rvec result(nmod);
+
+        return boost::numeric::ublas::prec_prod(trans(SparseSens),Misfit);
+      }
+
     void WaveletCompressedGravityCalculator::HandleSensitivities(
         const size_t measindex)
       {

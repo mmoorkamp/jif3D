@@ -29,8 +29,10 @@ namespace jiba
     void FullSensitivityGravityCalculator::HandleSensitivities(
         const size_t measindex)
       {
-        const size_t startindex = measindex * Imp.get()->GetDataPerMeasurement();
-        const size_t endindex = (measindex + 1) * Imp.get()->GetDataPerMeasurement();
+        const size_t startindex = measindex
+            * Imp.get()->GetDataPerMeasurement();
+        const size_t endindex = (measindex + 1)
+            * Imp.get()->GetDataPerMeasurement();
         ublas::matrix_range<jiba::rmat> mr(Sensitivities, ublas::range(
             startindex, endindex), ublas::range(0, Sensitivities.size2()));
         mr = SetCurrentSensitivities();
@@ -42,7 +44,8 @@ namespace jiba
         const size_t nmeas = Model.GetMeasPosX().size();
         const size_t ngrid = Model.GetDensities().num_elements();
         const size_t nmod = ngrid + Model.GetBackgroundThicknesses().size();
-        Sensitivities.resize(nmeas * Imp.get()->GetDataPerMeasurement(), nmod,false);
+        Sensitivities.resize(nmeas * Imp.get()->GetDataPerMeasurement(), nmod,
+            false);
 
         return Imp.get()->Calculate(Model, *this);
       }
@@ -61,6 +64,15 @@ namespace jiba
         std::copy(Model.GetBackgroundDensities().begin(),
             Model.GetBackgroundDensities().end(), DensVector.begin() + ngrid);
         atlas::gemv(1.0, Sensitivities, DensVector, 0.0, result);
+        return result;
+      }
+    rvec FullSensitivityGravityCalculator::CachedLQDerivative(
+        const ThreeDGravityModel &Model, const rvec &Misfit)
+      {
+        const size_t ngrid = Model.GetDensities().num_elements();
+        const size_t nmod = ngrid + Model.GetBackgroundThicknesses().size();
+        rvec result(nmod);
+        atlas::gemv(CblasTrans,1,Sensitivities,Misfit,0,result);
         return result;
       }
   }
