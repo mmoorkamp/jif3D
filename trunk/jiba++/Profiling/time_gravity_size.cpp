@@ -1,5 +1,7 @@
 #include <iostream>
+#include <fstream>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/program_options.hpp>
 #include "../Gravity/ThreeDGravityModel.h"
 #include "../Gravity/FullSensitivityGravityCalculator.h"
 #include "../Gravity/WaveletCompressedGravityCalculator.h"
@@ -39,14 +41,56 @@ void MakeRandomModel(jiba::ThreeDGravityModel &Model, const size_t size)
     Model.SetBackgroundThicknesses(bg_thick);
   }
 
-int main()
+namespace po = boost::program_options;
+int main(int ac, char* av[])
   {
+
+    po::options_description desc("Allowed options");
+    desc.add_options()("help", "produce help message")("scalar",
+        "Perform scalar calculation [default]")("ftg",
+        "Perform FTG calculation ")("cpu",
+        "Perform calculation on CPU [default]")("gpu",
+        "Perform calculation on GPU");
+
+    po::variables_map vm;
+    po::store(po::parse_command_line(ac, av, desc), vm);
+    po::notify(vm);
+
+    if (vm.count("help"))
+      {
+        std::cout << desc << "\n";
+        return 1;
+      }
+
     const size_t nruns = 100;
     const size_t nrunspersize = 5;
+    std::ofstream outfile("grav.time");
+    bool wantcuda = false;
+    boost::shared_ptr<jiba::FullSensitivityGravityCalculator> Calculator;
+
+    if (vm.count("gpu"))
+      {
+        std::cout << "Using GPU" << "\n";
+        wantcuda = true;
+      }
+
+    if (vm.count("ftg"))
+      {
+        Calculator = jiba::CreateGravityCalculator<
+            jiba::FullSensitivityGravityCalculator>::MakeTensor(wantcuda);
+
+      }
+    else
+      {
+        Calculator = jiba::CreateGravityCalculator<
+            jiba::FullSensitivityGravityCalculator>::MakeScalar(wantcuda);
+      }
+
+    std::cout << " Starting calculations. " << std::endl;
     for (size_t i = 0; i < nruns; ++i)
       {
         const size_t modelsize = (i + 1) * 2;
-
+        std::cout << "Current model size: " << pow(modelsize, 3) << std::endl;
         jiba::ThreeDGravityModel GravityTest;
 
         double rawruntime = 0.0;
@@ -57,11 +101,8 @@ int main()
             cachedruntime = 0.0;
             MakeRandomModel(GravityTest, modelsize);
 
-            boost::shared_ptr<jiba::FullSensitivityGravityCalculator>
-                Calculator = jiba::CreateGravityCalculator<
-                    jiba::FullSensitivityGravityCalculator>::MakeScalar(false);
             boost::posix_time::ptime firststarttime =
-                        boost::posix_time::microsec_clock::local_time();
+                boost::posix_time::microsec_clock::local_time();
             jiba::rvec gravmeas(Calculator->Calculate(GravityTest));
 
             boost::posix_time::ptime firstendtime =
@@ -72,15 +113,14 @@ int main()
             jiba::rvec gravmeas2(Calculator->Calculate(GravityTest));
             boost::posix_time::ptime secondendtime =
                 boost::posix_time::microsec_clock::local_time();
-            rawruntime += (firstendtime
-                - firststarttime).total_microseconds();
-            cachedruntime += (secondendtime
-                - secondstarttime).total_microseconds();
+            rawruntime += (firstendtime - firststarttime).total_microseconds();
+            cachedruntime
+                += (secondendtime - secondstarttime).total_microseconds();
           }
         rawruntime /= nrunspersize;
         cachedruntime /= nrunspersize;
-        std::cout << modelsize * modelsize * modelsize << " " << rawruntime << " " << cachedruntime << std::endl;
-
+        outfile << modelsize * modelsize * modelsize << " " << rawruntime
+            << " " << cachedruntime << std::endl;
       }
 
   }
