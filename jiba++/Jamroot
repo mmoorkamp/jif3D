@@ -25,7 +25,8 @@ use-project /Profiling : Profiling ;
 use-project /Inversion : Inversion ;
 
 local BOOST_TEST_LOG_LEVEL = all ;
-lib boost_filesystem : : <name>boost_filesystem-gcc43-mt ;
+lib boost_filesystem : : <name>boost_filesystem-mt ;
+lib boost_program_options : : <name>boost_program_options-mt  ;
 lib lapack : : <name>lapack ;
 lib f77blas : : <name>f77blas ;
 lib cblas : : <name>cblas ;
