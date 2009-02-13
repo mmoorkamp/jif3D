@@ -105,10 +105,15 @@ namespace jiba
           }
         return result;
       }
-
+    /*! This is the default implementation for the least squares derivatives. Derived classes can choose
+     * to override this if the forward engine requires a different approach. However, the scheme is fairly
+     * general and should work with most implementations.
+     * @param Model The Model for which we want the derivative
+     * @param Misfit The Misfit between observed and synthetic data
+     * @return The derivative of a least-squares objective function with respect to the model parameters
+     */
     rvec ThreeDGravityImplementation::LQDerivative(
-        const ThreeDGravityModel &Model, const rvec &Misfit,
-        ThreeDGravityCalculator &Calculator)
+        const ThreeDGravityModel &Model, const rvec &Misfit)
       {
         // get the number of measurements
         // this class is only called from a calculator object
@@ -134,14 +139,18 @@ namespace jiba
         rvec DerivMod(nmod);
         std::fill(DerivMod.begin(),DerivMod.end(),0.0);
 
-
+        //we need the Sensitivities from the calculator object
         rmat CurrentSensitivities(DataPerMeas, nmod);
 
         for (size_t i = 0; i < nmeas; ++i)
           {
+            //build up the full sensitivity matrix for the current measurement
             CalcGridded(i, Model, CurrentSensitivities);
             CalcBackground(i, modelxwidth, modelywidth, modelzwidth, Model,
                 CurrentSensitivities);
+            //treat the rows of the sensitivity matrix like columns
+            //to implicitely perform the transpose for the adjoint
+            //we might have more than one datum, e.g, for FTG data
             for (size_t j = 0; j < DataPerMeas; ++j )
               {
                 boost::numeric::ublas::matrix_row<rmat> CurrRow(CurrentSensitivities,j);

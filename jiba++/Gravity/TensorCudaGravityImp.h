@@ -14,6 +14,19 @@
 namespace jiba
   {
 
+    /** \addtogroup gravity Gravity forward modeling, display and inversion */
+    /* @{ */
+    //! Calculate a FTG gravity response using Cuda
+    /*! This class is the tensorial counterpart to ScalarCudaGravityImp.
+     * It calculates the 9 elements of second derivatives of the gravitational potential.
+     * It only implements the calculation of the background and the gridded part.
+     * The assembly of the two parts is performed by the base class ThreeDGravityImplementation.
+     *
+     * This implementation class uses Nvidia's CUDA API to perform
+     * the forward calculation on a Nvidia graphics card. It needs
+     * a card with compute capability 1.3 or more to perform double
+     * length floating point calculations
+     */
     class TensorCudaGravityImp: public jiba::ThreeDGravityImplementation
       {
     private:
