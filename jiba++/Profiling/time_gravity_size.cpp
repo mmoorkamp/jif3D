@@ -1,10 +1,13 @@
+#include <omp.h>
 #include <iostream>
 #include <fstream>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/program_options.hpp>
+#include "../Global/convert.h"
 #include "../Gravity/ThreeDGravityModel.h"
+#include "../Gravity/ThreeDGravityCalculator.h"
 #include "../Gravity/FullSensitivityGravityCalculator.h"
-#include "../Gravity/WaveletCompressedGravityCalculator.h"
+#include "../Gravity/MinMemGravityCalculator.h"
 
 void MakeRandomModel(jiba::ThreeDGravityModel &Model, const size_t size)
   {
@@ -50,7 +53,8 @@ int main(int ac, char* av[])
         "Perform scalar calculation [default]")("ftg",
         "Perform FTG calculation ")("cpu",
         "Perform calculation on CPU [default]")("gpu",
-        "Perform calculation on GPU");
+        "Perform calculation on GPU")("cached", "Also do cached calculation")(
+        "threads", po::value<int>(), "The number of openmp threads");
 
     po::variables_map vm;
     po::store(po::parse_command_line(ac, av, desc), vm);
@@ -62,30 +66,73 @@ int main(int ac, char* av[])
         return 1;
       }
 
-    const size_t nruns = 100;
+    const size_t nruns = 50;
     const size_t nrunspersize = 5;
-    std::ofstream outfile("grav.time");
+    std::string filename;
     bool wantcuda = false;
-    boost::shared_ptr<jiba::FullSensitivityGravityCalculator> Calculator;
+    bool wantcached = false;
+    boost::shared_ptr<jiba::ThreeDGravityCalculator> Calculator;
+
 
     if (vm.count("gpu"))
       {
+        filename = "gpu_";
         std::cout << "Using GPU" << "\n";
         wantcuda = true;
+      }
+    else
+      {
+        filename = "cpu_";
+        if (vm.count("threads"))
+          {
+            omp_set_num_threads(vm["threads"].as<int> ());
+            filename += vm["threads"].as<std::string>();
+          }
+        else
+          {
+            filename += jiba::stringify(omp_get_max_threads());
+          }
+      }
+
+
+    if (vm.count("cached"))
+      {
+        wantcached = true;
+        filename += "cached_";
       }
 
     if (vm.count("ftg"))
       {
-        Calculator = jiba::CreateGravityCalculator<
-            jiba::FullSensitivityGravityCalculator>::MakeTensor(wantcuda);
+        filename += "ftg.time";
+        if (wantcached)
+          {
+            Calculator = jiba::CreateGravityCalculator<
+                jiba::FullSensitivityGravityCalculator>::MakeTensor(wantcuda);
+          }
+        else
+          {
+            Calculator = jiba::CreateGravityCalculator<
+                jiba::MinMemGravityCalculator>::MakeTensor(wantcuda);
+
+          }
 
       }
     else
       {
-        Calculator = jiba::CreateGravityCalculator<
-            jiba::FullSensitivityGravityCalculator>::MakeScalar(wantcuda);
+        filename += "scalar.time";
+        if (wantcached)
+          {
+            Calculator = jiba::CreateGravityCalculator<
+                jiba::FullSensitivityGravityCalculator>::MakeScalar(wantcuda);
+          }
+        else
+          {
+            Calculator = jiba::CreateGravityCalculator<
+                jiba::MinMemGravityCalculator>::MakeScalar(wantcuda);
+          }
       }
 
+    std::ofstream outfile(filename.c_str());
     std::cout << " Starting calculations. " << std::endl;
     for (size_t i = 0; i < nruns; ++i)
       {
@@ -107,15 +154,18 @@ int main(int ac, char* av[])
 
             boost::posix_time::ptime firstendtime =
                 boost::posix_time::microsec_clock::local_time();
-
-            boost::posix_time::ptime secondstarttime =
-                boost::posix_time::microsec_clock::local_time();
-            jiba::rvec gravmeas2(Calculator->Calculate(GravityTest));
-            boost::posix_time::ptime secondendtime =
-                boost::posix_time::microsec_clock::local_time();
             rawruntime += (firstendtime - firststarttime).total_microseconds();
-            cachedruntime
-                += (secondendtime - secondstarttime).total_microseconds();
+            if (wantcached)
+              {
+                boost::posix_time::ptime secondstarttime =
+                    boost::posix_time::microsec_clock::local_time();
+                jiba::rvec gravmeas2(Calculator->Calculate(GravityTest));
+                boost::posix_time::ptime secondendtime =
+                    boost::posix_time::microsec_clock::local_time();
+
+                cachedruntime
+                    += (secondendtime - secondstarttime).total_microseconds();
+              }
           }
         rawruntime /= nrunspersize;
         cachedruntime /= nrunspersize;

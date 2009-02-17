@@ -8,7 +8,12 @@
 #ifndef FILEUTIL_H_
 #define FILEUTIL_H_
 
+#include "FatalException.h"
 #include <string>
+#include <fstream>
+#include <iostream>
+#include <boost/algorithm/string/predicate.hpp>
+
 /*! \file FileUtil.h
  * Utilities associated with the general handling of files and filenames.
  */
@@ -22,9 +27,9 @@ namespace jiba
     /*! It is a standard task to extract the filename extension, i.e. the name without the ending, for example
      * to determine the expected type of a file. If several dots are present in a file the function returns
      * only the part including and after the last dot.
-    * @param filename The complete filename to process.
-    * @return The ending of the file
-    */
+     * @param filename The complete filename to process.
+     * @return The ending of the file
+     */
     inline std::string GetFileExtension(const std::string &filename)
       {
         std::string ending;
@@ -32,6 +37,40 @@ namespace jiba
         if (dotpos != std::string::npos)
           ending = filename.substr(dotpos);
         return ending;
+      }
+
+    //! Given an open input filestream search for the string token in the file and return the line containing that token, throws if fails
+    /*! This function performs a case-sensitive search for the content of the string token. If a line in the file contains
+     * this string the function returns this line. If the token cannot be found it throws a FatalException.
+     * @param filestream An open infile stream, will be pointing to the next line after finding the token
+     * @param token The token to search for
+     * @return The line in the file that contains the token
+     */
+    inline std::string FindToken(std::ifstream &filestream,
+        const std::string &token)
+      {
+        bool found = false;
+        bool end = false;
+        std::string line;
+        while (!found && !end)
+          {
+            if (std::getline(filestream, line))
+              {
+                found = boost::algorithm::contains(line, token);
+              }
+            else
+              {
+                end = true;
+              }
+          }
+        if (found)
+          {
+            return line;
+          }
+        else
+          {
+            throw FatalException("Token " + token + " not found !");
+          }
       }
   /* @} */
   }
