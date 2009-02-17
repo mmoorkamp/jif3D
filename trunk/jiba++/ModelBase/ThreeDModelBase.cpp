@@ -14,8 +14,8 @@ namespace jiba
   {
 
     ThreeDModelBase::ThreeDModelBase() :
-      XCellSizesChanged(true), YCellSizesChanged(true),
-          ZCellSizesChanged(true), XOrigin(0.0), YOrigin(0.0), ZOrigin(0.0)
+      XOrigin(0.0), YOrigin(0.0), ZOrigin(0.0), XCellSizesChanged(true),
+          YCellSizesChanged(true), ZCellSizesChanged(true)
       {
       }
 
