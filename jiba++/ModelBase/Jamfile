@@ -1,5 +1,6 @@
 import testing ; 
-lib modelbase : ThreeDModelBase.cpp NetCDFTools.cpp VTKTools.cpp 
+lib modelbase : ThreeDModelBase.cpp NetCDFTools.cpp VTKTools.cpp ModelRefiner.cpp
                 ..//netcdf_c++ ..//netcdf : <include>boost : : <include>. ;
 
 unit-test base_test : test_ThreeDModelBase.cpp modelbase ..//netcdf_c++ ..//netcdf : <include>. ;
+unit-test refiner_test : test_ModelRefiner.cpp modelbase ..//Gravity ..//netcdf_c++ ..//netcdf : <include>. ;
