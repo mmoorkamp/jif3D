@@ -86,9 +86,9 @@ namespace jiba
       /*! See the explanation for XCellSizesChanged why this is mutable
        */
       mutable t3DModelDim GridXCoordinates;
-      //! The x-coordinate of the upper left front corner
+      //! The y-coordinate of the upper left front corner
       mutable t3DModelDim GridYCoordinates;
-      //! The x-coordinate of the upper left front corner
+      //! The z-coordinate of the upper left front corner
       mutable t3DModelDim GridZCoordinates;
       //! Calculate the coordinates of the model cells from the sizes of each cell
       /*! This functions assumes that the coordinate of the upper left front corner of the model is
@@ -252,6 +252,7 @@ namespace jiba
       void ReadMeasPosNetCDF(const std::string filename);
       //! Read the Measurement positions from an ascii file
       void ReadMeasPosAscii(const std::string filename);
+      friend class ModelRefiner;
       ThreeDModelBase();
       virtual ~ThreeDModelBase();
       };
