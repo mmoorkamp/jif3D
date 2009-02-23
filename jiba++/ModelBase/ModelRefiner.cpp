@@ -73,6 +73,7 @@ namespace jiba
         const ThreeDModelBase::t3DModelDim &NewSizes)
       {
         double currsize = 0.0;
+        endindex = startindex;
         while (currsize < CellSize && endindex < NewSizes.size())
           {
             currsize += NewSizes[endindex];
@@ -106,15 +107,16 @@ namespace jiba
                     FindEnd(startz,endz,InputModel.GetZCellSizes()[i],RefinedModel.GetZCellSizes());
 
                     typedef boost::multi_array_types::index_range range;
-                    // OR typedef array_type::index_range range;
                     ThreeDModelBase::t3DModelData::array_view<3>::type myview =
-                      RefinedModel.SetData()[boost::indices[range(startx,endx+1)][range(starty,endy+1)][range(startz,endz+1)] ];
+                      RefinedModel.SetData()[boost::indices[range(startx,endx)][range(starty,endy)][range(startz,endz)] ];
                     AssignValue(myview,InputModel.GetData()[i][j][k]);
-                    startz = endz+1;
+                    startz = endz;
                 }
-                starty = endy+1;
+                starty = endy;
+                startz = 0;
             }
-            startx = endx+1;
+            startx = endx;
+            starty =0;
         }
     }
 
