@@ -86,8 +86,8 @@ BOOST_AUTO_TEST_CASE(model_projection)
     for (size_t i = 0; i < xrefinement; ++i)
       {
         XRefiner[i] = 17 * i;
-        YRefiner[i] = 13 * i;
-        ZRefiner[i] = 19 * i;
+        YRefiner[i] = 7 * i;
+        ZRefiner[i] = 90 * i;
       }
     jiba::ModelRefiner Refiner;
     Refiner.SetXCoordinates(XRefiner);
