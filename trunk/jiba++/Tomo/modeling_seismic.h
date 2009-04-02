@@ -55,8 +55,6 @@ char *memory (char *prev_addr, size_t n, size_t size, std::string progname)
 /** \addtogroup seismod Seismic tomography modelling */
 /* @{ */
 int ForwardModRay(GEOMETRY geo,GRID_STRUCT grid,DATA_STRUCT *data, RP_STRUCT *raypath, time_t time_start);
-int ForwardModFatRay(GEOMETRY geo,GRID_STRUCT grid, DATA_STRUCT *data, F_RP_STRUCT *fat_rays, time_t time_start);
-int FatRayCalc(float *tt1,float *tt2,long nx,long ny,long nz, float tcalc,F_RP_STRUCT *fr,double *slow);
 float interpolate(float x,float y,float z,GRID_STRUCT *grid,float *data);
 int RayCalc(float *tt, int nx,int ny,int nz, float Xs, float Ys, float Zs,float *Xr,float *Yr, float *Zr,int nrec, RP_STRUCT *rp);
 double *TimeGrad(int x, int y, int z, float *tt,int ny, int nz);
