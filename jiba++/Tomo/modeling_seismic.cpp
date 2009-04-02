@@ -21,16 +21,15 @@ namespace jiba
         RP_STRUCT *raypath, time_t time_start)
       {
         int /*a,b,c,*/count/*Number of active receivers for a shot*/;
-        int i, k, nborder;
+        int i, k;
         int *nact_rec; /*active receiver-numbers for the used shot*/
         long *nact_datapos; /*Position of the active receivers in the data structure*/
         long j;
-        long nx, ny, nz, nx3, ny3, nz3, nyz3;
+        long  nx3, ny3, nz3, nyz3;
         float *tt, *tmp_slow;
         float Xs, Ys, Zs, *Xr, *Yr, *Zr; /*Normalized positions of the shots and receivers (referring to the grid cell nodes and NOT of the grid cell centers)*/
         float org[3];
         float delta_num = (float) 0.001;
-        double sum2;
 
         time_t time_relative;
         double zeit_angabe_sekunden;
@@ -38,18 +37,14 @@ namespace jiba
 
         RP_STRUCT *raypath_tmp;
 
-        nx = grid.nx + 1;
-        ny = grid.ny + 1;
-        nz = grid.nz + 1;
-        nborder = grid.nborder;
 
         org[0] = (float) (grid.org[0] - grid.h * 0.5);
         org[1] = (float) (grid.org[1] - grid.h * 0.5);
         org[2] = (float) (grid.org[2] - grid.h * 0.5);
 
-        nx3 = (nx + 2 * nborder);
-        ny3 = (ny + 2 * nborder);
-        nz3 = (nz + 2 * nborder);
+        nx3 = (grid.nx + 1);
+        ny3 = (grid.ny + 1);
+        nz3 = (grid.nz + 1);
         nyz3 = ny3 * nz3;
 
         /*******************************************************************************************/
@@ -71,7 +66,6 @@ namespace jiba
                 "!!WARNING!! NO seismic traveltime data exists although the seismic forward modelling is activated\n\n");
             printf("Seismic forward modeling is therefore finished\n\n");
             printf("-------------------------------\n\n");
-            data->rms_seis = -99999.9;
             return (1);
           }
 
@@ -98,12 +92,9 @@ namespace jiba
                 for (j = 0; j < nx3 * ny3 * nz3; j++)
                   tt[j] = 0.0;
 
-                Xs = ((geo.x[(data->shots[i]) - 1] - org[0]) / grid.h
-                    + (float) nborder); /*normalized x-coordinate of the shot locations according to grid cell nodes*/
-                Ys = ((geo.y[(data->shots[i]) - 1] - org[1]) / grid.h
-                    + (float) nborder); /*normalized y-coordinate of the shot locations according to grid cell nodes*/
-                Zs = ((geo.z[(data->shots[i]) - 1] - org[2]) / grid.h
-                    + (float) nborder); /*normalized z-coordinate of the shot locations according to grid cell nodes*/
+                Xs = ((geo.x[(data->shots[i]) - 1] - org[0]) / grid.h); /*normalized x-coordinate of the shot locations according to grid cell nodes*/
+                Ys = ((geo.y[(data->shots[i]) - 1] - org[1]) / grid.h); /*normalized y-coordinate of the shot locations according to grid cell nodes*/
+                Zs = ((geo.z[(data->shots[i]) - 1] - org[2]) / grid.h); /*normalized z-coordinate of the shot locations according to grid cell nodes*/
 
                 /***************************************************************************************/
                 /*Podvin&Lecomte forward algorithm*/
@@ -155,12 +146,9 @@ namespace jiba
                 /*Determine the accurate traveltimes at the receiver-locations (by trilinear interpolation of the traveltimes at the grid cell edges)*/
                 for (j = 0; j < count; j++)
                   {
-                    Xr[j] = ((geo.x[nact_rec[j] - 1] - org[0]) / grid.h
-                        + (float) nborder); /*normalized x-coordinate of the receiver locations according to grid cell EDGES*/
-                    Yr[j] = ((geo.y[nact_rec[j] - 1] - org[1]) / grid.h
-                        + (float) nborder); /*normalized y-coordinate of the receiver locations according to grid cell EDGES*/
-                    Zr[j] = ((geo.z[nact_rec[j] - 1] - org[2]) / grid.h
-                        + (float) nborder); /*normalized z-coordinate of the receiver locations according to grid cell EDGES*/
+                    Xr[j] = ((geo.x[nact_rec[j] - 1] - org[0]) / grid.h); /*normalized x-coordinate of the receiver locations according to grid cell EDGES*/
+                    Yr[j] = ((geo.y[nact_rec[j] - 1] - org[1]) / grid.h); /*normalized y-coordinate of the receiver locations according to grid cell EDGES*/
+                    Zr[j] = ((geo.z[nact_rec[j] - 1] - org[2]) / grid.h); /*normalized z-coordinate of the receiver locations according to grid cell EDGES*/
 
                     data->tcalc[nact_datapos[j]] = (double) (1000.0
                         * interpolate(Xr[j], Yr[j], Zr[j], &grid, tt));
@@ -318,31 +306,19 @@ namespace jiba
         /*Resort rays (If the ray runs along the boundary between to cells, the cell with the higher velocity will be considered)*/
         ResortRays(raypath, *data, grid);
 
-        /*Write out the raypath*/
-        //WriteRayOut(raypath, *data, grid);
-
         /*Determine the number of ACTIVE rays and the RMS-value*/
         data->ndata_seis_act = 0;
-        sum2 = 0.0;
         for (i = 0; i < data->ndata_seis; i++)
           {
             if (raypath[i].nray != 0)
               {
                 data->ndata_seis_act++;
-                sum2 = sum2 + (data->tcalc[i] - data->tobs[i])
-                    * (data->tcalc[i] - data->tobs[i]);
               }
           }
 
-        if (data->ndata_seis_act != 0)
-          data->rms_seis = sqrt(sum2 / data->ndata_seis_act);
-        else
-          data->rms_seis = -99999.9;
-
         printf("Seismic forward modeling is finished:\n");
-        printf("RMS-values: %10.5f ms\n", data->rms_seis);
         printf(
-            "%d of %d shot-receiver combinations will be used for inversion\n",
+            "%d of %d shot-receiver combinations are active\n",
             data->ndata_seis_act, data->ndata_seis);
         printf("----------------\n\n\n\n\n");
 
@@ -368,9 +344,9 @@ namespace jiba
         int ok, nx2, ny2, nz2, nyz2;
         float ival;
 
-        nx2 = grid->nx + 1 + 2 * grid->nborder;
-        ny2 = grid->ny + 1 + 2 * grid->nborder;
-        nz2 = grid->nz + 1 + 2 * grid->nborder;
+        nx2 = grid->nx + 1 ;
+        ny2 = grid->ny + 1 ;
+        nz2 = grid->nz + 1 ;
         nyz2 = ny2 * nz2;
 
         /* Check, if point is in grid */
@@ -1401,9 +1377,9 @@ namespace jiba
 
         double eps = 0.01;
 
-        nx = grid.nx + 2 * grid.nborder;
-        ny = grid.ny + 2 * grid.nborder;
-        nz = grid.nz + 2 * grid.nborder;
+        nx = grid.nx ;
+        ny = grid.ny ;
+        nz = grid.nz ;
         nyz = ny * nz;
 
         ny1 = ny + 1;
