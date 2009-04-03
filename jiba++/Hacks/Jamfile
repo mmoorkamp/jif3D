@@ -1,8 +1,5 @@
 import testing ; 
 
-project
-    : usage-requirements <include>../../gplib/include
-    ;
     
 #exe levjoint : levjoint.cpp ..//gplib ..//gsl ..//netcdf_c++ ..//netcdf ..//antlr ..//levmar ..//boost_filesystem ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran   
 #	: <include>/home/mmoorkamp/workspace/gplib/include ;
@@ -10,5 +7,5 @@ project
 exe fittingtest : fittingtest.cpp ../Inversion//inversion ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran : <include>. ;
 exe sparsetest : sparsetest.cpp ../Inversion//inversion ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran : <include>. ;
 exe wcompress : wcompress.cpp  ../Gravity ../Global : <include>. ;
-exe invariantftginv : invariantftginv.cpp  ../Gravity//gravity ../Global ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ../Inversion//inversion
-              ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran : <include>. ;
+exe invariantftginv : invariantftginv.cpp  ../Gravity//gravity ../Gravity//gravity-extra ../Global ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ../Inversion//inversion
+              ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran ..//cudart : <include>. ;
