@@ -51,7 +51,7 @@ void PrepareModelForR(jiba::ThreeDGravityModel &GravityTest,
     scriptfile << "dyn.load(\"libmodelbase.so\") \n";
     scriptfile << "dyn.load(\"libgravity.so\") \n";
     scriptfile << "source(\"Gravity/GravForward.R\") \n";
-    scriptfile << "alloc<-.C(\"AllocateModel\",as.integer(1),as.integer(1)) \n";
+    scriptfile << "alloc<-AllocateModel(1,1) \n";
     //write the different model quantities into the script
     //the cell size coordinates
     WriteVectorToScript(scriptfile, GravityTest.GetXCellSizes(), "XSizes");
@@ -68,6 +68,9 @@ void PrepareModelForR(jiba::ThreeDGravityModel &GravityTest,
         + GravityTest.GetDensities().num_elements(), DensityVector.begin());
     //write the density vector into the script as well
     WriteVectorToScript(scriptfile, DensityVector, "Densities");
+    std::vector<double> DummyBG(1,0.0);
+    WriteVectorToScript(scriptfile, DummyBG, "BGDensities");
+    WriteVectorToScript(scriptfile, DummyBG, "BGThicknesses");
   }
 
 //just a dummy to shut up the test system in case we do not compile the proper R tests
@@ -96,9 +99,9 @@ BOOST_AUTO_TEST_CASE(R_scalar_interface_test)
     //finish the R script
     //call the R interface function
     Rscript
-    << " raw<-system.time(result<-gravforward(XSizes,YSizes,ZSizes,Densities,XMeasPos,YMeasPos,ZMeasPos))\n";
+    << " raw<-system.time(result<-GravScalarForward(XSizes,YSizes,ZSizes,Densities,BGDensities,BGThicknesses,XMeasPos,YMeasPos,ZMeasPos))\n";
     Rscript
-    << " cached<-system.time(result2<-gravforward(XSizes,YSizes,ZSizes,Densities,XMeasPos,YMeasPos,ZMeasPos))\n";
+    << " cached<-system.time(result2<-GravScalarForward(XSizes,YSizes,ZSizes,Densities,BGDensities,BGThicknesses,XMeasPos,YMeasPos,ZMeasPos))\n";
     Rscript << " sink(\"scalar_output\")\n";
     Rscript << " cat(result$GravAcceleration)\n";
     Rscript << " sink(\"r_timing\")\n";
@@ -135,7 +138,7 @@ BOOST_AUTO_TEST_CASE(R_tensor_interface_test)
     boost::shared_ptr<jiba::MinMemGravityCalculator> TensorCalculator(jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeTensor());
     jiba::rvec tensormeas(
         TensorCalculator->Calculate(GravityModel));
-    Rscript << " result<-gravtensorforward(XSizes,YSizes,ZSizes,Densities,XMeasPos,YMeasPos,ZMeasPos)\n";
+    Rscript << " result<-GravTensorForward(XSizes,YSizes,ZSizes,Densities,XMeasPos,YMeasPos,ZMeasPos)\n";
     Rscript << " sink(\"tensor_output\")\n";
     Rscript << " cat(result$GravAcceleration)\n";
     Rscript << " q()\n";

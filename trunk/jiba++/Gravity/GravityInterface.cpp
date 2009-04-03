@@ -6,7 +6,8 @@
 //============================================================================
 #include "GravityInterface.h"
 #include "ThreeDGravityModel.h"
-#include "../Gravity/MinMemGravityCalculator.h"
+#include "MinMemGravityCalculator.h"
+#include "FullSensitivityGravityCalculator.h"
 #include <algorithm>
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
@@ -21,14 +22,31 @@ typedef boost::function<jiba::ThreeDGravityModel::t3DModelDim & ()>
 
 void AllocateModel(const int *storescalar, const int *storetensor)
   {
-    bool wantscalar = (storescalar > 0);
-    bool wanttensor = (storetensor > 0);
+    bool cachescalar = (storescalar > 0);
+    bool cachetensor = (storetensor > 0);
     GravModel = boost::shared_ptr<jiba::ThreeDGravityModel>(
         new jiba::ThreeDGravityModel);
-    ScalarGravCalculator = jiba::CreateGravityCalculator<
-        jiba::MinMemGravityCalculator>::MakeScalar();
-    TensorGravCalculator = jiba::CreateGravityCalculator<
-        jiba::MinMemGravityCalculator>::MakeTensor();
+    if (cachescalar)
+      {
+        ScalarGravCalculator = jiba::CreateGravityCalculator<
+            jiba::FullSensitivityGravityCalculator>::MakeScalar();
+      }
+    else
+      {
+        ScalarGravCalculator = jiba::CreateGravityCalculator<
+            jiba::MinMemGravityCalculator>::MakeScalar();
+      }
+    if (cachetensor)
+      {
+        TensorGravCalculator = jiba::CreateGravityCalculator<
+            jiba::FullSensitivityGravityCalculator>::MakeTensor();
+      }
+    else
+      {
+        TensorGravCalculator = jiba::CreateGravityCalculator<
+            jiba::MinMemGravityCalculator>::MakeTensor();
+      }
+
   }
 
 //Check whether a mesh coordinate has changed and copy values if necessary
@@ -99,26 +117,43 @@ void SetupModel(const double *XSizes, const unsigned int *nx,
       }
   }
 
+//Another helper function to copy values for the background thicknesses and densities
+void SetupBackground(const double *Thicknesses, const double *Densities,
+    const unsigned int nlayers)
+  {
+    std::vector<double> Thick, Dens;
+    std::copy(Thicknesses, Thicknesses + nlayers, std::back_inserter(Thick));
+    std::copy(Densities, Densities + nlayers, std::back_inserter(Dens));
+    GravModel->SetBackgroundDensities(Dens);
+    GravModel->SetBackgroundThicknesses(Thick);
+  }
+
 void CalcScalarForward(const double *XSizes, const unsigned int *nx,
     const double *YSizes, const unsigned int *ny, const double *ZSizes,
-    const unsigned int *nz, const double *Densities, const double *XMeasPos,
+    const unsigned int *nz, const double *Densities,
+    const double *BG_Thicknesses, const double *BG_Densities,
+    const unsigned int *nbg_layers, const double *XMeasPos,
     const double *YMeasPos, const double *ZMeasPos, const unsigned int *nmeas,
     double *GravAcceleration)
   {
     SetupModel(XSizes, nx, YSizes, ny, ZSizes, nz, Densities, XMeasPos,
         YMeasPos, ZMeasPos, nmeas);
+    SetupBackground(BG_Thicknesses,BG_Densities,*nbg_layers);
     jiba::rvec scalarmeas(ScalarGravCalculator->Calculate(*GravModel.get()));
     std::copy(scalarmeas.begin(), scalarmeas.end(), GravAcceleration);
   }
 
 void CalcTensorForward(const double *XSizes, const unsigned int *nx,
     const double *YSizes, const unsigned int *ny, const double *ZSizes,
-    const unsigned int *nz, const double *Densities, const double *XMeasPos,
+    const unsigned int *nz, const double *Densities,
+    const double *BG_Thicknesses, const double *BG_Densities,
+    const unsigned int *nbg_layers, const double *XMeasPos,
     const double *YMeasPos, const double *ZMeasPos, const unsigned int *nmeas,
     double *GravTensor)
   {
     SetupModel(XSizes, nx, YSizes, ny, ZSizes, nz, Densities, XMeasPos,
         YMeasPos, ZMeasPos, nmeas);
+    SetupBackground(BG_Thicknesses,BG_Densities,*nbg_layers);
     jiba::rvec tensormeas(TensorGravCalculator->Calculate(*GravModel.get()));
 
     std::copy(tensormeas.begin(), tensormeas.end(), GravTensor);

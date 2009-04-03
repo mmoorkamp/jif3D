@@ -17,9 +17,7 @@
  * Also we us a static object internally to perform these calculations. This means that these functions are not
  * thread safe !.
  */
-#ifdef HAVER
-#include <R.h>
-#endif
+
 extern "C"
   {
 
@@ -52,6 +50,7 @@ extern "C"
     void CalcScalarForward(const double *XSizes, const unsigned int *nx,
         const double *YSizes, const unsigned int *ny, const double *ZSizes,
         const unsigned int *nz, const double *Densities,
+        const double *BG_Thicknesses, const double *BG_Densities, const unsigned int *nbg_layers,
         const double *XMeasPos, const double *YMeasPos, const double *ZMeasPos,
         const unsigned int *nmeas, double *GravAcceleration);
 
@@ -74,6 +73,7 @@ extern "C"
     void CalcTensorForward(const double *XSizes, const unsigned int *nx,
         const double *YSizes, const unsigned int *ny, const double *ZSizes,
         const unsigned int *nz, const double *Densities,
+        const double *BG_Thicknesses, const double *BG_Densities, const unsigned int *nbg_layers,
         const double *XMeasPos, const double *YMeasPos, const double *ZMeasPos,
         const unsigned int *nmeas, double *GravTensor);
 

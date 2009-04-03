@@ -32,14 +32,20 @@ BOOST_AUTO_TEST_CASE  (box_gravity_calc_test)
       BOOST_CHECK(fabs(jiba::CalcGravBoxTerm(0.0, 0.0, 0.0, -10.0, -10.0, -10.0,
                   20.0, 20.0, 20.0)) < std::numeric_limits<double>::epsilon());
       //compare with the reported value of li and chouteau within a precision of 0.1%
-      double topofcube = jiba::CalcGravBoxTerm(0.0, 0.0, 10.0, -10.0, -10.0,
+      double topofcube = jiba::CalcGravBoxTerm(0.0, 0.0, -10.0, -10.0, -10.0,
           -10.0, 20.0, 20.0, 20.0);
-      BOOST_CHECK_CLOSE(topofcube, -3.46426e-6, 0.1);
-      double bottomofcube = jiba::CalcGravBoxTerm(0.0, 0.0, -10.0, -10.0, -10.0,
+      BOOST_CHECK_CLOSE(topofcube, 3.46426e-6, 0.1);
+      double bottomofcube = jiba::CalcGravBoxTerm(0.0, 0.0, 10.0, -10.0, -10.0,
           -10.0, 20.0, 20.0, 20.0);
       //check symmetry of results
       BOOST_CHECK_CLOSE(topofcube, -bottomofcube,
-          std::numeric_limits<float>::epsilon());
+                std::numeric_limits<float>::epsilon());
+      //check translation invariance
+      double shifted = jiba::CalcGravBoxTerm(10.0, 10.0, 0.0, 0.0, 0.0,
+          0.0, 20.0, 20.0, 20.0);
+      BOOST_CHECK_CLOSE(topofcube, shifted,
+                      std::numeric_limits<float>::epsilon());
+
       double away1 = jiba::CalcGravBoxTerm(1e5, 10.0, 10.0, -10.0, -10.0, -10.0,
           20.0, 20.0, 20.0);
       BOOST_CHECK(away1 < std::numeric_limits<double>::epsilon());
