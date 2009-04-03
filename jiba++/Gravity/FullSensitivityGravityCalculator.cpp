@@ -7,13 +7,19 @@
 
 
 #include "FullSensitivityGravityCalculator.h"
+
+#ifdef HAVEATLAS
 #include <boost/numeric/bindings/atlas/cblas2.hpp>
 #include <boost/numeric/bindings/atlas/cblas3.hpp>
+#endif
 
 namespace jiba
   {
 
+#ifdef HAVEATLAS
     namespace atlas = boost::numeric::bindings::atlas;
+#endif
+
     FullSensitivityGravityCalculator::FullSensitivityGravityCalculator(
         boost::shared_ptr<ThreeDGravityImplementation> TheImp) :
       CachedGravityCalculator(TheImp)
@@ -65,7 +71,11 @@ namespace jiba
             + ngrid, DensVector.begin());
         std::copy(Model.GetBackgroundDensities().begin(),
             Model.GetBackgroundDensities().end(), DensVector.begin() + ngrid);
+#ifdef HAVEATLAS
         atlas::gemv(1.0, Sensitivities, DensVector, 0.0, result);
+#else
+        result = boost::numeric::ublas::prod(Sensitivities, DensVector);
+#endif
         return result;
       }
 
@@ -78,7 +88,11 @@ namespace jiba
         assert(Misfit.size() == Sensitivities.size1());
         assert(Sensitivities.size2() == nmod);
         rvec result(nmod);
+#ifdef HAVEATLAS
         atlas::gemv(CblasTrans, 1.0, Sensitivities, Misfit, 0.0, result);
+#else
+        result = boost::numeric::ublas::prod(trans(Sensitivities),Misfit);
+#endif
         return result;
       }
   }

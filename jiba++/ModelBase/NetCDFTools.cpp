@@ -195,11 +195,13 @@ namespace jiba
         //so we allocate a temporary buffer
         double *databuffer = new double[Data.num_elements()];
         //change the storage order
-        for (size_t i = 0; i < ZSizeDim->size(); ++i)
-          for (size_t j = 0; j < YSizeDim->size(); ++j)
-            for (size_t k = 0; k < XSizeDim->size(); ++k)
-              databuffer[k + j * XSizeDim->size() + i * (XSizeDim->size()
-                  * YSizeDim->size())] = Data[k][j][i];
+        const size_t xsize = XSizeDim->size();
+        const size_t ysize = YSizeDim->size();
+        const size_t zsize = ZSizeDim->size();
+        for (size_t i = 0; i < zsize; ++i)
+          for (size_t j = 0; j < ysize; ++j)
+            for (size_t k = 0; k < xsize; ++k)
+              databuffer[k + j * xsize + i * (xsize * ysize)] = Data[k][j][i];
         //write the buffer to the file
         DataVar->put(databuffer, ZSizeDim->size(), YSizeDim->size(),
             XSizeDim->size());
@@ -209,8 +211,7 @@ namespace jiba
       }
 
     void ReadMeasPosNetCDF(const std::string filename,
-        ThreeDModelBase::tMeasPosVec &PosX,
-        ThreeDModelBase::tMeasPosVec &PosY,
+        ThreeDModelBase::tMeasPosVec &PosX, ThreeDModelBase::tMeasPosVec &PosY,
         ThreeDModelBase::tMeasPosVec &PosZ)
       {
 

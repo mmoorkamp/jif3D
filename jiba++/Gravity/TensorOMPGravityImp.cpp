@@ -97,7 +97,7 @@ namespace jiba
         const double z_meas = Model.GetMeasPosZ()[measindex];
         const int nmod = xsize * ysize * zsize;
         const bool storesens = (Sensitivities.size1() >= ndatapermeas)
-            && (Sensitivities.size2() >= nmod);
+            && (Sensitivities.size2() >= size_t(nmod));
         GravimetryMatrix currvalue(3, 3);
 
         //we cannot add up a user defined quantity in parallel

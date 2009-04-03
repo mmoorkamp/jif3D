@@ -23,6 +23,18 @@
  *     not performed any detailed speed optimizations of the code. Also, if there is a choice between clarity and speed
  *     I usually opt for clarity. However, some basic profiling indicates that there are no major bottlenecks caused by this.
  *
+ * \section pflags Preprocessor flags
+ *
+ * There are a number of flags for the preprocessor that determine with which features the code will be compiled. The following table summarizes
+ * the flags and what happens if they are defined.
+ *
+ * <table>
+ * <tr> <td>TESTR </td> <td>Run the unit tests for the R interface. Some versions of the boost unit-test system have  problems with the system call necessary for this test, so it is optional. </td></tr>
+ * <tr> <td>HAVEUBCCODE </td> <td>Is the UBC gravity code present on the system. If defined we run a unit test that compares our results with that code.  </td></tr>
+ * <tr> <td>HAVEATLAS </td> <td>This flag only affects FullSensitivityGravityCalculator.h This is to avoid dependency on blas etc. for the gravity code and makes using it on other machines easier. </td></tr>
+ * </table>
+ *
+ *
  * \section History
  *
  * \version Jan 2008
