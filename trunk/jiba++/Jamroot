@@ -2,11 +2,15 @@ project
     : requirements <include>/usr/local/include <include>/usr/local/R-2.6.2/include 
         <include>/usr/local/cuda/include
         <threading>multi 
+        <define>BIND_FORTRAN_LOWERCASE_UNDERSCORE 
     	<variant>release:<define>NDEBUG  
     	<toolset>gcc:<cflags>" -ansi -fopenmp  "
     	<toolset>gcc:<linkflags>" -fopenmp  "
     	<toolset>intel:<cxxflags>" -openmp"
     	<toolset>intel:<linkflags>" -openmp"
+    	<toolset>sun:<define>BOOST_UBLAS_UNSUPPORTED_COMPILER=0
+    	<toolset>sun:<cflags>-library=stlport4 
+    	<toolset>sun:<linkflags>-library=stlport4 
     ;
     
 path-constant TOP : . ;
@@ -15,8 +19,8 @@ import cuda ;
 
 #using gcc :  :  : <variant>debug:<cflags>" -ansi " <variant>release:<cflags>"-fopenmp " <variant>release:<linkflags>"-fopenmp" ;
 #using intel-linux : 11.0 : icpc : <cxxflags>-mssse3 ; 
-#using sun :  : CC : <compileflags>-library=stlport4 <linkflags>-library=stlport4 
-#                   <define>BOOST_UBLAS_UNSUPPORTED_COMPILER=0 <define>BIND_FORTRAN_LOWERCASE_UNDERSCORE ;
+
+
 
 use-project /Global : Global ;
 use-project /Gravity : Gravity ;
