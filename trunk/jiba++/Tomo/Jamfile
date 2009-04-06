@@ -1,6 +1,6 @@
 import testing ; 
 
-lib tomo :  modeling_seismic.cpp : <include>. ;
+lib tomo :  modeling_seismic.cpp  : <include>. ;
 
 
-unit-test seismic_test : podvin-lecomte-3Da.c test_modeling_seismic.cpp : <include>. ;
+unit-test seismic_test :  test_modeling_seismic.cpp podvin-lecomte-3Da.c tomo : <include>. ;
