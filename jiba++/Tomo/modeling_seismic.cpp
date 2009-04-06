@@ -3,6 +3,31 @@
 #include <cmath>
 namespace jiba
   {
+
+    /*! Structure to organize the cell parameters during back tracing the rays*/
+    typedef struct _CELL_STRUCT_
+      {
+      int xno; /*!< position number in x-direction of the cell in the grid*/
+      int yno; /*!< position number in y-direction of the cell in the grid*/
+      int zno; /*!< position number in z-direction of the cell in the grid*/
+      int dirx_i; /*!< The ray runs in negative x-direction into the cell = 1; the ray runs in positive x-direction into the cell = 1; else=0 */
+      int diry_i; /*!< The ray runs in negative y-direction into the cell = 1; the ray runs in positive y-direction into the cell = 1; else=0 */
+      int dirz_i; /*!< The ray runs in negative z-direction into the cell = 1; the ray runs in positive z-direction into the cell = 1; else=0 */
+      double xpos; /*!< The position of the starting point of the ray in x-direction (normalized by the position in the grid)*/
+      double ypos; /*!< The position of the starting point of the ray in y-direction (normalized by the position in the grid)*/
+      double zpos; /*!< The position of the starting point of the ray in z-direction (normalized by the position in the grid)*/
+
+      } CELL_STRUCT;
+
+    float
+        interpolate(float x, float y, float z, GRID_STRUCT *grid, float *data);
+    int RayCalc(float *tt, int nx, int ny, int nz, float Xs, float Ys,
+        float Zs, float *Xr, float *Yr, float *Zr, int nrec, RP_STRUCT *rp);
+    double *TimeGrad(int x, int y, int z, float *tt, int ny, int nz);
+    CELL_STRUCT RayBackTrace(double gradx, double grady, double gradz,
+        CELL_STRUCT cell, float *tt, int ny, int nz);
+    int ResortRays(RP_STRUCT *raypath, DATA_STRUCT data, GRID_STRUCT grid);
+
     /*-------------------------------------------------------------*/
     /*Performing the forward modeling(using the Podvin&Lecomte eikonal solver) and calculating conventional rays */
     /*Parameter:	 geo  := Geometry structure  */
@@ -25,7 +50,7 @@ namespace jiba
         int *nact_rec; /*active receiver-numbers for the used shot*/
         long *nact_datapos; /*Position of the active receivers in the data structure*/
         long j;
-        long  nx3, ny3, nz3, nyz3;
+        long nx3, ny3, nz3, nyz3;
         float *tt, *tmp_slow;
         float Xs, Ys, Zs, *Xr, *Yr, *Zr; /*Normalized positions of the shots and receivers (referring to the grid cell nodes and NOT of the grid cell centers)*/
         float org[3];
@@ -36,7 +61,6 @@ namespace jiba
         FILE *out;
 
         RP_STRUCT *raypath_tmp;
-
 
         org[0] = (float) (grid.org[0] - grid.h * 0.5);
         org[1] = (float) (grid.org[1] - grid.h * 0.5);
@@ -317,8 +341,7 @@ namespace jiba
           }
 
         printf("Seismic forward modeling is finished:\n");
-        printf(
-            "%d of %d shot-receiver combinations are active\n",
+        printf("%d of %d shot-receiver combinations are active\n",
             data->ndata_seis_act, data->ndata_seis);
         printf("----------------\n\n\n\n\n");
 
@@ -344,9 +367,9 @@ namespace jiba
         int ok, nx2, ny2, nz2, nyz2;
         float ival;
 
-        nx2 = grid->nx + 1 ;
-        ny2 = grid->ny + 1 ;
-        nz2 = grid->nz + 1 ;
+        nx2 = grid->nx + 1;
+        ny2 = grid->ny + 1;
+        nz2 = grid->nz + 1;
         nyz2 = ny2 * nz2;
 
         /* Check, if point is in grid */
@@ -1377,9 +1400,9 @@ namespace jiba
 
         double eps = 0.01;
 
-        nx = grid.nx ;
-        ny = grid.ny ;
-        nz = grid.nz ;
+        nx = grid.nx;
+        ny = grid.ny;
+        nz = grid.nz;
         nyz = ny * nz;
 
         ny1 = ny + 1;
