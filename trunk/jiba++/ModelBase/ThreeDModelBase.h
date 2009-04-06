@@ -12,7 +12,6 @@
 #include <netcdfcpp.h>
 #include <string>
 #include <functional>
-#include <boost/bind.hpp>
 #include <boost/multi_array.hpp>
 
 /*! \file ThreeDModelBase.h
@@ -129,6 +128,27 @@ namespace jiba
         {
           return Data;
         }
+      //! read-write access to the cell size in x-direction in m
+      t3DModelDim &SetXCellSizes()
+        {
+          SetCellSizesAction(XCellSizes);
+          XCellSizesChanged = true;
+          return XCellSizes;
+        }
+      //! read-write access to the cell size in y-direction in m
+      t3DModelDim &SetYCellSizes()
+        {
+          SetCellSizesAction(YCellSizes);
+          YCellSizesChanged = true;
+          return YCellSizes;
+        }
+      //! read-write access to the cell size in z-direction in m
+      t3DModelDim &SetZCellSizes()
+        {
+          SetCellSizesAction(ZCellSizes);
+          ZCellSizesChanged = true;
+          return ZCellSizes;
+        }
       //! Read data and associated cell sizes from a netcdf file
       void ReadDataFromNetCDF(const NcFile &NetCDFFile,
           const std::string &DataName, const std::string &UnitsName);
@@ -142,9 +162,9 @@ namespace jiba
       void AddMeasurementPoint(const double xcoord, const double ycoord,
           const double zcoord)
         {
-          MeasPosX.push_back(xcoord+XOrigin);
-          MeasPosY.push_back(ycoord+YOrigin);
-          MeasPosZ.push_back(zcoord+ZOrigin);
+          MeasPosX.push_back(xcoord + XOrigin);
+          MeasPosY.push_back(ycoord + YOrigin);
+          MeasPosZ.push_back(zcoord + ZOrigin);
         }
       //! remove all information about measurement points
       void ClearMeasurementPoints()
@@ -195,37 +215,19 @@ namespace jiba
         {
           return XCellSizes;
         }
-      //! read-write access to the cell size in x-direction in m
-      t3DModelDim &SetXCellSizes()
-        {
-          SetCellSizesAction(XCellSizes);
-          XCellSizesChanged = true;
-          return XCellSizes;
-        }
+
       //! read-only access to the cell size in y-direction in m
       const t3DModelDim &GetYCellSizes() const
         {
           return YCellSizes;
         }
-      //! read-write access to the cell size in y-direction in m
-      t3DModelDim &SetYCellSizes()
-        {
-          SetCellSizesAction(YCellSizes);
-          YCellSizesChanged = true;
-          return YCellSizes;
-        }
+
       //! read-only access to the cell size in z-direction in m
       const t3DModelDim &GetZCellSizes() const
         {
           return ZCellSizes;
         }
-      //! read-write access to the cell size in z-direction in m
-      t3DModelDim &SetZCellSizes()
-        {
-          SetCellSizesAction(ZCellSizes);
-          ZCellSizesChanged = true;
-          return ZCellSizes;
-        }
+
       //!Get the x (north) coordinates of the cells, might perform calculations and write operation so it is not thread-safe
       const t3DModelDim &GetXCoordinates() const
         {

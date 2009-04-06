@@ -7,6 +7,8 @@
 
 #include <fstream>
 #include <iostream>
+#include <boost/bind.hpp>
+
 #include "DepthWeighting.h"
 #include "../Inversion/LinearInversion.h"
 
