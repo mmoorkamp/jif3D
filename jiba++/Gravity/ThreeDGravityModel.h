@@ -50,7 +50,6 @@ namespace jiba
      */
     /* @{ */
 
-
     //! We store the 3x3 matrix for gravimetric measurements in a ublas matrix with real entries
     typedef rmat GravimetryMatrix;
 
@@ -72,9 +71,20 @@ namespace jiba
       //! The thicknesses of the background layers
       tBackgroundVec bg_thicknesses;
       //! Write out the values for a the measurement to an ascii file
-      void
-          PlotMeasAscii(const std::string &filename, rvec &Data) const;
+      void PlotMeasAscii(const std::string &filename, rvec &Data) const;
     public:
+      t3DModelDim &SetXCellSizes()
+        {
+          return ThreeDModelBase::SetXCellSizes();
+        }
+      t3DModelDim &SetYCellSizes()
+        {
+          return ThreeDModelBase::SetYCellSizes();
+        }
+      t3DModelDim &SetZCellSizes()
+        {
+          return ThreeDModelBase::SetZCellSizes();
+        }
       //! return read only access to the stored density values
       const t3DModelData &GetDensities() const
         {

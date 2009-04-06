@@ -8,6 +8,7 @@
 #include "ThreeDModelBase.h"
 #include <cassert>
 #include <fstream>
+#include <boost/bind.hpp>
 #include "NetCDFTools.h"
 #include "VTKTools.h"
 namespace jiba
