@@ -56,7 +56,7 @@ char *memory (char *prev_addr, size_t n, size_t size, std::string progname)
 /* @{ */
 int ForwardModRay(GEOMETRY geo,GRID_STRUCT grid,DATA_STRUCT *data, RP_STRUCT *raypath, time_t time_start);
 /*in podvin-lecomte-3D.c*/
-
+float interpolate(float x, float y, float z, GRID_STRUCT *grid, float *data);
 /* @} */
   }
 #endif

@@ -20,8 +20,6 @@ namespace jiba
 
       float org[3]; /*!< Components of the origin (center of the first cell in the upper left corner) of the grid in m*/
 
-      int *border_index; /*!< grid cell belongs to the border or to the "air"(yes=0,no=1)*/
-
       /*!< Seismic Velocity parameters*/
       int nborder; /*!< Number of grid cells for the boundary*/
 
@@ -49,13 +47,6 @@ namespace jiba
       int *rno; /*!< List of the receiver position numbers of the traces for which the first breaks were picked*/
 
       double *tcalc; /*!< Calculated travel times for the different shot-receiver combinations in ms*/
-      /*!< REMARK: sno, rno, tobs and tcalc have the same number of elements (ndata_seis) and are linked to each other*/
-      float *xdist; /*!< Distance (in x-direction) between the shots and receivers locations for all shot-receiver combinations in m*/
-      float *ydist; /*!< Distance (in y-direction) between the shots and receivers locations for all shot-receiver combinations in m*/
-      float *zdist; /*!< Distance (in z-direction) between the shots and receivers locations for all shot-receiver combinations in m*/
-
-      int *shots; /*!< List of all shot positions used (number of elements: nshot)*/
-      int *recs; /*!< List of all receiver positions used (number of elements: nrec)*/
 
       int *lshots; /*!< Number of active receivers for the corresponding shot position number (related to shots)*/
       int *lrecs; /*!< Number of used shots for the corresponding receicer position number (related to recs)*/
@@ -77,17 +68,6 @@ namespace jiba
 
       } RP_STRUCT;
 
-    /*! Structure for the fat-rays*/
-    typedef struct _F_RP_STRUCT_
-      {
-      long n; /*!< Number specifying the row in the matrix for the shot-receiver combination*/
-      long ncell; /*!< Number of cells which contribute to the fat ray*/
-      float fatthres; /*!< Threshold for the fat-ray in ms*/
-      float fatb; /*!< Exponent governing the decrease of the weight with increasing "difference"-time in 1/ms*/
-      double *weight; /*!< Normalized contribution of the cell to the fat-ray*/
-      long *ele; /*!< Grid cell position in the grid*/
-
-      } F_RP_STRUCT;
 
   }
 
