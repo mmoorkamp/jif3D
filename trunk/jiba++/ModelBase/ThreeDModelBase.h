@@ -45,12 +45,6 @@ namespace jiba
       //! The type of the measurement position vector, this is a std::vector because we want to easily append elements
       typedef std::vector<double> tMeasPosVec;
     private:
-      //! The origin of the coordinate system in x-direction in m
-      double XOrigin;
-      //! The rigin of the coordinate system in y-direction in m
-      double YOrigin;
-      //! The origin of the coordinate system in z-direction in m
-      double ZOrigin;
       //! the x-coordinates of the measurement points
       tMeasPosVec MeasPosX;
       //! the y-coordinates of the measurement points
@@ -115,6 +109,12 @@ namespace jiba
             }
         }
     protected:
+      //! The origin of the coordinate system in x-direction in m
+      double XOrigin;
+      //! The rigin of the coordinate system in y-direction in m
+      double YOrigin;
+      //! The origin of the coordinate system in z-direction in m
+      double ZOrigin;
       //The access to the data is protected, this requires the derived class
       // to provide an access function and allows to add initial checks and
       // meaningful names
@@ -156,7 +156,7 @@ namespace jiba
       void WriteDataToNetCDF(NcFile &NetCDFFile, const std::string &DataName,
           const std::string &UnitsName) const;
       //! Write the data and cell sizes to a VTK file for plotting in Paraview or Visit etc.
-      void WriteVTK(std::string filename, const std::string &DataName);
+      void WriteVTK(std::string filename, const std::string &DataName) const;
     public:
       //! Add a measurement point to the model
       void AddMeasurementPoint(const double xcoord, const double ycoord,
@@ -196,7 +196,7 @@ namespace jiba
           return MeasPosZ;
         }
       //! Set the origin of the coordinate system
-      void SetOrigin(const double x, const double y, const double z);
+      virtual void SetOrigin(const double x, const double y, const double z);
       //! From the three spatial indices, calculate the offset in memory
       int IndexToOffset(int xi, int yi, int zi) const
         {
