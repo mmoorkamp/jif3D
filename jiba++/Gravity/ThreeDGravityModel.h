@@ -70,8 +70,6 @@ namespace jiba
       tBackgroundVec bg_densities;
       //! The thicknesses of the background layers
       tBackgroundVec bg_thicknesses;
-      //! Write out the values for a the measurement to an ascii file
-      void PlotMeasAscii(const std::string &filename, rvec &Data) const;
     public:
       t3DModelDim &SetXCellSizes()
         {
@@ -120,7 +118,7 @@ namespace jiba
       //! Write the density model and all associated information in a netcdf file
       void WriteNetCDF(const std::string filename) const;
       //! Write the density model in VTK format, at the moment the best format for plotting
-      void WriteVTK(const std::string filename)
+      void WriteVTK(const std::string filename) const
         {
           ThreeDModelBase::WriteVTK(filename, "Density");
         }

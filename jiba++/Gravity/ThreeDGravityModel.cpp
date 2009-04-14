@@ -19,7 +19,7 @@
 
 namespace jiba
   {
-    static const std::string DensityName = "density";
+    static const std::string DensityName = "Density";
     static const std::string DensityUnit = "g/cm3";
 
 
@@ -161,29 +161,6 @@ namespace jiba
           {
             SetDensities()[i % nx][(i / nx) % ny][nz - 1 - ((i / (nx * ny))
                 % nz)] = density.at(i);
-          }
-      }
-
-
-    void ThreeDGravityModel::PlotMeasAscii(const std::string &filename,
-        rvec &Data) const
-      {
-        std::ofstream outfile(filename.c_str());
-
-        const size_t nmeas = Data.size();
-        assert(nmeas == GetMeasPosX().size());
-        assert(nmeas == GetMeasPosY().size());
-        assert(nmeas == GetMeasPosZ().size());
-        for (size_t i = 0; i < nmeas; ++i)
-          {
-            outfile << std::setw(15) << std::setprecision(5) << GetMeasPosX().at(i)
-                << " ";
-            outfile << std::setw(15) << std::setprecision(5) << GetMeasPosY().at(i)
-                << " ";
-            outfile << std::setw(15) << std::setprecision(5) << GetMeasPosZ().at(i)
-                << " ";
-            outfile << std::setw(15) << std::setprecision(5) << Data(i);
-            outfile << std::endl;
           }
       }
 

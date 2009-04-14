@@ -15,8 +15,8 @@ namespace jiba
   {
 
     ThreeDModelBase::ThreeDModelBase() :
-      XOrigin(0.0), YOrigin(0.0), ZOrigin(0.0), XCellSizesChanged(true),
-          YCellSizesChanged(true), ZCellSizesChanged(true)
+      XCellSizesChanged(true),YCellSizesChanged(true), ZCellSizesChanged(true),
+      XOrigin(0.0), YOrigin(0.0), ZOrigin(0.0)
       {
       }
 
@@ -46,20 +46,14 @@ namespace jiba
     void ThreeDModelBase::SetOrigin(const double x, const double y,
         const double z)
       {
-        //transform the measurement coordinates from old model to real coordinates
+        //transform the measurement coordinates from old model to new coordinates
         std::transform(MeasPosX.begin(), MeasPosX.end(), MeasPosX.begin(),
-            boost::bind(std::plus<double>(), _1, XOrigin));
+            boost::bind(std::plus<double>(), _1, XOrigin - x));
         std::transform(MeasPosY.begin(), MeasPosY.end(), MeasPosY.begin(),
-            boost::bind(std::plus<double>(), _1, YOrigin));
+            boost::bind(std::plus<double>(), _1, YOrigin - y));
         std::transform(MeasPosZ.begin(), MeasPosZ.end(), MeasPosZ.begin(),
-            boost::bind(std::plus<double>(), _1, ZOrigin));
-        //now transform from real to new model coordinates
-        std::transform(MeasPosX.begin(), MeasPosX.end(), MeasPosX.begin(),
-            boost::bind(std::minus<double>(), _1, x));
-        std::transform(MeasPosY.begin(), MeasPosY.end(), MeasPosY.begin(),
-            boost::bind(std::minus<double>(), _1, y));
-        std::transform(MeasPosZ.begin(), MeasPosZ.end(), MeasPosZ.begin(),
-            boost::bind(std::minus<double>(), _1, z));
+            boost::bind(std::plus<double>(), _1, ZOrigin - z));
+
         XOrigin = x;
         YOrigin = y;
         ZOrigin = z;
@@ -81,7 +75,7 @@ namespace jiba
       }
 
     void ThreeDModelBase::WriteVTK(std::string filename,
-        const std::string &DataName)
+        const std::string &DataName) const
       {
         Write3DModelToVTK(filename, DataName, GetXCellSizes(), GetYCellSizes(),
             GetZCellSizes(), GetData());
