@@ -85,8 +85,8 @@ int main(int ac, char* av[])
         filename = "cpu_";
         if (vm.count("threads"))
           {
-            omp_set_num_threads(vm["threads"].as<int> ());
-            filename += vm["threads"].as<std::string>();
+            omp_set_num_threads(vm["threads"].as<int>());
+            filename += jiba::stringify(vm["threads"].as<int>());
           }
         else
           {

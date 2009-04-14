@@ -7,6 +7,9 @@
 #include "Podvin.h"
 #include "modeling_seismic.h"
 #include <boost/test/floating_point_comparison.hpp>
+#include <boost/random/linear_congruential.hpp>
+#include <boost/random/uniform_real.hpp>
+#include <boost/random/variate_generator.hpp>
 
 BOOST_AUTO_TEST_SUITE( Seismic_Test_Suite )
 
@@ -30,6 +33,48 @@ BOOST_AUTO_TEST_CASE (memory_test)
       size_t failsize = dummy.max_size() * 2; // this should be enough to fail
       BOOST_CHECK_THROW(jiba::memory(NULL,failsize,1,"throw"),std::runtime_error);
       BOOST_CHECK_THROW(jiba::memory(mem_test,failsize,1,"throw"),std::runtime_error);
+    }
+
+  BOOST_AUTO_TEST_CASE(interpolate_test)
+    {
+
+      const size_t ncells = 5;
+      const size_t npos = 10;
+      boost::minstd_rand generator(42u);
+      boost::uniform_real<> uni_dist(0, ncells);
+      boost::variate_generator<boost::minstd_rand&, boost::uniform_real<> >
+          Pos(generator, uni_dist);
+
+      jiba::GRID_STRUCT grid;
+      grid.nx = ncells;
+      grid.ny = ncells;
+      grid.nz = ncells;
+      grid.h = 5;
+      grid.nborder = 0;
+      const size_t ngrid = pow(ncells + 1, 3);
+      std::fill_n(grid.org, 3, grid.h / 2.0);
+      grid.slow = new double[ngrid];
+      std::fill_n(grid.slow, ngrid, 1.0 * grid.h);
+      float *data = new float[ngrid];
+      float xcomp = Pos();
+      float ycomp = Pos();
+      float zcomp = Pos();
+      for (size_t i = 0; i < ncells + 1; ++i)
+        for (size_t j = 0; j < ncells + 1; ++j)
+          for (size_t k = 0; k < ncells + 1; ++k)
+            {
+              data[i * (ncells + 1) * (ncells + 1) + j * (ncells + 1) + k]
+                  = xcomp * i + ycomp * j + zcomp * k;
+            }
+      for (size_t i = 0; i < npos; ++i)
+        {
+          float xpos = Pos();
+          float ypos = Pos();
+          float zpos = Pos();
+          float inter = jiba::interpolate(xpos, ypos, zpos, &grid, data);
+          float exact = xcomp * xpos + ycomp * ypos + zcomp * zpos;
+          BOOST_CHECK_CLOSE(inter,exact,0.001);
+        }
     }
 
   BOOST_AUTO_TEST_CASE(podvin3d_test)
@@ -59,40 +104,28 @@ BOOST_AUTO_TEST_CASE (memory_test)
       jiba::GEOMETRY geo;
       jiba::GRID_STRUCT grid;
       jiba::DATA_STRUCT data;
-      jiba::RP_STRUCT raypath;
+      jiba::RP_STRUCT *raypath;
 
-      const size_t ncells = 3;
+      const size_t ncells = 5;
       grid.nx = ncells;
       grid.ny = ncells;
       grid.nz = ncells;
-      grid.h = 70;
+      grid.h = 35;
       grid.nborder = 0;
-      const size_t ngrid = pow(ncells, 3);
-      std::fill_n(grid.org, 3, 0.0);
+      const size_t ngrid = pow(ncells + 1, 3);
+      std::fill_n(grid.org, 3, grid.h / 2.0);
       grid.slow = new double[ngrid];
-      std::fill_n(grid.slow, ngrid, 1.0);
-      grid.border_index = new int[ngrid];
-      std::fill_n(grid.border_index, ngrid, 0);
+      std::fill_n(grid.slow, ngrid, 1.0 * grid.h);
 
       data.ndata_seis = 1;
       data.ndata_seis_act = 1;
       data.sno = new int[1];
       data.rno = new int[1];
-      data.sno[0] = 0;
-      data.rno[0] = 1;
-      data.xdist = new float[1];
-      data.ydist = new float[1];
-      data.zdist = new float[1];
-      data.xdist[0] = 50;
-      data.ydist[0] = 50;
-      data.zdist[0] = 50;
-      data.shots = new int[1];
-      data.recs = new int[1];
+      data.sno[0] = 1;
+      data.rno[0] = 2;
       data.lshots = new int[1];
       data.lrecs = new int[1];
 
-      data.shots[0] = 0;
-      data.recs[0] = 1;
       data.lshots[0] = 1;
       data.lrecs[0] = 1;
       data.tcalc = new double[1];
@@ -102,15 +135,30 @@ BOOST_AUTO_TEST_CASE (memory_test)
       geo.x = new float[geo.nrec + geo.nshot];
       geo.y = new float[geo.nrec + geo.nshot];
       geo.z = new float[geo.nrec + geo.nshot];
-      geo.x[0] = 10.0;
-      geo.y[0] = 10.0;
-      geo.z[0] = 0.0;
-      geo.x[1] = 60.0;
-      geo.y[1] = 60.0;
-      geo.z[1] = 50.0;
-      double dist = sqrt(pow(geo.x[0] - geo.x[1],2) + pow(geo.y[0] - geo.y[1],2) + pow(geo.z[0] - geo.z[1],2));
-      ForwardModRay(geo, grid, &data, &raypath, 0);
-      std::cout << data.tcalc[0] << " " << dist << std::endl;
-      double dummy = 0.0;
+      geo.x[0] = 75.0;
+      geo.y[0] = 100.0;
+      geo.z[0] = 100.0;
+      geo.x[1] = 157.0;
+      geo.y[1] = 157.0;
+      geo.z[1] = 157.0;
+      double dist = sqrt(pow(geo.x[0] - geo.x[1], 2) + pow(geo.y[0] - geo.y[1],
+          2) + pow(geo.z[0] - geo.z[1], 2));
+
+      raypath = new jiba::RP_STRUCT[1];
+
+      ForwardModRay(geo, grid, &data, raypath, 0);
+      std::cout << "Time: " << data.tcalc[0] / 1000.0 << " Dist: " << dist
+          << " Rel. Error: " << (data.tcalc[0] / 1000.0 - dist) / dist
+          << std::endl;
+      double totallength = 0.0;
+      for (size_t i = 0; i < raypath[0].nray; ++i)
+        {
+          std::cout << "Ray x: " << raypath[0].x[i] << " Ray y: "
+              << raypath[0].y[i] << " Ray z: " << raypath[0].z[i];
+          std::cout << " Length: " << raypath[0].len[i] << " Position: "
+              << raypath[0].ele[i] << std::endl;
+          totallength += raypath[0].len[i];
+        }
+      std::cout << "Total length: " << totallength << " Raypath time: " << totallength * grid.h << std::endl;
     }
 BOOST_AUTO_TEST_SUITE_END()
