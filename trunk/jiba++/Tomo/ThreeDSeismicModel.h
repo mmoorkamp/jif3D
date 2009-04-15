@@ -16,6 +16,8 @@ namespace jiba
 
     class ThreeDSeismicModel: public jiba::ThreeDModelBase
       {
+    public:
+      typedef std::vector<size_t> tIndexVec;
     private:
       //The x-position of the sources
       ThreeDModelBase::tMeasPosVec SourcePosX;
@@ -25,9 +27,9 @@ namespace jiba
       ThreeDModelBase::tMeasPosVec SourcePosZ;
       //Each source can can correspond to a number of measurements with different receivers
       //here we record for each datum the index of the source position in the above arrays
-      std::vector<size_t> SourceIndices;
+      tIndexVec SourceIndices;
       //and similarly for the receivers in the MeasPos* arrays
-      std::vector<size_t> ReceiverIndices;
+      tIndexVec ReceiverIndices;
     public:
       //! The seismic model has the same cell size for all cells in all directions so we just have one function to set it
       /*! This function sets both the size of all cells as well as the number of cells in x,y and z-direction
@@ -45,6 +47,7 @@ namespace jiba
           std::fill_n(ThreeDModelBase::SetYCellSizes().begin(), ny, Size);
           ThreeDModelBase::SetZCellSizes().resize(boost::extents[nz]);
           std::fill_n(ThreeDModelBase::SetZCellSizes().begin(), nz, Size);
+          ThreeDModelBase::SetData().resize(boost::extents[nx][ny][nz]);
         }
       //! return read only access to the stored slowness values
       const t3DModelData &GetSlownesses() const
@@ -63,6 +66,31 @@ namespace jiba
           SourcePosX.push_back(xcoord + XOrigin);
           SourcePosY.push_back(ycoord + YOrigin);
           SourcePosZ.push_back(zcoord + ZOrigin);
+        }
+      const ThreeDModelBase::tMeasPosVec &GetSourcePosX() const
+        {
+          return SourcePosX;
+        }
+      const ThreeDModelBase::tMeasPosVec &GetSourcePosY() const
+        {
+          return SourcePosY;
+        }
+      const ThreeDModelBase::tMeasPosVec &GetSourcePosZ() const
+        {
+          return SourcePosZ;
+        }
+      const tIndexVec &GetSourceIndices() const
+        {
+          return SourceIndices;
+        }
+      const tIndexVec &GetReceiverIndices() const
+        {
+          return ReceiverIndices;
+        }
+      void AddMeasurementConfiguration(const size_t SourceIndex, const size_t ReceiverIndex)
+        {
+          SourceIndices.push_back(SourceIndex);
+          ReceiverIndices.push_back(ReceiverIndex);
         }
       //! Set the origin of the coordinate system, this is a reimplementation from the base class to also change the source positions
       virtual void SetOrigin(const double x, const double y, const double z);
