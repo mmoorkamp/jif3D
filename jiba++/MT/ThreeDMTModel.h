@@ -16,6 +16,9 @@ namespace jiba
 
     class ThreeDMTModel: public jiba::ThreeDModelBase
       {
+      private:
+        void WriteProjectFile();
+        std::vector<double> Frequencies;
     public:
       //! The MT model has the same cell size for all cells in the two horizontal directions so we just have one function to set it
       /*! This function sets both the size of all cells as well as the number of cells in the horizontal (x and y) directions

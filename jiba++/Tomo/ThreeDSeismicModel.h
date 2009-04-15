@@ -89,6 +89,8 @@ namespace jiba
         }
       void AddMeasurementConfiguration(const size_t SourceIndex, const size_t ReceiverIndex)
         {
+          assert(SourceIndex < SourcePosX.size());
+          assert(ReceiverIndex < GetMeasPosX().size());
           SourceIndices.push_back(SourceIndex);
           ReceiverIndices.push_back(ReceiverIndex);
         }

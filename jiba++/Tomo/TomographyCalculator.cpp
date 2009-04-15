@@ -115,8 +115,21 @@ namespace jiba
         return result;
       }
 
-    rvec LQDerivative(const ThreeDSeismicModel &Model, const rvec &Misfit)
+    rvec TomographyCalculator::LQDerivative(const ThreeDSeismicModel &Model,
+        const rvec &Misfit)
       {
-
-      }
-  }
+        const size_t nmod = Model.GetSlownesses().num_elements();
+        const size_t ndata = Misfit.size();
+        assert(ndata == data.ndata_seis);
+        jiba::rvec DerivMod(nmod);
+        for (size_t i = 0; i < ndata; ++i)
+          {
+            const size_t nray = raypath[i].nray;
+            for (size_t j = 0; j < nray; ++j)
+              {
+                DerivMod(raypath[i].ele[j]) = raypath[i].len[j] * Misfit(i);
+            }
+        }
+        return DerivMod;
+    }
+}

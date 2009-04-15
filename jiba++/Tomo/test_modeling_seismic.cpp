@@ -164,7 +164,9 @@ BOOST_AUTO_TEST_CASE (memory_test)
       Model.AddSource(75.0,100.0,100.0);
       std::fill_n(Model.SetSlownesses().origin(),pow(ncells,3),1.0);
       Model.AddMeasurementConfiguration(0,0);
+      Model.AddMeasurementConfiguration(0,0);
       jiba::rvec time(Calculator.Calculate(Model));
       std::cout << "Bjoern: " << data.tcalc[0] << " C++: " << time(0) << std::endl;
+      std::cout << "Bjoern: " << data.tcalc[0] << " C++: " << time(1) << std::endl;
     }
 BOOST_AUTO_TEST_SUITE_END()
