@@ -5,4 +5,5 @@ lib inversion : MatrixTools.cpp  LinearInversion.cpp
                  : <include>boost : : <include>. ;
 
 unit-test inversion_test : test_inversion.cpp inversion ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran  : : <include>. ;
+unit-test transform_test : test_transform.cpp   : : <include>. ;
 
