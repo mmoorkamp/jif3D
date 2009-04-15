@@ -19,13 +19,13 @@ namespace jiba
 
       } CELL_STRUCT;
 
-
     int RayCalc(float *tt, int nx, int ny, int nz, float Xs, float Ys,
         float Zs, float *Xr, float *Yr, float *Zr, int nrec, RP_STRUCT *rp);
     double *TimeGrad(int x, int y, int z, float *tt, int ny, int nz);
     CELL_STRUCT RayBackTrace(double gradx, double grady, double gradz,
         CELL_STRUCT cell, float *tt, int ny, int nz);
-    int ResortRays(RP_STRUCT *raypath,const DATA_STRUCT &data,const GRID_STRUCT &grid);
+    int ResortRays(RP_STRUCT *raypath, const DATA_STRUCT &data,
+        const GRID_STRUCT &grid);
 
     /*-------------------------------------------------------------*/
     /*Performing the forward modeling(using the Podvin&Lecomte eikonal solver) and calculating conventional rays */
@@ -41,10 +41,10 @@ namespace jiba
 
 #define travel_t(x,y,z) tt[nyz3*(x) + nz3*(y) + (z)]
 
-    int ForwardModRay(const GEOMETRY &geo,const GRID_STRUCT &grid, DATA_STRUCT *data,
-        RP_STRUCT *raypath, time_t time_start)
+    int ForwardModRay(const GEOMETRY &geo, const GRID_STRUCT &grid,
+        DATA_STRUCT *data, RP_STRUCT *raypath, time_t time_start)
       {
-        int a,b,c,count; /*Number of active receivers for a shot*/
+        int a, b, c, count; /*Number of active receivers for a shot*/
         int i, k;
         int *nact_rec; /*active receiver-numbers for the used shot*/
         long *nact_datapos; /*Position of the active receivers in the data structure*/
@@ -107,182 +107,178 @@ namespace jiba
                     + j * nz3 + k];
               }
 
-        data->lshots = (int *) memory(NULL, geo.nshot, sizeof(int), "ForwardModRay");
+        data->lshots = (int *) memory(NULL, geo.nshot, sizeof(int),
+            "ForwardModRay");
         /*Start the loop over all shots*/
         for (i = 0; i < geo.nshot; i++)
           {
-                for (j = 0; j < nx3 * ny3 * nz3; j++)
-                  tt[j] = 0.0;
+            for (j = 0; j < nx3 * ny3 * nz3; j++)
+              tt[j] = 0.0;
 
-                Xs = ((geo.x[(data->sno[i]) - 1] - org[0]) / grid.h); /*normalized x-coordinate of the shot locations according to grid cell nodes*/
-                Ys = ((geo.y[(data->sno[i]) - 1] - org[1]) / grid.h); /*normalized y-coordinate of the shot locations according to grid cell nodes*/
-                Zs = ((geo.z[(data->sno[i]) - 1] - org[2]) / grid.h); /*normalized z-coordinate of the shot locations according to grid cell nodes*/
+            Xs = ((geo.x[(data->sno[i]) - 1] - org[0]) / grid.h); /*normalized x-coordinate of the shot locations according to grid cell nodes*/
+            Ys = ((geo.y[(data->sno[i]) - 1] - org[1]) / grid.h); /*normalized y-coordinate of the shot locations according to grid cell nodes*/
+            Zs = ((geo.z[(data->sno[i]) - 1] - org[2]) / grid.h); /*normalized z-coordinate of the shot locations according to grid cell nodes*/
 
-                /***************************************************************************************/
-                /*Podvin&Lecomte forward algorithm*/
-                /*tt is the calculated traveltime for each grid cell node*/
-                time_3d(tmp_slow, tt, nx3, ny3, nz3, Xs, Ys, Zs, delta_num, 0);
-                /***************************************************************************************/
+            /***************************************************************************************/
+            /*Podvin&Lecomte forward algorithm*/
+            /*tt is the calculated traveltime for each grid cell node*/
+            time_3d(tmp_slow, tt, nx3, ny3, nz3, Xs, Ys, Zs, delta_num, 0);
+            /***************************************************************************************/
 
-                /*Determine the receivers that are activate for the corresponding shot:*/
-                count = 0;
-                nact_rec
-                    = (int *) memory(NULL, 1, sizeof(int), "ForwardModRay");
-                nact_datapos = (long *) memory(NULL, 1, sizeof(long),
+            /*Determine the receivers that are activate for the corresponding shot:*/
+            count = 0;
+            nact_rec = (int *) memory(NULL, 1, sizeof(int), "ForwardModRay");
+            nact_datapos = (long *) memory(NULL, 1, sizeof(long),
+                "ForwardModRay");
+            Xr = (float *) memory(NULL, 1, sizeof(float), "ForwardModRay");
+            Yr = (float *) memory(NULL, 1, sizeof(float), "ForwardModRay");
+            Zr = (float *) memory(NULL, 1, sizeof(float), "ForwardModRay");
+
+            for (j = 0; j < data->ndata_seis; j++)
+              {
+
+                nact_rec = (int *) memory((char *) nact_rec, count + 1,
+                    sizeof(int), "ForwardModRay");
+                nact_datapos = (long *) memory((char *) nact_datapos,
+                    count + 1, sizeof(long), "ForwardModRay");
+                Xr = (float *) memory((char *) Xr, count + 1, sizeof(float),
                     "ForwardModRay");
-                Xr = (float *) memory(NULL, 1, sizeof(float), "ForwardModRay");
-                Yr = (float *) memory(NULL, 1, sizeof(float), "ForwardModRay");
-                Zr = (float *) memory(NULL, 1, sizeof(float), "ForwardModRay");
+                Yr = (float *) memory((char *) Yr, count + 1, sizeof(float),
+                    "ForwardModRay");
+                Zr = (float *) memory((char *) Zr, count + 1, sizeof(float),
+                    "ForwardModRay");
 
-                for (j = 0; j < data->ndata_seis; j++)
+                nact_rec[count] = data->rno[j];
+                nact_datapos[count] = j;
+
+                count++;
+
+              }
+            data->lshots[i] = count;
+
+            /***************************************************************************************/
+            /*Determine the accurate traveltimes at the receiver-locations (by trilinear interpolation of the traveltimes at the grid cell edges)*/
+            for (j = 0; j < count; j++)
+              {
+                Xr[j] = ((geo.x[nact_rec[j] - 1] - org[0]) / grid.h); /*normalized x-coordinate of the receiver locations according to grid cell EDGES*/
+                Yr[j] = ((geo.y[nact_rec[j] - 1] - org[1]) / grid.h); /*normalized y-coordinate of the receiver locations according to grid cell EDGES*/
+                Zr[j] = ((geo.z[nact_rec[j] - 1] - org[2]) / grid.h); /*normalized z-coordinate of the receiver locations according to grid cell EDGES*/
+
+                data->tcalc[nact_datapos[j]] = (double) (1000.0 * interpolate(
+                    Xr[j], Yr[j], Zr[j], grid, tt));
+
+                printf(" Calculating for receiver-nr. %d \n", nact_rec[j]);
+                printf("   (x=%f,y=%f,z=%f)\n", geo.x[nact_rec[j] - 1],
+                    geo.y[nact_rec[j] - 1], geo.z[nact_rec[j] - 1]);
+
+                if (nact_datapos[j] >= data->ndata_seis)
                   {
-
-                        nact_rec = (int *) memory((char *) nact_rec, count + 1,
-                            sizeof(int), "ForwardModRay");
-                        nact_datapos = (long *) memory((char *) nact_datapos,
-                            count + 1, sizeof(long), "ForwardModRay");
-                        Xr = (float *) memory((char *) Xr, count + 1,
-                            sizeof(float), "ForwardModRay");
-                        Yr = (float *) memory((char *) Yr, count + 1,
-                            sizeof(float), "ForwardModRay");
-                        Zr = (float *) memory((char *) Zr, count + 1,
-                            sizeof(float), "ForwardModRay");
-
-                        nact_rec[count] = data->rno[j];
-                        nact_datapos[count] = j;
-
-                        count++;
-
-                  }
-                data->lshots[i] = count;
-
-
-                /***************************************************************************************/
-                /*Determine the accurate traveltimes at the receiver-locations (by trilinear interpolation of the traveltimes at the grid cell edges)*/
-                for (j = 0; j < count; j++)
-                  {
-                    Xr[j] = ((geo.x[nact_rec[j] - 1] - org[0]) / grid.h); /*normalized x-coordinate of the receiver locations according to grid cell EDGES*/
-                    Yr[j] = ((geo.y[nact_rec[j] - 1] - org[1]) / grid.h); /*normalized y-coordinate of the receiver locations according to grid cell EDGES*/
-                    Zr[j] = ((geo.z[nact_rec[j] - 1] - org[2]) / grid.h); /*normalized z-coordinate of the receiver locations according to grid cell EDGES*/
-
-                    data->tcalc[nact_datapos[j]] = (double) (1000.0
-                        * interpolate(Xr[j], Yr[j], Zr[j], grid, tt));
-
-                    printf(" Calculating for receiver-nr. %d \n",
-                        nact_rec[j]);
-                                                    printf("   (x=%f,y=%f,z=%f)\n", geo.x[nact_rec[j] - 1],
-                                                        geo.y[nact_rec[j] - 1], geo.z[nact_rec[j] - 1]);
-
-                    if (nact_datapos[j] >= data->ndata_seis)
-                      {
-                        printf(
-                            "NOT enough memory is allocated: used %d, allocated %d\n",
-                            nact_datapos[j] + 1, data->ndata_seis);
-                        exit(0);
-                      }
-
+                    printf(
+                        "NOT enough memory is allocated: used %d, allocated %d\n",
+                        nact_datapos[j] + 1, data->ndata_seis);
+                    exit(0);
                   }
 
-                time(&time_relative);
-                zeit_angabe_sekunden = difftime(time_relative, time_start);
+              }
 
-                printf(" For shot-nr. %d all traveltimes are calculated\n",
-                    data->sno[i]);
-                printf("   (x=%f,y=%f,z=%f)\n", geo.x[(data->sno[i]) - 1],
-                    geo.y[(data->sno[i]) - 1], geo.z[(data->sno[i]) - 1]);
-                printf(
-                    "   Number of found receiver positions for the shot: %d\n",
-                    count);
-                printf("   Computing time:%fh\n\n", zeit_angabe_sekunden / 3600);
+            time(&time_relative);
+            zeit_angabe_sekunden = difftime(time_relative, time_start);
 
-                /***************************************/
-                /*Write out the traveltime cube*/
-                out = fopen("tcalc.txt","wt");
-                 for(c=0; c<nz3;c++)
-                 for(b=0; b<ny3;b++)
-                 for(a=0; a<nx3; a++)
-                 fprintf(out,"%f\n",travel_t(a,b,c));
-                 fclose(out);
-                /***************************************/
+            printf(" For shot-nr. %d all traveltimes are calculated\n",
+                data->sno[i]);
+            printf("   (x=%f,y=%f,z=%f)\n", geo.x[(data->sno[i]) - 1],
+                geo.y[(data->sno[i]) - 1], geo.z[(data->sno[i]) - 1]);
+            printf("   Number of found receiver positions for the shot: %d\n",
+                count);
+            printf("   Computing time:%fh\n\n", zeit_angabe_sekunden / 3600);
 
-                /***************************************************************************************/
-                /*Ray calculations (3-D version of the Aldridge&Oldenburg raypath-generation, 1993, Journal of seismic exploration,Vol.2,pages 257-274)*/
+            /***************************************/
+            /*Write out the traveltime cube*/
+            out = fopen("tcalc.txt", "wt");
+            for (c = 0; c < nz3; c++)
+              for (b = 0; b < ny3; b++)
+                for (a = 0; a < nx3; a++)
+                  fprintf(out, "%f\n", travel_t(a,b,c));
+            fclose(out);
+            /***************************************/
 
-                /*Allocate temporary ray-structures for the specific shot*/
-                raypath_tmp = (RP_STRUCT *) memory(NULL, data->lshots[i],
-                    sizeof(RP_STRUCT), "ForwardModRay");
+            /***************************************************************************************/
+            /*Ray calculations (3-D version of the Aldridge&Oldenburg raypath-generation, 1993, Journal of seismic exploration,Vol.2,pages 257-274)*/
 
-                for (j = 0; j < count; j++)
-                  raypath_tmp[j].n = nact_datapos[j];
+            /*Allocate temporary ray-structures for the specific shot*/
+            raypath_tmp = (RP_STRUCT *) memory(NULL, data->lshots[i],
+                sizeof(RP_STRUCT), "ForwardModRay");
 
-                /*Calculate the rays*/
-                RayCalc(tt, nx3, ny3, nz3, Xs, Ys, Zs, Xr, Yr, Zr, count,
-                    raypath_tmp);
+            for (j = 0; j < count; j++)
+              raypath_tmp[j].n = nact_datapos[j];
 
-                /*Copy the temporary raypath structures in structures that fit with the data structure*/
-                for (j = 0; j < count; j++)
+            /*Calculate the rays*/
+            RayCalc(tt, nx3, ny3, nz3, Xs, Ys, Zs, Xr, Yr, Zr, count,
+                raypath_tmp);
+
+            /*Copy the temporary raypath structures in structures that fit with the data structure*/
+            for (j = 0; j < count; j++)
+              {
+                raypath[nact_datapos[j]].n = raypath_tmp[j].n;
+                raypath[nact_datapos[j]].nray = raypath_tmp[j].nray;
+
+                if (raypath[nact_datapos[j]].nray != 0)
                   {
-                    raypath[nact_datapos[j]].n = raypath_tmp[j].n;
-                    raypath[nact_datapos[j]].nray = raypath_tmp[j].nray;
+                    raypath[nact_datapos[j]].len = (double *) memory(NULL,
+                        raypath[nact_datapos[j]].nray, sizeof(double),
+                        "ForwardModRay");
+                    raypath[nact_datapos[j]].ele = (long *) memory(NULL,
+                        raypath[nact_datapos[j]].nray, sizeof(long),
+                        "ForwardModRay");
+                  }
+                else
+                  {
+                    raypath[nact_datapos[j]].len = (double *) memory(NULL, 1,
+                        sizeof(double), "ForwardModRay");
+                    raypath[nact_datapos[j]].ele = (long *) memory(NULL, 1,
+                        sizeof(long), "ForwardModRay");
+                  }
+                raypath[nact_datapos[j]].x = (double *) memory(NULL,
+                    raypath[nact_datapos[j]].nray + 1, sizeof(double),
+                    "ForwardModRay");
+                raypath[nact_datapos[j]].y = (double *) memory(NULL,
+                    raypath[nact_datapos[j]].nray + 1, sizeof(double),
+                    "ForwardModRay");
+                raypath[nact_datapos[j]].z = (double *) memory(NULL,
+                    raypath[nact_datapos[j]].nray + 1, sizeof(double),
+                    "ForwardModRay");
 
-                    if (raypath[nact_datapos[j]].nray != 0)
-                      {
-                        raypath[nact_datapos[j]].len = (double *) memory(NULL,
-                            raypath[nact_datapos[j]].nray, sizeof(double),
-                            "ForwardModRay");
-                        raypath[nact_datapos[j]].ele = (long *) memory(NULL,
-                            raypath[nact_datapos[j]].nray, sizeof(long),
-                            "ForwardModRay");
-                      }
-                    else
-                      {
-                        raypath[nact_datapos[j]].len = (double *) memory(NULL,
-                            1, sizeof(double), "ForwardModRay");
-                        raypath[nact_datapos[j]].ele = (long *) memory(NULL, 1,
-                            sizeof(long), "ForwardModRay");
-                      }
-                    raypath[nact_datapos[j]].x = (double *) memory(NULL,
-                        raypath[nact_datapos[j]].nray + 1, sizeof(double),
-                        "ForwardModRay");
-                    raypath[nact_datapos[j]].y = (double *) memory(NULL,
-                        raypath[nact_datapos[j]].nray + 1, sizeof(double),
-                        "ForwardModRay");
-                    raypath[nact_datapos[j]].z = (double *) memory(NULL,
-                        raypath[nact_datapos[j]].nray + 1, sizeof(double),
-                        "ForwardModRay");
-
-                    for (k = 0; k < raypath_tmp[j].nray; k++)
-                      {
-                        raypath[nact_datapos[j]].len[k] = raypath_tmp[j].len[k];
-                        raypath[nact_datapos[j]].ele[k] = raypath_tmp[j].ele[k];
-                        raypath[nact_datapos[j]].x[k] = raypath_tmp[j].x[k];
-                        raypath[nact_datapos[j]].y[k] = raypath_tmp[j].y[k];
-                        raypath[nact_datapos[j]].z[k] = raypath_tmp[j].z[k];
-                      }
+                for (k = 0; k < raypath_tmp[j].nray; k++)
+                  {
+                    raypath[nact_datapos[j]].len[k] = raypath_tmp[j].len[k];
+                    raypath[nact_datapos[j]].ele[k] = raypath_tmp[j].ele[k];
                     raypath[nact_datapos[j]].x[k] = raypath_tmp[j].x[k];
                     raypath[nact_datapos[j]].y[k] = raypath_tmp[j].y[k];
                     raypath[nact_datapos[j]].z[k] = raypath_tmp[j].z[k];
                   }
+                raypath[nact_datapos[j]].x[k] = raypath_tmp[j].x[k];
+                raypath[nact_datapos[j]].y[k] = raypath_tmp[j].y[k];
+                raypath[nact_datapos[j]].z[k] = raypath_tmp[j].z[k];
+              }
 
-                for (j = 0; j < count; j++)
-                  {
-                    free(raypath_tmp[j].len);
-                    free(raypath_tmp[j].x);
-                    free(raypath_tmp[j].y);
-                    free(raypath_tmp[j].z);
-                    free(raypath_tmp[j].ele);
-                  }
+            for (j = 0; j < count; j++)
+              {
+                free(raypath_tmp[j].len);
+                free(raypath_tmp[j].x);
+                free(raypath_tmp[j].y);
+                free(raypath_tmp[j].z);
+                free(raypath_tmp[j].ele);
+              }
 
-                free(raypath_tmp);
+            free(raypath_tmp);
 
-                /****************************************************************************************/
+            /****************************************************************************************/
 
-                free(Xr);
-                free(Yr);
-                free(Zr);
-                free(nact_rec);
-                free(nact_datapos);
-
+            free(Xr);
+            free(Yr);
+            free(Zr);
+            free(nact_rec);
+            free(nact_datapos);
 
           }
 
@@ -314,10 +310,10 @@ namespace jiba
         /***************************************/
         /*Write out the calculated traveltime cube*/
         out = fopen("shot.txt", "wt");
-        fprintf(out,  "Index Shot-number Rec-number   Tcalc(ms)\n");
+        fprintf(out, "Index Shot-number Rec-number   Tcalc(ms)\n");
         for (i = 0; i < data->ndata_seis; i++)
-          fprintf(out,"  %d       %d         %d            %f\n", i, data->sno[i], data->rno[i],
-              data->tcalc[i]);
+          fprintf(out, "  %d       %d         %d            %f\n", i,
+              data->sno[i], data->rno[i], data->tcalc[i]);
         fclose(out);
         /***************************************/
 
@@ -329,7 +325,7 @@ namespace jiba
         data->ndata_seis_act = 0;
         for (i = 0; i < data->ndata_seis; i++)
           {
-            printf("Number of rays: %d\n",raypath[i].nray);
+            printf("Number of rays: %d\n", raypath[i].nray);
             if (raypath[i].nray != 0)
               {
                 data->ndata_seis_act++;
@@ -357,7 +353,8 @@ namespace jiba
 #define hi(val)    (int)ceil((val))
 #define dd(x,y,z)   data[nyz2*(x) + nz2*(y) + (z)]
 
-    float interpolate(float x, float y, float z, const GRID_STRUCT &grid, float *data)
+    float interpolate(float x, float y, float z, const GRID_STRUCT &grid,
+        float *data)
       {
         float u, v, w;
         int ok, nx2, ny2, nz2, nyz2;
@@ -382,8 +379,8 @@ namespace jiba
             printf("x = %f y = %f z = %f\n", x, y, z);
             printf("nx = %d ny = %d nz = %d\n", grid.nx, grid.ny, grid.nz);
             printf("h = %f\n", grid.h);
-            printf("orix = %f oriy = %f oriz = %f\n", grid.org[0],
-                grid.org[1], grid.org[2]);
+            printf("orix = %f oriy = %f oriz = %f\n", grid.org[0], grid.org[1],
+                grid.org[2]);
             exit(0);
           }
 
@@ -1389,7 +1386,8 @@ namespace jiba
     /*				data				:= Data structure*/
     /*				grid				:= Grid structure */
 
-    int ResortRays(RP_STRUCT *raypath,const DATA_STRUCT &data,const GRID_STRUCT &grid)
+    int ResortRays(RP_STRUCT *raypath, const DATA_STRUCT &data,
+        const GRID_STRUCT &grid)
       {
         long a, b, c, d, e;
         long nx, ny, nz, nyz, ny1, nz1, nyz1;
