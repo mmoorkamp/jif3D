@@ -13,6 +13,7 @@ namespace jiba
   {
 /*in file toolbox2.c:*/
 /*! Allocate new memory with additional safeguards and error information in case of failure */
+    inline
 char *memory (char *prev_addr, size_t n, size_t size, std::string progname)
   {
     //if there is nothing to allocate
@@ -54,9 +55,9 @@ char *memory (char *prev_addr, size_t n, size_t size, std::string progname)
 
 /** \addtogroup seismod Seismic tomography modelling */
 /* @{ */
-int ForwardModRay(GEOMETRY geo,GRID_STRUCT grid,DATA_STRUCT *data, RP_STRUCT *raypath, time_t time_start);
+int ForwardModRay(const GEOMETRY &geo,const GRID_STRUCT &grid,DATA_STRUCT *data, RP_STRUCT *raypath, time_t time_start);
 /*in podvin-lecomte-3D.c*/
-float interpolate(float x, float y, float z, GRID_STRUCT *grid, float *data);
+float interpolate(float x, float y, float z,const GRID_STRUCT &grid, float *data);
 /* @} */
   }
 #endif

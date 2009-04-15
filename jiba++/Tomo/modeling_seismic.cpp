@@ -25,7 +25,7 @@ namespace jiba
     double *TimeGrad(int x, int y, int z, float *tt, int ny, int nz);
     CELL_STRUCT RayBackTrace(double gradx, double grady, double gradz,
         CELL_STRUCT cell, float *tt, int ny, int nz);
-    int ResortRays(RP_STRUCT *raypath, DATA_STRUCT data, GRID_STRUCT grid);
+    int ResortRays(RP_STRUCT *raypath,const DATA_STRUCT &data,const GRID_STRUCT &grid);
 
     /*-------------------------------------------------------------*/
     /*Performing the forward modeling(using the Podvin&Lecomte eikonal solver) and calculating conventional rays */
@@ -41,7 +41,7 @@ namespace jiba
 
 #define travel_t(x,y,z) tt[nyz3*(x) + nz3*(y) + (z)]
 
-    int ForwardModRay(GEOMETRY geo, GRID_STRUCT grid, DATA_STRUCT *data,
+    int ForwardModRay(const GEOMETRY &geo,const GRID_STRUCT &grid, DATA_STRUCT *data,
         RP_STRUCT *raypath, time_t time_start)
       {
         int a,b,c,count; /*Number of active receivers for a shot*/
@@ -107,11 +107,10 @@ namespace jiba
                     + j * nz3 + k];
               }
 
+        data->lshots = (int *) memory(NULL, geo.nshot, sizeof(int), "ForwardModRay");
         /*Start the loop over all shots*/
         for (i = 0; i < geo.nshot; i++)
           {
-            if (data->lshots[i] != 0)
-              {
                 for (j = 0; j < nx3 * ny3 * nz3; j++)
                   tt[j] = 0.0;
 
@@ -155,14 +154,8 @@ namespace jiba
                         count++;
 
                   }
+                data->lshots[i] = count;
 
-                if (count != data->lshots[i])
-                  {
-                    printf(
-                        "The number of active receivers of shot number %d is not correct\n",
-                        data->sno[i]);
-                    exit(0);
-                  }
 
                 /***************************************************************************************/
                 /*Determine the accurate traveltimes at the receiver-locations (by trilinear interpolation of the traveltimes at the grid cell edges)*/
@@ -173,7 +166,7 @@ namespace jiba
                     Zr[j] = ((geo.z[nact_rec[j] - 1] - org[2]) / grid.h); /*normalized z-coordinate of the receiver locations according to grid cell EDGES*/
 
                     data->tcalc[nact_datapos[j]] = (double) (1000.0
-                        * interpolate(Xr[j], Yr[j], Zr[j], &grid, tt));
+                        * interpolate(Xr[j], Yr[j], Zr[j], grid, tt));
 
                     printf(" Calculating for receiver-nr. %d \n",
                         nact_rec[j]);
@@ -290,7 +283,7 @@ namespace jiba
                 free(nact_rec);
                 free(nact_datapos);
 
-              }
+
           }
 
         /*End of the loop over all shots*/
@@ -364,15 +357,15 @@ namespace jiba
 #define hi(val)    (int)ceil((val))
 #define dd(x,y,z)   data[nyz2*(x) + nz2*(y) + (z)]
 
-    float interpolate(float x, float y, float z, GRID_STRUCT *grid, float *data)
+    float interpolate(float x, float y, float z, const GRID_STRUCT &grid, float *data)
       {
         float u, v, w;
         int ok, nx2, ny2, nz2, nyz2;
         float ival;
 
-        nx2 = grid->nx + 1;
-        ny2 = grid->ny + 1;
-        nz2 = grid->nz + 1;
+        nx2 = grid.nx + 1;
+        ny2 = grid.ny + 1;
+        nz2 = grid.nz + 1;
         nyz2 = ny2 * nz2;
 
         /* Check, if point is in grid */
@@ -387,10 +380,10 @@ namespace jiba
           {
             printf("\nInterpolation point is out of the grid!\n");
             printf("x = %f y = %f z = %f\n", x, y, z);
-            printf("nx = %d ny = %d nz = %d\n", grid->nx, grid->ny, grid->nz);
-            printf("h = %f\n", grid->h);
-            printf("orix = %f oriy = %f oriz = %f\n", grid->org[0],
-                grid->org[1], grid->org[2]);
+            printf("nx = %d ny = %d nz = %d\n", grid.nx, grid.ny, grid.nz);
+            printf("h = %f\n", grid.h);
+            printf("orix = %f oriy = %f oriz = %f\n", grid.org[0],
+                grid.org[1], grid.org[2]);
             exit(0);
           }
 
@@ -1396,7 +1389,7 @@ namespace jiba
     /*				data				:= Data structure*/
     /*				grid				:= Grid structure */
 
-    int ResortRays(RP_STRUCT *raypath, DATA_STRUCT data, GRID_STRUCT grid)
+    int ResortRays(RP_STRUCT *raypath,const DATA_STRUCT &data,const GRID_STRUCT &grid)
       {
         long a, b, c, d, e;
         long nx, ny, nz, nyz, ny1, nz1, nyz1;

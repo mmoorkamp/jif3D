@@ -6,6 +6,7 @@
 #include <vector>
 #include "Podvin.h"
 #include "modeling_seismic.h"
+#include "TomographyCalculator.h"
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/random/linear_congruential.hpp>
 #include <boost/random/uniform_real.hpp>
@@ -71,7 +72,7 @@ BOOST_AUTO_TEST_CASE (memory_test)
           float xpos = Pos();
           float ypos = Pos();
           float zpos = Pos();
-          float inter = jiba::interpolate(xpos, ypos, zpos, &grid, data);
+          float inter = jiba::interpolate(xpos, ypos, zpos, grid, data);
           float exact = xcomp * xpos + ycomp * ypos + zcomp * zpos;
           BOOST_CHECK_CLOSE(inter,exact,0.001);
         }
@@ -123,11 +124,6 @@ BOOST_AUTO_TEST_CASE (memory_test)
       data.rno = new int[1];
       data.sno[0] = 1;
       data.rno[0] = 2;
-      data.lshots = new int[1];
-      data.lrecs = new int[1];
-
-      data.lshots[0] = 1;
-      data.lrecs[0] = 1;
       data.tcalc = new double[1];
 
       geo.nrec = 1;
@@ -160,5 +156,15 @@ BOOST_AUTO_TEST_CASE (memory_test)
           totallength += raypath[0].len[i];
         }
       std::cout << "Total length: " << totallength << " Raypath time: " << totallength * grid.h << std::endl;
+
+      jiba::TomographyCalculator Calculator;
+      jiba::ThreeDSeismicModel Model;
+      Model.SetCellSize(grid.h,ncells,ncells,ncells);
+      Model.AddMeasurementPoint(157.0,157.0,157.0);
+      Model.AddSource(75.0,100.0,100.0);
+      std::fill_n(Model.SetSlownesses().origin(),pow(ncells,3),1.0);
+      Model.AddMeasurementConfiguration(0,0);
+      jiba::rvec time(Calculator.Calculate(Model));
+      std::cout << "Bjoern: " << data.tcalc[0] << " C++: " << time(0) << std::endl;
     }
 BOOST_AUTO_TEST_SUITE_END()
