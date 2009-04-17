@@ -17,34 +17,47 @@ namespace jiba
         const ThreeDModelBase::t3DModelDim &OldSizes,
         ThreeDModelBase::t3DModelDim &NewSizes)
       {
+        //we need two indices, one for the current position in the original axes
         size_t oldindex = 0;
+        //and one for the current position on the refined axes
         size_t refineindex = 0;
         const size_t nold = OldCoordinates.size();
         const size_t nref = RefCoordinates.size();
+        //a vector is slightly easier to handle than boost::multi_array, so we work with it and copy the result
         std::vector<double> TempCoord;
+        // we go through all the coordinates of the original axes
         for (size_t i = 0; i < nold; ++i)
           {
+            //we guarantee that the original coordinates are also in the refined coordinates
             TempCoord.push_back(OldCoordinates[i]);
+            //we do not want to have a coordinate twice
+            //even if the original coordinates also appear in the refined coordinates
             if (refineindex < nref && RefCoordinates[refineindex]
                 == OldCoordinates[i])
               {
                 ++refineindex;
               }
+            //this is the end of the current cell
             const double CurrLimit = OldCoordinates[i] + OldSizes[i];
-
+            // as long as we haven't exceeded the index of the refinement coordinates
+            //and we are still in the current cell
             while (refineindex < nref && RefCoordinates[refineindex]
                 < CurrLimit)
               {
+                //we add the refinement coordinates
                 TempCoord.push_back(RefCoordinates[refineindex]);
                 ++refineindex;
               }
 
           }
+        //we work with sizes so we transform the coordinates
+        //to cell sizes
         NewSizes.resize(boost::extents[TempCoord.size()]);
         std::adjacent_difference(TempCoord.begin(), TempCoord.end(),
             NewSizes.origin());
         std::rotate(NewSizes.begin(), NewSizes.begin() + 1, NewSizes.end());
-
+        //finally adjust the size of the last cell so that the modeling domain
+        //is the same as before
         double lastsize = OldSizes[OldSizes.size() - 1];
         if (refineindex > 0)
           {
@@ -64,7 +77,7 @@ namespace jiba
     void ModelRefiner::RefineAxes(const ThreeDModelBase &InputModel,
         ThreeDModelBase &RefinedModel)
       {
-
+        //Refine all three axes and allocate memory for the new grid
         RefineOneAxis(InputModel.GetXCoordinates(), RefiningXCoordinates,
             InputModel.GetXCellSizes(), RefinedModel.SetXCellSizes());
         RefineOneAxis(InputModel.GetYCoordinates(), RefiningYCoordinates,
@@ -74,7 +87,7 @@ namespace jiba
         RefinedModel .SetData().resize(
             boost::extents[RefinedModel.GetXCellSizes().size()][RefinedModel.GetYCellSizes().size()][RefinedModel.GetZCellSizes().size()]);
       }
-
+    //find the index of the last refined cell that still corresponds to the current old cell
     void FindEnd(size_t startindex, size_t &endindex, const double CellSize,
         const ThreeDModelBase::t3DModelDim &NewSizes)
       {
@@ -86,7 +99,7 @@ namespace jiba
             ++endindex;
           }
       }
-
+    //assign the same value to the subset of refined cells that correspond to one coarse cell
     void AssignValue(
         ThreeDModelBase::t3DModelData::array_view<3>::type &myview,
         const double value)

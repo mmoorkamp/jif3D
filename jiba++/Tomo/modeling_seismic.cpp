@@ -190,16 +190,7 @@ namespace jiba
                 geo.y[(data->sno[i]) - 1], geo.z[(data->sno[i]) - 1]);
             printf("   Number of found receiver positions for the shot: %d\n",
                 count);
-            printf("   Computing time:%fh\n\n", zeit_angabe_sekunden / 3600);
 
-            /***************************************/
-            /*Write out the traveltime cube*/
-            out = fopen("tcalc.txt", "wt");
-            for (c = 0; c < nz3; c++)
-              for (b = 0; b < ny3; b++)
-                for (a = 0; a < nx3; a++)
-                  fprintf(out, "%f\n", travel_t(a,b,c));
-            fclose(out);
             /***************************************/
 
             /***************************************************************************************/
@@ -307,15 +298,6 @@ namespace jiba
                 exit(0);
               }
           }
-        /***************************************/
-        /*Write out the calculated traveltime cube*/
-        out = fopen("shot.txt", "wt");
-        fprintf(out, "Index Shot-number Rec-number   Tcalc(ms)\n");
-        for (i = 0; i < data->ndata_seis; i++)
-          fprintf(out, "  %d       %d         %d            %f\n", i,
-              data->sno[i], data->rno[i], data->tcalc[i]);
-        fclose(out);
-        /***************************************/
 
         /****************************************************************************/
         /*Resort rays (If the ray runs along the boundary between to cells, the cell with the higher velocity will be considered)*/
