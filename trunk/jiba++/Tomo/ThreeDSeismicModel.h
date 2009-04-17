@@ -13,7 +13,31 @@
 
 namespace jiba
   {
+    /** \addtogroup Tomo Classes for seismic tomography
+     * This module contains the functionality for seismic refraction forward modeling and data handling.
+     *
+     * As for the other methods the 3D Models are stored in a class derived from ThreeDModelBase. The model
+     * parameter for these models is slowness in s/m. At the moment we only have one forward modeling code based
+     * on the algorithm of Podvin and Lecomte with ray tracing implemented by B. Heincke.
+     *
+     * We therefore only have a single forward modeling class TomographyCalculator that is used to calculate arrival
+     * times from a given slowness model. In contrast to MT and Gravity models we also need to store the position
+     * of the sources in the model class.
+     * */
+    /* @{ */
 
+    //! The seismic model class stores all the information necessary to calculate arrival times, i.e. slownesses as well as source and receiver positions
+    /*! As this class is derived from ThreeDModelBase the overall handling is similar to the other model classes. There are a few notable exceptions.
+     * The model has to have equal cell sizes in all three directions, therefore there is only a single function to set the size and
+     * number of cells for all axes.
+     *
+     * We also need to store the position of the seismic sources. The receiver positions are the measurement positions of the base class and
+     * we have additional functions for the receivers through the GetSourcePosX etc. functions. For efficient storage we only store each
+     * receiver and source position once even though we usually have a multitude of source-receiver combinations that form our data.
+     *
+     * We therefore have an additional function AddMeasurementConfiguration that takes the index of the source and receiver for an individual measurement.
+     *
+     */
     class ThreeDSeismicModel: public jiba::ThreeDModelBase
       {
     public:
@@ -67,27 +91,39 @@ namespace jiba
           SourcePosY.push_back(ycoord + YOrigin);
           SourcePosZ.push_back(zcoord + ZOrigin);
         }
+      //! read only access to the x-positions of the sources in m
       const ThreeDModelBase::tMeasPosVec &GetSourcePosX() const
         {
           return SourcePosX;
         }
+      //! read only access to the y-positions of the sources in m
       const ThreeDModelBase::tMeasPosVec &GetSourcePosY() const
         {
           return SourcePosY;
         }
+      //! read only access to the z-positions of the sources in m
       const ThreeDModelBase::tMeasPosVec &GetSourcePosZ() const
         {
           return SourcePosZ;
         }
+      //! read only access to the indices of the sources for each data point
       const tIndexVec &GetSourceIndices() const
         {
           return SourceIndices;
         }
+      //! read only access to the indices of the receivers for each data point
       const tIndexVec &GetReceiverIndices() const
         {
           return ReceiverIndices;
         }
-      void AddMeasurementConfiguration(const size_t SourceIndex, const size_t ReceiverIndex)
+      //! add a source-receiver combination for which a travel time will be calculated
+      /*! We only store the positions of the sources and receivers once. With this
+       * function we can add a configuration for which we want to calculate a travel time.
+       * @param SourceIndex The index of the source in the vector of positions
+       * @param ReceiverIndex The index of the receiver in the vector of positions
+       */
+      void AddMeasurementConfiguration(const size_t SourceIndex,
+          const size_t ReceiverIndex)
         {
           assert(SourceIndex < SourcePosX.size());
           assert(ReceiverIndex < GetMeasPosX().size());
@@ -108,7 +144,7 @@ namespace jiba
       ThreeDSeismicModel();
       virtual ~ThreeDSeismicModel();
       };
-
+  /* @} */
   }
 
 #endif /* THREEDSEISMICMODEL_H_ */

@@ -10,6 +10,7 @@ lib gravity : ThreeDGravityModel.cpp GravityInterface.cpp
                
 lib gravity-extra : DepthWeighting.cpp ReadWriteGravityData.cpp 
                     WaveletCompressedGravityCalculator.cpp 
+                    GravityObjective.cpp
                     ..//cudart   ../Global//global ../Inversion//inversion ;
                     
 alias core :  ../ModelBase//modelbase ../Global ..//netcdf_c++ ..//netcdf ..//cudart ..//cutil ;

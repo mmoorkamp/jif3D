@@ -1,7 +1,7 @@
 //============================================================================
 // Name        : ModelDistributor.cpp
 // Author      : Apr 15, 2009
-// Version     : 
+// Version     :
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
@@ -11,15 +11,5 @@
 namespace jiba
   {
 
-    ModelDistributor::ModelDistributor()
-      {
-        // TODO Auto-generated constructor stub
-
-      }
-
-    ModelDistributor::~ModelDistributor()
-      {
-        // TODO Auto-generated destructor stub
-      }
-
+    //so far everything is in the header file
   }
