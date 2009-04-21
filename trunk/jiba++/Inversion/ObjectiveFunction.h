@@ -26,7 +26,7 @@ namespace jiba
       double CalcMisfit(const jiba::rvec &Model)
         {
           ImplDataDifference(Model, DataDifference);
-          return boost::numeric::ublas::norm_2(DataDifference);
+          return ublas::inner_prod(DataDifference,DataDifference);
         }
       jiba::rvec CalcGradient(const jiba::rvec &Model)
         {
