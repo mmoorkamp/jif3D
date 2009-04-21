@@ -1,24 +1,23 @@
 //============================================================================
-// Name        : NonLinearOptimization.cpp
-// Author      : Apr 16, 2009
-// Version     :
+// Name        : LineSearch.cpp
+// Author      : Apr 20, 2009
+// Version     : 
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
 
-#include "NonLinearOptimization.h"
+#include "LineSearch.h"
 
 namespace jiba
   {
 
-    NonLinearOptimization::NonLinearOptimization(boost::shared_ptr<jiba::ObjectiveFunction> ObjFunction)
-    :Objective(ObjFunction)
+    LineSearch::LineSearch()
       {
         // TODO Auto-generated constructor stub
 
       }
 
-    NonLinearOptimization::~NonLinearOptimization()
+    LineSearch::~LineSearch()
       {
         // TODO Auto-generated destructor stub
       }

@@ -1,9 +1,14 @@
 import testing ; 
 
 lib inversion : MatrixTools.cpp  LinearInversion.cpp ObjectiveFunction.cpp
+				NonLinearOptimization.cpp NonLinearConjugateGradient.cpp
+				LimitedMemoryQuasiNewton.cpp
+				LineSearch.cpp BacktrackingLineSearch.cpp
+				mcsrch.cpp
                 ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran
                  : <include>boost : : <include>. ;
 
 unit-test inversion_test : test_inversion.cpp inversion ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran  : : <include>. ;
 unit-test transform_test : test_transform.cpp   : : <include>. ;
+unit-test optstep_test : test_optstep.cpp  inversion : : <include>. ;
 
