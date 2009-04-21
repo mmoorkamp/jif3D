@@ -128,6 +128,7 @@ namespace jiba
       void ReadIgmas(const std::string filename);
       ThreeDGravityModel();
       virtual ~ThreeDGravityModel();
+      ThreeDGravityModel& operator= (const ThreeDGravityModel& source);
       };
   /* @} */
   }

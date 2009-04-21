@@ -256,6 +256,7 @@ namespace jiba
       void ReadMeasPosAscii(const std::string filename);
       friend class ModelRefiner;
       ThreeDModelBase();
+      ThreeDModelBase& operator= (const ThreeDModelBase& source);
       virtual ~ThreeDModelBase();
       };
   /* @} */
