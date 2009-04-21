@@ -28,8 +28,7 @@ namespace jiba
     void LimitedMemoryQuasiNewton::StepImplementation(jiba::rvec &CurrentModel)
       {
         double Misfit = GetObjective()->CalcMisfit(CurrentModel);
-        std::cout << "Misfit: " << Misfit << " Model: " << CurrentModel
-            << std::endl;
+        std::cout << "Misfit: " << Misfit << std::endl;
         jiba::rvec Gradient(ublas::element_prod(GetObjective()->CalcGradient(
             CurrentModel), GetModelCovDiag()));
         const size_t nmod = Gradient.size();

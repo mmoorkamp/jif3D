@@ -15,13 +15,41 @@ namespace jiba
   {
 
     ThreeDModelBase::ThreeDModelBase() :
-      XCellSizesChanged(true),YCellSizesChanged(true), ZCellSizesChanged(true),
-      XOrigin(0.0), YOrigin(0.0), ZOrigin(0.0)
+      XCellSizesChanged(true), YCellSizesChanged(true),
+          ZCellSizesChanged(true), XOrigin(0.0), YOrigin(0.0), ZOrigin(0.0)
       {
       }
 
     ThreeDModelBase::~ThreeDModelBase()
       {
+      }
+
+    ThreeDModelBase& ThreeDModelBase::operator=(const ThreeDModelBase& source)
+      {
+        MeasPosX.resize(source.MeasPosX.size());
+        std::copy(source.MeasPosX.begin(), source.MeasPosX.end(),
+            MeasPosX.begin());
+        MeasPosY.resize(source.MeasPosY.size());
+        std::copy(source.MeasPosY.begin(), source.MeasPosY.end(),
+            MeasPosY.begin());
+        MeasPosZ.resize(source.MeasPosZ.size());
+        std::copy(source.MeasPosZ.begin(), source.MeasPosZ.end(),
+            MeasPosZ.begin());
+        Data.resize(boost::extents[source.Data.shape()[0]][source.Data.shape()[1]][source.Data.shape()[2]]);
+        Data = source.Data;
+        XCellSizes.resize(boost::extents[source.XCellSizes.shape()[0]]);
+        std::copy(source.XCellSizes.begin(), source.XCellSizes.end(),
+            XCellSizes.begin());
+        YCellSizes.resize(boost::extents[source.YCellSizes.shape()[0]]);
+        std::copy(source.YCellSizes.begin(), source.YCellSizes.end(),
+            YCellSizes.begin());
+        ZCellSizes.resize(boost::extents[source.ZCellSizes.shape()[0]]);
+        std::copy(source.ZCellSizes.begin(), source.ZCellSizes.end(),
+            ZCellSizes.begin());
+        XOrigin = source.XOrigin;
+        YOrigin = source.YOrigin;
+        ZOrigin = source.ZOrigin;
+        return *this;
       }
 
     boost::array<ThreeDModelBase::t3DModelData::index, 3> ThreeDModelBase::FindAssociatedIndices(

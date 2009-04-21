@@ -22,7 +22,6 @@ namespace jiba
     static const std::string DensityName = "Density";
     static const std::string DensityUnit = "g/cm3";
 
-
     /*! The constructor does not take any parameters.
      */
     ThreeDGravityModel::ThreeDGravityModel()
@@ -31,6 +30,19 @@ namespace jiba
 
     ThreeDGravityModel::~ThreeDGravityModel()
       {
+      }
+
+    ThreeDGravityModel& ThreeDGravityModel::operator=(
+        const ThreeDGravityModel& source)
+      {
+        ThreeDModelBase::operator=(source);
+        bg_densities.resize(source.bg_densities.size());
+        std::copy(source.bg_densities.begin(), source.bg_densities.end(),
+            bg_densities.begin());
+        bg_thicknesses.resize(source.bg_thicknesses.size());
+        std::copy(source.bg_thicknesses.begin(), source.bg_thicknesses.end(),
+            bg_thicknesses.begin());
+        return *this;
       }
 
     void ThreeDGravityModel::WriteNetCDF(const std::string filename) const
@@ -163,6 +175,5 @@ namespace jiba
                 % nz)] = density.at(i);
           }
       }
-
 
   }

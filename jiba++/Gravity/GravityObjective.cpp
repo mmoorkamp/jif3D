@@ -8,6 +8,7 @@
 
 #include "GravityObjective.h"
 #include "MinMemGravityCalculator.h"
+#include <cassert>
 namespace jiba
   {
 
@@ -16,20 +17,21 @@ namespace jiba
         Calculator = boost::shared_ptr<jiba::ThreeDGravityCalculator>(
             jiba::CreateGravityCalculator<
                 jiba::MinMemGravityCalculator>::MakeScalar());
-        // TODO Auto-generated constructor stub
 
       }
 
     GravityObjective::~GravityObjective()
       {
-        // TODO Auto-generated destructor stub
+
       }
 
     void GravityObjective::ImplDataDifference(const jiba::rvec &Model,
         jiba::rvec &Diff)
       {
+        assert(DensityModel.GetMeasPosX().size() == ObservedData.size());
         std::copy(Model.begin(), Model.end(), DensityModel.SetDensities().origin());
         jiba::rvec SynthData(Calculator->Calculate(DensityModel));
+        Diff.resize(ObservedData.size());
         std::transform(SynthData.begin(), SynthData.end(),
             ObservedData.begin(), Diff.begin(), std::minus<double>());
       }
