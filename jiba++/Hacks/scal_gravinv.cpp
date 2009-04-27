@@ -9,16 +9,20 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <boost/bind.hpp>
 #include "../Global/convert.h"
 #include "../Global/FatalException.h"
+#include "../Global/NumUtil.h"
 #include "../ModelBase/VTKTools.h"
 #include "../ModelBase/NetCDFTools.h"
 #include "../Gravity/ThreeDGravityModel.h"
 #include "../Gravity/ReadWriteGravityData.h"
 #include "../Gravity/FullSensitivityGravityCalculator.h"
 #include "../Gravity/GravityObjective.h"
+#include "../Gravity/DepthWeighting.h"
+#include "../Gravity/GravityTransforms.h"
 #include "../Inversion/LimitedMemoryQuasiNewton.h"
-#include "DepthWeighting.h"
+
 namespace ublas = boost::numeric::ublas;
 
 int main(int argc, char *argv[])
@@ -49,11 +53,15 @@ int main(int argc, char *argv[])
     double DepthExponent = -2.0;
     //create the pointer for the calculator object without assigning anything
     boost::shared_ptr<jiba::FullSensitivityGravityCalculator> GravityCalculator;
+    boost::shared_ptr<jiba::VectorTransform> Transform;
     //now we have to do a few things differently depending on whether we deal
     //with scalar or FTG data
     //1. We have to read the data differently
     //2. We need a different forward modeling object
     //3. We need a different exponent for depth-weighting
+    Transform = boost::shared_ptr<jiba::VectorTransform>(
+        new jiba::CopyTransform());
+    jiba::rvec InvarData;
     switch (DataType)
       {
     case jiba::scalar:
@@ -63,11 +71,33 @@ int main(int argc, char *argv[])
           = boost::shared_ptr<jiba::FullSensitivityGravityCalculator>(
               jiba::CreateGravityCalculator<
                   jiba::FullSensitivityGravityCalculator>::MakeScalar());
+
+      break;
+    case jiba::ftg:
+      jiba::ReadTensorGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
+      //assign a ftg forward calculation object to the pointer
+      GravityCalculator
+          = boost::shared_ptr<jiba::FullSensitivityGravityCalculator>(
+              jiba::CreateGravityCalculator<
+                  jiba::FullSensitivityGravityCalculator>::MakeTensor());
+      DepthExponent = -3.0;
+//      Transform = boost::shared_ptr<jiba::FTGInvariant>(
+//          new jiba::FTGInvariant());
+//      InvarData.resize((Data.size() / 9));
+//      for (size_t i = 0; i < Data.size(); i += 9)
+//        {
+//          jiba::rvec temp(Transform->Transform(ublas::vector_range<jiba::rvec>(
+//              Data, ublas::range(i, i + 9))));
+//          InvarData(i / 9) = temp(0);
+//        }
+//      Data.resize(InvarData.size());
+//      Data = InvarData;
       break;
     default:
       //in case we couldn't identify the data in the netcdf file
       //print an error message and exit with an error code
-      std::cerr << "Wrong type of data. Aborting." << std::endl;
+      std::cerr << "Cannot determine the type of data to invert. Aborting."
+          << std::endl;
       exit(100);
       break;
       }
@@ -101,7 +131,23 @@ int main(int argc, char *argv[])
     jiba::rvec DataError(ndata);
 
     const double errorlevel = 0.02;
-    std::fill(DataError.begin(), DataError.end(), errorlevel);
+    const double maxdata = *std::max_element(Data.begin(),Data.end(),jiba::absLess<double,double>());
+    for (size_t i = 0; i < ndata; ++i)
+      {
+        DataError(i) = std::max(std::abs(Data(i) * errorlevel),1e-2 * maxdata * errorlevel);
+      }
+    std::cout << "DataError " << DataError << std::endl;
+
+    boost::shared_ptr<jiba::GravityObjective> Objective(
+        new jiba::GravityObjective(DataType == jiba::ftg));
+    Objective->SetObservedData(Data);
+    Objective->SetModelGeometry(Model);
+    Objective->SetDataCovar(DataError);
+    //Objective->SetDataTransform(Transform);
+
+    jiba::rvec InvModel(nmod);
+    std::copy(Model.GetDensities().origin(), Model.GetDensities().origin()
+        + Model.GetDensities().num_elements(), InvModel.begin());
 
     std::cout << "Calculating response of starting model." << std::endl;
     jiba::rvec StartingData(GravityCalculator->Calculate(Model));
@@ -127,23 +173,14 @@ int main(int argc, char *argv[])
         ModelWeight( i) = WeightVector(i % zsize);
       }
     //here comes the core inversion
-    //the problem is linear so we only perform a single inversion step
-    std::cout << "Performing inversion." << std::endl;
-    jiba::rvec InvModel(nmod);
-    std::copy(Model.GetDensities().origin(), Model.GetDensities().origin()
-        + Model.GetDensities().num_elements(), InvModel.begin());
 
-    boost::shared_ptr<jiba::GravityObjective> Objective(
-        new jiba::GravityObjective());
-    Objective->SetObservedData(Data);
-    Objective->SetModelGeometry(Model);
-    Objective->SetDataCovar(DataError);
+    std::cout << "Performing inversion." << std::endl;
 
     jiba::LimitedMemoryQuasiNewton LBFGS(Objective, 5);
     jiba::rvec ModelCov(nmod);
     std::fill_n(ModelCov.begin(), nmod, 1.0);
     LBFGS.SetModelCovDiag(ModelWeight);
-    for (size_t i = 0; i < 5; ++i)
+    for (size_t i = 0; i < 3; ++i)
       {
         LBFGS.MakeStep(InvModel);
         std::cout << std::endl;
@@ -158,7 +195,7 @@ int main(int argc, char *argv[])
     //calculate the predicted data
     std::cout << "Calculating response of inversion model." << std::endl;
     jiba::rvec InvData(GravityCalculator->Calculate(Model));
-
+    std::cout << "Inversion Data: " << InvData << std::endl;
     //and write out the data and model
     //here we have to distinguish again between scalar and ftg data
     std::cout << "Writing out inversion results." << std::endl;
@@ -171,6 +208,21 @@ int main(int argc, char *argv[])
       jiba::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc",
           InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
           Model.GetMeasPosZ());
+      break;
+    case jiba::ftg:
+      jiba::Write3DTensorDataToVTK(modelfilename + ".inv_ftg.vtk",
+          "grav_accel", InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
+          Model.GetMeasPosZ());
+      jiba::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc",
+          InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
+          Model.GetMeasPosZ());
+
+      /*jiba::SaveScalarGravityMeasurements(modelfilename + ".meas_invariant.nc",
+             Data, Model.GetMeasPosX(), Model.GetMeasPosY(),
+             Model.GetMeasPosZ());
+         jiba::SaveScalarGravityMeasurements(modelfilename + ".inv_invariant.nc",
+             InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
+             Model.GetMeasPosZ());*/
       break;
     default:
       std::cerr << " We should never reach this part. Fatal Error !"

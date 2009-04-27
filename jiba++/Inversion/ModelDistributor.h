@@ -14,7 +14,7 @@
 #include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
 #include "../Global/VecMat.h"
-
+#include "../Global/VectorTransform.h"
 namespace jiba
   {
     /** \addtogroup inversion General routines for inversion */
@@ -25,7 +25,7 @@ namespace jiba
      * concrete physical parameters that each method works with. This base class provides the interface for all function objects
      * that implement such a transformation.
      */
-    class GeneralModelTransform
+    class GeneralModelTransform: public VectorTransform
       {
     public:
       GeneralModelTransform()
@@ -44,7 +44,7 @@ namespace jiba
        * @param FullModel The generalized model vector including all parameters
        * @return The physical quantities for one method
        */
-      virtual jiba::rvec Transform(const jiba::rvec &FullModel) = 0;
+      virtual jiba::rvec Transform(const jiba::rvec &InputVector) = 0;
       //! For the inversion we also need the derivative of the transformation
       /*! To calculate the derivative of the generalized parameters we need to apply the chain rule, as each method only gives
        * us the derivative with respect to the physical parameters. This function returns a vector with all the derivative values
@@ -52,7 +52,7 @@ namespace jiba
        * @param FullModel The generalized model vector including all parameters
        * @return The derivatives of the generalized parameters with respect to the physical parameter
        */
-      virtual jiba::rvec Derivative(const jiba::rvec &FullModel) = 0;
+      virtual jiba::rmat Derivative(const jiba::rvec &InputVector) = 0;
       };
 
     //! A class to handle the distribution of model parameters from the "generalized" parameters of the joint inversion to the concrete parameters for each method
@@ -76,14 +76,14 @@ namespace jiba
         }
     private:
       //This vector stores a shared pointer to a Transformer object for each objective function
-      std::vector<boost::shared_ptr<GeneralModelTransform> > Transformers;
+      std::vector<boost::shared_ptr<VectorTransform> > Transformers;
     public:
       //! Add a transformation object
       /*! For each objective function we need to add a transformation object that
        * performs the translation between generalized and physical model parameters.
        * @param Trans A shared pointer to a transformation object
        */
-      void AddTransformer(boost::shared_ptr<GeneralModelTransform> Trans)
+      void AddTransformer(boost::shared_ptr<VectorTransform> Trans)
         {
           Transformers.push_back(Trans);
         }
@@ -102,32 +102,7 @@ namespace jiba
           return Transformers.at(TransIndex)->Transform(FullModel);
         }
       };
-    //! For simple tests and when only inverting a single parameter the generalized and physical parameters will be identical, so we just have to pass them on
-    /*! This class implements the simplest case when the generalized are the physical
-     * parameters.
-     */
-    class CopyTransform: public GeneralModelTransform
-      {
-    public:
-      CopyTransform()
-        {
-        }
-      virtual ~CopyTransform()
-        {
-        }
-      //! This "transformation" just passes the input parameter through
-      virtual jiba::rvec Transform(const jiba::rvec &FullModel)
-        {
-          return FullModel;
-        }
-      //! When generalized and physical parameters are the same the derivative is 1 for all parameters
-      virtual jiba::rvec Derivative(const jiba::rvec &FullModel)
-        {
-          jiba::rvec result(FullModel.size());
-          std::fill(result.begin(), result.end(), 1.0);
-          return result;
-        }
-      };
+
   /* @} */
   }
 

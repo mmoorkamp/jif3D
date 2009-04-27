@@ -33,7 +33,7 @@ namespace jiba
           rmat &Sensitivities);
       static const size_t ndatapermeas = 9;
     public:
-      virtual size_t GetDataPerMeasurement()
+      virtual size_t RawDataPerMeasurement()
         {
           return ndatapermeas;
         }

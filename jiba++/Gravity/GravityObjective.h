@@ -25,6 +25,10 @@ namespace jiba
       jiba::ThreeDGravityModel DensityModel;
       virtual void ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff);
       virtual jiba::rvec ImplGradient(const jiba::rvec &Model, const  jiba::rvec &Diff);
+      virtual void SetDataTransformAction()
+        {
+          Calculator->SetDataTransform(GetDataTransform());
+        }
     public:
       void SetObservedData(const jiba::rvec &Data)
         {
@@ -34,7 +38,7 @@ namespace jiba
         {
           DensityModel = Model;
         }
-      GravityObjective();
+      GravityObjective(bool ftg = false, bool cuda = false);
       virtual ~GravityObjective();
       };
   /* @} */
