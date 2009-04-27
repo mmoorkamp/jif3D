@@ -57,21 +57,31 @@ namespace jiba
       //! Check the the information in the model is consistent, i.e. corresponding vectors have the same size
       void CheckModelConsistency(const ThreeDGravityModel &Model);
     public:
+      //! Assign an object that performs a transformation on the data, e.g. FTG tensor to an invariant
+      void SetDataTransform(boost::shared_ptr<VectorTransform> DataTransform)
+        {
+          Imp->SetDataTransform(DataTransform);
+        }
       //! Calculate the forward response of the given model, this simple implementation just forwards the call to the implementation class
       virtual rvec Calculate(const ThreeDGravityModel &Model);
       //! Get the least squares derivative \f$ \partial O/ \partial \f$ of a least squares objective function \f$ O = \sum (d^{obs} - d^{pred})^2 \f$
-      virtual rvec LQDerivative(const ThreeDGravityModel &Model, const rvec &Misfit);
+      virtual rvec LQDerivative(const ThreeDGravityModel &Model,
+          const rvec &Misfit);
       //! Read and write access to the sensitivity information for the current measurement, only intended for implementation classes
       rmat &SetCurrentSensitivities()
         {
           return CurrentSensitivities;
         }
       //! In some cases we need to know the amount of data we get per measurement, this information is stored in the implementation class. It is 1 for scalar and at the moment 9 for FTG data
-      size_t GetDataPerMeasurement(){return Imp->GetDataPerMeasurement();}
+      size_t GetDataPerMeasurement()
+        {
+          return Imp->GetDataPerMeasurement();
+        }
       //! Process the sensitivity information for the current measurement, called from the implementation class
       virtual void HandleSensitivities(const size_t measindex) = 0;
       //! This class is useless without an implementation object so we have to pass one to the constructor
-      ThreeDGravityCalculator(boost::shared_ptr<ThreeDGravityImplementation> TheImp);
+      ThreeDGravityCalculator(
+          boost::shared_ptr<ThreeDGravityImplementation> TheImp);
       virtual ~ThreeDGravityCalculator();
       };
 
@@ -96,9 +106,8 @@ namespace jiba
           false);
       //! Make a new calculator object to calculate FTG data
       static boost::shared_ptr<CalculatorClass> MakeTensor(bool wantcuda =
-        false);
+          false);
       };
-
 
     /*! Creates a new shared pointer to a calculator object for scalar gravity.We specify
      * the way the sensitivities are handled through the calculator class in the template parameter. \see ThreeDGravityCalculator
@@ -128,18 +137,19 @@ namespace jiba
      * @return A shared pointer to a calculator object
      */
     template<class CalculatorClass>
-    boost::shared_ptr<CalculatorClass> CreateGravityCalculator<CalculatorClass>::MakeTensor(bool wantcuda)
+    boost::shared_ptr<CalculatorClass> CreateGravityCalculator<CalculatorClass>::MakeTensor(
+        bool wantcuda)
       {
         boost::shared_ptr<ThreeDGravityImplementation> Imp;
         if (wantcuda)
           {
             Imp = boost::shared_ptr<ThreeDGravityImplementation>(
-                            new TensorCudaGravityImp);
+                new TensorCudaGravityImp);
           }
         else
           {
             Imp = boost::shared_ptr<ThreeDGravityImplementation>(
-                           new TensorOMPGravityImp);
+                new TensorOMPGravityImp);
           }
         return boost::shared_ptr<CalculatorClass>(new CalculatorClass(Imp));
       }

@@ -12,12 +12,22 @@
 namespace jiba
   {
 
-    GravityObjective::GravityObjective()
+    GravityObjective::GravityObjective(bool ftg, bool cuda)
       {
-        Calculator = boost::shared_ptr<jiba::ThreeDGravityCalculator>(
-            jiba::CreateGravityCalculator<
-                jiba::MinMemGravityCalculator>::MakeScalar());
-
+        if (ftg)
+          {
+            Calculator
+                = boost::shared_ptr<jiba::ThreeDGravityCalculator>(
+                    jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeTensor(
+                        cuda));
+          }
+        else
+          {
+            Calculator
+                = boost::shared_ptr<jiba::ThreeDGravityCalculator>(
+                    jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeScalar(
+                        cuda));
+          }
       }
 
     GravityObjective::~GravityObjective()
@@ -28,16 +38,21 @@ namespace jiba
     void GravityObjective::ImplDataDifference(const jiba::rvec &Model,
         jiba::rvec &Diff)
       {
-        assert(DensityModel.GetMeasPosX().size() == ObservedData.size());
-        std::copy(Model.begin(), Model.end(), DensityModel.SetDensities().origin());
+        assert(DensityModel.GetMeasPosX().size() * Calculator->GetDataPerMeasurement() == ObservedData.size() );
+        std::copy(Model.begin(), Model.end(),
+            DensityModel.SetDensities().origin());
         jiba::rvec SynthData(Calculator->Calculate(DensityModel));
         Diff.resize(ObservedData.size());
         std::transform(SynthData.begin(), SynthData.end(),
             ObservedData.begin(), Diff.begin(), std::minus<double>());
       }
 
-    jiba::rvec GravityObjective::ImplGradient(const jiba::rvec &Model, const  jiba::rvec &Diff)
+    jiba::rvec GravityObjective::ImplGradient(const jiba::rvec &Model,
+        const jiba::rvec &Diff)
       {
-        return Calculator->LQDerivative(DensityModel,Diff);
+        assert(DensityModel.GetMeasPosX().size()* Calculator->GetDataPerMeasurement() == Diff.size() );
+        std::copy(Model.begin(), Model.end(),
+            DensityModel.SetDensities().origin());
+        return Calculator->LQDerivative(DensityModel, Diff);
       }
   }

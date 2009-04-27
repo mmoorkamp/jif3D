@@ -24,6 +24,7 @@ namespace jiba
     void ThreeDGravityImplementation::CacheGeometry(
         const ThreeDGravityModel &Model)
       {
+
         XCoord.resize(boost::extents[Model.GetXCoordinates().size()]);
         YCoord.resize(boost::extents[Model.GetYCoordinates().size()]);
         ZCoord.resize(boost::extents[Model.GetZCoordinates().size()]);
@@ -45,6 +46,17 @@ namespace jiba
 
       }
 
+    void ThreeDGravityImplementation::CheckTransform()
+      {
+        //if we have not specified a transform
+        if (!Transform)
+          {
+            //we use a transform that does nothing, i.e. just copies the parameters
+            Transform = boost::shared_ptr<CopyTransform>(new CopyTransform(
+                RawDataPerMeasurement()));
+          }
+      }
+
     /*! This function implements the grand structure of gravity forward calculation, i.e. processing
      * geometric information, looping over all measurements and combining the response
      * of the gridded part and the layered background. The details of the calculation,
@@ -55,6 +67,10 @@ namespace jiba
      * the current row of the sensitivity matrix to the calculator object and
      * call the HandleSensitivity method that allows the calculator class to store, process
      * or discard the sensitivity information.
+     *
+     * If we override this function in a derived class, e.g. for CUDA specific issues, make sure to call CheckTransform
+     * to guarantee a valid data transfrom object.
+     *
      * @param Model The gravity model for which to calculate the data
      * @param Calculator A derived class of ThreeDGravityCalculator
      * @return A vector of measurements
@@ -70,6 +86,7 @@ namespace jiba
         //Cache the coordinate and size information
         //to avoid problems with thread safety
         CacheGeometry(Model);
+        CheckTransform();
         //allocate enough memory for all datapoints in the result vector
         rvec result(nmeas * GetDataPerMeasurement());
 
@@ -86,14 +103,21 @@ namespace jiba
         for (size_t i = 0; i < nmeas; ++i)
           {
             // the vector to hold the result for the current measurement
-            rvec currresult(GetDataPerMeasurement());
+            rvec currdata(RawDataPerMeasurement());
 
-            currresult = CalcGridded(i, Model,
+            currdata = CalcGridded(i, Model,
                 Calculator.SetCurrentSensitivities());
 
             //adjust for the effects of finite extents of the grid
-            currresult += CalcBackground(i, modelxwidth, modelywidth,
+            currdata += CalcBackground(i, modelxwidth, modelywidth,
                 modelzwidth, Model, Calculator.SetCurrentSensitivities());
+
+            //now apply the transformation to the data
+            rvec currresult(Transform->Transform(currdata));
+            //and adjust the sensitivities
+            rmat TransDeriv(Transform->Derivative(currdata));
+            Calculator.SetCurrentSensitivities() = ublas::prod(TransDeriv,
+                Calculator.SetCurrentSensitivities());
             //give the calculator object the chance to handle the sensitivities
             //for the current measurement
             Calculator.HandleSensitivities(i);
@@ -117,11 +141,12 @@ namespace jiba
         // this class is only called from a calculator object
         // which performs consistency check
         const size_t nmeas = Model.GetMeasPosX().size();
-        const size_t DataPerMeas = GetDataPerMeasurement();
-        assert(Misfit.size() == nmeas * DataPerMeas);
+        const size_t TransDataPerMeas = GetDataPerMeasurement();
+        assert(Misfit.size() == nmeas * TransDataPerMeas);
         //Cache the coordinate and size information
         //to avoid problems with thread safety
         CacheGeometry(Model);
+        CheckTransform();
         // calculate the size of the modelling domain for the background adjustment
         // this way we do not have to recalculate within the loop
         const double modelxwidth = std::accumulate(
@@ -135,24 +160,28 @@ namespace jiba
             + Model.GetBackgroundDensities().size();
         //allocate enough memory for all derivatives in the result vector
         rvec DerivMod(nmod);
-        std::fill(DerivMod.begin(),DerivMod.end(),0.0);
+        std::fill(DerivMod.begin(), DerivMod.end(), 0.0);
 
-        //we need the Sensitivities from the calculator object
-        rmat CurrentSensitivities(DataPerMeas, nmod);
-
+        //we need the Sensitivities
+        rmat CurrentSensitivities(RawDataPerMeasurement(), nmod);
+        rmat NewSensitivities(TransDataPerMeas, nmod);
         for (size_t i = 0; i < nmeas; ++i)
           {
+            rvec currdata(RawDataPerMeasurement());
             //build up the full sensitivity matrix for the current measurement
-            CalcGridded(i, Model, CurrentSensitivities);
-            CalcBackground(i, modelxwidth, modelywidth, modelzwidth, Model,
-                CurrentSensitivities);
+            currdata = CalcGridded(i, Model, CurrentSensitivities);
+            currdata += CalcBackground(i, modelxwidth, modelywidth,
+                modelzwidth, Model, CurrentSensitivities);
+            rmat TransDeriv(Transform->Derivative(currdata));
             //treat the rows of the sensitivity matrix like columns
-            //to implicitely perform the transpose for the adjoint
+            //to implicitly perform the transpose for the adjoint
             //we might have more than one datum, e.g, for FTG data
-            for (size_t j = 0; j < DataPerMeas; ++j )
+            NewSensitivities = ublas::prod(TransDeriv, CurrentSensitivities);
+            for (size_t j = 0; j < TransDataPerMeas; ++j)
               {
-                boost::numeric::ublas::matrix_row<rmat> CurrRow(CurrentSensitivities,j);
-                DerivMod += Misfit(i*DataPerMeas + j) * CurrRow;
+                boost::numeric::ublas::matrix_row<rmat> CurrRow(
+                    NewSensitivities, j);
+                DerivMod += Misfit(i * TransDataPerMeas + j) * CurrRow;
               }
           }
         return DerivMod;

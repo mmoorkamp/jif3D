@@ -9,8 +9,10 @@
 #ifndef THREEDGRAVITYIMPLEMENTATION_H_
 #define THREEDGRAVITYIMPLEMENTATION_H_
 
+#include <boost/shared_ptr.hpp>
 #include "ThreeDGravityModel.h"
 #include "../Global/VecMat.h"
+#include "../Global/VectorTransform.h"
 
 namespace jiba
   {
@@ -34,6 +36,7 @@ namespace jiba
     class ThreeDGravityImplementation
       {
     private:
+      boost::shared_ptr<VectorTransform> Transform;
       void CacheGeometry(const ThreeDGravityModel &Model);
       //! Calculate the response of the 1D background for a single measurement, this function has to be implemented in the derived class.
       virtual rvec CalcBackground(const size_t measindex, const double xwidth, const double ywidth,
@@ -42,6 +45,7 @@ namespace jiba
       //! Calculate the response of the gridded domain for a single measurement, this function has to be implemented in the derived class.
       virtual rvec CalcGridded(const size_t measindex, const ThreeDGravityModel &Model,
           rmat &Sensitivities) = 0;
+      virtual size_t RawDataPerMeasurement() = 0;
     protected:
       // The access functions for the coordinates are not thread safe
       // so we cache the values once in the default implementation of calculate.
@@ -53,9 +57,18 @@ namespace jiba
       ThreeDGravityModel::t3DModelDim XSizes;
       ThreeDGravityModel::t3DModelDim YSizes;
       ThreeDGravityModel::t3DModelDim ZSizes;
+      void CheckTransform();
     public:
+      void SetDataTransform(boost::shared_ptr<VectorTransform> DataTransform)
+        {
+          Transform = DataTransform;
+        }
       //! We can implement tensor and scalar calculations in the derived classes, this function returns how many data values a single measurement yields
-      virtual size_t GetDataPerMeasurement() = 0;
+      size_t GetDataPerMeasurement()
+        {
+          CheckTransform();
+          return Transform->GetOutputSize();
+        }
       //! For a given Model calculate the forward response for all measurements and return it as a real vector, the calculator object is passed to process the sensitivity information
       virtual rvec Calculate(const ThreeDGravityModel &Model,
           ThreeDGravityCalculator &Calculator);

@@ -1,0 +1,75 @@
+//============================================================================
+// Name        : GravityTransforms.h
+// Author      : Apr 22, 2009
+// Version     :
+// Copyright   : 2009, mmoorkamp
+//============================================================================
+
+
+#ifndef GRAVITYTRANSFORMS_H_
+#define GRAVITYTRANSFORMS_H_
+
+#include "../Global/VectorTransform.h"
+#include <cassert>
+namespace jiba
+  {
+    //! Calculate I2 as described in Pedersen and Rasmussen 1990 and the associated derivative
+    /*! This transformation class takes the 9 elements of the FTG tensor as input and gives
+     * the invariant I2 and its partial derivatives with respect to the tensor elements as output.
+     */
+    class FTGInvariant: public VectorTransform
+      {
+    private:
+      static const size_t ninput = 9;
+      static const size_t noutput = 1;
+      double CalcInvariant(const jiba::rvec &Data)
+        {
+          return Data(0) * Data(4) + Data( 4) * Data(8) + Data(0) * Data(8) - Data(3) * Data(1)
+          - Data(7) * Data(5) - Data(2) * Data( 6);
+        }
+    public:
+      virtual size_t GetInputSize()
+        {
+          return ninput;
+        }
+      virtual size_t GetOutputSize()
+        {
+          return noutput;
+        }
+      virtual jiba::rvec Transform(const jiba::rvec &InputVector)
+        {
+          assert(InputVector.size() == ninput);
+          jiba::rvec result(1);
+          result(0) = CalcInvariant(InputVector);
+          return  result;
+        }
+
+      virtual jiba::rmat Derivative(
+          const jiba::rvec &InputVector)
+        {
+          const size_t ndata = InputVector.size();
+          assert(ndata == ninput);
+          jiba::rmat InvarSens(noutput,ninput);
+
+          InvarSens(0, 0) = InputVector(4) + InputVector(8);
+          InvarSens(0, 1) = -2.0 * InputVector(1);
+          InvarSens(0, 2) = -2.0 * InputVector(2);
+          InvarSens(0, 3) = -2.0 * InputVector(3);
+          InvarSens(0, 4) = InputVector(0) + InputVector(8);
+          InvarSens(0, 5) = -2.0 * InputVector(5);
+          InvarSens(0, 6) = -2.0 * InputVector(6);
+          InvarSens(0, 7) = -2.0 * InputVector(7);
+          InvarSens(0, 8) = InputVector(0) + InputVector(4);
+          return InvarSens;
+        }
+
+      FTGInvariant()
+        {
+        }
+      virtual ~FTGInvariant()
+        {
+        }
+      };
+  /* @} */
+  }
+#endif /* GRAVITYTRANSFORMS_H_ */
