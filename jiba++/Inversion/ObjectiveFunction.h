@@ -52,13 +52,20 @@ namespace jiba
       double CalcMisfit(const jiba::rvec &Model)
         {
           ImplDataDifference(Model, DataDifference);
-          if (CovarDiag.size() != DataDifference.size())
+          const size_t ndata = DataDifference.size();
+          if (CovarDiag.size() != ndata)
             {
               CovarDiag.resize(DataDifference.size());
               std::fill(CovarDiag.begin(), CovarDiag.end(), 1.0);
             }
-          DataDifference = ublas::element_div(DataDifference,CovarDiag);
-          return ublas::inner_prod(DataDifference, DataDifference);
+          double Misfit = 0.0;
+          for (size_t i =0; i < ndata; ++i)
+            {
+              DataDifference(i) /= CovarDiag(i);
+              Misfit += DataDifference(i) * DataDifference(i);
+              DataDifference(i) /= CovarDiag(i);
+            }
+          return Misfit;
         }
       jiba::rvec CalcGradient(const jiba::rvec &Model)
         {

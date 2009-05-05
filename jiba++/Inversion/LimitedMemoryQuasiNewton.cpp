@@ -27,10 +27,11 @@ namespace jiba
 
     void LimitedMemoryQuasiNewton::StepImplementation(jiba::rvec &CurrentModel)
       {
-        double Misfit = GetObjective()->CalcMisfit(CurrentModel);
+        Misfit = GetObjective()->CalcMisfit(CurrentModel);
         std::cout << "Misfit: " << Misfit << std::endl;
-        jiba::rvec Gradient(ublas::element_prod(GetObjective()->CalcGradient(
-            CurrentModel), GetModelCovDiag()));
+        jiba::rvec RawGrad(GetObjective()->CalcGradient(CurrentModel));
+        jiba::rvec Gradient(ublas::element_prod(RawGrad, GetModelCovDiag()));
+
         const size_t nmod = Gradient.size();
         const size_t npairs = SHistory.size();
 
@@ -56,9 +57,15 @@ namespace jiba
 
         //double mu = BacktrackingLineSearch().FindStep(CurrentModel, Gradient,
         //    SearchDir, *GetObjective());
+        //std::cout << "SearchDir: " << SearchDir << std::endl;
+        //std::cout << "RawGrad: " << RawGrad << std::endl;
         double mu = 1.0;
-        OPTPP::mcsrch(GetObjective().get(), SearchDir, CurrentModel, Misfit,
-            &mu, 20, 1e-4, 2.2e-16, 0.9, 1e3, 1e-9);
+        int status = OPTPP::mcsrch(GetObjective().get(), SearchDir, RawGrad, CurrentModel, Misfit,
+            &mu, 20, 1e-4, 2.2e-16, 0.9, 1e9, 1e-9);
+        std::cout << "Status: " << status << std::endl;
+        std::cout << " Mu: " << mu << "Search Angle: " << ublas::inner_prod(
+                   SearchDir, RawGrad) / (ublas::norm_2(SearchDir) * ublas::norm_2(
+                   RawGrad)) << std::endl;
         CurrentModel += mu * SearchDir;
         if (npairs < MaxPairs)
           {
