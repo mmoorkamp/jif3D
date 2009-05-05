@@ -20,15 +20,20 @@ namespace jiba
     class NonLinearOptimization
       {
     private:
+
       jiba::rvec ModelCovDiag;
       boost::shared_ptr<jiba::ObjectiveFunction> Objective;
       virtual void StepImplementation(jiba::rvec &CurrentModel) = 0;
     protected:
+      double Misfit;
+      double GradNorm;
       const boost::shared_ptr<jiba::ObjectiveFunction> GetObjective()
         {
           return Objective;
         }
     public:
+      double GetMisfit() { return Misfit;}
+      double GetGradNorm() {return GradNorm;}
       const jiba::rvec &GetModelCovDiag() const
         {
           return ModelCovDiag;

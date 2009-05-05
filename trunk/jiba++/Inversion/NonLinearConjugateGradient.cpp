@@ -29,11 +29,11 @@ namespace jiba
     void NonLinearConjugateGradient::StepImplementation(
         jiba::rvec &CurrentModel)
       {
-        double Misfit = GetObjective()->CalcMisfit(CurrentModel);
+        Misfit = GetObjective()->CalcMisfit(CurrentModel);
 
-        jiba::rvec Gradient(ublas::element_prod(GetObjective()->CalcGradient(
-            CurrentModel), GetModelCovDiag()));
-        Gradient *= -1.0;
+        jiba::rvec RawGrad(GetObjective()->CalcGradient(CurrentModel));
+        jiba::rvec Gradient(ublas::element_prod(RawGrad, GetModelCovDiag()));
+
         std::cout << "Misfit: " << Misfit << " Model: " << CurrentModel
             << " Gradient: " << ublas::norm_2(Gradient) << std::endl;
         const size_t nmod = Gradient.size();
@@ -56,17 +56,27 @@ namespace jiba
         alpha = (omega - alpha) / OldOmega;
         OldGradient = Gradient;
         OldOmega = omega;
-        Gradient -= alpha * OldDirection;
+        jiba::rvec Search(Gradient + alpha * OldDirection);
+        OldDirection = Search;
 
-        OldDirection = Gradient;
-
+        Search *= -1.0;
         mu = 1.0;
-        OPTPP::mcsrch(GetObjective().get(), Gradient, CurrentModel, Misfit,
-            &mu, 20, 1e-4, 2.2e-16, 0.1, 1e3, 1e-9);
-        std::cout << " Mu: " << mu << "Search Angle: " << ublas::inner_prod(
-            Gradient, OldGradient) / (ublas::norm_2(Gradient) * ublas::norm_2(
-            OldGradient)) << std::endl;
-        CurrentModel += mu * Gradient;
+        double angle = ublas::inner_prod(Search, RawGrad);
+        std::cout << "Angle: " << angle << std::endl;
+        if (angle < 0.0)
+          {
+            OPTPP::mcsrch(GetObjective().get(), Search, RawGrad, CurrentModel,
+                Misfit, &mu, 20, 1e-4, 2.2e-16, 0.1, 1e9, 1e-9);
+          }
+        else
+          {
+            Gradient *= -1.0;
+            OldGradient.resize(0);
+            OPTPP::mcsrch(GetObjective().get(), Gradient, RawGrad,
+                CurrentModel, Misfit, &mu, 20, 1e-4, 2.2e-16, 0.1, 1e9, 1e-9);
+          }
+
+        CurrentModel += mu * Search;
 
       }
   }

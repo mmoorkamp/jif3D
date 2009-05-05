@@ -42,15 +42,18 @@ private:
       return Gradient;
     }
 public:
-  size_t GetEval(){return neval;}
-  Rosenbrock():neval(0)
+  size_t GetEval()
+    {
+      return neval;
+    }
+  Rosenbrock() :
+    neval(0)
     {
     }
   virtual ~Rosenbrock()
     {
     }
   };
-
 
 BOOST_AUTO_TEST_SUITE( OptStep_Test_Suite )
 
@@ -66,9 +69,11 @@ BOOST_AUTO_TEST_CASE (basic_nlcg_test)
       jiba::rvec Model(2);
       Model(0) = -1.2;
       Model(1) = 1.0;
-      for (size_t i = 0; i < 30; ++i)
+      double Misfit = 1e10;
+      while (Misfit > 1e-9)
         {
           NLCG.MakeStep(Model);
+          Misfit = NLCG.GetMisfit();
           std::cout << std::endl;
 
         }
@@ -76,26 +81,28 @@ BOOST_AUTO_TEST_CASE (basic_nlcg_test)
       BOOST_CHECK(neval < 100);
       BOOST_CHECK_CLOSE(Model(0),1.0,1.0);
       BOOST_CHECK_CLOSE(Model(1),1.0,1.0);
-      std::cout << "Neval: " << neval  << std::endl;
+      std::cout << "Neval: " << neval << std::endl;
     }
 
-BOOST_AUTO_TEST_CASE (basic_lbfgs_test)
+  BOOST_AUTO_TEST_CASE (basic_lbfgs_test)
     {
       boost::shared_ptr<Rosenbrock> Objective(new Rosenbrock());
 
-      jiba::LimitedMemoryQuasiNewton LBFGS(Objective,5);
+      jiba::LimitedMemoryQuasiNewton LBFGS(Objective, 5);
       jiba::rvec Cov(2);
       //std::fill_n(Cov.begin(), 2, 1.0);
-      Cov(0) = 5.0;
-      Cov(1) = 1.0;
+      Cov(0) = 10.0;
+      Cov(1) = 0.1;
       LBFGS.SetModelCovDiag(Cov);
 
       jiba::rvec Model(2);
       Model(0) = -1.2;
       Model(1) = 1.0;
-      for (size_t i = 0; i < 30; ++i)
+      double Misfit = 1e10;
+      while (Misfit > 1e-9)
         {
           LBFGS.MakeStep(Model);
+          Misfit = LBFGS.GetMisfit();
           std::cout << std::endl;
 
         }
@@ -103,8 +110,7 @@ BOOST_AUTO_TEST_CASE (basic_lbfgs_test)
       BOOST_CHECK(neval < 100);
       BOOST_CHECK_CLOSE(Model(0),1.0,0.01);
       BOOST_CHECK_CLOSE(Model(1),1.0,0.01);
-      std::cout << "Neval: " << neval  << std::endl;
+      std::cout << "Neval: " << neval << std::endl;
     }
-
 
 BOOST_AUTO_TEST_SUITE_END()
