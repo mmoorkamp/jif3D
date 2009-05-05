@@ -45,7 +45,6 @@ namespace jiba
       //! Calculate the response of the gridded domain for a single measurement, this function has to be implemented in the derived class.
       virtual rvec CalcGridded(const size_t measindex, const ThreeDGravityModel &Model,
           rmat &Sensitivities) = 0;
-      virtual size_t RawDataPerMeasurement() = 0;
     protected:
       // The access functions for the coordinates are not thread safe
       // so we cache the values once in the default implementation of calculate.
@@ -57,17 +56,18 @@ namespace jiba
       ThreeDGravityModel::t3DModelDim XSizes;
       ThreeDGravityModel::t3DModelDim YSizes;
       ThreeDGravityModel::t3DModelDim ZSizes;
-      void CheckTransform();
     public:
+      //! Returns the number of data before any transformation is applied
+      virtual size_t RawDataPerMeasurement() = 0;
+      //! Set a transformation class that should be applied to any data and gradient in the calculation
       void SetDataTransform(boost::shared_ptr<VectorTransform> DataTransform)
         {
           Transform = DataTransform;
         }
-      //! We can implement tensor and scalar calculations in the derived classes, this function returns how many data values a single measurement yields
+      //! We can implement tensor and scalar calculations in the derived classes, this function returns how many data values a single measurement yields and considers any transformation
       size_t GetDataPerMeasurement()
         {
-          CheckTransform();
-          return Transform->GetOutputSize();
+          return Transform ? Transform->GetOutputSize() : RawDataPerMeasurement();
         }
       //! For a given Model calculate the forward response for all measurements and return it as a real vector, the calculator object is passed to process the sensitivity information
       virtual rvec Calculate(const ThreeDGravityModel &Model,

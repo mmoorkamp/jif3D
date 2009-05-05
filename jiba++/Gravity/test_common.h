@@ -11,7 +11,7 @@
 
 #include <stdlib.h>
 #include "ThreeDGravityModel.h"
-
+#include <boost/numeric/conversion/cast.hpp>
 
 //a helper function to create a model dimension of random size
 jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension()

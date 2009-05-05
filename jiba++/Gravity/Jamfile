@@ -19,7 +19,7 @@ alias core :  ../ModelBase//modelbase ../Global ..//netcdf_c++ ..//netcdf ..//cu
 unit-test Model_test : test_ThreeDGravityModel.cpp gravity gravity-extra core : : <include>. ;
 unit-test scalar_test : test_ScalarCalculation.cpp gravity gravity-extra core : : <include>. ;
 unit-test tensor_test : test_TensorCalculation.cpp gravity gravity-extra core : : <include>. ;
-unit-test transform_test : test_transforms.cpp  : : <include>. ;
+unit-test transform_test : test_transforms.cpp  gravity core ..//cblas ..//f77blas ..//gfortran : : <include>. ;
 unit-test R_test : test_Rinterface.cpp gravity  core ..//cblas ..//f77blas ..//gfortran : : <include>. ;
 unit-test weighting_test : test_weighting.cpp gravity gravity-extra ../Inversion//inversion core  : : <include>. ;
 unit-test readwrite_test : test_readwritedata.cpp gravity gravity-extra ../Inversion//inversion core  : : <include>. ;

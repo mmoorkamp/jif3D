@@ -23,12 +23,19 @@ namespace jiba
      * The actual management of the caching of calculations is performed by the base class
      * CachedGravityCalculator, this class only manages the storage and how cached results
      * are calculated.
+     *
+     * Important note: The stored sensitivities are the raw sensitivities irrespective of any
+     * transformation. This is necessary to calculate correct gradients for transformed data.
      */
     class FullSensitivityGravityCalculator: public jiba::CachedGravityCalculator
       {
     private:
       rmat Sensitivities;
+      //Calculates the raw gravity/FTG data from cached sensitivities without applying any transformation
+      rvec CalculateRawData(const ThreeDGravityModel &Model);
+      //Calculate a new model when no cached information is available or valid
       virtual rvec CalculateNewModel(const ThreeDGravityModel &Model);
+      //calculate Data with applied transformation when cached sensitivities are still valid
       virtual rvec CalculateCachedResult(const ThreeDGravityModel &Model);
       virtual rvec CachedLQDerivative(const ThreeDGravityModel &Model, const rvec &Misfit);
     public:

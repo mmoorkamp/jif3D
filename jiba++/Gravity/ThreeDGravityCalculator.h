@@ -37,10 +37,13 @@ namespace jiba
      * in cases where some compression is applied.
      *
      * Note also that the calculator class hierarchy is independent of whether
-     * scalar or FTG data is calculated. This is purely determined by the Implementation object.
+     * scalar or FTG data or a derived quantity is calculated. This is purely determined by the Implementation object.
      * Therefore the data is returned as a single vector. If we calculate scalar data it has one entry
      * per measurement point in the model. For FTG data it contains 9 consecutive entries with the matrix
      * elements per measurement.
+     *
+     * We can set a transformation to directly calculate derived quantities and the associated gradient. This transform
+     * is forwarded to the implementation object and all returned data and gradients will be with respect to this transformation.
      */
     class ThreeDGravityCalculator
       {
@@ -51,6 +54,8 @@ namespace jiba
       // decide how to handle this information
       rmat CurrentSensitivities;
     protected:
+      //In some cases we mitgh want to apply a transformation to the data, e.g. FTG to an invariant
+      boost::shared_ptr<VectorTransform> Transform;
       // The shared pointer to the implementation object
       // that does the actual calculation
       boost::shared_ptr<ThreeDGravityImplementation> Imp;
@@ -60,6 +65,7 @@ namespace jiba
       //! Assign an object that performs a transformation on the data, e.g. FTG tensor to an invariant
       void SetDataTransform(boost::shared_ptr<VectorTransform> DataTransform)
         {
+          Transform = DataTransform;
           Imp->SetDataTransform(DataTransform);
         }
       //! Calculate the forward response of the given model, this simple implementation just forwards the call to the implementation class
