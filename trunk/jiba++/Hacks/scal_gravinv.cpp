@@ -22,6 +22,7 @@
 #include "../Gravity/DepthWeighting.h"
 #include "../Gravity/GravityTransforms.h"
 #include "../Inversion/LimitedMemoryQuasiNewton.h"
+#include "../Inversion/NonLinearConjugateGradient.h"
 
 namespace ublas = boost::numeric::ublas;
 
@@ -74,24 +75,24 @@ int main(int argc, char *argv[])
 
       break;
     case jiba::ftg:
-      jiba::ReadTensorGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
-      //assign a ftg forward calculation object to the pointer
+     jiba::ReadTensorGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
+//      //assign a ftg forward calculation object to the pointer
       GravityCalculator
           = boost::shared_ptr<jiba::FullSensitivityGravityCalculator>(
               jiba::CreateGravityCalculator<
                   jiba::FullSensitivityGravityCalculator>::MakeTensor());
       DepthExponent = -3.0;
-//      Transform = boost::shared_ptr<jiba::FTGInvariant>(
-//          new jiba::FTGInvariant());
-//      InvarData.resize((Data.size() / 9));
-//      for (size_t i = 0; i < Data.size(); i += 9)
-//        {
-//          jiba::rvec temp(Transform->Transform(ublas::vector_range<jiba::rvec>(
-//              Data, ublas::range(i, i + 9))));
-//          InvarData(i / 9) = temp(0);
-//        }
-//      Data.resize(InvarData.size());
-//      Data = InvarData;
+      Transform = boost::shared_ptr<jiba::FTGInvariant>(
+          new jiba::FTGInvariant());
+      InvarData.resize((Data.size() / 9));
+      for (size_t i = 0; i < Data.size(); i += 9)
+        {
+          jiba::rvec temp(Transform->Transform(ublas::vector_range<jiba::rvec>(
+              Data, ublas::range(i, i + 9))));
+          InvarData(i / 9) = temp(0);
+        }
+      Data.resize(InvarData.size());
+      Data = InvarData;
       break;
     default:
       //in case we couldn't identify the data in the netcdf file
@@ -143,7 +144,8 @@ int main(int argc, char *argv[])
     Objective->SetObservedData(Data);
     Objective->SetModelGeometry(Model);
     Objective->SetDataCovar(DataError);
-    //Objective->SetDataTransform(Transform);
+    Objective->SetDataTransform(Transform);
+    GravityCalculator->SetDataTransform(Transform);
 
     jiba::rvec InvModel(nmod);
     std::copy(Model.GetDensities().origin(), Model.GetDensities().origin()
@@ -176,11 +178,12 @@ int main(int argc, char *argv[])
 
     std::cout << "Performing inversion." << std::endl;
 
+    jiba::NonLinearConjugateGradient NLCG(Objective);
     jiba::LimitedMemoryQuasiNewton LBFGS(Objective, 5);
-    jiba::rvec ModelCov(nmod);
-    std::fill_n(ModelCov.begin(), nmod, 1.0);
+
     LBFGS.SetModelCovDiag(ModelWeight);
-    for (size_t i = 0; i < 3; ++i)
+    NLCG.SetModelCovDiag(ModelWeight);
+    for (size_t i = 0; i < 30; ++i)
       {
         LBFGS.MakeStep(InvModel);
         std::cout << std::endl;
@@ -210,19 +213,19 @@ int main(int argc, char *argv[])
           Model.GetMeasPosZ());
       break;
     case jiba::ftg:
-      jiba::Write3DTensorDataToVTK(modelfilename + ".inv_ftg.vtk",
-          "grav_accel", InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
-          Model.GetMeasPosZ());
-      jiba::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc",
-          InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
-          Model.GetMeasPosZ());
+      //jiba::Write3DTensorDataToVTK(modelfilename + ".inv_ftg.vtk",
+      //    "grav_accel", InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
+      //    Model.GetMeasPosZ());
+      //jiba::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc",
+      //    InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
+      //    Model.GetMeasPosZ());
 
-      /*jiba::SaveScalarGravityMeasurements(modelfilename + ".meas_invariant.nc",
+      jiba::SaveScalarGravityMeasurements(modelfilename + ".meas_invariant.nc",
              Data, Model.GetMeasPosX(), Model.GetMeasPosY(),
              Model.GetMeasPosZ());
          jiba::SaveScalarGravityMeasurements(modelfilename + ".inv_invariant.nc",
              InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
-             Model.GetMeasPosZ());*/
+             Model.GetMeasPosZ());
       break;
     default:
       std::cerr << " We should never reach this part. Fatal Error !"
