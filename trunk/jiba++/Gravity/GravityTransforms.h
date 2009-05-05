@@ -24,8 +24,8 @@ namespace jiba
       static const size_t noutput = 1;
       double CalcInvariant(const jiba::rvec &Data)
         {
-          return Data(0) * Data(4) + Data( 4) * Data(8) + Data(0) * Data(8) - Data(3) * Data(1)
-          - Data(7) * Data(5) - Data(2) * Data( 6);
+          return Data(0) * Data(4) + Data(4) * Data(8) + Data(0) * Data(8)
+              - Data(3) * Data(1) - Data(7) * Data(5) - Data(2) * Data(6);
         }
     public:
       virtual size_t GetInputSize()
@@ -36,33 +36,41 @@ namespace jiba
         {
           return noutput;
         }
+      //! Take a vector of 9 tensor elements and calculate the invariant
+      /*! This function performs the transformation of a single tensor.
+       * @param InputVector The tensor elements as a vector in c-storage order, has to have 9 elements
+       * @return A vector with a single element, the calculated invariant.
+       */
       virtual jiba::rvec Transform(const jiba::rvec &InputVector)
         {
           assert(InputVector.size() == ninput);
           jiba::rvec result(1);
           result(0) = CalcInvariant(InputVector);
-          return  result;
+          return result;
         }
-
-      virtual jiba::rmat Derivative(
-          const jiba::rvec &InputVector)
+      //! Calculate the partial derivative of the invariant with respect to the tensor elements
+      /*! For a single tensor this function calculates the partial derivatives of the invariant with respect
+       * to the tensor elements
+       * @param InputVector The tensor elements as a vector in c-storage order, has to have 9 elements
+       * @return A 1x9 matrix of partial derivatives
+       */
+      virtual jiba::rmat Derivative(const jiba::rvec &InputVector)
         {
           const size_t ndata = InputVector.size();
           assert(ndata == ninput);
-          jiba::rmat InvarSens(noutput,ninput);
+          jiba::rmat InvarSens(noutput, ninput);
 
           InvarSens(0, 0) = InputVector(4) + InputVector(8);
-          InvarSens(0, 1) = -2.0 * InputVector(1);
-          InvarSens(0, 2) = -2.0 * InputVector(2);
-          InvarSens(0, 3) = -2.0 * InputVector(3);
+          InvarSens(0, 1) = -InputVector(3);
+          InvarSens(0, 2) = -InputVector(6);
+          InvarSens(0, 3) = -InputVector(1);
           InvarSens(0, 4) = InputVector(0) + InputVector(8);
-          InvarSens(0, 5) = -2.0 * InputVector(5);
-          InvarSens(0, 6) = -2.0 * InputVector(6);
-          InvarSens(0, 7) = -2.0 * InputVector(7);
+          InvarSens(0, 5) = -InputVector(7);
+          InvarSens(0, 6) = -InputVector(2);
+          InvarSens(0, 7) = -InputVector(5);
           InvarSens(0, 8) = InputVector(0) + InputVector(4);
           return InvarSens;
         }
-
       FTGInvariant()
         {
         }

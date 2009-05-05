@@ -9,6 +9,8 @@
 #include "ThreeDGravityImplementation.h"
 #include "ThreeDGravityCalculator.h"
 
+#include <boost/numeric/bindings/atlas/cblas2.hpp>
+#include <boost/numeric/bindings/atlas/cblas3.hpp>
 namespace jiba
   {
 
@@ -46,16 +48,6 @@ namespace jiba
 
       }
 
-    void ThreeDGravityImplementation::CheckTransform()
-      {
-        //if we have not specified a transform
-        if (!Transform)
-          {
-            //we use a transform that does nothing, i.e. just copies the parameters
-            Transform = boost::shared_ptr<CopyTransform>(new CopyTransform(
-                RawDataPerMeasurement()));
-          }
-      }
 
     /*! This function implements the grand structure of gravity forward calculation, i.e. processing
      * geometric information, looping over all measurements and combining the response
@@ -86,7 +78,7 @@ namespace jiba
         //Cache the coordinate and size information
         //to avoid problems with thread safety
         CacheGeometry(Model);
-        CheckTransform();
+
         //allocate enough memory for all datapoints in the result vector
         rvec result(nmeas * GetDataPerMeasurement());
 
@@ -99,30 +91,34 @@ namespace jiba
         const double modelzwidth = std::accumulate(
             Model.GetZCellSizes().begin(), Model.GetZCellSizes().end(), 0.0);
 
+
         // for all measurement points add the responses of the discretized part and the 1D background
         for (size_t i = 0; i < nmeas; ++i)
           {
             // the vector to hold the result for the current measurement
             rvec currdata(RawDataPerMeasurement());
 
-            currdata = CalcGridded(i, Model,
-                Calculator.SetCurrentSensitivities());
+            currdata = CalcGridded(i, Model, Calculator.SetCurrentSensitivities());
 
             //adjust for the effects of finite extents of the grid
             currdata += CalcBackground(i, modelxwidth, modelywidth,
-                modelzwidth, Model, Calculator.SetCurrentSensitivities());
-
-            //now apply the transformation to the data
-            rvec currresult(Transform->Transform(currdata));
-            //and adjust the sensitivities
-            rmat TransDeriv(Transform->Derivative(currdata));
-            Calculator.SetCurrentSensitivities() = ublas::prod(TransDeriv,
-                Calculator.SetCurrentSensitivities());
+                modelzwidth, Model,  Calculator.SetCurrentSensitivities());
+            if (Transform)
+              {
+                //now apply the transformation to the data
+                rvec currresult(Transform->Transform(currdata));
+                std::copy(currresult.begin(), currresult.end(), result.begin()
+                    + (i * GetDataPerMeasurement()));
+              }
+            else
+              {
+                std::copy(currdata.begin(), currdata.end(), result.begin() + (i
+                    * GetDataPerMeasurement()));
+              }
             //give the calculator object the chance to handle the sensitivities
             //for the current measurement
             Calculator.HandleSensitivities(i);
-            std::copy(currresult.begin(), currresult.end(), result.begin() + (i
-                * GetDataPerMeasurement()));
+
           }
         return result;
       }
@@ -146,7 +142,7 @@ namespace jiba
         //Cache the coordinate and size information
         //to avoid problems with thread safety
         CacheGeometry(Model);
-        CheckTransform();
+
         // calculate the size of the modelling domain for the background adjustment
         // this way we do not have to recalculate within the loop
         const double modelxwidth = std::accumulate(
@@ -164,7 +160,7 @@ namespace jiba
 
         //we need the Sensitivities
         rmat CurrentSensitivities(RawDataPerMeasurement(), nmod);
-        rmat NewSensitivities(TransDataPerMeas, nmod);
+        rmat NewSensitivities;
         for (size_t i = 0; i < nmeas; ++i)
           {
             rvec currdata(RawDataPerMeasurement());
@@ -172,11 +168,19 @@ namespace jiba
             currdata = CalcGridded(i, Model, CurrentSensitivities);
             currdata += CalcBackground(i, modelxwidth, modelywidth,
                 modelzwidth, Model, CurrentSensitivities);
-            rmat TransDeriv(Transform->Derivative(currdata));
-            //treat the rows of the sensitivity matrix like columns
-            //to implicitly perform the transpose for the adjoint
-            //we might have more than one datum, e.g, for FTG data
-            NewSensitivities = ublas::prod(TransDeriv, CurrentSensitivities);
+            if (Transform)
+              {
+                rmat TransDeriv(Transform->Derivative(currdata));
+                //treat the rows of the sensitivity matrix like columns
+                //to implicitly perform the transpose for the adjoint
+                //we might have more than one datum, e.g, for FTG data
+                NewSensitivities
+                    = ublas::prod(TransDeriv, CurrentSensitivities);
+              }
+            else
+              {
+                NewSensitivities = CurrentSensitivities;
+              }
             for (size_t j = 0; j < TransDataPerMeas; ++j)
               {
                 boost::numeric::ublas::matrix_row<rmat> CurrRow(

@@ -165,7 +165,6 @@ void      SingleScalarMeas(const double x_meas, const double y_meas,
           const unsigned int nx = Model.GetDensities().shape()[0];
           const unsigned int ny = Model.GetDensities().shape()[1];
           const unsigned int nz = Model.GetDensities().shape()[2];
-          CheckTransform();
           //allocate memory
           PrepareData(&d_xcoord,&d_ycoord,&d_zcoord,&d_xsize,&d_ysize,&d_zsize,&d_result,Model.GetXCoordinates().data(),Model.GetYCoordinates().data(),
               Model.GetZCoordinates().data(),Model.GetXCellSizes().data(),Model.GetYCellSizes().data(),Model.GetZCellSizes().data(),nx,ny,nz);
