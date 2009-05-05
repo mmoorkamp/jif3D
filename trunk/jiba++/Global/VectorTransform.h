@@ -9,6 +9,8 @@
 #ifndef VECTORTRANSFORM_H_
 #define VECTORTRANSFORM_H_
 #include "../Global/VecMat.h"
+#include <cassert>
+
 namespace jiba
   {
     /*! \addtogroup util General utility routines
@@ -73,6 +75,32 @@ namespace jiba
           return ublas::identity_matrix<double>(InputVector.size());
         }
       };
+    //! Apply a transformation to a vector
+    /*! The VectorTransform class works on a vector which length is
+     * determined by the number of elements for a single transformation, i.e. 9 input
+     * elements and 1 output element to calculate the invariant from the FTG tensor.
+     * If we have a vector that consists of several data to which we want to apply
+     * the same transformation we can use this function.
+     * @param InputVector The vector containing the input data for the transformation, has to have a length of a multiple of the transformation size
+     * @param Transform The transformation class to apply to the data
+     * @return A vector that contains the transformed data
+     */
+    template <class VectorTransform>
+    jiba::rvec ApplyTransform(const jiba::rvec &InputVector, VectorTransform &Transform)
+      {
+        const size_t insize = InputVector.size();
+        const size_t step = Transform.GetInputSize();
+        const size_t nout = Transform.GetOutputSize();
+        assert(insize % step  == 0);
+        jiba::rvec Output(insize/step * nout );
+        for (size_t i = 0; i < insize; i +=step)
+          {
+            jiba::rvec temp(Transform.Transform(ublas::vector_range<const jiba::rvec>(
+                          InputVector, ublas::range(i, i + step))));
+            copy(temp.begin(),temp.end(),Output.begin()+i/step*nout);
+          }
+        return Output;
+      }
   /* @} */
   }
 
