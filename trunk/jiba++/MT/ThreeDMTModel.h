@@ -9,11 +9,11 @@
 #ifndef THREEDMTMODEL_H_
 #define THREEDMTMODEL_H_
 
-#include "ThreeDModelBase.h"
+#include "../ModelBase/ThreeDModelBase.h"
 
 namespace jiba
   {
-
+    //! This class stores all information associated with 3D magnetotelluric models, so far it has only rudimentary functionality and will be extended
     class ThreeDMTModel: public jiba::ThreeDModelBase
       {
       private:
