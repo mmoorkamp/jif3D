@@ -1,10 +1,11 @@
 import testing ; 
 
-lib inversion : MatrixTools.cpp  LinearInversion.cpp ObjectiveFunction.cpp
+lib inversion : MatrixTools.cpp  LinearInversion.cpp 
 				NonLinearOptimization.cpp NonLinearConjugateGradient.cpp
 				LimitedMemoryQuasiNewton.cpp
 				LineSearch.cpp BacktrackingLineSearch.cpp
 				mcsrch.cpp
+				ObjectiveFunction.cpp JointObjective.cpp
                 ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran
                  : <include>boost : : <include>. ;
 

@@ -15,6 +15,7 @@
 #include "NonLinearConjugateGradient.h"
 #include "LimitedMemoryQuasiNewton.h"
 #include "ObjectiveFunction.h"
+#include "JointObjective.h"
 
 class Rosenbrock: public jiba::ObjectiveFunction
   {
@@ -113,4 +114,37 @@ BOOST_AUTO_TEST_CASE (basic_nlcg_test)
       std::cout << "Neval: " << neval << std::endl;
     }
 
+  BOOST_AUTO_TEST_CASE (basic_jointobjective_test)
+    {
+      boost::shared_ptr<jiba::JointObjective> Objective(new jiba::JointObjective());
+      boost::shared_ptr<Rosenbrock> Rosen1(new Rosenbrock());
+      boost::shared_ptr<Rosenbrock> Rosen2(new Rosenbrock());
+      boost::shared_ptr<Rosenbrock> Rosen3(new Rosenbrock());
+      boost::shared_ptr<jiba::VectorTransform> Transform(new jiba::CopyTransform());
+      Objective->AddObjective(Rosen1,Transform,0.8);
+      Objective->AddObjective(Rosen2,Transform,0.2);
+
+      jiba::LimitedMemoryQuasiNewton JointLBFGS(Objective, 5);
+      jiba::LimitedMemoryQuasiNewton RosenLBFGS(Rosen3, 5);
+      jiba::rvec Cov(2);
+      //std::fill_n(Cov.begin(), 2, 1.0);
+      Cov(0) = 10.0;
+      Cov(1) = 0.1;
+      JointLBFGS.SetModelCovDiag(Cov);
+      RosenLBFGS.SetModelCovDiag(Cov);
+
+      jiba::rvec JointModel(2);
+      JointModel(0) = -1.2;
+      JointModel(1) = 1.0;
+      jiba::rvec RosenModel(JointModel);
+      double Misfit = 1e10;
+      while (Misfit > 1e-9)
+        {
+          JointLBFGS.MakeStep(JointModel);
+          RosenLBFGS.MakeStep(RosenModel);
+          Misfit = RosenLBFGS.GetMisfit();
+        }
+      BOOST_CHECK_CLOSE(JointModel(0),RosenModel(0),0.01);
+      BOOST_CHECK_CLOSE(JointModel(1),RosenModel(1),0.01);
+    }
 BOOST_AUTO_TEST_SUITE_END()

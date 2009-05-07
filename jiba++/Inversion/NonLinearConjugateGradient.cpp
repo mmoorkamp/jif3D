@@ -31,7 +31,7 @@ namespace jiba
       {
         Misfit = GetObjective()->CalcMisfit(CurrentModel);
 
-        jiba::rvec RawGrad(GetObjective()->CalcGradient(CurrentModel));
+        jiba::rvec RawGrad(GetObjective()->CalcGradient());
         jiba::rvec Gradient(ublas::element_prod(RawGrad, GetModelCovDiag()));
 
         std::cout << "Misfit: " << Misfit << " Model: " << CurrentModel

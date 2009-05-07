@@ -29,7 +29,7 @@ namespace jiba
       {
         Misfit = GetObjective()->CalcMisfit(CurrentModel);
         std::cout << "Misfit: " << Misfit << std::endl;
-        jiba::rvec RawGrad(GetObjective()->CalcGradient(CurrentModel));
+        jiba::rvec RawGrad(GetObjective()->CalcGradient());
         jiba::rvec Gradient(ublas::element_prod(RawGrad, GetModelCovDiag()));
 
         const size_t nmod = Gradient.size();
@@ -80,7 +80,6 @@ namespace jiba
             std::rotate(YHistory.begin(), YHistory.begin() + 1, YHistory.end());
           }
         *SHistory.back() = mu * SearchDir;
-        *YHistory.back() = ublas::element_prod(GetObjective()->CalcGradient(
-            CurrentModel), GetModelCovDiag()) - Gradient;
+        *YHistory.back() = ublas::element_prod(GetObjective()->CalcGradient(), GetModelCovDiag()) - Gradient;
       }
   }
