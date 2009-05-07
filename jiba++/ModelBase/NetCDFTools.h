@@ -74,6 +74,18 @@ namespace jiba
         //read coordinate values from netcdf file
         SizeVar->get(&Position[0], nvalues);
       }
+
+    //! Write a vectorial quantity to a netcdf file
+    template<class VectorType>
+    void WriteVec(NcFile &NetCDFFile, const std::string &MeasPosName,
+        const VectorType &Position, NcDim *Dimension, const std::string unit)
+      {
+        const size_t nmeas = Position.size();
+        NcVar *PosVar = NetCDFFile.add_var(MeasPosName.c_str(), ncDouble,
+            Dimension);
+        PosVar->add_att("units", unit.c_str());
+        PosVar->put(&Position[0], nmeas);
+      }
   /* @} */
   }
 #endif /*NETCDFTOOLS_H_*/
