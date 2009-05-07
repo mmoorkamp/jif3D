@@ -6,7 +6,6 @@
 //============================================================================
 
 #include <netcdfcpp.h>
-#include <boost/bind.hpp>
 #include "ReadWriteGravityData.h"
 #include "../Global/NumUtil.h"
 #include "../ModelBase/NetCDFTools.h"
@@ -38,18 +37,8 @@ namespace jiba
           MatVec(i * 9 + n) = tempdata(i);
       }
 
-    //! Write a vectorial quantity to a netcdf file
-    template<class VectorType>
-    void WriteVec(NcFile &NetCDFFile, const std::string &MeasPosName,
-        const VectorType &Position, NcDim *Dimension, const std::string unit)
-      {
-        const size_t nmeas = Position.size();
-        NcVar *PosVar = NetCDFFile.add_var(MeasPosName.c_str(), ncDouble,
-            Dimension);
-        PosVar->add_att("units", unit.c_str());
-        PosVar->put(&Position[0], nmeas);
-      }
 
+    //! Write one component of an FTG matrix for all measurement positions
     void WriteMatComp(NcFile &NetCDFFile, const std::string &CompName,
         const rvec &MatVec, const size_t n, NcDim *Dimension)
       {
