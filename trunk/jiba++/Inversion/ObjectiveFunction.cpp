@@ -1,7 +1,7 @@
 //============================================================================
 // Name        : ObjectiveFunction.cpp
 // Author      : Apr 16, 2009
-// Version     : 
+// Version     :
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
@@ -13,13 +13,12 @@ namespace jiba
 
     ObjectiveFunction::ObjectiveFunction()
       {
-        // TODO Auto-generated constructor stub
 
       }
 
     ObjectiveFunction::~ObjectiveFunction()
       {
-        // TODO Auto-generated destructor stub
+
       }
 
   }
