@@ -24,7 +24,7 @@ namespace jiba
       /*!< Seismic Velocity parameters*/
       int nborder; /*!< Number of grid cells for the boundary*/
 
-      double *slow; /*!< Slowness model used for the forward model (normalized by the grid cell size)*/
+      float *slow; /*!< Slowness model used for the forward model (normalized by the grid cell size)*/
       GRID_STRUCT() :
         nx(0), ny(0), nz(0), h(0), nborder(0), slow(NULL)
         {

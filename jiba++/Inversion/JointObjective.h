@@ -27,7 +27,7 @@ namespace jiba
           const jiba::rvec &Diff);
     public:
       void AddObjective(boost::shared_ptr<ObjectiveFunction> Obj,
-          boost::shared_ptr<VectorTransform> Transform, const double lambda =
+          boost::shared_ptr<GeneralModelTransform> Transform, const double lambda =
               1.0)
         {
           Objectives.push_back(Obj);

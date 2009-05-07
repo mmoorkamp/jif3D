@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE (basic_nlcg_test)
       boost::shared_ptr<Rosenbrock> Rosen1(new Rosenbrock());
       boost::shared_ptr<Rosenbrock> Rosen2(new Rosenbrock());
       boost::shared_ptr<Rosenbrock> Rosen3(new Rosenbrock());
-      boost::shared_ptr<jiba::VectorTransform> Transform(new jiba::CopyTransform());
+      boost::shared_ptr<jiba::GeneralModelTransform> Transform(new jiba::ModelCopyTransform());
       Objective->AddObjective(Rosen1,Transform,0.8);
       Objective->AddObjective(Rosen2,Transform,0.2);
 

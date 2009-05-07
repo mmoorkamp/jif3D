@@ -52,7 +52,7 @@ namespace jiba
         const size_t nobjective = Objectives.size();
         for (size_t i = 0; i < nobjective; ++i)
           {
-            Gradient += Weights.at(i) * Objectives.at(i)->CalcGradient();
+            Gradient += Weights.at(i) * Distributor.TransformGradient(Model,Objectives.at(i)->CalcGradient(),i);
           }
         return Gradient;
       }

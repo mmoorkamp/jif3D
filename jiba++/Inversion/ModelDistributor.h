@@ -25,7 +25,7 @@ namespace jiba
      * concrete physical parameters that each method works with. This base class provides the interface for all function objects
      * that implement such a transformation.
      */
-    class GeneralModelTransform: public VectorTransform
+    class GeneralModelTransform
       {
     public:
       GeneralModelTransform()
@@ -44,7 +44,7 @@ namespace jiba
        * @param FullModel The generalized model vector including all parameters
        * @return The physical quantities for one method
        */
-      virtual jiba::rvec Transform(const jiba::rvec &InputVector) = 0;
+      virtual jiba::rvec Transform(const jiba::rvec &FullModel) = 0;
       //! For the inversion we also need the derivative of the transformation
       /*! To calculate the derivative of the generalized parameters we need to apply the chain rule, as each method only gives
        * us the derivative with respect to the physical parameters. This function returns a vector with all the derivative values
@@ -52,9 +52,29 @@ namespace jiba
        * @param FullModel The generalized model vector including all parameters
        * @return The derivatives of the generalized parameters with respect to the physical parameter
        */
-      virtual jiba::rmat Derivative(const jiba::rvec &InputVector) = 0;
+      virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
+          const jiba::rvec &Derivative) = 0;
       };
 
+    class ModelCopyTransform : public GeneralModelTransform
+      {
+    public:
+      ModelCopyTransform()
+        {
+        }
+      virtual ~ModelCopyTransform()
+        {
+        }
+      jiba::rvec Transform(const jiba::rvec &FullModel)
+        {
+          return FullModel;
+        }
+      virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
+                const jiba::rvec &Derivative)
+        {
+          return Derivative;
+        }
+      };
     //! A class to handle the distribution of model parameters from the "generalized" parameters of the joint inversion to the concrete parameters for each method
     /*! For the joint inversion we want to have the flexibility to invert for different type of model parameters. For example we can invert
      * for slowness and calculate density and conductivity from it like in the old code, invert for rock physics parameters or use the actual
@@ -76,14 +96,14 @@ namespace jiba
         }
     private:
       //This vector stores a shared pointer to a Transformer object for each objective function
-      std::vector<boost::shared_ptr<VectorTransform> > Transformers;
+      std::vector<boost::shared_ptr<GeneralModelTransform> > Transformers;
     public:
       //! Add a transformation object
       /*! For each objective function we need to add a transformation object that
        * performs the translation between generalized and physical model parameters.
        * @param Trans A shared pointer to a transformation object
        */
-      void AddTransformer(boost::shared_ptr<VectorTransform> Trans)
+      void AddTransformer(boost::shared_ptr<GeneralModelTransform> Trans)
         {
           Transformers.push_back(Trans);
         }
@@ -100,6 +120,12 @@ namespace jiba
         {
           assert(TransIndex < Transformers.size());
           return Transformers.at(TransIndex)->Transform(FullModel);
+        }
+      jiba::rvec TransformGradient(const jiba::rvec &FullModel,
+          const jiba::rvec &RawGradient, const size_t TransIndex)
+        {
+          assert(TransIndex < Transformers.size());
+          return Transformers.at(TransIndex)->Derivative(FullModel, RawGradient);
         }
       };
 

@@ -5,7 +5,7 @@ lib inversion : MatrixTools.cpp  LinearInversion.cpp
 				LimitedMemoryQuasiNewton.cpp
 				LineSearch.cpp BacktrackingLineSearch.cpp
 				mcsrch.cpp
-				ObjectiveFunction.cpp JointObjective.cpp
+				ObjectiveFunction.cpp JointObjective.cpp MinDiffRegularization.cpp
                 ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran
                  : <include>boost : : <include>. ;
 

@@ -59,18 +59,18 @@ namespace jiba
 
     //! Read a vector from a netcdf file
     template<class VectorType>
-    void ReadVec(NcFile &NetCDFFile, const std::string &MeasPosName,
+    void ReadVec(NcFile &NetCDFFile, const std::string &DataName, const std::string &DimName,
         VectorType &Position)
       {
         //create a netcdf dimension for the Station number
-        NcDim *Dim = NetCDFFile.get_dim(StationNumberName.c_str());
+        NcDim *Dim = NetCDFFile.get_dim(DimName.c_str());
         //determine the size of that dimension
         const size_t nvalues = Dim->size();
 
         //allocate memory in the class variable
         Position.resize(nvalues);
         // create netcdf variable with the same name as the dimension
-        NcVar *SizeVar = NetCDFFile.get_var(MeasPosName.c_str());
+        NcVar *SizeVar = NetCDFFile.get_var(DataName.c_str());
         //read coordinate values from netcdf file
         SizeVar->get(&Position[0], nvalues);
       }

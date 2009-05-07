@@ -41,7 +41,7 @@ namespace jiba
     class ThreeDSeismicModel: public jiba::ThreeDModelBase
       {
     public:
-      typedef std::vector<size_t> tIndexVec;
+      typedef std::vector<int> tIndexVec;
     private:
       //The x-position of the sources
       ThreeDModelBase::tMeasPosVec SourcePosX;
@@ -130,6 +130,19 @@ namespace jiba
           SourceIndices.push_back(SourceIndex);
           ReceiverIndices.push_back(ReceiverIndex);
         }
+      void ClearSourcePos()
+        {
+          SourcePosX.clear();
+          SourcePosY.clear();
+          SourcePosZ.clear();
+          SourceIndices.clear();
+          ReceiverIndices.clear();
+        }
+      void ClearMeasurementConfigurations()
+        {
+          SourceIndices.clear();
+          ReceiverIndices.clear();
+        }
       //! Set the origin of the coordinate system, this is a reimplementation from the base class to also change the source positions
       virtual void SetOrigin(const double x, const double y, const double z);
       //! Write the seismic model in VTK format, at the moment the best format for plotting, this only writes the slowness and not the source and receiver positions
@@ -139,7 +152,7 @@ namespace jiba
         }
       //! Write the seimic model and all associated information in a netcdf file
       void WriteNetCDF(const std::string filename) const;
-      //! Read the density model and all associated information from a netcdf file
+      //! Read the seismic model and all associated information from a netcdf file
       void ReadNetCDF(const std::string filename);
       ThreeDSeismicModel();
       virtual ~ThreeDSeismicModel();
