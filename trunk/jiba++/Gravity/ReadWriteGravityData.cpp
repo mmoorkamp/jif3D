@@ -24,19 +24,17 @@ namespace jiba
     static const std::string UzyName = "Uzy";
     static const std::string UzzName = "Uzz";
 
-
     //! Read a component of an FTG matrix for all measurement positions
     void ReadMatComp(NcFile &NetCDFFile, const std::string &CompName,
         rvec &MatVec, size_t n)
       {
         //read in the component from the netcdf file
         rvec tempdata(MatVec.size() / 9);
-        ReadVec(NetCDFFile, CompName, tempdata);
+        ReadVec(NetCDFFile, CompName, StationNumberName, tempdata);
         //copy to the right location in the matrix
         for (size_t i = 0; i < tempdata.size(); ++i)
           MatVec(i * 9 + n) = tempdata(i);
       }
-
 
     //! Write one component of an FTG matrix for all measurement positions
     void WriteMatComp(NcFile &NetCDFFile, const std::string &CompName,
@@ -47,7 +45,6 @@ namespace jiba
           tempdata( i) = MatVec(i * 9 + n);
         WriteVec(NetCDFFile, CompName, tempdata, Dimension, "1/s2");
       }
-
 
     /*! This function inspects the contents of a netcdf file to determine which kind
      * of gravity data is stored in it. If it encounters a variable called "Scalar_gravity"
@@ -130,10 +127,10 @@ namespace jiba
         ThreeDGravityModel::tMeasPosVec &PosZ)
       {
         NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
-        ReadVec(DataFile, MeasPosXName, PosX);
-        ReadVec(DataFile, MeasPosYName, PosY);
-        ReadVec(DataFile, MeasPosZName, PosZ);
-        ReadVec(DataFile, ScalarGravityName, Data);
+        ReadVec(DataFile, MeasPosXName, StationNumberName, PosX);
+        ReadVec(DataFile, MeasPosYName, StationNumberName, PosY);
+        ReadVec(DataFile, MeasPosZName, StationNumberName, PosZ);
+        ReadVec(DataFile, ScalarGravityName, StationNumberName, Data);
       }
 
     /*! Read FTG measurements and their position from a netcdf file. Data will have
@@ -150,9 +147,9 @@ namespace jiba
         ThreeDGravityModel::tMeasPosVec &PosZ)
       {
         NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
-        ReadVec(DataFile, MeasPosXName, PosX);
-        ReadVec(DataFile, MeasPosYName, PosY);
-        ReadVec(DataFile, MeasPosZName, PosZ);
+        ReadVec(DataFile, MeasPosXName, StationNumberName, PosX);
+        ReadVec(DataFile, MeasPosYName, StationNumberName, PosY);
+        ReadVec(DataFile, MeasPosZName, StationNumberName, PosZ);
         assert(PosX.size() == PosY.size());
         assert(PosX.size() == PosZ.size());
 

@@ -1,6 +1,15 @@
 import testing ; 
 
-lib tomo :  modeling_seismic.cpp ThreeDSeismicModel.cpp TomographyCalculator.cpp ../ModelBase//modelbase  : <include>. ;
+alias core :  ../ModelBase//modelbase ../Global ..//netcdf_c++ ..//netcdf  ;
 
+lib tomo :  modeling_seismic.cpp ThreeDSeismicModel.cpp TomographyCalculator.cpp 
+            ReadWriteTomographyData.cpp
+            podvin-lecomte-3Da.c 
+            core : <include>. ;
+             
+lib tomo-extra : TomographyObjective.cpp ../ModelBase//modelbase ../Inversion//inversion ;
 
-unit-test seismic_test :  test_modeling_seismic.cpp podvin-lecomte-3Da.c tomo ../ModelBase//modelbase : <include>. ;
+unit-test seismic_test :  test_modeling_seismic.cpp tomo ../ModelBase//modelbase : <include>. ;
+
+exe makeseismesh : makeseismesh.cpp tomo  core : <include>. ;
+exe tomogrid : tomogrid.cpp tomo  core : <include>. ;

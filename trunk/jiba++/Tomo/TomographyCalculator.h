@@ -25,7 +25,7 @@ namespace jiba
       jiba::GRID_STRUCT grid;
       jiba::DATA_STRUCT data;
       jiba::RP_STRUCT *raypath;
-      // Peform the dynamic allocation for the c-structures above
+      // Perform the dynamic allocation for the c-structures above
       void Allocate(const size_t ngrid, const size_t ndata, const size_t npos);
     public:
       TomographyCalculator();

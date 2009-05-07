@@ -218,9 +218,9 @@ namespace jiba
         //open the file
         NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
         //read the three coordinates for the measurements
-        ReadVec(DataFile, MeasPosXName, PosX);
-        ReadVec(DataFile, MeasPosYName, PosY);
-        ReadVec(DataFile, MeasPosZName, PosZ);
+        ReadVec(DataFile, MeasPosXName, StationNumberName,PosX);
+        ReadVec(DataFile, MeasPosYName, StationNumberName,PosY);
+        ReadVec(DataFile, MeasPosZName, StationNumberName,PosZ);
         //and make sure everything is consistent
         assert(PosX.size() == PosY.size());
         assert(PosX.size() == PosZ.size());

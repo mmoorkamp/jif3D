@@ -46,6 +46,11 @@ namespace jiba
 
       void MakeStep(jiba::rvec &CurrentModel)
         {
+          if (ModelCovDiag.size() != CurrentModel.size())
+            {
+              ModelCovDiag.resize(CurrentModel.size());
+              std::fill(ModelCovDiag.begin(),ModelCovDiag.end(),1.0);
+            }
           StepImplementation(CurrentModel);
         }
       NonLinearOptimization(boost::shared_ptr<jiba::ObjectiveFunction> ObjFunction);

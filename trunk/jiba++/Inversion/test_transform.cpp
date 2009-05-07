@@ -17,8 +17,8 @@ BOOST_AUTO_TEST_SUITE( Distributor_Test_Suite )
 BOOST_AUTO_TEST_CASE  (basic_copy_test)
     {
       jiba::ModelDistributor Distributor;
-      Distributor.AddTransformer(boost::shared_ptr<jiba::VectorTransform>(new jiba::CopyTransform()));
-      Distributor.AddTransformer(boost::shared_ptr<jiba::VectorTransform>(new jiba::CopyTransform()));
+      Distributor.AddTransformer(boost::shared_ptr<jiba::GeneralModelTransform>(new jiba::ModelCopyTransform()));
+      Distributor.AddTransformer(boost::shared_ptr<jiba::GeneralModelTransform>(new jiba::ModelCopyTransform()));
       jiba::rvec Input(50);
       std::generate(Input.begin(),Input.end(),rand);
 
