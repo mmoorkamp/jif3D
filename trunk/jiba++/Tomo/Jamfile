@@ -4,6 +4,7 @@ alias core :  ../ModelBase//modelbase ../Global ..//netcdf_c++ ..//netcdf  ;
 
 lib tomo :  modeling_seismic.cpp ThreeDSeismicModel.cpp TomographyCalculator.cpp 
             ReadWriteTomographyData.cpp
+            PodvinTime3D.cpp
             podvin-lecomte-3Da.c 
             core : <include>. ;
              

@@ -86,6 +86,8 @@ namespace jiba
             delete[] rno;
           if (tcalc != NULL)
             delete[] tcalc;
+          if (lshots != NULL)
+            delete[] lshots;
         }
       };
 
