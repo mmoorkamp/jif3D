@@ -13,13 +13,13 @@ namespace jiba
 
     TensorOMPGravityImp::TensorOMPGravityImp()
       {
-        // TODO Auto-generated constructor stub
+
 
       }
 
     TensorOMPGravityImp::~TensorOMPGravityImp()
       {
-        // TODO Auto-generated destructor stub
+
       }
 
     /*!  Calculate the contribution of a layered background to a tensor gravity measurement.

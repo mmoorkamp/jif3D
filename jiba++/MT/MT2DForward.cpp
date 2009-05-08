@@ -13,10 +13,11 @@ namespace jiba
 
     MT2DForward::MT2DForward()
       {
-        // TODO Auto-generated constructor stub
-
       }
 
+    MT2DForward::~MT2DForward()
+      {
+      }
     void MT2DForward::CalcEpol(const std::vector<double> &Periods)
       {
         const long nionos = 20;
@@ -25,7 +26,7 @@ namespace jiba
         const int nperiods = Periods.size();
         const long nx = XSizes.size();
         const long nz = ZSizes.size();
-        const int nzearth = nz ;
+        const int nzearth = nz;
         const int modelsize = nx * nzearth;
         const int nelements = modelsize * nperiods;
         const double rionos = 1.0;
@@ -41,9 +42,10 @@ namespace jiba
 #pragma omp parallel default(shared)
           {
             const t2DModelDim XS(XSizes);
-            t2DModelDim ZS(boost::extents[nz+nionos+natmos]);
-            std::fill_n(ZS.begin(),nionos+natmos,100.0);
-            std::copy(ZSizes.begin(),ZSizes.end(),ZS.begin()+nionos+natmos);
+            t2DModelDim ZS(boost::extents[nz + nionos + natmos]);
+            std::fill_n(ZS.begin(), nionos + natmos, 100.0);
+            std::copy(ZSizes.begin(), ZSizes.end(), ZS.begin() + nionos
+                + natmos);
             const t2DModelData Res(Resistivities);
 #pragma omp for
             for (int i = 0; i < nperiods; ++i)
@@ -91,15 +93,11 @@ namespace jiba
                 hpol_(&Periods[i], &nx, &nz, XS.origin(), ZS.origin(),
                     Res.origin(), Hy_real.origin() + startingindex,
                     Hy_imag.origin() + startingindex, Ex_real.origin()
-                        + startingindex, Ex_imag.origin() + startingindex, Ez_real.origin()
-                        + startingindex, Ez_imag.origin() + startingindex);
+                        + startingindex, Ex_imag.origin() + startingindex,
+                    Ez_real.origin() + startingindex, Ez_imag.origin()
+                        + startingindex);
               }
           }
-      }
-
-    MT2DForward::~MT2DForward()
-      {
-        // TODO Auto-generated destructor stub
       }
 
   }

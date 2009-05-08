@@ -62,13 +62,12 @@ namespace jiba
       hs_keep(NULL),
       source_at_node(0), init_stage(0)
       {
-        // TODO Auto-generated constructor stub
 
       }
 
     PodvinTime3D::~PodvinTime3D()
       {
-        // TODO Auto-generated destructor stub
+
       }
 
 

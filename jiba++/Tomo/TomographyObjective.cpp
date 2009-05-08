@@ -13,13 +13,10 @@ namespace jiba
 
     TomographyObjective::TomographyObjective()
       {
-        // TODO Auto-generated constructor stub
-
       }
 
     TomographyObjective::~TomographyObjective()
       {
-        // TODO Auto-generated destructor stub
       }
 
     void TomographyObjective::ImplDataDifference(const jiba::rvec &Model,
