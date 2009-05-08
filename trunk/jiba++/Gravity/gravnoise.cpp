@@ -10,12 +10,14 @@
  */
 
 #include <iostream>
-#include "ThreeDGravityModel.h"
+#include <ctime>
 #include <boost/random/lagged_fibonacci.hpp>
 #include <boost/random/normal_distribution.hpp>
 #include <boost/random/variate_generator.hpp>
+#include "../Global/FileUtil.h"
+#include "ThreeDGravityModel.h"
 #include "ReadWriteGravityData.h"
-#include <ctime>
+
 
 int main(int argc, char *argv[])
   {
@@ -27,9 +29,7 @@ int main(int argc, char *argv[])
     jiba::ThreeDGravityModel::tMeasPosVec PosX, PosY, PosZ;
 
     //read in the netcdf file with the data
-    std::string datafilename;
-    std::cout << "Data Filename: ";
-    std::cin >> datafilename;
+    std::string datafilename = jiba::AskFilename( "Data Filename: ");
     jiba::ReadScalarGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
 
     //get the relative noise level

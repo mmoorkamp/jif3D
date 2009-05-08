@@ -15,31 +15,31 @@
 #include <algorithm>
 #include <boost/bind.hpp>
 #include <boost/lambda/lambda.hpp>
-#include "../Global/convert.h"
-#include "ThreeDGravityModel.h"
-#include "ReadWriteGravityData.h"
-#include "../Inversion/MatrixTools.h"
 #include <boost/numeric/bindings/atlas/cblas2.hpp>
+#include "../Global/convert.h"
+#include "../Global/FileUtil.h"
+#include "../Inversion/MatrixTools.h"
 #include "../ModelBase/VTKTools.h"
 #include "FullSensitivityGravityCalculator.h"
+#include "ThreeDGravityModel.h"
+#include "ReadWriteGravityData.h"
 namespace atlas = boost::numeric::bindings::atlas;
 
 int main(int argc, char *argv[])
   {
     jiba::ThreeDGravityModel Model;
 
-    std::string modelfilename, datafilename;
+    std::string modelfilename = jiba::AskFilename("Mesh Filename: ");
+
     //get the name of the file containing the mesh information
-    std::cout << "Mesh Filename: ";
-    std::cin >> modelfilename;
+
     //we read in a complete modelfile, but we only use the mesh information
     Model.ReadNetCDF(modelfilename);
 
     //we also read in data, but we only use the information about the measurements
     jiba::rvec Data;
     jiba::ThreeDGravityModel::tMeasPosVec PosX, PosY, PosZ;
-    std::cout << "Data Filename: ";
-    std::cin >> datafilename;
+    std::string datafilename = jiba::AskFilename("Data Filename: ");
     jiba::ReadScalarGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
     const size_t nmeas = PosX.size();
     //set the measurement points in the model to those of the data

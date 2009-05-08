@@ -13,12 +13,11 @@
 #include <iostream>
 #include <string>
 #include "ThreeDSeismicModel.h"
-
+#include "../Global/FileUtil.h"
 using namespace std;
 
 int main(int argc, char *argv[])
   {
-    std::string MeshFilename;
     jiba::ThreeDSeismicModel Model;
     int nx, ny, nz;
     double cellsize;
@@ -38,9 +37,6 @@ int main(int argc, char *argv[])
     std::cout << "Slowness: ";
     std::cin >> defaultslowness;
     fill_n(Model.SetSlownesses().origin(),Model.GetSlownesses().num_elements(),defaultslowness);
-    cout << "Meshfile name: ";
-    cin >> MeshFilename;
+    std::string MeshFilename = jiba::AskFilename("Meshfile name: ");
     Model.WriteNetCDF(MeshFilename);
-
-
   }

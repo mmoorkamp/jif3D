@@ -13,6 +13,8 @@
 #include <fstream>
 #include <iostream>
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/filesystem.hpp>
+#include <iostream>
 
 /*! \file FileUtil.h
  * Utilities associated with the general handling of files and filenames.
@@ -71,6 +73,18 @@ namespace jiba
           {
             throw FatalException("Token " + token + " not found !");
           }
+      }
+
+    inline std::string AskFilename(const std::string &prompt)
+      {
+        std::cout << prompt;
+        std::string filename;
+        std::cin >> filename;
+        if (!boost::filesystem::exists(filename))
+          {
+            throw jiba::FatalException("File " + filename + " does not exist");
+          }
+        return filename;
       }
   /* @} */
   }

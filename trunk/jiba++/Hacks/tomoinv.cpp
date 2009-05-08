@@ -84,13 +84,11 @@ int main(int argc, char *argv[])
     //we define a few constants that are used throughout the inversion
 
     const size_t ndata = Data.size();
-
-    //create objects for the misfit and a very basic error estimate
-    jiba::rvec DataError(ndata);
-
     const double errorlevel = 0.02;
     const double maxdata = *std::max_element(Data.begin(), Data.end(),
         jiba::absLess<double, double>());
+    //create objects for the misfit and a very basic error estimate
+        jiba::rvec DataError(ndata);
     for (size_t i = 0; i < ndata; ++i)
       {
         DataError( i) = std::max(std::abs(Data(i) * errorlevel), 1e-2 * maxdata

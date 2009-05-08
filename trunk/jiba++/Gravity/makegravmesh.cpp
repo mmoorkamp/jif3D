@@ -12,13 +12,14 @@
 
 #include <iostream>
 #include <string>
+#include "../Global/FileUtil.h"
 #include "ThreeDGravityModel.h"
 
 using namespace std;
 
 int main(int argc, char *argv[])
   {
-    std::string MeshFilename;
+
     jiba::ThreeDGravityModel Model;
     int nx, ny, nz;
     double deltax, deltay, deltaz;
@@ -46,8 +47,7 @@ int main(int argc, char *argv[])
     fill_n(Model.SetXCellSizes().begin(),nx,deltax);
     fill_n(Model.SetYCellSizes().begin(),ny,deltay);
     fill_n(Model.SetZCellSizes().begin(),nz,deltaz);
-    cout << "Meshfile name: ";
-    cin >> MeshFilename;
+    std::string MeshFilename = jiba::AskFilename("Meshfile name: ");
     Model.WriteNetCDF(MeshFilename);
 
 
