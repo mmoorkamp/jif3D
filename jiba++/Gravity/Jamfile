@@ -14,7 +14,7 @@ lib gravity-extra : DepthWeighting.cpp
                     GravityObjective.cpp
                     ..//cudart   ../Global//global ../Inversion//inversion ;
                     
-alias core :  ../ModelBase//modelbase ../Global ..//netcdf_c++ ..//netcdf ..//cudart ..//cutil ;
+alias core :  ../ModelBase//modelbase ../Global ..//netcdf_c++ ..//netcdf ..//cudart ..//cutil ..//boost_filesystem  ;
 
 unit-test Model_test : test_ThreeDGravityModel.cpp gravity gravity-extra core : : <include>. ;
 unit-test scalar_test : test_ScalarCalculation.cpp gravity gravity-extra core : : <include>. ;

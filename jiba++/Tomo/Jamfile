@@ -1,6 +1,6 @@
 import testing ; 
 
-alias core :  ../ModelBase//modelbase ../Global ..//netcdf_c++ ..//netcdf  ;
+alias core :  ../ModelBase//modelbase ../Global ..//netcdf_c++ ..//netcdf ..//boost_filesystem  ;
 
 lib tomo :  modeling_seismic.cpp ThreeDSeismicModel.cpp TomographyCalculator.cpp 
             ReadWriteTomographyData.cpp

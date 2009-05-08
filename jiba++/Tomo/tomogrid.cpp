@@ -25,7 +25,7 @@ using namespace std;
 
 int main(int argc, char *argv[])
   {
-    std::string ModelFilename;
+
 
     jiba::ThreeDSeismicModel SeisModel;
 
@@ -49,8 +49,8 @@ int main(int argc, char *argv[])
     cout << "Z-level: ";
     cin >> z;
     //ask for the name of the netcdf file containing the model
-    cout << "Model Filename: ";
-    cin >> ModelFilename;
+    std::string ModelFilename = jiba::AskFilename("Model Filename: ");
+
     //determine the extension to find out the type
     std::string extension = jiba::GetFileExtension(ModelFilename);
     //read in the file

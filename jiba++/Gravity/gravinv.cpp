@@ -21,6 +21,7 @@
 #include <string>
 #include "../Global/convert.h"
 #include "../Global/FatalException.h"
+#include "../Global/FileUtil.h"
 #include "../Inversion/LinearInversion.h"
 #include "../ModelBase/VTKTools.h"
 #include "../ModelBase/NetCDFTools.h"
@@ -79,15 +80,13 @@ int main(int argc, char *argv[])
     jiba::ThreeDGravityModel::tMeasPosVec PosX, PosY, PosZ;
 
     //first we read in the starting model and the measured data
-    std::string modelfilename, datafilename;
-    std::cout << "Starting model Filename: ";
-    std::cin >> modelfilename;
+    std::string modelfilename = jiba::AskFilename("Starting model Filename: ");
+    std::string datafilename = jiba::AskFilename( "Data Filename: ");
+
     //we read in the starting modelfile
     jiba::ThreeDGravityModel Model;
     Model.ReadNetCDF(modelfilename);
     //get the name of the file containing the data and read it in
-    std::cout << "Data Filename: ";
-    std::cin >> datafilename;
 
     //we figure out the type of data (scalar or ftg) from the variables
     //that are in the netcdf file
