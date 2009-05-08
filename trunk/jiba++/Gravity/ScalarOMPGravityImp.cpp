@@ -14,13 +14,12 @@ namespace jiba
 
     ScalarOMPGravityImp::ScalarOMPGravityImp()
       {
-        // TODO Auto-generated constructor stub
 
       }
 
     ScalarOMPGravityImp::~ScalarOMPGravityImp()
       {
-        // TODO Auto-generated destructor stub
+
       }
 
     /*!  Calculate the contribution of a layered background to a scalar gravity measurement.

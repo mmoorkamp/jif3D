@@ -13,13 +13,12 @@ namespace jiba
 
     JointObjective::JointObjective()
       {
-        // TODO Auto-generated constructor stub
 
       }
 
     JointObjective::~JointObjective()
       {
-        // TODO Auto-generated destructor stub
+
       }
 
     void JointObjective::ImplDataDifference(const jiba::rvec &Model,

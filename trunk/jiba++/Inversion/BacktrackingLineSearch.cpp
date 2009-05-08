@@ -13,13 +13,12 @@ namespace jiba
 
     BacktrackingLineSearch::BacktrackingLineSearch()
       {
-        // TODO Auto-generated constructor stub
 
       }
 
     BacktrackingLineSearch::~BacktrackingLineSearch()
       {
-        // TODO Auto-generated destructor stub
+
       }
 
     double BacktrackingLineSearch::FindStep(const jiba::rvec &CurrModel,

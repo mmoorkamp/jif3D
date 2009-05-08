@@ -17,13 +17,12 @@ namespace jiba
         jiba::ObjectiveFunction> ObjFunction) :
       NonLinearOptimization(ObjFunction), OldOmega(1.0), mu(1.0)
       {
-        // TODO Auto-generated constructor stub
 
       }
 
     NonLinearConjugateGradient::~NonLinearConjugateGradient()
       {
-        // TODO Auto-generated destructor stub
+
       }
 
     void NonLinearConjugateGradient::StepImplementation(

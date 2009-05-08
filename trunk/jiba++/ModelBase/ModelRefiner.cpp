@@ -147,13 +147,12 @@ namespace jiba
 
     ModelRefiner::ModelRefiner()
       {
-        // TODO Auto-generated constructor stub
 
       }
 
     ModelRefiner::~ModelRefiner()
       {
-        // TODO Auto-generated destructor stub
+
       }
 
   }

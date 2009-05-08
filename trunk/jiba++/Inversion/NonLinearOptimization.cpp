@@ -14,13 +14,12 @@ namespace jiba
     NonLinearOptimization::NonLinearOptimization(boost::shared_ptr<jiba::ObjectiveFunction> ObjFunction)
     :Objective(ObjFunction)
       {
-        // TODO Auto-generated constructor stub
 
       }
 
     NonLinearOptimization::~NonLinearOptimization()
       {
-        // TODO Auto-generated destructor stub
+
       }
 
   }
