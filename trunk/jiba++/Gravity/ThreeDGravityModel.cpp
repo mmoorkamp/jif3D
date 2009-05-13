@@ -35,13 +35,26 @@ namespace jiba
     ThreeDGravityModel& ThreeDGravityModel::operator=(
         const ThreeDGravityModel& source)
       {
-        ThreeDModelBase::operator=(source);
-        bg_densities.resize(source.bg_densities.size());
-        std::copy(source.bg_densities.begin(), source.bg_densities.end(),
-            bg_densities.begin());
-        bg_thicknesses.resize(source.bg_thicknesses.size());
-        std::copy(source.bg_thicknesses.begin(), source.bg_thicknesses.end(),
-            bg_thicknesses.begin());
+        if (&source != this)
+          {
+            ThreeDModelBase::operator=(source);
+            bg_densities.resize(source.bg_densities.size());
+            std::copy(source.bg_densities.begin(), source.bg_densities.end(),
+                bg_densities.begin());
+            bg_thicknesses.resize(source.bg_thicknesses.size());
+            std::copy(source.bg_thicknesses.begin(),
+                source.bg_thicknesses.end(), bg_thicknesses.begin());
+          }
+        return *this;
+      }
+
+    ThreeDGravityModel& ThreeDGravityModel::operator=(
+        const ThreeDModelBase& source)
+      {
+        if (&source != this)
+          {
+            ThreeDModelBase::operator=(source);
+          }
         return *this;
       }
 
