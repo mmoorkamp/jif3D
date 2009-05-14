@@ -75,12 +75,12 @@ namespace jiba
           }
       }
 
-    inline std::string AskFilename(const std::string &prompt)
+    inline std::string AskFilename(const std::string &prompt, const bool checkexists = true)
       {
         std::cout << prompt;
         std::string filename;
         std::cin >> filename;
-        if (!boost::filesystem::exists(filename))
+        if (checkexists && !boost::filesystem::exists(filename))
           {
             throw jiba::FatalException("File " + filename + " does not exist");
           }
