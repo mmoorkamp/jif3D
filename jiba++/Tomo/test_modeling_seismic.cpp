@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE (memory_test)
       float YS = 0.5;
       float ZS = 0.5;
       float HS_EPS_INIT = 0.001;
-      int MSG = 2;
+      int MSG = 0;
       std::fill_n(HS, nparam, 1.0);
       std::fill_n(T, nparam, 0.0);
       int status = jiba::PodvinTime3D().time_3d(HS, T, nx, ny, nz, XS, YS, ZS, HS_EPS_INIT, MSG);
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE (memory_test)
       geo.z = new float[geo.nrec + geo.nshot];
       geo.x[0] = 75.0;
       geo.y[0] = 100.0;
-      geo.z[0] = 20.0;
+      geo.z[0] = 40.0;
       geo.x[1] = 157.0;
       geo.y[1] = 157.0;
       geo.z[1] = 157.0;
@@ -144,21 +144,16 @@ BOOST_AUTO_TEST_CASE (memory_test)
       raypath = new jiba::RP_STRUCT[2];
 
       ForwardModRay(geo, grid, &data, raypath, 0);
-      std::cout << "Time: " << data.tcalc[0] / 1000.0 << " Dist: " << dist
-          << " Rel. Error: " << (data.tcalc[0] / 1000.0 - dist) / dist
-          << std::endl;
+      double relerror = (data.tcalc[0] / 1000.0 - dist) / dist;
+      BOOST_CHECK(relerror < 0.01 );
+
       double totallength = 0.0;
       for (size_t i = 0; i < raypath[0].nray; ++i)
         {
-          std::cout << "Ray x: " << raypath[0].x[i] << " Ray y: "
-              << raypath[0].y[i] << " Ray z: " << raypath[0].z[i];
-          std::cout << " Length: " << raypath[0].len[i] << " Position: "
-              << raypath[0].ele[i] << std::endl;
           totallength += raypath[0].len[i];
         }
-      std::cout << "Total length: " << totallength << " Raypath time: "
-          << totallength * grid.h << std::endl;
 
+      BOOST_CHECK_CLOSE(dist,totallength * grid.h,0.1);
       jiba::TomographyCalculator Calculator;
       jiba::ThreeDSeismicModel Model;
       Model.SetCellSize(grid.h, ncells, ncells, ncells);
@@ -170,9 +165,7 @@ BOOST_AUTO_TEST_CASE (memory_test)
       Model.AddMeasurementConfiguration(0, 0);
       Model.AddMeasurementConfiguration(1, 1);
       jiba::rvec time(Calculator.Calculate(Model));
-      std::cout << "Bjoern: " << data.tcalc[0] << " C++: " << time(0)
-          << std::endl;
-      std::cout << "Bjoern: " << data.tcalc[1] << " C++: " << time(1)
-          << std::endl;
+      BOOST_CHECK_CLOSE(data.tcalc[0], time(0),0.01);
+      BOOST_CHECK_CLOSE(data.tcalc[1], time(1),0.01);
     }
 BOOST_AUTO_TEST_SUITE_END()
