@@ -99,6 +99,7 @@ int main(int argc, char *argv[])
     std::copy(Model.GetSlownesses().origin(), Model.GetSlownesses().origin()
         + Model.GetSlownesses().num_elements(), InvModel.begin());
 
+    jiba::rvec RefModel(InvModel);
     for (size_t i = 0; i < InvModel.size(); ++i)
       InvModel( i) = std::log10(InvModel(i));
     boost::shared_ptr<jiba::TomographyObjective> TomoObjective(
@@ -111,7 +112,7 @@ int main(int argc, char *argv[])
         new jiba::JointObjective());
     boost::shared_ptr<jiba::MinDiffRegularization> Regularization(
         new jiba::MinDiffRegularization());
-    jiba::rvec RefModel(InvModel);
+
     Regularization->SetReferenceModel(RefModel);
 
     double lambda = 1.0;
