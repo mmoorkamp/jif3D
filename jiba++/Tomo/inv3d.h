@@ -116,7 +116,7 @@ namespace jiba
           if (y != NULL)
             free(y);
           if (z != NULL)
-            delete[] z;
+            free( z);
           if (len != NULL)
             free(len);
           if (ele != NULL)
