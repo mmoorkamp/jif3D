@@ -9,7 +9,6 @@
  * Make a netcdf seismic model file with a specified mesh. The slownesses in this file are all identical to the specified value.
  */
 
-
 #include <iostream>
 #include <string>
 #include "ThreeDSeismicModel.h"
@@ -30,13 +29,24 @@ int main(int argc, char *argv[])
     cout << "Cell size: ";
     cin >> cellsize;
 
-
-    Model.SetCellSize(cellsize,nz,ny,nz);
+    Model.SetCellSize(cellsize, nx, ny, nz);
     Model.SetSlownesses().resize(boost::extents[nx][ny][nz]);
-    double defaultslowness = 0.0;
-    std::cout << "Slowness: ";
-    std::cin >> defaultslowness;
-    fill_n(Model.SetSlownesses().origin(),Model.GetSlownesses().num_elements(),defaultslowness);
-    std::string MeshFilename = jiba::AskFilename("Meshfile name: ");
+    double topvel = 0.0;
+    std::cout << "Velocity at top: ";
+    std::cin >> topvel;
+    double bottomvel = 0.0;
+    std::cout << "Velocity at bottom: ";
+    std::cin >> bottomvel;
+    const double firstdepth = Model.GetZCoordinates()[0];
+    const double bottomdepth = Model.GetZCoordinates()[nz -1];
+    for (size_t i = 0; i < Model.GetSlownesses().num_elements(); ++i)
+      {
+        double Depth = Model.GetZCoordinates()[i % nz];
+        double Velocity = topvel + (Depth - firstdepth) * (bottomvel - topvel)/(bottomdepth - firstdepth);
+        Model.SetSlownesses().origin()[i] = 1.0/Velocity;
+      }
+
+
+    std::string MeshFilename = jiba::AskFilename("Meshfile name: ", false);
     Model.WriteNetCDF(MeshFilename);
   }

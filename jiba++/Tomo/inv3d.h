@@ -112,15 +112,15 @@ namespace jiba
       virtual ~RP_STRUCT()
         {
           if (x != NULL)
-            delete[] x;
+            free(x);
           if (y != NULL)
-            delete[] y;
+            free(y);
           if (z != NULL)
             delete[] z;
           if (len != NULL)
-            delete[] len;
+            free(len);
           if (ele != NULL)
-            delete[] ele;
+            free(ele);
         }
       };
 

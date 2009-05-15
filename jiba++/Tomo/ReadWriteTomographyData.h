@@ -23,6 +23,7 @@ namespace jiba
     void PlotTimeField(const std::string &filename, const float *Times,
         const double gridspacing, const size_t nx, const size_t ny,
         const size_t nz);
-    void PlotRaypath(const std::string &filename, jiba::RP_STRUCT *raypath, const size_t nmeas, const double gridspacing);
+    void PlotRaypath(const std::string &filename, jiba::RP_STRUCT *raypath,
+        const size_t nmeas, const double gridspacing, const size_t nairlayers);
   }
 #endif /* READWRITETOMOGRAPHYDATA_H_ */
