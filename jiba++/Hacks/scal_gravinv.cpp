@@ -75,8 +75,8 @@ int main(int argc, char *argv[])
 
       break;
     case jiba::ftg:
-     jiba::ReadTensorGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
-//      //assign a ftg forward calculation object to the pointer
+      jiba::ReadTensorGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
+      //      //assign a ftg forward calculation object to the pointer
       GravityCalculator
           = boost::shared_ptr<jiba::FullSensitivityGravityCalculator>(
               jiba::CreateGravityCalculator<
@@ -132,10 +132,12 @@ int main(int argc, char *argv[])
     jiba::rvec DataError(ndata);
 
     const double errorlevel = 0.02;
-    const double maxdata = *std::max_element(Data.begin(),Data.end(),jiba::absLess<double,double>());
+    const double maxdata = *std::max_element(Data.begin(), Data.end(),
+        jiba::absLess<double, double>());
     for (size_t i = 0; i < ndata; ++i)
       {
-        DataError(i) = std::max(std::abs(Data(i) * errorlevel),1e-2 * maxdata * errorlevel);
+        DataError( i) = std::max(std::abs(Data(i) * errorlevel), 1e-2 * maxdata
+            * errorlevel);
       }
     std::cout << "DataError " << DataError << std::endl;
 
@@ -183,12 +185,14 @@ int main(int argc, char *argv[])
 
     LBFGS.SetModelCovDiag(ModelWeight);
     NLCG.SetModelCovDiag(ModelWeight);
-    for (size_t i = 0; i < 30; ++i)
+    size_t iteration = 0;
+    size_t maxiter = 30;
+    do
       {
         LBFGS.MakeStep(InvModel);
         std::cout << std::endl;
-
-      }
+        ++iteration;
+      } while (iteration < maxiter && LBFGS.GetMisfit() > ndata);
 
     //add the result of the inversion to the starting model
     //we only add the gridded part, the  background is always 0 due to the weighting
@@ -221,11 +225,10 @@ int main(int argc, char *argv[])
       //    Model.GetMeasPosZ());
 
       jiba::SaveScalarGravityMeasurements(modelfilename + ".meas_invariant.nc",
-             Data, Model.GetMeasPosX(), Model.GetMeasPosY(),
-             Model.GetMeasPosZ());
-         jiba::SaveScalarGravityMeasurements(modelfilename + ".inv_invariant.nc",
-             InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
-             Model.GetMeasPosZ());
+          Data, Model.GetMeasPosX(), Model.GetMeasPosY(), Model.GetMeasPosZ());
+      jiba::SaveScalarGravityMeasurements(modelfilename + ".inv_invariant.nc",
+          InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
+          Model.GetMeasPosZ());
       break;
     default:
       std::cerr << " We should never reach this part. Fatal Error !"
