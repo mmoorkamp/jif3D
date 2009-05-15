@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
     fill_n(Model.SetXCellSizes().begin(),nx,deltax);
     fill_n(Model.SetYCellSizes().begin(),ny,deltay);
     fill_n(Model.SetZCellSizes().begin(),nz,deltaz);
-    std::string MeshFilename = jiba::AskFilename("Meshfile name: ");
+    std::string MeshFilename = jiba::AskFilename("Meshfile name: ",false);
     Model.WriteNetCDF(MeshFilename);
 
 
