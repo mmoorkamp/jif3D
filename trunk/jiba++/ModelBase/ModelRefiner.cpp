@@ -17,9 +17,7 @@ namespace jiba
         const ThreeDModelBase::t3DModelDim &OldSizes,
         ThreeDModelBase::t3DModelDim &NewSizes)
       {
-        //we need two indices, one for the current position in the original axes
-        size_t oldindex = 0;
-        //and one for the current position on the refined axes
+        //we need an index for the current position on the refined axes
         size_t refineindex = 0;
         const size_t nold = OldCoordinates.size();
         const size_t nref = RefCoordinates.size();
@@ -123,11 +121,11 @@ namespace jiba
                 RefinedModel.GetXCellSizes());
             for (size_t j = 0; j < oldysize; ++j)
               {
-                FindEnd(starty, endy, InputModel.GetYCellSizes()[i],
+                FindEnd(starty, endy, InputModel.GetYCellSizes()[j],
                     RefinedModel.GetYCellSizes());
                 for (size_t k = 0; k < oldzsize; ++k)
                   {
-                    FindEnd(startz, endz, InputModel.GetZCellSizes()[i],
+                    FindEnd(startz, endz, InputModel.GetZCellSizes()[k],
                         RefinedModel.GetZCellSizes());
 
                     typedef boost::multi_array_types::index_range range;
