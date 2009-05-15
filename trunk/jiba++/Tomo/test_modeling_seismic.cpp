@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <vector>
-#include "Podvin.h"
+#include "PodvinTime3D.h"
 #include "modeling_seismic.h"
 #include "TomographyCalculator.h"
 #include <boost/test/floating_point_comparison.hpp>
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE (memory_test)
       int MSG = 2;
       std::fill_n(HS, nparam, 1.0);
       std::fill_n(T, nparam, 0.0);
-      int status = time_3d(HS, T, nx, ny, nz, XS, YS, ZS, HS_EPS_INIT, MSG);
+      int status = jiba::PodvinTime3D().time_3d(HS, T, nx, ny, nz, XS, YS, ZS, HS_EPS_INIT, MSG);
       float dist = sqrt(XS * XS + YS * YS + ZS * ZS);
       BOOST_CHECK_CLOSE(T[0],dist,0.001);
     }
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE (memory_test)
       const size_t ngrid = pow(ncells + 1, 3);
       std::fill_n(grid.org, 3, 0.0);
       grid.slow = new float[ngrid];
-      std::fill_n(grid.slow, ngrid, 1.0 * grid.h);
+      std::fill_n(grid.slow, ngrid, 0.1 * grid.h);
 
       data.ndata_seis = 2;
       data.ndata_seis_act = 2;
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE (memory_test)
       Model.AddSource(geo.x[0], geo.y[0], geo.z[0]);
       Model.AddMeasurementPoint(geo.x[0], geo.y[0], geo.z[0]);
       Model.AddSource(geo.x[1], geo.y[1], geo.z[1]);
-      std::fill_n(Model.SetSlownesses().origin(), pow(ncells, 3), 1.0);
+      std::fill_n(Model.SetSlownesses().origin(), pow(ncells, 3), 0.1);
       Model.AddMeasurementConfiguration(0, 0);
       Model.AddMeasurementConfiguration(1, 1);
       jiba::rvec time(Calculator.Calculate(Model));

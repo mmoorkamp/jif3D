@@ -14,3 +14,4 @@ unit-test seismic_test :  test_modeling_seismic.cpp tomo ../ModelBase//modelbase
 
 exe makeseismesh : makeseismesh.cpp tomo  core : <include>. ;
 exe tomogrid : tomogrid.cpp tomo  core : <include>. ;
+exe refinemodel : refinemodel.cpp tomo  core : <include>. ;

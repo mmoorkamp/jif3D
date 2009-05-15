@@ -78,9 +78,7 @@ namespace jiba
         uniqueshots.erase(std::unique(uniqueshots.begin(), uniqueshots.end()),
             uniqueshots.end());
         assert(uniqueshots.size() == geo.nshot);
-        std::copy(uniqueshots.begin(), uniqueshots.end(),
-            std::ostream_iterator<double>(std::cout, " "));
-        std::cout << std::endl;
+
 
 #pragma omp parallel default(shared)
           {
@@ -158,12 +156,12 @@ namespace jiba
 
                   }
 
-                printf(" For shot-nr. %d all traveltimes are calculated\n", i
-                    + 1);
-                printf("   (x=%f,y=%f,z=%f)\n", geo.x[i], geo.y[i], geo.z[i]);
-                printf(
-                    "   Number of found receiver positions for the shot: %d\n",
-                    count);
+                //printf(" For shot-nr. %d all traveltimes are calculated\n", i
+                //    + 1);
+                //printf("   (x=%f,y=%f,z=%f)\n", geo.x[i], geo.y[i], geo.z[i]);
+                //printf(
+                //    "   Number of found receiver positions for the shot: %d\n",
+                 //   count);
 
                 /***************************************/
 
@@ -460,10 +458,10 @@ namespace jiba
                 == 0 || next_cell.yno == ny1 || next_cell.zno == 0
                 || next_cell.zno == nz1)
               {
-                printf(
-                    "The ray from the shot-receiver\ncombination %d leaves the model\n\n",
-                    rp[i].n + 1);
-                rp[i].nray = 0;
+                //printf(
+                //    "The ray from the shot-receiver\ncombination %d leaves the model\n\n",
+                //    rp[i].n + 1);
+                //rp[i].nray = 0;
                 goto fertig;
               }
 
@@ -515,19 +513,19 @@ namespace jiba
                     == 0 || next_cell.yno == ny1 || next_cell.zno == 0
                     || next_cell.zno == nz1)
                   {
-                    printf(
-                        "The ray from the shot-receiver\ncombination %d leaves the model\n\n",
-                        rp[i].n + 1);
-                    rp[i].nray = 0;
+                    //printf(
+                    //    "The ray from the shot-receiver\ncombination %d leaves the model\n\n",
+                    //    rp[i].n + 1);
+                    //rp[i].nray = 0;
                     goto fertig;
                   }
 
                 /*The ray will not be traced back, if the number of ray segments become too large; the ray is "fallen" probably in a local minima*/
                 if (count >= max_nr_of_ray_seg)
                   {
-                    printf(
-                        "The discretized traveltime field of the ray from the shot-receiver\ncombination %d had a probably local minima\n\n",
-                        rp[i].n + 1);
+                    //printf(
+                    //    "The discretized traveltime field of the ray from the shot-receiver\ncombination %d had a probably local minima\n\n",
+                     //   rp[i].n + 1);
                     rp[i].nray = 0;
                     goto fertig;
                   }
@@ -569,8 +567,8 @@ namespace jiba
 
           }
 
-        printf("All rays for the shot are calculated\n");
-        printf("----------------\n\n");
+        //printf("All rays for the shot are calculated\n");
+        //printf("----------------\n\n");
 
         return (1);
       }

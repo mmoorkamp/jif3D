@@ -21,6 +21,7 @@ namespace jiba
     class TomographyCalculator
       {
     private:
+      size_t nairlayers;
       jiba::GEOMETRY geo;
       jiba::GRID_STRUCT grid;
       jiba::DATA_STRUCT data;

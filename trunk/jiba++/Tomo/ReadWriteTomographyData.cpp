@@ -153,7 +153,7 @@ namespace jiba
       }
 
     void PlotRaypath(const std::string &filename, jiba::RP_STRUCT *raypath,
-        const size_t nmeas, const double gridspacing)
+        const size_t nmeas, const double gridspacing, const size_t nairlayers)
       {
         std::ofstream outfile(filename.c_str());
         outfile << "# vtk DataFile Version 2.0\n";
@@ -179,9 +179,9 @@ namespace jiba
               {
                 for (size_t j = 0; j < raypath[i].nray + 1; ++j)
                   {
-                    outfile << raypath[i].x[j] * gridspacing << " "
+                    outfile << raypath[i].x[j]  * gridspacing << " "
                         << raypath[i].y[j] * gridspacing << " "
-                        << raypath[i].z[j] * gridspacing << "\n ";
+                        << (raypath[i].z[j]- nairlayers) * gridspacing << "\n ";
                   }
               }
           }

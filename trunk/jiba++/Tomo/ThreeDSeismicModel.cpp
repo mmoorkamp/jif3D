@@ -13,7 +13,7 @@
 namespace jiba
   {
     static const std::string SlownessName = "Slowness";
-    static const std::string SlownessUnit = "s/km";
+    static const std::string SlownessUnit = "s/m";
 
     ThreeDSeismicModel::ThreeDSeismicModel()
       {
