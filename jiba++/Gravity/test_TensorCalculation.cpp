@@ -230,10 +230,14 @@ BOOST_AUTO_TEST_CASE  (random_tensor_test)
       jiba::rvec Deriv(TensorCalculator->LQDerivative(GravityTest,Misfit));
       TensorCalculator->Calculate(GravityTest);
       jiba::rvec Compare(boost::numeric::ublas::prec_prod(ublas::trans(TensorCalculator->GetSensitivities()),Misfit));
+      //and test the caching, too
+      jiba::rvec Deriv2(TensorCalculator->LQDerivative(GravityTest,Misfit));
       for (size_t i = 0; i < nmeas*TensorCalculator->GetDataPerMeasurement(); ++i)
         {
           BOOST_CHECK_CLOSE(Deriv(i), Compare(i), std::numeric_limits<
               float>::epsilon());
+          BOOST_CHECK_CLOSE(Deriv2(i), Compare(i), std::numeric_limits<
+                        float>::epsilon());
         }
     }
   BOOST_AUTO_TEST_SUITE_END()
