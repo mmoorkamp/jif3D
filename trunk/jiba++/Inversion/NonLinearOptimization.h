@@ -20,20 +20,19 @@ namespace jiba
     class NonLinearOptimization
       {
     private:
-
+    	 virtual void StepImplementation(jiba::rvec &CurrentModel) = 0;
       jiba::rvec ModelCovDiag;
       boost::shared_ptr<jiba::ObjectiveFunction> Objective;
-      virtual void StepImplementation(jiba::rvec &CurrentModel) = 0;
     protected:
+      jiba::rvec SearchDir;
       double Misfit;
-      double GradNorm;
       const boost::shared_ptr<jiba::ObjectiveFunction> GetObjective()
         {
           return Objective;
         }
     public:
       double GetMisfit() { return Misfit;}
-      double GetGradNorm() {return GradNorm;}
+      double GetGradNorm() {return ublas::norm_2(SearchDir);}
       const jiba::rvec &GetModelCovDiag() const
         {
           return ModelCovDiag;
@@ -51,6 +50,10 @@ namespace jiba
               ModelCovDiag.resize(CurrentModel.size());
               std::fill(ModelCovDiag.begin(),ModelCovDiag.end(),1.0);
             }
+          if (SearchDir.size()!= CurrentModel.size() )
+          {
+        	  SearchDir.resize(CurrentModel.size());
+          }
           StepImplementation(CurrentModel);
         }
       NonLinearOptimization(boost::shared_ptr<jiba::ObjectiveFunction> ObjFunction);

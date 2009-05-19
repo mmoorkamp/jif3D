@@ -32,8 +32,8 @@ namespace jiba
 
         jiba::rvec RawGrad(GetObjective()->CalcGradient());
         jiba::rvec Gradient(ublas::element_prod(RawGrad, GetModelCovDiag()));
-
-        std::cout << "Misfit: " << Misfit << " Model: " << CurrentModel
+        SearchDir.clear();
+        std::cout << "Misfit: " << Misfit
             << " Gradient: " << ublas::norm_2(Gradient) << std::endl;
         const size_t nmod = Gradient.size();
         if (OldGradient.size() != nmod)
@@ -55,27 +55,29 @@ namespace jiba
         alpha = (omega - alpha) / OldOmega;
         OldGradient = Gradient;
         OldOmega = omega;
-        jiba::rvec Search(Gradient + alpha * OldDirection);
-        OldDirection = Search;
+        SearchDir = Gradient + alpha * OldDirection;
+        OldDirection = SearchDir;
 
-        Search *= -1.0;
+        SearchDir *= -1.0;
         mu = 1.0;
-        double angle = ublas::inner_prod(Search, RawGrad);
+        double angle = ublas::inner_prod(SearchDir, RawGrad)/ (ublas::norm_2(SearchDir) * ublas::norm_2(
+                RawGrad));
         std::cout << "Angle: " << angle << std::endl;
+        int status = 0;
         if (angle < 0.0)
           {
-            OPTPP::mcsrch(GetObjective().get(), Search, RawGrad, CurrentModel,
+            status = OPTPP::mcsrch(GetObjective().get(), SearchDir, RawGrad, CurrentModel,
                 Misfit, &mu, 20, 1e-4, 2.2e-16, 0.1, 1e9, 1e-9);
           }
         else
           {
             Gradient *= -1.0;
             OldGradient.resize(0);
-            OPTPP::mcsrch(GetObjective().get(), Gradient, RawGrad,
+            status = OPTPP::mcsrch(GetObjective().get(), Gradient, RawGrad,
                 CurrentModel, Misfit, &mu, 20, 1e-4, 2.2e-16, 0.1, 1e9, 1e-9);
           }
-
-        CurrentModel += mu * Search;
+        std::cout << "Status: " << status << std::endl;
+        CurrentModel += mu * SearchDir;
 
       }
   }
