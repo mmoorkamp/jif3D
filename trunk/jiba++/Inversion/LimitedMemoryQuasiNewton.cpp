@@ -63,7 +63,7 @@ namespace jiba
         int status = OPTPP::mcsrch(GetObjective().get(), SearchDir, RawGrad, CurrentModel, Misfit,
             &mu, 20, 1e-4, 2.2e-16, 0.9, 1e9, 1e-9);
         std::cout << "Status: " << status << std::endl;
-        std::cout << " Mu: " << mu << "Search Angle: " << ublas::inner_prod(
+        std::cout << " Mu: " << mu << " Search Angle: " << ublas::inner_prod(
                    SearchDir, RawGrad) / (ublas::norm_2(SearchDir) * ublas::norm_2(
                    RawGrad)) << std::endl;
         CurrentModel += mu * SearchDir;

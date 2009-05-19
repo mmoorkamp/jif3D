@@ -7,7 +7,7 @@
 
 
 #include "JointObjective.h"
-
+#include <iostream>
 namespace jiba
   {
 
@@ -28,7 +28,7 @@ namespace jiba
         const size_t nobjective = Objectives.size();
         for (size_t i = 0; i < nobjective; ++i)
           {
-            Objectives.at(i)->CalcMisfit(Distributor(Model, i));
+            std::cout << "Individual Misfits: " << i << " " << Objectives.at(i)->CalcMisfit(Distributor(Model, i)) << std::endl;
             totaldata += Objectives.at(i)->GetDataDifference().size();
           }
         Diff.resize(totaldata);
