@@ -60,7 +60,7 @@ namespace jiba
 
     PodvinTime3D::PodvinTime3D() :
       hs_keep(NULL),
-      source_at_node(0), init_stage(0)
+      source_at_node(0), init_stage(0),reverse_order(0)
       {
 
       }
