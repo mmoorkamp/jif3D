@@ -84,24 +84,21 @@ namespace jiba
               CovarDiag.resize(DataDifference.size());
               std::fill(CovarDiag.begin(), CovarDiag.end(), 1.0);
             }
-          double Misfit = 0.0;
+          LastModel = Model;
           //go through the data and weigh each misfit by its covariance
           //add up to get the Chi-square misfit
-          //and divide by the covariance again for the gradient calculation
-          for (size_t i = 0; i < ndata; ++i)
-            {
-              DataDifference(i) /= CovarDiag(i);
-              Misfit += DataDifference(i) * DataDifference(i);
-              DataDifference(i) /= CovarDiag(i);
-            }
-          LastModel = Model;
-          return Misfit;
+          DataDifference = ublas::element_div(DataDifference,CovarDiag);
+          return ublas::inner_prod(DataDifference,DataDifference);
         }
       //! Calculate the gradient associated with the last misfit calculation
       jiba::rvec CalcGradient()
         {
-          assert(CovarDiag.size() == DataDifference.size());
-          return ImplGradient(LastModel, DataDifference);
+          const size_t ndata = DataDifference.size();
+          assert(CovarDiag.size() == ndata);
+          //for the gradient we need the difference between predicted and observed data
+          //weighted by the squared covariance
+          jiba::rvec GradDiff(ublas::element_div(DataDifference,CovarDiag));
+          return ImplGradient(LastModel, GradDiff);
         }
       friend class JointObjective;
       ObjectiveFunction();
