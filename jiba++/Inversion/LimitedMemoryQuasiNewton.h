@@ -19,6 +19,7 @@ namespace jiba
     class LimitedMemoryQuasiNewton: public jiba::NonLinearOptimization
       {
       private:
+    	  double mu;
         const size_t MaxPairs;
         std::vector<boost::shared_ptr<jiba::rvec> > SHistory;
         std::vector<boost::shared_ptr<jiba::rvec> > YHistory;

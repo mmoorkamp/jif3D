@@ -15,7 +15,7 @@ namespace jiba
 
     LimitedMemoryQuasiNewton::LimitedMemoryQuasiNewton(boost::shared_ptr<
         jiba::ObjectiveFunction> ObjFunction, const size_t n) :
-      NonLinearOptimization(ObjFunction), MaxPairs(n)
+      NonLinearOptimization(ObjFunction),mu(1.0), MaxPairs(n)
       {
 
       }
@@ -31,11 +31,11 @@ namespace jiba
         std::cout << "Misfit: " << Misfit << std::endl;
         jiba::rvec RawGrad(GetObjective()->CalcGradient());
         jiba::rvec Gradient(ublas::element_prod(RawGrad, GetModelCovDiag()));
-
+        SearchDir = Gradient;
         const size_t nmod = Gradient.size();
         const size_t npairs = SHistory.size();
 
-        jiba::rvec Alpha(npairs), Rho(npairs), SearchDir(Gradient);
+        jiba::rvec Alpha(npairs), Rho(npairs);
 
         //we store the elements in reverse order
         for (int i = npairs - 1; i >= 0; --i)
@@ -54,12 +54,14 @@ namespace jiba
             SearchDir += *SHistory.at(i) * (Alpha(i) - beta);
           }
         SearchDir *= -1.0;
-
+        //std::cout << "Raw Gradient: " << RawGrad << std::endl;
+        //std::cout << "Gradient: " << Gradient << std::endl;
+        //std::cout << "Search Dir: " << SearchDir << std::endl;
         //double mu = BacktrackingLineSearch().FindStep(CurrentModel, Gradient,
         //    SearchDir, *GetObjective());
         //std::cout << "SearchDir: " << SearchDir << std::endl;
         //std::cout << "RawGrad: " << RawGrad << std::endl;
-        double mu = 1.0;
+        //double mu = 1.0;
         int status = OPTPP::mcsrch(GetObjective().get(), SearchDir, RawGrad, CurrentModel, Misfit,
             &mu, 20, 1e-4, 2.2e-16, 0.9, 1e9, 1e-9);
         std::cout << "Status: " << status << std::endl;
