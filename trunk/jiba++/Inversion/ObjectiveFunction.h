@@ -34,6 +34,8 @@ namespace jiba
     class ObjectiveFunction
       {
     private:
+      //How many forward plus gradient evaluations did we perform
+      size_t nEval;
       jiba::rvec DataDifference;
       jiba::rvec CovarDiag;
       jiba::rvec LastModel;
@@ -88,6 +90,7 @@ namespace jiba
           //go through the data and weigh each misfit by its covariance
           //add up to get the Chi-square misfit
           DataDifference = ublas::element_div(DataDifference,CovarDiag);
+          ++nEval;
           return ublas::inner_prod(DataDifference,DataDifference);
         }
       //! Calculate the gradient associated with the last misfit calculation
@@ -98,6 +101,7 @@ namespace jiba
           //for the gradient we need the difference between predicted and observed data
           //weighted by the squared covariance
           jiba::rvec GradDiff(ublas::element_div(DataDifference,CovarDiag));
+          ++nEval;
           return ImplGradient(LastModel, GradDiff);
         }
       friend class JointObjective;
