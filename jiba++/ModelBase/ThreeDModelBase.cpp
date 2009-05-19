@@ -46,6 +46,9 @@ namespace jiba
         ZCellSizes.resize(boost::extents[source.ZCellSizes.shape()[0]]);
         std::copy(source.ZCellSizes.begin(), source.ZCellSizes.end(),
             ZCellSizes.begin());
+        XCellSizesChanged = true;
+        YCellSizesChanged = true;
+        ZCellSizesChanged = true;
         XOrigin = source.XOrigin;
         YOrigin = source.YOrigin;
         ZOrigin = source.ZOrigin;
