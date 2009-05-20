@@ -13,12 +13,14 @@ namespace jiba
   {
     class LogTransform: public jiba::GeneralModelTransform
       {
+      private:
+          	  jiba::rvec Reference;
     public:
       virtual jiba::rvec Transform(const jiba::rvec &FullModel)
         {
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
-            Output( i) = exp(FullModel(i));
+            Output( i) = exp(FullModel(i))*Reference(i);
           return Output;
         }
 
@@ -28,11 +30,12 @@ namespace jiba
 
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
-            Output( i) = exp(FullModel(i)) * Derivative(i);
+            Output( i) = Reference(i) * exp(FullModel(i)) * Derivative(i);
 
           return Output;
         }
-      LogTransform()
+      LogTransform(const jiba::rvec &Ref):
+          Reference(Ref)
         {
         }
       virtual ~LogTransform()
@@ -42,12 +45,14 @@ namespace jiba
 
     class LogDensityTransform: public jiba::GeneralModelTransform
       {
+      private:
+          	  jiba::rvec Reference;
     public:
       virtual jiba::rvec Transform(const jiba::rvec &FullModel)
         {
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
-            Output( i) = (exp(-FullModel(i)) + 8500.0) / 5000.0;
+            Output( i) = (1./(exp(FullModel(i))*Reference(i)) + 8500.0) / 5000.0;
           return Output;
         }
 
@@ -58,12 +63,13 @@ namespace jiba
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
-              Output( i) = factor * exp(-FullModel(i)) * Derivative(i);
-              // std::cout <<FullModel(i) << " " << Output(i) << " " << Derivative(i) << std::endl;
+              Output( i) = factor/(Reference(i) * exp(FullModel(i))) * Derivative(i);
+              std::cout <<FullModel(i) << " " << Reference(i) << " "<< Output(i) << " " << Derivative(i) << std::endl;
             }
           return Output;
         }
-      LogDensityTransform()
+      LogDensityTransform(const jiba::rvec &Ref):
+          Reference(Ref)
         {
         }
       virtual ~LogDensityTransform()
@@ -73,12 +79,14 @@ namespace jiba
 
     class VelTransform: public jiba::GeneralModelTransform
       {
+      private:
+    	  jiba::rvec Reference;
     public:
       virtual jiba::rvec Transform(const jiba::rvec &FullModel)
         {
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
-            Output( i) = 1. / FullModel(i);
+            Output( i) = FullModel(i) * Reference(i);
           return Output;
         }
       virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
@@ -86,10 +94,11 @@ namespace jiba
         {
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
-            Output( i) = -1. / (FullModel(i) * FullModel(i)) * Derivative(i);
+            Output( i) = Reference(i) * Derivative(i);
           return Output;
         }
-      VelTransform()
+      VelTransform(const jiba::rvec &Ref):
+      Reference(Ref)
         {
         }
       virtual ~VelTransform()
@@ -99,12 +108,16 @@ namespace jiba
 
     class VelDensTransform: public jiba::GeneralModelTransform
       {
+      private:
+          	  jiba::rvec Reference;
     public:
       virtual jiba::rvec Transform(const jiba::rvec &FullModel)
         {
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
-            Output( i) = (FullModel(i) + 8500.0) / 5000.0;
+          {
+            Output( i) = ( 1./(Reference(i)*FullModel(i)) + 8500.0) / 5000.0;
+          }
           return Output;
         }
       virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
@@ -112,10 +125,14 @@ namespace jiba
         {
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
-            Output( i) = 1.0 / 5000.0 * Derivative(i);
+          {
+            Output( i) = - 1.0 / (Reference(i)*5000.0
+            		* FullModel(i) * FullModel(i))* Derivative(i);
+          }
           return Output;
         }
-      VelDensTransform()
+      VelDensTransform(const jiba::rvec &Ref):
+    	  Reference(Ref)
         {
         }
       virtual ~VelDensTransform()

@@ -27,6 +27,7 @@
 #include "../ModelBase/VTKTools.h"
 #include "../ModelBase/NetCDFTools.h"
 #include "../Inversion/LimitedMemoryQuasiNewton.h"
+#include "../Inversion/NonLinearConjugateGradient.h"
 #include "../Inversion/JointObjective.h"
 #include "../Inversion/MinDiffRegularization.h"
 #include "../Inversion/ModelTransforms.h"
@@ -46,14 +47,16 @@ jiba::rvec ConstructError(const jiba::rvec &Data)
   {
     const size_t ndata = Data.size();
     const double errorlevel = 0.02;
-    const double maxdata = *std::max_element(Data.begin(), Data.end(),
-        jiba::absLess<double, double>());
+    const double maxdata = abs(*std::max_element(Data.begin(), Data.end(),
+        jiba::absLess<double, double>()));
     //create objects for the misfit and a very basic error estimate
     jiba::rvec DataError(ndata);
+    std::ofstream errorfile("error.out");
     for (size_t i = 0; i < ndata; ++i)
       {
         DataError( i) = std::max(std::abs(Data(i) * errorlevel), 1e-2 * maxdata
             * errorlevel);
+        errorfile << i << " " << Data(i) << " " << DataError( i) << std::endl;
       }
     return DataError;
   }
@@ -84,8 +87,7 @@ int main(int argc, char *argv[])
     jiba::ThreeDGravityModel GravModel;
     GravModel.ReadNetCDF(gravmodelfilename);
     GravModel = TomoModel;
-    std::cout << "Background layers: "
-        << GravModel.GetBackgroundDensities().size() << std::endl;
+
     jiba::ThreeDGravityModel::tMeasPosVec PosX, PosY, PosZ;
     jiba::ReadScalarGravityMeasurements(scalgravdatafilename, ScalGravData,
         PosX, PosY, PosZ);
@@ -109,9 +111,21 @@ int main(int argc, char *argv[])
         TomoModel.GetSlownesses().origin()
             + TomoModel.GetSlownesses().num_elements(), InvModel.begin());
 
+
+
     jiba::rvec RefModel(InvModel);
+    //double average = std::accumulate(InvModel.begin(),InvModel.end(),0.0)/InvModel.size();
+    //std::fill(RefModel.begin(),RefModel.end(),average);
     for (size_t i = 0; i < InvModel.size(); ++i)
-      InvModel( i) = log(InvModel(i));
+      InvModel( i) = log(InvModel(i)/RefModel(i));
+
+    jiba::rvec DensStartModel(jiba::LogDensityTransform(RefModel).Transform(InvModel));
+           std::cout << "Background layers: "
+               << GravModel.GetBackgroundDensities().size() << std::endl;
+        std::copy(DensStartModel.begin(),DensStartModel.end(),GravModel.SetDensities().origin());
+        GravModel.WriteNetCDF("out_dens.nc");
+
+
     boost::shared_ptr<jiba::TomographyObjective> TomoObjective(
         new jiba::TomographyObjective());
     TomoObjective->SetObservedData(TomoData);
@@ -147,43 +161,55 @@ int main(int argc, char *argv[])
         new jiba::MinDiffRegularization());
 
     Regularization->SetReferenceModel(RefModel);
-    Regularization->SetDataCovar(RefModel);
+    //Regularization->SetDataCovar(RefModel);
+    double tomolambda = 1.0;
     double scalgravlambda = 1.0;
     double ftglambda = 1.0;
     double reglambda = 1.0;
+    std::cout << "Tomography Lambda: ";
+        std::cin >> tomolambda;
     std::cout << "Scalar Gravimetry Lambda: ";
     std::cin >> scalgravlambda;
     std::cout << "FTG Lambda: ";
     std::cin >> ftglambda;
     std::cout << "Regularization Lambda: ";
     std::cin >> reglambda;
+    if (tomolambda > 0.0)
+    {
     Objective->AddObjective(TomoObjective, boost::shared_ptr<
-        jiba::GeneralModelTransform>(new jiba::LogTransform()));
+        jiba::GeneralModelTransform>(new jiba::LogTransform(RefModel)),tomolambda);
+    }
+    if (scalgravlambda > 0.0)
+    {
     Objective->AddObjective(ScalGravObjective, boost::shared_ptr<
-        jiba::GeneralModelTransform>(new jiba::LogDensityTransform()),
+        jiba::GeneralModelTransform>(new jiba::LogDensityTransform(RefModel)),
         scalgravlambda);
+    }
+    if (ftglambda > 0.0)
+    {
     Objective->AddObjective(FTGObjective, boost::shared_ptr<
-        jiba::GeneralModelTransform>(new jiba::LogDensityTransform()),
+        jiba::GeneralModelTransform>(new jiba::LogDensityTransform(RefModel)),
         ftglambda);
+    }
     Objective->AddObjective(Regularization, boost::shared_ptr<
-        jiba::GeneralModelTransform>(new jiba::LogTransform()), reglambda);
+        jiba::GeneralModelTransform>(new jiba::LogTransform(RefModel)), reglambda);
 
     std::cout << "Performing inversion." << std::endl;
 
-    jiba::LimitedMemoryQuasiNewton LBFGS(Objective, 5);
+    jiba::LimitedMemoryQuasiNewton LBFGS(Objective,5);
     //LBFGS.SetModelCovDiag(ModelWeight);
 
     const size_t ndata = TomoData.size() + ScalGravData.size() + FTGData.size();
     size_t iteration = 0;
     size_t maxiter = 30;
-    jiba::rvec TomoInvModel(jiba::LogTransform().Transform(InvModel));
+    jiba::rvec TomoInvModel(jiba::LogTransform(RefModel).Transform(InvModel));
     do
       {
         std::cout << "Iteration" << iteration << std::endl;
         LBFGS.MakeStep(InvModel);
 
         ++iteration;
-        TomoInvModel = jiba::LogTransform().Transform(InvModel);
+        TomoInvModel = jiba::LogTransform(RefModel).Transform(InvModel);
         std::copy(TomoInvModel.begin(), TomoInvModel.begin()
             + TomoModel.GetSlownesses().num_elements(),
             TomoModel.SetSlownesses().origin());
@@ -195,7 +221,7 @@ int main(int argc, char *argv[])
       } while (iteration < maxiter && LBFGS.GetMisfit() > ndata
         && LBFGS.GetGradNorm() > 1e-6);
 
-    jiba::rvec DensInvModel(jiba::LogDensityTransform().Transform(InvModel));
+    jiba::rvec DensInvModel(jiba::LogDensityTransform(RefModel).Transform(InvModel));
 
     std::copy(TomoInvModel.begin(), TomoInvModel.begin()
         + TomoModel.GetSlownesses().num_elements(),
