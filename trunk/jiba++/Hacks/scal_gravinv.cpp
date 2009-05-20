@@ -82,17 +82,17 @@ int main(int argc, char *argv[])
               jiba::CreateGravityCalculator<
                   jiba::FullSensitivityGravityCalculator>::MakeTensor());
       DepthExponent = -3.0;
-      Transform = boost::shared_ptr<jiba::FTGInvariant>(
-          new jiba::FTGInvariant());
-      InvarData.resize((Data.size() / 9));
-      for (size_t i = 0; i < Data.size(); i += 9)
-        {
-          jiba::rvec temp(Transform->Transform(ublas::vector_range<jiba::rvec>(
-              Data, ublas::range(i, i + 9))));
-          InvarData(i / 9) = temp(0);
-        }
-      Data.resize(InvarData.size());
-      Data = InvarData;
+      //Transform = boost::shared_ptr<jiba::FTGInvariant>(
+      //    new jiba::FTGInvariant());
+      //InvarData.resize((Data.size() / 9));
+      //for (size_t i = 0; i < Data.size(); i += 9)
+      //  {
+      //    jiba::rvec temp(Transform->Transform(ublas::vector_range<jiba::rvec>(
+      //        Data, ublas::range(i, i + 9))));
+      //    InvarData(i / 9) = temp(0);
+      //  }
+      //Data.resize(InvarData.size());
+      //Data = InvarData;
       break;
     default:
       //in case we couldn't identify the data in the netcdf file
@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
     const size_t ysize = Model.GetDensities().shape()[1];
     const size_t zsize = Model.GetDensities().shape()[2];
     const size_t ngrid = xsize * ysize * zsize;
-    const size_t nmod = ngrid;
+    const size_t nmod = ngrid + Model.GetBackgroundDensities().size();
 
     //set the measurement points in the starting model to those of the data
     Model.ClearMeasurementPoints();
@@ -139,20 +139,20 @@ int main(int argc, char *argv[])
         DataError( i) = std::max(std::abs(Data(i) * errorlevel), 1e-2 * maxdata
             * errorlevel);
       }
-    std::cout << "DataError " << DataError << std::endl;
 
     boost::shared_ptr<jiba::GravityObjective> Objective(
         new jiba::GravityObjective(DataType == jiba::ftg));
     Objective->SetObservedData(Data);
     Objective->SetModelGeometry(Model);
     Objective->SetDataCovar(DataError);
-    Objective->SetDataTransform(Transform);
-    GravityCalculator->SetDataTransform(Transform);
+    //Objective->SetDataTransform(Transform);
+    //GravityCalculator->SetDataTransform(Transform);
 
     jiba::rvec InvModel(nmod);
     std::copy(Model.GetDensities().origin(), Model.GetDensities().origin()
         + Model.GetDensities().num_elements(), InvModel.begin());
-
+    std::copy(Model.GetBackgroundDensities().begin(),Model.GetBackgroundDensities().end(),
+    		InvModel.begin()+ngrid);
     std::cout << "Calculating response of starting model." << std::endl;
     jiba::rvec StartingData(GravityCalculator->Calculate(Model));
 
@@ -160,6 +160,7 @@ int main(int argc, char *argv[])
     //now we perform the depth weighting for the sensitivities
     jiba::rvec SensProfile;
     jiba::rvec WeightVector(zsize), ModelWeight(nmod);
+    ModelWeight.clear();
     //we find a measurement site close to the centre of the model and extract the
     //sensitivity variation with depth
     jiba::ExtractMiddleSens(Model, GravityCalculator->GetSensitivities(),
@@ -202,7 +203,7 @@ int main(int argc, char *argv[])
     //calculate the predicted data
     std::cout << "Calculating response of inversion model." << std::endl;
     jiba::rvec InvData(GravityCalculator->Calculate(Model));
-    std::cout << "Inversion Data: " << InvData << std::endl;
+
     //and write out the data and model
     //here we have to distinguish again between scalar and ftg data
     std::cout << "Writing out inversion results." << std::endl;
@@ -217,18 +218,18 @@ int main(int argc, char *argv[])
           Model.GetMeasPosZ());
       break;
     case jiba::ftg:
-      //jiba::Write3DTensorDataToVTK(modelfilename + ".inv_ftg.vtk",
-      //    "grav_accel", InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
-      //    Model.GetMeasPosZ());
-      //jiba::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc",
-      //    InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
-      //    Model.GetMeasPosZ());
-
-      jiba::SaveScalarGravityMeasurements(modelfilename + ".meas_invariant.nc",
-          Data, Model.GetMeasPosX(), Model.GetMeasPosY(), Model.GetMeasPosZ());
-      jiba::SaveScalarGravityMeasurements(modelfilename + ".inv_invariant.nc",
+      jiba::Write3DTensorDataToVTK(modelfilename + ".inv_ftg.vtk",
+          "grav_accel", InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
+          Model.GetMeasPosZ());
+      jiba::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc",
           InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
           Model.GetMeasPosZ());
+
+      //jiba::SaveScalarGravityMeasurements(modelfilename + ".meas_invariant.nc",
+      //    Data, Model.GetMeasPosX(), Model.GetMeasPosY(), Model.GetMeasPosZ());
+      //jiba::SaveScalarGravityMeasurements(modelfilename + ".inv_invariant.nc",
+      //    InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
+       //   Model.GetMeasPosZ());
       break;
     default:
       std::cerr << " We should never reach this part. Fatal Error !"
