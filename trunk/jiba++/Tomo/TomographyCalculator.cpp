@@ -74,7 +74,7 @@ namespace jiba
         //this needs to be one larger in each direction than our mdeol
         const size_t ngrid = (Model.GetXCellSizes().size() + 1)
             * (Model.GetYCellSizes().size() + 1)
-            * (Model.GetZCellSizes().size() + 1 + nairlayers);
+            * (Model.GetZCellSizes().size() + 1 + 2*nairlayers);
         const size_t ndata = Model.GetSourceIndices().size();
         const size_t nmeas = Model.GetMeasPosX().size();
         const size_t nshot = Model.GetSourcePosX().size();
@@ -85,7 +85,7 @@ namespace jiba
         //first we do the slowness grid
         grid.nx = Model.GetXCellSizes().size();
         grid.ny = Model.GetYCellSizes().size();
-        grid.nz = Model.GetZCellSizes().size() + nairlayers;
+        grid.nz = Model.GetZCellSizes().size() + 2*nairlayers;
         grid.h = Model.GetXCellSizes()[0];
         grid.nborder = 0;
 
@@ -103,10 +103,10 @@ namespace jiba
             {
               const size_t layerindex = i * (grid.nz + 1) * (grid.ny + 1) + j * (grid.nz + 1);
               //fill the airlayers
-              for (size_t k = 0; k < nairlayers; ++k)
-                grid.slow[layerindex + k] = grid.h;
+              std::fill_n(grid.slow + layerindex,nairlayers,grid.h);
+              std::fill_n(grid.slow + layerindex+ grid.nz - nairlayers,nairlayers,grid.h);
               //then copy the actual model
-              for (size_t k = nairlayers; k < grid.nz; ++k)
+              for (size_t k = nairlayers; k < grid.nz - nairlayers; ++k)
                 grid.slow[layerindex+ k] = Model.GetSlownesses()[i][j][k - nairlayers] * grid.h;
             }
 
@@ -172,8 +172,8 @@ namespace jiba
             const size_t nray = raypath[i].nray;
             for (size_t j = 0; j < nray; ++j)
               {
-                const size_t offset = (grid.nz - nairlayers) * grid.ny * (int) floor(raypath[i].x[j])
-                + (grid.nz - nairlayers) * (int) floor(raypath[i].y[j]) + (int) floor(raypath[i].z[j]) - nairlayers;
+                const size_t offset = (grid.nz - 2*nairlayers) * grid.ny * (int) floor(raypath[i].x[j])
+                + (grid.nz - 2*nairlayers) * (int) floor(raypath[i].y[j]) + (int) floor(raypath[i].z[j]) - nairlayers;
 
                 DerivMod(offset) += raypath[i].len[j] * Misfit(i);
               }
