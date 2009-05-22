@@ -1,44 +1,91 @@
 //============================================================================
-// Name        : jointinv.cpp
-// Author      : May 12, 2009
+// Name        : opttest.cpp
+// Author      : Sep 19, 2008
 // Version     :
-// Copyright   : 2009, mmoorkamp
+// Copyright   : 2008, mmoorkamp
 //============================================================================
 
 
-//============================================================================
-// Name        : gravinv.cpp
-// Author      : Max Moorkamp
-// Version     :
-// Copyright   : 2008, MM
-//============================================================================
+#ifdef HAVE_CONFIG_H
+#include "OPT++_config.h"
+#endif
 
-
-#include <iostream>
 #include <fstream>
-#include <string>
+#include <limits>
+#ifdef HAVE_STD
+#include <cstdio>
+#else
+#include <stdio.h>
+#endif
+#include <numeric>
 #include <cmath>
+#include "OptLBFGS.h"
+#include "NLF.h"
+#include "../Gravity/MinMemGravityCalculator.h"
+#include "../Inversion/JointObjective.h"
 #include <boost/bind.hpp>
 #include "../Global/convert.h"
 #include "../Global/FatalException.h"
 #include "../Global/NumUtil.h"
 #include "../Global/VectorTransform.h"
 #include "../Global/FileUtil.h"
-#include "../ModelBase/VTKTools.h"
-#include "../ModelBase/NetCDFTools.h"
-#include "../Inversion/LimitedMemoryQuasiNewton.h"
-#include "../Inversion/NonLinearConjugateGradient.h"
+#include "../Inversion/ModelTransforms.h"
 #include "../Inversion/JointObjective.h"
 #include "../Inversion/MinDiffRegularization.h"
-#include "../Inversion/ModelTransforms.h"
 #include "../Inversion/ConstructError.h"
+#include "../ModelBase/VTKTools.h"
+#include "../ModelBase/NetCDFTools.h"
 #include "../Gravity/GravityObjective.h"
 #include "../Gravity/ReadWriteGravityData.h"
 #include "../Gravity/ThreeDGravityCalculator.h"
 #include "../Gravity/MinMemGravityCalculator.h"
 #include "../Gravity/DepthWeighting.h"
+using NEWMAT::ColumnVector;
 
-namespace ublas = boost::numeric::ublas;
+boost::shared_ptr<jiba::JointObjective> Objective(new jiba::JointObjective());
+jiba::rvec InvModel;
+
+void update_model(int, int, ColumnVector x)
+  {
+    for (size_t i = 0; i < InvModel.size(); ++i)
+      InvModel(i) = x(i+1);
+  }
+
+void init_model(int ndim, ColumnVector& x)
+  {
+    if (ndim != InvModel.size())
+      {
+        exit(1);
+      }
+    for (size_t i = 0; i < InvModel.size(); ++i)
+      x(i + 1) = InvModel(i);
+  }
+
+void eval_objective(int mode, int n, const ColumnVector& x, double& fx,
+    ColumnVector& g, int& result)
+  {
+
+    if (n != InvModel.size())
+      return;
+
+    for (size_t i = 0; i < InvModel.size(); ++i)
+      InvModel( i) = x(i + 1);
+
+    if (mode & OPTPP::NLPFunction)
+      {
+        fx = Objective->CalcMisfit(InvModel);
+        result = OPTPP::NLPFunction;
+      }
+    if (mode & OPTPP::NLPGradient)
+      {
+        jiba::rvec Gradient(Objective->CalcGradient());
+        for (size_t i = 0; i < Gradient.size(); ++i)
+          g(i + 1) = Gradient(i);
+
+        result = OPTPP::NLPGradient;
+      }
+  }
+
 
 
 int main(int argc, char *argv[])
@@ -72,7 +119,7 @@ int main(int argc, char *argv[])
         exit(100);
       }
 
-    jiba::rvec InvModel(GravModel.GetDensities().num_elements());
+    InvModel.resize(GravModel.GetDensities().num_elements());
     std::copy(GravModel.GetDensities().origin(),
         GravModel.GetDensities().origin()
             + GravModel.GetDensities().num_elements(), InvModel.begin());
@@ -80,7 +127,7 @@ int main(int argc, char *argv[])
     jiba::rvec RefModel(InvModel);
     std::fill(RefModel.begin(), RefModel.end(), 1.0);
     boost::shared_ptr<jiba::GeneralModelTransform> Transform(
-        new jiba::NormalizeTransform(RefModel));
+        new jiba::ModelCopyTransform);
     InvModel = Transform->PhysicalToGeneralized(InvModel);
 
     boost::shared_ptr<jiba::GravityObjective> ScalGravObjective(
@@ -106,8 +153,6 @@ int main(int argc, char *argv[])
         ModelWeight( i) = WeightVector(i % GravModel.GetZCellSizes().size());
       }
 
-    boost::shared_ptr<jiba::JointObjective> Objective(
-        new jiba::JointObjective());
     boost::shared_ptr<jiba::MinDiffRegularization> Regularization(
         new jiba::MinDiffRegularization());
 
@@ -135,28 +180,29 @@ int main(int argc, char *argv[])
       }
     Objective->AddObjective(Regularization, Transform, reglambda);
 
-    std::cout << "Performing inversion." << std::endl;
+    int n = InvModel.size();
 
-    jiba::LimitedMemoryQuasiNewton LBFGS(Objective, 5);
-    //jiba::NonLinearConjugateGradient LBFGS(Objective);
-    LBFGS.SetModelCovDiag(ModelWeight);
+    static char *status_file =
+      { "tstLBFGS.out" };
 
-    const size_t ndata = ScalGravData.size() + FTGData.size();
-    size_t iteration = 0;
-    size_t maxiter = 30;
-    std::ofstream misfitfile("misfit.out");
-    do
-      {
-        std::cout << "Iteration" << iteration << std::endl;
-        LBFGS.MakeStep(InvModel);
+    //  Create a Nonlinear problem object
 
-        ++iteration;
-        std::cout << "Gradient Norm: " << LBFGS.GetGradNorm() << std::endl;
-        std::cout << "Currrent Misfit: " << LBFGS.GetMisfit() << std::endl;
-        std::cout << "Currrent Gradient: " << LBFGS.GetGradNorm() << std::endl;
-        misfitfile << iteration << " " << LBFGS.GetMisfit() << std::endl;
-      } while (iteration < maxiter && LBFGS.GetMisfit() > 1
-        && LBFGS.GetGradNorm() > 1e-6);
+    OPTPP::NLF1 nlp(n, eval_objective, init_model);
+
+    //  Build a LBFGS object and optimize
+
+    OPTPP::OptLBFGS objfcn(&nlp);
+    objfcn.setUpdateModel(update_model);
+    if (!objfcn.setOutputFile(status_file, 0))
+      cerr << "main: output file open failed" << endl;
+    objfcn.setGradTol(1.e-6);
+    objfcn.setMaxBacktrackIter(10);
+    objfcn.setPrintFinalX(true);
+    objfcn.optimize();
+
+    objfcn.printStatus("Solution from LBFGS: More and Thuente's linesearch");
+
+    objfcn.cleanup();
 
     jiba::rvec DensInvModel(Transform->GeneralizedToPhysical(InvModel));
 
@@ -190,4 +236,5 @@ int main(int argc, char *argv[])
     GravModel.WriteVTK(modelfilename + ".grav.inv.vtk");
     GravModel.WriteNetCDF(modelfilename + ".grav.inv.nc");
     std::cout << std::endl;
+
   }

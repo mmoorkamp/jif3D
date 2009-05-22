@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE  (random_tensor_test)
       MakeRandomModel(GravityTest,ncells, nmeas);
       boost::shared_ptr<jiba::FullSensitivityGravityCalculator> TensorCalculator(jiba::CreateGravityCalculator<jiba::FullSensitivityGravityCalculator>::MakeTensor());
       jiba::rvec Misfit(nmeas*TensorCalculator->GetDataPerMeasurement());
-      std::generate(Misfit.begin(),Misfit.end(),rand);
+      std::generate(Misfit.begin(),Misfit.end(),drand48);
       jiba::rvec Deriv(TensorCalculator->LQDerivative(GravityTest,Misfit));
       TensorCalculator->Calculate(GravityTest);
       jiba::rvec Compare(boost::numeric::ublas::prec_prod(ublas::trans(TensorCalculator->GetSensitivities()),Misfit));
@@ -237,7 +237,8 @@ BOOST_AUTO_TEST_CASE  (random_tensor_test)
           BOOST_CHECK_CLOSE(Deriv(i), Compare(i), std::numeric_limits<
               float>::epsilon());
           BOOST_CHECK_CLOSE(Deriv2(i), Compare(i), std::numeric_limits<
-                        float>::epsilon());
+              float>::epsilon());
         }
     }
+
   BOOST_AUTO_TEST_SUITE_END()

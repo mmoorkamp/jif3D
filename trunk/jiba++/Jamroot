@@ -35,6 +35,8 @@ lib lapack : : <name>lapack ;
 lib f77blas : : <name>f77blas ;
 lib cblas : : <name>cblas ;
 lib atlas : : <name>atlas ;
+lib optpp : : <name>opt ;
+lib newmat : : <name>newmat ;
 lib netcdf : : <name>netcdf ;
 lib netcdf_c++ : : <name>netcdf_c++ ;
 lib gfortran : : <name>gfortran ;

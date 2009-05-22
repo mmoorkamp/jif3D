@@ -44,13 +44,13 @@ namespace jiba
        * @param FullModel The generalized model vector including all parameters
        * @return The physical quantities for one method
        */
-      virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) = 0;
+      virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const = 0;
       //! Transform the physical model vector to a generalized model vector
       /*! This is the inverse transform to GeneralizedToPhysical. It is used
        * to transform a starting model that is given in terms of physical parameters
        * to generalized model parameters.
        */
-      virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) = 0;
+      virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const = 0;
       //! For the inversion we also need the derivative of the transformation
       /*! To calculate the derivative of the generalized parameters we need to apply the chain rule, as each method only gives
        * us the derivative with respect to the physical parameters. This function returns a vector with all the derivative values
@@ -59,7 +59,7 @@ namespace jiba
        * @return The derivatives of the generalized parameters with respect to the physical parameter
        */
       virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
-          const jiba::rvec &Derivative) = 0;
+          const jiba::rvec &Derivative) const = 0;
       };
 
     //! This is the simplest transformation, the generalized and physical parameters are identical
@@ -72,16 +72,16 @@ namespace jiba
       virtual ~ModelCopyTransform()
         {
         }
-      virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel)
+      virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
         {
           return FullModel;
         }
-      virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel)
+      virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
       {
     	return FullModel;
       }
       virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
-                const jiba::rvec &Derivative)
+                const jiba::rvec &Derivative) const
         {
           return Derivative;
         }
