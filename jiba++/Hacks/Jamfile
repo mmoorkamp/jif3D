@@ -9,6 +9,7 @@ exe sparsetest : sparsetest.cpp ../Inversion//inversion ..//lapack ..//cblas ../
 exe wcompress : wcompress.cpp  ../Gravity ../Global : <include>. ;
 exe tomoinv : tomoinv.cpp  ../Tomo ../Inversion ../Global : <include>. ;
 exe jointinv : jointinv.cpp  ../Tomo ../Gravity ../Inversion ../Global : <include>. ;
+exe grav_jointinv : grav_jointinv.cpp  ../Tomo ../Gravity ../Inversion ../Global : <include>. ;
 exe scal_gravinv : scal_gravinv.cpp  ../Gravity ../Inversion ../Global : <include>. ;
 exe invariantftginv : invariantftginv.cpp  ../Gravity//gravity ../Gravity//gravity-extra ../Global ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ../Inversion//inversion
               ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran ..//cudart : <include>. ;

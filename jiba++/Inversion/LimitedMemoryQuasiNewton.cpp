@@ -15,7 +15,7 @@ namespace jiba
 
     LimitedMemoryQuasiNewton::LimitedMemoryQuasiNewton(boost::shared_ptr<
         jiba::ObjectiveFunction> ObjFunction, const size_t n) :
-      NonLinearOptimization(ObjFunction),mu(1.0), MaxPairs(n)
+      NonLinearOptimization(ObjFunction), MaxPairs(n)
       {
 
       }
@@ -61,7 +61,7 @@ namespace jiba
         //    SearchDir, *GetObjective());
         //std::cout << "SearchDir: " << SearchDir << std::endl;
         //std::cout << "RawGrad: " << RawGrad << std::endl;
-        //double mu = 1.0;
+        double mu = 1.0;
         int status = OPTPP::mcsrch(GetObjective().get(), SearchDir, RawGrad, CurrentModel, Misfit,
             &mu, 20, 1e-4, 2.2e-16, 0.9, 1e9, 1e-9);
         std::cout << "Status: " << status << std::endl;

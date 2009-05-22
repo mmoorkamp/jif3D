@@ -51,6 +51,7 @@ namespace jiba
         const size_t nobjective = Objectives.size();
         for (size_t i = 0; i < nobjective; ++i)
           {
+        	std::cout << "Gradient for objective: " << i << std::endl;
             Gradient += Weights.at(i) * Distributor.TransformGradient(Model,Objectives.at(i)->CalcGradient(),i);
           }
         return Gradient;

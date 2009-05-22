@@ -4,6 +4,8 @@
 #include "PodvinTime3D.h"
 #include <cmath>
 #include <vector>
+extern "C" int time_3d(float *HS, float *T, int NX, int NY, int NZ,
+        float XS, float YS, float ZS, float HS_EPS_INIT, int MSG);
 namespace jiba
   {
 
@@ -80,9 +82,9 @@ namespace jiba
         assert(uniqueshots.size() == geo.nshot);
 
 
-#pragma omp parallel default(shared)
+//#pragma omp parallel default(shared)
           {
-#pragma omp for
+//#pragma omp for
             for (size_t i = 0; i < geo.nshot; i++)
               {
 
@@ -106,8 +108,12 @@ namespace jiba
                 /***************************************************************************************/
                 /*Podvin&Lecomte forward algorithm*/
                 /*tt is the calculated traveltime for each grid cell node*/
+                //jiba::PodvinTime3D *Forward = new jiba::PodvinTime3D();
                 jiba::PodvinTime3D().time_3d(grid.slow, &tt[0], nx3, ny3, nz3, Xs, Ys, Zs,
                     delta_num, 0);
+                //delete Forward;
+                //time_3d(grid.slow, &tt[0], nx3, ny3, nz3, Xs, Ys, Zs,
+                //                    delta_num, 0);
                 /***************************************************************************************/
 
                 //jiba::PlotTimeField("times.vtk", &tt[0], grid.h, nx3, ny3, nz3);

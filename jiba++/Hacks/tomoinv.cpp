@@ -20,6 +20,7 @@
 #include "../Inversion/LimitedMemoryQuasiNewton.h"
 #include "../Inversion/JointObjective.h"
 #include "../Inversion/MinDiffRegularization.h"
+#include "../Inversion/ModelTransforms.h"
 #include "../Tomo/ThreeDSeismicModel.h"
 #include "../Tomo/ReadWriteTomographyData.h"
 #include "../Tomo/TomographyObjective.h"
@@ -27,34 +28,6 @@
 
 namespace ublas = boost::numeric::ublas;
 
-class LogTransform: public jiba::GeneralModelTransform
-  {
-public:
-  virtual jiba::rvec Transform(const jiba::rvec &FullModel)
-    {
-      jiba::rvec Output(FullModel.size());
-      for (size_t i = 0; i < FullModel.size(); ++i)
-        Output( i) = pow(10, FullModel(i));
-      return Output;
-    }
-
-  virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
-      const jiba::rvec &Derivative)
-    {
-      const double factor = std::log(10.0);
-      jiba::rvec Output(FullModel.size());
-      for (size_t i = 0; i < FullModel.size(); ++i)
-        Output( i) = factor * pow(10, FullModel(i)) * Derivative(i);
-
-      return Output;
-    }
-  LogTransform()
-    {
-    }
-  virtual ~LogTransform()
-    {
-    }
-  };
 
 int main(int argc, char *argv[])
   {
@@ -101,7 +74,7 @@ int main(int argc, char *argv[])
 
     jiba::rvec RefModel(InvModel);
     for (size_t i = 0; i < InvModel.size(); ++i)
-      InvModel( i) = std::log10(InvModel(i));
+      InvModel( i) = log(InvModel(i)/RefModel(i));
     boost::shared_ptr<jiba::TomographyObjective> TomoObjective(
         new jiba::TomographyObjective());
     TomoObjective->SetObservedData(Data);
@@ -119,9 +92,9 @@ int main(int argc, char *argv[])
     std::cout << "Lambda: ";
     std::cin >> lambda;
     Objective->AddObjective(TomoObjective, boost::shared_ptr<
-        jiba::GeneralModelTransform>(new LogTransform()));
+        jiba::GeneralModelTransform>(new jiba::LogTransform(RefModel)));
     Objective->AddObjective(Regularization, boost::shared_ptr<
-        jiba::GeneralModelTransform>(new LogTransform()), lambda);
+        jiba::GeneralModelTransform>(new jiba::LogTransform(RefModel)), lambda);
 
     std::cout << "Performing inversion." << std::endl;
 
@@ -131,11 +104,9 @@ int main(int argc, char *argv[])
       {
         LBFGS.MakeStep(InvModel);
         std::cout << std::endl;
-
       }
+    InvModel = jiba::LogTransform(RefModel).GeneralizedToPhysical(InvModel);
 
-    for (size_t i = 0; i < InvModel.size(); ++i)
-      InvModel( i) = pow(10,InvModel(i));
     std::copy(InvModel.begin(), InvModel.begin()
         + Model.GetSlownesses().num_elements(), Model.SetSlownesses().origin());
 

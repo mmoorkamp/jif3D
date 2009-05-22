@@ -14,7 +14,7 @@
 #include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
 #include "../Global/VecMat.h"
-#include "../Global/VectorTransform.h"
+
 namespace jiba
   {
     /** \addtogroup inversion General routines for inversion */
@@ -44,7 +44,13 @@ namespace jiba
        * @param FullModel The generalized model vector including all parameters
        * @return The physical quantities for one method
        */
-      virtual jiba::rvec Transform(const jiba::rvec &FullModel) = 0;
+      virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) = 0;
+      //! Transform the physical model vector to a generalized model vector
+      /*! This is the inverse transform to GeneralizedToPhysical. It is used
+       * to transform a starting model that is given in terms of physical parameters
+       * to generalized model parameters.
+       */
+      virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) = 0;
       //! For the inversion we also need the derivative of the transformation
       /*! To calculate the derivative of the generalized parameters we need to apply the chain rule, as each method only gives
        * us the derivative with respect to the physical parameters. This function returns a vector with all the derivative values
@@ -56,6 +62,7 @@ namespace jiba
           const jiba::rvec &Derivative) = 0;
       };
 
+    //! This is the simplest transformation, the generalized and physical parameters are identical
     class ModelCopyTransform : public GeneralModelTransform
       {
     public:
@@ -65,10 +72,14 @@ namespace jiba
       virtual ~ModelCopyTransform()
         {
         }
-      jiba::rvec Transform(const jiba::rvec &FullModel)
+      virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel)
         {
           return FullModel;
         }
+      virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel)
+      {
+    	return FullModel;
+      }
       virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
                 const jiba::rvec &Derivative)
         {
@@ -119,7 +130,7 @@ namespace jiba
       jiba::rvec operator()(const jiba::rvec &FullModel, const size_t TransIndex)
         {
           assert(TransIndex < Transformers.size());
-          return Transformers.at(TransIndex)->Transform(FullModel);
+          return Transformers.at(TransIndex)->GeneralizedToPhysical(FullModel);
         }
       jiba::rvec TransformGradient(const jiba::rvec &FullModel,
           const jiba::rvec &RawGradient, const size_t TransIndex)
