@@ -31,6 +31,7 @@
 #include "../Inversion/JointObjective.h"
 #include "../Inversion/MinDiffRegularization.h"
 #include "../Inversion/ModelTransforms.h"
+#include "../Inversion/ConstructError.h"
 #include "../Tomo/ThreeDSeismicModel.h"
 #include "../Tomo/ReadWriteTomographyData.h"
 #include "../Tomo/TomographyObjective.h"
@@ -42,23 +43,6 @@
 #include "../Gravity/DepthWeighting.h"
 
 namespace ublas = boost::numeric::ublas;
-
-jiba::rvec ConstructError(const jiba::rvec &Data, const double errorlevel)
-  {
-    const size_t ndata = Data.size();
-    const double maxdata = abs(*std::max_element(Data.begin(), Data.end(),
-        jiba::absLess<double, double>()));
-    //create objects for the misfit and a very basic error estimate
-    jiba::rvec DataError(ndata);
-    std::ofstream errorfile("error.out");
-    for (size_t i = 0; i < ndata; ++i)
-      {
-        DataError( i) = std::max(std::abs(Data(i) * errorlevel), 1e-2 * maxdata
-            * errorlevel);
-        errorfile << i << " " << Data(i) << " " << DataError( i) << std::endl;
-      }
-    return DataError;
-  }
 
 int main(int argc, char *argv[])
   {
@@ -129,19 +113,19 @@ int main(int argc, char *argv[])
         new jiba::TomographyObjective());
     TomoObjective->SetObservedData(TomoData);
     TomoObjective->SetModelGeometry(TomoModel);
-    TomoObjective->SetDataCovar(ConstructError(TomoData,0.02));
+    TomoObjective->SetDataCovar(jiba::ConstructError(TomoData,0.02));
 
     boost::shared_ptr<jiba::GravityObjective> ScalGravObjective(
         new jiba::GravityObjective());
     ScalGravObjective->SetObservedData(ScalGravData);
     ScalGravObjective->SetModelGeometry(GravModel);
-    ScalGravObjective->SetDataCovar(ConstructError(ScalGravData,0.02));
+    ScalGravObjective->SetDataCovar(jiba::ConstructError(ScalGravData,0.02));
 
     boost::shared_ptr<jiba::GravityObjective> FTGObjective(
         new jiba::GravityObjective(true));
     FTGObjective->SetObservedData(FTGData);
     FTGObjective->SetModelGeometry(GravModel);
-    FTGObjective->SetDataCovar(ConstructError(FTGData,0.02));
+    FTGObjective->SetDataCovar(jiba::ConstructError(FTGData,0.02));
 
     const double z0 = 5.0;
     const double DepthExponent = -2.0;

@@ -28,7 +28,9 @@ namespace jiba
         const size_t nobjective = Objectives.size();
         for (size_t i = 0; i < nobjective; ++i)
           {
-            std::cout << "Individual Misfits: " << i << " " << Objectives.at(i)->CalcMisfit(Distributor(Model, i)) << std::endl;
+            std::cout << "Individual Misfits: " << i << " "
+                << Objectives.at(i)->CalcMisfit(Distributor(Model, i))
+                << std::endl;
             totaldata += Objectives.at(i)->GetDataDifference().size();
           }
         Diff.resize(totaldata);
@@ -37,8 +39,8 @@ namespace jiba
           {
             const size_t ndata = Objectives.at(i)->GetDataDifference().size();
             ublas::vector_range<jiba::rvec>(Diff, ublas::range(currstart,
-                currstart + ndata))
-                = sqrt(Weights.at(i)) * Objectives.at(i)->GetDataDifference();
+                currstart + ndata)) = sqrt(Weights.at(i))
+                * Objectives.at(i)->GetDataDifference();
             currstart += ndata;
           }
       }
@@ -51,8 +53,9 @@ namespace jiba
         const size_t nobjective = Objectives.size();
         for (size_t i = 0; i < nobjective; ++i)
           {
-        	std::cout << "Gradient for objective: " << i << std::endl;
-            Gradient += Weights.at(i) * Distributor.TransformGradient(Model,Objectives.at(i)->CalcGradient(),i);
+            std::cout << "Gradient for objective: " << i << std::endl;
+            Gradient += Weights.at(i) * Distributor.TransformGradient(Model,
+                Objectives.at(i)->CalcGradient(), i);
           }
         return Gradient;
       }
