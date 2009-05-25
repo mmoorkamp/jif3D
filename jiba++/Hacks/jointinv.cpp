@@ -97,10 +97,12 @@ int main(int argc, char *argv[])
 
 	jiba::rvec RefModel(InvModel);
 
+	const double minslow = 1e-4;
+	const double maxslow = 0.05;
 	boost::shared_ptr<jiba::GeneralModelTransform> DensityTransform(
-			new jiba::LogDensityTransform(RefModel));
+			new jiba::TanhDensityTransform(RefModel,minslow,maxslow));
 	boost::shared_ptr<jiba::GeneralModelTransform> SlownessTransform(
-			new jiba::LogTransform(RefModel));
+			new jiba::TanhTransform(RefModel,minslow,maxslow));
 	//double average = std::accumulate(InvModel.begin(),InvModel.end(),0.0)/InvModel.size();
 	//std::fill(RefModel.begin(),RefModel.end(),average);
 	InvModel = SlownessTransform->PhysicalToGeneralized(InvModel);
@@ -185,6 +187,7 @@ int main(int argc, char *argv[])
 	size_t iteration = 0;
 	size_t maxiter = 30;
 	jiba::rvec TomoInvModel(SlownessTransform->GeneralizedToPhysical(InvModel));
+	std::ofstream misfitfile("misfit.out");
 	do
 	{
 		std::cout << "Iteration" << iteration << std::endl;
@@ -200,6 +203,7 @@ int main(int argc, char *argv[])
 				+ ".tomo.inv.vtk");
 		std::cout << "Currrent Misfit: " << LBFGS.GetMisfit() << std::endl;
 		std::cout << "Currrent Gradient: " << LBFGS.GetGradNorm() << std::endl;
+		misfitfile << iteration << " " << LBFGS.GetMisfit() << std::endl;
 	} while (iteration < maxiter && LBFGS.GetMisfit() > ndata
 			&& LBFGS.GetGradNorm() > 1e-6);
 

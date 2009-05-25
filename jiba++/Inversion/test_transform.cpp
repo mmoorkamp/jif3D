@@ -94,5 +94,7 @@ BOOST_AUTO_TEST_CASE (basic_copy_test)
       TestTransform<jiba::LogDensityTransform> ();
       TestTransform<jiba::VelTransform> ();
       TestTransform<jiba::VelDensTransform> ();
+      TestTransform<jiba::TanhTransform> ();
+      TestTransform<jiba::TanhDensityTransform> ();
     }
 BOOST_AUTO_TEST_SUITE_END()

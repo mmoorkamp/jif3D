@@ -20,12 +20,14 @@ namespace jiba
     private:
       std::vector<boost::shared_ptr<ObjectiveFunction> > Objectives;
       std::vector<double> Weights;
+      std::vector<double> IndividualFits;
       ModelDistributor Distributor;
       virtual void
           ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff);
       virtual jiba::rvec ImplGradient(const jiba::rvec &Model,
           const jiba::rvec &Diff);
     public:
+     const std::vector<double> &GetIndividualFits() const {return IndividualFits;}
       void AddObjective(boost::shared_ptr<ObjectiveFunction> Obj,
           boost::shared_ptr<GeneralModelTransform> Transform, const double lambda =
               1.0)
