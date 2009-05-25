@@ -26,10 +26,12 @@ namespace jiba
       {
         size_t totaldata = 0;
         const size_t nobjective = Objectives.size();
+        IndividualFits.resize(nobjective);
         for (size_t i = 0; i < nobjective; ++i)
           {
+        	IndividualFits.at(i) = Objectives.at(i)->CalcMisfit(Distributor(Model, i));
             std::cout << "Individual Misfits: " << i << " "
-                << Objectives.at(i)->CalcMisfit(Distributor(Model, i))
+                << IndividualFits.at(i)
                 << std::endl;
             totaldata += Objectives.at(i)->GetDataDifference().size();
           }
