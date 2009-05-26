@@ -15,12 +15,10 @@
 
 
 //a general function to test various ModelTransforms
-template<class TransformType>
-void TestTransform()
+void TestTransform(const jiba::GeneralModelTransform &Transform,const size_t nelements )
   {
-    //this number is arbitrary
-    const size_t nelements = 11;
-    jiba::rvec Physical(nelements), Reference(nelements),
+
+    jiba::rvec Physical(nelements),
         Generalized(nelements), Derivative(nelements), Ones(nelements);
     //some transforms assume the normal ranges for seismic velocities or densities
     //so we make the physical parameters have similar ranges
@@ -28,11 +26,10 @@ void TestTransform()
     for (size_t i = 0; i < nelements; ++i)
       {
         Physical( i) = 2.0 + drand48();
-        Reference( i) = 3.1 + drand48();
         Derivative( i) = drand48();
         Ones( i) = 1.0;
       }
-    TransformType Transform(Reference);
+
     Generalized = Transform.PhysicalToGeneralized(Physical);
     jiba::rvec Compare = Transform.GeneralizedToPhysical(Generalized);
     //first we check whether backwards and forwards transformation produces
@@ -89,12 +86,20 @@ BOOST_AUTO_TEST_CASE (basic_copy_test)
 
   BOOST_AUTO_TEST_CASE (transform_test)
     {
-      TestTransform<jiba::NormalizeTransform> ();
-      TestTransform<jiba::LogTransform> ();
-      TestTransform<jiba::LogDensityTransform> ();
-      TestTransform<jiba::VelTransform> ();
-      TestTransform<jiba::VelDensTransform> ();
-      TestTransform<jiba::TanhTransform> ();
-      TestTransform<jiba::TanhDensityTransform> ();
+	  const size_t nelements = 11;
+	  jiba::rvec Reference(nelements);
+	  for (size_t i = 0; i < nelements; ++i)
+	        {
+	          Reference( i) = 2.0 + drand48();
+	        }
+      TestTransform(jiba::NormalizeTransform(Reference),nelements);
+      TestTransform(jiba::LogTransform(Reference),nelements);
+      TestTransform(jiba::LogDensityTransform(Reference),nelements);
+      TestTransform(jiba::VelTransform(Reference),nelements);
+      TestTransform(jiba::VelDensTransform(Reference),nelements);
+
+      TestTransform(jiba::TanhTransform(Reference,0.0,1000),nelements);
+      TestTransform(jiba::TanhDensityTransform(Reference,0.0,1000),nelements);
+
     }
 BOOST_AUTO_TEST_SUITE_END()
