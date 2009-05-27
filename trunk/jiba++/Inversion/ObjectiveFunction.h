@@ -63,6 +63,7 @@ namespace jiba
           return DataDifference;
         }
     public:
+    	size_t GetNEval(){return nEval;}
       //! Assign a class that transforms the data from the forward calculation
       void SetDataTransform(boost::shared_ptr<VectorTransform> Transform)
         {

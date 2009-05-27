@@ -19,7 +19,7 @@ namespace OPTPP
         double stpmin, double stpmax, int *info);
 
     int mcsrch(jiba::ObjectiveFunction* nlp, const jiba::rvec& s,
-        const jiba::rvec &Grad,
+        jiba::rvec &Grad,
         const jiba::rvec &model, double misfit, double *stp, int itnmax,
         double ftol, double xtol, double gtol, double stpmax, double stpmin)
       {
@@ -126,7 +126,7 @@ namespace OPTPP
         int n = s.size();
 
         double fvalue;
-        jiba::rvec xc(n), grad(n);
+        jiba::rvec xc(n);
 
         infoc = 1;
 
@@ -143,10 +143,10 @@ namespace OPTPP
         /* and check that s is a descent direction. */
 
         dginit = zero;
-        grad = Grad;
+
         for (j = 0; j < n; ++j)
           {
-            dginit += grad(j) * s(j);
+            dginit += Grad(j) * s(j);
           }
 
         if (dginit >= zero)
@@ -222,13 +222,13 @@ namespace OPTPP
             xc = model + s * (*stp);
 
             fvalue = nlp->CalcMisfit(xc);
-            grad = nlp->CalcGradient();
+            Grad = nlp->CalcGradient();
 
             info = 0;
             dg = zero;
             for (j = 0; j < n; ++j)
               {
-                dg += grad(j) * s(j);
+                dg += Grad(j) * s(j);
               }
             ftest1 = finit + *stp * dgtest;
 

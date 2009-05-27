@@ -15,7 +15,7 @@ namespace jiba
 
     LimitedMemoryQuasiNewton::LimitedMemoryQuasiNewton(boost::shared_ptr<
         jiba::ObjectiveFunction> ObjFunction, const size_t n) :
-      NonLinearOptimization(ObjFunction), MaxPairs(n)
+      NonLinearOptimization(ObjFunction), mu(1),MaxPairs(n)
       {
 
       }
@@ -61,13 +61,10 @@ namespace jiba
         //    SearchDir, *GetObjective());
         //std::cout << "SearchDir: " << SearchDir << std::endl;
         //std::cout << "RawGrad: " << RawGrad << std::endl;
-        double mu = 1.0;
         int status = OPTPP::mcsrch(GetObjective().get(), SearchDir, RawGrad, CurrentModel, Misfit,
             &mu, 20, 1e-4, 2.2e-16, 0.9, 1e9, 1e-9);
         std::cout << "Status: " << status << std::endl;
-        std::cout << " Mu: " << mu << " Search Angle: " << ublas::inner_prod(
-                   SearchDir, RawGrad) / (ublas::norm_2(SearchDir) * ublas::norm_2(
-                   RawGrad)) << std::endl;
+        std::cout << " Mu: " << mu  << std::endl;
         CurrentModel += mu * SearchDir;
         if (npairs < MaxPairs)
           {
@@ -82,6 +79,6 @@ namespace jiba
             std::rotate(YHistory.begin(), YHistory.begin() + 1, YHistory.end());
           }
         *SHistory.back() = mu * SearchDir;
-        *YHistory.back() = ublas::element_prod(GetObjective()->CalcGradient(), GetModelCovDiag()) - Gradient;
+        *YHistory.back() = ublas::element_prod(RawGrad, GetModelCovDiag()) - Gradient;
       }
   }

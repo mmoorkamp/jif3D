@@ -117,20 +117,20 @@ int main(int argc, char *argv[])
         new jiba::TomographyObjective());
     TomoObjective->SetObservedData(TomoData);
     TomoObjective->SetModelGeometry(TomoModel);
-    TomoObjective->SetDataCovar(jiba::ConstructError(TomoData, sqrt(0.02)));
+    TomoObjective->SetDataCovar(jiba::ConstructError(TomoData,0.02));
 
     boost::shared_ptr<jiba::GravityObjective> ScalGravObjective(
         new jiba::GravityObjective());
     ScalGravObjective->SetObservedData(ScalGravData);
     ScalGravObjective->SetModelGeometry(GravModel);
-    ScalGravObjective->SetDataCovar(jiba::ConstructError(ScalGravData, sqrt(
-        0.02)));
+    ScalGravObjective->SetDataCovar(jiba::ConstructError(ScalGravData,
+        0.02));
 
     boost::shared_ptr<jiba::GravityObjective> FTGObjective(
         new jiba::GravityObjective(true));
     FTGObjective->SetObservedData(FTGData);
     FTGObjective->SetModelGeometry(GravModel);
-    FTGObjective->SetDataCovar(jiba::ConstructError(FTGData, sqrt(0.02)));
+    FTGObjective->SetDataCovar(jiba::ConstructError(FTGData, 0.02));
 
     const double z0 = 5.0;
     const double DepthExponent = -2.0;
@@ -184,7 +184,7 @@ int main(int argc, char *argv[])
 
     const size_t ndata = TomoData.size() + ScalGravData.size() + FTGData.size();
     size_t iteration = 0;
-    size_t maxiter = 30;
+    size_t maxiter = 300;
     jiba::rvec TomoInvModel(SlownessTransform->GeneralizedToPhysical(InvModel));
     std::ofstream misfitfile("misfit.out");
     do
@@ -204,6 +204,7 @@ int main(int argc, char *argv[])
         std::cout << "Currrent Gradient: " << LBFGS.GetGradNorm() << std::endl;
         misfitfile << iteration << " " << LBFGS.GetMisfit() << " ";
         std::copy(Objective->GetIndividualFits().begin(),Objective->GetIndividualFits().end(),std::ostream_iterator<double>(misfitfile," "));
+        misfitfile << " " << Objective->GetNEval();
         misfitfile << std::endl;
       } while (iteration < maxiter && LBFGS.GetMisfit() > ndata
         && LBFGS.GetGradNorm() > 1e-6);
