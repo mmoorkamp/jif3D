@@ -30,11 +30,7 @@ namespace jiba
         //if the grid size changed we have to (re)allocate
         if (oldngrid != ngrid)
           {
-            if (grid.slow != NULL)
-              {
-                delete[] grid.slow;
-              }
-            grid.slow = new float[ngrid];
+        	grid.slow.resize(ngrid);
           }
         //if the number of data changed we have to (re)allocate
         if (data.ndata_seis != ndata)
@@ -93,7 +89,7 @@ namespace jiba
         std::fill_n(grid.org, 3, 0.0);
 
         //the extra cells have to be zero, it is easier to initialize everything
-        std::fill_n(grid.slow, ngrid, 0.0);
+        std::fill_n(grid.slow.begin(), ngrid, 0.0);
         //fill the real model with slowness values
         //we use physical slowness in s/m, the forward code requires
         //to multiply by the cell size
@@ -103,8 +99,8 @@ namespace jiba
             {
               const size_t layerindex = i * (grid.nz + 1) * (grid.ny + 1) + j * (grid.nz + 1);
               //fill the airlayers
-              std::fill_n(grid.slow + layerindex,nairlayers,grid.h);
-              std::fill_n(grid.slow + layerindex+ grid.nz - nairlayers,nairlayers,grid.h);
+              std::fill_n(grid.slow.begin() + layerindex,nairlayers,grid.h);
+              std::fill_n(grid.slow.begin() + layerindex+ grid.nz - nairlayers,nairlayers,grid.h);
               //then copy the actual model
               for (size_t k = nairlayers; k < grid.nz - nairlayers; ++k)
                 grid.slow[layerindex+ k] = Model.GetSlownesses()[i][j][k - nairlayers] * grid.h;

@@ -1,6 +1,6 @@
 /* Local libary of "inv3d": */
 #include <cstdlib>
-
+#include <vector>
 #ifndef _INV3D_
 #define _INV3D_
 
@@ -24,15 +24,13 @@ namespace jiba
       /*!< Seismic Velocity parameters*/
       int nborder; /*!< Number of grid cells for the boundary*/
 
-      float *slow; /*!< Slowness model used for the forward model (normalized by the grid cell size)*/
+      std::vector<float> slow; /*!< Slowness model used for the forward model (normalized by the grid cell size)*/
       GRID_STRUCT() :
-        nx(0), ny(0), nz(0), h(0), nborder(0), slow(NULL)
+        nx(0), ny(0), nz(0), h(0), nborder(0)
         {
         }
       virtual ~GRID_STRUCT()
         {
-          if (slow != NULL)
-            delete[] slow;
         }
       };
 

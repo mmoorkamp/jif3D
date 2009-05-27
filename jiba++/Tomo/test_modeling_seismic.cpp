@@ -54,8 +54,8 @@ BOOST_AUTO_TEST_CASE (memory_test)
       grid.nborder = 0;
       const size_t ngrid = pow(ncells + 1, 3);
       std::fill_n(grid.org, 3, grid.h / 2.0);
-      grid.slow = new float[ngrid];
-      std::fill_n(grid.slow, ngrid, 1.0 * grid.h);
+      grid.slow.resize(ngrid);
+      std::fill_n(grid.slow.begin(), ngrid, 1.0 * grid.h);
       float *data = new float[ngrid];
       float xcomp = Pos();
       float ycomp = Pos();
@@ -114,8 +114,8 @@ BOOST_AUTO_TEST_CASE (memory_test)
       grid.nborder = 0;
       const size_t ngrid = pow(ncells + 1, 3);
       std::fill_n(grid.org, 3, 0.0);
-      grid.slow = new float[ngrid];
-      std::fill_n(grid.slow, ngrid, 0.1 * grid.h);
+      grid.slow.resize(ngrid);
+      std::fill_n(grid.slow.begin(), ngrid, 0.1 * grid.h);
 
       data.ndata_seis = 2;
       data.ndata_seis_act = 2;

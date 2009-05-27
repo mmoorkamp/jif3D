@@ -11,7 +11,8 @@
 namespace jiba
   {
 
-    ObjectiveFunction::ObjectiveFunction()
+    ObjectiveFunction::ObjectiveFunction():
+    	nEval(0)
       {
 
       }

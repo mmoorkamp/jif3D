@@ -13,7 +13,7 @@
 namespace OPTPP
   {
     int mcsrch(jiba::ObjectiveFunction* nlp, const jiba::rvec& s,
-        const jiba::rvec &Grad,
+        jiba::rvec &Grad,
         const jiba::rvec &model, double misfit, double *stp, int itnmax,
         double ftol, double xtol, double gtol, double stpmax, double stpmin);
   }
