@@ -193,29 +193,17 @@ namespace jiba
 
                     if (raypath[nact_datapos[j]].nray != 0)
                       {
-                        raypath[nact_datapos[j]].len = (double *) memory(NULL,
-                            raypath[nact_datapos[j]].nray, sizeof(double),
-                            "ForwardModRay");
-                        raypath[nact_datapos[j]].ele = (long *) memory(NULL,
-                            raypath[nact_datapos[j]].nray, sizeof(long),
-                            "ForwardModRay");
+                        raypath[nact_datapos[j]].len.resize(raypath[nact_datapos[j]].nray);
+                        raypath[nact_datapos[j]].ele.resize(raypath[nact_datapos[j]].nray);
                       }
                     else
                       {
-                        raypath[nact_datapos[j]].len = (double *) memory(NULL,
-                            1, sizeof(double), "ForwardModRay");
-                        raypath[nact_datapos[j]].ele = (long *) memory(NULL, 1,
-                            sizeof(long), "ForwardModRay");
+                        raypath[nact_datapos[j]].len.resize(1);
+                        raypath[nact_datapos[j]].ele.resize(1);
                       }
-                    raypath[nact_datapos[j]].x = (double *) memory(NULL,
-                        raypath[nact_datapos[j]].nray + 1, sizeof(double),
-                        "ForwardModRay");
-                    raypath[nact_datapos[j]].y = (double *) memory(NULL,
-                        raypath[nact_datapos[j]].nray + 1, sizeof(double),
-                        "ForwardModRay");
-                    raypath[nact_datapos[j]].z = (double *) memory(NULL,
-                        raypath[nact_datapos[j]].nray + 1, sizeof(double),
-                        "ForwardModRay");
+                    raypath[nact_datapos[j]].x.resize(raypath[nact_datapos[j]].nray + 1);
+                    raypath[nact_datapos[j]].y.resize(raypath[nact_datapos[j]].nray + 1);
+                    raypath[nact_datapos[j]].z.resize(raypath[nact_datapos[j]].nray + 1);
 
                     for (size_t k = 0; k < raypath_tmp[j].nray; k++)
                       {
@@ -394,12 +382,11 @@ namespace jiba
                 (double) Ys) == floor((double) Yr[i]) && floor((double) Zs)
                 == floor((double) Zr[i]))
               {
-                rp[i].len = (double *) memory(NULL, 1, sizeof(double),
-                    "RayCalc");
-                rp[i].x = (double *) memory(NULL, 2, sizeof(double), "RayCalc");
-                rp[i].y = (double *) memory(NULL, 2, sizeof(double), "RayCalc");
-                rp[i].z = (double *) memory(NULL, 2, sizeof(double), "RayCalc");
-                rp[i].ele = (long *) memory(NULL, 1, sizeof(long), "RayCalc");
+                rp[i].len.resize(1);
+                rp[i].x.resize(2);
+                rp[i].y.resize(2);
+                rp[i].z.resize(2);
+                rp[i].ele.resize(1);
 
                 rp[i].len[0] = sqrt((double) (Xs - Xr[i]) * (Xs - Xr[i]) + (Ys
                     - Yr[i]) * (Ys - Yr[i]) + (Zs - Zr[i]) * (Zs - Zr[i])); /*Ray segment length*/
@@ -440,11 +427,11 @@ namespace jiba
                 cell, tt, ny, nz);
             free(gradient);
 
-            rp[i].len = (double *) memory(NULL, 1, sizeof(double), "RayCalc");
-            rp[i].x = (double *) memory(NULL, 1, sizeof(double), "RayCalc");
-            rp[i].y = (double *) memory(NULL, 1, sizeof(double), "RayCalc");
-            rp[i].z = (double *) memory(NULL, 1, sizeof(double), "RayCalc");
-            rp[i].ele = (long *) memory(NULL, 1, sizeof(long), "RayCalc");
+            rp[i].len.resize(1);
+            rp[i].x.resize(1);
+            rp[i].y.resize(1);
+            rp[i].z.resize(1);
+            rp[i].ele.resize(1);
 
             rp[i].len[0] = sqrt((next_cell.xpos + next_cell.xno - cell.xpos
                 - cell.xno) * (next_cell.xpos + next_cell.xno - cell.xpos
@@ -490,28 +477,18 @@ namespace jiba
                     cell, tt, ny, nz);
                 free(gradient);
 
-                rp[i].len = (double *) memory((char *) rp[i].len, count + 1,
-                    sizeof(double), "RayCalc");
-                rp[i].x = (double *) memory((char *) rp[i].x, count + 1,
-                    sizeof(double), "RayCalc");
-                rp[i].y = (double *) memory((char *) rp[i].y, count + 1,
-                    sizeof(double), "RayCalc");
-                rp[i].z = (double *) memory((char *) rp[i].z, count + 1,
-                    sizeof(double), "RayCalc");
-                rp[i].ele = (long *) memory((char *) rp[i].ele, count + 1,
-                    sizeof(long), "RayCalc");
 
-                rp[i].len[count] = sqrt((next_cell.xpos + next_cell.xno
+                rp[i].len.push_back( sqrt((next_cell.xpos + next_cell.xno
                     - cell.xpos - cell.xno) * (next_cell.xpos + next_cell.xno
                     - cell.xpos - cell.xno) + (next_cell.ypos + next_cell.yno
                     - cell.ypos - cell.yno) * (next_cell.ypos + next_cell.yno
                     - cell.ypos - cell.yno) + (next_cell.zpos + next_cell.zno
                     - cell.zpos - cell.zno) * (next_cell.zpos + next_cell.zno
-                    - cell.zpos - cell.zno)); /*Ray segment length*/
-                rp[i].x[count] = (double) cell.xpos + cell.xno;
-                rp[i].y[count] = (double) cell.ypos + cell.yno;
-                rp[i].z[count] = (double) cell.zpos + cell.zno;
-                rp[i].ele[count] = nyz1 * cell.xno + nz1 * cell.yno + cell.zno; /*Determine the position number of the cell, which the ray intersects*/
+                    - cell.zpos - cell.zno))); /*Ray segment length*/
+                rp[i].x.push_back((double) cell.xpos + cell.xno);
+                rp[i].y.push_back((double) cell.ypos + cell.yno);
+                rp[i].z.push_back((double) cell.zpos + cell.zno);
+                rp[i].ele.push_back( nyz1 * cell.xno + nz1 * cell.yno + cell.zno); /*Determine the position number of the cell, which the ray intersects*/
 
                 cell_index(cell.xno,cell.yno,cell.zno) = 1;
 
@@ -540,32 +517,21 @@ namespace jiba
                 count++;
               }
 
-            /*Determine the last ray segment to the shot:*/
-            rp[i].len = (double *) memory((char *) rp[i].len, count + 1,
-                sizeof(double), "RayCalc"); /*Normalized by the cell length*/
-            rp[i].x = (double *) memory((char *) rp[i].x, count + 2,
-                sizeof(double), "RayCalc");
-            rp[i].y = (double *) memory((char *) rp[i].y, count + 2,
-                sizeof(double), "RayCalc");
-            rp[i].z = (double *) memory((char *) rp[i].z, count + 2,
-                sizeof(double), "RayCalc");
-            rp[i].ele = (long *) memory((char *) rp[i].ele, count + 1,
-                sizeof(long), "RayCalc");
 
-            rp[i].x[count] = (double) next_cell.xpos + next_cell.xno;
-            rp[i].y[count] = (double) next_cell.ypos + next_cell.yno;
-            rp[i].z[count] = (double) next_cell.zpos + next_cell.zno;
+            rp[i].x.push_back( (double) next_cell.xpos + next_cell.xno);
+            rp[i].y.push_back( (double) next_cell.ypos + next_cell.yno);
+            rp[i].z.push_back( (double) next_cell.zpos + next_cell.zno);
 
-            rp[i].len[count] = sqrt((Xs - next_cell.xpos - next_cell.xno) * (Xs
+            rp[i].len.push_back( sqrt((Xs - next_cell.xpos - next_cell.xno) * (Xs
                 - next_cell.xpos - next_cell.xno) + (Ys - next_cell.ypos
                 - next_cell.yno) * (Ys - next_cell.ypos - next_cell.yno) + (Zs
                 - next_cell.zpos - next_cell.zno) * (Zs - next_cell.zpos
-                - next_cell.zno)); /*Ray segment length*/
-            rp[i].x[count + 1] = (double) Xs;
-            rp[i].y[count + 1] = (double) Ys;
-            rp[i].z[count + 1] = (double) Zs;
-            rp[i].ele[count] = nyz1 * (int) floor((double) Xs) + nz1
-                * (int) floor((double) Ys) + (int) floor((double) Zs); /*Determine the position number of the cell, which the ray intersects*/
+                - next_cell.zno))); /*Ray segment length*/
+            rp[i].x.push_back( (double) Xs);
+            rp[i].y.push_back( (double) Ys);
+            rp[i].z.push_back( (double) Zs);
+            rp[i].ele.push_back(nyz1 * (int) floor((double) Xs) + nz1
+                * (int) floor((double) Ys) + (int) floor((double) Zs)); /*Determine the position number of the cell, which the ray intersects*/
             rp[i].nray = count + 1; /*Number of the segments of the ray*/
 
             fertig: ;

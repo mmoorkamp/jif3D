@@ -97,8 +97,7 @@ namespace jiba
       //! Calculate the gradient associated with the last misfit calculation
       jiba::rvec CalcGradient()
         {
-          const size_t ndata = DataDifference.size();
-          assert(CovarDiag.size() == ndata);
+          assert(CovarDiag.size() == DataDifference.size());
           //for the gradient we need the difference between predicted and observed data
           //weighted by the squared covariance
           jiba::rvec GradDiff(ublas::element_div(DataDifference,CovarDiag));

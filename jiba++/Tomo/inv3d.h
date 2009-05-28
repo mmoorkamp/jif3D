@@ -95,30 +95,20 @@ namespace jiba
     public:
       long n; /*!< Number specifying the row in the matrix for the shot-receiver combination*/
       long nray; /*!< Number of segments for the ray*/
-      double *x; /*!< 		Forward grid: x-position of the begin of the ray-path segment*/
+      std::vector<double> x; /*!< 		Forward grid: x-position of the begin of the ray-path segment*/
       /*!< BUT:	Inversion grid: x-component of the ray in the cell*/
-      double *y; /*!< 		Forward grid: y-position of the begin of the ray-path segment*/
+      std::vector<double> y; /*!< 		Forward grid: y-position of the begin of the ray-path segment*/
       /*!< BUT:	Inversion grid: y-component of the ray in the cell*/
-      double *z; /*!< 		Forward grid: z-position of the begin of the ray-path segment*/
+      std::vector<double> z; /*!< 		Forward grid: z-position of the begin of the ray-path segment*/
       /*!< BUT:	Inversion grid: x-component of the ray in the cell*/
-      double *len; /*!< Length of the ray-path segment*/
-      long *ele; /*!< Grid cell position in the grid*/
+      std::vector<double> len; /*!< Length of the ray-path segment*/
+      std::vector<long> ele; /*!< Grid cell position in the grid*/
       RP_STRUCT() :
-        n(0), nray(0), x(NULL), y(NULL), z(NULL), len(NULL), ele(NULL)
+        n(0), nray(0)
         {
         }
       virtual ~RP_STRUCT()
         {
-          if (x != NULL)
-            free(x);
-          if (y != NULL)
-            free(y);
-          if (z != NULL)
-            free( z);
-          if (len != NULL)
-            free(len);
-          if (ele != NULL)
-            free(ele);
         }
       };
 
