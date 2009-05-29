@@ -30,11 +30,10 @@ namespace jiba
       {
         Misfit = GetObjective()->CalcMisfit(CurrentModel);
 
-        jiba::rvec RawGrad(GetObjective()->CalcGradient());
-        jiba::rvec Gradient(ublas::element_prod(RawGrad, GetModelCovDiag()));
+
         std::cout << "Misfit: " << Misfit << " Gradient: " << ublas::norm_2(
-            Gradient) << std::endl;
-        const size_t nmod = Gradient.size();
+            CovGrad) << std::endl;
+        const size_t nmod = CovGrad.size();
         if (OldGradient.size() != nmod)
           {
             OldOmega = 1.0;
@@ -47,14 +46,14 @@ namespace jiba
         double alpha = 0.0;
         for (size_t i = 0; i < nmod; ++i)
           {
-            const double factor = 1.0 / GetModelCovDiag()(i) * Gradient(i);
-            omega += Gradient(i) * factor;
+            const double factor = 1.0 / GetModelCovDiag()(i) * CovGrad(i);
+            omega += CovGrad(i) * factor;
             alpha += OldGradient(i) * factor;
           }
         alpha = (omega - alpha) / OldOmega;
-        OldGradient = Gradient;
+        OldGradient = CovGrad;
         OldOmega = omega;
-        SearchDir = Gradient + alpha * OldDirection;
+        SearchDir = CovGrad + alpha * OldDirection;
         OldDirection = SearchDir;
 
         SearchDir *= -1.0;
@@ -70,13 +69,13 @@ namespace jiba
           }
         else
           {
-            Gradient *= -1.0;
+            CovGrad *= -1.0;
             OldGradient.resize(0);
-            status = OPTPP::mcsrch(GetObjective().get(), Gradient, RawGrad,
+            status = OPTPP::mcsrch(GetObjective().get(), CovGrad, RawGrad,
                 CurrentModel, Misfit, &mu, 20, 1e-4, 2.2e-16, 0.1, 1e9, 1e-9);
           }
         std::cout << "Status: " << status << std::endl;
         CurrentModel += mu * SearchDir;
-
+        CovGrad = ublas::element_prod(RawGrad, GetModelCovDiag());
       }
   }

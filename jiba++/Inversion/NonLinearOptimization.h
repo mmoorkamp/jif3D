@@ -20,10 +20,14 @@ namespace jiba
     class NonLinearOptimization
       {
     private:
-    	 virtual void StepImplementation(jiba::rvec &CurrentModel) = 0;
+      void CalcMisfitandGradient(const jiba::rvec &CurrentModel);
+      virtual void StepImplementation(jiba::rvec &CurrentModel) = 0;
       jiba::rvec ModelCovDiag;
       boost::shared_ptr<jiba::ObjectiveFunction> Objective;
+      jiba::rvec LastModel;
     protected:
+      jiba::rvec RawGrad;
+      jiba::rvec CovGrad;
       jiba::rvec SearchDir;
       double Misfit;
       const boost::shared_ptr<jiba::ObjectiveFunction> GetObjective()
@@ -31,8 +35,14 @@ namespace jiba
           return Objective;
         }
     public:
-      double GetMisfit() { return Misfit;}
-      double GetGradNorm() {return ublas::norm_2(SearchDir);}
+      double GetMisfit()
+        {
+          return Misfit;
+        }
+      double GetGradNorm()
+        {
+          return ublas::norm_2(SearchDir);
+        }
       const jiba::rvec &GetModelCovDiag() const
         {
           return ModelCovDiag;
@@ -43,20 +53,9 @@ namespace jiba
           ModelCovDiag = Cov;
         }
 
-      void MakeStep(jiba::rvec &CurrentModel)
-        {
-          if (ModelCovDiag.size() != CurrentModel.size())
-            {
-              ModelCovDiag.resize(CurrentModel.size());
-              std::fill(ModelCovDiag.begin(),ModelCovDiag.end(),1.0);
-            }
-          if (SearchDir.size()!= CurrentModel.size() )
-          {
-        	  SearchDir.resize(CurrentModel.size());
-          }
-          StepImplementation(CurrentModel);
-        }
-      NonLinearOptimization(boost::shared_ptr<jiba::ObjectiveFunction> ObjFunction);
+      void MakeStep(jiba::rvec &CurrentModel);
+      NonLinearOptimization(
+          boost::shared_ptr<jiba::ObjectiveFunction> ObjFunction);
       virtual ~NonLinearOptimization();
       };
   /* @} */

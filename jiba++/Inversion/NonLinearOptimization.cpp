@@ -11,8 +11,9 @@
 namespace jiba
   {
 
-    NonLinearOptimization::NonLinearOptimization(boost::shared_ptr<jiba::ObjectiveFunction> ObjFunction)
-    :Objective(ObjFunction)
+    NonLinearOptimization::NonLinearOptimization(boost::shared_ptr<
+        jiba::ObjectiveFunction> ObjFunction) :
+      Objective(ObjFunction)
       {
 
       }
@@ -22,4 +23,30 @@ namespace jiba
 
       }
 
+    void NonLinearOptimization::CalcMisfitandGradient(const jiba::rvec &CurrentModel)
+      {
+        Misfit = GetObjective()->CalcMisfit(CurrentModel);
+
+        RawGrad = GetObjective()->CalcGradient();
+        CovGrad = ublas::element_prod(RawGrad, GetModelCovDiag());
+      }
+
+    void NonLinearOptimization::MakeStep(jiba::rvec &CurrentModel)
+      {
+        if (ModelCovDiag.size() != CurrentModel.size())
+          {
+            ModelCovDiag.resize(CurrentModel.size());
+            std::fill(ModelCovDiag.begin(), ModelCovDiag.end(), 1.0);
+          }
+        if (SearchDir.size() != CurrentModel.size())
+          {
+            SearchDir.resize(CurrentModel.size());
+          }
+        if (LastModel.size() != CurrentModel.size() || !std::equal(LastModel.begin(),LastModel.end(),CurrentModel.begin()))
+          {
+            CalcMisfitandGradient(CurrentModel);
+          }
+        StepImplementation(CurrentModel);
+        LastModel = CurrentModel;
+      }
   }
