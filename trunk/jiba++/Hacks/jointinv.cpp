@@ -184,7 +184,7 @@ int main(int argc, char *argv[])
 
     const size_t ndata = TomoData.size() + ScalGravData.size() + FTGData.size();
     size_t iteration = 0;
-    size_t maxiter = 300;
+    size_t maxiter = 10;
     jiba::rvec TomoInvModel(SlownessTransform->GeneralizedToPhysical(InvModel));
     std::ofstream misfitfile("misfit.out");
     do

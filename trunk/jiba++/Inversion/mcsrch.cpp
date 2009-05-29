@@ -20,7 +20,7 @@ namespace OPTPP
 
     int mcsrch(jiba::ObjectiveFunction* nlp, const jiba::rvec& s,
         jiba::rvec &Grad,
-        const jiba::rvec &model, double misfit, double *stp, int itnmax,
+        const jiba::rvec &model, double &misfit, double *stp, int itnmax,
         double ftol, double xtol, double gtol, double stpmax, double stpmin)
       {
 
@@ -223,7 +223,7 @@ namespace OPTPP
 
             fvalue = nlp->CalcMisfit(xc);
             Grad = nlp->CalcGradient();
-
+            misfit = fvalue;
             info = 0;
             dg = zero;
             for (j = 0; j < n; ++j)

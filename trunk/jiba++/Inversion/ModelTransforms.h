@@ -112,98 +112,102 @@ namespace jiba
       };
 
     class TanhTransform: public jiba::GeneralModelTransform
-          {
-        private:
-        	const double min;
-        	const double max;
-          const jiba::rvec Reference;
-        public:
-          //! Transform the normalized model parameters back to physical parameters
-          virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
+      {
+    private:
+      const double min;
+      const double max;
+      const jiba::rvec Reference;
+    public:
+      //! Transform the normalized model parameters back to physical parameters
+      virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
+        {
+          assert(FullModel.size() == Reference.size());
+          jiba::rvec Output(FullModel.size());
+          for (size_t i = 0; i < FullModel.size(); ++i)
+            Output( i) = min + (1.0 + tanh(FullModel(i))) / 2.0 * (max - min);
+          return Output;
+        }
+      virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
+        {
+          assert(FullModel.size() == Reference.size());
+          jiba::rvec Output(FullModel.size());
+          for (size_t i = 0; i < FullModel.size(); ++i)
             {
-              assert(FullModel.size() == Reference.size());
-              jiba::rvec Output(FullModel.size());
-              for (size_t i = 0; i < FullModel.size(); ++i)
-                Output( i) = min + (1.0 + tanh(FullModel(i)))/2.0 * (max-min);
-              return Output;
+              const double argument = 2.0 * (FullModel(i) - min) / (max - min)
+                  - 1;
+              Output( i) = atanh(argument);
             }
-          virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
-            {
-              assert(FullModel.size() == Reference.size());
-              jiba::rvec Output(FullModel.size());
-              for (size_t i = 0; i < FullModel.size(); ++i)
-              {
-            	  const double argument = 2.0 * (FullModel(i)- min)/(max-min)  - 1;
-                Output( i) = atanh(argument);
-              }
-              return Output;
-            }
-          //! Transform the derivative with respect to the physical parameters to normalized parameters
-          virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
-              const jiba::rvec &Derivative) const
-            {
+          return Output;
+        }
+      //! Transform the derivative with respect to the physical parameters to normalized parameters
+      virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
+          const jiba::rvec &Derivative) const
+        {
 
-              jiba::rvec Output(FullModel.size());
-              for (size_t i = 0; i < FullModel.size(); ++i)
-                {
-                  Output( i) = (max-min)/(2.0 * pow(cosh(FullModel(i)),2)) * Derivative(i);
-                }
-              return Output;
-            }
-          TanhTransform(const jiba::rvec &Ref, const double minval = 1.0, const double maxval = 5.0) :
-            min(minval),max(maxval),Reference(Ref)
+          jiba::rvec Output(FullModel.size());
+          for (size_t i = 0; i < FullModel.size(); ++i)
             {
+              Output( i) = (max - min) / (2.0 * pow(cosh(FullModel(i)), 2))
+                  * Derivative(i);
             }
-          virtual ~TanhTransform()
-            {
-            }
-          };
+          return Output;
+        }
+      TanhTransform(const jiba::rvec &Ref, const double minval = 1.0,
+          const double maxval = 5.0) :
+        min(minval), max(maxval), Reference(Ref)
+        {
+        }
+      virtual ~TanhTransform()
+        {
+        }
+      };
 
     class TanhDensityTransform: public jiba::TanhTransform
-{
-public:
-	virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
-	{
-		jiba::rvec Slowness(TanhTransform::GeneralizedToPhysical(FullModel));
-		jiba::rvec Output(FullModel.size());
-		for (size_t i = 0; i < FullModel.size(); ++i)
-		{
-			Output(i) = (1.0 / Slowness(i) + 8500.0) / 5000.0;
-		}
-		return Output;
-	}
-	virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
-	{
+      {
+    public:
+      virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
+        {
+          jiba::rvec Slowness(TanhTransform::GeneralizedToPhysical(FullModel));
+          jiba::rvec Output(FullModel.size());
+          for (size_t i = 0; i < FullModel.size(); ++i)
+            {
+              Output( i) = (1.0 / Slowness(i) + 8500.0) / 5000.0;
+            }
+          return Output;
+        }
+      virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
+        {
 
-		jiba::rvec Output(FullModel.size());
-				for (size_t i = 0; i < FullModel.size(); ++i)
-				{
-					Output(i) = 1.0/(5000.0 * FullModel(i) - 8500.0);
-				}
-				return TanhTransform::PhysicalToGeneralized(Output);
-	}
-	virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
-			const jiba::rvec &Derivative) const
-	{
-		jiba::rvec Slowness(TanhTransform::GeneralizedToPhysical(FullModel));
-		jiba::rvec SlowDeriv(TanhTransform::Derivative(FullModel, Derivative));
-		jiba::rvec Output(FullModel.size());
-			for (size_t i = 0; i < FullModel.size(); ++i)
-			{
-				Output(i) = -1.0 / (Slowness(i) * Slowness(i))  / 5000.0 * SlowDeriv(i);
-			}
-			return Output;
-	}
-	TanhDensityTransform(const jiba::rvec &Ref, const double minval = 1.0,
-			const double maxval = 5.0) :
-		TanhTransform(Ref, minval, maxval)
-	{
-	}
-	virtual ~TanhDensityTransform()
-	{
-	}
-    };
-
+          jiba::rvec Output(FullModel.size());
+          for (size_t i = 0; i < FullModel.size(); ++i)
+            {
+              Output( i) = 1.0 / (5000.0 * FullModel(i) - 8500.0);
+            }
+          return TanhTransform::PhysicalToGeneralized(Output);
+        }
+      virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
+          const jiba::rvec &Derivative) const
+        {
+          jiba::rvec Slowness(TanhTransform::GeneralizedToPhysical(FullModel));
+          jiba::rvec
+              SlowDeriv(TanhTransform::Derivative(FullModel, Derivative));
+          jiba::rvec Output(FullModel.size());
+          for (size_t i = 0; i < FullModel.size(); ++i)
+            {
+              Output( i) = -1.0 / (Slowness(i) * Slowness(i)) / 5000.0
+                  * SlowDeriv(i);
+            }
+          return Output;
+        }
+      TanhDensityTransform(const jiba::rvec &Ref, const double minval = 1.0,
+          const double maxval = 5.0) :
+        TanhTransform(Ref, minval, maxval)
+        {
+        }
+      virtual ~TanhDensityTransform()
+        {
+        }
+      };
 
     class LogDensityTransform: public jiba::GeneralModelTransform
       {
