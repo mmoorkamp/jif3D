@@ -5,7 +5,7 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-
+#include "../Global/FatalException.h"
 #include "LimitedMemoryQuasiNewton.h"
 #include "BacktrackingLineSearch.h"
 #include "mcsrch.h"
@@ -58,10 +58,11 @@ namespace jiba
         //    SearchDir, *GetObjective());
         //std::cout << "SearchDir: " << SearchDir << std::endl;
         //std::cout << "RawGrad: " << RawGrad << std::endl;
-        mu =1.0;
+
         int status = OPTPP::mcsrch(GetObjective().get(), SearchDir, RawGrad, CurrentModel, Misfit,
             &mu, 20, 1e-4, 2.2e-16, 0.9, 1e9, 1e-9);
-        std::cout << "Status: " << status << std::endl;
+        if (status < 0)
+        	throw jiba::FatalException("Cannot find suitable step");
         std::cout << " Mu: " << mu  << std::endl;
         CurrentModel += mu * SearchDir;
         if (npairs < MaxPairs)
