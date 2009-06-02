@@ -117,7 +117,10 @@ int main(int argc, char *argv[])
         new jiba::TomographyObjective());
     TomoObjective->SetObservedData(TomoData);
     TomoObjective->SetModelGeometry(TomoModel);
-    TomoObjective->SetDataCovar(jiba::ConstructError(TomoData,0.02));
+    jiba::rvec TomoCovar(TomoData.size());
+    //we assume a general error of 5 ms for the seismic data
+    std::fill(TomoCovar.begin(),TomoCovar.end(),5.0);
+    TomoObjective->SetDataCovar(TomoCovar);
 
     boost::shared_ptr<jiba::GravityObjective> ScalGravObjective(
         new jiba::GravityObjective());
@@ -162,6 +165,9 @@ int main(int argc, char *argv[])
     std::cin >> ftglambda;
     std::cout << "Regularization Lambda: ";
     std::cin >> reglambda;
+    size_t maxiter = 1;
+    std::cout << "Maximum iterations: ";
+    std::cin >> maxiter;
     if (tomolambda > 0.0)
       {
         Objective->AddObjective(TomoObjective, SlownessTransform, tomolambda);
@@ -184,11 +190,12 @@ int main(int argc, char *argv[])
 
     const size_t ndata = TomoData.size() + ScalGravData.size() + FTGData.size();
     size_t iteration = 0;
-    size_t maxiter = 10;
+
     jiba::rvec TomoInvModel(SlownessTransform->GeneralizedToPhysical(InvModel));
     std::ofstream misfitfile("misfit.out");
     do
       {
+    	try {
         std::cout << "Iteration" << iteration << std::endl;
         LBFGS.MakeStep(InvModel);
 
@@ -206,6 +213,12 @@ int main(int argc, char *argv[])
         std::copy(Objective->GetIndividualFits().begin(),Objective->GetIndividualFits().end(),std::ostream_iterator<double>(misfitfile," "));
         misfitfile << " " << Objective->GetNEval();
         misfitfile << std::endl;
+    	}
+    	catch(jiba::FatalException &e)
+    	{
+    		std::cerr << e.what() << std::endl;
+    		iteration = maxiter;
+    	}
       } while (iteration < maxiter && LBFGS.GetMisfit() > ndata
         && LBFGS.GetGradNorm() > 1e-6);
 
@@ -237,6 +250,7 @@ int main(int argc, char *argv[])
     //here we have to distinguish again between scalar and ftg data
     std::cout << "Writing out inversion results." << std::endl;
 
+    TomoModel.WriteNetCDF(modelfilename + ".tomo.inv.nc");
     TomoModel.WriteVTK(modelfilename + ".tomo.inv.vtk");
     GravModel.WriteVTK(modelfilename + ".grav.inv.vtk");
     GravModel.WriteNetCDF(modelfilename + ".grav.inv.nc");
