@@ -187,6 +187,12 @@ BOOST_AUTO_TEST_CASE  (random_tensor_test)
               std::numeric_limits<float>::epsilon());
 
         }
+      const size_t nruns = 10;
+      for (size_t i = 0; i < nruns; ++i)
+        {
+          jiba::rvec newcuda(CudaCalculator->Calculate(GravityTest));
+          BOOST_CHECK(std::equal(newcuda.begin(),newcuda.end(),cudameas.begin()));
+        }
     }
 
   BOOST_AUTO_TEST_CASE(tensor_cuda_caching_test)

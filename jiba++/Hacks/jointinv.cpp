@@ -5,20 +5,13 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-
-//============================================================================
-// Name        : gravinv.cpp
-// Author      : Max Moorkamp
-// Version     :
-// Copyright   : 2008, MM
-//============================================================================
-
-
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <cmath>
+#include <omp.h>
 #include <boost/bind.hpp>
+#include <boost/program_options.hpp>
 #include "../Global/convert.h"
 #include "../Global/FatalException.h"
 #include "../Global/NumUtil.h"
@@ -43,9 +36,49 @@
 #include "../Gravity/DepthWeighting.h"
 
 namespace ublas = boost::numeric::ublas;
+namespace po = boost::program_options;
 
 int main(int argc, char *argv[])
   {
+
+    po::options_description desc("Allowed options");
+    desc.add_options()("help", "produce help message")("cpu",
+        "Perform calculation on CPU [default]")("gpu",
+        "Perform calculation on GPU")("threads", po::value<int>(),
+        "The number of openmp threads")("corrpairs", po::value<int>(),
+        "The number correction pairs for L-BFGS")("nlcg",
+        "Use NLCG optimization");
+
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::notify(vm);
+
+    if (vm.count("help"))
+      {
+        std::cout << desc << "\n";
+        return 1;
+      }
+    bool wantcuda = false;
+
+    if (vm.count("gpu"))
+      {
+        std::cout << "Using GPU" << "\n";
+        wantcuda = true;
+      }
+    if (vm.count("threads"))
+      {
+        omp_set_num_threads(vm["threads"].as<int> ());
+      }
+    int correctionpairs = 5;
+    if (vm.count("corrpairs"))
+      {
+        correctionpairs = vm["corrpairs"].as<int> ();
+      }
+    bool wantnlcg = false;
+    if (vm.count("nlcg"))
+      {
+        wantnlcg = true;
+      }
     //these objects hold information about the measurements and their geometry
     jiba::rvec TomoData, ScalGravData, FTGData;
 
@@ -119,18 +152,17 @@ int main(int argc, char *argv[])
     TomoObjective->SetModelGeometry(TomoModel);
     jiba::rvec TomoCovar(TomoData.size());
     //we assume a general error of 5 ms for the seismic data
-    std::fill(TomoCovar.begin(),TomoCovar.end(),5.0);
+    std::fill(TomoCovar.begin(), TomoCovar.end(), 5.0);
     TomoObjective->SetDataCovar(TomoCovar);
 
     boost::shared_ptr<jiba::GravityObjective> ScalGravObjective(
-        new jiba::GravityObjective());
+        new jiba::GravityObjective(false, wantcuda));
     ScalGravObjective->SetObservedData(ScalGravData);
     ScalGravObjective->SetModelGeometry(GravModel);
-    ScalGravObjective->SetDataCovar(jiba::ConstructError(ScalGravData,
-        0.02));
+    ScalGravObjective->SetDataCovar(jiba::ConstructError(ScalGravData, 0.02));
 
     boost::shared_ptr<jiba::GravityObjective> FTGObjective(
-        new jiba::GravityObjective(true));
+        new jiba::GravityObjective(true, wantcuda));
     FTGObjective->SetObservedData(FTGData);
     FTGObjective->SetModelGeometry(GravModel);
     FTGObjective->SetDataCovar(jiba::ConstructError(FTGData, 0.02));
@@ -185,8 +217,19 @@ int main(int argc, char *argv[])
 
     std::cout << "Performing inversion." << std::endl;
 
-    jiba::LimitedMemoryQuasiNewton LBFGS(Objective, 5);
-    LBFGS.SetModelCovDiag(ModelWeight);
+    boost::shared_ptr<jiba::NonLinearOptimization> Optimizer;
+    if (wantnlcg)
+      {
+        Optimizer = boost::shared_ptr<jiba::NonLinearOptimization>(
+            new jiba::NonLinearConjugateGradient(Objective));
+      }
+    else
+      {
+        Optimizer = boost::shared_ptr<jiba::NonLinearOptimization>(
+            new jiba::LimitedMemoryQuasiNewton(Objective, correctionpairs));
+      }
+
+    Optimizer->SetModelCovDiag(ModelWeight);
 
     const size_t ndata = TomoData.size() + ScalGravData.size() + FTGData.size();
     size_t iteration = 0;
@@ -195,32 +238,35 @@ int main(int argc, char *argv[])
     std::ofstream misfitfile("misfit.out");
     do
       {
-    	try {
-        std::cout << "Iteration" << iteration << std::endl;
-        LBFGS.MakeStep(InvModel);
+        try
+          {
+            std::cout << "Iteration: " << iteration << std::endl;
+            Optimizer->MakeStep(InvModel);
 
-        ++iteration;
-        TomoInvModel = SlownessTransform->GeneralizedToPhysical(InvModel);
-        std::copy(TomoInvModel.begin(), TomoInvModel.begin()
-            + TomoModel.GetSlownesses().num_elements(),
-            TomoModel.SetSlownesses().origin());
-        std::cout << "Gradient Norm: " << LBFGS.GetGradNorm() << std::endl;
-        TomoModel.WriteVTK(modelfilename + jiba::stringify(iteration)
-            + ".tomo.inv.vtk");
-        std::cout << "Currrent Misfit: " << LBFGS.GetMisfit() << std::endl;
-        std::cout << "Currrent Gradient: " << LBFGS.GetGradNorm() << std::endl;
-        misfitfile << iteration << " " << LBFGS.GetMisfit() << " ";
-        std::copy(Objective->GetIndividualFits().begin(),Objective->GetIndividualFits().end(),std::ostream_iterator<double>(misfitfile," "));
-        misfitfile << " " << Objective->GetNEval();
-        misfitfile << std::endl;
-    	}
-    	catch(jiba::FatalException &e)
-    	{
-    		std::cerr << e.what() << std::endl;
-    		iteration = maxiter;
-    	}
-      } while (iteration < maxiter && LBFGS.GetMisfit() > ndata
-        && LBFGS.GetGradNorm() > 1e-6);
+            ++iteration;
+            TomoInvModel = SlownessTransform->GeneralizedToPhysical(InvModel);
+            std::copy(TomoInvModel.begin(), TomoInvModel.begin()
+                + TomoModel.GetSlownesses().num_elements(),
+                TomoModel.SetSlownesses().origin());
+            TomoModel.WriteVTK(modelfilename + jiba::stringify(iteration)
+                + ".tomo.inv.vtk");
+            std::cout << "Currrent Misfit: " << Optimizer->GetMisfit() << std::endl;
+            std::cout << "Currrent Gradient: " << Optimizer->GetGradNorm()
+                << std::endl;
+            misfitfile << iteration << " " << Optimizer->GetMisfit() << " ";
+            std::copy(Objective->GetIndividualFits().begin(),
+                Objective->GetIndividualFits().end(), std::ostream_iterator<
+                    double>(misfitfile, " "));
+            misfitfile << " " << Objective->GetNEval();
+            misfitfile << std::endl;
+            std::cout << "\n\n";
+          } catch (jiba::FatalException &e)
+          {
+            std::cerr << e.what() << std::endl;
+            iteration = maxiter;
+          }
+      } while (iteration < maxiter && Optimizer->GetMisfit() > ndata
+        && Optimizer->GetGradNorm() > 1e-6);
 
     jiba::rvec DensInvModel(DensityTransform->GeneralizedToPhysical(InvModel));
 
@@ -239,7 +285,7 @@ int main(int argc, char *argv[])
     jiba::rvec ScalGravInvData(jiba::CreateGravityCalculator<
         jiba::MinMemGravityCalculator>::MakeScalar()->Calculate(GravModel));
     jiba::rvec FTGInvData(jiba::CreateGravityCalculator<
-            jiba::MinMemGravityCalculator>::MakeTensor()->Calculate(GravModel));
+        jiba::MinMemGravityCalculator>::MakeTensor()->Calculate(GravModel));
     jiba::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc",
         ScalGravInvData, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
         GravModel.GetMeasPosZ());

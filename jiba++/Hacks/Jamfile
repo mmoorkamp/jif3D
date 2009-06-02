@@ -8,7 +8,7 @@ exe fittingtest : fittingtest.cpp ../Inversion//inversion ..//lapack ..//cblas .
 exe sparsetest : sparsetest.cpp ../Inversion//inversion ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran : <include>. ;
 exe wcompress : wcompress.cpp  ../Gravity ../Global : <include>. ;
 exe tomoinv : tomoinv.cpp  ../Tomo ../Inversion ../Global : <include>. ;
-exe jointinv : jointinv.cpp  ../Tomo ../Gravity ../Inversion ../Global : <include>. ;
+exe jointinv : jointinv.cpp  ../Tomo ../Gravity ../Inversion ../Global ..//boost_program_options : <include>. ;
 exe grav_jointinv : grav_jointinv.cpp  ../Tomo ../Gravity ../Inversion ../Global : <include>. ;
 exe mergetomo : mergetomo.cpp  ../Tomo  ../Global : <include>. ;
 exe scal_gravinv : scal_gravinv.cpp  ../Gravity ../Inversion ../Global : <include>. ;
