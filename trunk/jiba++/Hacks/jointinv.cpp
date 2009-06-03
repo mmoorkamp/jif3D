@@ -236,6 +236,12 @@ int main(int argc, char *argv[])
 
     jiba::rvec TomoInvModel(SlownessTransform->GeneralizedToPhysical(InvModel));
     std::ofstream misfitfile("misfit.out");
+    //calculate initial misfit
+    misfitfile << "0 " << Objective->CalcMisfit(InvModel) << " ";
+    std::copy(Objective->GetIndividualFits().begin(),
+        Objective->GetIndividualFits().end(), std::ostream_iterator<double>(
+            misfitfile, " "));
+    misfitfile << std::endl;
     do
       {
         try
@@ -250,7 +256,8 @@ int main(int argc, char *argv[])
                 TomoModel.SetSlownesses().origin());
             TomoModel.WriteVTK(modelfilename + jiba::stringify(iteration)
                 + ".tomo.inv.vtk");
-            std::cout << "Currrent Misfit: " << Optimizer->GetMisfit() << std::endl;
+            std::cout << "Currrent Misfit: " << Optimizer->GetMisfit()
+                << std::endl;
             std::cout << "Currrent Gradient: " << Optimizer->GetGradNorm()
                 << std::endl;
             misfitfile << iteration << " " << Optimizer->GetMisfit() << " ";
