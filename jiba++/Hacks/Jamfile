@@ -11,8 +11,8 @@ exe tomoinv : tomoinv.cpp  ../Tomo ../Inversion ../Global : <include>. ;
 exe jointinv : jointinv.cpp  ../Tomo ../Gravity ../Inversion ../Global ..//boost_program_options : <include>. ;
 exe grav_jointinv : grav_jointinv.cpp  ../Tomo ../Gravity ../Inversion ../Global : <include>. ;
 exe mergetomo : mergetomo.cpp  ../Tomo  ../Global : <include>. ;
-exe scal_gravinv : scal_gravinv.cpp  ../Gravity ../Inversion ../Global : <include>. ;
-exe opttest : opttest.cpp  ..//optpp ..//newmat ../Gravity ../Inversion ../Global : 
+exe scal_gravinv : scal_gravinv.cpp  ../Gravity ../Inversion ../Global  : <include>. ;
+exe opttest : opttest.cpp  ..//optpp ..//newmat ../Gravity ../Inversion ../Global ../Tomo ..//boost_program_options : 
               <include>/usr/local/include/opt++ <define>use_namespace <define>HAVE_STD ;
 exe invariantftginv : invariantftginv.cpp  ../Gravity//gravity ../Gravity//gravity-extra ../Global ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ../Inversion//inversion
               ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran ..//cudart : <include>. ;
