@@ -18,6 +18,7 @@
 #include "BasicGravElements.h"
 #include "MinMemGravityCalculator.h"
 #include "FullSensitivityGravityCalculator.h"
+#include "DiskGravityCalculator.h"
 #include "ScalarOMPGravityImp.h"
 #include "TensorOMPGravityImp.h"
 
@@ -126,6 +127,44 @@ BOOST_AUTO_TEST_CASE  (random_tensor_test)
 
         }
     }
+
+  //check whether calculation by the sensitivity matrix yields the same results
+  //for tensor calculations
+  BOOST_AUTO_TEST_CASE(tensor_disk_test)
+    {
+      jiba::ThreeDGravityModel GravityTest;
+      const size_t nmeas = 5;
+      MakeRandomModel(GravityTest,nmeas);
+      boost::shared_ptr<jiba::DiskGravityCalculator> TensorCalculator(jiba::CreateGravityCalculator<jiba::DiskGravityCalculator>::MakeTensor());
+
+      //Calculate twice, once with normal calculation, once cached
+      boost::posix_time::ptime startfirst =
+      boost::posix_time::microsec_clock::local_time();
+      jiba::rvec tensormeas1(
+          TensorCalculator->Calculate(GravityTest));
+      boost::posix_time::ptime endfirst =
+      boost::posix_time::microsec_clock::local_time();
+      jiba::rvec tensormeas2(
+          TensorCalculator->Calculate(GravityTest));
+      boost::posix_time::ptime endsecond =
+      boost::posix_time::microsec_clock::local_time();
+      //the second time it should be much faster
+      BOOST_CHECK(endfirst - startfirst> (endsecond - endfirst));
+
+      //check that invalidating the cache works
+      TensorCalculator->SetSensitivities() *= 10;
+      jiba::rvec meas3(TensorCalculator->Calculate(GravityTest));
+      //compare all tensor elements
+      for (size_t i = 0; i < tensormeas1.size(); ++i)
+        {
+          BOOST_CHECK_CLOSE(tensormeas1(i), tensormeas2(i),
+              std::numeric_limits<float>::epsilon());
+          BOOST_CHECK_CLOSE(tensormeas1(i), meas3(i),
+              std::numeric_limits<float>::epsilon());
+
+        }
+    }
+
 
   //check whether the diagonal elements of the tensor obey the poisson equation
   BOOST_AUTO_TEST_CASE(tensor_poisson_test)

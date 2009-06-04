@@ -34,6 +34,7 @@
 #include "../Gravity/ThreeDGravityCalculator.h"
 #include "../Gravity/MinMemGravityCalculator.h"
 #include "../Gravity/DepthWeighting.h"
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace ublas = boost::numeric::ublas;
 namespace po = boost::program_options;
@@ -200,17 +201,24 @@ int main(int argc, char *argv[])
     size_t maxiter = 1;
     std::cout << "Maximum iterations: ";
     std::cin >> maxiter;
+
+    boost::posix_time::ptime starttime =
+        boost::posix_time::microsec_clock::local_time();
+    size_t ndata = 0;
     if (tomolambda > 0.0)
       {
+    	ndata += TomoData.size();
         Objective->AddObjective(TomoObjective, SlownessTransform, tomolambda);
       }
     if (scalgravlambda > 0.0)
       {
+    	ndata += ScalGravData.size();
         Objective->AddObjective(ScalGravObjective, DensityTransform,
             scalgravlambda);
       }
     if (ftglambda > 0.0)
       {
+    	ndata += FTGData.size();
         Objective->AddObjective(FTGObjective, DensityTransform, ftglambda);
       }
     Objective->AddObjective(Regularization, SlownessTransform, reglambda);
@@ -231,7 +239,7 @@ int main(int argc, char *argv[])
 
     Optimizer->SetModelCovDiag(ModelWeight);
 
-    const size_t ndata = TomoData.size() + ScalGravData.size() + FTGData.size();
+
     size_t iteration = 0;
 
     jiba::rvec TomoInvModel(SlownessTransform->GeneralizedToPhysical(InvModel));
@@ -307,5 +315,9 @@ int main(int argc, char *argv[])
     TomoModel.WriteVTK(modelfilename + ".tomo.inv.vtk");
     GravModel.WriteVTK(modelfilename + ".grav.inv.vtk");
     GravModel.WriteNetCDF(modelfilename + ".grav.inv.nc");
+    boost::posix_time::ptime endtime =
+            boost::posix_time::microsec_clock::local_time();
+    double cachedruntime = (endtime - starttime).total_seconds();
+    std::cout << "Runtime: " << cachedruntime << " s" <<std::endl;
     std::cout << std::endl;
   }

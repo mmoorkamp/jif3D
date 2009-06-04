@@ -10,9 +10,10 @@ lib gravity : ThreeDGravityModel.cpp GravityInterface.cpp
               : <include>boost : : <include>. ;
                
 lib gravity-extra : DepthWeighting.cpp 
+              DiskGravityCalculator.cpp
                     WaveletCompressedGravityCalculator.cpp 
                     GravityObjective.cpp
-                    ..//cudart   ../Global//global ../Inversion//inversion ;
+                    ..//cudart   ../Global//global ../Inversion//inversion ..//boost_filesystem ;
                     
 alias core :  ../ModelBase//modelbase ../Global ..//netcdf_c++ ..//netcdf ..//cudart ..//cutil ..//boost_filesystem  ;
 
