@@ -148,14 +148,20 @@ namespace jiba
               }
 
           }
-        assert(ProcessedMisfit.size() == Sensitivities.size1());
+
+        return CalculateRawLQDerivative(Model,ProcessedMisfit);
+      }
+
+
+ rvec FullSensitivityGravityCalculator::CalculateRawLQDerivative(const ThreeDGravityModel &Model, const rvec &Misfit)
+    {
+        assert(Misfit.size() == Sensitivities.size1());
 #ifdef HAVEATLAS
         rvec result(nmod);
-        atlas::gemv(CblasTrans, 1.0, Sensitivities, ProcessedMisfit, 0.0, result);
+        atlas::gemv(CblasTrans, 1.0, Sensitivities, Misfit, 0.0, result);
         return result;
 #else
-        return boost::numeric::ublas::prod(trans(Sensitivities), ProcessedMisfit);
+        return boost::numeric::ublas::prod(trans(Sensitivities), Misfit);
 #endif
-
-      }
+    }
   }

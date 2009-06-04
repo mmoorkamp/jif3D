@@ -8,6 +8,7 @@
 
 #include "GravityObjective.h"
 #include "MinMemGravityCalculator.h"
+#include "DiskGravityCalculator.h"
 #include <cassert>
 namespace jiba
   {
@@ -33,14 +34,14 @@ namespace jiba
           {
             Calculator
                 = boost::shared_ptr<jiba::ThreeDGravityCalculator>(
-                    jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeTensor(
+                    jiba::CreateGravityCalculator<jiba::DiskGravityCalculator>::MakeTensor(
                         cuda));
           }
         else
           {
             Calculator
                 = boost::shared_ptr<jiba::ThreeDGravityCalculator>(
-                    jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeScalar(
+                    jiba::CreateGravityCalculator<jiba::DiskGravityCalculator>::MakeScalar(
                         cuda));
           }
       }
