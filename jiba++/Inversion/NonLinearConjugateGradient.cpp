@@ -57,7 +57,6 @@ namespace jiba
         OldDirection = SearchDir;
 
         SearchDir *= -1.0;
-        mu = 1.0;
         double angle = ublas::inner_prod(SearchDir, RawGrad) / (ublas::norm_2(
             SearchDir) * ublas::norm_2(RawGrad));
         std::cout << "Angle: " << angle << std::endl;

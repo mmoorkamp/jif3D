@@ -11,6 +11,7 @@
 
 #include "ObjectiveFunction.h"
 #include "ModelDistributor.h"
+#include "../Gravity/ThreeDGravityModel.h"
 #include <boost/shared_ptr.hpp>
 namespace jiba
   {
@@ -22,15 +23,23 @@ namespace jiba
       std::vector<double> Weights;
       std::vector<double> IndividualFits;
       ModelDistributor Distributor;
+      jiba::ThreeDGravityModel GradientModel;
       virtual void
           ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff);
       virtual jiba::rvec ImplGradient(const jiba::rvec &Model,
           const jiba::rvec &Diff);
     public:
-     const std::vector<double> &GetIndividualFits() const {return IndividualFits;}
+      void SetModelGeometry(const jiba::ThreeDGravityModel &Model)
+        {
+          GradientModel = Model;
+        }
+      const std::vector<double> &GetIndividualFits() const
+        {
+          return IndividualFits;
+        }
       void AddObjective(boost::shared_ptr<ObjectiveFunction> Obj,
-          boost::shared_ptr<GeneralModelTransform> Transform, const double lambda =
-              1.0)
+          boost::shared_ptr<GeneralModelTransform> Transform,
+          const double lambda = 1.0)
         {
           Objectives.push_back(Obj);
           Weights.push_back(lambda);

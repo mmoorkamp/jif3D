@@ -6,7 +6,7 @@ lib inversion : MatrixTools.cpp  LinearInversion.cpp
 				LineSearch.cpp BacktrackingLineSearch.cpp
 				mcsrch.cpp
 				ObjectiveFunction.cpp JointObjective.cpp MinDiffRegularization.cpp
-                ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran
+                ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran ../Gravity//gravity
                  : <include>boost : : <include>. ;
 
 unit-test inversion_test : test_inversion.cpp inversion ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran  : : <include>. ;
