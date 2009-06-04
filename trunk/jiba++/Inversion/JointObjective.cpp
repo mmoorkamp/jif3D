@@ -7,6 +7,7 @@
 
 
 #include "JointObjective.h"
+#include "../Global/convert.h"
 #include <iostream>
 namespace jiba
   {
@@ -29,10 +30,10 @@ namespace jiba
         IndividualFits.resize(nobjective);
         for (size_t i = 0; i < nobjective; ++i)
           {
-        	IndividualFits.at(i) = Objectives.at(i)->CalcMisfit(Distributor(Model, i));
+            IndividualFits.at(i) = Objectives.at(i)->CalcMisfit(Distributor(
+                Model, i));
             std::cout << "Individual Misfits: " << i << " "
-                << IndividualFits.at(i)
-                << std::endl;
+                << IndividualFits.at(i) << std::endl;
             totaldata += Objectives.at(i)->GetDataDifference().size();
           }
         Diff.resize(totaldata);
@@ -56,9 +57,20 @@ namespace jiba
         for (size_t i = 0; i < nobjective; ++i)
           {
             std::cout << "Gradient for objective: " << i << std::endl;
-            Gradient += Weights.at(i) * Distributor.TransformGradient(Model,
-                Objectives.at(i)->CalcGradient(), i);
+            jiba::rvec RawGrad = Objectives.at(i)->CalcGradient();
+            jiba::rvec CurrGrad = Weights.at(i)
+                * Distributor.TransformGradient(Model, RawGrad, i);
+            std::copy(RawGrad.begin(), RawGrad.end(),
+                GradientModel.SetDensities().origin());
+            GradientModel.WriteVTK("raw_grad" + jiba::stringify(i) + ".grad.vtk");
+            std::copy(CurrGrad.begin(), CurrGrad.end(),
+                GradientModel.SetDensities().origin());
+            GradientModel.WriteVTK("gradient" + jiba::stringify(i) + ".vtk");
+            Gradient += CurrGrad;
           }
+        std::copy(Gradient.begin(), Gradient.end(),
+                        GradientModel.SetDensities().origin());
+                    GradientModel.WriteVTK("totalgradient.vtk");
         return Gradient;
       }
   }

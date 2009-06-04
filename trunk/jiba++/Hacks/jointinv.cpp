@@ -128,8 +128,21 @@ int main(int argc, char *argv[])
         TomoModel.GetSlownesses().origin()
             + TomoModel.GetSlownesses().num_elements(), InvModel.begin());
 
-    jiba::rvec RefModel(InvModel);
 
+    const double z0 = 5.0;
+    const double DepthExponent = -2.0;
+    jiba::rvec WeightVector, ModelWeight(InvModel.size());
+    //calculate the depth scaling
+    jiba::ConstructDepthWeighting(GravModel.GetZCellSizes(), z0, WeightVector,
+        jiba::WeightingTerm(DepthExponent));
+    for (size_t i = 0; i < ModelWeight.size(); ++i)
+      {
+        ModelWeight( i) = WeightVector(i % GravModel.GetZCellSizes().size());
+      }
+
+    jiba::rvec RefModel(InvModel);
+    jiba::rvec PreCond(InvModel.size());
+    std::fill(PreCond.begin(),PreCond.end(),1.0);
     const double minslow = 1e-4;
     const double maxslow = 0.05;
     boost::shared_ptr<jiba::GeneralModelTransform> DensityTransform(
@@ -155,29 +168,21 @@ int main(int argc, char *argv[])
     //we assume a general error of 5 ms for the seismic data
     std::fill(TomoCovar.begin(), TomoCovar.end(), 5.0);
     TomoObjective->SetDataCovar(TomoCovar);
+    TomoObjective->SetPrecondDiag(PreCond);
 
     boost::shared_ptr<jiba::GravityObjective> ScalGravObjective(
         new jiba::GravityObjective(false, wantcuda));
     ScalGravObjective->SetObservedData(ScalGravData);
     ScalGravObjective->SetModelGeometry(GravModel);
     ScalGravObjective->SetDataCovar(jiba::ConstructError(ScalGravData, 0.02));
-
+    ScalGravObjective->SetPrecondDiag(ModelWeight);
     boost::shared_ptr<jiba::GravityObjective> FTGObjective(
         new jiba::GravityObjective(true, wantcuda));
     FTGObjective->SetObservedData(FTGData);
     FTGObjective->SetModelGeometry(GravModel);
     FTGObjective->SetDataCovar(jiba::ConstructError(FTGData, 0.02));
+    FTGObjective->SetPrecondDiag(ModelWeight);
 
-    const double z0 = 5.0;
-    const double DepthExponent = -2.0;
-    jiba::rvec WeightVector, ModelWeight(InvModel.size());
-    //calculate the depth scaling
-    jiba::ConstructDepthWeighting(GravModel.GetZCellSizes(), z0, WeightVector,
-        jiba::WeightingTerm(DepthExponent));
-    for (size_t i = 0; i < ModelWeight.size(); ++i)
-      {
-        ModelWeight( i) = WeightVector(i % GravModel.GetZCellSizes().size());
-      }
 
     boost::shared_ptr<jiba::JointObjective> Objective(
         new jiba::JointObjective());
@@ -186,6 +191,7 @@ int main(int argc, char *argv[])
 
     Regularization->SetReferenceModel(RefModel);
     Regularization->SetDataCovar(RefModel);
+    Regularization->SetPrecondDiag(PreCond);
     double tomolambda = 1.0;
     double scalgravlambda = 1.0;
     double ftglambda = 1.0;
@@ -222,7 +228,8 @@ int main(int argc, char *argv[])
         Objective->AddObjective(FTGObjective, DensityTransform, ftglambda);
       }
     Objective->AddObjective(Regularization, SlownessTransform, reglambda);
-
+    Objective->SetModelGeometry(GravModel);
+    Objective->SetPrecondDiag(PreCond);
     std::cout << "Performing inversion." << std::endl;
 
     boost::shared_ptr<jiba::NonLinearOptimization> Optimizer;
@@ -237,7 +244,7 @@ int main(int argc, char *argv[])
             new jiba::LimitedMemoryQuasiNewton(Objective, correctionpairs));
       }
 
-    Optimizer->SetModelCovDiag(ModelWeight);
+    //Optimizer->SetModelCovDiag(ModelWeight);
 
 
     size_t iteration = 0;

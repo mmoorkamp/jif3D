@@ -39,6 +39,7 @@ namespace jiba
       jiba::rvec DataDifference;
       jiba::rvec CovarDiag;
       jiba::rvec LastModel;
+      jiba::rvec PreCondDiag;
       boost::shared_ptr<VectorTransform> DataTransform;
       //! The abstract interface for functions that implement the calculation  of the data difference
       virtual void
@@ -75,6 +76,10 @@ namespace jiba
         {
           CovarDiag = Cov;
         }
+      void SetPrecondDiag(const jiba::rvec &Diag)
+        {
+          PreCondDiag = Diag;
+        }
       //! Calculate the Chi-squared data misfit for the given model
       double CalcMisfit(const jiba::rvec &Model)
         {
@@ -102,7 +107,7 @@ namespace jiba
           //weighted by the squared covariance
           jiba::rvec GradDiff(ublas::element_div(DataDifference,CovarDiag));
           ++nEval;
-          return ImplGradient(LastModel, GradDiff);
+          return ublas::element_prod(PreCondDiag,ImplGradient(LastModel, GradDiff));
         }
       friend class JointObjective;
       ObjectiveFunction();
