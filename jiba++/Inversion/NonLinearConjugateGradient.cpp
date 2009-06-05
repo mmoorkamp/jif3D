@@ -28,9 +28,6 @@ namespace jiba
     void NonLinearConjugateGradient::StepImplementation(
         jiba::rvec &CurrentModel)
       {
-        Misfit = GetObjective()->CalcMisfit(CurrentModel);
-
-
         std::cout << "Misfit: " << Misfit << " Gradient: " << ublas::norm_2(
             CovGrad) << std::endl;
         const size_t nmod = CovGrad.size();
@@ -55,7 +52,7 @@ namespace jiba
         OldOmega = omega;
         SearchDir = CovGrad + alpha * OldDirection;
         OldDirection = SearchDir;
-
+        mu = 1.0;
         SearchDir *= -1.0;
         double angle = ublas::inner_prod(SearchDir, RawGrad) / (ublas::norm_2(
             SearchDir) * ublas::norm_2(RawGrad));

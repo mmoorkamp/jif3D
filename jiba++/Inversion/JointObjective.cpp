@@ -62,15 +62,15 @@ namespace jiba
                 * Distributor.TransformGradient(Model, RawGrad, i);
             std::copy(RawGrad.begin(), RawGrad.end(),
                 GradientModel.SetDensities().origin());
-            GradientModel.WriteVTK("raw_grad" + jiba::stringify(i) + ".grad.vtk");
+            GradientModel.WriteVTK("raw_grad" +jiba::stringify(GetNEval())+ "o"+ jiba::stringify(i) + ".grad.vtk");
             std::copy(CurrGrad.begin(), CurrGrad.end(),
                 GradientModel.SetDensities().origin());
-            GradientModel.WriteVTK("gradient" + jiba::stringify(i) + ".vtk");
+            GradientModel.WriteVTK("gradient" + jiba::stringify(GetNEval())+ "o"+ jiba::stringify(i) + ".vtk");
             Gradient += CurrGrad;
           }
         std::copy(Gradient.begin(), Gradient.end(),
                         GradientModel.SetDensities().origin());
-                    GradientModel.WriteVTK("totalgradient.vtk");
+                    GradientModel.WriteVTK("totalgradient" +jiba::stringify(GetNEval())+".vtk");
         return Gradient;
       }
   }

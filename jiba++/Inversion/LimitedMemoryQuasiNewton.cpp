@@ -6,6 +6,7 @@
 //============================================================================
 
 #include "../Global/FatalException.h"
+#include "../Global/convert.h"
 #include "LimitedMemoryQuasiNewton.h"
 #include "BacktrackingLineSearch.h"
 #include "mcsrch.h"
@@ -50,6 +51,7 @@ namespace jiba
                 ublas::element_div(SearchDir, GetModelCovDiag()));
             SearchDir += *SHistory.at(i) * (Alpha(i) - beta);
           }
+        mu = 1.0;
         SearchDir *= -1.0;
         //std::cout << "Raw Gradient: " << RawGrad << std::endl;
         //std::cout << "Gradient: " << Gradient << std::endl;
@@ -59,10 +61,15 @@ namespace jiba
         //std::cout << "SearchDir: " << SearchDir << std::endl;
         //std::cout << "RawGrad: " << RawGrad << std::endl;
 
+
+        std::copy(SearchDir.begin(), SearchDir.end(),
+                        SearchModel.SetDensities().origin());
+       SearchModel.WriteVTK("search.vtk");
+
         int status = OPTPP::mcsrch(GetObjective().get(), SearchDir, RawGrad, CurrentModel, Misfit,
             &mu, 20, 1e-4, 2.2e-16, 0.9, 1e9, 1e-9);
         if (status < 0)
-        	throw jiba::FatalException("Cannot find suitable step");
+        	throw jiba::FatalException("Cannot find suitable step. Status: "+jiba::stringify(status));
         std::cout << " Mu: " << mu  << std::endl;
         CurrentModel += mu * SearchDir;
         if (npairs < MaxPairs)

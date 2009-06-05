@@ -122,7 +122,7 @@ namespace OPTPP
 
         int siter;
         //int    maxiter = itnmax;
-        int maxiter = 10;
+        int maxiter = itnmax;
         int n = s.size();
 
         double fvalue;
@@ -220,7 +220,7 @@ namespace OPTPP
             /*    and compute the directional derivative. */
 
             xc = model + s * (*stp);
-
+            std::cout << "Step: "<<  *stp << std::endl;
             fvalue = nlp->CalcMisfit(xc);
             Grad = nlp->CalcGradient();
             misfit = fvalue;
