@@ -4,8 +4,9 @@
 #include "PodvinTime3D.h"
 #include <cmath>
 #include <vector>
-extern "C" int time_3d(float *HS, float *T, int NX, int NY, int NZ,
-        float XS, float YS, float ZS, float HS_EPS_INIT, int MSG);
+extern "C"
+int  time_3d(float *HS, float *T, int NX, int NY, int NZ,
+      float XS, float YS, float ZS, float HS_EPS_INIT, int MSG);
 namespace jiba
   {
 
@@ -60,7 +61,6 @@ namespace jiba
 
         std::fill_n(data->tcalc, data->ndata_seis, -1.0);
 
-
         if (data->ndata_seis == 0)
           {
             data->ndata_seis_act = 0;
@@ -81,7 +81,6 @@ namespace jiba
             uniqueshots.end());
         assert(uniqueshots.size() == geo.nshot);
 
-
 #pragma omp parallel default(shared)
           {
 #pragma omp for
@@ -92,13 +91,13 @@ namespace jiba
                 std::vector<float> tt(nx3 * ny3 * nz3);
                 int count; /*Number of active receivers for a shot*/
                 std::vector<int> nact_rec; /*active receiver-numbers for the used shot*/
-                std::vector<long >nact_datapos; /*Position of the active receivers in the data structure*/
+                std::vector<long> nact_datapos; /*Position of the active receivers in the data structure*/
                 std::vector<RP_STRUCT> raypath_tmp;
                 float Xs, Ys, Zs;
-                std::vector<float> Xr ;
-                std::vector<float> Yr ;
-                std::vector<float> Zr ;
-                 /*Normalized positions of the shots and receivers (referring to the grid cell nodes and NOT of the grid cell centers)*/
+                std::vector<float> Xr;
+                std::vector<float> Yr;
+                std::vector<float> Zr;
+                /*Normalized positions of the shots and receivers (referring to the grid cell nodes and NOT of the grid cell centers)*/
                 std::fill(tt.begin(), tt.end(), 0.0);
 
                 Xs = ((geo.x[i]) / grid.h); /*normalized x-coordinate of the shot locations according to grid cell nodes*/
@@ -110,8 +109,8 @@ namespace jiba
                 /*tt is the calculated traveltime for each grid cell node*/
                 //jiba::PodvinTime3D *Forward = new jiba::PodvinTime3D();
                 std::vector<float> SlowBuffer(grid.slow);
-                jiba::PodvinTime3D().time_3d(&SlowBuffer[0], &tt[0], nx3, ny3, nz3, Xs, Ys, Zs,
-                    delta_num, 0);
+                jiba::PodvinTime3D().time_3d(&SlowBuffer[0], &tt[0], nx3, ny3,
+                    nz3, Xs, Ys, Zs, delta_num, 0);
                 //delete Forward;
                 //time_3d(grid.slow, &tt[0], nx3, ny3, nz3, Xs, Ys, Zs,
                 //                    delta_num, 0);
@@ -120,7 +119,6 @@ namespace jiba
                 //jiba::PlotTimeField("times.vtk", &tt[0], grid.h, nx3, ny3, nz3);
                 /*Determine the receivers that are activate for the corresponding shot:*/
                 count = 0;
-
 
                 for (size_t j = 0; j < data->ndata_seis; j++)
                   {
@@ -135,9 +133,9 @@ namespace jiba
                   }
                 data->lshots[i] = count;
 
-                Xr.resize(count+1);
-                Yr.resize(count+1);
-                Zr.resize(count+1);
+                Xr.resize(count + 1);
+                Yr.resize(count + 1);
+                Zr.resize(count + 1);
                 /***************************************************************************************/
                 /*Determine the accurate traveltimes at the receiver-locations (by trilinear interpolation of the traveltimes at the grid cell edges)*/
                 for (size_t j = 0; j < count; j++)
@@ -168,7 +166,7 @@ namespace jiba
                 //printf("   (x=%f,y=%f,z=%f)\n", geo.x[i], geo.y[i], geo.z[i]);
                 //printf(
                 //    "   Number of found receiver positions for the shot: %d\n",
-                 //   count);
+                //   count);
 
                 /***************************************/
 
@@ -182,8 +180,8 @@ namespace jiba
                   raypath_tmp[j].n = nact_datapos[j];
 
                 /*Calculate the rays*/
-                RayCalc(&tt[0], nx3, ny3, nz3, Xs, Ys, Zs, &Xr[0], &Yr[0], &Zr[0], count,
-                    &raypath_tmp[0]);
+                RayCalc(&tt[0], nx3, ny3, nz3, Xs, Ys, Zs, &Xr[0], &Yr[0],
+                    &Zr[0], count, &raypath_tmp[0]);
 
                 /*Copy the temporary raypath structures in structures that fit with the data structure*/
                 for (size_t j = 0; j < count; j++)
@@ -193,17 +191,22 @@ namespace jiba
 
                     if (raypath[nact_datapos[j]].nray != 0)
                       {
-                        raypath[nact_datapos[j]].len.resize(raypath[nact_datapos[j]].nray);
-                        raypath[nact_datapos[j]].ele.resize(raypath[nact_datapos[j]].nray);
+                        raypath[nact_datapos[j]].len.resize(
+                            raypath[nact_datapos[j]].nray);
+                        raypath[nact_datapos[j]].ele.resize(
+                            raypath[nact_datapos[j]].nray);
                       }
                     else
                       {
                         raypath[nact_datapos[j]].len.resize(1);
                         raypath[nact_datapos[j]].ele.resize(1);
                       }
-                    raypath[nact_datapos[j]].x.resize(raypath[nact_datapos[j]].nray + 1);
-                    raypath[nact_datapos[j]].y.resize(raypath[nact_datapos[j]].nray + 1);
-                    raypath[nact_datapos[j]].z.resize(raypath[nact_datapos[j]].nray + 1);
+                    raypath[nact_datapos[j]].x.resize(
+                        raypath[nact_datapos[j]].nray + 1);
+                    raypath[nact_datapos[j]].y.resize(
+                        raypath[nact_datapos[j]].nray + 1);
+                    raypath[nact_datapos[j]].z.resize(
+                        raypath[nact_datapos[j]].nray + 1);
 
                     for (size_t k = 0; k < raypath_tmp[j].nray; k++)
                       {
@@ -225,7 +228,7 @@ namespace jiba
 
             /*End of the loop over all shots*/
           }
-          //end of parallel section
+        //end of parallel section
         /*******************************************************************************************/
         /*******************************************************************************************/
         /*Check the modified structures*/
@@ -256,6 +259,8 @@ namespace jiba
         data->ndata_seis_act = 0;
         for (size_t i = 0; i < data->ndata_seis; i++)
           {
+
+
             //printf("Number of rays: %d\n", raypath[i].nray);
             if (raypath[i].nray != 0)
               {
@@ -263,11 +268,8 @@ namespace jiba
               }
           }
 
-        printf("Seismic forward modeling is finished:\n");
-        printf("%d of %d shot-receiver combinations are active\n",
-            data->ndata_seis_act, data->ndata_seis);
-        printf("----------------\n\n\n\n\n");
-
+        //printf("Seismic forward modeling is finished: %d of %d shot-receiver combinations are active\n",
+        //    data->ndata_seis_act, data->ndata_seis);
         return (1);
       }
 
@@ -477,8 +479,7 @@ namespace jiba
                     cell, tt, ny, nz);
                 free(gradient);
 
-
-                rp[i].len.push_back( sqrt((next_cell.xpos + next_cell.xno
+                rp[i].len.push_back(sqrt((next_cell.xpos + next_cell.xno
                     - cell.xpos - cell.xno) * (next_cell.xpos + next_cell.xno
                     - cell.xpos - cell.xno) + (next_cell.ypos + next_cell.yno
                     - cell.ypos - cell.yno) * (next_cell.ypos + next_cell.yno
@@ -488,7 +489,7 @@ namespace jiba
                 rp[i].x.push_back((double) cell.xpos + cell.xno);
                 rp[i].y.push_back((double) cell.ypos + cell.yno);
                 rp[i].z.push_back((double) cell.zpos + cell.zno);
-                rp[i].ele.push_back( nyz1 * cell.xno + nz1 * cell.yno + cell.zno); /*Determine the position number of the cell, which the ray intersects*/
+                rp[i].ele.push_back(nyz1 * cell.xno + nz1 * cell.yno + cell.zno); /*Determine the position number of the cell, which the ray intersects*/
 
                 cell_index(cell.xno,cell.yno,cell.zno) = 1;
 
@@ -509,7 +510,7 @@ namespace jiba
                   {
                     //printf(
                     //    "The discretized traveltime field of the ray from the shot-receiver\ncombination %d had a probably local minima\n\n",
-                     //   rp[i].n + 1);
+                    //   rp[i].n + 1);
                     rp[i].nray = 0;
                     goto fertig;
                   }
@@ -517,19 +518,18 @@ namespace jiba
                 count++;
               }
 
+            rp[i].x.push_back((double) next_cell.xpos + next_cell.xno);
+            rp[i].y.push_back((double) next_cell.ypos + next_cell.yno);
+            rp[i].z.push_back((double) next_cell.zpos + next_cell.zno);
 
-            rp[i].x.push_back( (double) next_cell.xpos + next_cell.xno);
-            rp[i].y.push_back( (double) next_cell.ypos + next_cell.yno);
-            rp[i].z.push_back( (double) next_cell.zpos + next_cell.zno);
-
-            rp[i].len.push_back( sqrt((Xs - next_cell.xpos - next_cell.xno) * (Xs
-                - next_cell.xpos - next_cell.xno) + (Ys - next_cell.ypos
+            rp[i].len.push_back(sqrt((Xs - next_cell.xpos - next_cell.xno)
+                * (Xs - next_cell.xpos - next_cell.xno) + (Ys - next_cell.ypos
                 - next_cell.yno) * (Ys - next_cell.ypos - next_cell.yno) + (Zs
                 - next_cell.zpos - next_cell.zno) * (Zs - next_cell.zpos
                 - next_cell.zno))); /*Ray segment length*/
-            rp[i].x.push_back( (double) Xs);
-            rp[i].y.push_back( (double) Ys);
-            rp[i].z.push_back( (double) Zs);
+            rp[i].x.push_back((double) Xs);
+            rp[i].y.push_back((double) Ys);
+            rp[i].z.push_back((double) Zs);
             rp[i].ele.push_back(nyz1 * (int) floor((double) Xs) + nz1
                 * (int) floor((double) Ys) + (int) floor((double) Zs)); /*Determine the position number of the cell, which the ray intersects*/
             rp[i].nray = count + 1; /*Number of the segments of the ray*/

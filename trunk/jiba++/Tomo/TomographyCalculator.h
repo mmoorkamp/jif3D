@@ -25,12 +25,14 @@ namespace jiba
       jiba::GEOMETRY geo;
       jiba::GRID_STRUCT grid;
       jiba::DATA_STRUCT data;
-      jiba::RP_STRUCT *raypath;
+      std::vector<jiba::RP_STRUCT> raypath;
       // Perform the dynamic allocation for the c-structures above
       void Allocate(const size_t ngrid, const size_t ndata, const size_t npos);
     public:
       TomographyCalculator();
       virtual ~TomographyCalculator();
+      //! Return the raypath structure for the last forward modelling
+      const std::vector<jiba::RP_STRUCT> &GetRayPath() const {return raypath;}
       //! Calculate the travel times for the given model
       /*! This is the core call to the forward modeling code. Has to be performed before LQDerivative can be called
        * @param Model The object containing the slowness distribution and measurement setup

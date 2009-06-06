@@ -93,7 +93,8 @@ BOOST_AUTO_TEST_CASE (memory_test)
       int MSG = 0;
       std::fill_n(HS, nparam, 1.0);
       std::fill_n(T, nparam, 0.0);
-      int status = jiba::PodvinTime3D().time_3d(HS, T, nx, ny, nz, XS, YS, ZS, HS_EPS_INIT, MSG);
+      int status = jiba::PodvinTime3D().time_3d(HS, T, nx, ny, nz, XS, YS, ZS,
+          HS_EPS_INIT, MSG);
       float dist = sqrt(XS * XS + YS * YS + ZS * ZS);
       BOOST_CHECK_CLOSE(T[0],dist,0.001);
     }
@@ -148,7 +149,7 @@ BOOST_AUTO_TEST_CASE (memory_test)
       BOOST_CHECK(relerror < 0.01 );
 
       double totallength = 0.0;
-      for (size_t i = 0; i < raypath[0].nray; ++i)
+      for (size_t i = 0; i < raypath[0].nray + 1; ++i)
         {
           totallength += raypath[0].len[i];
         }
@@ -167,5 +168,14 @@ BOOST_AUTO_TEST_CASE (memory_test)
       jiba::rvec time(Calculator.Calculate(Model));
       BOOST_CHECK_CLOSE(data.tcalc[0], time(0),0.01);
       BOOST_CHECK_CLOSE(data.tcalc[1], time(1),0.01);
+      //check the agreement between raypath and modelling for the calculator object
+      totallength = 0.0;
+      for (size_t i = 0; i < Calculator.GetRayPath()[0].nray + 1; ++i)
+        {
+          totallength += Calculator.GetRayPath()[0].len[i];
+        }
+
+      BOOST_CHECK_CLOSE(dist,totallength * grid.h,0.1);
+
     }
 BOOST_AUTO_TEST_SUITE_END()
