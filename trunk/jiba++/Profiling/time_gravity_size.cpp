@@ -9,7 +9,7 @@
 #include "../Gravity/FullSensitivityGravityCalculator.h"
 #include "../Gravity/MinMemGravityCalculator.h"
 
-void MakeRandomModel(jiba::ThreeDGravityModel &Model, const size_t size)
+void MakeTestModel(jiba::ThreeDGravityModel &Model, const size_t size)
   {
     Model.SetXCellSizes().resize(boost::extents[size]);
     Model.SetYCellSizes().resize(boost::extents[size]);
@@ -146,7 +146,7 @@ int main(int ac, char* av[])
           {
             rawruntime = 0.0;
             cachedruntime = 0.0;
-            MakeRandomModel(GravityTest, modelsize);
+            MakeTestModel(GravityTest, modelsize);
 
             boost::posix_time::ptime firststarttime =
                 boost::posix_time::microsec_clock::local_time();
