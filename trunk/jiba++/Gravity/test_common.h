@@ -14,10 +14,10 @@
 #include <boost/numeric/conversion/cast.hpp>
 
 //a helper function to create a model dimension of random size
-jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension()
+jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension(const size_t maxcells)
     {
 
-      const size_t DimLength = rand() % 11 +15;
+      const size_t DimLength = rand() % maxcells + 1;
       jiba::ThreeDModelBase::t3DModelDim TestDim(boost::extents[DimLength]);
       for (size_t i = 0; i < DimLength; ++i)
         {
@@ -27,13 +27,13 @@ jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension()
     }
 
   //create a random density model
-  void MakeRandomModel(jiba::ThreeDGravityModel &Model, const size_t nmeas, const bool withbackground = true)
+  void MakeRandomModel(jiba::ThreeDGravityModel &Model,const size_t maxcells, const size_t nmeas = 10, const bool withbackground = true)
     {
       srand(time(NULL));
 
-      jiba::ThreeDModelBase::t3DModelDim XDim = GenerateDimension();
-      jiba::ThreeDModelBase::t3DModelDim YDim = GenerateDimension();
-      jiba::ThreeDModelBase::t3DModelDim ZDim = GenerateDimension();
+      jiba::ThreeDModelBase::t3DModelDim XDim = GenerateDimension(maxcells);
+      jiba::ThreeDModelBase::t3DModelDim YDim = GenerateDimension(maxcells);
+      jiba::ThreeDModelBase::t3DModelDim ZDim = GenerateDimension(maxcells);
       const size_t xsize = XDim.size();
       const size_t ysize = YDim.size();
       const size_t zsize = ZDim.size();
@@ -52,10 +52,7 @@ jiba  ::ThreeDModelBase::t3DModelDim GenerateDimension()
       for (size_t j = 0; j < ysize; ++j)
       for (size_t k = 0; k < zsize; ++k)
         {
-          if (i < xsize / 2)
           Model.SetDensities()[i][j][k] = double(rand() % 50) / 10.0 + 1.0;
-          else
-          Model.SetDensities()[i][j][k] = -double(rand() % 50) / 10.0 + 1.0;
         }
       //generate measurement  points
       //the z-axis is positive down, so we choose negative z-coordinates
