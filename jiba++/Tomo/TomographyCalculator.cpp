@@ -40,9 +40,8 @@ namespace jiba
                 delete[] data.sno;
                 delete[] data.rno;
                 delete[] data.tcalc;
-                delete[] raypath;
               }
-            raypath = new jiba::RP_STRUCT[ndata];
+            raypath.resize(ndata);
             data.sno = new int[ndata];
             data.rno = new int[ndata];
             data.tcalc = new double[ndata];
@@ -142,8 +141,8 @@ namespace jiba
                 * nairlayers));
 
         //now we can do the forward modeling
-        ForwardModRay(geo, grid, &data, raypath, 0);
-        PlotRaypath("ray.vtk", raypath, ndata, grid.h, nairlayers);
+        ForwardModRay(geo, grid, &data, &raypath[0], 0);
+        PlotRaypath("ray.vtk", &raypath[0], ndata, grid.h, nairlayers);
         //and return the result as a vector
         jiba::rvec result(ndata);
         copy(data.tcalc, data.tcalc + ndata, result.begin());
