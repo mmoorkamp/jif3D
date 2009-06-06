@@ -255,6 +255,7 @@ namespace jiba
       //! Read the Measurement positions from an ascii file
       void ReadMeasPosAscii(const std::string filename);
       friend class ModelRefiner;
+      friend class GradientRegularization;
       ThreeDModelBase();
       ThreeDModelBase& operator= (const ThreeDModelBase& source);
       virtual ~ThreeDModelBase();

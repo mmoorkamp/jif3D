@@ -25,7 +25,7 @@ namespace jiba
       virtual jiba::rvec ImplGradient(const jiba::rvec &Model,
           const jiba::rvec &Diff)
         {
-          return Diff;
+          return 2.0*Diff;
         }
     public:
       void SetReferenceModel(const jiba::rvec &Model)
