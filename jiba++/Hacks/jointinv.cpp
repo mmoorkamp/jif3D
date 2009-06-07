@@ -23,6 +23,7 @@
 #include "../Inversion/NonLinearConjugateGradient.h"
 #include "../Inversion/JointObjective.h"
 #include "../Inversion/MinDiffRegularization.h"
+#include "../Inversion/GradientRegularization.h"
 #include "../Inversion/ModelTransforms.h"
 #include "../Inversion/ConstructError.h"
 #include "../Tomo/ThreeDSeismicModel.h"
@@ -128,7 +129,6 @@ int main(int argc, char *argv[])
         TomoModel.GetSlownesses().origin()
             + TomoModel.GetSlownesses().num_elements(), InvModel.begin());
 
-
     const double z0 = 5.0;
     const double DepthExponent = -2.0;
     jiba::rvec WeightVector, ModelWeight(InvModel.size());
@@ -142,13 +142,13 @@ int main(int argc, char *argv[])
 
     jiba::rvec RefModel(InvModel);
     jiba::rvec PreCond(InvModel.size());
-    std::fill(PreCond.begin(),PreCond.end(),1.0);
+    std::fill(PreCond.begin(), PreCond.end(), 1.0);
     const double minslow = 1e-4;
     const double maxslow = 0.0005;
     boost::shared_ptr<jiba::GeneralModelTransform> DensityTransform(
-        new jiba::TanhDensityTransform(RefModel,minslow,maxslow));
+        new jiba::TanhDensityTransform(RefModel, minslow, maxslow));
     boost::shared_ptr<jiba::GeneralModelTransform> SlownessTransform(
-        new jiba::TanhTransform(RefModel,minslow,maxslow));
+        new jiba::TanhTransform(RefModel, minslow, maxslow));
     //double average = std::accumulate(InvModel.begin(),InvModel.end(),0.0)/InvModel.size();
     //std::fill(RefModel.begin(),RefModel.end(),average);
     InvModel = SlownessTransform->PhysicalToGeneralized(InvModel);
@@ -184,14 +184,13 @@ int main(int argc, char *argv[])
     FTGObjective->SetDataCovar(jiba::ConstructError(FTGData, 0.02));
     FTGObjective->SetPrecondDiag(PreCond);
 
-
     boost::shared_ptr<jiba::JointObjective> Objective(
         new jiba::JointObjective());
-    boost::shared_ptr<jiba::MinDiffRegularization> Regularization(
-        new jiba::MinDiffRegularization());
+    boost::shared_ptr<jiba::GradientRegularization> Regularization(
+        new jiba::GradientRegularization(GravModel));
 
-    Regularization->SetReferenceModel(RefModel);
-    Regularization->SetDataCovar(RefModel);
+    Regularization->SetReferenceModel(InvModel);
+    Regularization->SetDataCovar(InvModel);
     Regularization->SetPrecondDiag(PreCond);
     double tomolambda = 1.0;
     double scalgravlambda = 1.0;
@@ -214,40 +213,39 @@ int main(int argc, char *argv[])
     size_t ndata = 0;
     if (tomolambda > 0.0)
       {
-    	ndata += TomoData.size();
+        ndata += TomoData.size();
         Objective->AddObjective(TomoObjective, SlownessTransform, tomolambda);
+        std::cout << "Tomo ndata: " << TomoData.size() << std::endl;
       }
     if (scalgravlambda > 0.0)
       {
-    	ndata += ScalGravData.size();
+        ndata += ScalGravData.size();
         Objective->AddObjective(ScalGravObjective, DensityTransform,
             scalgravlambda);
       }
     if (ftglambda > 0.0)
       {
-    	ndata += FTGData.size();
+        ndata += FTGData.size();
         Objective->AddObjective(FTGObjective, DensityTransform, ftglambda);
       }
-    Objective->AddObjective(Regularization, SlownessTransform, reglambda);
-    Objective->SetModelGeometry(GravModel);
+    Objective->AddObjective(Regularization, boost::shared_ptr<
+        jiba::GeneralModelTransform>(new jiba::ModelCopyTransform()), reglambda);
     Objective->SetPrecondDiag(PreCond);
     std::cout << "Performing inversion." << std::endl;
 
-    boost::shared_ptr<jiba::LimitedMemoryQuasiNewton> Optimizer(
-            new jiba::LimitedMemoryQuasiNewton(Objective, correctionpairs));;
-    //if (wantnlcg)
-    //  {
-    //    Optimizer = boost::shared_ptr<jiba::NonLinearOptimization>(
-//            new jiba::NonLinearConjugateGradient(Objective));
-//      }
-//    else
-//      {
-//        Optimizer = boost::shared_ptr<jiba::NonLinearOptimization>(
-//            new jiba::LimitedMemoryQuasiNewton(Objective, correctionpairs));
-//      }
+    boost::shared_ptr<jiba::NonLinearOptimization> Optimizer;
+    if (wantnlcg)
+      {
+        Optimizer = boost::shared_ptr<jiba::NonLinearOptimization>(
+            new jiba::NonLinearConjugateGradient(Objective));
+      }
+    else
+      {
+        Optimizer = boost::shared_ptr<jiba::NonLinearOptimization>(
+            new jiba::LimitedMemoryQuasiNewton(Objective, correctionpairs));
+      }
 
-   //Optimizer->SetModelCovDiag(ModelWeight);
-   Optimizer->SetModelGeometry(GravModel);
+    //Optimizer->SetModelCovDiag(ModelWeight);
 
     size_t iteration = 0;
 
@@ -262,15 +260,15 @@ int main(int argc, char *argv[])
     bool terminate = true;
     do
       {
-    	terminate = true;
+        terminate = true;
         try
           {
             std::cout << "Iteration: " << iteration << std::endl;
             std::copy(InvModel.begin(), InvModel.begin()
-                                    + TomoModel.GetSlownesses().num_elements(),
-                                    TomoModel.SetSlownesses().origin());
-                                TomoModel.WriteVTK("raw_model" + jiba::stringify(iteration)
-                                    + ".tomo.inv.vtk");
+                + TomoModel.GetSlownesses().num_elements(),
+                TomoModel.SetSlownesses().origin());
+            TomoModel.WriteVTK("raw_model" + jiba::stringify(iteration)
+                + ".tomo.inv.vtk");
             Optimizer->MakeStep(InvModel);
 
             ++iteration;
@@ -298,13 +296,21 @@ int main(int argc, char *argv[])
             iteration = maxiter;
           }
 
-          for (size_t i = 0; i < Objective->GetIndividualFits().size(); ++i)
+        for (size_t i = 0; i < Objective->GetIndividualFits().size() -1; ++i)
           {
-        	  if (Objective->GetIndividualFits().at(i) > Objective->GetNData())
-        		  terminate = false;
+            if (Objective->GetIndividualFits().at(i) > Objective->GetObjective(i).GetNData())
+              {
+              terminate = false;
+              }
+            else{
+              std::cout << "Reached target misfit." << std::endl;;
+              std::cout << "Objective number: " << i  << std::endl;
+              std::cout << "Misfit: " << Objective->GetIndividualFits().at(i) << std::endl;
+              std::cout << "Target: " << Objective->GetObjective(i).GetNData()<< std::endl;
+            }
           }
-      } while (iteration < maxiter && !terminate
-        && Optimizer->GetGradNorm() > 1e-6);
+      } while (iteration < maxiter && !terminate && Optimizer->GetGradNorm()
+        > 1e-6);
 
     jiba::rvec DensInvModel(DensityTransform->GeneralizedToPhysical(InvModel));
 
@@ -339,8 +345,8 @@ int main(int argc, char *argv[])
     GravModel.WriteVTK(modelfilename + ".grav.inv.vtk");
     GravModel.WriteNetCDF(modelfilename + ".grav.inv.nc");
     boost::posix_time::ptime endtime =
-            boost::posix_time::microsec_clock::local_time();
+        boost::posix_time::microsec_clock::local_time();
     double cachedruntime = (endtime - starttime).total_seconds();
-    std::cout << "Runtime: " << cachedruntime << " s" <<std::endl;
+    std::cout << "Runtime: " << cachedruntime << " s" << std::endl;
     std::cout << std::endl;
   }
