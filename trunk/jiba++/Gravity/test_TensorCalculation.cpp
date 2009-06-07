@@ -30,7 +30,8 @@ BOOST_AUTO_TEST_CASE  (random_tensor_test)
       jiba::ThreeDGravityModel GravityTest;
 
       const size_t nmeas = 15;
-      MakeRandomModel(GravityTest,nmeas);
+      const size_t ncells = 15;
+      MakeRandomModel(GravityTest,ncells,nmeas);
 
       boost::shared_ptr<jiba::MinMemGravityCalculator> Calculator(jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeTensor());
       jiba::rvec tensormeas(Calculator->Calculate(GravityTest));
@@ -55,10 +56,11 @@ BOOST_AUTO_TEST_CASE  (random_tensor_test)
       jiba::ThreeDGravityModel GravityTest;
       //we want to control the position of the measurements ourselves
       const size_t nmeas = 0;
+      const size_t ncells = 10;
       const double delta = 0.000001;
       //the value of delta in %
       const double precision = 0.05;
-      MakeRandomModel(GravityTest, nmeas);
+      MakeRandomModel(GravityTest,ncells, nmeas);
       //setup points for finite differencing in vertical and horizontal directions
       const double xpos = 50.0;
       const double ypos = 70.0;
@@ -211,7 +213,8 @@ BOOST_AUTO_TEST_CASE  (random_tensor_test)
     {
       jiba::ThreeDGravityModel GravityTest;
       const size_t nmeas = 7;
-      MakeRandomModel(GravityTest, nmeas);
+      const size_t ncells = 7;
+      MakeRandomModel(GravityTest,ncells, nmeas);
       boost::shared_ptr<jiba::MinMemGravityCalculator> CPUCalculator(jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeTensor());
       boost::shared_ptr<jiba::MinMemGravityCalculator> CudaCalculator(jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeTensor(true));
 
@@ -268,7 +271,7 @@ BOOST_AUTO_TEST_CASE  (random_tensor_test)
       jiba::ThreeDGravityModel GravityTest;
       const size_t ncells = 10;
       const size_t nmeas = 10;
-      MakeRandomModel(GravityTest,ncells, nmeas);
+      MakeRandomModel(GravityTest,ncells, nmeas,false);
       boost::shared_ptr<jiba::FullSensitivityGravityCalculator> TensorCalculator(jiba::CreateGravityCalculator<jiba::FullSensitivityGravityCalculator>::MakeTensor());
       jiba::rvec Misfit(nmeas*TensorCalculator->GetDataPerMeasurement());
       std::generate(Misfit.begin(),Misfit.end(),drand48);
@@ -277,7 +280,11 @@ BOOST_AUTO_TEST_CASE  (random_tensor_test)
       jiba::rvec Compare(boost::numeric::ublas::prec_prod(ublas::trans(TensorCalculator->GetSensitivities()),Misfit));
       //and test the caching, too
       jiba::rvec Deriv2(TensorCalculator->LQDerivative(GravityTest,Misfit));
-      for (size_t i = 0; i < nmeas*TensorCalculator->GetDataPerMeasurement(); ++i)
+      const size_t ngrid = GravityTest.GetDensities().num_elements();
+      BOOST_CHECK(Deriv.size() == ngrid);
+      BOOST_CHECK(Compare.size() == ngrid);
+      BOOST_CHECK(Deriv2.size() == ngrid);
+      for (size_t i = 0; i < ngrid; ++i)
         {
           BOOST_CHECK_CLOSE(Deriv(i), Compare(i), std::numeric_limits<
               float>::epsilon());

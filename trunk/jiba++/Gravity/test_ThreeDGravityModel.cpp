@@ -135,9 +135,9 @@ BOOST_AUTO_TEST_CASE  (constructors_test)
 
       srand(time(NULL));
 
-      jiba::ThreeDModelBase::t3DModelDim XDim = GenerateDimension();
-      jiba::ThreeDModelBase::t3DModelDim YDim = GenerateDimension();
-      jiba::ThreeDModelBase::t3DModelDim ZDim = GenerateDimension();
+      jiba::ThreeDModelBase::t3DModelDim XDim = GenerateDimension(11);
+      jiba::ThreeDModelBase::t3DModelDim YDim = GenerateDimension(23);
+      jiba::ThreeDModelBase::t3DModelDim ZDim = GenerateDimension(14);
       const size_t xsize = XDim.size();
       const size_t ysize = YDim.size();
       const size_t zsize = ZDim.size();

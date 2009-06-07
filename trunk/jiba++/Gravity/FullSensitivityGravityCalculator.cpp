@@ -110,7 +110,6 @@ namespace jiba
         const size_t ngrid = Model.GetDensities().num_elements();
         const size_t nmod = ngrid + Model.GetBackgroundThicknesses().size();
 
-        assert(Sensitivities.size2() == nmod);
         //first we calculate the raw data, the transformation might depend on this data
         rvec Data(CalculateRawData(Model));
         rvec ProcessedMisfit;
