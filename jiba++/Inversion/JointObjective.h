@@ -23,16 +23,12 @@ namespace jiba
       std::vector<double> Weights;
       std::vector<double> IndividualFits;
       ModelDistributor Distributor;
-      jiba::ThreeDGravityModel GradientModel;
       virtual void
           ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff);
       virtual jiba::rvec ImplGradient(const jiba::rvec &Model,
           const jiba::rvec &Diff);
     public:
-      void SetModelGeometry(const jiba::ThreeDGravityModel &Model)
-        {
-          GradientModel = Model;
-        }
+      const ObjectiveFunction &GetObjective(const size_t i) const {return *Objectives.at(i);}
       const std::vector<double> &GetIndividualFits() const
         {
           return IndividualFits;

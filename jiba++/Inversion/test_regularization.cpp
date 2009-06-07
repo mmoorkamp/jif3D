@@ -32,7 +32,6 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
           double FDGrad = (Objective.CalcMisfit(Forward) - Objective.CalcMisfit(Backward))/(2*delta);
           BOOST_CHECK_CLOSE(FDGrad,Gradient(i),0.001);
         }
-
     }
 
   BOOST_AUTO_TEST_CASE (mindiff_test)

@@ -16,7 +16,7 @@ namespace jiba
 
     LimitedMemoryQuasiNewton::LimitedMemoryQuasiNewton(boost::shared_ptr<
         jiba::ObjectiveFunction> ObjFunction, const size_t n) :
-      NonLinearOptimization(ObjFunction), mu(1),MaxPairs(n)
+      NonLinearOptimization(ObjFunction), mu(1), MaxPairs(n)
       {
 
       }
@@ -51,26 +51,15 @@ namespace jiba
                 ublas::element_div(SearchDir, GetModelCovDiag()));
             SearchDir += *SHistory.at(i) * (Alpha(i) - beta);
           }
-        mu = 1.0;
+        mu = 1.0; // /ublas::norm_2(SearchDir);
         SearchDir *= -1.0;
-        //std::cout << "Raw Gradient: " << RawGrad << std::endl;
-        //std::cout << "Gradient: " << Gradient << std::endl;
-        //std::cout << "Search Dir: " << SearchDir << std::endl;
-        //double mu = BacktrackingLineSearch().FindStep(CurrentModel, Gradient,
-        //    SearchDir, *GetObjective());
-        //std::cout << "SearchDir: " << SearchDir << std::endl;
-        //std::cout << "RawGrad: " << RawGrad << std::endl;
 
-
-        std::copy(SearchDir.begin(), SearchDir.end(),
-                        SearchModel.SetDensities().origin());
-       SearchModel.WriteVTK("search.vtk");
-
-        int status = OPTPP::mcsrch(GetObjective().get(), SearchDir, RawGrad, CurrentModel, Misfit,
-            &mu, 20, 1e-4, 2.2e-16, 0.9, 1e9, 1e-9);
+        int status = OPTPP::mcsrch(GetObjective().get(), SearchDir, RawGrad,
+            CurrentModel, Misfit, &mu, 20, 1e-4, 2.2e-16, 0.9, 1e9, 1e-9);
         if (status < 0)
-        	throw jiba::FatalException("Cannot find suitable step. Status: "+jiba::stringify(status));
-        std::cout << " Mu: " << mu  << std::endl;
+          throw jiba::FatalException("Cannot find suitable step. Status: "
+              + jiba::stringify(status));
+        std::cout << " Mu: " << mu << std::endl;
         CurrentModel += mu * SearchDir;
         if (npairs < MaxPairs)
           {
@@ -85,7 +74,8 @@ namespace jiba
             std::rotate(YHistory.begin(), YHistory.begin() + 1, YHistory.end());
           }
         *SHistory.back() = mu * SearchDir;
-        *YHistory.back() = ublas::element_prod(RawGrad, GetModelCovDiag()) - CovGrad;
+        *YHistory.back() = ublas::element_prod(RawGrad, GetModelCovDiag())
+            - CovGrad;
         CovGrad = ublas::element_prod(RawGrad, GetModelCovDiag());
       }
   }
