@@ -259,16 +259,20 @@ BOOST_AUTO_TEST_CASE  (box_gravity_calc_test)
       jiba::ThreeDGravityModel GravityTest;
       const size_t ncells = 10;
       const size_t nmeas = 10;
-      MakeRandomModel(GravityTest,ncells, nmeas);
+      MakeRandomModel(GravityTest,ncells, nmeas,false);
       boost::shared_ptr<jiba::FullSensitivityGravityCalculator> ScalarCalculator(jiba::CreateGravityCalculator<jiba::FullSensitivityGravityCalculator>::MakeScalar());
       jiba::rvec Misfit(nmeas);
-      std::generate(Misfit.begin(),Misfit.end(),rand);
+      std::generate(Misfit.begin(),Misfit.end(),drand48);
       jiba::rvec Deriv(ScalarCalculator->LQDerivative(GravityTest,Misfit));
       ScalarCalculator->Calculate(GravityTest);
       jiba::rvec Compare(boost::numeric::ublas::prec_prod(ublas::trans(ScalarCalculator->GetSensitivities()),Misfit));
       //and test the caching, too
       jiba::rvec Deriv2(ScalarCalculator->LQDerivative(GravityTest,Misfit));
-      for (size_t i = 0; i < nmeas; ++i)
+      const size_t ngrid = GravityTest.GetDensities().num_elements();
+      BOOST_CHECK(Deriv.size() == ngrid);
+      BOOST_CHECK(Compare.size() == ngrid);
+      BOOST_CHECK(Deriv2.size() == ngrid);
+      for (size_t i = 0; i < ngrid; ++i)
         {
           BOOST_CHECK_CLOSE(Deriv(i), Compare(i), std::numeric_limits<
               float>::epsilon());

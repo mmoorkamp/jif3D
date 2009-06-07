@@ -64,7 +64,8 @@ BOOST_AUTO_TEST_CASE(ftginvar_test)
       jiba::ThreeDGravityModel GravityTest;
 
       const size_t nmeas = 10;
-      MakeRandomModel(GravityTest, nmeas, true);
+      const size_t ncells = 10;
+      MakeRandomModel(GravityTest, ncells,nmeas, true);
 
       jiba::rvec InvDirect(InvCalculator->Calculate(GravityTest));
       jiba::rvec InvCached(InvCalculator->Calculate(GravityTest));
@@ -97,7 +98,8 @@ BOOST_AUTO_TEST_CASE(ftginvar_test)
       jiba::ThreeDGravityModel GravityTest;
 
       const size_t nmeas = 10;
-      MakeRandomModel(GravityTest, nmeas, true);
+      const size_t ncells = 10;
+      MakeRandomModel(GravityTest,ncells, nmeas, true);
 
       jiba::rvec Misfit(nmeas);
       std::fill(Misfit.begin(), Misfit.end(), 1.0);
@@ -128,7 +130,8 @@ BOOST_AUTO_TEST_CASE(ftginvar_test)
 
       jiba::ThreeDGravityModel GravityTest;
       const size_t nmeas = 10;
-      MakeRandomModel(GravityTest, nmeas, true);
+      const size_t ncells = 10;
+      MakeRandomModel(GravityTest, ncells, nmeas, true);
 
       jiba::rvec RawData(RawCalculator->Calculate(GravityTest));
       const jiba::rmat RawSens(RawCalculator->GetSensitivities());
