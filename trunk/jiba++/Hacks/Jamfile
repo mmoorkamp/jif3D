@@ -1,18 +1,19 @@
 import testing ; 
 
-    
+alias vecmat : ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran ;
+alias joint : ../Tomo ../Gravity ../Inversion ../Global ;
 #exe levjoint : levjoint.cpp ..//gplib ..//gsl ..//netcdf_c++ ..//netcdf ..//antlr ..//levmar ..//boost_filesystem ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran   
 #	: <include>/home/mmoorkamp/workspace/gplib/include ;
 	
-exe fittingtest : fittingtest.cpp ../Inversion//inversion ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran : <include>. ;
-exe sparsetest : sparsetest.cpp ../Inversion//inversion ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran : <include>. ;
+exe fittingtest : fittingtest.cpp ../Inversion//inversion vecmat : <include>. ;
+exe sparsetest : sparsetest.cpp ../Inversion//inversion vecmat : <include>. ;
 exe wcompress : wcompress.cpp  ../Gravity ../Global : <include>. ;
-exe tomoinv : tomoinv.cpp  ../Tomo ../Inversion ../Global : <include>. ;
-exe jointinv : jointinv.cpp  ../Tomo ../Gravity ../Inversion ../Global ..//boost_program_options : <include>. ;
-exe grav_jointinv : grav_jointinv.cpp  ../Tomo ../Gravity ../Inversion ../Global : <include>. ;
+exe tomoinv : tomoinv.cpp  joint : <include>. ;
+exe jointinv : jointinv.cpp  joint ..//boost_program_options : <include>. ;
+exe grav_jointinv : grav_jointinv.cpp  joint : <include>. ;
 exe mergetomo : mergetomo.cpp  ../Tomo  ../Global : <include>. ;
-exe scal_gravinv : scal_gravinv.cpp  ../Gravity ../Inversion ../Global  : <include>. ;
-exe opttest : opttest.cpp  ..//optpp ..//newmat ../Gravity ../Inversion ../Global ../Tomo ..//boost_program_options : 
+exe scal_gravinv : scal_gravinv.cpp  joint  : <include>. ;
+exe opttest : opttest.cpp  ..//optpp ..//newmat joint ..//boost_program_options : 
               <include>/usr/local/include/opt++ <define>use_namespace <define>HAVE_STD ;
 exe invariantftginv : invariantftginv.cpp  ../Gravity//gravity ../Gravity//gravity-extra ../Global ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ../Inversion//inversion
-              ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran ..//cudart : <include>. ;
+              vecmat ..//cudart : <include>. ;
