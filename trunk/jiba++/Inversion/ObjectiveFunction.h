@@ -64,8 +64,10 @@ namespace jiba
           return DataDifference;
         }
     public:
-    	size_t GetNData(){return DataDifference.size();}
-    	size_t GetNEval(){return nEval;}
+      //! Get the number of observed data
+    	size_t GetNData() const {return DataDifference.size();}
+    	//! Get the number of forward and gradient calculations
+    	size_t GetNEval() const {return nEval;}
       //! Assign a class that transforms the data from the forward calculation
       void SetDataTransform(boost::shared_ptr<VectorTransform> Transform)
         {
@@ -108,7 +110,7 @@ namespace jiba
           //weighted by the squared covariance
           jiba::rvec GradDiff(ublas::element_div(DataDifference,CovarDiag));
           ++nEval;
-          return ublas::element_prod(PreCondDiag,ImplGradient(LastModel, GradDiff));
+          return ImplGradient(LastModel, GradDiff);
         }
       friend class JointObjective;
       ObjectiveFunction();

@@ -16,5 +16,10 @@ namespace OPTPP
         jiba::rvec &Grad,
         const jiba::rvec &model, double &misfit, double *stp, int itnmax,
         double ftol, double xtol, double gtol, double stpmax, double stpmin);
+
+    int backtrack(jiba::ObjectiveFunction* nlp,
+        jiba::rvec& search_dir, jiba::rvec& sx,
+                  double *stp, int itnmax, double ftol, double stpmax, double stpmin);
+
   }
 #endif /* MCSRCH_H_ */

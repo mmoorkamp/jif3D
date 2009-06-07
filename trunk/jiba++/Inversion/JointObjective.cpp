@@ -46,6 +46,7 @@ namespace jiba
                 * Objectives.at(i)->GetDataDifference();
             currstart += ndata;
           }
+        std::cout << std::endl;
       }
 
     jiba::rvec JointObjective::ImplGradient(const jiba::rvec &Model,
@@ -60,17 +61,8 @@ namespace jiba
             jiba::rvec RawGrad = Objectives.at(i)->CalcGradient();
             jiba::rvec CurrGrad = Weights.at(i)
                 * Distributor.TransformGradient(Model, RawGrad, i);
-            std::copy(RawGrad.begin(), RawGrad.end(),
-                GradientModel.SetDensities().origin());
-            GradientModel.WriteVTK("raw_grad" +jiba::stringify(GetNEval())+ "o"+ jiba::stringify(i) + ".grad.vtk");
-            std::copy(CurrGrad.begin(), CurrGrad.end(),
-                GradientModel.SetDensities().origin());
-            GradientModel.WriteVTK("gradient" + jiba::stringify(GetNEval())+ "o"+ jiba::stringify(i) + ".vtk");
             Gradient += CurrGrad;
           }
-        std::copy(Gradient.begin(), Gradient.end(),
-                        GradientModel.SetDensities().origin());
-                    GradientModel.WriteVTK("totalgradient" +jiba::stringify(GetNEval())+".vtk");
         return Gradient;
       }
   }
