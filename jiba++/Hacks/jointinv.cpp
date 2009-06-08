@@ -344,6 +344,9 @@ int main(int argc, char *argv[])
     TomoModel.WriteVTK(modelfilename + ".tomo.inv.vtk");
     GravModel.WriteVTK(modelfilename + ".grav.inv.vtk");
     GravModel.WriteNetCDF(modelfilename + ".grav.inv.nc");
+    std::ofstream datadiffile("data.diff");
+    std::copy(Objective->GetDataDifference().begin(),Objective->GetDataDifference().end()
+    		,std::ostream_iterator<double>(datadiffile,"\n"));
     boost::posix_time::ptime endtime =
         boost::posix_time::microsec_clock::local_time();
     double cachedruntime = (endtime - starttime).total_seconds();

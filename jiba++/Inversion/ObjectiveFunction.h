@@ -58,12 +58,12 @@ namespace jiba
         {
           return DataTransform;
         }
-      //! Access to the difference between observed and calculated data
-      const jiba::rvec &GetDataDifference()
-        {
-          return DataDifference;
-        }
     public:
+    	//! Access to the difference between observed and calculated data
+    	      const jiba::rvec &GetDataDifference() const
+    	        {
+    	          return DataDifference;
+    	        }
       //! Get the number of observed data
     	size_t GetNData() const {return DataDifference.size();}
     	//! Get the number of forward and gradient calculations
