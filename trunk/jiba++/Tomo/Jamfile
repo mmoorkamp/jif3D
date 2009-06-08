@@ -16,3 +16,4 @@ unit-test tomo_objective_test :  test_tomo_objective.cpp tomo ../ModelBase//mode
 exe makeseismesh : makeseismesh.cpp tomo  core : <include>. ;
 exe tomogrid : tomogrid.cpp tomo  core : <include>. ;
 exe refinemodel : refinemodel.cpp tomo  core : <include>. ;
+exe reldiff : reldiff.cpp tomo  core : <include>. ;
