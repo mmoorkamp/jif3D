@@ -16,6 +16,7 @@
 #include "../Gravity/ThreeDGravityModel.h"
 #include "../Global/NumUtil.h"
 
+//check that one axis contains the coarse and the fine coordinates
 void CheckAxis(const jiba::ThreeDModelBase::t3DModelDim &Refiner,
     const jiba::ThreeDModelBase::t3DModelDim &FineCoordinates,
     const jiba::ThreeDModelBase::t3DModelDim &CoarseCoordinates,
