@@ -14,6 +14,10 @@
 #include <boost/bind.hpp>
 #include <iostream>
 
+//these static declarations make the code not thread-safe
+//however the forward calculations are parallelized and can be used
+//we just cannot have parallel calls thorugh this interface
+
 static boost::shared_ptr<jiba::ThreeDGravityModel> GravModel;
 static boost::shared_ptr<jiba::ThreeDGravityCalculator> ScalarGravCalculator;
 static boost::shared_ptr<jiba::ThreeDGravityCalculator> TensorGravCalculator;
@@ -22,10 +26,15 @@ typedef boost::function<jiba::ThreeDGravityModel::t3DModelDim & ()>
 
 void AllocateModel(const int *storescalar, const int *storetensor)
   {
+    //c doesn't have bool so we interpret every positive value as true
     bool cachescalar = (storescalar > 0);
     bool cachetensor = (storetensor > 0);
+    // we create a new model object that we can use for the calculations
     GravModel = boost::shared_ptr<jiba::ThreeDGravityModel>(
         new jiba::ThreeDGravityModel);
+    //depending on whether we want to save the sensitivities
+    //or not we allocate different forward calculation objects
+    //fopr FTG and scalar
     if (cachescalar)
       {
         ScalarGravCalculator = jiba::CreateGravityCalculator<
@@ -69,6 +78,7 @@ void CheckGridCoordinate(const double *Sizes, const unsigned int *n,
       }
   }
 
+//check whether a measurement position has changed
 bool CheckMeasPos(const double *Sizes, const unsigned int *n,
     const jiba::ThreeDGravityModel::tMeasPosVec &Meas)
   {
@@ -127,7 +137,7 @@ void SetupBackground(const double *Thicknesses, const double *Densities,
     GravModel->SetBackgroundDensities(Dens);
     GravModel->SetBackgroundThicknesses(Thick);
   }
-
+//perform a forward calculation for scalar gravity data
 void CalcScalarForward(const double *XSizes, const unsigned int *nx,
     const double *YSizes, const unsigned int *ny, const double *ZSizes,
     const unsigned int *nz, const double *Densities,
@@ -142,7 +152,7 @@ void CalcScalarForward(const double *XSizes, const unsigned int *nx,
     jiba::rvec scalarmeas(ScalarGravCalculator->Calculate(*GravModel.get()));
     std::copy(scalarmeas.begin(), scalarmeas.end(), GravAcceleration);
   }
-
+//perform a forward calculation for tensor gravity data
 void CalcTensorForward(const double *XSizes, const unsigned int *nx,
     const double *YSizes, const unsigned int *ny, const double *ZSizes,
     const unsigned int *nz, const double *Densities,

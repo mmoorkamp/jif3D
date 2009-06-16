@@ -11,6 +11,13 @@
 #include "../Global/VecMat.h"
 #include <cassert>
 
+/*! \file VectorTransform.h
+ * Provide function objects that transform one vector to another. The main purpose is to
+ * apply transformation to data within an inversion, e.g. impedance to apparent resistivity and phase
+ * or FTG tensor to an invariant. There are also transformation for models that work slightly differently
+ * in the file ModelTransforms.h .
+ */
+
 namespace jiba
   {
     /*! \addtogroup util General utility routines
@@ -19,16 +26,25 @@ namespace jiba
 
     //! Transform an input vector to an output vector and calculate the associated derivate
     /*! For the joint inversion we have calculate derived quantities from our data, i.e. apparent
-     * resistivity for MT or an invariant for FTG data. Also, we might have to transform model
-     * parameters, e.g. velocity to density. In both cases we have to transform the data, but also
-     * calculate the derivative. This class provides the general interface for both cases.
+     * resistivity for MT or an invariant for FTG data. We need an interface for these kind of transformations
+     * which is provided by this base class. The transforms assume that GetInputSize elements in the input vector
+     * form a logical block of data, e.g. the 9 elements of the FTG tensor and that input vector can be partioned
+     * into N segments of this size. Then the output will be a vector of GetOutputSize * N elements where the
+     * GetOutputSize consecutive elements correspond to one logical block in the input vector.
+     *
+     * For example to calculate an invariant from FTG data, GetInputSize would be 9 and GetOutputSize would give 1. An InputVector
+     * of size 90, i.e. 10 tensor observations, would result in and output of 10, i.e. 10 invariants.
      */
     class VectorTransform
       {
     public:
+      //! How many consecutive elements in the input vector form a logical block of data that this transform works on
       virtual size_t GetInputSize() = 0;
+      //! How many elements will one logical input block be transformed to
       virtual size_t GetOutputSize() = 0;
+      //! Transform the input vector
       virtual jiba::rvec Transform(const jiba::rvec &InputVector) = 0;
+      //! Give the matrix of partial derivatives with respect to the input parameters for the transformation \f$ \partial f/\partial m_i \f$.
       virtual jiba::rmat Derivative(const jiba::rvec &InputVector) = 0;
       VectorTransform()
         {
@@ -38,9 +54,8 @@ namespace jiba
         }
       };
 
-    //! For simple tests and when only inverting a single parameter the generalized and physical parameters will be identical, so we just have to pass them on
-    /*! This class implements the simplest case when the generalized are the physical
-     * parameters. So we just copy the input to the output.
+    //! In some cases we just want the output be the same as the input, this class simply copies the input
+    /*! This class implements the simplest case, we just copy the input to the output.
      */
     class CopyTransform: public VectorTransform
       {

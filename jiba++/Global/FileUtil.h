@@ -75,6 +75,13 @@ namespace jiba
           }
       }
 
+    //! Instead of always writing the same things in the main program, we can use this function to ask the use for a filename
+    /*! This function provides a very simple way to get the name of a file from a use, by default it also checks
+     * whether this file exists.
+     * @param prompt The message to show to the user.
+     * @param checkexists Shall the function check whether the file exists ? Default true
+     * @return The name of the file as typed in by the user.
+     */
     inline std::string AskFilename(const std::string &prompt, const bool checkexists = true)
       {
         std::cout << prompt;

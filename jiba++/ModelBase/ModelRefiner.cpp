@@ -59,7 +59,8 @@ namespace jiba
         double lastsize = OldSizes[OldSizes.size() - 1];
         if (refineindex > 0)
           {
-            lastsize += OldCoordinates[OldCoordinates.size() - 1] - TempCoord.back();
+            lastsize += OldCoordinates[OldCoordinates.size() - 1]
+                - TempCoord.back();
           }
         if (lastsize > 0.0)
           {
@@ -111,12 +112,18 @@ namespace jiba
     void ModelRefiner::ProjectValues(const ThreeDModelBase &InputModel,
         ThreeDModelBase &RefinedModel)
       {
+        //save the original size of the grid
         const size_t oldxsize = InputModel.GetXCellSizes().size();
         const size_t oldysize = InputModel.GetYCellSizes().size();
         const size_t oldzsize = InputModel.GetZCellSizes().size();
+        //we have to keep track of the current start und end index
+        //of the original coarse grid cell in the new refined grid
+        //in all three directions
         size_t startx = 0, endx = 0, starty = 0, endy = 0, startz = 0, endz = 0;
+        //we loop through all old cells
         for (size_t i = 0; i < oldxsize; ++i)
           {
+            //find the end of the current cell in the refined grid
             FindEnd(startx, endx, InputModel.GetXCellSizes()[i],
                 RefinedModel.GetXCellSizes());
             for (size_t j = 0; j < oldysize; ++j)
@@ -127,15 +134,18 @@ namespace jiba
                   {
                     FindEnd(startz, endz, InputModel.GetZCellSizes()[k],
                         RefinedModel.GetZCellSizes());
-
+                    //now we know the indices of the old cell in the new grid
+                    //and we can assign the right value to it
                     typedef boost::multi_array_types::index_range range;
                     ThreeDModelBase::t3DModelData::array_view<3>::type myview =
                         RefinedModel.SetData()[boost::indices[range(startx,
                             endx)][range(starty, endy)][range(startz, endz)]];
                     AssignValue(myview, InputModel.GetData()[i][j][k]);
+                    //the next cell starts at the end of the current cell
                     startz = endz;
                   }
                 starty = endy;
+                //we start at the top again
                 startz = 0;
               }
             startx = endx;

@@ -5,7 +5,7 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-
+//test the vector transforms
 #define BOOST_TEST_MODULE VectorTransform test
 #define BOOST_TEST_MAIN ...
 #include <boost/test/included/unit_test.hpp>
@@ -21,9 +21,12 @@ BOOST_AUTO_TEST_SUITE( VectorTransform_Test_Suite )
 class  TestTransform : public jiba::VectorTransform
     {
     private:
+      //the number of input parameters
       size_t nin;
+      //number of output parameters
       size_t nout;
     public:
+      //first access functions that need to be implemented
       virtual size_t GetInputSize()
         {
           return nin;
@@ -32,6 +35,7 @@ class  TestTransform : public jiba::VectorTransform
         {
           return nout;
         }
+      //the transform that tests the functionality
       virtual jiba::rvec Transform(const jiba::rvec &InputVector)
         {
           jiba::rvec Out(nout);
@@ -63,14 +67,23 @@ class  TestTransform : public jiba::VectorTransform
       const size_t ntest = 10;
       for (size_t i = 0; i < ntest; ++i)
         {
+          //make a random number for the input and output sizes
           const size_t nin = rand() %10 + 2;
           const size_t nout = rand() %10 + 1;
           TestTransform Transform(nin,nout);
+          //the number of elements in the vector can be different again
           const size_t nelements = nin * ((rand() % 10) + 1);
+          //make a random input vector
           jiba::rvec InVector(nelements);
+          std::generate(InVector.begin(),InVector.end(),drand48);
+          //transform the vector
           jiba::rvec OutVector(jiba::ApplyTransform(InVector,Transform));
+          //check that the transform has been applied correctly
+          //regardless of the size of the input/output
           if (nin <= nout)
             {
+              //if we have more output values, the first elements have to match
+              //and the others have to be zero
               size_t outindex = 0;
               for (size_t j = 0; j < nelements; j+= nin)
                 {
@@ -88,6 +101,10 @@ class  TestTransform : public jiba::VectorTransform
             }
           else
             {
+             //if we nout is less than nin we "calculate" the output
+            //from a block of nin values, for each of these blocks
+            //we take the first nout values, this is like an invariant
+            //for MT or FTG
               size_t inindex = 0;
               for (size_t j =0; j < OutVector.size(); j+=nout)
                 {
