@@ -107,8 +107,6 @@ namespace jiba
     rvec FullSensitivityGravityCalculator::CachedLQDerivative(
         const ThreeDGravityModel &Model, const rvec &Misfit)
       {
-        const size_t ngrid = Model.GetDensities().num_elements();
-
         //first we calculate the raw data, the transformation might depend on this data
         rvec Data(CalculateRawData(Model));
         rvec ProcessedMisfit;
