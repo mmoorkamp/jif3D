@@ -25,14 +25,15 @@ namespace jiba
       {
     private:
       //! Implement the calculation of the background response
-      virtual rvec CalcBackground(const size_t measindex, const double xwidth, const double ywidth,
-          const double zwidth, const ThreeDGravityModel &Model,
-          rmat &Sensitivities);
+      virtual rvec CalcBackground(const size_t measindex, const double xwidth,
+          const double ywidth, const double zwidth,
+          const ThreeDGravityModel &Model, rmat &Sensitivities);
       //! Calculate the response of the gridded part
-      virtual rvec CalcGridded(const size_t measindex, const ThreeDGravityModel &Model,
-          rmat &Sensitivities);
+      virtual rvec CalcGridded(const size_t measindex,
+          const ThreeDGravityModel &Model, rmat &Sensitivities);
       static const size_t ndatapermeas = 9;
     public:
+      //! How many data do we return before any transformation
       virtual size_t RawDataPerMeasurement()
         {
           return ndatapermeas;

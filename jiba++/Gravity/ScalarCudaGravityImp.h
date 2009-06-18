@@ -33,6 +33,7 @@ namespace jiba
       // we need a raw double pointer to store the sensitivities for
       // the current measurements, see CalcGridded
       double *currsens;
+      //the size of the current sensitivity row
       size_t currsenssize;
       // This is a scalar calculation so we get one value per measurement
       static const size_t ndatapermeas = 1;
@@ -44,6 +45,7 @@ namespace jiba
       virtual rvec CalcGridded(const size_t measindex, const ThreeDGravityModel &Model,
           rmat &Sensitivities);
     public:
+      //! How many data do we return before any transformation
       virtual size_t RawDataPerMeasurement()
         {
           return ndatapermeas;

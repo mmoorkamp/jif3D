@@ -15,6 +15,7 @@
 #include "test_common.h"
 #include "GravityTransforms.h"
 #include "FullSensitivityGravityCalculator.h"
+#include "ThreeDGravityFactory.h"
 #include "MinMemGravityCalculator.h"
 #include "../Global/NumUtil.h"
 

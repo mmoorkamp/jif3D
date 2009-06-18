@@ -29,6 +29,7 @@
 #include "ReadWriteGravityData.h"
 #include "FullSensitivityGravityCalculator.h"
 #include "DepthWeighting.h"
+#include "ThreeDGravityFactory.h"
 
 namespace ublas = boost::numeric::ublas;
 

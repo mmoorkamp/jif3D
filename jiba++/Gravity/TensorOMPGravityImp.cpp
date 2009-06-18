@@ -8,12 +8,13 @@
 
 #include "TensorOMPGravityImp.h"
 #include "BasicGravElements.h"
+#include "GravityBackground.h"
+
 namespace jiba
   {
 
     TensorOMPGravityImp::TensorOMPGravityImp()
       {
-
 
       }
 
@@ -35,50 +36,8 @@ namespace jiba
         const double xwidth, const double ywidth, const double zwidth,
         const ThreeDGravityModel &Model, rmat &Sensitivities)
       {
-        //make sure we have thicknesses and densities for all layers
-        assert(Model.GetBackgroundDensities().size() == Model.GetBackgroundThicknesses().size());
-        const size_t nbglayers = Model.GetBackgroundDensities().size();
-        const double x_meas = Model.GetMeasPosX()[measindex];
-        const double y_meas = Model.GetMeasPosY()[measindex];
-        const double z_meas = Model.GetMeasPosZ()[measindex];
-        GravimetryMatrix result(3, 3);
-        GravimetryMatrix currvalue(3, 3);
-        std::fill_n(result.data().begin(), ndatapermeas, 0.0);
-        std::fill_n(currvalue.data().begin(), ndatapermeas, 0.0);
-        double currtop = 0.0;
-        double currbottom = 0.0;
-        const size_t nmod = Model.GetDensities().num_elements();
-        const bool storesens = (Sensitivities.size1() >= ndatapermeas)
-            && (Sensitivities.size2() >= nmod);
-        // for all layers of the background
-        for (size_t j = 0; j < nbglayers; ++j)
-          {
-            std::fill_n(currvalue.data().begin(), ndatapermeas, 0.0);
-            const double currthick = Model.GetBackgroundThicknesses()[j];
-            currbottom = currtop + currthick;
-            currvalue(2, 2) = CalcUzzInfSheetTerm(z_meas, currtop, currbottom);
-            if (currtop < zwidth && (currbottom <= zwidth)) // if the background layer complete coincides with the discretized area
-              {
-                currvalue -= CalcTensorBoxTerm(x_meas, y_meas, z_meas, 0.0,
-                    0.0, currtop, xwidth, ywidth, currthick);
-              }
-            if (currtop < zwidth && currbottom > zwidth) //if some of the background coincides and some is below
-              {
-                currvalue -= CalcTensorBoxTerm(x_meas, y_meas, z_meas, 0.0,
-                    0.0, currtop, xwidth, ywidth, (zwidth - currtop));
-              }
-            if (storesens)
-              {
-                for (size_t i = 0; i < ndatapermeas; ++i)
-                  Sensitivities(i, nmod + j) = currvalue.data()[i];
-              }
-            result += currvalue * Model.GetBackgroundDensities()[j];
-            currtop += currthick;
-          }
-        rvec resultvector(ndatapermeas);
-        std::copy(result.data().begin(), result.data().end(),
-            resultvector.begin());
-        return resultvector;
+        return CalcTensorBackground(measindex, xwidth, ywidth, zwidth, Model,
+            Sensitivities);
       }
     /*! Calculate the FTG response of the gridded domain.
      * @param measindex The index of the measurement

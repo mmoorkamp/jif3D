@@ -24,6 +24,7 @@ namespace jiba
     class WeightingTerm
       {
     private:
+      //the exponent in the depth weighting, should match the decay of the sensitivities
       double n;
     public:
       //! Given the exponent specified in the constructor calculate the function value for given z and z0

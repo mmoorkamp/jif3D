@@ -23,6 +23,8 @@
 #include "FullSensitivityGravityCalculator.h"
 #include "ThreeDGravityModel.h"
 #include "ReadWriteGravityData.h"
+#include "ThreeDGravityFactory.h"
+
 namespace atlas = boost::numeric::bindings::atlas;
 
 int main(int argc, char *argv[])

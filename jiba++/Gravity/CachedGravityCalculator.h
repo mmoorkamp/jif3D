@@ -39,19 +39,25 @@ namespace jiba
       ThreeDGravityModel::tMeasPosVec OldMeasPosZ;
       ThreeDGravityModel::tBackgroundVec OldBackgroundThick;
       ThreeDGravityModel::tBackgroundVec OldBackgroundDens;
+      //copy the cell sizes from the current model to store them for caching
       void CopySizes(const ThreeDGravityModel::t3DModelDim &NewXSizes,
           const ThreeDGravityModel::t3DModelDim &NewYSizes,
           const ThreeDGravityModel::t3DModelDim &NewZSizes);
+      //copy the measurement positions from the current model to store them for caching
       void CopyMeasPos(const ThreeDGravityModel::tMeasPosVec &NewMeasPosX,
           const ThreeDGravityModel::tMeasPosVec &NewMeasPosY,
           const ThreeDGravityModel::tMeasPosVec &NewMeasPosZ);
+      //check whether the model geometry, i.e. cell sizes, has changed since the last calculation
       bool CheckGeometryChange(const ThreeDGravityModel &Model);
+      //check whether the measurement positions have changed since the last calculation
       bool CheckMeasPosChange(const ThreeDGravityModel &Model);
+      //check wether the 1D background has changed since the last calculation
       bool CheckBackgroundChange(const ThreeDGravityModel &Model);
       //! The function declaration for the calculation of a new sensitivity matrix and rebuilding of caching information
       virtual rvec CalculateNewModel(const ThreeDGravityModel &Model) = 0;
       //! The function declaration for the calculation of gravity data using the cached information
       virtual rvec CalculateCachedResult(const ThreeDGravityModel &Model) = 0;
+      //! The function declaration for the calculation of the gradient using the cached information
       virtual rvec CachedLQDerivative(const ThreeDGravityModel &Model, const rvec &Misfit) = 0;
     protected:
       //! Through this function derived classes can signal that the sensitivity information is not valid any more

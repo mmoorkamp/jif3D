@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include "DepthWeighting.h"
+#include "ThreeDGravityFactory.h"
 #include "ThreeDGravityCalculator.h"
 #include "FullSensitivityGravityCalculator.h"
 

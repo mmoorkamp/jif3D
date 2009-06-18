@@ -196,7 +196,7 @@ namespace jiba
         WriteVec(DataFile, MeasPosXName, PosX, StatNumDim, "m");
         WriteVec(DataFile, MeasPosYName, PosY, StatNumDim, "m");
         WriteVec(DataFile, MeasPosZName, PosZ, StatNumDim, "m");
-
+        //write the nine component of the gravity tensor
         WriteMatComp(DataFile, UxxName, Data, 0, StatNumDim);
         WriteMatComp(DataFile, UxyName, Data, 1, StatNumDim);
         WriteMatComp(DataFile, UxzName, Data, 2, StatNumDim);

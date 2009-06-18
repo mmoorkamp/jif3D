@@ -13,6 +13,9 @@
 #include <cassert>
 namespace jiba
   {
+    /** \addtogroup gravity Gravity forward modeling, display and inversion */
+    /* @{ */
+
     //! Calculate I2 as described in Pedersen and Rasmussen 1990 and the associated derivative
     /*! This transformation class takes the 9 elements of the FTG tensor as input and gives
      * the invariant I2 and its partial derivatives with respect to the tensor elements as output.
@@ -20,8 +23,11 @@ namespace jiba
     class FTGInvariant: public VectorTransform
       {
     private:
+      //we expect 9 tensor elements at each call
       static const size_t ninput = 9;
+      //we return one invariant at each call
       static const size_t noutput = 1;
+      //calculate the invariant from 9 observations
       double CalcInvariant(const jiba::rvec &Data)
         {
           return Data(0) * Data(4) + Data(4) * Data(8) + Data(0) * Data(8)

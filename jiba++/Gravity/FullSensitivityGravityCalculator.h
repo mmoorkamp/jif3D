@@ -33,6 +33,7 @@ namespace jiba
       rmat Sensitivities;
       //Calculates the raw gravity/FTG data from cached sensitivities without applying any transformation
       virtual rvec CalculateRawData(const ThreeDGravityModel &Model);
+      //Calculates the raw gravity/FTG derivative from cached sensitivities without applying any transformation
       virtual rvec CalculateRawLQDerivative(const ThreeDGravityModel &Model, const rvec &Misfit);
       //Calculate a new model when no cached information is available or valid
       virtual rvec CalculateNewModel(const ThreeDGravityModel &Model);

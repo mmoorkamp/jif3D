@@ -36,6 +36,7 @@ namespace jiba
         std::copy(NewYSizes.begin(), NewYSizes.end(), OldYSizes.begin());
         std::copy(NewZSizes.begin(), NewZSizes.end(), OldZSizes.begin());
       }
+
     void CachedGravityCalculator::CopyMeasPos(
         const ThreeDGravityModel::tMeasPosVec &NewMeasPosX,
         const ThreeDGravityModel::tMeasPosVec &NewMeasPosY,
@@ -121,10 +122,12 @@ namespace jiba
       {
         // by default we assume a change
         bool change = true;
+        //check if either the size of the background densities or the thicknesses changed
         change = (OldBackgroundDens.size()
             != Model.GetBackgroundDensities().size()
             || OldBackgroundThick.size()
                 != Model.GetBackgroundThicknesses().size());
+        //check if one size changed copy the new values
         if (change)
           {
             OldBackgroundDens.resize(Model.GetBackgroundDensities().size(), 0.0);
@@ -137,11 +140,15 @@ namespace jiba
                 OldBackgroundThick.begin());
             return change;
           }
+        //if the sizes are the same, we check whether the vectors still conatin the same values
+        //for densities
         bool denssame = std::equal(OldBackgroundDens.begin(),
             OldBackgroundDens.end(), Model.GetBackgroundDensities().begin());
+        //and for thickness
         bool thicksame = std::equal(OldBackgroundThick.begin(),
             OldBackgroundThick.end(), Model.GetBackgroundThicknesses().begin());
         change = !(denssame && thicksame);
+        //if the content changed we copy the new values
         if (change)
           {
             OldBackgroundDens.resize(Model.GetBackgroundDensities().size(), 0.0);
@@ -155,6 +162,7 @@ namespace jiba
           }
         return change;
       }
+
     /*! This function compares the geometry and measurements of the passed
      * model with the information stored during the last call and either
      * calls CalculateCachedResult or CalculateNewModel which have to
@@ -169,9 +177,10 @@ namespace jiba
         //check whether the model geometry has changed since the last calculation
         //we have to do them separately to ensure that all functions are executed
         bool HasGeometryChanged = CheckGeometryChange(Model);
-        bool HasMeasPosChanged = CheckMeasPosChange( Model);
+        bool HasMeasPosChanged = CheckMeasPosChange(Model);
         bool HasBGCHanged = CheckBackgroundChange(Model);
-        bool HasChanged = HasGeometryChanged || HasMeasPosChanged || HasBGCHanged;
+        bool HasChanged = HasGeometryChanged || HasMeasPosChanged
+            || HasBGCHanged;
         //if we have cached information and nothing has changed, we use the cache
         if (HaveCache && !HasChanged)
           {

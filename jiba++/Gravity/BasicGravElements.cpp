@@ -42,15 +42,6 @@ namespace jiba
         const double c)
       {
         return atan2(a * b, c * sqrt(a * a + b * b + c * c));
-        // this is an alternative formula to check the correctness
-        //        const double r = sqrt(a*a+b*b+c*c);
-        //
-        //        double returnvalue = atan2(a * b, c *r);
-        //       returnvalue += a*b*c*r/(c*c*r*r + a*a*b*b);
-        //      returnvalue += pow(c,3) * b * a/(c*c*pow(r,3)+b*b*a*a*r);
-        //     returnvalue += a*c/(b*r+r*r) + b*c/(a*r+r*r);
-        // assert(value1==returnvalue);
-        //   return returnvalue;
       }
 
     //! Calculate one of the terms of off-diagonal elements of the gravimetric matrixs
@@ -220,12 +211,12 @@ namespace jiba
      * @param z_size size of the prism in z-direction in m
      * @return The tensor response of the prism at the measurement site
      */
-    GravimetryMatrix CalcTensorBoxTerm(const double meas_x,
+    rmat CalcTensorBoxTerm(const double meas_x,
         const double meas_y, const double meas_z, const double ul_corner_x,
         const double ul_corner_y, const double ul_corner_z,
         const double x_size, const double y_size, const double z_size)
       {
-        GravimetryMatrix returnvalue(3, 3);
+        rmat returnvalue(3, 3);
         //Calculate the first diagonal element
         returnvalue(0, 0) = CalcUxxTerm(meas_x, meas_y, meas_z, ul_corner_x,
             ul_corner_y, ul_corner_z, x_size, y_size, z_size);

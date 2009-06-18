@@ -21,6 +21,7 @@
 #include "DiskGravityCalculator.h"
 #include "ScalarOMPGravityImp.h"
 #include "TensorOMPGravityImp.h"
+#include "ThreeDGravityFactory.h"
 
 BOOST_AUTO_TEST_SUITE( TensorGravity_Test_Suite )
 
@@ -166,7 +167,6 @@ BOOST_AUTO_TEST_CASE  (random_tensor_test)
 
         }
     }
-
 
   //check whether the diagonal elements of the tensor obey the poisson equation
   BOOST_AUTO_TEST_CASE(tensor_poisson_test)

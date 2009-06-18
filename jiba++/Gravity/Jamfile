@@ -1,6 +1,7 @@
 import testing ; 
 lib gravity : ThreeDGravityModel.cpp GravityInterface.cpp 
-              BasicGravElements.cpp ScalarOMPGravityImp.cpp  TensorOMPGravityImp.cpp
+              GravityBackground.cpp BasicGravElements.cpp
+              ScalarOMPGravityImp.cpp  TensorOMPGravityImp.cpp
               TensorCudaGravityImp.cpp ScalarCudaGravityImp.cpp 
               ThreeDGravityImplementation.cpp CachedGravityCalculator.cpp FullSensitivityGravityCalculator.cpp
               ThreeDGravityCalculator.cpp MinMemGravityCalculator.cpp 
