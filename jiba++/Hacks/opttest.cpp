@@ -43,6 +43,7 @@
 #include "../Gravity/ThreeDGravityCalculator.h"
 #include "../Gravity/MinMemGravityCalculator.h"
 #include "../Gravity/DepthWeighting.h"
+#include "../Gravity/ThreeDGravityFactory.h"
 #include "../Tomo/ThreeDSeismicModel.h"
 #include "../Tomo/ReadWriteTomographyData.h"
 #include "../Tomo/TomographyObjective.h"

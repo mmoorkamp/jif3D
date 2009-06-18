@@ -19,7 +19,7 @@
 #include "../Inversion/MatrixTools.h"
 #include "../Gravity/ReadWriteGravityData.h"
 #include "../Inversion/LinearInversion.h"
-
+#include "../Gravity/ThreeDGravityFactory.h"
 #include "../Gravity/DepthWeighting.h"
 #include "../Gravity/FullSensitivityGravityCalculator.h"
 

@@ -21,6 +21,7 @@
 #include "../Gravity/GravityObjective.h"
 #include "../Gravity/DepthWeighting.h"
 #include "../Gravity/GravityTransforms.h"
+#include "../Gravity/ThreeDGravityFactory.h"
 #include "../Inversion/LimitedMemoryQuasiNewton.h"
 #include "../Inversion/NonLinearConjugateGradient.h"
 

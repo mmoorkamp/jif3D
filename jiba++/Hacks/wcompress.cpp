@@ -13,6 +13,7 @@
 #include "../Gravity/ThreeDGravityModel.h"
 #include "../Gravity/ReadWriteGravityData.h"
 #include "../Gravity/DepthWeighting.h"
+#include "../Gravity/ThreeDGravityFactory.h"
 #include "../Global/Wavelet.h"
 #include "../ModelBase/VTKTools.h"
 #include "../Global/convert.h"

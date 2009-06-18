@@ -35,6 +35,7 @@
 #include "../Gravity/ThreeDGravityCalculator.h"
 #include "../Gravity/MinMemGravityCalculator.h"
 #include "../Gravity/DepthWeighting.h"
+#include "../Gravity/ThreeDGravityFactory.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace ublas = boost::numeric::ublas;
