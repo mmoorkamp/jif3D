@@ -19,6 +19,7 @@
 #include "MinMemGravityCalculator.h"
 #include "FullSensitivityGravityCalculator.h"
 #include "ScalarOMPGravityImp.h"
+#include "ThreeDGravityFactory.h"
 
 using namespace boost::assign;
 

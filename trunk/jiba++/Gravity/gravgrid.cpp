@@ -17,6 +17,7 @@
 #include "ThreeDGravityModel.h"
 #include "ReadWriteGravityData.h"
 #include "MinMemGravityCalculator.h"
+#include "ThreeDGravityFactory.h"
 #include "../ModelBase/VTKTools.h"
 #include "../Global/FileUtil.h"
 #include <boost/cast.hpp>

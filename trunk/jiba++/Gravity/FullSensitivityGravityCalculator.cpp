@@ -108,7 +108,6 @@ namespace jiba
         const ThreeDGravityModel &Model, const rvec &Misfit)
       {
         const size_t ngrid = Model.GetDensities().num_elements();
-        const size_t nmod = ngrid + Model.GetBackgroundThicknesses().size();
 
         //first we calculate the raw data, the transformation might depend on this data
         rvec Data(CalculateRawData(Model));
@@ -128,32 +127,28 @@ namespace jiba
             const size_t nout = Transform->GetOutputSize();
             //the sensitivities are for the raw data
             //so our new processed misfit has to have the same size as the raw data
-            ProcessedMisfit.resize(Misfit.size() / nout
-                * nin);
-            for (size_t i = 0; i < Misfit.size(); i
-                += nout)
+            ProcessedMisfit.resize(Misfit.size() / nout * nin);
+            for (size_t i = 0; i < Misfit.size(); i += nout)
               {
                 size_t outindex = i / nout * nin;
-                ublas::vector_range<jiba::rvec>
-                    OutRange(ProcessedMisfit, ublas::range(outindex, outindex
-                        + nin));
+                ublas::vector_range<jiba::rvec> OutRange(ProcessedMisfit,
+                    ublas::range(outindex, outindex + nin));
                 ublas::vector_range<const jiba::rvec> InRange(Misfit,
                     ublas::range(i, i + nout));
-                ublas::vector_range<const jiba::rvec>
-                    DataRange(Data, ublas::range(outindex, outindex
-                        + nin));
+                ublas::vector_range<const jiba::rvec> DataRange(Data,
+                    ublas::range(outindex, outindex + nin));
                 OutRange = ublas::prod(trans(Transform->Derivative(DataRange)),
                     InRange);
               }
 
           }
 
-        return CalculateRawLQDerivative(Model,ProcessedMisfit);
+        return CalculateRawLQDerivative(Model, ProcessedMisfit);
       }
 
-
- rvec FullSensitivityGravityCalculator::CalculateRawLQDerivative(const ThreeDGravityModel &Model, const rvec &Misfit)
-    {
+    rvec FullSensitivityGravityCalculator::CalculateRawLQDerivative(
+        const ThreeDGravityModel &Model, const rvec &Misfit)
+      {
         assert(Misfit.size() == Sensitivities.size1());
 #ifdef HAVEATLAS
         rvec result(nmod);
@@ -162,5 +157,5 @@ namespace jiba
 #else
         return boost::numeric::ublas::prod(trans(Sensitivities), Misfit);
 #endif
-    }
+      }
   }

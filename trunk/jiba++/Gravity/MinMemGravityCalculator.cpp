@@ -7,6 +7,8 @@
 
 
 #include "MinMemGravityCalculator.h"
+#include <iostream>
+
 
 namespace jiba
   {
@@ -32,7 +34,6 @@ namespace jiba
       {
         SetCurrentSensitivities().resize(0, 0);
         return ThreeDGravityCalculator::Calculate(Model);
-
       }
 
   }

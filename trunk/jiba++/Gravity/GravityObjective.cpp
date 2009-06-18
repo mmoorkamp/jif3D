@@ -9,9 +9,14 @@
 #include "GravityObjective.h"
 #include "MinMemGravityCalculator.h"
 #include "DiskGravityCalculator.h"
+#include "ThreeDGravityFactory.h"
 #include <cassert>
 namespace jiba
   {
+    //copy a vector of densities into a ThreeDGravityModel object
+    //this function checks whether the vector only contains elements
+    //corresponding to the gridded part or also to the background
+    //the background is assumed to be at the end
     void VectorToModel(const jiba::rvec &InVector,
         jiba::ThreeDGravityModel &Model)
       {
@@ -20,6 +25,8 @@ namespace jiba
             InVector.size() == ngrid+ Model.GetBackgroundDensities().size());
         std::copy(InVector.begin(), InVector.begin() + ngrid,
             Model.SetDensities().origin());
+        //if we also have values for the background
+        //copy them an set the values appropriately
         if (InVector.size() == ngrid + Model.GetBackgroundDensities().size())
           {
             std::vector<double> Background(InVector.begin() + ngrid,
@@ -30,6 +37,8 @@ namespace jiba
 
     GravityObjective::GravityObjective(bool ftg, bool cuda)
       {
+        //check whether we want to minimize FTG data and allocate the appropriate object
+        //for forward calculation
         if (ftg)
           {
             Calculator
@@ -55,9 +64,12 @@ namespace jiba
         jiba::rvec &Diff)
       {
         assert(DensityModel.GetMeasPosX().size() * Calculator->GetDataPerMeasurement() == ObservedData.size() );
+        //copy the model vector to the 3D object that contains the geometry information
         VectorToModel(Model, DensityModel);
+        //calculate the synthetic data
         jiba::rvec SynthData(Calculator->Calculate(DensityModel));
         Diff.resize(ObservedData.size());
+        //calculate the difference between observed and synthetic
         std::transform(SynthData.begin(), SynthData.end(),
             ObservedData.begin(), Diff.begin(), std::minus<double>());
       }
@@ -66,7 +78,9 @@ namespace jiba
         const jiba::rvec &Diff)
       {
         assert(DensityModel.GetMeasPosX().size()* Calculator->GetDataPerMeasurement() == Diff.size() );
+        //copy the model vector to the 3D object that contains the geometry information
         VectorToModel(Model, DensityModel);
+        //calculate and return the gradient
         return Calculator->LQDerivative(DensityModel, Diff);
       }
   }

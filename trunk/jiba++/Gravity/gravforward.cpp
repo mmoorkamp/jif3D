@@ -24,6 +24,7 @@
 #include "ThreeDGravityModel.h"
 #include "ReadWriteGravityData.h"
 #include "MinMemGravityCalculator.h"
+#include "ThreeDGravityFactory.h"
 
 //get the name of the input files
 void PromptForFiles(std::string &ModelFilename, std::string &MeasPosFilename)

@@ -4,10 +4,12 @@
 // Version     :
 // Copyright   : 2008, MM
 //============================================================================
+
 #include "GravityInterface.h"
 #include "ThreeDGravityModel.h"
 #include "MinMemGravityCalculator.h"
 #include "FullSensitivityGravityCalculator.h"
+#include "ThreeDGravityFactory.h"
 #include <algorithm>
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
@@ -34,7 +36,7 @@ void AllocateModel(const int *storescalar, const int *storetensor)
         new jiba::ThreeDGravityModel);
     //depending on whether we want to save the sensitivities
     //or not we allocate different forward calculation objects
-    //fopr FTG and scalar
+    //for FTG and scalar
     if (cachescalar)
       {
         ScalarGravCalculator = jiba::CreateGravityCalculator<
@@ -137,6 +139,7 @@ void SetupBackground(const double *Thicknesses, const double *Densities,
     GravModel->SetBackgroundDensities(Dens);
     GravModel->SetBackgroundThicknesses(Thick);
   }
+
 //perform a forward calculation for scalar gravity data
 void CalcScalarForward(const double *XSizes, const unsigned int *nx,
     const double *YSizes, const unsigned int *ny, const double *ZSizes,
@@ -148,10 +151,11 @@ void CalcScalarForward(const double *XSizes, const unsigned int *nx,
   {
     SetupModel(XSizes, nx, YSizes, ny, ZSizes, nz, Densities, XMeasPos,
         YMeasPos, ZMeasPos, nmeas);
-    SetupBackground(BG_Thicknesses,BG_Densities,*nbg_layers);
+    SetupBackground(BG_Thicknesses, BG_Densities, *nbg_layers);
     jiba::rvec scalarmeas(ScalarGravCalculator->Calculate(*GravModel.get()));
     std::copy(scalarmeas.begin(), scalarmeas.end(), GravAcceleration);
   }
+
 //perform a forward calculation for tensor gravity data
 void CalcTensorForward(const double *XSizes, const unsigned int *nx,
     const double *YSizes, const unsigned int *ny, const double *ZSizes,
@@ -163,7 +167,7 @@ void CalcTensorForward(const double *XSizes, const unsigned int *nx,
   {
     SetupModel(XSizes, nx, YSizes, ny, ZSizes, nz, Densities, XMeasPos,
         YMeasPos, ZMeasPos, nmeas);
-    SetupBackground(BG_Thicknesses,BG_Densities,*nbg_layers);
+    SetupBackground(BG_Thicknesses, BG_Densities, *nbg_layers);
     jiba::rvec tensormeas(TensorGravCalculator->Calculate(*GravModel.get()));
 
     std::copy(tensormeas.begin(), tensormeas.end(), GravTensor);

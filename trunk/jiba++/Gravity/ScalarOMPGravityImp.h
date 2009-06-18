@@ -33,6 +33,7 @@ namespace jiba
       virtual rvec CalcGridded(const size_t measindex, const ThreeDGravityModel &Model,
           rmat &Sensitivities);
     public:
+      //! How many data do we return before any transformation
       virtual size_t RawDataPerMeasurement()
         {
           return ndatapermeas;

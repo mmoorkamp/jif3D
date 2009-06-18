@@ -37,7 +37,9 @@ namespace jiba
       {
         if (&source != this)
           {
+            //in addition to copying the contents of the base class
             ThreeDModelBase::operator=(source);
+            //we have to make sure we copy the information about the background
             bg_densities.resize(source.bg_densities.size());
             std::copy(source.bg_densities.begin(), source.bg_densities.end(),
                 bg_densities.begin());

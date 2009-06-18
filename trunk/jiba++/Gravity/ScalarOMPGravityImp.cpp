@@ -8,7 +8,7 @@
 
 #include "ScalarOMPGravityImp.h"
 #include "BasicGravElements.h"
-
+#include "GravityBackground.h"
 namespace jiba
   {
 
@@ -31,57 +31,12 @@ namespace jiba
      * @param Sensitivities If the matrix hold enough elements the sensitivities for the background are stored for a single measurement
      * @return The gravitational acceleration in m/s^2 due to the background
      */
-    rvec ScalarOMPGravityImp::CalcBackground(const size_t measindex, const double xwidth,
-        const double ywidth, const double zwidth,
-        const ThreeDGravityModel &Model,
-        rmat &Sensitivities)
+    rvec ScalarOMPGravityImp::CalcBackground(const size_t measindex,
+        const double xwidth, const double ywidth, const double zwidth,
+        const ThreeDGravityModel &Model, rmat &Sensitivities)
       {
-        //make sure we have thicknesses and densities for all layers
-        assert(Model.GetBackgroundDensities().size() == Model.GetBackgroundThicknesses().size());
-        const double x_meas = Model.GetMeasPosX()[measindex];
-        const double y_meas = Model.GetMeasPosY()[measindex];
-        const double z_meas = Model.GetMeasPosZ()[measindex];
-        const size_t nbglayers = Model.GetBackgroundThicknesses().size();
-        double result = 0.0;
-        double currtop = 0.0;
-        double currvalue = 0.0;
-        double currbottom = 0.0;
-        const size_t modelsize = Model.GetDensities().shape()[0]
-            * Model.GetDensities().shape()[1] * Model.GetDensities().shape()[2];
-        const bool storesens = (Sensitivities.size1() >= ndatapermeas)
-            && (Sensitivities.size2() >= modelsize + nbglayers);
-        // for all layers of the background
-        for (size_t j = 0; j < nbglayers; ++j)
-          {
-            const double currthick = Model.GetBackgroundThicknesses()[j];
-            // first assume an infinite sheet for the current layer
-            currbottom = currtop + currthick;
-            currvalue = CalcInfSheetTerm(z_meas,currtop,currbottom);
-            // and then subtract the value for the modelling domain, as this is already calculated in the discretized routine
-            // if the background layer complete coincides with the discretized area
-            if (currtop < zwidth && (currbottom <= zwidth))
-
-              {
-                currvalue -= CalcGravBoxTerm(x_meas, y_meas, z_meas, 0.0, 0.0,
-                    currtop, xwidth, ywidth, currthick);
-              }
-            //if some of the background coincides and some is below
-            if (currtop < zwidth && currbottom > zwidth)
-
-              {
-                currvalue -= CalcGravBoxTerm(x_meas, y_meas, z_meas, 0.0, 0.0,
-                    currtop, xwidth, ywidth, (zwidth - currtop));
-              }
-            if (storesens)
-              {
-                Sensitivities(0, modelsize + j) = currvalue;
-              }
-            result += currvalue * Model.GetBackgroundDensities()[j];
-            currtop += currthick;
-          }
-        rvec returnvector(1);
-        returnvector(0) = result;
-        return returnvector;
+        return CalcScalarBackground(measindex, xwidth, ywidth, zwidth, Model,
+            Sensitivities);
       }
 
     /*! Calculate the gravitational effect of the 3D model at a single measurement site.
@@ -91,8 +46,7 @@ namespace jiba
      * @return The gravitational acceleration in m/s^2 due to the model at this site
      */
     rvec ScalarOMPGravityImp::CalcGridded(const size_t measindex,
-        const ThreeDGravityModel &Model,
-        rmat &Sensitivities)
+        const ThreeDGravityModel &Model, rmat &Sensitivities)
       {
         //get the dimensions of the model
         const size_t xsize = Model.GetDensities().shape()[0];
@@ -106,7 +60,6 @@ namespace jiba
             && (Sensitivities.size2() >= size_t(nmod));
         double returnvalue = 0.0;
         double currvalue = 0.0;
-
 
         //sum up the contributions of all prisms in an openmp parallel loop
 #pragma omp parallel default(shared) private(currvalue) reduction(+:returnvalue)

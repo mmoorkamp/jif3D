@@ -106,7 +106,7 @@ namespace jiba
         const size_t nmod = ngrid + Model.GetBackgroundThicknesses().size();
         rvec result(nmod);
 
-        return boost::numeric::ublas::prec_prod(trans(SparseSens),Misfit);
+        return boost::numeric::ublas::prec_prod(trans(SparseSens), Misfit);
       }
 
     void WaveletCompressedGravityCalculator::HandleSensitivities(

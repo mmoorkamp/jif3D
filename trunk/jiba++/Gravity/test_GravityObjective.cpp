@@ -16,6 +16,7 @@
 
 #include "test_common.h"
 #include "GravityObjective.h"
+#include "ThreeDGravityFactory.h"
 #include "ThreeDGravityModel.h"
 #include "FullSensitivityGravityCalculator.h"
 
