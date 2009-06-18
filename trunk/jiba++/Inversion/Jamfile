@@ -6,12 +6,16 @@ lib inversion : MatrixTools.cpp  LinearInversion.cpp
 				LineSearch.cpp BacktrackingLineSearch.cpp
 				mcsrch.cpp
 				ObjectiveFunction.cpp JointObjective.cpp MinDiffRegularization.cpp
-				GradientRegularization.cpp
-                ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran ../Gravity//gravity
+                ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran 
                  : <include>boost : : <include>. ;
+                 
+lib inversion-extra : GradientRegularization.cpp
+               ..//ModelBase 
+               : <include>boost : : <include>. ;
+
 
 unit-test inversion_test : test_inversion.cpp inversion ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran  : : <include>. ;
 unit-test transform_test : test_transform.cpp   : : <include>. ;
 unit-test optstep_test : test_optstep.cpp  inversion : : <include>. ;
-unit-test regularization_test : test_regularization.cpp  inversion : : <include>. ;
+unit-test regularization_test : test_regularization.cpp  inversion inversion-extra ..//Gravity : : <include>. ;
 
