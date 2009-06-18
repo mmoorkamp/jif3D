@@ -8,6 +8,7 @@
 #include "../Gravity/ThreeDGravityCalculator.h"
 #include "../Gravity/FullSensitivityGravityCalculator.h"
 #include "../Gravity/MinMemGravityCalculator.h"
+#include "../Gravity/ThreeDGravityFactory.h"
 
 void MakeTestModel(jiba::ThreeDGravityModel &Model, const size_t size)
   {

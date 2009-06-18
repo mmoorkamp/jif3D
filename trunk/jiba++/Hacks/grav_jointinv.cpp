@@ -37,6 +37,7 @@
 #include "../Gravity/ThreeDGravityCalculator.h"
 #include "../Gravity/MinMemGravityCalculator.h"
 #include "../Gravity/DepthWeighting.h"
+#include "../Gravity/ThreeDGravityFactory.h"
 
 namespace ublas = boost::numeric::ublas;
 
