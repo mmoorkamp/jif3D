@@ -24,7 +24,8 @@ namespace jiba
 
     /*! The constructor does not take any parameters.
      */
-    ThreeDGravityModel::ThreeDGravityModel()
+    ThreeDGravityModel::ThreeDGravityModel() :
+      bg_densities(), bg_thicknesses()
       {
       }
 

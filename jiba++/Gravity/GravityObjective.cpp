@@ -35,7 +35,8 @@ namespace jiba
           }
       }
 
-    GravityObjective::GravityObjective(bool ftg, bool cuda)
+    GravityObjective::GravityObjective(bool ftg, bool cuda) :
+      Calculator(), ObservedData(), DensityModel()
       {
         //check whether we want to minimize FTG data and allocate the appropriate object
         //for forward calculation

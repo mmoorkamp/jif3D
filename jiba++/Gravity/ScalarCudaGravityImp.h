@@ -18,7 +18,10 @@ namespace jiba
     /*! This implementation class uses Nvidia's CUDA API to perform
      * the forward calculation on a Nvidia graphics card. It needs
      * a card with compute capability 1.3 or more to perform double
-     * length floating point calculations
+     * length floating point calculations.
+     *
+     * This class cannot be copied as this would make a mess with management
+     * of cuda resources.
      */
     class ScalarCudaGravityImp: public jiba::ThreeDGravityImplementation
       {
@@ -38,12 +41,15 @@ namespace jiba
       // This is a scalar calculation so we get one value per measurement
       static const size_t ndatapermeas = 1;
       //! Calculate the response of the background, currently this is done on the CPU
-      virtual rvec CalcBackground(const size_t measindex, const double xwidth, const double ywidth,
-          const double zwidth, const ThreeDGravityModel &Model,
-          rmat &Sensitivities);
+      virtual rvec CalcBackground(const size_t measindex, const double xwidth,
+          const double ywidth, const double zwidth,
+          const ThreeDGravityModel &Model, rmat &Sensitivities);
       //! Calculate the response of the gridded part, this is done on the GPU with CUDA
-      virtual rvec CalcGridded(const size_t measindex, const ThreeDGravityModel &Model,
-          rmat &Sensitivities);
+      virtual rvec CalcGridded(const size_t measindex,
+          const ThreeDGravityModel &Model, rmat &Sensitivities);
+      // This class cannot be copied, so copy constructor and assignment are private
+      jiba::ScalarCudaGravityImp &operator=(const jiba::ScalarCudaGravityImp&);
+      ScalarCudaGravityImp(const jiba::ScalarCudaGravityImp&);
     public:
       //! How many data do we return before any transformation
       virtual size_t RawDataPerMeasurement()

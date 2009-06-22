@@ -39,7 +39,7 @@ namespace jiba
           Reference = Model;
         }
       GradientRegularization(const jiba::ThreeDModelBase &Geometry) :
-        ModelGeometry(Geometry)
+        OperatorMatrix(), ModelGeometry(Geometry), Reference()
         {
           OperatorMatrix = SmoothnessOperator();
         }

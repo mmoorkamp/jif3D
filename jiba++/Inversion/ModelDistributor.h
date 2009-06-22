@@ -99,7 +99,8 @@ namespace jiba
     class ModelDistributor
       {
     public:
-      ModelDistributor()
+      ModelDistributor():
+        Transformers()
         {
         }
       virtual ~ModelDistributor()

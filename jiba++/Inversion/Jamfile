@@ -3,10 +3,10 @@ import testing ;
 lib inversion : MatrixTools.cpp  LinearInversion.cpp 
 				NonLinearOptimization.cpp NonLinearConjugateGradient.cpp
 				LimitedMemoryQuasiNewton.cpp
-				LineSearch.cpp BacktrackingLineSearch.cpp
+				LineSearch.cpp 
 				mcsrch.cpp
 				ObjectiveFunction.cpp JointObjective.cpp MinDiffRegularization.cpp
-                ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran 
+                ..//vecopt
                  : <include>boost : : <include>. ;
                  
 lib inversion-extra : GradientRegularization.cpp
@@ -14,7 +14,7 @@ lib inversion-extra : GradientRegularization.cpp
                : <include>boost : : <include>. ;
 
 
-unit-test inversion_test : test_inversion.cpp inversion ..//lapack ..//cblas ..//atlas ..//f77blas ..//gfortran  : : <include>. ;
+unit-test inversion_test : test_inversion.cpp inversion : : <include>. ;
 unit-test transform_test : test_transform.cpp   : : <include>. ;
 unit-test optstep_test : test_optstep.cpp  inversion : : <include>. ;
 unit-test regularization_test : test_regularization.cpp  inversion inversion-extra ..//Gravity : : <include>. ;

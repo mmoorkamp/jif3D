@@ -51,10 +51,6 @@ namespace jiba
       tMeasPosVec MeasPosY;
       //! the z-coordinates of the measurement points
       tMeasPosVec MeasPosZ;
-      //! If a derived class needs to perform some action when one the cell size changes, this can be done here
-      virtual void SetCellSizesAction(t3DModelDim &sizes)
-        {
-        }
       //! Have the cell sizes for the x-coordinate changed
       /*! This is basically a flag for caching, we could recalculate the Grid coordinates
        * every time from the cell sizes. This is slow and the coordinates are often needed.
@@ -131,21 +127,18 @@ namespace jiba
       //! read-write access to the cell size in x-direction in m
       t3DModelDim &SetXCellSizes()
         {
-          SetCellSizesAction(XCellSizes);
           XCellSizesChanged = true;
           return XCellSizes;
         }
       //! read-write access to the cell size in y-direction in m
       t3DModelDim &SetYCellSizes()
         {
-          SetCellSizesAction(YCellSizes);
           YCellSizesChanged = true;
           return YCellSizes;
         }
       //! read-write access to the cell size in z-direction in m
       t3DModelDim &SetZCellSizes()
         {
-          SetCellSizesAction(ZCellSizes);
           ZCellSizesChanged = true;
           return ZCellSizes;
         }

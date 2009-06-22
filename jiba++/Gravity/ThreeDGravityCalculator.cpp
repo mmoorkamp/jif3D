@@ -13,7 +13,7 @@ namespace jiba
 
     ThreeDGravityCalculator::ThreeDGravityCalculator(boost::shared_ptr<
         ThreeDGravityImplementation> TheImp) :
-      Imp(TheImp)
+      CurrentSensitivities(),  Transform(), Imp(TheImp)
       {
 
       }

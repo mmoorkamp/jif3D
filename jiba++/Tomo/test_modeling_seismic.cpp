@@ -14,27 +14,6 @@
 
 BOOST_AUTO_TEST_SUITE( Seismic_Test_Suite )
 
-BOOST_AUTO_TEST_CASE (memory_test)
-    {
-      // check 0 length allocation
-      BOOST_CHECK(jiba::memory(NULL,0,1,"test") == NULL);
-      // check simple allocation
-      size_t length = 100;
-      char * mem_test = jiba::memory(NULL,length, 1, "test");
-      BOOST_CHECK( mem_test != NULL);
-      for (size_t i = 0; i < length; ++i)
-        mem_test[i] = i;
-      // check reallocation
-      mem_test = jiba::memory(mem_test, 2 * length, 1, "test");
-      for (size_t i = 0; i < length; ++i)
-        {
-          BOOST_CHECK( mem_test[i] == i);
-        }
-      std::vector<char> dummy;
-      size_t failsize = dummy.max_size() * 2; // this should be enough to fail
-      BOOST_CHECK_THROW(jiba::memory(NULL,failsize,1,"throw"),std::runtime_error);
-      BOOST_CHECK_THROW(jiba::memory(mem_test,failsize,1,"throw"),std::runtime_error);
-    }
 
   BOOST_AUTO_TEST_CASE(interpolate_test)
     {
@@ -93,7 +72,7 @@ BOOST_AUTO_TEST_CASE (memory_test)
       int MSG = 0;
       std::fill_n(HS, nparam, 1.0);
       std::fill_n(T, nparam, 0.0);
-      int status = jiba::PodvinTime3D().time_3d(HS, T, nx, ny, nz, XS, YS, ZS,
+      jiba::PodvinTime3D().time_3d(HS, T, nx, ny, nz, XS, YS, ZS,
           HS_EPS_INIT, MSG);
       float dist = sqrt(XS * XS + YS * YS + ZS * ZS);
       BOOST_CHECK_CLOSE(T[0],dist,0.001);
@@ -120,19 +99,19 @@ BOOST_AUTO_TEST_CASE (memory_test)
 
       data.ndata_seis = 2;
       data.ndata_seis_act = 2;
-      data.sno = new int[2];
-      data.rno = new int[2];
+      data.sno.resize(2);
+      data.rno.resize(2);
       data.sno[0] = 1;
       data.rno[0] = 2;
       data.sno[1] = 2;
       data.rno[1] = 1;
-      data.tcalc = new double[2];
+      data.tcalc.resize(2);
 
       geo.nrec = 2;
       geo.nshot = 2;
-      geo.x = new float[geo.nrec + geo.nshot];
-      geo.y = new float[geo.nrec + geo.nshot];
-      geo.z = new float[geo.nrec + geo.nshot];
+      geo.x.resize(geo.nrec + geo.nshot);
+      geo.y.resize(geo.nrec + geo.nshot);
+      geo.z.resize(geo.nrec + geo.nshot);
       geo.x[0] = 75.0;
       geo.y[0] = 100.0;
       geo.z[0] = 40.0;
@@ -144,7 +123,7 @@ BOOST_AUTO_TEST_CASE (memory_test)
 
       raypath = new jiba::RP_STRUCT[2];
 
-      ForwardModRay(geo, grid, &data, raypath, 0);
+      ForwardModRay(geo, grid, &data, raypath);
       double relerror = (data.tcalc[0] / 1000.0 - dist) / dist;
       BOOST_CHECK(relerror < 0.01 );
 

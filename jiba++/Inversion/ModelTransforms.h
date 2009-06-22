@@ -116,12 +116,10 @@ namespace jiba
     private:
       const double min;
       const double max;
-      const jiba::rvec Reference;
     public:
       //! Transform the normalized model parameters back to physical parameters
       virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
         {
-          assert(FullModel.size() == Reference.size());
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             Output( i) = min + (1.0 + tanh(FullModel(i))) / 2.0 * (max - min);
@@ -129,7 +127,6 @@ namespace jiba
         }
       virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
         {
-          assert(FullModel.size() == Reference.size());
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
@@ -152,9 +149,9 @@ namespace jiba
             }
           return Output;
         }
-      TanhTransform(const jiba::rvec &Ref, const double minval = 1.0,
+      TanhTransform(const double minval = 1.0,
           const double maxval = 5.0) :
-        min(minval), max(maxval), Reference(Ref)
+        min(minval), max(maxval)
         {
         }
       virtual ~TanhTransform()
@@ -199,9 +196,9 @@ namespace jiba
             }
           return Output;
         }
-      TanhDensityTransform(const jiba::rvec &Ref, const double minval = 1.0,
+      TanhDensityTransform(const double minval = 1.0,
           const double maxval = 5.0) :
-        TanhTransform(Ref, minval, maxval)
+        TanhTransform(minval, maxval)
         {
         }
       virtual ~TanhDensityTransform()

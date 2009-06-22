@@ -12,7 +12,8 @@
 namespace jiba
   {
 
-    JointObjective::JointObjective()
+    JointObjective::JointObjective() :
+      Objectives(), Weights(), IndividualFits(), Distributor()
       {
 
       }

@@ -7,7 +7,6 @@
 
 
 #include "NonLinearConjugateGradient.h"
-#include "BacktrackingLineSearch.h"
 #include "mcsrch.h"
 #include <fstream>
 namespace jiba
@@ -15,7 +14,7 @@ namespace jiba
 
     NonLinearConjugateGradient::NonLinearConjugateGradient(boost::shared_ptr<
         jiba::ObjectiveFunction> ObjFunction) :
-      NonLinearOptimization(ObjFunction), OldOmega(1.0), mu(1.0)
+      NonLinearOptimization(ObjFunction), OldGradient(), OldDirection(),OldOmega(1.0), mu(1.0)
       {
 
       }

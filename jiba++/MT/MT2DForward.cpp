@@ -11,7 +11,10 @@
 namespace jiba
   {
 
-    MT2DForward::MT2DForward()
+    MT2DForward::MT2DForward() :
+      XSizes(), ZSizes(), Resistivities(), Hx_real(), Hx_imag(), Hy_real(),
+          Hy_imag(), Ey_real(), Ey_imag(), Ex_real(), Ex_imag(), Ez_real(),
+          Ez_imag()
       {
       }
 

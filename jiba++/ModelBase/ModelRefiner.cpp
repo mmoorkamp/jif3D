@@ -153,7 +153,8 @@ namespace jiba
           }
       }
 
-    ModelRefiner::ModelRefiner()
+    ModelRefiner::ModelRefiner() :
+      RefiningXCoordinates(), RefiningYCoordinates(), RefiningZCoordinates()
       {
 
       }

@@ -6,7 +6,6 @@
 //============================================================================
 
 #include "NetCDFTools.h"
-#include <boost/assign/std/vector.hpp>
 
 namespace jiba
   {
@@ -163,7 +162,6 @@ namespace jiba
         const ThreeDModelBase::t3DModelDim &ZCellSizes,
         const ThreeDModelBase::t3DModelData &Data)
       {
-        using namespace boost::assign;
         //Make sure our data has the right dimensions and we have size information for each cell
         assert(Data.num_dimensions() == 3);
         assert(Data.shape()[0] == XCellSizes.size());
@@ -175,7 +173,8 @@ namespace jiba
         NcVar *BoundaryVar = NetCDFFile.add_var("nbound", ncInt, BoundaryDim);
         BoundaryVar->add_att("long_name", "Boundary index variable");
         std::vector<int> BIndices;
-        BIndices += 1, 2;
+        BIndices.push_back(1);
+        BIndices.push_back(2);
         BoundaryVar->put(&BIndices[0], 2);
         // Write the size information in x,y, and z-direction
         NcDim *XSizeDim = WriteSizesToNetCDF(NetCDFFile, "Northing",

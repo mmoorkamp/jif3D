@@ -15,8 +15,11 @@ namespace jiba
   {
 
     ThreeDModelBase::ThreeDModelBase() :
-      XCellSizesChanged(true), YCellSizesChanged(true),
-          ZCellSizesChanged(true), XOrigin(0.0), YOrigin(0.0), ZOrigin(0.0)
+      MeasPosX(), MeasPosY(), MeasPosZ(), XCellSizesChanged(true),
+          YCellSizesChanged(true), ZCellSizesChanged(true), Data(),
+          XCellSizes(), YCellSizes(), ZCellSizes(), GridXCoordinates(),
+          GridYCoordinates(), GridZCoordinates(), XOrigin(0.0), YOrigin(0.0),
+          ZOrigin(0.0)
       {
       }
 

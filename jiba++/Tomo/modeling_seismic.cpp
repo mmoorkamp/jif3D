@@ -2,11 +2,14 @@
 #include "modeling_seismic.h"
 #include "ReadWriteTomographyData.h"
 #include "PodvinTime3D.h"
+#include "../Global/FatalException.h"
+#include "../Global/convert.h"
 #include <cmath>
 #include <vector>
-extern "C"
-int  time_3d(float *HS, float *T, int NX, int NY, int NZ,
-      float XS, float YS, float ZS, float HS_EPS_INIT, int MSG);
+#include <iostream>
+
+extern "C" int time_3d(float *HS, float *T, int NX, int NY, int NZ, float XS,
+    float YS, float ZS, float HS_EPS_INIT, int MSG);
 namespace jiba
   {
 
@@ -27,7 +30,7 @@ namespace jiba
 
     int RayCalc(float *tt, int nx, int ny, int nz, float Xs, float Ys,
         float Zs, float *Xr, float *Yr, float *Zr, int nrec, RP_STRUCT *rp);
-    double *TimeGrad(int x, int y, int z, float *tt, int ny, int nz);
+    jiba::rvec TimeGrad(int x, int y, int z, float *tt, int ny, int nz);
     CELL_STRUCT RayBackTrace(double gradx, double grady, double gradz,
         CELL_STRUCT cell, float *tt, int ny, int nz);
     int ResortRays(RP_STRUCT *raypath, const DATA_STRUCT &data,
@@ -46,20 +49,19 @@ namespace jiba
     /*		Therefore the grid have to be readjusted*/
 
     int ForwardModRay(const GEOMETRY &geo, const GRID_STRUCT &grid,
-        DATA_STRUCT *data, RP_STRUCT *raypath, time_t time_start)
+        DATA_STRUCT *data, RP_STRUCT *raypath)
       {
 
         const float delta_num = (float) 0.001;
         const size_t nx3 = (grid.nx + 1);
         const size_t ny3 = (grid.ny + 1);
         const size_t nz3 = (grid.nz + 1);
-        const size_t nyz3 = ny3 * nz3;
 
         /*******************************************************************************************/
         /*******************************************************************************************/
         /*--Conventional-rays--*/
 
-        std::fill_n(data->tcalc, data->ndata_seis, -1.0);
+        std::fill(data->tcalc.begin(), data->tcalc.end(), -1.0);
 
         if (data->ndata_seis == 0)
           {
@@ -72,26 +74,28 @@ namespace jiba
             return (1);
           }
 
-        data->lshots = new int[geo.nshot];
+        data->lshots.resize(geo.nshot);
         /*Start the loop over all shots*/
-        std::vector<int> uniqueshots(data->ndata_seis);
-        std::copy(data->sno, data->sno + data->ndata_seis, uniqueshots.begin());
+        std::vector<size_t> uniqueshots(data->ndata_seis);
+        std::copy(data->sno.begin(), data->sno.end(), uniqueshots.begin());
         std::sort(uniqueshots.begin(), uniqueshots.end());
         uniqueshots.erase(std::unique(uniqueshots.begin(), uniqueshots.end()),
             uniqueshots.end());
         assert(uniqueshots.size() == geo.nshot);
-
+        //we need and unsigned version for the openmp loop
+        const int nshot = geo.nshot;
 #pragma omp parallel default(shared)
           {
+
 #pragma omp for
-            for (size_t i = 0; i < geo.nshot; i++)
+            for (int i = 0; i < nshot; i++)
               {
 
                 /*Allocate memory for the travel-times that will be calculated by the forward algorithm*/
                 std::vector<float> tt(nx3 * ny3 * nz3);
-                int count; /*Number of active receivers for a shot*/
-                std::vector<int> nact_rec; /*active receiver-numbers for the used shot*/
-                std::vector<long> nact_datapos; /*Position of the active receivers in the data structure*/
+                size_t count; /*Number of active receivers for a shot*/
+                std::vector<size_t> nact_rec; /*active receiver-numbers for the used shot*/
+                std::vector<size_t> nact_datapos; /*Position of the active receivers in the data structure*/
                 std::vector<RP_STRUCT> raypath_tmp;
                 float Xs, Ys, Zs;
                 std::vector<float> Xr;
@@ -107,13 +111,10 @@ namespace jiba
                 /***************************************************************************************/
                 /*Podvin&Lecomte forward algorithm*/
                 /*tt is the calculated traveltime for each grid cell node*/
-                //jiba::PodvinTime3D *Forward = new jiba::PodvinTime3D();
                 std::vector<float> SlowBuffer(grid.slow);
                 jiba::PodvinTime3D().time_3d(&SlowBuffer[0], &tt[0], nx3, ny3,
                     nz3, Xs, Ys, Zs, delta_num, 0);
-                //delete Forward;
-                //time_3d(grid.slow, &tt[0], nx3, ny3, nz3, Xs, Ys, Zs,
-                //                    delta_num, 0);
+
                 /***************************************************************************************/
 
                 //jiba::PlotTimeField("times.vtk", &tt[0], grid.h, nx3, ny3, nz3);
@@ -147,26 +148,15 @@ namespace jiba
                     data->tcalc[nact_datapos[j]] = (double) (1000.0
                         * interpolate(Xr[j], Yr[j], Zr[j], grid, &tt[0]));
 
-                    //printf(" Calculating for receiver-nr. %d \n", nact_rec[j]);
-                    //printf("   (x=%f,y=%f,z=%f)\n", geo.x[nact_rec[j] - 1],
-                    //    geo.y[nact_rec[j] - 1], geo.z[nact_rec[j] - 1]);
-
                     if (nact_datapos[j] >= data->ndata_seis)
                       {
-                        printf(
-                            "NOT enough memory is allocated: used %d, allocated %d\n",
-                            nact_datapos[j] + 1, data->ndata_seis);
+                        std::cerr << "NOT enough memory is allocated: used "
+                            << nact_datapos[j] + 1 << "allocated "
+                            << data->ndata_seis << "\n";
                         exit(0);
                       }
 
                   }
-
-                //printf(" For shot-nr. %d all traveltimes are calculated\n", i
-                //    + 1);
-                //printf("   (x=%f,y=%f,z=%f)\n", geo.x[i], geo.y[i], geo.z[i]);
-                //printf(
-                //    "   Number of found receiver positions for the shot: %d\n",
-                //   count);
 
                 /***************************************/
 
@@ -236,18 +226,17 @@ namespace jiba
           {
             if (data->tcalc[i] == -1.0)
               {
-                printf(
-                    "For the shot-receiver combination %d no traveltime was calculated\n->Check the program\n",
-                    i + 1);
-                return 100;
+
+                throw jiba::FatalException("For the shot-receiver combination"
+                    + jiba::stringify(i + 1)
+                    + "no traveltime was calculated\n->Check the program\n");
               }
 
             if (raypath[i].nray % 1 != 0)
               {
-                printf(
-                    "For the shot-receiver combination %d no raypath was calculated\n->Check the program\n",
-                    i + 1);
-                return 100;
+                throw jiba::FatalException("For the shot-receiver combination"
+                    + jiba::stringify(i + 1)
+                    + "no raypath was calculated\n->Check the program\n");
               }
           }
 
@@ -259,7 +248,6 @@ namespace jiba
         data->ndata_seis_act = 0;
         for (size_t i = 0; i < data->ndata_seis; i++)
           {
-
 
             //printf("Number of rays: %d\n", raypath[i].nray);
             if (raypath[i].nray != 0)
@@ -280,9 +268,19 @@ namespace jiba
     /*              *data  := Data (usually velocities) from which the interpolated velocities are determined */
     /*Output:  Determined velocity from receiver/shot positions to next grid point */
 
-#define lo(val)    (int)floor((val))
-#define hi(val)    (int)ceil((val))
+    //#define lo(val)    (int)floor((val))
+    //#define hi(val)    (int)ceil((val))
 #define dd(x,y,z)   data[nyz2*(x) + nz2*(y) + (z)]
+
+    inline int lo(const float val)
+      {
+        return (int) floor((val));
+      }
+
+    inline int hi(const float val)
+      {
+        return (int) ceil((val));
+      }
 
     float interpolate(float x, float y, float z, const GRID_STRUCT &grid,
         float *data)
@@ -306,13 +304,8 @@ namespace jiba
           ok = 0;
         if (!ok)
           {
-            printf("\nInterpolation point is out of the grid!\n");
-            printf("x = %f y = %f z = %f\n", x, y, z);
-            printf("nx = %d ny = %d nz = %d\n", grid.nx, grid.ny, grid.nz);
-            printf("h = %f\n", grid.h);
-            printf("orix = %f oriy = %f oriz = %f\n", grid.org[0], grid.org[1],
-                grid.org[2]);
-            exit(0);
+            throw jiba::FatalException(
+                "Interpolation point is out of the grid!");
           }
 
         /* Get interpolation distances */
@@ -321,9 +314,14 @@ namespace jiba
         w = z - (float) floor(z);
 
         /* And now interpolate */
-        ival = (1 - u) * (1 - v) * (1 - w) * dd(lo(x),lo(y),lo(z)) + (u) * (1 - v) * (1 - w) * dd(hi(x),lo(y),lo(z)) + (u) * (v) * (1 - w) * dd(hi(x),hi(y),lo(z)) + (1 - u) * (v) * (1 - w) * dd(lo(x),hi(y),lo(z)) +
+        ival = (1 - u) * (1 - v) * (1 - w) * dd(lo(x), lo(y), lo(z)) + (u) * (1
+            - v) * (1 - w) * dd(hi(x), lo(y), lo(z)) + (u) * (v) * (1 - w)
+            * dd(hi(x), hi(y), lo(z)) + (1 - u) * (v) * (1 - w) * dd(lo(x), hi(
+                y), lo(z)) +
 
-        (1 - u) * (1 - v) * (w) * dd(lo(x),lo(y),hi(z)) + (u) * (1 - v) * (w) * dd(hi(x),lo(y),hi(z)) + (u) * (v) * (w) * dd(hi(x),hi(y),hi(z)) + (1 - u) * (v) * (w) * dd(lo(x),hi(y),hi(z));
+        (1 - u) * (1 - v) * (w) * dd(lo(x), lo(y), hi(z)) + (u) * (1 - v) * (w)
+            * dd(hi(x), lo(y), hi(z)) + (u) * (v) * (w) * dd(hi(x), hi(y),
+            hi(z)) + (1 - u) * (v) * (w) * dd(lo(x), hi(y), hi(z));
 
         return (ival);
       }
@@ -350,10 +348,10 @@ namespace jiba
         int i, count;
         int nx1, ny1, nz1;
         long nyz1;
-        int *ray_cell_index; /*if 0=no ray in the cell; 1= ray path found in the cell*/
+        std::vector<int> ray_cell_index; /*if 0=no ray in the cell; 1= ray path found in the cell*/
         long max_nr_of_ray_seg; /*max. number of ray-segments*/
 
-        double *gradient; /*Components of the gradient*/
+        jiba::rvec gradient; /*Components of the gradient*/
         CELL_STRUCT next_cell, cell;
 
         nx1 = nx - 1; /* nx:Number of nodes; nx1= number of cells in x-direction*/
@@ -365,8 +363,7 @@ namespace jiba
         for (i = 0; i < nrec; i++)
           {
 
-            ray_cell_index = (int *) memory(NULL, (nx1) * (ny1) * (nz1),
-                sizeof(int), "RayCalc");
+            ray_cell_index.resize((nx1) * (ny1) * (nz1));
 
             /*Set "boundary-index" to 1 for all grid cells:*/
             for (a = 0; a < nx1; a++)
@@ -425,9 +422,8 @@ namespace jiba
             gradient = TimeGrad(cell.xno, cell.yno, cell.zno, tt, ny, nz);
 
             /*Calculate the ray segment through the first grid cell*/
-            next_cell = RayBackTrace(gradient[0], gradient[1], gradient[2],
+            next_cell = RayBackTrace(gradient(0), gradient(1), gradient(2),
                 cell, tt, ny, nz);
-            free(gradient);
 
             rp[i].len.resize(1);
             rp[i].x.resize(1);
@@ -477,7 +473,6 @@ namespace jiba
                 /*Calculate the ray segment through the corresponding grid cell*/
                 next_cell = RayBackTrace(gradient[0], gradient[1], gradient[2],
                     cell, tt, ny, nz);
-                free(gradient);
 
                 rp[i].len.push_back(sqrt((next_cell.xpos + next_cell.xno
                     - cell.xpos - cell.xno) * (next_cell.xpos + next_cell.xno
@@ -536,8 +531,6 @@ namespace jiba
 
             fertig: ;
 
-            free(ray_cell_index);
-
           }
 
         //printf("All rays for the shot are calculated\n");
@@ -557,20 +550,27 @@ namespace jiba
 
 #define Traveltimes(a,b,c) tt[nyz*(a) + nz*(b) + (c)]
 
-    double *TimeGrad(int x, int y, int z, float *tt, int ny, int nz)
+    jiba::rvec TimeGrad(int x, int y, int z, float *tt, int ny, int nz)
       {
         int nyz;
-        double *grad;
+        jiba::rvec grad(3);
 
         nyz = ny * nz;
 
-        grad = (double *) memory(NULL, 3, sizeof(double), "TimeGrad");
+        grad[0] = (-Traveltimes(x+1,y,z) - Traveltimes(x+1,y,z+1)
+            - Traveltimes(x+1,y+1,z) - Traveltimes(x+1,y+1,z+1)
+            + Traveltimes(x,y,z) + Traveltimes(x,y,z+1) + Traveltimes(x,y+1,z)
+            + Traveltimes(x,y+1,z+1)) / 4; /*x-component*/
 
-        grad[0] = (-Traveltimes(x+1,y,z) - Traveltimes(x+1,y,z+1) - Traveltimes(x+1,y+1,z) - Traveltimes(x+1,y+1,z+1) + Traveltimes(x,y,z) + Traveltimes(x,y,z+1) + Traveltimes(x,y+1,z) + Traveltimes(x,y+1,z+1)) / 4; /*x-component*/
+        grad[1] = (-Traveltimes(x,y+1,z) - Traveltimes(x,y+1,z+1)
+            - Traveltimes(x+1,y+1,z) - Traveltimes(x+1,y+1,z+1)
+            + Traveltimes(x,y,z) + Traveltimes(x,y,z+1) + Traveltimes(x+1,y,z)
+            + Traveltimes(x+1,y,z+1)) / 4; /*y-component*/
 
-        grad[1] = (-Traveltimes(x,y+1,z) - Traveltimes(x,y+1,z+1) - Traveltimes(x+1,y+1,z) - Traveltimes(x+1,y+1,z+1) + Traveltimes(x,y,z) + Traveltimes(x,y,z+1) + Traveltimes(x+1,y,z) + Traveltimes(x+1,y,z+1)) / 4; /*y-component*/
-
-        grad[2] = (-Traveltimes(x,y,z+1) - Traveltimes(x,y+1,z+1) - Traveltimes(x+1,y,z+1) - Traveltimes(x+1,y+1,z+1) + Traveltimes(x,y,z) + Traveltimes(x,y+1,z) + Traveltimes(x+1,y,z) + Traveltimes(x+1,y+1,z)) / 4; /*z-component*/
+        grad[2] = (-Traveltimes(x,y,z+1) - Traveltimes(x,y+1,z+1)
+            - Traveltimes(x+1,y,z+1) - Traveltimes(x+1,y+1,z+1)
+            + Traveltimes(x,y,z) + Traveltimes(x,y+1,z) + Traveltimes(x+1,y,z)
+            + Traveltimes(x+1,y+1,z)) / 4; /*z-component*/
 
         return (grad);
       }
@@ -590,7 +590,8 @@ namespace jiba
         CELL_STRUCT cell, float *tt, int ny, int nz)
       {
         double eps = 0.01; /*Stabilize the program;*/
-        double tmp_xpos, tmp_ypos, tmp_zpos, *gradient1, *gradient2;
+        double tmp_xpos, tmp_ypos, tmp_zpos;
+        jiba::rvec gradient1, gradient2;
         int diff;
         CELL_STRUCT next_cell;
 
@@ -803,9 +804,6 @@ namespace jiba
                     next_cell.yno = cell.yno - 1;
                     next_cell.zno = cell.zno;
 
-                    free(gradient1);
-                    free(gradient2);
-
                     goto bestimmt;
                   }
               }
@@ -843,9 +841,6 @@ namespace jiba
                       next_cell.xno = cell.xno;
                     next_cell.yno = cell.yno + 1;
                     next_cell.zno = cell.zno;
-
-                    free(gradient1);
-                    free(gradient2);
 
                     goto bestimmt;
                   }
@@ -886,9 +881,6 @@ namespace jiba
                     next_cell.yno = cell.yno;
                     next_cell.zno = cell.zno - 1;
 
-                    free(gradient1);
-                    free(gradient2);
-
                     goto bestimmt;
                   }
               }
@@ -925,9 +917,6 @@ namespace jiba
                       next_cell.xno = cell.xno;
                     next_cell.yno = cell.yno;
                     next_cell.zno = cell.zno + 1;
-
-                    free(gradient1);
-                    free(gradient2);
 
                     goto bestimmt;
                   }
@@ -972,10 +961,6 @@ namespace jiba
                     else
                       next_cell.yno = cell.yno;
                     next_cell.zno = cell.zno;
-
-                    free(gradient1);
-                    free(gradient2);
-
                     goto bestimmt;
                   }
               }
@@ -1012,9 +997,6 @@ namespace jiba
                     else
                       next_cell.yno = cell.yno;
                     next_cell.zno = cell.zno;
-
-                    free(gradient1);
-                    free(gradient2);
 
                     goto bestimmt;
                   }
@@ -1053,9 +1035,6 @@ namespace jiba
                       next_cell.yno = cell.yno;
                     next_cell.zno = cell.zno - 1;
 
-                    free(gradient1);
-                    free(gradient2);
-
                     goto bestimmt;
                   }
               }
@@ -1093,9 +1072,6 @@ namespace jiba
                     else
                       next_cell.yno = cell.yno;
                     next_cell.zno = cell.zno + 1;
-
-                    free(gradient1);
-                    free(gradient2);
 
                     goto bestimmt;
                   }
@@ -1142,9 +1118,6 @@ namespace jiba
                     else
                       next_cell.zno = cell.zno;
 
-                    free(gradient1);
-                    free(gradient2);
-
                     goto bestimmt;
                   }
               }
@@ -1183,9 +1156,6 @@ namespace jiba
                     else
                       next_cell.zno = cell.zno;
 
-                    free(gradient1);
-                    free(gradient2);
-
                     goto bestimmt;
                   }
               }
@@ -1221,9 +1191,6 @@ namespace jiba
                       next_cell.zno = cell.zno + cell.dirz_i;
                     else
                       next_cell.zno = cell.zno;
-
-                    free(gradient1);
-                    free(gradient2);
 
                     goto bestimmt;
                   }
@@ -1268,9 +1235,6 @@ namespace jiba
                     else
                       next_cell.zno = cell.zno;
 
-                    free(gradient1);
-                    free(gradient2);
-
                     goto bestimmt;
                   }
               }
@@ -1278,7 +1242,7 @@ namespace jiba
           }
 
         /*Unexspected cases*/
-        printf("Unexspected ray path in a grid cell\n");
+        printf("Unexpected ray path in a grid cell\n");
         next_cell = cell;
 
         bestimmt: ;
@@ -1296,7 +1260,7 @@ namespace jiba
     int ResortRays(RP_STRUCT *raypath, const DATA_STRUCT &data,
         const GRID_STRUCT &grid)
       {
-        long a, b, c, d, e;
+        long c, d, e;
         long nx, ny, nz, nyz, ny1, nz1, nyz1;
 
         double eps = 0.01;
@@ -1311,9 +1275,9 @@ namespace jiba
         nyz1 = ny1 * nz1;
 
         /*Loop over all rays*/
-        for (a = 0; a < data.ndata_seis; a++)
+        for (size_t a = 0; a < data.ndata_seis; a++)
           /*Loop over all segments of a ray*/
-          for (b = 0; b < raypath[a].nray; b++)
+          for (size_t b = 0; b < raypath[a].nray; b++)
             {
               /*Find the right cell*/
               c = (long) floor((double) (raypath[a].ele[b] / nyz));

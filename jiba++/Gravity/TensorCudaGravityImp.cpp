@@ -11,7 +11,6 @@
 #include "BasicGravElements.h"
 #include "GravityBackground.h"
 
-
 namespace jiba
   {
 
@@ -37,11 +36,11 @@ namespace jiba
         double **d_zcoord, double **d_xsize, double **d_ysize,
         double **d_zsize, double **d_result);
 
-    TensorCudaGravityImp::TensorCudaGravityImp()
+    TensorCudaGravityImp::TensorCudaGravityImp() :
+      d_xcoord(NULL), d_ycoord(NULL), d_zcoord(NULL), d_xsize(NULL), d_ysize(
+          NULL), d_zsize(NULL), d_result(NULL), currsens(NULL), currsenssize(0)
       {
         // we have to do some raw pointer operations for handling sensitivities with CUDA
-        currsens = NULL;
-        currsenssize = 0;
       }
 
     TensorCudaGravityImp::~TensorCudaGravityImp()
