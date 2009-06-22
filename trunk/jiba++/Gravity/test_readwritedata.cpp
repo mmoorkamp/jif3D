@@ -16,6 +16,9 @@
 
 BOOST_AUTO_TEST_SUITE( GravityReadWrite_Test_Suite )
 
+
+//check whether writing data to a file and reading it in again
+//gives the same data back for the scalar case
 BOOST_AUTO_TEST_CASE(readwrite_scalar_test)
       {
         const size_t ndata = 20;
@@ -40,6 +43,8 @@ BOOST_AUTO_TEST_CASE(readwrite_scalar_test)
         BOOST_CHECK(jiba::IdentifyGravityDatafileType(filename) == jiba::scalar);
       }
 
+//check whether writing data to a file and reading it in again
+//gives the same data back for the tensor case
 BOOST_AUTO_TEST_CASE(readwrite_tensor_test)
       {
         const size_t nmeas  =20;

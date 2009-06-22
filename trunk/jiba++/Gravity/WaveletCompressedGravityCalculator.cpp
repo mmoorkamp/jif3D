@@ -18,7 +18,9 @@ namespace jiba
 
     WaveletCompressedGravityCalculator::WaveletCompressedGravityCalculator(
         boost::shared_ptr<ThreeDGravityImplementation> TheImp) :
-      CachedGravityCalculator(TheImp), accuracy(0.01)
+      CachedGravityCalculator(TheImp), nmeas(), ngrid(), nbglayers(), nmod(),
+          xsize(), ysize(), zsize(), accuracy(0.01), CurrRow(),
+          transformsize(), SparseSens(), WhiteningVector()
       {
 
       }

@@ -22,7 +22,7 @@ namespace jiba
 
     FullSensitivityGravityCalculator::FullSensitivityGravityCalculator(
         boost::shared_ptr<ThreeDGravityImplementation> TheImp) :
-      CachedGravityCalculator(TheImp)
+      CachedGravityCalculator(TheImp), Sensitivities()
       {
 
       }

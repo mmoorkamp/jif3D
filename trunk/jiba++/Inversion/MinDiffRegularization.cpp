@@ -11,7 +11,8 @@
 namespace jiba
   {
 
-    MinDiffRegularization::MinDiffRegularization()
+    MinDiffRegularization::MinDiffRegularization():
+      Reference()
       {
 
       }

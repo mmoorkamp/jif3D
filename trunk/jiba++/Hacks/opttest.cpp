@@ -19,13 +19,11 @@
 #endif
 #include <numeric>
 #include <cmath>
-#include "OptLBFGS.h"
-#include "NLF.h"
 #include <omp.h>
-#include "../Gravity/MinMemGravityCalculator.h"
-#include "../Inversion/JointObjective.h"
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/program_options.hpp>
 #include <boost/bind.hpp>
+#include "OptppDecl.h"
 #include "../Global/convert.h"
 #include "../Global/FatalException.h"
 #include "../Global/NumUtil.h"
@@ -36,6 +34,7 @@
 #include "../Inversion/MinDiffRegularization.h"
 #include "../Inversion/GradientRegularization.h"
 #include "../Inversion/ConstructError.h"
+#include "../Inversion/JointObjective.h"
 #include "../ModelBase/VTKTools.h"
 #include "../ModelBase/NetCDFTools.h"
 #include "../Gravity/GravityObjective.h"
@@ -48,7 +47,7 @@
 #include "../Tomo/ReadWriteTomographyData.h"
 #include "../Tomo/TomographyObjective.h"
 #include "../Tomo/TomographyCalculator.h"
-#include <boost/date_time/posix_time/posix_time.hpp>
+
 
 using NEWMAT::ColumnVector;
 namespace po = boost::program_options;
@@ -208,9 +207,9 @@ int main(int argc, char *argv[])
     const double minslow = 1e-4;
     const double maxslow = 0.005;
     boost::shared_ptr<jiba::GeneralModelTransform> DensityTransform(
-        new jiba::TanhDensityTransform(RefModel, minslow, maxslow));
+        new jiba::TanhDensityTransform(minslow, maxslow));
     boost::shared_ptr<jiba::GeneralModelTransform> SlownessTransform(
-        new jiba::TanhTransform(RefModel, minslow, maxslow));
+        new jiba::TanhTransform(minslow, maxslow));
     //double average = std::accumulate(InvModel.begin(),InvModel.end(),0.0)/InvModel.size();
     //std::fill(RefModel.begin(),RefModel.end(),average);
     InvModel = SlownessTransform->PhysicalToGeneralized(InvModel);

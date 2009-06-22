@@ -13,7 +13,9 @@ namespace jiba
 
     CachedGravityCalculator::CachedGravityCalculator(boost::shared_ptr<
         ThreeDGravityImplementation> TheImp) :
-      ThreeDGravityCalculator(TheImp), HaveCache(false)
+      ThreeDGravityCalculator(TheImp), HaveCache(false), OldXSizes(),
+          OldYSizes(), OldZSizes(), OldMeasPosX(), OldMeasPosY(),
+          OldMeasPosZ(), OldBackgroundThick(), OldBackgroundDens()
       {
 
       }

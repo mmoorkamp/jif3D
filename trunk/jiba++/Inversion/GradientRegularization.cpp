@@ -32,7 +32,7 @@ namespace jiba
                     const size_t index = ModelGeometry.IndexToOffset(i, j, k);
                     Result(index, ModelGeometry.IndexToOffset(i + 1, j, k))
                         = 1.0;
-                    Result(index, index)= -3.0;
+                    Result(index, index) = -3.0;
                     Result(index, ModelGeometry.IndexToOffset(i, j + 1, k))
                         = 1.0;
                     Result(index, ModelGeometry.IndexToOffset(i, j, k + 1))

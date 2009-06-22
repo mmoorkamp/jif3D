@@ -14,7 +14,8 @@
 namespace jiba
   {
 
-    ThreeDGravityImplementation::ThreeDGravityImplementation()
+    ThreeDGravityImplementation::ThreeDGravityImplementation() :
+      Transform(), XCoord(), YCoord(), ZCoord(), XSizes(), YSizes(), ZSizes()
       {
 
       }
@@ -47,7 +48,6 @@ namespace jiba
             ZSizes.begin());
 
       }
-
 
     /*! This function implements the grand structure of gravity forward calculation, i.e. processing
      * geometric information, looping over all measurements and combining the response
@@ -91,18 +91,18 @@ namespace jiba
         const double modelzwidth = std::accumulate(
             Model.GetZCellSizes().begin(), Model.GetZCellSizes().end(), 0.0);
 
-
         // for all measurement points add the responses of the discretized part and the 1D background
         for (size_t i = 0; i < nmeas; ++i)
           {
             // the vector to hold the result for the current measurement
             rvec currdata(RawDataPerMeasurement());
 
-            currdata = CalcGridded(i, Model, Calculator.SetCurrentSensitivities());
+            currdata = CalcGridded(i, Model,
+                Calculator.SetCurrentSensitivities());
 
             //adjust for the effects of finite extents of the grid
             currdata += CalcBackground(i, modelxwidth, modelywidth,
-                modelzwidth, Model,  Calculator.SetCurrentSensitivities());
+                modelzwidth, Model, Calculator.SetCurrentSensitivities());
             if (Transform)
               {
                 //now apply the transformation to the data

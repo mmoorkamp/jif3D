@@ -111,7 +111,7 @@ namespace jiba
 
     DiskGravityCalculator::DiskGravityCalculator(boost::shared_ptr<
         ThreeDGravityImplementation> TheImp) :
-      FullSensitivityGravityCalculator(TheImp)
+      FullSensitivityGravityCalculator(TheImp), filename()
       {
         //make a unique filename for the sensitivity file created by this object
         filename = "grav" + jiba::stringify(getpid()) + jiba::stringify(this);

@@ -29,7 +29,6 @@ namespace jiba
       virtual void HandleSensitivities(const size_t measindex)
         {
         }
-      ;
       //! The constructor takes a shared pointer to an implementation object
       MinMemGravityCalculator(
           boost::shared_ptr<ThreeDGravityImplementation> TheImp);

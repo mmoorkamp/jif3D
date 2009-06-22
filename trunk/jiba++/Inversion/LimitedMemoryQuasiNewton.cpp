@@ -8,7 +8,6 @@
 #include "../Global/FatalException.h"
 #include "../Global/convert.h"
 #include "LimitedMemoryQuasiNewton.h"
-#include "BacktrackingLineSearch.h"
 #include "mcsrch.h"
 #include <fstream>
 namespace jiba
@@ -16,7 +15,8 @@ namespace jiba
 
     LimitedMemoryQuasiNewton::LimitedMemoryQuasiNewton(boost::shared_ptr<
         jiba::ObjectiveFunction> ObjFunction, const size_t n) :
-      NonLinearOptimization(ObjFunction), mu(1), MaxPairs(n)
+      NonLinearOptimization(ObjFunction), mu(1), MaxPairs(n), SHistory(),
+          YHistory()
       {
 
       }
@@ -38,9 +38,9 @@ namespace jiba
         //we store the elements in reverse order
         for (int i = npairs - 1; i >= 0; --i)
           {
-            Rho( i) = 1. / ublas::inner_prod(*YHistory.at(i),
+            Rho(i) = 1. / ublas::inner_prod(*YHistory.at(i),
                 ublas::element_div(*SHistory.at(i), GetModelCovDiag()));
-            Alpha( i) = Rho(i) * ublas::inner_prod(*SHistory.at(i),
+            Alpha(i) = Rho(i) * ublas::inner_prod(*SHistory.at(i),
                 ublas::element_div(SearchDir, GetModelCovDiag()));
             SearchDir -= Alpha(i) * *YHistory.at(i);
           }

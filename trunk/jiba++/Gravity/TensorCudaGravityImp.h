@@ -5,7 +5,6 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-
 #ifndef TENSORCUDAGRAVITYIMP_H_
 #define TENSORCUDAGRAVITYIMP_H_
 
@@ -25,7 +24,10 @@ namespace jiba
      * This implementation class uses Nvidia's CUDA API to perform
      * the forward calculation on a Nvidia graphics card. It needs
      * a card with compute capability 1.3 or more to perform double
-     * length floating point calculations
+     * length floating point calculations.
+     *
+     * This class cannot be copied as this would make a mess with management
+     * of cuda resources.
      */
     class TensorCudaGravityImp: public jiba::ThreeDGravityImplementation
       {
@@ -50,6 +52,9 @@ namespace jiba
       //! Calculate the response of the gridded part, this is done on the GPU with CUDA
       virtual rvec CalcGridded(const size_t measindex,
           const ThreeDGravityModel &Model, rmat &Sensitivities);
+      // This class cannot be copied, so copy constructor and assignment are private
+      jiba::TensorCudaGravityImp &operator=(const jiba::TensorCudaGravityImp&);
+      TensorCudaGravityImp(const jiba::TensorCudaGravityImp&);
     public:
       //! How many data do we return before any transformation
       virtual size_t RawDataPerMeasurement()

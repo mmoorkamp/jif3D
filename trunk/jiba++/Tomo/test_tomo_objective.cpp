@@ -14,7 +14,6 @@
 
 BOOST_AUTO_TEST_SUITE( Tomo_Objective_Test_Suite )
 
-
 void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
     {
       Objective.CalcMisfit(Model);
@@ -31,7 +30,7 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
         }
     }
 
-BOOST_AUTO_TEST_CASE (derivative_test)
+  BOOST_AUTO_TEST_CASE (derivative_test)
     {
       jiba::ThreeDSeismicModel TomoModel;
       const size_t xsize = 5;
@@ -46,8 +45,8 @@ BOOST_AUTO_TEST_CASE (derivative_test)
         {
           double Depth = TomoModel.GetZCoordinates()[i % zsize];
           double Velocity = topvel + (Depth - firstdepth)
-              * (bottomvel - topvel) / (bottomdepth - firstdepth);
-         TomoModel.SetSlownesses().origin()[i] = 1.0 / Velocity;
+          * (bottomvel - topvel) / (bottomdepth - firstdepth);
+          TomoModel.SetSlownesses().origin()[i] = 1.0 / Velocity;
         }
 
       const double minx = 150;
@@ -80,18 +79,17 @@ BOOST_AUTO_TEST_CASE (derivative_test)
             }
         }
 
-
       jiba::rvec InvModel(TomoModel.GetSlownesses().num_elements());
       std::copy(TomoModel.GetSlownesses().origin(),
           TomoModel.GetSlownesses().origin()
-              + TomoModel.GetSlownesses().num_elements(), InvModel.begin());
+          + TomoModel.GetSlownesses().num_elements(), InvModel.begin());
       const double minslow = 1e-4;
-      const double maxslow = 5e-3;
+      const double maxslow = 5e-2;
       jiba::rvec RefModel(InvModel);
       //boost::shared_ptr<jiba::GeneralModelTransform> SlownessTransform(
-      //                new jiba::TanhTransform(RefModel, minslow, maxslow));
+      //    new jiba::TanhTransform(RefModel, minslow, maxslow));
 
-//      InvModel = SlownessTransform->PhysicalToGeneralized(InvModel);
+      //InvModel = SlownessTransform->PhysicalToGeneralized(InvModel);
 
       jiba::TomographyCalculator Calculator;
       jiba::rvec ObservedTimes(Calculator.Calculate(TomoModel));
@@ -116,4 +114,4 @@ BOOST_AUTO_TEST_CASE (derivative_test)
       CheckGradient(*TomoObjective.get(), InvModel);
     }
 
-BOOST_AUTO_TEST_SUITE_END()
+  BOOST_AUTO_TEST_SUITE_END()

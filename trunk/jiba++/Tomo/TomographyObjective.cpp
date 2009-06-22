@@ -11,7 +11,8 @@
 namespace jiba
   {
 
-    TomographyObjective::TomographyObjective()
+    TomographyObjective::TomographyObjective() :
+      SlownessModel(), ObservedData(), Calculator()
       {
       }
 

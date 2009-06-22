@@ -11,8 +11,9 @@
 namespace jiba
   {
 
-    ObjectiveFunction::ObjectiveFunction():
-    	nEval(0)
+    ObjectiveFunction::ObjectiveFunction() :
+      nEval(0), DataDifference(), CovarDiag(), LastModel(), PreCondDiag(),
+          DataTransform()
       {
 
       }

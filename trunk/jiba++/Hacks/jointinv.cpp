@@ -138,7 +138,7 @@ int main(int argc, char *argv[])
         jiba::WeightingTerm(DepthExponent));
     for (size_t i = 0; i < ModelWeight.size(); ++i)
       {
-        ModelWeight( i) = WeightVector(i % GravModel.GetZCellSizes().size());
+        ModelWeight(i) = WeightVector(i % GravModel.GetZCellSizes().size());
       }
 
     jiba::rvec RefModel(InvModel);
@@ -147,9 +147,9 @@ int main(int argc, char *argv[])
     const double minslow = 1e-4;
     const double maxslow = 0.0005;
     boost::shared_ptr<jiba::GeneralModelTransform> DensityTransform(
-        new jiba::TanhDensityTransform(RefModel, minslow, maxslow));
+        new jiba::TanhDensityTransform(minslow, maxslow));
     boost::shared_ptr<jiba::GeneralModelTransform> SlownessTransform(
-        new jiba::TanhTransform(RefModel, minslow, maxslow));
+        new jiba::TanhTransform(minslow, maxslow));
     //double average = std::accumulate(InvModel.begin(),InvModel.end(),0.0)/InvModel.size();
     //std::fill(RefModel.begin(),RefModel.end(),average);
     InvModel = SlownessTransform->PhysicalToGeneralized(InvModel);
@@ -297,18 +297,23 @@ int main(int argc, char *argv[])
             iteration = maxiter;
           }
 
-        for (size_t i = 0; i < Objective->GetIndividualFits().size() -1; ++i)
+        for (size_t i = 0; i < Objective->GetIndividualFits().size() - 1; ++i)
           {
-            if (Objective->GetIndividualFits().at(i) > Objective->GetObjective(i).GetNData())
+            if (Objective->GetIndividualFits().at(i) > Objective->GetObjective(
+                i).GetNData())
               {
-              terminate = false;
+                terminate = false;
               }
-            else{
-              std::cout << "Reached target misfit." << std::endl;;
-              std::cout << "Objective number: " << i  << std::endl;
-              std::cout << "Misfit: " << Objective->GetIndividualFits().at(i) << std::endl;
-              std::cout << "Target: " << Objective->GetObjective(i).GetNData()<< std::endl;
-            }
+            else
+              {
+                std::cout << "Reached target misfit." << std::endl;
+                ;
+                std::cout << "Objective number: " << i << std::endl;
+                std::cout << "Misfit: " << Objective->GetIndividualFits().at(i)
+                    << std::endl;
+                std::cout << "Target: "
+                    << Objective->GetObjective(i).GetNData() << std::endl;
+              }
           }
       } while (iteration < maxiter && !terminate && Optimizer->GetGradNorm()
         > 1e-6);
@@ -346,8 +351,9 @@ int main(int argc, char *argv[])
     GravModel.WriteVTK(modelfilename + ".grav.inv.vtk");
     GravModel.WriteNetCDF(modelfilename + ".grav.inv.nc");
     std::ofstream datadiffile("data.diff");
-    std::copy(Objective->GetDataDifference().begin(),Objective->GetDataDifference().end()
-    		,std::ostream_iterator<double>(datadiffile,"\n"));
+    std::copy(Objective->GetDataDifference().begin(),
+        Objective->GetDataDifference().end(), std::ostream_iterator<double>(
+            datadiffile, "\n"));
     boost::posix_time::ptime endtime =
         boost::posix_time::microsec_clock::local_time();
     double cachedruntime = (endtime - starttime).total_seconds();

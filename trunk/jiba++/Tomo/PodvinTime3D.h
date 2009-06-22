@@ -75,6 +75,9 @@ namespace jiba
       float hs_eps_init; /* tolerance on homogeneity
        (fraction of slowness at source point) */
 
+      //this class cannot be copied
+      PodvinTime3D(const PodvinTime3D&);
+      PodvinTime3D &operator=(const  PodvinTime3D&);
     public:
       int time_3d(float *HS, float *T, int NX, int NY, int NZ, float XS,
           float YS, float ZS, float HS_EPS_INIT, int MSG);
