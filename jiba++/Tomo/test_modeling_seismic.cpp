@@ -14,7 +14,7 @@
 
 BOOST_AUTO_TEST_SUITE( Seismic_Test_Suite )
 
-
+  //test that the interpolation function works for a strictly quadratic function
   BOOST_AUTO_TEST_CASE(interpolate_test)
     {
 
@@ -30,9 +30,8 @@ BOOST_AUTO_TEST_SUITE( Seismic_Test_Suite )
       grid.ny = ncells;
       grid.nz = ncells;
       grid.h = 5;
-      grid.nborder = 0;
       const size_t ngrid = pow(ncells + 1, 3);
-      std::fill_n(grid.org, 3, grid.h / 2.0);
+      //std::fill_n(grid.org, 3, grid.h / 2.0);
       grid.slow.resize(ngrid);
       std::fill_n(grid.slow.begin(), ngrid, 1.0 * grid.h);
       float *data = new float[ngrid];
@@ -91,11 +90,10 @@ BOOST_AUTO_TEST_SUITE( Seismic_Test_Suite )
       grid.ny = ncells;
       grid.nz = ncells;
       grid.h = 35;
-      grid.nborder = 0;
       const size_t ngrid = pow(ncells + 1, 3);
-      std::fill_n(grid.org, 3, 0.0);
+      const double slow = 0.1;
       grid.slow.resize(ngrid);
-      std::fill_n(grid.slow.begin(), ngrid, 0.1 * grid.h);
+      std::fill_n(grid.slow.begin(), ngrid, slow * grid.h);
 
       data.ndata_seis = 2;
       data.ndata_seis_act = 2;
@@ -133,7 +131,7 @@ BOOST_AUTO_TEST_SUITE( Seismic_Test_Suite )
           totallength += raypath[0].len[i];
         }
 
-      BOOST_CHECK_CLOSE(dist,totallength * grid.h,0.1);
+      BOOST_CHECK(std::abs(dist-totallength * grid.h) < slow * grid.h);
       jiba::TomographyCalculator Calculator;
       jiba::ThreeDSeismicModel Model;
       Model.SetCellSize(grid.h, ncells, ncells, ncells);
@@ -145,8 +143,11 @@ BOOST_AUTO_TEST_SUITE( Seismic_Test_Suite )
       Model.AddMeasurementConfiguration(0, 0);
       Model.AddMeasurementConfiguration(1, 1);
       jiba::rvec time(Calculator.Calculate(Model));
-      BOOST_CHECK_CLOSE(data.tcalc[0], time(0),0.01);
-      BOOST_CHECK_CLOSE(data.tcalc[1], time(1),0.01);
+      //compare the C++ result to the C-result
+      //the C++ class adds a low velocity layer at the bottom and the top
+      //so the models are not identical, still the influence of these layers should be small
+      BOOST_CHECK_CLOSE(data.tcalc[0], time(0),0.2);
+      BOOST_CHECK_CLOSE(data.tcalc[1], time(1),0.2);
       //check the agreement between raypath and modelling for the calculator object
       totallength = 0.0;
       for (size_t i = 0; i < Calculator.GetRayPath()[0].nray + 1; ++i)
@@ -154,7 +155,9 @@ BOOST_AUTO_TEST_SUITE( Seismic_Test_Suite )
           totallength += Calculator.GetRayPath()[0].len[i];
         }
 
-      BOOST_CHECK_CLOSE(dist,totallength * grid.h,0.1);
+      //check that the difference between calculated and exact solution
+      //is smaller than the time it takes to go through one grid cell
+      BOOST_CHECK(std::abs(dist-totallength * grid.h) < slow * grid.h);
 
     }
 BOOST_AUTO_TEST_SUITE_END()

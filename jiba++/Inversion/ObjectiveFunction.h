@@ -43,7 +43,7 @@ namespace jiba
       boost::shared_ptr<VectorTransform> DataTransform;
       //! The abstract interface for functions that implement the calculation  of the data difference
       virtual void
-          ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff) = 0;
+      ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff) = 0;
       //! The abstract interface for the gradient calculation
       virtual jiba::rvec ImplGradient(const jiba::rvec &Model,
           const jiba::rvec &Diff) = 0;
@@ -59,15 +59,21 @@ namespace jiba
           return DataTransform;
         }
     public:
-    	//! Access to the difference between observed and calculated data
-    	      const jiba::rvec &GetDataDifference() const
-    	        {
-    	          return DataDifference;
-    	        }
+      //! Access to the difference between observed and calculated data
+      const jiba::rvec &GetDataDifference() const
+        {
+          return DataDifference;
+        }
       //! Get the number of observed data
-    	size_t GetNData() const {return DataDifference.size();}
-    	//! Get the number of forward and gradient calculations
-    	size_t GetNEval() const {return nEval;}
+      size_t GetNData() const
+        {
+          return DataDifference.size();
+        }
+      //! Get the number of forward and gradient calculations
+      size_t GetNEval() const
+        {
+          return nEval;
+        }
       //! Assign a class that transforms the data from the forward calculation
       void SetDataTransform(boost::shared_ptr<VectorTransform> Transform)
         {
@@ -98,9 +104,9 @@ namespace jiba
           LastModel = Model;
           //go through the data and weigh each misfit by its covariance
           //add up to get the Chi-square misfit
-          DataDifference = ublas::element_div(DataDifference,CovarDiag);
+          DataDifference = ublas::element_div(DataDifference, CovarDiag);
           ++nEval;
-          return ublas::inner_prod(DataDifference,DataDifference);
+          return ublas::inner_prod(DataDifference, DataDifference);
         }
       //! Calculate the gradient associated with the last misfit calculation
       jiba::rvec CalcGradient()
@@ -108,7 +114,7 @@ namespace jiba
           assert(CovarDiag.size() == DataDifference.size());
           //for the gradient we need the difference between predicted and observed data
           //weighted by the squared covariance
-          jiba::rvec GradDiff(ublas::element_div(DataDifference,CovarDiag));
+          jiba::rvec GradDiff(ublas::element_div(DataDifference, CovarDiag));
           ++nEval;
           return ImplGradient(LastModel, GradDiff);
         }

@@ -5,7 +5,6 @@ alias core :  ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ..//boost_filesy
 lib tomo :  modeling_seismic.cpp ThreeDSeismicModel.cpp TomographyCalculator.cpp 
             ReadWriteTomographyData.cpp
             PodvinTime3D.cpp
-            podvin-lecomte-3Da.c 
             core : <include>. ;
              
 lib tomo-extra : TomographyObjective.cpp ../ModelBase//modelbase ../Inversion//inversion ;

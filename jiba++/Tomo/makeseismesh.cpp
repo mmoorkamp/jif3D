@@ -6,7 +6,9 @@
 //============================================================================
 
 /*! \file makeseismesh.cpp
- * Make a netcdf seismic model file with a specified mesh. The slownesses in this file are all identical to the specified value.
+ * Make a netcdf seismic model file with a specified mesh. We can specify the velocity in the top layer
+ * and in the bottom lauer in m/s. The velocities in the other grid cells will be linearly
+ * interpolated with depth.
  */
 
 #include <iostream>

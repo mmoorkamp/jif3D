@@ -70,10 +70,6 @@ namespace jiba
         grid.ny = Model.GetYCellSizes().size();
         grid.nz = Model.GetZCellSizes().size() + 2 * nairlayers;
         grid.h = Model.GetXCellSizes()[0];
-        grid.nborder = 0;
-
-        //we take care of the origin in the model object
-        std::fill_n(grid.org, 3, 0.0);
 
         //the extra cells have to be zero, it is easier to initialize everything
         std::fill_n(grid.slow.begin(), ngrid, 0.0);
@@ -160,9 +156,9 @@ namespace jiba
             for (size_t j = 0; j < nray; ++j)
               {
                 const size_t offset = (grid.nz - 2 * nairlayers) * grid.ny
-                    * (int) floor(raypath[i].x[j]) + (grid.nz - 2 * nairlayers)
-                    * (int) floor(raypath[i].y[j]) + (int) floor(
-                    raypath[i].z[j]) - nairlayers;
+                    * floor(raypath[i].x[j]) + (grid.nz - 2 * nairlayers)
+                    * floor(raypath[i].y[j]) + floor(raypath[i].z[j])
+                    - nairlayers;
 
                 DerivMod(offset) += raypath[i].len[j] * Misfit(i);
               }

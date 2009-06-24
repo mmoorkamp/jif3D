@@ -5,6 +5,14 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
+/*! \file PodvinTime3D.cpp
+ * This file is mostly a copy and paste from the Podvin and Lecomte code
+ *the only modifications are class specifications for the functions, removing the static declaration for the variables
+ * and changing the name of the macro INFINITY to PODINFINITY.
+ *
+ * Please also note that this file, in a special agreement with P. Podvin is distributed under the LGPL. For terms
+ * and conditions refer to   http://www.gnu.org/licenses/lgpl.html
+ */
 
 #include "PodvinTime3D.h"
 #include <stdio.h>

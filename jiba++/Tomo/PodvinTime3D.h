@@ -11,7 +11,15 @@
 
 namespace jiba
   {
-
+    /** \addtogroup tomo Seismic tomography classes and functions */
+    /* @{ */
+    //! This is the 3D forward algorithm by Podvin and Lecomte encapsulated in a C++ class.
+    /*! We moved the Podvin and Lecomte code into a C++ class. This allows us to
+     * replace global static variables with class variables. Now we can do several
+     * calculations in parallel at the cost of separate memory for each class.
+     *
+     * Otherwise we made no changes to the functions or the data structures.
+     */
     class PodvinTime3D
       {
     private:
@@ -77,14 +85,14 @@ namespace jiba
 
       //this class cannot be copied
       PodvinTime3D(const PodvinTime3D&);
-      PodvinTime3D &operator=(const  PodvinTime3D&);
+      PodvinTime3D &operator=(const PodvinTime3D&);
     public:
       int time_3d(float *HS, float *T, int NX, int NY, int NZ, float XS,
           float YS, float ZS, float HS_EPS_INIT, int MSG);
       PodvinTime3D();
       virtual ~PodvinTime3D();
       };
-
+  /* @} */
   }
 
 #endif /* PODVINTIME3D_H_ */

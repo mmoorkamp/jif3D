@@ -11,10 +11,10 @@
 namespace jiba
   {
     //calculate the coefficient for the wavelet filter
-    static const double c0 = (1.0 + sqrt(3.0)) / (4.0 * sqrt(2.0));
-    static const double c1 = (3.0 + sqrt(3.0)) / (4.0 * sqrt(2));
-    static const double c2 = (3.0 - sqrt(3.0)) / (4.0 * sqrt(2.0));
-    static const double c3 = (1.0 - sqrt(3.0)) / (4.0 * sqrt(2.0));
+    static const double c0 = (1.0 + std::sqrt(3.0)) / (4.0 * std::sqrt(2.0));
+    static const double c1 = (3.0 + std::sqrt(3.0)) / (4.0 * std::sqrt(2.0));
+    static const double c2 = (3.0 - std::sqrt(3.0)) / (4.0 * std::sqrt(2.0));
+    static const double c3 = (1.0 - std::sqrt(3.0)) / (4.0 * std::sqrt(2.0));
     /*! Apply a 4 coefficient Daubechies wavelet filter to the input vector.
      * @param Invec The vector with the input data, will contain the result of the transform. Size must be a power of 2
      * @param maxindex The maximum index to which to apply the filter, must be a power of 2

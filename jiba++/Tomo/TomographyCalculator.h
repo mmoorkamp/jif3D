@@ -15,7 +15,7 @@
 
 namespace jiba
   {
-    /** \addtogroup Tomo Classes for seismic tomography */
+    /** \addtogroup tomo Classes for seismic tomography */
     /* @{ */
     //! This class provides a convenient interface to the Podvin and Lecomte code and Bjoern's additions
     class TomographyCalculator

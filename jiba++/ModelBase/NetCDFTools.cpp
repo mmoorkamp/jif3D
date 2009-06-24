@@ -93,7 +93,7 @@ namespace jiba
             BoundaryValues.at(2 * i) = CellCoordinates[i - 1];
             BoundaryValues.at(2 * i + 1) = CellCoordinates[i];
           }
-        BoundaryVar->put(BoundaryValues.data(), nvalues, 2);
+        BoundaryVar->put(&BoundaryValues[0], nvalues, 2);
         // We return the NcDim object, because we need it to write the model data
         return SizeDim;
       }

@@ -33,8 +33,6 @@ namespace jiba
           {
             IndividualFits.at(i) = Objectives.at(i)->CalcMisfit(Distributor(
                 Model, i));
-            std::cout << "Individual Misfits: " << i << " "
-                << IndividualFits.at(i) << std::endl;
             totaldata += Objectives.at(i)->GetDataDifference().size();
           }
         Diff.resize(totaldata);
@@ -47,7 +45,6 @@ namespace jiba
                 * Objectives.at(i)->GetDataDifference();
             currstart += ndata;
           }
-        std::cout << std::endl;
       }
 
     jiba::rvec JointObjective::ImplGradient(const jiba::rvec &Model,
@@ -58,11 +55,8 @@ namespace jiba
         const size_t nobjective = Objectives.size();
         for (size_t i = 0; i < nobjective; ++i)
           {
-            std::cout << "Gradient for objective: " << i << std::endl;
-            jiba::rvec RawGrad = Objectives.at(i)->CalcGradient();
-            jiba::rvec CurrGrad = Weights.at(i)
-                * Distributor.TransformGradient(Model, RawGrad, i);
-            Gradient += CurrGrad;
+            Gradient += Weights.at(i)
+                * Distributor.TransformGradient(Model, Objectives.at(i)->CalcGradient(), i);
           }
         return Gradient;
       }
