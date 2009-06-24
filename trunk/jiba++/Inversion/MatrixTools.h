@@ -107,6 +107,12 @@ namespace jiba
       //! The core calculation routine to calculate the generalized inverse
       void operator()(const rmat &Input, rmat &Inverse, const double lowthresh = 0.0,
           const double upthresh = 1.0);
+      //! The constructor just initializes everything to the default
+      GeneralizedInverse():
+        s(),u(),vt(),G()
+        {
+
+        }
       };
   /* @} */
   }

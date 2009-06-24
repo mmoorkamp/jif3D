@@ -1,4 +1,3 @@
-#include "inv3d.h"
 #include "modeling_seismic.h"
 #include "ReadWriteTomographyData.h"
 #include "PodvinTime3D.h"
@@ -8,8 +7,6 @@
 #include <vector>
 #include <iostream>
 
-extern "C" int time_3d(float *HS, float *T, int NX, int NY, int NZ, float XS,
-    float YS, float ZS, float HS_EPS_INIT, int MSG);
 namespace jiba
   {
 
@@ -28,6 +25,7 @@ namespace jiba
 
       } CELL_STRUCT;
 
+    // Calculate rays from the observed travel time field
     int RayCalc(float *tt, int nx, int ny, int nz, float Xs, float Ys,
         float Zs, float *Xr, float *Yr, float *Zr, int nrec, RP_STRUCT *rp);
     jiba::rvec TimeGrad(int x, int y, int z, float *tt, int ny, int nz);
@@ -150,10 +148,11 @@ namespace jiba
 
                     if (nact_datapos[j] >= data->ndata_seis)
                       {
-                        std::cerr << "NOT enough memory is allocated: used "
-                            << nact_datapos[j] + 1 << "allocated "
-                            << data->ndata_seis << "\n";
-                        exit(0);
+                        throw jiba::FatalException(
+                            "NOT enough memory is allocated: used "
+                                + jiba::stringify(nact_datapos[j] + 1)
+                                + "allocated " + jiba::stringify(
+                                data->ndata_seis) + "\n");
                       }
 
                   }
@@ -268,8 +267,6 @@ namespace jiba
     /*              *data  := Data (usually velocities) from which the interpolated velocities are determined */
     /*Output:  Determined velocity from receiver/shot positions to next grid point */
 
-    //#define lo(val)    (int)floor((val))
-    //#define hi(val)    (int)ceil((val))
 #define dd(x,y,z)   data[nyz2*(x) + nz2*(y) + (z)]
 
     inline int lo(const float val)
@@ -326,8 +323,6 @@ namespace jiba
         return (ival);
       }
 
-#undef lo
-#undef hi
 #undef dd
 
     /*-------------------------------------------------------------*/

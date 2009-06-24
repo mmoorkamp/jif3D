@@ -13,7 +13,7 @@
 
 namespace jiba
   {
-    /** \addtogroup Tomo Classes for seismic tomography
+    /** \addtogroup tomo Classes for seismic tomography
      * This module contains the functionality for seismic refraction forward modeling and data handling.
      *
      * As for the other methods the 3D Models are stored in a class derived from ThreeDModelBase. The model

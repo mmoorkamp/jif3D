@@ -23,7 +23,7 @@
 static boost::shared_ptr<jiba::ThreeDGravityModel> GravModel;
 static boost::shared_ptr<jiba::ThreeDGravityCalculator> ScalarGravCalculator;
 static boost::shared_ptr<jiba::ThreeDGravityCalculator> TensorGravCalculator;
-typedef boost::function<jiba::ThreeDGravityModel::t3DModelDim & ()>
+typedef boost::function0<jiba::ThreeDGravityModel::t3DModelDim &>
     tcoordinatefunc;
 
 void AllocateModel(const int *storescalar, const int *storetensor)

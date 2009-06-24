@@ -9,6 +9,13 @@
 #include "../ModelBase/ModelRefiner.h"
 #include "ThreeDSeismicModel.h"
 
+/*! \file refinemodel.cpp
+ * Refine the grid of input model. You can specify a new grid size. The old
+ * grid size should be an integer multiple of the new grid size in order
+ * to ensure that the new model has a uniform grid size as required by
+ * the tomography forward calculation object.
+ */
+
 int main()
   {
     std::string modelfilename = jiba::AskFilename("Model Filename: ");
