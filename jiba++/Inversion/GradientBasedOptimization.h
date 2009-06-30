@@ -34,6 +34,7 @@ namespace jiba
       //! Calculate the misfit and the gradient for the current model
       virtual void EvaluateModel(const jiba::rvec &CurrentModel);
     protected:
+      //! Derived classes can call this function to indicate that they have updated the misfit and raw gradient
       void HaveEvaluated()
         {
           HaveEvaluated_ = true;

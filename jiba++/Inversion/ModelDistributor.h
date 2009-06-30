@@ -49,6 +49,7 @@ namespace jiba
       /*! This is the inverse transform to GeneralizedToPhysical. It is used
        * to transform a starting model that is given in terms of physical parameters
        * to generalized model parameters.
+       * @param FullModel The physical model vector
        */
       virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const = 0;
       //! For the inversion we also need the derivative of the transformation
@@ -56,6 +57,7 @@ namespace jiba
        * us the derivative with respect to the physical parameters. This function returns a vector with all the derivative values
        * for the current model.
        * @param FullModel The generalized model vector including all parameters
+       * @param Derivative The gradient with respect to the untransformed parameters
        * @return The derivatives of the generalized parameters with respect to the physical parameter
        */
       virtual jiba::rvec Derivative(const jiba::rvec &FullModel,

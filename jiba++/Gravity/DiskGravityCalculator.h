@@ -32,6 +32,7 @@ namespace jiba
     public:
       //! Handle the current row of the sensitivity matrix by storing it in a file
       virtual void HandleSensitivities(const size_t measindex);
+      //! The constructor needs a shared pointer to an implementation object, usually handled by CreateGravityCalculator
       DiskGravityCalculator(
           boost::shared_ptr<ThreeDGravityImplementation> TheImp);
       virtual ~DiskGravityCalculator();
