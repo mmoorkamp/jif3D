@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_SUITE( GravityObjective_Test_Suite )
 void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
     {
       Objective.CalcMisfit(Model);
-      jiba::rvec Gradient = Objective.CalcGradient();
+      jiba::rvec Gradient = Objective.CalcGradient(Model);
 
       BOOST_CHECK(Model.size() == Gradient.size());
       for (size_t i = 0; i < Gradient.size(); ++i)

@@ -9,13 +9,12 @@
 #include "../Global/convert.h"
 #include "LimitedMemoryQuasiNewton.h"
 #include "mcsrch.h"
-#include <fstream>
 namespace jiba
   {
 
     LimitedMemoryQuasiNewton::LimitedMemoryQuasiNewton(boost::shared_ptr<
         jiba::ObjectiveFunction> ObjFunction, const size_t n) :
-      NonLinearOptimization(ObjFunction), mu(1), MaxPairs(n), SHistory(),
+      GradientBasedOptimization(ObjFunction), mu(1.0), MaxPairs(n), SHistory(),
           YHistory()
       {
 
@@ -28,7 +27,7 @@ namespace jiba
 
     void LimitedMemoryQuasiNewton::StepImplementation(jiba::rvec &CurrentModel)
       {
-
+        //we start assuming the search direction is the direction of steepest ascent
         SearchDir = CovGrad;
         const size_t nmod = CovGrad.size();
         const size_t npairs = SHistory.size();
@@ -36,6 +35,7 @@ namespace jiba
         jiba::rvec Alpha(npairs), Rho(npairs);
 
         //we store the elements in reverse order
+        //and apply algorithm 9.1 from Nocedal and Wright
         for (int i = npairs - 1; i >= 0; --i)
           {
             Rho(i) = 1. / ublas::inner_prod(*YHistory.at(i),
@@ -51,18 +51,23 @@ namespace jiba
                 ublas::element_div(SearchDir, GetModelCovDiag()));
             SearchDir += *SHistory.at(i) * (Alpha(i) - beta);
           }
-        mu = 1.0; // /ublas::norm_2(SearchDir);
+        //at each iteration we reset the stepsize
+        mu = 1.0;
         SearchDir *= -1.0;
 
-        int status = OPTPP::mcsrch(GetObjective().get(), SearchDir, RawGrad,
+        int status = OPTPP::mcsrch(&GetObjective(), SearchDir, RawGrad,
             CurrentModel, Misfit, &mu, 20, 1e-4, 2.2e-16, 0.9, 1e9, 1e-9);
         if (status < 0)
-          throw jiba::FatalException("Cannot find suitable step. Status: "
-              + jiba::stringify(status));
-        std::cout << " Mu: " << mu << std::endl;
+          {
+            throw jiba::FatalException("Cannot find suitable step. Status: "
+                + jiba::stringify(status));
+          }
+        //if we have found a good stepsize, update the model
         CurrentModel += mu * SearchDir;
+        //if we haven't reached the maximum number of correction pairs, yet
         if (npairs < MaxPairs)
           {
+            //allocate storage for a new correction pair
             boost::shared_ptr<jiba::rvec> NewS(new jiba::rvec(nmod));
             SHistory.push_back(NewS);
             boost::shared_ptr<jiba::rvec> NewY(new jiba::rvec(nmod));
@@ -70,12 +75,16 @@ namespace jiba
           }
         else
           {
+            //otherwise shift the correction pairs in the storage
+            //so the first (oldest) becomes the last element
             std::rotate(SHistory.begin(), SHistory.begin() + 1, SHistory.end());
             std::rotate(YHistory.begin(), YHistory.begin() + 1, YHistory.end());
           }
+        //and overwrite the last (oldest) correction pair
         *SHistory.back() = mu * SearchDir;
         *YHistory.back() = ublas::element_prod(RawGrad, GetModelCovDiag())
             - CovGrad;
-        CovGrad = ublas::element_prod(RawGrad, GetModelCovDiag());
+        //the line search has updated the gradient and misfit
+        HaveEvaluated();
       }
   }

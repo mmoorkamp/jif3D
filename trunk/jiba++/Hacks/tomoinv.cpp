@@ -84,9 +84,7 @@ int main(int argc, char *argv[])
     boost::shared_ptr<jiba::JointObjective> Objective(
         new jiba::JointObjective());
     boost::shared_ptr<jiba::MinDiffRegularization> Regularization(
-        new jiba::MinDiffRegularization());
-
-    Regularization->SetReferenceModel(RefModel);
+        new jiba::MinDiffRegularization(RefModel));
 
     double lambda = 1.0;
     std::cout << "Lambda: ";
