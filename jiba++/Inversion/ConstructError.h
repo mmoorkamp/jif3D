@@ -14,6 +14,15 @@
 
 namespace jiba
   {
+    //! This function provides a simple, convenient way to assign an error to synthetic data for inversion
+    /*! When inverting synthetic data for which we do not have any noise information, we still have
+     * to assign some data covariance for inversion, usually we use a relative error.
+     * This function provides such functionality and
+     * takes care of issues with zero or very small data.
+     * @param Data The vector of data elements
+     * @param errorlevel The minimum relative error for each datum
+     * @return The vector of error estimates
+     */
     jiba::rvec ConstructError(const jiba::rvec &Data, const double errorlevel)
       {
         assert(errorlevel > 0.0);

@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
 void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
     {
       Objective.CalcMisfit(Model);
-      jiba::rvec Gradient = Objective.CalcGradient();
+      jiba::rvec Gradient = Objective.CalcGradient(Model);
       for (size_t i = 0; i < Gradient.size(); ++i)
         {
           double delta = Model(i) * 0.01;
@@ -46,9 +46,8 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
       std::generate(StartModel.begin(),StartModel.end(),rand);
       std::generate(PertModel.begin(),PertModel.end(),rand);
 
-      jiba::MinDiffRegularization Regularization;
+      jiba::MinDiffRegularization Regularization(StartModel);
       Regularization.SetPrecondDiag(PreCond);
-      Regularization.SetReferenceModel(StartModel);
       jiba::rvec Diff = StartModel - PertModel;
       double Misfit = Regularization.CalcMisfit(PertModel);
       BOOST_CHECK_CLOSE(Misfit,ublas::inner_prod(Diff,Diff),0.001);
@@ -97,9 +96,8 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
       GradReg->SetPrecondDiag(PreCond);
       GradReg->SetReferenceModel(StartModel);
 
-      boost::shared_ptr<jiba::MinDiffRegularization> DiffReg(new jiba::MinDiffRegularization());
+      boost::shared_ptr<jiba::MinDiffRegularization> DiffReg(new jiba::MinDiffRegularization(StartModel));
       DiffReg->SetPrecondDiag(PreCond);
-      DiffReg->SetReferenceModel(StartModel);
       jiba::JointObjective Objective;
       Objective.AddObjective(GradReg,boost::shared_ptr<jiba::ModelCopyTransform>(new jiba::ModelCopyTransform),0.05);
       Objective.AddObjective(DiffReg,boost::shared_ptr<jiba::ModelCopyTransform>(new jiba::ModelCopyTransform),1.23);

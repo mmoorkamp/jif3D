@@ -234,15 +234,15 @@ int main(int argc, char *argv[])
     Objective->SetPrecondDiag(PreCond);
     std::cout << "Performing inversion." << std::endl;
 
-    boost::shared_ptr<jiba::NonLinearOptimization> Optimizer;
+    boost::shared_ptr<jiba::GradientBasedOptimization> Optimizer;
     if (wantnlcg)
       {
-        Optimizer = boost::shared_ptr<jiba::NonLinearOptimization>(
+        Optimizer = boost::shared_ptr<jiba::GradientBasedOptimization>(
             new jiba::NonLinearConjugateGradient(Objective));
       }
     else
       {
-        Optimizer = boost::shared_ptr<jiba::NonLinearOptimization>(
+        Optimizer = boost::shared_ptr<jiba::GradientBasedOptimization>(
             new jiba::LimitedMemoryQuasiNewton(Objective, correctionpairs));
       }
 

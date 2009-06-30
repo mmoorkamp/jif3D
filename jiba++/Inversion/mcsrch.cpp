@@ -222,7 +222,7 @@ namespace OPTPP
             xc = model + s * (*stp);
             std::cout << "Step: "<<  *stp << std::endl;
             fvalue = nlp->CalcMisfit(xc);
-            Grad = nlp->CalcGradient();
+            Grad = nlp->CalcGradient(xc);
             misfit = fvalue;
             info = 0;
             dg = zero;

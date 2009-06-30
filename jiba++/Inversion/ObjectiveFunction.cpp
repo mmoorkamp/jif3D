@@ -12,7 +12,7 @@ namespace jiba
   {
 
     ObjectiveFunction::ObjectiveFunction() :
-      nEval(0), DataDifference(), CovarDiag(), LastModel(), PreCondDiag(),
+      nEval(0), DataDifference(), CovarDiag(), PreCondDiag(),
           DataTransform()
       {
 

@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_SUITE( Tomo_Objective_Test_Suite )
 void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
     {
       Objective.CalcMisfit(Model);
-      jiba::rvec Gradient = Objective.CalcGradient();
+      jiba::rvec Gradient = Objective.CalcGradient(Model);
       for (size_t i = 0; i < Gradient.size(); ++i)
         {
           double delta = Model(i) * 0.001;

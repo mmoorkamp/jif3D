@@ -93,7 +93,7 @@ void eval_objective(int mode, int n, const ColumnVector& x, double& fx,
     if (mode & OPTPP::NLPGradient)
       {
         Objective->CalcMisfit(InvModel);
-        jiba::rvec Gradient(Objective->CalcGradient());
+        jiba::rvec Gradient(Objective->CalcGradient(InvModel));
         for (size_t i = 0; i < Gradient.size(); ++i)
           g(i + 1) = Gradient(i);
 

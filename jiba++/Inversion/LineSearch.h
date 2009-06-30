@@ -14,15 +14,18 @@
 
 namespace jiba
   {
-
+    /** \addtogroup inversion General routines for inversion */
+    /* @{ */
     class LineSearch
       {
     public:
-      virtual double FindStep(const jiba::rvec &CurrModel,const jiba::rvec &CurrGradient,const jiba::rvec &CurrSearch, ObjectiveFunction &Objective) = 0;
+      virtual double FindStep(const jiba::rvec &CurrModel,
+          const jiba::rvec &CurrGradient, const jiba::rvec &CurrSearch,
+          ObjectiveFunction &Objective) = 0;
       LineSearch();
       virtual ~LineSearch();
       };
-
+  /* @} */
   }
 
 #endif /* LINESEARCH_H_ */

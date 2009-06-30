@@ -110,9 +110,7 @@ int main(int argc, char *argv[])
     boost::shared_ptr<jiba::JointObjective> Objective(
         new jiba::JointObjective());
     boost::shared_ptr<jiba::MinDiffRegularization> Regularization(
-        new jiba::MinDiffRegularization());
-
-    Regularization->SetReferenceModel(RefModel);
+        new jiba::MinDiffRegularization(RefModel));
     Regularization->SetDataCovar(RefModel);
 
     double scalgravlambda = 1.0;

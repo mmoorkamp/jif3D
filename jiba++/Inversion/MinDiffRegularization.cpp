@@ -11,8 +11,8 @@
 namespace jiba
   {
 
-    MinDiffRegularization::MinDiffRegularization():
-      Reference()
+    MinDiffRegularization::MinDiffRegularization(const jiba::rvec &Model):
+      Reference(Model)
       {
 
       }

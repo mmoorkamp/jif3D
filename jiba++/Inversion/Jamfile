@@ -1,7 +1,9 @@
 import testing ; 
 
 lib inversion : MatrixTools.cpp  LinearInversion.cpp 
-				NonLinearOptimization.cpp NonLinearConjugateGradient.cpp
+				NonLinearOptimization.cpp
+				GradientBasedOptimization.cpp
+				NonLinearConjugateGradient.cpp
 				LimitedMemoryQuasiNewton.cpp
 				LineSearch.cpp 
 				mcsrch.cpp
