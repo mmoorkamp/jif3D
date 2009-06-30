@@ -41,6 +41,9 @@ extern "C"
      * @param ZSizes The sizes of the model cells in z-direction in m
      * @param nz The number of cells in z-direction
      * @param Densities The densities of all model cells in g/cm^3 the size of this vector must be nx * ny * nz. The z-direction varies fastest.
+     * @param BG_Thicknesses An array containing the thickness in m for each background layer
+     * @param BG_Densities An array containing the density in g/cm^3 for each background layer
+     * @param nbg_layers The number of background layers
      * @param XMeasPos The vector of x-coordinates of the measurement points in m
      * @param YMeasPos The vector of y-coordinates of the measurement points in m
      * @param ZMeasPos The vector of z-coordinates of the measurement points in m
@@ -63,6 +66,9 @@ extern "C"
      * @param ZSizes The sizes of the model cells in z-direction in m
      * @param nz The number of cells in z-direction
      * @param Densities The densities of all model cells in g/cm^3 the size of this vector must be nx * ny * nz. The z-direction varies fastest.
+     * @param BG_Thicknesses An array containing the thickness in m for each background layer
+     * @param BG_Densities An array containing the density in g/cm^3 for each background layer
+     * @param nbg_layers The number of background layers
      * @param XMeasPos The vector of x-coordinates of the measurement points in m
      * @param YMeasPos The vector of y-coordinates of the measurement points in m
      * @param ZMeasPos The vector of z-coordinates of the measurement points in m

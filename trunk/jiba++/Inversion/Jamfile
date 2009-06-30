@@ -6,7 +6,7 @@ lib inversion : MatrixTools.cpp  LinearInversion.cpp
 				NonLinearConjugateGradient.cpp
 				LimitedMemoryQuasiNewton.cpp
 				LineSearch.cpp 
-				mcsrch.cpp
+				mcsrch.cpp backtrack.cpp
 				ObjectiveFunction.cpp JointObjective.cpp MinDiffRegularization.cpp
                 ..//vecopt
                  : <include>boost : : <include>. ;

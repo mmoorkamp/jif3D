@@ -57,6 +57,7 @@ namespace jiba
 
         int status = OPTPP::mcsrch(&GetObjective(), SearchDir, RawGrad,
             CurrentModel, Misfit, &mu, 20, 1e-4, 2.2e-16, 0.9, 1e9, 1e-9);
+
         if (status < 0)
           {
             throw jiba::FatalException("Cannot find suitable step. Status: "
