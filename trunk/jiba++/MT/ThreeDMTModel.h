@@ -16,28 +16,12 @@ namespace jiba
     //! This class stores all information associated with 3D magnetotelluric models, so far it has only rudimentary functionality and will be extended
     class ThreeDMTModel: public jiba::ThreeDModelBase
       {
-      private:
-        void WriteProjectFile();
-        std::vector<double> Frequencies;
+    private:
+      std::vector<double> Frequencies;
     public:
-      //! The MT model has the same cell size for all cells in the two horizontal directions so we just have one function to set it
-      /*! This function sets both the size of all cells as well as the number of cells in the horizontal (x and y) directions
-       * @param Size The size of each cell in all directions in m
-       * @param nx The number of cells in x-direction (North)
-       * @param ny The number of cells in y-direction (East)
-       */
-      void SetHorizontalCellSize(const double Size, const size_t nx,
-          const size_t ny)
+      const std::vector<double> &GetFrequencies()
         {
-          ThreeDModelBase::SetXCellSizes().resize(boost::extents[nx]);
-          std::fill_n(ThreeDModelBase::SetXCellSizes().begin(), nx, Size);
-          ThreeDModelBase::SetYCellSizes().resize(boost::extents[ny]);
-          std::fill_n(ThreeDModelBase::SetYCellSizes().begin(), ny, Size);
-        }
-      //! The vertical cells can all have different sizes so we allow direct access to the CellSize structure
-      t3DModelDim &SetZCellSizes()
-        {
-          return ThreeDModelBase::SetZCellSizes();
+          return Frequencies;
         }
       //! return read only access to the stored conductivity values
       const t3DModelData &GetConductivities() const

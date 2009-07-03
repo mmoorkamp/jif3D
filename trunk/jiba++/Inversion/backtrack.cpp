@@ -13,7 +13,6 @@
 #endif
 #include "ObjectiveFunction.h"
 #include "mcsrch.h"
-const int MAXITER = 20;
 //------------------------------------------------------------------------
 // external subroutines referenced by this module
 //------------------------------------------------------------------------
@@ -38,7 +37,7 @@ namespace OPTPP
     int backtrack(jiba::ObjectiveFunction* nlp, jiba::rvec& search_dir,
         jiba::rvec& grad, const jiba::rvec &model, double &misfit, double *stp,
         int itnmax, double ftol, double stpmax, double stpmin)
-
+      {
         /* Local variables */
         double disc;
         double a, b;
@@ -88,7 +87,7 @@ namespace OPTPP
         iter = 0;
         //const  int MAXITER = itnmax;
         // std::cout << "Search Dir: " << search_dir << std::endl;
-        while (iter < MAXITER)
+        while (iter < itnmax)
           {
 
             iter++;
