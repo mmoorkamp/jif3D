@@ -1,24 +1,22 @@
 //============================================================================
-// Name        : ThreeDMTModel.cpp
-// Author      : Apr 8, 2009
-// Version     :
+// Name        : X3DModel.cpp
+// Author      : Jul 2, 2009
+// Version     : 
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
 
-#include "ThreeDMTModel.h"
-
+#include "X3DModel.h"
 
 namespace jiba
   {
 
-    ThreeDMTModel::ThreeDMTModel() :
-      Frequencies()
+    X3DModel::X3DModel()
       {
 
       }
 
-    ThreeDMTModel::~ThreeDMTModel()
+    X3DModel::~X3DModel()
       {
 
       }

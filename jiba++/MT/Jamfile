@@ -1,9 +1,9 @@
 import testing ; 
 using gfortran ;
 
-lib mt : B_epol1.for B_hpol.for  MT2DForward.cpp ReadWriteX3D.cpp ;
+lib mt : B_epol1.for B_hpol.for  MT2DForward.cpp ReadWriteX3D.cpp ThreeDMTModel.cpp X3DModel.cpp ..//ModelBase ;
 
 
 
-unit-test 2DMT_test : test_Tarits2DMT.cpp mt ..//gfortran ..//boost_filesystem : <include>. ;
+unit-test 2DMT_test : test_Tarits2DMT.cpp mt ..//ModelBase ..//gfortran ..//boost_filesystem : <include>. ;
 unit-test RWX3D_test : test_ReadWriteX3D.cpp mt  ..//ModelBase ..//boost_filesystem : <include>. ;
