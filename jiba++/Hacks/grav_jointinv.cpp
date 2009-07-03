@@ -29,7 +29,7 @@
 #include "../Inversion/LimitedMemoryQuasiNewton.h"
 #include "../Inversion/NonLinearConjugateGradient.h"
 #include "../Inversion/JointObjective.h"
-#include "../Inversion/MinDiffRegularization.h"
+#include "../Regularization/MinDiffRegularization.h"
 #include "../Inversion/ModelTransforms.h"
 #include "../Inversion/ConstructError.h"
 #include "../Gravity/GravityObjective.h"

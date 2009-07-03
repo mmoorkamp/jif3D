@@ -19,7 +19,7 @@
 #include "../ModelBase/NetCDFTools.h"
 #include "../Inversion/LimitedMemoryQuasiNewton.h"
 #include "../Inversion/JointObjective.h"
-#include "../Inversion/MinDiffRegularization.h"
+#include "../Regularization/MinDiffRegularization.h"
 #include "../Inversion/ModelTransforms.h"
 #include "../Tomo/ThreeDSeismicModel.h"
 #include "../Tomo/ReadWriteTomographyData.h"

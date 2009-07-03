@@ -1,0 +1,10 @@
+import testing ; 
+
+lib regularization :
+                  MinDiffRegularization.cpp GradientRegularization.cpp
+               ..//ModelBase
+                 : <include>boost : : <include>. ;
+                 
+
+
+unit-test regularization_test : test_regularization.cpp  ..//Inversion regularization ..//Gravity : : <include>. ;

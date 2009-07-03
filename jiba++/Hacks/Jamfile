@@ -1,7 +1,7 @@
 import testing ; 
 
 
-alias joint : ../Tomo ../Gravity ../Inversion ../Global ;
+alias joint : ../Tomo ../Gravity ../Inversion ../Global ../Regularization ;
 	
 exe fittingtest : fittingtest.cpp ../Inversion//inversion ..//vecopt : <include>. ;
 exe sparsetest : sparsetest.cpp ../Inversion//inversion ..//vecopt : <include>. ;

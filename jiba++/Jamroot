@@ -50,5 +50,6 @@ build-project MT ;
 build-project Tomo ;
 build-project ModelBase ;
 build-project Inversion ;
+build-project Regularization ;
 build-project Profiling ;
 build-project Hacks ;
