@@ -11,7 +11,8 @@
 namespace jiba
   {
 
-    X3DModel::X3DModel()
+    X3DModel::X3DModel() :
+      Frequencies(), bg_thicknesses(), bg_conductivities()
       {
 
       }

@@ -17,9 +17,45 @@ namespace jiba
     class X3DModel: public ThreeDMTModel
       {
     private:
-
+      std::vector<double> Frequencies;
+      std::vector<double> bg_thicknesses;
+      std::vector<double> bg_conductivities;
     public:
-      enum ProblemType {MT, CSMT,EDIP,MDIP};
+      enum ProblemType
+        {
+        MT, CSMT, EDIP, MDIP
+        };
+      const std::vector<double> &GetFrequencies() const
+        {
+          return Frequencies;
+        }
+      std::vector<double> &SetFrequencies()
+        {
+          return Frequencies;
+        }
+      //! Set the thicknesses of the background layers, the individual thicknesses are given in m
+      void SetBackgroundThicknesses(const std::vector<double> &value)
+        {
+          bg_thicknesses.clear();
+          copy(value.begin(), value.end(), back_inserter(bg_thicknesses));
+        }
+      //! Return the thicknesses of the background layers in m
+      const std::vector<double> &GetBackgroundThicknesses() const
+        {
+          return bg_thicknesses;
+        }
+      //! Set the conductivities of the background layers, the individual thicknesses are given in S/m
+      void SetBackgroundConductivities(const std::vector<double> &value)
+        {
+          bg_conductivities.clear();
+          bg_conductivities.reserve(value.size());
+          copy(value.begin(), value.end(), back_inserter(bg_conductivities));
+        }
+      //! Return the conductivities of the background layers in S/m
+      const std::vector<double> &GetBackgroundConductivities() const
+        {
+          return bg_conductivities;
+        }
       //! The MT model for X3D by Avdeev et al. has the same cell size for all cells in the two horizontal directions so we just have one function to set it
       /*! This function sets both the size of all cells as well as the number of cells in the horizontal (x and y) directions
        * @param Size The size of each cell in all directions in m

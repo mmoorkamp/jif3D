@@ -161,7 +161,7 @@ namespace jiba
                   {
                     outfile << std::scientific << std::setw(valuewidth)
                         << std::setprecision(valueprec) << Data[k][j][i];
-                    if (k > 0 && (k % valuesperline) == 0)
+                    if (k > 0 && ((k + 1) % valuesperline) == 0)
                       outfile << "\n";
                   }
                 outfile << "\n";
@@ -181,7 +181,7 @@ namespace jiba
         outfile << " 1                              0.0\n";
       }
 
-    void WriteProjectFile(std::vector<double> &Frequencies,
+    void WriteProjectFile(const std::vector<double> &Frequencies,
         X3DModel::ProblemType Type, const std::string &ResultFilename,
         const std::string &ModelFilename)
       {
@@ -196,7 +196,7 @@ namespace jiba
         for (size_t i = 0; i < nfreq; ++i)
           {
             outfile << "  " << Frequencies.at(i) << "  " << ResultFilename
-                << " " << jiba::stringify(i) << " " << ModelFilename
+                << jiba::stringify(i) << " " << ModelFilename
                 << "                             csmt01_1.source                csmt01_2.source\n";
           }
         outfile << "$\n";
@@ -214,6 +214,89 @@ namespace jiba
         outfile
             << "  Format_of_Output (0 - mfo, 1 - ASCII, 2 - mfo+ASCII, 3 - mfo+ASCII+mfa; default value = 0)\n";
         outfile << "  3\n";
+      }
+
+    void ReadEMO(const std::string &filename,
+        std::vector<std::complex<double> > &Ex, std::vector<
+            std::complex<double> > &Ey, std::vector<std::complex<double> > &Hx,
+        std::vector<std::complex<double> > &Hy)
+      {
+        std::ifstream infile(filename.c_str());
+        //find the description line for the electric fields
+        FindToken(infile, "#        x (m)");
+        //we have a few values in the file that we do not care about right now
+        double dummy;
+        const std::complex<double> I(0.0, 1.0);
+        char restline[2048];
+        //read in numbers as long as we can, this will be the E-field
+        while (infile.good())
+          {
+            infile >> dummy >> dummy >> dummy;
+            if (infile.good())
+              {
+                infile >> dummy;
+                Ex.push_back(dummy);
+                infile >> dummy;
+                Ex.back() -= dummy * I;
+                infile >> dummy;
+                Ey.push_back(dummy);
+                infile >> dummy;
+                Ey.back() -= dummy * I;
+                infile.getline(restline, 2048);
+              }
+          }
+        //swallow up the header line for the magnetic fields
+        infile.clear();
+        infile.getline(restline, 2048);
+
+        //read in the magnetic fields
+        while (infile.good())
+          {
+            infile >> dummy >> dummy >> dummy;
+            if (infile.good())
+              {
+                infile >> dummy;
+                Hx.push_back(dummy);
+                infile >> dummy;
+                Hx.back() -= dummy * I;
+                infile >> dummy;
+                Hy.push_back(dummy);
+                infile >> dummy;
+                Hy.back() -= dummy * I;
+                infile.getline(restline, 2048);
+              }
+          }
+        //read in both fields
+      }
+
+    void ReadEMA(const std::string &filename,
+        std::vector<std::complex<double> > &Ex, std::vector<
+            std::complex<double> > &Ey)
+      {
+        std::ifstream infile(filename.c_str());
+        //find the description line for the electric fields
+        FindToken(infile, "#        x (m)");
+        //we have a few values in the file that we do not care about right now
+        double dummy;
+        const std::complex<double> I(0.0, 1.0);
+        char restline[2048];
+        //read in numbers as long as we can, this will be the E-field
+        while (infile.good())
+          {
+            infile >> dummy >> dummy >> dummy;
+            if (infile.good())
+              {
+                infile >> dummy;
+                Ex.push_back(dummy);
+                infile >> dummy;
+                Ex.back() += dummy * I;
+                infile >> dummy;
+                Ey.push_back(dummy);
+                infile >> dummy;
+                Ey.back() += dummy * I;
+                infile.getline(restline, 2048);
+              }
+          }
       }
 
   }//end of namespace jiba
