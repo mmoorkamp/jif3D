@@ -94,7 +94,7 @@ namespace jiba
           return ThreeDModelBase::SetData();
         }
       //! Set the density of the background, it extends to infinity in horizontal directions and to the depth specified by the thicknesses in vertical direction
-      void SetBackgroundDensities(const tBackgroundVec value)
+      void SetBackgroundDensities(const tBackgroundVec &value)
         {
           bg_densities.clear();
           copy(value.begin(), value.end(), back_inserter(bg_densities));
@@ -105,7 +105,7 @@ namespace jiba
           return bg_densities;
         }
       //! Set the thicknesses of the background layers, the individual thicknesses are given in m the total thickness of the background layers does not need to coincide with the gridded domain
-      void SetBackgroundThicknesses(const tBackgroundVec value)
+      void SetBackgroundThicknesses(const tBackgroundVec &value)
         {
           bg_thicknesses.clear();
           copy(value.begin(), value.end(), back_inserter(bg_thicknesses));
