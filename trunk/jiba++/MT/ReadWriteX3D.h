@@ -12,6 +12,8 @@
 #include "../ModelBase/ThreeDModelBase.h"
 #include "X3DModel.h"
 #include <string>
+#include <vector>
+#include <complex>
 
 namespace jiba
   {
@@ -51,9 +53,18 @@ namespace jiba
         const std::vector<double> &bg_conductivities,
         const std::vector<double> &bg_thicknesses);
     //! Write the file a.project that controls the forward calculation parameters for x3D
-    void WriteProjectFile(std::vector<double> &Frequencies,
+    void WriteProjectFile(const std::vector<double> &Frequencies,
         X3DModel::ProblemType Type, const std::string &ResultFilename,
         const std::string &ModelFilename);
+
+    void ReadEMO(const std::string &filename,
+        std::vector<std::complex<double> > &Ex, std::vector<
+            std::complex<double> > &Ey, std::vector<std::complex<double> > &Hx,
+        std::vector<std::complex<double> > &Hy);
+
+    void ReadEMA(const std::string &filename,
+        std::vector<std::complex<double> > &Ex, std::vector<
+            std::complex<double> > &Ey);
   }
 
 #endif /* READWRITEX3D_H_ */

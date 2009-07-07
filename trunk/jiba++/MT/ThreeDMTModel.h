@@ -19,7 +19,7 @@ namespace jiba
     private:
       std::vector<double> Frequencies;
     public:
-      const std::vector<double> &GetFrequencies()
+      const std::vector<double> &GetFrequencies() const
         {
           return Frequencies;
         }
