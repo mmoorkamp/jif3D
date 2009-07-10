@@ -8,6 +8,8 @@
 #include <complex>
 namespace jiba
   {
+    const double mag_mu = 4e-7 * M_PI;
+
     std::complex<double> ImpedanceHalfspace(const double frequency,
         const double conductivity);
 

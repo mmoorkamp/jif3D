@@ -11,6 +11,8 @@
 #include "ReadWriteX3D.h"
 #include <fstream>
 #include <iomanip>
+#include <boost/function.hpp>
+#include <boost/bind.hpp>
 
 namespace jiba
   {
@@ -133,7 +135,8 @@ namespace jiba
 
         double currdepth = 0.0;
         const size_t nzlayers = ZCellSizes.size();
-        const size_t valuesperline = 90;
+        const size_t valuesperline = std::min(static_cast<size_t> (90),
+            static_cast<size_t> (XCellSizes.size() + 1));
         const size_t valuewidth = 11;
         const size_t valueprec = 3;
         for (size_t i = 0; i < nzlayers; ++i)
@@ -197,7 +200,9 @@ namespace jiba
           {
             outfile << "  " << Frequencies.at(i) << "  " << ResultFilename
                 << jiba::stringify(i) << " " << ModelFilename
-                << "                             csmt01_1.source                csmt01_2.source\n";
+                << "                          " << ModelFilename
+                << jiba::stringify(i) << "a.source             "
+                << ModelFilename << jiba::stringify(i) << ".bsource\n";
           }
         outfile << "$\n";
         outfile
@@ -271,7 +276,7 @@ namespace jiba
 
     void ReadEMA(const std::string &filename,
         std::vector<std::complex<double> > &Ex, std::vector<
-            std::complex<double> > &Ey)
+            std::complex<double> > &Ey, std::vector<std::complex<double> > &Ez)
       {
         std::ifstream infile(filename.c_str());
         //find the description line for the electric fields
@@ -294,9 +299,112 @@ namespace jiba
                 Ey.push_back(dummy);
                 infile >> dummy;
                 Ey.back() += dummy * I;
-                infile.getline(restline, 2048);
+                infile >> dummy;
+                Ez.push_back(dummy);
+                infile >> dummy;
+                Ez.back() += dummy * I;
               }
           }
+      }
+
+    void WriteSourceComp(std::ofstream &outfile, const boost::multi_array<
+        std::complex<double>, 2> &Moments, const boost::function<
+        const double &(const std::complex<double> &)> &CompFunc)
+      {
+        const size_t nx = Moments.shape()[0];
+        const size_t ny = Moments.shape()[1];
+        const size_t valuesperline = std::min(static_cast<size_t> (90), nx + 1);
+        const size_t valuewidth = 11;
+        const size_t valueprec = 3;
+
+        outfile << "FORMAT\n (" << valuesperline << "E" << valuewidth << "."
+            << valueprec << ") \n";
+        outfile << "ARRAY\n";
+        for (size_t j = 0; j < ny; ++j)
+          {
+            for (size_t k = 0; k < nx; ++k)
+              {
+                outfile << std::scientific << std::setw(valuewidth)
+                    << std::setprecision(valueprec) << CompFunc(Moments[k][j]);
+                if (k > 0 && ((k + 1) % valuesperline) == 0)
+                  outfile << "\n";
+              }
+            outfile << "\n";
+          }
+        outfile << "$\n";
+        //finished writing out all moments
+      }
+
+    void WriteGeometryInfo(std::ofstream &outfile, const size_t endx,
+        const size_t endy)
+      {
+        outfile
+            << " Scale  ( the ARRAY will be multiplied by this Scale ) \n 1.0 \n\n";
+        outfile << "First and last cells in X-direction \n";
+        outfile << " 1  " << endx << "\n";
+        outfile << "First and last cells in Y-direction \n";
+        outfile << " 1  " << endy << "\n\n";
+      }
+
+    void WriteEmptyArray(std::ofstream &outfile, const size_t XSize,
+        const size_t YSize)
+      {
+        outfile << "ARRAY\n";
+        outfile << YSize << "Lines: " << XSize << "*0.\n";
+      }
+
+    void WriteSourceFile(const std::string &filename, const double SourceDepth,
+        const boost::multi_array<std::complex<double>, 2> &XPolMoments,
+        const boost::multi_array<std::complex<double>, 2> &YPolMoments)
+      {
+        assert(XPolMoments.shape()[0] == YPolMoments.shape()[0]);
+        assert(XPolMoments.shape()[1] == YPolMoments.shape()[1]);
+        std::ofstream outfile(filename.c_str());
+        outfile << "  Version_of_X3D code (yyyy-mm-dd)\n";
+        outfile << "  2006-06-06\n\n";
+        outfile
+            << " is imaginary_part_of_the_sources assigned in this file?(Y / N; Default N)\n";
+        outfile << " Y\n";
+        outfile << "First and last cells in X-direction(nxSf, nxSl)\n";
+        outfile << " 1  " << XPolMoments.shape()[0] << "\n";
+        outfile << "First and last cells in Y-direction(nySf, nySl)\n";
+        outfile << " 1  " << XPolMoments.shape()[1] << "\n";
+        outfile << "zS(m)  (Depth to the source level)\n";
+        outfile << SourceDepth << "\n $\n";
+
+        //write real part of x-component
+        WriteGeometryInfo(outfile, XPolMoments.shape()[0],
+            XPolMoments.shape()[1]);
+        WriteSourceComp(outfile, XPolMoments, boost::bind<const double&>(
+            &std::complex<double>::real, _1));
+
+        //write imaginary part of x-component
+        WriteGeometryInfo(outfile, XPolMoments.shape()[0],
+            XPolMoments.shape()[1]);
+        WriteSourceComp(outfile, XPolMoments, boost::bind<const double&>(
+            &std::complex<double>::imag, _1));
+
+        //write real part of y-component
+        WriteGeometryInfo(outfile, YPolMoments.shape()[0],
+            YPolMoments.shape()[1]);
+        WriteSourceComp(outfile, YPolMoments, boost::bind<const double&>(
+            &std::complex<double>::real, _1));
+
+        //write imaginary part of y-component
+        WriteGeometryInfo(outfile, YPolMoments.shape()[0],
+            YPolMoments.shape()[1]);
+        WriteSourceComp(outfile, YPolMoments, boost::bind<const double&>(
+            &std::complex<double>::imag, _1));
+
+        //write real part of z-component, we assume it is 0
+        WriteGeometryInfo(outfile, YPolMoments.shape()[0],
+            YPolMoments.shape()[1]);
+        WriteEmptyArray(outfile, XPolMoments.shape()[0], XPolMoments.shape()[1]);
+
+        //write imaginary part of z-component, we assume it is 0
+        WriteGeometryInfo(outfile, YPolMoments.shape()[0],
+            YPolMoments.shape()[1]);
+        WriteEmptyArray(outfile, XPolMoments.shape()[0], XPolMoments.shape()[1]);
       }
 
   }//end of namespace jiba
