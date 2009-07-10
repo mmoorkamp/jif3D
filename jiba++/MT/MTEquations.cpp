@@ -19,12 +19,12 @@ namespace jiba
         std::complex<double> &Zyx, std::complex<double> &Zyy)
       {
         //1D case
-        if (abs(Hx1) == 0 && abs(Hy2) == 0 )
+        if (abs(Hx1) == 0 && abs(Hy2) == 0)
           {
             Zxx = std::complex<double>();
             Zyy = std::complex<double>();
-            Zxy = Ex1/Hy1;
-            Zyx = Ey2/Hx2;
+            Zxy = Ex1 / Hy1;
+            Zyx = Ey2 / Hx2;
           }
         const std::complex<double> magdet(Hx1 * Hy2 - Hy1 * Hx2);
         Zxx = (Ex1 * Hy2 - Hy1 * Ex2) / magdet;
@@ -36,8 +36,8 @@ namespace jiba
     std::complex<double> ImpedanceHalfspace(const double frequency,
         const double conductivity)
       {
-        std::complex<double> omegamu = std::complex<double>(0.0, 1.0) * 8e-7
-            * M_PI * M_PI * frequency;
+        std::complex<double> omegamu = std::complex<double>(0.0, 1.0) * 2.0
+            * M_PI * mag_mu * frequency;
         return sqrt(omegamu / conductivity);
       }
   }

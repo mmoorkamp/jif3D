@@ -3,11 +3,12 @@ using gfortran ;
 
 lib mt : B_epol1.for B_hpol.for  MT2DForward.cpp ReadWriteX3D.cpp 
          ThreeDMTModel.cpp X3DModel.cpp MTEquations.cpp 
-         MT3DCalculator.cpp X3DMTCalculator.cpp
-         ..//ModelBase ;
+         MT3DCalculator.cpp X3DMTCalculator.cpp X3DObjective.cpp
+         ..//ModelBase ..//Inversion ;
 
 
 
-unit-test 2DMT_test : test_Tarits2DMT.cpp mt ..//ModelBase ..//gfortran ..//boost_filesystem : <include>. ;
-unit-test RWX3D_test : test_ReadWriteX3D.cpp mt  ..//ModelBase ..//boost_filesystem : <include>. ;
-unit-test X3Dcalc_test : test_X3DCalculator.cpp mt  ..//ModelBase ..//boost_filesystem : <include>. ;
+unit-test 2DMT_test : test_Tarits2DMT.cpp mt ..//ModelBase ..//Inversion ..//gfortran ..//boost_filesystem : <include>. ;
+unit-test RWX3D_test : test_ReadWriteX3D.cpp mt  ..//ModelBase ..//Inversion ..//boost_filesystem : <include>. ;
+unit-test X3Dcalc_test : test_X3DCalculator.cpp mt  ..//ModelBase ..//Inversion ..//boost_filesystem : <include>. ;
+unit-test X3DObjective_test : test_X3DObjective.cpp mt  ..//ModelBase ..//Inversion ..//boost_filesystem : <include>. ;
