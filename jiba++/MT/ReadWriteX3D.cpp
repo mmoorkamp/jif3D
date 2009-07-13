@@ -5,14 +5,15 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-#include "../Global/FileUtil.h"
-#include "../Global/FatalException.h"
-#include "../Global/convert.h"
-#include "ReadWriteX3D.h"
+#include <cassert>
 #include <fstream>
 #include <iomanip>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
+#include "../Global/FileUtil.h"
+#include "../Global/FatalException.h"
+#include "../Global/convert.h"
+#include "ReadWriteX3D.h"
 
 namespace jiba
   {
@@ -272,6 +273,9 @@ namespace jiba
               }
           }
         //read in both fields
+        assert(Ex.size()==Ey.size());
+        assert(Ex.size()==Hx.size());
+        assert(Ex.size()==Hy.size());
       }
 
     void ReadEMA(const std::string &filename,
@@ -282,7 +286,7 @@ namespace jiba
         //find the description line for the electric fields
         FindToken(infile, "#        x (m)");
         //we have a few values in the file that we do not care about right now
-        double dummy;
+        double dummy, real, imaginary;
         const std::complex<double> I(0.0, 1.0);
         char restline[2048];
         //read in numbers as long as we can, this will be the E-field
@@ -291,20 +295,16 @@ namespace jiba
             infile >> dummy >> dummy >> dummy;
             if (infile.good())
               {
-                infile >> dummy;
-                Ex.push_back(dummy);
-                infile >> dummy;
-                Ex.back() += dummy * I;
-                infile >> dummy;
-                Ey.push_back(dummy);
-                infile >> dummy;
-                Ey.back() += dummy * I;
-                infile >> dummy;
-                Ez.push_back(dummy);
-                infile >> dummy;
-                Ez.back() += dummy * I;
+                infile >> real >> imaginary;
+                Ex.push_back(std::complex<double>(real, -imaginary));
+                infile >> real >> imaginary;
+                Ey.push_back(std::complex<double>(real,- imaginary));
+                infile >> real >> imaginary;
+                Ez.push_back(std::complex<double>(real, -imaginary));
               }
           }
+        assert(Ex.size()==Ey.size());
+        assert(Ex.size()==Ez.size());
       }
 
     void WriteSourceComp(std::ofstream &outfile, const boost::multi_array<

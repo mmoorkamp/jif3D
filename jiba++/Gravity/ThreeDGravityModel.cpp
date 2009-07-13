@@ -5,17 +5,18 @@
 // Copyright   : 2008, MM
 //============================================================================
 
-#include "ThreeDGravityModel.h"
-#include "../Global/NumUtil.h"
-#include "TensorOMPGravityImp.h"
-#include "ScalarOMPGravityImp.h"
-#include "ReadWriteGravityData.h"
+
 #include <boost/bind.hpp>
 #include <cassert>
 #include <netcdfcpp.h>
 #include <fstream>
 #include <iomanip>
 #include <iterator>
+#include "../Global/NumUtil.h"
+#include "ThreeDGravityModel.h"
+#include "TensorOMPGravityImp.h"
+#include "ScalarOMPGravityImp.h"
+#include "ReadWriteGravityData.h"
 
 namespace jiba
   {
