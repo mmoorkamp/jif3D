@@ -5,6 +5,7 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
+#include <cassert>
 #include <complex>
 #include <boost/multi_array.hpp>
 #include <boost/filesystem/operations.hpp>
@@ -105,6 +106,18 @@ namespace jiba
         return result;
       }
 
+    cmat MakeH(const std::complex<double> &Hx1,
+        const std::complex<double> &Hx2, const std::complex<double> &Hy1,
+        const std::complex<double> &Hy2)
+      {
+        cmat result(2, 2);
+        result(0, 0) = Hx1;
+        result(0, 1) = Hx2;
+        result(1, 0) = Hy1;
+        result(1, 1) = Hy2;
+        return result;
+      }
+
     rvec X3DMTCalculator::LQDerivative(const X3DModel &Model,
         const rvec &Misfit)
       {
@@ -116,7 +129,7 @@ namespace jiba
         const size_t nmod = ncellsx * ncellsy
             * Model.GetConductivities().shape()[2];
         assert(Misfit.size() == ndata);
-        std::cout << "Misfit: " << Misfit << std::endl;
+        //std::cout << "Misfit: " << Misfit << std::endl;
         jiba::rvec Gradient(Model.GetConductivities().num_elements());
         Gradient.clear();
         for (size_t i = 0; i < nfreq; ++i)
@@ -132,13 +145,16 @@ namespace jiba
 
             ReadEMO(emoAname, Ex1_obs, Ey1_obs, Hx1_obs, Hy1_obs);
             ReadEMO(emoBname, Ex2_obs, Ey2_obs, Hx2_obs, Hy2_obs);
-
+            assert(Ex1_obs.size()==nobs);
+            assert(Ex2_obs.size()==nobs);
             std::vector<std::complex<double> > Ex1_all, Ex2_all, Ey1_all,
                 Ey2_all, Ez1_all, Ez2_all;
             ReadEMA(resultfilename + jiba::stringify(i) + "a.ema", Ex1_all,
                 Ey1_all, Ez1_all);
             ReadEMA(resultfilename + jiba::stringify(i) + "b.ema", Ex2_all,
                 Ey2_all, Ez2_all);
+            assert(Ex1_all.size() == nmod);
+            assert(Ex2_all.size() == nmod);
             const size_t freq_index = nobs * i;
             boost::multi_array<std::complex<double>, 2> XPolMoments(
                 boost::extents[ncellsx][ncellsy]), YPolMoments(
@@ -150,13 +166,9 @@ namespace jiba
             for (size_t j = 0; j < nobs; ++j)
               {
                 const size_t siteindex = freq_index + j * 8;
-                cmat H(2, 2);
-                H(0, 0) = Hx1_obs[j];
-                H(0, 1) = Hx2_obs[j];
-                H(1, 0) = Hy1_obs[j];
-                H(1, 1) = Hy2_obs[j];
-                cmat result = CalcATimesH(MisfitToA(Misfit, siteindex), H);
-                std::cout << result << std::endl;
+                cmat result = CalcATimesH(MisfitToA(Misfit, siteindex), MakeH(
+                    Hx1_obs[j], Hx2_obs[j], Hy1_obs[j], Hy2_obs[j]));
+                //std::cout << result << std::endl;
                 XPolVec[j] = result(0, 0);
                 YPolVec[j] = result(0, 1);
               }
@@ -170,29 +182,26 @@ namespace jiba
             std::fill(YPolVec.begin(), YPolVec.end(), 0.0);
             WriteSourceFile(modelfilename + stringify(i) + "b.source", 0.0,
                 XPolMoments, YPolMoments);
-            boost::filesystem::remove_all(resultfilename+"*");
+           boost::filesystem::remove_all(resultfilename + "*");
             system("x3d");
             std::vector<std::complex<double> > Ux1_el, Ux2_el, Uy1_el, Uy2_el,
                 Uz1_el, Uz2_el;
             ReadEMA(emaname, Ux1_el, Uy1_el, Uz1_el);
-
+            assert(Ux1_el.size() == nmod);
             for (size_t j = 0; j < nobs; ++j)
               {
                 const size_t siteindex = freq_index + j * 8;
-                cmat H(2, 2);
-                H(0, 0) = Hx1_obs[j];
-                H(0, 1) = Hx2_obs[j];
-                H(1, 0) = Hy1_obs[j];
-                H(1, 1) = Hy2_obs[j];
-                cmat result = CalcATimesH(MisfitToA(Misfit, siteindex), H);
+                cmat result = CalcATimesH(MisfitToA(Misfit, siteindex), MakeH(
+                    Hx1_obs[j], Hx2_obs[j], Hy1_obs[j], Hy2_obs[j]));
                 XPolVec[j] = result(1, 0);
                 YPolVec[j] = result(1, 1);
               }
             WriteSourceFile(sourcefilename, 0.0, XPolMoments, YPolMoments);
-            boost::filesystem::remove_all(resultfilename+"*");
+            boost::filesystem::remove_all(resultfilename + "*");
             system("x3d");
             ReadEMA(emaname, Ux2_el, Uy2_el, Uz2_el);
 
+            assert(Ux2_el.size() == nmod);
             //first polarization of the magnetic dipole
 
             const std::complex<double> omega_mu = -1.0 / (std::complex<double>(
@@ -206,22 +215,19 @@ namespace jiba
                 FieldsToImpedance(Ex1_obs[i], Ex2_obs[i], Ey1_obs[i],
                     Ey2_obs[i], Hx1_obs[i], Hx2_obs[i], Hy1_obs[i], Hy2_obs[i],
                     Z(0, 0), Z(0, 1), Z(1, 0), Z(1, 1));
-                cmat H(2, 2);
-                H(0, 0) = Hx1_obs[j];
-                H(0, 1) = Hx2_obs[j];
-                H(1, 0) = Hy1_obs[j];
-                H(1, 1) = Hy2_obs[j];
-                cmat AH = CalcATimesH(MisfitToA(Misfit, siteindex), H);
+                cmat AH = CalcATimesH(MisfitToA(Misfit, siteindex), MakeH(
+                    Hx1_obs[j], Hx2_obs[j], Hy1_obs[j], Hy2_obs[j]));
                 cmat result = ublas::prod(trans(Z), AH);
                 XPolVec[j] = result(0, 0) * omega_mu;
                 YPolVec[j] = result(0, 1) * omega_mu;
               }
             WriteSourceFile(sourcefilename, 0.0, XPolMoments, YPolMoments);
-            boost::filesystem::remove_all(resultfilename+"*");
+            boost::filesystem::remove_all(resultfilename + "*");
             system("x3d");
             std::vector<std::complex<double> > Ux1_mag, Ux2_mag, Uy1_mag,
                 Uy2_mag, Uz1_mag, Uz2_mag;
             ReadEMA(emaname, Ux1_mag, Uy1_mag, Uz1_mag);
+            assert(Ux1_mag.size() == nmod);
             for (size_t j = 0; j < nobs; ++j)
               {
                 cmat Z(2, 2);
@@ -229,27 +235,25 @@ namespace jiba
                 FieldsToImpedance(Ex1_obs[i], Ex2_obs[i], Ey1_obs[i],
                     Ey2_obs[i], Hx1_obs[i], Hx2_obs[i], Hy1_obs[i], Hy2_obs[i],
                     Z(0, 0), Z(0, 1), Z(1, 0), Z(1, 1));
-                cmat H(2, 2);
-                H(0, 0) = Hx1_obs[j];
-                H(0, 1) = Hx2_obs[j];
-                H(1, 0) = Hy1_obs[j];
-                H(1, 1) = Hy2_obs[j];
-                cmat AH = CalcATimesH(MisfitToA(Misfit, siteindex), H);
+                cmat AH = CalcATimesH(MisfitToA(Misfit, siteindex), MakeH(
+                    Hx1_obs[j], Hx2_obs[j], Hy1_obs[j], Hy2_obs[j]));
                 cmat result = ublas::prod(trans(Z), AH);
                 XPolVec[j] = result(1, 0) * omega_mu;
                 YPolVec[j] = result(1, 1) * omega_mu;
               }
             WriteSourceFile(sourcefilename, 0.0, XPolMoments, YPolMoments);
-            boost::filesystem::remove_all(resultfilename+"*");
+            boost::filesystem::remove_all(resultfilename + "*");
             system("x3d");
             ReadEMA(emaname, Ux2_mag, Uy2_mag, Uz2_mag);
+            assert(Ux2_mag.size() == nmod);
             const double cell_sizex = Model.GetXCellSizes()[0];
             const double cell_sizey = Model.GetYCellSizes()[0];
             for (size_t i = 0; i < nmod; ++i)
               {
                 int xindex, yindex, zindex;
                 Model.OffsetToIndex(i, xindex, yindex, zindex);
-                const double Volume = cell_sizex * cell_sizey * Model.GetZCellSizes()[zindex];
+                const double Volume = cell_sizex * cell_sizey
+                    * Model.GetZCellSizes()[zindex];
                 Gradient(i) += std::real((Ux1_el[i] + Ux1_mag[i]) * Ex1_all[i]
                     + (Uy1_el[i] + Uy1_mag[i]) * Ey1_all[i] + (Uz1_el[i]
                     + Uz1_mag[i]) * Ez1_all[i] + (Ux2_el[i] + Ux2_mag[i])

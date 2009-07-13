@@ -75,6 +75,8 @@ namespace jiba
         {
           return ThreeDModelBase::SetZCellSizes();
         }
+      void WriteNetCDF(const std::string filename) const;
+      void ReadNetCDF(const std::string filename);
       X3DModel();
       virtual ~X3DModel();
       };
