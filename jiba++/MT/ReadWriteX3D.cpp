@@ -298,7 +298,7 @@ namespace jiba
                 infile >> real >> imaginary;
                 Ex.push_back(std::complex<double>(real, -imaginary));
                 infile >> real >> imaginary;
-                Ey.push_back(std::complex<double>(real,- imaginary));
+                Ey.push_back(std::complex<double>(real, -imaginary));
                 infile >> real >> imaginary;
                 Ez.push_back(std::complex<double>(real, -imaginary));
               }
@@ -405,6 +405,24 @@ namespace jiba
         WriteGeometryInfo(outfile, YPolMoments.shape()[0],
             YPolMoments.shape()[1]);
         WriteEmptyArray(outfile, XPolMoments.shape()[0], XPolMoments.shape()[1]);
+      }
+
+    std::vector<std::complex<double> > ResortFields(const std::vector<
+        std::complex<double> > &InField, const size_t nx, const size_t ny,
+        const size_t nz)
+      {
+        const size_t nelements = nx * ny * nz;
+        assert(nelements == InField.size());
+        std::vector<std::complex<double> > result;
+        result.reserve(nelements);
+        for (size_t i = 0; i < nx; ++i)
+          for (size_t j = 0; j < ny; ++j)
+            for (size_t k = 0; k < nz; ++k)
+              {
+                result.push_back(InField[j + ny * i + (ny * nx) * k]);
+              }
+
+        return result;
       }
 
   }//end of namespace jiba

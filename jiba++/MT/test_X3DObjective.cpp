@@ -20,9 +20,9 @@ BOOST_AUTO_TEST_SUITE( X3DCalculator_Suite )
 
 BOOST_AUTO_TEST_CASE  (X3D_basic_deriv_test)
     {
-      const size_t xsize = 5;
-      const size_t ysize = 5;
-      const size_t zsize = 5;
+      const size_t xsize = 3;
+      const size_t ysize = 7;
+      const size_t zsize = 2;
       const size_t nbglayers = 5;
       const size_t nmod = xsize * ysize * zsize;
       jiba::X3DModel Model;
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE  (X3D_basic_deriv_test)
       jiba::rvec Gradient = Objective.CalcGradient(ModelVec);
 
       //const size_t index =  62; //rand() % nmod;
-      /*jiba::rvec FDGrad(nmod);
+      jiba::rvec FDGrad(nmod);
       std::ofstream outfile("grad.comp");
       for (size_t index = 0; index < nmod; ++index)
         {
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE  (X3D_basic_deriv_test)
           Backward(index) -= delta;
           FDGrad(index) = (Objective.CalcMisfit(Forward) - Objective.CalcMisfit(Backward))/(2*delta);
           outfile << index << " " << FDGrad(index) << " " << Gradient(index) << std::endl;
-        }*/
+        }
       //std::cout << "Index: " << index << std::endl;
       //BOOST_CHECK_CLOSE(FDGrad,Gradient(index),1.0);
       // std::cout << "Gradient: " << Gradient << std::endl;

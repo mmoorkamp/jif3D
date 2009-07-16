@@ -19,9 +19,9 @@ namespace OPTPP
         double stpmin, double stpmax, int *info);
 
     int mcsrch(jiba::ObjectiveFunction* nlp, const jiba::rvec& s,
-        jiba::rvec &Grad,
-        const jiba::rvec &model, double &misfit, double *stp, int itnmax,
-        double ftol, double xtol, double gtol, double stpmax, double stpmin)
+        jiba::rvec &Grad, const jiba::rvec &model, double &misfit, double *stp,
+        int itnmax, double ftol, double xtol, double gtol, double stpmax,
+        double stpmin)
       {
 
         /****************************************************************************
@@ -220,9 +220,10 @@ namespace OPTPP
             /*    and compute the directional derivative. */
 
             xc = model + s * (*stp);
-            std::cout << "Step: "<<  *stp << std::endl;
+
             fvalue = nlp->CalcMisfit(xc);
             Grad = nlp->CalcGradient(xc);
+            std::cout << "Step: " << *stp << " Fvalue: " << fvalue << std::endl;
             misfit = fvalue;
             info = 0;
             dg = zero;

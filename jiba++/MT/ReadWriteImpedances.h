@@ -15,14 +15,14 @@ namespace jiba
   {
 
     void WriteImpedancesToNetCDF(const std::string &filename,
-        const jiba::rvec &Frequencies, const jiba::rvec &StatXCoord,
-        const jiba::rvec &StatYCoord, const jiba::rvec &StatZCoord,
-        const jiba::rvec &Impedances);
+        const jiba::rvec &Frequencies, const std::vector<double> &StatXCoord,
+        const std::vector<double> &StatYCoord,
+        const std::vector<double> &StatZCoord, const jiba::rvec &Impedances);
 
     void ReadImpedancesFromNetCDF(const std::string &filename,
-        jiba::rvec &Frequencies, jiba::rvec &StatXCoord,
-        jiba::rvec &StatYCoord, jiba::rvec &StatZCoord, jiba::rvec &Impedances);
-
+        jiba::rvec &Frequencies, std::vector<double> &StatXCoord, std::vector<
+            double> &StatYCoord, std::vector<double> &StatZCoord,
+        jiba::rvec &Impedances);
   }
 
 #endif /* READWRITEIMPEDANCES_H_ */
