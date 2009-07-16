@@ -27,7 +27,7 @@ namespace jiba
           {
             Component(i) = Impedances(i * 8 + compindex);
           }
-        CompVar->put(&Component[0], Component.size());
+        CompVar->put(&Component[0], StatNumDim->size(), FreqDim->size());
       }
 
     void ReadImpedanceComp(NcFile &NetCDFFile, jiba::rvec &Impedances,
@@ -36,7 +36,7 @@ namespace jiba
         NcVar *SizeVar = NetCDFFile.get_var(CompName.c_str());
         const size_t nvalues = Impedances.size() / 8;
         jiba::rvec Temp(nvalues);
-        SizeVar->get(&Temp[0], nvalues);
+        SizeVar->get(&Temp[0], SizeVar->edges()[0], SizeVar->edges()[1]);
         for (size_t i = 0; i < nvalues; ++i)
           {
             Impedances(i * 8 + compindex) = Temp(i);
@@ -45,9 +45,9 @@ namespace jiba
       }
 
     void WriteImpedancesToNetCDF(const std::string &filename,
-        const jiba::rvec &Frequencies, const jiba::rvec &StatXCoord,
-        const jiba::rvec &StatYCoord, const jiba::rvec &StatZCoord,
-        const jiba::rvec &Impedances)
+        const jiba::rvec &Frequencies, const std::vector<double> &StatXCoord,
+        const std::vector<double> &StatYCoord,
+        const std::vector<double> &StatZCoord, const jiba::rvec &Impedances)
       {
         const size_t nstats = StatXCoord.size();
         const size_t nfreqs = Frequencies.size();
@@ -92,14 +92,24 @@ namespace jiba
       }
 
     void ReadImpedancesFromNetCDF(const std::string &filename,
-        jiba::rvec &Frequencies, jiba::rvec &StatXCoord,
-        jiba::rvec &StatYCoord, jiba::rvec &StatZCoord, jiba::rvec &Impedances)
+        jiba::rvec &Frequencies, std::vector<double> &StatXCoord, std::vector<
+            double> &StatYCoord, std::vector<double> &StatZCoord,
+        jiba::rvec &Impedances)
       {
         NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
         ReadVec(DataFile, MeasPosXName, StationNumberName, StatXCoord);
-        ReadVec(DataFile, MeasPosXName, StationNumberName, StatYCoord);
-        ReadVec(DataFile, MeasPosXName, StationNumberName, StatZCoord);
+        ReadVec(DataFile, MeasPosYName, StationNumberName, StatYCoord);
+        ReadVec(DataFile, MeasPosZName, StationNumberName, StatZCoord);
         ReadVec(DataFile, FreqDimName, FreqDimName, Frequencies);
+        Impedances.resize(Frequencies.size() * StatXCoord.size() * 8);
+        ReadImpedanceComp(DataFile, Impedances, "Zxx_re", 0);
+        ReadImpedanceComp(DataFile, Impedances, "Zxx_im", 1);
+        ReadImpedanceComp(DataFile, Impedances, "Zxy_re", 2);
+        ReadImpedanceComp(DataFile, Impedances, "Zxy_im", 3);
+        ReadImpedanceComp(DataFile, Impedances, "Zyx_re", 4);
+        ReadImpedanceComp(DataFile, Impedances, "Zyx_im", 5);
+        ReadImpedanceComp(DataFile, Impedances, "Zyy_re", 6);
+        ReadImpedanceComp(DataFile, Impedances, "Zyy_im", 7);
 
       }
   }

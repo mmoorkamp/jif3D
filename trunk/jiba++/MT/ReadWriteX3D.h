@@ -58,10 +58,10 @@ namespace jiba
         X3DModel::ProblemType Type, const std::string &ResultFilename,
         const std::string &ModelFilename);
 
-
     //!Write a file containing information about sources (electric or magnetic)
     void WriteSourceFile(const std::string &filename, const double SourceDepth,
-        const boost::multi_array<std::complex<double>, 2> &XPolMoments,const boost::multi_array<std::complex<double>, 2> &YPolMoments );
+        const boost::multi_array<std::complex<double>, 2> &XPolMoments,
+        const boost::multi_array<std::complex<double>, 2> &YPolMoments);
     void ReadEMO(const std::string &filename,
         std::vector<std::complex<double> > &Ex, std::vector<
             std::complex<double> > &Ey, std::vector<std::complex<double> > &Hx,
@@ -70,6 +70,10 @@ namespace jiba
     void ReadEMA(const std::string &filename,
         std::vector<std::complex<double> > &Ex, std::vector<
             std::complex<double> > &Ey, std::vector<std::complex<double> > &Ez);
+
+    std::vector<std::complex<double> > ResortFields(const std::vector<
+        std::complex<double> > &InField, const size_t nx, const size_t ny,
+        const size_t nz);
   }
 
 #endif /* READWRITEX3D_H_ */

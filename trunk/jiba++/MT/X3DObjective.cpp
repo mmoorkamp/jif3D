@@ -14,13 +14,11 @@ namespace jiba
 
     X3DObjective::X3DObjective()
       {
-        // TODO Auto-generated constructor stub
 
       }
 
     X3DObjective::~X3DObjective()
       {
-        // TODO Auto-generated destructor stub
       }
 
     void X3DObjective::ImplDataDifference(const jiba::rvec &Model,
@@ -30,7 +28,7 @@ namespace jiba
         //Copy the model vector into the object with the geometry information
         std::copy(Model.begin(), Model.end(),
             ConductivityModel.SetConductivities().origin());
-        //Calcualte the travel times for the 3D model
+        //Calculate the travel times for the 3D model
         jiba::X3DMTCalculator Calculator;
         jiba::rvec SynthData(Calculator.Calculate(ConductivityModel));
         Diff.resize(ObservedData.size());

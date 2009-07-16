@@ -19,13 +19,13 @@ namespace jiba
         std::complex<double> &Zyx, std::complex<double> &Zyy)
       {
         //1D case
-        if (abs(Hx1) == 0 && abs(Hy2) == 0)
+        /*if (abs(Hx1) == 0 && abs(Hy2) == 0)
           {
             Zxx = std::complex<double>();
             Zyy = std::complex<double>();
             Zxy = Ex1 / Hy1;
             Zyx = Ey2 / Hx2;
-          }
+          }*/
         const std::complex<double> magdet(Hx1 * Hy2 - Hy1 * Hx2);
         Zxx = (Ex1 * Hy2 - Hy1 * Ex2) / magdet;
         Zxy = (Ex2 * Hx1 - Hx2 * Ex1) / magdet;
