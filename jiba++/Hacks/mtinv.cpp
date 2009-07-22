@@ -65,8 +65,8 @@ int main(int argc, char *argv[])
     jiba::rvec DataError(ndata);
     for (size_t i = 0; i < ndata; ++i)
       {
-        DataError(i) = 1.0 ; //std::max(std::abs(Data(i) * errorlevel), 1e-2 * maxdata
-            //* errorlevel);
+        DataError(i) = maxdata
+            * errorlevel;
       }
     for (size_t i = 0; i < Model.GetConductivities().shape()[2]; ++i)
       {

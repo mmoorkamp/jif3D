@@ -21,8 +21,8 @@ BOOST_AUTO_TEST_SUITE( X3DCalculator_Suite )
 BOOST_AUTO_TEST_CASE  (X3D_basic_deriv_test)
     {
       const size_t xsize = 3;
-      const size_t ysize = 7;
-      const size_t zsize = 2;
+      const size_t ysize = 6;
+      const size_t zsize = 4;
       const size_t nbglayers = 5;
       const size_t nmod = xsize * ysize * zsize;
       jiba::X3DModel Model;
@@ -60,17 +60,22 @@ BOOST_AUTO_TEST_CASE  (X3D_basic_deriv_test)
       jiba::rvec Gradient = Objective.CalcGradient(ModelVec);
 
       //const size_t index =  62; //rand() % nmod;
-      jiba::rvec FDGrad(nmod);
+      jiba::rvec ForFDGrad(nmod), BackFDGrad(nmod);
       std::ofstream outfile("grad.comp");
-      for (size_t index = 0; index < nmod; ++index)
+      for (double prec = 2.0; prec < 4.0; prec += 1.0)
         {
-          double delta = ModelVec(index) * 0.01;
-          jiba::rvec Forward(ModelVec);
-          jiba::rvec Backward(ModelVec);
-          Forward(index) += delta;
-          Backward(index) -= delta;
-          FDGrad(index) = (Objective.CalcMisfit(Forward) - Objective.CalcMisfit(Backward))/(2*delta);
-          outfile << index << " " << FDGrad(index) << " " << Gradient(index) << std::endl;
+          for (size_t index = 0; index < nmod; ++index)
+            {
+              double delta = ModelVec(index) * pow(10.0,-prec);
+              jiba::rvec Forward(ModelVec);
+              jiba::rvec Backward(ModelVec);
+              Forward(index) += delta;
+              Backward(index) -= delta;
+              ForFDGrad(index) = (Objective.CalcMisfit(Forward) - misfit)/(delta);
+              BackFDGrad(index) = (misfit - Objective.CalcMisfit(Backward))/delta;
+              outfile << index << " " << ForFDGrad(index) << " "<< BackFDGrad(index) << " " << Gradient(index) << std::endl;
+            }
+          outfile << std::endl;
         }
       //std::cout << "Index: " << index << std::endl;
       //BOOST_CHECK_CLOSE(FDGrad,Gradient(index),1.0);
