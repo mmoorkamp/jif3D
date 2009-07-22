@@ -20,24 +20,32 @@ namespace jiba
       {
         //1D case
         /*if (abs(Hx1) == 0 && abs(Hy2) == 0)
-          {
-            Zxx = std::complex<double>();
-            Zyy = std::complex<double>();
-            Zxy = Ex1 / Hy1;
-            Zyx = Ey2 / Hx2;
-          }*/
+         {
+         Zxx = std::complex<double>();
+         Zyy = std::complex<double>();
+         Zxy = Ex1 / Hy1;
+         Zyx = Ey2 / Hx2;
+         }*/
         const std::complex<double> magdet(Hx1 * Hy2 - Hy1 * Hx2);
         Zxx = (Ex1 * Hy2 - Hy1 * Ex2) / magdet;
         Zxy = (Ex2 * Hx1 - Hx2 * Ex1) / magdet;
         Zyx = (Ey1 * Hy2 - Hy1 * Ey2) / magdet;
-        Zyy = (Ey1 * Hx1 - Hx2 * Ey1) / magdet;
+        Zyy = (Ey2 * Hx1 - Hx2 * Ey1) / magdet;
       }
 
+
+    //! Calculate the impedance of a half-space in S.I. units (Ohm)
+    /*! For a given frequency and conductivity, calculate the impedance
+     * for a half-space with that conductivity.
+     * @param frequency The measurement frequency in Hz
+     * @param conductivity The conductivity of the half-space in S/m
+     * @return The impedance of the half-space in S.I. units, i.e. Ohm
+     */
     std::complex<double> ImpedanceHalfspace(const double frequency,
         const double conductivity)
       {
-        std::complex<double> omegamu = std::complex<double>(0.0, 1.0) * 2.0
-            * M_PI * mag_mu * frequency;
+        std::complex<double> omegamu = std::complex<double>(0.0, 2.0 * M_PI
+            * mag_mu * frequency);
         return sqrt(omegamu / conductivity);
       }
   }

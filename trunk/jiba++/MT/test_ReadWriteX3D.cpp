@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE  (read_write_X3D_test)
     {
       std::string filename("csmt010a.ema");
       std::vector<std::complex<double> > Ex,Ey,Ez;
-      jiba::ReadEMA(filename,Ex,Ey,Ez);
+      jiba::ReadEMA(filename,Ex,Ey,Ez,80,90,14);
       BOOST_CHECK(Ex.size() ==7200 * 14);
       BOOST_CHECK(Ex.size() == Ey.size());
     }

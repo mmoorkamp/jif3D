@@ -39,10 +39,11 @@ namespace jiba
             Model.GetConductivities(), Model.GetBackgroundConductivities(),
             Model.GetBackgroundThicknesses());
         system("x3d> /dev/null");
-        jiba::rvec result(Model.GetXCellSizes().size()
-            * Model.GetYCellSizes().size() * Model.GetFrequencies().size() * 8);
-        result.clear();
         const size_t nfreq = Model.GetFrequencies().size();
+        jiba::rvec result(Model.GetXCellSizes().size()
+            * Model.GetYCellSizes().size() * nfreq * 8);
+        result.clear();
+
         for (size_t i = 0; i < nfreq; ++i)
           {
             std::string emoAname = resultfilename + jiba::stringify(i)
@@ -127,10 +128,8 @@ namespace jiba
       {
         WriteSourceFile(sourcefilename, 0.0, XPolMoments, YPolMoments);
         system("x3d > /dev/null");
-        ReadEMA(emaname, Ux, Uy, Uz);
-        Ux = ResortFields(Ux, ncellsx, ncellsy, ncellsz);
-        Uy = ResortFields(Uy, ncellsx, ncellsy, ncellsz);
-        Uz = ResortFields(Uz, ncellsx, ncellsy, ncellsz);
+        ReadEMA(emaname, Ux, Uy, Uz, ncellsx, ncellsy, ncellsz);
+        //boost::filesystem::remove_all(emaname);
       }
 
     rvec X3DMTCalculator::LQDerivative(const X3DModel &Model,
@@ -145,7 +144,7 @@ namespace jiba
         const size_t nmod = ncellsx * ncellsy * ncellsz;
         assert(Misfit.size() == ndata);
         //std::cout << "Misfit: " << Misfit << std::endl;
-        jiba::rvec Gradient(Model.GetConductivities().num_elements());
+        jiba::rvec Gradient(nmod);
         Gradient.clear();
         for (size_t i = 0; i < nfreq; ++i)
           {
@@ -155,9 +154,9 @@ namespace jiba
                 + "b.emo";
             std::string emaname = resultfilename + jiba::stringify(i) + ".ema";
 
+            //read the fields from the forward calculation
             std::vector<std::complex<double> > Ex1_obs, Ex2_obs, Ey1_obs,
                 Ey2_obs, Hx1_obs, Hx2_obs, Hy1_obs, Hy2_obs;
-
             ReadEMO(emoAname, Ex1_obs, Ey1_obs, Hx1_obs, Hy1_obs);
             ReadEMO(emoBname, Ex2_obs, Ey2_obs, Hx2_obs, Hy2_obs);
             assert(Ex1_obs.size()==nobs);
@@ -165,17 +164,11 @@ namespace jiba
             std::vector<std::complex<double> > Ex1_all, Ex2_all, Ey1_all,
                 Ey2_all, Ez1_all, Ez2_all;
             ReadEMA(resultfilename + jiba::stringify(i) + "a.ema", Ex1_all,
-                Ey1_all, Ez1_all);
+                Ey1_all, Ez1_all, ncellsx, ncellsy, ncellsz);
             ReadEMA(resultfilename + jiba::stringify(i) + "b.ema", Ex2_all,
-                Ey2_all, Ez2_all);
-            assert(Ex1_all.size() == nmod);
-            assert(Ex2_all.size() == nmod);
-            Ex1_all = ResortFields(Ex1_all, ncellsx, ncellsy, ncellsz);
-            Ex2_all = ResortFields(Ex2_all, ncellsx, ncellsy, ncellsz);
-            Ey1_all = ResortFields(Ey1_all, ncellsx, ncellsy, ncellsz);
-            Ey2_all = ResortFields(Ey2_all, ncellsx, ncellsy, ncellsz);
-            Ez1_all = ResortFields(Ez1_all, ncellsx, ncellsy, ncellsz);
-            Ez2_all = ResortFields(Ez2_all, ncellsx, ncellsy, ncellsz);
+                Ey2_all, Ez2_all, ncellsx, ncellsy, ncellsz);
+
+            //create variables for the adjoint field calculation
             const size_t freq_index = nobs * i * 8;
             boost::multi_array<std::complex<double>, 2> XPolMoments1(
                 boost::extents[ncellsx][ncellsy]), YPolMoments1(
@@ -195,27 +188,27 @@ namespace jiba
             boost::multi_array_ref<std::complex<double>, 1> YPolVec2(
                 YPolMoments2.data(),
                 boost::extents[YPolMoments2.num_elements()]);
+            boost::multi_array<std::complex<double>, 2> Zeros(
+                boost::extents[ncellsx][ncellsy]);
+            std::fill(Zeros.origin(), Zeros.origin() + Zeros.num_elements(),
+                0.0);
+            //make the sources for the electric dipoles
             for (size_t j = 0; j < nobs; ++j)
               {
                 const size_t siteindex = freq_index + j * 8;
                 cmat j_ext = CalcATimesH(MisfitToA(Misfit, siteindex), MakeH(
                     Hx1_obs[j], Hx2_obs[j], Hy1_obs[j], Hy2_obs[j]));
                 //std::cout << result << std::endl;
-                XPolVec1[j] = j_ext(0, 0);
-                YPolVec1[j] = j_ext(1, 0);
-                XPolVec2[j] = j_ext(0, 1);
-                YPolVec2[j] = j_ext(1, 1);
+                XPolVec1[j] = conj(j_ext(0, 0));
+                YPolVec1[j] = conj(j_ext(1, 0));
+                XPolVec2[j] = conj(j_ext(0, 1));
+                YPolVec2[j] = conj(j_ext(1, 1));
               }
             WriteProjectFile(Model.GetFrequencies(), X3DModel::EDIP,
                 resultfilename, modelfilename);
             std::string sourcefilename = modelfilename + stringify(i)
                 + "a.source";
             //write an empty source file for the second source polarization
-            boost::multi_array<std::complex<double>, 2> Zeros(
-                boost::extents[ncellsx][ncellsy]);
-            std::fill(Zeros.origin(), Zeros.origin() + Zeros.num_elements(),
-                0.0);
-
             WriteSourceFile(modelfilename + stringify(i) + "b.source", 0.0,
                 Zeros, Zeros);
             std::vector<std::complex<double> > Ux1_el, Ux2_el, Uy1_el, Uy2_el,
@@ -242,10 +235,10 @@ namespace jiba
                 cmat AH = CalcATimesH(MisfitToA(Misfit, siteindex), MakeH(
                     Hx1_obs[j], Hx2_obs[j], Hy1_obs[j], Hy2_obs[j]));
                 cmat h_ext = ublas::prod(trans(Z), AH);
-                XPolVec1[j] = h_ext(0, 0) * omega_mu;
-                YPolVec1[j] = h_ext(1, 0) * omega_mu;
-                XPolVec2[j] = h_ext(0, 1) * omega_mu;
-                YPolVec2[j] = h_ext(1, 1) * omega_mu;
+                XPolVec1[j] = conj(h_ext(0, 0) * omega_mu);
+                YPolVec1[j] = conj(h_ext(1, 0) * omega_mu);
+                XPolVec2[j] = conj(h_ext(0, 1) * omega_mu);
+                YPolVec2[j] = conj(h_ext(1, 1) * omega_mu);
               }
 
             std::vector<std::complex<double> > Ux1_mag, Ux2_mag, Uy1_mag,
@@ -269,6 +262,9 @@ namespace jiba
               }
             //finished with one frequency
           }
+        X3DModel GradMod(Model);
+        std::copy(Gradient.begin(),Gradient.end(),GradMod.SetConductivities().origin());
+        GradMod.WriteVTK("grad.vtk");
         return Gradient;
       }
   }

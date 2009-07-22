@@ -84,18 +84,19 @@ BOOST_AUTO_TEST_CASE  (EPOL_test)
   BOOST_AUTO_TEST_CASE(MT2DForward_test)
     {
       jiba::MT2DForward Forward;
-
-      Forward.SetXSizes().resize(boost::extents[100]);
-      Forward.SetZSizes().resize(boost::extents[100]);
+      const size_t nx = 100;
+      const size_t nz = 100;
+      Forward.SetXSizes().resize(boost::extents[nx]);
+      Forward.SetZSizes().resize(boost::extents[nz]);
       double currsize = 10.0;
-      std::fill_n(Forward.SetXSizes().origin(),100,100.0);
-      for (int i = 0; i < 100; ++i)
+      std::fill_n(Forward.SetXSizes().origin(),nx,100.0);
+      for (int i = 0; i < nz; ++i)
         {
           Forward.SetZSizes()[i] = currsize;
           currsize *= 1.1;
         }
-      Forward.SetResistivities().resize(boost::extents[100][100]);
-      std::fill_n(Forward.SetResistivities().origin(),6000,10.0);
+      Forward.SetResistivities().resize(boost::extents[nx][nz]);
+      std::fill_n(Forward.SetResistivities().origin(),nx*nz,10.0);
       std::vector<double> Periods(2,10.0);
       Periods.at(1) = 100.0;
       Forward.CalcEpol(Periods);

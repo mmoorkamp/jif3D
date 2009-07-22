@@ -28,8 +28,9 @@ namespace jiba
 
         const int nperiods = Periods.size();
         const long nx = XSizes.size();
-        const long nz = ZSizes.size();
-        const int nzearth = nz;
+        const int nzearth = ZSizes.size();
+        const long nz = nzearth + nionos + natmos;
+
         const int modelsize = nx * nzearth;
         const int nelements = modelsize * nperiods;
         const double rionos = 1.0;
@@ -49,16 +50,15 @@ namespace jiba
             std::fill_n(ZS.begin(), nionos + natmos, 100.0);
             std::copy(ZSizes.begin(), ZSizes.end(), ZS.begin() + nionos
                 + natmos);
-            const t2DModelData Res(Resistivities);
 #pragma omp for
             for (int i = 0; i < nperiods; ++i)
               {
                 int startingindex = i * (nx * nzearth);
                 epol_(&Periods[i], &nx, &nz, &nionos, &natmos, XS.origin(),
-                    ZS.origin(), Res.origin(), &rionos, Hx_real.origin()
-                        + startingindex, Hx_imag.origin() + startingindex,
-                    Ey_real.origin() + startingindex, Ey_imag.origin()
-                        + startingindex);
+                    ZS.origin(), Resistivities.origin(), &rionos,
+                    Hx_real.origin() + startingindex, Hx_imag.origin()
+                        + startingindex, Ey_real.origin() + startingindex,
+                    Ey_imag.origin() + startingindex);
               }
           }
       }
@@ -88,13 +88,12 @@ namespace jiba
           {
             const t2DModelDim XS(XSizes);
             const t2DModelDim ZS(ZSizes);
-            const t2DModelData Res(Resistivities);
 #pragma omp for
             for (int i = 0; i < nperiods; ++i)
               {
                 int startingindex = i * (nx * nzearth);
                 hpol_(&Periods[i], &nx, &nz, XS.origin(), ZS.origin(),
-                    Res.origin(), Hy_real.origin() + startingindex,
+                    Resistivities.origin(), Hy_real.origin() + startingindex,
                     Hy_imag.origin() + startingindex, Ex_real.origin()
                         + startingindex, Ex_imag.origin() + startingindex,
                     Ez_real.origin() + startingindex, Ez_imag.origin()

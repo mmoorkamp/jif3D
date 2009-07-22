@@ -33,6 +33,9 @@ namespace jiba
 
         line = FindToken(infile, "Thickness");
         double currvalue;
+        //swallow the line with 0 thickness and conductivity
+        char dummy[1024];
+        infile.getline(dummy, 1024);
         while (!infile.fail())
           {
             infile >> currvalue;
@@ -116,9 +119,15 @@ namespace jiba
         const double sigma_imag = 0.0;
         const double rel_eps = 1.0;
         const double rel_mu = 1.0;
+        //we need a top layer with 0 thickness and 0 conductivity
+        outfile << std::setw(10) << std::setprecision(5) << 0.0
+            << std::setw(10) << std::setprecision(5) << 0.0 << std::setw(10)
+            << std::setprecision(5) << 0.0 << std::setw(10)
+            << std::setprecision(5) << 1.0 << std::setw(10)
+            << std::setprecision(5) << 1.0 << "\n";
         for (size_t i = 0; i < bg_thicknesses.size(); ++i)
           {
-            outfile << std::setw(15) << std::setprecision(5)
+            outfile << std::setw(10) << std::setprecision(5)
                 << bg_thicknesses[i] << std::setw(15) << std::setprecision(5)
                 << bg_conductivities[i] << std::setw(15)
                 << std::setprecision(5) << sigma_imag << std::setw(15)
@@ -136,18 +145,21 @@ namespace jiba
 
         double currdepth = 0.0;
         const size_t nzlayers = ZCellSizes.size();
-        const size_t valuesperline = std::min(static_cast<size_t> (90),
+        const size_t valuesperline = std::min(static_cast<size_t> (35),
             static_cast<size_t> (XCellSizes.size() + 1));
-        const size_t valuewidth = 11;
-        const size_t valueprec = 3;
+        const size_t valuewidth = 27;
+        const size_t valueprec = 18;
         for (size_t i = 0; i < nzlayers; ++i)
           {
             outfile << "zA(m)  ( 'Depth_to_the_anomaly_layer' ) \n "
-                << currdepth << " \n\n";
+                << std::resetiosflags(std::ios::scientific)
+                << std::setprecision(5) << currdepth << " \n\n";
             outfile << "dzA(m) ( 'Thickness_of_the_anomaly_layer' ) \n";
-            outfile << ZCellSizes[i] << "\n\n";
+            outfile << std::resetiosflags(std::ios::scientific)
+                << std::setprecision(5) << ZCellSizes[i] << "\n\n";
             outfile << "Thicknesses of sublayers (m) \n";
-            outfile << ZCellSizes[i] << "\n\n";
+            outfile << std::resetiosflags(std::ios::scientific)
+                << std::setprecision(5) << ZCellSizes[i] << "\n\n";
             currdepth += ZCellSizes[i];
             outfile
                 << "Scale  ( the ARRAY will be multiplied by 'this_Scale' ) \n 1.0 \n\n";
@@ -183,6 +195,11 @@ namespace jiba
         outfile
             << "Binding_cell_in_Y-direction     Y-coordinate of centre of Binding cell (m) \n";
         outfile << " 1                              0.0\n";
+
+        if (outfile.bad())
+          {
+            throw jiba::FatalException("Problem writing model file.");
+          }
       }
 
     void WriteProjectFile(const std::vector<double> &Frequencies,
@@ -220,6 +237,10 @@ namespace jiba
         outfile
             << "  Format_of_Output (0 - mfo, 1 - ASCII, 2 - mfo+ASCII, 3 - mfo+ASCII+mfa; default value = 0)\n";
         outfile << "  3\n";
+        if (outfile.bad())
+          {
+            throw jiba::FatalException("Problem writing project file.");
+          }
       }
 
     void ReadEMO(const std::string &filename,
@@ -231,7 +252,7 @@ namespace jiba
         //find the description line for the electric fields
         FindToken(infile, "#        x (m)");
         //we have a few values in the file that we do not care about right now
-        double dummy;
+        double dummy, real, imag;
         const std::complex<double> I(0.0, 1.0);
         char restline[2048];
         //read in numbers as long as we can, this will be the E-field
@@ -240,14 +261,10 @@ namespace jiba
             infile >> dummy >> dummy >> dummy;
             if (infile.good())
               {
-                infile >> dummy;
-                Ex.push_back(dummy);
-                infile >> dummy;
-                Ex.back() -= dummy * I;
-                infile >> dummy;
-                Ey.push_back(dummy);
-                infile >> dummy;
-                Ey.back() -= dummy * I;
+                infile >> real >> imag;
+                Ex.push_back(std::complex<double>(real, -imag));
+                infile >> real >> imag;
+                Ey.push_back(std::complex<double>(real, -imag));
                 infile.getline(restline, 2048);
               }
           }
@@ -261,14 +278,10 @@ namespace jiba
             infile >> dummy >> dummy >> dummy;
             if (infile.good())
               {
-                infile >> dummy;
-                Hx.push_back(dummy);
-                infile >> dummy;
-                Hx.back() -= dummy * I;
-                infile >> dummy;
-                Hy.push_back(dummy);
-                infile >> dummy;
-                Hy.back() -= dummy * I;
+                infile >> real >> imag;
+                Hx.push_back(std::complex<double>(real, -imag));
+                infile >> real >> imag;
+                Hy.push_back(std::complex<double>(real, -imag));
                 infile.getline(restline, 2048);
               }
           }
@@ -280,15 +293,14 @@ namespace jiba
 
     void ReadEMA(const std::string &filename,
         std::vector<std::complex<double> > &Ex, std::vector<
-            std::complex<double> > &Ey, std::vector<std::complex<double> > &Ez)
+            std::complex<double> > &Ey, std::vector<std::complex<double> > &Ez,
+        const size_t ncellsx, const size_t ncellsy, const size_t ncellsz)
       {
         std::ifstream infile(filename.c_str());
         //find the description line for the electric fields
         FindToken(infile, "#        x (m)");
         //we have a few values in the file that we do not care about right now
         double dummy, real, imaginary;
-        const std::complex<double> I(0.0, 1.0);
-        char restline[2048];
         //read in numbers as long as we can, this will be the E-field
         while (infile.good())
           {
@@ -303,8 +315,12 @@ namespace jiba
                 Ez.push_back(std::complex<double>(real, -imaginary));
               }
           }
+        assert(Ex.size() == ncellsx*ncellsy*ncellsz);
         assert(Ex.size()==Ey.size());
         assert(Ex.size()==Ez.size());
+        Ex = ResortFields(Ex, ncellsx, ncellsy, ncellsz);
+        Ey = ResortFields(Ey, ncellsx, ncellsy, ncellsz);
+        Ez = ResortFields(Ez, ncellsx, ncellsy, ncellsz);
       }
 
     void WriteSourceComp(std::ofstream &outfile, const boost::multi_array<
@@ -313,9 +329,9 @@ namespace jiba
       {
         const size_t nx = Moments.shape()[0];
         const size_t ny = Moments.shape()[1];
-        const size_t valuesperline = std::min(static_cast<size_t> (90), nx + 1);
-        const size_t valuewidth = 11;
-        const size_t valueprec = 3;
+        const size_t valuesperline = std::min(static_cast<size_t> (35), nx + 1);
+        const size_t valuewidth = 27;
+        const size_t valueprec = 18;
 
         outfile << "FORMAT\n (" << valuesperline << "E" << valuewidth << "."
             << valueprec << ") \n";
@@ -357,8 +373,10 @@ namespace jiba
         const boost::multi_array<std::complex<double>, 2> &XPolMoments,
         const boost::multi_array<std::complex<double>, 2> &YPolMoments)
       {
-        assert(XPolMoments.shape()[0] == YPolMoments.shape()[0]);
-        assert(XPolMoments.shape()[1] == YPolMoments.shape()[1]);
+        const size_t nx = XPolMoments.shape()[0];
+        const size_t ny = XPolMoments.shape()[1];
+        assert(nx == YPolMoments.shape()[0]);
+        assert(ny == YPolMoments.shape()[1]);
         std::ofstream outfile(filename.c_str());
         outfile << "  Version_of_X3D code (yyyy-mm-dd)\n";
         outfile << "  2006-06-06\n\n";
@@ -373,38 +391,36 @@ namespace jiba
         outfile << SourceDepth << "\n $\n";
 
         //write real part of x-component
-        WriteGeometryInfo(outfile, XPolMoments.shape()[0],
-            XPolMoments.shape()[1]);
+        WriteGeometryInfo(outfile, nx, ny);
         WriteSourceComp(outfile, XPolMoments, boost::bind<const double&>(
             &std::complex<double>::real, _1));
 
         //write imaginary part of x-component
-        WriteGeometryInfo(outfile, XPolMoments.shape()[0],
-            XPolMoments.shape()[1]);
+        WriteGeometryInfo(outfile, nx, ny);
         WriteSourceComp(outfile, XPolMoments, boost::bind<const double&>(
             &std::complex<double>::imag, _1));
 
         //write real part of y-component
-        WriteGeometryInfo(outfile, YPolMoments.shape()[0],
-            YPolMoments.shape()[1]);
+        WriteGeometryInfo(outfile, nx, ny);
         WriteSourceComp(outfile, YPolMoments, boost::bind<const double&>(
             &std::complex<double>::real, _1));
 
         //write imaginary part of y-component
-        WriteGeometryInfo(outfile, YPolMoments.shape()[0],
-            YPolMoments.shape()[1]);
+        WriteGeometryInfo(outfile, nx, ny);
         WriteSourceComp(outfile, YPolMoments, boost::bind<const double&>(
             &std::complex<double>::imag, _1));
 
         //write real part of z-component, we assume it is 0
-        WriteGeometryInfo(outfile, YPolMoments.shape()[0],
-            YPolMoments.shape()[1]);
-        WriteEmptyArray(outfile, XPolMoments.shape()[0], XPolMoments.shape()[1]);
+        WriteGeometryInfo(outfile, nx, ny);
+        WriteEmptyArray(outfile, nx, ny);
 
         //write imaginary part of z-component, we assume it is 0
-        WriteGeometryInfo(outfile, YPolMoments.shape()[0],
-            YPolMoments.shape()[1]);
-        WriteEmptyArray(outfile, XPolMoments.shape()[0], XPolMoments.shape()[1]);
+        WriteGeometryInfo(outfile, nx, ny);
+        WriteEmptyArray(outfile, nx, ny);
+        if (outfile.bad())
+          {
+            throw jiba::FatalException("Problem writing source file.");
+          }
       }
 
     std::vector<std::complex<double> > ResortFields(const std::vector<
@@ -421,7 +437,6 @@ namespace jiba
               {
                 result.push_back(InField[j + ny * i + (ny * nx) * k]);
               }
-
         return result;
       }
 

@@ -69,7 +69,8 @@ namespace jiba
 
     void ReadEMA(const std::string &filename,
         std::vector<std::complex<double> > &Ex, std::vector<
-            std::complex<double> > &Ey, std::vector<std::complex<double> > &Ez);
+            std::complex<double> > &Ey, std::vector<std::complex<double> > &Ez,
+        const size_t ncellsx, const size_t ncellsy, const size_t ncellsz);
 
     std::vector<std::complex<double> > ResortFields(const std::vector<
         std::complex<double> > &InField, const size_t nx, const size_t ny,
