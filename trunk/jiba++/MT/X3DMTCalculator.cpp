@@ -119,6 +119,22 @@ namespace jiba
         return result;
       }
 
+    void CalcHext(const std::complex<double> &omega_mu,
+        std::complex<double> &Xp1, std::complex<double> &Xp2, std::complex<
+            double> &Yp1, std::complex<double> &Yp2,
+        const std::complex<double> &Zxx, const std::complex<double> &Zxy,
+        const std::complex<double> &Zyx, const std::complex<double> &Zyy)
+      {
+        std::complex<double> temp1 = conj(Zxx) * Xp1 + conj(Zyx) * Yp1;
+        std::complex<double> temp2 = conj(Zxy) * Xp1 + conj(Zyy) * Yp1;
+        Xp1 = temp1 * omega_mu;
+        Yp1 = temp2 * omega_mu;
+        temp1 = conj(Zxx) * Xp2 + conj(Zyx) * Yp2;
+        temp2 = conj(Zxy) * Xp2 + conj(Zyy) * Yp2;
+        Xp2 = temp1 * omega_mu;
+        Yp2 = temp2 * omega_mu;
+      }
+
     void CalcU(const std::string &sourcefilename, const std::string &emaname,
         const boost::multi_array<std::complex<double>, 2> &XPolMoments,
         const boost::multi_array<std::complex<double>, 2> &YPolMoments,
@@ -176,18 +192,6 @@ namespace jiba
             boost::multi_array<std::complex<double>, 2> XPolMoments2(
                 boost::extents[ncellsx][ncellsy]), YPolMoments2(
                 boost::extents[ncellsx][ncellsy]);
-            boost::multi_array_ref<std::complex<double>, 1> XPolVec1(
-                XPolMoments1.data(),
-                boost::extents[XPolMoments1.num_elements()]);
-            boost::multi_array_ref<std::complex<double>, 1> YPolVec1(
-                YPolMoments1.data(),
-                boost::extents[YPolMoments1.num_elements()]);
-            boost::multi_array_ref<std::complex<double>, 1> XPolVec2(
-                XPolMoments2.data(),
-                boost::extents[XPolMoments2.num_elements()]);
-            boost::multi_array_ref<std::complex<double>, 1> YPolVec2(
-                YPolMoments2.data(),
-                boost::extents[YPolMoments2.num_elements()]);
             boost::multi_array<std::complex<double>, 2> Zeros(
                 boost::extents[ncellsx][ncellsy]);
             std::fill(Zeros.origin(), Zeros.origin() + Zeros.num_elements(),
@@ -199,10 +203,10 @@ namespace jiba
                 cmat j_ext = CalcATimesH(MisfitToA(Misfit, siteindex), MakeH(
                     Hx1_obs[j], Hx2_obs[j], Hy1_obs[j], Hy2_obs[j]));
                 //std::cout << result << std::endl;
-                XPolVec1[j] = conj(j_ext(0, 0));
-                YPolVec1[j] = conj(j_ext(1, 0));
-                XPolVec2[j] = conj(j_ext(0, 1));
-                YPolVec2[j] = conj(j_ext(1, 1));
+                XPolMoments1.data()[j] = conj(j_ext(0, 0));
+                YPolMoments1.data()[j] = conj(j_ext(1, 0));
+                XPolMoments2.data()[j] = conj(j_ext(0, 1));
+                YPolMoments2.data()[j] = conj(j_ext(1, 1));
               }
             WriteProjectFile(Model.GetFrequencies(), X3DModel::EDIP,
                 resultfilename, modelfilename);
@@ -215,11 +219,11 @@ namespace jiba
                 Uz1_el, Uz2_el;
             CalcU(sourcefilename, emaname, XPolMoments1, YPolMoments1, Ux1_el,
                 Uy1_el, Uz1_el, ncellsx, ncellsy, ncellsz);
-
+           // boost::filesystem::rename(sourcefilename, "model.edipa.source");
             //calculate the second polarization
             CalcU(sourcefilename, emaname, XPolMoments2, YPolMoments2, Ux2_el,
                 Uy2_el, Uz2_el, ncellsx, ncellsy, ncellsz);
-
+            //boost::filesystem::rename(sourcefilename, "model.edipb.source");
             //first polarization of the magnetic dipole
             const std::complex<double> omega_mu = -1.0 / (std::complex<double>(
                 0.0, jiba::mag_mu) * 2.0 * M_PI * Model.GetFrequencies()[i]);
@@ -228,42 +232,39 @@ namespace jiba
             for (size_t j = 0; j < nobs; ++j)
               {
                 cmat Z(2, 2);
-                const size_t siteindex = freq_index + j * 8;
-                FieldsToImpedance(Ex1_obs[i], Ex2_obs[i], Ey1_obs[i],
-                    Ey2_obs[i], Hx1_obs[i], Hx2_obs[i], Hy1_obs[i], Hy2_obs[i],
+                FieldsToImpedance(Ex1_obs[j], Ex2_obs[j], Ey1_obs[j],
+                    Ey2_obs[j], Hx1_obs[j], Hx2_obs[j], Hy1_obs[j], Hy2_obs[j],
                     Z(0, 0), Z(0, 1), Z(1, 0), Z(1, 1));
-                cmat AH = CalcATimesH(MisfitToA(Misfit, siteindex), MakeH(
-                    Hx1_obs[j], Hx2_obs[j], Hy1_obs[j], Hy2_obs[j]));
-                cmat h_ext = ublas::prod(trans(Z), AH);
-                XPolVec1[j] = conj(h_ext(0, 0) * omega_mu);
-                YPolVec1[j] = conj(h_ext(1, 0) * omega_mu);
-                XPolVec2[j] = conj(h_ext(0, 1) * omega_mu);
-                YPolVec2[j] = conj(h_ext(1, 1) * omega_mu);
+                CalcHext(omega_mu, XPolMoments1.data()[j],
+                    XPolMoments2.data()[j], YPolMoments1.data()[j],
+                    YPolMoments2.data()[j], Z(0, 0), Z(0, 1), Z(1, 0), Z(1, 1));
               }
 
             std::vector<std::complex<double> > Ux1_mag, Ux2_mag, Uy1_mag,
                 Uy2_mag, Uz1_mag, Uz2_mag;
             CalcU(sourcefilename, emaname, XPolMoments1, YPolMoments1, Ux1_mag,
                 Uy1_mag, Uz1_mag, ncellsx, ncellsy, ncellsz);
-
+            //boost::filesystem::rename(sourcefilename, "model.mdipa.source");
             CalcU(sourcefilename, emaname, XPolMoments2, YPolMoments2, Ux2_mag,
                 Uy2_mag, Uz2_mag, ncellsx, ncellsy, ncellsz);
+           // boost::filesystem::rename(sourcefilename, "model.mdipb.source");
             const double cell_sizex = Model.GetXCellSizes()[0];
             const double cell_sizey = Model.GetYCellSizes()[0];
-            for (size_t i = 0; i < nmod; ++i)
+            for (size_t j = 0; j < nmod; ++j)
               {
                 const double Volume = cell_sizex * cell_sizey
-                    * Model.GetZCellSizes()[i % ncellsz];
-                Gradient(i) += std::real((Ux1_el[i] + Ux1_mag[i]) * Ex1_all[i]
-                    + (Uy1_el[i] + Uy1_mag[i]) * Ey1_all[i] + (Uz1_el[i]
-                    + Uz1_mag[i]) * Ez1_all[i] + (Ux2_el[i] + Ux2_mag[i])
-                    * Ex2_all[i] + (Uy2_el[i] + Uy2_mag[i]) * Ey2_all[i]
-                    + (Uz2_el[i] + Uz2_mag[i]) * Ez2_all[i]) * Volume;
+                    * Model.GetZCellSizes()[j % ncellsz];
+                Gradient(j) += std::real((Ux1_el[j] + Ux1_mag[j]) * Ex1_all[j]
+                    + (Uy1_el[j] + Uy1_mag[j]) * Ey1_all[j] + (Uz1_el[j]
+                    + Uz1_mag[j]) * Ez1_all[j] + (Ux2_el[j] + Ux2_mag[j])
+                    * Ex2_all[j] + (Uy2_el[j] + Uy2_mag[j]) * Ey2_all[j]
+                    + (Uz2_el[j] + Uz2_mag[j]) * Ez2_all[j]) * Volume;
               }
             //finished with one frequency
           }
         X3DModel GradMod(Model);
-        std::copy(Gradient.begin(),Gradient.end(),GradMod.SetConductivities().origin());
+        std::copy(Gradient.begin(), Gradient.end(),
+            GradMod.SetConductivities().origin());
         GradMod.WriteVTK("grad.vtk");
         return Gradient;
       }
