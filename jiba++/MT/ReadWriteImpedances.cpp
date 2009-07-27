@@ -45,7 +45,8 @@ namespace jiba
       }
 
     void WriteImpedancesToNetCDF(const std::string &filename,
-        const jiba::rvec &Frequencies, const std::vector<double> &StatXCoord,
+        const std::vector<double> &Frequencies,
+        const std::vector<double> &StatXCoord,
         const std::vector<double> &StatYCoord,
         const std::vector<double> &StatZCoord, const jiba::rvec &Impedances)
       {
@@ -91,9 +92,9 @@ namespace jiba
             7);
       }
 
-    void ReadImpedancesFromNetCDF(const std::string &filename,
-        jiba::rvec &Frequencies, std::vector<double> &StatXCoord, std::vector<
-            double> &StatYCoord, std::vector<double> &StatZCoord,
+    void ReadImpedancesFromNetCDF(const std::string &filename, std::vector<
+        double> &Frequencies, std::vector<double> &StatXCoord, std::vector<
+        double> &StatYCoord, std::vector<double> &StatZCoord,
         jiba::rvec &Impedances)
       {
         NcFile DataFile(filename.c_str(), NcFile::ReadOnly);

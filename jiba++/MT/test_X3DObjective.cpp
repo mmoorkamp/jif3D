@@ -10,11 +10,12 @@
 #define BOOST_TEST_MAIN ...
 #include <boost/test/included/unit_test.hpp>
 #include <boost/test/floating_point_comparison.hpp>
-
+#include <boost/filesystem.hpp>
 #include "X3DObjective.h"
 #include "X3DModel.h"
 #include "X3DMTCalculator.h"
 #include "MTEquations.h"
+#include "ReadWriteImpedances.h"
 
 BOOST_AUTO_TEST_SUITE( X3DCalculator_Suite )
 
@@ -35,7 +36,7 @@ BOOST_AUTO_TEST_CASE  (X3D_basic_deriv_test)
       const double deltax = 100.0;
       const double deltay = 100.0;
       const double deltaz = 100.0;
-      Model.SetHorizontalCellSize(deltax,xsize,ysize);
+      Model.SetHorizontalCellSize(deltax,deltay,xsize,ysize);
 
       std::fill_n(Model.SetZCellSizes().origin(),zsize,deltaz);
       std::fill_n(Model.SetConductivities().origin(),nmod,0.01);
@@ -44,14 +45,33 @@ BOOST_AUTO_TEST_CASE  (X3D_basic_deriv_test)
 
       Model.SetBackgroundConductivities(bg_conductivities);
       Model.SetBackgroundThicknesses(bg_thicknesses);
+      Model.SetFrequencies().push_back(1.0);
       Model.SetFrequencies().push_back(10.0);
 
+      jiba::X3DModel TrueModel(Model);
+      std::fill_n(TrueModel.SetConductivities().origin(),nmod,0.02);
+
       jiba::X3DMTCalculator Calculator;
+      jiba::rvec Observed = Calculator.Calculate(TrueModel);
+      //boost::filesystem::rename("x3d.model","true.model");
       jiba::rvec Impedance = Calculator.Calculate(Model);
 
-      Impedance *= 1.01;
+      std::vector<double> Freq(TrueModel.GetFrequencies());
+      std::vector<double> XCoord(xsize*ysize),YCoord(xsize*ysize),ZCoord(xsize*ysize);
+      std::fill_n(ZCoord.begin(),xsize*ysize,0.0);
+      for (size_t i = 0; i < TrueModel.GetXCoordinates().size(); ++i)
+        {
+          for (size_t j = 0; j < TrueModel.GetYCoordinates().size(); ++j)
+            {
+              XCoord[i] = TrueModel.GetXCoordinates()[i];
+              YCoord[i] = TrueModel.GetYCoordinates()[i];
+
+            }
+        }
+      jiba::WriteImpedancesToNetCDF("gradimp.nc",Freq,XCoord,YCoord,ZCoord,Observed);
+
       jiba::X3DObjective Objective;
-      Objective.SetObservedData(Impedance);
+      Objective.SetObservedData(Observed);
       Objective.SetModelGeometry(Model);
       jiba::rvec ModelVec(nmod);
       std::copy(Model.GetConductivities().origin(),Model.GetConductivities().origin()+nmod,ModelVec.begin());

@@ -14,6 +14,8 @@
 
 namespace jiba
   {
+    /** \addtogroup mtmodelling Forward modelling of magnetotelluric data */
+    /* @{ */
     //! This is the base class for the implementation of the 3D MT forward calculation
     /*! For our joint inversion we use x3D by Avdeev et al. to calculate impedances
      * for MT. However, this code is not generally available so provide this abstract
@@ -36,7 +38,7 @@ namespace jiba
       MT3DCalculator();
       virtual ~MT3DCalculator();
       };
-
+  /* @} */
   }
 
 #endif /* MT3DCALCULATOR_H_ */

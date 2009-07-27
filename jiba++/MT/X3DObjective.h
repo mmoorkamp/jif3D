@@ -11,13 +11,16 @@
 
 #include "../Inversion/ObjectiveFunction.h"
 #include "X3DModel.h"
+#include "X3DMTCalculator.h"
 
 namespace jiba
   {
-
+    /** \addtogroup mtmodelling Forward modelling of magnetotelluric data */
+    /* @{ */
     class X3DObjective: public ObjectiveFunction
       {
     private:
+      jiba::X3DMTCalculator Calculator;
       X3DModel ConductivityModel;
       jiba::rvec ObservedData;
       virtual void
@@ -42,7 +45,7 @@ namespace jiba
       X3DObjective();
       virtual ~X3DObjective();
       };
-
+  /* @} */
   }
 
 #endif /* X3DOBJECTIVE_H_ */

@@ -13,6 +13,8 @@
 
 namespace jiba
   {
+    /** \addtogroup mtmodelling Forward modelling of magnetotelluric data */
+    /* @{ */
     //! This class stores all information associated with 3D magnetotelluric models, so far it has only rudimentary functionality and will be extended
     class ThreeDMTModel: public jiba::ThreeDModelBase
       {
@@ -41,7 +43,7 @@ namespace jiba
       ThreeDMTModel();
       virtual ~ThreeDMTModel();
       };
-
+  /* @} */
   }
 
 #endif /* THREEDMTMODEL_H_ */

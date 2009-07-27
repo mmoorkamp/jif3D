@@ -7,6 +7,7 @@
 
 #include <boost/lambda/lambda.hpp>
 #include "../Global/FileUtil.h"
+#include "../Global/convert.h"
 #include "X3DModel.h"
 #include "X3DMTCalculator.h"
 #include "ReadWriteImpedances.h"
@@ -18,9 +19,22 @@ int main()
     jiba::X3DModel MTModel;
     MTModel.ReadNetCDF(modelfilename);
     std::string outfilename = jiba::AskFilename("Output filename: ", false);
-    jiba::rvec Frequencies(1);
-    Frequencies(0) = 10.0;
-    MTModel.SetFrequencies().assign(1, 1.0);
+    std::cout << "Frequencies: ";
+    double currfreq = 1.0;
+    try
+      {
+        while (true)
+          {
+            std::string input;
+            std::cin >> input;
+            jiba::convert(input, currfreq);
+            MTModel.SetFrequencies().push_back(currfreq);
+          }
+      } catch (jiba::BadConversion &e)
+      {
+
+      }
+
     jiba::X3DMTCalculator Calculator;
     jiba::rvec Impedances(Calculator.Calculate(MTModel));
     std::vector<double> XCoord(MTModel.GetConductivities().shape()[0]), YCoord(
@@ -36,8 +50,8 @@ int main()
           }
       }
 
-    jiba::WriteImpedancesToNetCDF(outfilename, Frequencies,
-        MTModel.GetMeasPosX(), MTModel.GetMeasPosY(),
-        MTModel.GetMeasPosZ(), Impedances);
+    jiba::WriteImpedancesToNetCDF(outfilename, MTModel.GetFrequencies(),
+        MTModel.GetMeasPosX(), MTModel.GetMeasPosY(), MTModel.GetMeasPosZ(),
+        Impedances);
   }
 

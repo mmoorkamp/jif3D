@@ -14,10 +14,12 @@
 
 namespace jiba
   {
-
+    /** \addtogroup mtmodelling Forward modelling of magnetotelluric data */
+    /* @{ */
     class X3DMTCalculator
       {
     private:
+      std::string MakeUniqueName( X3DModel::ProblemType Type, const size_t FreqIndex);
     public:
       //! Given a conductivity model, calculate a vector of impedances
       rvec Calculate(const X3DModel &Model);
@@ -27,7 +29,7 @@ namespace jiba
       X3DMTCalculator();
       virtual ~X3DMTCalculator();
       };
-
+  /* @} */
   }
 
 #endif /* X3DMTCALCULATOR_H_ */

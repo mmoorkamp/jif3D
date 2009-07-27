@@ -9,16 +9,19 @@
 #ifndef READWRITEX3D_H_
 #define READWRITEX3D_H_
 
-#include "../ModelBase/ThreeDModelBase.h"
-#include "X3DModel.h"
 #include <string>
 #include <vector>
 #include <complex>
 #include <boost/multi_array.hpp>
+#include <boost/filesystem.hpp>
+#include "../ModelBase/ThreeDModelBase.h"
+#include "X3DModel.h"
+
 
 namespace jiba
   {
-
+  /** \addtogroup mtmodelling Forward modelling of magnetotelluric data */
+  /* @{ */
     //! Read an ascii 3D MT model in the format used by x3D, not feature complete !
     /*! Read in a file with a 3D MT model in the format used by x3D
      * @param filename The name of the file
@@ -53,8 +56,15 @@ namespace jiba
         const ThreeDModelBase::t3DModelData &Data,
         const std::vector<double> &bg_conductivities,
         const std::vector<double> &bg_thicknesses);
+
     //! Write the file a.project that controls the forward calculation parameters for x3D
-    void WriteProjectFile(const std::vector<double> &Frequencies,
+    /*! The project file is always called a.project and controls what x3d calculates.
+     * @param Frequencies The vector of frequencies in Hz for which we want to calculate data
+     * @param Type The type of data we want to calculate, MT, electric dipole or magnetic dipole fields
+     * @param ResultFilename The filename root for the results
+     * @param ModelFilename The filename for the model in x3d format
+     */
+    void WriteProjectFile(const boost::filesystem::path &RootDir ,const std::vector<double> &Frequencies,
         X3DModel::ProblemType Type, const std::string &ResultFilename,
         const std::string &ModelFilename);
 
@@ -72,9 +82,8 @@ namespace jiba
             std::complex<double> > &Ey, std::vector<std::complex<double> > &Ez,
         const size_t ncellsx, const size_t ncellsy, const size_t ncellsz);
 
-    std::vector<std::complex<double> > ResortFields(const std::vector<
-        std::complex<double> > &InField, const size_t nx, const size_t ny,
-        const size_t nz);
+
+    /* @} */
   }
 
 #endif /* READWRITEX3D_H_ */
