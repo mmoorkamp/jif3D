@@ -8,6 +8,8 @@
 #include <complex>
 namespace jiba
   {
+    /** \addtogroup mtmodelling Forward modelling of magnetotelluric data */
+    /* @{ */
     const double mag_mu = 4e-7 * M_PI;
 
     std::complex<double> ImpedanceHalfspace(const double frequency,
@@ -19,6 +21,6 @@ namespace jiba
         double> &Hx2, const std::complex<double> &Hy1, const std::complex<
         double> &Hy2, std::complex<double> &Zxx, std::complex<double> &Zxy,
         std::complex<double> &Zyx, std::complex<double> &Zyy);
-
+  /* @} */
   }
 

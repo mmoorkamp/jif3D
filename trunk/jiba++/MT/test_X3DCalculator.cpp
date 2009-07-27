@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE  (X3D_forward_hs_test)
       const double deltax = 100.0;
       const double deltay = 100.0;
       const double deltaz = 100.0;
-      Model.SetHorizontalCellSize(deltax,xsize,ysize);
+      Model.SetHorizontalCellSize(deltax,deltay,xsize,ysize);
 
       std::fill_n(Model.SetZCellSizes().origin(),zsize,deltaz);
       std::fill_n(Model.SetConductivities().origin(),xsize*ysize*zsize,0.01);
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE  (X3D_forward_hs_test)
       const double bg_cond = 0.1;
       const double anom_cond = 1.0;
 
-      Model.SetHorizontalCellSize(deltax,xsize,ysize);
+      Model.SetHorizontalCellSize(deltax,deltay,xsize,ysize);
       Model.SetZCellSizes().resize(boost::extents[zsize]);
 
       double currsize = 200.0;

@@ -7,7 +7,7 @@
 
 
 #include "X3DObjective.h"
-#include "X3DMTCalculator.h"
+#include "../Global/FatalException.h"
 
 namespace jiba
   {
@@ -29,7 +29,7 @@ namespace jiba
         std::copy(Model.begin(), Model.end(),
             ConductivityModel.SetConductivities().origin());
         //Calculate the travel times for the 3D model
-        jiba::X3DMTCalculator Calculator;
+
         jiba::rvec SynthData(Calculator.Calculate(ConductivityModel));
         Diff.resize(ObservedData.size());
         assert(SynthData.size() == ObservedData.size());
@@ -43,11 +43,12 @@ namespace jiba
         const jiba::rvec &Diff)
       {
         assert(Model.size() == ConductivityModel.GetConductivities().num_elements());
-        //Copy the model vector into the object with the geometry information
-        std::copy(Model.begin(), Model.end(),
-            ConductivityModel.SetConductivities().origin());
+        if (!std::equal(Model.begin(), Model.end(),
+            ConductivityModel.GetConductivities().origin()))
+          throw jiba::FatalException(
+              "Gradient calculation needs identical model to forward !");
         //calculate the gradient
-        jiba::X3DMTCalculator Calculator;
+
         return Calculator.LQDerivative(ConductivityModel, Diff);
       }
   }

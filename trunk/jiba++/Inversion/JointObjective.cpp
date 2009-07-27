@@ -65,7 +65,8 @@ namespace jiba
         for (size_t i = 0; i < nobjective; ++i)
           {
             Gradient += Weights.at(i)
-                * Distributor.TransformGradient(Model, Objectives.at(i)->CalcGradient(Model), i);
+                * Distributor.TransformGradient(Model, Objectives.at(i)->CalcGradient(Distributor(
+                    Model, i)), i);
           }
         return Gradient;
       }

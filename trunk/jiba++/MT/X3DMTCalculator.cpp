@@ -5,10 +5,13 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
+#include <unistd.h>
 #include <cassert>
 #include <complex>
+#include <fstream>
 #include <boost/multi_array.hpp>
 #include <boost/filesystem/operations.hpp>
+#include "../Global/FatalException.h"
 #include "../Global/convert.h"
 #include "X3DMTCalculator.h"
 #include "ReadWriteX3D.h"
@@ -19,6 +22,13 @@ namespace jiba
 
     const std::string modelfilename("x3d.model");
     const std::string resultfilename("x3d.result");
+    const std::string emaname = resultfilename + "0.ema";
+    const std::string sourcefilename = modelfilename + "0a.source";
+    const std::string emoAname = resultfilename + "0a.emo";
+    const std::string emoBname = resultfilename + "0b.emo";
+    const std::string emaAname = resultfilename + "0a.ema";
+    const std::string emaBname = resultfilename + "0b.ema";
+
     X3DMTCalculator::X3DMTCalculator()
       {
 
@@ -29,16 +39,84 @@ namespace jiba
 
       }
 
+    bool CheckHNK(const boost::filesystem::path &TargetDir)
+      {
+        return boost::filesystem::exists(TargetDir / "ndec15.hnk")
+            && boost::filesystem::exists(TargetDir / "ndec20.hnk")
+            && boost::filesystem::exists(TargetDir / "ndec30.hnk")
+            && boost::filesystem::exists(TargetDir / "ndec40.hnk");
+      }
+
+    void CopyHNK(const boost::filesystem::path &SourceDir,
+        const boost::filesystem::path &TargetDir)
+      {
+        if (!CheckHNK(TargetDir))
+          {
+            boost::filesystem::copy_file(SourceDir / "ndec15.hnk", TargetDir
+                / "ndec15.hnk");
+            boost::filesystem::copy_file(SourceDir / "ndec20.hnk", TargetDir
+                / "ndec20.hnk");
+            boost::filesystem::copy_file(SourceDir / "ndec30.hnk", TargetDir
+                / "ndec30.hnk");
+            boost::filesystem::copy_file(SourceDir / "ndec40.hnk", TargetDir
+                / "ndec40.hnk");
+          }
+      }
+
+    std::string X3DMTCalculator::MakeUniqueName(X3DModel::ProblemType Type,
+        const size_t FreqIndex)
+      {
+        std::string result("p" + jiba::stringify(getpid()) + jiba::stringify(
+            this));
+        switch (Type)
+          {
+        case X3DModel::MT:
+          result += "MT";
+          break;
+        case X3DModel::EDIP:
+          result += "EDIP";
+          break;
+        case X3DModel::MDIP:
+          result += "MDIP";
+          break;
+        default:
+          throw jiba::FatalException("Unknown calculation type");
+          break;
+          }
+        result += jiba::stringify(FreqIndex);
+        return result;
+      }
+
+    void MakeRunFile(const std::string &NameRoot)
+      {
+        std::string DirName = NameRoot + "_dir";
+        std::string RunFileName = NameRoot + "_run";
+        boost::filesystem::create_directory(DirName);
+        std::ofstream runfile;
+        runfile.open(RunFileName.c_str());
+        runfile << "#!/bin/bash\n";
+        runfile << "cd " << DirName << "\n";
+        runfile << "x3d > /dev/null\n";
+        runfile << "cd ..\n";
+        runfile.close();
+        system((std::string("chmod u+x ./") + RunFileName).c_str());
+        CopyHNK(boost::filesystem::current_path(), DirName);
+      }
+
+    void RunX3D(const std::string &NameRoot)
+      {
+        system(("./" + NameRoot + "_run").c_str());
+      }
+
+    void CleanFiles(const std::string &NameRoot)
+      {
+        boost::filesystem::remove_all(NameRoot + "_dir");
+        boost::filesystem::remove_all(NameRoot + "_run");
+      }
+
     rvec X3DMTCalculator::Calculate(const X3DModel &Model)
       {
 
-        WriteProjectFile(Model.GetFrequencies(), X3DModel::MT, resultfilename,
-            modelfilename);
-        Write3DModelForX3D(modelfilename, Model.GetXCellSizes(),
-            Model.GetYCellSizes(), Model.GetZCellSizes(),
-            Model.GetConductivities(), Model.GetBackgroundConductivities(),
-            Model.GetBackgroundThicknesses());
-        system("x3d> /dev/null");
         const size_t nfreq = Model.GetFrequencies().size();
         jiba::rvec result(Model.GetXCellSizes().size()
             * Model.GetYCellSizes().size() * nfreq * 8);
@@ -46,15 +124,24 @@ namespace jiba
 
         for (size_t i = 0; i < nfreq; ++i)
           {
-            std::string emoAname = resultfilename + jiba::stringify(i)
-                + "a.emo";
-            std::string emoBname = resultfilename + jiba::stringify(i)
-                + "b.emo";
+            std::string RootName = MakeUniqueName(X3DModel::MT, i);
+            MakeRunFile(RootName);
+            std::string DirName = RootName + "_dir";
+            std::vector<double> CurrFreq(1, Model.GetFrequencies()[i]);
+            WriteProjectFile(DirName, CurrFreq, X3DModel::MT, resultfilename,
+                modelfilename);
+            Write3DModelForX3D(DirName + "/" + modelfilename,
+                Model.GetXCellSizes(), Model.GetYCellSizes(),
+                Model.GetZCellSizes(), Model.GetConductivities(),
+                Model.GetBackgroundConductivities(),
+                Model.GetBackgroundThicknesses());
+
+            RunX3D(RootName);
             std::vector<std::complex<double> > Ex1, Ex2, Ey1, Ey2, Hx1, Hx2,
                 Hy1, Hy2;
             std::complex<double> Zxx, Zxy, Zyx, Zyy;
-            ReadEMO(emoAname, Ex1, Ey1, Hx1, Hy1);
-            ReadEMO(emoBname, Ex2, Ey2, Hx2, Hy2);
+            ReadEMO(DirName + "/" + emoAname, Ex1, Ey1, Hx1, Hy1);
+            ReadEMO(DirName + "/" + emoBname, Ex2, Ey2, Hx2, Hy2);
             const size_t nobs = Ex1.size();
             const size_t freq_index = nobs * i * 8;
             for (size_t j = 0; j < nobs; ++j)
@@ -135,16 +222,17 @@ namespace jiba
         Yp2 = temp2 * omega_mu;
       }
 
-    void CalcU(const std::string &sourcefilename, const std::string &emaname,
-        const boost::multi_array<std::complex<double>, 2> &XPolMoments,
-        const boost::multi_array<std::complex<double>, 2> &YPolMoments,
+    void CalcU(const std::string &RootName, const boost::multi_array<
+        std::complex<double>, 2> &XPolMoments, const boost::multi_array<
+        std::complex<double>, 2> &YPolMoments,
         std::vector<std::complex<double> > &Ux, std::vector<
             std::complex<double> > &Uy, std::vector<std::complex<double> > &Uz,
         const size_t ncellsx, const size_t ncellsy, const size_t ncellsz)
       {
-        WriteSourceFile(sourcefilename, 0.0, XPolMoments, YPolMoments);
-        system("x3d > /dev/null");
-        ReadEMA(emaname, Ux, Uy, Uz, ncellsx, ncellsy, ncellsz);
+        std::string DirName = RootName + "_dir/";
+        WriteSourceFile(DirName + sourcefilename, 0.0, XPolMoments, YPolMoments);
+        RunX3D(RootName);
+        ReadEMA(DirName + emaname, Ux, Uy, Uz, ncellsx, ncellsy, ncellsz);
         //boost::filesystem::remove_all(emaname);
       }
 
@@ -162,27 +250,27 @@ namespace jiba
         //std::cout << "Misfit: " << Misfit << std::endl;
         jiba::rvec Gradient(nmod);
         Gradient.clear();
+        std::vector<double> CurrFreq(1, 0.0);
         for (size_t i = 0; i < nfreq; ++i)
           {
-            std::string emoAname = resultfilename + jiba::stringify(i)
-                + "a.emo";
-            std::string emoBname = resultfilename + jiba::stringify(i)
-                + "b.emo";
-            std::string emaname = resultfilename + jiba::stringify(i) + ".ema";
+            std::string ForwardName = MakeUniqueName(X3DModel::MT, i);
+            std::string ForwardDirName = ForwardName + "_dir/";
 
             //read the fields from the forward calculation
             std::vector<std::complex<double> > Ex1_obs, Ex2_obs, Ey1_obs,
                 Ey2_obs, Hx1_obs, Hx2_obs, Hy1_obs, Hy2_obs;
-            ReadEMO(emoAname, Ex1_obs, Ey1_obs, Hx1_obs, Hy1_obs);
-            ReadEMO(emoBname, Ex2_obs, Ey2_obs, Hx2_obs, Hy2_obs);
+            ReadEMO(ForwardDirName + emoAname, Ex1_obs, Ey1_obs, Hx1_obs,
+                Hy1_obs);
+            ReadEMO(ForwardDirName + emoBname, Ex2_obs, Ey2_obs, Hx2_obs,
+                Hy2_obs);
             assert(Ex1_obs.size()==nobs);
             assert(Ex2_obs.size()==nobs);
             std::vector<std::complex<double> > Ex1_all, Ex2_all, Ey1_all,
                 Ey2_all, Ez1_all, Ez2_all;
-            ReadEMA(resultfilename + jiba::stringify(i) + "a.ema", Ex1_all,
-                Ey1_all, Ez1_all, ncellsx, ncellsy, ncellsz);
-            ReadEMA(resultfilename + jiba::stringify(i) + "b.ema", Ex2_all,
-                Ey2_all, Ez2_all, ncellsx, ncellsy, ncellsz);
+            ReadEMA(ForwardDirName + emaAname, Ex1_all, Ey1_all, Ez1_all,
+                ncellsx, ncellsy, ncellsz);
+            ReadEMA(ForwardDirName + emaBname, Ex2_all, Ey2_all, Ez2_all,
+                ncellsx, ncellsy, ncellsz);
 
             //create variables for the adjoint field calculation
             const size_t freq_index = nobs * i * 8;
@@ -208,27 +296,45 @@ namespace jiba
                 XPolMoments2.data()[j] = conj(j_ext(0, 1));
                 YPolMoments2.data()[j] = conj(j_ext(1, 1));
               }
-            WriteProjectFile(Model.GetFrequencies(), X3DModel::EDIP,
+            CurrFreq[0] = Model.GetFrequencies()[i];
+            std::string EdipName = MakeUniqueName(X3DModel::EDIP, i);
+            std::string EdipDirName = EdipName + "_dir/";
+            MakeRunFile(EdipName);
+            WriteProjectFile(EdipDirName, CurrFreq, X3DModel::EDIP,
                 resultfilename, modelfilename);
-            std::string sourcefilename = modelfilename + stringify(i)
-                + "a.source";
+            Write3DModelForX3D(EdipDirName + modelfilename,
+                Model.GetXCellSizes(), Model.GetYCellSizes(),
+                Model.GetZCellSizes(), Model.GetConductivities(),
+                Model.GetBackgroundConductivities(),
+                Model.GetBackgroundThicknesses());
             //write an empty source file for the second source polarization
-            WriteSourceFile(modelfilename + stringify(i) + "b.source", 0.0,
+            WriteSourceFile(EdipDirName + modelfilename + "0b.source", 0.0,
                 Zeros, Zeros);
             std::vector<std::complex<double> > Ux1_el, Ux2_el, Uy1_el, Uy2_el,
                 Uz1_el, Uz2_el;
-            CalcU(sourcefilename, emaname, XPolMoments1, YPolMoments1, Ux1_el,
-                Uy1_el, Uz1_el, ncellsx, ncellsy, ncellsz);
-           // boost::filesystem::rename(sourcefilename, "model.edipa.source");
+            CalcU(EdipName, XPolMoments1, YPolMoments1, Ux1_el, Uy1_el, Uz1_el,
+                ncellsx, ncellsy, ncellsz);
+            // boost::filesystem::rename(sourcefilename, "model.edipa.source");
             //calculate the second polarization
-            CalcU(sourcefilename, emaname, XPolMoments2, YPolMoments2, Ux2_el,
-                Uy2_el, Uz2_el, ncellsx, ncellsy, ncellsz);
+            CalcU(EdipName, XPolMoments2, YPolMoments2, Ux2_el, Uy2_el, Uz2_el,
+                ncellsx, ncellsy, ncellsz);
             //boost::filesystem::rename(sourcefilename, "model.edipb.source");
+
+
             //first polarization of the magnetic dipole
             const std::complex<double> omega_mu = -1.0 / (std::complex<double>(
                 0.0, jiba::mag_mu) * 2.0 * M_PI * Model.GetFrequencies()[i]);
-            WriteProjectFile(Model.GetFrequencies(), X3DModel::MDIP,
+
+            std::string MdipName = MakeUniqueName(X3DModel::MDIP, i);
+            std::string MdipDirName = MdipName + "_dir/";
+            MakeRunFile(MdipName);
+            WriteProjectFile(MdipDirName, CurrFreq, X3DModel::MDIP,
                 resultfilename, modelfilename);
+            Write3DModelForX3D(MdipDirName + modelfilename,
+                Model.GetXCellSizes(), Model.GetYCellSizes(),
+                Model.GetZCellSizes(), Model.GetConductivities(),
+                Model.GetBackgroundConductivities(),
+                Model.GetBackgroundThicknesses());
             for (size_t j = 0; j < nobs; ++j)
               {
                 cmat Z(2, 2);
@@ -242,12 +348,12 @@ namespace jiba
 
             std::vector<std::complex<double> > Ux1_mag, Ux2_mag, Uy1_mag,
                 Uy2_mag, Uz1_mag, Uz2_mag;
-            CalcU(sourcefilename, emaname, XPolMoments1, YPolMoments1, Ux1_mag,
-                Uy1_mag, Uz1_mag, ncellsx, ncellsy, ncellsz);
+            CalcU(MdipName, XPolMoments1, YPolMoments1, Ux1_mag, Uy1_mag,
+                Uz1_mag, ncellsx, ncellsy, ncellsz);
             //boost::filesystem::rename(sourcefilename, "model.mdipa.source");
-            CalcU(sourcefilename, emaname, XPolMoments2, YPolMoments2, Ux2_mag,
-                Uy2_mag, Uz2_mag, ncellsx, ncellsy, ncellsz);
-           // boost::filesystem::rename(sourcefilename, "model.mdipb.source");
+            CalcU(MdipName, XPolMoments2, YPolMoments2, Ux2_mag, Uy2_mag,
+                Uz2_mag, ncellsx, ncellsy, ncellsz);
+            // boost::filesystem::rename(sourcefilename, "model.mdipb.source");
             const double cell_sizex = Model.GetXCellSizes()[0];
             const double cell_sizey = Model.GetYCellSizes()[0];
             for (size_t j = 0; j < nmod; ++j)

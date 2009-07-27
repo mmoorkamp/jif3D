@@ -18,6 +18,10 @@
 namespace jiba
   {
 
+    std::vector<std::complex<double> > ResortFields(const std::vector<
+        std::complex<double> > &InField, const size_t nx, const size_t ny,
+        const size_t nz);
+
     void Read3DModelFromX3D(const std::string &filename,
         ThreeDModelBase::t3DModelDim &XCellSizes,
         ThreeDModelBase::t3DModelDim &YCellSizes,
@@ -202,12 +206,12 @@ namespace jiba
           }
       }
 
-    void WriteProjectFile(const std::vector<double> &Frequencies,
+    void WriteProjectFile(const boost::filesystem::path &RootDir ,const std::vector<double> &Frequencies,
         X3DModel::ProblemType Type, const std::string &ResultFilename,
         const std::string &ModelFilename)
       {
         const size_t nfreq = Frequencies.size();
-        std::ofstream outfile("a.project");
+        std::ofstream outfile((RootDir / "a.project").file_string().c_str());
         outfile << "  Version_of_X3D code (yyyy-mm-dd)\n";
         outfile << "  2006-06-06\n\n";
         outfile << "  Type_of_problem (0 - MT, 1 - CSMT, 2 - EDIP, 3 - MDIP)\n";

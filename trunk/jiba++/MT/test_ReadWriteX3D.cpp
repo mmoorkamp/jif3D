@@ -96,27 +96,5 @@ BOOST_AUTO_TEST_CASE  (read_write_X3D_test)
       BOOST_CHECK(Ex.size() ==7200 * 14);
       BOOST_CHECK(Ex.size() == Ey.size());
     }
-  BOOST_AUTO_TEST_CASE (test_rw_fields)
-    {
-      const size_t nx = 4;
-      const size_t ny = 5;
-      const size_t nz = 6;
-      const size_t nelements = nx * ny * nz;
-      std::vector<std::complex<double> > InField;
-      for (size_t i = 0; i < nelements; ++i)
-        {
-          InField.push_back(std::complex<double>(drand48(),drand48()));
-        }
-      std::vector<std::complex<double> > Output(jiba::ResortFields(InField,nx,ny,nz));
-      BOOST_CHECK(Output.size() == InField.size());
-      for (size_t i = 0; i < nx; ++i)
-      for (size_t j = 0; j < ny; ++j)
-      for (size_t k = 0; k < nz; ++k)
-        {
-          size_t inindex = j + i * ny + k * (ny*nx);
-          size_t outindex = k + j * nz + i *(nz *ny);
-          BOOST_CHECK(Output[outindex] == InField[inindex]);
-        }
-    }
 
   BOOST_AUTO_TEST_SUITE_END()

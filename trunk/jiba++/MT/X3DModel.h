@@ -13,7 +13,14 @@
 
 namespace jiba
   {
-
+    /** \addtogroup mtmodelling Forward modelling of magnetotelluric data */
+    /* @{ */
+    //! This class stores MT models with the additional information required for calculations with x3d
+    /*! The x3d forward calculation code requires the gridded "anomalous" domain to be embedded in a layered
+     * background. This class provides the necessary functionality to store information about the background
+     * so that it can seamlessly used with the x3d forward calculation classes.
+     *
+     */
     class X3DModel: public ThreeDMTModel
       {
     private:
@@ -56,19 +63,20 @@ namespace jiba
         {
           return bg_conductivities;
         }
-      //! The MT model for X3D by Avdeev et al. has the same cell size for all cells in the two horizontal directions so we just have one function to set it
+      //! The MT model for X3D by Avdeev et al. has the same cell size for all cells in each horizontal directions so we just have one function to set it
       /*! This function sets both the size of all cells as well as the number of cells in the horizontal (x and y) directions
-       * @param Size The size of each cell in all directions in m
+       * @param XSize The size of each cell in x-direction (North) in m
+       * @param YSize The size of each cell in y-direction (East) in m
        * @param nx The number of cells in x-direction (North)
        * @param ny The number of cells in y-direction (East)
        */
-      void SetHorizontalCellSize(const double Size, const size_t nx,
-          const size_t ny)
+      void SetHorizontalCellSize(const double XSize, const double YSize,
+          const size_t nx, const size_t ny)
         {
           ThreeDModelBase::SetXCellSizes().resize(boost::extents[nx]);
-          std::fill_n(ThreeDModelBase::SetXCellSizes().begin(), nx, Size);
+          std::fill_n(ThreeDModelBase::SetXCellSizes().begin(), nx, XSize);
           ThreeDModelBase::SetYCellSizes().resize(boost::extents[ny]);
-          std::fill_n(ThreeDModelBase::SetYCellSizes().begin(), ny, Size);
+          std::fill_n(ThreeDModelBase::SetYCellSizes().begin(), ny, YSize);
         }
       //! The vertical cells can all have different sizes so we allow direct access to the CellSize structure
       t3DModelDim &SetZCellSizes()
@@ -80,7 +88,7 @@ namespace jiba
       X3DModel();
       virtual ~X3DModel();
       };
-
+  /* @} */
   }
 
 #endif /* X3DMODEL_H_ */
