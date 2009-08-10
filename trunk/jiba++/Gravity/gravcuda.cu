@@ -90,9 +90,8 @@ void  SingleScalarMeas(const double x_meas, const double y_meas,
       const double z_meas, double *d_xcoord, double *d_ycoord,
       double *d_zcoord, double *d_xsize, double *d_ysize, double *d_zsize,
       double *d_result, const unsigned int nx, const unsigned int ny, const unsigned int nz,
-      double *returnvalue)
+      double *returnvalue, const unsigned int BLOCK_SIZE)
     {
-      const int BLOCK_SIZE = 128;
       dim3 threads( BLOCK_SIZE);
       const unsigned int nelements = nx * ny * nz;
       const unsigned int nblocks = (nelements/threads.x)+1;
@@ -112,9 +111,8 @@ void  SingleFTGMeas(const double x_meas, const double y_meas,
       const double z_meas, double *d_xcoord, double *d_ycoord,
       double *d_zcoord, double *d_xsize, double *d_ysize, double *d_zsize,
       double *d_result, const unsigned int nx, const unsigned int ny, const unsigned int nz,
-      double *returnvalue)
+      double *returnvalue, const unsigned int BLOCK_SIZE)
     {
-      const int BLOCK_SIZE = 128;
       dim3 threads( BLOCK_SIZE);
       const unsigned int nelements = nx * ny * nz;
       const unsigned int nblocks = (nelements/threads.x)+1;

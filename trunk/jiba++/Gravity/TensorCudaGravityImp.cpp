@@ -23,7 +23,7 @@ namespace jiba
         const double z_meas, double *d_xcoord, double *d_ycoord,
         double *d_zcoord, double *d_xsize, double *d_ysize, double *d_zsize,
         double *d_result, const unsigned int nx, const unsigned int ny,
-        const unsigned int nz, double *returnvalue);
+        const unsigned int nz, double *returnvalue, const unsigned int BLOCK_SIZE);
     //Perform the allocation of arrays on the GPU and copy the values
     extern "C" void PrepareData(double **d_xcoord, double **d_ycoord,
         double **d_zcoord, double **d_xsize, double **d_ysize,
@@ -36,9 +36,12 @@ namespace jiba
         double **d_zcoord, double **d_xsize, double **d_ysize,
         double **d_zsize, double **d_result);
 
+    //the default block size for a CUDA execution block
+    const size_t defaultblocksize = 128;
+
     TensorCudaGravityImp::TensorCudaGravityImp() :
       d_xcoord(NULL), d_ycoord(NULL), d_zcoord(NULL), d_xsize(NULL), d_ysize(
-          NULL), d_zsize(NULL), d_result(NULL), currsens(NULL), currsenssize(0)
+          NULL), d_zsize(NULL), d_result(NULL), currsens(NULL), currsenssize(0), blocksize(defaultblocksize)
       {
         // we have to do some raw pointer operations for handling sensitivities with CUDA
       }
@@ -92,7 +95,7 @@ namespace jiba
         SingleFTGMeas(x_meas, y_meas, z_meas, d_xcoord, d_ycoord, d_zcoord,
             d_xsize, d_ysize, d_zsize, d_result,
             Model.GetDensities().shape()[0], Model.GetDensities().shape()[1],
-            Model.GetDensities().shape()[2], currsens);
+            Model.GetDensities().shape()[2], currsens, blocksize);
         rvec result(ndatapermeas);
         //the GPU only calculates the sensitivities, we calculate the acceleration with the densities
         result(0) = std::inner_product(currsens, currsens + ngrid,

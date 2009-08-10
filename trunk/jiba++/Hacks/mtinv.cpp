@@ -57,14 +57,17 @@ int main(int argc, char *argv[])
         std::cerr << "No measurements defined" << std::endl;
         exit(100);
       }
-
+    for (size_t i = 0; i < XCoord.size(); ++i)
+      {
+        Model.AddMeasurementPoint(XCoord[i], YCoord[i], ZCoord[i]);
+      }
     //we define a few constants that are used throughout the inversion
 
     const size_t ndata = Data.size();
     const double errorlevel = 0.02;
 
     //create objects for the misfit and a very basic error estimate
-    jiba::rvec DataError = jiba::ConstructError(Data,errorlevel);
+    jiba::rvec DataError = jiba::ConstructError(Data, errorlevel);
 
     for (size_t i = 0; i < Model.GetConductivities().shape()[2]; ++i)
       {

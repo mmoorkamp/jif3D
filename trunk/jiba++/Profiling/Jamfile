@@ -7,6 +7,8 @@ project
 alias core :  ../ModelBase//modelbase ../Global ../Gravity ..//netcdf_c++ ..//netcdf ..//cudart ..//cutil ;
     
 exe time_gravity_size : time_gravity_size.cpp core ..//boost_program_options ;
+exe gravity_precision : gravity_precision.cpp core ;
+exe time_gravity_blocksize : time_gravity_blocksize.cpp core ;
 exe time_grav_term : time_grav_term.cpp core ;
 exe comp_grav_moment : comp_grav_moment.cpp core ;
 exe time_vector : time_vector.cpp ;

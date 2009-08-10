@@ -44,7 +44,13 @@ namespace jiba
                 ublas::element_div(SearchDir, GetModelCovDiag()));
             SearchDir -= Alpha(i) * *YHistory.at(i);
           }
-
+        double gamma = 1.0;
+        if (YHistory.size() > 0)
+          {
+            gamma = 1.0 / Rho(npairs-1) / ublas::inner_prod(*YHistory.back(),
+                ublas::element_div(*YHistory.back(), GetModelCovDiag()));
+          }
+        SearchDir *= gamma;
         for (size_t i = 0; i < npairs; ++i)
           {
             double beta = Rho(i) * ublas::inner_prod(*YHistory.at(i),
