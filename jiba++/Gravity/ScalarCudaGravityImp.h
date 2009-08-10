@@ -38,6 +38,8 @@ namespace jiba
       double *currsens;
       //the size of the current sensitivity row
       size_t currsenssize;
+      //the size of a CUDA execution block
+      size_t blocksize;
       // This is a scalar calculation so we get one value per measurement
       static const size_t ndatapermeas = 1;
       //! Calculate the response of the background, currently this is done on the CPU
@@ -55,6 +57,11 @@ namespace jiba
       virtual size_t RawDataPerMeasurement()
         {
           return ndatapermeas;
+        }
+      //! Set the size for a CUDA execution block, the default value is 128
+      void SetCUDABlockSize(const size_t s)
+        {
+          blocksize = s;
         }
       //! We reimplement the Calculate method to accommodate some specific CUDA issues
       virtual rvec Calculate(const ThreeDGravityModel &Model,

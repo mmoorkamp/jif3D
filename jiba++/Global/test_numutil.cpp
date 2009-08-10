@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(test_sign)
       std::vector<int> Sequence;
       //use the generator and compare the result
       std::generate_n(back_inserter(Sequence), ntries, jiba::IntSequence(start));
-      for (size_t i = 0; i < ntries; ++i)
+      for (int i = 0; i < ntries; ++i)
         {
           BOOST_CHECK(Sequence.at(i)== i+start);
         }

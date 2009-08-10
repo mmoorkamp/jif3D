@@ -27,7 +27,7 @@ void MakeTestModel(jiba::ThreeDGravityModel &Model, const size_t size)
       for (size_t j = 0; j < size; ++j)
         for (size_t k = 0; k < size; ++k)
           {
-            Model.SetDensities()[i][j][k] = double(rand() % 1000) / 300.0;
+            Model.SetDensities()[i][j][k] = 0.1 + double(rand() % 1000) / 300.0;
           }
     const size_t nmeas = 30;
     for (size_t i = 0; i < nmeas; ++i)
