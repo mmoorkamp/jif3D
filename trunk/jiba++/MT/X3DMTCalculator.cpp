@@ -118,8 +118,11 @@ namespace jiba
       {
 
         const size_t nfreq = Model.GetFrequencies().size();
-        jiba::rvec result(Model.GetXCellSizes().size()
-            * Model.GetYCellSizes().size() * nfreq * 8);
+        const size_t nmeas = Model.GetMeasPosX().size();
+        const size_t nmodx = Model.GetXCellSizes().size();
+        const size_t nmody = Model.GetYCellSizes().size();
+
+        jiba::rvec result(nmeas * nfreq * 8);
         result.clear();
 
         for (size_t i = 0; i < nfreq; ++i)
@@ -143,20 +146,27 @@ namespace jiba
             ReadEMO(DirName + "/" + emoAname, Ex1, Ey1, Hx1, Hy1);
             ReadEMO(DirName + "/" + emoBname, Ex2, Ey2, Hx2, Hy2);
             const size_t nobs = Ex1.size();
-            const size_t freq_index = nobs * i * 8;
-            for (size_t j = 0; j < nobs; ++j)
+            const size_t freq_index = nmeas * i * 8;
+            for (size_t j = 0; j < nmeas; ++j)
               {
-                const size_t obs_index = freq_index + j * 8;
-                FieldsToImpedance(Ex1[j], Ex2[j], Ey1[j], Ey2[j], Hx1[j],
-                    Hx2[j], Hy1[j], Hy2[j], Zxx, Zxy, Zyx, Zyy);
-                result(obs_index) = Zxx.real();
-                result(obs_index + 1) = Zxx.imag();
-                result(obs_index + 2) = Zxy.real();
-                result(obs_index + 3) = Zxy.imag();
-                result(obs_index + 4) = Zyx.real();
-                result(obs_index + 5) = Zyx.imag();
-                result(obs_index + 6) = Zyy.real();
-                result(obs_index + 7) = Zyy.imag();
+                boost::array<ThreeDModelBase::t3DModelData::index, 3>
+                    StationIndex = Model.FindAssociatedIndices(
+                        Model.GetMeasPosX()[j], Model.GetMeasPosY()[j],
+                        Model.GetMeasPosZ()[j]);
+                //at the moment we ignore the depth/elevation of the site
+                const size_t offset = StationIndex[1] * nmodx + StationIndex[0];
+                const size_t meas_index = freq_index + j * 8;
+                FieldsToImpedance(Ex1[offset], Ex2[offset], Ey1[offset],
+                    Ey2[offset], Hx1[offset], Hx2[offset], Hy1[offset],
+                    Hy2[offset], Zxx, Zxy, Zyx, Zyy);
+                result(meas_index) = Zxx.real();
+                result(meas_index + 1) = Zxx.imag();
+                result(meas_index + 2) = Zxy.real();
+                result(meas_index + 3) = Zxy.imag();
+                result(meas_index + 4) = Zyx.real();
+                result(meas_index + 5) = Zyx.imag();
+                result(meas_index + 6) = Zyy.real();
+                result(meas_index + 7) = Zyy.imag();
               }
             //finished with one frequency
           }
@@ -244,7 +254,8 @@ namespace jiba
         const size_t ncellsy = Model.GetConductivities().shape()[1];
         const size_t ncellsz = Model.GetConductivities().shape()[2];
         const size_t nobs = ncellsx * ncellsy;
-        const size_t ndata = nobs * nfreq * 8;
+        const size_t nmeas = Model.GetMeasPosX().size();
+        const size_t ndata = nmeas * nfreq * 8;
         const size_t nmod = ncellsx * ncellsy * ncellsz;
         assert(Misfit.size() == ndata);
         //std::cout << "Misfit: " << Misfit << std::endl;
@@ -273,7 +284,7 @@ namespace jiba
                 ncellsx, ncellsy, ncellsz);
 
             //create variables for the adjoint field calculation
-            const size_t freq_index = nobs * i * 8;
+            const size_t freq_index = nmeas * i * 8;
             boost::multi_array<std::complex<double>, 2> XPolMoments1(
                 boost::extents[ncellsx][ncellsy]), YPolMoments1(
                 boost::extents[ncellsx][ncellsy]);
@@ -284,17 +295,29 @@ namespace jiba
                 boost::extents[ncellsx][ncellsy]);
             std::fill(Zeros.origin(), Zeros.origin() + Zeros.num_elements(),
                 0.0);
+            std::fill(XPolMoments1.origin(), XPolMoments1.origin() + nobs, 0.0);
+            std::fill(XPolMoments2.origin(), XPolMoments2.origin() + nobs, 0.0);
+            std::fill(YPolMoments1.origin(), YPolMoments1.origin() + nobs, 0.0);
+            std::fill(YPolMoments2.origin(), YPolMoments2.origin() + nobs, 0.0);
             //make the sources for the electric dipoles
-            for (size_t j = 0; j < nobs; ++j)
+            for (size_t j = 0; j < nmeas; ++j)
               {
+                boost::array<ThreeDModelBase::t3DModelData::index, 3>
+                    StationIndex = Model.FindAssociatedIndices(
+                        Model.GetMeasPosX()[j], Model.GetMeasPosY()[j],
+                        Model.GetMeasPosZ()[j]);
+                //at the moment we ignore the depth/elevation of the site
+                const size_t offset = StationIndex[1] * ncellsx + StationIndex[0];
+
                 const size_t siteindex = freq_index + j * 8;
                 cmat j_ext = CalcATimesH(MisfitToA(Misfit, siteindex), MakeH(
-                    Hx1_obs[j], Hx2_obs[j], Hy1_obs[j], Hy2_obs[j]));
+                    Hx1_obs[offset], Hx2_obs[offset], Hy1_obs[offset],
+                    Hy2_obs[offset]));
                 //std::cout << result << std::endl;
-                XPolMoments1.data()[j] = conj(j_ext(0, 0));
-                YPolMoments1.data()[j] = conj(j_ext(1, 0));
-                XPolMoments2.data()[j] = conj(j_ext(0, 1));
-                YPolMoments2.data()[j] = conj(j_ext(1, 1));
+                XPolMoments1.data()[offset] = conj(j_ext(0, 0));
+                YPolMoments1.data()[offset] = conj(j_ext(1, 0));
+                XPolMoments2.data()[offset] = conj(j_ext(0, 1));
+                YPolMoments2.data()[offset] = conj(j_ext(1, 1));
               }
             CurrFreq[0] = Model.GetFrequencies()[i];
             std::string EdipName = MakeUniqueName(X3DModel::EDIP, i);

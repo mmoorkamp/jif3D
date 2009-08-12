@@ -3,11 +3,12 @@
 #include <stdio.h>
 #include "gravcuda_kernel.cu"
 #include "ftgcuda_kernel.cu"
+
+// Free all the memory allocated on the GPU
 extern "C"
 void  FreeData(double **d_xcoord, double **d_ycoord, double **d_zcoord,
       double **d_xsize, double **d_ysize, double **d_zsize, double **d_result)
     {
-      CUT_CHECK_ERROR("Kernel execution failed");
       CUDA_SAFE_CALL(cudaFree(*d_xcoord));
       CUDA_SAFE_CALL(cudaFree(*d_ycoord));
       CUDA_SAFE_CALL(cudaFree(*d_zcoord));
@@ -15,6 +16,7 @@ void  FreeData(double **d_xcoord, double **d_ycoord, double **d_zcoord,
       CUDA_SAFE_CALL(cudaFree(*d_ysize));
       CUDA_SAFE_CALL(cudaFree(*d_zsize));
       CUDA_SAFE_CALL(cudaFree(*d_result));
+      CUT_CHECK_ERROR("Kernel execution failed");
       *d_xcoord = NULL;
       *d_ycoord = NULL;
       *d_zcoord = NULL;
@@ -24,13 +26,24 @@ void  FreeData(double **d_xcoord, double **d_ycoord, double **d_zcoord,
       *d_result = NULL;
     }
 
+/* Initialize the GPU, allocate memory on the GPU and transfer coordinate
+ * information from CPU to GPU. The variables starting with d_ point to memory
+ * on the GPU while the corresponding variables without the prefix point to
+ * main memory.
+ * 
+ * xcoord, ycoord, zcoord: The coordinates of the left, upper front corner for each cell in m
+ * xsize, ysize, zsize: The size of each cell in the respective direction in m
+ * nx, ny, nz the number of cells in x-direction, y-direction, z-direction, respectively
+ * 
+ */
 extern "C"
 void  PrepareData(double **d_xcoord, double **d_ycoord, double **d_zcoord,
       double **d_xsize, double **d_ysize, double **d_zsize, double **d_result,
       const double *xcoord,const double *ycoord,const double *zcoord,
       const double *xsize,const double *ysize,const double *zsize, unsigned int nx,unsigned int ny,unsigned int nz)
     {
-
+      //initialize the device and perform basic checks
+      // we always use the first device
       int deviceCount;
       cutilSafeCallNoSync(cudaGetDeviceCount(&deviceCount));
       if (deviceCount == 0)
@@ -41,25 +54,24 @@ void  PrepareData(double **d_xcoord, double **d_ycoord, double **d_zcoord,
       int dev = 0;
       cudaDeviceProp deviceProp;
       cudaGetDeviceProperties(&deviceProp, dev);
-      //printf("\nThe Properties of the Device with ID %d are\n",dev);
-      //printf("\tDevice Name : %s",deviceProp.name);
-      //printf("\n\tDevice Memory Size (in bytes) : %u",deviceProp.bytes);
-      //printf("\n\tDevice Major Revision Numbers : %d",deviceProp.major);
-      //printf("\n\tDevice Minor Revision Numbers : %d",deviceProp.minor);
       if (deviceProp.major < 1)
         {
           fprintf(stderr, "cutil error: device does not support CUDA.\n");
           exit(-1);
         }
-
+      if (deviceProp.minor < 3)
+        {
+          fprintf(stderr, "cutil error: device does not double precision.\n");
+          exit(-1);
+        }
       cudaSetDevice(dev);
       cudaGetLastError();
-
+      //determine the memory requirements in bytes
       size_t xmem_size = sizeof(double) * nx;
       size_t ymem_size = sizeof(double) * ny;
       size_t zmem_size = sizeof(double) * nz;
       size_t result_size = sizeof(double) * nx * ny * nz;
-
+      //allocate memory
       CUDA_SAFE_CALL(cudaMalloc((void**) d_xcoord, xmem_size));
       CUDA_SAFE_CALL(cudaMalloc((void**) d_ycoord, ymem_size));
       CUDA_SAFE_CALL(cudaMalloc((void**) d_zcoord, zmem_size));
@@ -82,9 +94,17 @@ void  PrepareData(double **d_xcoord, double **d_ycoord, double **d_zcoord,
               cudaMemcpyHostToDevice));
       CUDA_SAFE_CALL(cudaMemcpy(*d_zsize, zsize, zmem_size,
               cudaMemcpyHostToDevice));
-      cutilCheckMsg("Allocation and memory copy failed");
+      cutilCheckMsg("Allocation or memory copy failed");
     }
 
+/* Calculate the sensitivities for scalar gravity data for a single measurement position
+ *
+ * x_meas, y_meas, z_meas the measurement coordinates in m
+ * d_xcoord, d_ycoord, d_zcoord, ..., d_result, the pointers to GPU memory as initialized by
+ * PrepareData.
+ * returnvalue will contain an array of size nx*ny*nz with the sensitivities in c-storage order
+ * BLOCK_SIZE the number of threads per CUDA execution block
+ */
 extern "C"
 void  SingleScalarMeas(const double x_meas, const double y_meas,
       const double z_meas, double *d_xcoord, double *d_ycoord,
@@ -105,6 +125,16 @@ void  SingleScalarMeas(const double x_meas, const double y_meas,
 
       CUT_CHECK_ERROR("Result copy failed");
     }
+
+/* Calculate the sensitivities for scalar gravity data for a single measurement position
+ *
+ * x_meas, y_meas, z_meas the measurement coordinates in m
+ * d_xcoord, d_ycoord, d_zcoord, ..., d_result, the pointers to GPU memory as initialized by
+ * PrepareData.
+ * returnvalue will contain an array of size 6*nx*ny*nz with the sensitivities for ftg, with
+ * the sensitivities for Uxx first in c-storage order, then Uxy, Uxz, Uyy, Uyz, Uzz
+ * BLOCK_SIZE the number of threads per CUDA execution block
+ */
 
 extern "C"
 void  SingleFTGMeas(const double x_meas, const double y_meas,
@@ -160,7 +190,7 @@ void  SingleFTGMeas(const double x_meas, const double y_meas,
       CalcUzzMeas<<< grid, threads >>>(x_meas, y_meas, z_meas, d_xcoord, d_ycoord, d_zcoord,
                 d_xsize, d_ysize, d_zsize, nx, ny,
                 nz, d_result);
-      cutilCheckMsg("Kernel execution failed for Uyy");
+      cutilCheckMsg("Kernel execution failed for Uzz");
       CUDA_SAFE_CALL(cudaMemcpy(returnvalue + 5* nelements, d_result, mem_elements,
               cudaMemcpyDeviceToHost));
 

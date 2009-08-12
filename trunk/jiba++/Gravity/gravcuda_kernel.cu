@@ -5,9 +5,7 @@
 
 __device__ double CalcGravTerm(const double x, const double y, const double z)
   {
-    //if the distance r between the measurement point and one of the border points is very small
-    //the log(...) expressions become undefined, so we shift the measurement point by a tiny amount
-    const double r = sqrt(x * x + y * y + z * z) * (1.00001);
+    const double r = sqrt(x * x + y * y + z * z);
     double rvalue = x * log(y + r) + y * log(x + r);
     // atan2 takes care of small denominators
     rvalue += z * atan2(z * r, x * y);
