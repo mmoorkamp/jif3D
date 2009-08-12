@@ -59,13 +59,13 @@ int main(int ac, char* av[])
 
     std::vector<double> blocksizes;
 
-    blocksizes += 64, 76, 90, 107, 128, 152, 181, 192, 215, 255;
+    blocksizes += 64, 76, 90, 107, 128, 152, 181, 192, 215, 256;
     const size_t nruns = blocksizes.size();
     std::ofstream outfile(filename.c_str());
     std::cout << " Starting calculations. " << std::endl;
     for (size_t i = 0; i < nruns; ++i)
       {
-        const size_t modelsize = 60;
+        const size_t modelsize = 80;
         std::cout << "Blocksize: " << blocksizes.at(i) << std::endl;
         jiba::ThreeDGravityModel GravityTest;
         Implementation->SetCUDABlockSize(blocksizes.at(i));

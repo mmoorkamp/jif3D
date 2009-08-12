@@ -25,7 +25,7 @@ void MakeTestModel(jiba::ThreeDGravityModel &Model, const size_t size)
       for (size_t j = 0; j < size; ++j)
         for (size_t k = 0; k < size; ++k)
           {
-            Model.SetDensities()[i][j][k] = double(rand() % 1000) / 300.0;
+            Model.SetDensities()[i][j][k] = 1.0 + double(rand() % 1000) / 300.0;
           }
     const size_t nmeas = 30;
     for (size_t i = 0; i < nmeas; ++i)
@@ -54,27 +54,27 @@ int main(int ac, char* av[])
         GPUCalculator = jiba::CreateGravityCalculator<
             jiba::MinMemGravityCalculator>::MakeTensor(true);
 
-    boost::shared_ptr<jiba::ThreeDGravityCalculator>
-        CPUCalculator = jiba::CreateGravityCalculator<
-            jiba::MinMemGravityCalculator>::MakeTensor(false);
+  //  boost::shared_ptr<jiba::ThreeDGravityCalculator>
+   //     CPUCalculator = jiba::CreateGravityCalculator<
+    //        jiba::MinMemGravityCalculator>::MakeTensor(false);
 
     std::ofstream outfile(filename.c_str());
     std::cout << " Starting calculations. " << std::endl;
     for (size_t i = 0; i < nruns; ++i)
       {
-        const size_t modelsize = 30 + rand() % 50;
+        const size_t modelsize = 80; //30 + rand() % 50;
         std::cout << "Current model size: " << pow(modelsize, 3) << std::endl;
         jiba::ThreeDGravityModel GravityTest;
 
         MakeTestModel(GravityTest, modelsize);
 
         jiba::rvec gpugravmeas(GPUCalculator->Calculate(GravityTest));
-        jiba::rvec cpugravmeas(CPUCalculator->Calculate(GravityTest));
-        for (size_t j = 0; j < gpugravmeas.size(); ++j)
-          {
-            outfile << (gpugravmeas(j) - cpugravmeas(j)) / cpugravmeas(j)
-                << std::endl;
-          }
+       // jiba::rvec cpugravmeas(CPUCalculator->Calculate(GravityTest));
+        //for (size_t j = 0; j < gpugravmeas.size(); ++j)
+         // {
+          //  outfile << (gpugravmeas(j) - cpugravmeas(j)) / cpugravmeas(j)
+           //     << std::endl;
+         // }
       }
 
   }
