@@ -7,10 +7,12 @@ exe fittingtest : fittingtest.cpp ../Inversion//inversion ..//vecopt : <include>
 exe sparsetest : sparsetest.cpp ../Inversion//inversion ..//vecopt : <include>. ;
 exe wcompress : wcompress.cpp  ../Gravity ../Global : <include>. ;
 exe tomoinv : tomoinv.cpp  joint : <include>. ;
-exe mtinv : mtinv.cpp  joint ../MT : <include>. ;
+exe mtinv : mtinv.cpp  ../Inversion ../Global ../Regularization ../MT ..//boost_filesystem : <include>. ;
 exe jointinv : jointinv.cpp  joint ..//boost_program_options : <include>. ;
 exe grav_jointinv : grav_jointinv.cpp  joint : <include>. ;
 exe mergetomo : mergetomo.cpp  ../Tomo  ../Global : <include>. ;
+exe eikonal : eikonal.cpp  ../Tomo  ../Global : <include>. ;
+exe eikonal2D : eikonal2D.cpp  ../Tomo  ../Global : <include>. ;
 exe scal_gravinv : scal_gravinv.cpp  joint  : <include>. ;
 exe opttest : opttest.cpp  ..//optpp ..//newmat joint ..//boost_program_options : 
               <include>/usr/local/include/opt++ <define>use_namespace <define>HAVE_STD ;

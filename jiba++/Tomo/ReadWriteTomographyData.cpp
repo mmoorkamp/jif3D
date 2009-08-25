@@ -125,32 +125,6 @@ namespace jiba
         ReadVec(DataFile, TravelTimeName,MeasIndexName, Data);
       }
 
-    void PlotTimeField(const std::string &filename, const float *Times,
-        const double gridspacing, const size_t nx, const size_t ny,
-        const size_t nz)
-      {
-        std::ofstream outfile(filename.c_str());
-        outfile << "# vtk DataFile Version 2.0\n";
-        outfile << "Traveltimes\n";
-        outfile << "ASCII\n";
-        outfile << "DATASET STRUCTURED_POINTS\n";
-        outfile << "DIMENSIONS " << nx << " " << ny << " " << nz << std::endl;
-        outfile << "ORIGIN 0 0 0\n";
-        outfile << "SPACING " << gridspacing << " " << gridspacing << " "
-            << gridspacing << std::endl;
-        outfile << "POINT_DATA " << nx * ny * nz << std::endl;
-        outfile << "SCALARS traveltimes float\n";
-        outfile << "LOOKUP_TABLE default\n";
-        for (size_t i = 0; i < nz; ++i)
-          for (size_t j = 0; j < ny; ++j)
-            {
-              for (size_t k = 0; k < nx; ++k)
-                {
-                  outfile << Times[k * (nz * ny) + j * nz + i] << " ";
-                }
-              outfile << std::endl;
-            }
-      }
 
     void PlotRaypath(const std::string &filename, jiba::RP_STRUCT *raypath,
         const size_t nmeas, const double gridspacing, const size_t nairlayers)
