@@ -17,7 +17,9 @@ int main()
     std::string modelfilename = jiba::AskFilename("Filename: ", true);
     jiba::X3DModel MTModel;
     MTModel.ReadNetCDF(modelfilename);
-
+    std::cout << "Model size: " << MTModel.GetXCellSizes().size() << " "
+        << MTModel.GetYCellSizes().size() << " "
+        << MTModel.GetZCellSizes().size() << std::endl;
     double minx, miny, maxx, maxy, deltax, deltay, z;
     //ask for the measurement grid specifications
     //first x-direction

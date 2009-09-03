@@ -15,7 +15,7 @@
 
 //a general function to test various ModelTransforms
 void TestTransform(const jiba::GeneralModelTransform &Transform,
-    const size_t nelements)
+    const size_t nelements, const double min = 2.0, const double max = 3.0)
   {
 
     jiba::rvec Physical(nelements), Generalized(nelements), Derivative(
@@ -25,7 +25,7 @@ void TestTransform(const jiba::GeneralModelTransform &Transform,
     //otherwise everything is random
     for (size_t i = 0; i < nelements; ++i)
       {
-        Physical(i) = 2.0 + drand48();
+        Physical(i) = min + (max - min) * drand48();
         Derivative(i) = drand48();
         Ones(i) = 1.0;
       }
@@ -94,12 +94,13 @@ BOOST_AUTO_TEST_CASE  (basic_copy_test)
         }
       TestTransform(jiba::NormalizeTransform(Reference),nelements);
       TestTransform(jiba::LogTransform(Reference),nelements);
-      TestTransform(jiba::LogDensityTransform(Reference),nelements);
+      TestTransform(jiba::DensityTransform(boost::shared_ptr<jiba::GeneralModelTransform>(new jiba::LogTransform(Reference))),nelements);
+
       TestTransform(jiba::VelTransform(Reference),nelements);
-      TestTransform(jiba::VelDensTransform(Reference),nelements);
+      TestTransform(jiba::DensityTransform(boost::shared_ptr<jiba::GeneralModelTransform>(new jiba::VelTransform(Reference))),nelements);
 
       TestTransform(jiba::TanhTransform(0.0,1000),nelements);
-      TestTransform(jiba::TanhDensityTransform(0.0,1000),nelements);
-
+      TestTransform(jiba::DensityTransform(boost::shared_ptr<jiba::GeneralModelTransform>(new jiba::TanhTransform(0.0,1000.0))),nelements);
+      TestTransform(jiba::ConductivityTransform(boost::shared_ptr<jiba::GeneralModelTransform>(new jiba::TanhTransform(0.0,10.0))),nelements,0.001,0.5);
     }
   BOOST_AUTO_TEST_SUITE_END()

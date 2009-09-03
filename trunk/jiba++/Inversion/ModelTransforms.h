@@ -79,7 +79,7 @@ namespace jiba
           assert(FullModel.size() == Reference.size());
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
-            Output( i) = exp(FullModel(i)) * Reference(i);
+            Output(i) = exp(FullModel(i)) * Reference(i);
           return Output;
         }
       virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
@@ -87,7 +87,7 @@ namespace jiba
           assert(FullModel.size() == Reference.size());
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
-            Output( i) = log(FullModel(i) / Reference(i));
+            Output(i) = log(FullModel(i) / Reference(i));
           return Output;
         }
       //! Transform the derivative with respect to the physical parameters to normalized parameters
@@ -98,7 +98,7 @@ namespace jiba
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
-              Output( i) = Reference(i) * exp(FullModel(i)) * Derivative(i);
+              Output(i) = Reference(i) * exp(FullModel(i)) * Derivative(i);
             }
           return Output;
         }
@@ -122,7 +122,7 @@ namespace jiba
         {
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
-            Output( i) = min + (1.0 + tanh(FullModel(i))) / 2.0 * (max - min);
+            Output(i) = min + (1.0 + tanh(FullModel(i))) / 2.0 * (max - min);
           return Output;
         }
       virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
@@ -132,7 +132,7 @@ namespace jiba
             {
               const double argument = 2.0 * (FullModel(i) - min) / (max - min)
                   - 1;
-              Output( i) = atanh(argument);
+              Output(i) = atanh(argument);
             }
           return Output;
         }
@@ -144,13 +144,12 @@ namespace jiba
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
-              Output( i) = (max - min) / (2.0 * pow(cosh(FullModel(i)), 2))
+              Output(i) = (max - min) / (2.0 * pow(cosh(FullModel(i)), 2))
                   * Derivative(i);
             }
           return Output;
         }
-      TanhTransform(const double minval = 1.0,
-          const double maxval = 5.0) :
+      TanhTransform(const double minval = 1.0, const double maxval = 5.0) :
         min(minval), max(maxval)
         {
         }
@@ -159,16 +158,19 @@ namespace jiba
         }
       };
 
-    class TanhDensityTransform: public jiba::TanhTransform
+    class DensityTransform: public jiba::GeneralModelTransform
       {
+    private:
+      boost::shared_ptr<GeneralModelTransform> VelocityTransform;
     public:
       virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
         {
-          jiba::rvec Slowness(TanhTransform::GeneralizedToPhysical(FullModel));
+          jiba::rvec Slowness(VelocityTransform->GeneralizedToPhysical(
+              FullModel));
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
-              Output( i) = (1.0 / Slowness(i) + 8500.0) / 5000.0;
+              Output(i) = (1.0 / Slowness(i) + 8500.0) / 5000.0;
             }
           return Output;
         }
@@ -178,72 +180,87 @@ namespace jiba
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
-              Output( i) = 1.0 / (5000.0 * FullModel(i) - 8500.0);
+              Output(i) = 1.0 / (5000.0 * FullModel(i) - 8500.0);
             }
-          return TanhTransform::PhysicalToGeneralized(Output);
+          return VelocityTransform->PhysicalToGeneralized(Output);
         }
       virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
           const jiba::rvec &Derivative) const
         {
-          jiba::rvec Slowness(TanhTransform::GeneralizedToPhysical(FullModel));
-          jiba::rvec
-              SlowDeriv(TanhTransform::Derivative(FullModel, Derivative));
+          jiba::rvec Slowness(VelocityTransform->GeneralizedToPhysical(
+              FullModel));
+          jiba::rvec SlowDeriv(VelocityTransform->Derivative(FullModel,
+              Derivative));
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
-              Output( i) = -1.0 / (Slowness(i) * Slowness(i)) / 5000.0
+              Output(i) = -1.0 / (Slowness(i) * Slowness(i)) / 5000.0
                   * SlowDeriv(i);
             }
           return Output;
         }
-      TanhDensityTransform(const double minval = 1.0,
-          const double maxval = 5.0) :
-        TanhTransform(minval, maxval)
+      DensityTransform(boost::shared_ptr<GeneralModelTransform> VelTrans) :
+        VelocityTransform(VelTrans)
         {
         }
-      virtual ~TanhDensityTransform()
+      virtual ~DensityTransform()
         {
         }
       };
 
-    class LogDensityTransform: public jiba::GeneralModelTransform
+    class ConductivityTransform: public jiba::GeneralModelTransform
       {
     private:
-      const jiba::rvec Reference;
+      const double a;
+      const double b;
+      const double c;
+      boost::shared_ptr<GeneralModelTransform> VelocityTransform;
     public:
       virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
         {
+          jiba::rvec Slowness(VelocityTransform->GeneralizedToPhysical(
+              FullModel));
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
-            Output( i) = (1. / (exp(FullModel(i)) * Reference(i)) + 8500.0)
-                / 5000.0;
+            {
+              Output(i) = std::exp(-(a / (Slowness(i) * Slowness(i)) + b / Slowness(
+                  i) + c));
+            }
           return Output;
         }
       virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
         {
+
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
-            Output( i) = log(1.0 / (Reference(i) * (5000.0 * FullModel(i)
-                - 8500.0)));
-          return Output;
+            {
+              double vel = (-b + sqrt(b * b - 4.0 * a * (c + std::log(FullModel(i)))))
+                  / (2 * a);
+              Output(i) = 1.0 / vel;
+            }
+          return VelocityTransform->PhysicalToGeneralized(Output);
         }
       virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
           const jiba::rvec &Derivative) const
         {
-          const double factor = -1.0 / 5000.0;
+          jiba::rvec Slowness(VelocityTransform->GeneralizedToPhysical(
+              FullModel));
+          jiba::rvec SlowDeriv(VelocityTransform->Derivative(FullModel,
+              Derivative));
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
-              Output( i) = factor / (Reference(i) * exp(FullModel(i)))
-                  * Derivative(i);
+              Output(i) = exp(-(a / (Slowness(i) * Slowness(i)) + b / Slowness(
+                  i) + c)) * (2.0 * a * pow(Slowness(i), -3) + b / (Slowness(i)
+                  * Slowness(i))) * SlowDeriv(i);
             }
           return Output;
         }
-      LogDensityTransform(const jiba::rvec &Ref) :
-        Reference(Ref)
+      ConductivityTransform(boost::shared_ptr<GeneralModelTransform> VelTrans) :
+        a(2.31e-7), b(-5.79e-4), c(0.124), VelocityTransform(VelTrans)
         {
         }
-      virtual ~LogDensityTransform()
+      virtual ~ConductivityTransform()
         {
         }
       };
@@ -257,14 +274,14 @@ namespace jiba
         {
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
-            Output( i) = 1.0 / (FullModel(i) * Reference(i));
+            Output(i) = 1.0 / (FullModel(i) * Reference(i));
           return Output;
         }
       virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
         {
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
-            Output( i) = 1.0 / (FullModel(i) * Reference(i));
+            Output(i) = 1.0 / (FullModel(i) * Reference(i));
           return Output;
         }
       virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
@@ -272,7 +289,7 @@ namespace jiba
         {
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
-            Output( i) = -1.0 / (Reference(i) * FullModel(i) * FullModel(i))
+            Output(i) = -1.0 / (Reference(i) * FullModel(i) * FullModel(i))
                 * Derivative(i);
           return Output;
         }
@@ -285,47 +302,6 @@ namespace jiba
         }
       };
 
-    class VelDensTransform: public jiba::GeneralModelTransform
-      {
-    private:
-      jiba::rvec Reference;
-    public:
-      virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
-        {
-          jiba::rvec Output(FullModel.size());
-          for (size_t i = 0; i < FullModel.size(); ++i)
-            {
-              Output( i) = (Reference(i) * FullModel(i) + 8500.0) / 5000.0;
-            }
-          return Output;
-        }
-      virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
-        {
-          jiba::rvec Output(FullModel.size());
-          for (size_t i = 0; i < FullModel.size(); ++i)
-            {
-              Output( i) = (5000.0 * FullModel(i) - 8500) / Reference(i);
-            }
-          return Output;
-        }
-      virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
-          const jiba::rvec &Derivative) const
-        {
-          jiba::rvec Output(FullModel.size());
-          for (size_t i = 0; i < FullModel.size(); ++i)
-            {
-              Output( i) = Reference(i) / 5000.0 * Derivative(i);
-            }
-          return Output;
-        }
-      VelDensTransform(const jiba::rvec &Ref) :
-        Reference(Ref)
-        {
-        }
-      virtual ~VelDensTransform()
-        {
-        }
-      };
   /* @} */
   }
 #endif /* MODELTRANSFORMS_H_ */

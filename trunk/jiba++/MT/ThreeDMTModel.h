@@ -25,6 +25,10 @@ namespace jiba
         {
           return Frequencies;
         }
+      std::vector<double> &SetFrequencies()
+        {
+          return Frequencies;
+        }
       //! return read only access to the stored conductivity values
       const t3DModelData &GetConductivities() const
         {
@@ -40,6 +44,10 @@ namespace jiba
         {
           ThreeDModelBase::WriteVTK(filename, "Conductivity");
         }
+      //! We have a copy operator for other MT models
+      ThreeDMTModel& operator= (const ThreeDMTModel& source);
+      //! Other models will be copied by the copy operator for the base class
+      ThreeDMTModel& operator= (const ThreeDModelBase& source);
       ThreeDMTModel();
       virtual ~ThreeDMTModel();
       };

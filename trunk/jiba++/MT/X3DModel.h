@@ -24,7 +24,6 @@ namespace jiba
     class X3DModel: public ThreeDMTModel
       {
     private:
-      std::vector<double> Frequencies;
       std::vector<double> bg_thicknesses;
       std::vector<double> bg_conductivities;
     public:
@@ -32,14 +31,6 @@ namespace jiba
         {
         MT, CSMT, EDIP, MDIP
         };
-      const std::vector<double> &GetFrequencies() const
-        {
-          return Frequencies;
-        }
-      std::vector<double> &SetFrequencies()
-        {
-          return Frequencies;
-        }
       //! Set the thicknesses of the background layers, the individual thicknesses are given in m
       void SetBackgroundThicknesses(const std::vector<double> &value)
         {
@@ -85,6 +76,9 @@ namespace jiba
         }
       void WriteNetCDF(const std::string filename) const;
       void ReadNetCDF(const std::string filename);
+      X3DModel& operator= (const X3DModel& source);
+      //! Other models will be copied by the copy operator for the base class
+      X3DModel& operator= (const ThreeDModelBase& source);
       X3DModel();
       virtual ~X3DModel();
       };

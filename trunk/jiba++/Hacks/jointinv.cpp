@@ -36,6 +36,9 @@
 #include "../Gravity/MinMemGravityCalculator.h"
 #include "../Gravity/DepthWeighting.h"
 #include "../Gravity/ThreeDGravityFactory.h"
+#include "../MT/X3DObjective.h"
+#include "../MT/X3DModel.h"
+#include "../MT/ReadWriteImpedances.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace ublas = boost::numeric::ublas;
@@ -83,7 +86,7 @@ int main(int argc, char *argv[])
         wantnlcg = true;
       }
     //these objects hold information about the measurements and their geometry
-    jiba::rvec TomoData, ScalGravData, FTGData;
+    jiba::rvec TomoData, ScalGravData, FTGData, MTData;
 
     //first we read in the starting model and the measured data
     std::string modelfilename = jiba::AskFilename("Starting model Filename: ");
@@ -101,10 +104,14 @@ int main(int argc, char *argv[])
     std::string scalgravdatafilename = jiba::AskFilename(
         "Scalar Gravity Data Filename: ");
     std::string ftgdatafilename = jiba::AskFilename("FTG Data Filename: ");
+    std::string mtdatafilename = jiba::AskFilename("MT data filename: ");
     std::string gravmodelfilename = jiba::AskFilename(
         "Gravity Model Filename: ");
+    std::string mtmodelfilename = jiba::AskFilename("MT Model Filename: ");
     jiba::ThreeDGravityModel GravModel;
     GravModel.ReadNetCDF(gravmodelfilename);
+    //we only read in the gravity model for the information about the background layers
+    //we take the actual gridding from the start model
     GravModel = TomoModel;
 
     jiba::ThreeDGravityModel::tMeasPosVec PosX, PosY, PosZ;
@@ -118,8 +125,24 @@ int main(int argc, char *argv[])
         GravModel.AddMeasurementPoint(PosX.at(i), PosY.at(i), PosZ.at(i));
       }
 
+    //read in MT data
+    std::vector<double> MTXPos, MTYPos, MTZPos, Frequencies;
+    jiba::ReadImpedancesFromNetCDF(mtdatafilename, Frequencies, MTXPos, MTYPos,
+        MTZPos, MTData);
+    jiba::X3DModel MTModel;
+    MTModel.ReadNetCDF(mtmodelfilename);
+    //as for the gravity model the gridding is determined by the starting model
+    //and we only read the mt model for the background layers
+    MTModel = TomoModel;
+    std::copy(Frequencies.begin(), Frequencies.end(), std::back_inserter(
+        MTModel.SetFrequencies()));
+    for (size_t i = 0; i < MTXPos.size(); ++i)
+      {
+        MTModel.AddMeasurementPoint(MTXPos[i], MTYPos[i], MTZPos[i]);
+      }
+
     //if we don't have data inversion doesn't make sense;
-    if (TomoData.empty() || ScalGravData.empty())
+    if (TomoData.empty() || ScalGravData.empty() || MTData.empty())
       {
         std::cerr << "No measurements defined" << std::endl;
         exit(100);
@@ -146,10 +169,14 @@ int main(int argc, char *argv[])
     std::fill(PreCond.begin(), PreCond.end(), 1.0);
     const double minslow = 1e-4;
     const double maxslow = 0.0005;
-    boost::shared_ptr<jiba::GeneralModelTransform> DensityTransform(
-        new jiba::TanhDensityTransform(minslow, maxslow));
+
     boost::shared_ptr<jiba::GeneralModelTransform> SlownessTransform(
         new jiba::TanhTransform(minslow, maxslow));
+    boost::shared_ptr<jiba::GeneralModelTransform> DensityTransform(
+        new jiba::DensityTransform(SlownessTransform));
+    boost::shared_ptr<jiba::GeneralModelTransform> MTTransform(
+        new jiba::ConductivityTransform(SlownessTransform));
+
     //double average = std::accumulate(InvModel.begin(),InvModel.end(),0.0)/InvModel.size();
     //std::fill(RefModel.begin(),RefModel.end(),average);
     InvModel = SlownessTransform->PhysicalToGeneralized(InvModel);
@@ -185,6 +212,12 @@ int main(int argc, char *argv[])
     FTGObjective->SetDataCovar(jiba::ConstructError(FTGData, 0.02));
     FTGObjective->SetPrecondDiag(PreCond);
 
+    boost::shared_ptr<jiba::X3DObjective> MTObjective(new jiba::X3DObjective());
+    MTObjective->SetModelGeometry(MTModel);
+    MTObjective->SetObservedData(MTData);
+    MTObjective->SetDataCovar(jiba::ConstructError(MTData, 0.02));
+    MTObjective->SetPrecondDiag(PreCond);
+
     boost::shared_ptr<jiba::JointObjective> Objective(
         new jiba::JointObjective());
     boost::shared_ptr<jiba::GradientRegularization> Regularization(
@@ -197,12 +230,15 @@ int main(int argc, char *argv[])
     double scalgravlambda = 1.0;
     double ftglambda = 1.0;
     double reglambda = 1.0;
+    double mtlambda = 1.0;
     std::cout << "Tomography Lambda: ";
     std::cin >> tomolambda;
     std::cout << "Scalar Gravimetry Lambda: ";
     std::cin >> scalgravlambda;
     std::cout << "FTG Lambda: ";
     std::cin >> ftglambda;
+    std::cout << "MT Lambda: ";
+    std::cin >> mtlambda;
     std::cout << "Regularization Lambda: ";
     std::cin >> reglambda;
     size_t maxiter = 1;
@@ -228,6 +264,11 @@ int main(int argc, char *argv[])
       {
         ndata += FTGData.size();
         Objective->AddObjective(FTGObjective, DensityTransform, ftglambda);
+      }
+    if (mtlambda > 0.0)
+      {
+        ndata += MTData.size();
+        Objective->AddObjective(MTObjective, MTTransform, mtlambda);
       }
     Objective->AddObjective(Regularization, boost::shared_ptr<
         jiba::GeneralModelTransform>(new jiba::ModelCopyTransform()), reglambda);
