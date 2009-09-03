@@ -15,7 +15,7 @@ namespace jiba
     static const std::string ConductivityUnit = "S/m";
 
     X3DModel::X3DModel() :
-      Frequencies(), bg_thicknesses(), bg_conductivities()
+      bg_thicknesses(), bg_conductivities()
       {
 
       }
@@ -23,6 +23,30 @@ namespace jiba
     X3DModel::~X3DModel()
       {
 
+      }
+
+    X3DModel& X3DModel::operator=(const X3DModel& source)
+      {
+        if (&source != this)
+          {
+            ThreeDModelBase::operator=(source);
+            bg_thicknesses.resize(source.bg_thicknesses.size());
+            bg_conductivities.resize(source.bg_conductivities.size());
+            std::copy(source.bg_thicknesses.begin(),
+                source.bg_thicknesses.end(), bg_thicknesses.begin());
+            std::copy(source.bg_conductivities.begin(),
+                source.bg_conductivities.end(), bg_conductivities.begin());
+          }
+        return *this;
+      }
+
+    X3DModel& X3DModel::operator=(const ThreeDModelBase& source)
+      {
+        if (&source != this)
+          {
+            ThreeDModelBase::operator=(source);
+          }
+        return *this;
       }
 
     void X3DModel::WriteNetCDF(const std::string filename) const

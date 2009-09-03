@@ -206,10 +206,11 @@ int main(int argc, char *argv[])
     std::fill(PreCond.begin(), PreCond.end(), 1.0);
     const double minslow = 1e-4;
     const double maxslow = 0.005;
-    boost::shared_ptr<jiba::GeneralModelTransform> DensityTransform(
-        new jiba::TanhDensityTransform(minslow, maxslow));
     boost::shared_ptr<jiba::GeneralModelTransform> SlownessTransform(
         new jiba::TanhTransform(minslow, maxslow));
+    boost::shared_ptr<jiba::GeneralModelTransform> DensityTransform(
+        new jiba::DensityTransform(SlownessTransform));
+
     //double average = std::accumulate(InvModel.begin(),InvModel.end(),0.0)/InvModel.size();
     //std::fill(RefModel.begin(),RefModel.end(),average);
     InvModel = SlownessTransform->PhysicalToGeneralized(InvModel);

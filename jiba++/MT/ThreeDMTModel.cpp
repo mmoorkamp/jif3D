@@ -8,7 +8,6 @@
 
 #include "ThreeDMTModel.h"
 
-
 namespace jiba
   {
 
@@ -23,4 +22,24 @@ namespace jiba
 
       }
 
+    ThreeDMTModel& ThreeDMTModel::operator=(const ThreeDMTModel& source)
+      {
+        if (&source != this)
+          {
+            ThreeDModelBase::operator=(source);
+            Frequencies.resize(source.Frequencies.size());
+            std::copy(source.Frequencies.begin(), source.Frequencies.end(),
+                Frequencies.begin());
+          }
+        return *this;
+      }
+
+    ThreeDMTModel& ThreeDMTModel::operator=(const ThreeDModelBase& source)
+      {
+        if (&source != this)
+          {
+            ThreeDModelBase::operator=(source);
+          }
+        return *this;
+      }
   }
