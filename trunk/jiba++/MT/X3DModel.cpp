@@ -29,7 +29,7 @@ namespace jiba
       {
         if (&source != this)
           {
-            ThreeDModelBase::operator=(source);
+            ThreeDMTModel::operator=(source);
             bg_thicknesses.resize(source.bg_thicknesses.size());
             bg_conductivities.resize(source.bg_conductivities.size());
             std::copy(source.bg_thicknesses.begin(),

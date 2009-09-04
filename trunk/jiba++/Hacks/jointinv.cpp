@@ -134,6 +134,7 @@ int main(int argc, char *argv[])
     //as for the gravity model the gridding is determined by the starting model
     //and we only read the mt model for the background layers
     MTModel = TomoModel;
+    MTModel.ClearMeasurementPoints();
     std::copy(Frequencies.begin(), Frequencies.end(), std::back_inserter(
         MTModel.SetFrequencies()));
     for (size_t i = 0; i < MTXPos.size(); ++i)
@@ -253,22 +254,29 @@ int main(int argc, char *argv[])
         ndata += TomoData.size();
         Objective->AddObjective(TomoObjective, SlownessTransform, tomolambda);
         std::cout << "Tomo ndata: " << TomoData.size() << std::endl;
+        std::cout << "Tomo lambda: " << tomolambda << std::endl;
       }
     if (scalgravlambda > 0.0)
       {
         ndata += ScalGravData.size();
         Objective->AddObjective(ScalGravObjective, DensityTransform,
             scalgravlambda);
+        std::cout << "Scalar Gravity ndata: " << ScalGravData.size() << std::endl;
+        std::cout << "Scalar Gravity lambda: " << scalgravlambda << std::endl;
       }
     if (ftglambda > 0.0)
       {
         ndata += FTGData.size();
         Objective->AddObjective(FTGObjective, DensityTransform, ftglambda);
+        std::cout << "FTG ndata: " << FTGData.size() << std::endl;
+        std::cout << "FTG lambda: " << ftglambda << std::endl;
       }
     if (mtlambda > 0.0)
       {
         ndata += MTData.size();
         Objective->AddObjective(MTObjective, MTTransform, mtlambda);
+        std::cout << "MT ndata: " << MTData.size() << std::endl;
+        std::cout << "MT lambda: " << mtlambda << std::endl;
       }
     Objective->AddObjective(Regularization, boost::shared_ptr<
         jiba::GeneralModelTransform>(new jiba::ModelCopyTransform()), reglambda);

@@ -28,11 +28,11 @@ namespace jiba
         //Copy the model vector into the object with the geometry information
         std::copy(Model.begin(), Model.end(),
             ConductivityModel.SetConductivities().origin());
-        //Calculate the travel times for the 3D model
+        //Calculate the impedances for the 3D model
 
         jiba::rvec SynthData(Calculator.Calculate(ConductivityModel));
-        Diff.resize(ObservedData.size());
         assert(SynthData.size() == ObservedData.size());
+        Diff.resize(ObservedData.size());
         //calculate the difference between observed and synthetic
         std::transform(SynthData.begin(), SynthData.end(),
             ObservedData.begin(), Diff.begin(), std::minus<double>());
