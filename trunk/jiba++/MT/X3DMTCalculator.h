@@ -19,7 +19,9 @@ namespace jiba
     class X3DMTCalculator
       {
     private:
-      std::string MakeUniqueName( X3DModel::ProblemType Type, const size_t FreqIndex);
+      //! Create a unique name for each object, calculation type and frequency so that we can write to different directories and execute in parallel
+      std::string MakeUniqueName(X3DModel::ProblemType Type,
+          const size_t FreqIndex);
     public:
       //! Given a conductivity model, calculate a vector of impedances
       rvec Calculate(const X3DModel &Model);

@@ -192,6 +192,8 @@ namespace jiba
         outfile << " 1 " << XCellSizes.size() << "\n\n";
         outfile << "   First and last cells in Y-direction (nyOf, nyOl)    \n";
         outfile << " 1 " << YCellSizes.size() << "\n\n";
+        //at the moment we always set the z component of the site location to zero
+        //this should be changed
         outfile << "   zO(m)  \n 0.0 \n\n";
         outfile
             << "Binding_cell_in_X-direction     X-coordinate of centre of Binding cell (m)  \n";
@@ -211,11 +213,16 @@ namespace jiba
         const std::string &ModelFilename)
       {
         const size_t nfreq = Frequencies.size();
+        //the filename is always a.project
         std::ofstream outfile((RootDir / "a.project").file_string().c_str());
+        //write out some information that x3d expects
         outfile << "  Version_of_X3D code (yyyy-mm-dd)\n";
         outfile << "  2006-06-06\n\n";
         outfile << "  Type_of_problem (0 - MT, 1 - CSMT, 2 - EDIP, 3 - MDIP)\n";
         outfile << " " << Type << "\n";
+        //we can specify a model and a result for each frequency
+        //we use the same model, but create a unique name for the frequencies
+        //by appending the index at the end
         outfile
             << "  Frequency (Hz)    File_with_results     File with 3D formation      File with 1st source      File with 2nd source\n";
         for (size_t i = 0; i < nfreq; ++i)
@@ -226,6 +233,8 @@ namespace jiba
                 << jiba::stringify(i) << "a.source             "
                 << ModelFilename << jiba::stringify(i) << ".bsource\n";
           }
+        //in principle some other parameters for the forward calculation can be changed
+        //at the moment we leave them at their default values
         outfile << "$\n";
         outfile
             << "  Threshold_of relative residual norm  (default value = 0.003)\n";
@@ -289,7 +298,7 @@ namespace jiba
                 infile.getline(restline, 2048);
               }
           }
-        //read in both fields
+        //make sure all fields have the same size
         assert(Ex.size()==Ey.size());
         assert(Ex.size()==Hx.size());
         assert(Ex.size()==Hy.size());
@@ -319,9 +328,11 @@ namespace jiba
                 Ez.push_back(std::complex<double>(real, -imaginary));
               }
           }
+        //make sure all fields have the same size
         assert(Ex.size() == ncellsx*ncellsy*ncellsz);
         assert(Ex.size()==Ey.size());
         assert(Ex.size()==Ez.size());
+        //we use a different storage ordering then in the .ema files
         Ex = ResortFields(Ex, ncellsx, ncellsy, ncellsz);
         Ey = ResortFields(Ey, ncellsx, ncellsy, ncellsz);
         Ez = ResortFields(Ez, ncellsx, ncellsy, ncellsz);
