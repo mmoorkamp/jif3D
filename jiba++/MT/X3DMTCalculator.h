@@ -19,6 +19,10 @@ namespace jiba
     class X3DMTCalculator
       {
     private:
+      //! Remove all files created for running x3d
+      void CleanUp();
+      //! Make a unique string identifier for this object, basis for MakeUniqueName
+      std::string ObjectID();
       //! Create a unique name for each object, calculation type and frequency so that we can write to different directories and execute in parallel
       std::string MakeUniqueName(X3DModel::ProblemType Type,
           const size_t FreqIndex);

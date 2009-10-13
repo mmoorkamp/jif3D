@@ -18,7 +18,7 @@ namespace jiba
     /* @{ */
     //! This is the base class for the implementation of the 3D MT forward calculation
     /*! For our joint inversion we use x3D by Avdeev et al. to calculate impedances
-     * for MT. However, this code is not generally available so provide this abstract
+     * for MT. However, this code is not generally available so we provide this abstract
      * base class that defines the interface for the MT forward calculation. By deriving
      * from this class and implementing the two virtual functions CalculateImpl and
      * LQDerivativeImpl any other implementation can be plugged into the joint inversion
@@ -33,7 +33,9 @@ namespace jiba
       virtual rvec LQDerivativeImpl(const ThreeDMTModel &Model,
           const rvec &Misfit) = 0;
     public:
+      //! Calculate synthetic impedances for a 3D MT model, forwards call to CalculateImpl
       rvec Calculate(const ThreeDMTModel &Model);
+      //! Given a conductivity model and the misfit for each datum, calculate the derivative of the objective function with respect to the model parameters.
       rvec LQDerivative(const ThreeDMTModel &Model, const rvec &Misfit);
       MT3DCalculator();
       virtual ~MT3DCalculator();
