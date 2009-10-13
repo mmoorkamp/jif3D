@@ -69,14 +69,45 @@ namespace jiba
         const std::string &ModelFilename);
 
     //!Write a file containing information about sources (electric or magnetic)
+    /*! Write a file that contains the dipole moments of electric or magnetic dipoles
+     * for x3d.
+     * @param filename The name of the ascii file we want to write
+     * @param SourceDepth The depth of the dipoles in m
+     * @param XPolMoments The x-component of the dipole moment
+     * @param YPolMoments The y-component of the dipole moment
+     */
     void WriteSourceFile(const std::string &filename, const double SourceDepth,
         const boost::multi_array<std::complex<double>, 2> &XPolMoments,
         const boost::multi_array<std::complex<double>, 2> &YPolMoments);
+
+    //! Read one .emo file produced by x3d that contains the electric and magnetic fields at the observation sites
+    /*! x3d produces files with ending .emo that contain the electric and magnetic fields at the
+     * observation points that were specified for the forward calculation. This function reads in
+     * the contents of the file.
+     * @param filename The complete filename including the ending
+     * @param Ex The x-component of the electric field in V/m
+     * @param Ey The y-component of the electric field in V/m
+     * @param Hx The x-component of the magnetic field in A/m
+     * @param Hy The y-component of the magnetic field in A/m
+     */
     void ReadEMO(const std::string &filename,
         std::vector<std::complex<double> > &Ex, std::vector<
             std::complex<double> > &Ey, std::vector<std::complex<double> > &Hx,
         std::vector<std::complex<double> > &Hy);
 
+    //! Read one .ema file produced by x3d that contains the electric field at all model cells
+    /*! x3d produces files with ending .ema that contain the electric field in all model cells.
+     * This information is needed to calculate the gradient using the adjoint approach. This function reads in
+     * the contents of the file.
+     *
+     * @param filename The complete filename including the ending
+     * @param Ex The x-component of the electric field at all cells in V/m
+     * @param Ey The y-component of the electric field at all cells in V/m
+     * @param Ez The z-component of the electric field at all cells in V/m
+     * @param ncellsx The number of cells in x-direction
+     * @param ncellsy The number of cells in y-direction
+     * @param ncellsz The number of cells in z-direction
+     */
     void ReadEMA(const std::string &filename,
         std::vector<std::complex<double> > &Ex, std::vector<
             std::complex<double> > &Ey, std::vector<std::complex<double> > &Ez,
