@@ -6,7 +6,7 @@ project
     	<variant>release:<define>NDEBUG  
     	<toolset>gcc:<cflags>" -ansi -fopenmp -Wall -Wextra  -Wno-long-long -pedantic"
     	<toolset>gcc:<linkflags>" -fopenmp  "
-    	<toolset>intel:<cxxflags>" -openmp -tcheck -Wall"
+    	<toolset>intel:<cxxflags>" -openmp  -Wall"
     	<toolset>intel:<linkflags>" -openmp"
     	<toolset>sun:<define>BOOST_UBLAS_UNSUPPORTED_COMPILER=0
     	<toolset>sun:<cflags>" -library=stlport4" 
@@ -29,8 +29,8 @@ use-project /Profiling : Profiling ;
 use-project /Inversion : Inversion ;
 
 local BOOST_TEST_LOG_LEVEL = all ;
-lib boost_filesystem : : <name>boost_filesystem-mt ;
-lib boost_program_options : : <name>boost_program_options-mt  ;
+lib boost_filesystem : : <name>boost_filesystem ;
+lib boost_program_options : : <name>boost_program_options  ;
 lib lapack : : <name>lapack ;
 lib f77blas : : <name>f77blas ;
 lib cblas : : <name>cblas ;

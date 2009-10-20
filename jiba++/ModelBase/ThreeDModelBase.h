@@ -203,6 +203,22 @@ namespace jiba
           yi = xi % Data.shape()[1];
           xi = (xi - yi) / Data.shape()[1];
         }
+      //! Return the size of the gridded domain in x, y and z-direction, respectively
+      /*! This function solves the problem that sometimes we want to know how
+       * big the gridded domain is for a general model (seismic, MT or gravity)
+       * but Data is a private member. This function just returns
+       * The result of Data.shape()
+       * @return The size of the gridded domain in x, y and z-direction as it would be returned by a call to Data.shape()
+       */
+      const boost::multi_array_types::size_type* GetModelShape() const
+      {
+          return Data.shape();
+      }
+      //! Return the total number of cells in the gridded domain
+      size_t GetNModelElements() const
+        {
+          return Data.num_elements();
+        }
       //! read-only access to the cell size in x-direction in m
       const t3DModelDim &GetXCellSizes() const
         {
@@ -248,7 +264,6 @@ namespace jiba
       //! Read the Measurement positions from an ascii file
       void ReadMeasPosAscii(const std::string filename);
       friend class ModelRefiner;
-      friend class GradientRegularization;
       ThreeDModelBase();
       ThreeDModelBase& operator= (const ThreeDModelBase& source);
       virtual ~ThreeDModelBase();
