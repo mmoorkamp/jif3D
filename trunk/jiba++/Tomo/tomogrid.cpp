@@ -12,20 +12,20 @@
  * a netcdf file.
  */
 
-#include <iostream>
-#include <string>
 #include "ThreeDSeismicModel.h"
 #include "TomographyCalculator.h"
 #include "ReadWriteTomographyData.h"
 #include "../ModelBase/VTKTools.h"
 #include "../Global/FileUtil.h"
+#include "../Global/Noise.h"
+#include <iostream>
+#include <string>
 #include <boost/cast.hpp>
 
 using namespace std;
 
 int main(int argc, char *argv[])
   {
-
 
     jiba::ThreeDSeismicModel SeisModel;
 
@@ -89,6 +89,14 @@ int main(int argc, char *argv[])
 
     jiba::TomographyCalculator Calculator;
     jiba::rvec TravelTimes(Calculator.Calculate(SeisModel));
-    jiba::SaveTraveltimes(ModelFilename+".tt.nc",TravelTimes,SeisModel);
-    SeisModel.WriteVTK(ModelFilename+".vtk");
+    double error = 0.0;
+    std::cout << "Traveltime error (ms): ";
+    std::cin >> error;
+    //if we want to add noise to the data
+    if (error > 0.0)
+      {
+        jiba::AddNoise(TravelTimes, 0.0, error);
+      }
+    jiba::SaveTraveltimes(ModelFilename + ".tt.nc", TravelTimes, SeisModel);
+    SeisModel.WriteVTK(ModelFilename + ".vtk");
   }
