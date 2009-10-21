@@ -26,7 +26,7 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
       jiba::rvec Gradient = Objective.CalcGradient(Model);
       for (size_t i = 0; i < Gradient.size(); ++i)
         {
-          double delta = Model(i) * 0.01;
+          double delta = Model(i) * 0.00001;
           jiba::rvec Forward(Model);
           jiba::rvec Backward(Model);
           Forward(i) += delta;
@@ -78,6 +78,7 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
       BOOST_CHECK_CLOSE(zero,0.0,0.0001);
       CheckGradient(Regularization,PertModel);
     }
+
 
   BOOST_AUTO_TEST_CASE (gradjoint_test)
     {

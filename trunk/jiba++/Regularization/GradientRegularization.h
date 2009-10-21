@@ -33,38 +33,78 @@ namespace jiba
       //so we provide a typedef for convenience
       typedef boost::numeric::ublas::compressed_matrix<double,
           boost::numeric::ublas::column_major> comp_mat;
+      //we have individual weights for each direction
+      double xweight;
+      double yweight;
+      double zweight;
       //and store the result in a sparse matrix
-      comp_mat OperatorMatrix;
+      comp_mat XOperatorMatrix;
+      comp_mat YOperatorMatrix;
+      comp_mat ZOperatorMatrix;
       // the vector of the reference model
       jiba::rvec Reference;
+      inline jiba::rvec DirGrad(const comp_mat &Operator,
+          const jiba::rvec &Model)
+        {
+          const size_t nmod = Model.size();
+          jiba::rvec LocalDiff(nmod), Grad(nmod);
+          ublas::axpy_prod(Operator, Model - Reference, LocalDiff);
+          ublas::axpy_prod(ublas::trans(Operator), LocalDiff, Grad);
+          assert(Grad.size() == nmod);
+          return 2.0*Grad;
+        }
       //! Construct the operator matrix for the given model
       /*! From the geometry information in the ModelGeometry parameter, construct
        * the operator matrix for the first derivative
        * @param ModelGeometry The object containing the number of cells in each direction
        * @return A sparse matrix representation of the spatial first derivative
        */
-      comp_mat SmoothnessOperator(const jiba::ThreeDModelBase &ModelGeometry);
+      void SmoothnessOperator(const jiba::ThreeDModelBase &ModelGeometry);
       //! The misfit, i.e. roughness of the current model
       virtual void ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff)
         {
-          assert(OperatorMatrix.size1() == Model.size());
-          Diff.resize(Model.size());
-          if (Reference.size() == Model.size())
-            {
-              ublas::axpy_prod(OperatorMatrix, Model - Reference, Diff);
-            }
-          else
-            {
-              ublas::axpy_prod(OperatorMatrix, Model, Diff);
-            }
+          const size_t nmod = Model.size();
+
+          assert(XOperatorMatrix.size1() == Model.size());
+          assert(YOperatorMatrix.size1() == Model.size());
+          assert(ZOperatorMatrix.size1() == Model.size());
+          Diff.resize(3 * nmod);
+          ublas::vector_range<jiba::rvec> xrange(Diff, ublas::range(0,
+              Model.size()));
+          ublas::vector_range<jiba::rvec> yrange(Diff, ublas::range(
+              Model.size(), 2 * Model.size()));
+          ublas::vector_range<jiba::rvec> zrange(Diff, ublas::range(2
+              * Model.size(), 3 * Model.size()));
+          jiba::rvec x(Model - Reference);
+          ublas::axpy_prod(XOperatorMatrix, x, xrange, true);
+          ublas::axpy_prod(YOperatorMatrix, x, yrange, true);
+          ublas::axpy_prod(ZOperatorMatrix, x, zrange, true);
+          xrange *= sqrt(xweight);
+          yrange *= sqrt(yweight);
+          zrange *= sqrt(zweight);
         }
       //! The gradient of the regularization with respect to the model parameters
       virtual jiba::rvec ImplGradient(const jiba::rvec &Model,
           const jiba::rvec &Diff)
         {
-          return 2.0 * ublas::prod(ublas::trans(OperatorMatrix), Diff);
+          jiba::rvec Grad(xweight * DirGrad(XOperatorMatrix, Model));
+          Grad += yweight * DirGrad(YOperatorMatrix, Model);
+          Grad += zweight * DirGrad(ZOperatorMatrix, Model);
+          return Grad;
         }
     public:
+      void SetXWeight(const double Weight)
+        {
+          xweight = Weight;
+        }
+      void SetYWeight(const double Weight)
+        {
+          yweight = Weight;
+        }
+      void SetZWeight(const double Weight)
+        {
+          zweight = Weight;
+        }
       //! Set the reference model for the roughness calculation, this is optional
       void SetReferenceModel(const jiba::rvec &Model)
         {
@@ -72,7 +112,11 @@ namespace jiba
         }
       //! We have to provide the model geometry to the constructor
       explicit GradientRegularization(const jiba::ThreeDModelBase &Geometry) :
-        OperatorMatrix(SmoothnessOperator(Geometry)), Reference()
+        xweight(1.0), yweight(1.0), zweight(1.0), XOperatorMatrix(
+            Geometry.GetNModelElements(), Geometry.GetNModelElements()),
+            YOperatorMatrix(Geometry.GetNModelElements(),
+                Geometry.GetNModelElements()), ZOperatorMatrix(
+                Geometry.GetNModelElements(), Geometry.GetNModelElements())
         {
         }
       virtual ~GradientRegularization();

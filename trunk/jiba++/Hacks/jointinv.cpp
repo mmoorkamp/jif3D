@@ -165,7 +165,6 @@ int main(int argc, char *argv[])
         ModelWeight(i) = WeightVector(i % GravModel.GetZCellSizes().size());
       }
 
-    jiba::rvec RefModel(InvModel);
     jiba::rvec PreCond(InvModel.size());
     std::fill(PreCond.begin(), PreCond.end(), 1.0);
     const double minslow = 1e-4;
@@ -181,6 +180,7 @@ int main(int argc, char *argv[])
     //double average = std::accumulate(InvModel.begin(),InvModel.end(),0.0)/InvModel.size();
     //std::fill(RefModel.begin(),RefModel.end(),average);
     InvModel = SlownessTransform->PhysicalToGeneralized(InvModel);
+    jiba::rvec RefModel(InvModel);
     jiba::rvec
         DensStartModel(DensityTransform->GeneralizedToPhysical(InvModel));
     std::cout << "Background layers: "
@@ -224,8 +224,17 @@ int main(int argc, char *argv[])
     boost::shared_ptr<jiba::GradientRegularization> Regularization(
         new jiba::GradientRegularization(GravModel));
 
+    jiba::rvec ModCov(InvModel.size() * 3);
+    //std::fill(ModCov.begin(), ModCov.end(), 1.0);
+    ublas::vector_range<jiba::rvec>(ModCov, ublas::range(0, InvModel.size()))
+        = InvModel;
+    ublas::vector_range<jiba::rvec>(ModCov, ublas::range(InvModel.size(), 2
+        * InvModel.size())) = InvModel;
+    ublas::vector_range<jiba::rvec>(ModCov, ublas::range(2 * InvModel.size(), 3
+        * InvModel.size())) = InvModel;
+
     Regularization->SetReferenceModel(InvModel);
-    Regularization->SetDataCovar(InvModel);
+    Regularization->SetDataCovar(ModCov);
     Regularization->SetPrecondDiag(PreCond);
     double tomolambda = 1.0;
     double scalgravlambda = 1.0;
@@ -261,7 +270,8 @@ int main(int argc, char *argv[])
         ndata += ScalGravData.size();
         Objective->AddObjective(ScalGravObjective, DensityTransform,
             scalgravlambda);
-        std::cout << "Scalar Gravity ndata: " << ScalGravData.size() << std::endl;
+        std::cout << "Scalar Gravity ndata: " << ScalGravData.size()
+            << std::endl;
         std::cout << "Scalar Gravity lambda: " << scalgravlambda << std::endl;
       }
     if (ftglambda > 0.0)
@@ -368,19 +378,26 @@ int main(int argc, char *argv[])
         > 1e-6);
 
     jiba::rvec DensInvModel(DensityTransform->GeneralizedToPhysical(InvModel));
-
+    jiba::rvec CondInvModel(MTTransform->GeneralizedToPhysical(InvModel));
     std::copy(TomoInvModel.begin(), TomoInvModel.begin()
         + TomoModel.GetSlownesses().num_elements(),
         TomoModel.SetSlownesses().origin());
     std::copy(DensInvModel.begin(), DensInvModel.begin()
         + GravModel.SetDensities().num_elements(),
         GravModel.SetDensities().origin());
+    std::copy(CondInvModel.begin(), CondInvModel.begin()
+        + MTModel.GetConductivities().num_elements(),
+        MTModel.SetConductivities().origin());
 
     //calculate the predicted refraction data
     std::cout << "Calculating response of inversion model." << std::endl;
     jiba::rvec TomoInvData(jiba::TomographyCalculator().Calculate(TomoModel));
     jiba::SaveTraveltimes(modelfilename + ".inv_tt.nc", TomoInvData, TomoModel);
+    TomoModel.WriteNetCDF(modelfilename + ".tomo.inv.nc");
+    TomoModel.WriteVTK(modelfilename + ".tomo.inv.vtk");
 
+    //and write out the data and model
+    //here we have to distinguish again between scalar and ftg data
     jiba::rvec ScalGravInvData(jiba::CreateGravityCalculator<
         jiba::MinMemGravityCalculator>::MakeScalar()->Calculate(GravModel));
     jiba::rvec FTGInvData(jiba::CreateGravityCalculator<
@@ -391,14 +408,17 @@ int main(int argc, char *argv[])
     jiba::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc",
         FTGInvData, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
         GravModel.GetMeasPosZ());
-    //and write out the data and model
-    //here we have to distinguish again between scalar and ftg data
+    //calculate MT inversion result
+    jiba::rvec MTInvData(jiba::X3DMTCalculator().Calculate(MTModel));
+    jiba::WriteImpedancesToNetCDF(modelfilename + "inv_mt.nc",
+        MTModel.GetFrequencies(), MTModel.GetMeasPosX(), MTModel.GetMeasPosY(),
+        MTModel.GetMeasPosZ(), MTInvData);
     std::cout << "Writing out inversion results." << std::endl;
 
-    TomoModel.WriteNetCDF(modelfilename + ".tomo.inv.nc");
-    TomoModel.WriteVTK(modelfilename + ".tomo.inv.vtk");
     GravModel.WriteVTK(modelfilename + ".grav.inv.vtk");
     GravModel.WriteNetCDF(modelfilename + ".grav.inv.nc");
+    MTModel.WriteVTK(modelfilename + ".mt.inv.vtk");
+    MTModel.WriteNetCDF(modelfilename + ".mt.inv.nc");
     std::ofstream datadiffile("data.diff");
     std::copy(Objective->GetDataDifference().begin(),
         Objective->GetDataDifference().end(), std::ostream_iterator<double>(
