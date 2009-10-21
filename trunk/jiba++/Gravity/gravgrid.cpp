@@ -20,6 +20,7 @@
 #include "ThreeDGravityFactory.h"
 #include "../ModelBase/VTKTools.h"
 #include "../Global/FileUtil.h"
+#include "../Global/Noise.h"
 #include <boost/cast.hpp>
 
 using namespace std;
@@ -85,6 +86,11 @@ int main(int argc, char *argv[])
     jiba::rvec ScalarResults(ScalarCalculator->Calculate(GravModel));
     jiba::rvec TensorResults(TensorCalculator->Calculate(GravModel));
 
+    double relnoise = 0.0;
+    cout << "Relative noise level: ";
+    cin >> relnoise;
+    jiba::AddNoise(ScalarResults,relnoise,0.0);
+    jiba::AddNoise(TensorResults,relnoise,0.0);
     jiba::SaveScalarGravityMeasurements(ModelFilename + ".sgd.nc",
         ScalarResults, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
         GravModel.GetMeasPosZ());

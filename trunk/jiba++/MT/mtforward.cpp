@@ -8,6 +8,7 @@
 #include <boost/numeric/conversion/cast.hpp>
 #include "../Global/FileUtil.h"
 #include "../Global/convert.h"
+#include "../Global/Noise.h"
 #include "X3DModel.h"
 #include "X3DMTCalculator.h"
 #include "ReadWriteImpedances.h"
@@ -70,6 +71,10 @@ int main()
     jiba::X3DMTCalculator Calculator;
     jiba::rvec Impedances(Calculator.Calculate(MTModel));
 
+    double relnoise = 0.0;
+    std::cout << "Relative noise level: ";
+    std::cin >> relnoise;
+    jiba::AddNoise(Impedances,relnoise,0.0);
     jiba::WriteImpedancesToNetCDF(outfilename, MTModel.GetFrequencies(),
         MTModel.GetMeasPosX(), MTModel.GetMeasPosY(), MTModel.GetMeasPosZ(),
         Impedances);
