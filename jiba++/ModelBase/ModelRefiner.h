@@ -9,6 +9,8 @@
 #ifndef MODELREFINER_H_
 #define MODELREFINER_H_
 #include "ThreeDModelBase.h"
+#include "../Global/VecMat.h"
+
 namespace jiba
   {
     /** \addtogroup modelbase Basic classes and routines for 3D models */
@@ -92,6 +94,16 @@ namespace jiba
           RefineAxes(InputModel, RefinedModel);
           ProjectValues(InputModel, RefinedModel);
         }
+      //! Combine the gradient information from the cells of the fine grid on the coarse grid
+      /*! When we refine a coarse model for the forward calculation, we have to combine the gradient
+       * that we get from this refined model for the coarse model. This function takes the refined gradient
+       * and the coarse model as arguments and returns the gradient that corresponds to the cells of the coarse model.
+       * @param FineGradient The gradient information for each cell of the refined model
+       * @param CoarseModel The coarse model that was refined for the forward calculation
+       * @param RefinedModel The grid information for the refined model is taken from this class
+       * @return The gradient for each cell of the coarse model
+       */
+      jiba::rvec CombineGradient(const jiba::rvec &FineGradient, const ThreeDModelBase &CoarseModel,const ThreeDModelBase &RefinedModel);
       ModelRefiner();
       virtual ~ModelRefiner();
       };
