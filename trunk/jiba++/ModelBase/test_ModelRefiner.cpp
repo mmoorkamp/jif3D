@@ -137,6 +137,10 @@ BOOST_AUTO_TEST_CASE(model_projection)
     const size_t newnz = FineModel.GetZCellSizes().size();
     BOOST_CHECK(FineModel.GetDensities().num_elements() == newnx * newny *newnz);
     Refiner.ProjectValues(CoarseModel, FineModel);
-
+    jiba::rvec FineGradient(FineModel.GetDensities().num_elements());
+    std::fill(FineGradient.begin(), FineGradient.end(), 1.0);
+    jiba::rvec CoarseGradient = Refiner.CombineGradient(FineGradient,
+        CoarseModel, FineModel);
+    std::cout << CoarseGradient << std::endl;
     FineModel.WriteVTK("fine.vtk");
   }

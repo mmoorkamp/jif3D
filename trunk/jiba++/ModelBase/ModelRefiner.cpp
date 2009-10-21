@@ -109,6 +109,18 @@ namespace jiba
               myview[i][j][k] = value;
       }
 
+    //assign the same value to the subset of refined cells that correspond to one coarse cell
+    double CombineValues(
+        ThreeDModelBase::t3DModelData::array_view<3>::type &myview)
+      {
+        double result = 0;
+        for (size_t i = 0; i < myview.shape()[0]; ++i)
+          for (size_t j = 0; j < myview.shape()[1]; ++j)
+            for (size_t k = 0; k < myview.shape()[2]; ++k)
+              result += myview[i][j][k];
+        return result;
+      }
+
     void ModelRefiner::ProjectValues(const ThreeDModelBase &InputModel,
         ThreeDModelBase &RefinedModel)
       {
@@ -123,19 +135,21 @@ namespace jiba
         //we loop through all old cells
         for (size_t i = 0; i < oldxsize; ++i)
           {
-            //find the end of the current cell in the refined grid
+            //find the end of the current cell in x-direction in the refined grid
             FindEnd(startx, endx, InputModel.GetXCellSizes()[i],
                 RefinedModel.GetXCellSizes());
             for (size_t j = 0; j < oldysize; ++j)
               {
+                //find the end of the current cell in y-direction in the refined grid
                 FindEnd(starty, endy, InputModel.GetYCellSizes()[j],
                     RefinedModel.GetYCellSizes());
                 for (size_t k = 0; k < oldzsize; ++k)
                   {
+                    //find the end of the current cell in z-direction in the refined grid
                     FindEnd(startz, endz, InputModel.GetZCellSizes()[k],
                         RefinedModel.GetZCellSizes());
                     //now we know the indices of the old cell in the new grid
-                    //and we can assign the right value to it
+                    //and we can assign the right value to these cells
                     typedef boost::multi_array_types::index_range range;
                     ThreeDModelBase::t3DModelData::array_view<3>::type myview =
                         RefinedModel.SetData()[boost::indices[range(startx,
@@ -151,6 +165,56 @@ namespace jiba
             startx = endx;
             starty = 0;
           }
+      }
+
+    jiba::rvec ModelRefiner::CombineGradient(const jiba::rvec &FineGradient,
+        const ThreeDModelBase &CoarseModel, const ThreeDModelBase &RefinedModel)
+      {
+        //save the original size of the grid
+        const size_t oldxsize = CoarseModel.GetXCellSizes().size();
+        const size_t oldysize = CoarseModel.GetYCellSizes().size();
+        const size_t oldzsize = CoarseModel.GetZCellSizes().size();
+        //we have to keep track of the current start und end index
+        //of the original coarse grid cell in the new refined grid
+        //in all three directions
+        ThreeDModelBase GradientModel(RefinedModel);
+        jiba::rvec CoarseGradient(CoarseModel.GetData().num_elements());
+        std::copy(FineGradient.begin(), FineGradient.end(),
+            GradientModel.SetData().origin());
+        size_t startx = 0, endx = 0, starty = 0, endy = 0, startz = 0, endz = 0;
+        //we loop through all old cells
+        for (size_t i = 0; i < oldxsize; ++i)
+          {
+            //find the end of the current cell in x-direction in the refined grid
+            FindEnd(startx, endx, CoarseModel.GetXCellSizes()[i],
+                RefinedModel.GetXCellSizes());
+            for (size_t j = 0; j < oldysize; ++j)
+              {
+                //find the end of the current cell in y-direction in the refined grid
+                FindEnd(starty, endy, CoarseModel.GetYCellSizes()[j],
+                    RefinedModel.GetYCellSizes());
+                for (size_t k = 0; k < oldzsize; ++k)
+                  {
+                    //find the end of the current cell in z-direction in the refined grid
+                    FindEnd(startz, endz, CoarseModel.GetZCellSizes()[k],
+                        RefinedModel.GetZCellSizes());
+                    typedef boost::multi_array_types::index_range range;
+                    ThreeDModelBase::t3DModelData::array_view<3>::type myview =
+                        GradientModel.SetData()[boost::indices[range(startx,
+                            endx)][range(starty, endy)][range(startz, endz)]];
+                    CoarseGradient(CoarseModel.IndexToOffset(i, j, k))
+                        = CombineValues(myview);
+                    //the next cell starts at the end of the current cell
+                    startz = endz;
+                  }
+                starty = endy;
+                //we start at the top again
+                startz = 0;
+              }
+            startx = endx;
+            starty = 0;
+          }
+        return CoarseGradient;
       }
 
     ModelRefiner::ModelRefiner() :
