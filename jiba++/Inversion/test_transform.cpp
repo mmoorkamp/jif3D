@@ -50,7 +50,7 @@ void TestTransform(const jiba::GeneralModelTransform &Transform,
         const double DiffDeriv = (Transform.GeneralizedToPhysical(PlusVec)(i)
             - Transform.GeneralizedToPhysical(MinusVec)(i)) / (2 * h);
         jiba::rvec TransDeriv = Transform.Derivative(Generalized, Ones);
-        BOOST_CHECK_CLOSE(DiffDeriv,TransDeriv(i),1e-2);
+        BOOST_CHECK_CLOSE(DiffDeriv,TransDeriv(i),0.1);
       }
     //finally we check whether the call to derivative applies
     //the chain rule properly

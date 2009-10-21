@@ -1,7 +1,7 @@
 import testing ; 
 
 lib regularization :
-                  MinDiffRegularization.cpp GradientRegularization.cpp
+                  MinDiffRegularization.cpp GradientRegularization.cpp 
                ..//ModelBase
                  : <include>boost : : <include>. ;
                  
