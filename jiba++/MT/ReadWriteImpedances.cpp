@@ -21,13 +21,13 @@ namespace jiba
         const std::string &CompName, const size_t compindex)
       {
         NcVar *CompVar = NetCDFFile.add_var(CompName.c_str(), ncDouble,
-            StatNumDim, FreqDim);
-        jiba::rvec Component(StatNumDim->size() * FreqDim->size());
+            FreqDim, StatNumDim);
+        jiba::rvec Component( FreqDim->size() * StatNumDim->size() );
         for (size_t i = 0; i < Component.size(); ++i)
           {
             Component(i) = Impedances(i * 8 + compindex);
           }
-        CompVar->put(&Component[0], StatNumDim->size(), FreqDim->size());
+        CompVar->put(&Component[0], FreqDim->size(), StatNumDim->size());
       }
 
     void ReadImpedanceComp(NcFile &NetCDFFile, jiba::rvec &Impedances,

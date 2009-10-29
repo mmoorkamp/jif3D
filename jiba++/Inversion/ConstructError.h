@@ -33,7 +33,7 @@ namespace jiba
         jiba::rvec DataError(ndata);
         for (size_t i = 0; i < ndata; ++i)
           {
-            DataError(i) = std::max(std::fabs(Data(i)), 1e-2 * maxdata)
+            DataError(i) = std::max(std::fabs(Data(i)), 1e-4 * maxdata)
                 * errorlevel;
             assert(DataError(i) > 0.0);
           }

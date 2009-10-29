@@ -30,11 +30,11 @@ void CheckAxis(const jiba::ThreeDModelBase::t3DModelDim &Refiner,
         std::back_inserter(All));
     std::sort(All.begin(), All.end());
     All.erase(std::unique(All.begin(), All.end()), All.end());
-    All.erase(std::remove_if(All.begin(), All.end(), boost::bind(std::greater<
-        double>(), _1, CoarseCoordinates[ncoarsecells - 1]
-        + CoarseSizes[ncoarsecells - 1])), All.end());
 
-    BOOST_CHECK(std::equal(All.begin(),All.end(),FineCoordinates.origin()));
+    //we have to do the comparison this way round
+    //because all can have more elements at the end that are not
+    //part of the original modeling domain
+    BOOST_CHECK(std::equal(FineCoordinates.origin(),FineCoordinates.origin()+FineCoordinates.num_elements(),All.begin()));
   }
 
 void MakeModelandRefinement(jiba::ThreeDGravityModel &CoarseModel,
@@ -54,23 +54,23 @@ void MakeModelandRefinement(jiba::ThreeDGravityModel &CoarseModel,
     std::fill_n(CoarseModel.SetYCellSizes().origin(), ncoarsecellsy, 40.0);
     std::fill_n(CoarseModel.SetZCellSizes().origin(), ncoarsecellsz, 30.0);
 
-    const size_t xrefinement = 10;
-    const size_t yrefinement = 11;
-    const size_t zrefinement = 13;
+    const size_t xrefinement = 20;
+    const size_t yrefinement = 20;
+    const size_t zrefinement = 50;
     XRefiner.resize(boost::extents[xrefinement]);
     YRefiner.resize(boost::extents[yrefinement]);
     ZRefiner.resize(boost::extents[zrefinement]);
     for (size_t i = 0; i < xrefinement; ++i)
       {
-        XRefiner[i] = 17 * i;
+        XRefiner[i] = 10 * i;
       }
     for (size_t i = 0; i < yrefinement; ++i)
       {
-        YRefiner[i] = 18 * i;
+        YRefiner[i] = 20 * i;
       }
     for (size_t i = 0; i < zrefinement; ++i)
       {
-        ZRefiner[i] = 20 * i;
+        ZRefiner[i] = 5 * i;
       }
 
     Refiner.SetXCoordinates(XRefiner);
@@ -141,6 +141,6 @@ BOOST_AUTO_TEST_CASE(model_projection)
     std::fill(FineGradient.begin(), FineGradient.end(), 1.0);
     jiba::rvec CoarseGradient = Refiner.CombineGradient(FineGradient,
         CoarseModel, FineModel);
-    std::cout << CoarseGradient << std::endl;
+    BOOST_CHECK(std::count(CoarseGradient.begin(),CoarseGradient.end(),60) == CoarseGradient.size());
     FineModel.WriteVTK("fine.vtk");
   }

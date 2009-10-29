@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE  (X3D_basic_deriv_test)
       jiba::X3DModel TrueModel(Model);
       std::vector<double> XCoord(xsize*ysize),YCoord(xsize*ysize),ZCoord(xsize*ysize);
       std::fill_n(ZCoord.begin(),xsize*ysize,0.0);
-      std::fill_n(TrueModel.SetConductivities().origin(),nmod,0.02);
+      std::fill_n(TrueModel.SetConductivities().origin(),nmod,0.012);
 
       for (size_t i = 0; i < TrueModel.GetXCoordinates().size(); ++i)
         {
@@ -59,8 +59,8 @@ BOOST_AUTO_TEST_CASE  (X3D_basic_deriv_test)
             {
               XCoord[i] = TrueModel.GetXCoordinates()[i];
               YCoord[i] = TrueModel.GetYCoordinates()[i];
-              TrueModel.AddMeasurementPoint(XCoord[i],YCoord[i],0.0);
-              Model.AddMeasurementPoint(XCoord[i],YCoord[i],0.0);
+              TrueModel.AddMeasurementPoint(XCoord[i]+deltax/2.0,YCoord[i]+deltay/2.0,0.0);
+              Model.AddMeasurementPoint(XCoord[i]+deltax/2.0,YCoord[i]+deltay/2.0,0.0);
             }
         }
 
@@ -70,7 +70,6 @@ BOOST_AUTO_TEST_CASE  (X3D_basic_deriv_test)
       jiba::rvec Impedance = Calculator.Calculate(Model);
 
       std::vector<double> Freq(TrueModel.GetFrequencies());
-
 
       jiba::WriteImpedancesToNetCDF("gradimp.nc",Freq,XCoord,YCoord,ZCoord,Observed);
 
@@ -86,7 +85,7 @@ BOOST_AUTO_TEST_CASE  (X3D_basic_deriv_test)
       //const size_t index =  62; //rand() % nmod;
       jiba::rvec ForFDGrad(nmod), BackFDGrad(nmod);
       std::ofstream outfile("grad.comp");
-   /*   for (double prec = 2.0; prec < 4.0; prec += 1.0)
+      for (double prec = 2.0; prec < 4.0; prec += 1.0)
         {
           for (size_t index = 0; index < nmod; ++index)
             {
@@ -100,7 +99,7 @@ BOOST_AUTO_TEST_CASE  (X3D_basic_deriv_test)
               outfile << index << " " << ForFDGrad(index) << " "<< BackFDGrad(index) << " " << Gradient(index) << std::endl;
             }
           outfile << std::endl;
-        }*/
+        }
       //std::cout << "Index: " << index << std::endl;
       //BOOST_CHECK_CLOSE(FDGrad,Gradient(index),1.0);
       // std::cout << "Gradient: " << Gradient << std::endl;

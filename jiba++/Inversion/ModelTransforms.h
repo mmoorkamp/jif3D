@@ -223,8 +223,8 @@ namespace jiba
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
-              Output(i) = std::exp(-(a / (Slowness(i) * Slowness(i)) + b / Slowness(
-                  i) + c));
+              Output(i) = std::exp(-(a / (Slowness(i) * Slowness(i)) + b
+                  / Slowness(i) + c));
             }
           return Output;
         }
@@ -234,8 +234,8 @@ namespace jiba
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
-              double vel = (-b + sqrt(b * b - 4.0 * a * (c + std::log(FullModel(i)))))
-                  / (2 * a);
+              double vel = (-b + sqrt(b * b - 4.0 * a * (c + std::log(
+                  FullModel(i))))) / (2 * a);
               Output(i) = 1.0 / vel;
             }
           return VelocityTransform->PhysicalToGeneralized(Output);
@@ -302,6 +302,50 @@ namespace jiba
         }
       };
 
+    class ChainedTransform: public jiba::GeneralModelTransform
+      {
+    private:
+      std::vector<boost::shared_ptr<GeneralModelTransform> > Transforms;
+    public:
+      virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
+        {
+          jiba::rvec Output(FullModel);
+
+          for (size_t j = 0; j < Transforms.size(); ++j)
+            Output = Transforms.at(j)->GeneralizedToPhysical(Output);
+          return Output;
+        }
+      virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
+        {
+          jiba::rvec Output(FullModel);
+          for (int i = Transforms.size() - 1; i >= 0; --i)
+            Output = Transforms.at(i)->PhysicalToGeneralized(Output);
+          return Output;
+        }
+      virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
+          const jiba::rvec &Derivative) const
+        {
+          jiba::rvec Output(Derivative);
+          jiba::rvec TransModel(FullModel);
+          for (size_t j = 0; j < Transforms.size(); ++j)
+            {
+              Output = Transforms.at(j)->Derivative(TransModel, Output);
+              TransModel = Transforms.at(j)->GeneralizedToPhysical(TransModel);
+            }
+          return Output;
+        }
+      void AddTransform(boost::shared_ptr<GeneralModelTransform> Trans)
+        {
+          Transforms.push_back(Trans);
+        }
+      ChainedTransform()
+        {
+
+        }
+      virtual ~ChainedTransform()
+        {
+        }
+      };
   /* @} */
   }
 #endif /* MODELTRANSFORMS_H_ */

@@ -15,6 +15,7 @@
 #include "ModelTransforms.h"
 #include "MinDiffRegularization.h"
 #include "GradientRegularization.h"
+#include "CrossGradient.h"
 #include "JointObjective.h"
 #include <boost/test/floating_point_comparison.hpp>
 
@@ -56,29 +57,53 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
 
   BOOST_AUTO_TEST_CASE (gradreg_test)
     {
-      srand(time(NULL));
       jiba::ThreeDGravityModel GravModel;
       GravModel.SetDensities().resize(boost::extents[5][4][3]);
 
       const size_t msize = GravModel.GetDensities().num_elements();
       jiba::rvec StartModel(msize), PertModel(msize);
-      jiba::rvec PreCond(msize);
-      std::fill(PreCond.begin(),PreCond.end(),1.0);
+      jiba::rvec ConstMod(msize);
+      std::fill(ConstMod.begin(),ConstMod.end(),1.0);
       std::generate(StartModel.begin(),StartModel.end(),rand);
       std::generate(PertModel.begin(),PertModel.end(),rand);
 
       jiba::GradientRegularization Regularization(GravModel);
-      Regularization.SetPrecondDiag(PreCond);
       Regularization.SetReferenceModel(StartModel);
 
-      jiba::rvec Diff = StartModel - PertModel;
-      double Misfit = Regularization.CalcMisfit(PertModel);
-
-      double zero = Regularization.CalcMisfit(StartModel+PreCond);
+      double zero = Regularization.CalcMisfit(StartModel+ConstMod);
       BOOST_CHECK_CLOSE(zero,0.0,0.0001);
+      double Misfit = Regularization.CalcMisfit(PertModel);
       CheckGradient(Regularization,PertModel);
     }
 
+  BOOST_AUTO_TEST_CASE (crossgrad_test)
+    {
+      jiba::ThreeDGravityModel GravModel;
+      GravModel.SetDensities().resize(boost::extents[3][3][3]);
+      srand48(time(NULL));
+      const int msize = GravModel.GetDensities().num_elements();
+      jiba::rvec PertModel(msize *2);
+      for (int i = 0; i < msize; ++i)
+        {
+          PertModel(i) = i + 1;
+          PertModel(i + msize) = 1.0 + double ( i %2 == 0) * (i+1);
+        }
+
+      jiba::CrossGradient Regularization(GravModel);
+      //if the two models are scaled versions of each other
+      //the cross-gradient should be zero
+      jiba::rvec ZeroModel(msize*2);
+      for (size_t i = 0; i < msize; ++i)
+        {
+          ZeroModel(i) = drand48();
+          ZeroModel(i + msize) = 3.2 * ZeroModel(i);
+        }
+      double zero = Regularization.CalcMisfit(ZeroModel);
+      //practically it is very small
+      BOOST_CHECK(zero < 1e-10);
+      double Misfit = Regularization.CalcMisfit(PertModel);
+      CheckGradient(Regularization,PertModel);
+    }
 
   BOOST_AUTO_TEST_CASE (gradjoint_test)
     {

@@ -62,7 +62,7 @@ namespace jiba
         SearchDir *= -1.0;
 
         int status = OPTPP::mcsrch(&GetObjective(), SearchDir, RawGrad,
-            CurrentModel, Misfit, &mu, 20, 1e-4, 2.2e-16, 0.9, 1e9, 1e-9);
+            CurrentModel, Misfit, &mu, 20, 1e-4, 2.2e-16, 0.9, 1e9, 1e-12);
 
         if (status < 0)
           {
