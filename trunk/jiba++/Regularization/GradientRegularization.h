@@ -11,6 +11,7 @@
 
 #include "ObjectiveFunction.h"
 #include "../ModelBase/ThreeDModelBase.h"
+
 namespace jiba
   {
     /** \addtogroup inversion General routines for inversion */
@@ -41,18 +42,11 @@ namespace jiba
       comp_mat XOperatorMatrix;
       comp_mat YOperatorMatrix;
       comp_mat ZOperatorMatrix;
+      jiba::rvec XGrad;
+      jiba::rvec YGrad;
+      jiba::rvec ZGrad;
       // the vector of the reference model
       jiba::rvec Reference;
-      inline jiba::rvec DirGrad(const comp_mat &Operator,
-          const jiba::rvec &Model)
-        {
-          const size_t nmod = Model.size();
-          jiba::rvec LocalDiff(nmod), Grad(nmod);
-          ublas::axpy_prod(Operator, Model - Reference, LocalDiff);
-          ublas::axpy_prod(ublas::trans(Operator), LocalDiff, Grad);
-          assert(Grad.size() == nmod);
-          return 2.0*Grad;
-        }
       //! Construct the operator matrix for the given model
       /*! From the geometry information in the ModelGeometry parameter, construct
        * the operator matrix for the first derivative
@@ -64,17 +58,21 @@ namespace jiba
       virtual void ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff)
         {
           const size_t nmod = Model.size();
-
+          if (Reference.size() != nmod)
+            {
+              Reference.resize(nmod);
+              Reference.clear();
+            }
           assert(XOperatorMatrix.size1() == Model.size());
           assert(YOperatorMatrix.size1() == Model.size());
           assert(ZOperatorMatrix.size1() == Model.size());
           Diff.resize(3 * nmod);
           ublas::vector_range<jiba::rvec> xrange(Diff, ublas::range(0,
-              Model.size()));
+              nmod));
           ublas::vector_range<jiba::rvec> yrange(Diff, ublas::range(
-              Model.size(), 2 * Model.size()));
+              nmod, 2 * nmod));
           ublas::vector_range<jiba::rvec> zrange(Diff, ublas::range(2
-              * Model.size(), 3 * Model.size()));
+              * nmod, 3 * nmod));
           jiba::rvec x(Model - Reference);
           ublas::axpy_prod(XOperatorMatrix, x, xrange, true);
           ublas::axpy_prod(YOperatorMatrix, x, yrange, true);
@@ -87,10 +85,20 @@ namespace jiba
       virtual jiba::rvec ImplGradient(const jiba::rvec &Model,
           const jiba::rvec &Diff)
         {
-          jiba::rvec Grad(xweight * DirGrad(XOperatorMatrix, Model));
-          Grad += yweight * DirGrad(YOperatorMatrix, Model);
-          Grad += zweight * DirGrad(ZOperatorMatrix, Model);
-          return Grad;
+          const size_t nmod = Model.size();
+          XGrad.resize(nmod);
+          YGrad.resize(nmod);
+          ZGrad.resize(nmod);
+          ublas::vector_range<const jiba::rvec> xrange(Diff, ublas::range(0,
+              nmod));
+          ublas::vector_range<const jiba::rvec> yrange(Diff, ublas::range(
+              nmod, 2 * nmod));
+          ublas::vector_range<const jiba::rvec> zrange(Diff, ublas::range(2
+              * nmod, 3 * nmod));
+          ublas::axpy_prod(ublas::trans(XOperatorMatrix), xrange, XGrad);
+          ublas::axpy_prod(ublas::trans(YOperatorMatrix), yrange, YGrad);
+          ublas::axpy_prod(ublas::trans(ZOperatorMatrix), zrange, ZGrad);
+          return 2.0*(XGrad + YGrad + ZGrad);
         }
     public:
       void SetXWeight(const double Weight)
@@ -105,6 +113,18 @@ namespace jiba
         {
           zweight = Weight;
         }
+      const jiba::rvec &GetXGrad()
+        {
+          return XGrad;
+        }
+      const jiba::rvec &GetYGrad()
+        {
+          return YGrad;
+        }
+      const jiba::rvec &GetZGrad()
+        {
+          return ZGrad;
+        }
       //! Set the reference model for the roughness calculation, this is optional
       void SetReferenceModel(const jiba::rvec &Model)
         {
@@ -118,6 +138,7 @@ namespace jiba
                 Geometry.GetNModelElements()), ZOperatorMatrix(
                 Geometry.GetNModelElements(), Geometry.GetNModelElements())
         {
+          SmoothnessOperator(Geometry);
         }
       virtual ~GradientRegularization();
       };

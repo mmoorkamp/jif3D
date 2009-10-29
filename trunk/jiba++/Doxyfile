@@ -517,6 +517,9 @@ INPUT                  = "Global" \
                          "Gravity" \
                          "ModelBase" \
                          "Inversion" \
+                         "Regularization" \
+                         "MT" \
+                         "Tomo" \
                          "docu.h" \
                         
 

@@ -54,6 +54,7 @@ int main()
     std::string outfilename = jiba::AskFilename("Output filename: ", false);
     std::cout << "Frequencies: ";
     double currfreq = 1.0;
+    std::vector<double> frequencies;
     try
       {
         while (true)
@@ -61,12 +62,15 @@ int main()
             std::string input;
             std::cin >> input;
             jiba::convert(input, currfreq);
-            MTModel.SetFrequencies().push_back(currfreq);
+            frequencies.push_back(currfreq);
           }
       } catch (jiba::BadConversion &e)
       {
 
       }
+    std::sort(frequencies.begin(), frequencies.end());
+    std::copy(frequencies.begin(), frequencies.end(), std::back_inserter(
+        MTModel.SetFrequencies()));
     std::cout << "Calculating forward response " << std::endl;
     jiba::X3DMTCalculator Calculator;
     jiba::rvec Impedances(Calculator.Calculate(MTModel));
@@ -74,7 +78,7 @@ int main()
     double relnoise = 0.0;
     std::cout << "Relative noise level: ";
     std::cin >> relnoise;
-    jiba::AddNoise(Impedances,relnoise,0.0);
+    jiba::AddNoise(Impedances, relnoise, 0.0);
     jiba::WriteImpedancesToNetCDF(outfilename, MTModel.GetFrequencies(),
         MTModel.GetMeasPosX(), MTModel.GetMeasPosY(), MTModel.GetMeasPosZ(),
         Impedances);

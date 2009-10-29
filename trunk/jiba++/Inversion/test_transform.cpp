@@ -102,5 +102,10 @@ BOOST_AUTO_TEST_CASE  (basic_copy_test)
       TestTransform(jiba::TanhTransform(0.0,1000),nelements);
       TestTransform(jiba::DensityTransform(boost::shared_ptr<jiba::GeneralModelTransform>(new jiba::TanhTransform(0.0,1000.0))),nelements);
       TestTransform(jiba::ConductivityTransform(boost::shared_ptr<jiba::GeneralModelTransform>(new jiba::TanhTransform(0.0,10.0))),nelements,0.001,0.5);
+      jiba::ChainedTransform Transform;
+      Transform.AddTransform(boost::shared_ptr<jiba::GeneralModelTransform>(new jiba::TanhTransform(-5,5.0)) );
+      Transform.AddTransform(boost::shared_ptr<jiba::GeneralModelTransform>(new jiba::LogTransform(Reference)));
+
+      TestTransform(Transform,nelements);
     }
   BOOST_AUTO_TEST_SUITE_END()

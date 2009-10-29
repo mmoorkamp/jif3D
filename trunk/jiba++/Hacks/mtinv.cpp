@@ -80,10 +80,15 @@ int main(int argc, char *argv[])
     Model.WriteVTK("start.vtk");
     const double mincond = 5e-2;
     const double maxcond = 5;
-    boost::shared_ptr<jiba::GeneralModelTransform> ConductivityTransform(
-        new jiba::TanhTransform(mincond, maxcond));
+    boost::shared_ptr<jiba::ChainedTransform> ConductivityTransform(
+        new jiba::ChainedTransform);
 
     jiba::rvec RefModel(InvModel);
+    std::fill(RefModel.begin(),RefModel.end(),1.0);
+    ConductivityTransform->AddTransform(boost::shared_ptr<jiba::GeneralModelTransform>(new jiba::TanhTransform(-1,1.0)) );
+    ConductivityTransform->AddTransform(boost::shared_ptr<jiba::GeneralModelTransform>(new jiba::LogTransform(RefModel)));
+
+
     InvModel = ConductivityTransform->PhysicalToGeneralized(InvModel);
 
     boost::shared_ptr<jiba::X3DObjective>
