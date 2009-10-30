@@ -153,6 +153,7 @@ namespace jiba
         const int nfreq = Model.GetFrequencies().size();
         const size_t nmeas = Model.GetMeasPosX().size();
         const size_t nmodx = Model.GetXCoordinates().size();
+        const size_t nmody = Model.GetYCoordinates().size();
 
         jiba::rvec result(nmeas * nfreq * 8);
         result.clear();
@@ -198,7 +199,7 @@ namespace jiba
                         Model.GetMeasPosX()[j], Model.GetMeasPosY()[j],
                         Model.GetMeasPosZ()[j]);
                 //at the moment we ignore the depth/elevation of the site
-                const size_t offset = StationIndex[1] * nmodx + StationIndex[0];
+                const size_t offset = StationIndex[0] * nmody + StationIndex[1];
                 const size_t meas_index = freq_index + j * 8;
                 FieldsToImpedance(Ex1[offset], Ex2[offset], Ey1[offset],
                     Ey2[offset], Hx1[offset], Hx2[offset], Hy1[offset],
@@ -368,8 +369,8 @@ namespace jiba
                         Model.GetMeasPosX()[j], Model.GetMeasPosY()[j],
                         Model.GetMeasPosZ()[j]);
                 //at the moment we ignore the depth/elevation of the site
-                const size_t offset = StationIndex[1] * ncellsx
-                    + StationIndex[0];
+                const size_t offset = StationIndex[0] * ncellsy
+                    + StationIndex[1];
 
                 const size_t siteindex = freq_index + j * 8;
                 //this is an implementation of eq. 12 in Avdeev and Avdeeva
@@ -414,7 +415,6 @@ namespace jiba
             CalcU(EdipName, XPolMoments2, YPolMoments2, Ux2_el, Uy2_el, Uz2_el,
                 ncellsx, ncellsy, ncellsz);
 
-
             //now we calculate the response to magnetic dipole sources
             const std::complex<double> omega_mu = -1.0 / (std::complex<double>(
                 0.0, jiba::mag_mu) * 2.0 * M_PI * Model.GetFrequencies()[i]);
@@ -433,15 +433,27 @@ namespace jiba
                     Model.GetBackgroundConductivities(),
                     Model.GetBackgroundThicknesses());
               }
-            for (size_t j = 0; j < nobs; ++j)
+            //make the sources for the magnetic dipoles
+            for (size_t j = 0; j < nmeas; ++j)
               {
+                boost::array<ThreeDModelBase::t3DModelData::index, 3>
+                    StationIndex = Model.FindAssociatedIndices(
+                        Model.GetMeasPosX()[j], Model.GetMeasPosY()[j],
+                        Model.GetMeasPosZ()[j]);
+                //at the moment we ignore the depth/elevation of the site
+                const size_t offset = StationIndex[0] * ncellsy
+                    + StationIndex[1];
+
+                const size_t siteindex = freq_index + j * 8;
                 cmat Z(2, 2);
-                FieldsToImpedance(Ex1_obs[j], Ex2_obs[j], Ey1_obs[j],
-                    Ey2_obs[j], Hx1_obs[j], Hx2_obs[j], Hy1_obs[j], Hy2_obs[j],
-                    Z(0, 0), Z(0, 1), Z(1, 0), Z(1, 1));
-                CalcHext(omega_mu, XPolMoments1.data()[j],
-                    XPolMoments2.data()[j], YPolMoments1.data()[j],
-                    YPolMoments2.data()[j], Z(0, 0), Z(0, 1), Z(1, 0), Z(1, 1));
+                FieldsToImpedance(Ex1_obs[offset], Ex2_obs[offset],
+                    Ey1_obs[offset], Ey2_obs[offset], Hx1_obs[offset],
+                    Hx2_obs[offset], Hy1_obs[offset], Hy2_obs[offset], Z(0, 0),
+                    Z(0, 1), Z(1, 0), Z(1, 1));
+                CalcHext(omega_mu, XPolMoments1.data()[offset],
+                    XPolMoments2.data()[offset], YPolMoments1.data()[offset],
+                    YPolMoments2.data()[offset], Z(0, 0), Z(0, 1), Z(1, 0), Z(
+                        1, 1));
               }
 
             std::vector<std::complex<double> > Ux1_mag, Ux2_mag, Uy1_mag,
@@ -482,6 +494,6 @@ namespace jiba
         std::copy(Gradient.begin(), Gradient.end(),
             GradMod.SetConductivities().origin());
         GradMod.WriteVTK("grad.vtk");
-        return Gradient;
+        return 2.0 * Gradient;
       }
   }
