@@ -17,6 +17,7 @@
 #include "../Global/NumUtil.h"
 #include "../Global/VectorTransform.h"
 #include "../Global/FileUtil.h"
+#include "../Global/Noise.h"
 #include "../ModelBase/VTKTools.h"
 #include "../ModelBase/NetCDFTools.h"
 #include "../Inversion/LimitedMemoryQuasiNewton.h"
@@ -25,7 +26,6 @@
 #include "../Regularization/MinDiffRegularization.h"
 #include "../Regularization/GradientRegularization.h"
 #include "../Inversion/ModelTransforms.h"
-#include "../Inversion/ConstructError.h"
 #include "../Tomo/ThreeDSeismicModel.h"
 #include "../Tomo/ReadWriteTomographyData.h"
 #include "../Tomo/TomographyObjective.h"
@@ -210,13 +210,13 @@ int main(int argc, char *argv[])
         new jiba::GravityObjective(true, wantcuda));
     FTGObjective->SetObservedData(FTGData);
     FTGObjective->SetModelGeometry(GravModel);
-    FTGObjective->SetDataCovar(jiba::ConstructError(FTGData, 0.02));
+    FTGObjective->SetDataCovar(jiba::ConstructError(FTGData, 0.02,1e-9));
     FTGObjective->SetPrecondDiag(PreCond);
 
     boost::shared_ptr<jiba::X3DObjective> MTObjective(new jiba::X3DObjective());
     MTObjective->SetModelGeometry(MTModel);
     MTObjective->SetObservedData(MTData);
-    MTObjective->SetDataCovar(jiba::ConstructError(MTData, 0.02));
+    MTObjective->SetDataCovar(jiba::ConstructError(MTData, 0.02,1e-4));
     MTObjective->SetPrecondDiag(PreCond);
 
     boost::shared_ptr<jiba::JointObjective> Objective(
