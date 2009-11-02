@@ -14,10 +14,18 @@
 #include "X3DObjective.h"
 #include "X3DModel.h"
 #include "X3DMTCalculator.h"
+#include "ReadWriteX3D.h"
 #include "MTEquations.h"
 #include "ReadWriteImpedances.h"
 
 BOOST_AUTO_TEST_SUITE( X3DCalculator_Suite )
+
+bool Between(const double limit1, const double limit2, const double value)
+  {
+    const double upper = std::max(limit1,limit2);
+    const double lower = std::min(limit1,limit2);
+    return (lower <= value) && (upper >= value);
+  }
 
 BOOST_AUTO_TEST_CASE  (X3D_basic_deriv_test)
     {
@@ -48,30 +56,26 @@ BOOST_AUTO_TEST_CASE  (X3D_basic_deriv_test)
       Model.SetFrequencies().push_back(1.0);
       Model.SetFrequencies().push_back(10.0);
 
-      jiba::X3DModel TrueModel(Model);
-      std::vector<double> XCoord(xsize*ysize),YCoord(xsize*ysize),ZCoord(xsize*ysize);
-      std::fill_n(ZCoord.begin(),xsize*ysize,0.0);
-      std::fill_n(TrueModel.SetConductivities().origin(),nmod,0.012);
-
-      for (size_t i = 0; i < TrueModel.GetXCoordinates().size(); ++i)
+      for (size_t i = 0; i < xsize; ++i)
         {
-          for (size_t j = 0; j < TrueModel.GetYCoordinates().size(); ++j)
+          for (size_t j = 0; j < ysize; ++j)
             {
-              XCoord[i] = TrueModel.GetXCoordinates()[i];
-              YCoord[i] = TrueModel.GetYCoordinates()[i];
-              TrueModel.AddMeasurementPoint(XCoord[i]+deltax/2.0,YCoord[i]+deltay/2.0,0.0);
-              Model.AddMeasurementPoint(XCoord[i]+deltax/2.0,YCoord[i]+deltay/2.0,0.0);
+              double currx = Model.GetXCoordinates()[i]+deltax/2.0;
+              double curry = Model.GetYCoordinates()[j]+deltay/2.0;
+              Model.AddMeasurementPoint(currx,curry,0.0);
             }
         }
+      jiba::X3DModel TrueModel(Model);
+      std::fill_n(TrueModel.SetConductivities().origin(),nmod,0.012);
+
 
       jiba::X3DMTCalculator Calculator;
       jiba::rvec Observed = Calculator.Calculate(TrueModel);
-      //boost::filesystem::rename("x3d.model","true.model");
-      jiba::rvec Impedance = Calculator.Calculate(Model);
+
 
       std::vector<double> Freq(TrueModel.GetFrequencies());
 
-      jiba::WriteImpedancesToNetCDF("gradimp.nc",Freq,XCoord,YCoord,ZCoord,Observed);
+      jiba::WriteImpedancesToNetCDF("gradimp.nc",Freq,TrueModel.GetMeasPosX(),TrueModel.GetMeasPosY(),TrueModel.GetMeasPosZ(),Observed);
 
       jiba::X3DObjective Objective;
       Objective.SetObservedData(Observed);
@@ -82,27 +86,21 @@ BOOST_AUTO_TEST_CASE  (X3D_basic_deriv_test)
       BOOST_CHECK(misfit > 0.0);
       jiba::rvec Gradient = Objective.CalcGradient(ModelVec);
 
-      //const size_t index =  62; //rand() % nmod;
-      jiba::rvec ForFDGrad(nmod), BackFDGrad(nmod);
-      std::ofstream outfile("grad.comp");
-      for (double prec = 2.0; prec < 4.0; prec += 1.0)
+
+      /*std::ofstream outfile("grad.comp");
+
+      for (size_t index = 0; index < nmod; ++index)
         {
-          for (size_t index = 0; index < nmod; ++index)
-            {
-              double delta = ModelVec(index) * pow(10.0,-prec);
-              jiba::rvec Forward(ModelVec);
-              jiba::rvec Backward(ModelVec);
-              Forward(index) += delta;
-              Backward(index) -= delta;
-              ForFDGrad(index) = (Objective.CalcMisfit(Forward) - misfit)/(delta);
-              BackFDGrad(index) = (misfit - Objective.CalcMisfit(Backward))/delta;
-              outfile << index << " " << ForFDGrad(index) << " "<< BackFDGrad(index) << " " << Gradient(index) << std::endl;
-            }
-          outfile << std::endl;
-        }
-      //std::cout << "Index: " << index << std::endl;
-      //BOOST_CHECK_CLOSE(FDGrad,Gradient(index),1.0);
-      // std::cout << "Gradient: " << Gradient << std::endl;
+          double delta = ModelVec(index) * 0.001;
+          jiba::rvec Forward(ModelVec);
+          jiba::rvec Backward(ModelVec);
+          Forward(index) += delta;
+          Backward(index) -= delta;
+          double ForFDGrad = (Objective.CalcMisfit(Forward) - misfit)/(delta);
+          double BackFDGrad = (misfit - Objective.CalcMisfit(Backward))/delta;
+          BOOST_CHECK(Between(ForFDGrad,BackFDGrad,Gradient(index)));
+          outfile << index << " " << ForFDGrad << " "<< BackFDGrad << " " << Gradient(index) << std::endl;
+        }*/
     }
 
   BOOST_AUTO_TEST_SUITE_END()

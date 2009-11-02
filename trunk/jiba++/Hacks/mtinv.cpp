@@ -15,12 +15,13 @@
 #include "../Global/FatalException.h"
 #include "../Global/NumUtil.h"
 #include "../Global/VectorTransform.h"
+#include "../Global/FileUtil.h"
+#include "../Global/Noise.h"
 #include "../ModelBase/VTKTools.h"
 #include "../ModelBase/NetCDFTools.h"
 #include "../Regularization/GradientRegularization.h"
 #include "../Inversion/LimitedMemoryQuasiNewton.h"
 #include "../Inversion/JointObjective.h"
-#include "../Inversion/ConstructError.h"
 #include "../Inversion/ModelTransforms.h"
 #include "../MT/X3DModel.h"
 #include "../MT/X3DObjective.h"
@@ -33,16 +34,14 @@ int main(int argc, char *argv[])
   {
 
     //first we read in the starting model and the measured data
-    std::string modelfilename, datafilename;
-    std::cout << "Starting model Filename: ";
-    std::cin >> modelfilename;
+    std::string modelfilename = jiba::AskFilename("Starting model Filename: ");
+
     //we read in the starting modelfile
     jiba::X3DModel Model;
     Model.ReadNetCDF(modelfilename);
 
     //get the name of the file containing the data and read it in
-    std::cout << "Data Filename: ";
-    std::cin >> datafilename;
+    std::string datafilename = jiba::AskFilename("Data Filename: ");
 
     //read in data
     jiba::rvec Data;
@@ -67,7 +66,7 @@ int main(int argc, char *argv[])
     const double errorlevel = 0.02;
 
     //create objects for the misfit and a very basic error estimate
-    jiba::rvec DataError = jiba::ConstructError(Data, errorlevel);
+    jiba::rvec DataError = jiba::ConstructError(Data, errorlevel,1e-4);
 
     for (size_t i = 0; i < Model.GetConductivities().shape()[2]; ++i)
       {
@@ -84,10 +83,10 @@ int main(int argc, char *argv[])
         new jiba::ChainedTransform);
 
     jiba::rvec RefModel(InvModel);
-    std::fill(RefModel.begin(),RefModel.end(),1.0);
+    std::fill(RefModel.begin(), RefModel.end(), 1.0);
     ConductivityTransform->AddTransform(boost::shared_ptr<jiba::GeneralModelTransform>(new jiba::TanhTransform(-1,1.0)) );
-    ConductivityTransform->AddTransform(boost::shared_ptr<jiba::GeneralModelTransform>(new jiba::LogTransform(RefModel)));
-
+    ConductivityTransform->AddTransform(boost::shared_ptr<
+        jiba::GeneralModelTransform>(new jiba::LogTransform(RefModel)));
 
     InvModel = ConductivityTransform->PhysicalToGeneralized(InvModel);
 
@@ -106,8 +105,7 @@ int main(int argc, char *argv[])
     std::cout << "Lambda: ";
     std::cin >> lambda;
     Objective->AddObjective(X3DObjective, ConductivityTransform);
-    Objective->AddObjective(Regularization, boost::shared_ptr<
-        jiba::GeneralModelTransform>(new jiba::ModelCopyTransform()), lambda);
+    Objective->AddObjective(Regularization, ConductivityTransform, lambda);
 
     std::cout << "Performing inversion." << std::endl;
 
@@ -124,6 +122,11 @@ int main(int argc, char *argv[])
       {
         std::cout << "Iteration: " << iteration + 1 << std::endl;
         LBFGS.MakeStep(InvModel);
+        std::copy(InvModel.begin(), InvModel.end(),
+            Model.SetConductivities().origin());
+        Model.WriteVTK(modelfilename + jiba::stringify(iteration)
+            + ".mt.raw.vtk");
+
         jiba::rvec CondInvModel = ConductivityTransform->GeneralizedToPhysical(
             InvModel);
         std::copy(CondInvModel.begin(), CondInvModel.end(),
