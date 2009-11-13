@@ -60,8 +60,8 @@ namespace jiba
     jiba::rvec ConstructError(const jiba::rvec &Data, const double relerror,
         const double absmin = 0.0)
       {
-        assert(relerror > 0.0);
-        assert(absmin > 0.0);
+        assert(relerror >= 0.0);
+        assert(absmin >= 0.0);
         const size_t ndata = Data.size();
         const double maxdata = std::abs(*std::max_element(Data.begin(),
             Data.end(), jiba::absLess<double, double>()));
