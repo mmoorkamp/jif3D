@@ -19,6 +19,8 @@ namespace jiba
     class X3DMTCalculator
       {
     private:
+      void WriteVectorDebug(const int freqindex, const std::string Name,
+              const std::vector<std::complex<double> >&Data);
       //! Remove all files created for running x3d
       void CleanUp();
       //! Make a unique string identifier for this object, basis for MakeUniqueName

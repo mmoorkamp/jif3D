@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_CASE  (read_write_netcdf_test)
       jiba::rvec Impedances(ndata);
 
       std::generate_n(Frequencies.begin(),nfreq,drand48);
-      sort(Frequencies.begin(),Frequencies.end());
+      std::sort(Frequencies.begin(),Frequencies.end());
       std::generate_n(XCoord.begin(),nstat,drand48);
       std::generate_n(YCoord.begin(),nstat,drand48);
       std::generate_n(ZCoord.begin(),nstat,drand48);
