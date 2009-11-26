@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_SUITE( Seismic_Test_Suite )
       grid.ny = ncells;
       grid.nz = ncells;
       grid.h = 5;
-      const size_t ngrid = pow(ncells + 1, 3);
+      const size_t ngrid = pow(double(ncells + 1), 3);
       //std::fill_n(grid.org, 3, grid.h / 2.0);
       grid.slow.resize(ngrid);
       std::fill_n(grid.slow.begin(), ngrid, 1.0 * grid.h);
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_SUITE( Seismic_Test_Suite )
       grid.ny = ncells;
       grid.nz = ncells;
       grid.h = 35;
-      const size_t ngrid = pow(ncells + 1, 3);
+      const size_t ngrid = pow(double(ncells + 1), 3);
       const double slow = 0.1;
       grid.slow.resize(ngrid);
       std::fill_n(grid.slow.begin(), ngrid, slow * grid.h);
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_SUITE( Seismic_Test_Suite )
       Model.AddSource(geo.x[0], geo.y[0], geo.z[0]);
       Model.AddMeasurementPoint(geo.x[0], geo.y[0], geo.z[0]);
       Model.AddSource(geo.x[1], geo.y[1], geo.z[1]);
-      std::fill_n(Model.SetSlownesses().origin(), pow(ncells, 3), 0.1);
+      std::fill_n(Model.SetSlownesses().origin(), pow(double(ncells), 3), 0.1);
       Model.AddMeasurementConfiguration(0, 0);
       Model.AddMeasurementConfiguration(1, 1);
       jiba::rvec time(Calculator.Calculate(Model));
