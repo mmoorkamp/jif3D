@@ -11,6 +11,7 @@
 #include <string>
 #include <cmath>
 #include <boost/bind.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include "../Global/convert.h"
 #include "../Global/FatalException.h"
 #include "../Global/NumUtil.h"
@@ -118,6 +119,8 @@ int main(int argc, char *argv[])
     misfitfile << std::endl;
     const size_t maxiter = 30;
     size_t iteration = 0;
+    boost::posix_time::ptime starttime =
+        boost::posix_time::microsec_clock::local_time();
     do
       {
         std::cout << "Iteration: " << iteration + 1 << std::endl;
@@ -145,6 +148,11 @@ int main(int argc, char *argv[])
         misfitfile << std::endl;
         iteration++;
       } while (iteration < maxiter && Objective->GetIndividualFits()[0] > ndata);
+    boost::posix_time::ptime endtime =
+        boost::posix_time::microsec_clock::local_time();
+    double cachedruntime = (endtime - starttime).total_seconds();
+    std::cout << "Runtime: " << cachedruntime << " s" << std::endl;
+    std::cout << std::endl;
     InvModel = ConductivityTransform->GeneralizedToPhysical(InvModel);
 
     std::copy(InvModel.begin(), InvModel.begin()
