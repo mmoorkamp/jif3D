@@ -8,6 +8,7 @@
 #include <cassert>
 #include <complex>
 #include <fstream>
+#include <iomanip>
 #include <map>
 #include <omp.h>
 #include <boost/assign/list_of.hpp> // for 'map_list_of()'
@@ -140,7 +141,7 @@ namespace jiba
     //produced by x3d
     void CleanFiles(const std::string &NameRoot)
       {
-#pragma omp critical
+#pragma omp critical(cleanfiles)
           {
             //fs::remove_all(NameRoot + dirext);
             //fs::remove_all(NameRoot + runext);
@@ -157,12 +158,19 @@ namespace jiba
 
         jiba::rvec result(nmeas * nfreq * 8);
         result.clear();
+        //we make a call to the coordinate functions to make sure
+        //that we have updated the coordinate information and cached it
+        //only then the subsequent calls are thread safe
+        Model.GetXCoordinates();
+        Model.GetYCoordinates();
+        Model.GetZCoordinates();
         omp_lock_t lck;
         omp_init_lock(&lck);
         //we parallelize by frequency, this is relatively simple
         //but we can use up to 20 processors for typical MT problems
         // as we do not have the source for x3d, this is our only possibility anyway
-#pragma omp parallel for default(shared)
+        //the const qualified variables above are predertimend to be shared by the openmp standard
+#pragma omp parallel for shared(result)
         for (int i = 0; i < nfreq; ++i)
           {
             std::string RootName = MakeUniqueName(X3DModel::MT, i);
@@ -170,7 +178,7 @@ namespace jiba
             std::vector<double> CurrFreq(1, Model.GetFrequencies()[i]);
             //writing out files causes problems in parallel
             // so we make sure it is done one at a time
-#pragma omp critical
+#pragma omp critical(forward_write_files)
               {
                 MakeRunFile(RootName);
                 WriteProjectFile(DirName, CurrFreq, X3DModel::MT,
@@ -187,8 +195,11 @@ namespace jiba
                 Hy1, Hy2;
             std::complex<double> Zxx, Zxy, Zyx, Zyy;
             //read in the electric and magnetic field at the observe sites
-            ReadEMO(DirName + "/" + emoAname, Ex1, Ey1, Hx1, Hy1);
-            ReadEMO(DirName + "/" + emoBname, Ex2, Ey2, Hx2, Hy2);
+#pragma omp critical(forward_read_emo)
+              {
+                ReadEMO(DirName + "/" + emoAname, Ex1, Ey1, Hx1, Hy1);
+                ReadEMO(DirName + "/" + emoBname, Ex2, Ey2, Hx2, Hy2);
+              }
             const size_t freq_index = nmeas * i * 8;
             //calculate impedances from the field spectra for all measurement sites
             for (size_t j = 0; j < nmeas; ++j)
@@ -297,8 +308,20 @@ namespace jiba
                 YPolMoments);
           }
         RunX3D(RootName);
-        ReadEMA(DirName + emaname, Ux, Uy, Uz, ncellsx, ncellsy, ncellsz);
+#pragma omp critical
+          {
+            ReadEMA(DirName + emaname, Ux, Uy, Uz, ncellsx, ncellsy, ncellsz);
+          }
         //boost::filesystem::remove_all(emaname);
+      }
+
+    void X3DMTCalculator::WriteVectorDebug(const int freqindex,
+        const std::string Name, const std::vector<std::complex<double> >&Data)
+      {
+        std::string filename = MakeUniqueName(X3DModel::MT, freqindex) + Name;
+        std::ofstream outfile(filename.c_str());
+        std::copy(Data.begin(), Data.end(), std::ostream_iterator<std::complex<
+            double> >(outfile, "\n"));
       }
 
     rvec X3DMTCalculator::LQDerivative(const X3DModel &Model,
@@ -316,9 +339,19 @@ namespace jiba
         assert(Misfit.size() == ndata);
         jiba::rvec Gradient(nmod);
         Gradient.clear();
+
+        //we make a call to the coordinate functions to make sure
+        //that we have updated the coordinate information and cached it
+        //only then the subsequent calls are thread safe
+        Model.GetXCoordinates();
+        Model.GetYCoordinates();
+        Model.GetZCoordinates();
+
         //we parallelize the gradient calculation by frequency
         //see also the comments for the forward calculation
-#pragma omp parallel for default(shared)
+        //here the explicitly shared variables are Gradient and lck
+        //all others are predetermined to be shared
+#pragma omp parallel for shared(Gradient) ordered
         for (int i = 0; i < nfreq; ++i)
           {
             std::string ForwardName = MakeUniqueName(X3DModel::MT, i);
@@ -327,10 +360,13 @@ namespace jiba
             //read the fields from the forward calculation
             std::vector<std::complex<double> > Ex1_obs, Ex2_obs, Ey1_obs,
                 Ey2_obs, Hx1_obs, Hx2_obs, Hy1_obs, Hy2_obs;
-            ReadEMO(ForwardDirName + emoAname, Ex1_obs, Ey1_obs, Hx1_obs,
-                Hy1_obs);
-            ReadEMO(ForwardDirName + emoBname, Ex2_obs, Ey2_obs, Hx2_obs,
-                Hy2_obs);
+#pragma omp critical
+              {
+                ReadEMO(ForwardDirName + emoAname, Ex1_obs, Ey1_obs, Hx1_obs,
+                    Hy1_obs);
+                ReadEMO(ForwardDirName + emoBname, Ex2_obs, Ey2_obs, Hx2_obs,
+                    Hy2_obs);
+              }
             assert(Ex1_obs.size()==nobs);
             assert(Ex2_obs.size()==nobs);
             std::vector<std::complex<double> > Ex1_all, Ex2_all, Ey1_all,
@@ -338,11 +374,13 @@ namespace jiba
             //for the gradient calculation we also need the electric fields
             //at all cells in the model for the two source polarizations of
             //the forward calculations
-            ReadEMA(ForwardDirName + emaAname, Ex1_all, Ey1_all, Ez1_all,
-                ncellsx, ncellsy, ncellsz);
-            ReadEMA(ForwardDirName + emaBname, Ex2_all, Ey2_all, Ez2_all,
-                ncellsx, ncellsy, ncellsz);
-
+#pragma omp critical
+              {
+                ReadEMA(ForwardDirName + emaAname, Ex1_all, Ey1_all, Ez1_all,
+                    ncellsx, ncellsy, ncellsz);
+                ReadEMA(ForwardDirName + emaBname, Ex2_all, Ey2_all, Ez2_all,
+                    ncellsx, ncellsy, ncellsz);
+              }
             //create variables for the adjoint field calculation
             const size_t freq_index = nmeas * i * 8;
             boost::multi_array<std::complex<double>, 2> XPolMoments1(
@@ -355,8 +393,7 @@ namespace jiba
                 boost::extents[ncellsx][ncellsy]);
             //we only calculate sources for the observe sites, so
             //we make sure everything else is zero
-            std::fill(Zeros.origin(), Zeros.origin() + Zeros.num_elements(),
-                0.0);
+            std::fill(Zeros.origin(), Zeros.origin() + nobs, 0.0);
             std::fill(XPolMoments1.origin(), XPolMoments1.origin() + nobs, 0.0);
             std::fill(XPolMoments2.origin(), XPolMoments2.origin() + nobs, 0.0);
             std::fill(YPolMoments1.origin(), YPolMoments1.origin() + nobs, 0.0);
@@ -432,6 +469,9 @@ namespace jiba
                     Model.GetZCellSizes(), Model.GetConductivities(),
                     Model.GetBackgroundConductivities(),
                     Model.GetBackgroundThicknesses());
+                //write an empty source file for the second source polarization
+                WriteSourceFile(MdipDirName + modelfilename + "0b.source", 0.0,
+                    Zeros, Zeros);
               }
             //make the sources for the magnetic dipoles
             for (size_t j = 0; j < nmeas; ++j)
@@ -445,15 +485,14 @@ namespace jiba
                     + StationIndex[1];
 
                 const size_t siteindex = freq_index + j * 8;
-                cmat Z(2, 2);
+                std::complex<double> Zxx, Zxy, Zyx, Zyy;
                 FieldsToImpedance(Ex1_obs[offset], Ex2_obs[offset],
                     Ey1_obs[offset], Ey2_obs[offset], Hx1_obs[offset],
-                    Hx2_obs[offset], Hy1_obs[offset], Hy2_obs[offset], Z(0, 0),
-                    Z(0, 1), Z(1, 0), Z(1, 1));
+                    Hx2_obs[offset], Hy1_obs[offset], Hy2_obs[offset], Zxx,
+                    Zxy, Zyx, Zyy);
                 CalcHext(omega_mu, XPolMoments1.data()[offset],
                     XPolMoments2.data()[offset], YPolMoments1.data()[offset],
-                    YPolMoments2.data()[offset], Z(0, 0), Z(0, 1), Z(1, 0), Z(
-                        1, 1));
+                    YPolMoments2.data()[offset], Zxx, Zxy, Zyx, Zyy);
               }
 
             std::vector<std::complex<double> > Ux1_mag, Ux2_mag, Uy1_mag,
@@ -468,19 +507,67 @@ namespace jiba
             const double cell_sizex = Model.GetXCellSizes()[0];
             const double cell_sizey = Model.GetYCellSizes()[0];
             //now we can calculate the gradient for each model cell
-            for (size_t j = 0; j < nmod; ++j)
+            /*#pragma omp critical(debug)
+             {
+             std::cout << MakeUniqueName(X3DModel::MT, i) << std::endl;
+             WriteVectorDebug(i, "Ux1el", Ux1_el);
+             WriteVectorDebug(i, "Ux2el", Ux2_el);
+             WriteVectorDebug(i, "Uy1el", Uy1_el);
+             WriteVectorDebug(i, "Uy2el", Ux2_el);
+             WriteVectorDebug(i, "Uz1el", Ux1_el);
+             WriteVectorDebug(i, "Uz2el", Ux2_el);
+
+             WriteVectorDebug(i, "Ux1mag", Ux1_mag);
+             WriteVectorDebug(i, "Ux2mag", Ux2_mag);
+             WriteVectorDebug(i, "Uy1mag", Uy1_mag);
+             WriteVectorDebug(i, "Uy2mag", Ux2_mag);
+             WriteVectorDebug(i, "Uz1mag", Ux1_mag);
+             WriteVectorDebug(i, "Uz2mag", Ux2_mag);
+
+             WriteVectorDebug(i, "Ex1all", Ex1_all);
+             WriteVectorDebug(i, "Ex2all", Ex2_all);
+             WriteVectorDebug(i, "Ey1all", Ey1_all);
+             WriteVectorDebug(i, "Ey2all", Ex2_all);
+             WriteVectorDebug(i, "Ez1all", Ex1_all);
+             WriteVectorDebug(i, "Ez2all", Ex2_all);
+             }
+             assert(Ux1_el.size() ==nmod);
+             assert(Ux2_el.size() ==nmod);
+             assert(Uy1_el.size() ==nmod);
+             assert(Uy2_el.size() ==nmod);
+             assert(Uz1_el.size() ==nmod);
+             assert(Uz2_el.size() ==nmod);
+             assert(Ux1_mag.size() ==nmod);
+             assert(Ux2_mag.size() ==nmod);
+             assert(Uy1_mag.size() ==nmod);
+             assert(Uy2_mag.size() ==nmod);
+             assert(Uz1_mag.size() ==nmod);
+             assert(Uz2_mag.size() ==nmod);
+             assert(Ex1_all.size() ==nmod);
+             assert(Ex2_all.size() ==nmod);
+             assert(Ey1_all.size() ==nmod);
+             assert(Ey2_all.size() ==nmod);
+             assert(Ez1_all.size() ==nmod);
+             assert(Ez2_all.size() ==nmod);*/
+            double Volume, gradinc;
+#pragma omp ordered
               {
-                const double Volume = cell_sizex * cell_sizey
-                    * Model.GetZCellSizes()[j % ncellsz];
-                //this is an implementation of eq. 14 in Avdeev and Avdeeva
-                //we make the update of the gradient atomic, to avoid
-                //race conditions
+                for (size_t j = 0; j < nmod; ++j)
+                  {
+                    Volume = cell_sizex * cell_sizey * Model.GetZCellSizes()[j
+                        % ncellsz];
+                    //this is an implementation of eq. 14 in Avdeev and Avdeeva
+                    //we make the update of the gradient atomic, to avoid
+                    //race conditions
+                    gradinc = std::real((Ux1_el[j] + Ux1_mag[j]) * Ex1_all[j]
+                        + (Uy1_el[j] + Uy1_mag[j]) * Ey1_all[j] + (Uz1_el[j]
+                        + Uz1_mag[j]) * Ez1_all[j] + (Ux2_el[j] + Ux2_mag[j])
+                        * Ex2_all[j] + (Uy2_el[j] + Uy2_mag[j]) * Ey2_all[j]
+                        + (Uz2_el[j] + Uz2_mag[j]) * Ez2_all[j]) * Volume;
 #pragma omp atomic
-                Gradient(j) += std::real((Ux1_el[j] + Ux1_mag[j]) * Ex1_all[j]
-                    + (Uy1_el[j] + Uy1_mag[j]) * Ey1_all[j] + (Uz1_el[j]
-                    + Uz1_mag[j]) * Ez1_all[j] + (Ux2_el[j] + Ux2_mag[j])
-                    * Ex2_all[j] + (Uy2_el[j] + Uy2_mag[j]) * Ey2_all[j]
-                    + (Uz2_el[j] + Uz2_mag[j]) * Ez2_all[j]) * Volume;
+                    Gradient(j) += gradinc;
+
+                  }
               }
             //clean the files
             CleanFiles(ForwardName);
@@ -488,6 +575,7 @@ namespace jiba
             CleanFiles(MdipName);
             //finished with one frequency
           }
+
         //plot the gradient for each model cell in a vtk file
         //this is purely for debugging purposes and might be removed in the future
         X3DModel GradMod(Model);
