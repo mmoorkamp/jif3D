@@ -33,7 +33,7 @@ namespace jiba
         const double abslower = maxeval * lowthresh;
         const size_t neval = s.size();
         //this will eventually hold lambda^-1 * vt
-        rmat lambdavt(neval,vt.size1());
+        rmat lambdavt(vt.size1(),neval);
         // go through all eigenvalues
         for (size_t i = 0; i < neval; ++i)
           {
