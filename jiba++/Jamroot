@@ -6,8 +6,8 @@ project
     	<variant>release:<define>NDEBUG  
     	<toolset>gcc:<cflags>" -ansi -fopenmp -Wall -Wextra  -Wno-long-long -pedantic"
     	<toolset>gcc:<linkflags>" -fopenmp  "
-    	<toolset>intel:<cxxflags>" -openmp "
-    	<toolset>intel:<linkflags>" -openmp"
+    	<toolset>intel:<cxxflags>" -openmp   "
+    	<toolset>intel:<linkflags>" -openmp   "
     	<toolset>sun:<define>BOOST_UBLAS_UNSUPPORTED_COMPILER=0
     	<toolset>sun:<cflags>" -library=stlport4" 
     	<toolset>sun:<linkflags>" -library=stlport4" 
@@ -39,7 +39,7 @@ lib optpp : : <name>opt ;
 lib newmat : : <name>newmat ;
 lib netcdf : : <name>netcdf ;
 lib netcdf_c++ : : <name>netcdf_c++ ;
-lib gfortran : : <name>gfortran ;
+lib gfortran : :  <name>gfortran ;
 lib cudart : : <name>cudart <search>/usr/local/cuda/lib ;
 lib cublas : : <name>cublas <search>/usr/local/cuda/lib ;
 lib cutil : : <name>cutil <search>/usr/local/CUDA_SDK/lib ;

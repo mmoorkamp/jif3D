@@ -39,11 +39,12 @@ namespace jiba
       std::vector<double> Weights;
       //! The misfit of each objective for output and analysis purposes
       std::vector<double> IndividualFits;
+      std::vector<double> IndividualGradNorms;
       //! The object that translates between the optimization parameters and the individual parameters for each objective function
       ModelDistributor Distributor;
       //the implementation of the misfit calculation
       virtual void
-          ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff);
+      ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff);
       //the implementation of the gradient calculation
       virtual jiba::rvec ImplGradient(const jiba::rvec &Model,
           const jiba::rvec &Diff);
@@ -57,6 +58,10 @@ namespace jiba
       const std::vector<double> &GetIndividualFits() const
         {
           return IndividualFits;
+        }
+      const std::vector<double> &GetIndividualGradNorms() const
+        {
+          return IndividualGradNorms;
         }
       //! Add an individual objective function
       /*! The joint objective delegates the misfit calculation to a collection of individual objective
