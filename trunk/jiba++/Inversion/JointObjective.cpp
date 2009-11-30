@@ -59,14 +59,17 @@ namespace jiba
         jiba::rvec Gradient(Model.size());
         Gradient.clear();
         const size_t nobjective = Objectives.size();
+        IndividualGradNorms.resize(nobjective);
         //add up the contribution to the gradient from each method
         //considering the weighting and the transformation
         //that has been applied to the model parameters
+        jiba::rvec CurrGrad(Model.size());
         for (size_t i = 0; i < nobjective; ++i)
           {
-            Gradient += Weights.at(i)
-                * Distributor.TransformGradient(Model, Objectives.at(i)->CalcGradient(Distributor(
-                    Model, i)), i);
+            CurrGrad =  Distributor.TransformGradient(Model, Objectives.at(i)->CalcGradient(Distributor(
+                Model, i)), i);
+            IndividualGradNorms.at(i) = ublas::norm_2(CurrGrad);
+            Gradient += Weights.at(i) * CurrGrad;
           }
         return Gradient;
       }

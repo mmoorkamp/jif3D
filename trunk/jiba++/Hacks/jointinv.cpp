@@ -168,7 +168,7 @@ int main(int argc, char *argv[])
     jiba::rvec PreCond(InvModel.size());
     std::fill(PreCond.begin(), PreCond.end(), 1.0);
     const double minslow = 1e-4;
-    const double maxslow = 0.0005;
+    const double maxslow = 0.005;
 
     boost::shared_ptr<jiba::GeneralModelTransform> SlownessTransform(
         new jiba::TanhTransform(minslow, maxslow));
@@ -210,13 +210,13 @@ int main(int argc, char *argv[])
         new jiba::GravityObjective(true, wantcuda));
     FTGObjective->SetObservedData(FTGData);
     FTGObjective->SetModelGeometry(GravModel);
-    FTGObjective->SetDataCovar(jiba::ConstructError(FTGData, 0.02,1e-9));
+    FTGObjective->SetDataCovar(jiba::ConstructError(FTGData, 0.02, 1e-9));
     FTGObjective->SetPrecondDiag(PreCond);
 
     boost::shared_ptr<jiba::X3DObjective> MTObjective(new jiba::X3DObjective());
     MTObjective->SetModelGeometry(MTModel);
     MTObjective->SetObservedData(MTData);
-    MTObjective->SetDataCovar(jiba::ConstructError(MTData, 0.02,1e-4));
+    MTObjective->SetDataCovar(jiba::ConstructError(MTData, 0.02, 1e-4));
     MTObjective->SetPrecondDiag(PreCond);
 
     boost::shared_ptr<jiba::JointObjective> Objective(
@@ -347,6 +347,10 @@ int main(int argc, char *argv[])
             std::copy(Objective->GetIndividualFits().begin(),
                 Objective->GetIndividualFits().end(), std::ostream_iterator<
                     double>(misfitfile, " "));
+            std::cout  << "Gradient Norms: ";
+            std::copy(Objective->GetIndividualGradNorms().begin(),
+                Objective->GetIndividualGradNorms().end(),
+                std::ostream_iterator<double>(std::cout, " "));
             misfitfile << " " << Objective->GetNEval();
             misfitfile << std::endl;
             std::cout << "\n\n";

@@ -3,9 +3,10 @@ import testing ;
 
 alias joint : ../Tomo ../Gravity ../Inversion ../Global ../Regularization ;
 	
-exe fittingtest : fittingtest.cpp ../Inversion//inversion ..//vecopt : <include>. ;
-exe sparsetest : sparsetest.cpp ../Inversion//inversion ..//vecopt : <include>. ;
+exe fittingtest : fittingtest.cpp ../Inversion ..//vecopt : <include>. ;
+exe sparsetest : sparsetest.cpp ../Inversion ..//vecopt : <include>. ;
 exe wcompress : wcompress.cpp  ../Gravity ../Global : <include>. ;
+exe gravconsist : gravconsist.cpp  ../Gravity ../Global ../Inversion : <include>. ;
 exe tomoinv : tomoinv.cpp  joint : <include>. ;
 exe parrun : parrun.cpp ..//boost_filesystem ;
 exe mtinv : mtinv.cpp  ../Inversion ../Global ../Regularization ../MT ..//boost_filesystem : <include>. ;
