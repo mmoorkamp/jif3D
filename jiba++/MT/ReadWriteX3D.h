@@ -45,6 +45,7 @@ namespace jiba
      * @param XCellSizes The size of the cells in x-direction [m]
      * @param YCellSizes The size of the cells in y-direction [m]
      * @param ZCellSizes The size of the cells in z-direction [m]
+     * @param ObservationDepth The depth of the observation sites in m, currently all sites have to be located at the same depth
      * @param Data The conductivities in Siemens
      * @param bg_conductivities The conductivities in Siemens of the background layers
      * @param bg_thicknesses The thicknesses in m of the background layers
@@ -53,6 +54,7 @@ namespace jiba
         const ThreeDModelBase::t3DModelDim &XCellSizes,
         const ThreeDModelBase::t3DModelDim &YCellSizes,
         const ThreeDModelBase::t3DModelDim &ZCellSizes,
+        const double ObservationDepth,
         const ThreeDModelBase::t3DModelData &Data,
         const std::vector<double> &bg_conductivities,
         const std::vector<double> &bg_thicknesses);

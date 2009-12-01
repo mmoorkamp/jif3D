@@ -90,6 +90,22 @@ namespace jiba
           }
       }
 
+    double GetObservationDepth(const std::vector<double> &Depths)
+      {
+        if (Depths.size() > 0)
+          {
+            double ObservationDepth = Depths[0];
+            if (std::count(Depths.begin(), Depths.end(), ObservationDepth)
+                == Depths.size())
+              return ObservationDepth;
+            else
+              throw jiba::FatalException(
+                  "Different depths for observation sites are not allowed yet.");
+          }
+        else
+          throw jiba::FatalException("No Depths for MT sites specified.");
+      }
+
     std::string X3DMTCalculator::ObjectID()
       {
         return std::string("p" + jiba::stringify(getpid()) + jiba::stringify(
@@ -155,7 +171,8 @@ namespace jiba
         const size_t nmeas = Model.GetMeasPosX().size();
         const size_t nmodx = Model.GetXCoordinates().size();
         const size_t nmody = Model.GetYCoordinates().size();
-
+        const double ObservationDepth =
+            GetObservationDepth(Model.GetMeasPosZ());
         jiba::rvec result(nmeas * nfreq * 8);
         result.clear();
         //we make a call to the coordinate functions to make sure
@@ -185,7 +202,8 @@ namespace jiba
                     resultfilename, modelfilename);
                 Write3DModelForX3D(DirName + "/" + modelfilename,
                     Model.GetXCellSizes(), Model.GetYCellSizes(),
-                    Model.GetZCellSizes(), Model.GetConductivities(),
+                    Model.GetZCellSizes(), ObservationDepth,
+                    Model.GetConductivities(),
                     Model.GetBackgroundConductivities(),
                     Model.GetBackgroundThicknesses());
               }
@@ -299,13 +317,14 @@ namespace jiba
         std::complex<double>, 2> &YPolMoments,
         std::vector<std::complex<double> > &Ux, std::vector<
             std::complex<double> > &Uy, std::vector<std::complex<double> > &Uz,
-        const size_t ncellsx, const size_t ncellsy, const size_t ncellsz)
+        const double ObservationDepth, const size_t ncellsx,
+        const size_t ncellsy, const size_t ncellsz)
       {
         std::string DirName = RootName + dirext + "/";
 #pragma omp critical
           {
-            WriteSourceFile(DirName + sourcefilename, 0.0, XPolMoments,
-                YPolMoments);
+            WriteSourceFile(DirName + sourcefilename, ObservationDepth,
+                XPolMoments, YPolMoments);
           }
         RunX3D(RootName);
 #pragma omp critical
@@ -336,6 +355,8 @@ namespace jiba
         const size_t nmeas = Model.GetMeasPosX().size();
         const size_t ndata = nmeas * nfreq * 8;
         const size_t nmod = ncellsx * ncellsy * ncellsz;
+        const double ObservationDepth =
+            GetObservationDepth(Model.GetMeasPosZ());
         assert(Misfit.size() == ndata);
         jiba::rvec Gradient(nmod);
         Gradient.clear();
@@ -436,21 +457,22 @@ namespace jiba
                     resultfilename, modelfilename);
                 Write3DModelForX3D(EdipDirName + modelfilename,
                     Model.GetXCellSizes(), Model.GetYCellSizes(),
-                    Model.GetZCellSizes(), Model.GetConductivities(),
+                    Model.GetZCellSizes(), ObservationDepth,
+                    Model.GetConductivities(),
                     Model.GetBackgroundConductivities(),
                     Model.GetBackgroundThicknesses());
                 //write an empty source file for the second source polarization
-                WriteSourceFile(EdipDirName + modelfilename + "0b.source", 0.0,
-                    Zeros, Zeros);
+                WriteSourceFile(EdipDirName + modelfilename + "0b.source",
+                    ObservationDepth, Zeros, Zeros);
               }
             std::vector<std::complex<double> > Ux1_el, Ux2_el, Uy1_el, Uy2_el,
                 Uz1_el, Uz2_el;
             //calculate the first polarization and read the adjoint fields
             CalcU(EdipName, XPolMoments1, YPolMoments1, Ux1_el, Uy1_el, Uz1_el,
-                ncellsx, ncellsy, ncellsz);
+                ObservationDepth, ncellsx, ncellsy, ncellsz);
             //calculate the second polarization
             CalcU(EdipName, XPolMoments2, YPolMoments2, Ux2_el, Uy2_el, Uz2_el,
-                ncellsx, ncellsy, ncellsz);
+                ObservationDepth, ncellsx, ncellsy, ncellsz);
 
             //now we calculate the response to magnetic dipole sources
             const std::complex<double> omega_mu = -1.0 / (std::complex<double>(
@@ -466,12 +488,13 @@ namespace jiba
                     resultfilename, modelfilename);
                 Write3DModelForX3D(MdipDirName + modelfilename,
                     Model.GetXCellSizes(), Model.GetYCellSizes(),
-                    Model.GetZCellSizes(), Model.GetConductivities(),
+                    Model.GetZCellSizes(), ObservationDepth,
+                    Model.GetConductivities(),
                     Model.GetBackgroundConductivities(),
                     Model.GetBackgroundThicknesses());
                 //write an empty source file for the second source polarization
-                WriteSourceFile(MdipDirName + modelfilename + "0b.source", 0.0,
-                    Zeros, Zeros);
+                WriteSourceFile(MdipDirName + modelfilename + "0b.source",
+                    ObservationDepth, Zeros, Zeros);
               }
             //make the sources for the magnetic dipoles
             for (size_t j = 0; j < nmeas; ++j)
@@ -499,10 +522,10 @@ namespace jiba
                 Uy2_mag, Uz1_mag, Uz2_mag;
             //calculate the first polarization and read the adjoint fields
             CalcU(MdipName, XPolMoments1, YPolMoments1, Ux1_mag, Uy1_mag,
-                Uz1_mag, ncellsx, ncellsy, ncellsz);
+                Uz1_mag, ObservationDepth, ncellsx, ncellsy, ncellsz);
             //calculate the second polarization and read the adjoint fields
             CalcU(MdipName, XPolMoments2, YPolMoments2, Ux2_mag, Uy2_mag,
-                Uz2_mag, ncellsx, ncellsy, ncellsz);
+                Uz2_mag, ObservationDepth, ncellsx, ncellsy, ncellsz);
 
             const double cell_sizex = Model.GetXCellSizes()[0];
             const double cell_sizey = Model.GetYCellSizes()[0];

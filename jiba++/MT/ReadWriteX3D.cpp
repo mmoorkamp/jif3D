@@ -109,6 +109,7 @@ namespace jiba
         const ThreeDModelBase::t3DModelDim &XCellSizes,
         const ThreeDModelBase::t3DModelDim &YCellSizes,
         const ThreeDModelBase::t3DModelDim &ZCellSizes,
+        const double ObservationDepth,
         const ThreeDModelBase::t3DModelData &Data,
         const std::vector<double> &bg_conductivities,
         const std::vector<double> &bg_thicknesses)
@@ -194,7 +195,7 @@ namespace jiba
         outfile << " 1 " << YCellSizes.size() << "\n\n";
         //at the moment we always set the z component of the site location to zero
         //this should be changed
-        outfile << "   zO(m)  \n 0.0 \n\n";
+        outfile << "   zO(m)  \n"<< ObservationDepth << "\n\n";
         outfile
             << "Binding_cell_in_X-direction     X-coordinate of centre of Binding cell (m)  \n";
         outfile << " 1                              0.0\n";
