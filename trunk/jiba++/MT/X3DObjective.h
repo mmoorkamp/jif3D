@@ -9,6 +9,7 @@
 #ifndef X3DOBJECTIVE_H_
 #define X3DOBJECTIVE_H_
 
+#include "../Global/FatalException.h"
 #include "../Inversion/ObjectiveFunction.h"
 #include "X3DModel.h"
 #include "X3DMTCalculator.h"
@@ -48,6 +49,9 @@ namespace jiba
        */
       void SetObservedData(const jiba::rvec &Data)
         {
+          if (Data.empty())
+            throw jiba::FatalException(
+                "Cannot have empty observations in MT objective function.");
           ObservedData = Data;
         }
       //! Set a skeleton for the conductivity model that contains all information about cell sizes, site coordinates etc.
@@ -58,6 +62,9 @@ namespace jiba
        */
       void SetModelGeometry(const jiba::X3DModel &Model)
         {
+          if (Model.GetConductivities().num_elements() == 0 || Model.GetFrequencies().size() == 0)
+            throw jiba::FatalException(
+                "Cannot have empty frequencies or model in MT objective function.");
           ConductivityModel = Model;
         }
       X3DObjective();

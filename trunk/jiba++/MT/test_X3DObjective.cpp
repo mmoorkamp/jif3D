@@ -10,6 +10,7 @@
 #define BOOST_TEST_MAIN ...
 #include <boost/test/included/unit_test.hpp>
 #include <boost/test/floating_point_comparison.hpp>
+#include <boost/test/test_tools.hpp>
 #include <boost/filesystem.hpp>
 #include "X3DObjective.h"
 #include "X3DModel.h"
@@ -22,8 +23,8 @@ BOOST_AUTO_TEST_SUITE( X3DCalculator_Suite )
 
 void  MakeMTModel(jiba::X3DModel &Model)
     {
-      const size_t xsize = 2;
-      const size_t ysize = 3;
+      const size_t xsize = 3;
+      const size_t ysize = 4;
       const size_t zsize = 2;
       const size_t nbglayers = 5;
       const size_t nmod = xsize * ysize * zsize;
@@ -56,7 +57,7 @@ void  MakeMTModel(jiba::X3DModel &Model)
             {
               double currx = Model.GetXCoordinates()[i]+deltax/2.0;
               double curry = Model.GetYCoordinates()[j]+deltay/2.0;
-              Model.AddMeasurementPoint(currx,curry,0.0);
+              Model.AddMeasurementPoint(currx,curry,250.0);
             }
         }
     }
@@ -66,6 +67,25 @@ void  MakeMTModel(jiba::X3DModel &Model)
       const double upper = std::max(limit1,limit2);
       const double lower = std::min(limit1,limit2);
       return (lower <= value) && (upper >= value);
+    }
+
+  BOOST_AUTO_TEST_CASE (X3D_fail_test)
+    {
+      jiba::X3DModel Model;
+      jiba::rvec Observed;
+      jiba::X3DObjective Objective;
+      BOOST_CHECK_THROW(Objective.SetObservedData(Observed),jiba::FatalException);
+      BOOST_CHECK_THROW(Objective.SetModelGeometry(Model),jiba::FatalException);
+      Observed.resize(10);
+      Observed.clear();
+      BOOST_CHECK_NO_THROW(Objective.SetObservedData(Observed));
+      MakeMTModel(Model);
+      BOOST_CHECK_NO_THROW(Objective.SetModelGeometry(Model));
+      Model.ClearMeasurementPoints();
+      Model.AddMeasurementPoint(10.0,12.0,250.0);
+      Model.AddMeasurementPoint(13.0,14.0,350.0);
+      Objective.SetModelGeometry(Model);
+      BOOST_CHECK_THROW(Objective.CalcMisfit(Observed),jiba::FatalException);
     }
 
   BOOST_AUTO_TEST_CASE (X3D_basic_deriv_test)
@@ -98,20 +118,20 @@ void  MakeMTModel(jiba::X3DModel &Model)
       BOOST_CHECK(misfit > 0.0);
       jiba::rvec Gradient = Objective.CalcGradient(ModelVec);
 
-      /*std::ofstream outfile("grad.comp");
+      std::ofstream outfile("grad.comp");
 
-       for (size_t index = 0; index < nmod; ++index)
-       {
-       double delta = ModelVec(index) * 0.001;
-       jiba::rvec Forward(ModelVec);
-       jiba::rvec Backward(ModelVec);
-       Forward(index) += delta;
-       Backward(index) -= delta;
-       double ForFDGrad = (Objective.CalcMisfit(Forward) - misfit)/(delta);
-       double BackFDGrad = (misfit - Objective.CalcMisfit(Backward))/delta;
-       BOOST_CHECK(Between(ForFDGrad,BackFDGrad,Gradient(index)));
-       outfile << index << " " << ForFDGrad << " "<< BackFDGrad << " " << Gradient(index) << std::endl;
-       }*/
+      /*for (size_t index = 0; index < nmod; ++index)
+        {
+          double delta = ModelVec(index) * 0.001;
+          jiba::rvec Forward(ModelVec);
+          jiba::rvec Backward(ModelVec);
+          Forward(index) += delta;
+          Backward(index) -= delta;
+          double ForFDGrad = (Objective.CalcMisfit(Forward) - misfit)/(delta);
+          double BackFDGrad = (misfit - Objective.CalcMisfit(Backward))/delta;
+          BOOST_CHECK(Between(ForFDGrad,BackFDGrad,Gradient(index)));
+          outfile << index << " " << ForFDGrad << " "<< BackFDGrad << " " << Gradient(index) << std::endl;
+        }*/
     }
 
   BOOST_AUTO_TEST_CASE (X3D_gradient_reproc_test)
@@ -133,7 +153,7 @@ void  MakeMTModel(jiba::X3DModel &Model)
       std::vector<double> FitVec;
       std::vector<jiba::rvec> GradVec;
       std::vector<jiba::rvec> DiffVec;
-      std::vector<boost::shared_ptr<jiba::X3DObjective> >  Objectives;
+      std::vector<boost::shared_ptr<jiba::X3DObjective> > Objectives;
       for (size_t i = 0; i < nruns; ++i)
         {
           boost::shared_ptr<jiba::X3DObjective> Objective(new jiba::X3DObjective);
