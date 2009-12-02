@@ -14,7 +14,7 @@ namespace jiba
 
     LimitedMemoryQuasiNewton::LimitedMemoryQuasiNewton(boost::shared_ptr<
         jiba::ObjectiveFunction> ObjFunction, const size_t n) :
-      GradientBasedOptimization(ObjFunction), mu(1.0), MaxPairs(n), SHistory(),
+      GradientBasedOptimization(ObjFunction), mu(1.0), LineIter(10),MaxPairs(n), SHistory(),
           YHistory()
       {
 
