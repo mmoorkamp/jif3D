@@ -60,11 +60,11 @@ namespace jiba
         //at each iteration we reset the stepsize
         mu = 1.0;
         SearchDir *= -1.0;
-
+        double OldFit = Misfit;
         int status = OPTPP::mcsrch(&GetObjective(), SearchDir, RawGrad,
-            CurrentModel, Misfit, &mu, 20, 1e-4, 2.2e-16, 0.9, 1e9, 1e-12);
+            CurrentModel, Misfit, &mu, LineIter, 1e-4, 2.2e-16, 0.9, 1e9, 1e-12);
 
-        if (status < 0)
+        if (status < 0 && Misfit > OldFit)
           {
             throw jiba::FatalException("Cannot find suitable step. Status: "
                 + jiba::stringify(status));
