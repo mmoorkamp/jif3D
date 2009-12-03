@@ -14,6 +14,7 @@
 #include <iostream>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/filesystem/convenience.hpp>
 #include <iostream>
 
 /*! \file FileUtil.h
@@ -92,6 +93,18 @@ namespace jiba
             throw jiba::FatalException("File " + filename + " does not exist");
           }
         return filename;
+      }
+
+    //! Checks whether the file called abort exists in the current directory to signal the program that we want to stop
+    inline bool WantAbort()
+      {
+        return boost::filesystem::exists("abort");
+      }
+
+    //! Remove the abort file in the current directory
+    inline void RemoveAbort()
+      {
+        boost::filesystem::remove("abort");
       }
   /* @} */
   }
