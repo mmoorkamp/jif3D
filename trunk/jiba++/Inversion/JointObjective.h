@@ -11,6 +11,7 @@
 
 #include "ObjectiveFunction.h"
 #include "ModelDistributor.h"
+#include "../Global/FatalException.h"
 #include "../Gravity/ThreeDGravityModel.h"
 #include <boost/shared_ptr.hpp>
 namespace jiba
@@ -77,6 +78,13 @@ namespace jiba
           Objectives.push_back(Obj);
           Weights.push_back(lambda);
           Distributor.AddTransformer(Transform);
+        }
+      void SetWeights(const std::vector<double> &W)
+        {
+          if (W.size() != Weights.size())
+            throw jiba::FatalException(
+                "Number of weights has to match the number of objective functions !");
+          std::copy(W.begin(), W.end(), Weights.begin());
         }
       JointObjective();
       virtual ~JointObjective();
