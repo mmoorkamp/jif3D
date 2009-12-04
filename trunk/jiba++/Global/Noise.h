@@ -74,5 +74,25 @@ namespace jiba
           }
         return DataError;
       }
+
+    jiba::rvec ConstructMTError(const jiba::rvec &Data, const double relerror)
+      {
+        assert(relerror >= 0.0);
+        const size_t ndata = Data.size();
+        jiba::rvec DataError(ndata);
+        const size_t ntensorelem = 8;
+        assert((Data.size() % ntensorelem) == 0);
+        const size_t ntensor = ndata / 8;
+        for(size_t i = 0; i < ntensor; ++i)
+          {
+           //find the maximum tensor element
+            const double maxdata = std::abs(*std::max_element(Data.begin() + i
+                * ntensorelem, Data.begin() + (i + 1) * ntensorelem,
+                jiba::absLess<double, double>()));
+            assert(maxdata > 0);
+            std::fill_n(DataError.begin() + i * ntensorelem,ntensorelem,maxdata*relerror);
+          }
+        return DataError;
+      }
   }
 #endif /* NOISE_H_ */
