@@ -1,7 +1,7 @@
 //============================================================================
 // Name        : mtforward.cpp
 // Author      : Jul 14, 2009
-// Version     : 
+// Version     :
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
@@ -76,9 +76,12 @@ int main()
     jiba::rvec Impedances(Calculator.Calculate(MTModel));
 
     double relnoise = 0.0;
+    double absnoise = 0.0;
     std::cout << "Relative noise level: ";
     std::cin >> relnoise;
-    jiba::AddNoise(Impedances, relnoise, 0.0);
+    std::cout << "Absolute noise level: ";
+    std::cin >> absnoise;
+    jiba::AddNoise(Impedances, relnoise, absnoise);
     jiba::WriteImpedancesToNetCDF(outfilename, MTModel.GetFrequencies(),
         MTModel.GetMeasPosX(), MTModel.GetMeasPosY(), MTModel.GetMeasPosZ(),
         Impedances);
