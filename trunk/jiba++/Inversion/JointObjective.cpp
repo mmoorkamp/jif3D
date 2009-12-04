@@ -31,10 +31,12 @@ namespace jiba
         IndividualFits.resize(nobjective);
         //go through all the objective function objects and calculate the misfit
         //also count how much data points we have in total
+        std::cout << "Individual Fits: ";
         for (size_t i = 0; i < nobjective; ++i)
           {
             IndividualFits.at(i) = Objectives.at(i)->CalcMisfit(Distributor(
                 Model, i));
+            std::cout << IndividualFits.at(i) << " ";
             totaldata += Objectives.at(i)->GetDataDifference().size();
           }
         Diff.resize(totaldata);
@@ -50,6 +52,7 @@ namespace jiba
                 * Objectives.at(i)->GetDataDifference();
             currstart += ndata;
           }
+        std::cout << std::endl;
       }
 
     jiba::rvec JointObjective::ImplGradient(const jiba::rvec &Model,
@@ -64,13 +67,16 @@ namespace jiba
         //considering the weighting and the transformation
         //that has been applied to the model parameters
         jiba::rvec CurrGrad(Model.size());
+        std::cout << "Individual Grad Norms: ";
         for (size_t i = 0; i < nobjective; ++i)
           {
             CurrGrad =  Distributor.TransformGradient(Model, Objectives.at(i)->CalcGradient(Distributor(
                 Model, i)), i);
             IndividualGradNorms.at(i) = ublas::norm_2(CurrGrad);
+            std::cout << IndividualGradNorms.at(i) << " ";
             Gradient += Weights.at(i) * CurrGrad;
           }
+        std::cout << std::endl;
         return Gradient;
       }
   }
