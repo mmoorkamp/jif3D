@@ -216,7 +216,7 @@ int main(int argc, char *argv[])
     boost::shared_ptr<jiba::X3DObjective> MTObjective(new jiba::X3DObjective());
     MTObjective->SetModelGeometry(MTModel);
     MTObjective->SetObservedData(MTData);
-    MTObjective->SetDataCovar(jiba::ConstructError(MTData, 0.02, 1e-4));
+    MTObjective->SetDataCovar(jiba::ConstructMTError(MTData, 0.02));
     MTObjective->SetPrecondDiag(PreCond);
 
     boost::shared_ptr<jiba::JointObjective> Objective(

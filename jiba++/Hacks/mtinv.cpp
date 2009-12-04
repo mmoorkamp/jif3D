@@ -67,8 +67,13 @@ int main(int argc, char *argv[])
     const double errorlevel = 0.02;
 
     //create objects for the misfit and a very basic error estimate
-    jiba::rvec DataError = jiba::ConstructError(Data, errorlevel,1e-4);
-
+    jiba::rvec DataError = jiba::ConstructError(Data, errorlevel, 1e-4);
+    jiba::rvec MTDataError = jiba::ConstructMTError(Data, errorlevel);
+    std::ofstream errorfile("error.out");
+    for (size_t i = 0; i < DataError.size(); ++i)
+      {
+        errorfile << i << " " << DataError(i) << " " << MTDataError(i) << std::endl;
+      }
     for (size_t i = 0; i < Model.GetConductivities().shape()[2]; ++i)
       {
         Model.SetConductivities()[0][0][i] *= (1 + 0.0001 * (i + 1));
@@ -85,7 +90,8 @@ int main(int argc, char *argv[])
 
     jiba::rvec RefModel(InvModel);
     std::fill(RefModel.begin(), RefModel.end(), 1.0);
-    ConductivityTransform->AddTransform(boost::shared_ptr<jiba::GeneralModelTransform>(new jiba::TanhTransform(-1,1.0)) );
+    ConductivityTransform->AddTransform(boost::shared_ptr<
+        jiba::GeneralModelTransform>(new jiba::TanhTransform(-1, 1.0)));
     ConductivityTransform->AddTransform(boost::shared_ptr<
         jiba::GeneralModelTransform>(new jiba::LogTransform(RefModel)));
 
@@ -95,7 +101,7 @@ int main(int argc, char *argv[])
         X3DObjective(new jiba::X3DObjective());
     X3DObjective->SetObservedData(Data);
     X3DObjective->SetModelGeometry(Model);
-    X3DObjective->SetDataCovar(DataError);
+    X3DObjective->SetDataCovar(MTDataError);
 
     boost::shared_ptr<jiba::JointObjective> Objective(
         new jiba::JointObjective());
