@@ -236,6 +236,7 @@ int main(int argc, char *argv[])
     Regularization->SetReferenceModel(InvModel);
     Regularization->SetDataCovar(ModCov);
     Regularization->SetPrecondDiag(PreCond);
+    Regularization->SetZWeight(0.001);
     double tomolambda = 1.0;
     double scalgravlambda = 1.0;
     double ftglambda = 1.0;
@@ -288,8 +289,7 @@ int main(int argc, char *argv[])
         std::cout << "MT ndata: " << MTData.size() << std::endl;
         std::cout << "MT lambda: " << mtlambda << std::endl;
       }
-    Objective->AddObjective(Regularization, boost::shared_ptr<
-        jiba::GeneralModelTransform>(new jiba::ModelCopyTransform()), reglambda);
+    Objective->AddObjective(Regularization, SlownessTransform, reglambda);
     Objective->SetPrecondDiag(PreCond);
     std::cout << "Performing inversion." << std::endl;
 
