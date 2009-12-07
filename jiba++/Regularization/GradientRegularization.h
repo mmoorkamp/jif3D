@@ -98,7 +98,7 @@ namespace jiba
           ublas::axpy_prod(ublas::trans(XOperatorMatrix), xrange, XGrad);
           ublas::axpy_prod(ublas::trans(YOperatorMatrix), yrange, YGrad);
           ublas::axpy_prod(ublas::trans(ZOperatorMatrix), zrange, ZGrad);
-          return 2.0*(XGrad + YGrad + ZGrad);
+          return 2.0*(sqrt(xweight) * XGrad + sqrt(yweight) * YGrad + sqrt(zweight)*ZGrad);
         }
     public:
       void SetXWeight(const double Weight)
