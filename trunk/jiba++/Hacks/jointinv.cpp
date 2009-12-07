@@ -45,46 +45,51 @@ namespace ublas = boost::numeric::ublas;
 namespace po = boost::program_options;
 
 int main(int argc, char *argv[])
-  {
+    {
 
     po::options_description desc("Allowed options");
     desc.add_options()("help", "produce help message")("cpu",
-        "Perform calculation on CPU [default]")("gpu",
-        "Perform calculation on GPU")("threads", po::value<int>(),
-        "The number of openmp threads")("corrpairs", po::value<int>(),
-        "The number correction pairs for L-BFGS")("nlcg",
-        "Use NLCG optimization");
+	    "Perform calculation on CPU [default]")("gpu",
+	    "Perform calculation on GPU")("threads", po::value<int>(),
+	    "The number of openmp threads")("corrpairs", po::value<int>(),
+	    "The number correction pairs for L-BFGS")("nlcg",
+	    "Use NLCG optimization")("xreg", po::value<double>(),
+	    "The weight for the regularization in x-direction")("yreg",
+	    po::value<double>(),
+	    "The weight for the regularization in y-direction")("zreg",
+	    po::value<double>(),
+	    "The weight for the regularization in z-direction");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
 
     if (vm.count("help"))
-      {
-        std::cout << desc << "\n";
-        return 1;
-      }
+	{
+	std::cout << desc << "\n";
+	return 1;
+	}
     bool wantcuda = false;
 
     if (vm.count("gpu"))
-      {
-        std::cout << "Using GPU" << "\n";
-        wantcuda = true;
-      }
+	{
+	std::cout << "Using GPU" << "\n";
+	wantcuda = true;
+	}
     if (vm.count("threads"))
-      {
-        omp_set_num_threads(vm["threads"].as<int> ());
-      }
+	{
+	omp_set_num_threads(vm["threads"].as<int> ());
+	}
     int correctionpairs = 5;
     if (vm.count("corrpairs"))
-      {
-        correctionpairs = vm["corrpairs"].as<int> ();
-      }
+	{
+	correctionpairs = vm["corrpairs"].as<int> ();
+	}
     bool wantnlcg = false;
     if (vm.count("nlcg"))
-      {
-        wantnlcg = true;
-      }
+	{
+	wantnlcg = true;
+	}
     //these objects hold information about the measurements and their geometry
     jiba::rvec TomoData, ScalGravData, FTGData, MTData;
 
@@ -96,17 +101,17 @@ int main(int argc, char *argv[])
     TomoModel.WriteVTK(modelfilename + ".vtk");
     //get the name of the file containing the data and read it in
     std::string tomodatafilename = jiba::AskFilename(
-        "Tomography Data Filename: ");
+	    "Tomography Data Filename: ");
 
     //read in data
     jiba::ReadTraveltimes(tomodatafilename, TomoData, TomoModel);
 
     std::string scalgravdatafilename = jiba::AskFilename(
-        "Scalar Gravity Data Filename: ");
+	    "Scalar Gravity Data Filename: ");
     std::string ftgdatafilename = jiba::AskFilename("FTG Data Filename: ");
     std::string mtdatafilename = jiba::AskFilename("MT data filename: ");
     std::string gravmodelfilename = jiba::AskFilename(
-        "Gravity Model Filename: ");
+	    "Gravity Model Filename: ");
     std::string mtmodelfilename = jiba::AskFilename("MT Model Filename: ");
     jiba::ThreeDGravityModel GravModel;
     GravModel.ReadNetCDF(gravmodelfilename);
@@ -116,19 +121,19 @@ int main(int argc, char *argv[])
 
     jiba::ThreeDGravityModel::tMeasPosVec PosX, PosY, PosZ;
     jiba::ReadScalarGravityMeasurements(scalgravdatafilename, ScalGravData,
-        PosX, PosY, PosZ);
+	    PosX, PosY, PosZ);
     jiba::ReadTensorGravityMeasurements(ftgdatafilename, FTGData, PosX, PosY,
-        PosZ);
+	    PosZ);
     GravModel.ClearMeasurementPoints();
     for (size_t i = 0; i < PosX.size(); ++i)
-      {
-        GravModel.AddMeasurementPoint(PosX.at(i), PosY.at(i), PosZ.at(i));
-      }
+	{
+	GravModel.AddMeasurementPoint(PosX.at(i), PosY.at(i), PosZ.at(i));
+	}
 
     //read in MT data
     std::vector<double> MTXPos, MTYPos, MTZPos, Frequencies;
     jiba::ReadImpedancesFromNetCDF(mtdatafilename, Frequencies, MTXPos, MTYPos,
-        MTZPos, MTData);
+	    MTZPos, MTData);
     jiba::X3DModel MTModel;
     MTModel.ReadNetCDF(mtmodelfilename);
     //as for the gravity model the gridding is determined by the starting model
@@ -136,34 +141,35 @@ int main(int argc, char *argv[])
     MTModel = TomoModel;
     MTModel.ClearMeasurementPoints();
     std::copy(Frequencies.begin(), Frequencies.end(), std::back_inserter(
-        MTModel.SetFrequencies()));
+	    MTModel.SetFrequencies()));
     for (size_t i = 0; i < MTXPos.size(); ++i)
-      {
-        MTModel.AddMeasurementPoint(MTXPos[i], MTYPos[i], MTZPos[i]);
-      }
+	{
+	MTModel.AddMeasurementPoint(MTXPos[i], MTYPos[i], MTZPos[i]);
+	}
 
     //if we don't have data inversion doesn't make sense;
     if (TomoData.empty() || ScalGravData.empty() || MTData.empty())
-      {
-        std::cerr << "No measurements defined" << std::endl;
-        exit(100);
-      }
+	{
+	std::cerr << "No measurements defined" << std::endl;
+	exit(100);
+	}
 
     jiba::rvec InvModel(TomoModel.GetSlownesses().num_elements());
     std::copy(TomoModel.GetSlownesses().origin(),
-        TomoModel.GetSlownesses().origin()
-            + TomoModel.GetSlownesses().num_elements(), InvModel.begin());
+	    TomoModel.GetSlownesses().origin()
+		    + TomoModel.GetSlownesses().num_elements(),
+	    InvModel.begin());
 
     const double z0 = 5.0;
     const double DepthExponent = -2.0;
     jiba::rvec WeightVector, ModelWeight(InvModel.size());
     //calculate the depth scaling
     jiba::ConstructDepthWeighting(GravModel.GetZCellSizes(), z0, WeightVector,
-        jiba::WeightingTerm(DepthExponent));
+	    jiba::WeightingTerm(DepthExponent));
     for (size_t i = 0; i < ModelWeight.size(); ++i)
-      {
-        ModelWeight(i) = WeightVector(i % GravModel.GetZCellSizes().size());
-      }
+	{
+	ModelWeight(i) = WeightVector(i % GravModel.GetZCellSizes().size());
+	}
 
     jiba::rvec PreCond(InvModel.size());
     std::fill(PreCond.begin(), PreCond.end(), 1.0);
@@ -171,26 +177,26 @@ int main(int argc, char *argv[])
     const double maxslow = 0.005;
 
     boost::shared_ptr<jiba::GeneralModelTransform> SlownessTransform(
-        new jiba::TanhTransform(minslow, maxslow));
+	    new jiba::TanhTransform(minslow, maxslow));
     boost::shared_ptr<jiba::GeneralModelTransform> DensityTransform(
-        new jiba::DensityTransform(SlownessTransform));
+	    new jiba::DensityTransform(SlownessTransform));
     boost::shared_ptr<jiba::GeneralModelTransform> MTTransform(
-        new jiba::ConductivityTransform(SlownessTransform));
+	    new jiba::ConductivityTransform(SlownessTransform));
 
     //double average = std::accumulate(InvModel.begin(),InvModel.end(),0.0)/InvModel.size();
     //std::fill(RefModel.begin(),RefModel.end(),average);
     InvModel = SlownessTransform->PhysicalToGeneralized(InvModel);
     jiba::rvec RefModel(InvModel);
     jiba::rvec
-        DensStartModel(DensityTransform->GeneralizedToPhysical(InvModel));
+	    DensStartModel(DensityTransform->GeneralizedToPhysical(InvModel));
     std::cout << "Background layers: "
-        << GravModel.GetBackgroundDensities().size() << std::endl;
+	    << GravModel.GetBackgroundDensities().size() << std::endl;
     std::copy(DensStartModel.begin(), DensStartModel.end(),
-        GravModel.SetDensities().origin());
+	    GravModel.SetDensities().origin());
     GravModel.WriteNetCDF("out_dens.nc");
 
     boost::shared_ptr<jiba::TomographyObjective> TomoObjective(
-        new jiba::TomographyObjective());
+	    new jiba::TomographyObjective());
     TomoObjective->SetObservedData(TomoData);
     TomoObjective->SetModelGeometry(TomoModel);
     jiba::rvec TomoCovar(TomoData.size());
@@ -200,14 +206,14 @@ int main(int argc, char *argv[])
     TomoObjective->SetPrecondDiag(PreCond);
 
     boost::shared_ptr<jiba::GravityObjective> ScalGravObjective(
-        new jiba::GravityObjective(false, wantcuda));
+	    new jiba::GravityObjective(false, wantcuda));
     ScalGravObjective->SetObservedData(ScalGravData);
     ScalGravObjective->SetModelGeometry(GravModel);
     ScalGravObjective->SetDataCovar(jiba::ConstructError(ScalGravData, 0.02));
     ScalGravObjective->SetPrecondDiag(PreCond);
 
     boost::shared_ptr<jiba::GravityObjective> FTGObjective(
-        new jiba::GravityObjective(true, wantcuda));
+	    new jiba::GravityObjective(true, wantcuda));
     FTGObjective->SetObservedData(FTGData);
     FTGObjective->SetModelGeometry(GravModel);
     FTGObjective->SetDataCovar(jiba::ConstructError(FTGData, 0.02, 1e-9));
@@ -220,23 +226,41 @@ int main(int argc, char *argv[])
     MTObjective->SetPrecondDiag(PreCond);
 
     boost::shared_ptr<jiba::JointObjective> Objective(
-        new jiba::JointObjective());
+	    new jiba::JointObjective());
     boost::shared_ptr<jiba::GradientRegularization> Regularization(
-        new jiba::GradientRegularization(GravModel));
+	    new jiba::GradientRegularization(GravModel));
 
     jiba::rvec ModCov(InvModel.size() * 3);
     //std::fill(ModCov.begin(), ModCov.end(), 1.0);
     ublas::vector_range<jiba::rvec>(ModCov, ublas::range(0, InvModel.size()))
-        = InvModel;
+	    = InvModel;
     ublas::vector_range<jiba::rvec>(ModCov, ublas::range(InvModel.size(), 2
-        * InvModel.size())) = InvModel;
+	    * InvModel.size())) = InvModel;
     ublas::vector_range<jiba::rvec>(ModCov, ublas::range(2 * InvModel.size(), 3
-        * InvModel.size())) = InvModel;
+	    * InvModel.size())) = InvModel;
 
     Regularization->SetReferenceModel(InvModel);
     Regularization->SetDataCovar(ModCov);
     Regularization->SetPrecondDiag(PreCond);
-    Regularization->SetZWeight(0.001);
+    if (vm.count("xreg"))
+	{
+	const double xreg = vm["xreg"].as<double> ();
+	std::cout << "Setting xreg: " << xreg << std::endl;
+	Regularization->SetXWeight(xreg);
+	}
+    if (vm.count("yreg"))
+	{
+	const double yreg = vm["yreg"].as<double> ();
+	std::cout << "Setting yreg: " << yreg << std::endl;
+	Regularization->SetYWeight(yreg);
+	}
+    if (vm.count("zreg"))
+	{
+	const double zreg = vm["zreg"].as<double> ();
+	std::cout << "Setting zreg: " << zreg << std::endl;
+	Regularization->SetZWeight(zreg);
+	}
+
     double tomolambda = 1.0;
     double scalgravlambda = 1.0;
     double ftglambda = 1.0;
@@ -257,53 +281,53 @@ int main(int argc, char *argv[])
     std::cin >> maxiter;
 
     boost::posix_time::ptime starttime =
-        boost::posix_time::microsec_clock::local_time();
+	    boost::posix_time::microsec_clock::local_time();
     size_t ndata = 0;
     if (tomolambda > 0.0)
-      {
-        ndata += TomoData.size();
-        Objective->AddObjective(TomoObjective, SlownessTransform, tomolambda);
-        std::cout << "Tomo ndata: " << TomoData.size() << std::endl;
-        std::cout << "Tomo lambda: " << tomolambda << std::endl;
-      }
+	{
+	ndata += TomoData.size();
+	Objective->AddObjective(TomoObjective, SlownessTransform, tomolambda);
+	std::cout << "Tomo ndata: " << TomoData.size() << std::endl;
+	std::cout << "Tomo lambda: " << tomolambda << std::endl;
+	}
     if (scalgravlambda > 0.0)
-      {
-        ndata += ScalGravData.size();
-        Objective->AddObjective(ScalGravObjective, DensityTransform,
-            scalgravlambda);
-        std::cout << "Scalar Gravity ndata: " << ScalGravData.size()
-            << std::endl;
-        std::cout << "Scalar Gravity lambda: " << scalgravlambda << std::endl;
-      }
+	{
+	ndata += ScalGravData.size();
+	Objective->AddObjective(ScalGravObjective, DensityTransform,
+		scalgravlambda);
+	std::cout << "Scalar Gravity ndata: " << ScalGravData.size()
+		<< std::endl;
+	std::cout << "Scalar Gravity lambda: " << scalgravlambda << std::endl;
+	}
     if (ftglambda > 0.0)
-      {
-        ndata += FTGData.size();
-        Objective->AddObjective(FTGObjective, DensityTransform, ftglambda);
-        std::cout << "FTG ndata: " << FTGData.size() << std::endl;
-        std::cout << "FTG lambda: " << ftglambda << std::endl;
-      }
+	{
+	ndata += FTGData.size();
+	Objective->AddObjective(FTGObjective, DensityTransform, ftglambda);
+	std::cout << "FTG ndata: " << FTGData.size() << std::endl;
+	std::cout << "FTG lambda: " << ftglambda << std::endl;
+	}
     if (mtlambda > 0.0)
-      {
-        ndata += MTData.size();
-        Objective->AddObjective(MTObjective, MTTransform, mtlambda);
-        std::cout << "MT ndata: " << MTData.size() << std::endl;
-        std::cout << "MT lambda: " << mtlambda << std::endl;
-      }
+	{
+	ndata += MTData.size();
+	Objective->AddObjective(MTObjective, MTTransform, mtlambda);
+	std::cout << "MT ndata: " << MTData.size() << std::endl;
+	std::cout << "MT lambda: " << mtlambda << std::endl;
+	}
     Objective->AddObjective(Regularization, SlownessTransform, reglambda);
     Objective->SetPrecondDiag(PreCond);
     std::cout << "Performing inversion." << std::endl;
 
     boost::shared_ptr<jiba::GradientBasedOptimization> Optimizer;
     if (wantnlcg)
-      {
-        Optimizer = boost::shared_ptr<jiba::GradientBasedOptimization>(
-            new jiba::NonLinearConjugateGradient(Objective));
-      }
+	{
+	Optimizer = boost::shared_ptr<jiba::GradientBasedOptimization>(
+		new jiba::NonLinearConjugateGradient(Objective));
+	}
     else
-      {
-        Optimizer = boost::shared_ptr<jiba::GradientBasedOptimization>(
-            new jiba::LimitedMemoryQuasiNewton(Objective, correctionpairs));
-      }
+	{
+	Optimizer = boost::shared_ptr<jiba::GradientBasedOptimization>(
+		new jiba::LimitedMemoryQuasiNewton(Objective, correctionpairs));
+	}
 
     //Optimizer->SetModelCovDiag(ModelWeight);
 
@@ -314,84 +338,85 @@ int main(int argc, char *argv[])
     //calculate initial misfit
     misfitfile << "0 " << Objective->CalcMisfit(InvModel) << " ";
     std::copy(Objective->GetIndividualFits().begin(),
-        Objective->GetIndividualFits().end(), std::ostream_iterator<double>(
-            misfitfile, " "));
+	    Objective->GetIndividualFits().end(),
+	    std::ostream_iterator<double>(misfitfile, " "));
     misfitfile << std::endl;
     bool terminate = true;
     do
-      {
-        terminate = true;
-        try
-          {
-            std::cout << "Iteration: " << iteration << std::endl;
-            std::copy(InvModel.begin(), InvModel.begin()
-                + TomoModel.GetSlownesses().num_elements(),
-                TomoModel.SetSlownesses().origin());
-            TomoModel.WriteVTK("raw_model" + jiba::stringify(iteration)
-                + ".tomo.inv.vtk");
-            Optimizer->MakeStep(InvModel);
+	{
+	terminate = true;
+	try
+	    {
+	    std::cout << "Iteration: " << iteration << std::endl;
+	    std::copy(InvModel.begin(), InvModel.begin()
+		    + TomoModel.GetSlownesses().num_elements(),
+		    TomoModel.SetSlownesses().origin());
+	    TomoModel.WriteVTK("raw_model" + jiba::stringify(iteration)
+		    + ".tomo.inv.vtk");
+	    Optimizer->MakeStep(InvModel);
 
-            ++iteration;
+	    ++iteration;
 
-            TomoInvModel = SlownessTransform->GeneralizedToPhysical(InvModel);
-            std::copy(TomoInvModel.begin(), TomoInvModel.begin()
-                + TomoModel.GetSlownesses().num_elements(),
-                TomoModel.SetSlownesses().origin());
-            TomoModel.WriteVTK(modelfilename + jiba::stringify(iteration)
-                + ".tomo.inv.vtk");
-            std::cout << "Currrent Misfit: " << Optimizer->GetMisfit()
-                << std::endl;
-            std::cout << "Currrent Gradient: " << Optimizer->GetGradNorm()
-                << std::endl;
-            misfitfile << iteration << " " << Optimizer->GetMisfit() << " ";
-            std::copy(Objective->GetIndividualFits().begin(),
-                Objective->GetIndividualFits().end(), std::ostream_iterator<
-                    double>(misfitfile, " "));
-            std::cout  << "Gradient Norms: ";
-            std::copy(Objective->GetIndividualGradNorms().begin(),
-                Objective->GetIndividualGradNorms().end(),
-                std::ostream_iterator<double>(std::cout, " "));
-            misfitfile << " " << Objective->GetNEval();
-            misfitfile << std::endl;
-            std::cout << "\n\n";
-          } catch (jiba::FatalException &e)
-          {
-            std::cerr << e.what() << std::endl;
-            iteration = maxiter;
-          }
+	    TomoInvModel = SlownessTransform->GeneralizedToPhysical(InvModel);
+	    std::copy(TomoInvModel.begin(), TomoInvModel.begin()
+		    + TomoModel.GetSlownesses().num_elements(),
+		    TomoModel.SetSlownesses().origin());
+	    TomoModel.WriteVTK(modelfilename + jiba::stringify(iteration)
+		    + ".tomo.inv.vtk");
+	    std::cout << "Currrent Misfit: " << Optimizer->GetMisfit()
+		    << std::endl;
+	    std::cout << "Currrent Gradient: " << Optimizer->GetGradNorm()
+		    << std::endl;
+	    misfitfile << iteration << " " << Optimizer->GetMisfit() << " ";
+	    std::copy(Objective->GetIndividualFits().begin(),
+		    Objective->GetIndividualFits().end(),
+		    std::ostream_iterator<double>(misfitfile, " "));
+	    std::cout << "Gradient Norms: ";
+	    std::copy(Objective->GetIndividualGradNorms().begin(),
+		    Objective->GetIndividualGradNorms().end(),
+		    std::ostream_iterator<double>(std::cout, " "));
+	    misfitfile << " " << Objective->GetNEval();
+	    misfitfile << std::endl;
+	    std::cout << "\n\n";
+	    }
+	catch (jiba::FatalException &e)
+	    {
+	    std::cerr << e.what() << std::endl;
+	    iteration = maxiter;
+	    }
 
-        for (size_t i = 0; i < Objective->GetIndividualFits().size() - 1; ++i)
-          {
-            if (Objective->GetIndividualFits().at(i) > Objective->GetObjective(
-                i).GetNData())
-              {
-                terminate = false;
-              }
-            else
-              {
-                std::cout << "Reached target misfit." << std::endl;
-                ;
-                std::cout << "Objective number: " << i << std::endl;
-                std::cout << "Misfit: " << Objective->GetIndividualFits().at(i)
-                    << std::endl;
-                std::cout << "Target: "
-                    << Objective->GetObjective(i).GetNData() << std::endl;
-              }
-          }
-      } while (iteration < maxiter && !terminate && Optimizer->GetGradNorm()
-        > 1e-6);
+	for (size_t i = 0; i < Objective->GetIndividualFits().size() - 1; ++i)
+	    {
+	    if (Objective->GetIndividualFits().at(i) > Objective->GetObjective(
+		    i).GetNData())
+		{
+		terminate = false;
+		}
+	    else
+		{
+		std::cout << "Reached target misfit." << std::endl;
+		;
+		std::cout << "Objective number: " << i << std::endl;
+		std::cout << "Misfit: " << Objective->GetIndividualFits().at(i)
+			<< std::endl;
+		std::cout << "Target: "
+			<< Objective->GetObjective(i).GetNData() << std::endl;
+		}
+	    }
+	}
+    while (iteration < maxiter && !terminate && Optimizer->GetGradNorm() > 1e-6);
 
     jiba::rvec DensInvModel(DensityTransform->GeneralizedToPhysical(InvModel));
     jiba::rvec CondInvModel(MTTransform->GeneralizedToPhysical(InvModel));
     std::copy(TomoInvModel.begin(), TomoInvModel.begin()
-        + TomoModel.GetSlownesses().num_elements(),
-        TomoModel.SetSlownesses().origin());
+	    + TomoModel.GetSlownesses().num_elements(),
+	    TomoModel.SetSlownesses().origin());
     std::copy(DensInvModel.begin(), DensInvModel.begin()
-        + GravModel.SetDensities().num_elements(),
-        GravModel.SetDensities().origin());
+	    + GravModel.SetDensities().num_elements(),
+	    GravModel.SetDensities().origin());
     std::copy(CondInvModel.begin(), CondInvModel.begin()
-        + MTModel.GetConductivities().num_elements(),
-        MTModel.SetConductivities().origin());
+	    + MTModel.GetConductivities().num_elements(),
+	    MTModel.SetConductivities().origin());
 
     //calculate the predicted refraction data
     std::cout << "Calculating response of inversion model." << std::endl;
@@ -403,20 +428,20 @@ int main(int argc, char *argv[])
     //and write out the data and model
     //here we have to distinguish again between scalar and ftg data
     jiba::rvec ScalGravInvData(jiba::CreateGravityCalculator<
-        jiba::MinMemGravityCalculator>::MakeScalar()->Calculate(GravModel));
+	    jiba::MinMemGravityCalculator>::MakeScalar()->Calculate(GravModel));
     jiba::rvec FTGInvData(jiba::CreateGravityCalculator<
-        jiba::MinMemGravityCalculator>::MakeTensor()->Calculate(GravModel));
+	    jiba::MinMemGravityCalculator>::MakeTensor()->Calculate(GravModel));
     jiba::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc",
-        ScalGravInvData, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
-        GravModel.GetMeasPosZ());
+	    ScalGravInvData, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
+	    GravModel.GetMeasPosZ());
     jiba::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc",
-        FTGInvData, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
-        GravModel.GetMeasPosZ());
+	    FTGInvData, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
+	    GravModel.GetMeasPosZ());
     //calculate MT inversion result
     jiba::rvec MTInvData(jiba::X3DMTCalculator().Calculate(MTModel));
     jiba::WriteImpedancesToNetCDF(modelfilename + "inv_mt.nc",
-        MTModel.GetFrequencies(), MTModel.GetMeasPosX(), MTModel.GetMeasPosY(),
-        MTModel.GetMeasPosZ(), MTInvData);
+	    MTModel.GetFrequencies(), MTModel.GetMeasPosX(),
+	    MTModel.GetMeasPosY(), MTModel.GetMeasPosZ(), MTInvData);
     std::cout << "Writing out inversion results." << std::endl;
 
     GravModel.WriteVTK(modelfilename + ".grav.inv.vtk");
@@ -425,11 +450,11 @@ int main(int argc, char *argv[])
     MTModel.WriteNetCDF(modelfilename + ".mt.inv.nc");
     std::ofstream datadiffile("data.diff");
     std::copy(Objective->GetDataDifference().begin(),
-        Objective->GetDataDifference().end(), std::ostream_iterator<double>(
-            datadiffile, "\n"));
+	    Objective->GetDataDifference().end(),
+	    std::ostream_iterator<double>(datadiffile, "\n"));
     boost::posix_time::ptime endtime =
-        boost::posix_time::microsec_clock::local_time();
+	    boost::posix_time::microsec_clock::local_time();
     double cachedruntime = (endtime - starttime).total_seconds();
     std::cout << "Runtime: " << cachedruntime << " s" << std::endl;
     std::cout << std::endl;
-  }
+    }
