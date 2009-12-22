@@ -10,7 +10,7 @@
 #include "../Global/NumUtil.h"
 namespace jiba
   {
-
+    //we use these names for storing the model in NetCDF and vtk files
     static const std::string ConductivityName = "Conductivity";
     static const std::string ConductivityUnit = "S/m";
 
@@ -29,7 +29,10 @@ namespace jiba
       {
         if (&source != this)
           {
+           //first we copy the base class
             ThreeDMTModel::operator=(source);
+            //then we copy the additional information about the background layers
+            //that is not contained in the base class
             bg_thicknesses.resize(source.bg_thicknesses.size());
             bg_conductivities.resize(source.bg_conductivities.size());
             std::copy(source.bg_thicknesses.begin(),
@@ -63,21 +66,24 @@ namespace jiba
                 bg_thicknesses.size());
             NcVar *BackgroundVar = DataFile.add_var("bg_layers", ncDouble,
                 BackgroundDim);
+            //here we generate the indices for the layers
             std::vector<double> layerindex;
             std::generate_n(back_inserter(layerindex), bg_thicknesses.size(),
                 IntSequence(0));
             BackgroundVar->put(&layerindex[0], layerindex.size());
             BackgroundVar->add_att("long_name", "Layer Index");
             //now we can write the actual parameters for the layers
-            NcVar *bgDensVar = DataFile.add_var("bg_conductivities", ncDouble,
+            //first layer conductivities
+            NcVar *bgCondVar = DataFile.add_var("bg_conductivities", ncDouble,
                 BackgroundDim);
-            bgDensVar->add_att("long_name", "Background Conductivities");
-            bgDensVar->add_att("units", ConductivityUnit.c_str());
+            bgCondVar->add_att("long_name", "Background Conductivities");
+            bgCondVar->add_att("units", ConductivityUnit.c_str());
+            bgCondVar->put(&bg_conductivities[0], bg_conductivities.size());
+            //and then layer thicknesses
             NcVar *bgThickVar = DataFile.add_var("bg_thicknesses", ncDouble,
                 BackgroundDim);
             bgThickVar->add_att("long_name", "Background Thicknesses");
             bgThickVar->add_att("units", "m");
-            bgDensVar->put(&bg_conductivities[0], bg_conductivities.size());
             bgThickVar->put(&bg_thicknesses[0], bg_thicknesses.size());
           }
       }

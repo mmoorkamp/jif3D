@@ -174,6 +174,7 @@ namespace jiba
         const double ObservationDepth =
             GetObservationDepth(Model.GetMeasPosZ());
         jiba::rvec result(nmeas * nfreq * 8);
+        bool FatalError = false;
         result.clear();
         //we make a call to the coordinate functions to make sure
         //that we have updated the coordinate information and cached it
@@ -190,67 +191,83 @@ namespace jiba
 #pragma omp parallel for shared(result)
         for (int i = 0; i < nfreq; ++i)
           {
-            std::string RootName = MakeUniqueName(X3DModel::MT, i);
-            std::string DirName = RootName + dirext;
-            std::vector<double> CurrFreq(1, Model.GetFrequencies()[i]);
-            //writing out files causes problems in parallel
-            // so we make sure it is done one at a time
+            //the openmp standard specifies that we cannot leave a parallel construct
+            //by throwing an exception, so we catch all exceptions and just
+            //generate an error message
+            try
+              {
+                std::string RootName = MakeUniqueName(X3DModel::MT, i);
+                std::string DirName = RootName + dirext;
+                std::vector<double> CurrFreq(1, Model.GetFrequencies()[i]);
+                //writing out files causes problems in parallel
+                // so we make sure it is done one at a time
 #pragma omp critical(forward_write_files)
-              {
-                MakeRunFile(RootName);
-                WriteProjectFile(DirName, CurrFreq, X3DModel::MT,
-                    resultfilename, modelfilename);
-                Write3DModelForX3D(DirName + "/" + modelfilename,
-                    Model.GetXCellSizes(), Model.GetYCellSizes(),
-                    Model.GetZCellSizes(), ObservationDepth,
-                    Model.GetConductivities(),
-                    Model.GetBackgroundConductivities(),
-                    Model.GetBackgroundThicknesses());
-              }
-            //run x3d in parallel
-            RunX3D(RootName);
-            std::vector<std::complex<double> > Ex1, Ex2, Ey1, Ey2, Hx1, Hx2,
-                Hy1, Hy2;
-            std::complex<double> Zxx, Zxy, Zyx, Zyy;
-            //read in the electric and magnetic field at the observe sites
+                  {
+                    MakeRunFile(RootName);
+                    WriteProjectFile(DirName, CurrFreq, X3DModel::MT,
+                        resultfilename, modelfilename);
+                    Write3DModelForX3D(DirName + "/" + modelfilename,
+                        Model.GetXCellSizes(), Model.GetYCellSizes(),
+                        Model.GetZCellSizes(), ObservationDepth,
+                        Model.GetConductivities(),
+                        Model.GetBackgroundConductivities(),
+                        Model.GetBackgroundThicknesses());
+                  }
+                //run x3d in parallel
+                RunX3D(RootName);
+                std::vector<std::complex<double> > Ex1, Ex2, Ey1, Ey2, Hx1,
+                    Hx2, Hy1, Hy2;
+                std::complex<double> Zxx, Zxy, Zyx, Zyy;
+                //read in the electric and magnetic field at the observe sites
 #pragma omp critical(forward_read_emo)
+                  {
+                    ReadEMO(DirName + "/" + emoAname, Ex1, Ey1, Hx1, Hy1);
+                    ReadEMO(DirName + "/" + emoBname, Ex2, Ey2, Hx2, Hy2);
+                  }
+                const size_t freq_index = nmeas * i * 8;
+                //calculate impedances from the field spectra for all measurement sites
+                for (size_t j = 0; j < nmeas; ++j)
+                  {
+                    //find out where our site is located in the model
+                    boost::array<ThreeDModelBase::t3DModelData::index, 3>
+                        StationIndex = Model.FindAssociatedIndices(
+                            Model.GetMeasPosX()[j], Model.GetMeasPosY()[j],
+                            Model.GetMeasPosZ()[j]);
+                    //at the moment we ignore the depth/elevation of the site
+                    const size_t offset = StationIndex[0] * nmody
+                        + StationIndex[1];
+                    const size_t meas_index = freq_index + j * 8;
+                    FieldsToImpedance(Ex1[offset], Ex2[offset], Ey1[offset],
+                        Ey2[offset], Hx1[offset], Hx2[offset], Hy1[offset],
+                        Hy2[offset], Zxx, Zxy, Zyx, Zyy);
+                    //in order to guarantee a coherent state of the array
+                    //we lock the access before writing
+                    //update the values and then unlock
+                    omp_set_lock(&lck);
+                    result(meas_index) = Zxx.real();
+                    result(meas_index + 1) = Zxx.imag();
+                    result(meas_index + 2) = Zxy.real();
+                    result(meas_index + 3) = Zxy.imag();
+                    result(meas_index + 4) = Zyx.real();
+                    result(meas_index + 5) = Zyx.imag();
+                    result(meas_index + 6) = Zyy.real();
+                    result(meas_index + 7) = Zyy.imag();
+                    omp_unset_lock(&lck);
+                  }
+              } catch (...)
               {
-                ReadEMO(DirName + "/" + emoAname, Ex1, Ey1, Hx1, Hy1);
-                ReadEMO(DirName + "/" + emoBname, Ex2, Ey2, Hx2, Hy2);
-              }
-            const size_t freq_index = nmeas * i * 8;
-            //calculate impedances from the field spectra for all measurement sites
-            for (size_t j = 0; j < nmeas; ++j)
-              {
-                //find out where our site is located in the model
-                boost::array<ThreeDModelBase::t3DModelData::index, 3>
-                    StationIndex = Model.FindAssociatedIndices(
-                        Model.GetMeasPosX()[j], Model.GetMeasPosY()[j],
-                        Model.GetMeasPosZ()[j]);
-                //at the moment we ignore the depth/elevation of the site
-                const size_t offset = StationIndex[0] * nmody + StationIndex[1];
-                const size_t meas_index = freq_index + j * 8;
-                FieldsToImpedance(Ex1[offset], Ex2[offset], Ey1[offset],
-                    Ey2[offset], Hx1[offset], Hx2[offset], Hy1[offset],
-                    Hy2[offset], Zxx, Zxy, Zyx, Zyy);
-                //in order to guarantee a coherent state of the array
-                //we lock the access before writing
-                //update the values and then unlock
-                omp_set_lock(&lck);
-                result(meas_index) = Zxx.real();
-                result(meas_index + 1) = Zxx.imag();
-                result(meas_index + 2) = Zxy.real();
-                result(meas_index + 3) = Zxy.imag();
-                result(meas_index + 4) = Zyx.real();
-                result(meas_index + 5) = Zyx.imag();
-                result(meas_index + 6) = Zyy.real();
-                result(meas_index + 7) = Zyy.imag();
-                omp_unset_lock(&lck);
+                FatalError = true;
+                std::cerr << "Problem in MT forward calculation.";
               }
             //finished with one frequency
           }
+        //we cannot throw from within the openmp section so if there was an exception
+        //inside the parallel region we set FatalErrror to true and throw a new exception here
+        if (FatalError)
+          throw jiba::FatalException("Problem in MT forward calculation.");
         omp_destroy_lock(&lck);
         return result;
+
       }
 
     cmat CalcATimesH(const cmat &A, const cmat &H)
@@ -359,6 +376,7 @@ namespace jiba
             GetObservationDepth(Model.GetMeasPosZ());
         assert(Misfit.size() == ndata);
         jiba::rvec Gradient(nmod);
+        bool FatalError = false;
         Gradient.clear();
 
         //we make a call to the coordinate functions to make sure
@@ -375,230 +393,206 @@ namespace jiba
 #pragma omp parallel for shared(Gradient) ordered
         for (int i = 0; i < nfreq; ++i)
           {
-            std::string ForwardName = MakeUniqueName(X3DModel::MT, i);
-            std::string ForwardDirName = ForwardName + dirext + "/";
+            try
+              {
+                std::string ForwardName = MakeUniqueName(X3DModel::MT, i);
+                std::string ForwardDirName = ForwardName + dirext + "/";
 
-            //read the fields from the forward calculation
-            std::vector<std::complex<double> > Ex1_obs, Ex2_obs, Ey1_obs,
-                Ey2_obs, Hx1_obs, Hx2_obs, Hy1_obs, Hy2_obs;
+                //read the fields from the forward calculation
+                std::vector<std::complex<double> > Ex1_obs, Ex2_obs, Ey1_obs,
+                    Ey2_obs, Hx1_obs, Hx2_obs, Hy1_obs, Hy2_obs;
 #pragma omp critical
-              {
-                ReadEMO(ForwardDirName + emoAname, Ex1_obs, Ey1_obs, Hx1_obs,
-                    Hy1_obs);
-                ReadEMO(ForwardDirName + emoBname, Ex2_obs, Ey2_obs, Hx2_obs,
-                    Hy2_obs);
-              }
-            assert(Ex1_obs.size()==nobs);
-            assert(Ex2_obs.size()==nobs);
-            std::vector<std::complex<double> > Ex1_all, Ex2_all, Ey1_all,
-                Ey2_all, Ez1_all, Ez2_all;
-            //for the gradient calculation we also need the electric fields
-            //at all cells in the model for the two source polarizations of
-            //the forward calculations
-#pragma omp critical
-              {
-                ReadEMA(ForwardDirName + emaAname, Ex1_all, Ey1_all, Ez1_all,
-                    ncellsx, ncellsy, ncellsz);
-                ReadEMA(ForwardDirName + emaBname, Ex2_all, Ey2_all, Ez2_all,
-                    ncellsx, ncellsy, ncellsz);
-              }
-            //create variables for the adjoint field calculation
-            const size_t freq_index = nmeas * i * 8;
-            boost::multi_array<std::complex<double>, 2> XPolMoments1(
-                boost::extents[ncellsx][ncellsy]), YPolMoments1(
-                boost::extents[ncellsx][ncellsy]);
-            boost::multi_array<std::complex<double>, 2> XPolMoments2(
-                boost::extents[ncellsx][ncellsy]), YPolMoments2(
-                boost::extents[ncellsx][ncellsy]);
-            boost::multi_array<std::complex<double>, 2> Zeros(
-                boost::extents[ncellsx][ncellsy]);
-            //we only calculate sources for the observe sites, so
-            //we make sure everything else is zero
-            std::fill(Zeros.origin(), Zeros.origin() + nobs, 0.0);
-            std::fill(XPolMoments1.origin(), XPolMoments1.origin() + nobs, 0.0);
-            std::fill(XPolMoments2.origin(), XPolMoments2.origin() + nobs, 0.0);
-            std::fill(YPolMoments1.origin(), YPolMoments1.origin() + nobs, 0.0);
-            std::fill(YPolMoments2.origin(), YPolMoments2.origin() + nobs, 0.0);
-            //make the sources for the electric dipoles
-            for (size_t j = 0; j < nmeas; ++j)
-              {
-                boost::array<ThreeDModelBase::t3DModelData::index, 3>
-                    StationIndex = Model.FindAssociatedIndices(
-                        Model.GetMeasPosX()[j], Model.GetMeasPosY()[j],
-                        Model.GetMeasPosZ()[j]);
-                //at the moment we ignore the depth/elevation of the site
-                const size_t offset = StationIndex[0] * ncellsy
-                    + StationIndex[1];
-
-                const size_t siteindex = freq_index + j * 8;
-                //this is an implementation of eq. 12 in Avdeev and Avdeeva
-                //we do not have any beta, as this is part of the misfit
-                cmat j_ext = CalcATimesH(MisfitToA(Misfit, siteindex), MakeH(
-                    Hx1_obs[offset], Hx2_obs[offset], Hy1_obs[offset],
-                    Hy2_obs[offset]));
-                XPolMoments1.data()[offset] = conj(j_ext(0, 0));
-                YPolMoments1.data()[offset] = conj(j_ext(1, 0));
-                XPolMoments2.data()[offset] = conj(j_ext(0, 1));
-                YPolMoments2.data()[offset] = conj(j_ext(1, 1));
-              }
-            //we only want to calculate for one frequency
-            //so our vector has just 1 element
-            std::vector<double> CurrFreq(1, 0.0);
-            CurrFreq[0] = Model.GetFrequencies()[i];
-            std::string EdipName = MakeUniqueName(X3DModel::EDIP, i);
-            std::string EdipDirName = EdipName + dirext + "/";
-            //again we have to write out some file for the electric
-            //dipole calculation with x3d, this shouldn't be done
-            //in parallel
-#pragma omp critical
-              {
-                MakeRunFile(EdipName);
-                WriteProjectFile(EdipDirName, CurrFreq, X3DModel::EDIP,
-                    resultfilename, modelfilename);
-                Write3DModelForX3D(EdipDirName + modelfilename,
-                    Model.GetXCellSizes(), Model.GetYCellSizes(),
-                    Model.GetZCellSizes(), ObservationDepth,
-                    Model.GetConductivities(),
-                    Model.GetBackgroundConductivities(),
-                    Model.GetBackgroundThicknesses());
-                //write an empty source file for the second source polarization
-                WriteSourceFile(EdipDirName + modelfilename + "0b.source",
-                    ObservationDepth, Zeros, Zeros);
-              }
-            std::vector<std::complex<double> > Ux1_el, Ux2_el, Uy1_el, Uy2_el,
-                Uz1_el, Uz2_el;
-            //calculate the first polarization and read the adjoint fields
-            CalcU(EdipName, XPolMoments1, YPolMoments1, Ux1_el, Uy1_el, Uz1_el,
-                ObservationDepth, ncellsx, ncellsy, ncellsz);
-            //calculate the second polarization
-            CalcU(EdipName, XPolMoments2, YPolMoments2, Ux2_el, Uy2_el, Uz2_el,
-                ObservationDepth, ncellsx, ncellsy, ncellsz);
-
-            //now we calculate the response to magnetic dipole sources
-            const std::complex<double> omega_mu = -1.0 / (std::complex<double>(
-                0.0, jiba::mag_mu) * 2.0 * M_PI * Model.GetFrequencies()[i]);
-
-            std::string MdipName = MakeUniqueName(X3DModel::MDIP, i);
-            std::string MdipDirName = MdipName + dirext + "/";
-            //write the files for the magnetic dipole calculation
-#pragma omp critical
-              {
-                MakeRunFile(MdipName);
-                WriteProjectFile(MdipDirName, CurrFreq, X3DModel::MDIP,
-                    resultfilename, modelfilename);
-                Write3DModelForX3D(MdipDirName + modelfilename,
-                    Model.GetXCellSizes(), Model.GetYCellSizes(),
-                    Model.GetZCellSizes(), ObservationDepth,
-                    Model.GetConductivities(),
-                    Model.GetBackgroundConductivities(),
-                    Model.GetBackgroundThicknesses());
-                //write an empty source file for the second source polarization
-                WriteSourceFile(MdipDirName + modelfilename + "0b.source",
-                    ObservationDepth, Zeros, Zeros);
-              }
-            //make the sources for the magnetic dipoles
-            for (size_t j = 0; j < nmeas; ++j)
-              {
-                boost::array<ThreeDModelBase::t3DModelData::index, 3>
-                    StationIndex = Model.FindAssociatedIndices(
-                        Model.GetMeasPosX()[j], Model.GetMeasPosY()[j],
-                        Model.GetMeasPosZ()[j]);
-                //at the moment we ignore the depth/elevation of the site
-                const size_t offset = StationIndex[0] * ncellsy
-                    + StationIndex[1];
-
-                const size_t siteindex = freq_index + j * 8;
-                std::complex<double> Zxx, Zxy, Zyx, Zyy;
-                FieldsToImpedance(Ex1_obs[offset], Ex2_obs[offset],
-                    Ey1_obs[offset], Ey2_obs[offset], Hx1_obs[offset],
-                    Hx2_obs[offset], Hy1_obs[offset], Hy2_obs[offset], Zxx,
-                    Zxy, Zyx, Zyy);
-                CalcHext(omega_mu, XPolMoments1.data()[offset],
-                    XPolMoments2.data()[offset], YPolMoments1.data()[offset],
-                    YPolMoments2.data()[offset], Zxx, Zxy, Zyx, Zyy);
-              }
-
-            std::vector<std::complex<double> > Ux1_mag, Ux2_mag, Uy1_mag,
-                Uy2_mag, Uz1_mag, Uz2_mag;
-            //calculate the first polarization and read the adjoint fields
-            CalcU(MdipName, XPolMoments1, YPolMoments1, Ux1_mag, Uy1_mag,
-                Uz1_mag, ObservationDepth, ncellsx, ncellsy, ncellsz);
-            //calculate the second polarization and read the adjoint fields
-            CalcU(MdipName, XPolMoments2, YPolMoments2, Ux2_mag, Uy2_mag,
-                Uz2_mag, ObservationDepth, ncellsx, ncellsy, ncellsz);
-
-            const double cell_sizex = Model.GetXCellSizes()[0];
-            const double cell_sizey = Model.GetYCellSizes()[0];
-            //now we can calculate the gradient for each model cell
-            /*#pragma omp critical(debug)
-             {
-             std::cout << MakeUniqueName(X3DModel::MT, i) << std::endl;
-             WriteVectorDebug(i, "Ux1el", Ux1_el);
-             WriteVectorDebug(i, "Ux2el", Ux2_el);
-             WriteVectorDebug(i, "Uy1el", Uy1_el);
-             WriteVectorDebug(i, "Uy2el", Ux2_el);
-             WriteVectorDebug(i, "Uz1el", Ux1_el);
-             WriteVectorDebug(i, "Uz2el", Ux2_el);
-
-             WriteVectorDebug(i, "Ux1mag", Ux1_mag);
-             WriteVectorDebug(i, "Ux2mag", Ux2_mag);
-             WriteVectorDebug(i, "Uy1mag", Uy1_mag);
-             WriteVectorDebug(i, "Uy2mag", Ux2_mag);
-             WriteVectorDebug(i, "Uz1mag", Ux1_mag);
-             WriteVectorDebug(i, "Uz2mag", Ux2_mag);
-
-             WriteVectorDebug(i, "Ex1all", Ex1_all);
-             WriteVectorDebug(i, "Ex2all", Ex2_all);
-             WriteVectorDebug(i, "Ey1all", Ey1_all);
-             WriteVectorDebug(i, "Ey2all", Ex2_all);
-             WriteVectorDebug(i, "Ez1all", Ex1_all);
-             WriteVectorDebug(i, "Ez2all", Ex2_all);
-             }
-             assert(Ux1_el.size() ==nmod);
-             assert(Ux2_el.size() ==nmod);
-             assert(Uy1_el.size() ==nmod);
-             assert(Uy2_el.size() ==nmod);
-             assert(Uz1_el.size() ==nmod);
-             assert(Uz2_el.size() ==nmod);
-             assert(Ux1_mag.size() ==nmod);
-             assert(Ux2_mag.size() ==nmod);
-             assert(Uy1_mag.size() ==nmod);
-             assert(Uy2_mag.size() ==nmod);
-             assert(Uz1_mag.size() ==nmod);
-             assert(Uz2_mag.size() ==nmod);
-             assert(Ex1_all.size() ==nmod);
-             assert(Ex2_all.size() ==nmod);
-             assert(Ey1_all.size() ==nmod);
-             assert(Ey2_all.size() ==nmod);
-             assert(Ez1_all.size() ==nmod);
-             assert(Ez2_all.size() ==nmod);*/
-            double Volume, gradinc;
-#pragma omp ordered
-              {
-                for (size_t j = 0; j < nmod; ++j)
                   {
-                    Volume = cell_sizex * cell_sizey * Model.GetZCellSizes()[j
-                        % ncellsz];
-                    //this is an implementation of eq. 14 in Avdeev and Avdeeva
-                    //we make the update of the gradient atomic, to avoid
-                    //race conditions
-                    gradinc = std::real((Ux1_el[j] + Ux1_mag[j]) * Ex1_all[j]
-                        + (Uy1_el[j] + Uy1_mag[j]) * Ey1_all[j] + (Uz1_el[j]
-                        + Uz1_mag[j]) * Ez1_all[j] + (Ux2_el[j] + Ux2_mag[j])
-                        * Ex2_all[j] + (Uy2_el[j] + Uy2_mag[j]) * Ey2_all[j]
-                        + (Uz2_el[j] + Uz2_mag[j]) * Ez2_all[j]) * Volume;
-#pragma omp atomic
-                    Gradient(j) += gradinc;
-
+                    ReadEMO(ForwardDirName + emoAname, Ex1_obs, Ey1_obs,
+                        Hx1_obs, Hy1_obs);
+                    ReadEMO(ForwardDirName + emoBname, Ex2_obs, Ey2_obs,
+                        Hx2_obs, Hy2_obs);
                   }
+                assert(Ex1_obs.size()==nobs);
+                assert(Ex2_obs.size()==nobs);
+                std::vector<std::complex<double> > Ex1_all, Ex2_all, Ey1_all,
+                    Ey2_all, Ez1_all, Ez2_all;
+                //for the gradient calculation we also need the electric fields
+                //at all cells in the model for the two source polarizations of
+                //the forward calculations
+#pragma omp critical
+                  {
+                    ReadEMA(ForwardDirName + emaAname, Ex1_all, Ey1_all,
+                        Ez1_all, ncellsx, ncellsy, ncellsz);
+                    ReadEMA(ForwardDirName + emaBname, Ex2_all, Ey2_all,
+                        Ez2_all, ncellsx, ncellsy, ncellsz);
+                  }
+                //create variables for the adjoint field calculation
+                const size_t freq_index = nmeas * i * 8;
+                boost::multi_array<std::complex<double>, 2> XPolMoments1(
+                    boost::extents[ncellsx][ncellsy]), YPolMoments1(
+                    boost::extents[ncellsx][ncellsy]);
+                boost::multi_array<std::complex<double>, 2> XPolMoments2(
+                    boost::extents[ncellsx][ncellsy]), YPolMoments2(
+                    boost::extents[ncellsx][ncellsy]);
+                boost::multi_array<std::complex<double>, 2> Zeros(
+                    boost::extents[ncellsx][ncellsy]);
+                //we only calculate sources for the observe sites, so
+                //we make sure everything else is zero
+                std::fill(Zeros.origin(), Zeros.origin() + nobs, 0.0);
+                std::fill(XPolMoments1.origin(), XPolMoments1.origin() + nobs,
+                    0.0);
+                std::fill(XPolMoments2.origin(), XPolMoments2.origin() + nobs,
+                    0.0);
+                std::fill(YPolMoments1.origin(), YPolMoments1.origin() + nobs,
+                    0.0);
+                std::fill(YPolMoments2.origin(), YPolMoments2.origin() + nobs,
+                    0.0);
+                //make the sources for the electric dipoles
+                for (size_t j = 0; j < nmeas; ++j)
+                  {
+                    boost::array<ThreeDModelBase::t3DModelData::index, 3>
+                        StationIndex = Model.FindAssociatedIndices(
+                            Model.GetMeasPosX()[j], Model.GetMeasPosY()[j],
+                            Model.GetMeasPosZ()[j]);
+                    //at the moment we ignore the depth/elevation of the site
+                    const size_t offset = StationIndex[0] * ncellsy
+                        + StationIndex[1];
+
+                    const size_t siteindex = freq_index + j * 8;
+                    //this is an implementation of eq. 12 in Avdeev and Avdeeva
+                    //we do not have any beta, as this is part of the misfit
+                    cmat j_ext = CalcATimesH(MisfitToA(Misfit, siteindex),
+                        MakeH(Hx1_obs[offset], Hx2_obs[offset],
+                            Hy1_obs[offset], Hy2_obs[offset]));
+                    XPolMoments1.data()[offset] = conj(j_ext(0, 0));
+                    YPolMoments1.data()[offset] = conj(j_ext(1, 0));
+                    XPolMoments2.data()[offset] = conj(j_ext(0, 1));
+                    YPolMoments2.data()[offset] = conj(j_ext(1, 1));
+                  }
+                //we only want to calculate for one frequency
+                //so our vector has just 1 element
+                std::vector<double> CurrFreq(1, 0.0);
+                CurrFreq[0] = Model.GetFrequencies()[i];
+                std::string EdipName = MakeUniqueName(X3DModel::EDIP, i);
+                std::string EdipDirName = EdipName + dirext + "/";
+                //again we have to write out some file for the electric
+                //dipole calculation with x3d, this shouldn't be done
+                //in parallel
+#pragma omp critical
+                  {
+                    MakeRunFile(EdipName);
+                    WriteProjectFile(EdipDirName, CurrFreq, X3DModel::EDIP,
+                        resultfilename, modelfilename);
+                    Write3DModelForX3D(EdipDirName + modelfilename,
+                        Model.GetXCellSizes(), Model.GetYCellSizes(),
+                        Model.GetZCellSizes(), ObservationDepth,
+                        Model.GetConductivities(),
+                        Model.GetBackgroundConductivities(),
+                        Model.GetBackgroundThicknesses());
+                    //write an empty source file for the second source polarization
+                    WriteSourceFile(EdipDirName + modelfilename + "0b.source",
+                        ObservationDepth, Zeros, Zeros);
+                  }
+                std::vector<std::complex<double> > Ux1_el, Ux2_el, Uy1_el,
+                    Uy2_el, Uz1_el, Uz2_el;
+                //calculate the first polarization and read the adjoint fields
+                CalcU(EdipName, XPolMoments1, YPolMoments1, Ux1_el, Uy1_el,
+                    Uz1_el, ObservationDepth, ncellsx, ncellsy, ncellsz);
+                //calculate the second polarization
+                CalcU(EdipName, XPolMoments2, YPolMoments2, Ux2_el, Uy2_el,
+                    Uz2_el, ObservationDepth, ncellsx, ncellsy, ncellsz);
+
+                //now we calculate the response to magnetic dipole sources
+                const std::complex<double> omega_mu = -1.0 / (std::complex<
+                    double>(0.0, jiba::mag_mu) * 2.0 * M_PI
+                    * Model.GetFrequencies()[i]);
+
+                std::string MdipName = MakeUniqueName(X3DModel::MDIP, i);
+                std::string MdipDirName = MdipName + dirext + "/";
+                //write the files for the magnetic dipole calculation
+#pragma omp critical
+                  {
+                    MakeRunFile(MdipName);
+                    WriteProjectFile(MdipDirName, CurrFreq, X3DModel::MDIP,
+                        resultfilename, modelfilename);
+                    Write3DModelForX3D(MdipDirName + modelfilename,
+                        Model.GetXCellSizes(), Model.GetYCellSizes(),
+                        Model.GetZCellSizes(), ObservationDepth,
+                        Model.GetConductivities(),
+                        Model.GetBackgroundConductivities(),
+                        Model.GetBackgroundThicknesses());
+                    //write an empty source file for the second source polarization
+                    WriteSourceFile(MdipDirName + modelfilename + "0b.source",
+                        ObservationDepth, Zeros, Zeros);
+                  }
+                //make the sources for the magnetic dipoles
+                for (size_t j = 0; j < nmeas; ++j)
+                  {
+                    boost::array<ThreeDModelBase::t3DModelData::index, 3>
+                        StationIndex = Model.FindAssociatedIndices(
+                            Model.GetMeasPosX()[j], Model.GetMeasPosY()[j],
+                            Model.GetMeasPosZ()[j]);
+                    //at the moment we ignore the depth/elevation of the site
+                    const size_t offset = StationIndex[0] * ncellsy
+                        + StationIndex[1];
+
+                    const size_t siteindex = freq_index + j * 8;
+                    std::complex<double> Zxx, Zxy, Zyx, Zyy;
+                    FieldsToImpedance(Ex1_obs[offset], Ex2_obs[offset],
+                        Ey1_obs[offset], Ey2_obs[offset], Hx1_obs[offset],
+                        Hx2_obs[offset], Hy1_obs[offset], Hy2_obs[offset], Zxx,
+                        Zxy, Zyx, Zyy);
+                    CalcHext(omega_mu, XPolMoments1.data()[offset],
+                        XPolMoments2.data()[offset],
+                        YPolMoments1.data()[offset],
+                        YPolMoments2.data()[offset], Zxx, Zxy, Zyx, Zyy);
+                  }
+
+                std::vector<std::complex<double> > Ux1_mag, Ux2_mag, Uy1_mag,
+                    Uy2_mag, Uz1_mag, Uz2_mag;
+                //calculate the first polarization and read the adjoint fields
+                CalcU(MdipName, XPolMoments1, YPolMoments1, Ux1_mag, Uy1_mag,
+                    Uz1_mag, ObservationDepth, ncellsx, ncellsy, ncellsz);
+                //calculate the second polarization and read the adjoint fields
+                CalcU(MdipName, XPolMoments2, YPolMoments2, Ux2_mag, Uy2_mag,
+                    Uz2_mag, ObservationDepth, ncellsx, ncellsy, ncellsz);
+
+                const double cell_sizex = Model.GetXCellSizes()[0];
+                const double cell_sizey = Model.GetYCellSizes()[0];
+                //now we can calculate the gradient for each model cell
+                double Volume, gradinc;
+#pragma omp ordered
+                  {
+                    for (size_t j = 0; j < nmod; ++j)
+                      {
+                        Volume = cell_sizex * cell_sizey
+                            * Model.GetZCellSizes()[j % ncellsz];
+                        //this is an implementation of eq. 14 in Avdeev and Avdeeva
+                        //we make the update of the gradient atomic, to avoid
+                        //race conditions
+                        gradinc = std::real((Ux1_el[j] + Ux1_mag[j])
+                            * Ex1_all[j] + (Uy1_el[j] + Uy1_mag[j])
+                            * Ey1_all[j] + (Uz1_el[j] + Uz1_mag[j])
+                            * Ez1_all[j] + (Ux2_el[j] + Ux2_mag[j])
+                            * Ex2_all[j] + (Uy2_el[j] + Uy2_mag[j])
+                            * Ey2_all[j] + (Uz2_el[j] + Uz2_mag[j])
+                            * Ez2_all[j]) * Volume;
+#pragma omp atomic
+                        Gradient(j) += gradinc;
+
+                      }
+                  }
+                //clean the files
+                CleanFiles(ForwardName);
+                CleanFiles(EdipName);
+                CleanFiles(MdipName);
+              } catch (...)
+              {
+                //we cannot throw exceptions that leave the parallel region
+                //so we catch everything and set FatalError to true
+                //then outside the parallel region we throw a new exception
+                FatalError = true;
               }
-            //clean the files
-            CleanFiles(ForwardName);
-            CleanFiles(EdipName);
-            CleanFiles(MdipName);
             //finished with one frequency
           }
-
+        if (FatalError)
+          throw jiba::FatalException("Problem in MT gradient calculation.");
         //plot the gradient for each model cell in a vtk file
         //this is purely for debugging purposes and might be removed in the future
         X3DModel GradMod(Model);

@@ -74,8 +74,11 @@ namespace jiba
         {
           return ThreeDModelBase::SetZCellSizes();
         }
+      //! Write all model information to a netcdf file
       void WriteNetCDF(const std::string filename) const;
+      //! Read all model information from a netcdf file
       void ReadNetCDF(const std::string filename);
+      //! The copy operator for X3DModels
       X3DModel& operator= (const X3DModel& source);
       //! Other models will be copied by the copy operator for the base class
       X3DModel& operator= (const ThreeDModelBase& source);

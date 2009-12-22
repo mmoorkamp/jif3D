@@ -26,6 +26,9 @@ namespace jiba
       {
         if (&source != this)
           {
+            //apart from copying the contents of the base class
+            //we have to copy the vector of frequencies which
+            //is the only additional data in this class
             ThreeDModelBase::operator=(source);
             Frequencies.resize(source.Frequencies.size());
             std::copy(source.Frequencies.begin(), source.Frequencies.end(),
