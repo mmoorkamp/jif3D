@@ -15,21 +15,23 @@ namespace jiba
   {
 
     const std::string FreqDimName = "Frequency";
-
+    //write one compoment of the impedance tensor to a netcdf file
+    //this is an internal helper function
     void WriteImpedanceComp(NcFile &NetCDFFile, NcDim *StatNumDim,
         NcDim *FreqDim, const jiba::rvec &Impedances,
         const std::string &CompName, const size_t compindex)
       {
         NcVar *CompVar = NetCDFFile.add_var(CompName.c_str(), ncDouble,
             FreqDim, StatNumDim);
-        jiba::rvec Component( FreqDim->size() * StatNumDim->size() );
+        jiba::rvec Component(FreqDim->size() * StatNumDim->size());
         for (size_t i = 0; i < Component.size(); ++i)
           {
             Component(i) = Impedances(i * 8 + compindex);
           }
         CompVar->put(&Component[0], FreqDim->size(), StatNumDim->size());
       }
-
+    //read one compoment of the impedance tensor from a netcdf file
+    //this is an internal helper function
     void ReadImpedanceComp(NcFile &NetCDFFile, jiba::rvec &Impedances,
         const std::string &CompName, const size_t compindex)
       {
@@ -57,7 +59,8 @@ namespace jiba
         assert(Impedances.size() == nstats * nfreqs * 8);
         //create a netcdf file
         NcFile DataFile(filename.c_str(), NcFile::Replace);
-
+        //each station gets an index number that we use as a dimension
+        //in the netcdf file
         NcDim *StatNumDim = DataFile.add_dim(StationNumberName.c_str(), nstats);
         std::vector<int> StationNumber;
         std::generate_n(back_inserter(StationNumber), nstats, IntSequence(0));
@@ -68,12 +71,13 @@ namespace jiba
         WriteVec(DataFile, MeasPosXName, StatXCoord, StatNumDim, "m");
         WriteVec(DataFile, MeasPosYName, StatYCoord, StatNumDim, "m");
         WriteVec(DataFile, MeasPosZName, StatZCoord, StatNumDim, "m");
-
+        //write out the frequencies that we store
         NcDim *FreqDim = DataFile.add_dim(FreqDimName.c_str(),
             Frequencies.size());
         NcVar *FreqVar = DataFile.add_var(FreqDimName.c_str(), ncDouble,
             FreqDim);
         FreqVar->put(&Frequencies[0], nfreqs);
+        //and now we can write all the impedance components
         WriteImpedanceComp(DataFile, StatNumDim, FreqDim, Impedances, "Zxx_re",
             0);
         WriteImpedanceComp(DataFile, StatNumDim, FreqDim, Impedances, "Zxx_im",

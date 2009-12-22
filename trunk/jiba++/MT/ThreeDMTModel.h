@@ -21,10 +21,12 @@ namespace jiba
     private:
       std::vector<double> Frequencies;
     public:
+      //! Get the vector of calculation frequencies in Hz, read only
       const std::vector<double> &GetFrequencies() const
         {
           return Frequencies;
         }
+      //! Set the vector of calculation frequencies in Hz
       std::vector<double> &SetFrequencies()
         {
           return Frequencies;
