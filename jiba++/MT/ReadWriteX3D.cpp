@@ -195,7 +195,7 @@ namespace jiba
         outfile << " 1 " << YCellSizes.size() << "\n\n";
         //at the moment we always set the z component of the site location to zero
         //this should be changed
-        outfile << "   zO(m)  \n"<< ObservationDepth << "\n\n";
+        outfile << "   zO(m)  \n" << ObservationDepth << "\n\n";
         outfile
             << "Binding_cell_in_X-direction     X-coordinate of centre of Binding cell (m)  \n";
         outfile << " 1                              0.0\n";
@@ -209,9 +209,9 @@ namespace jiba
           }
       }
 
-    void WriteProjectFile(const boost::filesystem::path &RootDir ,const std::vector<double> &Frequencies,
-        X3DModel::ProblemType Type, const std::string &ResultFilename,
-        const std::string &ModelFilename)
+    void WriteProjectFile(const boost::filesystem::path &RootDir,
+        const std::vector<double> &Frequencies, X3DModel::ProblemType Type,
+        const std::string &ResultFilename, const std::string &ModelFilename)
       {
         const size_t nfreq = Frequencies.size();
         //the filename is always a.project
@@ -251,6 +251,11 @@ namespace jiba
         outfile
             << "  Format_of_Output (0 - mfo, 1 - ASCII, 2 - mfo+ASCII, 3 - mfo+ASCII+mfa; default value = 0)\n";
         outfile << "  3\n";
+        outfile << "What_Green_function_at_step_1\n";
+        outfile << "HST\n";
+        outfile << "What_Green_function_at_step_4\n";
+        outfile << "HST\n";
+
         if (outfile.bad())
           {
             throw jiba::FatalException("Problem writing project file.");
