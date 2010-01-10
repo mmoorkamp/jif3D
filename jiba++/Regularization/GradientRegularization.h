@@ -9,7 +9,7 @@
 #ifndef GRADIENTREGULARIZATION_H_
 #define GRADIENTREGULARIZATION_H_
 
-#include "ObjectiveFunction.h"
+#include "../Inversion/ObjectiveFunction.h"
 #include "../ModelBase/ThreeDModelBase.h"
 
 namespace jiba
