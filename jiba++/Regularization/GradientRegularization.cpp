@@ -16,7 +16,7 @@ namespace jiba
 
       }
 
-   void GradientRegularization::SmoothnessOperator(
+   void GradientRegularization::ConstructOperator(
         const jiba::ThreeDModelBase &ModelGeometry)
       {
         const size_t xsize = ModelGeometry.GetModelShape()[0];

@@ -15,6 +15,7 @@
 #include "ModelTransforms.h"
 #include "MinDiffRegularization.h"
 #include "GradientRegularization.h"
+#include "CurvatureRegularization.h"
 #include "CrossGradient.h"
 #include "JointObjective.h"
 #include <boost/test/floating_point_comparison.hpp>
@@ -68,6 +69,30 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
       std::generate(PertModel.begin(),PertModel.end(),rand);
 
       jiba::GradientRegularization Regularization(GravModel);
+      Regularization.SetReferenceModel(StartModel);
+      Regularization.SetXWeight(5.0);
+      Regularization.SetYWeight(4.0);
+      Regularization.SetZWeight(3.0);
+      double zero = Regularization.CalcMisfit(StartModel+ConstMod);
+      BOOST_CHECK_CLOSE(zero,0.0,0.0001);
+      double Misfit = Regularization.CalcMisfit(PertModel);
+      CheckGradient(Regularization,PertModel);
+    }
+
+   //this needs to be extended and refined
+  BOOST_AUTO_TEST_CASE (curvreg_test)
+    {
+      jiba::ThreeDGravityModel GravModel;
+      GravModel.SetDensities().resize(boost::extents[5][4][3]);
+
+      const size_t msize = GravModel.GetDensities().num_elements();
+      jiba::rvec StartModel(msize), PertModel(msize);
+      jiba::rvec ConstMod(msize);
+      std::fill(ConstMod.begin(),ConstMod.end(),1.0);
+      std::generate(StartModel.begin(),StartModel.end(),rand);
+      std::generate(PertModel.begin(),PertModel.end(),rand);
+
+      jiba::CurvatureRegularization Regularization(GravModel);
       Regularization.SetReferenceModel(StartModel);
       Regularization.SetXWeight(5.0);
       Regularization.SetYWeight(4.0);
