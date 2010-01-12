@@ -1,8 +1,9 @@
 import testing ; 
 
 lib regularization :
-                  MinDiffRegularization.cpp GradientRegularization.cpp CrossGradient.cpp
-               ..//ModelBase
+                  MinDiffRegularization.cpp GradientRegularization.cpp CurvatureRegularization.cpp 
+                  CrossGradient.cpp
+                  ..//ModelBase
                  : <include>boost : : <include>. ;
                  
 
