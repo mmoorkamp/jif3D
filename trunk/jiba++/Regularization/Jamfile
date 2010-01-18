@@ -8,4 +8,4 @@ lib regularization :
                  
 
 
-unit-test regularization_test : test_regularization.cpp  ..//Inversion regularization ..//Gravity : : <include>. ;
+unit-test regularization_test : test_regularization.cpp  ..//Inversion ..//Tomo regularization ..//Gravity : : <include>. ;
