@@ -14,7 +14,7 @@ namespace jiba
 
     LimitedMemoryQuasiNewton::LimitedMemoryQuasiNewton(boost::shared_ptr<
         jiba::ObjectiveFunction> ObjFunction, const size_t n) :
-      GradientBasedOptimization(ObjFunction), mu(1.0), LineIter(10),MaxPairs(n), SHistory(),
+      GradientBasedOptimization(ObjFunction), mu(1.0), LineIter(20),MaxPairs(n), SHistory(),
           YHistory()
       {
 
@@ -64,7 +64,7 @@ namespace jiba
         int status = OPTPP::mcsrch(&GetObjective(), SearchDir, RawGrad,
             CurrentModel, Misfit, &mu, LineIter, 1e-4, 2.2e-16, 0.9, 1e9, 1e-12);
 
-        if (status < 0 && Misfit >= OldFit)
+        if (status < 0 )
           {
             throw jiba::FatalException("Cannot find suitable step. Status: "
                 + jiba::stringify(status));

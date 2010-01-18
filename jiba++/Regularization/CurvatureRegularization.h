@@ -17,10 +17,12 @@ namespace jiba
     class CurvatureRegularization: public jiba::MatOpRegularization
       {
     private:
+      const double Eps;
       void ConstructOperator(const jiba::ThreeDModelBase &ModelGeometry);
     public:
-      CurvatureRegularization(const jiba::ThreeDModelBase &Geometry) :
-        MatOpRegularization(Geometry)
+      CurvatureRegularization(const jiba::ThreeDModelBase &Geometry,
+          const double ModEps = 1e-8) :
+        MatOpRegularization(Geometry), Eps(ModEps)
         {
           ConstructOperator(Geometry);
         }

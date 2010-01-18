@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
     cin >> cellsize;
 
     Model.SetCellSize(cellsize, nx, ny, nz);
-    Model.SetSlownesses().resize(boost::extents[nx][ny][nz]);
+
     double topvel = 0.0;
     std::cout << "Velocity at top: ";
     std::cin >> topvel;

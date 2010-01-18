@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <numeric>
 #include "../Gravity/test_common.h"
+#include "../Tomo/ThreeDSeismicModel.h"
 #include "ModelTransforms.h"
 #include "MinDiffRegularization.h"
 #include "GradientRegularization.h"
@@ -79,26 +80,48 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
       CheckGradient(Regularization,PertModel);
     }
 
-   //this needs to be extended and refined
+  //this needs to be extended and refined
   BOOST_AUTO_TEST_CASE (curvreg_test)
     {
       jiba::ThreeDGravityModel GravModel;
-      GravModel.SetDensities().resize(boost::extents[5][4][3]);
+      jiba::ThreeDSeismicModel GradModel;
+      const size_t nx = 5;
+      const size_t ny = 6;
+      const size_t nz = 7;
+      const double cellsize = 100;
+      GravModel.SetDensities().resize(boost::extents[nx][ny][nz]);
+      GradModel.SetCellSize(cellsize, nx, ny, nz);
+
 
       const size_t msize = GravModel.GetDensities().num_elements();
-      jiba::rvec StartModel(msize), PertModel(msize);
+      jiba::rvec StartModel(msize), PertModel(msize), GradModelVec(msize);
       jiba::rvec ConstMod(msize);
       std::fill(ConstMod.begin(),ConstMod.end(),1.0);
       std::generate(StartModel.begin(),StartModel.end(),rand);
       std::generate(PertModel.begin(),PertModel.end(),rand);
 
-      jiba::CurvatureRegularization Regularization(GravModel);
+      jiba::CurvatureRegularization Regularization(GravModel,0.0);
       Regularization.SetReferenceModel(StartModel);
       Regularization.SetXWeight(5.0);
       Regularization.SetYWeight(4.0);
       Regularization.SetZWeight(3.0);
       double zero = Regularization.CalcMisfit(StartModel+ConstMod);
       BOOST_CHECK_CLOSE(zero,0.0,0.0001);
+
+      double topslow = 1.0/1000.0;
+      double bottomslow = 1.0/5000.0;
+
+      const double firstdepth = GradModel.GetZCoordinates()[0];
+      const double bottomdepth = GradModel.GetZCoordinates()[nz -1];
+      for (size_t i = 0; i < GradModel.GetSlownesses().num_elements(); ++i)
+        {
+          double Depth = GradModel.GetZCoordinates()[i % nz];
+          double Slowness = topslow + (Depth - firstdepth) * (bottomslow - topslow)/(bottomdepth - firstdepth);
+          GradModelVec(i) = Slowness;
+        }
+      zero = Regularization.CalcMisfit(StartModel+GradModelVec);
+      BOOST_CHECK_CLOSE(zero,0.0,0.0001);
+
       double Misfit = Regularization.CalcMisfit(PertModel);
       CheckGradient(Regularization,PertModel);
     }

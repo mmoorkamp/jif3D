@@ -25,6 +25,7 @@
 #include "../Inversion/JointObjective.h"
 #include "../Regularization/MinDiffRegularization.h"
 #include "../Regularization/GradientRegularization.h"
+#include "../Regularization/CurvatureRegularization.h"
 #include "../Inversion/ModelTransforms.h"
 #include "../Tomo/ThreeDSeismicModel.h"
 #include "../Tomo/ReadWriteTomographyData.h"
@@ -56,7 +57,8 @@ int main(int argc, char *argv[])
         "Use NLCG optimization")("xreg", po::value<double>(),
         "The weight for the regularization in x-direction")("yreg", po::value<
         double>(), "The weight for the regularization in y-direction")("zreg",
-        po::value<double>(), "The weight for the regularization in z-direction");
+        po::value<double>(), "The weight for the regularization in z-direction")(
+        "curvreg", "Use model curvature for regularization.");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -88,6 +90,12 @@ int main(int argc, char *argv[])
       {
         wantnlcg = true;
       }
+    bool wantcurvreg = false;
+    if (vm.count("curvreg"))
+      {
+        wantcurvreg = true;
+      }
+
     //these objects hold information about the measurements and their geometry
     jiba::rvec TomoData, ScalGravData, FTGData, MTData;
 
@@ -182,7 +190,6 @@ int main(int argc, char *argv[])
 
     //double average = std::accumulate(InvModel.begin(),InvModel.end(),0.0)/InvModel.size();
     //std::fill(RefModel.begin(),RefModel.end(),average);
-    InvModel = SlownessTransform->PhysicalToGeneralized(InvModel);
     jiba::rvec RefModel(InvModel);
     jiba::rvec
         DensStartModel(DensityTransform->GeneralizedToPhysical(InvModel));
@@ -206,7 +213,8 @@ int main(int argc, char *argv[])
         new jiba::GravityObjective(false, wantcuda));
     ScalGravObjective->SetObservedData(ScalGravData);
     ScalGravObjective->SetModelGeometry(GravModel);
-    ScalGravObjective->SetDataCovar(jiba::ConstructError(ScalGravData, 0.0,5e-7));
+    ScalGravObjective->SetDataCovar(jiba::ConstructError(ScalGravData, 0.0,
+        5e-7));
     ScalGravObjective->SetPrecondDiag(PreCond);
 
     boost::shared_ptr<jiba::GravityObjective> FTGObjective(
@@ -224,9 +232,16 @@ int main(int argc, char *argv[])
 
     boost::shared_ptr<jiba::JointObjective> Objective(
         new jiba::JointObjective());
-    boost::shared_ptr<jiba::GradientRegularization> Regularization(
-        new jiba::GradientRegularization(GravModel));
 
+    boost::shared_ptr<jiba::MatOpRegularization> Regularization;
+    if (wantcurvreg)
+      {
+      Regularization =  boost::shared_ptr<jiba::MatOpRegularization>(new jiba::CurvatureRegularization(GravModel));
+      }
+    else
+      {
+      Regularization =  boost::shared_ptr<jiba::MatOpRegularization>(new jiba::GradientRegularization(GravModel));
+      }
     jiba::rvec ModCov(InvModel.size() * 3);
     //std::fill(ModCov.begin(), ModCov.end(), 1.0);
     ublas::vector_range<jiba::rvec>(ModCov, ublas::range(0, InvModel.size()))
@@ -329,7 +344,7 @@ int main(int argc, char *argv[])
     //Optimizer->SetModelCovDiag(ModelWeight);
 
     size_t iteration = 0;
-
+    InvModel = SlownessTransform->PhysicalToGeneralized(InvModel);
     jiba::rvec TomoInvModel(SlownessTransform->GeneralizedToPhysical(InvModel));
     std::ofstream misfitfile("misfit.out");
     //calculate initial misfit
