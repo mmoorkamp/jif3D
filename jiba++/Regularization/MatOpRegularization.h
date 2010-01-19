@@ -9,7 +9,7 @@
 #ifndef MATOPREGULARIZATION_H_
 #define MATOPREGULARIZATION_H_
 
-#include "ObjectiveFunction.h"
+#include "../Inversion/ObjectiveFunction.h"
 #include "../Global/VecMat.h"
 #include "../ModelBase/ThreeDModelBase.h"
 
