@@ -9,6 +9,7 @@
 #ifndef TOMOGRAPHYOBJECTIVE_H_
 #define TOMOGRAPHYOBJECTIVE_H_
 
+#include "../ModelBase/ModelRefiner.h"
 #include "../Inversion/ObjectiveFunction.h"
 #include "TomographyCalculator.h"
 #include "ThreeDSeismicModel.h"
@@ -29,14 +30,17 @@ namespace jiba
       {
     private:
       // The slowness model we use for the forward calculations, keeps track of model and measurement geometry
-      jiba::ThreeDSeismicModel SlownessModel;
+      jiba::ThreeDSeismicModel FineSlownessModel;
+      jiba::ThreeDSeismicModel CoarseSlownessModel;
+      //We might use a different discretization for forward modeling and inversion
+      jiba::ModelRefiner Refiner;
       // The observed travel times
       jiba::rvec ObservedData;
       // The calculator object
       TomographyCalculator Calculator;
       //The implementation of the function to calculate the difference between observed and synthetic data
       virtual void
-          ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff);
+      ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff);
       //The implementation of the gradient calculation
       virtual jiba::rvec ImplGradient(const jiba::rvec &Model,
           const jiba::rvec &Diff);
@@ -52,9 +56,13 @@ namespace jiba
           ObservedData = Data;
         }
       //! Set the model that contains the grid geometry and measurement and shot positions
-      void SetModelGeometry(const jiba::ThreeDSeismicModel &Model)
+      void SetFineModelGeometry(const jiba::ThreeDSeismicModel &Model)
         {
-          SlownessModel = Model;
+          FineSlownessModel = Model;
+        }
+      void SetCoarseModelGeometry(const jiba::ThreeDSeismicModel &Model)
+        {
+          CoarseSlownessModel = Model;
         }
       TomographyObjective();
       virtual ~TomographyObjective();

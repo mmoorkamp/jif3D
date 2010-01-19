@@ -225,7 +225,8 @@ int main(int argc, char *argv[])
     boost::shared_ptr<jiba::TomographyObjective> TomoObjective(
         new jiba::TomographyObjective());
     TomoObjective->SetObservedData(TomoData);
-    TomoObjective->SetModelGeometry(TomoModel);
+    TomoObjective->SetFineModelGeometry(TomoModel);
+    TomoObjective->SetCoarseModelGeometry(TomoModel);
     TomoObjective->SetPrecondDiag(PreCond);
     jiba::rvec TomoCovar(TomoData.size());
     //we assume a general error of 5 ms for the seismic data

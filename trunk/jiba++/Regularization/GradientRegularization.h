@@ -29,11 +29,13 @@ namespace jiba
     class GradientRegularization: public jiba::MatOpRegularization
       {
     private:
+      const double Eps;
       void ConstructOperator(const jiba::ThreeDModelBase &ModelGeometry);
     public:
       //! We have to provide the model geometry to the constructor
-      explicit GradientRegularization(const jiba::ThreeDModelBase &Geometry) :
-        MatOpRegularization(Geometry)
+      explicit GradientRegularization(const jiba::ThreeDModelBase &Geometry, const double ModEps = 1e-8) :
+        MatOpRegularization(Geometry),
+        Eps(ModEps)
         {
         ConstructOperator(Geometry);
         }

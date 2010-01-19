@@ -28,7 +28,6 @@ using namespace std;
 int main(int argc, char *argv[])
   {
 
-
     jiba::ThreeDGravityModel GravModel;
 
     double minx, miny, maxx, maxy, deltax, deltay, z;
@@ -57,8 +56,8 @@ int main(int argc, char *argv[])
       {
         for (size_t j = 0; j <= nmeasy; ++j)
           {
-            GravModel.AddMeasurementPoint(minx + i * deltax, miny + j
-                * deltay, z);
+            GravModel.AddMeasurementPoint(minx + i * deltax, miny + j * deltay,
+                z);
           }
       }
     //ask for the name of the netcdf file containing the model
@@ -86,11 +85,20 @@ int main(int argc, char *argv[])
     jiba::rvec ScalarResults(ScalarCalculator->Calculate(GravModel));
     jiba::rvec TensorResults(TensorCalculator->Calculate(GravModel));
 
-    double relnoise = 0.0;
-    cout << "Relative noise level: ";
-    cin >> relnoise;
-    jiba::AddNoise(ScalarResults,relnoise,0.0);
-    jiba::AddNoise(TensorResults,relnoise,0.0);
+    double scalrelnoise = 0.0;
+    double ftgrelnoise = 0.0;
+    double scalabsnoise = 0.0;
+    double ftgabsnoise = 0.0;
+    cout << "Relative noise level (scalar data): ";
+    cin >> scalrelnoise;
+    cout << "Relative noise level (ftg data): ";
+    cin >> ftgrelnoise;
+    cout << "Absolute noise level (scalar data): ";
+    cin >> scalabsnoise;
+    cout << "Absolute noise level (ftg data): ";
+    cin >> ftgabsnoise;
+    jiba::AddNoise(ScalarResults, scalrelnoise, scalabsnoise);
+    jiba::AddNoise(TensorResults, ftgrelnoise, ftgabsnoise);
     jiba::SaveScalarGravityMeasurements(ModelFilename + ".sgd.nc",
         ScalarResults, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
         GravModel.GetMeasPosZ());
@@ -100,11 +108,11 @@ int main(int argc, char *argv[])
     //write the model in .vtk format, at the moment the best plotting option
     GravModel.WriteVTK(ModelFilename + ".vtk");
 
-    jiba::Write3DDataToVTK(ModelFilename + ".data.vtk", "grav_accel", ScalarResults,
-        GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
+    jiba::Write3DDataToVTK(ModelFilename + ".data.vtk", "grav_accel",
+        ScalarResults, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
         GravModel.GetMeasPosZ());
-    jiba::Write3DTensorDataToVTK(ModelFilename + ".ftgdata.vtk", "U", TensorResults,
-        GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
+    jiba::Write3DTensorDataToVTK(ModelFilename + ".ftgdata.vtk", "U",
+        TensorResults, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
         GravModel.GetMeasPosZ());
 
   }

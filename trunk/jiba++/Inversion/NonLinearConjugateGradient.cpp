@@ -5,7 +5,8 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-
+#include "../Global/FatalException.h"
+#include "../Global/convert.h"
 #include "NonLinearConjugateGradient.h"
 #include "mcsrch.h"
 
@@ -14,8 +15,8 @@ namespace jiba
 
     NonLinearConjugateGradient::NonLinearConjugateGradient(boost::shared_ptr<
         jiba::ObjectiveFunction> ObjFunction) :
-      GradientBasedOptimization(ObjFunction), OldGradient(),
-          OldDirection(), OldOmega(1.0), mu(1.0)
+      GradientBasedOptimization(ObjFunction), OldGradient(), OldDirection(),
+          OldOmega(1.0), mu(1.0)
       {
 
       }
@@ -73,6 +74,11 @@ namespace jiba
             OldGradient.resize(0);
             status = OPTPP::mcsrch(&GetObjective(), CovGrad, RawGrad,
                 CurrentModel, Misfit, &mu, 20, 1e-4, 2.2e-16, 0.1, 1e9, 1e-9);
+          }
+        if (status < 0)
+          {
+            throw jiba::FatalException("Cannot find suitable step. Status: "
+                + jiba::stringify(status));
           }
         CurrentModel += mu * SearchDir;
         //the line search already calculated the new gradient

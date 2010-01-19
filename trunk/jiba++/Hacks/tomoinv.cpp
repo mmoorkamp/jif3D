@@ -73,7 +73,8 @@ int main(int argc, char *argv[])
     boost::shared_ptr<jiba::TomographyObjective> TomoObjective(
         new jiba::TomographyObjective());
     TomoObjective->SetObservedData(Data);
-    TomoObjective->SetModelGeometry(Model);
+    TomoObjective->SetFineModelGeometry(Model);
+    TomoObjective->SetCoarseModelGeometry(Model);
     TomoObjective->SetDataCovar(DataError);
 
     boost::shared_ptr<jiba::JointObjective> Objective(

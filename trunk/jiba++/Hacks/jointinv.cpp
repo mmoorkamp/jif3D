@@ -58,7 +58,8 @@ int main(int argc, char *argv[])
         "The weight for the regularization in x-direction")("yreg", po::value<
         double>(), "The weight for the regularization in y-direction")("zreg",
         po::value<double>(), "The weight for the regularization in z-direction")(
-        "curvreg", "Use model curvature for regularization.");
+        "curvreg", "Use model curvature for regularization.")("refmod",
+        "Substract the starting model as a reference model for the regularization.");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -102,16 +103,20 @@ int main(int argc, char *argv[])
     //first we read in the starting model and the measured data
     std::string modelfilename = jiba::AskFilename("Starting model Filename: ");
     //we read in the starting modelfile
-    jiba::ThreeDSeismicModel TomoModel;
+    jiba::ThreeDSeismicModel TomoModel, TomoFineGeometry;
     TomoModel.ReadNetCDF(modelfilename);
     TomoModel.WriteVTK(modelfilename + ".vtk");
+    std::string tomogeometryfilename = jiba::AskFilename("Tomography forward geometry filename: ");
+    TomoFineGeometry.ReadNetCDF(tomogeometryfilename);
+
     //get the name of the file containing the data and read it in
     std::string tomodatafilename = jiba::AskFilename(
         "Tomography Data Filename: ");
 
     //read in data
     jiba::ReadTraveltimes(tomodatafilename, TomoData, TomoModel);
-
+    //copy measurement configuration to refined model
+    TomoFineGeometry.CopyMeasurementConfigurations(TomoModel);
     std::string scalgravdatafilename = jiba::AskFilename(
         "Scalar Gravity Data Filename: ");
     std::string ftgdatafilename = jiba::AskFilename("FTG Data Filename: ");
@@ -191,18 +196,15 @@ int main(int argc, char *argv[])
     //double average = std::accumulate(InvModel.begin(),InvModel.end(),0.0)/InvModel.size();
     //std::fill(RefModel.begin(),RefModel.end(),average);
     jiba::rvec RefModel(InvModel);
-    jiba::rvec
-        DensStartModel(DensityTransform->GeneralizedToPhysical(InvModel));
     std::cout << "Background layers: "
         << GravModel.GetBackgroundDensities().size() << std::endl;
-    std::copy(DensStartModel.begin(), DensStartModel.end(),
-        GravModel.SetDensities().origin());
-    GravModel.WriteNetCDF("out_dens.nc");
+
 
     boost::shared_ptr<jiba::TomographyObjective> TomoObjective(
         new jiba::TomographyObjective());
     TomoObjective->SetObservedData(TomoData);
-    TomoObjective->SetModelGeometry(TomoModel);
+    TomoObjective->SetFineModelGeometry(TomoFineGeometry);
+    TomoObjective->SetCoarseModelGeometry(TomoModel);
     jiba::rvec TomoCovar(TomoData.size());
     //we assume a general error of 5 ms for the seismic data
     std::fill(TomoCovar.begin(), TomoCovar.end(), 5.0);
@@ -236,11 +238,13 @@ int main(int argc, char *argv[])
     boost::shared_ptr<jiba::MatOpRegularization> Regularization;
     if (wantcurvreg)
       {
-      Regularization =  boost::shared_ptr<jiba::MatOpRegularization>(new jiba::CurvatureRegularization(GravModel));
+        Regularization = boost::shared_ptr<jiba::MatOpRegularization>(
+            new jiba::CurvatureRegularization(GravModel));
       }
     else
       {
-      Regularization =  boost::shared_ptr<jiba::MatOpRegularization>(new jiba::GradientRegularization(GravModel));
+        Regularization = boost::shared_ptr<jiba::MatOpRegularization>(
+            new jiba::GradientRegularization(GravModel));
       }
     jiba::rvec ModCov(InvModel.size() * 3);
     //std::fill(ModCov.begin(), ModCov.end(), 1.0);
@@ -251,7 +255,16 @@ int main(int argc, char *argv[])
     ublas::vector_range<jiba::rvec>(ModCov, ublas::range(2 * InvModel.size(), 3
         * InvModel.size())) = InvModel;
 
-    Regularization->SetReferenceModel(InvModel);
+    if (vm.count("refmod"))
+      {
+        Regularization->SetReferenceModel(InvModel);
+      }
+    else
+      {
+        jiba::rvec ZeroMod(InvModel.size());
+        ZeroMod.clear();
+        Regularization->SetReferenceModel(ZeroMod);
+      }
     //Regularization->SetDataCovar(ModCov);
     Regularization->SetPrecondDiag(PreCond);
     if (vm.count("xreg"))

@@ -43,7 +43,7 @@ namespace jiba
        * at which new interfaces should be inserted
        * @param XCoordinates The coordinates of the extra boundaries in m
        */
-      void SetXCoordinates(ThreeDModelBase::t3DModelDim &XCoordinates)
+      void SetXCoordinates(const ThreeDModelBase::t3DModelDim &XCoordinates)
         {
           RefiningXCoordinates.resize(boost::extents[XCoordinates.size()]);
           RefiningXCoordinates = XCoordinates;
@@ -53,7 +53,7 @@ namespace jiba
        * at which new interfaces should be inserted
        * @param YCoordinates The coordinates of the extra boundaries in m
        */
-      void SetYCoordinates(ThreeDModelBase::t3DModelDim &YCoordinates)
+      void SetYCoordinates(const ThreeDModelBase::t3DModelDim &YCoordinates)
         {
           RefiningYCoordinates.resize(boost::extents[YCoordinates.size()]);
           RefiningYCoordinates = YCoordinates;
@@ -63,7 +63,7 @@ namespace jiba
        * at which new interfaces should be inserted
        * @param ZCoordinates The coordinates of the extra boundaries in m
        */
-      void SetZCoordinates(ThreeDModelBase::t3DModelDim &ZCoordinates)
+      void SetZCoordinates(const ThreeDModelBase::t3DModelDim &ZCoordinates)
         {
           RefiningZCoordinates.resize(boost::extents[ZCoordinates.size()]);
           RefiningZCoordinates = ZCoordinates;
