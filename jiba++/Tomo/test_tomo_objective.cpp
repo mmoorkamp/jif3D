@@ -95,7 +95,8 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
       boost::shared_ptr<jiba::TomographyObjective> TomoObjective(
           new jiba::TomographyObjective());
       TomoObjective->SetObservedData(ObservedTimes);
-      TomoObjective->SetModelGeometry(TomoModel);
+      TomoObjective->SetFineModelGeometry(TomoModel);
+      TomoObjective->SetCoarseModelGeometry(TomoModel);
       jiba::rvec TomoCovar(ObservedTimes.size());
       //we assume a general error of 5 ms for the seismic data
       std::fill(TomoCovar.begin(), TomoCovar.end(), 5.0);

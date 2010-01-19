@@ -12,7 +12,7 @@ namespace jiba
   {
 
     TomographyObjective::TomographyObjective() :
-      SlownessModel(), ObservedData(), Calculator()
+      FineSlownessModel(), CoarseSlownessModel(), ObservedData(), Calculator()
       {
       }
 
@@ -23,12 +23,19 @@ namespace jiba
     void TomographyObjective::ImplDataDifference(const jiba::rvec &Model,
         jiba::rvec &Diff)
       {
-        assert(Model.size() == SlownessModel.GetSlownesses().num_elements());
+
+        assert(Model.size() == CoarseSlownessModel.GetSlownesses().num_elements());
         //Copy the model vector into the object with the geometry information
         std::copy(Model.begin(), Model.end(),
-            SlownessModel.SetSlownesses().origin());
-        //Calcualte the travel times for the 3D model
-        jiba::rvec SynthData(Calculator.Calculate(SlownessModel));
+            CoarseSlownessModel.SetSlownesses().origin());
+
+        Refiner.SetXCoordinates(FineSlownessModel.GetXCoordinates());
+        Refiner.SetYCoordinates(FineSlownessModel.GetYCoordinates());
+        Refiner.SetZCoordinates(FineSlownessModel.GetZCoordinates());
+        Refiner.RefineModel(CoarseSlownessModel, FineSlownessModel);
+
+        //Calculate the travel times for the 3D model
+        jiba::rvec SynthData(Calculator.Calculate(FineSlownessModel));
         Diff.resize(ObservedData.size());
         assert(SynthData.size() == ObservedData.size());
         //calculate the difference between observed and synthetic
@@ -39,11 +46,17 @@ namespace jiba
     jiba::rvec TomographyObjective::ImplGradient(const jiba::rvec &Model,
         const jiba::rvec &Diff)
       {
-        assert(Model.size() == SlownessModel.GetSlownesses().num_elements());
+        assert(Model.size() == CoarseSlownessModel.GetSlownesses().num_elements());
         //Copy the model vector into the object with the geometry information
         std::copy(Model.begin(), Model.end(),
-            SlownessModel.SetSlownesses().origin());
+            CoarseSlownessModel.SetSlownesses().origin());
+
+        jiba::ThreeDSeismicModel FineModel;
+        Refiner.RefineModel(CoarseSlownessModel, FineSlownessModel);
         //calculate the gradient
-        return Calculator.LQDerivative(SlownessModel, Diff);
+        jiba::rvec FineGradient(
+            Calculator.LQDerivative(FineSlownessModel, Diff));
+        return Refiner.CombineGradient(FineGradient, CoarseSlownessModel,
+            FineSlownessModel);
       }
   }

@@ -143,6 +143,25 @@ namespace jiba
           SourceIndices.clear();
           ReceiverIndices.clear();
         }
+      void CopyMeasurementConfigurations(const ThreeDSeismicModel &Source)
+        {
+
+          SourcePosX.resize(Source.SourcePosX.size());
+          std::copy(Source.SourcePosX.begin(), Source.SourcePosX.end(),
+              SourcePosX.begin());
+          SourcePosY.resize(Source.SourcePosY.size());
+          std::copy(Source.SourcePosY.begin(), Source.SourcePosY.end(),
+              SourcePosY.begin());
+          SourcePosZ.resize(Source.SourcePosZ.size());
+          std::copy(Source.SourcePosZ.begin(), Source.SourcePosZ.end(),
+              SourcePosZ.begin());
+          SourceIndices.resize(Source.SourceIndices.size());
+          std::copy(Source.SourceIndices.begin(), Source.SourceIndices.end(),
+              SourceIndices.begin());
+          ReceiverIndices.resize(Source.ReceiverIndices.size());
+          std::copy(Source.ReceiverIndices.begin(),
+              Source.ReceiverIndices.end(), ReceiverIndices.begin());
+        }
       //! Set the origin of the coordinate system, this is a reimplementation from the base class to also change the source positions
       virtual void SetOrigin(const double x, const double y, const double z);
       //! Write the seismic model in VTK format, at the moment the best format for plotting, this only writes the slowness and not the source and receiver positions
