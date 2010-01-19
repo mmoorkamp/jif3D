@@ -63,8 +63,6 @@ namespace jiba
         assert(relerror >= 0.0);
         assert(absmin >= 0.0);
         const size_t ndata = Data.size();
-        const double maxdata = std::abs(*std::max_element(Data.begin(),
-            Data.end(), jiba::absLess<double, double>()));
         //create objects for the misfit and a very basic error estimate
         jiba::rvec DataError(ndata);
         for (size_t i = 0; i < ndata; ++i)

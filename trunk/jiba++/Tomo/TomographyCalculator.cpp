@@ -160,7 +160,7 @@ namespace jiba
                     * floor(raypath[i].y[j]) + floor(raypath[i].z[j])
                     - nairlayers;
 
-                DerivMod(offset) += raypath[i].len[j] * Misfit(i);
+                DerivMod(offset) += raypath[i].len[j] *grid.h * Misfit(i);
               }
           }
         return DerivMod;

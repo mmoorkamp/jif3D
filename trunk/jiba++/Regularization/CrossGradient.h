@@ -9,7 +9,7 @@
 #ifndef CROSSGRADIENT_H_
 #define CROSSGRADIENT_H_
 
-#include "ObjectiveFunction.h"
+#include "../Inversion/ObjectiveFunction.h"
 #include "GradientRegularization.h"
 #include "../ModelBase/ThreeDModelBase.h"
 #include "../Gravity/ThreeDGravityModel.h"
