@@ -143,8 +143,7 @@ namespace jiba
                     Yr[j] = ((geo.y[nact_rec[j] - 1]) / grid.h); /*normalized y-coordinate of the receiver locations according to grid cell EDGES*/
                     Zr[j] = ((geo.z[nact_rec[j] - 1]) / grid.h); /*normalized z-coordinate of the receiver locations according to grid cell EDGES*/
 
-                    data->tcalc[nact_datapos[j]] = (double) (1000.0
-                        * interpolate(Xr[j], Yr[j], Zr[j], grid, &tt[0]));
+                    data->tcalc[nact_datapos[j]] =  interpolate(Xr[j], Yr[j], Zr[j], grid, &tt[0]) ;
 
                     if (nact_datapos[j] >= data->ndata_seis)
                       {
@@ -344,7 +343,7 @@ namespace jiba
         int nx1, ny1, nz1;
         long nyz1;
         std::vector<int> ray_cell_index; /*if 0=no ray in the cell; 1= ray path found in the cell*/
-        long max_nr_of_ray_seg; /*max. number of ray-segments*/
+
 
         jiba::rvec gradient; /*Components of the gradient*/
         CELL_STRUCT next_cell, cell;
@@ -353,8 +352,7 @@ namespace jiba
         ny1 = ny - 1;
         nz1 = nz - 1;
         nyz1 = ny1 * nz1;
-        max_nr_of_ray_seg = 2 * (nx1 + ny1 + nz1);
-
+        const long max_nr_of_ray_seg = 2 * (nx1 + ny1 + nz1); /*max. number of ray-segments*/
         for (i = 0; i < nrec; i++)
           {
 

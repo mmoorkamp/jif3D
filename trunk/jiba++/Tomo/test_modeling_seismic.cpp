@@ -122,15 +122,14 @@ BOOST_AUTO_TEST_SUITE( Seismic_Test_Suite )
       raypath = new jiba::RP_STRUCT[2];
 
       ForwardModRay(geo, grid, &data, raypath);
-      double relerror = (data.tcalc[0] / 1000.0 - dist) / dist;
-      BOOST_CHECK(relerror < 0.01 );
+      double relerror = (data.tcalc[0] - dist *slow) / (dist*slow);
+      BOOST_CHECK(std::abs(relerror) < 0.05 );
 
       double totallength = 0.0;
       for (size_t i = 0; i < raypath[0].nray + 1; ++i)
         {
           totallength += raypath[0].len[i];
         }
-
       BOOST_CHECK(std::abs(dist-totallength * grid.h) < slow * grid.h);
       jiba::TomographyCalculator Calculator;
       jiba::ThreeDSeismicModel Model;
