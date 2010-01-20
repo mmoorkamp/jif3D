@@ -207,7 +207,7 @@ int main(int argc, char *argv[])
     TomoObjective->SetCoarseModelGeometry(TomoModel);
     jiba::rvec TomoCovar(TomoData.size());
     //we assume a general error of 5 ms for the seismic data
-    std::fill(TomoCovar.begin(), TomoCovar.end(), 5.0);
+    std::fill(TomoCovar.begin(), TomoCovar.end(), 5.0e-3);
     TomoObjective->SetDataCovar(TomoCovar);
     TomoObjective->SetPrecondDiag(PreCond);
 
