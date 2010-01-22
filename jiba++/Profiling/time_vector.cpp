@@ -11,7 +11,6 @@
 int main()
   {
     const size_t nelements = 1e6;
-    const size_t nruns = 1;
 
     jiba::rvec ModelCov(nelements), CovGrad(nelements), OldGradient(nelements);
     double omega = 0.0, alpha = 0.0;
@@ -33,7 +32,8 @@ int main()
     boost::posix_time::ptime secondstarttime =
         boost::posix_time::microsec_clock::local_time();
     omega = ublas::inner_prod(CovGrad, ublas::element_div(CovGrad, ModelCov));
-    alpha = ublas::inner_prod(OldGradient, ublas::element_div(CovGrad, ModelCov));
+    alpha = ublas::inner_prod(OldGradient,
+        ublas::element_div(CovGrad, ModelCov));
     boost::posix_time::ptime secondendtime =
         boost::posix_time::microsec_clock::local_time();
 

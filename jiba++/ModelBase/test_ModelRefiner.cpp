@@ -19,10 +19,8 @@
 //check that one axis contains the coarse and the fine coordinates
 void CheckAxis(const jiba::ThreeDModelBase::t3DModelDim &Refiner,
     const jiba::ThreeDModelBase::t3DModelDim &FineCoordinates,
-    const jiba::ThreeDModelBase::t3DModelDim &CoarseCoordinates,
-    const jiba::ThreeDModelBase::t3DModelDim &CoarseSizes)
+    const jiba::ThreeDModelBase::t3DModelDim &CoarseCoordinates)
   {
-    const size_t ncoarsecells = CoarseCoordinates.size();
     std::vector<double> All;
     std::copy(Refiner.origin(), Refiner.origin() + Refiner.num_elements(),
         std::back_inserter(All));
@@ -92,11 +90,11 @@ BOOST_AUTO_TEST_CASE(basic_axis_refinement)
     Refiner.RefineAxes(CoarseModel, FineModel);
 
     CheckAxis(XRefiner, FineModel.GetXCoordinates(),
-        CoarseModel.GetXCoordinates(), CoarseModel.GetXCellSizes());
+        CoarseModel.GetXCoordinates());
     CheckAxis(YRefiner, FineModel.GetYCoordinates(),
-        CoarseModel.GetYCoordinates(), CoarseModel.GetYCellSizes());
+        CoarseModel.GetYCoordinates());
     CheckAxis(ZRefiner, FineModel.GetZCoordinates(),
-        CoarseModel.GetZCoordinates(), CoarseModel.GetZCellSizes());
+        CoarseModel.GetZCoordinates());
     const size_t newnx = FineModel.GetXCellSizes().size();
     const size_t newny = FineModel.GetYCellSizes().size();
     const size_t newnz = FineModel.GetZCellSizes().size();
@@ -141,6 +139,6 @@ BOOST_AUTO_TEST_CASE(model_projection)
     std::fill(FineGradient.begin(), FineGradient.end(), 1.0);
     jiba::rvec CoarseGradient = Refiner.CombineGradient(FineGradient,
         CoarseModel, FineModel);
-    BOOST_CHECK(std::count(CoarseGradient.begin(),CoarseGradient.end(),60) == CoarseGradient.size());
+    BOOST_CHECK(std::count(CoarseGradient.begin(),CoarseGradient.end(),60) == int(CoarseGradient.size()));
     FineModel.WriteVTK("fine.vtk");
   }

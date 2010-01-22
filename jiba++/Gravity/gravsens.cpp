@@ -27,7 +27,7 @@
 
 namespace atlas = boost::numeric::bindings::atlas;
 
-int main(int argc, char *argv[])
+int main()
   {
     jiba::ThreeDGravityModel Model;
 

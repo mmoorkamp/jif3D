@@ -33,6 +33,15 @@ namespace jiba
       void ConstructOperator(const jiba::ThreeDModelBase &ModelGeometry);
     public:
       //! We have to provide the model geometry to the constructor
+      /*! We have to specify the geometry of the 3D model by providing
+       * a ThreeDModelBase or derived class. Also the gradient regularization
+       * contains a small component to minimize the absolute value of the model
+       * vector. This stabilizes the Operator matrix that otherwise would be singular.
+       * Under normal circumstances the default value should work well, but it can be specified
+       * to change the behaviour of the regularization.
+       * @param Geometry A 3D model class that describes the cell geometries
+       * @param ModEps The weight of the absolute value minimization of the model vector.
+       */
       explicit GradientRegularization(const jiba::ThreeDModelBase &Geometry, const double ModEps = 1e-8) :
         MatOpRegularization(Geometry),
         Eps(ModEps)

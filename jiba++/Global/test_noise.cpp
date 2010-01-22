@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE  (addnoise)
       accumulator_set<double, stats<tag::mean,tag::variance > > acc;
       std::for_each( Diff.begin(), Diff.end(), boost::bind<void>( boost::ref(acc), _1 ) );
       BOOST_CHECK(mean(acc) < 0.001);
-      BOOST_CHECK_CLOSE(variance(acc),relerror*relerror,0.1);
+      BOOST_CHECK_CLOSE(variance(acc),relerror*relerror,0.2);
 
       //now check absolute noise level
       Noisy = Data;
@@ -47,6 +47,6 @@ BOOST_AUTO_TEST_CASE  (addnoise)
       accumulator_set<double, stats<tag::mean,tag::variance > > acc2;
       std::for_each( Diff.begin(), Diff.end(), boost::bind<void>( boost::ref(acc2), _1 ) );
       BOOST_CHECK(mean(acc2) < 0.001);
-      BOOST_CHECK_CLOSE(variance(acc2),abserror*abserror,0.1);
+      BOOST_CHECK_CLOSE(variance(acc2),abserror*abserror,0.2);
     }
   BOOST_AUTO_TEST_SUITE_END()

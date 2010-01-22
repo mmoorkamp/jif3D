@@ -31,7 +31,7 @@
 
 namespace ublas = boost::numeric::ublas;
 
-int main(int argc, char *argv[])
+int main()
   {
 
     //first we read in the starting model and the measured data
@@ -72,7 +72,8 @@ int main(int argc, char *argv[])
     std::ofstream errorfile("error.out");
     for (size_t i = 0; i < DataError.size(); ++i)
       {
-        errorfile << i << " " << DataError(i) << " " << MTDataError(i) << std::endl;
+        errorfile << i << " " << DataError(i) << " " << MTDataError(i)
+            << std::endl;
       }
     for (size_t i = 0; i < Model.GetConductivities().shape()[2]; ++i)
       {
@@ -83,15 +84,16 @@ int main(int argc, char *argv[])
         Model.GetConductivities().origin()
             + Model.GetConductivities().num_elements(), InvModel.begin());
     Model.WriteVTK("start.vtk");
-    const double mincond = 5e-2;
-    const double maxcond = 5;
+    //these are logarithmic values
+    const double mincond = -1.0;
+    const double maxcond = 1;
     boost::shared_ptr<jiba::ChainedTransform> ConductivityTransform(
         new jiba::ChainedTransform);
 
     jiba::rvec RefModel(InvModel);
     std::fill(RefModel.begin(), RefModel.end(), 1.0);
     ConductivityTransform->AddTransform(boost::shared_ptr<
-        jiba::GeneralModelTransform>(new jiba::TanhTransform(-1, 1.0)));
+        jiba::GeneralModelTransform>(new jiba::TanhTransform(mincond, maxcond)));
     ConductivityTransform->AddTransform(boost::shared_ptr<
         jiba::GeneralModelTransform>(new jiba::LogTransform(RefModel)));
 

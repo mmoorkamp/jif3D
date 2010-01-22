@@ -96,7 +96,6 @@ BOOST_AUTO_TEST_CASE (X3D_basic_deriv_test)
     const size_t xsize = Model.GetXCoordinates().size();
     const size_t ysize = Model.GetYCoordinates().size();
     const size_t zsize = Model.GetZCoordinates().size();
-    const size_t nbglayers = Model.GetBackgroundConductivities().size();
     const size_t nmod = xsize * ysize * zsize;
 
     jiba::X3DModel TrueModel(Model);
@@ -141,7 +140,6 @@ BOOST_AUTO_TEST_CASE (X3D_gradient_reproc_test)
     const size_t xsize = Model.GetXCoordinates().size();
     const size_t ysize = Model.GetYCoordinates().size();
     const size_t zsize = Model.GetZCoordinates().size();
-    const size_t nbglayers = Model.GetBackgroundConductivities().size();
     const size_t nmod = xsize * ysize * zsize;
     const size_t nruns = 5;
 

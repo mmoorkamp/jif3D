@@ -41,8 +41,15 @@ namespace jiba
        * has to have the same size as the model vector in the inversion.
        * @param Model The reference model
        */
-      explicit MinDiffRegularization(const jiba::rvec &Model);
-      virtual ~MinDiffRegularization();
+      explicit MinDiffRegularization(const jiba::rvec &Model) :
+        Reference(Model)
+        {
+
+        }
+      virtual ~MinDiffRegularization()
+        {
+
+        }
       };
   /* @} */
   }

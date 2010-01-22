@@ -29,7 +29,7 @@
 
 namespace ublas = boost::numeric::ublas;
 
-int main(int argc, char *argv[])
+int main()
   {
     //these objects hold information about the measurements and their geometry
     jiba::rvec Data;
@@ -57,8 +57,6 @@ int main(int argc, char *argv[])
     //we define a few constants that are used throughout the inversion
 
     const size_t ndata = Data.size();
-    const double maxdata = *std::max_element(Data.begin(), Data.end(),
-        jiba::absLess<double, double>());
     //create objects for the misfit and a very basic error estimate
     jiba::rvec DataError(ndata);
     std::fill_n(DataError.begin(), ndata, 5.0);

@@ -138,7 +138,7 @@ void LineSearch(jiba::rvec &DeltaModel, jiba::ThreeDGravityModel &Model,
         DeltaModel.begin(), boost::bind(std::multiplies<double>(), _1, optstep));
   }
 
-int main(int argc, char *argv[])
+int main()
   {
     jiba::ThreeDGravityModel Model;
     boost::shared_ptr<jiba::FullSensitivityGravityCalculator>
@@ -159,7 +159,7 @@ int main(int argc, char *argv[])
     double lambda = 1.0;
     std::cout << "Lambda: ";
     std::cin >> lambda;
-    const size_t ndata = Data.size();
+
     const size_t nmeas = Data.size() / 9;
     jiba::rvec DataVector(nmeas), DataError(nmeas);
     for (size_t i = 0; i < nmeas; ++i)

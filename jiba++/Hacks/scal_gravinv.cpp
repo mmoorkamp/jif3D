@@ -27,7 +27,7 @@
 
 namespace ublas = boost::numeric::ublas;
 
-int main(int argc, char *argv[])
+int main()
   {
     //these objects hold information about the measurements and their geometry
     jiba::rvec Data;

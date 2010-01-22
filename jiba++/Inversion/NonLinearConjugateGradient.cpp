@@ -75,11 +75,7 @@ namespace jiba
             status = OPTPP::mcsrch(&GetObjective(), CovGrad, RawGrad,
                 CurrentModel, Misfit, &mu, 20, 1e-4, 2.2e-16, 0.1, 1e9, 1e-9);
           }
-        if (status < 0)
-          {
-            throw jiba::FatalException("Cannot find suitable step. Status: "
-                + jiba::stringify(status));
-          }
+
         CurrentModel += mu * SearchDir;
         //the line search already calculated the new gradient
         // so we signal that we have calculated everything

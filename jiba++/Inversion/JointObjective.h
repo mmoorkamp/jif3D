@@ -40,6 +40,7 @@ namespace jiba
       std::vector<double> Weights;
       //! The misfit of each objective for output and analysis purposes
       std::vector<double> IndividualFits;
+      //! Stores the l2-norm of the gradient for each method
       std::vector<double> IndividualGradNorms;
       //! The object that translates between the optimization parameters and the individual parameters for each objective function
       ModelDistributor Distributor;
@@ -60,6 +61,7 @@ namespace jiba
         {
           return IndividualFits;
         }
+      //! Get the vector of l2-norms of the gradient for each individual objective at the current iteration
       const std::vector<double> &GetIndividualGradNorms() const
         {
           return IndividualGradNorms;
@@ -79,6 +81,16 @@ namespace jiba
           Weights.push_back(lambda);
           Distributor.AddTransformer(Transform);
         }
+      //! Change the weighting of the different methods
+      /*! This function can be used to change the weight for
+       * each method in the joint inversion after all objectives
+       * have been added with AddObjective. The size of the argument
+       * vector has to match the number of objective functions or an
+       * exception will be thrown. Note that changing the weights during an inversion that stores previous gradient information,
+       * i.e. NLCG and L-BFGS, will have unpredictable effects, as the approximation to the inverse of the Hessian will become
+       * invalid.
+       * @param W The vector of new weights for each method.
+       */
       void SetWeights(const std::vector<double> &W)
         {
           if (W.size() != Weights.size())

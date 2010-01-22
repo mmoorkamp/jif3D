@@ -47,7 +47,7 @@ void MakeTestModel(jiba::ThreeDGravityModel &Model, const size_t size)
     Model.SetBackgroundThicknesses(bg_thick);
   }
 
-int main(int ac, char* av[])
+int main()
   {
 
 

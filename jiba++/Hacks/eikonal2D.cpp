@@ -99,7 +99,7 @@ int main()
     const size_t nx = 7;
     const size_t ny = 7;
 
-    const size_t ngrid = nx * ny;
+    const int ngrid = nx * ny;
     boost::multi_array<double, 2> U(boost::extents[nx][ny]);
     boost::multi_array<double, 2> Vel(boost::extents[nx][ny]);
 

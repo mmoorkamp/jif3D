@@ -23,7 +23,7 @@
 #include "../Global/FatalException.h"
 #include "../Global/NumUtil.h"
 #include "../Global/VectorTransform.h"
-#include "../Global/FileUtil.h""
+#include "../Global/FileUtil.h"
 #include "../Global/Noise.h"
 #include "../ModelBase/VTKTools.h"
 #include "../ModelBase/NetCDFTools.h"
@@ -42,7 +42,7 @@
 namespace ublas = boost::numeric::ublas;
 
 
-int main(int argc, char *argv[])
+int main()
   {
     //these objects hold information about the measurements and their geometry
     jiba::rvec ScalGravData, FTGData;
@@ -140,7 +140,6 @@ int main(int argc, char *argv[])
     //jiba::NonLinearConjugateGradient LBFGS(Objective);
     LBFGS.SetModelCovDiag(ModelWeight);
 
-    const size_t ndata = ScalGravData.size() + FTGData.size();
     size_t iteration = 0;
     size_t maxiter = 30;
     std::ofstream misfitfile("misfit.out");

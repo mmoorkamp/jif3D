@@ -43,7 +43,7 @@ void MakeTestModel(jiba::ThreeDGravityModel &Model, const size_t size)
     Model.SetBackgroundThicknesses(bg_thick);
   }
 
-int main(int ac, char* av[])
+int main()
   {
 
     const size_t nruns = 5;
@@ -54,8 +54,8 @@ int main(int ac, char* av[])
         GPUCalculator = jiba::CreateGravityCalculator<
             jiba::MinMemGravityCalculator>::MakeTensor(true);
 
-  //  boost::shared_ptr<jiba::ThreeDGravityCalculator>
-   //     CPUCalculator = jiba::CreateGravityCalculator<
+    //  boost::shared_ptr<jiba::ThreeDGravityCalculator>
+    //     CPUCalculator = jiba::CreateGravityCalculator<
     //        jiba::MinMemGravityCalculator>::MakeTensor(false);
 
     std::ofstream outfile(filename.c_str());
@@ -69,12 +69,12 @@ int main(int ac, char* av[])
         MakeTestModel(GravityTest, modelsize);
 
         jiba::rvec gpugravmeas(GPUCalculator->Calculate(GravityTest));
-       // jiba::rvec cpugravmeas(CPUCalculator->Calculate(GravityTest));
+        // jiba::rvec cpugravmeas(CPUCalculator->Calculate(GravityTest));
         //for (size_t j = 0; j < gpugravmeas.size(); ++j)
-         // {
-          //  outfile << (gpugravmeas(j) - cpugravmeas(j)) / cpugravmeas(j)
-           //     << std::endl;
-         // }
+        // {
+        //  outfile << (gpugravmeas(j) - cpugravmeas(j)) / cpugravmeas(j)
+        //     << std::endl;
+        // }
       }
 
   }
