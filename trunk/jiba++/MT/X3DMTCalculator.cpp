@@ -96,7 +96,7 @@ namespace jiba
           {
             double ObservationDepth = Depths[0];
             if (std::count(Depths.begin(), Depths.end(), ObservationDepth)
-                == Depths.size())
+                == int(Depths.size()))
               return ObservationDepth;
             else
               throw jiba::FatalException(
@@ -153,23 +153,13 @@ namespace jiba
         if (std::system(runname.c_str()))
           throw FatalException("Cannot execute run script: " + runname);
       }
-    //remove the script file and the directory that contains the results
-    //produced by x3d
-    void CleanFiles(const std::string &NameRoot)
-      {
-#pragma omp critical(cleanfiles)
-          {
-            //fs::remove_all(NameRoot + dirext);
-            //fs::remove_all(NameRoot + runext);
-          }
-      }
+
 
     rvec X3DMTCalculator::Calculate(const X3DModel &Model)
       {
         //we define nfreq as int to make the compiler happy in the openmp loop
         const int nfreq = Model.GetFrequencies().size();
         const size_t nmeas = Model.GetMeasPosX().size();
-        const size_t nmodx = Model.GetXCoordinates().size();
         const size_t nmody = Model.GetYCoordinates().size();
         const double ObservationDepth =
             GetObservationDepth(Model.GetMeasPosZ());
@@ -532,7 +522,7 @@ namespace jiba
                     const size_t offset = StationIndex[0] * ncellsy
                         + StationIndex[1];
 
-                    const size_t siteindex = freq_index + j * 8;
+                    //const size_t siteindex = freq_index + j * 8;
                     std::complex<double> Zxx, Zxy, Zyx, Zyy;
                     FieldsToImpedance(Ex1_obs[offset], Ex2_obs[offset],
                         Ey1_obs[offset], Ey2_obs[offset], Hx1_obs[offset],
@@ -578,10 +568,6 @@ namespace jiba
 
                       }
                   }
-                //clean the files
-                CleanFiles(ForwardName);
-                CleanFiles(EdipName);
-                CleanFiles(MdipName);
               } catch (...)
               {
                 //we cannot throw exceptions that leave the parallel region

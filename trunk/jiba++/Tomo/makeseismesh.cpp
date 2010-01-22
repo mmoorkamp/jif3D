@@ -17,7 +17,7 @@
 #include "../Global/FileUtil.h"
 using namespace std;
 
-int main(int argc, char *argv[])
+int main()
   {
     jiba::ThreeDSeismicModel Model;
     int nx, ny, nz;

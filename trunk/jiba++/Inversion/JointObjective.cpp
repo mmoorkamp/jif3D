@@ -70,10 +70,16 @@ namespace jiba
         std::cout << "Individual Grad Norms: ";
         for (size_t i = 0; i < nobjective; ++i)
           {
-            CurrGrad =  Distributor.TransformGradient(Model, Objectives.at(i)->CalcGradient(Distributor(
-                Model, i)), i);
+            //we calculate the "natural" gradient for each method
+            // and then pass it to the corresponding parameter transformation
+            //class in the model distributor to account for the effect of those
+            //transformations.
+            CurrGrad = Distributor.TransformGradient(Model,
+                Objectives.at(i)->CalcGradient(Distributor(Model, i)), i);
+            //We store the norm of each gradient for information during the inversion
             IndividualGradNorms.at(i) = ublas::norm_2(CurrGrad);
             std::cout << IndividualGradNorms.at(i) << " ";
+            //the total gradient is just the weighted sum of the individual gradients
             Gradient += Weights.at(i) * CurrGrad;
           }
         std::cout << std::endl;

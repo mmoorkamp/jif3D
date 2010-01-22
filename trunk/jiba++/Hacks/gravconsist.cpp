@@ -37,7 +37,7 @@ double CalcMisfit(const jiba::rvec &ObservedData,
     return ublas::norm_2(Misfit);
   }
 
-int main(int argc, char *argv[])
+int main()
   {
     //these objects hold information about the measurements and their geometry
     jiba::rvec Data;

@@ -6,8 +6,6 @@
 //============================================================================
 
 
-
-
 #include <iostream>
 #include <string>
 #include "../Tomo/ThreeDSeismicModel.h"
@@ -18,9 +16,8 @@
 
 using namespace std;
 
-int main(int argc, char *argv[])
+int main()
   {
-
 
     jiba::ThreeDSeismicModel BaseModel;
     std::string ModelFilename = jiba::AskFilename("Base Filename: ");
@@ -34,11 +31,11 @@ int main(int argc, char *argv[])
 
     const double threshold = 0.00027;
     for (size_t i = 0; i < ngrid; ++i)
-    {
-    	const double value = *(AnomalyModel.GetSlownesses().origin() +i);
-    	if ( value > threshold)
-    		*(BaseModel.SetSlownesses().origin() + i) = value;
-    }
+      {
+        const double value = *(AnomalyModel.GetSlownesses().origin() + i);
+        if (value > threshold)
+          *(BaseModel.SetSlownesses().origin() + i) = value;
+      }
 
     BaseModel.WriteNetCDF("ano.nc");
     BaseModel.WriteVTK("ano.vtk");

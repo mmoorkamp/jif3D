@@ -49,7 +49,7 @@ namespace jiba
        * @param Geometry An object that contains the information about the model geometry (cell sizes etc.)
        */
       explicit CrossGradient(const jiba::ThreeDModelBase &Geometry) :
-        FirstGradient(Geometry), SecondGradient(Geometry), ModelGeometry(
+        FirstGradient(Geometry,0.0), SecondGradient(Geometry,0.0), ModelGeometry(
             Geometry)
         {
 

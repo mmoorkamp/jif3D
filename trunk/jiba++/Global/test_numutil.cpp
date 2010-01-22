@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(test_sign)
     {
       //test the sequence generator
       //the length of the vector
-      const size_t ntries = 30;
+      const int ntries = 30;
       //the value of the first element
       const int start = 7;
       std::vector<int> Sequence;

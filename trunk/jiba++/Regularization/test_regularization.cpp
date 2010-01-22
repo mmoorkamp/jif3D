@@ -69,14 +69,14 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
       std::generate(StartModel.begin(),StartModel.end(),rand);
       std::generate(PertModel.begin(),PertModel.end(),rand);
 
-      jiba::GradientRegularization Regularization(GravModel);
+      jiba::GradientRegularization Regularization(GravModel,0.0);
       Regularization.SetReferenceModel(StartModel);
       Regularization.SetXWeight(5.0);
       Regularization.SetYWeight(4.0);
       Regularization.SetZWeight(3.0);
       double zero = Regularization.CalcMisfit(StartModel+ConstMod);
       BOOST_CHECK_CLOSE(zero,0.0,0.0001);
-      double Misfit = Regularization.CalcMisfit(PertModel);
+      Regularization.CalcMisfit(PertModel);
       CheckGradient(Regularization,PertModel);
     }
 
@@ -122,7 +122,7 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
       zero = Regularization.CalcMisfit(StartModel+GradModelVec);
       BOOST_CHECK_CLOSE(zero,0.0,0.0001);
 
-      double Misfit = Regularization.CalcMisfit(PertModel);
+      Regularization.CalcMisfit(PertModel);
       CheckGradient(Regularization,PertModel);
     }
 
@@ -151,7 +151,7 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
       double zero = Regularization.CalcMisfit(ZeroModel);
       //practically it is very small
       BOOST_CHECK(zero < 1e-10);
-      double Misfit = Regularization.CalcMisfit(PertModel);
+      Regularization.CalcMisfit(PertModel);
       CheckGradient(Regularization,PertModel);
     }
 

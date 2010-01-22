@@ -60,7 +60,9 @@ namespace jiba
         //at each iteration we reset the stepsize
         mu = 1.0;
         SearchDir *= -1.0;
-        double OldFit = Misfit;
+        //now we do a line search to find the optimum step size mu
+        //after this call, both Misfit and RawGrad are already
+        //updated for the new model
         int status = OPTPP::mcsrch(&GetObjective(), SearchDir, RawGrad,
             CurrentModel, Misfit, &mu, LineIter, 1e-4, 2.2e-16, 0.9, 1e9, 1e-12);
 

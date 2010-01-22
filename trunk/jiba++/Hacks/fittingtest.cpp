@@ -16,7 +16,7 @@ double func(const double z, const double z0)
 
 double deriv(const double z, const double z0)
   {
-    return -2.0 * pow(z - z0,-3);
+    return -2.0 * pow(z - z0, -3);
   }
 
 double misfit(const jiba::rvec &observed, const jiba::rvec &zvalues,
@@ -33,14 +33,13 @@ double misfit(const jiba::rvec &observed, const jiba::rvec &zvalues,
 int main()
   {
     const size_t ndata = 20;
-    const double evalthresh = 1e-3;
     jiba::rvec observed(ndata), zvalues(ndata), error(ndata), delta(ndata);
     const double z0 = 350;
     const double zstart = 250;
     for (size_t i = 0; i < ndata; ++i)
       {
         zvalues(i) = i * 10;
-        observed(i) = func(zvalues(i),z0);
+        observed(i) = func(zvalues(i), z0);
         error(i) = 1.0;
       }
     jiba::rmat sens(ndata, 1);
@@ -55,13 +54,13 @@ int main()
         for (size_t j = 0; j < ndata; ++j)
           {
             sens(j, 0) = deriv(zvalues(j), InvModel(0));
-            delta(j) = observed(j) - func(zvalues(j),InvModel(0));
+            delta(j) = observed(j) - func(zvalues(j), InvModel(0));
           }
         jiba::ModelSpaceInversion()(sens, delta, weights, error, 1e-10,
             DeltaModel);
         double stepsize = 1.0;
         //jiba::rvec TryModel1 = InvModel - stepsize * DeltaModel;
-       // double m1 = misfit(observed, zvalues, TryModel1);
+        // double m1 = misfit(observed, zvalues, TryModel1);
         //jiba::rvec TryModel2 = InvModel - 0.1 * stepsize * DeltaModel;
         //double m2 = misfit(observed, zvalues, TryModel2);
         //jiba::rvec TryModel3 = InvModel -  10.0 * stepsize * DeltaModel;

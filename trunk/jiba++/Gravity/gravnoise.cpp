@@ -19,7 +19,7 @@
 #include "ReadWriteGravityData.h"
 
 
-int main(int argc, char *argv[])
+int main()
   {
     //create the generator object for the random number generator
     boost::lagged_fibonacci607 generator(

@@ -137,7 +137,7 @@ int main()
     const size_t nx = 10;
     const size_t ny = 10;
     const size_t nz = 5;
-    const size_t ngrid = nx * ny * nz;
+    const int ngrid = nx * ny * nz;
     boost::multi_array<double, 3> U(boost::extents[nx][ny][nz]);
     jiba::ThreeDSeismicModel Model;
     Model.SetSlownesses().resize(boost::extents[nx][ny][nz]);

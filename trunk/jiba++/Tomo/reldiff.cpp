@@ -16,30 +16,31 @@
  * and as a single column.
  */
 
-int main(int argc, char *argv[])
-{
-	std::string firstname = jiba::AskFilename("First model file: ", true);
-	std::string secondname = jiba::AskFilename("Second model file: ", true);
-	jiba::ThreeDSeismicModel FirstModel;
-	jiba::ThreeDSeismicModel SecondModel;
+int main()
+  {
+    std::string firstname = jiba::AskFilename("First model file: ", true);
+    std::string secondname = jiba::AskFilename("Second model file: ", true);
+    jiba::ThreeDSeismicModel FirstModel;
+    jiba::ThreeDSeismicModel SecondModel;
 
-	FirstModel.ReadNetCDF(firstname);
-	SecondModel.ReadNetCDF(secondname);
-	size_t ngrid = FirstModel.GetSlownesses().num_elements();
-	if (SecondModel.GetSlownesses().num_elements() != ngrid)
-	{
-		std::cerr << "Number of model parameter does not match." << std::endl;
-		return 100;
-	}
-	std::transform(FirstModel.GetSlownesses().origin(),
-			FirstModel.GetSlownesses().origin() + ngrid,
-			SecondModel.GetSlownesses().origin(),
-			SecondModel.SetSlownesses().origin(), boost::bind(std::divides<
-					double>(), boost::bind(std::minus<double>(), _1, _2), _1));
-	SecondModel.WriteNetCDF("diff.nc");
-	SecondModel.WriteVTK("diff.vtk");
-	std::ofstream outfile("diff.hist");
-	std::copy(SecondModel.GetSlownesses().origin(),
-			SecondModel.GetSlownesses().origin() + ngrid,
-			std::ostream_iterator<double>(outfile, "\n"));
-}
+    FirstModel.ReadNetCDF(firstname);
+    SecondModel.ReadNetCDF(secondname);
+    size_t ngrid = FirstModel.GetSlownesses().num_elements();
+    if (SecondModel.GetSlownesses().num_elements() != ngrid)
+      {
+        std::cerr << "Number of model parameter does not match." << std::endl;
+        return 100;
+      }
+    std::transform(FirstModel.GetSlownesses().origin(),
+        FirstModel.GetSlownesses().origin() + ngrid,
+        SecondModel.GetSlownesses().origin(),
+        SecondModel.SetSlownesses().origin(), boost::bind(
+            std::divides<double>(), boost::bind(std::minus<double>(), _1, _2),
+            _1));
+    SecondModel.WriteNetCDF("diff.nc");
+    SecondModel.WriteVTK("diff.vtk");
+    std::ofstream outfile("diff.hist");
+    std::copy(SecondModel.GetSlownesses().origin(),
+        SecondModel.GetSlownesses().origin() + ngrid, std::ostream_iterator<
+            double>(outfile, "\n"));
+  }
