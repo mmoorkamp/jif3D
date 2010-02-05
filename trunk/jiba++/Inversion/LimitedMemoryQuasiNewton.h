@@ -41,6 +41,7 @@ namespace jiba
       //The implementation of a single step
       virtual void StepImplementation(jiba::rvec &CurrentModel);
     public:
+      //! Set the maximum number of forward evaluations the inversion spends in one line-search
       void SetLineSearchIterations(const size_t iter)
         {
           LineIter = iter;

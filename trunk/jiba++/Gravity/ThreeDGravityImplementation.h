@@ -50,11 +50,17 @@ namespace jiba
       // so we cache the values once in the default implementation of calculate.
       // Because CalcBackground and CalcGridded can only be called from within
       // there we are guaranteed correct values in the implementation of those functions
+      //! The cached values of the x-coordinates in m for each cell
       ThreeDGravityModel::t3DModelDim XCoord;
+      //! The cached values of the y-coordinates in m for each cell
       ThreeDGravityModel::t3DModelDim YCoord;
+      //! The cached values of the z-coordinates in m for each cell
       ThreeDGravityModel::t3DModelDim ZCoord;
+      //! The cached values for the size of each cell in x-direction
       ThreeDGravityModel::t3DModelDim XSizes;
+      //! The cached values for the size of each cell in y-direction
       ThreeDGravityModel::t3DModelDim YSizes;
+      //! The cached values for the size of each cell in z-direction
       ThreeDGravityModel::t3DModelDim ZSizes;
     public:
       //! Returns the number of data before any transformation is applied

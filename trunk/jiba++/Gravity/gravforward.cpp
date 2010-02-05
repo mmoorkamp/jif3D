@@ -25,15 +25,9 @@
 #include "ReadWriteGravityData.h"
 #include "MinMemGravityCalculator.h"
 #include "ThreeDGravityFactory.h"
+#include "../Global/FileUtil.h"
 
-//get the name of the input files
-void PromptForFiles(std::string &ModelFilename, std::string &MeasPosFilename)
-  {
-    std::cout << "Model Filename: ";
-    std::cin >> ModelFilename;
-    std::cout << "Measurement Position Filename: ";
-    std::cin >> MeasPosFilename;
-  }
+
 
 int main(int argc, char *argv[])
   {
@@ -57,7 +51,8 @@ int main(int argc, char *argv[])
       break;
     default:
       //anything else, we ask for the filenames, measurement positions are ascii
-      PromptForFiles(ModelFilename, MeasPosFilename);
+      ModelFilename = jiba::AskFilename("Model Filename: ");
+      MeasPosFilename = jiba::AskFilename("Measurement Position Filename: ");
       GravModel.ReadMeasPosAscii(MeasPosFilename);
       break;
       }

@@ -30,6 +30,7 @@ namespace jiba
     class GradientBasedOptimization: public jiba::NonLinearOptimization
       {
     private:
+      //! Have we evaluated the misfit and gradient for the current model?
       bool HaveEvaluated_;
       //! Calculate the misfit and the gradient for the current model
       virtual void EvaluateModel(const jiba::rvec &CurrentModel);
@@ -39,11 +40,11 @@ namespace jiba
         {
           HaveEvaluated_ = true;
         }
-      //the gradient gamma  for the current model
+      //! the gradient gamma  for the current model
       jiba::rvec RawGrad;
-      //the direction of steepest ascent C_M gamma for the current model
+      //! the direction of steepest ascent C_M gamma for the current model
       jiba::rvec CovGrad;
-      // the search direction for the current opimization step
+      //! the search direction for the current opimization step
       jiba::rvec SearchDir;
     public:
       //! Signal that the model has been changed and new misfit and gradient have to be calculated

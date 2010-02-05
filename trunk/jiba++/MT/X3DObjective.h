@@ -18,6 +18,7 @@ namespace jiba
   {
     /** \addtogroup mtmodelling Forward modelling of magnetotelluric data */
     /* @{ */
+    //! An objective function for 3D magnetotelluric data using x3D by Avdeev et al. as an engine
     class X3DObjective: public ObjectiveFunction
       {
     private:
@@ -62,7 +63,8 @@ namespace jiba
        */
       void SetModelGeometry(const jiba::X3DModel &Model)
         {
-          if (Model.GetConductivities().num_elements() == 0 || Model.GetFrequencies().size() == 0)
+          if (Model.GetConductivities().num_elements() == 0
+              || Model.GetFrequencies().size() == 0)
             throw jiba::FatalException(
                 "Cannot have empty frequencies or model in MT objective function.");
           ConductivityModel = Model;

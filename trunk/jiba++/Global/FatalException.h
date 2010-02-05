@@ -25,6 +25,7 @@ namespace jiba
     class FatalException: public std::runtime_error
       {
     public:
+      //! The constructor takes the error description and simply passes it on to std::runtime_error.
       FatalException(const std::string whatString) :
         std::runtime_error(whatString)
         {

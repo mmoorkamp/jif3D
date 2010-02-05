@@ -38,7 +38,6 @@ namespace jiba
       size_t nEval;
       jiba::rvec DataDifference;
       jiba::rvec CovarDiag;
-      jiba::rvec PreCondDiag;
       boost::shared_ptr<VectorTransform> DataTransform;
       //! The abstract interface for functions that implement the calculation  of the data difference
       virtual void
@@ -83,10 +82,6 @@ namespace jiba
       void SetDataCovar(const jiba::rvec &Cov)
         {
           CovarDiag = Cov;
-        }
-      void SetPrecondDiag(const jiba::rvec &Diag)
-        {
-          PreCondDiag = Diag;
         }
       //! Calculate the Chi-squared data misfit for the given model
       double CalcMisfit(const jiba::rvec &Model)

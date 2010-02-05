@@ -33,6 +33,7 @@ namespace jiba
     class BadConversion: public std::runtime_error
       {
     public:
+      //! The constructor takes the error description and simply passes it on to std::runtime_error.
       BadConversion(const std::string& s) :
         std::runtime_error(s)
         {

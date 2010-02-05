@@ -22,9 +22,13 @@ namespace jiba
   {
     /** \addtogroup modelbase Basic classes and routines for 3D models */
     /* @{ */
+    //! The name used for the x-coordinates of the measurements in netcdf files
     static const std::string MeasPosXName = "MeasPosX";
+    //! The name used for the y-coordinates of the measurements in netcdf files
     static const std::string MeasPosYName = "MeasPosY";
+    //! The name used for the z-coordinates of the measurements in netcdf files
     static const std::string MeasPosZName = "MeasPosZ";
+    //! The name used for the index of the measurements in netcdf files
     static const std::string StationNumberName = "StationNumber";
     //! Read a 3D model from netcdf, this is the preferred storage format
     void Read3DModelFromNetCDF(const NcFile &NetCDFFile,
