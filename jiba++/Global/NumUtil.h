@@ -40,6 +40,7 @@ namespace jiba
         value(start)
         {
         }
+      //! Return a new valuye from the sequence
       int operator()()
         {
           return value++;

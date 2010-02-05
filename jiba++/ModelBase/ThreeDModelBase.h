@@ -265,6 +265,7 @@ namespace jiba
       void ReadMeasPosAscii(const std::string filename);
       friend class ModelRefiner;
       ThreeDModelBase();
+      //! The copy constructor copies all independent variables of ThreeDModelBase
       ThreeDModelBase& operator= (const ThreeDModelBase& source);
       virtual ~ThreeDModelBase();
       };

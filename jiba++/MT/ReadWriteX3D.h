@@ -61,6 +61,7 @@ namespace jiba
 
     //! Write the file a.project that controls the forward calculation parameters for x3D
     /*! The project file is always called a.project and controls what x3d calculates.
+     * @param RootDir The start of the directory name without the frequency index
      * @param Frequencies The vector of frequencies in Hz for which we want to calculate data
      * @param Type The type of data we want to calculate, MT, electric dipole or magnetic dipole fields
      * @param ResultFilename The filename root for the results

@@ -55,11 +55,12 @@ namespace jiba
         {
           ObservedData = Data;
         }
-      //! Set the model that contains the grid geometry and measurement and shot positions
+      //! Set the model that contains the grid geometry and measurement and shot positions for the forward calculations
       void SetFineModelGeometry(const jiba::ThreeDSeismicModel &Model)
         {
           FineSlownessModel = Model;
         }
+      //! Set the geometry of the inversion model, the forward model will be determined by applying model refinement with FineSlownessModel
       void SetCoarseModelGeometry(const jiba::ThreeDSeismicModel &Model)
         {
           CoarseSlownessModel = Model;

@@ -87,6 +87,7 @@ namespace jiba
       PodvinTime3D(const PodvinTime3D&);
       PodvinTime3D &operator=(const PodvinTime3D&);
     public:
+      //! This is the definition of the original function by Podvin and Lecomte
       int time_3d(float *HS, float *T, int NX, int NY, int NZ, float XS,
           float YS, float ZS, float HS_EPS_INIT, int MSG);
       PodvinTime3D();

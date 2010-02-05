@@ -50,10 +50,9 @@ namespace jiba
       // decide how to handle this information
       rmat CurrentSensitivities;
     protected:
-      //In some cases we mitgh want to apply a transformation to the data, e.g. FTG to an invariant
+      //! In some cases we mitgh want to apply a transformation to the data, e.g. FTG to an invariant
       boost::shared_ptr<VectorTransform> Transform;
-      // The shared pointer to the implementation object
-      // that does the actual calculation
+      //! The shared pointer to the implementation object that does the actual calculation
       boost::shared_ptr<ThreeDGravityImplementation> Imp;
       //! Check the the information in the model is consistent, i.e. corresponding vectors have the same size
       void CheckModelConsistency(const ThreeDGravityModel &Model);

@@ -44,13 +44,10 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
       srand(time(NULL));
       const size_t msize = 18;
       jiba::rvec StartModel(msize), PertModel(msize);
-      jiba::rvec PreCond(msize);
-      std::fill(PreCond.begin(),PreCond.end(),1.0);
       std::generate(StartModel.begin(),StartModel.end(),rand);
       std::generate(PertModel.begin(),PertModel.end(),rand);
 
       jiba::MinDiffRegularization Regularization(StartModel);
-      Regularization.SetPrecondDiag(PreCond);
       jiba::rvec Diff = StartModel - PertModel;
       double Misfit = Regularization.CalcMisfit(PertModel);
       BOOST_CHECK_CLOSE(Misfit,ublas::inner_prod(Diff,Diff),0.001);
@@ -143,7 +140,7 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
       //if the two models are scaled versions of each other
       //the cross-gradient should be zero
       jiba::rvec ZeroModel(msize*2);
-      for (size_t i = 0; i < msize; ++i)
+      for (int i = 0; i < msize; ++i)
         {
           ZeroModel(i) = drand48();
           ZeroModel(i + msize) = 3.2 * ZeroModel(i);
@@ -163,17 +160,14 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
 
       const size_t msize = GravModel.GetDensities().num_elements();
       jiba::rvec StartModel(msize), PertModel(msize);
-      jiba::rvec PreCond(msize);
-      std::fill(PreCond.begin(),PreCond.end(),1.0);
+
       std::generate(StartModel.begin(),StartModel.end(),rand);
       std::generate(PertModel.begin(),PertModel.end(),rand);
-
       boost::shared_ptr<jiba::GradientRegularization> GradReg(new jiba::GradientRegularization(GravModel));
-      GradReg->SetPrecondDiag(PreCond);
+
       GradReg->SetReferenceModel(StartModel);
 
       boost::shared_ptr<jiba::MinDiffRegularization> DiffReg(new jiba::MinDiffRegularization(StartModel));
-      DiffReg->SetPrecondDiag(PreCond);
       jiba::JointObjective Objective;
       Objective.AddObjective(GradReg,boost::shared_ptr<jiba::ModelCopyTransform>(new jiba::ModelCopyTransform),0.05);
       Objective.AddObjective(DiffReg,boost::shared_ptr<jiba::ModelCopyTransform>(new jiba::ModelCopyTransform),1.23);

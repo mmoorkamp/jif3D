@@ -202,8 +202,6 @@ int main(int argc, char *argv[])
       }
 
     jiba::rvec RefModel(InvModel);
-    jiba::rvec PreCond(InvModel.size());
-    std::fill(PreCond.begin(), PreCond.end(), 1.0);
     const double minslow = 1e-4;
     const double maxslow = 0.005;
     boost::shared_ptr<jiba::GeneralModelTransform> SlownessTransform(
@@ -227,7 +225,7 @@ int main(int argc, char *argv[])
     TomoObjective->SetObservedData(TomoData);
     TomoObjective->SetFineModelGeometry(TomoModel);
     TomoObjective->SetCoarseModelGeometry(TomoModel);
-    TomoObjective->SetPrecondDiag(PreCond);
+
     jiba::rvec TomoCovar(TomoData.size());
     //we assume a general error of 5 ms for the seismic data
     std::fill(TomoCovar.begin(), TomoCovar.end(), 5.0);
@@ -237,14 +235,12 @@ int main(int argc, char *argv[])
         new jiba::GravityObjective(false, wantcuda));
     ScalGravObjective->SetObservedData(ScalGravData);
     ScalGravObjective->SetModelGeometry(GravModel);
-    ScalGravObjective->SetPrecondDiag(PreCond);
     ScalGravObjective->SetDataCovar(jiba::ConstructError(ScalGravData, 0.02));
 
     boost::shared_ptr<jiba::GravityObjective> FTGObjective(
         new jiba::GravityObjective(true, wantcuda));
     FTGObjective->SetObservedData(FTGData);
     FTGObjective->SetModelGeometry(GravModel);
-    FTGObjective->SetPrecondDiag(PreCond);
     FTGObjective->SetDataCovar(jiba::ConstructError(FTGData, 0.02));
 
     boost::shared_ptr<jiba::GradientRegularization> Regularization(
@@ -252,7 +248,7 @@ int main(int argc, char *argv[])
 
     Regularization->SetReferenceModel(InvModel);
     Regularization->SetDataCovar(InvModel);
-    Regularization->SetPrecondDiag(PreCond);
+
     double tomolambda = 1.0;
     double scalgravlambda = 1.0;
     double ftglambda = 1.0;
@@ -286,7 +282,6 @@ int main(int argc, char *argv[])
       }
     Objective->AddObjective(Regularization, boost::shared_ptr<
         jiba::GeneralModelTransform>(new jiba::ModelCopyTransform()), reglambda);
-    Objective->SetPrecondDiag(PreCond);
     std::cout << "Performing inversion." << std::endl;
 
     static char *status_file =

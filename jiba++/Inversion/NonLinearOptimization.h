@@ -52,7 +52,9 @@ namespace jiba
       //The objective function object
       boost::shared_ptr<jiba::ObjectiveFunction> Objective;
     protected:
+      //! The current misfit of the objective function
       double Misfit;
+      //! Direct access to the objective function object for derived classes
       jiba::ObjectiveFunction &GetObjective()
         {
           return *Objective.get();

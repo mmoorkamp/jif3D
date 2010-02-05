@@ -341,15 +341,6 @@ namespace jiba
         //boost::filesystem::remove_all(emaname);
       }
 
-    void X3DMTCalculator::WriteVectorDebug(const int freqindex,
-        const std::string Name, const std::vector<std::complex<double> >&Data)
-      {
-        std::string filename = MakeUniqueName(X3DModel::MT, freqindex) + Name;
-        std::ofstream outfile(filename.c_str());
-        std::copy(Data.begin(), Data.end(), std::ostream_iterator<std::complex<
-            double> >(outfile, "\n"));
-      }
-
     rvec X3DMTCalculator::LQDerivative(const X3DModel &Model,
         const rvec &Misfit)
       {

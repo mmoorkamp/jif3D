@@ -277,7 +277,7 @@ namespace jiba
       {
         return (int) ceil((val));
       }
-
+    //! Interpolate from the solution at the grid points from the eikonal solver to actual station positions
     float interpolate(float x, float y, float z, const GRID_STRUCT &grid,
         float *data)
       {

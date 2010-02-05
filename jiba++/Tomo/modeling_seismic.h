@@ -26,7 +26,6 @@ namespace jiba
 
       float h; /*!< Size of the grid cells in m (!The same in all three directions!)*/
 
-
       /*!< Seismic Velocity parameters*/
       std::vector<float> slow; /*!< Slowness model used for the forward model (normalized by the grid cell size)*/
       GRID_STRUCT() :
@@ -43,7 +42,9 @@ namespace jiba
     class GEOMETRY
       {
     public:
-      std::vector<float> x, y, z; /*!< Positions of the shot/receiver locations and fixpoints in m*/
+      std::vector<float> x; /*!< x-coordinates of the shot/receiver locations  in m*/
+      std::vector<float> y; /*!< y-coordinates of the shot/receiver locations  in m*/
+      std::vector<float> z; /*!< z-coordinates of the shot/receiver locations in m*/
       size_t nshot; /*!< Number of shot positions*/
       size_t nrec; /*!< Number of receiver positions*/
       GEOMETRY() :

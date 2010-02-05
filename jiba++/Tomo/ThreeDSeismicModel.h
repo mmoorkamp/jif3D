@@ -13,7 +13,7 @@
 
 namespace jiba
   {
-    /** \addtogroup tomo Classes for seismic tomography
+    /** \addtogroup tomo Seismic tomography classes and functions
      * This module contains the functionality for seismic refraction forward modeling and data handling.
      *
      * As for the other methods the 3D Models are stored in a class derived from ThreeDModelBase. The model
@@ -41,6 +41,7 @@ namespace jiba
     class ThreeDSeismicModel: public jiba::ThreeDModelBase
       {
     public:
+      //! We need vectors of indices to associate a source with a receiver for a given shot
       typedef std::vector<int> tIndexVec;
     private:
       //The x-position of the sources
@@ -130,19 +131,21 @@ namespace jiba
           SourceIndices.push_back(SourceIndex);
           ReceiverIndices.push_back(ReceiverIndex);
         }
-      void ClearSourcePos()
-        {
-          SourcePosX.clear();
-          SourcePosY.clear();
-          SourcePosZ.clear();
-          SourceIndices.clear();
-          ReceiverIndices.clear();
-        }
+      //! Remove all the index values that determine which source-receiver combinations are active
       void ClearMeasurementConfigurations()
         {
           SourceIndices.clear();
           ReceiverIndices.clear();
         }
+      //! Clear all the source position definitions including the source-receiver combinations
+      void ClearSourcePos()
+        {
+          SourcePosX.clear();
+          SourcePosY.clear();
+          SourcePosZ.clear();
+          ClearMeasurementConfigurations();
+        }
+      //! Copy the source and receiver positions and the indices for the source-receiver combinations from the source model
       void CopyMeasurementConfigurations(const ThreeDSeismicModel &Source)
         {
 

@@ -54,9 +54,6 @@ BOOST_AUTO_TEST_SUITE( OptStep_Test_Suite )
 BOOST_AUTO_TEST_CASE  (basic_nlcg_test)
     {
       boost::shared_ptr<Rosenbrock> Objective(new Rosenbrock());
-      jiba::rvec PreCond(2);
-      std::fill(PreCond.begin(),PreCond.end(),1.0);
-      Objective->SetPrecondDiag(PreCond);
       jiba::NonLinearConjugateGradient NLCG(Objective);
       jiba::rvec Cov(2);
       //std::fill_n(Cov.begin(), 2, 1.0);
@@ -84,9 +81,6 @@ BOOST_AUTO_TEST_CASE  (basic_nlcg_test)
   BOOST_AUTO_TEST_CASE (basic_lbfgs_test)
     {
       boost::shared_ptr<Rosenbrock> Objective(new Rosenbrock());
-      jiba::rvec PreCond(2);
-      std::fill(PreCond.begin(),PreCond.end(),1.0);
-      Objective->SetPrecondDiag(PreCond);
       jiba::LimitedMemoryQuasiNewton LBFGS(Objective, 5);
       jiba::rvec Cov(2);
       //std::fill_n(Cov.begin(), 2, 1.0);
@@ -113,15 +107,10 @@ BOOST_AUTO_TEST_CASE  (basic_nlcg_test)
   BOOST_AUTO_TEST_CASE (basic_jointobjective_test)
     {
       boost::shared_ptr<jiba::JointObjective> Objective(new jiba::JointObjective());
-      jiba::rvec PreCond(2);
-      std::fill(PreCond.begin(),PreCond.end(),1.0);
-      Objective->SetPrecondDiag(PreCond);
       boost::shared_ptr<Rosenbrock> Rosen1(new Rosenbrock());
       boost::shared_ptr<Rosenbrock> Rosen2(new Rosenbrock());
       boost::shared_ptr<Rosenbrock> Rosen3(new Rosenbrock());
-      Rosen1->SetPrecondDiag(PreCond);
-      Rosen2->SetPrecondDiag(PreCond);
-      Rosen3->SetPrecondDiag(PreCond);
+
       boost::shared_ptr<jiba::GeneralModelTransform> Transform(new jiba::ModelCopyTransform());
       Objective->AddObjective(Rosen1,Transform,0.8);
       Objective->AddObjective(Rosen2,Transform,0.2);

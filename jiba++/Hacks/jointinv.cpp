@@ -181,8 +181,6 @@ int main(int argc, char *argv[])
         ModelWeight(i) = WeightVector(i % GravModel.GetZCellSizes().size());
       }
 
-    jiba::rvec PreCond(InvModel.size());
-    std::fill(PreCond.begin(), PreCond.end(), 1.0);
     const double minslow = 1e-4;
     const double maxslow = 0.005;
 
@@ -209,7 +207,7 @@ int main(int argc, char *argv[])
     //we assume a general error of 5 ms for the seismic data
     std::fill(TomoCovar.begin(), TomoCovar.end(), 5.0e-3);
     TomoObjective->SetDataCovar(TomoCovar);
-    TomoObjective->SetPrecondDiag(PreCond);
+
 
     boost::shared_ptr<jiba::GravityObjective> ScalGravObjective(
         new jiba::GravityObjective(false, wantcuda));
@@ -217,20 +215,19 @@ int main(int argc, char *argv[])
     ScalGravObjective->SetModelGeometry(GravModel);
     ScalGravObjective->SetDataCovar(jiba::ConstructError(ScalGravData, 0.0,
         5e-7));
-    ScalGravObjective->SetPrecondDiag(PreCond);
 
     boost::shared_ptr<jiba::GravityObjective> FTGObjective(
         new jiba::GravityObjective(true, wantcuda));
     FTGObjective->SetObservedData(FTGData);
     FTGObjective->SetModelGeometry(GravModel);
     FTGObjective->SetDataCovar(jiba::ConstructError(FTGData, 0.02, 1e-9));
-    FTGObjective->SetPrecondDiag(PreCond);
+
 
     boost::shared_ptr<jiba::X3DObjective> MTObjective(new jiba::X3DObjective());
     MTObjective->SetModelGeometry(MTModel);
     MTObjective->SetObservedData(MTData);
     MTObjective->SetDataCovar(jiba::ConstructMTError(MTData, 0.02));
-    MTObjective->SetPrecondDiag(PreCond);
+
 
     boost::shared_ptr<jiba::JointObjective> Objective(
         new jiba::JointObjective());
@@ -266,7 +263,6 @@ int main(int argc, char *argv[])
         Regularization->SetReferenceModel(ZeroMod);
       }
     //Regularization->SetDataCovar(ModCov);
-    Regularization->SetPrecondDiag(PreCond);
     if (vm.count("xreg"))
       {
         const double xreg = vm["xreg"].as<double> ();
@@ -339,7 +335,6 @@ int main(int argc, char *argv[])
         std::cout << "MT lambda: " << mtlambda << std::endl;
       }
     Objective->AddObjective(Regularization, SlownessTransform, reglambda);
-    Objective->SetPrecondDiag(PreCond);
     std::cout << "Performing inversion." << std::endl;
 
     boost::shared_ptr<jiba::GradientBasedOptimization> Optimizer;
