@@ -135,6 +135,15 @@ namespace jiba
           assert(TransIndex < Transformers.size());
           return Transformers.at(TransIndex)->GeneralizedToPhysical(FullModel);
         }
+      //! Transform the gradient for a given model using the transformation stored at index
+      /*! When we calculate the gradient of the objective function for a given method, we
+       * get the gradient with respect to the physical parameters. We can use this function to
+       * transform the gradient to the inversion parameters.
+       * @param FullModel The generalized model with all parameters
+       * @param RawGradient The gradient with respect to the physical parameters
+       * @param TransIndex The index of the transformation object
+       * @return The gradient with respect to the inversion parameters
+       */
       jiba::rvec TransformGradient(const jiba::rvec &FullModel,
           const jiba::rvec &RawGradient, const size_t TransIndex)
         {

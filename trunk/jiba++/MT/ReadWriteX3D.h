@@ -23,7 +23,11 @@ namespace jiba
   /** \addtogroup mtmodelling Forward modelling of magnetotelluric data */
   /* @{ */
     //! Read an ascii 3D MT model in the format used by x3D, not feature complete !
-    /*! Read in a file with a 3D MT model in the format used by x3D
+    /*! Read in a file with a 3D MT model in the format used by x3D. Note that
+     * we do not support all possible models that can be described in the model
+     * file, but only the ones that are relevant to our joint inversion. For
+     * example we assume that there is one modeling domain, all layers are located
+     * next to each other and each layer has the same number of cells.
      * @param filename The name of the file
      * @param XCellSizes The size of the cells in x-direction [m]
      * @param YCellSizes The size of the cells in y-direction [m]
@@ -40,7 +44,7 @@ namespace jiba
         std::vector<double> &bg_conductivities,
         std::vector<double> &bg_thicknesses);
     //! Write a 3D model to an ascii file compatible with x3D
-    /*! Write a file with a 3D MT model in the format used by x3D
+    /*! Write a file with a 3D MT model in the format used by x3D.
      * @param filename The name of the file
      * @param XCellSizes The size of the cells in x-direction [m]
      * @param YCellSizes The size of the cells in y-direction [m]

@@ -94,23 +94,25 @@ namespace jiba
               zweight) * ZGrad);
         }
     protected:
-      //the weight of the regularization in x-direction
+      //! The weight of the regularization in x-direction
       double xweight;
-      //the weight of the regularization in y-direction
+      //! The weight of the regularization in y-direction
       double yweight;
-      //the weight of the regularization in z-direction
+      //! The weight of the regularization in z-direction
       double zweight;
-      //Storage for the three operator matrices
+      //! Storage for the operator matrix in x-direction
       comp_mat XOperatorMatrix;
+      //! Storage for the operator matrix in y-direction
       comp_mat YOperatorMatrix;
+      //! Storage for the operator matrix in z-direction
       comp_mat ZOperatorMatrix;
-      //the gradient of the x-direction part of the regularization functional
+      //! The gradient of the x-direction part of the regularization functional
       jiba::rvec XGrad;
-      //the gradient of the y-direction part of the regularization functional
+      //! The gradient of the y-direction part of the regularization functional
       jiba::rvec YGrad;
-      //the gradient of the z-direction part of the regularization functional
+      //! The gradient of the z-direction part of the regularization functional
       jiba::rvec ZGrad;
-      //the possible storage for a reference model
+      //! The storage for a reference model
       jiba::rvec Reference;
     public:
       //! Set the regularization strength in x-direction, will be 1 otherwise
@@ -128,16 +130,18 @@ namespace jiba
         {
           zweight = Weight;
         }
-      //! Access to the gradient of the regularization functional that works in x-direction
-      const jiba::rvec &GetXGrad()
+      //! Read only access to the gradient of the regularization functional that works in x-direction
+      const jiba::rvec &GetXGrad() const
         {
           return XGrad;
         }
-      const jiba::rvec &GetYGrad()
+      //! Read only access to the gradient of the regularization functional that works in y-direction
+      const jiba::rvec &GetYGrad() const
         {
           return YGrad;
         }
-      const jiba::rvec &GetZGrad()
+      //! Read only access to the gradient of the regularization functional that works in z-direction
+      const jiba::rvec &GetZGrad() const
         {
           return ZGrad;
         }
@@ -146,6 +150,12 @@ namespace jiba
         {
           Reference = Model;
         }
+      //! We have to specify the model geometry when constructing a regularization object
+      /*! In order to understand the spatial relationship between the elements of the
+       * model vector, we need the geometry of the 3D model. It should not change
+       * during the lifetime of the object and is therefore a parameter for the constructor.
+       * @param Geometry An object that describes the model geometry
+       */
       explicit MatOpRegularization(const jiba::ThreeDModelBase &Geometry) :
         xweight(1.0), yweight(1.0), zweight(1.0), XOperatorMatrix(
             Geometry.GetNModelElements(), Geometry.GetNModelElements()),

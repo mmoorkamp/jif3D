@@ -102,6 +102,11 @@ namespace jiba
             }
           return Output;
         }
+      //! The constructor takes a reference model for normalization as argument
+      /*! When we construct the transformation object we need the values for \f$m_0\f$ as described in
+       * the general description for this class.
+       * @param Ref The reference model vector \f$m_0\f$
+       */
       LogTransform(const jiba::rvec &Ref) :
         Reference(Ref)
         {

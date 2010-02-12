@@ -31,18 +31,25 @@ namespace jiba
         std::vector<double> &bg_thicknesses)
       {
         std::ifstream infile(filename.c_str());
+        //find the line in the file that describes the cell size in the horizontal directions
+        //all cells have the same size
         std::string line = FindToken(infile, "Dx");
         double dx = 2.1, dy = 3.4;
         infile >> dx >> dy;
 
+        //find the information about the background
         line = FindToken(infile, "Thickness");
         double currvalue;
         //swallow the line with 0 thickness and conductivity
         char dummy[1024];
         infile.getline(dummy, 1024);
+        //read in background layer thickness and conductivity
+        //as long as we can read in two consecutive numbers
         while (!infile.fail())
           {
             infile >> currvalue;
+            //we read in and if the conversion went OK
+            //we assign it to the background
             if (!infile.fail())
               bg_thicknesses.push_back(currvalue);
             infile >> currvalue;
@@ -53,14 +60,21 @@ namespace jiba
                 infile.getline(dummy, 1024);
               }
           }
+        //clear the failbit
         infile.clear();
         std::vector<double> Zthick;
         std::vector<double> Values;
         bool havelayer = true;
 
         int startx, starty, endx, endy;
+        //we do not know how many layers we have beforehand
+        //so we search for the next occurence of dzA(m)
+        //if it is there we read in another layer
+        //if not there are no more layers
         while (havelayer)
           {
+            //FindToken throws an exception if it cannot find the token
+            //so we catch that and just signal that there are no more layers
             try
               {
                 line = FindToken(infile, "dzA(m)");
@@ -68,18 +82,25 @@ namespace jiba
               {
                 havelayer = false;
               }
+            //if there is another layer in the file read in the information
             if (havelayer)
               {
+                //first the layer thickness
                 infile >> currvalue;
                 Zthick.push_back(currvalue);
-
+                //we read in the amount of cells in x-direction and y-direction
+                //but we assume that these numbers are the same for each layer
+                //In the file these numbers can vary, but we do not perform
+                //any checking as this case is not interesting for us
                 line = FindToken(infile, "cells_in_X-direction");
                 infile >> startx >> endx;
                 FindToken(infile, "cells_in_Y-direction");
                 infile >> starty >> endy;
                 FindToken(infile, "ARRAY");
+                //calculate how many cells in a layer
                 const unsigned int nelements = (endx - startx + 1) * (endy
                     - starty + 1);
+                //and read them in the order they were written
                 for (size_t i = 0; i < nelements; ++i)
                   {
                     infile >> currvalue;
@@ -87,6 +108,8 @@ namespace jiba
                   }
               }
           }//end of while
+        //now allocate appropriate memory to store the model information
+        //again note that we assume that all layers have the same size
         const size_t nx = (endx - startx + 1);
         const size_t ny = (endy - starty + 1);
         const size_t nz = Zthick.size();
@@ -98,6 +121,8 @@ namespace jiba
         std::fill(XCellSizes.begin(), XCellSizes.end(), dx);
         std::fill(YCellSizes.begin(), YCellSizes.end(), dy);
         Data.resize(boost::extents[nx][ny][nz]);
+        //we use a different storage ordering than x3d
+        //so we resort the cell values while copying
         for (size_t i = 0; i < nx; ++i)
           for (size_t j = 0; j < ny; ++j)
             for (size_t k = 0; k < nz; ++k)

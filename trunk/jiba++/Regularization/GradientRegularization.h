@@ -42,13 +42,16 @@ namespace jiba
        * @param Geometry A 3D model class that describes the cell geometries
        * @param ModEps The weight of the absolute value minimization of the model vector.
        */
-      explicit GradientRegularization(const jiba::ThreeDModelBase &Geometry, const double ModEps = 1e-8) :
-        MatOpRegularization(Geometry),
-        Eps(ModEps)
+      explicit GradientRegularization(const jiba::ThreeDModelBase &Geometry,
+          const double ModEps = 1e-8) :
+        MatOpRegularization(Geometry), Eps(ModEps)
         {
-        ConstructOperator(Geometry);
+          ConstructOperator(Geometry);
         }
-      virtual ~GradientRegularization();
+      virtual ~GradientRegularization()
+        {
+
+        }
       };
   /* @} */
   }
