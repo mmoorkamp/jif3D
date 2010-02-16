@@ -21,15 +21,15 @@ namespace jiba
     class MinDiffRegularization: public ObjectiveFunction
       {
     private:
-      //The reference model
+      //! The reference model that we want to regularize to
       jiba::rvec Reference;
-      //the misfit is simply the difference between the vectors
+      //! The misfit is simply the difference between the vectors
       virtual void ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff)
         {
           assert(Model.size() == Reference.size());
           Diff = Model - Reference;
         }
-      // The gradient is particularly simple
+      //! The gradient is particularly simple
       virtual jiba::rvec ImplGradient(const jiba::rvec &Model,
           const jiba::rvec &Diff)
         {

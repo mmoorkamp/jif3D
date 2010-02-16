@@ -15,10 +15,17 @@ namespace jiba
   {
     /** \addtogroup mtmodelling Forward modelling of magnetotelluric data */
     /* @{ */
-    //! This class stores all information associated with 3D magnetotelluric models, so far it has only rudimentary functionality and will be extended
+    //! This class stores all information associated with 3D magnetotelluric models
+    /*! This class extends ThreeDModelBase to store the calculation frequencies
+     * which are required for any MT forward calculation. It also provides named
+     * access to the model through SetConductivities and writting file for vtk.
+     * All other functionality and properties that are specific to a certain
+     * forward code have to be implemented in a derived class.
+     */
     class ThreeDMTModel: public jiba::ThreeDModelBase
       {
     private:
+      //! The calculation frequencies in Hz
       std::vector<double> Frequencies;
     public:
       //! Get the vector of calculation frequencies in Hz, read only

@@ -43,6 +43,8 @@ namespace jiba
         const jiba::rvec &Diff)
       {
         assert(Model.size() == ConductivityModel.GetConductivities().num_elements());
+        //as we have stored the model vector from the misfit calculation
+        //in the model object, we can check if the call is correct
         if (!std::equal(Model.begin(), Model.end(),
             ConductivityModel.GetConductivities().origin()))
           throw jiba::FatalException(

@@ -33,6 +33,7 @@ namespace jiba
     class IntSequence
       {
     private:
+      //! The current value of the sequence
       int value;
     public:
       //! The constructor takes the first value of the sequence

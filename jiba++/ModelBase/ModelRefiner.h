@@ -30,9 +30,13 @@ namespace jiba
     class ModelRefiner
       {
     private:
+      //! The coordinates in x-direction in the refined model
       ThreeDModelBase::t3DModelDim RefiningXCoordinates;
+      //! The coordinates in y-direction in the refined model
       ThreeDModelBase::t3DModelDim RefiningYCoordinates;
+      //! The coordinates in z-direction in the refined model
       ThreeDModelBase::t3DModelDim RefiningZCoordinates;
+      //! Refine the coordinate and size information for a single axis
       void RefineOneAxis(const ThreeDModelBase::t3DModelDim &OldCoordinates,
           const ThreeDModelBase::t3DModelDim &RefCoordinates,
           const ThreeDModelBase::t3DModelDim &OldSizes,

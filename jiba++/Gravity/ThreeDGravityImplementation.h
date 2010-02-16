@@ -36,7 +36,9 @@ namespace jiba
     class ThreeDGravityImplementation
       {
     private:
+      //! A data transform that we can apply to the calculated values, e.g. an invariant of the FTG data
       boost::shared_ptr<VectorTransform> Transform;
+      //! Store the geometry information inside this object to avoid issues with thread safe access
       void CacheGeometry(const ThreeDGravityModel &Model);
       //! Calculate the response of the 1D background for a single measurement, this function has to be implemented in the derived class.
       virtual rvec CalcBackground(const size_t measindex, const double xwidth, const double ywidth,
@@ -46,10 +48,11 @@ namespace jiba
       virtual rvec CalcGridded(const size_t measindex, const ThreeDGravityModel &Model,
           rmat &Sensitivities) = 0;
     protected:
-      // The access functions for the coordinates are not thread safe
-      // so we cache the values once in the default implementation of calculate.
-      // Because CalcBackground and CalcGridded can only be called from within
-      // there we are guaranteed correct values in the implementation of those functions
+      /*! The access functions for the coordinates are not thread safe
+       * so we cache the values once in the default implementation of calculate.
+       * Because CalcBackground and CalcGridded can only be called from within
+       * there we are guaranteed correct values in the implementation of those functions
+       */
       //! The cached values of the x-coordinates in m for each cell
       ThreeDGravityModel::t3DModelDim XCoord;
       //! The cached values of the y-coordinates in m for each cell

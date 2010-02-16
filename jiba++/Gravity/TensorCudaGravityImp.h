@@ -32,20 +32,20 @@ namespace jiba
     class TensorCudaGravityImp: public jiba::ThreeDGravityImplementation
       {
     private:
-      // These pointers hold the memory on the graphics card as allocated
-      // before the calculation. We make them class variables so that we
-      // can use them in different parts of the program and only have to
-      // do the allocation once for all measurements
+      /*! These pointers hold the memory on the graphics card as allocated
+      * before the calculation. We make them class variables so that we
+      * can use them in different parts of the program and only have to
+      * do the allocation once for all measurements
+      * */
       double *d_xcoord, *d_ycoord, *d_zcoord;
       double *d_xsize, *d_ysize, *d_zsize;
       double *d_result;
-      // we need a raw double pointer to store the sensitivities for
-      // the current measurements, see CalcGridded
+      //! We need a raw double pointer to store the sensitivities for  the current measurements, see CalcGridded
       double *currsens;
       size_t currsenssize;
-      //the size of a CUDA execution block
+      //! The size of a CUDA execution block
       size_t blocksize;
-      // This is a tensor calculation for any outside call we return 9 data per measurement
+      //! This is a tensor calculation for any outside call we return 9 data per measurement
       static const size_t ndatapermeas = 9;
       //! Calculate the response of the background, currently this is done on the CPU
       virtual rvec CalcBackground(const size_t measindex, const double xwidth,
@@ -54,8 +54,9 @@ namespace jiba
       //! Calculate the response of the gridded part, this is done on the GPU with CUDA
       virtual rvec CalcGridded(const size_t measindex,
           const ThreeDGravityModel &Model, rmat &Sensitivities);
-      // This class cannot be copied, so copy constructor and assignment are private
+      //! This class cannot be copied, so copy constructor and assignment are private
       jiba::TensorCudaGravityImp &operator=(const jiba::TensorCudaGravityImp&);
+      //! This class cannot be copied, so copy constructor and assignment are private
       TensorCudaGravityImp(const jiba::TensorCudaGravityImp&);
     public:
       //! How many data do we return before any transformation

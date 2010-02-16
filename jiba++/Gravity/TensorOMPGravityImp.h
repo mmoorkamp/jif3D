@@ -31,6 +31,7 @@ namespace jiba
       //! Calculate the response of the gridded part
       virtual rvec CalcGridded(const size_t measindex,
           const ThreeDGravityModel &Model, rmat &Sensitivities);
+      //! The gravity tensor has 9 elements and we return all of them even though they are not all independent
       static const size_t ndatapermeas = 9;
     public:
       //! How many data do we return before any transformation

@@ -109,7 +109,7 @@ namespace jiba
         {
         }
     private:
-      //This vector stores a shared pointer to a Transformer object for each objective function
+      //! This vector stores a shared pointer to a Transformer object for each objective function
       std::vector<boost::shared_ptr<GeneralModelTransform> > Transformers;
     public:
       //! Add a transformation object

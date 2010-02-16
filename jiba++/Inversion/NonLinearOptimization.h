@@ -47,9 +47,9 @@ namespace jiba
        * @param CurrentModel The current model, contains the updated model on exit
        */
       virtual void StepImplementation(jiba::rvec &CurrentModel) = 0;
-      //The diagonal elements of the model covariance matrix
+      //! The diagonal elements of the model covariance matrix
       jiba::rvec ModelCovDiag;
-      //The objective function object
+      //! The objective function object
       boost::shared_ptr<jiba::ObjectiveFunction> Objective;
     protected:
       //! The current misfit of the objective function

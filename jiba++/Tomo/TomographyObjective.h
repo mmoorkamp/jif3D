@@ -29,19 +29,26 @@ namespace jiba
     class TomographyObjective: public ObjectiveFunction
       {
     private:
-      // The slowness model we use for the forward calculations, keeps track of model and measurement geometry
+      //! The slowness model we use for the forward calculations, keeps track of model and measurement geometry
       jiba::ThreeDSeismicModel FineSlownessModel;
+      //! The goemetry of the slowness model used in the inversion
       jiba::ThreeDSeismicModel CoarseSlownessModel;
-      //We might use a different discretization for forward modeling and inversion
+      //! We might use a different discretization for forward modeling and inversion
+      /*! To ensure numerically correct travel times we might need a model discretization
+       * that is much finer than the inversion grid we want to use. The Refiner object
+       * takes CoarseSlownessModel which is the model with a geometry as intended in the
+       * inversion and refines it using the geometry of FineSlownessModel. This model
+       * is then used for the forward calculation.
+       */
       jiba::ModelRefiner Refiner;
-      // The observed travel times
+      //! The observed travel times for each source receiver pair
       jiba::rvec ObservedData;
-      // The calculator object
+      //! The calculator object
       TomographyCalculator Calculator;
-      //The implementation of the function to calculate the difference between observed and synthetic data
+      //!The implementation of the function to calculate the difference between observed and synthetic data
       virtual void
       ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff);
-      //The implementation of the gradient calculation
+      //! The implementation of the gradient calculation
       virtual jiba::rvec ImplGradient(const jiba::rvec &Model,
           const jiba::rvec &Diff);
       //! So far transformations have no effect for travel time data !

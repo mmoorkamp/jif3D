@@ -24,9 +24,16 @@ namespace jiba
     class X3DModel: public ThreeDMTModel
       {
     private:
+      //! The thicknesses of the background layers in m
       std::vector<double> bg_thicknesses;
+      //! The conductivities of the background layers in S/m
       std::vector<double> bg_conductivities;
     public:
+      //! The problem type we want to perform the calculation for
+      /*! We can use this enum to specify which type of forward calculation
+       * we want to perform, magnetotelluric (MT), controlled source EM (CSEM),
+       * electric dipole (EDIP), or magnetic dipole (MDIP).
+       */
       enum ProblemType
         {
         MT, CSMT, EDIP, MDIP

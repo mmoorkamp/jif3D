@@ -44,16 +44,16 @@ namespace jiba
       //! We need vectors of indices to associate a source with a receiver for a given shot
       typedef std::vector<int> tIndexVec;
     private:
-      //The x-position of the sources
+      //! The x-position of the sources
       ThreeDModelBase::tMeasPosVec SourcePosX;
-      //The y-position of the sources
+      //! The y-position of the sources
       ThreeDModelBase::tMeasPosVec SourcePosY;
-      //The z-position of the sources
+      //! The z-position of the sources
       ThreeDModelBase::tMeasPosVec SourcePosZ;
-      //Each source can can correspond to a number of measurements with different receivers
-      //here we record for each datum the index of the source position in the above arrays
+      //! Each source can can correspond to a number of measurements with different receivers
+      //! here we record for each datum the index of the source position in the above arrays
       tIndexVec SourceIndices;
-      //and similarly for the receivers in the MeasPos* arrays
+      //! The index in the position vectors for the receivers
       tIndexVec ReceiverIndices;
     public:
       //! The seismic model has the same cell size for all cells in all directions so we just have one function to set it
