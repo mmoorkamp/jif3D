@@ -44,10 +44,11 @@ namespace jiba
     class ThreeDGravityCalculator
       {
     private:
-      // We need a structure to hold the sensitivities for
-      // the current measurement that can be passed to
-      // the implementation object. The derived classes
-      // decide how to handle this information
+      /*! We need a structure to hold the sensitivities for
+       * the current measurement that can be passed to
+       * the implementation object. The derived classes
+       * decide how to handle this information
+       */
       rmat CurrentSensitivities;
     protected:
       //! In some cases we mitgh want to apply a transformation to the data, e.g. FTG to an invariant
@@ -85,8 +86,6 @@ namespace jiba
           boost::shared_ptr<ThreeDGravityImplementation> TheImp);
       virtual ~ThreeDGravityCalculator();
       };
-
-
 
   /* @} */
   }

@@ -22,19 +22,22 @@ namespace jiba
     class X3DObjective: public ObjectiveFunction
       {
     private:
-      //The object that calculates the synthetic data using x3d
+      //! The object that calculates the synthetic data using x3d
       jiba::X3DMTCalculator Calculator;
-      //The skeleton for the conductivity model that contains geometry information etc.
-      //the objective function simply copies the vector of value it receives for the current model
-      //into this object, to obtain a well formed model for the synthetic forward and gradient calculation
+      //! The skeleton for the conductivity model that contains geometry information etc.
+      /*! The objective function simply copies the vector of values it receives for the current model
+       * into this object, to obtain a well formed model for the synthetic forward and gradient calculation.
+       * We therefore have to make sure that the total number of elements in the grid
+       * matches the size of the model vector. Currently we cannot change the values for the background,
+       * these are use as specified in ConductivityModel.
+       */
       X3DModel ConductivityModel;
-      //the vector of observed impedances real and imaginary part of the impedance elements
-      //for all stations at one frequency, then for the next frequency etc.
+      //! The vector of observed impedances real and imaginary part of the impedance elements for all stations at one frequency, then for the next frequency etc.
       jiba::rvec ObservedData;
-      //calculate the difference between observed and synthetic data for a given conductivity model
+      //! Calculate the difference between observed and synthetic data for a given conductivity model
       virtual void
       ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff);
-      //The implementation of the gradient calculation
+      //! The implementation of the gradient calculation
       virtual jiba::rvec ImplGradient(const jiba::rvec &Model,
           const jiba::rvec &Diff);
       //! So far transformations have no effect for MT data !

@@ -21,12 +21,17 @@ namespace jiba
     class TomographyCalculator
       {
     private:
+      //! The number of air layers on top of the model
       size_t nairlayers;
+      //! Information about the source receiver geometry in the format of Bjoern's code
       jiba::GEOMETRY geo;
+      //! Information about the model grid in the format of Bjoern's code
       jiba::GRID_STRUCT grid;
+      //! Information about the data in the format of Bjoern's code
       jiba::DATA_STRUCT data;
+      //! The various segments of each raypath through the model cells
       std::vector<jiba::RP_STRUCT> raypath;
-      // Perform the dynamic allocation for the c-structures above
+      //! Perform the dynamic allocation for the c-structures above
       void Allocate(const size_t ngrid, const size_t ndata, const size_t npos);
     public:
       TomographyCalculator();

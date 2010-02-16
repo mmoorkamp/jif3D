@@ -149,7 +149,8 @@ namespace jiba
         assert(ndata == data.ndata_seis);
         jiba::rvec DerivMod(nmod);
         std::fill(DerivMod.begin(), DerivMod.end(), 0.0);
-
+        //the gradient is simply the length of the raypath
+        //through each cell weighted by the data misfit
         for (size_t i = 0; i < ndata; ++i)
           {
             const size_t nray = raypath[i].nray;

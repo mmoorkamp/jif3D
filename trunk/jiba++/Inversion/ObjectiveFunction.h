@@ -34,18 +34,38 @@ namespace jiba
     class ObjectiveFunction
       {
     private:
-      //How many forward plus gradient evaluations did we perform
+      //! How many forward plus gradient evaluations did we perform
       size_t nEval;
+      //! The difference between observed and synthetic data for the last forward calculation
       jiba::rvec DataDifference;
+      //! The diagonal elements of the covariance matrix
       jiba::rvec CovarDiag;
+      //! A possible storage for a data transformation object, whether and how this is used depends on the derived class
       boost::shared_ptr<VectorTransform> DataTransform;
       //! The abstract interface for functions that implement the calculation  of the data difference
+      /*! This function has to be implemented in derived classes to calculate the data misfit from a given model vector.
+       * Note that the model vector does not contain any information about model geometry,  etc. Therefore
+       * derived classes have to obtain this information independently through appropriate initializations, see the
+       * implementations of GravityObjective, TomoObjective or X3DObjective for examples. On exit the parameter
+       * Diff has to contain the unweighted raw difference between synthetic and observed data \f$ d_{synth} - d_{obs} \f$
+       * This class takes care of weighting and returning the squared sum at each call to CalcMisfit.
+       * @param Model The vector of model parameters, e.g. velocity at each cell, the interpretation depends solely on the derived class
+       * @param Diff The vector of unweighted differences between calculated and observed data, calculated in the derived class
+       */
       virtual void
       ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff) = 0;
       //! The abstract interface for the gradient calculation
+      /*! Here derived classes have to implement the calculation of the derivative of the objective function
+       * with respect to the model parameters. It is important that the model vector Model and the data difference Diff correspond
+       * to the same model, i.e. have been calculated from a call to ImplDataDifference. Therefore ideally we only calculate the
+       * gradient after calculating the misfit for the same model.
+       * @param Model The model vector for which we want to calculate the derivative of the objective function
+       * @param Diff The difference between observed and calculated data that corresponds to the model
+       * @return The gradient of the objective function with respect to the model parameters
+       */
       virtual jiba::rvec ImplGradient(const jiba::rvec &Model,
           const jiba::rvec &Diff) = 0;
-      //we might have to do something in the derived class when we assign the data transform
+      //! We might have to do something in the derived class when we assign the data transform
       virtual void SetDataTransformAction()
         {
 
@@ -84,6 +104,12 @@ namespace jiba
           CovarDiag = Cov;
         }
       //! Calculate the Chi-squared data misfit for the given model
+      /*! This function calculates the value of the objective function \f$ \Phi(m) = (d -f(m))C_D(d -f(m))\f$ for a given model vector m.
+       * The details of the calculation are implemented in ImplDataDifference in the derived class. This function takes
+       * care of weighting the misfit by the covariance and storing the data difference for further use in the gradient calculation.
+       * @param Model The model vector. The interpretation of the values depends on the derived class.
+       * @return The \f$ \chi^2 \f$ misfit of the given model
+       */
       double CalcMisfit(const jiba::rvec &Model)
         {
           //calculate the data difference in the derived class
@@ -102,6 +128,17 @@ namespace jiba
           return ublas::inner_prod(DataDifference, DataDifference);
         }
       //! Calculate the gradient associated with the last misfit calculation
+      /*! This function returns the gradient of the objective function with respect to the model
+       * parameters for use in an inversion. The model vector passed to this function has to be
+       * the same as for the last call to CalcMisfit. This is because we store the data difference
+       * from the last call to CalcMisfit internally and use it in the gradient calculation. The
+       * reason for this type of design is that we need the model vector in the inversion and therefore
+       * only store it once in the inversion program and pass it by reference to CalcMisfit and CalcGradient to
+       * save memory. The data difference is usually not needed and we store it internally to reduce
+       * the number of parameters and the amount of variables in the main program.
+       * @param Model The model vector, has to be the same as for the last call to CalcMisfit
+       * @return The gradient of the objective function with respect to the model parameters
+       */
       jiba::rvec CalcGradient(const jiba::rvec &Model)
         {
           assert(CovarDiag.size() == DataDifference.size());

@@ -54,8 +54,8 @@
 
  This code has been compiled with
 
- gcc 4.2 under SuSE Linux 10.1 and 11.0
- gcc 4.3 under ubuntu 8/10
+ gcc 4.2 under SuSE Linux 10.1 and 11.0,
+ gcc 4.3 under ubuntu 8/10,
  intel 11.0 under ubuntu 8/10
 
  Sun 5.10 is known to fail, this is an issue with partial template spezialization in
