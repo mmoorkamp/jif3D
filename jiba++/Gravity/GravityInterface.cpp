@@ -18,7 +18,7 @@
 
 //these static declarations make the code not thread-safe
 //however the forward calculations are parallelized and can be used
-//we just cannot have parallel calls thorugh this interface
+//we just cannot have parallel calls through this interface
 
 static boost::shared_ptr<jiba::ThreeDGravityModel> GravModel;
 static boost::shared_ptr<jiba::ThreeDGravityCalculator> ScalarGravCalculator;
