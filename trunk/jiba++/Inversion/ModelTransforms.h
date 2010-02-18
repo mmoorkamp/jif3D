@@ -39,6 +39,7 @@ namespace jiba
           assert(FullModel.size() == Reference.size());
           return ublas::element_prod(FullModel, Reference);
         }
+      //! Transform the physical model parameters to generalized model parameters
       virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
         {
           assert(FullModel.size() == Reference.size());
@@ -82,6 +83,7 @@ namespace jiba
             Output(i) = exp(FullModel(i)) * Reference(i);
           return Output;
         }
+      //! Transform the physical model parameters to generalized model parameters
       virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
         {
           assert(FullModel.size() == Reference.size());
@@ -116,10 +118,20 @@ namespace jiba
         }
       };
 
+    //! Change an unconstrained optimization problem to a constrained optimization problem throug a tanh transformation
+    /*! We often want to constrain the range of possible values in our optimization problem between an upper and
+     * a lower limit. Instead of using a constrained optimization method, we use this transformation
+     * \f$ m^{\star} =  \atanh \left(2.0 * \frac{m - m_{min}} {m_{max} - m_{min}} \right) \f$ between the generalized
+     * model parameters \f$ m \f$ and the generalized model parameters \f$ m^{\star} \f$. The generalized model
+     * parameters can then vary over the whole range, while the physical model parameters will always been between
+     * the two bounds.
+     */
     class TanhTransform: public jiba::GeneralModelTransform
       {
     private:
+      //! The minimum value for the pysical model parameters
       const double min;
+      //! The maximum value for the pysical model parameters
       const double max;
     public:
       //! Transform the normalized model parameters back to physical parameters
@@ -130,6 +142,7 @@ namespace jiba
             Output(i) = min + (1.0 + tanh(FullModel(i))) / 2.0 * (max - min);
           return Output;
         }
+      //! Transform the physical model parameters to generalized model parameters
       virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
         {
           jiba::rvec Output(FullModel.size());
@@ -154,6 +167,12 @@ namespace jiba
             }
           return Output;
         }
+      //! The constructor need the minimum and maximum physical model parameter
+      /*! When we construct the transformation object we need to specify the
+       * upper and lower bound for the physical model parameters.
+       * @param minval The minimum value for the physical model parameters.
+       * @param maxval The maximum value for the physical model parameters.
+       */
       TanhTransform(const double minval = 1.0, const double maxval = 5.0) :
         min(minval), max(maxval)
         {
@@ -163,14 +182,23 @@ namespace jiba
         }
       };
 
+    //! Transform generalized model parameters for slowness to density
+    /*! This transformation class can be used to transform generalized
+     * model parameters for slowness to density using a linear
+     * relationship between velocity and density. This type of transformation
+     * is motivated by the common velocity-density relationships
+     * used in inversion problems and also observed for the Faeroe data.
+     */
     class DensityTransform: public jiba::GeneralModelTransform
       {
     private:
-      boost::shared_ptr<GeneralModelTransform> VelocityTransform;
+      //! A pointer to a transformation that gives slowness
+      boost::shared_ptr<GeneralModelTransform> SlownessTransform;
     public:
+      //! Transform the normalized model parameters back to physical parameters
       virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
         {
-          jiba::rvec Slowness(VelocityTransform->GeneralizedToPhysical(
+          jiba::rvec Slowness(SlownessTransform->GeneralizedToPhysical(
               FullModel));
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
@@ -179,6 +207,7 @@ namespace jiba
             }
           return Output;
         }
+      //! Transform the physical model parameters to generalized model parameters
       virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
         {
 
@@ -187,14 +216,15 @@ namespace jiba
             {
               Output(i) = 1.0 / (5000.0 * FullModel(i) - 8500.0);
             }
-          return VelocityTransform->PhysicalToGeneralized(Output);
+          return SlownessTransform->PhysicalToGeneralized(Output);
         }
+      //! Transform the derivative with respect to the physical parameters to normalized parameters
       virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
           const jiba::rvec &Derivative) const
         {
-          jiba::rvec Slowness(VelocityTransform->GeneralizedToPhysical(
+          jiba::rvec Slowness(SlownessTransform->GeneralizedToPhysical(
               FullModel));
-          jiba::rvec SlowDeriv(VelocityTransform->Derivative(FullModel,
+          jiba::rvec SlowDeriv(SlownessTransform->Derivative(FullModel,
               Derivative));
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
@@ -204,8 +234,15 @@ namespace jiba
             }
           return Output;
         }
-      DensityTransform(boost::shared_ptr<GeneralModelTransform> VelTrans) :
-        VelocityTransform(VelTrans)
+      //! The constructor needs a pointer to an object that gives slowness
+      /*! To reduce the amount of code in the main program this class
+       * takes a pointer to a transformation object that it uses to
+       * transform the generalized model parameters to slowness before
+       * then transforming to density.
+       * @param SlowTrans A pointer to an object that gives slowness
+       */
+      DensityTransform(boost::shared_ptr<GeneralModelTransform> SlowTrans) :
+        SlownessTransform(SlowTrans)
         {
         }
       virtual ~DensityTransform()
@@ -213,17 +250,24 @@ namespace jiba
         }
       };
 
+    //! Transform generalized model parameters to conductivity
+    /*! Similarly to DensityTransform, this class transforms
+     * generalized model parameters to conductivity taking an
+     * intermediate step through slowness. This is motivated
+     * by the parametrization used in the SINDRI project.
+     */
     class ConductivityTransform: public jiba::GeneralModelTransform
       {
     private:
       const double a;
       const double b;
       const double c;
-      boost::shared_ptr<GeneralModelTransform> VelocityTransform;
+      boost::shared_ptr<GeneralModelTransform> SlownessTransform;
     public:
+      //! Transform the normalized model parameters back to physical parameters
       virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
         {
-          jiba::rvec Slowness(VelocityTransform->GeneralizedToPhysical(
+          jiba::rvec Slowness(SlownessTransform->GeneralizedToPhysical(
               FullModel));
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
@@ -233,6 +277,7 @@ namespace jiba
             }
           return Output;
         }
+      //! Transform the physical model parameters to generalized model parameters
       virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
         {
 
@@ -243,14 +288,15 @@ namespace jiba
                   FullModel(i))))) / (2 * a);
               Output(i) = 1.0 / vel;
             }
-          return VelocityTransform->PhysicalToGeneralized(Output);
+          return SlownessTransform->PhysicalToGeneralized(Output);
         }
+      //! Transform the derivative with respect to the physical parameters to normalized parameters
       virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
           const jiba::rvec &Derivative) const
         {
-          jiba::rvec Slowness(VelocityTransform->GeneralizedToPhysical(
+          jiba::rvec Slowness(SlownessTransform->GeneralizedToPhysical(
               FullModel));
-          jiba::rvec SlowDeriv(VelocityTransform->Derivative(FullModel,
+          jiba::rvec SlowDeriv(SlownessTransform->Derivative(FullModel,
               Derivative));
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
@@ -261,8 +307,16 @@ namespace jiba
             }
           return Output;
         }
-      ConductivityTransform(boost::shared_ptr<GeneralModelTransform> VelTrans) :
-        a(2.31e-7), b(-5.79e-4), c(0.124), VelocityTransform(VelTrans)
+      //! The constructor needs a pointer to an object that gives slowness
+      /*! To reduce the amount of code in the main program this class
+       * takes a pointer to a transformation object that it uses to
+       * transform the generalized model parameters to slowness before
+       * then transforming to conductivity. In addition we can specify
+       * the coefficients for the transformation.
+       * @param SlowTrans A pointer to an object that gives slowness
+       */
+      ConductivityTransform(boost::shared_ptr<GeneralModelTransform> SlowTrans) :
+        a(2.31e-7), b(-5.79e-4), c(0.124), SlownessTransform(VelTrans)
         {
         }
       virtual ~ConductivityTransform()
@@ -270,48 +324,18 @@ namespace jiba
         }
       };
 
-    class VelTransform: public jiba::GeneralModelTransform
-      {
-    private:
-      const jiba::rvec Reference;
-    public:
-      virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
-        {
-          jiba::rvec Output(FullModel.size());
-          for (size_t i = 0; i < FullModel.size(); ++i)
-            Output(i) = 1.0 / (FullModel(i) * Reference(i));
-          return Output;
-        }
-      virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
-        {
-          jiba::rvec Output(FullModel.size());
-          for (size_t i = 0; i < FullModel.size(); ++i)
-            Output(i) = 1.0 / (FullModel(i) * Reference(i));
-          return Output;
-        }
-      virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
-          const jiba::rvec &Derivative) const
-        {
-          jiba::rvec Output(FullModel.size());
-          for (size_t i = 0; i < FullModel.size(); ++i)
-            Output(i) = -1.0 / (Reference(i) * FullModel(i) * FullModel(i))
-                * Derivative(i);
-          return Output;
-        }
-      VelTransform(const jiba::rvec &Ref) :
-        Reference(Ref)
-        {
-        }
-      virtual ~VelTransform()
-        {
-        }
-      };
-
+    //!We can use this transformation class to chain a number of transformations together
+    /*! This class takes a number of transformations and consecutively applies them
+     * to the generalized parameters. For the backtransformation to physical
+     * parameters the order is reversed and we use the chain rule to calculate
+     * the derivatives.
+     */
     class ChainedTransform: public jiba::GeneralModelTransform
       {
     private:
       std::vector<boost::shared_ptr<GeneralModelTransform> > Transforms;
     public:
+      //! Transform the normalized model parameters back to physical parameters
       virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
         {
           jiba::rvec Output(FullModel);
@@ -320,6 +344,7 @@ namespace jiba
             Output = Transforms.at(j)->GeneralizedToPhysical(Output);
           return Output;
         }
+      //! Transform the physical model parameters to generalized model parameters
       virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
         {
           jiba::rvec Output(FullModel);
@@ -327,6 +352,7 @@ namespace jiba
             Output = Transforms.at(i)->PhysicalToGeneralized(Output);
           return Output;
         }
+      //! Transform the derivative with respect to the physical parameters to normalized parameters
       virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
           const jiba::rvec &Derivative) const
         {
@@ -339,6 +365,7 @@ namespace jiba
             }
           return Output;
         }
+      //! Add a transform to the chain
       void AddTransform(boost::shared_ptr<GeneralModelTransform> Trans)
         {
           Transforms.push_back(Trans);

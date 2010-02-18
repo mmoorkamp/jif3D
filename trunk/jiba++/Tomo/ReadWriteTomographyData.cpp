@@ -13,6 +13,8 @@
 
 namespace jiba
   {
+    //we define these string variables to guarantee that we
+    //use the exact same name for reading and writing the nectdf file
     static const std::string SourceNumberName = "SourceNumber";
     static const std::string ReceiverNumberName = "ReceiverNumber";
     static const std::string SourcePosXName = "SourcePosX";
@@ -58,31 +60,31 @@ namespace jiba
             "m");
         WriteVec(DataFile, SourcePosZName, Model.GetSourcePosZ(), SourceNumDim,
             "m");
-
+        //write out the positions of the receivers, i.e. measurement positions
         NcVar *RecNumVar = DataFile.add_var(ReceiverNumberName.c_str(), ncInt,
             RecNumDim);
         RecNumVar->put(&ReceiverPosNumber[0], nrecpos);
         WriteVec(DataFile, MeasPosXName, Model.GetMeasPosX(), RecNumDim, "m");
         WriteVec(DataFile, MeasPosYName, Model.GetMeasPosY(), RecNumDim, "m");
         WriteVec(DataFile, MeasPosZName, Model.GetMeasPosZ(), RecNumDim, "m");
-
+        //generate an index for the receivers
         NcDim *MeasIndexDim = DataFile.add_dim(MeasIndexName.c_str(), ndata);
         std::vector<int> MeasIndex;
         std::generate_n(back_inserter(MeasIndex), ndata, IntSequence(0));
         NcVar *MeasIndexVar = DataFile.add_var(MeasIndexName.c_str(), ncInt,
             MeasIndexDim);
         MeasIndexVar->put(&MeasIndex[0], ndata);
-        //Write the measurements
+        //Write the travel times
         NcVar *DataVar = DataFile.add_var(TravelTimeName.c_str(), ncDouble,
             MeasIndexDim);
         DataVar->add_att("units", "s");
         DataVar->add_att("_FillValue", -1.0);
         DataVar->put(&Data[0], MeasIndexDim->size());
-
+        //write the index of the source for each measurement
         NcVar *SourceIndexVar = DataFile.add_var(SourceIndexName.c_str(),
             ncInt, MeasIndexDim);
         SourceIndexVar->put(&Model.GetSourceIndices()[0], MeasIndexDim->size());
-
+        //write the index of the receiver for each measurement
         NcVar *RecIndexVar = DataFile.add_var(ReceiverIndexName.c_str(), ncInt,
             MeasIndexDim);
         RecIndexVar->put(&Model.GetReceiverIndices()[0], MeasIndexDim->size());
@@ -94,48 +96,58 @@ namespace jiba
       {
         NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
         jiba::ThreeDSeismicModel::tMeasPosVec PosX, PosY, PosZ;
+        //delete any old values in the model object
         Model.ClearMeasurementPoints();
         Model.ClearSourcePos();
         Model.ClearMeasurementConfigurations();
+        //read the positions of the sources
         ReadVec(DataFile, SourcePosXName, SourceNumberName, PosX);
         ReadVec(DataFile, SourcePosYName, SourceNumberName, PosY);
         ReadVec(DataFile, SourcePosZName, SourceNumberName, PosZ);
         const size_t nsource = PosX.size();
+        //and add them to the model object
         for (size_t i = 0; i < nsource; ++i)
           {
             Model.AddSource(PosX[i], PosY[i], PosZ[i]);
           }
+        //read the positions of the receivers
         ReadVec(DataFile, MeasPosXName, ReceiverNumberName, PosX);
         ReadVec(DataFile, MeasPosYName, ReceiverNumberName, PosY);
         ReadVec(DataFile, MeasPosZName, ReceiverNumberName, PosZ);
         const size_t nmeas = PosX.size();
+        //and add them as measurement positions to the model object
         for (size_t i = 0; i < nmeas; ++i)
           {
             Model.AddMeasurementPoint(PosX[i], PosY[i], PosZ[i]);
           }
         std::vector<int> SourceIndices, ReceiverIndices;
+        //now read the indices for the source receiver combinations
+        //for each measurement
         ReadVec(DataFile, SourceIndexName, MeasIndexName, SourceIndices);
         ReadVec(DataFile, ReceiverIndexName, MeasIndexName, ReceiverIndices);
         const size_t nconf = SourceIndices.size();
+        //and configure the model object for these combinations
         for (size_t i = 0; i < nconf; ++i)
           {
             Model.AddMeasurementConfiguration(SourceIndices[i],
                 ReceiverIndices[i]);
           }
-        ReadVec(DataFile, TravelTimeName,MeasIndexName, Data);
+        //finally read in the traveltimes
+        ReadVec(DataFile, TravelTimeName, MeasIndexName, Data);
       }
-
 
     void PlotRaypath(const std::string &filename, jiba::RP_STRUCT *raypath,
         const size_t nmeas, const double gridspacing, const size_t nairlayers)
       {
         std::ofstream outfile(filename.c_str());
+        //write out the old style vtk header
         outfile << "# vtk DataFile Version 2.0\n";
         outfile << "Raypaths\n";
         outfile << "ASCII\n";
         outfile << "DATASET POLYDATA\n";
         size_t npoints = 0;
         size_t act_rays = 0;
+        //count the number of points we need to plot the rays
         for (size_t i = 0; i < nmeas; ++i)
           {
             if (raypath[i].nray > 0)
@@ -146,19 +158,22 @@ namespace jiba
 
           }
         outfile << "POINTS " << npoints << " double\n";
-
+        //write out the positions of each ray segment start and endpoint
         for (size_t i = 0; i < nmeas; ++i)
           {
             if (raypath[i].nray > 0)
               {
                 for (size_t j = 0; j < raypath[i].nray + 1; ++j)
                   {
-                    outfile << raypath[i].x[j]  * gridspacing << " "
+                    outfile << raypath[i].x[j] * gridspacing << " "
                         << raypath[i].y[j] * gridspacing << " "
-                        << (raypath[i].z[j]- nairlayers) * gridspacing << "\n ";
+                        << (raypath[i].z[j] - nairlayers) * gridspacing
+                        << "\n ";
                   }
               }
           }
+        //now we connect the points by lines
+        //by writing out the indices of the start and endpoint
         outfile << "\nLINES " << act_rays << " " << npoints + act_rays
             << std::endl;
         size_t index = 0;
@@ -175,6 +190,8 @@ namespace jiba
                 outfile << std::endl;
               }
           }
+        //finally we write out the receiver positions
+        //as an independent set of points for plotting
         outfile << "POINT_DATA " << npoints << std::endl;
         outfile << "SCALARS  Rays float\n";
         outfile << "LOOKUP_TABLE default\n";
