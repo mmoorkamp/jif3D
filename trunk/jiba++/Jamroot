@@ -54,3 +54,4 @@ build-project Inversion ;
 build-project Regularization ;
 build-project Profiling ;
 build-project Hacks ;
+build-project Joint ;

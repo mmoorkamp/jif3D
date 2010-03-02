@@ -30,6 +30,15 @@ namespace jiba
        * We therefore have to make sure that the total number of elements in the grid
        * matches the size of the model vector. Currently we cannot change the values for the background,
        * these are use as specified in ConductivityModel.
+       *
+       * There are a few restrictions on the conductivity model in order to ensure correct calculation of gradients. x3d
+       * performs some "optimizations" that interfere with our approach for gradient calculation. Two adjacent layers
+       * in the grid cannot have absolutely identical values, as x3d will then treat them as a single layer. Therefore at
+       * least one grid cell must have a slightly different value from the layer above and below. Similarly a homogeneous
+       * layer (with all grid cell values identical) cannot match the value for the background layer at this depth. In both
+       * cases x3d will not yield field values for these areas in the .ema files that we need to calculate the gradient.
+       * As the difference does not have to be very large, it is probably best to always have one grid cell in each layer
+       * that differs from everything else by 0.1% or so.
        */
       X3DModel ConductivityModel;
       //! The vector of observed impedances real and imaginary part of the impedance elements for all stations at one frequency, then for the next frequency etc.

@@ -28,7 +28,7 @@ namespace jiba
      * @param relerror The relative error for each datum, e.g. 0.02 corresponds to 2%
      * @param abserror The minimum absolute error for each datum in the same units as the data vector
      */
-    void AddNoise(jiba::rvec &Data, const double relerror,
+    inline void AddNoise(jiba::rvec &Data, const double relerror,
         const double abserror = 0)
       {
 
@@ -57,7 +57,7 @@ namespace jiba
      * @param absmin The absolute minimum data value considered for error calculation, this reduced the influence of very small data
      * @return The vector of error estimates
      */
-    jiba::rvec ConstructError(const jiba::rvec &Data, const double relerror,
+    inline jiba::rvec ConstructError(const jiba::rvec &Data, const double relerror,
         const double absmin = 0.0)
       {
         assert(relerror >= 0.0);
@@ -82,7 +82,7 @@ namespace jiba
      * @param The relative error of the maximum tensor element
      * @return The vector of error estimates
      */
-    jiba::rvec ConstructMTError(const jiba::rvec &Data, const double relerror)
+    inline jiba::rvec ConstructMTError(const jiba::rvec &Data, const double relerror)
       {
         assert(relerror >= 0.0);
         const size_t ndata = Data.size();
