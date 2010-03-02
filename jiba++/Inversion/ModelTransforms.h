@@ -316,7 +316,7 @@ namespace jiba
        * @param SlowTrans A pointer to an object that gives slowness
        */
       ConductivityTransform(boost::shared_ptr<GeneralModelTransform> SlowTrans) :
-        a(2.31e-7), b(-5.79e-4), c(0.124), SlownessTransform(VelTrans)
+        a(2.31e-7), b(-5.79e-4), c(0.124), SlownessTransform(SlowTrans)
         {
         }
       virtual ~ConductivityTransform()

@@ -10,7 +10,6 @@ exe gravconsist : gravconsist.cpp  ../Gravity ../Global ../Inversion : <include>
 exe tomoinv : tomoinv.cpp  joint : <include>. ;
 exe parrun : parrun.cpp ..//boost_filesystem ;
 exe mtinv : mtinv.cpp  ../Inversion ../Global ../Regularization ../MT ..//boost_filesystem : <include>. ;
-exe jointinv : jointinv.cpp  joint ../MT ..//boost_program_options : <include>. ;
 exe grav_jointinv : grav_jointinv.cpp  joint : <include>. ;
 exe mergetomo : mergetomo.cpp  ../Tomo  ../Global : <include>. ;
 exe eikonal : eikonal.cpp  ../Tomo  ../Global : <include>. ;
