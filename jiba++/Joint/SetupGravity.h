@@ -27,7 +27,7 @@ namespace jiba
           SetupObjective(const po::variables_map &vm,
               jiba::JointObjective &Objective,
               const ThreeDSeismicModel &StartModel, boost::shared_ptr<jiba::GeneralModelTransform> Transform);
-      const jiba::ThreeDGravityModel &GetModelGeometry() {return GravModel;}
+      const jiba::ThreeDGravityModel &GetModel() {return GravModel;}
       SetupGravity();
       virtual ~SetupGravity();
       };

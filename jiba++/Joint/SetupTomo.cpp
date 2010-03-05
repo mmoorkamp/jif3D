@@ -37,7 +37,7 @@ namespace jiba
 
         //first we read in the starting model and the measured data
         std::string modelfilename = jiba::AskFilename(
-            "Starting model Filename: ");
+            "Tomography inversion model Filename: ");
         //we read in the starting modelfile
         jiba::ThreeDSeismicModel TomoFineGeometry;
         StartModel.ReadNetCDF(modelfilename);

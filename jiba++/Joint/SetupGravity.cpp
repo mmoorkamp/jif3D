@@ -7,6 +7,7 @@
 
 
 #include "SetupGravity.h"
+#include "../ModelBase/EqualGeometry.h"
 #include "../Gravity/GravityObjective.h"
 #include "../Gravity/ReadWriteGravityData.h"
 #include "../Global/FileUtil.h"
@@ -77,9 +78,11 @@ namespace jiba
             std::string gravmodelfilename = jiba::AskFilename(
                 "Gravity Model Filename: ");
             GravModel.ReadNetCDF(gravmodelfilename);
-            //we only read in the gravity model for the information about the background layers
-            //we take the actual gridding from the start model
-            GravModel = StartModel;
+            if (!EqualGridGeometry(GravModel, StartModel))
+              {
+                throw jiba::FatalException(
+                    "Gravity model does not have the same geometry as starting model");
+              }
             GravModel.ClearMeasurementPoints();
             for (size_t i = 0; i < PosX.size(); ++i)
               {

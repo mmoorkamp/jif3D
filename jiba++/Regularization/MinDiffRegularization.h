@@ -8,7 +8,7 @@
 
 #ifndef MINDIFFREGULARIZATION_H_
 #define MINDIFFREGULARIZATION_H_
-#include "ObjectiveFunction.h"
+#include "../Inversion/ObjectiveFunction.h"
 
 namespace jiba
   {

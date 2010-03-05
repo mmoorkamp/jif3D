@@ -7,6 +7,10 @@
 
 
 #include "SetupCoupling.h"
+#include "../Global/FileUtil.h"
+#include "../Regularization/CrossGradient.h"
+
+namespace ublas = boost::numeric::ublas;
 
 namespace jiba
   {
@@ -21,29 +25,154 @@ namespace jiba
 
     po::options_description SetupCoupling::SetupOptions()
       {
-        po::options_description desc("Gravity options");
+        po::options_description desc("Coupling options");
+        desc.add_options()("crossgrad", "Use cross-gradient coupling");
 
         return desc;
       }
 
-    void SetupCoupling::ConfigureCoupling(
-        boost::shared_ptr<jiba::GeneralModelTransform> &InversionTransform,
+    void SetupCoupling::SetupTransforms(const po::variables_map &vm,
         boost::shared_ptr<jiba::GeneralModelTransform> &TomoTransform,
-        boost::shared_ptr<jiba::GeneralModelTransform> &MTTransform,
         boost::shared_ptr<jiba::GeneralModelTransform> &GravityTransform,
+        boost::shared_ptr<jiba::GeneralModelTransform> &MTTransform,
         boost::shared_ptr<jiba::GeneralModelTransform> &RegTransform)
       {
         const double minslow = 1e-4;
         const double maxslow = 0.005;
+        const double mincond = -10;
+        const double maxcond = 3;
+        const double mindens = 0.5;
+        const double maxdens = 10.0;
 
-        TomoTransform = boost::shared_ptr<jiba::GeneralModelTransform>(
-            new jiba::TanhTransform(minslow, maxslow));
-        GravityTransform = boost::shared_ptr<jiba::GeneralModelTransform>(
-            new jiba::DensityTransform(TomoTransform));
-        MTTransform = boost::shared_ptr<jiba::GeneralModelTransform>(
-            new jiba::ConductivityTransform(TomoTransform));
+        jiba::ThreeDSeismicModel StartModel;
+        std::string modelfilename = jiba::AskFilename(
+            "Inversion Model Geometry: ");
+        StartModel.ReadNetCDF(modelfilename);
 
-        InversionTransform = TomoTransform;
-        RegTransform = TomoTransform;
+        const size_t ngrid = StartModel.GetNModelElements();
+        if (vm.count("crossgrad"))
+          {
+            boost::shared_ptr<jiba::ChainedTransform> SlownessTransform(
+                new jiba::ChainedTransform);
+            SlownessTransform->AddTransform(boost::shared_ptr<
+                jiba::GeneralModelTransform>(new jiba::SectionTransform(0,
+                ngrid)));
+            SlownessTransform->AddTransform(boost::shared_ptr<
+                jiba::GeneralModelTransform>(new jiba::TanhTransform(minslow,
+                maxslow)));
+            SlownessTransform->AddTransform(boost::shared_ptr<
+                jiba::GeneralModelTransform>(new jiba::ExpansionTransform(3
+                * ngrid, 0, ngrid)));
+
+            boost::shared_ptr<jiba::ChainedTransform> DensityTransform(
+                new jiba::ChainedTransform);
+            DensityTransform->AddTransform(boost::shared_ptr<
+                jiba::GeneralModelTransform>(new jiba::SectionTransform(ngrid,
+                2 * ngrid)));
+            DensityTransform->AddTransform(boost::shared_ptr<
+                jiba::GeneralModelTransform>(new jiba::TanhTransform(mindens,
+                maxdens)));
+            DensityTransform->AddTransform(boost::shared_ptr<
+                jiba::GeneralModelTransform>(new jiba::ExpansionTransform(3
+                * ngrid, ngrid, 2 * ngrid)));
+
+            boost::shared_ptr<jiba::ChainedTransform> ConductivityTransform(
+                new jiba::ChainedTransform);
+            jiba::rvec RefModel(ngrid);
+            std::fill(RefModel.begin(), RefModel.end(), 1.0);
+            ConductivityTransform->AddTransform(boost::shared_ptr<
+                jiba::GeneralModelTransform>(new jiba::SectionTransform(2
+                * ngrid, 3 * ngrid)));
+            ConductivityTransform->AddTransform(boost::shared_ptr<
+                jiba::GeneralModelTransform>(new jiba::TanhTransform(mincond,
+                maxcond)));
+            ConductivityTransform->AddTransform(boost::shared_ptr<
+                jiba::GeneralModelTransform>(new jiba::LogTransform(RefModel)));
+            ConductivityTransform->AddTransform(boost::shared_ptr<
+                jiba::GeneralModelTransform>(new jiba::ExpansionTransform(3
+                * ngrid, 2 * ngrid, 3 * ngrid)));
+
+            TomoTransform = SlownessTransform;
+            GravityTransform = DensityTransform;
+            MTTransform = ConductivityTransform;
+            RegTransform = TomoTransform;
+          }
+        else
+          {
+            TomoTransform = boost::shared_ptr<jiba::GeneralModelTransform>(
+                new jiba::TanhTransform(minslow, maxslow));
+            GravityTransform = boost::shared_ptr<jiba::GeneralModelTransform>(
+                new jiba::DensityTransform(TomoTransform));
+            MTTransform = boost::shared_ptr<jiba::GeneralModelTransform>(
+                new jiba::ConductivityTransform(TomoTransform));
+
+            RegTransform = TomoTransform;
+          }
+        SlowTrans = TomoTransform;
+        CondTrans = MTTransform;
+        DensTrans = GravityTransform;
+
+      }
+
+    void SetupCoupling::SetupModelVector(const po::variables_map &vm,
+        jiba::rvec &InvModel, const jiba::ThreeDSeismicModel &SeisMod,
+        const jiba::ThreeDGravityModel GravMod,
+        const jiba::ThreeDMTModel &MTMod, jiba::JointObjective &Objective)
+      {
+
+        const size_t ngrid = SeisMod.GetSlownesses().num_elements();
+        if (MTMod.GetConductivities().num_elements() != ngrid
+            || GravMod.GetDensities().num_elements() != ngrid)
+          {
+            throw jiba::FatalException(" Grids have different sizes !");
+          }
+        if (vm.count("crossgrad"))
+          {
+            InvModel.resize(3 * ngrid);
+            jiba::rvec TempModel(ngrid);
+            std::copy(SeisMod.GetSlownesses().origin(),
+                SeisMod.GetSlownesses().origin() + ngrid, TempModel.begin());
+            ublas::subrange(InvModel, 0, ngrid)
+                = SlowTrans->PhysicalToGeneralized(TempModel);
+
+            std::copy(GravMod.GetDensities().origin(),
+                GravMod.GetDensities().origin() + ngrid, TempModel.begin());
+            ublas::subrange(InvModel, ngrid, 2 * ngrid)
+                = DensTrans->PhysicalToGeneralized(TempModel);
+
+            std::copy(MTMod.GetConductivities().origin(),
+                MTMod.GetConductivities().origin() + ngrid, TempModel.begin());
+            ublas::subrange(InvModel, 2 * ngrid, 3 * ngrid)
+                = CondTrans->PhysicalToGeneralized(TempModel);
+
+            boost::shared_ptr<jiba::CrossGradient> SeisGravCross(
+                new jiba::CrossGradient(SeisMod));
+            boost::shared_ptr<jiba::GeneralModelTransform> SeisGravTrans(
+                new jiba::DoubleSectionTransform(3 * ngrid, 0, ngrid, ngrid, 2
+                    * ngrid));
+
+            double seisgravlambda = 1.0;
+            std::cout << "Weight for seismic-gravity cross-gradient term: ";
+            std::cin >> seisgravlambda;
+            Objective.AddObjective(SeisGravCross, SeisGravTrans, seisgravlambda);
+
+            boost::shared_ptr<jiba::CrossGradient> SeisMTCross(
+                new jiba::CrossGradient(SeisMod));
+            boost::shared_ptr<jiba::GeneralModelTransform> SeisMTTrans(
+                new jiba::DoubleSectionTransform(3 * ngrid, 0, ngrid,
+                    2 * ngrid, 3 * ngrid));
+
+            double seismtlambda = 1.0;
+            std::cout << "Weight for seismic-MT cross-gradient term: ";
+            std::cin >> seismtlambda;
+            Objective.AddObjective(SeisMTCross, SeisMTTrans, seismtlambda);
+          }
+        else
+          {
+            InvModel.resize(ngrid);
+            std::copy(SeisMod.GetSlownesses().origin(),
+                SeisMod.GetSlownesses().origin() + ngrid, InvModel.begin());
+            InvModel = SlowTrans->PhysicalToGeneralized(InvModel);
+          }
       }
   }
