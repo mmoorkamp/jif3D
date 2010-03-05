@@ -8,6 +8,7 @@
 #ifndef MODELTRANSFORMS_H_
 #define MODELTRANSFORMS_H_
 
+#include "../Global/FatalException.h"
 #include "ModelDistributor.h"
 
 /*! \file ModelTransforms.h
@@ -376,6 +377,146 @@ namespace jiba
         }
       virtual ~ChainedTransform()
         {
+        }
+      };
+
+    namespace ublas = boost::numeric::ublas;
+    //! This transform takes a section of the model vector that can be specified in the constructor
+    /*! For cross-gradient type joint inversion the inversion model vector consists of a number
+     * of segments of equal size, that correspond to one method each. To calculate the misfit
+     * and gradient for one of those segments, we have to extract the appropriate range
+     * from the inversion model vector using this transform. This transform extracts
+     * a range that is continuous in memory and can be specified by an index for the first element
+     * and one index for the last element.
+     */
+    class SectionTransform: public jiba::GeneralModelTransform
+      {
+    private:
+      size_t length;
+      size_t startindex;
+      size_t endindex;
+    public:
+      virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
+        {
+          return ublas::subrange(FullModel, startindex, endindex);
+        }
+      virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
+        {
+          return FullModel;
+        }
+      virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
+          const jiba::rvec &Derivative) const
+        {
+          return Derivative;
+        }
+      //! The constructor tales the specifications for the range
+      /*! We have to specify the length of the complete model vector,
+       * the startindex and the endindex.
+       * @param start The index of the first element of the section we want to extract
+       * @param end  The index of the successor of the last element (as in typical c/c++ loops)
+       */
+      SectionTransform(size_t start, size_t end) :
+        startindex(start), endindex(end)
+        {
+          if (startindex >= endindex)
+            throw jiba::FatalException("Startindex is greater than Endindex !");
+        }
+      virtual ~SectionTransform()
+        {
+
+        }
+      };
+
+    //! For the cross-gradient we sometimes have to extract to sections from the model vector that are not continuous in memory
+    /*! For cases were we want to extract two sections that are not continuous in memory, we cannot simply piece a transform
+     * from two different SectionTransform objects. We therefore have a similar class to extract two sections, each of which
+     * is continuous in memory.
+     */
+    class DoubleSectionTransform: public jiba::GeneralModelTransform
+      {
+    private:
+      size_t length;
+      size_t startindex1;
+      size_t endindex1;
+      size_t startindex2;
+      size_t endindex2;
+    public:
+      virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
+        {
+          jiba::rvec Result(endindex1 - startindex1 + endindex2 - startindex2);
+          ublas::subrange(Result, 0, endindex1 - startindex1)
+              = ublas::subrange(FullModel, startindex1, endindex1);
+          ublas::subrange(Result, endindex1 - startindex1, endindex1
+              - startindex1 + endindex2 - startindex2) = ublas::subrange(
+              FullModel, startindex2, endindex2);
+          return Result;
+        }
+      virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
+        {
+          return FullModel;
+        }
+      virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
+          const jiba::rvec &Derivative) const
+        {
+          jiba::rvec Result(length);
+          Result.clear();
+          ublas::subrange(Result, startindex1, endindex1) = ublas::subrange(
+              Derivative, 0, endindex1 - startindex1);
+          ublas::subrange(Result, startindex2, endindex2) = ublas::subrange(
+              Derivative, endindex1 - startindex1, endindex1 - startindex1
+                  + endindex2 - startindex2);
+          return Result;
+        }
+      DoubleSectionTransform(size_t l,size_t start1, size_t end1, size_t start2,
+          size_t end2) :
+        length(l), startindex1(start1), endindex1(end1), startindex2(start2), endindex2(
+            end2)
+        {
+          if (startindex1 >= endindex1 || startindex2 >= endindex2)
+            throw jiba::FatalException("Startindex is greater than Endindex !");
+        }
+      virtual ~DoubleSectionTransform()
+        {
+
+        }
+      };
+
+    //! When we chain several transforms and the first one is a SectionTransform, we have to "blow up" the derivative vector at the end
+    /*! T
+     *
+     */
+    class ExpansionTransform: public jiba::GeneralModelTransform
+      {
+    private:
+      size_t length;
+      size_t startindex;
+      size_t endindex;
+    public:
+      virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
+        {
+          return FullModel;
+        }
+      virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
+        {
+          return FullModel;
+        }
+      virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
+          const jiba::rvec &Derivative) const
+        {
+          jiba::rvec Result(length);
+          Result.clear();
+          ublas::subrange(Result, startindex, endindex) = Derivative;
+          return Result;
+        }
+      ExpansionTransform(size_t l, size_t start, size_t end) :
+        length(l), startindex(start), endindex(end)
+        {
+          if (startindex >= endindex)
+            throw jiba::FatalException("Startindex is greater than Endindex !");
+        }
+      virtual ~ExpansionTransform()
+        {
+
         }
       };
   /* @} */

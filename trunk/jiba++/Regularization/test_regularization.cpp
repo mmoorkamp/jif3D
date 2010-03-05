@@ -13,12 +13,12 @@
 #include <numeric>
 #include "../Gravity/test_common.h"
 #include "../Tomo/ThreeDSeismicModel.h"
-#include "ModelTransforms.h"
+#include "../Inversion/ModelTransforms.h"
+#include "../Inversion/JointObjective.h"
 #include "MinDiffRegularization.h"
 #include "GradientRegularization.h"
 #include "CurvatureRegularization.h"
 #include "CrossGradient.h"
-#include "JointObjective.h"
 #include <boost/test/floating_point_comparison.hpp>
 
 BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )

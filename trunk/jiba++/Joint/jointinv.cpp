@@ -79,11 +79,11 @@ int main(int argc, char *argv[])
     boost::shared_ptr<jiba::JointObjective> Objective(
         new jiba::JointObjective());
 
-    boost::shared_ptr<jiba::GeneralModelTransform> InversionTransform,
-        TomoTransform, MTTransform, GravityTransform, RegTransform;
+    boost::shared_ptr<jiba::GeneralModelTransform> TomoTransform, MTTransform,
+        GravityTransform, RegTransform;
 
-    CouplingSetup.ConfigureCoupling(InversionTransform, TomoTransform,
-        MTTransform, GravityTransform, RegTransform);
+    CouplingSetup.SetupTransforms(vm, TomoTransform, GravityTransform,
+        MTTransform, RegTransform);
 
     jiba::ThreeDSeismicModel TomoModel;
     TomoSetup.SetupObjective(vm, *Objective.get(), TomoModel, TomoTransform);
@@ -92,10 +92,9 @@ int main(int argc, char *argv[])
     MTSetup.SetupObjective(vm, *Objective.get(), TomoModel, MTTransform);
     RegSetup.SetupObjective(vm, *Objective.get(), TomoModel, RegTransform);
 
-    const size_t ngrid = TomoModel.GetSlownesses().num_elements();
-    jiba::rvec InvModel(ngrid);
-    std::copy(TomoModel.GetSlownesses().origin(),
-        TomoModel.GetSlownesses().origin() + ngrid, InvModel.begin());
+    jiba::rvec InvModel;
+    CouplingSetup.SetupModelVector(vm, InvModel, TomoModel,
+        GravitySetup.GetModel(), MTSetup.GetModel(),*Objective.get());
 
     size_t maxiter = 1;
     std::cout << "Maximum iterations: ";
@@ -110,7 +109,7 @@ int main(int argc, char *argv[])
     InversionSetup.ConfigureInversion(vm, Optimizer, Objective);
 
     size_t iteration = 0;
-    InvModel = InversionTransform->PhysicalToGeneralized(InvModel);
+
     jiba::rvec TomoInvModel(TomoTransform->GeneralizedToPhysical(InvModel));
     std::ofstream misfitfile("misfit.out");
     //calculate initial misfit
@@ -128,16 +127,17 @@ int main(int argc, char *argv[])
         try
           {
             std::cout << "Iteration: " << iteration << std::endl;
-            std::copy(InvModel.begin(), InvModel.begin() + ngrid,
-                TomoModel.SetSlownesses().origin());
-            TomoModel.WriteVTK("raw_model" + jiba::stringify(iteration)
-                + ".tomo.inv.vtk");
+            //std::copy(InvModel.begin(), InvModel.begin() + ngrid,
+            //    TomoModel.SetSlownesses().origin());
+            //TomoModel.WriteVTK("raw_model" + jiba::stringify(iteration)
+            //    + ".tomo.inv.vtk");
             Optimizer->MakeStep(InvModel);
 
             ++iteration;
 
             TomoInvModel = TomoTransform->GeneralizedToPhysical(InvModel);
-            std::copy(TomoInvModel.begin(), TomoInvModel.begin() + ngrid,
+            std::copy(TomoInvModel.begin(), TomoInvModel.begin()
+                + TomoModel.GetNModelElements(),
                 TomoModel.SetSlownesses().origin());
             TomoModel.WriteVTK(modelfilename + jiba::stringify(iteration)
                 + ".tomo.inv.vtk");
@@ -190,15 +190,15 @@ int main(int argc, char *argv[])
 
     jiba::rvec DensInvModel(GravityTransform->GeneralizedToPhysical(InvModel));
     jiba::rvec CondInvModel(MTTransform->GeneralizedToPhysical(InvModel));
-    std::copy(TomoInvModel.begin(), TomoInvModel.begin() + ngrid,
-        TomoModel.SetSlownesses().origin());
+    std::copy(TomoInvModel.begin(), TomoInvModel.begin()
+        + TomoModel.GetNModelElements(), TomoModel.SetSlownesses().origin());
 
-    jiba::ThreeDGravityModel GravModel(GravitySetup.GetModelGeometry());
+    jiba::ThreeDGravityModel GravModel(GravitySetup.GetModel());
     std::copy(DensInvModel.begin(), DensInvModel.begin()
         + GravModel.SetDensities().num_elements(),
         GravModel.SetDensities().origin());
 
-    jiba::X3DModel MTModel(MTSetup.GetModelGeometry());
+    jiba::X3DModel MTModel(MTSetup.GetModel());
     std::copy(CondInvModel.begin(), CondInvModel.begin()
         + MTModel.GetConductivities().num_elements(),
         MTModel.SetConductivities().origin());

@@ -7,6 +7,7 @@
 
 #include "../MT/X3DObjective.h"
 #include "../MT/ReadWriteImpedances.h"
+#include "../ModelBase/EqualGeometry.h"
 #include "../Global/FileUtil.h"
 #include "../Global/Noise.h"
 #include "SetupMT.h"
@@ -50,9 +51,11 @@ namespace jiba
                 MTYPos, MTZPos, MTData);
 
             MTModel.ReadNetCDF(mtmodelfilename);
-            //as for the gravity model the gridding is determined by the starting model
-            //and we only read the mt model for the background layers
-            MTModel = StartModel;
+            if (!EqualGridGeometry(MTModel, StartModel))
+              {
+                throw jiba::FatalException(
+                    "MT model does not have the same geometry as starting model");
+              }
             MTModel.ClearMeasurementPoints();
             std::copy(Frequencies.begin(), Frequencies.end(),
                 std::back_inserter(MTModel.SetFrequencies()));

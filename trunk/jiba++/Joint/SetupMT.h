@@ -28,7 +28,7 @@ namespace jiba
           jiba::JointObjective &Objective,
           const ThreeDSeismicModel &StartModel, boost::shared_ptr<
               jiba::GeneralModelTransform> Transform);
-      const jiba::X3DModel &GetModelGeometry() {return MTModel;}
+      const jiba::X3DModel &GetModel() {return MTModel;}
       SetupMT();
       virtual ~SetupMT();
       };
