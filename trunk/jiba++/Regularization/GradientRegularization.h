@@ -32,6 +32,11 @@ namespace jiba
       const double Eps;
       void ConstructOperator(const jiba::ThreeDModelBase &ModelGeometry);
     public:
+      //! The clone function provides a virtual constructor
+      virtual GradientRegularization *clone() const
+        {
+          return new GradientRegularization(*this);
+        }
       //! We have to provide the model geometry to the constructor
       /*! We have to specify the geometry of the 3D model by providing
        * a ThreeDModelBase or derived class. Also the gradient regularization
