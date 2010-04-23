@@ -77,6 +77,17 @@ namespace jiba
           return DataTransform;
         }
     public:
+      //! Some objective functions can reach a meaningful value that signals convergence, e.g. an RMS of 1 for data misfit, while regularization cannot
+      /*! When we minimize data misfit we do not want to go significantly below a misfit that corresponds to the data error, i.e an RMS of 1.
+       * When we reach this value the objective function has converged. For a regularization objective function we do not have such a value, the current
+       * value for the regularization should not determine whether we stop the inversion. This function returns the threshold for which we assume convergence for
+       * this objective and can stop the inversion. By default it is the number of data. For regularization classes it has to be overwritten.
+       * @return The threshold for which we can consider this objective function to be converged
+       */
+      virtual double ConvergenceLimit() const
+        {
+          return boost::numeric_cast<double>(GetNData());
+        }
       //! Access to the difference between observed and calculated data
       const jiba::rvec &GetDataDifference() const
         {

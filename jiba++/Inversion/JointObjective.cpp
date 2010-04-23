@@ -8,12 +8,20 @@
 
 #include "JointObjective.h"
 #include "../Global/convert.h"
+#include <boost/format.hpp>
 #include <iostream>
+#include <iomanip>
+
+using boost::format;
+using boost::io::group;
+
 namespace jiba
   {
+    static const std::string MisfitFormat = " %15s ";
 
-    JointObjective::JointObjective() :
-      Objectives(), Weights(), IndividualFits(), Distributor()
+    JointObjective::JointObjective(bool Verbose) :
+      Objectives(), Weights(), IndividualFits(), Distributor(), PrintMisfit(
+          Verbose)
       {
 
       }
@@ -26,17 +34,29 @@ namespace jiba
     void JointObjective::ImplDataDifference(const jiba::rvec &Model,
         jiba::rvec &Diff)
       {
+        const size_t minlength = 20;
         size_t totaldata = 0;
         const size_t nobjective = Objectives.size();
         IndividualFits.resize(nobjective);
+        //write out a description of the objective functions to the screen
+        if (PrintMisfit)
+          {
+            for (size_t i = 0; i < nobjective; ++i)
+              {
+                std::cout << format(MisfitFormat) % Names.at(i);
+              }
+            std::cout << std::endl;
+          }
         //go through all the objective function objects and calculate the misfit
         //also count how much data points we have in total
-        std::cout << "Individual Fits: ";
         for (size_t i = 0; i < nobjective; ++i)
           {
             IndividualFits.at(i) = Objectives.at(i)->CalcMisfit(Distributor(
                 Model, i));
-            std::cout << IndividualFits.at(i) << " ";
+            if (PrintMisfit)
+              {
+                std::cout << format(MisfitFormat) % IndividualFits.at(i);
+              }
             totaldata += Objectives.at(i)->GetDataDifference().size();
           }
         Diff.resize(totaldata);
@@ -52,7 +72,10 @@ namespace jiba
                 * Objectives.at(i)->GetDataDifference();
             currstart += ndata;
           }
-        std::cout << std::endl;
+        if (PrintMisfit)
+          {
+            std::cout << std::endl;
+          }
       }
 
     jiba::rvec JointObjective::ImplGradient(const jiba::rvec &Model,
@@ -67,7 +90,10 @@ namespace jiba
         //considering the weighting and the transformation
         //that has been applied to the model parameters
         jiba::rvec CurrGrad(Model.size());
-        std::cout << "Individual Grad Norms: ";
+        if (PrintMisfit)
+          {
+            std::cout << "Individual Grad Norms: \n";
+          }
         for (size_t i = 0; i < nobjective; ++i)
           {
             //we calculate the "natural" gradient for each method
@@ -78,11 +104,17 @@ namespace jiba
                 Objectives.at(i)->CalcGradient(Distributor(Model, i)), i);
             //We store the norm of each gradient for information during the inversion
             IndividualGradNorms.at(i) = ublas::norm_2(CurrGrad);
-            std::cout << IndividualGradNorms.at(i) << " ";
+            if (PrintMisfit)
+              {
+                std::cout << format(MisfitFormat) % IndividualGradNorms.at(i);
+              }
             //the total gradient is just the weighted sum of the individual gradients
             Gradient += Weights.at(i) * CurrGrad;
           }
-        std::cout << std::endl;
+        if (PrintMisfit)
+          {
+            std::cout << "\n" << std::endl;
+          }
         return Gradient;
       }
   }
