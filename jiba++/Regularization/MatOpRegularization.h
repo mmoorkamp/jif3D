@@ -115,6 +115,19 @@ namespace jiba
       //! The storage for a reference model
       jiba::rvec Reference;
     public:
+      //! We need a virtual constructor to create a new object from a pointer to a base class;
+      /*! There are situations where we only have a pointer to the base class, but we need
+       * a copy of the derived class without knowing what derived type it has. This virtual
+       * constructor definition allows us to do this. Each derived class has to define this
+       * function a return a pointer to a copy of itself.
+       * @return A pointer to copy of the derived object
+       */
+      virtual MatOpRegularization *clone() const = 0;
+      //! We never want to terminate the inversion because the regularization has reached a particular value, so we return 0
+      virtual double ConvergenceLimit() const
+        {
+          return -1.0;
+        }
       //! Set the regularization strength in x-direction, will be 1 otherwise
       void SetXWeight(const double Weight)
         {

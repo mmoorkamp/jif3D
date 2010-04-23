@@ -36,9 +36,19 @@ namespace jiba
       GradientRegularization SecondGradient;
       ThreeDModelBase ModelGeometry;
     public:
+      //! The clone function provides a virtual constructor
+      virtual CrossGradient *clone() const
+        {
+          return new CrossGradient(*this);
+        }
+      //! We never want to terminate the inversion because the regularization has reached a particular value, so we return 0
+      virtual double ConvergenceLimit() const
+        {
+          return -1.0;
+        }
       //! The implementation of the cross-gradient calculation
       virtual void
-          ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff);
+      ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff);
       //! The gradient of the cross-gradient objective function with respect to the model parameters
       virtual jiba::rvec ImplGradient(const jiba::rvec &Model,
           const jiba::rvec &Diff);
@@ -49,8 +59,8 @@ namespace jiba
        * @param Geometry An object that contains the information about the model geometry (cell sizes etc.)
        */
       explicit CrossGradient(const jiba::ThreeDModelBase &Geometry) :
-        FirstGradient(Geometry,0.0), SecondGradient(Geometry,0.0), ModelGeometry(
-            Geometry)
+        FirstGradient(Geometry, 0.0), SecondGradient(Geometry, 0.0),
+            ModelGeometry(Geometry)
         {
 
         }
