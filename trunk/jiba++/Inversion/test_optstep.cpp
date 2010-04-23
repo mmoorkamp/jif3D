@@ -68,8 +68,6 @@ BOOST_AUTO_TEST_CASE  (basic_nlcg_test)
         {
           NLCG.MakeStep(Model);
           Misfit = NLCG.GetMisfit();
-          std::cout << std::endl;
-
         }
       const size_t neval = Objective->GetNEval();
       BOOST_CHECK(neval < 100);

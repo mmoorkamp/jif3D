@@ -9,6 +9,8 @@
 
 #include "mcsrch.h"
 #include <iostream>
+#include "../Global/FatalException.h"
+
 namespace OPTPP
   {
     using std::min;
@@ -21,7 +23,7 @@ namespace OPTPP
     int mcsrch(jiba::ObjectiveFunction* nlp, const jiba::rvec& s,
         jiba::rvec &Grad, const jiba::rvec &model, double &misfit, double *stp,
         int itnmax, double ftol, double xtol, double gtol, double stpmax,
-        double stpmin)
+        double stpmin, bool Verbose)
       {
 
         /****************************************************************************
@@ -151,9 +153,8 @@ namespace OPTPP
 
         if (dginit >= zero)
           {
-            std::cout
-                << "\nmcsrch: Initial search direction not a descent direction\n";
-            return -1;
+            throw jiba::FatalException(
+                "\nmcsrch: Initial search direction not a descent direction");
           }
 
         /* initialize local variables. */
@@ -223,7 +224,11 @@ namespace OPTPP
 
             fvalue = nlp->CalcMisfit(xc);
             Grad = nlp->CalcGradient(xc);
-            std::cout << "Step: " << *stp << " Fvalue: " << fvalue << std::endl;
+            if (Verbose)
+              {
+                std::cout << "Step: " << *stp << " Fvalue: " << fvalue
+                    << std::endl;
+              }
             misfit = fvalue;
             info = 0;
             dg = zero;

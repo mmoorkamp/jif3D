@@ -42,8 +42,12 @@ namespace jiba
       std::vector<double> IndividualFits;
       //! Stores the l2-norm of the gradient for each method
       std::vector<double> IndividualGradNorms;
+      //! Store a name for each objective for display and output purposes
+      std::vector<std::string> Names;
       //! The object that translates between the optimization parameters and the individual parameters for each objective function
       ModelDistributor Distributor;
+      //! Do we want to print misfit and gradient information to the screen
+      bool PrintMisfit;
       //the implementation of the misfit calculation
       virtual void
       ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff);
@@ -72,14 +76,16 @@ namespace jiba
        * @param Obj A shared pointer to the objective function object
        * @param Transform A shared pointer to a transformation object that calculates the correct physical parameters for this objective
        * @param lambda The weight of the objective function in the inversion
+       * @param A name for the objective function for display purposes
        */
       void AddObjective(boost::shared_ptr<ObjectiveFunction> Obj,
           boost::shared_ptr<GeneralModelTransform> Transform,
-          const double lambda = 1.0)
+          const double lambda = 1.0, std::string DisplayName = "Objective")
         {
           Objectives.push_back(Obj);
           Weights.push_back(lambda);
           Distributor.AddTransformer(Transform);
+          Names.push_back(DisplayName);
         }
       //! Change the weighting of the different methods
       /*! This function can be used to change the weight for
@@ -98,7 +104,12 @@ namespace jiba
                 "Number of weights has to match the number of objective functions !");
           std::copy(W.begin(), W.end(), Weights.begin());
         }
-      JointObjective();
+      /*! When constructing a JointObjective object we can specify whether we want to print
+       * information about the misfit of the individual objective functions to the screen or not.
+       * This is part of the objective function so that we can see what happens inside the line search.
+       * @param Verbose If true print misfit and gradient information
+       */
+      JointObjective(bool Verbose = false);
       virtual ~JointObjective();
       };
   /* @} */

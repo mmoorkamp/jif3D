@@ -16,7 +16,7 @@ namespace OPTPP
     int mcsrch(jiba::ObjectiveFunction* nlp, const jiba::rvec& s,
         jiba::rvec &Grad, const jiba::rvec &model, double &misfit, double *stp,
         int itnmax, double ftol, double xtol, double gtol, double stpmax,
-        double stpmin);
+        double stpmin, bool Verbose = false);
     //! A backtracking line search taken from Opt++
     int backtrack(jiba::ObjectiveFunction* nlp, jiba::rvec& search_dir,
         jiba::rvec& grad, const jiba::rvec &model, double &misfit, double *stp,
