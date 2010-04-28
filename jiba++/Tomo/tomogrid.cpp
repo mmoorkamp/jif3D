@@ -29,61 +29,88 @@ int main(int argc, char *argv[])
 
     jiba::ThreeDSeismicModel SeisModel;
 
-    double minx, miny, maxx, maxy, deltax, deltay, z;
+    double recminx, recminy, recmaxx, recmaxy, recdeltax, recdeltay, recz;
     //ask for the measurement grid specifications
     //first x-direction
-    cout << "Minimum x-position: ";
-    cin >> minx;
-    cout << "Maximum x-position: ";
-    cin >> maxx;
-    cout << "Delta x: ";
-    cin >> deltax;
+    std::cout << "Receiver configuration\n";
+    cout << "  Minimum x-position: ";
+    cin >> recminx;
+    cout << "  Maximum x-position: ";
+    cin >> recmaxx;
+    cout << "  Delta x: ";
+    cin >> recdeltax;
     //then y-direction
-    cout << "Minimum y-position: ";
-    cin >> miny;
-    cout << "Maximum y-position: ";
-    cin >> maxy;
-    cout << "Delta y: ";
-    cin >> deltay;
+    cout << "  Minimum y-position: ";
+    cin >> recminy;
+    cout << "  Maximum y-position: ";
+    cin >> recmaxy;
+    cout << "  Delta y: ";
+    cin >> recdeltay;
     //all measurements have to be at the same height.
-    cout << "Z-level: ";
-    cin >> z;
+    cout << "  Z-level: ";
+    cin >> recz;
+
+    double sorminx, sorminy, sormaxx, sormaxy, sordeltax, sordeltay, sorz;
+    //ask for the source grid specifications
+    //first x-direction
+    std::cout << "Source configuration\n";
+    cout << "  Minimum x-position: ";
+    cin >> sorminx;
+    cout << "  Maximum x-position: ";
+    cin >> sormaxx;
+    cout << "  Delta x: ";
+    cin >> sordeltax;
+    //then y-direction
+    cout << "  Minimum y-position: ";
+    cin >> sorminy;
+    cout << "  Maximum y-position: ";
+    cin >> sormaxy;
+    cout << "  Delta y: ";
+    cin >> sordeltay;
+    //all measurements have to be at the same height.
+    cout << "  Z-level: ";
+    cin >> sorz;
+
     //ask for the name of the netcdf file containing the model
     std::string ModelFilename = jiba::AskFilename("Model Filename: ");
+    SeisModel.ReadNetCDF(ModelFilename);
 
-    //determine the extension to find out the type
-    std::string extension = jiba::GetFileExtension(ModelFilename);
-    //read in the file
-    if (extension == ".nc")
-      {
-        SeisModel.ReadNetCDF(ModelFilename);
-      }
-    else
-      {
-        std::cerr << "Wrong file format ! " << std::endl;
-        return 100;
-      }
     //setup the measurements in the forward modelling code
-    const size_t nmeasx = boost::numeric_cast<size_t>((maxx - minx) / deltax);
-    const size_t nmeasy = boost::numeric_cast<size_t>((maxy - miny) / deltay);
-    for (size_t i = 0; i <= nmeasx; ++i)
+    const size_t recnmeasx = boost::numeric_cast<size_t>((recmaxx - recminx)
+        / recdeltax);
+    const size_t recnmeasy = boost::numeric_cast<size_t>((recmaxy - recminy)
+        / recdeltay);
+    for (size_t i = 0; i <= recnmeasx; ++i)
       {
-        for (size_t j = 0; j <= nmeasy; ++j)
+        for (size_t j = 0; j <= recnmeasy; ++j)
           {
-            SeisModel.AddMeasurementPoint(minx + i * deltax, miny + j * deltay,
-                z);
-            SeisModel.AddSource(minx + i * deltax, miny + j * deltay, z);
+            SeisModel.AddMeasurementPoint(recminx + i * recdeltax, recminy + j
+                * recdeltay, recz);
+
           }
       }
+
+    const size_t sornmeasx = boost::numeric_cast<size_t>((sormaxx - sorminx)
+        / sordeltax);
+    const size_t sornmeasy = boost::numeric_cast<size_t>((sormaxy - sorminy)
+        / sordeltay);
+    for (size_t i = 0; i <= sornmeasx; ++i)
+      {
+        for (size_t j = 0; j <= sornmeasy; ++j)
+          {
+            SeisModel.AddSource(sorminx + i * sordeltax, sorminy + j
+                * sordeltay, sorz);
+
+          }
+      }
+
     const size_t nsource = SeisModel.GetSourcePosX().size();
+    const size_t nrec = SeisModel.GetMeasPosX().size();
     for (size_t i = 0; i < nsource; ++i)
       {
-        for (size_t j = 0; j < nsource; ++j)
+        for (size_t j = 0; j < nrec; ++j)
           {
-            if (j != i)
-              {
-                SeisModel.AddMeasurementConfiguration(i, j);
-              }
+            SeisModel.AddMeasurementConfiguration(i, j);
           }
       }
 
@@ -99,4 +126,10 @@ int main(int argc, char *argv[])
       }
     jiba::SaveTraveltimes(ModelFilename + ".tt.nc", TravelTimes, SeisModel);
     SeisModel.WriteVTK(ModelFilename + ".vtk");
+    jiba::Write3DDataToVTK(ModelFilename + ".rec.vtk", "Receiver", jiba::rvec(
+        SeisModel.GetMeasPosX().size()), SeisModel.GetMeasPosX(),
+        SeisModel.GetMeasPosY(), SeisModel.GetMeasPosZ());
+    jiba::Write3DDataToVTK(ModelFilename + ".sor.vtk", "Source", jiba::rvec(
+        SeisModel.GetSourcePosX().size()), SeisModel.GetSourcePosX(),
+        SeisModel.GetSourcePosY(), SeisModel.GetSourcePosZ());
   }
