@@ -105,7 +105,7 @@ namespace jiba
         //but the forward stores the positions in a single array
         std::transform(Model.GetReceiverIndices().begin(),
             Model.GetReceiverIndices().end(), data.rno.begin(), boost::bind(
-                std::plus<int>(), _1, nmeas + 1));
+                std::plus<int>(), _1, nshot + 1));
 
         geo.nrec = nmeas;
         geo.nshot = Model.GetSourcePosX().size();
