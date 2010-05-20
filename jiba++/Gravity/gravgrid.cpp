@@ -22,11 +22,28 @@
 #include "../Global/FileUtil.h"
 #include "../Global/Noise.h"
 #include <boost/cast.hpp>
+#include <boost/program_options.hpp>
 
 using namespace std;
+namespace po = boost::program_options;
 
-int main()
+int main(int argc, char *argv[])
   {
+    bool wantcuda = false;
+    po::options_description desc("General options");
+    desc.add_options()("help", "produce help message")("cuda", po::value(
+        &wantcuda)->default_value(false), "Use cuda for forward calculations.");
+
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::notify(vm);
+
+
+    if (vm.count("help"))
+      {
+        std::cout << desc << "\n";
+        return 1;
+      }
 
     jiba::ThreeDGravityModel GravModel;
 
@@ -78,10 +95,10 @@ int main()
     //save the measurements and some plots
     boost::shared_ptr<jiba::MinMemGravityCalculator>
         TensorCalculator(jiba::CreateGravityCalculator<
-            jiba::MinMemGravityCalculator>::MakeTensor());
+            jiba::MinMemGravityCalculator>::MakeTensor(wantcuda));
     boost::shared_ptr<jiba::MinMemGravityCalculator>
         ScalarCalculator(jiba::CreateGravityCalculator<
-            jiba::MinMemGravityCalculator>::MakeScalar());
+            jiba::MinMemGravityCalculator>::MakeScalar(wantcuda));
     jiba::rvec ScalarResults(ScalarCalculator->Calculate(GravModel));
     jiba::rvec TensorResults(TensorCalculator->Calculate(GravModel));
 
