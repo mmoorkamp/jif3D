@@ -17,6 +17,14 @@
 namespace jiba
   {
     namespace po = boost::program_options;
+
+    /** \addtogroup joint Joint inversion routines */
+    /* @{ */
+
+    //! Setup the core optimization
+    /*! Depending on command line options this class sets up different optimization algorithm
+     * that can be used for joint inversion.
+     */
     class SetupInversion
       {
 
@@ -28,7 +36,7 @@ namespace jiba
       SetupInversion();
       virtual ~SetupInversion();
       };
-
+    /* @} */
   }
 
 #endif /* SETUPINVERSION_H_ */

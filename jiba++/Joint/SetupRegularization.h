@@ -9,25 +9,35 @@
 #ifndef SETUPREGULARIZATION_H_
 #define SETUPREGULARIZATION_H_
 
-#include "../Inversion/JointObjective.h"
+#include "../Inversion/ModelTransforms.h"
+#include "../Regularization/MatOpRegularization.h"
 #include "../Tomo/ThreeDSeismicModel.h"
 #include <boost/program_options.hpp>
+#include <boost/shared_ptr.hpp>
 
 namespace jiba
   {
     namespace po = boost::program_options;
+
+
+    /** \addtogroup joint Joint inversion routines */
+    /* @{ */
+
+    //! Setup the type of regularization used in the inversion
+    /*! Choose the type of regularization and the weighting
+     * of the different directions depending on command line options.
+     */
     class SetupRegularization
       {
     public:
       po::options_description SetupOptions();
-      void
-          SetupObjective(const po::variables_map &vm,
-              jiba::JointObjective &Objective,
-              const ThreeDSeismicModel &StartModel, boost::shared_ptr<jiba::GeneralModelTransform> Transform);
+      boost::shared_ptr<jiba::MatOpRegularization> SetupObjective(
+          const po::variables_map &vm, const ThreeDSeismicModel &StartModel,
+          boost::shared_ptr<jiba::GeneralModelTransform> Transform);
       SetupRegularization();
       virtual ~SetupRegularization();
       };
-
+    /* @} */
   }
 
 #endif /* SETUPREGULARIZATION_H_ */

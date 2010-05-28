@@ -56,7 +56,7 @@ namespace jiba
 
         jiba::ThreeDGravityModel::tMeasPosVec PosX, PosY, PosZ;
 
-        if (scalgravlambda > 0.0)
+       // if (scalgravlambda > 0.0)
           {
             std::string scalgravdatafilename = jiba::AskFilename(
                 "Scalar Gravity Data Filename: ");
@@ -65,7 +65,7 @@ namespace jiba
                 ScalGravData, PosX, PosY, PosZ);
           }
 
-        if (ftglambda > 0.0)
+        //if (ftglambda > 0.0)
           {
             std::string ftgdatafilename = jiba::AskFilename(
                 "FTG Data Filename: ");
@@ -73,7 +73,7 @@ namespace jiba
                 PosY, PosZ);
           }
 
-        if (scalgravlambda > 0.0 || ftglambda > 0.0)
+        //if (scalgravlambda > 0.0 || ftglambda > 0.0)
           {
             std::string gravmodelfilename = jiba::AskFilename(
                 "Gravity Model Filename: ");
@@ -90,7 +90,7 @@ namespace jiba
                     PosZ.at(i));
               }
           }
-        if (scalgravlambda > 0.0)
+        //if (scalgravlambda > 0.0)
           {
             boost::shared_ptr<jiba::GravityObjective> ScalGravObjective(
                 new jiba::GravityObjective(false, wantcuda));
@@ -99,13 +99,13 @@ namespace jiba
             ScalGravObjective->SetDataCovar(jiba::ConstructError(ScalGravData,
                 0.0, 5e-7));
 
-            Objective.AddObjective(ScalGravObjective, Transform, scalgravlambda);
+            Objective.AddObjective(ScalGravObjective, Transform, scalgravlambda,"ScalGrav");
             std::cout << "Scalar Gravity ndata: " << ScalGravData.size()
                 << std::endl;
             std::cout << "Scalar Gravity lambda: " << scalgravlambda
                 << std::endl;
           }
-        if (ftglambda > 0.0)
+        //if (ftglambda > 0.0)
           {
             boost::shared_ptr<jiba::GravityObjective> FTGObjective(
                 new jiba::GravityObjective(true, wantcuda));
@@ -114,7 +114,7 @@ namespace jiba
             FTGObjective->SetDataCovar(
                 jiba::ConstructError(FTGData, 0.02, 1e-9));
 
-            Objective.AddObjective(FTGObjective, Transform, ftglambda);
+            Objective.AddObjective(FTGObjective, Transform, ftglambda,"FTG");
             std::cout << "FTG ndata: " << FTGData.size() << std::endl;
             std::cout << "FTG lambda: " << ftglambda << std::endl;
           }

@@ -41,6 +41,13 @@
 namespace ublas = boost::numeric::ublas;
 namespace po = boost::program_options;
 
+/** \addtogroup joint Joint inversion routines */
+/* @{ */
+
+/*! \file jointinv.cpp
+ * The main joint inversion program.
+ */
+
 int main(int argc, char *argv[])
   {
     jiba::SetupTomo TomoSetup;
@@ -75,9 +82,9 @@ int main(int argc, char *argv[])
       {
         omp_set_num_threads(vm["threads"].as<int> ());
       }
-
-    boost::shared_ptr<jiba::JointObjective> Objective(
-        new jiba::JointObjective());
+    //we want some output so we set Verbose in the constructor to true
+    boost::shared_ptr<jiba::JointObjective> Objective(new jiba::JointObjective(
+        true));
 
     boost::shared_ptr<jiba::GeneralModelTransform> TomoTransform, MTTransform,
         GravityTransform, RegTransform;
@@ -90,11 +97,13 @@ int main(int argc, char *argv[])
     GravitySetup.SetupObjective(vm, *Objective.get(), TomoModel,
         GravityTransform);
     MTSetup.SetupObjective(vm, *Objective.get(), TomoModel, MTTransform);
-    RegSetup.SetupObjective(vm, *Objective.get(), TomoModel, RegTransform);
+    boost::shared_ptr<jiba::MatOpRegularization> Regularization =
+        RegSetup.SetupObjective(vm, TomoModel, RegTransform);
 
     jiba::rvec InvModel;
     CouplingSetup.SetupModelVector(vm, InvModel, TomoModel,
-        GravitySetup.GetModel(), MTSetup.GetModel(),*Objective.get());
+        GravitySetup.GetModel(), MTSetup.GetModel(), *Objective.get(),
+        Regularization);
 
     size_t maxiter = 1;
     std::cout << "Maximum iterations: ";
@@ -126,7 +135,7 @@ int main(int argc, char *argv[])
         terminate = true;
         try
           {
-            std::cout << "Iteration: " << iteration << std::endl;
+            std::cout << "\n\n Iteration: " << iteration << std::endl;
             //std::copy(InvModel.begin(), InvModel.begin() + ngrid,
             //    TomoModel.SetSlownesses().origin());
             //TomoModel.WriteVTK("raw_model" + jiba::stringify(iteration)
@@ -145,14 +154,14 @@ int main(int argc, char *argv[])
                 << std::endl;
             std::cout << "Currrent Gradient: " << Optimizer->GetGradNorm()
                 << std::endl;
-            misfitfile << iteration << " " << Optimizer->GetMisfit() << " ";
-            std::copy(Objective->GetIndividualFits().begin(),
-                Objective->GetIndividualFits().end(), std::ostream_iterator<
-                    double>(misfitfile, " "));
-            std::cout << "Gradient Norms: ";
-            std::copy(Objective->GetIndividualGradNorms().begin(),
-                Objective->GetIndividualGradNorms().end(),
-                std::ostream_iterator<double>(std::cout, " "));
+            misfitfile << std::setw(5) << iteration << " " << std::setw(15)
+                << Optimizer->GetMisfit() << " ";
+            for (size_t i = 0; i < Objective->GetIndividualFits().size(); ++i)
+              {
+                misfitfile << std::setw(15)
+                    << Objective->GetIndividualFits().at(i) << " ";
+              }
+
             misfitfile << " " << Objective->GetNEval();
             misfitfile << std::endl;
             std::cout << "\n\n";
@@ -171,13 +180,15 @@ int main(int argc, char *argv[])
               }
             else
               {
-                std::cout << "Reached target misfit." << std::endl;
-                ;
-                std::cout << "Objective number: " << i << std::endl;
-                std::cout << "Misfit: " << Objective->GetIndividualFits().at(i)
-                    << std::endl;
-                std::cout << "Target: "
-                    << Objective->GetObjective(i).GetNData() << std::endl;
+                if (Objective->GetObjective(i).ConvergenceLimit() > 0.0)
+                  {
+                    std::cout << "Reached target misfit." << std::endl;
+                    std::cout << "Objective number: " << i << std::endl;
+                    std::cout << "Misfit: "
+                        << Objective->GetIndividualFits().at(i) << std::endl;
+                    std::cout << "Target: "
+                        << Objective->GetObjective(i).GetNData() << std::endl;
+                  }
               }
           }
         if (jiba::WantAbort())
@@ -243,3 +254,4 @@ int main(int argc, char *argv[])
     std::cout << "Runtime: " << cachedruntime << " s" << std::endl;
     std::cout << std::endl;
   }
+/* @} */

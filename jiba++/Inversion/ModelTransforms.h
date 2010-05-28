@@ -10,6 +10,8 @@
 
 #include "../Global/FatalException.h"
 #include "ModelDistributor.h"
+#include <boost/math/special_functions/atanh.hpp>
+
 
 /*! \file ModelTransforms.h
  * This file contains various classes to transform model parameters within an inversion.
@@ -81,7 +83,7 @@ namespace jiba
           assert(FullModel.size() == Reference.size());
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
-            Output(i) = exp(FullModel(i)) * Reference(i);
+            Output(i) = std::exp(FullModel(i)) * Reference(i);
           return Output;
         }
       //! Transform the physical model parameters to generalized model parameters
@@ -90,7 +92,7 @@ namespace jiba
           assert(FullModel.size() == Reference.size());
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
-            Output(i) = log(FullModel(i) / Reference(i));
+            Output(i) = std::log(FullModel(i) / Reference(i));
           return Output;
         }
       //! Transform the derivative with respect to the physical parameters to normalized parameters
@@ -101,7 +103,7 @@ namespace jiba
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
-              Output(i) = Reference(i) * exp(FullModel(i)) * Derivative(i);
+              Output(i) = Reference(i) * std::exp(FullModel(i)) * Derivative(i);
             }
           return Output;
         }
@@ -140,7 +142,7 @@ namespace jiba
         {
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
-            Output(i) = min + (1.0 + tanh(FullModel(i))) / 2.0 * (max - min);
+            Output(i) = min + (1.0 + std::tanh(FullModel(i))) / 2.0 * (max - min);
           return Output;
         }
       //! Transform the physical model parameters to generalized model parameters
@@ -151,7 +153,7 @@ namespace jiba
             {
               const double argument = 2.0 * (FullModel(i) - min) / (max - min)
                   - 1;
-              Output(i) = atanh(argument);
+              Output(i) = boost::math::atanh(argument);
             }
           return Output;
         }
@@ -163,7 +165,7 @@ namespace jiba
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
-              Output(i) = (max - min) / (2.0 * pow(cosh(FullModel(i)), 2))
+              Output(i) = (max - min) / (2.0 * std::pow(std::cosh(FullModel(i)), 2))
                   * Derivative(i);
             }
           return Output;
@@ -286,7 +288,7 @@ namespace jiba
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
               double vel = (-b + sqrt(b * b - 4.0 * a * (c + std::log(
-                  FullModel(i))))) / (2 * a);
+                  FullModel(i))))) / (2.0 * a);
               Output(i) = 1.0 / vel;
             }
           return SlownessTransform->PhysicalToGeneralized(Output);
@@ -302,8 +304,8 @@ namespace jiba
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
-              Output(i) = exp(-(a / (Slowness(i) * Slowness(i)) + b / Slowness(
-                  i) + c)) * (2.0 * a * pow(Slowness(i), -3) + b / (Slowness(i)
+              Output(i) = std::exp(-(a / (Slowness(i) * Slowness(i)) + b / Slowness(
+                  i) + c)) * (2.0 * a * std::pow(Slowness(i), -3) + b / (Slowness(i)
                   * Slowness(i))) * SlowDeriv(i);
             }
           return Output;
