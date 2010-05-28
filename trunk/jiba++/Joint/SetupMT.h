@@ -17,6 +17,16 @@
 namespace jiba
   {
     namespace po = boost::program_options;
+
+
+    /** \addtogroup joint Joint inversion routines */
+    /* @{ */
+
+    //! Setup the MT part of the joint inversion
+    /*!This class reads the information about grid sizes, measurement configuration, data etc.
+     * from the command line and through interactive input. It configures the objective
+     * function for MT data and adds it to the joint objective.
+     */
     class SetupMT
       {
     private:
@@ -32,7 +42,7 @@ namespace jiba
       SetupMT();
       virtual ~SetupMT();
       };
-
+    /* @} */
   }
 
 #endif /* SETUPMT_H_ */

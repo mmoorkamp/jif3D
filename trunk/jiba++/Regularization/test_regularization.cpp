@@ -103,7 +103,7 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
       Regularization.SetYWeight(4.0);
       Regularization.SetZWeight(3.0);
       double zero = Regularization.CalcMisfit(StartModel+ConstMod);
-      BOOST_CHECK_CLOSE(zero,0.0,0.0001);
+      BOOST_CHECK_SMALL(zero,1e-11);
 
       double topslow = 1.0/1000.0;
       double bottomslow = 1.0/5000.0;
@@ -117,7 +117,7 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
           GradModelVec(i) = Slowness;
         }
       zero = Regularization.CalcMisfit(StartModel+GradModelVec);
-      BOOST_CHECK_CLOSE(zero,0.0,0.0001);
+      BOOST_CHECK_SMALL(zero,1e-11);
 
       Regularization.CalcMisfit(PertModel);
       CheckGradient(Regularization,PertModel);

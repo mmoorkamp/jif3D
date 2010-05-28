@@ -72,7 +72,7 @@ namespace jiba
         if (tomolambda > 0.0)
           {
             Objective.AddObjective(TomoObjective, Transform,
-                tomolambda);
+                tomolambda,"Tomo");
             std::cout << "Tomo ndata: " << TomoData.size() << std::endl;
             std::cout << "Tomo lambda: " << tomolambda << std::endl;
           }

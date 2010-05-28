@@ -17,7 +17,7 @@
 void TestTransform(const jiba::GeneralModelTransform &Transform,
     const size_t nelements, const double min = 2.0, const double max = 3.0)
   {
-
+    srand48( time(NULL));
     jiba::rvec Physical(nelements), Generalized(nelements), Derivative(
         nelements), Ones(nelements);
     //some transforms assume the normal ranges for seismic velocities or densities
@@ -40,6 +40,7 @@ void TestTransform(const jiba::GeneralModelTransform &Transform,
       }
     //then we check the derivative from the transformation class
     //against a finite difference
+    jiba::rvec TransDeriv = Transform.Derivative(Generalized, Ones);
     for (size_t i = 0; i < nelements; ++i)
       {
         jiba::rvec PlusVec(Generalized), MinusVec(Generalized);
@@ -49,17 +50,16 @@ void TestTransform(const jiba::GeneralModelTransform &Transform,
         MinusVec(i) -= h;
         const double DiffDeriv = (Transform.GeneralizedToPhysical(PlusVec)(i)
             - Transform.GeneralizedToPhysical(MinusVec)(i)) / (2 * h);
-        jiba::rvec TransDeriv = Transform.Derivative(Generalized, Ones);
         BOOST_CHECK_CLOSE(DiffDeriv,TransDeriv(i),0.1);
       }
     //finally we check whether the call to derivative applies
     //the chain rule properly
-    jiba::rvec TransDeriv = Transform.Derivative(Generalized, Derivative);
+    jiba::rvec ChainDeriv = Transform.Derivative(Generalized, Derivative);
     jiba::rvec CompDeriv = ublas::element_prod(Transform.Derivative(
         Generalized, Ones), Derivative);
     for (size_t i = 0; i < nelements; ++i)
       {
-        BOOST_CHECK_CLOSE(TransDeriv(i),CompDeriv(i),1e-5);
+        BOOST_CHECK_CLOSE(ChainDeriv(i),CompDeriv(i),1e-5);
       }
   }
 
@@ -67,6 +67,7 @@ BOOST_AUTO_TEST_SUITE( Distributor_Test_Suite )
 
 BOOST_AUTO_TEST_CASE  (basic_copy_test)
     {
+      srand48(time(NULL));
       jiba::ModelDistributor Distributor;
       Distributor.AddTransformer(
           boost::shared_ptr<jiba::GeneralModelTransform>(
@@ -75,7 +76,7 @@ BOOST_AUTO_TEST_CASE  (basic_copy_test)
           boost::shared_ptr<jiba::GeneralModelTransform>(
               new jiba::ModelCopyTransform()));
       jiba::rvec Input(50);
-      std::generate(Input.begin(), Input.end(), rand);
+      std::generate(Input.begin(), Input.end(), drand48);
 
       jiba::rvec Output1(Distributor(Input, 0));
       jiba::rvec Output2(Distributor(Input, 1));

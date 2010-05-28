@@ -128,8 +128,9 @@ void  MakeMTModel(jiba::X3DModel &Model)
           Backward(index) -= delta;
           double ForFDGrad = (Objective.CalcMisfit(Forward) - misfit)/(delta);
           double BackFDGrad = (misfit - Objective.CalcMisfit(Backward))/delta;
-          BOOST_CHECK(Between(ForFDGrad,BackFDGrad,Gradient(index)));
-          outfile << index << " " << ForFDGrad << " "<< BackFDGrad << " " << Gradient(index) << std::endl;
+          double CentFDGrad = (ForFDGrad + BackFDGrad)/2.0;
+          BOOST_CHECK(Between(ForFDGrad,BackFDGrad,Gradient(index)) || (CentFDGrad - Gradient(index))/CentFDGrad < 0.01);
+          outfile << index << " " << ForFDGrad << " "<< BackFDGrad << " " << (ForFDGrad + BackFDGrad)/2.0 << " " << Gradient(index) << std::endl;
         }
     }
 

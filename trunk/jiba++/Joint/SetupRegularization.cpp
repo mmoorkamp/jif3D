@@ -36,8 +36,8 @@ namespace jiba
         return desc;
       }
 
-    void SetupRegularization::SetupObjective(const po::variables_map &vm,
-        jiba::JointObjective &Objective, const ThreeDSeismicModel &StartModel, boost::shared_ptr<jiba::GeneralModelTransform> Transform)
+    boost::shared_ptr<jiba::MatOpRegularization> SetupRegularization::SetupObjective(const po::variables_map &vm,
+        const ThreeDSeismicModel &StartModel, boost::shared_ptr<jiba::GeneralModelTransform> Transform)
       {
 
         boost::shared_ptr<jiba::MatOpRegularization> Regularization;
@@ -82,10 +82,6 @@ namespace jiba
             Regularization->SetZWeight(zreg);
           }
 
-        double reglambda = 1.0;
-        std::cout << "Regularization Lambda: ";
-        std::cin >> reglambda;
-
-        Objective.AddObjective(Regularization, Transform, reglambda);
+        return Regularization;
       }
   }

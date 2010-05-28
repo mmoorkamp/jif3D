@@ -117,7 +117,8 @@ namespace jiba
     void SetupCoupling::SetupModelVector(const po::variables_map &vm,
         jiba::rvec &InvModel, const jiba::ThreeDSeismicModel &SeisMod,
         const jiba::ThreeDGravityModel GravMod,
-        const jiba::ThreeDMTModel &MTMod, jiba::JointObjective &Objective)
+        const jiba::ThreeDMTModel &MTMod, jiba::JointObjective &Objective,
+        boost::shared_ptr<jiba::MatOpRegularization> Regularization)
       {
 
         const size_t ngrid = SeisMod.GetSlownesses().num_elements();
@@ -154,7 +155,8 @@ namespace jiba
             double seisgravlambda = 1.0;
             std::cout << "Weight for seismic-gravity cross-gradient term: ";
             std::cin >> seisgravlambda;
-            Objective.AddObjective(SeisGravCross, SeisGravTrans, seisgravlambda);
+            Objective.AddObjective(SeisGravCross, SeisGravTrans,
+                seisgravlambda, "SeisGrav");
 
             boost::shared_ptr<jiba::CrossGradient> SeisMTCross(
                 new jiba::CrossGradient(SeisMod));
@@ -165,14 +167,56 @@ namespace jiba
             double seismtlambda = 1.0;
             std::cout << "Weight for seismic-MT cross-gradient term: ";
             std::cin >> seismtlambda;
-            Objective.AddObjective(SeisMTCross, SeisMTTrans, seismtlambda);
+            Objective.AddObjective(SeisMTCross, SeisMTTrans, seismtlambda,
+                "SeisMT");
+
+            boost::shared_ptr<jiba::CrossGradient> GravMTCross(
+                new jiba::CrossGradient(SeisMod));
+            boost::shared_ptr<jiba::GeneralModelTransform> GravMTTrans(
+                new jiba::DoubleSectionTransform(3 * ngrid, ngrid, 2 * ngrid, 2
+                    * ngrid, 3 * ngrid));
+
+            double gravmtlambda = 1.0;
+            std::cout << "Weight for gravity-MT cross-gradient term: ";
+            std::cin >> gravmtlambda;
+            Objective.AddObjective(GravMTCross, GravMTTrans, seismtlambda,
+                "GravMT");
+
+            double seisreglambda = 1.0;
+            std::cout << " Weight for seismic regularization: ";
+            std::cin >> seisreglambda;
+            Objective.AddObjective(
+                boost::shared_ptr<jiba::MatOpRegularization>(
+                    Regularization->clone()), SlowTrans, seisreglambda,
+                "SeisReg");
+
+            double gravreglambda = 1.0;
+            std::cout << " Weight for gravity regularization: ";
+            std::cin >> gravreglambda;
+            Objective.AddObjective(
+                boost::shared_ptr<jiba::MatOpRegularization>(
+                    Regularization->clone()), DensTrans, gravreglambda,
+                "GravReg");
+
+            double mtreglambda = 1.0;
+            std::cout << " Weight for MT regularization: ";
+            std::cin >> mtreglambda;
+            Objective.AddObjective(
+                boost::shared_ptr<jiba::MatOpRegularization>(
+                    Regularization->clone()), CondTrans, mtreglambda, "MTReg");
           }
+        //if we want direct parameter coupling
         else
           {
             InvModel.resize(ngrid);
             std::copy(SeisMod.GetSlownesses().origin(),
                 SeisMod.GetSlownesses().origin() + ngrid, InvModel.begin());
             InvModel = SlowTrans->PhysicalToGeneralized(InvModel);
+
+            double reglambda = 1.0;
+            std::cout << " Weight for regularization: ";
+            std::cin >> reglambda;
+            Objective.AddObjective(Regularization, SlowTrans, reglambda, "Reg");
           }
       }
   }

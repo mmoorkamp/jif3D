@@ -4,7 +4,7 @@ project
         <threading>multi 
         <define>BIND_FORTRAN_LOWERCASE_UNDERSCORE 
     	<variant>release:<define>NDEBUG  
-    	<toolset>gcc:<cflags>" -ansi -fopenmp -Wall -Wextra  -Wno-long-long -pedantic"
+    	<toolset>gcc:<cflags>" -ansi -fopenmp -Wall -Wextra  -Wno-long-long -Wno-unused-parameter  -pedantic"
     	<toolset>gcc:<linkflags>" -fopenmp  "
     	<toolset>intel:<cxxflags>" -openmp   "
     	<toolset>intel:<linkflags>" -openmp   "

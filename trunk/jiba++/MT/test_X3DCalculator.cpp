@@ -22,9 +22,9 @@ BOOST_AUTO_TEST_SUITE( X3DCalculator_Suite )
 
 BOOST_AUTO_TEST_CASE  (X3D_forward_hs_test)
     {
-      //create a random number of cells and background layers
-      const size_t xsize = 10;
-      const size_t ysize = 10;
+      //create a 3D version of a 1D model
+      const size_t xsize = 20;
+      const size_t ysize = 20;
       const size_t zsize = 10;
       const size_t nbglayers = 5;
       jiba::X3DModel Model;
@@ -37,35 +37,46 @@ BOOST_AUTO_TEST_CASE  (X3D_forward_hs_test)
       const double deltax = 100.0;
       const double deltay = 100.0;
       const double deltaz = 100.0;
+      const double freq = 1.0;
+      const double cond = 0.01;
       Model.SetHorizontalCellSize(deltax,deltay,xsize,ysize);
 
       std::fill_n(Model.SetZCellSizes().origin(),zsize,deltaz);
-      std::fill_n(Model.SetConductivities().origin(),xsize*ysize*zsize,0.01);
-      std::fill_n(bg_conductivities.begin(),nbglayers,0.01);
-      std::fill_n(bg_thicknesses.begin(),nbglayers,100.0);
+      std::fill_n(Model.SetConductivities().origin(),xsize*ysize*zsize,cond);
+      std::fill_n(bg_conductivities.begin(),nbglayers,cond);
+      bg_conductivities.back() *= 1.001;
+      std::fill_n(bg_thicknesses.begin(),nbglayers,200.0);
 
       Model.SetBackgroundConductivities(bg_conductivities);
       Model.SetBackgroundThicknesses(bg_thicknesses);
-      Model.SetFrequencies().push_back(10.0);
+      Model.SetFrequencies().push_back(freq);
 
       jiba::X3DMTCalculator Calculator;
-      jiba::rvec Impedance = Calculator.Calculate(Model);
+      for (size_t i = 0; i < xsize; ++i)
+      for (size_t j = 0; j < ysize; ++j)
+        {
+          Model.AddMeasurementPoint(Model.GetXCoordinates()[i] + deltax/2.0,Model.GetYCoordinates()[j] + deltay/2.0,0.0);
+        }
 
-      std::complex<double> HsImp = jiba::ImpedanceHalfspace(10.0,0.01);
+      jiba::rvec Impedance = Calculator.Calculate(Model);
+      std::complex<double> HsImp = jiba::ImpedanceHalfspace(freq,cond);
+      const double prec = 0.05;
       for (size_t i = 0; i < xsize * ysize; ++i)
         {
-          BOOST_CHECK_CLOSE(Impedance(i*8+2),HsImp.real(),0.01);
-          BOOST_CHECK_CLOSE(Impedance(i*8+3),HsImp.imag(),0.01);
-          BOOST_CHECK_CLOSE(Impedance(i*8+4),-HsImp.real(),0.01);
-          BOOST_CHECK_CLOSE(Impedance(i*8+5),-HsImp.imag(),0.01);
+          BOOST_CHECK_CLOSE(Impedance(i*8+2),HsImp.real(),prec);
+          BOOST_CHECK_CLOSE(Impedance(i*8+3),HsImp.imag(),prec);
+          BOOST_CHECK_CLOSE(Impedance(i*8+4),-HsImp.real(),prec);
+          BOOST_CHECK_CLOSE(Impedance(i*8+5),-HsImp.imag(),prec);
         }
+
     }
+
   BOOST_AUTO_TEST_CASE (X3D_forward_2D_test)
     {
       const size_t xsize = 100;
       const size_t ysize = 100;
-      const size_t zsize = 15;
-      const size_t nbglayers = 15;
+      const size_t zsize = 20;
+      const size_t nbglayers = 5;
       jiba::X3DModel Model;
 
       Model.SetConductivities().resize(boost::extents[xsize][ysize][zsize]);
@@ -74,21 +85,22 @@ BOOST_AUTO_TEST_CASE  (X3D_forward_hs_test)
       const double deltax = 100.0;
       const double deltay = 100.0;
       const double deltaz = 100.0;
-      const double Period = 1.0;
+      const double bg_thick = 500.0;
+      const double Period = 0.1;
       const double bg_cond = 0.1;
       const double anom_cond = 1.0;
 
       Model.SetHorizontalCellSize(deltax,deltay,xsize,ysize);
       Model.SetZCellSizes().resize(boost::extents[zsize]);
 
-      double currsize = 200.0;
-      for (int i = 0; i < zsize; ++i)
+      double currsize = deltaz;
+      for (size_t i = 0; i < zsize; ++i)
         {
-          bg_thicknesses[i] = floor(currsize);
+          //bg_thicknesses[i] = floor(currsize);
           Model.SetZCellSizes()[i] = floor(currsize);
           currsize *= 1.1;
         }
-      //std::fill_n(bg_thicknesses.begin(),nbglayers,deltaz);
+      std::fill_n(bg_thicknesses.begin(),nbglayers,bg_thick);
       //std::fill_n(Model.SetZCellSizes().origin(),zsize,deltaz);
 
       std::fill_n(Model.SetConductivities().origin(),xsize*ysize*zsize,bg_cond);
@@ -104,22 +116,23 @@ BOOST_AUTO_TEST_CASE  (X3D_forward_hs_test)
       Model.SetBackgroundConductivities(bg_conductivities);
       Model.SetBackgroundThicknesses(bg_thicknesses);
       Model.SetFrequencies().push_back(1.0/Period);
+      for (size_t i = 0; i < xsize; ++i)
+      for (size_t j = 0; j < ysize; ++j)
+        {
+          Model.AddMeasurementPoint(Model.GetXCoordinates()[i] + deltax/2.0,Model.GetYCoordinates()[i] + deltay/2.0,0.0);
+        }
 
       jiba::X3DMTCalculator Calculator;
+      std::cout << "Calculating 3D forward " << std::endl;
       jiba::rvec Impedance3D = Calculator.Calculate(Model);
-      jiba::rvec Freq(Model.GetFrequencies().size());
+      std::vector<double> Freq(Model.GetFrequencies().size());
       std::copy(Model.GetFrequencies().begin(),Model.GetFrequencies().end(),Freq.begin());
       std::vector<double> XCoord(xsize*ysize),YCoord(xsize*ysize),ZCoord(xsize*ysize);
       std::fill_n(ZCoord.begin(),xsize*ysize,0.0);
-      for (size_t i = 0; i < Model.GetXCoordinates().size(); ++i)
-        {
-          for (size_t j = 0; j < Model.GetYCoordinates().size(); ++j)
-            {
-              XCoord[i] = Model.GetXCoordinates()[i];
-              YCoord[i] = Model.GetYCoordinates()[i];
 
-            }
-        }
+      std::copy(Model.GetMeasPosX().begin(),Model.GetMeasPosX().end(),XCoord.begin());
+      std::copy(Model.GetMeasPosY().begin(),Model.GetMeasPosY().end(),YCoord.begin());
+
       jiba::WriteImpedancesToNetCDF("imp2D.nc",Freq,XCoord,YCoord,ZCoord,Impedance3D);
       jiba::rvec Imp3DProfile(xsize*8);
       for (size_t i = 0; i < xsize; ++i)
@@ -140,7 +153,7 @@ BOOST_AUTO_TEST_CASE  (X3D_forward_hs_test)
       Forward2D.SetZSizes().resize(boost::extents[nz2D]);
       currsize = 10.0;
       std::fill_n(Forward2D.SetXSizes().origin(),nx2D,100.0);
-      for (int i = 0; i < nz2D; ++i)
+      for (size_t i = 0; i < nz2D; ++i)
         {
           Forward2D.SetZSizes()[i] = currsize;
           currsize *= 1.1;
@@ -152,6 +165,7 @@ BOOST_AUTO_TEST_CASE  (X3D_forward_hs_test)
       Forward2D.SetResistivities()[i][k] = 1./anom_cond;
 
       std::vector<double> Periods(1,Period);
+      std::cout << "Calculating 2D forward " << std::endl;
       Forward2D.CalcEpol(Periods);
       Forward2D.CalcBpol(Periods);
 
