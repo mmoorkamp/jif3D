@@ -570,12 +570,7 @@ namespace jiba
           }
         if (FatalError)
           throw jiba::FatalException("Problem in MT gradient calculation.");
-        //plot the gradient for each model cell in a vtk file
-        //this is purely for debugging purposes and might be removed in the future
-        X3DModel GradMod(Model);
-        std::copy(Gradient.begin(), Gradient.end(),
-            GradMod.SetConductivities().origin());
-        GradMod.WriteVTK("grad.vtk");
+
         return 2.0 * Gradient;
       }
   }

@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
     std::cout << "Performing inversion." << std::endl;
 
     boost::shared_ptr<jiba::GradientBasedOptimization> Optimizer;
-    InversionSetup.ConfigureInversion(vm, Optimizer, Objective);
+    InversionSetup.ConfigureInversion(vm, Optimizer, Objective, InvModel);
 
     size_t iteration = 0;
 

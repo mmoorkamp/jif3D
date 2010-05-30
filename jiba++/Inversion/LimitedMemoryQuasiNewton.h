@@ -28,17 +28,17 @@ namespace jiba
     class LimitedMemoryQuasiNewton: public jiba::GradientBasedOptimization
       {
     private:
-      //the stepsize
+      //! the stepsize
       double mu;
-      //the maximum number of iterations in the line search
+      //! The maximum number of iterations in the line search
       size_t LineIter;
-      //the maximum number of correction pairs
+      //! The maximum number of correction pairs
       const size_t MaxPairs;
-      //the difference between the last MaxPairs updates, \f$s_k\f$ in eq. 9.4 of Nocedal and Wright
+      //! The difference between the last MaxPairs updates, \f$s_k\f$ in eq. 9.4 of Nocedal and Wright
       std::vector<boost::shared_ptr<jiba::rvec> > SHistory;
-      //the difference between the last MaxPairs gradients, \f$y_k\f$ in eq. 9.4 of Nocedal and Wright
+      //! The difference between the last MaxPairs gradients, \f$y_k\f$ in eq. 9.4 of Nocedal and Wright
       std::vector<boost::shared_ptr<jiba::rvec> > YHistory;
-      //The implementation of a single step
+      //! The implementation of a single step
       virtual void StepImplementation(jiba::rvec &CurrentModel);
     public:
       //! Set the maximum number of forward evaluations the inversion spends in one line-search

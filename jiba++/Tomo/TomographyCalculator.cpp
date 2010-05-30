@@ -61,7 +61,7 @@ namespace jiba
         const size_t ndata = Model.GetSourceIndices().size();
         const size_t nmeas = Model.GetMeasPosX().size();
         const size_t nshot = Model.GetSourcePosX().size();
-        const size_t npos = nmeas + Model.GetSourcePosX().size();
+        const size_t npos = nmeas + nshot;
         //allocate the arrays
         Allocate(ngrid, ndata, npos);
         //now we can start to fill the different structures for the forward code
@@ -103,12 +103,14 @@ namespace jiba
 
         //also we have different storage for source and receivers
         //but the forward stores the positions in a single array
+        //our indices are 0 based, the forward uses a base of 1
+        //and we have to add the number of shots that we already stored
         std::transform(Model.GetReceiverIndices().begin(),
             Model.GetReceiverIndices().end(), data.rno.begin(), boost::bind(
                 std::plus<int>(), _1, nshot + 1));
 
         geo.nrec = nmeas;
-        geo.nshot = Model.GetSourcePosX().size();
+        geo.nshot = nshot;
 
         //we use the convention that first we store all shot positions
         std::copy(Model.GetSourcePosX().begin(), Model.GetSourcePosX().end(),
