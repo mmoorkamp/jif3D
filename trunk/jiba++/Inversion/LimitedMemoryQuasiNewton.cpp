@@ -7,6 +7,7 @@
 
 #include "../Global/FatalException.h"
 #include "../Global/convert.h"
+#include "../Global/NormProd.h"
 #include "LimitedMemoryQuasiNewton.h"
 #include "mcsrch.h"
 namespace jiba
@@ -14,8 +15,8 @@ namespace jiba
 
     LimitedMemoryQuasiNewton::LimitedMemoryQuasiNewton(boost::shared_ptr<
         jiba::ObjectiveFunction> ObjFunction, const size_t n) :
-      GradientBasedOptimization(ObjFunction), mu(1.0), LineIter(20),MaxPairs(n), SHistory(),
-          YHistory()
+      GradientBasedOptimization(ObjFunction), mu(1.0), LineIter(20),
+          MaxPairs(n), SHistory(), YHistory()
       {
 
       }
@@ -38,23 +39,23 @@ namespace jiba
         //and apply algorithm 9.1 from Nocedal and Wright
         for (int i = npairs - 1; i >= 0; --i)
           {
-            Rho(i) = 1. / ublas::inner_prod(*YHistory.at(i),
-                ublas::element_div(*SHistory.at(i), GetModelCovDiag()));
-            Alpha(i) = Rho(i) * ublas::inner_prod(*SHistory.at(i),
-                ublas::element_div(SearchDir, GetModelCovDiag()));
+            Rho(i) = 1. / NormProd(*YHistory.at(i), *SHistory.at(i),
+                GetModelCovDiag());
+            Alpha(i) = Rho(i) * NormProd(*SHistory.at(i), SearchDir,
+                GetModelCovDiag());
             SearchDir -= Alpha(i) * *YHistory.at(i);
           }
         double gamma = 1.0;
         if (YHistory.size() > 0)
           {
-            gamma = 1.0 / Rho(npairs-1) / ublas::inner_prod(*YHistory.back(),
-                ublas::element_div(*YHistory.back(), GetModelCovDiag()));
+            gamma = 1.0 / Rho(npairs - 1) / NormProd(*YHistory.back(),
+                *YHistory.back(), GetModelCovDiag());
           }
         SearchDir *= gamma;
         for (size_t i = 0; i < npairs; ++i)
           {
-            double beta = Rho(i) * ublas::inner_prod(*YHistory.at(i),
-                ublas::element_div(SearchDir, GetModelCovDiag()));
+            double beta = Rho(i) * NormProd(*YHistory.at(i), SearchDir,
+                GetModelCovDiag());
             SearchDir += *SHistory.at(i) * (Alpha(i) - beta);
           }
         //at each iteration we reset the stepsize
@@ -63,10 +64,11 @@ namespace jiba
         //now we do a line search to find the optimum step size mu
         //after this call, both Misfit and RawGrad are already
         //updated for the new model
-        int status = OPTPP::mcsrch(&GetObjective(), SearchDir, RawGrad,
-            CurrentModel, Misfit, &mu, LineIter, 1e-4, 2.2e-16, 0.9, 1e9, 1e-12);
+        int status =
+            OPTPP::mcsrch(&GetObjective(), SearchDir, RawGrad, CurrentModel,
+                Misfit, &mu, LineIter, 1e-4, 2.2e-16, 0.9, 1e9, 1e-12);
 
-        if (status < 0 )
+        if (status < 0)
           {
             throw jiba::FatalException("Cannot find suitable step. Status: "
                 + jiba::stringify(status));

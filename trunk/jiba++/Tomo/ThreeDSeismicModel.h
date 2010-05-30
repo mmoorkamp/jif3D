@@ -149,21 +149,20 @@ namespace jiba
       void CopyMeasurementConfigurations(const ThreeDSeismicModel &Source)
         {
 
-          SourcePosX.resize(Source.SourcePosX.size());
-          std::copy(Source.SourcePosX.begin(), Source.SourcePosX.end(),
-              SourcePosX.begin());
-          SourcePosY.resize(Source.SourcePosY.size());
-          std::copy(Source.SourcePosY.begin(), Source.SourcePosY.end(),
-              SourcePosY.begin());
-          SourcePosZ.resize(Source.SourcePosZ.size());
-          std::copy(Source.SourcePosZ.begin(), Source.SourcePosZ.end(),
-              SourcePosZ.begin());
-          SourceIndices.resize(Source.SourceIndices.size());
-          std::copy(Source.SourceIndices.begin(), Source.SourceIndices.end(),
-              SourceIndices.begin());
-          ReceiverIndices.resize(Source.ReceiverIndices.size());
-          std::copy(Source.ReceiverIndices.begin(),
-              Source.ReceiverIndices.end(), ReceiverIndices.begin());
+          SourcePosX = Source.SourcePosX;
+          SourcePosY = Source.SourcePosY;
+          SourcePosZ = Source.SourcePosZ;
+          SourceIndices = Source.SourceIndices;
+
+          ClearMeasurementPoints();
+          const size_t nmeas = Source.GetMeasPosX().size();
+          for (size_t i = 0; i < nmeas; ++i)
+            {
+              AddMeasurementPoint(Source.GetMeasPosX()[i],
+                  Source.GetMeasPosY()[i], Source.GetMeasPosZ()[i]);
+            }
+
+          ReceiverIndices = Source.ReceiverIndices;
         }
       //! Set the origin of the coordinate system, this is a reimplementation from the base class to also change the source positions
       virtual void SetOrigin(const double x, const double y, const double z);

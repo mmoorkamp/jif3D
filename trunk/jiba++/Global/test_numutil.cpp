@@ -10,9 +10,11 @@
 #define BOOST_TEST_MODULE NumUtil test
 #define BOOST_TEST_MAIN ...
 #include <boost/test/included/unit_test.hpp>
+#include <boost/test/floating_point_comparison.hpp>
 #include <stdlib.h>
 #include "NumUtil.h"
-#include <boost/test/floating_point_comparison.hpp>
+#include "NormProd.h"
+#include "VecMat.h"
 
 BOOST_AUTO_TEST_SUITE( NumUtil_Test_Suite )
 
@@ -56,6 +58,18 @@ BOOST_AUTO_TEST_CASE(test_sign)
       negdoub = -0.5;
       BOOST_CHECK( ( jiba::absLess<double,double>()(posdoub,negdoub) == false) );
       BOOST_CHECK( ( jiba::absLess<double,double>()(negdoub,posdoub) == true) );
+    }
+
+  BOOST_AUTO_TEST_CASE(test_normprod)
+    {
+      const size_t nelements = 1010;
+      jiba::rvec a(nelements), b(nelements), NormDiag(nelements);
+      std::generate_n(a.begin(),nelements, drand48);
+      std::generate_n(b.begin(),nelements, drand48);
+      std::generate_n(NormDiag.begin(),nelements, drand48);
+      double myresult = jiba::NormProd(a, b, NormDiag);
+      double uresult = ublas::inner_prod(a, ublas::element_div(b, NormDiag));
+      BOOST_CHECK_CLOSE(myresult,uresult,std::numeric_limits<float>::epsilon());
     }
 
 BOOST_AUTO_TEST_SUITE_END()

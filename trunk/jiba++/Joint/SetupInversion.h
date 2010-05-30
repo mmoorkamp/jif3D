@@ -32,7 +32,7 @@ namespace jiba
       po::options_description SetupOptions();
       void ConfigureInversion(const po::variables_map &vm, boost::shared_ptr<
           jiba::GradientBasedOptimization> &Optimizer, boost::shared_ptr<
-          jiba::ObjectiveFunction> ObjFunction);
+          jiba::ObjectiveFunction> ObjFunction, const jiba::rvec &InvModel);
       SetupInversion();
       virtual ~SetupInversion();
       };
