@@ -102,7 +102,7 @@ int main()
     boost::shared_ptr<jiba::X3DObjective>
         X3DObjective(new jiba::X3DObjective());
     X3DObjective->SetObservedData(Data);
-    X3DObjective->SetModelGeometry(Model);
+    X3DObjective->SetCoarseModelGeometry(Model);
     X3DObjective->SetDataCovar(MTDataError);
 
     boost::shared_ptr<jiba::JointObjective> Objective(

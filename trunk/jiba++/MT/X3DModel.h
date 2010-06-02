@@ -81,14 +81,25 @@ namespace jiba
         {
           return ThreeDModelBase::SetZCellSizes();
         }
+      //! Copy the source and receiver positions and the indices for the source-receiver combinations from the source model
+      void CopyMeasurementConfigurations(const X3DModel &Source)
+        {
+          ClearMeasurementPoints();
+          const size_t nmeas = Source.GetMeasPosX().size();
+          for (size_t i = 0; i < nmeas; ++i)
+            {
+              AddMeasurementPoint(Source.GetMeasPosX()[i],
+                  Source.GetMeasPosY()[i], Source.GetMeasPosZ()[i]);
+            }
+        }
       //! Write all model information to a netcdf file
       void WriteNetCDF(const std::string filename) const;
       //! Read all model information from a netcdf file
       void ReadNetCDF(const std::string filename);
       //! The copy operator for X3DModels
-      X3DModel& operator= (const X3DModel& source);
+      X3DModel& operator=(const X3DModel& source);
       //! Other models will be copied by the copy operator for the base class
-      X3DModel& operator= (const ThreeDModelBase& source);
+      X3DModel& operator=(const ThreeDModelBase& source);
       X3DModel();
       virtual ~X3DModel();
       };

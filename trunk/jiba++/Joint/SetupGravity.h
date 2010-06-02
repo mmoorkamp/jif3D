@@ -28,6 +28,14 @@ namespace jiba
     class SetupGravity
       {
     private:
+      // The relative error for the scalar data to assume for construction of the data variance
+      double scalrelerr;
+      // The relative error for the ftg data to assume for construction of the data variance
+      double ftgrelerr;
+      // The minimum error for the scalar data to assume for construction of the data variance
+      double scalminerr;
+      // The minimum error for the ftg data to assume for construction of the data variance
+      double ftgminerr;
       jiba::ThreeDGravityModel GravModel;
     public:
       //! Return an options descriptions object for boost::program_options that contains information about gravity options
