@@ -28,6 +28,9 @@ namespace jiba
      */
     class SetupTomo
       {
+    private:
+      // The picking  error in ms to assume for construction of the data variance
+      double pickerr;
     public:
       po::options_description SetupOptions();
       void

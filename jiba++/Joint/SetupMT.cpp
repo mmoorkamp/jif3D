@@ -15,7 +15,8 @@
 namespace jiba
   {
 
-    SetupMT::SetupMT()
+    SetupMT::SetupMT() :
+      relerr(0.02)
       {
       }
 
@@ -26,6 +27,10 @@ namespace jiba
     po::options_description SetupMT::SetupOptions()
       {
         po::options_description desc("MT options");
+        desc.add_options()("mtrelerr", po::value(&relerr)->default_value(0.02),
+            "The relative error for the MT data")("mtfine", po::value(
+            &FineModelName),
+            "The name for the model with the MT forward geometry");
         return desc;
       }
 
@@ -63,9 +68,16 @@ namespace jiba
           {
             boost::shared_ptr<jiba::X3DObjective> MTObjective(
                 new jiba::X3DObjective());
-            MTObjective->SetModelGeometry(MTModel);
+            if (vm.count("mtfine"))
+              {
+                jiba::X3DModel FineModel;
+                FineModel.ReadNetCDF(FineModelName);
+                FineModel.CopyMeasurementConfigurations(MTModel);
+                MTObjective->SetFineModelGeometry(FineModel);
+              }
+            MTObjective->SetCoarseModelGeometry(MTModel);
             MTObjective->SetObservedData(MTData);
-            MTObjective->SetDataCovar(jiba::ConstructMTError(MTData, 0.02));
+            MTObjective->SetDataCovar(jiba::ConstructMTError(MTData, relerr));
 
             Objective.AddObjective(MTObjective, Transform, mtlambda, "MT");
             std::cout << "MT ndata: " << MTData.size() << std::endl;

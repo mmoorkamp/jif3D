@@ -18,7 +18,6 @@ namespace jiba
   {
     namespace po = boost::program_options;
 
-
     /** \addtogroup joint Joint inversion routines */
     /* @{ */
 
@@ -30,6 +29,9 @@ namespace jiba
     class SetupMT
       {
     private:
+      // The relative data error to assume for construction of the data variance
+      double relerr;
+      std::string FineModelName;
       jiba::X3DModel MTModel;
     public:
       po::options_description SetupOptions();
@@ -38,11 +40,14 @@ namespace jiba
           jiba::JointObjective &Objective,
           const ThreeDSeismicModel &StartModel, boost::shared_ptr<
               jiba::GeneralModelTransform> Transform);
-      const jiba::X3DModel &GetModel() {return MTModel;}
+      const jiba::X3DModel &GetModel()
+        {
+          return MTModel;
+        }
       SetupMT();
       virtual ~SetupMT();
       };
-    /* @} */
+  /* @} */
   }
 
 #endif /* SETUPMT_H_ */

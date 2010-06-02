@@ -41,6 +41,8 @@ namespace jiba
        * is then used for the forward calculation.
        */
       jiba::ModelRefiner Refiner;
+      //! If we set a FineSlowness model we will do the refinement otherwise we save some time by skipping it
+      bool wantrefinement;
       //! The observed travel times for each source receiver pair
       jiba::rvec ObservedData;
       //! The calculator object
@@ -66,6 +68,13 @@ namespace jiba
       void SetFineModelGeometry(const jiba::ThreeDSeismicModel &Model)
         {
           FineSlownessModel = Model;
+          //set the coordinates of the refiner object according to the fine model
+          //we want to use for the forward calculation
+          Refiner.SetXCoordinates(FineSlownessModel.GetXCoordinates());
+          Refiner.SetYCoordinates(FineSlownessModel.GetYCoordinates());
+          Refiner.SetZCoordinates(FineSlownessModel.GetZCoordinates());
+          //set the flag that we call the refiner in the forward and gradient calculation
+          wantrefinement = true;
         }
       //! Set the geometry of the inversion model, the forward model will be determined by applying model refinement with FineSlownessModel
       void SetCoarseModelGeometry(const jiba::ThreeDSeismicModel &Model)

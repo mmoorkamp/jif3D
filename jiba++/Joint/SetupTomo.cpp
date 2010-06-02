@@ -16,7 +16,8 @@
 namespace jiba
   {
 
-    SetupTomo::SetupTomo()
+    SetupTomo::SetupTomo() :
+      pickerr(5.0e-3)
       {
       }
 
@@ -27,11 +28,15 @@ namespace jiba
     po::options_description SetupTomo::SetupOptions()
       {
         po::options_description desc("Tomography options");
+        desc .add_options()("pickerr",
+            po::value(&pickerr)->default_value(5e-3),
+            "The picking error for the travel time data");
         return desc;
       }
 
     void SetupTomo::SetupObjective(const po::variables_map &vm,
-        jiba::JointObjective &Objective, ThreeDSeismicModel &StartModel, boost::shared_ptr<jiba::GeneralModelTransform> Transform)
+        jiba::JointObjective &Objective, ThreeDSeismicModel &StartModel,
+        boost::shared_ptr<jiba::GeneralModelTransform> Transform)
       {
         jiba::rvec TomoData;
 
@@ -62,7 +67,7 @@ namespace jiba
         TomoObjective->SetCoarseModelGeometry(StartModel);
         jiba::rvec TomoCovar(TomoData.size());
         //we assume a general error of 5 ms for the seismic data
-        std::fill(TomoCovar.begin(), TomoCovar.end(), 5.0e-3);
+        std::fill(TomoCovar.begin(), TomoCovar.end(), pickerr);
         TomoObjective->SetDataCovar(TomoCovar);
 
         double tomolambda = 1.0;
@@ -71,8 +76,7 @@ namespace jiba
 
         if (tomolambda > 0.0)
           {
-            Objective.AddObjective(TomoObjective, Transform,
-                tomolambda,"Tomo");
+            Objective.AddObjective(TomoObjective, Transform, tomolambda, "Tomo");
             std::cout << "Tomo ndata: " << TomoData.size() << std::endl;
             std::cout << "Tomo lambda: " << tomolambda << std::endl;
           }

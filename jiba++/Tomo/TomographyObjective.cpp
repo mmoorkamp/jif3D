@@ -12,7 +12,8 @@ namespace jiba
   {
 
     TomographyObjective::TomographyObjective() :
-      FineSlownessModel(), CoarseSlownessModel(), ObservedData(), Calculator()
+      FineSlownessModel(), CoarseSlownessModel(), Refiner(), wantrefinement(
+          false), ObservedData(), Calculator()
       {
       }
 
@@ -28,16 +29,19 @@ namespace jiba
         //Copy the model vector into the object with the geometry information
         std::copy(Model.begin(), Model.end(),
             CoarseSlownessModel.SetSlownesses().origin());
-        //set the coordinates of the refiner object according to the fine model
-        //we want to use for the forward calculation
-        Refiner.SetXCoordinates(FineSlownessModel.GetXCoordinates());
-        Refiner.SetYCoordinates(FineSlownessModel.GetYCoordinates());
-        Refiner.SetZCoordinates(FineSlownessModel.GetZCoordinates());
-        //project the values from the coarse model onto the fine model
-        Refiner.RefineModel(CoarseSlownessModel, FineSlownessModel);
 
-        //Calculate the travel times for the 3D model
-        jiba::rvec SynthData(Calculator.Calculate(FineSlownessModel));
+        jiba::rvec SynthData;
+        //project the values from the coarse model onto the fine model
+        if (wantrefinement)
+          {
+            Refiner.RefineModel(CoarseSlownessModel, FineSlownessModel);
+            //Calculate the travel times for the 3D model
+            SynthData = Calculator.Calculate(FineSlownessModel);
+          }
+        else
+          {
+            SynthData = Calculator.Calculate(CoarseSlownessModel);
+          }
         Diff.resize(ObservedData.size());
         assert(SynthData.size() == ObservedData.size());
         //calculate the difference between observed and synthetic
@@ -53,13 +57,18 @@ namespace jiba
         std::copy(Model.begin(), Model.end(),
             CoarseSlownessModel.SetSlownesses().origin());
 
-        jiba::ThreeDSeismicModel FineModel;
-        Refiner.RefineModel(CoarseSlownessModel, FineSlownessModel);
-        //calculate the gradient for the fine model
-        jiba::rvec FineGradient(
-            Calculator.LQDerivative(FineSlownessModel, Diff));
-        //and return the projection of the fine gradient onto the coarse model
-        return Refiner.CombineGradient(FineGradient, CoarseSlownessModel,
-            FineSlownessModel);
+        if (wantrefinement)
+          {
+            Refiner.RefineModel(CoarseSlownessModel, FineSlownessModel);
+            //calculate the gradient for the fine model
+            jiba::rvec FineGradient(Calculator.LQDerivative(FineSlownessModel,
+                Diff));
+            //and return the projection of the fine gradient onto the coarse model
+            return Refiner.CombineGradient(FineGradient, CoarseSlownessModel,
+                FineSlownessModel);
+          }
+        //we only get here if we do not do any refinement
+        //omitting the else saves us a compiler warning
+        return Calculator.LQDerivative(CoarseSlownessModel, Diff);
       }
   }

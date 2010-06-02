@@ -16,7 +16,8 @@
 namespace jiba
   {
 
-    SetupGravity::SetupGravity()
+    SetupGravity::SetupGravity() :
+      scalrelerr(0.02), ftgrelerr(0.02), scalminerr(0.0), ftgminerr(0.0)
       {
 
       }
@@ -30,7 +31,15 @@ namespace jiba
       {
         po::options_description desc("Gravity options");
 
-        desc.add_options()("gpu", "Perform gravity calculation on GPU");
+        desc.add_options()("gpu", "Perform gravity calculation on GPU")(
+            "scalrelerr", po::value(&scalrelerr)->default_value(0.02),
+            "The relative error for the scalar gravity data")("scalminerr",
+            po::value(&scalminerr)->default_value(0.0),
+            "The minimum absolute error for the scalar gravity data")(
+            "ftgrelerr", po::value(&scalrelerr)->default_value(0.02),
+            "The relative error for the FTG gravity data")("ftgminerr",
+            po::value(&ftgminerr)->default_value(0.0),
+            "The minimum absolute error for the FTG gravity data");
 
         return desc;
       }
@@ -56,7 +65,7 @@ namespace jiba
 
         jiba::ThreeDGravityModel::tMeasPosVec PosX, PosY, PosZ;
 
-       // if (scalgravlambda > 0.0)
+        if (scalgravlambda > 0.0)
           {
             std::string scalgravdatafilename = jiba::AskFilename(
                 "Scalar Gravity Data Filename: ");
@@ -65,7 +74,7 @@ namespace jiba
                 ScalGravData, PosX, PosY, PosZ);
           }
 
-        //if (ftglambda > 0.0)
+        if (ftglambda > 0.0)
           {
             std::string ftgdatafilename = jiba::AskFilename(
                 "FTG Data Filename: ");
@@ -73,7 +82,7 @@ namespace jiba
                 PosY, PosZ);
           }
 
-        //if (scalgravlambda > 0.0 || ftglambda > 0.0)
+        if (scalgravlambda > 0.0 || ftglambda > 0.0)
           {
             std::string gravmodelfilename = jiba::AskFilename(
                 "Gravity Model Filename: ");
@@ -90,31 +99,32 @@ namespace jiba
                     PosZ.at(i));
               }
           }
-        //if (scalgravlambda > 0.0)
+        if (scalgravlambda > 0.0)
           {
             boost::shared_ptr<jiba::GravityObjective> ScalGravObjective(
                 new jiba::GravityObjective(false, wantcuda));
             ScalGravObjective->SetObservedData(ScalGravData);
             ScalGravObjective->SetModelGeometry(GravModel);
             ScalGravObjective->SetDataCovar(jiba::ConstructError(ScalGravData,
-                0.0, 5e-7));
+                scalrelerr, scalminerr));
 
-            Objective.AddObjective(ScalGravObjective, Transform, scalgravlambda,"ScalGrav");
+            Objective.AddObjective(ScalGravObjective, Transform,
+                scalgravlambda, "ScalGrav");
             std::cout << "Scalar Gravity ndata: " << ScalGravData.size()
                 << std::endl;
             std::cout << "Scalar Gravity lambda: " << scalgravlambda
                 << std::endl;
           }
-        //if (ftglambda > 0.0)
+        if (ftglambda > 0.0)
           {
             boost::shared_ptr<jiba::GravityObjective> FTGObjective(
                 new jiba::GravityObjective(true, wantcuda));
             FTGObjective->SetObservedData(FTGData);
             FTGObjective->SetModelGeometry(GravModel);
-            FTGObjective->SetDataCovar(
-                jiba::ConstructError(FTGData, 0.02, 1e-9));
+            FTGObjective->SetDataCovar(jiba::ConstructError(FTGData, ftgrelerr,
+                ftgminerr));
 
-            Objective.AddObjective(FTGObjective, Transform, ftglambda,"FTG");
+            Objective.AddObjective(FTGObjective, Transform, ftglambda, "FTG");
             std::cout << "FTG ndata: " << FTGData.size() << std::endl;
             std::cout << "FTG lambda: " << ftglambda << std::endl;
           }

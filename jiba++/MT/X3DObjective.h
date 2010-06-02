@@ -9,6 +9,7 @@
 #ifndef X3DOBJECTIVE_H_
 #define X3DOBJECTIVE_H_
 
+#include "../ModelBase/ModelRefiner.h"
 #include "../Global/FatalException.h"
 #include "../Inversion/ObjectiveFunction.h"
 #include "X3DModel.h"
@@ -40,7 +41,13 @@ namespace jiba
        * As the difference does not have to be very large, it is probably best to always have one grid cell in each layer
        * that differs from everything else by 0.1% or so.
        */
-      X3DModel ConductivityModel;
+      X3DModel CoarseConductivityModel;
+      //! Similarly to the seismic tomography case \see TomographyObjective we can specify a finer model for forward calculation
+      X3DModel FineConductivityModel;
+      //! Did we actually set a fine model for the forward calculation
+      bool wantrefinement;
+      //! The object performing the model refinement
+      jiba::ModelRefiner Refiner;
       //! The vector of observed impedances real and imaginary part of the impedance elements for all stations at one frequency, then for the next frequency etc.
       jiba::rvec ObservedData;
       //! Calculate the difference between observed and synthetic data for a given conductivity model
@@ -57,7 +64,7 @@ namespace jiba
     public:
       //! Set the observed impedance data
       /*! We have to set the observed impedances for all sites and frequencies. They are stored
-       * real and imaginary part seperately, then Zxx, Zxy, Zux, Zyy, then by sites, then by frequency.
+       * real and imaginary part separately, then Zxx, Zxy, Zux, Zyy, then by sites, then by frequency.
        * @param Data The observed data in the format described above.
        */
       void SetObservedData(const jiba::rvec &Data)
@@ -70,16 +77,32 @@ namespace jiba
       //! Set a skeleton for the conductivity model that contains all information about cell sizes, site coordinates etc.
       /*! During the inversion we only copy conductivity values, so we have to store the
        * geometry and background information so we can form a complete model for the
-       * forward calculation.
-       * @param Model The skeleton object that contains all information about geometry and background
+       * forward calculation. The coarse model has to have the same number of cells as the model vector
+       * that is passed to the gradient and forward calculations. It is used to establish the geometry
+       * of the inversion model. For forward modeling this can be refined to the geometry of the FineConductivityModel
+       * @param Model The skeleton object that contains all information about geometry, background and the location of the sites
        */
-      void SetModelGeometry(const jiba::X3DModel &Model)
+      void SetCoarseModelGeometry(const jiba::X3DModel &Model)
         {
           if (Model.GetConductivities().num_elements() == 0
               || Model.GetFrequencies().size() == 0)
             throw jiba::FatalException(
                 "Cannot have empty frequencies or model in MT objective function.");
-          ConductivityModel = Model;
+          CoarseConductivityModel = Model;
+        }
+      void SetFineModelGeometry(const jiba::X3DModel &Model)
+        {
+          if (Model.GetConductivities().num_elements() == 0)
+            throw jiba::FatalException(
+                "Cannot have empty model in MT objective function.");
+          FineConductivityModel = Model;
+          //set the coordinates of the refiner object according to the fine model
+          //we want to use for the forward calculation
+          Refiner.SetXCoordinates(FineConductivityModel.GetXCoordinates());
+          Refiner.SetYCoordinates(FineConductivityModel.GetYCoordinates());
+          Refiner.SetZCoordinates(FineConductivityModel.GetZCoordinates());
+          //set the flag that we call the refiner in the forward and gradient calculation
+          wantrefinement = true;
         }
       X3DObjective();
       virtual ~X3DObjective();
