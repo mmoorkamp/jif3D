@@ -74,7 +74,7 @@ namespace jiba
                 for (size_t j = 0; j < ncovmod; ++j)
                   {
                     CovVec(j + i * ncovmod) = std::abs(
-                        *(CovModel.GetSlownesses().origin() + j) * InvModel(j + i * ncovmod));
+                        *(CovModel.GetSlownesses().origin() + j));
                   }
 
               }

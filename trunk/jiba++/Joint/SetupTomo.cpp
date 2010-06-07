@@ -30,7 +30,9 @@ namespace jiba
         po::options_description desc("Tomography options");
         desc .add_options()("pickerr",
             po::value(&pickerr)->default_value(5e-3),
-            "The picking error for the travel time data");
+            "The picking error for the travel time data")("tomofine",
+            po::value(&FineModelName),
+            "The name for the model with the MT forward geometry");
         return desc;
       }
 
@@ -44,12 +46,9 @@ namespace jiba
         std::string modelfilename = jiba::AskFilename(
             "Tomography inversion model Filename: ");
         //we read in the starting modelfile
-        jiba::ThreeDSeismicModel TomoFineGeometry;
         StartModel.ReadNetCDF(modelfilename);
+        //write out the starting model as a .vtk file for plotting
         StartModel.WriteVTK(modelfilename + ".vtk");
-        std::string tomogeometryfilename = jiba::AskFilename(
-            "Tomography forward geometry filename: ");
-        TomoFineGeometry.ReadNetCDF(tomogeometryfilename);
 
         //get the name of the file containing the data and read it in
         std::string tomodatafilename = jiba::AskFilename(
@@ -57,16 +56,15 @@ namespace jiba
 
         //read in data
         jiba::ReadTraveltimes(tomodatafilename, TomoData, StartModel);
-        //copy measurement configuration to refined model
-        TomoFineGeometry.CopyMeasurementConfigurations(StartModel);
 
         boost::shared_ptr<jiba::TomographyObjective> TomoObjective(
             new jiba::TomographyObjective());
         TomoObjective->SetObservedData(TomoData);
-        TomoObjective->SetFineModelGeometry(TomoFineGeometry);
         TomoObjective->SetCoarseModelGeometry(StartModel);
+        //we assume the same error for all measurements
+        //this is either the default value set in the constructor
+        //or set by the user
         jiba::rvec TomoCovar(TomoData.size());
-        //we assume a general error of 5 ms for the seismic data
         std::fill(TomoCovar.begin(), TomoCovar.end(), pickerr);
         TomoObjective->SetDataCovar(TomoCovar);
 
@@ -76,6 +74,14 @@ namespace jiba
 
         if (tomolambda > 0.0)
           {
+            if (vm.count("tomofine"))
+              {
+                jiba::ThreeDSeismicModel TomoFineGeometry;
+                TomoFineGeometry.ReadNetCDF(FineModelName);
+                //copy measurement configuration to refined model
+                TomoFineGeometry.CopyMeasurementConfigurations(StartModel);
+                TomoObjective->SetFineModelGeometry(TomoFineGeometry);
+              }
             Objective.AddObjective(TomoObjective, Transform, tomolambda, "Tomo");
             std::cout << "Tomo ndata: " << TomoData.size() << std::endl;
             std::cout << "Tomo lambda: " << tomolambda << std::endl;

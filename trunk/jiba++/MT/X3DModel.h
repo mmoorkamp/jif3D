@@ -81,7 +81,7 @@ namespace jiba
         {
           return ThreeDModelBase::SetZCellSizes();
         }
-      //! Copy the source and receiver positions and the indices for the source-receiver combinations from the source model
+      //! Copy the source and receiver positions and the indices for the source-receiver combinations from the source model, also copies frequencies for calculation
       void CopyMeasurementConfigurations(const X3DModel &Source)
         {
           ClearMeasurementPoints();
@@ -91,6 +91,7 @@ namespace jiba
               AddMeasurementPoint(Source.GetMeasPosX()[i],
                   Source.GetMeasPosY()[i], Source.GetMeasPosZ()[i]);
             }
+          SetFrequencies() = Source.GetFrequencies();
         }
       //! Write all model information to a netcdf file
       void WriteNetCDF(const std::string filename) const;
