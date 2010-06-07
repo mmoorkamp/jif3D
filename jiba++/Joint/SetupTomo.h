@@ -31,6 +31,8 @@ namespace jiba
     private:
       // The picking  error in ms to assume for construction of the data variance
       double pickerr;
+      // Storage for the name of the refinement model, can optionally be set on the command line
+      std::string FineModelName;
     public:
       po::options_description SetupOptions();
       void

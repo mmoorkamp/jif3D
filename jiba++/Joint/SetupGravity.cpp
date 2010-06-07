@@ -17,7 +17,7 @@ namespace jiba
   {
 
     SetupGravity::SetupGravity() :
-      scalrelerr(0.02), ftgrelerr(0.02), scalminerr(0.0), ftgminerr(0.0)
+      scalrelerr(0.02), ftgrelerr(0.02), scalminerr(0.0), ftgminerr(1e-9)
       {
 
       }
@@ -38,7 +38,7 @@ namespace jiba
             "The minimum absolute error for the scalar gravity data")(
             "ftgrelerr", po::value(&scalrelerr)->default_value(0.02),
             "The relative error for the FTG gravity data")("ftgminerr",
-            po::value(&ftgminerr)->default_value(0.0),
+            po::value(&ftgminerr)->default_value(1e-9),
             "The minimum absolute error for the FTG gravity data");
 
         return desc;
