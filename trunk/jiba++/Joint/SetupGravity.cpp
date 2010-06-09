@@ -48,6 +48,9 @@ namespace jiba
         jiba::JointObjective &Objective, const ThreeDSeismicModel &StartModel,
         boost::shared_ptr<jiba::GeneralModelTransform> Transform)
       {
+        //if we want to use CUDA for forward modeling
+        //we set a variable for easier access later and print
+        //that information to the screen
         bool wantcuda = false;
         if (vm.count("gpu"))
           {
@@ -58,13 +61,16 @@ namespace jiba
         jiba::rvec ScalGravData, FTGData;
         double scalgravlambda = 1.0;
         double ftglambda = 1.0;
+        //we first ask for the weights for scalar and tensor gravity
+        //as we might not have to do very much if the weights are zero
         std::cout << "Scalar Gravimetry Lambda: ";
         std::cin >> scalgravlambda;
         std::cout << "FTG Lambda: ";
         std::cin >> ftglambda;
 
         jiba::ThreeDGravityModel::tMeasPosVec PosX, PosY, PosZ;
-
+        //if the weight is different from zero
+        //we have to read in scalar gravity data
         if (scalgravlambda > 0.0)
           {
             std::string scalgravdatafilename = jiba::AskFilename(
@@ -74,6 +80,8 @@ namespace jiba
                 ScalGravData, PosX, PosY, PosZ);
           }
 
+        //if the weight is different from zero
+        //we have to read in ftg data
         if (ftglambda > 0.0)
           {
             std::string ftgdatafilename = jiba::AskFilename(
@@ -81,7 +89,8 @@ namespace jiba
             jiba::ReadTensorGravityMeasurements(ftgdatafilename, FTGData, PosX,
                 PosY, PosZ);
           }
-
+        //if the inversion includes any type of gravity data
+        //we need the model geometry
         if (scalgravlambda > 0.0 || ftglambda > 0.0)
           {
             std::string gravmodelfilename = jiba::AskFilename(
