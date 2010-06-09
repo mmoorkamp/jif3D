@@ -1,0 +1,4 @@
+#!/bin/bash
+find -wholename *gcc-4.4.3*release*.so -exec cp '{}' ~/jiba_dist \;
+cp ~/workspace/jiba++/Joint/bin/gcc-4.4.3/release/threading-multi/jointinv ~/jiba_dist
+chrpath -r /home/mmoorkamp/jiba_dist ~/jiba_dist/jointinv

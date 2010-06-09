@@ -9,6 +9,7 @@
 #include <boost/bind.hpp>
 #include "SetupInversion.h"
 #include "../Global/FatalException.h"
+#include "../Global/convert.h"
 #include "../Tomo/ThreeDSeismicModel.h"
 #include "../Inversion/LimitedMemoryQuasiNewton.h"
 #include "../Inversion/NonLinearConjugateGradient.h"
@@ -64,11 +65,13 @@ namespace jiba
             const size_t nparm = InvModel.size();
             const size_t ncovmod = CovModel.GetSlownesses().num_elements();
 
-            if (ncovmod % nparm != 0)
-              throw FatalException(
-                  "Size of inversion model vector is not a multiple of covariance model size !");
+            if (nparm % ncovmod  != 0)
+              throw FatalException("Size of inversion model vector: "
+                  + jiba::stringify(nparm)
+                  + " is not a multiple of covariance model size: "
+                  + jiba::stringify(ncovmod) + "!");
             rvec CovVec(nparm);
-            const size_t nsections = ncovmod / nparm;
+            const size_t nsections = nparm / ncovmod;
             for (size_t i = 0; i < nsections; ++i)
               {
                 for (size_t j = 0; j < ncovmod; ++j)
