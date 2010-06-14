@@ -136,6 +136,7 @@ namespace jiba
           //add up to get the Chi-square misfit
           DataDifference = ublas::element_div(DataDifference, CovarDiag);
           ++nEval;
+          //we return the chi-squared misfit, not the RMS
           return ublas::inner_prod(DataDifference, DataDifference);
         }
       //! Calculate the gradient associated with the last misfit calculation
@@ -159,7 +160,6 @@ namespace jiba
           ++nEval;
           return ImplGradient(Model, GradDiff);
         }
-      friend class JointObjective;
       ObjectiveFunction();
       virtual ~ObjectiveFunction();
       };
