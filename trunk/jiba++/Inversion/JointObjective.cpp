@@ -34,7 +34,6 @@ namespace jiba
     void JointObjective::ImplDataDifference(const jiba::rvec &Model,
         jiba::rvec &Diff)
       {
-        const size_t minlength = 20;
         size_t totaldata = 0;
         const size_t nobjective = Objectives.size();
         IndividualFits.resize(nobjective);

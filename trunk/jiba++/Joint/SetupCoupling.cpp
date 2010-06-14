@@ -136,19 +136,21 @@ namespace jiba
         const jiba::ThreeDMTModel &MTMod, jiba::JointObjective &Objective,
         boost::shared_ptr<jiba::MatOpRegularization> Regularization)
       {
-        //first we check whether the size of the three inversion grid matches
+
         const size_t ngrid = SeisMod.GetSlownesses().num_elements();
-        if (MTMod.GetConductivities().num_elements() != ngrid
-            || GravMod.GetDensities().num_elements() != ngrid)
-          {
-            throw jiba::FatalException(" Grids have different sizes !");
-          }
+
         //if we want to do corss-gradient type inversion
         //we need three cross-gradient objective functions
         //and three regularization terms
         if (vm.count("crossgrad"))
           {
-            //first we construct the model vector for the starting model
+            //first we check whether the size of the three inversion grid matches
+            if (MTMod.GetConductivities().num_elements() != ngrid
+                || GravMod.GetDensities().num_elements() != ngrid)
+              {
+                throw jiba::FatalException(" Grids have different sizes !");
+              }
+            // we construct the model vector for the starting model
             //from the different starting models and the transformations
             InvModel.resize(3 * ngrid);
             jiba::rvec TempModel(ngrid);
@@ -210,25 +212,26 @@ namespace jiba
             double seisreglambda = 1.0;
             std::cout << " Weight for seismic regularization: ";
             std::cin >> seisreglambda;
-            Objective.AddObjective(
-                boost::shared_ptr<jiba::MatOpRegularization>(
-                    Regularization->clone()), SlowTrans, seisreglambda,
-                "SeisReg");
+            boost::shared_ptr<jiba::MatOpRegularization> SeisReg(
+                Regularization->clone());
+            SeisReg->SetDataCovar(ublas::subrange(InvModel, 0, ngrid));
+            Objective.AddObjective(SeisReg, SlowTrans, seisreglambda, "SeisReg");
 
             double gravreglambda = 1.0;
             std::cout << " Weight for gravity regularization: ";
             std::cin >> gravreglambda;
-            Objective.AddObjective(
-                boost::shared_ptr<jiba::MatOpRegularization>(
-                    Regularization->clone()), DensTrans, gravreglambda,
-                "GravReg");
+            boost::shared_ptr<jiba::MatOpRegularization> GravReg(
+                Regularization->clone());
+            GravReg->SetDataCovar(ublas::subrange(InvModel, ngrid, 2 * ngrid));
+            Objective.AddObjective(GravReg, DensTrans, gravreglambda, "GravReg");
 
             double mtreglambda = 1.0;
             std::cout << " Weight for MT regularization: ";
             std::cin >> mtreglambda;
-            Objective.AddObjective(
-                boost::shared_ptr<jiba::MatOpRegularization>(
-                    Regularization->clone()), CondTrans, mtreglambda, "MTReg");
+            boost::shared_ptr<jiba::MatOpRegularization> MTReg(
+                Regularization->clone());
+            MTReg->SetDataCovar(ublas::subrange(InvModel, 2 * ngrid, 3 * ngrid));
+            Objective.AddObjective(MTReg, CondTrans, mtreglambda, "MTReg");
           }
         else
           {

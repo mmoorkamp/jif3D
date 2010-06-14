@@ -68,6 +68,7 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
 
       jiba::GradientRegularization Regularization(GravModel,0.0);
       Regularization.SetReferenceModel(StartModel);
+      Regularization.SetDataCovar(StartModel);
       Regularization.SetXWeight(5.0);
       Regularization.SetYWeight(4.0);
       Regularization.SetZWeight(3.0);
@@ -99,6 +100,7 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
 
       jiba::CurvatureRegularization Regularization(GravModel,0.0);
       Regularization.SetReferenceModel(StartModel);
+      Regularization.SetDataCovar(StartModel);
       Regularization.SetXWeight(5.0);
       Regularization.SetYWeight(4.0);
       Regularization.SetZWeight(3.0);
