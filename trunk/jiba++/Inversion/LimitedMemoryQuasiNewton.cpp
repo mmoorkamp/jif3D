@@ -45,6 +45,9 @@ namespace jiba
                 GetModelCovDiag());
             SearchDir -= Alpha(i) * *YHistory.at(i);
           }
+        //gamma is a scaling factor that we apply to the search direction
+        //after the first iteration this scale usually helps to find the minimum
+        //without additional steps in the line search
         double gamma = 1.0;
         if (YHistory.size() > 0)
           {
