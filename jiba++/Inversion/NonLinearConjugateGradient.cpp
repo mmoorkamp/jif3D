@@ -7,6 +7,7 @@
 
 #include "../Global/FatalException.h"
 #include "../Global/convert.h"
+#include "../Global/NormProd.h"
 #include "NonLinearConjugateGradient.h"
 #include "mcsrch.h"
 
@@ -39,6 +40,7 @@ namespace jiba
             OldDirection.resize(nmod);
             OldGradient.clear();
             OldDirection.clear();
+            gamma = 1.0;
           }
         double omega = 0.0;
         double alpha = 0.0;
@@ -56,7 +58,8 @@ namespace jiba
         SearchDir = CovGrad + alpha * OldDirection;
         OldDirection = SearchDir;
         mu = 1.0;
-        SearchDir *= -1.0;
+        SearchDir *= -gamma;
+        //ublas::element_div(SearchDir, M);
         //we only care about the sign of the angle, so we don't bother normalizing
         //by the norm of the two vectors
         double angle = ublas::inner_prod(SearchDir, RawGrad);
@@ -67,6 +70,13 @@ namespace jiba
           {
             status = OPTPP::mcsrch(&GetObjective(), SearchDir, RawGrad,
                 CurrentModel, Misfit, &mu, 20, 1e-4, 2.2e-16, 0.1, 1e9, 1e-9);
+            jiba::rvec y(ublas::element_prod(RawGrad, GetModelCovDiag())
+                - OldGradient);
+            //This is the same calculation as for L-BFGS to scale the search direction for the next iteration
+            //we therefore use the same nomenclature
+            jiba::rvec s(mu * SearchDir);
+            double rho = 1.0 / NormProd(y, s, GetModelCovDiag());
+            gamma = 1.0 / rho / NormProd(y, y, GetModelCovDiag());
           }
         else
           {
@@ -75,7 +85,6 @@ namespace jiba
             status = OPTPP::mcsrch(&GetObjective(), CovGrad, RawGrad,
                 CurrentModel, Misfit, &mu, 20, 1e-4, 2.2e-16, 0.1, 1e9, 1e-9);
           }
-
         CurrentModel += mu * SearchDir;
         //the line search already calculated the new gradient
         // so we signal that we have calculated everything

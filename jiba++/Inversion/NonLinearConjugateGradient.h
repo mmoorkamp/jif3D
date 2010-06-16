@@ -28,6 +28,8 @@ namespace jiba
       jiba::rvec OldGradient;
       //! The last search direction
       jiba::rvec OldDirection;
+      //! A scaling factor similar to L-BFGS to make help that after the first iteration we have the right step size
+      double gamma;
       //! See Tarantolla
       double OldOmega;
       //! The step-size
