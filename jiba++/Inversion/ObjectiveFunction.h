@@ -114,6 +114,11 @@ namespace jiba
         {
           CovarDiag = Cov;
         }
+      //! Return a read-only version of the diagonal of the data covariance
+      const jiba::rvec &GetDataCovar() const
+        {
+          return CovarDiag;
+        }
       //! Calculate the Chi-squared data misfit for the given model
       /*! This function calculates the value of the objective function \f$ \Phi(m) = (d -f(m))C_D(d -f(m))\f$ for a given model vector m.
        * The details of the calculation are implemented in ImplDataDifference in the derived class. This function takes
