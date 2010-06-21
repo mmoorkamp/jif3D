@@ -48,9 +48,9 @@ namespace jiba
               Reference.clear();
             }
           //make sure that the operator matrix has the right dimension
-          assert(XOperatorMatrix.size1() == Model.size());
-          assert(YOperatorMatrix.size1() == Model.size());
-          assert(ZOperatorMatrix.size1() == Model.size());
+          assert(XOperatorMatrix.size1() == nmod);
+          assert(YOperatorMatrix.size1() == nmod);
+          assert(ZOperatorMatrix.size1() == nmod);
           //the difference vector will contain the roughness values
           //in the three coordinate directions separately
           Diff.resize(3 * nmod);
