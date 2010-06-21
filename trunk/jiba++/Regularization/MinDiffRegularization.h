@@ -16,7 +16,9 @@ namespace jiba
     /* @{ */
     //! Regularize by calculating the difference to a reference model
     /*! This class can be used to regularize the inversion by
-     * looking for a model that is as close as possible to a reference model.
+     * looking for a model that is as close as possible to a reference model. If no reference
+     * model is specified it is assumed to be zero and therefore the smallest model
+     * is sought.
      */
     class MinDiffRegularization: public ObjectiveFunction
       {
@@ -26,6 +28,11 @@ namespace jiba
       //! The misfit is simply the difference between the vectors
       virtual void ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff)
         {
+          if (Reference.empty())
+            {
+              Reference.resize(Model.size());
+              std::fill(Reference.begin(), Reference.end(), 0.0);
+            }
           assert(Model.size() == Reference.size());
           Diff = Model - Reference;
         }
@@ -36,19 +43,16 @@ namespace jiba
           return 2.0 * Diff;
         }
     public:
-      //! When constructing the object we have to specify a reference
-      /*! The constructor always needs a reference model vector. This
-       * has to have the same size as the model vector in the inversion.
-       * @param Model The reference model
-       */
-      explicit MinDiffRegularization(const jiba::rvec &Model) :
-        Reference(Model)
+      //! Set the reference model for the roughness calculation, this is optional
+      void SetReferenceModel(const jiba::rvec &Model)
         {
-
+          Reference = Model;
+        }
+      MinDiffRegularization()
+        {
         }
       virtual ~MinDiffRegularization()
         {
-
         }
       };
   /* @} */

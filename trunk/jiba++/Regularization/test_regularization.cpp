@@ -47,7 +47,8 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
       std::generate(StartModel.begin(),StartModel.end(),rand);
       std::generate(PertModel.begin(),PertModel.end(),rand);
 
-      jiba::MinDiffRegularization Regularization(StartModel);
+      jiba::MinDiffRegularization Regularization;
+      Regularization.SetReferenceModel(StartModel);
       jiba::rvec Diff = StartModel - PertModel;
       double Misfit = Regularization.CalcMisfit(PertModel);
       BOOST_CHECK_CLOSE(Misfit,ublas::inner_prod(Diff,Diff),0.001);
@@ -169,7 +170,8 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
 
       GradReg->SetReferenceModel(StartModel);
 
-      boost::shared_ptr<jiba::MinDiffRegularization> DiffReg(new jiba::MinDiffRegularization(StartModel));
+      boost::shared_ptr<jiba::MinDiffRegularization> DiffReg(new jiba::MinDiffRegularization);
+      DiffReg->SetReferenceModel(StartModel);
       jiba::JointObjective Objective;
       Objective.AddObjective(GradReg,boost::shared_ptr<jiba::ModelCopyTransform>(new jiba::ModelCopyTransform),0.05);
       Objective.AddObjective(DiffReg,boost::shared_ptr<jiba::ModelCopyTransform>(new jiba::ModelCopyTransform),1.23);
