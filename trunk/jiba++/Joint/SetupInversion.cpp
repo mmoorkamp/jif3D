@@ -10,7 +10,6 @@
 #include "SetupInversion.h"
 #include "../Global/FatalException.h"
 #include "../Global/convert.h"
-#include "../Tomo/ThreeDSeismicModel.h"
 #include "../Inversion/LimitedMemoryQuasiNewton.h"
 #include "../Inversion/NonLinearConjugateGradient.h"
 
@@ -30,15 +29,14 @@ namespace jiba
         po::options_description desc("Inversion options");
         desc.add_options()("corrpairs", po::value<int>(),
             "The number correction pairs for L-BFGS")("nlcg",
-            "Use NLCG optimization")("covmod", po::value<std::string>(),
-            "A file containing the model covariance");
+            "Use NLCG optimization");
         return desc;
       }
 
     void SetupInversion::ConfigureInversion(const po::variables_map &vm,
         boost::shared_ptr<jiba::GradientBasedOptimization> &Optimizer,
         boost::shared_ptr<jiba::ObjectiveFunction> ObjFunction,
-        const jiba::rvec &InvModel)
+        const jiba::rvec &InvModel, const jiba::rvec &CovModVec)
       {
         int correctionpairs = 5;
         if (vm.count("corrpairs"))
@@ -58,14 +56,13 @@ namespace jiba
                     new jiba::LimitedMemoryQuasiNewton(ObjFunction,
                         correctionpairs));
           }
-        if (vm.count("covmod"))
+        if (!CovModVec.empty())
           {
-            ThreeDSeismicModel CovModel;
-            CovModel.ReadNetCDF(vm["covmod"].as<std::string> ());
-            const size_t nparm = InvModel.size();
-            const size_t ncovmod = CovModel.GetSlownesses().num_elements();
 
-            if (nparm % ncovmod  != 0)
+            const size_t nparm = InvModel.size();
+            const size_t ncovmod = CovModVec.size();
+
+            if (nparm % ncovmod != 0)
               throw FatalException("Size of inversion model vector: "
                   + jiba::stringify(nparm)
                   + " is not a multiple of covariance model size: "
@@ -76,8 +73,7 @@ namespace jiba
               {
                 for (size_t j = 0; j < ncovmod; ++j)
                   {
-                    CovVec(j + i * ncovmod) = std::abs(
-                        *(CovModel.GetSlownesses().origin() + j));
+                    CovVec(j + i * ncovmod) = std::abs(CovModVec(j));
                   }
 
               }

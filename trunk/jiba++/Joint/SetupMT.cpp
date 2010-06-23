@@ -35,7 +35,7 @@ namespace jiba
       }
 
     void SetupMT::SetupObjective(const po::variables_map &vm,
-        jiba::JointObjective &Objective, const ThreeDSeismicModel &StartModel,
+        jiba::JointObjective &Objective, const ThreeDModelBase &StartModel,
         boost::shared_ptr<jiba::GeneralModelTransform> Transform)
       {
         double mtlambda = 1.0;

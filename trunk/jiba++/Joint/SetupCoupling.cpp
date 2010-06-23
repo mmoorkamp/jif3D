@@ -14,6 +14,28 @@ namespace ublas = boost::numeric::ublas;
 
 namespace jiba
   {
+    void SetupModelCovar(jiba::rvec &Covar, const jiba::rvec &InvModel,
+        const jiba::rvec &OldCov, size_t ngrid)
+      {
+        assert(Covar.size() == 3 * ngrid);
+        assert(InvModel.size() == ngrid);
+        if (OldCov.empty())
+          {
+            ublas::subrange(Covar, 0, ngrid) = InvModel;
+            ublas::subrange(Covar, ngrid, 2 * ngrid) = InvModel;
+            ublas::subrange(Covar, 2 * ngrid, 3 * ngrid) = InvModel;
+          }
+        else
+          {
+            assert(OldCov.size() == 3 * ngrid);
+            ublas::subrange(Covar, 0, ngrid) = ublas::element_prod(InvModel,
+                ublas::subrange(OldCov, 0, ngrid));
+            ublas::subrange(Covar, ngrid, 2 * ngrid) = ublas::element_prod(
+                InvModel, ublas::subrange(OldCov, ngrid, 2 * ngrid));
+            ublas::subrange(Covar, 2 * ngrid, 3 * ngrid) = ublas::element_prod(
+                InvModel, ublas::subrange(OldCov, 2 * ngrid, 3 * ngrid));
+          }
+      }
 
     SetupCoupling::SetupCoupling()
       {
@@ -153,21 +175,23 @@ namespace jiba
             // we construct the model vector for the starting model
             //from the different starting models and the transformations
             InvModel.resize(3 * ngrid);
-            jiba::rvec TempModel(ngrid);
+            jiba::rvec SeisModel(ngrid);
             std::copy(SeisMod.GetSlownesses().origin(),
-                SeisMod.GetSlownesses().origin() + ngrid, TempModel.begin());
+                SeisMod.GetSlownesses().origin() + ngrid, SeisModel.begin());
             ublas::subrange(InvModel, 0, ngrid)
-                = SlowTrans->PhysicalToGeneralized(TempModel);
+                = SlowTrans->PhysicalToGeneralized(SeisModel);
 
+            jiba::rvec GravModel(ngrid);
             std::copy(GravMod.GetDensities().origin(),
-                GravMod.GetDensities().origin() + ngrid, TempModel.begin());
+                GravMod.GetDensities().origin() + ngrid, GravModel.begin());
             ublas::subrange(InvModel, ngrid, 2 * ngrid)
-                = DensTrans->PhysicalToGeneralized(TempModel);
+                = DensTrans->PhysicalToGeneralized(GravModel);
 
+            jiba::rvec MTModel(ngrid);
             std::copy(MTMod.GetConductivities().origin(),
-                MTMod.GetConductivities().origin() + ngrid, TempModel.begin());
+                MTMod.GetConductivities().origin() + ngrid, MTModel.begin());
             ublas::subrange(InvModel, 2 * ngrid, 3 * ngrid)
-                = CondTrans->PhysicalToGeneralized(TempModel);
+                = CondTrans->PhysicalToGeneralized(MTModel);
             //then we constrcut the three cross gradient terms
             //the double section transform takes two sections of the model
             //and feeds them to the objective function
@@ -214,7 +238,11 @@ namespace jiba
             std::cin >> seisreglambda;
             boost::shared_ptr<jiba::MatOpRegularization> SeisReg(
                 Regularization->clone());
-            SeisReg->SetDataCovar(ublas::subrange(InvModel, 0, ngrid));
+            jiba::rvec TomoCovar(3 * ngrid);
+            SetupModelCovar(TomoCovar, SeisModel, SeisReg->GetDataCovar(),
+                ngrid);
+            SeisReg->SetDataCovar(TomoCovar);
+            SeisReg->SetReferenceModel(SeisModel);
             Objective.AddObjective(SeisReg, SlowTrans, seisreglambda, "SeisReg");
 
             double gravreglambda = 1.0;
@@ -222,7 +250,11 @@ namespace jiba
             std::cin >> gravreglambda;
             boost::shared_ptr<jiba::MatOpRegularization> GravReg(
                 Regularization->clone());
-            GravReg->SetDataCovar(ublas::subrange(InvModel, ngrid, 2 * ngrid));
+            jiba::rvec GravCovar(3 * ngrid);
+            SetupModelCovar(GravCovar, GravModel, GravReg->GetDataCovar(),
+                ngrid);
+            GravReg->SetDataCovar(GravCovar);
+            GravReg->SetReferenceModel(GravModel);
             Objective.AddObjective(GravReg, DensTrans, gravreglambda, "GravReg");
 
             double mtreglambda = 1.0;
@@ -230,7 +262,10 @@ namespace jiba
             std::cin >> mtreglambda;
             boost::shared_ptr<jiba::MatOpRegularization> MTReg(
                 Regularization->clone());
-            MTReg->SetDataCovar(ublas::subrange(InvModel, 2 * ngrid, 3 * ngrid));
+            jiba::rvec MTCovar(3 * ngrid);
+            SetupModelCovar(MTCovar, MTModel, MTReg->GetDataCovar(), ngrid);
+            MTReg->SetDataCovar(MTCovar);
+            MTReg->SetReferenceModel(MTModel);
             Objective.AddObjective(MTReg, CondTrans, mtreglambda, "MTReg");
           }
         else
@@ -241,12 +276,17 @@ namespace jiba
             InvModel.resize(ngrid);
             std::copy(SeisMod.GetSlownesses().origin(),
                 SeisMod.GetSlownesses().origin() + ngrid, InvModel.begin());
-            InvModel = SlowTrans->PhysicalToGeneralized(InvModel);
-
             double reglambda = 1.0;
             std::cout << " Weight for regularization: ";
             std::cin >> reglambda;
+            jiba::rvec TomoCovar(3 * ngrid);
+            SetupModelCovar(TomoCovar, InvModel,
+                Regularization->GetDataCovar(), ngrid);
+            Regularization->SetDataCovar(TomoCovar);
+            Regularization->SetReferenceModel(InvModel);
             Objective.AddObjective(Regularization, SlowTrans, reglambda, "Reg");
+            InvModel = SlowTrans->PhysicalToGeneralized(InvModel);
+
           }
       }
   }

@@ -89,6 +89,9 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
       const size_t nz = 7;
       const double cellsize = 100;
       GravModel.SetDensities().resize(boost::extents[nx][ny][nz]);
+      GravModel.SetXCellSizes().resize(boost::extents[nx]);
+      GravModel.SetYCellSizes().resize(boost::extents[ny]);
+      GravModel.SetZCellSizes().resize(boost::extents[nz]);
       GradModel.SetCellSize(cellsize, nx, ny, nz);
 
 

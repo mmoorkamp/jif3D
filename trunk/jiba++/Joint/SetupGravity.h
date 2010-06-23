@@ -11,7 +11,6 @@
 
 #include "../Gravity/ThreeDGravityModel.h"
 #include "../Inversion/JointObjective.h"
-#include "../Tomo/ThreeDSeismicModel.h"
 #include <boost/program_options.hpp>
 
 namespace jiba
@@ -44,7 +43,7 @@ namespace jiba
       void
       SetupObjective(const po::variables_map &vm,
           jiba::JointObjective &Objective,
-          const ThreeDSeismicModel &StartModel, boost::shared_ptr<
+          const ThreeDModelBase &StartModel, boost::shared_ptr<
               jiba::GeneralModelTransform> Transform);
       //! Return the gravity model that was read in
       const jiba::ThreeDGravityModel &GetModel()

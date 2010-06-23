@@ -30,7 +30,13 @@ namespace jiba
       {
     private:
       const double Eps;
-      void ConstructOperator(const jiba::ThreeDModelBase &ModelGeometry);
+      void ConstructOperator(const jiba::ThreeDModelBase &ModelGeometry,
+          const jiba::ThreeDModelBase &TearModelX,
+          const jiba::ThreeDModelBase &TearModelY,
+          const jiba::ThreeDModelBase &TearModelZ);
+      //! Make an dummy tear model object, that contains 1 in all cells and therefore does not change regularization
+      void MakeTearModel(const jiba::ThreeDModelBase &Geometry,
+          jiba::ThreeDModelBase &TearModel);
     public:
       //! The clone function provides a virtual constructor
       virtual GradientRegularization *clone() const
@@ -51,7 +57,47 @@ namespace jiba
           const double ModEps = 1e-8) :
         MatOpRegularization(Geometry), Eps(ModEps)
         {
-          ConstructOperator(Geometry);
+          jiba::ThreeDModelBase TearModel;
+          //if we do not want tears in the regularization we temporarily
+          //construct a dummy tear object that contains 1 everywhere
+          //and therefore applies the normal regularization everywhere
+          MakeTearModel(Geometry, TearModel);
+          ConstructOperator(Geometry, TearModel, TearModel, TearModel);
+        }
+      //! This alternative constructor allows to introduce tears in the regularization in the three spatial directions
+      /*! There are situations where we do not want to regularize in a certain part of the model. Either because we want
+       * to facilitate discontinuities, or because a part of the inversion domain has been fixed and we do not want to
+       * have this part influence the value of the regularization functional. In this case we can introduce tears in
+       * the regularization by passing a model object for each spatial direction to this constructor that specifies
+       * the regions of tear. Each tear model has to have the same geometry as the geometry object. If the "slowness" value
+       * for the respective model object is zero, we introduce a tear between this cell and the cell with the higher index
+       * (to the north/east/down) for all other values the regularization works as usual.
+       * @param Geometry An object containing information about the geometry of the inversion domain
+       * @param TearModelX Contains information about tears in the regularization in x-direction  (North)
+       * @param TearModelY Contains information about tears in the regularization in y-direction  (East)
+       * @param TearModelZ Contains information about tears in the regularization in z-direction  (Down)
+       * @param ModEps The weight of the absolute value minimization of the model vector.
+       */
+      GradientRegularization(const jiba::ThreeDModelBase &Geometry,
+          jiba::ThreeDModelBase &TearModelX, jiba::ThreeDModelBase &TearModelY,
+          jiba::ThreeDModelBase &TearModelZ, const double ModEps = 1e-8) :
+        MatOpRegularization(Geometry), Eps(ModEps)
+        {
+          //in debug mode we check that the geometry of the tear models
+          //matches the geometry we specify for the inversion domain
+          assert(TearModelX.GetXCellSizes().size() == Geometry.GetXCellSizes().size());
+          assert(TearModelX.GetYCellSizes().size() == Geometry.GetYCellSizes().size());
+          assert(TearModelX.GetZCellSizes().size() == Geometry.GetZCellSizes().size());
+
+          assert(TearModelY.GetXCellSizes().size() == Geometry.GetXCellSizes().size());
+          assert(TearModelY.GetYCellSizes().size() == Geometry.GetYCellSizes().size());
+          assert(TearModelY.GetZCellSizes().size() == Geometry.GetZCellSizes().size());
+
+          assert(TearModelZ.GetXCellSizes().size() == Geometry.GetXCellSizes().size());
+          assert(TearModelZ.GetYCellSizes().size() == Geometry.GetYCellSizes().size());
+          assert(TearModelZ.GetZCellSizes().size() == Geometry.GetZCellSizes().size());
+
+          ConstructOperator(Geometry, TearModelX, TearModelY, TearModelZ);
         }
       virtual ~GradientRegularization()
         {
