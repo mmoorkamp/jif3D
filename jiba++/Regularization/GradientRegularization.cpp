@@ -11,8 +11,22 @@
 namespace jiba
   {
 
+    void GradientRegularization::MakeTearModel(
+        const jiba::ThreeDModelBase &Geometry, jiba::ThreeDModelBase &TearModel)
+      {
+        //create a model with a geometry that matches the inversion domain
+        TearModel.SetData().resize(
+            boost::extents[Geometry.GetXCellSizes().size()][Geometry.GetYCellSizes().size()][Geometry.GetZCellSizes().size()]);
+        //fill the object with 1 values, which means that there is no tear anywhere
+        std::fill_n(TearModel.SetData().origin(),
+            TearModel.GetData().num_elements(), 1.0);
+      }
+
     void GradientRegularization::ConstructOperator(
-        const jiba::ThreeDModelBase &ModelGeometry)
+        const jiba::ThreeDModelBase &ModelGeometry,
+        const jiba::ThreeDModelBase &TearModelX,
+        const jiba::ThreeDModelBase &TearModelY,
+        const jiba::ThreeDModelBase &TearModelZ)
       {
         const size_t xsize = ModelGeometry.GetModelShape()[0];
         const size_t ysize = ModelGeometry.GetModelShape()[1];
@@ -32,29 +46,42 @@ namespace jiba
                     const size_t index = ModelGeometry.IndexToOffset(i, j, k);
                     //we use forward differences for the gradient
                     //so we have two elements per matrix row
-                    XOperatorMatrix(index, ModelGeometry.IndexToOffset(i + 1,
-                        j, k)) = 1.0;
-                    XOperatorMatrix(index, index) = CenterValue;
-
-                    YOperatorMatrix(index, ModelGeometry.IndexToOffset(i,
-                        j + 1, k)) = 1.0;
-                    YOperatorMatrix(index, index) = CenterValue;
-
-                    ZOperatorMatrix(index, ModelGeometry.IndexToOffset(i, j, k
-                        + 1)) = 1.0;
-                    ZOperatorMatrix(index, index) = CenterValue;
+                    if (TearModelX.GetData()[i][j][k])
+                      {
+                        XOperatorMatrix(index, ModelGeometry.IndexToOffset(i
+                            + 1, j, k)) = 1.0;
+                        XOperatorMatrix(index, index) = CenterValue;
+                      }
+                    if (TearModelY.GetData()[i][j][k])
+                      {
+                        YOperatorMatrix(index, ModelGeometry.IndexToOffset(i, j
+                            + 1, k)) = 1.0;
+                        YOperatorMatrix(index, index) = CenterValue;
+                      }
+                    if (TearModelZ.GetData()[i][j][k])
+                      {
+                        ZOperatorMatrix(index, ModelGeometry.IndexToOffset(i,
+                            j, k + 1)) = 1.0;
+                        ZOperatorMatrix(index, index) = CenterValue;
+                      }
                   }
+
                 //we can handle the border in z-direction within this loop
                 //there we only use the gradient in x-direction and y-direction
                 const size_t index = ModelGeometry.IndexToOffset(i, j, zsize
                     - 1);
-                XOperatorMatrix(index, ModelGeometry.IndexToOffset(i + 1, j,
-                    zsize - 1)) = 1.0;
-                XOperatorMatrix(index, index) = CenterValue;
-
-                YOperatorMatrix(index, ModelGeometry.IndexToOffset(i, j + 1,
-                    zsize - 1)) = 1.0;
-                YOperatorMatrix(index, index) = CenterValue;
+                if (TearModelX.GetData()[i][j][zsize - 1])
+                  {
+                    XOperatorMatrix(index, ModelGeometry.IndexToOffset(i + 1,
+                        j, zsize - 1)) = 1.0;
+                    XOperatorMatrix(index, index) = CenterValue;
+                  }
+                if (TearModelY.GetData()[i][j][zsize - 1])
+                  {
+                    YOperatorMatrix(index, ModelGeometry.IndexToOffset(i,
+                        j + 1, zsize - 1)) = 1.0;
+                    YOperatorMatrix(index, index) = CenterValue;
+                  }
               }
           }
 
@@ -66,12 +93,18 @@ namespace jiba
               {
                 const size_t index = ModelGeometry.IndexToOffset(xsize - 1, j,
                     k);
-                YOperatorMatrix(index, ModelGeometry.IndexToOffset(xsize - 1, j
-                    + 1, k)) = 1.0;
-                YOperatorMatrix(index, index) = CenterValue;
-                ZOperatorMatrix(index, ModelGeometry.IndexToOffset(xsize - 1,
-                    j, k + 1)) = 1.0;
-                ZOperatorMatrix(index, index) = CenterValue;
+                if (TearModelY.GetData()[xsize - 1][j][k])
+                  {
+                    YOperatorMatrix(index, ModelGeometry.IndexToOffset(xsize
+                        - 1, j + 1, k)) = 1.0;
+                    YOperatorMatrix(index, index) = CenterValue;
+                  }
+                if (TearModelZ.GetData()[xsize - 1][j][k])
+                  {
+                    ZOperatorMatrix(index, ModelGeometry.IndexToOffset(xsize
+                        - 1, j, k + 1)) = 1.0;
+                    ZOperatorMatrix(index, index) = CenterValue;
+                  }
               }
           }
 
@@ -83,12 +116,18 @@ namespace jiba
               {
                 const size_t index = ModelGeometry.IndexToOffset(j, ysize - 1,
                     k);
-                XOperatorMatrix(index, ModelGeometry.IndexToOffset(j + 1, ysize
-                    - 1, k)) = 1.0;
-                XOperatorMatrix(index, index) = CenterValue;
-                ZOperatorMatrix(index, ModelGeometry.IndexToOffset(j,
-                    ysize - 1, k + 1)) = 1.0;
-                ZOperatorMatrix(index, index) = CenterValue;
+                if (TearModelX.GetData()[j][ysize - 1][k])
+                  {
+                    XOperatorMatrix(index, ModelGeometry.IndexToOffset(j + 1,
+                        ysize - 1, k)) = 1.0;
+                    XOperatorMatrix(index, index) = CenterValue;
+                  }
+                if (TearModelZ.GetData()[j][ysize - 1][k])
+                  {
+                    ZOperatorMatrix(index, ModelGeometry.IndexToOffset(j, ysize
+                        - 1, k + 1)) = 1.0;
+                    ZOperatorMatrix(index, index) = CenterValue;
+                  }
               }
           }
       }

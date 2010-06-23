@@ -11,7 +11,7 @@
 
 #include "../Inversion/ModelTransforms.h"
 #include "../Regularization/MatOpRegularization.h"
-#include "../Tomo/ThreeDSeismicModel.h"
+#include "../ModelBase/ThreeDModelBase.h"
 #include <boost/program_options.hpp>
 #include <boost/shared_ptr.hpp>
 
@@ -32,8 +32,8 @@ namespace jiba
     public:
       po::options_description SetupOptions();
       boost::shared_ptr<jiba::MatOpRegularization> SetupObjective(
-          const po::variables_map &vm, const ThreeDSeismicModel &StartModel,
-          boost::shared_ptr<jiba::GeneralModelTransform> Transform);
+          const po::variables_map &vm, const ThreeDModelBase &StartModel,
+          boost::shared_ptr<jiba::GeneralModelTransform> Transform , const jiba::rvec &CovModVec);
       SetupRegularization();
       virtual ~SetupRegularization();
       };

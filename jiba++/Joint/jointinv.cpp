@@ -59,7 +59,8 @@ int main(int argc, char *argv[])
 
     po::options_description desc("General options");
     desc.add_options()("help", "produce help message")("threads",
-        po::value<int>(), "The number of openmp threads");
+        po::value<int>(), "The number of openmp threads")("covmod", po::value<
+        std::string>(), "A file containing the model covariance");
 
     desc.add(TomoSetup.SetupOptions());
     desc.add(GravitySetup.SetupOptions());
@@ -82,6 +83,17 @@ int main(int argc, char *argv[])
       {
         omp_set_num_threads(vm["threads"].as<int> ());
       }
+
+    jiba::rvec CovModVec;
+    if (vm.count("covmod"))
+      {
+        jiba::ThreeDSeismicModel CovModel;
+        CovModel.ReadNetCDF(vm["covmod"].as<std::string> ());
+        const size_t ncovmod = CovModel.GetSlownesses().num_elements();
+        CovModVec.resize(ncovmod);
+        std::copy(CovModel.GetSlownesses().origin(),
+            CovModel.GetSlownesses().origin() + ncovmod, CovModVec.begin());
+      }
     //we want some output so we set Verbose in the constructor to true
     boost::shared_ptr<jiba::JointObjective> Objective(new jiba::JointObjective(
         true));
@@ -98,7 +110,7 @@ int main(int argc, char *argv[])
         GravityTransform);
     MTSetup.SetupObjective(vm, *Objective.get(), TomoModel, MTTransform);
     boost::shared_ptr<jiba::MatOpRegularization> Regularization =
-        RegSetup.SetupObjective(vm, TomoModel, RegTransform);
+        RegSetup.SetupObjective(vm, TomoModel, RegTransform, CovModVec);
 
     jiba::rvec InvModel;
     CouplingSetup.SetupModelVector(vm, InvModel, TomoModel,
@@ -115,7 +127,7 @@ int main(int argc, char *argv[])
     std::cout << "Performing inversion." << std::endl;
 
     boost::shared_ptr<jiba::GradientBasedOptimization> Optimizer;
-    InversionSetup.ConfigureInversion(vm, Optimizer, Objective, InvModel);
+    InversionSetup.ConfigureInversion(vm, Optimizer, Objective, InvModel, CovModVec);
 
     size_t iteration = 0;
 

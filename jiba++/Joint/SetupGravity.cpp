@@ -45,7 +45,7 @@ namespace jiba
       }
 
     void SetupGravity::SetupObjective(const po::variables_map &vm,
-        jiba::JointObjective &Objective, const ThreeDSeismicModel &StartModel,
+        jiba::JointObjective &Objective, const ThreeDModelBase &StartModel,
         boost::shared_ptr<jiba::GeneralModelTransform> Transform)
       {
         //if we want to use CUDA for forward modeling

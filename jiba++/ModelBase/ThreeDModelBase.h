@@ -111,19 +111,6 @@ namespace jiba
       double YOrigin;
       //! The origin of the coordinate system in z-direction in m
       double ZOrigin;
-      //The access to the data is protected, this requires the derived class
-      // to provide an access function and allows to add initial checks and
-      // meaningful names
-      //! return read only access to the stored data
-      const t3DModelData &GetData() const
-        {
-          return Data;
-        }
-      //! return a reference to the data so it can be modified
-      t3DModelData &SetData()
-        {
-          return Data;
-        }
       //! read-write access to the cell size in x-direction in m
       t3DModelDim &SetXCellSizes()
         {
@@ -151,6 +138,16 @@ namespace jiba
       //! Write the data and cell sizes to a VTK file for plotting in Paraview or Visit etc.
       void WriteVTK(std::string filename, const std::string &DataName) const;
     public:
+      //! return a reference to the data so it can be modified
+      t3DModelData &SetData()
+        {
+          return Data;
+        }
+      //! return read only access to the stored data
+      const t3DModelData &GetData() const
+        {
+          return Data;
+        }
       //! Add a measurement point to the model
       void AddMeasurementPoint(const double xcoord, const double ycoord,
           const double zcoord)

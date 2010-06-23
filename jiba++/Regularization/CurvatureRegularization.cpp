@@ -16,8 +16,23 @@ namespace jiba
 
       }
 
+    void CurvatureRegularization::MakeTearModel(
+        const jiba::ThreeDModelBase &Geometry, jiba::ThreeDModelBase &TearModel)
+      {
+        //create a model with a geometry that matches the inversion domain
+        TearModel.SetData().resize(
+            boost::extents[Geometry.GetXCellSizes().size()][Geometry.GetYCellSizes().size()][Geometry.GetZCellSizes().size()]);
+        //fill the object with 1 values, which means that there is no tear anywhere
+        std::fill_n(TearModel.SetData().origin(),
+            TearModel.GetData().num_elements(), 1.0);
+
+      }
+
     void CurvatureRegularization::ConstructOperator(
-        const jiba::ThreeDModelBase &ModelGeometry)
+        const jiba::ThreeDModelBase &ModelGeometry,
+        const jiba::ThreeDModelBase &TearModelX,
+        const jiba::ThreeDModelBase &TearModelY,
+        const jiba::ThreeDModelBase &TearModelZ)
       {
         const size_t xsize = ModelGeometry.GetModelShape()[0];
         const size_t ysize = ModelGeometry.GetModelShape()[1];
@@ -32,53 +47,82 @@ namespace jiba
               {
                 for (size_t k = 1; k < zsize - 1; ++k)
                   {
+                    //save the storage index of the current element in the inversion domain
                     const size_t index = ModelGeometry.IndexToOffset(i, j, k);
-                    XOperatorMatrix(index, ModelGeometry.IndexToOffset(i + 1,
-                        j, k)) = RightValue;
-                    XOperatorMatrix(index, index) = CenterValue;
-                    XOperatorMatrix(index, ModelGeometry.IndexToOffset(i - 1,
-                        j, k)) = LeftValue;
-
-                    YOperatorMatrix(index, ModelGeometry.IndexToOffset(i,
-                        j + 1, k)) = RightValue;
-                    YOperatorMatrix(index, index) = CenterValue;
-                    YOperatorMatrix(index, ModelGeometry.IndexToOffset(i,
-                        j - 1, k)) = LeftValue;
-
-                    ZOperatorMatrix(index, ModelGeometry.IndexToOffset(i, j, k
-                        + 1)) = RightValue;
-                    ZOperatorMatrix(index, index) = CenterValue;
-                    ZOperatorMatrix(index, ModelGeometry.IndexToOffset(i, j, k
-                        - 1)) = LeftValue;
+                    //for each direction we have to check whether we want to introduce a tear
+                    //we have to check the current element and the previous one,
+                    //as curvature based regularization depends on elements on both
+                    //sides of the current element, if both are different from zero
+                    //we add the appropriate values to the operator matrix
+                    if (TearModelX.GetData()[i][j][k] && TearModelX.GetData()[i
+                        - 1][j][k])
+                      {
+                        XOperatorMatrix(index, ModelGeometry.IndexToOffset(i
+                            + 1, j, k)) = RightValue;
+                        XOperatorMatrix(index, index) = CenterValue;
+                        XOperatorMatrix(index, ModelGeometry.IndexToOffset(i
+                            - 1, j, k)) = LeftValue;
+                      }
+                    if (TearModelY.GetData()[i][j][k]
+                        && TearModelY.GetData()[i][j - 1][k])
+                      {
+                        YOperatorMatrix(index, ModelGeometry.IndexToOffset(i, j
+                            + 1, k)) = RightValue;
+                        YOperatorMatrix(index, index) = CenterValue;
+                        YOperatorMatrix(index, ModelGeometry.IndexToOffset(i, j
+                            - 1, k)) = LeftValue;
+                      }
+                    if (TearModelZ.GetData()[i][j][k]
+                        && TearModelZ.GetData()[i][j][k - 1])
+                      {
+                        ZOperatorMatrix(index, ModelGeometry.IndexToOffset(i,
+                            j, k + 1)) = RightValue;
+                        ZOperatorMatrix(index, index) = CenterValue;
+                        ZOperatorMatrix(index, ModelGeometry.IndexToOffset(i,
+                            j, k - 1)) = LeftValue;
+                      }
                   }
                 //we can handle the border in z-direction within this loop
                 //first the maximum z index
                 size_t index = ModelGeometry.IndexToOffset(i, j, zsize - 1);
-                XOperatorMatrix(index, ModelGeometry.IndexToOffset(i + 1, j,
-                    zsize - 1)) = RightValue;
-                XOperatorMatrix(index, index) = CenterValue;
-                XOperatorMatrix(index, ModelGeometry.IndexToOffset(i - 1, j,
-                    zsize - 1)) = LeftValue;
-
-                YOperatorMatrix(index, ModelGeometry.IndexToOffset(i, j + 1,
-                    zsize - 1)) = RightValue;
-                YOperatorMatrix(index, index) = CenterValue;
-                YOperatorMatrix(index, ModelGeometry.IndexToOffset(i, j - 1,
-                    zsize - 1)) = LeftValue;
-
+                if (TearModelX.GetData()[i][j][zsize - 1]
+                    && TearModelX.GetData()[i - 1][j][zsize - 1])
+                  {
+                    XOperatorMatrix(index, ModelGeometry.IndexToOffset(i + 1,
+                        j, zsize - 1)) = RightValue;
+                    XOperatorMatrix(index, index) = CenterValue;
+                    XOperatorMatrix(index, ModelGeometry.IndexToOffset(i - 1,
+                        j, zsize - 1)) = LeftValue;
+                  }
+                if (TearModelY.GetData()[i][j][zsize - 1]
+                    && TearModelY.GetData()[i][j - 1][zsize - 1])
+                  {
+                    YOperatorMatrix(index, ModelGeometry.IndexToOffset(i,
+                        j + 1, zsize - 1)) = RightValue;
+                    YOperatorMatrix(index, index) = CenterValue;
+                    YOperatorMatrix(index, ModelGeometry.IndexToOffset(i,
+                        j - 1, zsize - 1)) = LeftValue;
+                  }
                 //then the first z-index
-                index = ModelGeometry.IndexToOffset(i, j, 0);
-                XOperatorMatrix(index, ModelGeometry.IndexToOffset(i + 1, j, 0))
-                    = RightValue;
-                XOperatorMatrix(index, index) = CenterValue;
-                XOperatorMatrix(index, ModelGeometry.IndexToOffset(i - 1, j, 0))
-                    = LeftValue;
-
-                YOperatorMatrix(index, ModelGeometry.IndexToOffset(i, j + 1, 0))
-                    = RightValue;
-                YOperatorMatrix(index, index) = CenterValue;
-                YOperatorMatrix(index, ModelGeometry.IndexToOffset(i, j - 1, 0))
-                    = LeftValue;
+                if (TearModelX.GetData()[i][j][0]
+                    && TearModelX.GetData()[i - 1][j][0])
+                  {
+                    index = ModelGeometry.IndexToOffset(i, j, 0);
+                    XOperatorMatrix(index, ModelGeometry.IndexToOffset(i + 1,
+                        j, 0)) = RightValue;
+                    XOperatorMatrix(index, index) = CenterValue;
+                    XOperatorMatrix(index, ModelGeometry.IndexToOffset(i - 1,
+                        j, 0)) = LeftValue;
+                  }
+                if (TearModelY.GetData()[i][j][0] && TearModelY.GetData()[i][j
+                    - 1][0])
+                  {
+                    YOperatorMatrix(index, ModelGeometry.IndexToOffset(i,
+                        j + 1, 0)) = RightValue;
+                    YOperatorMatrix(index, index) = CenterValue;
+                    YOperatorMatrix(index, ModelGeometry.IndexToOffset(i,
+                        j - 1, 0)) = LeftValue;
+                  }
               }
           }
       }
