@@ -50,8 +50,8 @@ namespace jiba
                 StartModel.GetXCellSizes().size(),
                 StartModel.GetYCellSizes().size(),
                 StartModel.GetZCellSizes().size());
-            std::fill_n(TearMod.SetSlownesses().origin(),
-                TearMod.GetSlownesses().num_elements(), 1.0);
+            std::fill_n(NoTearMod.SetSlownesses().origin(),
+                NoTearMod.GetSlownesses().num_elements(), 1.0);
             TearMod.ReadNetCDF(vm["tearmod"].as<std::string> ());
             assert(StartModel.GetNModelElements() == TearMod. GetNModelElements());
           }
