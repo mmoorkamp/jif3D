@@ -31,9 +31,13 @@ namespace jiba
             "The weight for the regularization in y-direction")("zreg",
             po::value<double>(),
             "The weight for the regularization in z-direction")("curvreg",
-            "Use model curvature for regularization.")("tearmod", po::value<
+            "Use model curvature for regularization.")("tearmodx", po::value<
             std::string>(),
-            "Filename for a model containing information about tear zones.");
+            "Filename for a model containing information about tear zones in x-direction.")(
+            "tearmody", po::value<std::string>(),
+            "Filename for a model containing information about tear zones in y-direction.")(
+            "tearmodz", po::value<std::string>(),
+            "Filename for a model containing information about tear zones in z-direction.");
 
         return desc;
       }
@@ -43,59 +47,70 @@ namespace jiba
         boost::shared_ptr<jiba::GeneralModelTransform> Transform,
         const jiba::rvec &CovModVec)
       {
-        jiba::ThreeDSeismicModel TearMod, NoTearMod;
-        if (vm.count("tearmod"))
+        jiba::ThreeDSeismicModel TearModX, TearModY, TearModZ;
+        if (vm.count("tearmodx"))
           {
-            NoTearMod.SetCellSize(StartModel.GetXCellSizes()[0],
+            TearModX.ReadNetCDF(vm["tearmodx"].as<std::string> ());
+          }
+        else
+          {
+            TearModX.SetCellSize(StartModel.GetXCellSizes()[0],
                 StartModel.GetXCellSizes().size(),
                 StartModel.GetYCellSizes().size(),
                 StartModel.GetZCellSizes().size());
-            std::fill_n(NoTearMod.SetSlownesses().origin(),
-                NoTearMod.GetSlownesses().num_elements(), 1.0);
-            TearMod.ReadNetCDF(vm["tearmod"].as<std::string> ());
-            assert(StartModel.GetNModelElements() == TearMod. GetNModelElements());
+            std::fill_n(TearModX.SetSlownesses().origin(),
+                TearModX.GetSlownesses().num_elements(), 1.0);
           }
+
+        if (vm.count("tearmody"))
+          {
+            TearModY.ReadNetCDF(vm["tearmody"].as<std::string> ());
+          }
+        else
+          {
+            TearModY.SetCellSize(StartModel.GetXCellSizes()[0],
+                StartModel.GetXCellSizes().size(),
+                StartModel.GetYCellSizes().size(),
+                StartModel.GetZCellSizes().size());
+            std::fill_n(TearModY.SetSlownesses().origin(),
+                TearModY.GetSlownesses().num_elements(), 1.0);
+          }
+
+        if (vm.count("tearmodz"))
+          {
+
+            TearModZ.ReadNetCDF(vm["tearmodz"].as<std::string> ());
+
+          }
+        else
+          {
+            TearModZ.SetCellSize(StartModel.GetXCellSizes()[0],
+                StartModel.GetXCellSizes().size(),
+                StartModel.GetYCellSizes().size(),
+                StartModel.GetZCellSizes().size());
+            std::fill_n(TearModZ.SetSlownesses().origin(),
+                TearModZ.GetSlownesses().num_elements(), 1.0);
+          }
+
+        assert(StartModel.GetNModelElements() == TearModX.GetNModelElements());
+        assert(StartModel.GetNModelElements() == TearModY.GetNModelElements());
+        assert(StartModel.GetNModelElements() == TearModZ.GetNModelElements());
 
         boost::shared_ptr<jiba::MatOpRegularization> Regularization;
         if (vm.count("curvreg"))
           {
-            if (vm.count("tearmod"))
-              {
-                Regularization = boost::shared_ptr<jiba::MatOpRegularization>(
-                    new jiba::CurvatureRegularization(StartModel, NoTearMod,
-                        NoTearMod, TearMod));
-              }
-            else
-              {
-                Regularization = boost::shared_ptr<jiba::MatOpRegularization>(
-                    new jiba::CurvatureRegularization(StartModel));
-              }
+            Regularization = boost::shared_ptr<jiba::MatOpRegularization>(
+                new jiba::CurvatureRegularization(StartModel, TearModX,
+                    TearModY, TearModZ));
+
           }
         else
           {
-            if (vm.count("tearmod"))
-              {
-                Regularization = boost::shared_ptr<jiba::MatOpRegularization>(
-                    new jiba::GradientRegularization(StartModel, NoTearMod,
-                        NoTearMod, TearMod));
-              }
-            else
-              {
-                Regularization = boost::shared_ptr<jiba::MatOpRegularization>(
-                    new jiba::GradientRegularization(StartModel));
-              }
+            Regularization = boost::shared_ptr<jiba::MatOpRegularization>(
+                new jiba::GradientRegularization(StartModel, TearModX,
+                    TearModY, TearModZ));
           }
 
-        /*if (vm.count("refmod"))
-         {
-         Regularization->SetReferenceModel(InvModel);
-         }
-         else
-         {
-         jiba::rvec ZeroMod(InvModel.size());
-         ZeroMod.clear();
-         Regularization->SetReferenceModel(ZeroMod);
-         }*/
         if (!CovModVec.empty())
           {
             const size_t ngrid = StartModel.GetNModelElements();
