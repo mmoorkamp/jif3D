@@ -37,7 +37,11 @@ namespace jiba
             "tearmody", po::value<std::string>(),
             "Filename for a model containing information about tear zones in y-direction.")(
             "tearmodz", po::value<std::string>(),
-            "Filename for a model containing information about tear zones in z-direction.");
+            "Filename for a model containing information about tear zones in z-direction.")(
+            "beta", po::value(&beta)->default_value(0.0),
+            "The weight for the model parameter minimization in the regularization")(
+            "substart", po::value(&substart)->default_value(false),
+            "Substract the starting model when calculating the roughness");
 
         return desc;
       }
@@ -101,14 +105,14 @@ namespace jiba
           {
             Regularization = boost::shared_ptr<jiba::MatOpRegularization>(
                 new jiba::CurvatureRegularization(StartModel, TearModX,
-                    TearModY, TearModZ));
+                    TearModY, TearModZ, beta));
 
           }
         else
           {
             Regularization = boost::shared_ptr<jiba::MatOpRegularization>(
                 new jiba::GradientRegularization(StartModel, TearModX,
-                    TearModY, TearModZ));
+                    TearModY, TearModZ, beta));
           }
 
         if (!CovModVec.empty())

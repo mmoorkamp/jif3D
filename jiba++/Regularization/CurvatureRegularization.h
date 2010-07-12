@@ -10,6 +10,7 @@
 #define CURVATUREREGULARIZATION_H_
 
 #include "MatOpRegularization.h"
+#include "MakeTearModel.h"
 
 namespace jiba
   {
@@ -30,9 +31,6 @@ namespace jiba
           const jiba::ThreeDModelBase &TearModelX,
           const jiba::ThreeDModelBase &TearModelY,
           const jiba::ThreeDModelBase &TearModelZ);
-      //! Make an dummy tear model object, that contains 1 in all cells and therefore does not change regularization
-      void MakeTearModel(const jiba::ThreeDModelBase &Geometry,
-          jiba::ThreeDModelBase &TearModel);
     public:
       //! The clone function provides a virtual constructor
       virtual CurvatureRegularization *clone() const
@@ -54,24 +52,24 @@ namespace jiba
        * @param ModEps The weight of the absolute value minimization of the model vector.
        */
       CurvatureRegularization(const jiba::ThreeDModelBase &Geometry,
-          jiba::ThreeDModelBase &TearModelX,
-          jiba::ThreeDModelBase &TearModelY,
+          jiba::ThreeDModelBase &TearModelX, jiba::ThreeDModelBase &TearModelY,
           jiba::ThreeDModelBase &TearModelZ, const double ModEps = 1e-8) :
         MatOpRegularization(Geometry), Eps(ModEps)
         {
           //in debug mode we check that the geometry of the tear models
           //matches the geometry we specify for the inversion domain
-          assert(TearModelX.GetXCellSizes().size() == Geometry.GetXCellSizes().size());
-          assert(TearModelX.GetYCellSizes().size() == Geometry.GetYCellSizes().size());
-          assert(TearModelX.GetZCellSizes().size() == Geometry.GetZCellSizes().size());
+          //we have to check all three tear models
+          assert(TearModelX.GetData().shape()[0] == Geometry.GetData().shape()[0]);
+          assert(TearModelX.GetData().shape()[1] == Geometry.GetData().shape()[1]);
+          assert(TearModelX.GetData().shape()[2] == Geometry.GetData().shape()[2]);
 
-          assert(TearModelY.GetXCellSizes().size() == Geometry.GetXCellSizes().size());
-          assert(TearModelY.GetYCellSizes().size() == Geometry.GetYCellSizes().size());
-          assert(TearModelY.GetZCellSizes().size() == Geometry.GetZCellSizes().size());
+          assert(TearModelY.GetData().shape()[0] == Geometry.GetData().shape()[0]);
+          assert(TearModelY.GetData().shape()[1] == Geometry.GetData().shape()[1]);
+          assert(TearModelY.GetData().shape()[2] == Geometry.GetData().shape()[2]);
 
-          assert(TearModelZ.GetXCellSizes().size() == Geometry.GetXCellSizes().size());
-          assert(TearModelZ.GetYCellSizes().size() == Geometry.GetYCellSizes().size());
-          assert(TearModelZ.GetZCellSizes().size() == Geometry.GetZCellSizes().size());
+          assert(TearModelZ.GetData().shape()[0] == Geometry.GetData().shape()[0]);
+          assert(TearModelZ.GetData().shape()[1] == Geometry.GetData().shape()[1]);
+          assert(TearModelZ.GetData().shape()[2] == Geometry.GetData().shape()[2]);
 
           ConstructOperator(Geometry, TearModelX, TearModelY, TearModelZ);
         }

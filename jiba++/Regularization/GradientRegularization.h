@@ -10,6 +10,7 @@
 #define GRADIENTREGULARIZATION_H_
 
 #include "MatOpRegularization.h"
+#include "MakeTearModel.h"
 
 namespace jiba
   {
@@ -34,9 +35,6 @@ namespace jiba
           const jiba::ThreeDModelBase &TearModelX,
           const jiba::ThreeDModelBase &TearModelY,
           const jiba::ThreeDModelBase &TearModelZ);
-      //! Make an dummy tear model object, that contains 1 in all cells and therefore does not change regularization
-      void MakeTearModel(const jiba::ThreeDModelBase &Geometry,
-          jiba::ThreeDModelBase &TearModel);
     public:
       //! The clone function provides a virtual constructor
       virtual GradientRegularization *clone() const
@@ -61,7 +59,7 @@ namespace jiba
           //if we do not want tears in the regularization we temporarily
           //construct a dummy tear object that contains 1 everywhere
           //and therefore applies the normal regularization everywhere
-          MakeTearModel(Geometry, TearModel);
+          jiba::MakeTearModel(Geometry, TearModel);
           ConstructOperator(Geometry, TearModel, TearModel, TearModel);
         }
       //! This alternative constructor allows to introduce tears in the regularization in the three spatial directions

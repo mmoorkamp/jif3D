@@ -16,18 +16,6 @@ namespace jiba
 
       }
 
-    void CurvatureRegularization::MakeTearModel(
-        const jiba::ThreeDModelBase &Geometry, jiba::ThreeDModelBase &TearModel)
-      {
-        //create a model with a geometry that matches the inversion domain
-        TearModel.SetData().resize(
-            boost::extents[Geometry.GetXCellSizes().size()][Geometry.GetYCellSizes().size()][Geometry.GetZCellSizes().size()]);
-        //fill the object with 1 values, which means that there is no tear anywhere
-        std::fill_n(TearModel.SetData().origin(),
-            TearModel.GetData().num_elements(), 1.0);
-
-      }
-
     void CurvatureRegularization::ConstructOperator(
         const jiba::ThreeDModelBase &ModelGeometry,
         const jiba::ThreeDModelBase &TearModelX,

@@ -19,7 +19,6 @@ namespace jiba
   {
     namespace po = boost::program_options;
 
-
     /** \addtogroup joint Joint inversion routines */
     /* @{ */
 
@@ -29,15 +28,23 @@ namespace jiba
      */
     class SetupRegularization
       {
+    private:
+      double beta;
+      bool substart;
     public:
+      bool GetSubStart()
+        {
+          return substart;
+        }
       po::options_description SetupOptions();
       boost::shared_ptr<jiba::MatOpRegularization> SetupObjective(
           const po::variables_map &vm, const ThreeDModelBase &StartModel,
-          boost::shared_ptr<jiba::GeneralModelTransform> Transform , const jiba::rvec &CovModVec);
+          boost::shared_ptr<jiba::GeneralModelTransform> Transform,
+          const jiba::rvec &CovModVec);
       SetupRegularization();
       virtual ~SetupRegularization();
       };
-    /* @} */
+  /* @} */
   }
 
 #endif /* SETUPREGULARIZATION_H_ */

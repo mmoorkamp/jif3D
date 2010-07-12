@@ -49,7 +49,7 @@ namespace jiba
           const jiba::ThreeDSeismicModel &SeisMod,
           const jiba::ThreeDGravityModel GravMod,
           const jiba::ThreeDMTModel &MTMod, jiba::JointObjective &Objective,
-          boost::shared_ptr<jiba::MatOpRegularization> Regularization);
+          boost::shared_ptr<jiba::MatOpRegularization> Regularization, bool substart);
       SetupCoupling();
       virtual ~SetupCoupling();
       };
