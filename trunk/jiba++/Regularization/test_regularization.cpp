@@ -39,6 +39,7 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
         }
     }
 
+
   BOOST_AUTO_TEST_CASE (mindiff_test)
     {
       srand(time(NULL));
@@ -58,7 +59,13 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
   BOOST_AUTO_TEST_CASE (gradreg_test)
     {
       jiba::ThreeDGravityModel GravModel;
-      GravModel.SetDensities().resize(boost::extents[5][4][3]);
+      const size_t nx = 5;
+      const size_t ny = 4;
+      const size_t nz = 3;
+      GravModel.SetDensities().resize(boost::extents[nx][ny][nz]);
+      GravModel.SetXCellSizes().resize(boost::extents[nx]);
+      GravModel.SetYCellSizes().resize(boost::extents[ny]);
+      GravModel.SetZCellSizes().resize(boost::extents[nz]);
 
       const size_t msize = GravModel.GetDensities().num_elements();
       jiba::rvec StartModel(msize), PertModel(msize);
@@ -94,7 +101,6 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
       GravModel.SetZCellSizes().resize(boost::extents[nz]);
       GradModel.SetCellSize(cellsize, nx, ny, nz);
 
-
       const size_t msize = GravModel.GetDensities().num_elements();
       jiba::rvec StartModel(msize), PertModel(msize), GradModelVec(msize);
       jiba::rvec ConstMod(msize);
@@ -103,6 +109,70 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
       std::generate(PertModel.begin(),PertModel.end(),rand);
 
       jiba::CurvatureRegularization Regularization(GravModel,0.0);
+      Regularization.SetReferenceModel(StartModel);
+      Regularization.SetDataCovar(StartModel);
+      Regularization.SetXWeight(5.0);
+      Regularization.SetYWeight(4.0);
+      Regularization.SetZWeight(3.0);
+      double zero = Regularization.CalcMisfit(StartModel+ConstMod);
+      BOOST_CHECK_SMALL(zero,1e-11);
+
+      double topslow = 1.0/1000.0;
+      double bottomslow = 1.0/5000.0;
+
+      const double firstdepth = GradModel.GetZCoordinates()[0];
+      const double bottomdepth = GradModel.GetZCoordinates()[nz -1];
+      for (size_t i = 0; i < GradModel.GetSlownesses().num_elements(); ++i)
+        {
+          double Depth = GradModel.GetZCoordinates()[i % nz];
+          double Slowness = topslow + (Depth - firstdepth) * (bottomslow - topslow)/(bottomdepth - firstdepth);
+          GradModelVec(i) = Slowness;
+        }
+      zero = Regularization.CalcMisfit(StartModel+GradModelVec);
+      BOOST_CHECK_SMALL(zero,1e-11);
+
+      Regularization.CalcMisfit(PertModel);
+      CheckGradient(Regularization,PertModel);
+    }
+
+  //this needs to be extended and refined
+  BOOST_AUTO_TEST_CASE (curvreg_tear_test)
+    {
+      jiba::ThreeDGravityModel GravModel;
+      jiba::ThreeDSeismicModel GradModel;
+      jiba::ThreeDSeismicModel TearX, TearY, TearZ;
+      const size_t nx = 5;
+      const size_t ny = 6;
+      const size_t nz = 7;
+      const double cellsize = 100;
+      GravModel.SetDensities().resize(boost::extents[nx][ny][nz]);
+      GravModel.SetXCellSizes().resize(boost::extents[nx]);
+      GravModel.SetYCellSizes().resize(boost::extents[ny]);
+      GravModel.SetZCellSizes().resize(boost::extents[nz]);
+      GradModel.SetCellSize(cellsize, nx, ny, nz);
+
+      MakeTearModel(GravModel,TearX);
+      MakeTearModel(GravModel,TearY);
+      MakeTearModel(GravModel,TearZ);
+      srand48(time(NULL));
+      const double fraction = 0.1;
+      for (size_t i = 0; i < TearX.GetNModelElements(); ++i)
+        {
+          if (drand48() > fraction)
+          TearX.SetSlownesses().data()[i] = 0.0;
+          if (drand48() > fraction)
+          TearY.SetSlownesses().data()[i] = 0.0;
+          if (drand48() > fraction)
+          TearZ.SetSlownesses().data()[i] = 0.0;
+        }
+      const size_t msize = GravModel.GetDensities().num_elements();
+      jiba::rvec StartModel(msize), PertModel(msize), GradModelVec(msize);
+      jiba::rvec ConstMod(msize);
+      std::fill(ConstMod.begin(),ConstMod.end(),1.0);
+      std::generate(StartModel.begin(),StartModel.end(),rand);
+      std::generate(PertModel.begin(),PertModel.end(),rand);
+
+      jiba::CurvatureRegularization Regularization(GravModel,TearX,TearY,TearZ);
       Regularization.SetReferenceModel(StartModel);
       Regularization.SetDataCovar(StartModel);
       Regularization.SetXWeight(5.0);

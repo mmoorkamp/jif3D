@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
     jiba::rvec InvModel;
     CouplingSetup.SetupModelVector(vm, InvModel, TomoModel,
         GravitySetup.GetModel(), MTSetup.GetModel(), *Objective.get(),
-        Regularization);
+        Regularization, RegSetup.GetSubStart());
 
     size_t maxiter = 1;
     std::cout << "Maximum iterations: ";

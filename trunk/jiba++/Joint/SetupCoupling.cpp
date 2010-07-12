@@ -156,7 +156,8 @@ namespace jiba
         jiba::rvec &InvModel, const jiba::ThreeDSeismicModel &SeisMod,
         const jiba::ThreeDGravityModel GravMod,
         const jiba::ThreeDMTModel &MTMod, jiba::JointObjective &Objective,
-        boost::shared_ptr<jiba::MatOpRegularization> Regularization)
+        boost::shared_ptr<jiba::MatOpRegularization> Regularization,
+        bool substart)
       {
 
         const size_t ngrid = SeisMod.GetSlownesses().num_elements();
@@ -230,9 +231,10 @@ namespace jiba
             std::cin >> gravmtlambda;
             Objective.AddObjective(GravMTCross, GravMTTrans, seismtlambda,
                 "GravMT");
-            //finally we constrcut the regularization terms
+            //finally we construct the regularization terms
             //we ask for a weight and construct a regularization object
             //for each type of physical parameter separately
+            //first we set up seismic tomography
             double seisreglambda = 1.0;
             std::cout << " Weight for seismic regularization: ";
             std::cin >> seisreglambda;
@@ -242,9 +244,8 @@ namespace jiba
             SetupModelCovar(TomoCovar, SeisModel, SeisReg->GetDataCovar(),
                 ngrid);
             SeisReg->SetDataCovar(TomoCovar);
-            SeisReg->SetReferenceModel(SeisModel);
-            Objective.AddObjective(SeisReg, SlowTrans, seisreglambda, "SeisReg");
 
+            //then the regularization of densities
             double gravreglambda = 1.0;
             std::cout << " Weight for gravity regularization: ";
             std::cin >> gravreglambda;
@@ -254,9 +255,8 @@ namespace jiba
             SetupModelCovar(GravCovar, GravModel, GravReg->GetDataCovar(),
                 ngrid);
             GravReg->SetDataCovar(GravCovar);
-            GravReg->SetReferenceModel(GravModel);
-            Objective.AddObjective(GravReg, DensTrans, gravreglambda, "GravReg");
 
+            //and finally conductivities
             double mtreglambda = 1.0;
             std::cout << " Weight for MT regularization: ";
             std::cin >> mtreglambda;
@@ -265,7 +265,17 @@ namespace jiba
             jiba::rvec MTCovar(3 * ngrid);
             SetupModelCovar(MTCovar, MTModel, MTReg->GetDataCovar(), ngrid);
             MTReg->SetDataCovar(MTCovar);
-            MTReg->SetReferenceModel(MTModel);
+            //if we specify on the command line that we want to subtract the
+            //starting model, we set the corresponding reference model
+            //in the regularization object
+            if (substart)
+              {
+                SeisReg->SetReferenceModel(SeisModel);
+                GravReg->SetReferenceModel(GravModel);
+                MTReg->SetReferenceModel(MTModel);
+              }
+            Objective.AddObjective(SeisReg, SlowTrans, seisreglambda, "SeisReg");
+            Objective.AddObjective(GravReg, DensTrans, gravreglambda, "GravReg");
             Objective.AddObjective(MTReg, CondTrans, mtreglambda, "MTReg");
           }
         else
@@ -283,7 +293,10 @@ namespace jiba
             SetupModelCovar(TomoCovar, InvModel,
                 Regularization->GetDataCovar(), ngrid);
             Regularization->SetDataCovar(TomoCovar);
-            Regularization->SetReferenceModel(InvModel);
+            if (substart)
+              {
+                Regularization->SetReferenceModel(InvModel);
+              }
             Objective.AddObjective(Regularization, SlowTrans, reglambda, "Reg");
             InvModel = SlowTrans->PhysicalToGeneralized(InvModel);
 

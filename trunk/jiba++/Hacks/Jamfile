@@ -8,6 +8,7 @@ exe sparsetest : sparsetest.cpp ../Inversion ..//vecopt : <include>. ;
 exe wcompress : wcompress.cpp  ../Gravity ../Global : <include>. ;
 exe gravconsist : gravconsist.cpp  ../Gravity ../Global ../Inversion : <include>. ;
 exe tomoinv : tomoinv.cpp  joint : <include>. ;
+exe plotgrav : plotgrav.cpp  joint : <include>. ;
 exe parrun : parrun.cpp ..//boost_filesystem ;
 exe mtinv : mtinv.cpp  ../Inversion ../Global ../Regularization ../MT ..//boost_filesystem : <include>. ;
 exe grav_jointinv : grav_jointinv.cpp  joint : <include>. ;

@@ -6,6 +6,7 @@
 //============================================================================
 
 #include "NetCDFTools.h"
+#include "../Global/FatalException.h"
 
 namespace jiba
   {
@@ -39,6 +40,17 @@ namespace jiba
         NcVar *SizeVar = NetCDFFile.get_var(SizeName.c_str());
         //read coordinate values from netcdf file
         SizeVar->get(CellCoordinates.origin(), nvalues);
+        //check whether the cell coordinates are sorted
+        //otherwise we will have a problem
+        ThreeDModelBase::t3DModelDim::iterator pos = std::adjacent_find(
+            CellCoordinates.begin(), CellCoordinates.end(), // range
+            std::greater<int>());
+
+        if (pos != CellCoordinates.end())
+          {
+            throw jiba::FatalException("Cell coordinates in netcdf file are not in increasing order.");
+          }
+
         // transform coordinates to cell sizes, assuming the start is at 0
         std::adjacent_difference(CellCoordinates.begin(),
             CellCoordinates.end(), CellSize.begin());
@@ -217,9 +229,9 @@ namespace jiba
         //open the file
         NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
         //read the three coordinates for the measurements
-        ReadVec(DataFile, MeasPosXName, StationNumberName,PosX);
-        ReadVec(DataFile, MeasPosYName, StationNumberName,PosY);
-        ReadVec(DataFile, MeasPosZName, StationNumberName,PosZ);
+        ReadVec(DataFile, MeasPosXName, StationNumberName, PosX);
+        ReadVec(DataFile, MeasPosYName, StationNumberName, PosY);
+        ReadVec(DataFile, MeasPosZName, StationNumberName, PosZ);
         //and make sure everything is consistent
         assert(PosX.size() == PosY.size());
         assert(PosX.size() == PosZ.size());
