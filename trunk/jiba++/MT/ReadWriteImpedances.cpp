@@ -5,8 +5,10 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
+#include <fstream>
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
+#include "../Global/FatalException.h"
 #include "../Global/NumUtil.h"
 #include "../ModelBase/NetCDFTools.h"
 #include "ReadWriteImpedances.h"
@@ -116,5 +118,76 @@ namespace jiba
         ReadImpedanceComp(DataFile, Impedances, "Zyy_re", 6);
         ReadImpedanceComp(DataFile, Impedances, "Zyy_im", 7);
 
+      }
+
+    void ReadImpendacesFromMTT(const std::string &filename,
+        std::vector<double> &Frequencies, jiba::rvec &Impedances)
+      {
+        std::ifstream infile;
+        double currentreal, currentimag;
+        int nentries = 0;
+        infile.open(filename.c_str());
+        while (infile.good())
+          {
+            infile >> currentreal;
+            ++nentries;
+          }
+        infile.close();
+        if (((nentries - 1) % 23) != 0)
+          throw FatalException("Number of records does not match expected: "
+              + filename);
+        const int nrecords = (nentries - 1) / 23;
+        Impedances.resize(nrecords * 8);
+        Frequencies.resize(nrecords);
+        infile.open(filename.c_str());
+        int currentrecord = 0;
+        if (infile)
+          {
+            while (infile.good()) // read in inputfile
+              {
+                infile >> Frequencies[currentrecord];
+                if (infile.good())
+                  {
+                    //read number of degrees of freedom in file an throw away
+                    infile >> currentreal;
+
+                    infile >> Impedances(currentrecord*8) >> Impedances(currentrecord*8+1)
+                         >> Impedances(currentrecord*8+2) >> Impedances(currentrecord*8+3)
+                         >> Impedances(currentrecord*8+4) >> Impedances(currentrecord*8+5)
+                         >> Impedances(currentrecord*8+6) >> Impedances(currentrecord*8+7);
+                    //we skip the rest of the information contained in the file for now
+                    //dZxx
+                    infile >> currentreal;
+                    //dZxy
+                    infile >> currentreal;
+                    //dZyx
+                    infile >> currentreal;
+                    //dZyy
+                    infile >> currentreal;
+                    //Tx
+                    infile >> currentreal >> currentimag;
+                    //Ty
+                    infile >> currentreal >> currentimag;
+                    //dTx
+                    infile >> currentreal;
+                    //dTy
+                    infile >> currentreal;
+                    //Coherence Rx
+                    infile >> currentreal;
+                    //Coherence Ry
+                    infile >> currentreal;
+                    //Coherence Rz
+                    infile >> currentreal;
+
+                    ++currentrecord;
+                  }
+              }
+            infile.close();
+
+          }
+        else
+          {
+            throw jiba::FatalException("File not found: " + filename);
+          }
       }
   }

@@ -19,7 +19,8 @@
 #include "../ModelBase/NetCDFTools.h"
 #include "ThreeDGravityModel.h"
 #include "ReadWriteGravityData.h"
-#include "FullSensitivityGravityCalculator.h"
+#include "../Gravity/FullSensitivityGravityCalculator.h"
+#include "../Gravity/MinMemGravityCalculator.h"
 #include "DepthWeighting.h"
 #include "ThreeDGravityFactory.h"
 
@@ -99,18 +100,21 @@ int main()
     const double maxymeas = *std::max_element(PosY.begin(), PosY.end());
     const double minxmeas = *std::min_element(PosX.begin(), PosX.end());
     const double minymeas = *std::min_element(PosY.begin(), PosY.end());
+    const double minzmeas = *std::min_element(PosZ.begin(), PosZ.end());
 
     jiba::rvec XPosDiff(nmeas), YPosDiff(nmeas);
     std::adjacent_difference(PosX.begin(), PosX.end(), XPosDiff.begin());
     std::adjacent_difference(PosY.begin(), PosY.end(), YPosDiff.begin());
 
-    const int nrefine = 3;
-    const double deltax = (maxxmeas - minxmeas)/(nrefine * sqrt(double(ndata)));
-    const double deltay = (maxymeas - minymeas)/(nrefine * sqrt(double(ndata)));
+    const int nrefine = 2;
+    const double deltax = (maxxmeas - minxmeas) / (nrefine
+        * sqrt(double(ndata)));
+    const double deltay = (maxymeas - minymeas) / (nrefine
+        * sqrt(double(ndata)));
 
     std::cout << "Delta X: " << deltax << " Delta Y: " << deltay << std::endl;
     const int nx = std::ceil((maxxmeas - minxmeas) / deltax);
-    const int ny = std::ceil((maxymeas  - minymeas)/ deltay);
+    const int ny = std::ceil((maxymeas - minymeas) / deltay);
     const int nz = 1;
     const double deltaz = 1.0;
     std::cout << "Nx: " << nx << " Ny: " << ny << std::endl;
@@ -126,7 +130,7 @@ int main()
     std::fill_n(Model.SetXCellSizes().begin(), nx, deltax);
     std::fill_n(Model.SetYCellSizes().begin(), ny, deltay);
     std::fill_n(Model.SetZCellSizes().begin(), nz, deltaz);
-    Model.SetOrigin(minxmeas, minymeas, 100.0);
+    Model.SetOrigin(minxmeas, minymeas, minzmeas - 100.0);
 
     const size_t xsize = Model.GetDensities().shape()[0];
     const size_t ysize = Model.GetDensities().shape()[1];
@@ -151,16 +155,12 @@ int main()
     jiba::rvec ModelWeight(nmod);
     std::fill(ModelWeight.begin(), ModelWeight.end(), 1.0);
     //create objects for the misfit and a very basic error estimate
-    jiba::rvec DataDiffVec(ndata), DataError(ndata);
+    jiba::rvec DataDiffVec(ndata);
 
-    //we create a simple error estimate by assuming 2% error
-    //for each measurement
-    std::cout << "Equalizing sensitivity matrix." << std::endl;
-    const double errorlevel = 0.02;
     double misfit = CalcMisfit(Data, StartingData, DataDiffVec);
     std::cout << "Initial misfit: " << misfit << std::endl;
 
-    std::fill(DataError.begin(), DataError.end(), errorlevel);
+    std::cout << "Equalizing sensitivity matrix." << std::endl;
     //and also equalise the sensitivity matrix
     for (size_t i = 0; i < ndata; ++i)
       {
@@ -173,27 +173,34 @@ int main()
     //the problem is linear so we only perform a single inversion step
     std::cout << "Performing inversion." << std::endl;
     jiba::rvec InvModel(nmod);
-    std::fill(InvModel.begin(), InvModel.end(), 0.0);
-    jiba::rmat InvMat;
-    jiba::GeneralizedInverse()(GravityCalculator->SetSensitivities(), InvMat,
-        1e-14);
+    std::fill(InvModel.begin(), InvModel.end(), defaultdensity);
+
     jiba::rvec Ones(ndata);
     std::fill_n(Ones.begin(), ndata, 1.0);
-    InvModel = boost::numeric::ublas::prod(InvMat, Ones);
-    std::copy(InvModel.begin(), InvModel.end(), Model.SetDensities().origin());
+
+    double lambda = 1e-14;
+    jiba::DataSpaceInversion()(GravityCalculator->SetSensitivities(),
+        DataDiffVec, ModelWeight, Ones, lambda, InvModel);
+
+    /*jiba::rmat InvMat;
+     jiba::GeneralizedInverse()(GravityCalculator->SetSensitivities(), InvMat,
+     1e-14);
+
+     InvModel = boost::numeric::ublas::prod(InvMat, Ones);*/
+     std::copy(InvModel.begin(), InvModel.end(), Model.SetDensities().origin());
 
     //calculate the predicted data
     double newgrid = 0.0, newz = 0.0;
-    std::cout << "New grid spacing: ";
-    std::cin >> newgrid;
-    std::cout << "New z-level: ";
-    std::cin >> newz;
-    Model.ClearMeasurementPoints();
-    for (double x = minxmeas; x < maxxmeas; x += newgrid)
-      {
-        for (double y = minymeas; y < maxymeas; y += newgrid)
-          Model.AddMeasurementPoint(x, y, newz);
-      }
+    //std::cout << "New grid spacing: ";
+    //std::cin >> newgrid;
+    //std::cout << "New z-level: ";
+    //std::cin >> newz;
+    /*Model.ClearMeasurementPoints();
+     for (double x = minxmeas; x < maxxmeas; x += newgrid)
+     {
+     for (double y = minymeas; y < maxymeas; y += newgrid)
+     Model.AddMeasurementPoint(x, y, newz);
+     }*/
     std::cout << "Calculating response of inversion model." << std::endl;
     jiba::rvec InvData(GravityCalculator->Calculate(Model));
     //and write out the data and model
@@ -211,6 +218,12 @@ int main()
           Model.GetMeasPosZ());
       break;
     case jiba::ftg:
+
+      jiba::SaveScalarGravityMeasurements(
+          modelfilename + ".inv_sgd.nc",
+          jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeScalar()->Calculate(
+              Model), Model.GetMeasPosX(), Model.GetMeasPosY(),
+          Model.GetMeasPosZ());
       jiba::Write3DTensorDataToVTK(modelfilename + ".inv_ftg.vtk",
           "grav_accel", InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
           Model.GetMeasPosZ());

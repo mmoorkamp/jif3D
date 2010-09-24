@@ -152,9 +152,9 @@ namespace jiba
       void AddMeasurementPoint(const double xcoord, const double ycoord,
           const double zcoord)
         {
-          MeasPosX.push_back(xcoord + XOrigin);
-          MeasPosY.push_back(ycoord + YOrigin);
-          MeasPosZ.push_back(zcoord + ZOrigin);
+          MeasPosX.push_back(xcoord - XOrigin);
+          MeasPosY.push_back(ycoord - YOrigin);
+          MeasPosZ.push_back(zcoord - ZOrigin);
         }
       //! remove all information about measurement points
       void ClearMeasurementPoints()

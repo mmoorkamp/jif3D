@@ -96,11 +96,11 @@ namespace jiba
       {
         //transform the measurement coordinates from old model to new coordinates
         std::transform(MeasPosX.begin(), MeasPosX.end(), MeasPosX.begin(),
-            boost::bind(std::plus<double>(), _1, XOrigin - x));
+            boost::bind(std::minus<double>(), _1, XOrigin - x));
         std::transform(MeasPosY.begin(), MeasPosY.end(), MeasPosY.begin(),
-            boost::bind(std::plus<double>(), _1, YOrigin - y));
+            boost::bind(std::minus<double>(), _1, YOrigin - y));
         std::transform(MeasPosZ.begin(), MeasPosZ.end(), MeasPosZ.begin(),
-            boost::bind(std::plus<double>(), _1, ZOrigin - z));
+            boost::bind(std::minus<double>(), _1, ZOrigin - z));
         //copy the information about the new origin
         XOrigin = x;
         YOrigin = y;

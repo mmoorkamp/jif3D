@@ -8,5 +8,6 @@ find -name "Jam*" >> distfiles
 find -name "*.jam" >> distfiles
 find -name "*.for" >> distfiles
 echo "README" >> distfiles
+echo "Doxyfile" >> distfiles
 
 tar cf jiba.tar -T distfiles 

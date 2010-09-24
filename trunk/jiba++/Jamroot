@@ -27,6 +27,7 @@ use-project /Gravity : Gravity ;
 use-project /ModelBase : ModelBase ;
 use-project /Profiling : Profiling ;
 use-project /Inversion : Inversion ;
+use-project /Joint : Joint ;
 
 local BOOST_TEST_LOG_LEVEL = all ;
 lib boost_filesystem : : <name>boost_filesystem ;

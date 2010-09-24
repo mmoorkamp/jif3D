@@ -17,12 +17,13 @@ documentation on how to install these components.
 * Boost
 These two are available from http://www.boost.org/users/download/
 
+* The boost bindings for Lapack and Atlas from news.tiker.net/filebrowser/software/boost-bindings
 * netcdf from http://www.unidata.ucar.edu/software/netcdf/
 * atlas from http://math-atlas.sourceforge.net/
 * lapack from http://www.netlib.org/lapack/
 * cuda from http://www.nvidia.com/object/cuda_home.html#
 
-Alternatively you can install all but cuda through the package manager on ubuntu 08/10.
+Alternatively you can install all but cuda through the package manager on Ubuntu.
 Depending on the path you chose to install the libraries to, you might
 have to modify the Jamroot file. Refer to http://www.boost.org/doc/tools/build/index.html
 for a description of the syntax.
@@ -39,6 +40,7 @@ This code has been compiled with
 
 gcc 4.2 under SuSE Linux 10.1 and 11.0
 gcc 4.3 under ubuntu 8/10
+gcc 4.4 under ubuntu 10/04
 intel 11.0 under ubuntu 8/10
 
 Sun 5.10 is known to fail, this is an issue with partial template spezialization in
