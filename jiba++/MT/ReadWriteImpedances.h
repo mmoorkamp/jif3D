@@ -44,6 +44,10 @@ namespace jiba
         double> &Frequencies, std::vector<double> &StatXCoord, std::vector<
         double> &StatYCoord, std::vector<double> &StatZCoord,
         jiba::rvec &Impedances);
+
+    //! A very basic routine to read impedances at a single site from a .mtt file in the format used by University of Goettingen
+    void ReadImpendacesFromMTT(const std::string &filename,
+        std::vector<double> &Frequencies, jiba::rvec &Impedances);
   /* @} */
   }
 

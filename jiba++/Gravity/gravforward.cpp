@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
     switch (argc)
       {
     case 2:
-      //1 argument, we assume measurement positions are store within the netcdf file for the model
+      //1 argument, we assume measurement positions are stored within the netcdf file for the model
       ModelFilename = argv[1];
       MeasPosFilename = argv[1];
       GravModel.ReadMeasPosNetCDF(MeasPosFilename);

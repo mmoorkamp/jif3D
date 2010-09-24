@@ -10,7 +10,9 @@
 #include <fstream>
 #include <string>
 #include <cmath>
+#include <omp.h>
 #include <boost/bind.hpp>
+#include <boost/program_options.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include "../Global/convert.h"
 #include "../Global/FatalException.h"
@@ -28,11 +30,46 @@
 #include "../MT/X3DObjective.h"
 #include "../MT/X3DMTCalculator.h"
 #include "../MT/ReadWriteImpedances.h"
+#include "../Joint/SetupRegularization.h"
 
 namespace ublas = boost::numeric::ublas;
+namespace po = boost::program_options;
 
-int main()
+int main(int argc, char *argv[])
   {
+
+    po::options_description desc("General options");
+    desc.add_options()("help", "produce help message")("threads",
+        po::value<int>(), "The number of openmp threads")("covmod", po::value<
+        std::string>(), "A file containing the model covariance");
+
+    jiba::SetupRegularization RegSetup;
+    desc.add(RegSetup.SetupOptions());
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::notify(vm);
+
+    if (vm.count("help"))
+      {
+        std::cout << desc << "\n";
+        return 1;
+      }
+
+    if (vm.count("threads"))
+      {
+        omp_set_num_threads(vm["threads"].as<int> ());
+      }
+
+    jiba::rvec CovModVec;
+    if (vm.count("covmod"))
+      {
+        jiba::X3DModel CovModel;
+        CovModel.ReadNetCDF(vm["covmod"].as<std::string> ());
+        const size_t ncovmod = CovModel.GetConductivities().num_elements();
+        CovModVec.resize(ncovmod);
+        std::copy(CovModel.GetConductivities().origin(),
+            CovModel.GetConductivities().origin() + ncovmod, CovModVec.begin());
+      }
 
     //first we read in the starting model and the measured data
     std::string modelfilename = jiba::AskFilename("Starting model Filename: ");
@@ -84,9 +121,9 @@ int main()
         Model.GetConductivities().origin()
             + Model.GetConductivities().num_elements(), InvModel.begin());
     Model.WriteVTK("start.vtk");
-    //these are logarithmic values
-    const double mincond = -1.0;
-    const double maxcond = 1;
+    //these are natural logarithmic values
+    const double mincond = -6.0;
+    const double maxcond = 3;
     boost::shared_ptr<jiba::ChainedTransform> ConductivityTransform(
         new jiba::ChainedTransform);
 
@@ -107,8 +144,9 @@ int main()
 
     boost::shared_ptr<jiba::JointObjective> Objective(
         new jiba::JointObjective());
-    boost::shared_ptr<jiba::GradientRegularization> Regularization(
-        new jiba::GradientRegularization(Model));
+    boost::shared_ptr<jiba::MatOpRegularization> Regularization =
+            RegSetup.SetupObjective(vm, Model, ConductivityTransform, CovModVec);
+
 
     double lambda = 1.0;
     std::cout << "Lambda: ";
@@ -116,16 +154,20 @@ int main()
     Objective->AddObjective(X3DObjective, ConductivityTransform);
     Objective->AddObjective(Regularization, ConductivityTransform, lambda);
 
+    size_t maxiter = 30;
+    std::cout << "Maximum number of iterations: ";
+    std::cin >> maxiter;
     std::cout << "Performing inversion." << std::endl;
 
     jiba::LimitedMemoryQuasiNewton LBFGS(Objective, 5);
+    LBFGS.SetModelCovDiag(CovModVec);
     std::ofstream misfitfile("misfit.out");
     misfitfile << "0 " << Objective->CalcMisfit(InvModel) << " ";
     std::copy(Objective->GetIndividualFits().begin(),
         Objective->GetIndividualFits().end(), std::ostream_iterator<double>(
             misfitfile, " "));
     misfitfile << std::endl;
-    const size_t maxiter = 30;
+
     size_t iteration = 0;
     boost::posix_time::ptime starttime =
         boost::posix_time::microsec_clock::local_time();

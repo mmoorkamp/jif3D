@@ -124,7 +124,7 @@ namespace jiba
     //! Change an unconstrained optimization problem to a constrained optimization problem throug a tanh transformation
     /*! We often want to constrain the range of possible values in our optimization problem between an upper and
      * a lower limit. Instead of using a constrained optimization method, we use this transformation
-     * \f$ m^{\star} =  \atanh \left(2.0 * \frac{m - m_{min}} {m_{max} - m_{min}} \right) \f$ between the generalized
+     * \f$ m^{\star} =  \mbox{atanh} \left(2.0 * \frac{m - m_{min}} {m_{max} - m_{min}} \right) \f$ between the generalized
      * model parameters \f$ m \f$ and the generalized model parameters \f$ m^{\star} \f$. The generalized model
      * parameters can then vary over the whole range, while the physical model parameters will always been between
      * the two bounds.
