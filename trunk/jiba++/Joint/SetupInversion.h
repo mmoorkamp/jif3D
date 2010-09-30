@@ -27,16 +27,34 @@ namespace jiba
      */
     class SetupInversion
       {
-
+    private:
+      int corrpairs;
     public:
+      //! Setup the possible command line options
+      /*! This function creates an options_description object for boost::program
+       * options that describes all possible options for the inversion. This can
+       * then be used to parse the command line or a configuration file etc.
+       * @return The options_description object for the inversion options
+       */
       po::options_description SetupOptions();
-      void ConfigureInversion(const po::variables_map &vm, boost::shared_ptr<
-          jiba::GradientBasedOptimization> &Optimizer, boost::shared_ptr<
-          jiba::ObjectiveFunction> ObjFunction, const jiba::rvec &InvModel, const jiba::rvec &CovModVec);
+      //! Setup the optimizer object so that it is ready to use for the inversion
+      /*! We setup the optimizer object based on the program options and pass all
+       * information about objective functions, starting model and covariance to it
+       * so that it can be directly used for inversion.
+       * @param vm The variable map from boost::program_options that contains the actually set options
+       * @param ObjFunction The objective function to use for the optimization
+       * @param InvModel The vector containing the current model parameters
+       * @param CovModVec The vector of covariances
+       * @return A shared pointer to a new optimizer object
+       */
+      boost::shared_ptr<jiba::GradientBasedOptimization> ConfigureInversion(
+          const po::variables_map &vm, boost::shared_ptr<
+              jiba::ObjectiveFunction> ObjFunction, const jiba::rvec &InvModel,
+          const jiba::rvec &CovModVec);
       SetupInversion();
       virtual ~SetupInversion();
       };
-    /* @} */
+  /* @} */
   }
 
 #endif /* SETUPINVERSION_H_ */

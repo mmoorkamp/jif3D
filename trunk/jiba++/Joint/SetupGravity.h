@@ -40,11 +40,18 @@ namespace jiba
       //! Return an options descriptions object for boost::program_options that contains information about gravity options
       po::options_description SetupOptions();
       //! Setup the objective function and add to the joint objective
+      /*! Setup the objective function for inverting scalar and tensorial data based on
+       * the program options.
+       * @param vm The variable map from boost::program_options that contains the actually set options
+       * @param Objective An existing JointObjective object that the newly created gravity objective(s) are added to
+       * @param StartModel The starting model geometry
+       * @param Transform A transformation object to transform generalized to physical parameters
+       * @param NeedStartModel Do we need to ask the user for a starting model (true) or do we generate the geometry from the parameter StartModel
+       */
       void
       SetupObjective(const po::variables_map &vm,
-          jiba::JointObjective &Objective,
-          const ThreeDModelBase &StartModel, boost::shared_ptr<
-              jiba::GeneralModelTransform> Transform);
+          jiba::JointObjective &Objective, const ThreeDModelBase &StartModel,
+          boost::shared_ptr<jiba::GeneralModelTransform> Transform);
       //! Return the gravity model that was read in
       const jiba::ThreeDGravityModel &GetModel()
         {
@@ -53,7 +60,7 @@ namespace jiba
       SetupGravity();
       virtual ~SetupGravity();
       };
-    /* @} */
+  /* @} */
   }
 
 #endif /* SETUPGRAVITY_H_ */

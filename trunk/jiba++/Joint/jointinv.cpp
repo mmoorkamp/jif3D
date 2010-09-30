@@ -135,9 +135,8 @@ int main(int argc, char *argv[])
 
     std::cout << "Performing inversion." << std::endl;
 
-    boost::shared_ptr<jiba::GradientBasedOptimization> Optimizer;
-    InversionSetup.ConfigureInversion(vm, Optimizer, Objective, InvModel,
-        CovModVec);
+    boost::shared_ptr<jiba::GradientBasedOptimization> Optimizer =
+        InversionSetup.ConfigureInversion(vm, Objective, InvModel, CovModVec);
 
     size_t iteration = 0;
 
@@ -213,11 +212,7 @@ int main(int argc, char *argv[])
                   }
               }
           }
-        if (jiba::WantAbort())
-          {
-            terminate = true;
-            jiba::RemoveAbort();
-          }
+        terminate = jiba::WantAbort();
       } while (iteration < maxiter && !terminate && Optimizer->GetGradNorm()
         > 1e-6);
 

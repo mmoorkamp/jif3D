@@ -1,5 +1,5 @@
 //============================================================================
-// Name        : test_interpolate.cpp
+// Name        : test_numutil.cpp
 // Author      : Max Moorkamp
 // Version     :
 // Copyright   : 2008, MM

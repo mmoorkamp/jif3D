@@ -176,9 +176,8 @@ int main(int argc, char *argv[])
     std::cin >> maxiter;
     std::cout << "Performing inversion." << std::endl;
 
-    boost::shared_ptr<jiba::GradientBasedOptimization> Optimizer;
-    InversionSetup.ConfigureInversion(vm, Optimizer, Objective, InvModel,
-        CovModVec);
+    boost::shared_ptr<jiba::GradientBasedOptimization> Optimizer =
+        InversionSetup.ConfigureInversion(vm, Objective, InvModel, CovModVec);
 
     std::ofstream misfitfile("misfit.out");
     misfitfile << "0 " << Objective->CalcMisfit(InvModel) << " ";
@@ -196,6 +195,8 @@ int main(int argc, char *argv[])
     size_t iteration = 0;
     boost::posix_time::ptime starttime =
         boost::posix_time::microsec_clock::local_time();
+
+    bool terminate = false;
     do
       {
         std::cout << "Iteration: " << iteration + 1 << std::endl;
@@ -223,7 +224,10 @@ int main(int argc, char *argv[])
         misfitfile << " " << Objective->GetNEval();
         misfitfile << std::endl;
         iteration++;
-      } while (iteration < maxiter && Objective->GetIndividualFits()[0] > ndata);
+        terminate = jiba::WantAbort();
+      } while (iteration < maxiter && !terminate
+        && Objective->GetIndividualFits()[0] > ndata);
+
     boost::posix_time::ptime endtime =
         boost::posix_time::microsec_clock::local_time();
     double cachedruntime = (endtime - starttime).total_seconds();

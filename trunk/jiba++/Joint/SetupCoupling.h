@@ -45,17 +45,44 @@ namespace jiba
       double mindens;
       double maxdens;
     public:
+      //! Return an options descriptions object for boost::program_options that contains information about options for coupling the methods
       po::options_description SetupOptions();
+      //! Set the transformations between generalized and physical parameters for the different methods
+      /*! Depending on whether we use direct parameter coupling or a cross gradient approach we have
+       * to use different transformations between generalized and physical parameters for each method.
+       * This function looks at the program options and sets the appropriate transforms for seismics, MT, gravity and
+       * regularization.
+       * @param vm The variables map containing the options set by the user
+       * @param TomoTransform The parameter transform for the seismic objective function
+       * @param GravityTransform The parameter transform for the gravity objective function
+       * @param MTTransform The parameter transform for the MT objective function
+       * @param RegTransform The parameter transform for the regularization
+       */
       void SetupTransforms(const po::variables_map &vm, boost::shared_ptr<
           jiba::GeneralModelTransform> &TomoTransform, boost::shared_ptr<
           jiba::GeneralModelTransform> &GravityTransform, boost::shared_ptr<
           jiba::GeneralModelTransform> &MTTransform, boost::shared_ptr<
           jiba::GeneralModelTransform> &RegTransform);
+      //! Set the model vector for the inversion, its length and content depends on the coupling method
+      /*! For the direct coupling joint inversion the model parameter vector only contains a slowness value
+       * for each cell, while for the cross-gradient it contains slowness, density and conductivity. Also
+       * depending on the approach we have to set a different number of regularization and coupling objective functions
+       * which is done here as well.
+       * @param vm The variables map containing the options set by the user
+       * @param InvModel Contains the inversion parameter vector at the end
+       * @param SeisMod The seismic starting model
+       * @param GravMod The gravity starting model
+       * @param MTMod The MT starting model
+       * @param Objective The joint objective object we want to add the coupling and regularization terms to
+       * @param Regularization An object for regularization (gradient/curvature etc.)
+       * @param substart Do we want to substract the starting model for roughness calculations
+       */
       void SetupModelVector(const po::variables_map &vm, jiba::rvec &InvModel,
           const jiba::ThreeDSeismicModel &SeisMod,
           const jiba::ThreeDGravityModel GravMod,
           const jiba::ThreeDMTModel &MTMod, jiba::JointObjective &Objective,
-          boost::shared_ptr<jiba::MatOpRegularization> Regularization, bool substart);
+          boost::shared_ptr<jiba::MatOpRegularization> Regularization,
+          bool substart);
       SetupCoupling();
       virtual ~SetupCoupling();
       };

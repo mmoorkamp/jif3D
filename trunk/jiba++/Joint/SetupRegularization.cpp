@@ -13,6 +13,26 @@
 namespace jiba
   {
 
+    void SetTearModel(const po::variables_map &vm,
+        const std::string &OptionName, const ThreeDModelBase &StartModel,
+        jiba::ThreeDSeismicModel &TearModel)
+      {
+        if (vm.count(OptionName))
+          {
+            TearModel.ReadNetCDF(vm[OptionName].as<std::string> ());
+          }
+        else
+          {
+            TearModel.SetCellSize(StartModel.GetXCellSizes()[0],
+                StartModel.GetXCellSizes().size(),
+                StartModel.GetYCellSizes().size(),
+                StartModel.GetZCellSizes().size());
+            std::fill_n(TearModel.SetSlownesses().origin(),
+                TearModel.GetSlownesses().num_elements(), 1.0);
+          }
+
+      }
+
     SetupRegularization::SetupRegularization()
       {
       }
@@ -23,15 +43,18 @@ namespace jiba
 
     po::options_description SetupRegularization::SetupOptions()
       {
+        //add all possible options for regularization to an
+        //options_description object that can be used for
+        //parsing
         po::options_description desc("Regularization options");
 
-        desc.add_options()("xreg", po::value<double>(),
+        desc.add_options()("xreg", po::value(&xweight)->default_value(1.0),
             "The weight for the regularization in x-direction")("yreg",
-            po::value<double>(),
+            po::value(&yweight)->default_value(1.0),
             "The weight for the regularization in y-direction")("zreg",
-            po::value<double>(),
+            po::value(&zweight)->default_value(1.0),
             "The weight for the regularization in z-direction")("curvreg",
-            "Use model curvature for regularization.")("tearmodx", po::value<
+            "Use model curvature for regularization. If not set use gradient.")("tearmodx", po::value<
             std::string>(),
             "Filename for a model containing information about tear zones in x-direction.")(
             "tearmody", po::value<std::string>(),
@@ -51,55 +74,18 @@ namespace jiba
         boost::shared_ptr<jiba::GeneralModelTransform> Transform,
         const jiba::rvec &CovModVec)
       {
+        //setup possible tearing for the regularization for the three directions
         jiba::ThreeDSeismicModel TearModX, TearModY, TearModZ;
-        if (vm.count("tearmodx"))
-          {
-            TearModX.ReadNetCDF(vm["tearmodx"].as<std::string> ());
-          }
-        else
-          {
-            TearModX.SetCellSize(StartModel.GetXCellSizes()[0],
-                StartModel.GetXCellSizes().size(),
-                StartModel.GetYCellSizes().size(),
-                StartModel.GetZCellSizes().size());
-            std::fill_n(TearModX.SetSlownesses().origin(),
-                TearModX.GetSlownesses().num_elements(), 1.0);
-          }
-
-        if (vm.count("tearmody"))
-          {
-            TearModY.ReadNetCDF(vm["tearmody"].as<std::string> ());
-          }
-        else
-          {
-            TearModY.SetCellSize(StartModel.GetXCellSizes()[0],
-                StartModel.GetXCellSizes().size(),
-                StartModel.GetYCellSizes().size(),
-                StartModel.GetZCellSizes().size());
-            std::fill_n(TearModY.SetSlownesses().origin(),
-                TearModY.GetSlownesses().num_elements(), 1.0);
-          }
-
-        if (vm.count("tearmodz"))
-          {
-
-            TearModZ.ReadNetCDF(vm["tearmodz"].as<std::string> ());
-
-          }
-        else
-          {
-            TearModZ.SetCellSize(StartModel.GetXCellSizes()[0],
-                StartModel.GetXCellSizes().size(),
-                StartModel.GetYCellSizes().size(),
-                StartModel.GetZCellSizes().size());
-            std::fill_n(TearModZ.SetSlownesses().origin(),
-                TearModZ.GetSlownesses().num_elements(), 1.0);
-          }
+        SetTearModel(vm,"tearmodx",StartModel,TearModX);
+        SetTearModel(vm,"tearmody",StartModel,TearModY);
+        SetTearModel(vm,"tearmodz",StartModel,TearModZ);
 
         assert(StartModel.GetNModelElements() == TearModX.GetNModelElements());
         assert(StartModel.GetNModelElements() == TearModY.GetNModelElements());
         assert(StartModel.GetNModelElements() == TearModZ.GetNModelElements());
 
+        //decide whether we want to use gradient base regularization
+        //or curvature based regularization, the default is gradient
         boost::shared_ptr<jiba::MatOpRegularization> Regularization;
         if (vm.count("curvreg"))
           {
@@ -114,9 +100,14 @@ namespace jiba
                 new jiba::GradientRegularization(StartModel, TearModX,
                     TearModY, TearModZ, beta));
           }
-
+        //We either pass an empty covariance vector then the regularization class
+        //takes care of setting the covariance to 1
+        //or we set a covariance vector that has one value for each model cell
         if (!CovModVec.empty())
           {
+            //as we treat each direction separately, the covariance
+            //vector has to have a length 3 times the length of the model vector
+            //here we copy the covariances to the appropriate position
             const size_t ngrid = StartModel.GetNModelElements();
             assert(CovModVec.size() == ngrid);
             jiba::rvec Cov(ngrid * 3);
@@ -125,24 +116,12 @@ namespace jiba
             ublas::subrange(Cov, 2 * ngrid, 3 * ngrid) = CovModVec;
             Regularization->SetDataCovar(Cov);
           }
-        if (vm.count("xreg"))
-          {
-            const double xreg = vm["xreg"].as<double> ();
-            std::cout << "Setting xreg: " << xreg << std::endl;
-            Regularization->SetXWeight(xreg);
-          }
-        if (vm.count("yreg"))
-          {
-            const double yreg = vm["yreg"].as<double> ();
-            std::cout << "Setting yreg: " << yreg << std::endl;
-            Regularization->SetYWeight(yreg);
-          }
-        if (vm.count("zreg"))
-          {
-            const double zreg = vm["zreg"].as<double> ();
-            std::cout << "Setting zreg: " << zreg << std::endl;
-            Regularization->SetZWeight(zreg);
-          }
+
+        //we can directly use the values for the weights without checking
+        //the options because we set the default value to 1
+        Regularization->SetXWeight(xweight);
+        Regularization->SetYWeight(yweight);
+        Regularization->SetZWeight(zweight);
 
         return Regularization;
       }

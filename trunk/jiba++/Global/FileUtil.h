@@ -83,7 +83,8 @@ namespace jiba
      * @param checkexists Shall the function check whether the file exists ? Default true
      * @return The name of the file as typed in by the user.
      */
-    inline std::string AskFilename(const std::string &prompt, const bool checkexists = true)
+    inline std::string AskFilename(const std::string &prompt,
+        const bool checkexists = true)
       {
         std::cout << prompt;
         std::string filename;
@@ -95,17 +96,28 @@ namespace jiba
         return filename;
       }
 
-    //! Checks whether the file called abort exists in the current directory to signal the program that we want to stop
-    inline bool WantAbort()
-      {
-        return boost::filesystem::exists("abort");
-      }
-
-    //! Remove the abort file in the current directory
+    //! Remove the abort file in the current directory, see also WantAbort
     inline void RemoveAbort()
       {
         boost::filesystem::remove("abort");
       }
+
+    //! Checks whether the file called abort exists in the current directory to signal the program that we want to stop
+    /*! This function checks whether a file called "abort" exists in the current directory
+     * and returns true if that is the case.
+     * @param removefile Do we want to remove the file called "abort" if it exists (to avoid interference with a new run)
+     * @return True if file abort exists
+     */
+    inline bool WantAbort(bool removefile = true)
+      {
+        bool abort = boost::filesystem::exists("abort");
+        if (removefile && abort)
+          {
+            RemoveAbort();
+          }
+        return abort;
+      }
+
   /* @} */
   }
 #endif /* FILEUTIL_H_ */

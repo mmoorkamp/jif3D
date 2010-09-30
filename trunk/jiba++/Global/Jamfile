@@ -10,3 +10,4 @@ unit-test wavelet_test : Wavelet.o test_wavelet.cpp   : : <include>. ;
 unit-test numutil_test : test_numutil.cpp   : : <include>. ;
 unit-test transform_test : test_transform.cpp   : : <include>. ;
 unit-test noise_test : test_noise.cpp   : : <include>. ;
+unit-test fileutil_test : test_fileutil.cpp  ..//boost_filesystem : : <include>. ;
