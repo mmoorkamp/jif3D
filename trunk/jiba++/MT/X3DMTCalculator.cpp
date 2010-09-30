@@ -154,7 +154,6 @@ namespace jiba
           throw FatalException("Cannot execute run script: " + runname);
       }
 
-
     rvec X3DMTCalculator::Calculate(const X3DModel &Model)
       {
         //we define nfreq as int to make the compiler happy in the openmp loop
@@ -177,7 +176,7 @@ namespace jiba
         //we parallelize by frequency, this is relatively simple
         //but we can use up to 20 processors for typical MT problems
         // as we do not have the source for x3d, this is our only possibility anyway
-        //the const qualified variables above are predertimend to be shared by the openmp standard
+        //the const qualified variables above are predetermined to be shared by the openmp standard
 #pragma omp parallel for shared(result)
         for (int i = 0; i < nfreq; ++i)
           {
@@ -223,7 +222,9 @@ namespace jiba
                         StationIndex = Model.FindAssociatedIndices(
                             Model.GetMeasPosX()[j], Model.GetMeasPosY()[j],
                             Model.GetMeasPosZ()[j]);
-                    //at the moment we ignore the depth/elevation of the site
+                    //all sites are at the same elevation and the observed fields
+                    //are only calculated at this observation depth, so we
+                    //only have to consider thye horizontal position
                     const size_t offset = StationIndex[0] * nmody
                         + StationIndex[1];
                     const size_t meas_index = freq_index + j * 8;
@@ -431,7 +432,9 @@ namespace jiba
                         StationIndex = Model.FindAssociatedIndices(
                             Model.GetMeasPosX()[j], Model.GetMeasPosY()[j],
                             Model.GetMeasPosZ()[j]);
-                    //at the moment we ignore the depth/elevation of the site
+                    //all sites are at the same elevation and the observed fields
+                    //are only calculated at this observation depth, so we
+                    //only have to consider the horizontal position
                     const size_t offset = StationIndex[0] * ncellsy
                         + StationIndex[1];
 
@@ -509,7 +512,9 @@ namespace jiba
                         StationIndex = Model.FindAssociatedIndices(
                             Model.GetMeasPosX()[j], Model.GetMeasPosY()[j],
                             Model.GetMeasPosZ()[j]);
-                    //at the moment we ignore the depth/elevation of the site
+                    //all sites are at the same elevation and the observed fields
+                    //are only calculated at this observation depth, so we
+                    //only have to consider the horizontal position
                     const size_t offset = StationIndex[0] * ncellsy
                         + StationIndex[1];
 

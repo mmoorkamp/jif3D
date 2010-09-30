@@ -31,6 +31,8 @@ namespace jiba
             Component(i) = Impedances(i * 8 + compindex);
           }
         CompVar->put(&Component[0], FreqDim->size(), StatNumDim->size());
+        //we write the impedance in units of Ohm
+        CompVar->add_att("units", "Ohm");
       }
     //read one compoment of the impedance tensor from a netcdf file
     //this is an internal helper function
@@ -120,7 +122,7 @@ namespace jiba
 
       }
 
-    void ReadImpendacesFromMTT(const std::string &filename,
+    void ReadImpedancesFromMTT(const std::string &filename,
         std::vector<double> &Frequencies, jiba::rvec &Impedances)
       {
         std::ifstream infile;
@@ -183,7 +185,8 @@ namespace jiba
                   }
               }
             infile.close();
-
+            //convert the units in the .mtt file (km/s) into S.I units (Ohm)
+            Impedances *= 4 * 1e-4 * acos(-1.0);
           }
         else
           {

@@ -48,7 +48,13 @@ namespace jiba
     po::options_description SetupCoupling::SetupOptions()
       {
         po::options_description desc("Coupling options");
-        desc.add_options()("crossgrad", "Use cross-gradient coupling");
+        desc.add_options()("crossgrad", "Use cross-gradient coupling")(
+            "minslow", po::value(&minslow)->default_value(1e-4))("maxslow",
+            po::value(&maxslow)->default_value(0.005))("mincond", po::value(
+            &mincond)->default_value(1e-4))("maxcond",
+            po::value(&maxcond)->default_value(5))("mindens", po::value(
+            &mindens)->default_value(0.5))("maxdens",
+            po::value(&maxdens)->default_value(4.0));
 
         return desc;
       }
@@ -59,14 +65,6 @@ namespace jiba
         boost::shared_ptr<jiba::GeneralModelTransform> &MTTransform,
         boost::shared_ptr<jiba::GeneralModelTransform> &RegTransform)
       {
-        //these are some limits for the different parameters that we set for now
-        //we might want to change them in the future
-        const double minslow = 1e-4;
-        const double maxslow = 0.005;
-        const double mincond = -10;
-        const double maxcond = 3;
-        const double mindens = 0.5;
-        const double maxdens = 10.0;
 
         //we need the geometry of the starting model to setup
         //the transformations
@@ -120,8 +118,8 @@ namespace jiba
                 jiba::GeneralModelTransform>(new jiba::SectionTransform(2
                 * ngrid, 3 * ngrid)));
             ConductivityTransform->AddTransform(boost::shared_ptr<
-                jiba::GeneralModelTransform>(new jiba::TanhTransform(mincond,
-                maxcond)));
+                jiba::GeneralModelTransform>(new jiba::TanhTransform(std::log(
+                mincond), std::log(maxcond))));
             ConductivityTransform->AddTransform(boost::shared_ptr<
                 jiba::GeneralModelTransform>(new jiba::LogTransform(RefModel)));
             ConductivityTransform->AddTransform(boost::shared_ptr<

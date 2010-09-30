@@ -11,6 +11,7 @@
 #include <cmath>
 #include <omp.h>
 #include <boost/program_options.hpp>
+#include <boost/program_options/config.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include "../Global/convert.h"
 #include "../Global/FatalException.h"
@@ -71,6 +72,14 @@ int main(int argc, char *argv[])
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
+    //we can also read options from a configuration file
+    const std::string ConfFileName("jointinv.conf");
+    if (boost::filesystem::exists(ConfFileName))
+      {
+
+        std::ifstream ConfFile(ConfFileName.c_str());
+        po::store(po::parse_config_file(ConfFile, desc), vm);
+      }
     po::notify(vm);
 
     if (vm.count("help"))
@@ -127,7 +136,8 @@ int main(int argc, char *argv[])
     std::cout << "Performing inversion." << std::endl;
 
     boost::shared_ptr<jiba::GradientBasedOptimization> Optimizer;
-    InversionSetup.ConfigureInversion(vm, Optimizer, Objective, InvModel, CovModVec);
+    InversionSetup.ConfigureInversion(vm, Optimizer, Objective, InvModel,
+        CovModVec);
 
     size_t iteration = 0;
 

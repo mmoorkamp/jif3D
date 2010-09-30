@@ -281,7 +281,7 @@ namespace OPTPP
 
             if (info < 0)
               {
-                return (-1);
+                return (info);
               }
             if (info != 0)
               {
