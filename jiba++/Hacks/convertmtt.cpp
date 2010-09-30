@@ -8,6 +8,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <boost/program_options.hpp>
 #include "../Global/FileUtil.h"
 #include "../Global/FatalException.h"
 #include "../MT/ReadWriteImpedances.h"
@@ -44,13 +45,14 @@ int main()
             >> StatZCoord.front() >> StationName;
         if (StationFile.good())
           {
-            jiba::ReadImpendacesFromMTT(StationName, Frequencies,
+            jiba::ReadImpedancesFromMTT(StationName, Frequencies,
                 CurrImpedances);
           }
 
         const size_t nfreq = Frequencies.size();
         assert(nfreq * 8 == CurrImpedances.size());
         Impedances.resize(nstats * nfreq * 8);
+
         for (size_t i = 0; i < nfreq; ++i)
           {
             std::copy(CurrImpedances.begin() + i * 8, CurrImpedances.begin()
@@ -63,13 +65,14 @@ int main()
                 stationindex) >> StatZCoord.at(stationindex) >> StationName;
             if (StationFile.good())
               {
-                jiba::ReadImpendacesFromMTT(StationName, CurrFrequencies,
+                jiba::ReadImpedancesFromMTT(StationName, CurrFrequencies,
                     CurrImpedances);
                 std::cout << stationindex << " " << StationName << " "
                     << CurrFrequencies.size() << " " << nfreq << std::endl;
                 if (CurrFrequencies.size() != nfreq)
                   throw jiba::FatalException(
                       "Number of frequencies in current file does not match number of frequencies in first file !");
+
                 for (size_t i = 0; i < nfreq; ++i)
                   {
                     std::copy(CurrImpedances.begin() + i * 8,

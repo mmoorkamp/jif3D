@@ -38,6 +38,12 @@ namespace jiba
       boost::shared_ptr<jiba::GeneralModelTransform> SlowTrans;
       boost::shared_ptr<jiba::GeneralModelTransform> CondTrans;
       boost::shared_ptr<jiba::GeneralModelTransform> DensTrans;
+      double mincond;
+      double maxcond;
+      double minslow;
+      double maxslow;
+      double mindens;
+      double maxdens;
     public:
       po::options_description SetupOptions();
       void SetupTransforms(const po::variables_map &vm, boost::shared_ptr<
