@@ -26,24 +26,22 @@ namespace jiba
 
     po::options_description SetupInversion::SetupOptions()
       {
+        //setup the desctription object for the inversioj options
         po::options_description desc("Inversion options");
-        desc.add_options()("corrpairs", po::value<int>(),
+        desc.add_options()("corrpairs",
+            po::value(&corrpairs)->default_value(5),
             "The number correction pairs for L-BFGS")("nlcg",
-            "Use NLCG optimization");
+            "Use NLCG optimization, otherwise use L-BFGS");
         return desc;
       }
 
-    void SetupInversion::ConfigureInversion(const po::variables_map &vm,
-        boost::shared_ptr<jiba::GradientBasedOptimization> &Optimizer,
+    boost::shared_ptr<jiba::GradientBasedOptimization> SetupInversion::ConfigureInversion(
+        const po::variables_map &vm,
         boost::shared_ptr<jiba::ObjectiveFunction> ObjFunction,
         const jiba::rvec &InvModel, const jiba::rvec &CovModVec)
       {
-        int correctionpairs = 5;
-        if (vm.count("corrpairs"))
-          {
-            correctionpairs = vm["corrpairs"].as<int> ();
-          }
-
+        //we can either use nlcg or L-BFGS for the optimizer
+        boost::shared_ptr<jiba::GradientBasedOptimization> Optimizer;
         if (vm.count("nlcg"))
           {
             Optimizer = boost::shared_ptr<jiba::GradientBasedOptimization>(
@@ -51,11 +49,18 @@ namespace jiba
           }
         else
           {
+            //for L-BFGS we check whether the number of correction pairs is positive
+            if (corrpairs < 0)
+              throw jiba::FatalException(
+                  "Negative number of correction pairs specified !");
             Optimizer
                 = boost::shared_ptr<jiba::GradientBasedOptimization>(
                     new jiba::LimitedMemoryQuasiNewton(ObjFunction,
-                        correctionpairs));
+                        corrpairs));
           }
+        //if the model covariance is empty we let the optimizer object
+        //take care of setting the values to 1
+        //otherwise we perform some checks here
         if (!CovModVec.empty())
           {
 
@@ -79,6 +84,7 @@ namespace jiba
               }
             Optimizer->SetModelCovDiag(CovVec);
           }
+        return Optimizer;
       }
   }
 
