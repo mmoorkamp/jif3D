@@ -21,11 +21,14 @@ namespace jiba
     MT2DForward::~MT2DForward()
       {
       }
+
     void MT2DForward::CalcEpol(const std::vector<double> &Periods)
       {
+        //we need a number of extra layers above the actual modeling domain
         const long nionos = 20;
         const long natmos = 20;
 
+        //we define a number of constants that are used below
         const int nperiods = Periods.size();
         const long nx = XSizes.size();
         const int nzearth = ZSizes.size();
@@ -35,6 +38,8 @@ namespace jiba
         const int nelements = modelsize * nperiods;
         const double rionos = 1.0;
 
+        //Initialize the field solutions to zero for
+        //all periods and all model cells
         Hx_real.resize(boost::extents[nperiods][nx][nzearth]);
         Hx_imag.resize(boost::extents[nperiods][nx][nzearth]);
         Ey_real.resize(boost::extents[nperiods][nx][nzearth]);
@@ -43,8 +48,13 @@ namespace jiba
         std::fill_n(Hx_imag.origin(), nelements, 0.0);
         std::fill_n(Ey_real.origin(), nelements, 0.0);
         std::fill_n(Ey_imag.origin(), nelements, 0.0);
+        //we parallelize the calculalion by frequency
+        //this might not be the most effective way
+        //but is easy to implement
 #pragma omp parallel default(shared)
           {
+            //extend the modeling domain in z-direction
+            //by the extra layers
             const t2DModelDim XS(XSizes);
             t2DModelDim ZS(boost::extents[nz + nionos + natmos]);
             std::fill_n(ZS.begin(), nionos + natmos, 100.0);
@@ -53,7 +63,10 @@ namespace jiba
 #pragma omp for
             for (int i = 0; i < nperiods; ++i)
               {
+                //calculate the index to store the solution for
+                //the current period
                 int startingindex = i * (nx * nzearth);
+                //call the Fortran code
                 epol_(&Periods[i], &nx, &nz, &nionos, &natmos, XS.origin(),
                     ZS.origin(), Resistivities.origin(), &rionos,
                     Hx_real.origin() + startingindex, Hx_imag.origin()
@@ -72,6 +85,8 @@ namespace jiba
         const int modelsize = nx * nzearth;
         const int nelements = modelsize * nperiods;
 
+        //Initialize the field solutions to zero for
+          //all periods and all model cells
         Hy_real.resize(boost::extents[nperiods][nx][nzearth]);
         Hy_imag.resize(boost::extents[nperiods][nx][nzearth]);
         Ex_real.resize(boost::extents[nperiods][nx][nzearth]);
@@ -84,6 +99,7 @@ namespace jiba
         std::fill_n(Ex_imag.origin(), nelements, 0.0);
         std::fill_n(Ez_real.origin(), nelements, 0.0);
         std::fill_n(Ez_imag.origin(), nelements, 0.0);
+        //same as for CalcEPol, we parallelize by frequency
 #pragma omp parallel default(shared)
           {
             const t2DModelDim XS(XSizes);

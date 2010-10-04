@@ -32,8 +32,11 @@ namespace jiba
     class CrossGradient: public jiba::ObjectiveFunction
       {
     private:
+      //! The object to calculate the spatial gradient for the first model
       GradientRegularization FirstGradient;
+      //! The object to calculate the spatial gradient for the second model
       GradientRegularization SecondGradient;
+      //! The model geometry for the two models, this is always identical to the geometry in GradientRegularization objects
       ThreeDModelBase ModelGeometry;
     public:
       //! The clone function provides a virtual constructor

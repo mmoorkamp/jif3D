@@ -199,32 +199,40 @@ int main(int argc, char *argv[])
     bool terminate = false;
     do
       {
-        std::cout << "Iteration: " << iteration + 1 << std::endl;
-        Optimizer->MakeStep(InvModel);
-        std::copy(InvModel.begin(), InvModel.end(),
-            Model.SetConductivities().origin());
-        Model.WriteVTK(modelfilename + jiba::stringify(iteration)
-            + ".mt.raw.vtk");
+        try
+          {
+            std::cout << "Iteration: " << iteration + 1 << std::endl;
+            Optimizer->MakeStep(InvModel);
+            std::copy(InvModel.begin(), InvModel.end(),
+                Model.SetConductivities().origin());
+            Model.WriteVTK(modelfilename + jiba::stringify(iteration)
+                + ".mt.raw.vtk");
 
-        jiba::rvec CondInvModel = ConductivityTransform->GeneralizedToPhysical(
-            InvModel);
-        std::copy(CondInvModel.begin(), CondInvModel.end(),
-            Model.SetConductivities().origin());
-        Model.WriteVTK(modelfilename + jiba::stringify(iteration)
-            + ".mt.inv.vtk");
-        std::cout << "Currrent Misfit: " << Optimizer->GetMisfit() << std::endl;
-        std::cout << "Currrent Gradient: " << Optimizer->GetGradNorm()
-            << std::endl;
-        std::cout << std::endl;
+            jiba::rvec CondInvModel =
+                ConductivityTransform->GeneralizedToPhysical(InvModel);
+            std::copy(CondInvModel.begin(), CondInvModel.end(),
+                Model.SetConductivities().origin());
+            Model.WriteVTK(modelfilename + jiba::stringify(iteration)
+                + ".mt.inv.vtk");
+            std::cout << "Currrent Misfit: " << Optimizer->GetMisfit()
+                << std::endl;
+            std::cout << "Currrent Gradient: " << Optimizer->GetGradNorm()
+                << std::endl;
+            std::cout << std::endl;
 
-        misfitfile << iteration + 1 << " " << Optimizer->GetMisfit() << " ";
-        std::copy(Objective->GetIndividualFits().begin(),
-            Objective->GetIndividualFits().end(),
-            std::ostream_iterator<double>(misfitfile, " "));
-        misfitfile << " " << Objective->GetNEval();
-        misfitfile << std::endl;
-        iteration++;
-        terminate = jiba::WantAbort();
+            misfitfile << iteration + 1 << " " << Optimizer->GetMisfit() << " ";
+            std::copy(Objective->GetIndividualFits().begin(),
+                Objective->GetIndividualFits().end(), std::ostream_iterator<
+                    double>(misfitfile, " "));
+            misfitfile << " " << Objective->GetNEval();
+            misfitfile << std::endl;
+            iteration++;
+            terminate = jiba::WantAbort();
+          } catch (jiba::FatalException &e)
+          {
+            std::cerr << e.what() << std::endl;
+            terminate = true;
+          }
       } while (iteration < maxiter && !terminate
         && Objective->GetIndividualFits()[0] > ndata);
 
@@ -244,6 +252,8 @@ int main(int argc, char *argv[])
     jiba::rvec InvData(jiba::X3DMTCalculator().Calculate(Model));
     jiba::WriteImpedancesToNetCDF(modelfilename + ".inv_imp.nc", Frequencies,
         XCoord, YCoord, ZCoord, InvData);
+    jiba::WriteImpedancesToNetCDF(modelfilename + ".diff_imp.nc", Frequencies,
+        XCoord, YCoord, ZCoord, X3DObjective->GetDataDifference());
 
     //and write out the data and model
     //here we have to distinguish again between scalar and ftg data

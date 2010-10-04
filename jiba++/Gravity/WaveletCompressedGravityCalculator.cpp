@@ -48,6 +48,10 @@ namespace jiba
         denssize[1] = ysize;
         denssize[2] = zsize;
         std::fill_n(transformsize, 3, 1.0);
+        //we go through the 3 spatial directions
+        //and determine the smallest power of 2 greates than the number of cells
+        //we need this as we can only do a wavelet transform on data
+        //with a power of 2 length
         for (size_t i = 0; i < 3; ++i)
           {
             while (transformsize[i] < denssize[i])
@@ -55,7 +59,7 @@ namespace jiba
                 transformsize[i] *= 2;
               }
           }
-
+        //allocate memory for the sensitivities for the extended domain
         CurrRow.resize(
             boost::extents[transformsize[0]][transformsize[1]][transformsize[2]]);
         SparseSens.resize(nmeas * Imp.get()->GetDataPerMeasurement(),
@@ -68,6 +72,9 @@ namespace jiba
     rvec WaveletCompressedGravityCalculator::CalculateCachedResult(
         const ThreeDGravityModel &Model)
       {
+        //if the WhiteningVector does not have the right length
+        //set all elements to 1 so that it does not do anything
+        //in the calculations below
         if (WhiteningVector.size() != ngrid)
           {
             WhiteningVector.resize(ngrid);
@@ -84,13 +91,13 @@ namespace jiba
                 CurrRow[j][k][l] = Model.GetDensities()[j][k][l]
                     / WhiteningVector(j * (ysize * zsize) + k * zsize + l);
             }
-
+        //we also need to copy the background densities to consider
+        //them in the compressed sensitivity matrix
         for (size_t l = 0; l < nbglayers; ++l)
           CurrRow[xsize + 1][0][l] = Model.GetBackgroundDensities().at(l);
         jiba::WaveletTransform(CurrRow);
 
         jiba::rvec TransDens(CurrRow.num_elements());
-        std::fill_n(TransDens.begin(), CurrRow.num_elements(), 0.0);
         std::copy(CurrRow.origin(), CurrRow.origin() + CurrRow.num_elements(),
             TransDens.begin());
 
@@ -107,7 +114,8 @@ namespace jiba
         const size_t ngrid = Model.GetDensities().num_elements();
         const size_t nmod = ngrid + Model.GetBackgroundThicknesses().size();
         rvec result(nmod);
-
+        //when calculating the gradient from cached results we only
+        //have to multiply the misfit vector with the transposed sensitivities
         return boost::numeric::ublas::prec_prod(trans(SparseSens), Misfit);
       }
 

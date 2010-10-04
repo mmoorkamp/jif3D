@@ -36,6 +36,8 @@ namespace jiba
                     const size_t index = ModelGeometry.IndexToOffset(i, j, k);
                     //we use forward differences for the gradient
                     //so we have two elements per matrix row
+                    //for each operator matrix we have to check
+                    //whether we want a tear for the cell boundary in that direction
                     if (TearModelX.GetData()[i][j][k])
                       {
                         XOperatorMatrix(index, ModelGeometry.IndexToOffset(i
