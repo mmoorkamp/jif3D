@@ -16,6 +16,10 @@ namespace jiba
     /* @{ */
 
     //! Calculate the magnetoteluric response for a 2D model
+    /*! This class encapsulates calls to the 2D MT Fortran code
+     * by P. Tarits. It only contains some very basic features
+     * as it is not actively used at the moment.
+     */
     class MT2DForward
       {
     public:
@@ -106,7 +110,9 @@ namespace jiba
         {
           return Ex_imag;
         }
+      //! Calculate the response for the E-polarization
       void CalcEpol(const std::vector<double> &Periods);
+      //! Calculate the response of the B-polarization
       void CalcBpol(const std::vector<double> &Periods);
       MT2DForward();
       virtual ~MT2DForward();

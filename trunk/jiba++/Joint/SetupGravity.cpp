@@ -108,6 +108,11 @@ namespace jiba
                     PosZ.at(i));
               }
           }
+        //now we setup the objective functions for each type of gravity data
+        //the steps are the same for both, create new objective function,
+        //set the observed data, model geometry and data error
+        //finally output some basic information about the data to the screen
+        //to signal the user that something happened.
         if (scalgravlambda > 0.0)
           {
             boost::shared_ptr<jiba::GravityObjective> ScalGravObjective(

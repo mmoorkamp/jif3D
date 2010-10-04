@@ -27,6 +27,14 @@ namespace jiba
       //! A small number to stabilize the matrix operator
       const double Eps;
       //! Construct the operator matrix to calculate the regularization
+      /*! We construct three operator matrices, one for each spatial direction, to calculate the
+       * curvature regularization term. This way we can weight each direction separately. We need
+       * information about the model geometry and possible tears in the regularization in each direction.
+       * @param ModelGeometry An object containing the geometry of the model we want to regularize
+       * @param TearModelX Specify tearing in x-direction. The geometry has to match ModelGeometry. A value of 0 in a cell signifies that we want to exclude this cell from regularization in x-direction.
+       * @param TearModelY Specify tearing in y-direction. The geometry has to match ModelGeometry. A value of 0 in a cell signifies that we want to exclude this cell from regularization in y-direction.
+       * @param TearModelZ Specify tearing in z-direction. The geometry has to match ModelGeometry. A value of 0 in a cell signifies that we want to exclude this cell from regularization in z-direction.
+       */
       void ConstructOperator(const jiba::ThreeDModelBase &ModelGeometry,
           const jiba::ThreeDModelBase &TearModelX,
           const jiba::ThreeDModelBase &TearModelY,
