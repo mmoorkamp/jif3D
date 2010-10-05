@@ -9,6 +9,7 @@
 #include <cassert>
 #include <fstream>
 #include <boost/bind.hpp>
+#include "../Global/FatalException.h"
 #include "NetCDFTools.h"
 #include "VTKTools.h"
 namespace jiba
@@ -84,10 +85,10 @@ namespace jiba
             std::lower_bound(GetZCoordinates().begin(),
                 GetZCoordinates().end(), zcoord));
         //when we return the value we make sure that we cannot go out of bounds
-        boost::array<t3DModelData::index, 3> idx =
+        boost::array < t3DModelData::index, 3 > idx=
           {
-            { std::max(xindex - 1, 0), std::max(yindex - 1, 0), std::max(zindex
-                - 1, 0) } };
+              { std::max(xindex - 1, 0), std::max(yindex - 1, 0), std::max(zindex
+                    - 1, 0)}};
         return idx;
       }
 
@@ -113,6 +114,13 @@ namespace jiba
       {
         Read3DModelFromNetCDF(NetCDFFile, DataName, UnitsName, XCellSizes,
             YCellSizes, ZCellSizes, Data);
+
+        //we check that the sizes of the grid cell specifications and the data are matching
+        if (XCellSizes.size() != Data.shape()[0] || YCellSizes.size() != Data.shape()[1]
+            || ZCellSizes.size() != Data.shape()[2])
+          {
+            throw jiba::FatalException("Cell size specification does not match data !");
+          }
       }
 
     void ThreeDModelBase::WriteDataToNetCDF(NcFile &NetCDFFile,

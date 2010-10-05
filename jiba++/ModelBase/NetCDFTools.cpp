@@ -33,6 +33,12 @@ namespace jiba
         NcDim *SizeDim = NetCDFFile.get_dim(SizeName.c_str());
         //determine the size of that dimension
         const size_t nvalues = SizeDim->size();
+        //it does not make much sense to have an 0 size coordinate in a file
+        //so we throw an exception
+        if (nvalues == 0)
+          {
+            throw jiba::FatalException("Cell coordinate is empty: " + SizeName);
+          }
         //allocate memory in the class variable
         CellSize.resize(boost::extents[nvalues]);
         ThreeDModelBase::t3DModelDim CellCoordinates(boost::extents[nvalues]);

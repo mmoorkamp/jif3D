@@ -355,7 +355,7 @@ namespace OPTPP
 
           } /*  end of iteration. */
 
-        return (-1); // too many iterations;
+        return (-7); // too many iterations;
 
       } /* last line of subroutine mcsrch. */
     /****************************************************************************/
