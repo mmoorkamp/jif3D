@@ -7,8 +7,10 @@
 
 
 #include "ThreeDSeismicModel.h"
+#include "../Global/FatalException.h"
 #include <boost/bind.hpp>
 #include <cassert>
+#include <algorithm>
 
 namespace jiba
   {
@@ -58,5 +60,25 @@ namespace jiba
         NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
         //read in the 3D gridded data
         ReadDataFromNetCDF(DataFile, SlownessName, SlownessUnit);
+        //check that the grid has equal sizes in all three dimensions
+        const double CellSize = GetXCellSizes()[0];
+       /* if (std::search_n(GetXCellSizes().begin(), GetXCellSizes().end(),
+            GetXCellSizes().num_elements(), CellSize) == GetXCellSizes().end())
+          {
+            throw jiba::FatalException(
+                "Non-equal grid spacing in x-direction !");
+          }
+        if (std::search_n(GetYCellSizes().begin(), GetYCellSizes().end(),
+            GetYCellSizes().num_elements(), CellSize) == GetYCellSizes().end())
+          {
+            throw jiba::FatalException(
+                "Non-equal grid spacing in y-direction !");
+          }
+        if (std::search_n(GetZCellSizes().begin(), GetZCellSizes().end(),
+            GetZCellSizes().num_elements(), CellSize) == GetZCellSizes().end())
+          {
+            throw jiba::FatalException(
+                "Non-equal grid spacing in z-direction !");
+          }*/
       }
   }
