@@ -17,6 +17,11 @@
 #include <boost/random/variate_generator.hpp>
 #include <boost/bind.hpp>
 
+/*! \file Noise.h
+ * General routines for adding noise to observed data or constructing error estimates
+ * for the inversion of noisy data.
+ */
+
 namespace jiba
   {
     //! Add random gaussian noise to a vector of data

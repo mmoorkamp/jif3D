@@ -11,6 +11,7 @@
 #include "../Global/FileUtil.h"
 #include "../Global/Noise.h"
 #include "SetupMT.h"
+#include <algorithm>
 
 namespace jiba
   {
@@ -78,9 +79,9 @@ namespace jiba
               }
             //read in MT data, the position of the measurement sites, frequencies and impedances
             std::vector<double> MTXPos, MTYPos, MTZPos, Frequencies;
-            jiba::rvec MTData;
+            jiba::rvec MTData, MTError;
             jiba::ReadImpedancesFromNetCDF(mtdatafilename, Frequencies, MTXPos,
-                MTYPos, MTZPos, MTData);
+                MTYPos, MTZPos, MTData, MTError);
 
             //set the model object so that we can use it to calculate synthetic data
             // for each observation
@@ -106,7 +107,9 @@ namespace jiba
               }
             MTObjective->SetCoarseModelGeometry(MTModel);
             MTObjective->SetObservedData(MTData);
-            MTObjective->SetDataCovar(jiba::ConstructMTError(MTData, relerr));
+            jiba::rvec MinErr(jiba::ConstructMTError(MTData, relerr));
+            std::transform(MTError.begin(),MTError.end(),MinErr.begin(),MTError.begin(),std::max<double>);
+            MTObjective->SetDataCovar(MTError);
             //add the MT part to the JointObjective that will be used
             //for the inversion
             Objective.AddObjective(MTObjective, Transform, mtlambda, "MT");

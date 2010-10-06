@@ -92,10 +92,10 @@ int main(int argc, char *argv[])
     std::string datafilename = jiba::AskFilename("Data Filename: ");
 
     //read in data
-    jiba::rvec Data;
+    jiba::rvec Data, ZError;
     std::vector<double> XCoord, YCoord, ZCoord, Frequencies;
     jiba::ReadImpedancesFromNetCDF(datafilename, Frequencies, XCoord, YCoord,
-        ZCoord, Data);
+        ZCoord, Data, ZError);
     std::copy(Frequencies.begin(), Frequencies.end(), std::back_inserter(
         Model.SetFrequencies()));
     //if we don't have data inversion doesn't make sense;
@@ -120,10 +120,8 @@ int main(int argc, char *argv[])
 
     //create objects for the misfit and a very basic error estimate
     jiba::rvec MTDataError = jiba::ConstructMTError(Data, errorlevel);
-    std::ofstream errorfile("error.out");
-    std::copy(MTDataError.begin(), MTDataError.end(), std::ostream_iterator<
-        double>(errorfile, "\n"));
-    std::flush(errorfile);
+    std::transform(ZError.begin(), ZError.end(), MTDataError.begin(),
+        ZError.begin(), std::max<double>);
 
     for (size_t i = 0; i < Model.GetConductivities().shape()[2]; ++i)
       {
@@ -157,7 +155,7 @@ int main(int argc, char *argv[])
         X3DObjective(new jiba::X3DObjective());
     X3DObjective->SetObservedData(Data);
     X3DObjective->SetCoarseModelGeometry(Model);
-    X3DObjective->SetDataCovar(MTDataError);
+    X3DObjective->SetDataCovar(ZError);
 
     boost::shared_ptr<jiba::JointObjective> Objective(new jiba::JointObjective(
         true));
