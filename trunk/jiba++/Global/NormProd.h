@@ -10,9 +10,14 @@
 #define NORMPROD_H_
 
 #include <cassert>
+
+/*! \file NomrProd.h
+ * Contains a template to calculate the inner product of two vectors given a norm by the diagonal of covariance matrix
+ */
+
 namespace jiba
   {
-    //! Calculate the inner product of two vectors given a norm by a covariance matrix
+    //! Calculate the inner product of two vectors given a norm by the diagonal of a covariance matrix
     /*! For inversion with respect to a model covariance we have to calculate the inner product
      * of two vectors with respect to the norm defined by that covariance. This function
      * implements this for diagonal covariances. These can be expressed in a vector as the third

@@ -34,56 +34,60 @@ int main()
     std::cout << "Number of stations: " << nstats << std::endl;
     if (nstats > 0)
       {
-        jiba::rvec Impedances;
+        jiba::rvec Impedances, Errors;
         std::vector<double> Frequencies, StatXCoord(nstats),
             StatYCoord(nstats), StatZCoord(nstats);
         StationFile.open(filename.c_str());
         std::vector<double> CurrFrequencies;
-        jiba::rvec CurrImpedances;
+        jiba::rvec CurrImpedances, CurrErrors;
         std::string StationName;
         StationFile >> StatXCoord.front() >> StatYCoord.front()
             >> StatZCoord.front() >> StationName;
         if (StationFile.good())
           {
             jiba::ReadImpedancesFromMTT(StationName, Frequencies,
-                CurrImpedances);
+                CurrImpedances, CurrErrors);
           }
 
         const size_t nfreq = Frequencies.size();
         assert(nfreq * 8 == CurrImpedances.size());
         Impedances.resize(nstats * nfreq * 8);
-
-        for (size_t i = 0; i < nfreq; ++i)
-          {
-            std::copy(CurrImpedances.begin() + i * 8, CurrImpedances.begin()
-                + (i + 1) * 8, Impedances.begin() + i * nstats * 8);
-          }
-        size_t stationindex = 1;
+        Errors.resize(nstats * nfreq * 8);
+        size_t stationindex = 0;
+        std::cout << stationindex << " " << StationName << " "
+            << CurrFrequencies.size() << " " << nfreq << std::endl;
         while (StationFile.good() && stationindex < nstats)
           {
-            StationFile >> StatXCoord.at(stationindex) >> StatYCoord.at(
-                stationindex) >> StatZCoord.at(stationindex) >> StationName;
+            for (size_t i = 0; i < nfreq; ++i)
+              {
+                std::copy(CurrImpedances.begin() + i * 8,
+                    CurrImpedances.begin() + (i + 1) * 8, Impedances.begin()
+                        + i * nstats * 8 + stationindex * 8);
+                std::copy(CurrErrors.begin() + i * 8, CurrErrors.begin() + (i
+                    + 1) * 8, Errors.begin() + i * nstats * 8 + stationindex
+                    * 8);
+              }
+            double xcoord, ycoord, zcoord;
+            StationFile >> xcoord >> ycoord >> zcoord >> StationName;
+
             if (StationFile.good())
               {
+                StatXCoord.at(stationindex + 1) = xcoord;
+                StatYCoord.at(stationindex + 1) = ycoord;
+                StatZCoord.at(stationindex + 1) = zcoord;
                 jiba::ReadImpedancesFromMTT(StationName, CurrFrequencies,
-                    CurrImpedances);
-                std::cout << stationindex << " " << StationName << " "
+                    CurrImpedances, CurrErrors);
+                std::cout << stationindex + 1 << " " << StationName << " "
                     << CurrFrequencies.size() << " " << nfreq << std::endl;
                 if (CurrFrequencies.size() != nfreq)
                   throw jiba::FatalException(
                       "Number of frequencies in current file does not match number of frequencies in first file !");
 
-                for (size_t i = 0; i < nfreq; ++i)
-                  {
-                    std::copy(CurrImpedances.begin() + i * 8,
-                        CurrImpedances.begin() + (i + 1) * 8,
-                        Impedances.begin() + i * nstats * 8 + stationindex * 8);
-                  }
               }
             ++stationindex;
           }
         std::string outfilename = jiba::AskFilename("Output file: ", false);
         jiba::WriteImpedancesToNetCDF(outfilename, Frequencies, StatXCoord,
-            StatYCoord, StatZCoord, Impedances);
+            StatYCoord, StatZCoord, Impedances, Errors);
       }
   }
