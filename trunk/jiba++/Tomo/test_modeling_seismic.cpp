@@ -7,6 +7,7 @@
 #include "PodvinTime3D.h"
 #include "modeling_seismic.h"
 #include "TomographyCalculator.h"
+#include "ReadWriteTomographyData.h"
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/random/linear_congruential.hpp>
 #include <boost/random/uniform_real.hpp>
@@ -14,8 +15,8 @@
 
 BOOST_AUTO_TEST_SUITE( Seismic_Test_Suite )
 
-  //test that the interpolation function works for a strictly quadratic function
-  BOOST_AUTO_TEST_CASE(interpolate_test)
+//test that the interpolation function works for a strictly quadratic function
+BOOST_AUTO_TEST_CASE  (interpolate_test)
     {
 
       const size_t ncells = 5;
@@ -23,7 +24,7 @@ BOOST_AUTO_TEST_SUITE( Seismic_Test_Suite )
       boost::minstd_rand generator(42u);
       boost::uniform_real<> uni_dist(0, ncells);
       boost::variate_generator<boost::minstd_rand&, boost::uniform_real<> >
-          Pos(generator, uni_dist);
+      Pos(generator, uni_dist);
 
       jiba::GRID_STRUCT grid;
       grid.nx = ncells;
@@ -39,12 +40,12 @@ BOOST_AUTO_TEST_SUITE( Seismic_Test_Suite )
       float ycomp = Pos();
       float zcomp = Pos();
       for (size_t i = 0; i < ncells + 1; ++i)
-        for (size_t j = 0; j < ncells + 1; ++j)
-          for (size_t k = 0; k < ncells + 1; ++k)
-            {
-              data[i * (ncells + 1) * (ncells + 1) + j * (ncells + 1) + k]
-                  = xcomp * i + ycomp * j + zcomp * k;
-            }
+      for (size_t j = 0; j < ncells + 1; ++j)
+      for (size_t k = 0; k < ncells + 1; ++k)
+        {
+          data[i * (ncells + 1) * (ncells + 1) + j * (ncells + 1) + k]
+          = xcomp * i + ycomp * j + zcomp * k;
+        }
       for (size_t i = 0; i < npos; ++i)
         {
           float xpos = Pos();
@@ -117,7 +118,7 @@ BOOST_AUTO_TEST_SUITE( Seismic_Test_Suite )
       geo.y[1] = 157.0;
       geo.z[1] = 157.0;
       double dist = sqrt(pow(geo.x[0] - geo.x[1], 2) + pow(geo.y[0] - geo.y[1],
-          2) + pow(geo.z[0] - geo.z[1], 2));
+              2) + pow(geo.z[0] - geo.z[1], 2));
 
       raypath = new jiba::RP_STRUCT[2];
 
@@ -157,6 +158,17 @@ BOOST_AUTO_TEST_SUITE( Seismic_Test_Suite )
       //check that the difference between calculated and exact solution
       //is smaller than the time it takes to go through one grid cell
       BOOST_CHECK(std::abs(dist-totallength * grid.h) < slow * grid.h);
-
+      //now check that saving and restoring works
+      jiba::SaveTraveltimes("tt.nc",time,Model);
+      jiba::rvec ReadTime;
+      jiba::ThreeDSeismicModel ReadModel;
+      jiba::ReadTraveltimes("tt.nc",ReadTime,ReadModel);
+      BOOST_CHECK(std::equal(time.begin(),time.end(),ReadTime.begin()));
+      BOOST_CHECK(std::equal(Model.GetSourcePosX().begin(),Model.GetSourcePosX().end(),ReadModel.GetSourcePosX().begin()));
+      BOOST_CHECK(std::equal(Model.GetSourcePosY().begin(),Model.GetSourcePosY().end(),ReadModel.GetSourcePosY().begin()));
+      BOOST_CHECK(std::equal(Model.GetSourcePosZ().begin(),Model.GetSourcePosZ().end(),ReadModel.GetSourcePosZ().begin()));
+      BOOST_CHECK(std::equal(Model.GetMeasPosX().begin(),Model.GetMeasPosX().end(),ReadModel.GetMeasPosX().begin()));
+      BOOST_CHECK(std::equal(Model.GetMeasPosY().begin(),Model.GetMeasPosY().end(),ReadModel.GetMeasPosY().begin()));
+      BOOST_CHECK(std::equal(Model.GetMeasPosZ().begin(),Model.GetMeasPosZ().end(),ReadModel.GetMeasPosZ().begin()));
     }
-BOOST_AUTO_TEST_SUITE_END()
+  BOOST_AUTO_TEST_SUITE_END()

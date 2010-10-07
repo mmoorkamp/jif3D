@@ -14,7 +14,9 @@
 #include <boost/test/included/unit_test.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 #include <numeric>
-#include "ThreeDModelBase.h"
+#include "../Gravity/test_common.h"
+#include "../Gravity/ThreeDGravityModel.h"
+#include "EqualGeometry.h"
 
 //Test the default state of the object
 BOOST_AUTO_TEST_CASE(constructors_test)
@@ -24,7 +26,6 @@ BOOST_AUTO_TEST_CASE(constructors_test)
     BOOST_CHECK_EQUAL(ConstBaseTest.GetYCellSizes().size(), (size_t)0 );
     BOOST_CHECK_EQUAL(ConstBaseTest.GetZCellSizes().size(), (size_t)0 );
   }
-
 
 BOOST_AUTO_TEST_CASE(measpos_test)
   {
@@ -65,3 +66,31 @@ BOOST_AUTO_TEST_CASE(measpos_test)
             float>::epsilon());
       }
   }
+
+BOOST_AUTO_TEST_CASE(equal_geometry_test)
+  {
+    jiba::ThreeDGravityModel Model1;
+    srand(time(0));
+    MakeRandomModel(Model1, rand() % 20, 1);
+    jiba::ThreeDGravityModel Model2(Model1);
+    //check that we recognize to equal model geometries as equal
+    BOOST_CHECK(jiba::EqualGridGeometry(Model1,Model2));
+    //do we recognize differences in x-direction
+    const size_t xsize = Model1.GetXCellSizes().num_elements();
+    jiba::ThreeDGravityModel DiffX(Model1);
+    DiffX.SetXCellSizes()[rand() % xsize] += 0.1;
+    BOOST_CHECK(!jiba::EqualGridGeometry(Model1,DiffX));
+
+    //do we recognize differences in y-direction
+    const size_t ysize = Model1.GetYCellSizes().num_elements();
+    jiba::ThreeDGravityModel DiffY(Model1);
+    DiffY.SetYCellSizes()[rand() % ysize] += 0.1;
+    BOOST_CHECK(!jiba::EqualGridGeometry(Model1,DiffY));
+
+    //do we recognize differences in z-direction
+    const size_t zsize = Model1.GetZCellSizes().num_elements();
+    jiba::ThreeDGravityModel DiffZ(Model1);
+    DiffZ.SetZCellSizes()[rand() % zsize] += 0.1;
+    BOOST_CHECK(!jiba::EqualGridGeometry(Model1,DiffZ));
+  }
+

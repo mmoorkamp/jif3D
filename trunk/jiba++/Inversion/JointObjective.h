@@ -76,7 +76,7 @@ namespace jiba
        * @param Obj A shared pointer to the objective function object
        * @param Transform A shared pointer to a transformation object that calculates the correct physical parameters for this objective
        * @param lambda The weight of the objective function in the inversion
-       * @param A name for the objective function for display purposes
+       * @param DisplayName A name for the objective function for display purposes
        */
       void AddObjective(boost::shared_ptr<ObjectiveFunction> Obj,
           boost::shared_ptr<GeneralModelTransform> Transform,

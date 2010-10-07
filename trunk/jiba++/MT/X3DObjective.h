@@ -90,6 +90,16 @@ namespace jiba
                 "Cannot have empty frequencies or model in MT objective function.");
           CoarseConductivityModel = Model;
         }
+      //! Set the geometry of a finely discretized model to ensure numerical precision
+      /*! The geometry we want to use for the inversion might not be fine enough
+       * to ensure a proper numerical calculation. In these cases we can pass the geometry
+       * of a refined model to the objective function. Note that the resulting model
+       * will have the grid interfaces from both the coarse model and the fine model
+       * as described for the ModelRefiner class. The resulting model must still have
+       * equal grid sizes in each of the horizontal directions. This is not checked here.
+       * @param Model An object containing the refined grid coordinates, conductivity values, site locations
+       *        and back are ignored.
+       */
       void SetFineModelGeometry(const jiba::X3DModel &Model)
         {
           if (Model.GetConductivities().num_elements() == 0)

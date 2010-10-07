@@ -33,7 +33,7 @@ namespace jiba
     class NormalizeTransform: public jiba::GeneralModelTransform
       {
     private:
-      // the Reference model
+      //! The Reference model we devide the model parameters by
       const jiba::rvec Reference;
     public:
       //! Transform the normalized model parameters back to physical parameters
@@ -75,6 +75,7 @@ namespace jiba
     class LogTransform: public jiba::GeneralModelTransform
       {
     private:
+      //! Each model parameter is divided by the reference values before taking the logarithm
       const jiba::rvec Reference;
     public:
       //! Transform the normalized model parameters back to physical parameters
