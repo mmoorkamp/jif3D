@@ -35,11 +35,11 @@ namespace jiba
     class GravityObjective: public ObjectiveFunction
       {
     private:
-      // The pointer to the forward calculation object, assigen by the constructor
+      //! The pointer to the forward calculation object, assigen by the constructor
       boost::shared_ptr<jiba::ThreeDGravityCalculator> Calculator;
-      //The observed gravity data, its type (scalar/FTG) depends on the constructor
+      //! The observed gravity data, its type (scalar/FTG) depends on the constructor
       jiba::rvec ObservedData;
-      //The object containing the geometry information of the model, the densities are overwritten at each misfit calculation
+      //! The object containing the geometry information of the model, the densities are overwritten at each misfit calculation
       jiba::ThreeDGravityModel DensityModel;
       //Calculate the difference between observed and synthetic data from the current model
       virtual void ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff);

@@ -27,14 +27,16 @@ namespace jiba
     class MatOpRegularization: public jiba::ObjectiveFunction
       {
     private:
-      //The operator matrix for the first spatial derivative is sparse
-      //so we provide a typedef for convenience
+      //! The operator matrix for the first spatial derivative is sparse so we provide a typedef for convenience
       typedef boost::numeric::ublas::compressed_matrix<double,
           boost::numeric::ublas::column_major> comp_mat;
-      //The implementation of the data difference is independent
-      //of the form of the matrix. We calculate the model roughness
-      //for all three directions and combine the results depending
-      //on the values of xweight, yweight and zweight
+      /*! The implementation of the data difference is independent
+       * of the form of the matrix. We calculate the model roughness
+       * for all three directions and combine the results depending
+       * on the values of xweight, yweight and zweight.
+       * @param Model The current model
+       * @param Diff The difference vector, i.e. raw value of regularization, for each model cell.
+       */
       virtual void ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff)
         {
           const size_t nmod = Model.size();

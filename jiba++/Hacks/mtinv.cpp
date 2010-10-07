@@ -212,9 +212,9 @@ int main(int argc, char *argv[])
                 Model.SetConductivities().origin());
             Model.WriteVTK(modelfilename + jiba::stringify(iteration)
                 + ".mt.inv.vtk");
-            std::cout << "Currrent Misfit: " << Optimizer->GetMisfit()
+            std::cout << "Current Misfit: " << Optimizer->GetMisfit()
                 << std::endl;
-            std::cout << "Currrent Gradient: " << Optimizer->GetGradNorm()
+            std::cout << "Current Gradient: " << Optimizer->GetGradNorm()
                 << std::endl;
             std::cout << std::endl;
 

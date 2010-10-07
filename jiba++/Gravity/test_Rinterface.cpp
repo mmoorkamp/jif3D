@@ -21,6 +21,7 @@
 #include "FullSensitivityGravityCalculator.h"
 #include "ScalarOMPGravityImp.h"
 #include "TensorOMPGravityImp.h"
+#include "ThreeDGravityFactory.h"
 
 BOOST_AUTO_TEST_SUITE( TensorGravity_Test_Suite )
 
