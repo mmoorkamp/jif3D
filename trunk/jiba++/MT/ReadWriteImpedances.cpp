@@ -35,15 +35,16 @@ namespace jiba
         CompVar->add_att("units", "Ohm");
       }
 
-    //read one compoment of the impedance tensor from a netcdf file
+    //read one component of the impedance tensor from a netcdf file
     //this is an internal helper function
     void ReadImpedanceComp(NcFile &NetCDFFile, jiba::rvec &Impedances,
         const std::string &CompName, const size_t compindex,
         const bool MustExist = true)
       {
-        NcError(MustExist ? NcError::verbose_fatal : NcError::silent_nonfatal);
-        NcVar *SizeVar = NetCDFFile.get_var(CompName.c_str());
-        if (SizeVar->is_valid())
+        NcError MyError(MustExist ? NcError::verbose_fatal
+            : NcError::silent_nonfatal);
+        NcVar *SizeVar;
+        if ((SizeVar = NetCDFFile.get_var(CompName.c_str())))
           {
             const size_t nvalues = Impedances.size() / 8;
             assert(nvalues == boost::numeric_cast<size_t>(SizeVar->edges()[0] * SizeVar->edges()[1]));
@@ -159,9 +160,9 @@ namespace jiba
         ReadImpedanceComp(DataFile, ImpError, "dZyy", 6, false);
         //we only read in the errors for the real part
         //and then assign the same error to the imaginary part
-        for (size_t i = 0; i < nimp-1; i+=2)
+        for (size_t i = 0; i < nimp - 1; i += 2)
           {
-            ImpError(i+1) = ImpError(i);
+            ImpError(i + 1) = ImpError(i);
           }
       }
 
@@ -231,9 +232,9 @@ namespace jiba
 
             //we read the error information into the vector components corresponding to the real part
             //we have to copy that error to the components corresponding to the imaginary part
-            for (size_t i = 0; i < Errors.size()-1; i+=2)
+            for (size_t i = 0; i < Errors.size() - 1; i += 2)
               {
-                Errors(i+1) = Errors(i);
+                Errors(i + 1) = Errors(i);
               }
             //convert the units in the .mtt file (km/s) into S.I units (Ohm)
             const double convfactor = 4.0 * 1e-4 * acos(-1.0);

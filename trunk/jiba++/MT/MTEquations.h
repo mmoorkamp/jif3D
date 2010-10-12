@@ -10,7 +10,7 @@ namespace jiba
   {
     /** \addtogroup mtmodelling Forward modelling of magnetotelluric data */
     /* @{ */
-    //! The value of magnetic permeability \f$ \mu \f$
+    //! The value of magnetic permeability \f$ \mu = 4 \cdot 10^{-7} \pi\f$
     const double mag_mu = 4e-7 * M_PI;
 
     //! Calculate the impedance of a half-space in S.I. units (Ohm)
