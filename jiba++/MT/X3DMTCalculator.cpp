@@ -25,7 +25,7 @@ namespace fs = boost::filesystem;
 
 namespace jiba
   {
-    //define some names that are alwats the same
+    //define some names that are always the same
     //either because x3d uses this convention
     //or because we use them in their own directory
     //and want to keep them simple to make sure x3d can handle them
@@ -310,10 +310,13 @@ namespace jiba
         const std::complex<double> &Zxx, const std::complex<double> &Zxy,
         const std::complex<double> &Zyx, const std::complex<double> &Zyy)
       {
+        //we need temporary variables as we calculate a new  value for Xp1 in the first line
+        //but need the old value for Xp1 in the second line
         std::complex<double> temp1 = conj(Zxx) * Xp1 + conj(Zyx) * Yp1;
         std::complex<double> temp2 = conj(Zxy) * Xp1 + conj(Zyy) * Yp1;
         Xp1 = temp1 * omega_mu;
         Yp1 = temp2 * omega_mu;
+        //the same remark applies to Xp2
         temp1 = conj(Zxx) * Xp2 + conj(Zyx) * Yp2;
         temp2 = conj(Zxy) * Xp2 + conj(Zyy) * Yp2;
         Xp2 = temp1 * omega_mu;
@@ -329,13 +332,13 @@ namespace jiba
         const size_t ncellsy, const size_t ncellsz)
       {
         std::string DirName = RootName + dirext + "/";
-#pragma omp critical
+#pragma omp critical(calcU_writesource)
           {
             WriteSourceFile(DirName + sourcefilename, ObservationDepth,
                 XPolMoments, YPolMoments);
           }
         RunX3D(RootName);
-#pragma omp critical
+#pragma omp critical(calcU_readema)
           {
             ReadEMA(DirName + emaname, Ux, Uy, Uz, ncellsx, ncellsy, ncellsz);
           }
@@ -383,7 +386,7 @@ namespace jiba
                 //read the fields from the forward calculation
                 std::vector<std::complex<double> > Ex1_obs, Ex2_obs, Ey1_obs,
                     Ey2_obs, Hx1_obs, Hx2_obs, Hy1_obs, Hy2_obs;
-#pragma omp critical
+#pragma omp critical(gradient_reademo)
                   {
                     ReadEMO(ForwardDirName + emoAname, Ex1_obs, Ey1_obs,
                         Hx1_obs, Hy1_obs);
@@ -397,7 +400,7 @@ namespace jiba
                 //for the gradient calculation we also need the electric fields
                 //at all cells in the model for the two source polarizations of
                 //the forward calculations
-#pragma omp critical
+#pragma omp critical(gradient_readema)
                   {
                     ReadEMA(ForwardDirName + emaAname, Ex1_all, Ey1_all,
                         Ez1_all, ncellsx, ncellsy, ncellsz);
@@ -458,7 +461,7 @@ namespace jiba
                 //again we have to write out some file for the electric
                 //dipole calculation with x3d, this shouldn't be done
                 //in parallel
-#pragma omp critical
+#pragma omp critical(gradient_writemodel_edip)
                   {
                     MakeRunFile(EdipName);
                     WriteProjectFile(EdipDirName, CurrFreq, X3DModel::EDIP,
@@ -490,7 +493,7 @@ namespace jiba
                 std::string MdipName = MakeUniqueName(X3DModel::MDIP, i);
                 std::string MdipDirName = MdipName + dirext + "/";
                 //write the files for the magnetic dipole calculation
-#pragma omp critical
+#pragma omp critical(gradient_writemodel_mdip)
                   {
                     MakeRunFile(MdipName);
                     WriteProjectFile(MdipDirName, CurrFreq, X3DModel::MDIP,

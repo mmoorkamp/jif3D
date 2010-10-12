@@ -423,6 +423,8 @@ namespace jiba
         const size_t ny = XPolMoments.shape()[1];
         assert(nx == YPolMoments.shape()[0]);
         assert(ny == YPolMoments.shape()[1]);
+        //write out the required header for the source file
+        //x3d is very picky about this
         std::ofstream outfile(filename.c_str());
         outfile << "  Version_of_X3D code (yyyy-mm-dd)\n";
         outfile << "  2006-06-06\n\n";
