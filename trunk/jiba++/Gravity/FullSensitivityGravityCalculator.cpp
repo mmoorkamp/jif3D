@@ -149,7 +149,7 @@ namespace jiba
       {
         assert(Misfit.size() == Sensitivities.size1());
 #ifdef HAVEATLAS
-        rvec result(nmod);
+        rvec result(Misfit.size());
         atlas::gemv(CblasTrans, 1.0, Sensitivities, Misfit, 0.0, result);
         return result;
 #else
