@@ -79,9 +79,9 @@ namespace jiba
         std::sort(uniqueshots.begin(), uniqueshots.end());
         uniqueshots.erase(std::unique(uniqueshots.begin(), uniqueshots.end()),
             uniqueshots.end());
-        assert(uniqueshots.size() == geo.nshot);
+       // assert(uniqueshots.size() == geo.nshot);
         //we need and unsigned version for the openmp loop
-        const int nshot = geo.nshot;
+        const int nshot = uniqueshots.size();
 #pragma omp parallel default(shared)
           {
 
@@ -102,9 +102,9 @@ namespace jiba
                 /*Normalized positions of the shots and receivers (referring to the grid cell nodes and NOT of the grid cell centers)*/
                 std::fill(tt.begin(), tt.end(), 0.0);
 
-                Xs = ((geo.x[i]) / grid.h); /*normalized x-coordinate of the shot locations according to grid cell nodes*/
-                Ys = ((geo.y[i]) / grid.h); /*normalized y-coordinate of the shot locations according to grid cell nodes*/
-                Zs = ((geo.z[i]) / grid.h); /*normalized z-coordinate of the shot locations according to grid cell nodes*/
+                Xs = ((geo.x[uniqueshots[i]-1]) / grid.h); /*normalized x-coordinate of the shot locations according to grid cell nodes*/
+                Ys = ((geo.y[uniqueshots[i]-1]) / grid.h); /*normalized y-coordinate of the shot locations according to grid cell nodes*/
+                Zs = ((geo.z[uniqueshots[i]-1]) / grid.h); /*normalized z-coordinate of the shot locations according to grid cell nodes*/
 
                 /***************************************************************************************/
                 /*Podvin&Lecomte forward algorithm*/
