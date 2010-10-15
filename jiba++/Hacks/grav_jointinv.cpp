@@ -1,12 +1,4 @@
 //============================================================================
-// Name        : jointinv.cpp
-// Author      : May 12, 2009
-// Version     :
-// Copyright   : 2009, mmoorkamp
-//============================================================================
-
-
-//============================================================================
 // Name        : gravinv.cpp
 // Author      : Max Moorkamp
 // Version     :
@@ -18,7 +10,8 @@
 #include <fstream>
 #include <string>
 #include <cmath>
-#include <boost/bind.hpp>
+#include <omp.h>
+#include <boost/program_options.hpp>
 #include "../Global/convert.h"
 #include "../Global/FatalException.h"
 #include "../Global/NumUtil.h"
@@ -38,12 +31,50 @@
 #include "../Gravity/MinMemGravityCalculator.h"
 #include "../Gravity/DepthWeighting.h"
 #include "../Gravity/ThreeDGravityFactory.h"
+#include "../Joint/SetupRegularization.h"
+#include "../Joint/SetupInversion.h"
 
 namespace ublas = boost::numeric::ublas;
+namespace po = boost::program_options;
 
-
-int main()
+int main(int argc, char *argv[])
   {
+
+    po::options_description desc("General options");
+    desc.add_options()("help", "produce help message")("threads",
+        po::value<int>(), "The number of openmp threads")("covmod", po::value<
+        std::string>(), "A file containing the model covariance");
+
+    jiba::SetupRegularization RegSetup;
+    jiba::SetupInversion InversionSetup;
+    desc.add(RegSetup.SetupOptions());
+    desc.add(InversionSetup.SetupOptions());
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::notify(vm);
+
+    if (vm.count("help"))
+      {
+        std::cout << desc << "\n";
+        return 1;
+      }
+
+    if (vm.count("threads"))
+      {
+        omp_set_num_threads(vm["threads"].as<int> ());
+      }
+
+    jiba::rvec CovModVec;
+    if (vm.count("covmod"))
+      {
+        jiba::ThreeDGravityModel CovModel;
+        CovModel.ReadNetCDF(vm["covmod"].as<std::string> ());
+        const size_t ncovmod = CovModel.GetDensities().num_elements();
+        CovModVec.resize(ncovmod);
+        std::copy(CovModel.GetDensities().origin(),
+            CovModel.GetDensities().origin() + ncovmod, CovModVec.begin());
+      }
+
     //these objects hold information about the measurements and their geometry
     jiba::rvec ScalGravData, FTGData;
     jiba::ThreeDGravityModel GravModel;
@@ -85,34 +116,32 @@ int main()
     InvModel = Transform->PhysicalToGeneralized(InvModel);
 
     boost::shared_ptr<jiba::GravityObjective> ScalGravObjective(
-        new jiba::GravityObjective());
+        new jiba::GravityObjective(false, false));
     ScalGravObjective->SetObservedData(ScalGravData);
     ScalGravObjective->SetModelGeometry(GravModel);
     ScalGravObjective->SetDataCovar(jiba::ConstructError(ScalGravData, 0.02));
 
     boost::shared_ptr<jiba::GravityObjective> FTGObjective(
-        new jiba::GravityObjective(true));
+        new jiba::GravityObjective(true, false));
     FTGObjective->SetObservedData(FTGData);
     FTGObjective->SetModelGeometry(GravModel);
-    FTGObjective->SetDataCovar(jiba::ConstructError(FTGData, sqrt(0.02)));
+    FTGObjective->SetDataCovar(jiba::ConstructError(FTGData, sqrt(0.02), 1e-11));
 
     const double z0 = 5.0;
     const double DepthExponent = -2.0;
-    jiba::rvec WeightVector, ModelWeight(InvModel.size());
+    jiba::rvec WeightVector;
     //calculate the depth scaling
     jiba::ConstructDepthWeighting(GravModel.GetZCellSizes(), z0, WeightVector,
         jiba::WeightingTerm(DepthExponent));
-    for (size_t i = 0; i < ModelWeight.size(); ++i)
-      {
-        ModelWeight( i) = WeightVector(i % GravModel.GetZCellSizes().size());
-      }
-
-    boost::shared_ptr<jiba::JointObjective> Objective(
-        new jiba::JointObjective());
-    boost::shared_ptr<jiba::MinDiffRegularization> Regularization(
-        new jiba::MinDiffRegularization);
-    Regularization->SetReferenceModel(RefModel);
-    Regularization->SetDataCovar(RefModel);
+    //    for (size_t i = 0; i < CovModVec.size(); ++i)
+    //      {
+    //        CovModVec(i) *= WeightVector(i % GravModel.GetZCellSizes().size());
+    //      }
+    //std::fill(CovModVec.begin(), CovModVec.end(), 1.0);
+    boost::shared_ptr<jiba::JointObjective> Objective(new jiba::JointObjective(
+        true));
+    boost::shared_ptr<jiba::MatOpRegularization> Regularization =
+        RegSetup.SetupObjective(vm, GravModel, Transform, RefModel);
 
     double scalgravlambda = 1.0;
     double ftglambda = 1.0;
@@ -137,25 +166,44 @@ int main()
 
     std::cout << "Performing inversion." << std::endl;
 
-    jiba::LimitedMemoryQuasiNewton LBFGS(Objective, 5);
-    //jiba::NonLinearConjugateGradient LBFGS(Objective);
-    LBFGS.SetModelCovDiag(ModelWeight);
+    //jiba::rvec Ones(CovModVec);
+    //std::fill(Ones.begin(),Ones.end(),1.0);
+    boost::shared_ptr<jiba::GradientBasedOptimization> Optimizer =
+        InversionSetup.ConfigureInversion(vm, Objective, InvModel, CovModVec);
 
     size_t iteration = 0;
     size_t maxiter = 30;
+    std::cout << "Maximum number of iterations: ";
+    std::cin >> maxiter;
     std::ofstream misfitfile("misfit.out");
     do
       {
-        std::cout << "Iteration" << iteration << std::endl;
-        LBFGS.MakeStep(InvModel);
+        std::cout << "Iteration: " << iteration << std::endl;
+        Optimizer->MakeStep(InvModel);
+
+        jiba::rvec DensInvModel = Transform->GeneralizedToPhysical(InvModel);
+        std::copy(DensInvModel.begin(), DensInvModel.end(),
+            GravModel.SetDensities().origin());
+        GravModel.WriteVTK(modelfilename + jiba::stringify(iteration)
+            + ".grav.inv.vtk");
 
         ++iteration;
-        std::cout << "Gradient Norm: " << LBFGS.GetGradNorm() << std::endl;
-        std::cout << "Currrent Misfit: " << LBFGS.GetMisfit() << std::endl;
-        std::cout << "Currrent Gradient: " << LBFGS.GetGradNorm() << std::endl;
-        misfitfile << iteration << " " << LBFGS.GetMisfit() << std::endl;
-      } while (iteration < maxiter && LBFGS.GetMisfit() > 1
-        && LBFGS.GetGradNorm() > 1e-6);
+        std::cout << "Gradient Norm: " << Optimizer->GetGradNorm() << std::endl;
+        std::cout << "Currrent Misfit: " << Optimizer->GetMisfit() << std::endl;
+        std::cout << "Currrent Gradient: " << Optimizer->GetGradNorm()
+            << std::endl;
+        misfitfile << std::setw(5) << iteration << " " << std::setw(15)
+            << Optimizer->GetMisfit() << " ";
+        for (size_t i = 0; i < Objective->GetIndividualFits().size(); ++i)
+          {
+            misfitfile << std::setw(15) << Objective->GetIndividualFits().at(i)
+                << " ";
+          }
+
+        misfitfile << " " << Objective->GetNEval();
+        misfitfile << std::endl;
+      } while (iteration < maxiter && Optimizer->GetMisfit() > 1
+        && Optimizer->GetGradNorm() > 1e-6);
 
     jiba::rvec DensInvModel(Transform->GeneralizedToPhysical(InvModel));
 
@@ -181,6 +229,13 @@ int main()
                 jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeTensor());
     jiba::rvec FTGInvData(FTGGravityCalculator->Calculate(GravModel));
     jiba::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc",
+        FTGInvData, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
+        GravModel.GetMeasPosZ());
+
+    jiba::Write3DDataToVTK(modelfilename + ".inv_sgd.vtk", "grav_accel",
+        GravInvData, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
+        GravModel.GetMeasPosZ());
+    jiba::Write3DTensorDataToVTK(modelfilename + ".inv_ftg.vtk", "U",
         FTGInvData, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
         GravModel.GetMeasPosZ());
     //and write out the data and model

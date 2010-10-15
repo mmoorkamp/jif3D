@@ -27,7 +27,7 @@ size_t MakeKey(size_t RecNo, size_t SourceNo)
 void ExtractIndex(size_t key, size_t &RecNo, size_t &SourceNo)
   {
     RecNo = key / 1e6;
-    SourceNo = key - 1e6*RecNo;
+    SourceNo = key - 1e6 * RecNo;
   }
 
 int main()
@@ -40,8 +40,8 @@ int main()
       {
         size_t CurrShotNo, CurrRecNo, CurrTracl;
         double CurrSourceX, CurrSourceY, CurrRecX, CurrRecY;
-        PosFile >> CurrShotNo >> CurrTracl >> CurrRecNo >> CurrSourceX
-            >> CurrSourceY >> CurrRecX >> CurrRecY;
+        PosFile >> CurrShotNo >> CurrTracl >> CurrRecNo >> CurrSourceY
+            >> CurrSourceX >> CurrRecY >> CurrRecX;
         if (PosFile.good())
           {
             ShotNo.push_back(CurrShotNo);
@@ -55,18 +55,21 @@ int main()
       }
 
     typedef std::map<size_t, std::vector<double> > MyMap;
-    MyMap SourceRecMap;
+    MyMap SourceRecMap, SourceMap;
 
     const size_t nrecords = ShotNo.size();
     for (size_t i = 0; i < nrecords; ++i)
       {
-        std::vector<double> SourceRecPos(4, 0.0);
+        std::vector<double> SourceRecPos(4, 0.0), SourcePos(2, 0.0);
         SourceRecPos[0] = RecX.at(i);
         SourceRecPos[1] = RecY.at(i);
         SourceRecPos[2] = SourceX.at(i);
         SourceRecPos[3] = SourceY.at(i);
+        SourcePos[0] = SourceX.at(i);
+        SourcePos[1] = SourceY.at(i);
         size_t key = MakeKey(RecNo.at(i), ShotNo.at(i));
         SourceRecMap.insert(std::make_pair(key, SourceRecPos));
+        SourceMap.insert(std::make_pair(ShotNo.at(i), SourcePos));
       }
 
     std::string PickFileName = jiba::AskFilename("Pick-file name: ");
@@ -85,8 +88,8 @@ int main()
             if (PickFile.good())
               {
 
-                ShotIndex.push_back(CurrShotIndex);
-                RecIndex.push_back(CurrRecIndex);
+                ShotIndex.push_back(boost::math::round(CurrShotIndex));
+                RecIndex.push_back(boost::math::round(CurrRecIndex));
                 TravelTime.push_back(CurrTT);
 
               }
@@ -98,47 +101,37 @@ int main()
 
     jiba::ThreeDSeismicModel Model;
     size_t nrec = SourceRecMap.size();
+    const double depth = 10.0;
 
-    std::cout << "Nrec: " << nrec << std::endl;
-    for (MyMap::iterator RecIter = SourceRecMap.begin(); RecIter
-        != SourceRecMap.end(); ++RecIter)
+    for (MyMap::iterator sourceiter = SourceMap.begin(); sourceiter != SourceMap.end(); ++sourceiter)
       {
-        Model.AddMeasurementPoint(RecIter->second[0], RecIter->second[1], 10.0);
-      }
-
-    std::set<size_t> SourceSet;
-    for (MyMap::iterator SourceIter = SourceRecMap.begin(); SourceIter
-        != SourceRecMap.end(); ++SourceIter)
-      {
-        size_t RecIndex, SourceIndex;
-        ExtractIndex(SourceIter->first, RecIndex, SourceIndex);
-        if (SourceSet.insert(SourceIndex).second)
-          {
-            std::cout << "Inserted: " << SourceIndex << std::endl;
-            Model.AddSource(SourceIter->second[2], SourceIter->second[3], 10.0);
-          }
+        Model.AddSource(sourceiter->second[0],sourceiter->second[1],depth);
       }
 
     const size_t ntime = TravelTime.size();
     std::cout << "NTimes: " << ntime << std::endl;
+    size_t measindex = 0;
     for (size_t i = 0; i < ntime; ++i)
       {
         const size_t Key = MakeKey(RecIndex.at(i), ShotIndex.at(i));
         MyMap::iterator sriter = SourceRecMap.find(Key);
-        std::set<size_t>::iterator SourceIter = SourceSet.find(
-            ShotIndex.at(i));
-        if (sriter != SourceRecMap.end() && SourceIter != SourceSet.end())
+
+        if (sriter != SourceRecMap.end())
           {
-            size_t CurrRecIndex = std::distance(SourceRecMap.begin(), sriter);
-            size_t CurrShotIndex = std::distance(SourceSet.begin(), SourceIter);
-            Model.AddMeasurementConfiguration(CurrShotIndex, CurrRecIndex);
+            Model.AddMeasurementPoint(sriter->second[0], sriter->second[1],
+                depth);
+            MyMap::iterator sourceiter = SourceMap.find(ShotIndex.at(i));
+            size_t CurrShotIndex = std::distance(SourceMap.begin(), sourceiter);
+            Model.AddMeasurementConfiguration(CurrShotIndex, measindex);
+            ++measindex;
           }
         else
           {
             TravelTime.at(i) = -1.0;
           }
       }
-    TravelTime.erase(std::remove(TravelTime.begin(),TravelTime.end(),-1.0),TravelTime.end());
+    TravelTime.erase(std::remove(TravelTime.begin(), TravelTime.end(), -1.0),
+        TravelTime.end());
     std::string outfilename = jiba::AskFilename("Output file: ", false);
     jiba::rvec TT(TravelTime.size());
     std::copy(TravelTime.begin(), TravelTime.end(), TT.begin());

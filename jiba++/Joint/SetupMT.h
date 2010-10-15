@@ -42,14 +42,12 @@ namespace jiba
        * the program options.
        * @param vm The variable map from boost::program_options that contains the actually set options
        * @param Objective An existing JointObjective object that the newly created MT objective is added to
-       * @param StartModel The starting model geometry
        * @param Transform A transformation object to transform generalized to physical parameters
-       * @param NeedStartModel Do we need to ask the user for a starting model (true) or do we generate the geometry from the parameter StartModel
        */
       void
       SetupObjective(const po::variables_map &vm,
-          jiba::JointObjective &Objective, const ThreeDModelBase &StartModel,
-          boost::shared_ptr<jiba::GeneralModelTransform> Transform, bool NeedStartModel = true);
+          jiba::JointObjective &Objective,
+          boost::shared_ptr<jiba::GeneralModelTransform> Transform);
       //! Return the MT model that has been set for the inversion
       const jiba::X3DModel &GetModel()
         {

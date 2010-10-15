@@ -20,6 +20,7 @@
 #include "../Global/FileUtil.h"
 #include "../ModelBase/VTKTools.h"
 #include "../ModelBase/NetCDFTools.h"
+#include "../ModelBase/EqualGeometry.h"
 #include "../Inversion/JointObjective.h"
 #include "../Regularization/MinDiffRegularization.h"
 #include "../Inversion/ModelTransforms.h"
@@ -115,9 +116,21 @@ int main(int argc, char *argv[])
 
     jiba::ThreeDSeismicModel TomoModel;
     TomoSetup.SetupObjective(vm, *Objective.get(), TomoModel, TomoTransform);
-    GravitySetup.SetupObjective(vm, *Objective.get(), TomoModel,
-        GravityTransform);
-    MTSetup.SetupObjective(vm, *Objective.get(), TomoModel, MTTransform);
+    GravitySetup.SetupObjective(vm, *Objective.get(), GravityTransform);
+
+    if (!EqualGridGeometry(TomoModel, GravitySetup.GetModel()))
+      {
+        throw jiba::FatalException(
+            "Gravity model does not have the same geometry as starting model");
+      }
+
+    MTSetup.SetupObjective(vm, *Objective.get(), MTTransform);
+    if (!EqualGridGeometry(MTSetup.GetModel(), TomoModel))
+      {
+        throw jiba::FatalException(
+            "MT model does not have the same geometry as starting model");
+      }
+
     boost::shared_ptr<jiba::MatOpRegularization> Regularization =
         RegSetup.SetupObjective(vm, TomoModel, RegTransform, CovModVec);
 

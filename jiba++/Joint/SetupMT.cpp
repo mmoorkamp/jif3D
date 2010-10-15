@@ -7,7 +7,6 @@
 
 #include "../MT/X3DObjective.h"
 #include "../MT/ReadWriteImpedances.h"
-#include "../ModelBase/EqualGeometry.h"
 #include "../Global/FileUtil.h"
 #include "../Global/Noise.h"
 #include "SetupMT.h"
@@ -37,9 +36,8 @@ namespace jiba
       }
 
     void SetupMT::SetupObjective(const po::variables_map &vm,
-        jiba::JointObjective &Objective, const ThreeDModelBase &StartModel,
-        boost::shared_ptr<jiba::GeneralModelTransform> Transform,
-        bool NeedStartModel)
+        jiba::JointObjective &Objective, boost::shared_ptr<
+            jiba::GeneralModelTransform> Transform)
       {
         //first we ask the user a few questions
         //these are all values that are likely to change from run to run
@@ -55,28 +53,13 @@ namespace jiba
             //for inversion we need some data, so we ask for the filename
             std::string mtdatafilename =
                 jiba::AskFilename("MT data filename: ");
-            //depending on whether we are doing an independent inversion
-            // a joint inversion with direct parameter coupling or cross-gradients
-            // we might need conductivity values for the MT or not
-            if (NeedStartModel)
-              {
-                std::string mtmodelfilename = jiba::AskFilename(
-                    "MT Model Filename: ");
-                //read in the model and check whether the geometry matches the one
-                //of the tomography starting model
-                MTModel.ReadNetCDF(mtmodelfilename);
-                if (!EqualGridGeometry(MTModel, StartModel))
-                  {
-                    throw jiba::FatalException(
-                        "MT model does not have the same geometry as starting model");
-                  }
-              }
-            else
-              {
-                //if we do not need a starting model with conductivity values we
-                //generate an appropriate geometry from the parameter StartModel
-                MTModel = StartModel;
-              }
+
+            std::string mtmodelfilename = jiba::AskFilename(
+                "MT Model Filename: ");
+            //read in the model and check whether the geometry matches the one
+            //of the tomography starting model
+            MTModel.ReadNetCDF(mtmodelfilename);
+
             //read in MT data, the position of the measurement sites, frequencies and impedances
             std::vector<double> MTXPos, MTYPos, MTZPos, Frequencies;
             jiba::rvec MTData, MTError;
@@ -108,7 +91,8 @@ namespace jiba
             MTObjective->SetCoarseModelGeometry(MTModel);
             MTObjective->SetObservedData(MTData);
             jiba::rvec MinErr(jiba::ConstructMTError(MTData, relerr));
-            std::transform(MTError.begin(),MTError.end(),MinErr.begin(),MTError.begin(),std::max<double>);
+            std::transform(MTError.begin(), MTError.end(), MinErr.begin(),
+                MTError.begin(), std::max<double>);
             MTObjective->SetDataCovar(MTError);
             //add the MT part to the JointObjective that will be used
             //for the inversion
