@@ -103,14 +103,18 @@ int main()
     size_t nrec = SourceRecMap.size();
     const double depth = 10.0;
 
-    for (MyMap::iterator sourceiter = SourceMap.begin(); sourceiter != SourceMap.end(); ++sourceiter)
+    for (MyMap::iterator sourceiter = SourceMap.begin(); sourceiter
+        != SourceMap.end(); ++sourceiter)
       {
-        Model.AddSource(sourceiter->second[0],sourceiter->second[1],depth);
+        Model.AddSource(sourceiter->second[0], sourceiter->second[1], depth);
       }
 
     const size_t ntime = TravelTime.size();
     std::cout << "NTimes: " << ntime << std::endl;
     size_t measindex = 0;
+    double mindist = 0.0;
+    std::cout << "Minimum offset: ";
+    std::cin >> mindist;
     for (size_t i = 0; i < ntime; ++i)
       {
         const size_t Key = MakeKey(RecIndex.at(i), ShotIndex.at(i));
@@ -118,12 +122,23 @@ int main()
 
         if (sriter != SourceRecMap.end())
           {
-            Model.AddMeasurementPoint(sriter->second[0], sriter->second[1],
-                depth);
+
             MyMap::iterator sourceiter = SourceMap.find(ShotIndex.at(i));
             size_t CurrShotIndex = std::distance(SourceMap.begin(), sourceiter);
-            Model.AddMeasurementConfiguration(CurrShotIndex, measindex);
-            ++measindex;
+            double distance = std::sqrt(std::pow(sourceiter->second[0]
+                - sriter->second[0],2) + std::pow(sourceiter->second[1]
+                - sriter->second[1],2));
+            if (distance > mindist)
+              {
+                Model.AddMeasurementPoint(sriter->second[0], sriter->second[1],
+                    depth);
+                Model.AddMeasurementConfiguration(CurrShotIndex, measindex);
+                ++measindex;
+              }
+            else
+              {
+                TravelTime.at(i) = -1.0;
+              }
           }
         else
           {
