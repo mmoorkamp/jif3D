@@ -43,8 +43,9 @@ namespace jiba
        * @param vm The variable map from boost::program_options that contains the actually set options
        * @param Objective An existing JointObjective object that the newly created MT objective is added to
        * @param Transform A transformation object to transform generalized to physical parameters
+       * @return True if the weight for  the MT objective is greater zero, i.e. we added an objective function to JointObjective, false otherwise
        */
-      void
+      bool
       SetupObjective(const po::variables_map &vm,
           jiba::JointObjective &Objective,
           boost::shared_ptr<jiba::GeneralModelTransform> Transform);

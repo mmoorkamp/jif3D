@@ -15,7 +15,6 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/convenience.hpp>
-#include <iostream>
 
 /*! \file FileUtil.h
  * Utilities associated with the general handling of files and filenames.

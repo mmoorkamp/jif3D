@@ -22,10 +22,17 @@ namespace jiba
           GridYCoordinates(), GridZCoordinates(), XOrigin(0.0), YOrigin(0.0),
           ZOrigin(0.0)
       {
+        omp_init_lock(&lck_model_xcoord);
+        omp_init_lock(&lck_model_ycoord);
+        omp_init_lock(&lck_model_zcoord);
+
       }
 
     ThreeDModelBase::~ThreeDModelBase()
       {
+        omp_destroy_lock(&lck_model_xcoord);
+        omp_destroy_lock(&lck_model_ycoord);
+        omp_destroy_lock(&lck_model_zcoord);
       }
 
     ThreeDModelBase& ThreeDModelBase::operator=(const ThreeDModelBase& source)
@@ -65,7 +72,40 @@ namespace jiba
         YCellSizesChanged = true;
         ZCellSizesChanged = true;
 
+        //we do not perform any copying of the ompenmp lock
+        //they are initialized by the constructor
+
         return *this;
+      }
+
+    /*! This functions assumes that the coordinate of the upper left front corner of the model is
+     * is (0,0,0).
+     * @param Coordinates This vector will contain the coordinates of the left upper front corner of each cell
+     * @param Sizes The size of each cell in m
+     * @param ChangeFlag The flag that stores whether this coordinate has been changed
+     */
+    void ThreeDModelBase::CalcCoordinates(t3DModelDim &Coordinates,
+        const t3DModelDim Sizes, bool &ChangeFlag) const
+      {
+        //we have to create an openmp lock as we want to access the model
+        //coordinates in parallel. However, when we perform a recalculation
+        //several threads mights want to access this code in parallel
+        //we prevent this with a lock, also this way the coordinates
+        //are only calculated once
+        const size_t nelements = Sizes.size();
+        if (ChangeFlag && nelements > 0)
+          {
+            Coordinates.resize(boost::extents[nelements]);
+            if (nelements > 0)
+              {
+                std::partial_sum(Sizes.begin(), Sizes.end(),
+                    Coordinates.begin());
+                std::rotate(Coordinates.begin(), Coordinates.end() - 1,
+                    Coordinates.end());
+                Coordinates[0] = 0.0;
+              }
+            ChangeFlag = false;
+          }
       }
 
     boost::array<ThreeDModelBase::t3DModelData::index, 3> ThreeDModelBase::FindAssociatedIndices(
@@ -85,10 +125,10 @@ namespace jiba
             std::lower_bound(GetZCoordinates().begin(),
                 GetZCoordinates().end(), zcoord));
         //when we return the value we make sure that we cannot go out of bounds
-        boost::array < t3DModelData::index, 3 > idx=
+        boost::array<t3DModelData::index, 3> idx =
           {
-              { std::max(xindex - 1, 0), std::max(yindex - 1, 0), std::max(zindex
-                    - 1, 0)}};
+            { std::max(xindex - 1, 0), std::max(yindex - 1, 0), std::max(zindex
+                - 1, 0) } };
         return idx;
       }
 
@@ -116,10 +156,11 @@ namespace jiba
             YCellSizes, ZCellSizes, Data);
 
         //we check that the sizes of the grid cell specifications and the data are matching
-        if (XCellSizes.size() != Data.shape()[0] || YCellSizes.size() != Data.shape()[1]
-            || ZCellSizes.size() != Data.shape()[2])
+        if (XCellSizes.size() != Data.shape()[0] || YCellSizes.size()
+            != Data.shape()[1] || ZCellSizes.size() != Data.shape()[2])
           {
-            throw jiba::FatalException("Cell size specification does not match data !");
+            throw jiba::FatalException(
+                "Cell size specification does not match data !");
           }
       }
 

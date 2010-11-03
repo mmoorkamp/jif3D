@@ -35,7 +35,7 @@ namespace jiba
         return desc;
       }
 
-    void SetupMT::SetupObjective(const po::variables_map &vm,
+    bool SetupMT::SetupObjective(const po::variables_map &vm,
         jiba::JointObjective &Objective, boost::shared_ptr<
             jiba::GeneralModelTransform> Transform)
       {
@@ -102,5 +102,7 @@ namespace jiba
             std::cout << "MT ndata: " << MTData.size() << std::endl;
             std::cout << "MT lambda: " << mtlambda << std::endl;
           }
+        //return true if we added an MT objective function
+        return (mtlambda >  0.0);
       }
   }

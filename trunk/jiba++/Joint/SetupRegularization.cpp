@@ -19,7 +19,9 @@ namespace jiba
       {
         if (vm.count(OptionName))
           {
-            TearModel.ReadNetCDF(vm[OptionName].as<std::string> ());
+            //we use a seismic model file as a container for the tear information
+            //but this model does not have to obey the gridding rules
+            TearModel.ReadNetCDF(vm[OptionName].as<std::string> (), false);
           }
         else
           {
@@ -54,8 +56,8 @@ namespace jiba
             "The weight for the regularization in y-direction")("zreg",
             po::value(&zweight)->default_value(1.0),
             "The weight for the regularization in z-direction")("curvreg",
-            "Use model curvature for regularization. If not set use gradient.")("tearmodx", po::value<
-            std::string>(),
+            "Use model curvature for regularization. If not set use gradient.")(
+            "tearmodx", po::value<std::string>(),
             "Filename for a model containing information about tear zones in x-direction.")(
             "tearmody", po::value<std::string>(),
             "Filename for a model containing information about tear zones in y-direction.")(
@@ -76,9 +78,9 @@ namespace jiba
       {
         //setup possible tearing for the regularization for the three directions
         jiba::ThreeDSeismicModel TearModX, TearModY, TearModZ;
-        SetTearModel(vm,"tearmodx",StartModel,TearModX);
-        SetTearModel(vm,"tearmody",StartModel,TearModY);
-        SetTearModel(vm,"tearmodz",StartModel,TearModZ);
+        SetTearModel(vm, "tearmodx", StartModel, TearModX);
+        SetTearModel(vm, "tearmody", StartModel, TearModY);
+        SetTearModel(vm, "tearmodz", StartModel, TearModZ);
 
         assert(StartModel.GetNModelElements() == TearModX.GetNModelElements());
         assert(StartModel.GetNModelElements() == TearModY.GetNModelElements());

@@ -14,6 +14,7 @@
 #include <boost/test/included/unit_test.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 #include <numeric>
+#include <omp.h>
 #include "../Gravity/test_common.h"
 #include "../Gravity/ThreeDGravityModel.h"
 #include "EqualGeometry.h"
@@ -72,6 +73,8 @@ BOOST_AUTO_TEST_CASE(equal_geometry_test)
     jiba::ThreeDGravityModel Model1;
     srand(time(0));
     MakeRandomModel(Model1, rand() % 20, 1);
+    //we cannot use a ThreeDBaseModel as a concrete object
+    //so we use a derived ThreeDGravityModel instead
     jiba::ThreeDGravityModel Model2(Model1);
     //check that we recognize to equal model geometries as equal
     BOOST_CHECK(jiba::EqualGridGeometry(Model1,Model2));
@@ -94,3 +97,27 @@ BOOST_AUTO_TEST_CASE(equal_geometry_test)
     BOOST_CHECK(!jiba::EqualGridGeometry(Model1,DiffZ));
   }
 
+BOOST_AUTO_TEST_CASE(concurrent_coordinates_test)
+  {
+    jiba::ThreeDGravityModel Model;
+    srand(time(0));
+    MakeRandomModel(Model, rand() % 20, 1);
+    jiba::ThreeDGravityModel ModelCopy(Model);
+
+#pragma omp parallel default(shared)
+      {
+#pragma omp for
+        for (size_t i = 0; i < 4; ++i)
+          {
+            Model.GetXCoordinates();
+            Model.GetYCoordinates();
+            Model.GetZCoordinates();
+          }
+      }
+    BOOST_CHECK(std::equal(Model.GetXCoordinates().origin(),Model.GetXCoordinates().origin()
+            + Model.GetXCoordinates().num_elements(),ModelCopy.GetXCoordinates().origin()));
+    BOOST_CHECK(std::equal(Model.GetYCoordinates().origin(),Model.GetYCoordinates().origin()
+            + Model.GetYCoordinates().num_elements(),ModelCopy.GetYCoordinates().origin()));
+    BOOST_CHECK(std::equal(Model.GetZCoordinates().origin(),Model.GetZCoordinates().origin()
+            + Model.GetZCoordinates().num_elements(),ModelCopy.GetZCoordinates().origin()));
+  }

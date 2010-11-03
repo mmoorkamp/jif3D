@@ -96,7 +96,7 @@ namespace jiba
 #define ERR_PHYS         (-7)
 #define ERR_DIM          (-8)
 
-    static char *err_msg[] =
+    static const char *err_msg[] =
       { "\ntime_3d: Computations terminated normally.\n",
           "\ntime_3d: [Bug] macros PODINFINITY, FD_HUGE not properly set.\n",
           "\ntime_3d: Multiple source but input time map is uniform.\n",
