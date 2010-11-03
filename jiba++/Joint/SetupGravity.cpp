@@ -43,7 +43,7 @@ namespace jiba
         return desc;
       }
 
-    void SetupGravity::SetupObjective(const po::variables_map &vm,
+    bool SetupGravity::SetupObjective(const po::variables_map &vm,
         jiba::JointObjective &Objective, boost::shared_ptr<jiba::GeneralModelTransform> Transform)
       {
         //if we want to use CUDA for forward modeling
@@ -136,5 +136,8 @@ namespace jiba
             std::cout << "FTG ndata: " << FTGData.size() << std::endl;
             std::cout << "FTG lambda: " << ftglambda << std::endl;
           }
+        //indicate whether we added a gravity objective function
+        //this way the caller can do additional consistency checks
+        return (ftglambda > 0.0) || (scalgravlambda > 0.0);
       }
   }

@@ -10,8 +10,8 @@
 #define THREEDMODELBASE_H_
 
 #include <netcdfcpp.h>
+#include <omp.h>
 #include <string>
-#include <functional>
 #include <boost/multi_array.hpp>
 
 /*! \file ThreeDModelBase.h
@@ -63,6 +63,12 @@ namespace jiba
       mutable bool YCellSizesChanged;
       //! Have the cell sizes for the z-coordinate changed
       mutable bool ZCellSizesChanged;
+      //! a locking variable to allow concurrent coordinate calculation calls for the x-component
+      mutable omp_lock_t lck_model_xcoord;
+      //! a locking variable to allow concurrent coordinate calculation calls for the y-component
+      mutable omp_lock_t lck_model_ycoord;
+      //! a locking variable to allow concurrent coordinate calculation calls for the z-component
+      mutable omp_lock_t lck_model_zcoord;
       //! The object containing the actual value, e.g. conductivity, velocity
       t3DModelData Data;
       //! The size of the cells in x-direction
@@ -79,31 +85,9 @@ namespace jiba
       mutable t3DModelDim GridYCoordinates;
       //! The z-coordinate of the upper left front corner
       mutable t3DModelDim GridZCoordinates;
-      //! Calculate the coordinates of the model cells from the sizes of each cell
-      /*! This functions assumes that the coordinate of the upper left front corner of the model is
-       * is (0,0,0).
-       * @param Coordinates This vector will contain the coordinates of the left upper front corner of each cell
-       * @param Sizes The size of each cell in m
-       * @param ChangeFlag The flag that stores whether this coordinate has been changed
-       */
+      //! Calculate the coordinates of the model cells from the sizes of each cell, this is a helper function used by ThreeDModelBase
       void CalcCoordinates(t3DModelDim &Coordinates, const t3DModelDim Sizes,
-          bool &ChangeFlag) const
-        {
-          const size_t nelements = Sizes.size();
-          if (ChangeFlag && nelements > 0)
-            {
-              Coordinates.resize(boost::extents[nelements]);
-              if (nelements > 0)
-                {
-                  std::partial_sum(Sizes.begin(), Sizes.end(),
-                      Coordinates.begin());
-                  std::rotate(Coordinates.begin(), Coordinates.end() - 1,
-                      Coordinates.end());
-                  Coordinates[0] = 0.0;
-                }
-              ChangeFlag = false;
-            }
-        }
+          bool &ChangeFlag) const;
     protected:
       //! The origin of the coordinate system in x-direction in m
       double XOrigin;
@@ -208,9 +192,9 @@ namespace jiba
        * @return The size of the gridded domain in x, y and z-direction as it would be returned by a call to Data.shape()
        */
       const boost::multi_array_types::size_type* GetModelShape() const
-      {
+        {
           return Data.shape();
-      }
+        }
       //! Return the total number of cells in the gridded domain
       size_t GetNModelElements() const
         {
@@ -234,28 +218,34 @@ namespace jiba
           return ZCellSizes;
         }
 
-      //!Get the x (north) coordinates of the cells, might perform calculations and write operation so it is not thread-safe
+      //!Get the x (north) coordinates of the cells, might perform calculations and write operation but is now thread-safe
       const t3DModelDim &GetXCoordinates() const
         {
+          omp_set_lock(&lck_model_xcoord);
           CalcCoordinates(GridXCoordinates, XCellSizes, XCellSizesChanged);
+          omp_unset_lock(&lck_model_xcoord);
           return GridXCoordinates;
         }
-      //!Get the y (east) coordinates of the cells, might perform calculations and write operation so it is not thread-safe
+      //!Get the y (east) coordinates of the cells, might perform calculations and write operation but is now thread-safe
       const t3DModelDim &GetYCoordinates() const
         {
+          omp_set_lock(&lck_model_ycoord);
           CalcCoordinates(GridYCoordinates, YCellSizes, YCellSizesChanged);
+          omp_unset_lock(&lck_model_ycoord);
           return GridYCoordinates;
         }
-      //!Get the z (depth) coordinates of the cells, might perform calculations and write operation so it is not thread-safe
+      //!Get the z (depth) coordinates of the cells, might perform calculations and write operation but is now thread-safe
       const t3DModelDim &GetZCoordinates() const
         {
+          omp_set_lock(&lck_model_zcoord);
           CalcCoordinates(GridZCoordinates, ZCellSizes, ZCellSizesChanged);
+          omp_unset_lock(&lck_model_zcoord);
           return GridZCoordinates;
         }
       //! Given three coordinates in m, find the indices of the model cell that correponds to these coordinates
       boost::array<ThreeDModelBase::t3DModelData::index, 3>
-          FindAssociatedIndices(const double xcoord, const double ycoord,
-              const double zcoord) const;
+      FindAssociatedIndices(const double xcoord, const double ycoord,
+          const double zcoord) const;
       //! Read the Measurement positions from a netcdf file
       void ReadMeasPosNetCDF(const std::string filename);
       //! Read the Measurement positions from an ascii file
@@ -263,7 +253,7 @@ namespace jiba
       friend class ModelRefiner;
       ThreeDModelBase();
       //! The copy constructor copies all independent variables of ThreeDModelBase
-      ThreeDModelBase& operator= (const ThreeDModelBase& source);
+      ThreeDModelBase& operator=(const ThreeDModelBase& source);
       virtual ~ThreeDModelBase();
       };
   /* @} */

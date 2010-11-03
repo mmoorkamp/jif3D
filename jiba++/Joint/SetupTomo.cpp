@@ -36,7 +36,7 @@ namespace jiba
         return desc;
       }
 
-    void SetupTomo::SetupObjective(const po::variables_map &vm,
+    bool SetupTomo::SetupObjective(const po::variables_map &vm,
         jiba::JointObjective &Objective, ThreeDSeismicModel &StartModel,
         boost::shared_ptr<jiba::GeneralModelTransform> Transform)
       {
@@ -46,7 +46,9 @@ namespace jiba
         std::string modelfilename = jiba::AskFilename(
             "Tomography inversion model Filename: ");
         //we read in the starting modelfile
-        StartModel.ReadNetCDF(modelfilename);
+        //the starting model does not necessarily obey the gridding rules for seismic data
+        //we can fix this with a grid refinement model
+        StartModel.ReadNetCDF(modelfilename, false);
         //write out the starting model as a .vtk file for plotting
         StartModel.WriteVTK(modelfilename + ".vtk");
 
@@ -86,6 +88,8 @@ namespace jiba
             std::cout << "Tomo ndata: " << TomoData.size() << std::endl;
             std::cout << "Tomo lambda: " << tomolambda << std::endl;
           }
+        //indicate whether we added a tomography objective
+        return (tomolambda > 0.0);
       }
 
   }

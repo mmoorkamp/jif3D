@@ -11,7 +11,6 @@
 namespace jiba
   {
 
-
     void GradientRegularization::ConstructOperator(
         const jiba::ThreeDModelBase &ModelGeometry,
         const jiba::ThreeDModelBase &TearModelX,
@@ -122,5 +121,18 @@ namespace jiba
                   }
               }
           }
+
+        for (size_t k = 0; k < zsize - 1; ++k)
+          {
+            const size_t index = ModelGeometry.IndexToOffset(0, 0, k);
+
+            if (TearModelZ.GetData()[0][0][k])
+              {
+                ZOperatorMatrix(index, ModelGeometry.IndexToOffset(0,
+                    0, k + 1)) = 1.0;
+                ZOperatorMatrix(index, index) = CenterValue;
+              }
+          }
+
       }
   }

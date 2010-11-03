@@ -174,7 +174,7 @@ namespace jiba
       //! Write the seimic model and all associated information in a netcdf file
       void WriteNetCDF(const std::string filename) const;
       //! Read the seismic model and all associated information from a netcdf file
-      void ReadNetCDF(const std::string filename);
+      void ReadNetCDF(const std::string filename, bool checkgrid = true);
       ThreeDSeismicModel();
       virtual ~ThreeDSeismicModel();
       };

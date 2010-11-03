@@ -17,6 +17,7 @@
 
 namespace jiba
   {
+    static const size_t maxlength = 2048;
 
     std::vector<std::complex<double> > ResortFields(const std::vector<
         std::complex<double> > &InField, const size_t nx, const size_t ny,
@@ -41,8 +42,8 @@ namespace jiba
         line = FindToken(infile, "Thickness");
         double currvalue;
         //swallow the line with 0 thickness and conductivity
-        char dummy[1024];
-        infile.getline(dummy, 1024);
+        char dummy[maxlength];
+        infile.getline(dummy, maxlength);
         //read in background layer thickness and conductivity
         //as long as we can read in two consecutive numbers
         while (!infile.fail())
@@ -55,9 +56,9 @@ namespace jiba
             infile >> currvalue;
             if (!infile.fail())
               {
-                char dummy[1024];
+                char dummy[maxlength];
                 bg_conductivities.push_back(currvalue);
-                infile.getline(dummy, 1024);
+                infile.getline(dummy, maxlength);
               }
           }
         //clear the failbit
@@ -298,7 +299,7 @@ namespace jiba
         //we have a few values in the file that we do not care about right now
         double dummy, real, imag;
         const std::complex<double> I(0.0, 1.0);
-        char restline[2048];
+        char restline[maxlength];
         //read in numbers as long as we can, this will be the E-field
         while (infile.good())
           {
@@ -309,12 +310,12 @@ namespace jiba
                 Ex.push_back(std::complex<double>(real, -imag));
                 infile >> real >> imag;
                 Ey.push_back(std::complex<double>(real, -imag));
-                infile.getline(restline, 2048);
+                infile.getline(restline, maxlength);
               }
           }
         //swallow up the header line for the magnetic fields
         infile.clear();
-        infile.getline(restline, 2048);
+        infile.getline(restline, maxlength);
 
         //read in the magnetic fields
         while (infile.good())
@@ -326,7 +327,7 @@ namespace jiba
                 Hx.push_back(std::complex<double>(real, -imag));
                 infile >> real >> imag;
                 Hy.push_back(std::complex<double>(real, -imag));
-                infile.getline(restline, 2048);
+                infile.getline(restline, maxlength);
               }
           }
         //make sure all fields have the same size

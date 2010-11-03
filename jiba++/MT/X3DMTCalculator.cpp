@@ -224,7 +224,7 @@ namespace jiba
                             Model.GetMeasPosZ()[j]);
                     //all sites are at the same elevation and the observed fields
                     //are only calculated at this observation depth, so we
-                    //only have to consider thye horizontal position
+                    //only have to consider the horizontal position
                     const size_t offset = StationIndex[0] * nmody
                         + StationIndex[1];
                     const size_t meas_index = freq_index + j * 8;

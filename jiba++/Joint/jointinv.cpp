@@ -77,7 +77,6 @@ int main(int argc, char *argv[])
     const std::string ConfFileName("jointinv.conf");
     if (boost::filesystem::exists(ConfFileName))
       {
-
         std::ifstream ConfFile(ConfFileName.c_str());
         po::store(po::parse_config_file(ConfFile, desc), vm);
       }
@@ -98,7 +97,9 @@ int main(int argc, char *argv[])
     if (vm.count("covmod"))
       {
         jiba::ThreeDSeismicModel CovModel;
-        CovModel.ReadNetCDF(vm["covmod"].as<std::string> ());
+        //we store the covariances in a seismic model file
+        //but we do not have to have an equidistant grid
+        CovModel.ReadNetCDF(vm["covmod"].as<std::string> (), false);
         const size_t ncovmod = CovModel.GetSlownesses().num_elements();
         CovModVec.resize(ncovmod);
         std::copy(CovModel.GetSlownesses().origin(),
@@ -115,17 +116,17 @@ int main(int argc, char *argv[])
         MTTransform, RegTransform);
 
     jiba::ThreeDSeismicModel TomoModel;
-    TomoSetup.SetupObjective(vm, *Objective.get(), TomoModel, TomoTransform);
-    GravitySetup.SetupObjective(vm, *Objective.get(), GravityTransform);
+    bool havetomo = TomoSetup.SetupObjective(vm, *Objective.get(), TomoModel, TomoTransform);
+    bool havegrav = GravitySetup.SetupObjective(vm, *Objective.get(), GravityTransform);
 
-    if (!EqualGridGeometry(TomoModel, GravitySetup.GetModel()))
+    if (havetomo && havegrav && !EqualGridGeometry(TomoModel, GravitySetup.GetModel()))
       {
         throw jiba::FatalException(
             "Gravity model does not have the same geometry as starting model");
       }
 
-    MTSetup.SetupObjective(vm, *Objective.get(), MTTransform);
-    if (!EqualGridGeometry(MTSetup.GetModel(), TomoModel))
+    bool havemt = MTSetup.SetupObjective(vm, *Objective.get(), MTTransform);
+    if (havetomo && havemt && !EqualGridGeometry(MTSetup.GetModel(), TomoModel))
       {
         throw jiba::FatalException(
             "MT model does not have the same geometry as starting model");
@@ -170,10 +171,6 @@ int main(int argc, char *argv[])
         try
           {
             std::cout << "\n\n Iteration: " << iteration << std::endl;
-            //std::copy(InvModel.begin(), InvModel.begin() + ngrid,
-            //    TomoModel.SetSlownesses().origin());
-            //TomoModel.WriteVTK("raw_model" + jiba::stringify(iteration)
-            //    + ".tomo.inv.vtk");
             Optimizer->MakeStep(InvModel);
 
             ++iteration;
@@ -246,10 +243,12 @@ int main(int argc, char *argv[])
 
     //calculate the predicted refraction data
     std::cout << "Calculating response of inversion model." << std::endl;
-    jiba::rvec TomoInvData(jiba::TomographyCalculator().Calculate(TomoModel));
-    jiba::SaveTraveltimes(modelfilename + ".inv_tt.nc", TomoInvData, TomoModel);
     TomoModel.WriteNetCDF(modelfilename + ".tomo.inv.nc");
     TomoModel.WriteVTK(modelfilename + ".tomo.inv.vtk");
+    jiba::rvec TomoInvData(jiba::TomographyCalculator().Calculate(TomoModel));
+
+    jiba::SaveTraveltimes(modelfilename + ".inv_tt.nc", TomoInvData, TomoModel);
+
 
     //and write out the data and model
     //here we have to distinguish again between scalar and ftg data

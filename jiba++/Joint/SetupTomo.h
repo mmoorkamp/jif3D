@@ -44,8 +44,9 @@ namespace jiba
        * @param Objective An existing JointObjective object that the newly created tomography objective is added to
        * @param StartModel The starting model geometry
        * @param Transform A transformation object to transform generalized to physical parameters
+       * @return True if the weight the tomography objective is greater zero, i.e. we added an objective function to JointObjective, false otherwise
        */
-      void
+      bool
       SetupObjective(const po::variables_map &vm,
           jiba::JointObjective &Objective, ThreeDSeismicModel &StartModel,
           boost::shared_ptr<jiba::GeneralModelTransform> Transform);

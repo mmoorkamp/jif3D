@@ -71,7 +71,9 @@ namespace jiba
         jiba::ThreeDSeismicModel StartModel;
         std::string modelfilename = jiba::AskFilename(
             "Inversion Model Geometry: ");
-        StartModel.ReadNetCDF(modelfilename);
+        //although we specify the starting model as a seismic model
+        //it does not need to have the same grid specifications
+        StartModel.ReadNetCDF(modelfilename, false);
 
         const size_t ngrid = StartModel.GetNModelElements();
         //if we want to do a cross-gradient type joint inversion
