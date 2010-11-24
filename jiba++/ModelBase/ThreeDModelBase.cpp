@@ -35,8 +35,31 @@ namespace jiba
         omp_destroy_lock(&lck_model_zcoord);
       }
 
+    //when we copy a model we always set the cell size change flags to true
+    //this costs us recalculation of the grid coordinates, but we do not
+    //have to worry whether the grid coordinate values are updated or not
+    ThreeDModelBase::ThreeDModelBase(const ThreeDModelBase &source) :
+      MeasPosX(source.MeasPosX), MeasPosY(source.MeasPosY), MeasPosZ(
+          source.MeasPosZ), XCellSizesChanged(true), YCellSizesChanged(true),
+          ZCellSizesChanged(true), Data(source.Data), XCellSizes(
+              source.XCellSizes), YCellSizes(source.YCellSizes), ZCellSizes(
+              source.ZCellSizes), GridXCoordinates(), GridYCoordinates(),
+          GridZCoordinates(), XOrigin(source.XOrigin), YOrigin(source.YOrigin),
+          ZOrigin(source.ZOrigin)
+
+      {
+        //each object needs its own lock for openmp
+        //so we do not copy the value from the source object
+        //but we reinitialize
+        omp_init_lock(&lck_model_xcoord);
+        omp_init_lock(&lck_model_ycoord);
+        omp_init_lock(&lck_model_zcoord);
+      }
+
     ThreeDModelBase& ThreeDModelBase::operator=(const ThreeDModelBase& source)
       {
+        if (this == &source)
+          return *this;
         //we have to implement the copy operator to make sure
         //all information is updated appropriately
         //first we copy all the measurement positions

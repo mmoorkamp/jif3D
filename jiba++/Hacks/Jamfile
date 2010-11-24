@@ -12,6 +12,7 @@ exe plotgrav : plotgrav.cpp  joint : <include>. ;
 exe parrun : parrun.cpp ..//boost_filesystem ;
 exe mtinv : mtinv.cpp  ../Inversion ../Global ../Regularization ../MT ../Joint ..//boost_filesystem : <include>. ;
 exe picksort : picksort.cpp  ../Global  ../Tomo ..//boost_filesystem : <include>. ;
+exe joinpicks : joinpicks.cpp  ../Global  ../Tomo ..//boost_filesystem : <include>. ;
 exe srcrecdist : srcrecdist.cpp  ../Global  ../Tomo ..//boost_filesystem : <include>. ;
 exe calccross : calccross.cpp  ../Global  ../Tomo ../Regularization ..//boost_filesystem : <include>. ;
 exe convertmtt : convertmtt.cpp   ../Global ../MT ..//boost_filesystem : <include>. ;

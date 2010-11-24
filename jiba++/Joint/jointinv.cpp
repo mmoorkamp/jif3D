@@ -46,6 +46,19 @@ namespace po = boost::program_options;
 /** \addtogroup joint Joint inversion routines */
 /* @{ */
 
+template<class ModelType>
+void SaveModel(const jiba::rvec &InvModel,
+    const jiba::GeneralModelTransform &Transform, ModelType &ModelObject,
+    const std::string &filename)
+  {
+    jiba::rvec TransModel = Transform.GeneralizedToPhysical(InvModel);
+    assert(TransModel.size() >= ModelObject.GetNModelElements());
+    std::copy(TransModel.begin(), TransModel.begin()
+        + ModelObject.GetNModelElements(), ModelObject.SetData().origin());
+    ModelObject.WriteVTK(filename + ".vtk");
+    ModelObject.WriteNetCDF(filename + ".nc");
+  }
+
 /*! \file jointinv.cpp
  * The main joint inversion program.
  */
@@ -116,10 +129,13 @@ int main(int argc, char *argv[])
         MTTransform, RegTransform);
 
     jiba::ThreeDSeismicModel TomoModel;
-    bool havetomo = TomoSetup.SetupObjective(vm, *Objective.get(), TomoModel, TomoTransform);
-    bool havegrav = GravitySetup.SetupObjective(vm, *Objective.get(), GravityTransform);
+    bool havetomo = TomoSetup.SetupObjective(vm, *Objective.get(), TomoModel,
+        TomoTransform);
+    bool havegrav = GravitySetup.SetupObjective(vm, *Objective.get(),
+        GravityTransform);
 
-    if (havetomo && havegrav && !EqualGridGeometry(TomoModel, GravitySetup.GetModel()))
+    if (havetomo && havegrav && !EqualGridGeometry(TomoModel,
+        GravitySetup.GetModel()))
       {
         throw jiba::FatalException(
             "Gravity model does not have the same geometry as starting model");
@@ -153,8 +169,6 @@ int main(int argc, char *argv[])
         InversionSetup.ConfigureInversion(vm, Objective, InvModel, CovModVec);
 
     size_t iteration = 0;
-
-    jiba::rvec TomoInvModel(TomoTransform->GeneralizedToPhysical(InvModel));
     std::ofstream misfitfile("misfit.out");
     //calculate initial misfit
     misfitfile << "0 " << Objective->CalcMisfit(InvModel) << " ";
@@ -164,6 +178,22 @@ int main(int argc, char *argv[])
     misfitfile << std::endl;
 
     std::string modelfilename = "result";
+
+    jiba::Write3DDataToVTK(modelfilename + ".rec.vtk", "Receiver", jiba::rvec(
+        TomoModel.GetMeasPosX().size()), TomoModel.GetMeasPosX(),
+        TomoModel.GetMeasPosY(), TomoModel.GetMeasPosZ());
+    jiba::Write3DDataToVTK(modelfilename + ".sor.vtk", "Source", jiba::rvec(
+        TomoModel.GetSourcePosX().size()), TomoModel.GetSourcePosX(),
+        TomoModel.GetSourcePosY(), TomoModel.GetSourcePosZ());
+
+    jiba::ThreeDGravityModel GravModel(GravitySetup.GetModel());
+    jiba::X3DModel MTModel(MTSetup.GetModel());
+
+    if (!havemt)
+      MTModel = TomoModel;
+    if (!havegrav)
+      GravModel = TomoModel;
+
     bool terminate = true;
     do
       {
@@ -175,12 +205,12 @@ int main(int argc, char *argv[])
 
             ++iteration;
 
-            TomoInvModel = TomoTransform->GeneralizedToPhysical(InvModel);
-            std::copy(TomoInvModel.begin(), TomoInvModel.begin()
-                + TomoModel.GetNModelElements(),
-                TomoModel.SetSlownesses().origin());
-            TomoModel.WriteVTK(modelfilename + jiba::stringify(iteration)
-                + ".tomo.inv.vtk");
+            SaveModel(InvModel, *TomoTransform.get(), TomoModel, modelfilename
+                + jiba::stringify(iteration) + ".tomo.inv");
+            SaveModel(InvModel, *MTTransform.get(), MTModel, modelfilename
+                + jiba::stringify(iteration) + ".mt.inv");
+            SaveModel(InvModel, *GravityTransform.get(), GravModel,
+                modelfilename + jiba::stringify(iteration) + ".grav.inv");
             std::cout << "Currrent Misfit: " << Optimizer->GetMisfit()
                 << std::endl;
             std::cout << "Currrent Gradient: " << Optimizer->GetGradNorm()
@@ -226,49 +256,46 @@ int main(int argc, char *argv[])
       } while (iteration < maxiter && !terminate && Optimizer->GetGradNorm()
         > 1e-6);
 
-    jiba::rvec DensInvModel(GravityTransform->GeneralizedToPhysical(InvModel));
-    jiba::rvec CondInvModel(MTTransform->GeneralizedToPhysical(InvModel));
-    std::copy(TomoInvModel.begin(), TomoInvModel.begin()
-        + TomoModel.GetNModelElements(), TomoModel.SetSlownesses().origin());
-
-    jiba::ThreeDGravityModel GravModel(GravitySetup.GetModel());
-    std::copy(DensInvModel.begin(), DensInvModel.begin()
-        + GravModel.SetDensities().num_elements(),
-        GravModel.SetDensities().origin());
-
-    jiba::X3DModel MTModel(MTSetup.GetModel());
-    std::copy(CondInvModel.begin(), CondInvModel.begin()
-        + MTModel.GetConductivities().num_elements(),
-        MTModel.SetConductivities().origin());
+    SaveModel(InvModel, *TomoTransform.get(), TomoModel, modelfilename
+        + ".tomo.inv");
+    SaveModel(InvModel, *MTTransform.get(), MTModel, modelfilename + ".mt.inv");
+    SaveModel(InvModel, *GravityTransform.get(), GravModel, modelfilename
+        + ".grav.inv");
 
     //calculate the predicted refraction data
     std::cout << "Calculating response of inversion model." << std::endl;
-    TomoModel.WriteNetCDF(modelfilename + ".tomo.inv.nc");
-    TomoModel.WriteVTK(modelfilename + ".tomo.inv.vtk");
     jiba::rvec TomoInvData(jiba::TomographyCalculator().Calculate(TomoModel));
 
     jiba::SaveTraveltimes(modelfilename + ".inv_tt.nc", TomoInvData, TomoModel);
 
+    //if we are inverting gravity data and have specified site locations
+    if (havegrav)
+      {
+        //and write out the data and model
+        //here we have to distinguish again between scalar and ftg data
+        jiba::rvec ScalGravInvData(jiba::CreateGravityCalculator<
+            jiba::MinMemGravityCalculator>::MakeScalar()->Calculate(GravModel));
+        jiba::rvec FTGInvData(jiba::CreateGravityCalculator<
+            jiba::MinMemGravityCalculator>::MakeTensor()->Calculate(GravModel));
+        jiba::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc",
+            ScalGravInvData, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
+            GravModel.GetMeasPosZ());
+        jiba::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc",
+            FTGInvData, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
+            GravModel.GetMeasPosZ());
+      }
 
-    //and write out the data and model
-    //here we have to distinguish again between scalar and ftg data
-    jiba::rvec ScalGravInvData(jiba::CreateGravityCalculator<
-        jiba::MinMemGravityCalculator>::MakeScalar()->Calculate(GravModel));
-    jiba::rvec FTGInvData(jiba::CreateGravityCalculator<
-        jiba::MinMemGravityCalculator>::MakeTensor()->Calculate(GravModel));
-    jiba::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc",
-        ScalGravInvData, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
-        GravModel.GetMeasPosZ());
-    jiba::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc",
-        FTGInvData, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
-        GravModel.GetMeasPosZ());
-    //calculate MT inversion result
-    jiba::rvec MTInvData(jiba::X3DMTCalculator().Calculate(MTModel));
-    jiba::WriteImpedancesToNetCDF(modelfilename + "inv_mt.nc",
-        MTModel.GetFrequencies(), MTModel.GetMeasPosX(), MTModel.GetMeasPosY(),
-        MTModel.GetMeasPosZ(), MTInvData);
-    std::cout << "Writing out inversion results." << std::endl;
-
+    //if we are inverting MT data and have specified site locations
+    if (havemt)
+      {
+        //calculate MT inversion result
+        jiba::rvec MTInvData(jiba::X3DMTCalculator().Calculate(MTModel));
+        jiba::WriteImpedancesToNetCDF(modelfilename + "inv_mt.nc",
+            MTModel.GetFrequencies(), MTModel.GetMeasPosX(),
+            MTModel.GetMeasPosY(), MTModel.GetMeasPosZ(), MTInvData);
+        std::cout << "Writing out inversion results." << std::endl;
+      }
+    //in any case we write out the corresponding models
     GravModel.WriteVTK(modelfilename + ".grav.inv.vtk");
     GravModel.WriteNetCDF(modelfilename + ".grav.inv.nc");
     MTModel.WriteVTK(modelfilename + ".mt.inv.vtk");

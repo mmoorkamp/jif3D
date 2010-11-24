@@ -51,7 +51,7 @@ namespace jiba
       bool
       SetupObjective(const po::variables_map &vm,
           jiba::JointObjective &Objective, boost::shared_ptr<
-              jiba::GeneralModelTransform> Transform);
+              jiba::GeneralModelTransform> &Transform);
       //! Return the gravity model that was read in
       const jiba::ThreeDGravityModel &GetModel()
         {

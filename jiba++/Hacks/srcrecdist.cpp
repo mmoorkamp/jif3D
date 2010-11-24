@@ -61,7 +61,7 @@ int main()
             - RecPosX[ReceiverIndices[i]];
         double YDist = SourcePosY[SourceIndices[i]]
             - RecPosY[ReceiverIndices[i]];
-        outfile << SourceIndices[i] << " "<< sqrt(XDist * XDist + YDist * YDist) << " " << Data(i)
+        outfile << sqrt(XDist * XDist + YDist * YDist) << " " << Data(i)
             << "\n";
       }
   }

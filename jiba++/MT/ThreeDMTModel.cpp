@@ -22,6 +22,12 @@ namespace jiba
 
       }
 
+    ThreeDMTModel::ThreeDMTModel(const ThreeDMTModel &source) :
+      ThreeDModelBase(source), Frequencies(source.Frequencies)
+      {
+
+      }
+
     ThreeDMTModel& ThreeDMTModel::operator=(const ThreeDMTModel& source)
       {
         if (&source != this)

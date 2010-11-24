@@ -252,8 +252,10 @@ namespace jiba
       void ReadMeasPosAscii(const std::string filename);
       friend class ModelRefiner;
       ThreeDModelBase();
-      //! The copy constructor copies all independent variables of ThreeDModelBase
+      //! The copy operator copies all independent variables of ThreeDModelBase
       ThreeDModelBase& operator=(const ThreeDModelBase& source);
+      //! We need to define a copy constructor to deal with openmp locks
+      ThreeDModelBase(const ThreeDModelBase &source);
       virtual ~ThreeDModelBase();
       };
   /* @} */

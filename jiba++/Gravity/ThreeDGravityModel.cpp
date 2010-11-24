@@ -34,6 +34,13 @@ namespace jiba
       {
       }
 
+    ThreeDGravityModel::ThreeDGravityModel(const ThreeDGravityModel &source) :
+      ThreeDModelBase(source), bg_densities(source.bg_densities),
+          bg_thicknesses(source.bg_thicknesses)
+      {
+
+      }
+
     ThreeDGravityModel& ThreeDGravityModel::operator=(
         const ThreeDGravityModel& source)
       {
