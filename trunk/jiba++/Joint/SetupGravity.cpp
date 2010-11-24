@@ -9,6 +9,7 @@
 #include "SetupGravity.h"
 #include "../Gravity/GravityObjective.h"
 #include "../Gravity/ReadWriteGravityData.h"
+#include "../Inversion/ModelTransforms.h"
 #include "../Global/FileUtil.h"
 #include "../Global/Noise.h"
 
@@ -44,7 +45,8 @@ namespace jiba
       }
 
     bool SetupGravity::SetupObjective(const po::variables_map &vm,
-        jiba::JointObjective &Objective, boost::shared_ptr<jiba::GeneralModelTransform> Transform)
+        jiba::JointObjective &Objective, boost::shared_ptr<
+            jiba::GeneralModelTransform> &Transform)
       {
         //if we want to use CUDA for forward modeling
         //we set a variable for easier access later and print
@@ -101,6 +103,13 @@ namespace jiba
                 GravModel.AddMeasurementPoint(PosX.at(i), PosY.at(i),
                     PosZ.at(i));
               }
+          }
+        if (Transform.get() == NULL)
+          {
+            jiba::rvec RefVec(GravModel.GetDensities().num_elements());
+            std::fill(RefVec.begin(), RefVec.end(), 1.0);
+            Transform = boost::shared_ptr<jiba::GeneralModelTransform>(
+                new jiba::NormalizeTransform(RefVec));
           }
         //now we setup the objective functions for each type of gravity data
         //the steps are the same for both, create new objective function,

@@ -25,11 +25,18 @@ namespace jiba
 
       }
 
+    X3DModel::X3DModel(const X3DModel &source) :
+      ThreeDMTModel(source), bg_thicknesses(source.bg_thicknesses),
+          bg_conductivities(source.bg_conductivities)
+      {
+
+      }
+
     X3DModel& X3DModel::operator=(const X3DModel& source)
       {
         if (&source != this)
           {
-           //first we copy the base class
+            //first we copy the base class
             ThreeDMTModel::operator=(source);
             //then we copy the additional information about the background layers
             //that is not contained in the base class

@@ -127,6 +127,7 @@ namespace jiba
       //! Read an igmas xyz model file
       void ReadIgmas(const std::string filename);
       ThreeDGravityModel();
+      ThreeDGravityModel(const ThreeDGravityModel &source);
       virtual ~ThreeDGravityModel();
       //! We have a copy operator for other Gravity models
       ThreeDGravityModel& operator= (const ThreeDGravityModel& source);

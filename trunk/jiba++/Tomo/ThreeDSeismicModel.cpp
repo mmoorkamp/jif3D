@@ -27,6 +27,28 @@ namespace jiba
       {
       }
 
+    ThreeDSeismicModel::ThreeDSeismicModel(const ThreeDSeismicModel &source) :
+      ThreeDModelBase(source), SourcePosX(source.SourcePosX), SourcePosY(
+          source.SourcePosY), SourcePosZ(source.SourcePosZ), SourceIndices(
+          source.SourceIndices), ReceiverIndices(source.ReceiverIndices)
+      {
+
+      }
+
+    ThreeDSeismicModel& ThreeDSeismicModel::operator=(
+        const ThreeDSeismicModel& source)
+      {
+        if (this == &source)
+          return *this;
+        ThreeDModelBase::operator =(source);
+        SourcePosX = source.SourcePosX;
+        SourcePosY = source.SourcePosY;
+        SourcePosZ = source.SourcePosZ;
+        SourceIndices = source.SourceIndices;
+        ReceiverIndices = source.ReceiverIndices;
+        return *this;
+      }
+
     void ThreeDSeismicModel::SetOrigin(const double x, const double y,
         const double z)
       {
