@@ -138,18 +138,16 @@ namespace jiba
         runfile << "x3d > /dev/null\n";
         runfile << "cd ..\n";
         runfile.close();
-        //it is important to include the std:: namespace specification
-        //for the system call, otherwise the GNU compiler picks up
-        //a version from the c library that gives trouble in threaded environments
-        if (std::system((std::string("chmod u+x ./") + RunFileName).c_str()))
-          throw FatalException("Cannot make script executable !");
         CopyHNK(fs::current_path(), DirName);
       }
 
     //execute the script that runs x3d
     void RunX3D(const std::string &NameRoot)
       {
-        const std::string runname = "./" + NameRoot + runext;
+        const std::string runname = "bash ./" + NameRoot + runext;
+        //it is important to include the std:: namespace specification
+        //for the system call, otherwise the GNU compiler picks up
+        //a version from the c library that gives trouble in threaded environments
         if (std::system(runname.c_str()))
           throw FatalException("Cannot execute run script: " + runname);
       }
