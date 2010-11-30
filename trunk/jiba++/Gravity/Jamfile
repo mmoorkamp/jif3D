@@ -12,7 +12,6 @@ lib gravity-extra : GravityInterface.cpp  TensorCudaGravityImp.cpp ScalarCudaGra
              gravcuda.cu  
              DepthWeighting.cpp DiskGravityCalculator.cpp
              WaveletCompressedGravityCalculator.cpp 
-             GravityObjective.cpp
              ..//cudart   ../Global//global ../Inversion//inversion ..//boost_filesystem ;
                     
 alias core :  ../ModelBase//modelbase ../Global ..//netcdf_c++ ..//netcdf ..//cudart ..//cutil ..//boost_filesystem  ..//boost_program_options ;
