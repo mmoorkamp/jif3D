@@ -26,8 +26,8 @@
 #include "../Inversion/LimitedMemoryQuasiNewton.h"
 #include "../Inversion/JointObjective.h"
 #include "../Inversion/ModelTransforms.h"
+#include "../Inversion/ThreeDModelObjective.h"
 #include "../MT/X3DModel.h"
-#include "../MT/X3DObjective.h"
 #include "../MT/X3DMTCalculator.h"
 #include "../MT/ReadWriteImpedances.h"
 #include "../Joint/SetupRegularization.h"
@@ -151,8 +151,13 @@ int main(int argc, char *argv[])
     std::ofstream startmodfile("start.mod");
     std::copy(InvModel.begin(), InvModel.end(), std::ostream_iterator<double>(
         startmodfile, "\n"));
-    boost::shared_ptr<jiba::X3DObjective>
-        X3DObjective(new jiba::X3DObjective());
+
+    jiba::X3DMTCalculator Calculator;
+
+    boost::shared_ptr<jiba::ThreeDModelObjective<jiba::X3DMTCalculator> >
+        X3DObjective(new jiba::ThreeDModelObjective<jiba::X3DMTCalculator>(
+            Calculator));
+
     X3DObjective->SetObservedData(Data);
     X3DObjective->SetCoarseModelGeometry(Model);
     X3DObjective->SetDataCovar(ZError);
