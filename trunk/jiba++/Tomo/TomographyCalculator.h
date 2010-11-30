@@ -20,6 +20,8 @@ namespace jiba
     //! This class provides a convenient interface to the Podvin and Lecomte code and Bjoern's additions
     class TomographyCalculator
       {
+    public:
+      typedef ThreeDSeismicModel ModelType;
     private:
       //! The number of air layers on top of the model
       size_t nairlayers;
@@ -37,13 +39,16 @@ namespace jiba
       TomographyCalculator();
       virtual ~TomographyCalculator();
       //! Return the raypath structure for the last forward modelling
-      const std::vector<jiba::RP_STRUCT> &GetRayPath() const {return raypath;}
+      const std::vector<jiba::RP_STRUCT> &GetRayPath() const
+        {
+          return raypath;
+        }
       //! Calculate the travel times for the given model
       /*! This is the core call to the forward modeling code. Has to be performed before LQDerivative can be called
        * @param Model The object containing the slowness distribution and measurement setup
        * @return The calculated travel times
        */
-      rvec Calculate(const ThreeDSeismicModel &Model);
+      rvec Calculate(const ModelType &Model);
       //! Calculate the least-square derivative for the given model and data difference
       /*! For inversion we need the derivative of a least-squares objective function
        * with respect to the model parameters.
@@ -51,7 +56,7 @@ namespace jiba
        * @param Misfit The difference between observed and calculated data
        * @return The partial derivatives with respect to each model parameter
        */
-      rvec LQDerivative(const ThreeDSeismicModel &Model, const rvec &Misfit);
+      rvec LQDerivative(const ModelType &Model, const rvec &Misfit);
       };
   /* @} */
   }

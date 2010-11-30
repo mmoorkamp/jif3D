@@ -15,10 +15,11 @@
 #include <boost/numeric/conversion/cast.hpp>
 
 #include "test_common.h"
-#include "GravityObjective.h"
+#include "../Inversion/ThreeDModelObjective.h"
 #include "ThreeDGravityFactory.h"
 #include "ThreeDGravityModel.h"
 #include "FullSensitivityGravityCalculator.h"
+#include "MinMemGravityCalculator.h"
 
 BOOST_AUTO_TEST_SUITE( GravityObjective_Test_Suite )
 
@@ -59,16 +60,16 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
       //otherwise our gradient will be zero
       Observed *= 1.1;
 
-      boost::shared_ptr<jiba::GravityObjective> FTGObjective(
-          new jiba::GravityObjective(true, false));
-      FTGObjective->SetObservedData(Observed);
-      FTGObjective->SetModelGeometry(GravityTest);
+      jiba::ThreeDModelObjective<jiba::FullSensitivityGravityCalculator> FTGObjective(*TensorCalculator.get());
+
+      FTGObjective.SetObservedData(Observed);
+      FTGObjective.SetCoarseModelGeometry(GravityTest);
       jiba::rvec InvModel(GravityTest.GetDensities().num_elements());
       std::copy(GravityTest.GetDensities().origin(),
           GravityTest.GetDensities().origin()
           + GravityTest.GetDensities().num_elements(), InvModel.begin());
 
-      CheckGradient(*FTGObjective.get(),InvModel);
+      CheckGradient(FTGObjective,InvModel);
     }
 
   BOOST_AUTO_TEST_CASE (scalar_fdderiv_test)
@@ -81,16 +82,15 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
       jiba::rvec Observed(ScalarCalculator->Calculate(GravityTest));
       Observed *= 1.1;
 
-      boost::shared_ptr<jiba::GravityObjective> ScalarObjective(
-          new jiba::GravityObjective(false, false));
-      ScalarObjective->SetObservedData(Observed);
-      ScalarObjective->SetModelGeometry(GravityTest);
+      jiba::ThreeDModelObjective<jiba::FullSensitivityGravityCalculator> ScalarObjective(*ScalarCalculator.get());
+      ScalarObjective.SetObservedData(Observed);
+      ScalarObjective.SetCoarseModelGeometry(GravityTest);
       jiba::rvec InvModel(GravityTest.GetDensities().num_elements());
       std::copy(GravityTest.GetDensities().origin(),
           GravityTest.GetDensities().origin()
           + GravityTest.GetDensities().num_elements(), InvModel.begin());
 
-      CheckGradient(*ScalarObjective.get(),InvModel);
+      CheckGradient(ScalarObjective,InvModel);
     }
 
   BOOST_AUTO_TEST_SUITE_END()

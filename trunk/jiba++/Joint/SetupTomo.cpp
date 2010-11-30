@@ -6,7 +6,8 @@
 //============================================================================
 
 
-#include "../Tomo/TomographyObjective.h"
+#include "../Inversion/ThreeDModelObjective.h"
+#include "../Tomo/TomographyCalculator.h"
 #include "../Tomo/ReadWriteTomographyData.h"
 #include "../Global/FileUtil.h"
 #include "../Global/Noise.h"
@@ -59,8 +60,12 @@ namespace jiba
         //read in data
         jiba::ReadTraveltimes(tomodatafilename, TomoData, StartModel);
 
-        boost::shared_ptr<jiba::TomographyObjective> TomoObjective(
-            new jiba::TomographyObjective());
+        jiba::TomographyCalculator Calculator;
+
+        boost::shared_ptr<
+            jiba::ThreeDModelObjective<jiba::TomographyCalculator> >
+            TomoObjective(new jiba::ThreeDModelObjective<
+                jiba::TomographyCalculator>(Calculator));
         TomoObjective->SetObservedData(TomoData);
         TomoObjective->SetCoarseModelGeometry(StartModel);
         //we assume the same error for all measurements

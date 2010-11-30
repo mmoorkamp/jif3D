@@ -4,9 +4,9 @@
 #include <stdlib.h>
 #include <time.h>
 #include <vector>
-#include "TomographyObjective.h"
 #include "TomographyCalculator.h"
 #include "../Inversion/ModelTransforms.h"
+#include "../Inversion/ThreeDModelObjective.h"
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/random/linear_congruential.hpp>
 #include <boost/random/uniform_real.hpp>
@@ -92,25 +92,25 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
       jiba::TomographyCalculator Calculator;
       jiba::rvec ObservedTimes(Calculator.Calculate(TomoModel));
 
-      boost::shared_ptr<jiba::TomographyObjective> TomoObjective(
-          new jiba::TomographyObjective());
-      TomoObjective->SetObservedData(ObservedTimes);
-      TomoObjective->SetFineModelGeometry(TomoModel);
-      TomoObjective->SetCoarseModelGeometry(TomoModel);
+      jiba::ThreeDModelObjective<jiba::TomographyCalculator> TomoObjective(
+          Calculator);
+      TomoObjective.SetObservedData(ObservedTimes);
+      TomoObjective.SetFineModelGeometry(TomoModel);
+      TomoObjective.SetCoarseModelGeometry(TomoModel);
       jiba::rvec TomoCovar(ObservedTimes.size());
       //we assume a general error of 5 ms for the seismic data
       std::fill(TomoCovar.begin(), TomoCovar.end(), 5.0);
-      TomoObjective->SetDataCovar(TomoCovar);
+      TomoObjective.SetDataCovar(TomoCovar);
       //TomoObjective->SetPrecondDiag(PreCond);
-      double ZeroMisfit = TomoObjective->CalcMisfit(InvModel);
+      double ZeroMisfit = TomoObjective.CalcMisfit(InvModel);
       //we used the same model to calculate the observed data so the misfit should be 0
       BOOST_CHECK(ZeroMisfit == 0.0);
 
       ObservedTimes *= 1.1;
-      TomoObjective->SetObservedData(ObservedTimes);
-      double Misfit = TomoObjective->CalcMisfit(InvModel);
+      TomoObjective.SetObservedData(ObservedTimes);
+      double Misfit = TomoObjective.CalcMisfit(InvModel);
       BOOST_CHECK(Misfit > 0.0);
-      CheckGradient(*TomoObjective.get(), InvModel);
+      CheckGradient(TomoObjective, InvModel);
     }
 
   BOOST_AUTO_TEST_SUITE_END()
