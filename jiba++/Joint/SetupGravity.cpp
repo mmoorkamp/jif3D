@@ -7,9 +7,11 @@
 
 
 #include "SetupGravity.h"
-#include "../Gravity/GravityObjective.h"
-#include "../Gravity/ReadWriteGravityData.h"
+#include "../Inversion/ThreeDModelObjective.h"
 #include "../Inversion/ModelTransforms.h"
+#include "../Gravity/ReadWriteGravityData.h"
+#include "../Gravity/ThreeDGravityFactory.h"
+#include "../Gravity/DiskGravityCalculator.h"
 #include "../Global/FileUtil.h"
 #include "../Global/Noise.h"
 
@@ -118,10 +120,14 @@ namespace jiba
         //to signal the user that something happened.
         if (scalgravlambda > 0.0)
           {
-            boost::shared_ptr<jiba::GravityObjective> ScalGravObjective(
-                new jiba::GravityObjective(false, wantcuda));
+            boost::shared_ptr<jiba::DiskGravityCalculator>
+                ScalarCalculator(jiba::CreateGravityCalculator<
+                    jiba::DiskGravityCalculator>::MakeScalar(wantcuda));
+            boost::shared_ptr<jiba::ThreeDModelObjective<DiskGravityCalculator> >
+                ScalGravObjective(new jiba::ThreeDModelObjective<
+                    DiskGravityCalculator>(*ScalarCalculator));
             ScalGravObjective->SetObservedData(ScalGravData);
-            ScalGravObjective->SetModelGeometry(GravModel);
+            ScalGravObjective->SetCoarseModelGeometry(GravModel);
             ScalGravObjective->SetDataCovar(jiba::ConstructError(ScalGravData,
                 scalrelerr, scalminerr));
 
@@ -134,10 +140,14 @@ namespace jiba
           }
         if (ftglambda > 0.0)
           {
-            boost::shared_ptr<jiba::GravityObjective> FTGObjective(
-                new jiba::GravityObjective(true, wantcuda));
+            boost::shared_ptr<jiba::DiskGravityCalculator>
+                TensorCalculator(jiba::CreateGravityCalculator<
+                    jiba::DiskGravityCalculator>::MakeTensor(wantcuda));
+            boost::shared_ptr<jiba::ThreeDModelObjective<DiskGravityCalculator> >
+                FTGObjective(new jiba::ThreeDModelObjective<
+                    DiskGravityCalculator>(*TensorCalculator));
             FTGObjective->SetObservedData(FTGData);
-            FTGObjective->SetModelGeometry(GravModel);
+            FTGObjective->SetCoarseModelGeometry(GravModel);
             FTGObjective->SetDataCovar(jiba::ConstructError(FTGData, ftgrelerr,
                 ftgminerr));
 

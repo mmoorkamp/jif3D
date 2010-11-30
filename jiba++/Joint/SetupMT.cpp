@@ -5,7 +5,8 @@
 // Copyright   : 2010, mmoorkamp
 //============================================================================
 
-#include "../MT/X3DObjective.h"
+#include "../Inversion/ThreeDModelObjective.h"
+#include "../MT/X3DMTCalculator.h"
 #include "../MT/ReadWriteImpedances.h"
 #include "../Global/FileUtil.h"
 #include "../Global/Noise.h"
@@ -76,8 +77,11 @@ namespace jiba
                 MTModel.AddMeasurementPoint(MTXPos[i], MTYPos[i], MTZPos[i]);
               }
             //setup the objective function for the MT data
-            boost::shared_ptr<jiba::X3DObjective> MTObjective(
-                new jiba::X3DObjective());
+            jiba::X3DMTCalculator Calculator;
+
+            boost::shared_ptr<jiba::ThreeDModelObjective<jiba::X3DMTCalculator> >
+                MTObjective(new jiba::ThreeDModelObjective<
+                    jiba::X3DMTCalculator>(Calculator));
             //if we specified the name for a refined model for forward calculations
             //we read in that model, set the measurement configuration for the observed
             //data and pass it to the objective function
@@ -103,6 +107,6 @@ namespace jiba
             std::cout << "MT lambda: " << mtlambda << std::endl;
           }
         //return true if we added an MT objective function
-        return (mtlambda >  0.0);
+        return (mtlambda > 0.0);
       }
   }

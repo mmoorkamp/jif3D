@@ -43,6 +43,8 @@ namespace jiba
      */
     class ThreeDGravityCalculator
       {
+    public:
+      typedef ThreeDGravityModel ModelType;
     private:
       /*! We need a structure to hold the sensitivities for
        * the current measurement that can be passed to
@@ -51,12 +53,12 @@ namespace jiba
        */
       rmat CurrentSensitivities;
     protected:
-      //! In some cases we mitgh want to apply a transformation to the data, e.g. FTG to an invariant
+      //! In some cases we might want to apply a transformation to the data, e.g. FTG to an invariant
       boost::shared_ptr<VectorTransform> Transform;
       //! The shared pointer to the implementation object that does the actual calculation
       boost::shared_ptr<ThreeDGravityImplementation> Imp;
       //! Check the the information in the model is consistent, i.e. corresponding vectors have the same size
-      void CheckModelConsistency(const ThreeDGravityModel &Model);
+      void CheckModelConsistency(const ModelType &Model);
     public:
       //! Assign an object that performs a transformation on the data, e.g. FTG tensor to an invariant
       void SetDataTransform(boost::shared_ptr<VectorTransform> DataTransform)
@@ -65,10 +67,9 @@ namespace jiba
           Imp->SetDataTransform(DataTransform);
         }
       //! Calculate the forward response of the given model, this simple implementation just forwards the call to the implementation class
-      virtual rvec Calculate(const ThreeDGravityModel &Model);
+      virtual rvec Calculate(const ModelType &Model);
       //! Get the least squares derivative \f$ \partial O/ \partial \f$ of a least squares objective function \f$ O = \sum (d^{obs} - d^{pred})^2 \f$
-      virtual rvec LQDerivative(const ThreeDGravityModel &Model,
-          const rvec &Misfit);
+      virtual rvec LQDerivative(const ModelType &Model, const rvec &Misfit);
       //! Read and write access to the sensitivity information for the current measurement, only intended for implementation classes
       rmat &SetCurrentSensitivities()
         {

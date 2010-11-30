@@ -12,7 +12,7 @@
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/test/test_tools.hpp>
 #include <boost/filesystem.hpp>
-#include "X3DObjective.h"
+#include "../Inversion/ThreeDModelObjective.h"
 #include "X3DModel.h"
 #include "X3DMTCalculator.h"
 #include "ReadWriteX3D.h"
@@ -73,18 +73,19 @@ void  MakeMTModel(jiba::X3DModel &Model)
     {
       jiba::X3DModel Model;
       jiba::rvec Observed;
-      jiba::X3DObjective Objective;
+      jiba::X3DMTCalculator Calculator;
+      jiba::ThreeDModelObjective<jiba::X3DMTCalculator> Objective(Calculator);
       BOOST_CHECK_THROW(Objective.SetObservedData(Observed),jiba::FatalException);
-      BOOST_CHECK_THROW(Objective.SetModelGeometry(Model),jiba::FatalException);
+      BOOST_CHECK_THROW(Objective.SetCoarseModelGeometry(Model),jiba::FatalException);
       Observed.resize(10);
       Observed.clear();
       BOOST_CHECK_NO_THROW(Objective.SetObservedData(Observed));
       MakeMTModel(Model);
-      BOOST_CHECK_NO_THROW(Objective.SetModelGeometry(Model));
+      BOOST_CHECK_NO_THROW(Objective.SetCoarseModelGeometry(Model));
       Model.ClearMeasurementPoints();
       Model.AddMeasurementPoint(10.0,12.0,250.0);
       Model.AddMeasurementPoint(13.0,14.0,350.0);
-      Objective.SetModelGeometry(Model);
+      Objective.SetCoarseModelGeometry(Model);
       BOOST_CHECK_THROW(Objective.CalcMisfit(jiba::rvec(Model.GetConductivities().num_elements())),jiba::FatalException);
     }
 
@@ -108,9 +109,9 @@ void  MakeMTModel(jiba::X3DModel &Model)
 
       jiba::WriteImpedancesToNetCDF("gradimp.nc",Freq,TrueModel.GetMeasPosX(),TrueModel.GetMeasPosY(),TrueModel.GetMeasPosZ(),Observed);
 
-      jiba::X3DObjective Objective;
+      jiba::ThreeDModelObjective<jiba::X3DMTCalculator> Objective(Calculator);
       Objective.SetObservedData(Observed);
-      Objective.SetModelGeometry(Model);
+      Objective.SetCoarseModelGeometry(Model);
       jiba::rvec ModelVec(nmod);
       std::copy(Model.GetConductivities().origin(),Model.GetConductivities().origin()+nmod,ModelVec.begin());
       double misfit = Objective.CalcMisfit(ModelVec);
@@ -134,56 +135,5 @@ void  MakeMTModel(jiba::X3DModel &Model)
         }
     }
 
-  BOOST_AUTO_TEST_CASE (X3D_gradient_reproc_test)
-    {
-      jiba::X3DModel Model;
-      MakeMTModel(Model);
-      const size_t xsize = Model.GetXCoordinates().size();
-      const size_t ysize = Model.GetYCoordinates().size();
-      const size_t zsize = Model.GetZCoordinates().size();
-      const size_t nmod = xsize * ysize * zsize;
-      const size_t nruns = 5;
 
-      jiba::X3DModel TrueModel(Model);
-      std::fill_n(TrueModel.SetConductivities().origin(),nmod,0.1);
-
-      jiba::X3DMTCalculator Calculator;
-      jiba::rvec Observed = Calculator.Calculate(TrueModel);
-      std::vector<double> FitVec;
-      std::vector<jiba::rvec> GradVec;
-      std::vector<jiba::rvec> DiffVec;
-      std::vector<boost::shared_ptr<jiba::X3DObjective> > Objectives;
-      for (size_t i = 0; i < nruns; ++i)
-        {
-          boost::shared_ptr<jiba::X3DObjective> Objective(new jiba::X3DObjective);
-          Objectives.push_back(Objective);
-          Objective->SetObservedData(Observed);
-          Objective->SetModelGeometry(Model);
-          jiba::rvec ModelVec(nmod);
-          std::copy(Model.GetConductivities().origin(),Model.GetConductivities().origin()+nmod,ModelVec.begin());
-          double misfit = Objective->CalcMisfit(ModelVec);
-          DiffVec.push_back(Objective->GetDataDifference());
-          jiba::rvec Grad = Objective->CalcGradient(ModelVec);
-          FitVec.push_back(misfit);
-          GradVec.push_back(Grad);
-        }
-      for (size_t i = 1; i < nruns; ++i)
-        {
-          BOOST_CHECK(FitVec.at(0) == FitVec.at(i));
-          for (size_t j = 0; j < GradVec.size(); ++j)
-            {
-              BOOST_CHECK_CLOSE(GradVec.at(0)(j),GradVec.at(i)(j),std::numeric_limits<double>::epsilon());
-              if (GradVec.at(0)(j) != GradVec.at(i)(j))
-                {
-                  std::cout << "i: " << i << " j: " << j << std::endl;
-                }
-            }
-
-          for (size_t j = 0; j < DiffVec.size(); ++j)
-            {
-              BOOST_CHECK(DiffVec.at(0)(j) == DiffVec.at(i)(j));
-            }
-
-        }
-    }
   BOOST_AUTO_TEST_SUITE_END()

@@ -348,16 +348,17 @@ namespace jiba
       {
         //we define nfreq as int to make the compiler happy in the openmp loop
         const int nfreq = Model.GetFrequencies().size();
+        //a few commonly used quantities for shorter notation
         const size_t ncellsx = Model.GetConductivities().shape()[0];
         const size_t ncellsy = Model.GetConductivities().shape()[1];
         const size_t ncellsz = Model.GetConductivities().shape()[2];
+        //the number of observations in the model file, one for each cell in the layer
         const size_t nobs = ncellsx * ncellsy;
         const size_t nmeas = Model.GetMeasPosX().size();
-        const size_t ndata = nmeas * nfreq * 8;
         const size_t nmod = ncellsx * ncellsy * ncellsz;
         const double ObservationDepth =
             GetObservationDepth(Model.GetMeasPosZ());
-        assert(Misfit.size() == ndata);
+        assert(Misfit.size() == nmeas * nfreq * 8);
         jiba::rvec Gradient(nmod);
         bool FatalError = false;
         Gradient.clear();
