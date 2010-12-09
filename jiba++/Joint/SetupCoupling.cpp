@@ -168,11 +168,11 @@ namespace jiba
         if (vm.count("crossgrad"))
           {
             //first we check whether the size of the three inversion grid matches
-            if (MTMod.GetConductivities().num_elements() != ngrid
-                || GravMod.GetDensities().num_elements() != ngrid)
-              {
-                throw jiba::FatalException(" Grids have different sizes !");
-              }
+            //if (MTMod.GetConductivities().num_elements() != ngrid
+            //    || GravMod.GetDensities().num_elements() != ngrid)
+            //  {
+            //    throw jiba::FatalException(" Grids have different sizes !");
+            //  }
             // we construct the model vector for the starting model
             //from the different starting models and the transformations
             InvModel.resize(3 * ngrid);
@@ -205,9 +205,11 @@ namespace jiba
             double seisgravlambda = 1.0;
             std::cout << "Weight for seismic-gravity cross-gradient term: ";
             std::cin >> seisgravlambda;
-            Objective.AddObjective(SeisGravCross, SeisGravTrans,
-                seisgravlambda, "SeisGrav");
-
+            if (seisgravlambda > 0.0)
+              {
+                Objective.AddObjective(SeisGravCross, SeisGravTrans,
+                    seisgravlambda, "SeisGrav");
+              }
             boost::shared_ptr<jiba::CrossGradient> SeisMTCross(
                 new jiba::CrossGradient(SeisMod));
             boost::shared_ptr<jiba::GeneralModelTransform> SeisMTTrans(
@@ -217,9 +219,11 @@ namespace jiba
             double seismtlambda = 1.0;
             std::cout << "Weight for seismic-MT cross-gradient term: ";
             std::cin >> seismtlambda;
-            Objective.AddObjective(SeisMTCross, SeisMTTrans, seismtlambda,
-                "SeisMT");
-
+            if (seismtlambda > 0.0)
+              {
+                Objective.AddObjective(SeisMTCross, SeisMTTrans, seismtlambda,
+                    "SeisMT");
+              }
             boost::shared_ptr<jiba::CrossGradient> GravMTCross(
                 new jiba::CrossGradient(SeisMod));
             boost::shared_ptr<jiba::GeneralModelTransform> GravMTTrans(
@@ -229,8 +233,11 @@ namespace jiba
             double gravmtlambda = 1.0;
             std::cout << "Weight for gravity-MT cross-gradient term: ";
             std::cin >> gravmtlambda;
-            Objective.AddObjective(GravMTCross, GravMTTrans, seismtlambda,
-                "GravMT");
+            if (gravmtlambda > 0.0)
+              {
+                Objective.AddObjective(GravMTCross, GravMTTrans, seismtlambda,
+                    "GravMT");
+              }
             //finally we construct the regularization terms
             //we ask for a weight and construct a regularization object
             //for each type of physical parameter separately
@@ -274,9 +281,20 @@ namespace jiba
                 GravReg->SetReferenceModel(GravModel);
                 MTReg->SetReferenceModel(MTModel);
               }
-            Objective.AddObjective(SeisReg, SlowTrans, seisreglambda, "SeisReg");
-            Objective.AddObjective(GravReg, DensTrans, gravreglambda, "GravReg");
-            Objective.AddObjective(MTReg, CondTrans, mtreglambda, "MTReg");
+            if (seisreglambda > 0.0)
+              {
+                Objective.AddObjective(SeisReg, SlowTrans, seisreglambda,
+                    "SeisReg");
+              }
+            if (gravreglambda > 0.0)
+              {
+                Objective.AddObjective(GravReg, DensTrans, gravreglambda,
+                    "GravReg");
+              }
+            if (mtreglambda > 0.0)
+              {
+                Objective.AddObjective(MTReg, CondTrans, mtreglambda, "MTReg");
+              }
           }
         else
           {
