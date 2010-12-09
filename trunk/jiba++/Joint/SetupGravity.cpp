@@ -7,11 +7,9 @@
 
 
 #include "SetupGravity.h"
-#include "../Inversion/ThreeDModelObjective.h"
 #include "../Inversion/ModelTransforms.h"
 #include "../Gravity/ReadWriteGravityData.h"
 #include "../Gravity/ThreeDGravityFactory.h"
-#include "../Gravity/DiskGravityCalculator.h"
 #include "../Global/FileUtil.h"
 #include "../Global/Noise.h"
 
@@ -123,9 +121,10 @@ namespace jiba
             boost::shared_ptr<jiba::DiskGravityCalculator>
                 ScalarCalculator(jiba::CreateGravityCalculator<
                     jiba::DiskGravityCalculator>::MakeScalar(wantcuda));
-            boost::shared_ptr<jiba::ThreeDModelObjective<DiskGravityCalculator> >
-                ScalGravObjective(new jiba::ThreeDModelObjective<
-                    DiskGravityCalculator>(*ScalarCalculator));
+
+            ScalGravObjective = boost::shared_ptr<jiba::ThreeDModelObjective<
+                DiskGravityCalculator> >(new jiba::ThreeDModelObjective<
+                DiskGravityCalculator>(*ScalarCalculator));
             ScalGravObjective->SetObservedData(ScalGravData);
             ScalGravObjective->SetCoarseModelGeometry(GravModel);
             ScalGravObjective->SetDataCovar(jiba::ConstructError(ScalGravData,
@@ -143,9 +142,10 @@ namespace jiba
             boost::shared_ptr<jiba::DiskGravityCalculator>
                 TensorCalculator(jiba::CreateGravityCalculator<
                     jiba::DiskGravityCalculator>::MakeTensor(wantcuda));
-            boost::shared_ptr<jiba::ThreeDModelObjective<DiskGravityCalculator> >
-                FTGObjective(new jiba::ThreeDModelObjective<
-                    DiskGravityCalculator>(*TensorCalculator));
+
+            FTGObjective = boost::shared_ptr<jiba::ThreeDModelObjective<
+                DiskGravityCalculator> >(new jiba::ThreeDModelObjective<
+                DiskGravityCalculator>(*TensorCalculator));
             FTGObjective->SetObservedData(FTGData);
             FTGObjective->SetCoarseModelGeometry(GravModel);
             FTGObjective->SetDataCovar(jiba::ConstructError(FTGData, ftgrelerr,

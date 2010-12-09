@@ -6,8 +6,6 @@
 //============================================================================
 
 
-#include "../Inversion/ThreeDModelObjective.h"
-#include "../Tomo/TomographyCalculator.h"
 #include "../Tomo/ReadWriteTomographyData.h"
 #include "../Global/FileUtil.h"
 #include "../Global/Noise.h"
@@ -62,10 +60,9 @@ namespace jiba
 
         jiba::TomographyCalculator Calculator;
 
-        boost::shared_ptr<
-            jiba::ThreeDModelObjective<jiba::TomographyCalculator> >
-            TomoObjective(new jiba::ThreeDModelObjective<
-                jiba::TomographyCalculator>(Calculator));
+        TomoObjective = boost::shared_ptr<jiba::ThreeDModelObjective<
+            jiba::TomographyCalculator> >(new jiba::ThreeDModelObjective<
+            jiba::TomographyCalculator>(Calculator));
         TomoObjective->SetObservedData(TomoData);
         TomoObjective->SetCoarseModelGeometry(StartModel);
         //we assume the same error for all measurements

@@ -10,6 +10,8 @@
 #define SETUPMT_H_
 
 #include "../MT/X3DModel.h"
+#include "../MT/X3DMTCalculator.h"
+#include "../Inversion/ThreeDModelObjective.h"
 #include "../Inversion/JointObjective.h"
 #include <boost/program_options.hpp>
 
@@ -28,6 +30,8 @@ namespace jiba
     class SetupMT
       {
     private:
+      boost::shared_ptr<jiba::ThreeDModelObjective<jiba::X3DMTCalculator> >
+          MTObjective;
       //! The relative data error to assume for construction of the data variance
       double relerr;
       //! The file name for a model with cell refinements
@@ -35,6 +39,10 @@ namespace jiba
       //! The object containing the geometry of the MT inversion model, has to match the geometry of the starting model
       jiba::X3DModel MTModel;
     public:
+      const jiba::ThreeDModelObjective<jiba::X3DMTCalculator> &GetMTObjective()
+        {
+          return *MTObjective;
+        }
       //! Setup the program options for the MT part of the inversion
       po::options_description SetupOptions();
       //! Setup the MT objective function
@@ -47,8 +55,8 @@ namespace jiba
        */
       bool
       SetupObjective(const po::variables_map &vm,
-          jiba::JointObjective &Objective,
-          boost::shared_ptr<jiba::GeneralModelTransform> Transform);
+          jiba::JointObjective &Objective, boost::shared_ptr<
+              jiba::GeneralModelTransform> Transform);
       //! Return the MT model that has been set for the inversion
       const jiba::X3DModel &GetModel()
         {

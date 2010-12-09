@@ -19,7 +19,7 @@ namespace jiba
     /*! The different types of synthetic data calculations we currently perform during the joint inversion
      * are all encapsulated in a Calculator object with identical interfaces. We therefore define this
      * template that calculates the misfit between observed and calculated data and provides other
-     * common functionaluty with the type of the calculator object as a template parameter.
+     * common functionality with the type of the calculator object as a template parameter.
      * This template has 3 requirements on the calculator object.
      *   - A public typedef ModelType that specifies the model object type required for the forward calculation
      *   - A function  with signature void Calculate(const ModelType &); to calculate synthetic data for a given model
@@ -55,10 +55,10 @@ namespace jiba
       //! Did we actually set a fine model for the forward calculation
       bool wantrefinement;
       //! We might use a different discretization for forward modeling and inversion
-      /*! To ensure numerically correct travel times we might need a model discretization
+      /*! To ensure numerically correct results we might need a model discretization
        * that is much finer than the inversion grid we want to use. The Refiner object
-       * takes CoarseSlownessModel which is the model with a geometry as intended in the
-       * inversion and refines it using the geometry of FineSlownessModel. This model
+       * takes CoarseModel which is the model with a geometry as intended in the
+       * inversion and refines it using the geometry of FineModel. This model
        * is then used for the forward calculation.
        */
       jiba::ModelRefiner Refiner;
@@ -89,8 +89,25 @@ namespace jiba
                 "Cannot have empty observations in objective function.");
           ObservedData = Data;
         }
+      //! Return a read only version of the observed data
+      const jiba::rvec &GetObservedData() const
+        {
+          return ObservedData;
+        }
+      //! Return the synthetic data calculated for the last forward call
+      /*! We do not store the synthetic data, but only the data difference which we need frequently.
+       * As we only need the synthetic data occasionally, we generate it from the data difference
+       * when needed and save memory.
+       */
+      jiba::rvec GetSyntheticData() const
+        {
+          jiba::rvec Synthetic(GetDataDifference());
+          Synthetic = ublas::element_prod(Synthetic, GetDataCovar());
+          Synthetic += ObservedData;
+          return Synthetic;
+        }
       //! Set a skeleton for the  model that contains all information about cell sizes, site coordinates etc.
-      /*! During the inversion we only copy a vector ofvalues, so we have to store the
+      /*! During the inversion we only copy a vector of values, so we have to store the
        * geometry and background information so we can form a complete model for the
        * forward calculation. The coarse model has to have the same number of cells as the model vector
        * that is passed to the gradient and forward calculations. It is used to establish the geometry

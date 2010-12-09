@@ -88,14 +88,14 @@ int main()
             if (PickFile.good())
               {
 
-                ShotIndex.push_back(boost::math::round(CurrShotIndex));
-                RecIndex.push_back(boost::math::round(CurrRecIndex));
+                ShotIndex.push_back(floor(CurrShotIndex));
+                RecIndex.push_back(floor(CurrRecIndex));
                 TravelTime.push_back(CurrTT);
 
               }
           } catch (...)
           {
-
+            //here we catch the occurence of NaN in the file
           }
       }
 
@@ -110,13 +110,14 @@ int main()
       }
 
     const size_t ntime = TravelTime.size();
-    std::cout << "NTimes: " << ntime << std::endl;
+    std::cout << "NTimes total: " << ntime << std::endl;
     size_t measindex = 0;
     double mindist = 0.0;
     std::cout << "Minimum offset: ";
     std::cin >> mindist;
     for (size_t i = 0; i < ntime; ++i)
       {
+        std::cout << RecIndex.at(i) << " " << ShotIndex.at(i) << std::endl;
         const size_t Key = MakeKey(RecIndex.at(i), ShotIndex.at(i));
         MyMap::iterator sriter = SourceRecMap.find(Key);
 
@@ -124,10 +125,25 @@ int main()
           {
 
             MyMap::iterator sourceiter = SourceMap.find(ShotIndex.at(i));
+
             size_t CurrShotIndex = std::distance(SourceMap.begin(), sourceiter);
+            if (sourceiter->second[0] != sriter->second[2])
+              {
+                std::cerr << "Mismatch in X-component of source: "
+                    << CurrShotIndex << " " << sourceiter->second[0] << " "
+                    << sriter->second[2] << std::endl;
+                return 100;
+              }
+            if (sourceiter->second[1] != sriter->second[3])
+              {
+                std::cerr << "Mismatch in Y-component of source: "
+                    << CurrShotIndex << " " << sourceiter->second[1] << " "
+                    << sriter->second[3] << std::endl;
+                return 100;
+              }
             double distance = std::sqrt(std::pow(sourceiter->second[0]
-                - sriter->second[0],2) + std::pow(sourceiter->second[1]
-                - sriter->second[1],2));
+                - sriter->second[0], 2) + std::pow(sourceiter->second[1]
+                - sriter->second[1], 2));
             if (distance > mindist)
               {
                 Model.AddMeasurementPoint(sriter->second[0], sriter->second[1],
@@ -142,11 +158,14 @@ int main()
           }
         else
           {
+            std::cout << "Could not find : ";
+            std::cout << RecIndex.at(i) << " " << ShotIndex.at(i) << std::endl;
             TravelTime.at(i) = -1.0;
           }
       }
     TravelTime.erase(std::remove(TravelTime.begin(), TravelTime.end(), -1.0),
         TravelTime.end());
+    std::cout << "NTimes in file: " << TravelTime.size() << std::endl;
     std::string outfilename = jiba::AskFilename("Output file: ", false);
     jiba::rvec TT(TravelTime.size());
     std::copy(TravelTime.begin(), TravelTime.end(), TT.begin());
