@@ -42,7 +42,17 @@ namespace jiba
           ScalGravObjective;
       boost::shared_ptr<jiba::ThreeDModelObjective<DiskGravityCalculator> >
           FTGObjective;
+      bool HaveScal;
+      bool HaveFTG;
     public:
+      bool GetHaveScal() const
+        {
+          return HaveScal;
+        }
+      bool GetHaveFTG() const
+        {
+          return HaveFTG;
+        }
       const jiba::ThreeDModelObjective<DiskGravityCalculator> &GetScalGravObjective()
         {
           return *ScalGravObjective;

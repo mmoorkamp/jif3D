@@ -17,6 +17,8 @@
 #include "../Global/VectorTransform.h"
 #include "../ModelBase/VTKTools.h"
 #include "../ModelBase/NetCDFTools.h"
+#include "../Inversion/JointObjective.h"
+#include "../Inversion/ThreeDModelObjective.h"
 #include "../Inversion/LimitedMemoryQuasiNewton.h"
 #include "../Inversion/JointObjective.h"
 #include "../Regularization/MinDiffRegularization.h"
@@ -24,7 +26,6 @@
 #include "../Inversion/ModelTransforms.h"
 #include "../Tomo/ThreeDSeismicModel.h"
 #include "../Tomo/ReadWriteTomographyData.h"
-#include "../Tomo/TomographyObjective.h"
 #include "../Tomo/TomographyCalculator.h"
 
 namespace ublas = boost::numeric::ublas;
@@ -68,8 +69,11 @@ int main()
     jiba::rvec RefModel(InvModel);
     for (size_t i = 0; i < InvModel.size(); ++i)
       InvModel(i) = log(InvModel(i) / RefModel(i));
-    boost::shared_ptr<jiba::TomographyObjective> TomoObjective(
-        new jiba::TomographyObjective());
+    jiba::TomographyCalculator Calculator;
+    boost::shared_ptr<jiba::ThreeDModelObjective<jiba::TomographyCalculator> >
+        TomoObjective(
+            new jiba::ThreeDModelObjective<jiba::TomographyCalculator>(
+                Calculator));
     TomoObjective->SetObservedData(Data);
     TomoObjective->SetFineModelGeometry(Model);
     TomoObjective->SetCoarseModelGeometry(Model);

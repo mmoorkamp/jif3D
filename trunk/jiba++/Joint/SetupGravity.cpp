@@ -17,7 +17,8 @@ namespace jiba
   {
 
     SetupGravity::SetupGravity() :
-      scalrelerr(0.02), ftgrelerr(0.02), scalminerr(0.0), ftgminerr(1e-9)
+      scalrelerr(0.02), ftgrelerr(0.02), scalminerr(0.0), ftgminerr(1e-9),
+          HaveScal(false), HaveFTG(false)
       {
 
       }
@@ -78,6 +79,7 @@ namespace jiba
 
             jiba::ReadScalarGravityMeasurements(scalgravdatafilename,
                 ScalGravData, PosX, PosY, PosZ);
+            HaveScal = true;
           }
 
         //if the weight is different from zero
@@ -88,6 +90,7 @@ namespace jiba
                 "FTG Data Filename: ");
             jiba::ReadTensorGravityMeasurements(ftgdatafilename, FTGData, PosX,
                 PosY, PosZ);
+            HaveFTG = true;
           }
         //if the inversion includes any type of gravity data
         //we need the model geometry

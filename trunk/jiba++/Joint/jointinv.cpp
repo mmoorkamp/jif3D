@@ -255,7 +255,7 @@ int main(int argc, char *argv[])
           }
         terminate = jiba::WantAbort();
       } while (iteration < maxiter && !terminate && Optimizer->GetGradNorm()
-        > 1e-6);
+        > 1e-6 * Optimizer->GetMisfit());
 
     SaveModel(InvModel, *TomoTransform.get(), TomoModel, modelfilename
         + ".tomo.inv");
@@ -278,14 +278,22 @@ int main(int argc, char *argv[])
       {
         //and write out the data and model
         //here we have to distinguish again between scalar and ftg data
-        jiba::rvec ScalGravInvData(GravitySetup.GetScalGravObjective().GetSyntheticData());
-        jiba::rvec FTGInvData(GravitySetup.GetFTGObjective().GetSyntheticData());
-        jiba::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc",
-            ScalGravInvData, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
-            GravModel.GetMeasPosZ());
-        jiba::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc",
-            FTGInvData, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
-            GravModel.GetMeasPosZ());
+        if (GravitySetup.GetHaveScal())
+          {
+            jiba::rvec ScalGravInvData(
+                GravitySetup.GetScalGravObjective().GetSyntheticData());
+            jiba::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc",
+                ScalGravInvData, GravModel.GetMeasPosX(),
+                GravModel.GetMeasPosY(), GravModel.GetMeasPosZ());
+          }
+        if (GravitySetup.GetHaveFTG())
+          {
+            jiba::rvec FTGInvData(
+                GravitySetup.GetFTGObjective().GetSyntheticData());
+            jiba::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc",
+                FTGInvData, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
+                GravModel.GetMeasPosZ());
+          }
       }
 
     //if we are inverting MT data and have specified site locations
