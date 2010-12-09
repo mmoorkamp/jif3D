@@ -22,6 +22,7 @@
 #include "../ModelBase/NetCDFTools.h"
 #include "../ModelBase/EqualGeometry.h"
 #include "../Inversion/JointObjective.h"
+#include "../Inversion/ThreeDModelObjective.h"
 #include "../Regularization/MinDiffRegularization.h"
 #include "../Inversion/ModelTransforms.h"
 #include "../Tomo/ThreeDSeismicModel.h"
@@ -264,8 +265,12 @@ int main(int argc, char *argv[])
 
     //calculate the predicted refraction data
     std::cout << "Calculating response of inversion model." << std::endl;
-    jiba::rvec TomoInvData(jiba::TomographyCalculator().Calculate(TomoModel));
+    //during the last iteration we might have performed steps in the line search
+    //so we update the forward calculation for the last proper inversion model
+    //we use the results from this calculation to save the final inversion synthetic data
+    Objective->CalcMisfit(InvModel);
 
+    jiba::rvec TomoInvData(TomoSetup.GetTomoObjective().GetSyntheticData());
     jiba::SaveTraveltimes(modelfilename + ".inv_tt.nc", TomoInvData, TomoModel);
 
     //if we are inverting gravity data and have specified site locations
@@ -273,10 +278,8 @@ int main(int argc, char *argv[])
       {
         //and write out the data and model
         //here we have to distinguish again between scalar and ftg data
-        jiba::rvec ScalGravInvData(jiba::CreateGravityCalculator<
-            jiba::MinMemGravityCalculator>::MakeScalar()->Calculate(GravModel));
-        jiba::rvec FTGInvData(jiba::CreateGravityCalculator<
-            jiba::MinMemGravityCalculator>::MakeTensor()->Calculate(GravModel));
+        jiba::rvec ScalGravInvData(GravitySetup.GetScalGravObjective().GetSyntheticData());
+        jiba::rvec FTGInvData(GravitySetup.GetFTGObjective().GetSyntheticData());
         jiba::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc",
             ScalGravInvData, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
             GravModel.GetMeasPosZ());
@@ -289,17 +292,12 @@ int main(int argc, char *argv[])
     if (havemt)
       {
         //calculate MT inversion result
-        jiba::rvec MTInvData(jiba::X3DMTCalculator().Calculate(MTModel));
+        jiba::rvec MTInvData(MTSetup.GetMTObjective().GetSyntheticData());
         jiba::WriteImpedancesToNetCDF(modelfilename + "inv_mt.nc",
             MTModel.GetFrequencies(), MTModel.GetMeasPosX(),
             MTModel.GetMeasPosY(), MTModel.GetMeasPosZ(), MTInvData);
-        std::cout << "Writing out inversion results." << std::endl;
       }
-    //in any case we write out the corresponding models
-    GravModel.WriteVTK(modelfilename + ".grav.inv.vtk");
-    GravModel.WriteNetCDF(modelfilename + ".grav.inv.nc");
-    MTModel.WriteVTK(modelfilename + ".mt.inv.vtk");
-    MTModel.WriteNetCDF(modelfilename + ".mt.inv.nc");
+
     std::ofstream datadiffile("data.diff");
     std::copy(Objective->GetDataDifference().begin(),
         Objective->GetDataDifference().end(), std::ostream_iterator<double>(

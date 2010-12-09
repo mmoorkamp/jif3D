@@ -9,6 +9,7 @@
 #include "../Global/VecMat.h"
 #include "../Global/FileUtil.h"
 #include "../ModelBase/NetCDFTools.h"
+#include "../ModelBase/VTKTools.h"
 
 int main()
   {
@@ -55,13 +56,30 @@ int main()
     const size_t ntimes = Data.size();
 
     std::ofstream outfile((filename + ".diff.out").c_str());
+    std::ofstream pseudofile((filename + ".xyz").c_str());
+
+    double refx = 0.0;
+    double refy = 0.0;
+    std::cout << " X Reference coordinate: ";
+    std::cin >> refx;
+    std::cout << " Y Reference coordinate: ";
+    std::cin >> refy;
+    std::vector<double> PosX(ntimes), PosY(ntimes), PosZ(ntimes);
     for (size_t i = 0; i < ntimes; ++i)
       {
         double XDist = SourcePosX[SourceIndices[i]]
             - RecPosX[ReceiverIndices[i]];
         double YDist = SourcePosY[SourceIndices[i]]
             - RecPosY[ReceiverIndices[i]];
-        outfile << sqrt(XDist * XDist + YDist * YDist) << " " << Data(i)
-            << "\n";
+        double Dist = sqrt(XDist * XDist + YDist * YDist);
+        outfile << Dist << " " << Data(i) << "\n";
+        PosX[i] = SourcePosX[SourceIndices[i]] - XDist / 2.0 -refx;
+        PosY[i] = SourcePosY[SourceIndices[i]] - YDist / 2.0 - refy;
+        PosZ[i] = Dist;
+        double coord = sqrt(PosX[i] * PosX[i] + PosY[i] * PosY[i]);
+        pseudofile << coord << " " << Dist << " " << Data(i) << "\n";
       }
+    jiba::Write3DDataToVTK(filename + ".vtk", "Traveltimes", Data, PosX, PosY,
+        PosZ);
+
   }

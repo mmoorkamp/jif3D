@@ -5,8 +5,7 @@
 // Copyright   : 2010, mmoorkamp
 //============================================================================
 
-#include "../Inversion/ThreeDModelObjective.h"
-#include "../MT/X3DMTCalculator.h"
+
 #include "../MT/ReadWriteImpedances.h"
 #include "../Global/FileUtil.h"
 #include "../Global/Noise.h"
@@ -79,9 +78,9 @@ namespace jiba
             //setup the objective function for the MT data
             jiba::X3DMTCalculator Calculator;
 
-            boost::shared_ptr<jiba::ThreeDModelObjective<jiba::X3DMTCalculator> >
-                MTObjective(new jiba::ThreeDModelObjective<
-                    jiba::X3DMTCalculator>(Calculator));
+            MTObjective = boost::shared_ptr<jiba::ThreeDModelObjective<
+                jiba::X3DMTCalculator> >(new jiba::ThreeDModelObjective<
+                jiba::X3DMTCalculator>(Calculator));
             //if we specified the name for a refined model for forward calculations
             //we read in that model, set the measurement configuration for the observed
             //data and pass it to the objective function

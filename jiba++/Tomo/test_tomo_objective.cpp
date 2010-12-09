@@ -106,6 +106,10 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
       //we used the same model to calculate the observed data so the misfit should be 0
       BOOST_CHECK(ZeroMisfit == 0.0);
 
+      //for the same model the synthetic data should equal the observed data
+      jiba::rvec SynthData = TomoObjective.GetSyntheticData();
+      BOOST_CHECK(ObservedTimes.size() == SynthData.size());
+      BOOST_CHECK(std::equal(ObservedTimes.begin(),ObservedTimes.end(),SynthData.begin()));
       ObservedTimes *= 1.1;
       TomoObjective.SetObservedData(ObservedTimes);
       double Misfit = TomoObjective.CalcMisfit(InvModel);

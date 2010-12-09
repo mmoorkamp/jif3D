@@ -10,6 +10,8 @@
 #define SETUPTOMO_H_
 
 #include "../Inversion/JointObjective.h"
+#include "../Inversion/ThreeDModelObjective.h"
+#include "../Tomo/TomographyCalculator.h"
 #include "../Tomo/ThreeDSeismicModel.h"
 #include <boost/program_options.hpp>
 
@@ -30,11 +32,17 @@ namespace jiba
     class SetupTomo
       {
     private:
+      boost::shared_ptr<jiba::ThreeDModelObjective<jiba::TomographyCalculator> >
+          TomoObjective;
       //! The picking  error in ms to assume for construction of the data variance
       double pickerr;
       //! Storage for the name of the refinement model, can optionally be set on the command line
       std::string FineModelName;
     public:
+      const jiba::ThreeDModelObjective<jiba::TomographyCalculator> &GetTomoObjective()
+        {
+          return *TomoObjective;
+        }
       //! Setup the program options for the tomography part of the inversion
       po::options_description SetupOptions();
       //! Setup the tomography objective function

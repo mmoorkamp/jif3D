@@ -9,6 +9,8 @@
 #ifndef SETUPGRAVITY_H_
 #define SETUPGRAVITY_H_
 
+#include "../Inversion/ThreeDModelObjective.h"
+#include "../Gravity/DiskGravityCalculator.h"
 #include "../Gravity/ThreeDGravityModel.h"
 #include "../Inversion/JointObjective.h"
 #include <boost/program_options.hpp>
@@ -36,7 +38,19 @@ namespace jiba
       // The minimum error for the ftg data to assume for construction of the data variance
       double ftgminerr;
       jiba::ThreeDGravityModel GravModel;
+      boost::shared_ptr<jiba::ThreeDModelObjective<DiskGravityCalculator> >
+          ScalGravObjective;
+      boost::shared_ptr<jiba::ThreeDModelObjective<DiskGravityCalculator> >
+          FTGObjective;
     public:
+      const jiba::ThreeDModelObjective<DiskGravityCalculator> &GetScalGravObjective()
+        {
+          return *ScalGravObjective;
+        }
+      const jiba::ThreeDModelObjective<DiskGravityCalculator> &GetFTGObjective()
+        {
+          return *FTGObjective;
+        }
       //! Return an options descriptions object for boost::program_options that contains information about gravity options
       po::options_description SetupOptions();
       //! Setup the objective function and add to the joint objective
