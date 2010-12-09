@@ -6,6 +6,8 @@
  */
 
 #include <unistd.h>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
 #include <boost/filesystem.hpp>
 #include "../Global/convert.h"
 #include "../Global/VecMat.h"
@@ -111,10 +113,11 @@ namespace jiba
 
     DiskGravityCalculator::DiskGravityCalculator(boost::shared_ptr<
         ThreeDGravityImplementation> TheImp) :
-      FullSensitivityGravityCalculator(TheImp), filename()
+      FullSensitivityGravityCalculator(TheImp),tag(boost::uuids::random_generator()()),
+ filename()
       {
         //make a unique filename for the sensitivity file created by this object
-        filename = "grav" + jiba::stringify(getpid()) + jiba::stringify(this);
+        filename = "grav" + jiba::stringify(getpid()) + jiba::stringify(tag);
       }
 
     DiskGravityCalculator::~DiskGravityCalculator()
