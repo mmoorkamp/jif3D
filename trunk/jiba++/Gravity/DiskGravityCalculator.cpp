@@ -6,6 +6,7 @@
  */
 
 #include <unistd.h>
+#include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/filesystem.hpp>
@@ -17,6 +18,16 @@
 
 namespace jiba
   {
+
+    std::string DiskGravityCalculator::MakeFilename()
+      {
+        //a unique ID created on construction
+        boost::uuids::uuid tag = boost::uuids::random_generator()();
+        //make a unique filename for the sensitivity file created by this object
+        //we use boost uuid to generate a unique identifier tag
+        //and translate it to a string to generate the filename
+        return "grav" + jiba::stringify(getpid()) + jiba::stringify(tag);
+      }
 
     rvec DiskGravityCalculator::CalculateNewModel(
         const ThreeDGravityModel &Model)
@@ -82,8 +93,10 @@ namespace jiba
               }
             else
               {
-                throw FatalException(
-                    "Cannot read sensitivities from binary file !");
+                std::string error =
+                    "In CalculateRawData, cannot read sensitivities from binary file: "
+                        + filename;
+                throw FatalException(error);
               }
           }
         return result;
@@ -93,31 +106,67 @@ namespace jiba
     rvec DiskGravityCalculator::CalculateRawLQDerivative(
         const ThreeDGravityModel &Model, const rvec &Misfit)
       {
+        //when we are in this routine we read the sensitivities
+        //from a previously created binary file
         std::fstream infile(filename.c_str(), std::ios::in | std::ios::binary);
 
         const size_t nmeas = Model.GetMeasPosX().size()
             * Imp.get()->RawDataPerMeasurement();
         const size_t ngrid = Model.GetDensities().num_elements();
         const size_t nmod = ngrid + Model.GetBackgroundThicknesses().size();
-        rvec result(nmod);
-        result.clear();
-        rvec CurrSens(nmod);
+
+        rvec result(nmod, 0.0);
+        rvec CurrSens(nmod, 0.0);
+        //for each measurement
         for (size_t i = 0; i < nmeas; ++i)
           {
+            //read in one row of the sensitivity matrix from the binary file
             infile.read(reinterpret_cast<char *> (&CurrSens.data()[0]), nmod
                 * sizeof(double));
-            result += CurrSens * Misfit(i);
+            if (infile.good())
+              {
+                //if reading was successful, we can compute the gradient
+                //this is equivalent to J^T * delta d
+                result += CurrSens * Misfit(i);
+              }
+            else
+              {
+                std::string error =
+                    "In CalculateRawLQDerivative, cannot read sensitivities from binary file: "
+                        + filename;
+                throw FatalException(error);
+              }
           }
         return result;
       }
 
     DiskGravityCalculator::DiskGravityCalculator(boost::shared_ptr<
         ThreeDGravityImplementation> TheImp) :
-      FullSensitivityGravityCalculator(TheImp),tag(boost::uuids::random_generator()()),
- filename()
+      FullSensitivityGravityCalculator(TheImp), filename()
       {
-        //make a unique filename for the sensitivity file created by this object
-        filename = "grav" + jiba::stringify(getpid()) + jiba::stringify(tag);
+        filename = MakeFilename();
+      }
+
+    //! We need to define the copy constructor to make sure that filename stays unique among all created objects
+    DiskGravityCalculator::DiskGravityCalculator(
+        const DiskGravityCalculator &Old) :
+      FullSensitivityGravityCalculator(Old)
+      {
+        filename = MakeFilename();
+      }
+
+    //! We have to define a copy operator to make sure filename stays unique
+    DiskGravityCalculator& DiskGravityCalculator::operator=(
+        const DiskGravityCalculator& source)
+      {
+        if (this == &source)
+          return *this;
+        FullSensitivityGravityCalculator::operator=(source);
+        //we only have to copy the base class information
+        //DiskGravityCalculator only adds the field filename
+        //this should be unqiue for each object, so we do
+        //not copy it, but keep the name generated at construction
+        return *this;
       }
 
     DiskGravityCalculator::~DiskGravityCalculator()

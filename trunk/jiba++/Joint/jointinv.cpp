@@ -98,6 +98,8 @@ int main(int argc, char *argv[])
 
     if (vm.count("help"))
       {
+        string version = "$Id$";
+        std::cout << version << std::endl;
         std::cout << desc << "\n";
         return 1;
       }
