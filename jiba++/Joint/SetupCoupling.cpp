@@ -175,24 +175,31 @@ namespace jiba
             //  }
             // we construct the model vector for the starting model
             //from the different starting models and the transformations
-            InvModel.resize(3 * ngrid);
-            jiba::rvec SeisModel(ngrid);
+            InvModel.resize(3 * ngrid, 0.0);
+
+            jiba::rvec SeisModel(ngrid, 0.0);
             std::copy(SeisMod.GetSlownesses().origin(),
                 SeisMod.GetSlownesses().origin() + ngrid, SeisModel.begin());
             ublas::subrange(InvModel, 0, ngrid)
                 = SlowTrans->PhysicalToGeneralized(SeisModel);
 
-            jiba::rvec GravModel(ngrid);
-            std::copy(GravMod.GetDensities().origin(),
-                GravMod.GetDensities().origin() + ngrid, GravModel.begin());
-            ublas::subrange(InvModel, ngrid, 2 * ngrid)
-                = DensTrans->PhysicalToGeneralized(GravModel);
+            jiba::rvec GravModel(ngrid, 1.0);
+            if (GravMod.GetDensities().num_elements() == ngrid)
+              {
+                std::copy(GravMod.GetDensities().origin(),
+                    GravMod.GetDensities().origin() + ngrid, GravModel.begin());
+                ublas::subrange(InvModel, ngrid, 2 * ngrid)
+                    = DensTrans->PhysicalToGeneralized(GravModel);
+              }
 
-            jiba::rvec MTModel(ngrid);
-            std::copy(MTMod.GetConductivities().origin(),
-                MTMod.GetConductivities().origin() + ngrid, MTModel.begin());
-            ublas::subrange(InvModel, 2 * ngrid, 3 * ngrid)
-                = CondTrans->PhysicalToGeneralized(MTModel);
+            jiba::rvec MTModel(ngrid, 1.0);
+            if (MTMod.GetConductivities().num_elements() == ngrid)
+              {
+                std::copy(MTMod.GetConductivities().origin(),
+                    MTMod.GetConductivities().origin() + ngrid, MTModel.begin());
+                ublas::subrange(InvModel, 2 * ngrid, 3 * ngrid)
+                    = CondTrans->PhysicalToGeneralized(MTModel);
+              }
             //then we constrcut the three cross gradient terms
             //the double section transform takes two sections of the model
             //and feeds them to the objective function

@@ -81,6 +81,8 @@ namespace jiba
         std::copy(Model.GetBackgroundDensities().begin(),
             Model.GetBackgroundDensities().end(), DensVector.begin() + ngrid);
         //perform the vector matrix product to get the raw data
+        //depending on whether atlas is available on the system
+        //we use the fast atlas version or the slower native ublas code
 #ifdef HAVEATLAS
         rvec result(nmeas);
         atlas::gemv(1.0, Sensitivities, DensVector, 0.0, result);
@@ -147,6 +149,9 @@ namespace jiba
     rvec FullSensitivityGravityCalculator::CalculateRawLQDerivative(
         const ThreeDGravityModel &Model, const rvec &Misfit)
       {
+        //when we have the sensitivities, the derivative of the objective function
+        //is simply J^T * delta d, as above we use the fast atlas matrix
+        //vector operation when available and the slower ublas version otherwise
         assert(Misfit.size() == Sensitivities.size1());
 #ifdef HAVEATLAS
         rvec result(Misfit.size());
