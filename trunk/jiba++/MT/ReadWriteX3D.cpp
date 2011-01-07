@@ -361,9 +361,19 @@ namespace jiba
               }
           }
         //make sure all fields have the same size
-        assert(Ex.size() == ncellsx*ncellsy*ncellsz);
-        assert(Ex.size()==Ey.size());
-        assert(Ex.size()==Ez.size());
+        if (Ex.size() != ncellsx * ncellsy * ncellsz)
+          {
+            throw jiba::FatalException(
+                "In ReadEma, number of electric field values does not match grid size");
+          }
+        if (Ex.size() != Ey.size())
+          {
+            throw jiba::FatalException("In ReadEma, size of Ex != Ey");
+          }
+        if (Ex.size() != Ez.size())
+          {
+            throw jiba::FatalException("In ReadEma, size of Ex != Ez");
+          }
         //we use a different storage ordering then in the .ema files
         Ex = ResortFields(Ex, ncellsx, ncellsy, ncellsz);
         Ey = ResortFields(Ey, ncellsx, ncellsy, ncellsz);

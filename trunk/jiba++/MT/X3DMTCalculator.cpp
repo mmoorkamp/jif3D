@@ -359,9 +359,8 @@ namespace jiba
         const double ObservationDepth =
             GetObservationDepth(Model.GetMeasPosZ());
         assert(Misfit.size() == nmeas * nfreq * 8);
-        jiba::rvec Gradient(nmod);
+        jiba::rvec Gradient(nmod, 0.0);
         bool FatalError = false;
-        Gradient.clear();
 
         //we make a call to the coordinate functions to make sure
         //that we have updated the coordinate information and cached it
@@ -372,9 +371,9 @@ namespace jiba
 
         //we parallelize the gradient calculation by frequency
         //see also the comments for the forward calculation
-        //here the explicitly shared variables are Gradient and lck
+        //here the explicitly shared variable is Gradient
         //all others are predetermined to be shared
-#pragma omp parallel for shared(Gradient) ordered
+#pragma omp parallel for shared(Gradient)
         for (int i = 0; i < nfreq; ++i)
           {
             try
@@ -545,27 +544,24 @@ namespace jiba
                 const double cell_sizey = Model.GetYCellSizes()[0];
                 //now we can calculate the gradient for each model cell
                 double Volume, gradinc;
-#pragma omp ordered
-                  {
-                    for (size_t j = 0; j < nmod; ++j)
-                      {
-                        Volume = cell_sizex * cell_sizey
-                            * Model.GetZCellSizes()[j % ncellsz];
-                        //this is an implementation of eq. 14 in Avdeev and Avdeeva
-                        //we make the update of the gradient atomic, to avoid
-                        //race conditions
-                        gradinc = std::real((Ux1_el[j] + Ux1_mag[j])
-                            * Ex1_all[j] + (Uy1_el[j] + Uy1_mag[j])
-                            * Ey1_all[j] + (Uz1_el[j] + Uz1_mag[j])
-                            * Ez1_all[j] + (Ux2_el[j] + Ux2_mag[j])
-                            * Ex2_all[j] + (Uy2_el[j] + Uy2_mag[j])
-                            * Ey2_all[j] + (Uz2_el[j] + Uz2_mag[j])
-                            * Ez2_all[j]) * Volume;
-#pragma omp atomic
-                        Gradient(j) += gradinc;
 
-                      }
+                for (size_t j = 0; j < nmod; ++j)
+                  {
+                    Volume = cell_sizex * cell_sizey * Model.GetZCellSizes()[j
+                        % ncellsz];
+                    //this is an implementation of eq. 14 in Avdeev and Avdeeva
+                    //we make the update of the gradient atomic, to avoid
+                    //race conditions
+                    gradinc = std::real((Ux1_el[j] + Ux1_mag[j]) * Ex1_all[j]
+                        + (Uy1_el[j] + Uy1_mag[j]) * Ey1_all[j] + (Uz1_el[j]
+                        + Uz1_mag[j]) * Ez1_all[j] + (Ux2_el[j] + Ux2_mag[j])
+                        * Ex2_all[j] + (Uy2_el[j] + Uy2_mag[j]) * Ey2_all[j]
+                        + (Uz2_el[j] + Uz2_mag[j]) * Ez2_all[j]) * Volume;
+#pragma omp atomic
+                    Gradient(j) += gradinc;
+
                   }
+
               } catch (...)
               {
                 //we cannot throw exceptions that leave the parallel region
