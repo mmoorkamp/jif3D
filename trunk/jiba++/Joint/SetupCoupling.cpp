@@ -195,8 +195,17 @@ namespace jiba
             jiba::rvec MTModel(ngrid, 1.0);
             if (MTMod.GetConductivities().num_elements() == ngrid)
               {
+
                 std::copy(MTMod.GetConductivities().origin(),
                     MTMod.GetConductivities().origin() + ngrid, MTModel.begin());
+                //make sure that each layer has a slightly different conductivity
+                //at least in one cell, otherwise x3d optimizes by joining layers
+                //and messes up the gradient calculation
+                for (size_t i = 0; i < MTMod.GetConductivities().shape()[2]; ++i)
+                  {
+                    MTModel(MTMod.IndexToOffset(0, 0, i)) *= (1 + 0.0001 * (i
+                        + 1));
+                  }
                 ublas::subrange(InvModel, 2 * ngrid, 3 * ngrid)
                     = CondTrans->PhysicalToGeneralized(MTModel);
               }
