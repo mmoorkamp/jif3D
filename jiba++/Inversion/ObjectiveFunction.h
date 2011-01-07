@@ -109,7 +109,7 @@ namespace jiba
           DataTransform = Transform;
           SetDataTransformAction();
         }
-      //! We assume that the data covariance is in diagonal form and store it as vector, if we do not assign a covariance it is assumed to be 1
+      //! We assume that the data covariance is in diagonal form and store its square root as vector, if we do not assign a covariance it is assumed to be 1
       void SetDataCovar(const jiba::rvec &Cov)
         {
           CovarDiag = Cov;

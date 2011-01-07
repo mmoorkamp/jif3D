@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
 
     if (vm.count("help"))
       {
-        string version = "$Id$";
+        std::string version = "$Id$";
         std::cout << version << std::endl;
         std::cout << desc << "\n";
         return 1;
@@ -257,7 +257,7 @@ int main(int argc, char *argv[])
           }
         terminate = jiba::WantAbort();
       } while (iteration < maxiter && !terminate && Optimizer->GetGradNorm()
-        > 1e-6 * Optimizer->GetMisfit());
+        > 1e-6 );
 
     SaveModel(InvModel, *TomoTransform.get(), TomoModel, modelfilename
         + ".tomo.inv");
