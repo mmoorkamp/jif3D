@@ -76,7 +76,8 @@ int main(int argc, char *argv[])
     po::options_description desc("General options");
     desc.add_options()("help", "produce help message")("threads",
         po::value<int>(), "The number of openmp threads")("covmod", po::value<
-        std::string>(), "A file containing the model covariance");
+        std::string>(), "A file containing the model covariance")("tempdir", po::value<
+            std::string>(), "The name of the directory to store temporary files in");
 
     desc.add(TomoSetup.SetupOptions());
     desc.add(GravitySetup.SetupOptions());
@@ -107,6 +108,17 @@ int main(int argc, char *argv[])
     if (vm.count("threads"))
       {
         omp_set_num_threads(vm["threads"].as<int> ());
+      }
+
+    boost::filesystem::path TempDir = boost::filesystem::current_path();
+    if (vm.count("tempdir"))
+      {
+        TempDir = vm["tempdir"].as<std::string>();
+        if (!boost::filesystem::is_directory(TempDir))
+          {
+            std::cerr << TempDir.string() << " is not a directory or does not exist ! \n";
+            return 500;
+          }
       }
 
     jiba::rvec CovModVec;
@@ -144,7 +156,7 @@ int main(int argc, char *argv[])
             "Gravity model does not have the same geometry as starting model");
       }
 
-    bool havemt = MTSetup.SetupObjective(vm, *Objective.get(), MTTransform);
+    bool havemt = MTSetup.SetupObjective(vm, *Objective.get(), MTTransform, TempDir);
     if (havetomo && havemt && !EqualGridGeometry(MTSetup.GetModel(), TomoModel))
       {
         throw jiba::FatalException(

@@ -37,7 +37,7 @@ namespace jiba
 
     bool SetupMT::SetupObjective(const po::variables_map &vm,
         jiba::JointObjective &Objective, boost::shared_ptr<
-            jiba::GeneralModelTransform> Transform)
+            jiba::GeneralModelTransform> Transform, boost::filesystem::path TempDir)
       {
         //first we ask the user a few questions
         //these are all values that are likely to change from run to run
@@ -76,7 +76,7 @@ namespace jiba
                 MTModel.AddMeasurementPoint(MTXPos[i], MTYPos[i], MTZPos[i]);
               }
             //setup the objective function for the MT data
-            jiba::X3DMTCalculator Calculator;
+            jiba::X3DMTCalculator Calculator(TempDir);
 
             MTObjective = boost::shared_ptr<jiba::ThreeDModelObjective<
                 jiba::X3DMTCalculator> >(new jiba::ThreeDModelObjective<

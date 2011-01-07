@@ -32,7 +32,8 @@ namespace jiba
     const std::string modelfilename("x3d.model");
     const std::string resultfilename("x3d.result");
     const std::string emaname = resultfilename + "0.ema";
-    const std::string sourcefilename = modelfilename + "0a.source";
+    const std::string sourceafilename = modelfilename + "0a.source";
+    const std::string sourcebfilename = modelfilename + "0b.source";
     const std::string emoAname = resultfilename + "0a.emo";
     const std::string emoBname = resultfilename + "0b.emo";
     const std::string emaAname = resultfilename + "0a.ema";
@@ -50,16 +51,18 @@ namespace jiba
         fs::directory_iterator end_itr; // default construction yields past-the-end
         for (fs::directory_iterator itr(fs::current_path()); itr != end_itr; ++itr)
           {
-            if (boost::algorithm::starts_with(itr->leaf(), NameRoot))
+            if (boost::algorithm::starts_with(itr->filename(), NameRoot))
               {
-                fs::remove_all(itr->leaf());
+                fs::remove_all(itr->filename());
               }
           }
       }
 
-    X3DMTCalculator::X3DMTCalculator()
+    X3DMTCalculator::X3DMTCalculator(boost::filesystem::path TDir)
       {
-
+        if (!fs::is_directory(TDir))
+          throw FatalException("TDir is not a directory: " + TDir.string());
+        TempDir = TDir;
       }
 
     X3DMTCalculator::~X3DMTCalculator()
@@ -68,7 +71,7 @@ namespace jiba
       }
 
     //check that the .hnk file for x3d are in a certain directory
-    bool CheckHNK(const boost::filesystem::path &TargetDir)
+    bool CheckHNK(const fs::path &TargetDir)
       {
         return fs::exists(TargetDir / "ndec15.hnk") && fs::exists(TargetDir
             / "ndec20.hnk") && fs::exists(TargetDir / "ndec30.hnk")
@@ -76,8 +79,7 @@ namespace jiba
       }
 
     //copy the .hnk files for x3d from SourceDir to TargetDir
-    void CopyHNK(const boost::filesystem::path &SourceDir,
-        const boost::filesystem::path &TargetDir)
+    void CopyHNK(const fs::path &SourceDir, const fs::path &TargetDir)
       {
         //copy file fails with an exception if the target exists
         //so we check before we do the actual copy
@@ -126,9 +128,8 @@ namespace jiba
       }
     //create a script that changes to the correct directory
     //and executes x3d in that directory
-    void MakeRunFile(const std::string &NameRoot)
+    void MakeRunFile(const std::string &NameRoot, const std::string DirName)
       {
-        std::string DirName = NameRoot + dirext;
         std::string RunFileName = NameRoot + runext;
         fs::create_directory(DirName);
         std::ofstream runfile;
@@ -144,7 +145,7 @@ namespace jiba
     //execute the script that runs x3d
     void RunX3D(const std::string &NameRoot)
       {
-        const std::string runname = "bash ./" + NameRoot + runext;
+        const std::string runname = "bash " + NameRoot + runext;
         //it is important to include the std:: namespace specification
         //for the system call, otherwise the GNU compiler picks up
         //a version from the c library that gives trouble in threaded environments
@@ -183,17 +184,17 @@ namespace jiba
             //generate an error message
             try
               {
-                std::string RootName = MakeUniqueName(X3DModel::MT, i);
-                std::string DirName = RootName + dirext;
+                fs::path RootName = TempDir / MakeUniqueName(X3DModel::MT, i);
+                fs::path DirName = RootName.string() + dirext;
                 std::vector<double> CurrFreq(1, Model.GetFrequencies()[i]);
                 //writing out files causes problems in parallel
                 // so we make sure it is done one at a time
 #pragma omp critical(forward_write_files)
                   {
-                    MakeRunFile(RootName);
-                    WriteProjectFile(DirName, CurrFreq, X3DModel::MT,
+                    MakeRunFile(RootName.string(), DirName.string());
+                    WriteProjectFile(DirName.string(), CurrFreq, X3DModel::MT,
                         resultfilename, modelfilename);
-                    Write3DModelForX3D(DirName + "/" + modelfilename,
+                    Write3DModelForX3D((DirName / modelfilename).string(),
                         Model.GetXCellSizes(), Model.GetYCellSizes(),
                         Model.GetZCellSizes(), ObservationDepth,
                         Model.GetConductivities(),
@@ -201,15 +202,15 @@ namespace jiba
                         Model.GetBackgroundThicknesses());
                   }
                 //run x3d in parallel
-                RunX3D(RootName);
+                RunX3D(RootName.string());
                 std::vector<std::complex<double> > Ex1, Ex2, Ey1, Ey2, Hx1,
                     Hx2, Hy1, Hy2;
                 std::complex<double> Zxx, Zxy, Zyx, Zyy;
                 //read in the electric and magnetic field at the observe sites
 #pragma omp critical(forward_read_emo)
                   {
-                    ReadEMO(DirName + "/" + emoAname, Ex1, Ey1, Hx1, Hy1);
-                    ReadEMO(DirName + "/" + emoBname, Ex2, Ey2, Hx2, Hy2);
+                    ReadEMO((DirName / emoAname).string(), Ex1, Ey1, Hx1, Hy1);
+                    ReadEMO((DirName / emoBname).string(), Ex2, Ey2, Hx2, Hy2);
                   }
                 const size_t freq_index = nmeas * i * 8;
                 //calculate impedances from the field spectra for all measurement sites
@@ -332,7 +333,7 @@ namespace jiba
         std::string DirName = RootName + dirext + "/";
 #pragma omp critical(calcU_writesource)
           {
-            WriteSourceFile(DirName + sourcefilename, ObservationDepth,
+            WriteSourceFile(DirName + sourceafilename, ObservationDepth,
                 XPolMoments, YPolMoments);
           }
         RunX3D(RootName);
@@ -378,18 +379,23 @@ namespace jiba
           {
             try
               {
-                std::string ForwardName = MakeUniqueName(X3DModel::MT, i);
-                std::string ForwardDirName = ForwardName + dirext + "/";
+
+                fs::path ForwardDirName = TempDir / (MakeUniqueName(
+                    X3DModel::MT, i) + dirext);
+                if (!fs::is_directory(ForwardDirName))
+                  throw FatalException(
+                      "In X3D gradient calculation, directory does not exist: "
+                          + ForwardDirName.string());
 
                 //read the fields from the forward calculation
                 std::vector<std::complex<double> > Ex1_obs, Ex2_obs, Ey1_obs,
                     Ey2_obs, Hx1_obs, Hx2_obs, Hy1_obs, Hy2_obs;
 #pragma omp critical(gradient_reademo)
                   {
-                    ReadEMO(ForwardDirName + emoAname, Ex1_obs, Ey1_obs,
-                        Hx1_obs, Hy1_obs);
-                    ReadEMO(ForwardDirName + emoBname, Ex2_obs, Ey2_obs,
-                        Hx2_obs, Hy2_obs);
+                    ReadEMO((ForwardDirName / emoAname).string(), Ex1_obs,
+                        Ey1_obs, Hx1_obs, Hy1_obs);
+                    ReadEMO((ForwardDirName / emoBname).string(), Ex2_obs,
+                        Ey2_obs, Hx2_obs, Hy2_obs);
                   }
                 assert(Ex1_obs.size()==nobs);
                 assert(Ex2_obs.size()==nobs);
@@ -400,10 +406,10 @@ namespace jiba
                 //the forward calculations
 #pragma omp critical(gradient_readema)
                   {
-                    ReadEMA(ForwardDirName + emaAname, Ex1_all, Ey1_all,
-                        Ez1_all, ncellsx, ncellsy, ncellsz);
-                    ReadEMA(ForwardDirName + emaBname, Ex2_all, Ey2_all,
-                        Ez2_all, ncellsx, ncellsy, ncellsz);
+                    ReadEMA((ForwardDirName / emaAname).string(), Ex1_all,
+                        Ey1_all, Ez1_all, ncellsx, ncellsy, ncellsz);
+                    ReadEMA((ForwardDirName / emaBname).string(), Ex2_all,
+                        Ey2_all, Ez2_all, ncellsx, ncellsy, ncellsz);
                   }
                 //create variables for the adjoint field calculation
                 const size_t freq_index = nmeas * i * 8;
@@ -454,56 +460,56 @@ namespace jiba
                 //so our vector has just 1 element
                 std::vector<double> CurrFreq(1, 0.0);
                 CurrFreq[0] = Model.GetFrequencies()[i];
-                std::string EdipName = MakeUniqueName(X3DModel::EDIP, i);
-                std::string EdipDirName = EdipName + dirext + "/";
+                fs::path EdipName = TempDir / MakeUniqueName(X3DModel::EDIP, i);
+                fs::path EdipDirName = EdipName.string() + dirext;
                 //again we have to write out some file for the electric
                 //dipole calculation with x3d, this shouldn't be done
                 //in parallel
 #pragma omp critical(gradient_writemodel_edip)
                   {
-                    MakeRunFile(EdipName);
-                    WriteProjectFile(EdipDirName, CurrFreq, X3DModel::EDIP,
-                        resultfilename, modelfilename);
-                    Write3DModelForX3D(EdipDirName + modelfilename,
+                    MakeRunFile(EdipName.string(), EdipDirName.string());
+                    WriteProjectFile(EdipDirName.string(), CurrFreq,
+                        X3DModel::EDIP, resultfilename, modelfilename);
+                    Write3DModelForX3D((EdipDirName / modelfilename).string(),
                         Model.GetXCellSizes(), Model.GetYCellSizes(),
                         Model.GetZCellSizes(), ObservationDepth,
                         Model.GetConductivities(),
                         Model.GetBackgroundConductivities(),
                         Model.GetBackgroundThicknesses());
                     //write an empty source file for the second source polarization
-                    WriteSourceFile(EdipDirName + modelfilename + "0b.source",
+                    WriteSourceFile((EdipDirName / sourcebfilename).string(),
                         ObservationDepth, Zeros, Zeros);
                   }
                 std::vector<std::complex<double> > Ux1_el, Ux2_el, Uy1_el,
                     Uy2_el, Uz1_el, Uz2_el;
                 //calculate the first polarization and read the adjoint fields
-                CalcU(EdipName, XPolMoments1, YPolMoments1, Ux1_el, Uy1_el,
-                    Uz1_el, ObservationDepth, ncellsx, ncellsy, ncellsz);
+                CalcU(EdipName.string(), XPolMoments1, YPolMoments1, Ux1_el,
+                    Uy1_el, Uz1_el, ObservationDepth, ncellsx, ncellsy, ncellsz);
                 //calculate the second polarization
-                CalcU(EdipName, XPolMoments2, YPolMoments2, Ux2_el, Uy2_el,
-                    Uz2_el, ObservationDepth, ncellsx, ncellsy, ncellsz);
+                CalcU(EdipName.string(), XPolMoments2, YPolMoments2, Ux2_el,
+                    Uy2_el, Uz2_el, ObservationDepth, ncellsx, ncellsy, ncellsz);
 
                 //now we calculate the response to magnetic dipole sources
                 const std::complex<double> omega_mu = -1.0 / (std::complex<
                     double>(0.0, jiba::mag_mu) * 2.0 * M_PI
                     * Model.GetFrequencies()[i]);
 
-                std::string MdipName = MakeUniqueName(X3DModel::MDIP, i);
-                std::string MdipDirName = MdipName + dirext + "/";
+                fs::path MdipName = TempDir / MakeUniqueName(X3DModel::MDIP, i);
+                fs::path MdipDirName = MdipName.string() + dirext;
                 //write the files for the magnetic dipole calculation
 #pragma omp critical(gradient_writemodel_mdip)
                   {
-                    MakeRunFile(MdipName);
-                    WriteProjectFile(MdipDirName, CurrFreq, X3DModel::MDIP,
-                        resultfilename, modelfilename);
-                    Write3DModelForX3D(MdipDirName + modelfilename,
+                    MakeRunFile(MdipName.string(), MdipDirName.string());
+                    WriteProjectFile(MdipDirName.string(), CurrFreq,
+                        X3DModel::MDIP, resultfilename, modelfilename);
+                    Write3DModelForX3D((MdipDirName / modelfilename).string(),
                         Model.GetXCellSizes(), Model.GetYCellSizes(),
                         Model.GetZCellSizes(), ObservationDepth,
                         Model.GetConductivities(),
                         Model.GetBackgroundConductivities(),
                         Model.GetBackgroundThicknesses());
                     //write an empty source file for the second source polarization
-                    WriteSourceFile(MdipDirName + modelfilename + "0b.source",
+                    WriteSourceFile((MdipDirName / sourcebfilename).string(),
                         ObservationDepth, Zeros, Zeros);
                   }
                 //make the sources for the magnetic dipoles
@@ -534,11 +540,13 @@ namespace jiba
                 std::vector<std::complex<double> > Ux1_mag, Ux2_mag, Uy1_mag,
                     Uy2_mag, Uz1_mag, Uz2_mag;
                 //calculate the first polarization and read the adjoint fields
-                CalcU(MdipName, XPolMoments1, YPolMoments1, Ux1_mag, Uy1_mag,
-                    Uz1_mag, ObservationDepth, ncellsx, ncellsy, ncellsz);
+                CalcU(MdipName.string(), XPolMoments1, YPolMoments1, Ux1_mag,
+                    Uy1_mag, Uz1_mag, ObservationDepth, ncellsx, ncellsy,
+                    ncellsz);
                 //calculate the second polarization and read the adjoint fields
-                CalcU(MdipName, XPolMoments2, YPolMoments2, Ux2_mag, Uy2_mag,
-                    Uz2_mag, ObservationDepth, ncellsx, ncellsy, ncellsz);
+                CalcU(MdipName.string(), XPolMoments2, YPolMoments2, Ux2_mag,
+                    Uy2_mag, Uz2_mag, ObservationDepth, ncellsx, ncellsy,
+                    ncellsz);
 
                 const double cell_sizex = Model.GetXCellSizes()[0];
                 const double cell_sizey = Model.GetYCellSizes()[0];
