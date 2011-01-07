@@ -14,6 +14,7 @@
 #include "../Inversion/ThreeDModelObjective.h"
 #include "../Inversion/JointObjective.h"
 #include <boost/program_options.hpp>
+#include <boost/filesystem.hpp>
 
 namespace jiba
   {
@@ -56,7 +57,8 @@ namespace jiba
       bool
       SetupObjective(const po::variables_map &vm,
           jiba::JointObjective &Objective, boost::shared_ptr<
-              jiba::GeneralModelTransform> Transform);
+              jiba::GeneralModelTransform> Transform,
+          boost::filesystem::path TempDir = boost::filesystem::current_path());
       //! Return the MT model that has been set for the inversion
       const jiba::X3DModel &GetModel()
         {

@@ -14,7 +14,7 @@
 
 namespace jiba
   {
-    //! Create a dummy tear model with the same geometry as the geometry model, but with a value of 1.0 everywhere so tjat there is no tear
+    //! Create a dummy tear model with the same geometry as the geometry model, but with a value of 1.0 everywhere so that there is no tear
     inline void MakeTearModel(const jiba::ThreeDModelBase &Geometry,
         jiba::ThreeDModelBase &TearModel)
       {

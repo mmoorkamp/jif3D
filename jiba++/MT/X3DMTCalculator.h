@@ -9,6 +9,7 @@
 #ifndef X3DMTCALCULATOR_H_
 #define X3DMTCALCULATOR_H_
 
+#include <boost/filesystem.hpp>
 #include "MT3DCalculator.h"
 #include "X3DModel.h"
 
@@ -49,6 +50,8 @@ namespace jiba
       //! Create a unique name for each object, calculation type and frequency so that we can write to different directories and execute in parallel
       std::string MakeUniqueName(X3DModel::ProblemType Type,
           const size_t FreqIndex);
+      //! The directory to store all temporary files
+      boost::filesystem::path TempDir;
     public:
       //! Given a conductivity model, calculate a vector of impedances
       /*! For a conductivity model given by the input parameter Model, we calculate the synthetic magnetotelluric data. When compiled with
@@ -68,8 +71,9 @@ namespace jiba
        * @return The gradient of the objective function with respect to the model parameters for the given model. The storage ordering is identical to X3DModel.
        */
       rvec LQDerivative(const ModelType &Model, const rvec &Misfit);
-
-      X3DMTCalculator();
+      //! The constructor takes an optional argument to change the directory were temporary files are stored
+      X3DMTCalculator(boost::filesystem::path TDir =
+          boost::filesystem::current_path());
       virtual ~X3DMTCalculator();
       };
   /* @} */
