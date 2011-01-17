@@ -155,10 +155,10 @@ namespace jiba
         assert(Misfit.size() == Sensitivities.size1());
 #ifdef HAVEATLAS
         rvec result(Misfit.size());
-        atlas::gemv(CblasTrans, 1.0, Sensitivities, Misfit, 0.0, result);
+        atlas::gemv(CblasTrans, 2.0, Sensitivities, Misfit, 0.0, result);
         return result;
 #else
-        return boost::numeric::ublas::prod(trans(Sensitivities), Misfit);
+        return 2.0 * boost::numeric::ublas::prod(trans(Sensitivities), Misfit);
 #endif
       }
   }

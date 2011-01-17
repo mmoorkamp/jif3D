@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(ftginvar_test)
       jiba::rvec Misfit(nmeas);
       std::fill(Misfit.begin(),Misfit.end(),1.0);
       jiba::rvec InvDeriv(InvCalculator->LQDerivative(GravityTest,Misfit));
-      jiba::rvec CompDeriv(ublas::prod(trans(InvarSens),Misfit));
+      jiba::rvec CompDeriv(2.0 * ublas::prod(trans(InvarSens),Misfit));
       for (size_t i =0; i < InvDeriv.size();++i)
         {
           BOOST_CHECK_CLOSE(InvDeriv(i),CompDeriv(i),std::numeric_limits<float>::epsilon());

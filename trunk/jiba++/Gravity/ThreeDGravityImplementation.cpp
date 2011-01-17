@@ -188,6 +188,6 @@ namespace jiba
                 DerivMod += Misfit(i * TransDataPerMeas + j) * CurrRow;
               }
           }
-        return DerivMod;
+        return 2.0 * DerivMod;
       }
   }
