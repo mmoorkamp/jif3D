@@ -266,7 +266,7 @@ BOOST_AUTO_TEST_CASE  (box_gravity_calc_test)
       std::generate(Misfit.begin(),Misfit.end(),drand48);
       jiba::rvec Deriv(ScalarCalculator->LQDerivative(GravityTest,Misfit));
       ScalarCalculator->Calculate(GravityTest);
-      jiba::rvec Compare(boost::numeric::ublas::prec_prod(ublas::trans(ScalarCalculator->GetSensitivities()),Misfit));
+      jiba::rvec Compare(2.0 * boost::numeric::ublas::prec_prod(ublas::trans(ScalarCalculator->GetSensitivities()),Misfit));
       //and test the caching, too
       jiba::rvec Deriv2(ScalarCalculator->LQDerivative(GravityTest,Misfit));
       const size_t ngrid = GravityTest.GetDensities().num_elements();

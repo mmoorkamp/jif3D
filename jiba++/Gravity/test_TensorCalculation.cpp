@@ -277,7 +277,7 @@ BOOST_AUTO_TEST_CASE  (random_tensor_test)
       std::generate(Misfit.begin(),Misfit.end(),drand48);
       jiba::rvec Deriv(TensorCalculator->LQDerivative(GravityTest,Misfit));
       TensorCalculator->Calculate(GravityTest);
-      jiba::rvec Compare(boost::numeric::ublas::prec_prod(ublas::trans(TensorCalculator->GetSensitivities()),Misfit));
+      jiba::rvec Compare(2.0 * boost::numeric::ublas::prec_prod(ublas::trans(TensorCalculator->GetSensitivities()),Misfit));
       //and test the caching, too
       jiba::rvec Deriv2(TensorCalculator->LQDerivative(GravityTest,Misfit));
       const size_t ngrid = GravityTest.GetDensities().num_elements();

@@ -42,7 +42,7 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
           if (delta> 0.0)
             {
               double FDGrad = (Objective.CalcMisfit(Forward) - Objective.CalcMisfit(Backward))/(2*delta);
-              BOOST_CHECK_CLOSE(FDGrad,2*Gradient(i),0.001);
+              BOOST_CHECK_CLOSE(FDGrad,Gradient(i),0.001);
             }
         }
     }

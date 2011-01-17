@@ -65,7 +65,8 @@ namespace jiba
         const ThreeDGravityModel &Model)
       {
         //open the file where the sensitivities are stored
-        std::fstream infile(filename.c_str(), std::ios::in | std::ios::binary);
+        boost::filesystem::path fullpath = TempDir / filename;
+        std::fstream infile(fullpath.string().c_str(), std::ios::in | std::ios::binary);
 
         const size_t nmeas = Model.GetMeasPosX().size()
             * Imp.get()->RawDataPerMeasurement();
@@ -108,7 +109,8 @@ namespace jiba
       {
         //when we are in this routine we read the sensitivities
         //from a previously created binary file
-        std::fstream infile(filename.c_str(), std::ios::in | std::ios::binary);
+        boost::filesystem::path fullpath = TempDir / filename;
+        std::fstream infile(fullpath.string().c_str(), std::ios::in | std::ios::binary);
 
         const size_t nmeas = Model.GetMeasPosX().size()
             * Imp.get()->RawDataPerMeasurement();
@@ -141,9 +143,12 @@ namespace jiba
       }
 
     DiskGravityCalculator::DiskGravityCalculator(boost::shared_ptr<
-        ThreeDGravityImplementation> TheImp) :
+        ThreeDGravityImplementation> TheImp, boost::filesystem::path TDir) :
       FullSensitivityGravityCalculator(TheImp), filename()
       {
+        if (!boost::filesystem::is_directory(TDir))
+          throw FatalException("TDir is not a directory: " + TDir.string());
+        TempDir = TDir;
         filename = MakeFilename();
       }
 
@@ -152,6 +157,7 @@ namespace jiba
         const DiskGravityCalculator &Old) :
       FullSensitivityGravityCalculator(Old)
       {
+        TempDir = Old.TempDir;
         filename = MakeFilename();
       }
 
