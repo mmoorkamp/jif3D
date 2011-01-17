@@ -47,7 +47,8 @@ namespace jiba
 
     bool SetupGravity::SetupObjective(const po::variables_map &vm,
         jiba::JointObjective &Objective, boost::shared_ptr<
-            jiba::GeneralModelTransform> &Transform)
+            jiba::GeneralModelTransform> &Transform,
+        boost::filesystem::path TempDir)
       {
         //if we want to use CUDA for forward modeling
         //we set a variable for easier access later and print
@@ -121,9 +122,24 @@ namespace jiba
         //to signal the user that something happened.
         if (scalgravlambda > 0.0)
           {
-            boost::shared_ptr<jiba::DiskGravityCalculator>
-                ScalarCalculator(jiba::CreateGravityCalculator<
-                    jiba::DiskGravityCalculator>::MakeScalar(wantcuda));
+            //we want to set the path for temporary file storage
+            //the factory function cannot perform this, so we
+            //have to assemble the calculator object ourselves
+            boost::shared_ptr<jiba::ThreeDGravityImplementation> Implementation;
+            if (wantcuda)
+              {
+                Implementation = boost::shared_ptr<
+                    jiba::ThreeDGravityImplementation>(
+                    new jiba::ScalarCudaGravityImp);
+              }
+            else
+              {
+                Implementation = boost::shared_ptr<
+                    jiba::ThreeDGravityImplementation>(
+                    new jiba::ScalarOMPGravityImp);
+              }
+            boost::shared_ptr<jiba::DiskGravityCalculator> ScalarCalculator(
+                new jiba::DiskGravityCalculator(Implementation, TempDir));
 
             ScalGravObjective = boost::shared_ptr<jiba::ThreeDModelObjective<
                 DiskGravityCalculator> >(new jiba::ThreeDModelObjective<
@@ -142,9 +158,24 @@ namespace jiba
           }
         if (ftglambda > 0.0)
           {
-            boost::shared_ptr<jiba::DiskGravityCalculator>
-                TensorCalculator(jiba::CreateGravityCalculator<
-                    jiba::DiskGravityCalculator>::MakeTensor(wantcuda));
+            //we want to set the path for temporary file storage
+            //the factory function cannot perform this, so we
+            //have to assemble the calculator object ourselves
+            boost::shared_ptr<jiba::ThreeDGravityImplementation> Implementation;
+            if (wantcuda)
+              {
+                Implementation = boost::shared_ptr<
+                    jiba::ThreeDGravityImplementation>(
+                    new jiba::TensorCudaGravityImp);
+              }
+            else
+              {
+                Implementation = boost::shared_ptr<
+                    jiba::ThreeDGravityImplementation>(
+                    new jiba::TensorOMPGravityImp);
+              }
+            boost::shared_ptr<jiba::DiskGravityCalculator> TensorCalculator(
+                new jiba::DiskGravityCalculator(Implementation, TempDir));
 
             FTGObjective = boost::shared_ptr<jiba::ThreeDModelObjective<
                 DiskGravityCalculator> >(new jiba::ThreeDModelObjective<

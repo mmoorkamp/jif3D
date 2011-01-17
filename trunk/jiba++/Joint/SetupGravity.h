@@ -14,6 +14,7 @@
 #include "../Gravity/ThreeDGravityModel.h"
 #include "../Inversion/JointObjective.h"
 #include <boost/program_options.hpp>
+#include <boost/filesystem.hpp>
 
 namespace jiba
   {
@@ -69,13 +70,14 @@ namespace jiba
        * @param vm The variable map from boost::program_options that contains the actually set options
        * @param Objective An existing JointObjective object that the newly created gravity objective(s) are added to
        * @param Transform A transformation object to transform generalized to physical parameters
-       * @param NeedStartModel Do we need to ask the user for a starting model (true) or do we generate the geometry from the parameter StartModel
+       * @param TempDir A directory to store temporary files with sensitivity information
        * @return True if the weight for one of the gravity objectives is greater zero, i.e. we added an objective function to JointObjective, false otherwise
        */
       bool
       SetupObjective(const po::variables_map &vm,
           jiba::JointObjective &Objective, boost::shared_ptr<
-              jiba::GeneralModelTransform> &Transform);
+              jiba::GeneralModelTransform> &Transform,
+          boost::filesystem::path TempDir = boost::filesystem::current_path());
       //! Return the gravity model that was read in
       const jiba::ThreeDGravityModel &GetModel()
         {

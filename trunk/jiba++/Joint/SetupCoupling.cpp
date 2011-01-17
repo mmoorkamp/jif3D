@@ -180,6 +180,7 @@ namespace jiba
             jiba::rvec SeisModel(ngrid, 0.0);
             std::copy(SeisMod.GetSlownesses().origin(),
                 SeisMod.GetSlownesses().origin() + ngrid, SeisModel.begin());
+            std::cout << "Transforming slowness model. " << std::endl;
             ublas::subrange(InvModel, 0, ngrid)
                 = SlowTrans->PhysicalToGeneralized(SeisModel);
 
@@ -188,6 +189,7 @@ namespace jiba
               {
                 std::copy(GravMod.GetDensities().origin(),
                     GravMod.GetDensities().origin() + ngrid, GravModel.begin());
+                std::cout << "Transforming Density model. " << std::endl;
                 ublas::subrange(InvModel, ngrid, 2 * ngrid)
                     = DensTrans->PhysicalToGeneralized(GravModel);
               }
@@ -206,6 +208,7 @@ namespace jiba
                     MTModel(MTMod.IndexToOffset(0, 0, i)) *= (1 + 0.0001 * (i
                         + 1));
                   }
+                std::cout << "Transforming conductivity model. " << std::endl;
                 ublas::subrange(InvModel, 2 * ngrid, 3 * ngrid)
                     = CondTrans->PhysicalToGeneralized(MTModel);
               }
