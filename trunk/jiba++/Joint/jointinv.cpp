@@ -60,12 +60,58 @@ void SaveModel(const jiba::rvec &InvModel,
     ModelObject.WriteNetCDF(filename + ".nc");
   }
 
+void StoreMisfit(std::ofstream &misfitfile, const size_t iteration,
+    const double Misfit, const jiba::JointObjective &Objective)
+  {
+    misfitfile << std::setw(5) << iteration << " " << std::setw(15) << Misfit
+        << " ";
+    for (size_t i = 0; i < Objective.GetIndividualFits().size(); ++i)
+      {
+        misfitfile << std::setw(15) << Objective.GetIndividualFits().at(i)
+            << " ";
+      }
+
+    misfitfile << " " << Objective.GetNEval();
+    misfitfile << std::endl;
+  }
+
+bool CheckConvergence(const jiba::JointObjective &Objective)
+  {
+    bool terminate = true;
+    for (size_t i = 0; i < Objective.GetIndividualFits().size() - 1; ++i)
+      {
+        if (Objective.GetIndividualFits().at(i)
+            > Objective.GetObjective(i).GetNData())
+          {
+            terminate = false;
+          }
+        else
+          {
+            if (Objective.GetObjective(i).ConvergenceLimit() > 0.0)
+              {
+                std::cout << "Reached target misfit." << std::endl;
+                std::cout << "Objective number: " << i << std::endl;
+                std::cout << "Misfit: " << Objective.GetIndividualFits().at(i)
+                    << std::endl;
+                std::cout << "Target: " << Objective.GetObjective(i).GetNData()
+                    << std::endl;
+              }
+          }
+      }
+    return terminate;
+  }
+
 /*! \file jointinv.cpp
- * The main joint inversion program.
+ * The main joint inversion program. The main taks of the program is to read in the appropriate files
+ * and options and from these settings assemble the objects that perform the actual work. Also,
+ * the main program manages the output of inversion results and data among other statistics.
  */
 
 int main(int argc, char *argv[])
   {
+    //first we create objects that manage the setup of individual parts
+    //that way we can reuse these objects so that other programs use
+    //exactly the same options
     jiba::SetupTomo TomoSetup;
     jiba::SetupGravity GravitySetup;
     jiba::SetupMT MTSetup;
@@ -73,12 +119,16 @@ int main(int argc, char *argv[])
     jiba::SetupRegularization RegSetup;
     jiba::SetupCoupling CouplingSetup;
 
+    //we also create a number of options that are specific to our joint inversion
+    //or act globally so that they cannot be associated with one subsystem
     po::options_description desc("General options");
     desc.add_options()("help", "produce help message")("threads",
         po::value<int>(), "The number of openmp threads")("covmod", po::value<
-        std::string>(), "A file containing the model covariance")("tempdir", po::value<
-            std::string>(), "The name of the directory to store temporary files in");
-
+        std::string>(), "A file containing the model covariance")("tempdir",
+        po::value<std::string>(),
+        "The name of the directory to store temporary files in");
+    //we need to add the description for each part to the boost program options object
+    //that way the user can get a help output and the parser object recongnizes these options
     desc.add(TomoSetup.SetupOptions());
     desc.add(GravitySetup.SetupOptions());
     desc.add(MTSetup.SetupOptions());
@@ -89,6 +139,11 @@ int main(int argc, char *argv[])
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
     //we can also read options from a configuration file
+    //that way we do not have to specify a large number of options
+    //on the command line, the order we use now, reading the configuration
+    //file after parsing the command line options means that
+    //the command line options override configuration file options
+    //as one would expect (see also program_options documentation)
     const std::string ConfFileName("jointinv.conf");
     if (boost::filesystem::exists(ConfFileName))
       {
@@ -97,9 +152,12 @@ int main(int argc, char *argv[])
       }
     po::notify(vm);
 
+    //if the option was "help" we output the program version
+    //and a description of all options, but we do not perform any inversion
     if (vm.count("help"))
       {
-        std::string version = "$Id$";
+        std::string version =
+            "$Id$";
         std::cout << version << std::endl;
         std::cout << desc << "\n";
         return 1;
@@ -109,14 +167,17 @@ int main(int argc, char *argv[])
       {
         omp_set_num_threads(vm["threads"].as<int> ());
       }
-
+    //some objects accept a directory name as a path to store temporary files
+    //we check that this directory actually exists to avoid double checking
+    //and early detection of problems
     boost::filesystem::path TempDir = boost::filesystem::current_path();
     if (vm.count("tempdir"))
       {
-        TempDir = vm["tempdir"].as<std::string>();
+        TempDir = vm["tempdir"].as<std::string> ();
         if (!boost::filesystem::is_directory(TempDir))
           {
-            std::cerr << TempDir.string() << " is not a directory or does not exist ! \n";
+            std::cerr << TempDir.string()
+                << " is not a directory or does not exist ! \n";
             return 500;
           }
       }
@@ -136,45 +197,60 @@ int main(int argc, char *argv[])
     //we want some output so we set Verbose in the constructor to true
     boost::shared_ptr<jiba::JointObjective> Objective(new jiba::JointObjective(
         true));
-
+    //we need a number of transformation objects to translate the generalized model parameters
+    //used by the inversion algorithm to physically meaningful parameters for the forward
+    //calculation. The exact type of transformation depends on the chosen coupling
+    //and is assigned below
     boost::shared_ptr<jiba::GeneralModelTransform> TomoTransform, MTTransform,
         GravityTransform, RegTransform;
-
+    //coupling setup is responsible to set the appropriate transformation
+    //as we have to use different ones depending on the chose coupling mechanism
     CouplingSetup.SetupTransforms(vm, TomoTransform, GravityTransform,
         MTTransform, RegTransform);
 
+    //read in the tomography model and setup the options that are applicable
+    //for the seismic tomography part of the inversion
     jiba::ThreeDSeismicModel TomoModel;
     bool havetomo = TomoSetup.SetupObjective(vm, *Objective.get(), TomoModel,
         TomoTransform);
+    //setup the gravity part of the joint inversion
     bool havegrav = GravitySetup.SetupObjective(vm, *Objective.get(),
         GravityTransform);
-
+    //if we have a seismic and a gravity objective function, we have
+    //to make sure that the starting models have the same geometry (not considering refinement)
     if (havetomo && havegrav && !EqualGridGeometry(TomoModel,
         GravitySetup.GetModel()))
       {
         throw jiba::FatalException(
             "Gravity model does not have the same geometry as starting model");
       }
-
-    bool havemt = MTSetup.SetupObjective(vm, *Objective.get(), MTTransform, TempDir);
+    //setup the MT part of the joint inversion
+    bool havemt = MTSetup.SetupObjective(vm, *Objective.get(), MTTransform,
+        TempDir);
+    //if we have a seismic and a MT objective function, we have
+    //to make sure that the starting models have the same geometry (not considering refinement)
     if (havetomo && havemt && !EqualGridGeometry(MTSetup.GetModel(), TomoModel))
       {
         throw jiba::FatalException(
             "MT model does not have the same geometry as starting model");
       }
-
+    //now we setup the regularization
     boost::shared_ptr<jiba::MatOpRegularization> Regularization =
         RegSetup.SetupObjective(vm, TomoModel, RegTransform, CovModVec);
 
+    //the vector InvModel will hold the current inversion model
+    //depending on the chosen coupling mechanism it will have different size
+    //so we fill its content in the object Coupling setup
     jiba::rvec InvModel;
     CouplingSetup.SetupModelVector(vm, InvModel, TomoModel,
         GravitySetup.GetModel(), MTSetup.GetModel(), *Objective.get(),
         Regularization, RegSetup.GetSubStart());
-
+    //finally ask for the maximum number of iterations
     size_t maxiter = 1;
     std::cout << "Maximum iterations: ";
     std::cin >> maxiter;
-
+    //note the start time of the core calculations for statistics
+    //and output some status information
     boost::posix_time::ptime starttime =
         boost::posix_time::microsec_clock::local_time();
 
@@ -186,11 +262,8 @@ int main(int argc, char *argv[])
     size_t iteration = 0;
     std::ofstream misfitfile("misfit.out");
     //calculate initial misfit
-    misfitfile << "0 " << Objective->CalcMisfit(InvModel) << " ";
-    std::copy(Objective->GetIndividualFits().begin(),
-        Objective->GetIndividualFits().end(), std::ostream_iterator<double>(
-            misfitfile, " "));
-    misfitfile << std::endl;
+    double InitialMisfit = Objective->CalcMisfit(InvModel);
+    StoreMisfit(misfitfile, 0, InitialMisfit, *Objective);
 
     std::string modelfilename = "result";
 
@@ -210,12 +283,14 @@ int main(int argc, char *argv[])
       GravModel = TomoModel;
 
     bool terminate = true;
+    jiba::rvec OldModel(InvModel);
     do
       {
         terminate = true;
         try
           {
             std::cout << "\n\n Iteration: " << iteration << std::endl;
+            OldModel = InvModel;
             Optimizer->MakeStep(InvModel);
 
             ++iteration;
@@ -230,46 +305,20 @@ int main(int argc, char *argv[])
                 << std::endl;
             std::cout << "Currrent Gradient: " << Optimizer->GetGradNorm()
                 << std::endl;
-            misfitfile << std::setw(5) << iteration << " " << std::setw(15)
-                << Optimizer->GetMisfit() << " ";
-            for (size_t i = 0; i < Objective->GetIndividualFits().size(); ++i)
-              {
-                misfitfile << std::setw(15)
-                    << Objective->GetIndividualFits().at(i) << " ";
-              }
-
-            misfitfile << " " << Objective->GetNEval();
-            misfitfile << std::endl;
+            StoreMisfit(misfitfile, iteration, Optimizer->GetMisfit(),
+                *Objective);
             std::cout << "\n\n";
           } catch (jiba::FatalException &e)
           {
             std::cerr << e.what() << std::endl;
+            InvModel = OldModel;
             iteration = maxiter;
           }
 
-        for (size_t i = 0; i < Objective->GetIndividualFits().size() - 1; ++i)
-          {
-            if (Objective->GetIndividualFits().at(i) > Objective->GetObjective(
-                i).GetNData())
-              {
-                terminate = false;
-              }
-            else
-              {
-                if (Objective->GetObjective(i).ConvergenceLimit() > 0.0)
-                  {
-                    std::cout << "Reached target misfit." << std::endl;
-                    std::cout << "Objective number: " << i << std::endl;
-                    std::cout << "Misfit: "
-                        << Objective->GetIndividualFits().at(i) << std::endl;
-                    std::cout << "Target: "
-                        << Objective->GetObjective(i).GetNData() << std::endl;
-                  }
-              }
-          }
-        terminate = jiba::WantAbort();
+        terminate = CheckConvergence(*Objective);
+        terminate = terminate || jiba::WantAbort();
       } while (iteration < maxiter && !terminate && Optimizer->GetGradNorm()
-        > 1e-6 );
+        > 1e-6);
 
     SaveModel(InvModel, *TomoTransform.get(), TomoModel, modelfilename
         + ".tomo.inv");
@@ -299,12 +348,19 @@ int main(int argc, char *argv[])
             jiba::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc",
                 ScalGravInvData, GravModel.GetMeasPosX(),
                 GravModel.GetMeasPosY(), GravModel.GetMeasPosZ());
+            jiba::Write3DDataToVTK(modelfilename + ".inv_sgd.vtk",
+                "grav_accel", ScalGravInvData, GravModel.GetMeasPosX(),
+                GravModel.GetMeasPosY(), GravModel.GetMeasPosZ());
+
           }
         if (GravitySetup.GetHaveFTG())
           {
             jiba::rvec FTGInvData(
                 GravitySetup.GetFTGObjective().GetSyntheticData());
             jiba::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc",
+                FTGInvData, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
+                GravModel.GetMeasPosZ());
+            jiba::Write3DTensorDataToVTK(modelfilename + ".inv_ftg.vtk", "U",
                 FTGInvData, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
                 GravModel.GetMeasPosZ());
           }
