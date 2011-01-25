@@ -102,6 +102,7 @@ namespace jiba
       //! Other models will be copied by the copy operator for the base class
       X3DModel& operator=(const ThreeDModelBase& source);
       X3DModel();
+      //! We define our own copy constructor. This has to be updated if additional information is stored in this object.
       X3DModel(const X3DModel &source);
       virtual ~X3DModel();
       };

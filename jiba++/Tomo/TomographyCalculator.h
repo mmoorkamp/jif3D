@@ -21,6 +21,7 @@ namespace jiba
     class TomographyCalculator
       {
     public:
+      //! This type definition is necessary so that ThreeDModelObjective can correctly deduce the native type for a model object for this class
       typedef ThreeDSeismicModel ModelType;
     private:
       //! The number of air layers on top of the model

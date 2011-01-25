@@ -41,6 +41,7 @@ namespace jiba
     class X3DMTCalculator
       {
     public:
+      //! This type definition is necessary so that ThreeDModelObjective can correctly deduce the native type for a model object for this class
       typedef X3DModel ModelType;
     private:
       //! Remove all files created for running x3d
