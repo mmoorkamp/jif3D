@@ -15,9 +15,13 @@ namespace jiba
     class Durham1DTrans: public jiba::GeneralModelTransform
       {
     private:
+      //! The constant in the conversion equation
       const double a;
+      //! The factor for the linear part in the conversion equation
       const double b;
+      //! The factor for the square part in the conversion equation
       const double c;
+      //! The final scale factor to scale the output by
       const double scale;
       boost::shared_ptr<GeneralModelTransform> ResTransform;
     public:

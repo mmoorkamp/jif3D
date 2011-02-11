@@ -2,7 +2,8 @@ import testing ;
 
 
 alias joint : ../Tomo ../Gravity ../Inversion ../Global ../Regularization ;
-	
+
+exe gravregion : gravregion.cpp joint : <include>. ;	
 exe fittingtest : fittingtest.cpp ../Inversion ..//vecopt : <include>. ;
 exe sparsetest : sparsetest.cpp ../Inversion ..//vecopt : <include>. ;
 exe wcompress : wcompress.cpp  ../Gravity ../Global : <include>. ;

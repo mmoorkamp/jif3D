@@ -215,7 +215,7 @@ int main(int argc, char *argv[])
         TomoTransform);
     //setup the gravity part of the joint inversion
     bool havegrav = GravitySetup.SetupObjective(vm, *Objective.get(),
-        GravityTransform);
+        GravityTransform, TempDir);
     //if we have a seismic and a gravity objective function, we have
     //to make sure that the starting models have the same geometry (not considering refinement)
     if (havetomo && havegrav && !EqualGridGeometry(TomoModel,
@@ -282,9 +282,9 @@ int main(int argc, char *argv[])
     if (!havegrav)
       GravModel = TomoModel;
 
-    bool terminate = true;
+    bool terminate = false;
     jiba::rvec OldModel(InvModel);
-    do
+    while (iteration < maxiter && !terminate)
       {
         terminate = true;
         try
@@ -317,8 +317,7 @@ int main(int argc, char *argv[])
 
         terminate = CheckConvergence(*Objective);
         terminate = terminate || jiba::WantAbort();
-      } while (iteration < maxiter && !terminate && Optimizer->GetGradNorm()
-        > 1e-6);
+      }
 
     SaveModel(InvModel, *TomoTransform.get(), TomoModel, modelfilename
         + ".tomo.inv");

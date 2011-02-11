@@ -54,7 +54,7 @@ namespace jiba
       {
 
         //first we calculate the size of the actual forward modeling grid
-        //this needs to be one larger in each direction than our mdeol
+        //this needs to be one larger in each direction than our model
         const size_t ngrid = (Model.GetXCellSizes().size() + 1)
             * (Model.GetYCellSizes().size() + 1)
             * (Model.GetZCellSizes().size() + 1 + 2 * nairlayers);
@@ -134,8 +134,21 @@ namespace jiba
         ForwardModRay(geo, grid, &data, &raypath[0]);
         PlotRaypath("ray.vtk", &raypath[0], ndata, grid.h, nairlayers);
         //and return the result as a vector
-        jiba::rvec result(ndata);
-        copy(data.tcalc.begin(), data.tcalc.end(), result.begin());
+        jiba::rvec result(ndata, 0.0);
+        /*for (size_t i = 0; i < ndata; ++i)
+          {
+            const size_t nray = raypath[i].nray;
+            for (size_t j = 0; j < nray; ++j)
+              {
+                const size_t offset = (grid.nz - 2 * nairlayers) * grid.ny
+                    * floor(raypath[i].x[j]) + (grid.nz - 2 * nairlayers)
+                    * floor(raypath[i].y[j]) + floor(raypath[i].z[j])
+                    - nairlayers;
+                result(i) += raypath[i].len[j] * grid.h * Model.GetSlownesses().data()[offset];
+              }
+
+          }*/
+        std::copy(data.tcalc.begin(), data.tcalc.end(), result.begin());
         return result;
       }
 
@@ -163,7 +176,8 @@ namespace jiba
                     * floor(raypath[i].y[j]) + floor(raypath[i].z[j])
                     - nairlayers;
 
-                DerivMod(offset) += raypath[i].len[j] *grid.h * Misfit(i);
+                DerivMod(offset) += 2.0 * raypath[i].len[j] * grid.h
+                    * Misfit(i);
               }
           }
         return DerivMod;

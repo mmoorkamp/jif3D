@@ -24,6 +24,8 @@
 
 namespace jiba
   {
+    /** \addtogroup util General utility routines */
+    /* @{ */
     //! Add random gaussian noise to a vector of data
     /*! When inverting synthetic data, we usually want to add
      * noise to it to simulate some of the properties of real data. This function
@@ -62,8 +64,8 @@ namespace jiba
      * @param absmin The absolute minimum data value considered for error calculation, this reduced the influence of very small data
      * @return The vector of error estimates
      */
-    inline jiba::rvec ConstructError(const jiba::rvec &Data, const double relerror,
-        const double absmin = 0.0)
+    inline jiba::rvec ConstructError(const jiba::rvec &Data,
+        const double relerror, const double absmin = 0.0)
       {
         assert(relerror >= 0.0);
         assert(absmin >= 0.0);
@@ -87,7 +89,8 @@ namespace jiba
      * @param The relative error of the maximum tensor element
      * @return The vector of error estimates
      */
-    inline jiba::rvec ConstructMTError(const jiba::rvec &Data, const double relerror)
+    inline jiba::rvec ConstructMTError(const jiba::rvec &Data,
+        const double relerror)
       {
         assert(relerror >= 0.0);
         const size_t ndata = Data.size();
@@ -107,5 +110,6 @@ namespace jiba
           }
         return DataError;
       }
+  /* @} */
   }
 #endif /* NOISE_H_ */
