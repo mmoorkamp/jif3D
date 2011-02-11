@@ -520,6 +520,7 @@ INPUT                  = "Global" \
                          "Regularization" \
                          "MT" \
                          "Tomo" \
+                         "Joint" \
                          "docu.h" \
                         
 

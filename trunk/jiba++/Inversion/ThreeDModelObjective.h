@@ -33,7 +33,9 @@ namespace jiba
     class ThreeDModelObjective: public jiba::ObjectiveFunction
       {
     public:
+      //! We create a shorthand for the template parameter that determines the type of the forward calculation object
       typedef ThreeDCalculatorType CalculatorType;
+      //! The forward calculation class must contain a type definition that sets the type of the model object
       typedef typename CalculatorType::ModelType ModelType;
     private:
       //! The object that calculates the synthetic data its type is set by the template parameter
@@ -81,6 +83,7 @@ namespace jiba
        * As we provide an abstract interface here, the user has to make sure that the calculator
        * object yields a synthetic data vector with the same ordering as the observed data here, for
        * example by adding measurement points to the model object in the right order.
+       * @param Data A vector with real values containing the observed data
        */
       void SetObservedData(const jiba::rvec &Data)
         {
@@ -147,6 +150,13 @@ namespace jiba
         }
 
     public:
+      //! The constructor needs a forward calculation object as a parameter
+      /*! As this is a general objective function class for different types of forward calculations
+       * we need to pass the object that calculates the synthetic data as
+       * a parameter to the constructor. See the general description of
+       * this class for requirements on the forward calculation object.
+       * @param Calc The forward calculation object
+       */
       ThreeDModelObjective(const ThreeDCalculatorType &Calc);
       virtual ~ThreeDModelObjective();
       };

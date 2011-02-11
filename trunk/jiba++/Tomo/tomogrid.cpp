@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
     jiba::TomographyCalculator Calculator;
     jiba::rvec TravelTimes(Calculator.Calculate(SeisModel));
     double error = 0.0;
-    std::cout << "Traveltime error (ms): ";
+    std::cout << "Traveltime error (s): ";
     std::cin >> error;
     //if we want to add noise to the data
     if (error > 0.0)

@@ -14,6 +14,7 @@
 
 namespace jiba
   {
+    //we use these names when writing the model to a netcdf file
     static const std::string SlownessName = "Slowness";
     static const std::string SlownessUnit = "s/m";
 
@@ -53,6 +54,8 @@ namespace jiba
         const double z)
       {
         //transform the source coordinates from old model to real coordinates
+        //the coordinates of the receivers are changed by the implementation
+        //in the base class that we call below
         std::transform(SourcePosX.begin(), SourcePosX.end(),
             SourcePosX.begin(), boost::bind(std::plus<double>(), _1, XOrigin
                 - x));
@@ -71,7 +74,7 @@ namespace jiba
       {
 
         NcFile DataFile(filename.c_str(), NcFile::Replace);
-        //first write the 3D discretized part
+        //write the 3D discretized part
         WriteDataToNetCDF(DataFile, SlownessName, SlownessUnit);
 
       }
@@ -83,10 +86,20 @@ namespace jiba
         NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
         //read in the 3D gridded data
         ReadDataFromNetCDF(DataFile, SlownessName, SlownessUnit);
-        //check that the grid has equal sizes in all three dimensions
+
         const double CellSize = GetXCellSizes()[0];
+        //we can check that the grid has equal sizes in all three dimensions
+        //in some cases we use a seismic grid that does not conform to
+        //the requirements of the forward code, e.g. as an inversion grid
+        //that is then refined for the forward calculation, that is why
+        //we can turn of checking through the parameter checkgrid
         if (checkgrid)
           {
+            //all grid cells should have the same size, so we search for
+            // n = number of cells occurences of CellSize, if the search
+            //fails search_n returns the end iterator and we throw an exception
+            //we do this for all three spatial directions
+            //first for x
             if (std::search_n(GetXCellSizes().begin(), GetXCellSizes().end(),
                 GetXCellSizes().num_elements(), CellSize)
                 == GetXCellSizes().end())
@@ -94,6 +107,7 @@ namespace jiba
                 throw jiba::FatalException(
                     "Non-equal grid spacing in x-direction !");
               }
+            //then for y
             if (std::search_n(GetYCellSizes().begin(), GetYCellSizes().end(),
                 GetYCellSizes().num_elements(), CellSize)
                 == GetYCellSizes().end())
@@ -101,6 +115,7 @@ namespace jiba
                 throw jiba::FatalException(
                     "Non-equal grid spacing in y-direction !");
               }
+            //finally for z, in each cases the cell size we search for is the same
             if (std::search_n(GetZCellSizes().begin(), GetZCellSizes().end(),
                 GetZCellSizes().num_elements(), CellSize)
                 == GetZCellSizes().end())

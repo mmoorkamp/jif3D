@@ -113,11 +113,15 @@ int main()
     std::cout << "NTimes total: " << ntime << std::endl;
     size_t measindex = 0;
     double mindist = 0.0;
-    std::cout << "Minimum offset: ";
+    double minvel = 0.0;
+    const double maxvel = 10000;
+    std::cout << "Minimum offset [m]: ";
     std::cin >> mindist;
+    std::cout << "Minimum velocity [m/s]: ";
+    std::cin >> minvel;
     for (size_t i = 0; i < ntime; ++i)
       {
-        std::cout << RecIndex.at(i) << " " << ShotIndex.at(i) << std::endl;
+        //std::cout << RecIndex.at(i) << " " << ShotIndex.at(i) << std::endl;
         const size_t Key = MakeKey(RecIndex.at(i), ShotIndex.at(i));
         MyMap::iterator sriter = SourceRecMap.find(Key);
 
@@ -144,7 +148,8 @@ int main()
             double distance = std::sqrt(std::pow(sourceiter->second[0]
                 - sriter->second[0], 2) + std::pow(sourceiter->second[1]
                 - sriter->second[1], 2));
-            if (distance > mindist)
+            double currvel = distance/TravelTime.at(i);
+            if (distance > mindist &&  currvel > minvel && currvel < maxvel)
               {
                 Model.AddMeasurementPoint(sriter->second[0], sriter->second[1],
                     depth);

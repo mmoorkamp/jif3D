@@ -35,9 +35,11 @@
 
    - Boost numeric bindings from http://mathema.tician.de/dl/software/boost-numeric-bindings
    - netcdf from http://www.unidata.ucar.edu/software/netcdf/
+   - cuda from http://www.nvidia.com/object/cuda_home.html#
+
+These two libraries are optional and have to be activated in the code through appropriate pre-processor flags (see below).
    - atlas from http://math-atlas.sourceforge.net/
    - lapack from http://www.netlib.org/lapack/
-   - cuda from http://www.nvidia.com/object/cuda_home.html#
 
  Alternatively you can install all but cuda through the package manager on ubuntu 08/10.
  Depending on the path you chose to install the libraries to, you might
@@ -56,12 +58,16 @@
 
  gcc 4.2 under SuSE Linux 10.1 and 11.0,
  gcc 4.3 under ubuntu 8/10,
+ gcc 4.4 under ubuntu 10/04
  intel 11.0 under ubuntu 8/10
 
- Sun 5.10 is known to fail, this is an issue with partial template spezialization in
+ Sun 5.10 is known to fail, this is an issue with partial template specialization in
  the boost libraries.
 
- No tests have been performed under Windows.
+ Also, Visual Studio currently does not compile the code as we are using the c++ interface
+ for the netcdf library that has not been ported to Windows, yet. An possible alternative
+ is cygwin and the code should compile there. However, this has not been tested.
+
  *
  * \section pflags Preprocessor flags
  *

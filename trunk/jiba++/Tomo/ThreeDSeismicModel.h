@@ -176,7 +176,9 @@ namespace jiba
       //! Read the seismic model and all associated information from a netcdf file
       void ReadNetCDF(const std::string filename, bool checkgrid = true);
       ThreeDSeismicModel();
+      //! We define our own copy constructor
       ThreeDSeismicModel(const ThreeDSeismicModel &source);
+      //! We define our own copy operator
       ThreeDSeismicModel& operator=(const ThreeDSeismicModel& source);
       virtual ~ThreeDSeismicModel();
       };

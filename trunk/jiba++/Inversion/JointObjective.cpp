@@ -37,6 +37,7 @@ namespace jiba
         size_t totaldata = 0;
         const size_t nobjective = Objectives.size();
         IndividualFits.resize(nobjective);
+        //if we set verbose in the constructor
         //write out a description of the objective functions to the screen
         if (PrintMisfit)
           {
@@ -50,6 +51,9 @@ namespace jiba
         //also count how much data points we have in total
         for (size_t i = 0; i < nobjective; ++i)
           {
+            //the call to the Distributor object makes sure that each
+            //individual objective functions gets the right type of parameters
+            //converted from the inversion parameter vector
             IndividualFits.at(i) = Objectives.at(i)->CalcMisfit(Distributor(
                 Model, i));
             if (PrintMisfit)
