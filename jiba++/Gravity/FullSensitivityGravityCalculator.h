@@ -30,15 +30,17 @@ namespace jiba
     class FullSensitivityGravityCalculator: public jiba::CachedGravityCalculator
       {
     private:
+	//! The full sensitivity matrix G for the gravity measurements, we use it to calculate the forward response through d = G*m
       rmat Sensitivities;
-      //Calculates the raw gravity/FTG data from cached sensitivities without applying any transformation
+      //! Calculates the raw gravity/FTG data from cached sensitivities without applying any transformation
       virtual rvec CalculateRawData(const ThreeDGravityModel &Model);
-      //Calculates the raw gravity/FTG derivative from cached sensitivities without applying any transformation
+      //! Calculates the raw gravity/FTG derivative from cached sensitivities without applying any transformation
       virtual rvec CalculateRawLQDerivative(const ThreeDGravityModel &Model, const rvec &Misfit);
-      //Calculate a new model when no cached information is available or valid
+      //! Calculate a new model when no cached information is available or valid
       virtual rvec CalculateNewModel(const ThreeDGravityModel &Model);
-      //calculate Data with applied transformation when cached sensitivities are still valid
+      //! calculate Data with applied transformation when cached sensitivities are still valid
       virtual rvec CalculateCachedResult(const ThreeDGravityModel &Model);
+      //! calculate derivative of least squares objective function with applied transformation when cached sensitivities are still valid
       virtual rvec CachedLQDerivative(const ThreeDGravityModel &Model, const rvec &Misfit);
     public:
       //! return a read only copy of the sensitivity matrix, this guarantees that cache information is preserved

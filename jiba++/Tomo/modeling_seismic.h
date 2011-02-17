@@ -16,7 +16,7 @@ namespace jiba
     /** \addtogroup tomo Seismic tomography classes and functions */
     /* @{ */
 
-    /*! Parameters of the grid structure:*/
+    //! Parameters of the grid structure:
     class GRID_STRUCT
       {
     public:
@@ -37,8 +37,7 @@ namespace jiba
         }
       };
 
-    /*! Geometry of the  the seismic shots and receivers */
-
+    //! Geometry of the  the seismic shots and receivers
     class GEOMETRY
       {
     public:
@@ -56,7 +55,7 @@ namespace jiba
         }
       };
 
-    /*! Structure including informations about the seismic data*/
+    //! Structure including informations about the seismic data
     class DATA_STRUCT
       {
     public:
@@ -80,7 +79,7 @@ namespace jiba
         }
       };
 
-    /*! Structure for the ray paths*/
+    //! Structure for the ray paths
     class RP_STRUCT
       {
     public:

@@ -80,6 +80,7 @@ namespace jiba
     class mytoupper
       {
     private:
+      //! Storage for the locale, gets assigned in constructor to make use with algorithms easier
       const std::locale& loc;
     public:
       //! The constructor needs the locale to convert special characters properly
@@ -104,6 +105,7 @@ namespace jiba
     class mytolower
       {
     private:
+      //! Storage for the locale, gets assigned in constructor to make use with algorithms easier
       const std::locale& loc;
     public:
       //! The constructor needs the locale to convert special characters properly

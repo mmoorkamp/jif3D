@@ -27,31 +27,39 @@ namespace jiba
     class CachedGravityCalculator: public jiba::ThreeDGravityCalculator
       {
     private:
-      //have we performed a calculation before and build up cached information
+      //! Have we performed a calculation before and build up cached information
       bool HaveCache;
       //we have to store the model and measurement information of the previous
       //calculation, so we can decide whether the geometries have changed
+      //! The size of the model cells in x-direction for the previous calculations
       ThreeDGravityModel::t3DModelDim OldXSizes;
+      //! The size of the model cells in y-direction for the previous calculations
       ThreeDGravityModel::t3DModelDim OldYSizes;
+      //! The size of the model cells in z-direction for the previous calculations
       ThreeDGravityModel::t3DModelDim OldZSizes;
+      //! The measurement coordinates in x-direction for the previous calculations
       ThreeDGravityModel::tMeasPosVec OldMeasPosX;
+      //! The measurement coordinates in y-direction for the previous calculations
       ThreeDGravityModel::tMeasPosVec OldMeasPosY;
+      //! The measurement coordinates in z-direction for the previous calculations
       ThreeDGravityModel::tMeasPosVec OldMeasPosZ;
+      //! The thickness of the background layers for the previous calculation
       ThreeDGravityModel::tBackgroundVec OldBackgroundThick;
+      //! The density of the background layers for the previous calculation
       ThreeDGravityModel::tBackgroundVec OldBackgroundDens;
-      //copy the cell sizes from the current model to store them for caching
+      //! Copy the cell sizes from the current model to store them for caching
       void CopySizes(const ThreeDGravityModel::t3DModelDim &NewXSizes,
           const ThreeDGravityModel::t3DModelDim &NewYSizes,
           const ThreeDGravityModel::t3DModelDim &NewZSizes);
-      //copy the measurement positions from the current model to store them for caching
+      //! Copy the measurement positions from the current model to store them for caching
       void CopyMeasPos(const ThreeDGravityModel::tMeasPosVec &NewMeasPosX,
           const ThreeDGravityModel::tMeasPosVec &NewMeasPosY,
           const ThreeDGravityModel::tMeasPosVec &NewMeasPosZ);
-      //check whether the model geometry, i.e. cell sizes, has changed since the last calculation
+      //! Check whether the model geometry, i.e. cell sizes, has changed since the last calculation
       bool CheckGeometryChange(const ThreeDGravityModel &Model);
-      //check whether the measurement positions have changed since the last calculation
+      //! Check whether the measurement positions have changed since the last calculation
       bool CheckMeasPosChange(const ThreeDGravityModel &Model);
-      //check wether the 1D background has changed since the last calculation
+      //! Check wether the 1D background has changed since the last calculation
       bool CheckBackgroundChange(const ThreeDGravityModel &Model);
       //! The function declaration for the calculation of a new sensitivity matrix and rebuilding of caching information
       virtual rvec CalculateNewModel(const ThreeDGravityModel &Model) = 0;

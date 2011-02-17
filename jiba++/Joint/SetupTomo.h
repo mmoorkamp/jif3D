@@ -1,7 +1,7 @@
 //============================================================================
 // Name        : SetupTomo.h
 // Author      : Mar 2, 2010
-// Version     : 
+// Version     :
 // Copyright   : 2010, mmoorkamp
 //============================================================================
 
@@ -32,6 +32,7 @@ namespace jiba
     class SetupTomo
       {
     private:
+	//! A shared pointer to the objective function object for seismic tomography data
       boost::shared_ptr<jiba::ThreeDModelObjective<jiba::TomographyCalculator> >
           TomoObjective;
       //! The picking  error in ms to assume for construction of the data variance
@@ -39,6 +40,7 @@ namespace jiba
       //! Storage for the name of the refinement model, can optionally be set on the command line
       std::string FineModelName;
     public:
+	//! read only access to the objective function object for seismic tomography data
       const jiba::ThreeDModelObjective<jiba::TomographyCalculator> &GetTomoObjective()
         {
           return *TomoObjective;

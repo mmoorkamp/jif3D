@@ -395,18 +395,22 @@ namespace jiba
     class SectionTransform: public jiba::GeneralModelTransform
       {
     private:
-      size_t length;
+	//! The index of the first element to copy
       size_t startindex;
+      //! The index of the last element to copy
       size_t endindex;
     public:
+	//! Return the segment specified by the indices in the constructor from the full vector
       virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
         {
           return ublas::subrange(FullModel, startindex, endindex);
         }
+      //! The inverse transformation just returns the input vector
       virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
         {
           return FullModel;
         }
+      //! The transformation of the derivative simply returns the derivative passed into the function
       virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
           const jiba::rvec &Derivative) const
         {

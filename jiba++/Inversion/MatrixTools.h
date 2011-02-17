@@ -78,9 +78,13 @@ namespace jiba
     class GeneralizedInverse
       {
     private:
+      //! The singular values of the matrix G
       rvec s;
+      //! The data space eigenvectors of the matrix G
       rmat u;
+      //! The model space eigenvectors of the matrix G
       rmat vt;
+      //! The input matrix to the SVD gets overwritten by the algorithm, as we do not want this we store a copy of the sensitivity matrix
       rmat G;
     public:
       //! return the vector of generalized eigenvalues, no threshold is applied
@@ -107,7 +111,7 @@ namespace jiba
       //! The core calculation routine to calculate the generalized inverse
       void operator()(const rmat &Input, rmat &Inverse, const double lowthresh = 0.0,
           const double upthresh = 1.0);
-      //! The constructor just initializes everything to the default
+      //! The constructor just initialises everything to the default
       GeneralizedInverse():
         s(),u(),vt(),G()
         {
