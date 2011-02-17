@@ -38,10 +38,13 @@ namespace jiba
       * do the allocation once for all measurements
       * */
       double *d_xcoord, *d_ycoord, *d_zcoord;
+      //! Pointers for the cell size structures on the GPU
       double *d_xsize, *d_ysize, *d_zsize;
+      //! The pointer to the array of sensitivies on the GPU for the current tensor element
       double *d_result;
       //! We need a raw double pointer to store the sensitivities for  the current measurements, see CalcGridded
       double *currsens;
+      //! The number of elements in one row of the sensitivity matrix
       size_t currsenssize;
       //! The size of a CUDA execution block
       size_t blocksize;

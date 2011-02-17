@@ -14,25 +14,28 @@
 
 BOOST_AUTO_TEST_SUITE( Tomo_Objective_Test_Suite )
 
-void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
+jiba  ::rvec CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
     {
       Objective.CalcMisfit(Model);
       jiba::rvec Gradient = Objective.CalcGradient(Model);
+
+      std::ofstream gradfile("tomograd.out");
+      jiba::rvec FDGrad(Model.size(),0.0);
+      double Misfit = Objective.CalcMisfit(Model);
       for (size_t i = 0; i < Gradient.size(); ++i)
         {
-          double delta = Model(i) * 0.001;
+          double delta = Model(i) * 0.0001;
           jiba::rvec Forward(Model);
           jiba::rvec Backward(Model);
           Forward(i) += delta;
           Backward(i) -= delta;
-          double FDGrad = (Objective.CalcMisfit(Forward) - Objective.CalcMisfit(Backward))/(2*delta);
+          FDGrad(i) = (Objective.CalcMisfit(Forward) - Objective.CalcMisfit(Backward))/(2.0 * delta);
           //we have a problem here with small gradients
           //have to investigate more, switched off test for these cases for now
-          if (std::abs(Gradient(i)) > 100.0)
-            {
-              BOOST_CHECK_CLOSE(FDGrad,Gradient(i),0.001);
-            }
+          gradfile << i << " " << FDGrad(i) << " " << Gradient(i) << std::endl;
+          BOOST_CHECK_CLOSE(FDGrad(i),Gradient(i),0.001);
         }
+      return FDGrad;
     }
 
   BOOST_AUTO_TEST_CASE (derivative_test)
@@ -45,7 +48,7 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
       const double firstdepth = TomoModel.GetZCoordinates()[0];
       const double bottomdepth = TomoModel.GetZCoordinates()[zsize - 1];
       const double topvel = 1000.0;
-      const double bottomvel = 3000.0;
+      const double bottomvel = 5000.0;
       for (size_t i = 0; i < TomoModel.GetSlownesses().num_elements(); ++i)
         {
           double Depth = TomoModel.GetZCoordinates()[i % zsize];
@@ -54,32 +57,35 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
           TomoModel.SetSlownesses().origin()[i] = 1.0 / Velocity;
         }
 
-      const double minx = 150;
-      const double miny = 150;
-      const double maxx = 350;
-      const double maxy = 450;
+      const double minx = 50;
+      const double miny = 50;
+      const double maxx = 450;
+      const double maxy = 550;
       const double deltax = 100;
       const double deltay = 100;
-      const double z = 0.0;
+      const double measz = 50.0;
+      const double sourcez = 650;
       const size_t nmeasx = boost::numeric_cast<size_t>((maxx - minx) / deltax);
       const size_t nmeasy = boost::numeric_cast<size_t>((maxy - miny) / deltay);
       for (size_t i = 0; i <= nmeasx; ++i)
         {
           for (size_t j = 0; j <= nmeasy; ++j)
             {
-              TomoModel.AddMeasurementPoint(minx + i * deltax, miny + j
-                  * deltay, z);
-              TomoModel.AddSource(minx + i * deltax, miny + j * deltay, z);
+              TomoModel.AddSource(minx + i * deltax, miny + j * deltay, sourcez);
+              TomoModel.AddMeasurementPoint(minx + i * deltax, miny + j * deltay, measz);
             }
         }
+
       const size_t nsource = TomoModel.GetSourcePosX().size();
-      for (size_t i = 0; i < nsource; ++i)
+      const size_t nmeas = TomoModel.GetMeasPosX().size();
+      for (size_t i = 0; i < nmeas; ++i)
         {
           for (size_t j = 0; j < nsource; ++j)
             {
               if (j != i)
+
                 {
-                  TomoModel.AddMeasurementConfiguration(i, j);
+                  TomoModel.AddMeasurementConfiguration(j, i);
                 }
             }
         }
@@ -97,9 +103,10 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
       TomoObjective.SetObservedData(ObservedTimes);
       TomoObjective.SetFineModelGeometry(TomoModel);
       TomoObjective.SetCoarseModelGeometry(TomoModel);
+      TomoModel.WriteVTK("tomotest.vtk");
       jiba::rvec TomoCovar(ObservedTimes.size());
-      //we assume a general error of 5 ms for the seismic data
-      std::fill(TomoCovar.begin(), TomoCovar.end(), 5.0);
+      //we assume a general error of 50 ms for the seismic data
+      std::fill(TomoCovar.begin(), TomoCovar.end(), 0.05);
       TomoObjective.SetDataCovar(TomoCovar);
       //TomoObjective->SetPrecondDiag(PreCond);
       double ZeroMisfit = TomoObjective.CalcMisfit(InvModel);
@@ -110,11 +117,20 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
       jiba::rvec SynthData = TomoObjective.GetSyntheticData();
       BOOST_CHECK(ObservedTimes.size() == SynthData.size());
       BOOST_CHECK(std::equal(ObservedTimes.begin(),ObservedTimes.end(),SynthData.begin()));
+      //check the gradient by perturbing the travel times
       ObservedTimes *= 1.1;
       TomoObjective.SetObservedData(ObservedTimes);
       double Misfit = TomoObjective.CalcMisfit(InvModel);
       BOOST_CHECK(Misfit > 0.0);
-      CheckGradient(TomoObjective, InvModel);
+
+      jiba::rvec Gradient = TomoObjective.CalcGradient(InvModel);
+      std::copy(Gradient.begin(),Gradient.end(),TomoModel.SetSlownesses().origin());
+      TomoModel.WriteVTK("tomograd.vtk");
+
+      jiba::rvec FDGrad = CheckGradient(TomoObjective, InvModel);
+      std::copy(FDGrad.begin(),FDGrad.end(),TomoModel.SetSlownesses().origin());
+      TomoModel.WriteVTK("tomofd.vtk");
+
     }
 
   BOOST_AUTO_TEST_SUITE_END()

@@ -372,7 +372,8 @@ int main(int argc, char *argv[])
         jiba::rvec MTInvData(MTSetup.GetMTObjective().GetSyntheticData());
         jiba::WriteImpedancesToNetCDF(modelfilename + "inv_mt.nc",
             MTModel.GetFrequencies(), MTModel.GetMeasPosX(),
-            MTModel.GetMeasPosY(), MTModel.GetMeasPosZ(), MTInvData);
+            MTModel.GetMeasPosY(), MTModel.GetMeasPosZ(), MTInvData,
+            MTSetup.GetMTObjective().GetDataCovar());
       }
 
     std::ofstream datadiffile("data.diff");

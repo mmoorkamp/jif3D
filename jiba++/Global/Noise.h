@@ -38,14 +38,16 @@ namespace jiba
     inline void AddNoise(jiba::rvec &Data, const double relerror,
         const double abserror = 0)
       {
-
+        //create a random number generator object without specifying the distribution
         boost::lagged_fibonacci607 generator(
             static_cast<unsigned int> (std::time(0)));
         const size_t ndata = Data.size();
+        //create an error estimate for each datum
         for (size_t i = 0; i < ndata; ++i)
           {
             const double error = std::max(std::abs(Data(i)) * relerror,
                 abserror);
+            //construct a gaussian distributiuon based on mean and standard deviation
             boost::normal_distribution<> noise_dist(Data(i), error);
             boost::variate_generator<boost::lagged_fibonacci607&,
                 boost::normal_distribution<> > noise(generator, noise_dist);
@@ -60,7 +62,7 @@ namespace jiba
      * This function provides such functionality and
      * takes care of issues with zero or very small data.
      * @param Data The vector of data elements
-     * @param errorlevel The minimum relative error for each datum
+     * @param relerror The minimum relative error for each datum
      * @param absmin The absolute minimum data value considered for error calculation, this reduced the influence of very small data
      * @return The vector of error estimates
      */
@@ -86,7 +88,7 @@ namespace jiba
      * for a given frequency and site as the error estimate for all other tensor elements at that
      * frequency and site. This avoids problems with small diagonal elements.
      * @param Data A vector containing the MT data, we assume that 8 consecutive real numbers form one complex impedance tensor
-     * @param The relative error of the maximum tensor element
+     * @param relerror The relative error of the maximum tensor element
      * @return The vector of error estimates
      */
     inline jiba::rvec ConstructMTError(const jiba::rvec &Data,
