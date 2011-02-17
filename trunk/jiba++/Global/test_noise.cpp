@@ -22,9 +22,12 @@
 using namespace boost::accumulators;
 
 BOOST_AUTO_TEST_SUITE( Noise_Test_Suite )
-
+//check that the function to add noise to synthetic data
+//produces a Gaussian distribution with the required parameters
+//this test can fail occassionally due to the finite sample size
 BOOST_AUTO_TEST_CASE  (addnoise)
     {
+      //we use a million data points
       const size_t ndata = 1e6;
       jiba::rvec Data(ndata);
       std::fill_n(Data.begin(),ndata,1.0);

@@ -142,10 +142,15 @@ namespace jiba
       {
         assert(bg_conductivities.size() == bg_thicknesses.size());
         std::ofstream outfile(filename.c_str());
+        //write out some header information
         outfile << "Version_of_X3D code (yyyy-mm-dd)\n";
         outfile << "2006-06-06\n\n";
+        //all cells have the same siyes in each horizontal direction
+        //so we write only the first value, the access function
+        //guarantees that all values in the size arrays are identical
         outfile << "Dx (m)       Dy (m)\n";
         outfile << XCellSizes[0] << "   " << YCellSizes[0] << "\n\n";
+        //hten we write information about the surrounding backgroud
         outfile << "Background \n Thickness(m) \n";
         const double sigma_imag = 0.0;
         const double rel_eps = 1.0;
@@ -156,6 +161,7 @@ namespace jiba
             << std::setprecision(5) << 0.0 << std::setw(10)
             << std::setprecision(5) << 1.0 << std::setw(10)
             << std::setprecision(5) << 1.0 << "\n";
+        //and then we write the background layers we specified in the model
         for (size_t i = 0; i < bg_thicknesses.size(); ++i)
           {
             outfile << std::setw(10) << std::setprecision(5)
@@ -165,6 +171,8 @@ namespace jiba
                 << std::setprecision(5) << rel_eps << std::setw(15)
                 << std::setprecision(5) << rel_mu << "\n";
           }
+        //there are some options in x3d that we do not support
+        //so we always answer no
         outfile << "$\n imaginary_part_of_the_anomalous_conductivity \n N \n\n";
         outfile << " anomalous_dielectric_permittivity\n N \n\n";
         outfile
@@ -176,10 +184,13 @@ namespace jiba
 
         double currdepth = 0.0;
         const size_t nzlayers = ZCellSizes.size();
+        //there can only be 1024 character per line in the ascii file
+        //so we format the entries for high precision and adjust the number of values per line
         const size_t valuesperline = std::min(static_cast<size_t> (35),
             static_cast<size_t> (XCellSizes.size() + 1));
         const size_t valuewidth = 27;
         const size_t valueprec = 18;
+        //write out the model grid layer by layer in z-direction
         for (size_t i = 0; i < nzlayers; ++i)
           {
             outfile << "zA(m)  ( 'Depth_to_the_anomaly_layer' ) \n "
@@ -192,6 +203,7 @@ namespace jiba
             outfile << std::resetiosflags(std::ios::scientific)
                 << std::setprecision(5) << ZCellSizes[i] << "\n\n";
             currdepth += ZCellSizes[i];
+            //we do not apply any scaling to the conductivity values, but write them out as is
             outfile
                 << "Scale  ( the ARRAY will be multiplied by 'this_Scale' ) \n 1.0 \n\n";
             outfile << "First and last cells_in_X-direction \n";
@@ -219,16 +231,17 @@ namespace jiba
         outfile << " 1 " << XCellSizes.size() << "\n\n";
         outfile << "   First and last cells in Y-direction (nyOf, nyOl)    \n";
         outfile << " 1 " << YCellSizes.size() << "\n\n";
-        //at the moment we always set the z component of the site location to zero
-        //this should be changed
+        //write out the depth at which the sites are located
+        //we assume that all sites are at the same depth
         outfile << "   zO(m)  \n" << ObservationDepth << "\n\n";
+        //the first cell always has the coordinate 0
         outfile
             << "Binding_cell_in_X-direction     X-coordinate of centre of Binding cell (m)  \n";
-        outfile << " 1                              0.0\n";
+        outfile << " 1                             " << XCellSizes[0]/2.0 << " \n";
         outfile
             << "Binding_cell_in_Y-direction     Y-coordinate of centre of Binding cell (m) \n";
-        outfile << " 1                              0.0\n";
-
+        outfile << " 1                             " << YCellSizes[0]/2.0 << " \n";
+        //if something went wrong during writing we throw an exception
         if (outfile.bad())
           {
             throw jiba::FatalException("Problem writing model file.");
