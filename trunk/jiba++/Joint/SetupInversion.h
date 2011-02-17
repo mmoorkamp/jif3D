@@ -1,7 +1,7 @@
 //============================================================================
 // Name        : SetupInversion.h
 // Author      : Mar 2, 2010
-// Version     : 
+// Version     :
 // Copyright   : 2010, mmoorkamp
 //============================================================================
 
@@ -28,6 +28,7 @@ namespace jiba
     class SetupInversion
       {
     private:
+	//! The number of correction pairs for the L-BFGS optimization algorithm
       int corrpairs;
     public:
       //! Setup the possible command line options

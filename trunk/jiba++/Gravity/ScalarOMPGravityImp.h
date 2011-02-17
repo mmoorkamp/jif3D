@@ -23,7 +23,7 @@ namespace jiba
     class ScalarOMPGravityImp: public jiba::ThreeDGravityImplementation
       {
     private:
-      // we calculate scalar data, so we have one data point per site
+      //! We calculate scalar data, so we have one data point per site
       static const size_t ndatapermeas = 1;
       //! Implement the calculation of the background response
       virtual rvec CalcBackground(const size_t measindex, const double xwidth, const double ywidth,

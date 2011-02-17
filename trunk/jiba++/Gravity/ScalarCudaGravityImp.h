@@ -36,11 +36,11 @@ namespace jiba
       // we need a raw double pointer to store the sensitivities for
       // the current measurements, see CalcGridded
       double *currsens;
-      //the size of the current sensitivity row
+      //! The size of the current sensitivity row
       size_t currsenssize;
-      //the size of a CUDA execution block
+      //! The size of a CUDA execution block
       size_t blocksize;
-      // This is a scalar calculation so we get one value per measurement
+      //! This is a scalar calculation so we get one value per measurement
       static const size_t ndatapermeas = 1;
       //! Calculate the response of the background, currently this is done on the CPU
       virtual rvec CalcBackground(const size_t measindex, const double xwidth,
@@ -49,7 +49,7 @@ namespace jiba
       //! Calculate the response of the gridded part, this is done on the GPU with CUDA
       virtual rvec CalcGridded(const size_t measindex,
           const ThreeDGravityModel &Model, rmat &Sensitivities);
-      // This class cannot be copied, so copy constructor and assignment are private
+      //! This class cannot be copied, so copy constructor and assignment are private
       jiba::ScalarCudaGravityImp &operator=(const jiba::ScalarCudaGravityImp&);
       ScalarCudaGravityImp(const jiba::ScalarCudaGravityImp&);
     public:

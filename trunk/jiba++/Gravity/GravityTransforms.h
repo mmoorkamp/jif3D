@@ -23,21 +23,23 @@ namespace jiba
     class FTGInvariant: public VectorTransform
       {
     private:
-      //we expect 9 tensor elements at each call
+      //! we expect 9 tensor elements at each call
       static const size_t ninput = 9;
-      //we return one invariant at each call
+      //! we return one invariant as output at each call
       static const size_t noutput = 1;
-      //calculate the invariant from 9 observations
+      //! calculate the invariant from 9 observations
       double CalcInvariant(const jiba::rvec &Data)
         {
           return Data(0) * Data(4) + Data(4) * Data(8) + Data(0) * Data(8)
               - Data(3) * Data(1) - Data(7) * Data(5) - Data(2) * Data(6);
         }
     public:
+	//! Return the size of the input vector this class expects
       virtual size_t GetInputSize()
         {
           return ninput;
         }
+      //! Return the size of the input vector this class will yield
       virtual size_t GetOutputSize()
         {
           return noutput;

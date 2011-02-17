@@ -71,14 +71,17 @@ namespace jiba
       //! The thicknesses of the background layers
       tBackgroundVec bg_thicknesses;
     public:
+	//! Set the siyes of the grid cells in x-direction in m
       t3DModelDim &SetXCellSizes()
         {
           return ThreeDModelBase::SetXCellSizes();
         }
+      //! Set the siyes of the grid cells in y-direction in m
       t3DModelDim &SetYCellSizes()
         {
           return ThreeDModelBase::SetYCellSizes();
         }
+      //! Set the siyes of the grid cells in z-direction in m
       t3DModelDim &SetZCellSizes()
         {
           return ThreeDModelBase::SetZCellSizes();
@@ -127,6 +130,7 @@ namespace jiba
       //! Read an igmas xyz model file
       void ReadIgmas(const std::string filename);
       ThreeDGravityModel();
+      //! We define our own copy constructor
       ThreeDGravityModel(const ThreeDGravityModel &source);
       virtual ~ThreeDGravityModel();
       //! We have a copy operator for other Gravity models

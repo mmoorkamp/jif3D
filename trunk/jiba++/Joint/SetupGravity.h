@@ -1,7 +1,7 @@
 //============================================================================
 // Name        : SetupGravity.h
 // Author      : Mar 1, 2010
-// Version     : 
+// Version     :
 // Copyright   : 2010, mmoorkamp
 //============================================================================
 
@@ -30,37 +30,51 @@ namespace jiba
     class SetupGravity
       {
     private:
-      // The relative error for the scalar data to assume for construction of the data variance
+      //! The relative error for the scalar data to assume for construction of the data variance
       double scalrelerr;
-      // The relative error for the ftg data to assume for construction of the data variance
+      //! The relative error for the ftg data to assume for construction of the data variance
       double ftgrelerr;
-      // The minimum error for the scalar data to assume for construction of the data variance
+      //! The minimum error for the scalar data to assume for construction of the data variance
       double scalminerr;
-      // The minimum error for the ftg data to assume for construction of the data variance
+      //! The minimum error for the ftg data to assume for construction of the data variance
       double ftgminerr;
+      //! Stores the grid for the gravity model and the starting model
       jiba::ThreeDGravityModel GravModel;
+      //! Possible pointer to the scalar gravity objective function, gets assigned below depending on user input
       boost::shared_ptr<jiba::ThreeDModelObjective<DiskGravityCalculator> >
           ScalGravObjective;
+      //! Possible pointer to the tensor gravity objective function, gets assigned below depending on user input
       boost::shared_ptr<jiba::ThreeDModelObjective<DiskGravityCalculator> >
           FTGObjective;
+      //! Does the user want scalar gravity calculations and have we set up everything?
       bool HaveScal;
+      //! Does the user want tensor gravity calculations and have we set up everything?
       bool HaveFTG;
     public:
+	 //! Does the user want scalar gravity calculations and have we set up everything?
       bool GetHaveScal() const
         {
           return HaveScal;
         }
+      //! Does the user want tensor gravity calculations and have we set up everything?
       bool GetHaveFTG() const
         {
           return HaveFTG;
         }
+      //! read-only access to the objective function for scalar gravity data
       const jiba::ThreeDModelObjective<DiskGravityCalculator> &GetScalGravObjective()
         {
           return *ScalGravObjective;
         }
+      //! read-only access to the objective function for tensor gravity data
       const jiba::ThreeDModelObjective<DiskGravityCalculator> &GetFTGObjective()
         {
           return *FTGObjective;
+        }
+      //! Return the gravity model that was read in
+      const jiba::ThreeDGravityModel &GetModel()
+        {
+          return GravModel;
         }
       //! Return an options descriptions object for boost::program_options that contains information about gravity options
       po::options_description SetupOptions();
@@ -78,11 +92,6 @@ namespace jiba
           jiba::JointObjective &Objective, boost::shared_ptr<
               jiba::GeneralModelTransform> &Transform,
           boost::filesystem::path TempDir = boost::filesystem::current_path());
-      //! Return the gravity model that was read in
-      const jiba::ThreeDGravityModel &GetModel()
-        {
-          return GravModel;
-        }
       SetupGravity();
       virtual ~SetupGravity();
       };

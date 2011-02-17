@@ -1,7 +1,7 @@
 //============================================================================
 // Name        : SetupMT.h
 // Author      : Mar 1, 2010
-// Version     : 
+// Version     :
 // Copyright   : 2010, mmoorkamp
 //============================================================================
 
@@ -31,6 +31,7 @@ namespace jiba
     class SetupMT
       {
     private:
+	//! The objective function object for magnetotelluric data using X§D as a forward engine
       boost::shared_ptr<jiba::ThreeDModelObjective<jiba::X3DMTCalculator> >
           MTObjective;
       //! The relative data error to assume for construction of the data variance
@@ -40,6 +41,7 @@ namespace jiba
       //! The object containing the geometry of the MT inversion model, has to match the geometry of the starting model
       jiba::X3DModel MTModel;
     public:
+	//! Get read-only access to the objective function object, for example to output misfit information
       const jiba::ThreeDModelObjective<jiba::X3DMTCalculator> &GetMTObjective()
         {
           return *MTObjective;
@@ -52,6 +54,7 @@ namespace jiba
        * @param vm The variable map from boost::program_options that contains the actually set options
        * @param Objective An existing JointObjective object that the newly created MT objective is added to
        * @param Transform A transformation object to transform generalized to physical parameters
+       * @param TempDir Set the directory to which all temporary files are written, this directory must exist
        * @return True if the weight for  the MT objective is greater zero, i.e. we added an objective function to JointObjective, false otherwise
        */
       bool

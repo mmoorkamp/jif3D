@@ -44,6 +44,7 @@ namespace jiba
     class ThreeDGravityCalculator
       {
     public:
+      //! We want to use this class with the ThreeDObjective function class template, so we need to define ModelType as the class that contains the forward model
       typedef ThreeDGravityModel ModelType;
     private:
       /*! We need a structure to hold the sensitivities for

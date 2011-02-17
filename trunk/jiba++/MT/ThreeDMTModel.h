@@ -58,6 +58,7 @@ namespace jiba
       //! Other models will be copied by the copy operator for the base class
       ThreeDMTModel& operator= (const ThreeDModelBase& source);
       ThreeDMTModel();
+      //! As we defined a copy operator, we also need a copy constructor
       ThreeDMTModel(const ThreeDMTModel &source);
       virtual ~ThreeDMTModel();
       };

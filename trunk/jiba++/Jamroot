@@ -1,6 +1,7 @@
 project 
     : requirements <include>/usr/local/include <include>/usr/local/R-2.6.2/include 
         <include>/usr/local/cuda/include
+        <include>/usr/local/boost_1_40_0
         <threading>multi 
         <define>BIND_FORTRAN_LOWERCASE_UNDERSCORE 
     	<variant>release:<define>NDEBUG  
