@@ -62,6 +62,7 @@ BOOST_AUTO_TEST_CASE(test_sign)
 
   BOOST_AUTO_TEST_CASE(test_normprod)
     {
+      //check that our normed scalar product function works correctly
       const size_t nelements = 1010;
       jiba::rvec a(nelements), b(nelements), NormDiag(nelements);
       std::generate_n(a.begin(),nelements, drand48);

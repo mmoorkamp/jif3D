@@ -15,6 +15,7 @@
 
 BOOST_AUTO_TEST_SUITE( Interpolation_Test_Suite )
 
+//check that the interpolation correctly works for a quadratic function
 BOOST_AUTO_TEST_CASE(basic_quad_inter)
       {
        //we try a number of different random quadratic functions
