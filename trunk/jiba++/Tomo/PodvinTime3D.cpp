@@ -586,16 +586,14 @@ T[0][0][0]=%g\n",*HS,*T);
 
     /*------------------------------------------------Init_nearest()------------*/
 
+    /*! initialize the 8|12|18 nearest neighbour nodes of the source    */
+    /*! according to source position (inside a mesh or at a boundary).  */
+    /*! WARNING: errors are maximal when the source is located close to */
+    /*! a grid-point. Best configurations are close to the centre of a  */
+    /*! mesh face, or of a mesh. Errors increase (anisotropically) when */
+    /*! the source gets close to a grid-point. Better use the grid-     */
+    /*! point itself as the source in such case...                      */
     void PodvinTime3D::init_nearest(void)
-
-    /*! \fn static void init_nearest(void)
-     *  initialize the 8|12|18 nearest neighbour nodes of the source    */
-    /* according to source position (inside a mesh or at a boundary).  */
-    /* WARNING: errors are maximal when the source is located close to */
-    /* a grid-point. Best configurations are close to the centre of a  */
-    /* mesh face, or of a mesh. Errors increase (anisotropically) when */
-    /* the source gets close to a grid-point. Better use the grid-     */
-    /* point itself as the source in such case...                      */
       {
         int x, y, z;
         float distx, disty, distz;

@@ -35,14 +35,23 @@ namespace jiba
     class SetupCoupling
       {
     private:
+      //! The transformation between generalized model parameters and slowness
       boost::shared_ptr<jiba::GeneralModelTransform> SlowTrans;
+      //! The transformation between generalized model parameters and conductivity
       boost::shared_ptr<jiba::GeneralModelTransform> CondTrans;
+      //! The transformation between generalized model parameters and density
       boost::shared_ptr<jiba::GeneralModelTransform> DensTrans;
+      //! The minimal conductivity in S/m
       double mincond;
+      //! The maximum conductivity in S/m
       double maxcond;
+      //! The minimum slowness in s/m
       double minslow;
+      //! The maximum slowness in s/m
       double maxslow;
+      //! The minimum density in g/cm3
       double mindens;
+      //! The maximum density in g/cm3
       double maxdens;
     public:
       //! Return an options descriptions object for boost::program_options that contains information about options for coupling the methods
