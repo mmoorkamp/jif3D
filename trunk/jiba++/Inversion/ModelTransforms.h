@@ -122,7 +122,7 @@ namespace jiba
         }
       };
 
-    //! Change an unconstrained optimization problem to a constrained optimization problem throug a tanh transformation
+    //! Change an unconstrained optimization problem to a constrained optimization problem through a tanh transformation
     /*! We often want to constrain the range of possible values in our optimization problem between an upper and
      * a lower limit. Instead of using a constrained optimization method, we use this transformation
      * \f$ m^{\star} =  \mbox{atanh} \left(2.0 * \frac{m - m_{min}} {m_{max} - m_{min}} \right) \f$ between the generalized
@@ -152,6 +152,10 @@ namespace jiba
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
+              if (FullModel(i) >= max || FullModel(i) <= min )
+        	  {
+        	    std::cerr << i << " " << FullModel(i) << " " << max << " " << min << std::endl;
+        	  }
               const double argument = 2.0 * (FullModel(i) - min) / (max - min)
                   - 1;
               Output(i) = boost::math::atanh(argument);
