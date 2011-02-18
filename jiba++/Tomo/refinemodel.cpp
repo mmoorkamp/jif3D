@@ -23,7 +23,7 @@ int main()
     std::string modelfilename = jiba::AskFilename("Model Filename: ");
     //and then create an object containing the old model
     jiba::ThreeDSeismicModel TomoModel;
-    TomoModel.ReadNetCDF(modelfilename);
+    TomoModel.ReadNetCDF(modelfilename,false);
 
     //seismic models have to have an equally spaced grid in all directions
     //so we only read in one grid size in m
