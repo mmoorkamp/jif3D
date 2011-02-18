@@ -1,9 +1,12 @@
 #!/bin/bash
+#find necessary binaries to copy to a different system e.g. a cluster
+#find all dynamic libraries in the release subdirectories
 find -wholename *gcc-4.4.3*release*.so -exec cp '{}' ~/jiba_dist \;
+#copy a few selcted executables to the dsitribution directory
 cp ~/workspace/jiba++/Joint/bin/gcc-4.4.3/release/threading-multi/jointinv ~/jiba_dist
 cp ~/workspace/jiba++/Tomo/bin/gcc-4.4.3/release/threading-multi/tomogrid ~/jiba_dist
 cp ~/workspace/jiba++/Hacks/bin/gcc-4.4.3/release/threading-multi/mtinv ~/jiba_dist
-
+#change the dynamic library path so that the executable find the .so files 
 chrpath -r /home/mmoorkamp/jiba_dist ~/jiba_dist/jointinv
 chrpath -r /home/mmoorkamp/jiba_dist ~/jiba_dist/tomogrid
 chrpath -r /home/mmoorkamp/jiba_dist ~/jiba_dist/mtinv

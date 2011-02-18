@@ -10,6 +10,13 @@
 #include "../Gravity/MinMemGravityCalculator.h"
 #include "../Gravity/ThreeDGravityFactory.h"
 
+/*! \file time_gravity_size.cpp
+ * This program can be used to benchmark the different methods for calculating
+ * scalar and tensor gravity data as a function of model size. Different methods
+ * can be set by options on the command line. To get a list of options type
+ * time_gravity_size --help.
+ */
+
 void MakeTestModel(jiba::ThreeDGravityModel &Model, const size_t size)
   {
     Model.SetXCellSizes().resize(boost::extents[size]);
@@ -48,7 +55,7 @@ void MakeTestModel(jiba::ThreeDGravityModel &Model, const size_t size)
 namespace po = boost::program_options;
 int main(int ac, char* av[])
   {
-
+  //set up the command line options
     po::options_description desc("Allowed options");
     desc.add_options()("help", "produce help message")("scalar",
         "Perform scalar calculation [default]")("ftg",
@@ -135,6 +142,7 @@ int main(int ac, char* av[])
 
     std::ofstream outfile(filename.c_str());
     std::cout << " Starting calculations. " << std::endl;
+    // we calculate gravity data for a number of different grid sizes
     for (size_t i = 0; i < nruns; ++i)
       {
         const size_t modelsize = (i + 1) * 2;
@@ -143,6 +151,8 @@ int main(int ac, char* av[])
 
         double rawruntime = 0.0;
         double cachedruntime = 0.0;
+        //for each grid size we perform several runs and average the run time
+        //to reduce the influence from other processes running on the system
         for (size_t j = 0; j < nrunspersize; ++j)
           {
             rawruntime = 0.0;
@@ -156,6 +166,8 @@ int main(int ac, char* av[])
             boost::posix_time::ptime firstendtime =
                 boost::posix_time::microsec_clock::local_time();
             rawruntime += (firstendtime - firststarttime).total_microseconds();
+            //if we want to compare to the time using caching we calculate
+            //a cached result right after the original run
             if (wantcached)
               {
                 boost::posix_time::ptime secondstarttime =

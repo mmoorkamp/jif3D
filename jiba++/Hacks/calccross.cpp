@@ -1,13 +1,19 @@
 //============================================================================
 // Name        : calccross.cpp
 // Author      : Sep 29, 2010
-// Version     : 
+// Version     :
 // Copyright   : 2010, mmoorkamp
 //============================================================================
 
 #include "../Global/FileUtil.h"
 #include "../Regularization/CrossGradient.h"
 #include "../Tomo/ThreeDSeismicModel.h"
+
+/*! \file calccross.cpp
+ * Calculate the cross-gradient constraint for each model cell between two models.
+ * For simplicity the two input models have to be seismic models and we do not
+ * consider any model covariances.
+ */
 
 int main()
   {
