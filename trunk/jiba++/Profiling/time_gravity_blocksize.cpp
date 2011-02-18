@@ -12,6 +12,13 @@
 
 using namespace boost::assign;
 
+
+
+/*! \file time_gravity_blocksize.cpp
+ * This program shows the execution time for the gavity forward calculation
+ * using CUDA for a fixed model size, but different CUDA thread block sizes.
+ */
+
 void MakeTestModel(jiba::ThreeDGravityModel &Model, const size_t size)
   {
     Model.SetXCellSizes().resize(boost::extents[size]);

@@ -1,5 +1,6 @@
 #!/bin/bash
-
+#prepare all files for release to another system
+#collect all source files and build files
 find -name "*.h" > distfiles
 find -name "*.hpp" >> distfiles
 find -name "*.cpp" >> distfiles
@@ -8,6 +9,6 @@ find -name "Jam*" >> distfiles
 find -name "*.jam" >> distfiles
 find -name "*.for" >> distfiles
 echo "README" >> distfiles
-echo "Doxyfile" >> distfiles
-
+find -name "Doxyfile.*" >> distfiles
+#create a tar archive with the files listed above
 tar cf jiba.tar -T distfiles 
