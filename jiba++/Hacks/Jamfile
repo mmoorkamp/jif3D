@@ -17,6 +17,7 @@ exe joinpicks : joinpicks.cpp  ../Global  ../Tomo ..//boost_filesystem : <includ
 exe srcrecdist : srcrecdist.cpp  ../Global  ../Tomo ..//boost_filesystem : <include>. ;
 exe calccross : calccross.cpp  ../Global  ../Tomo ../Regularization ../Inversion ..//boost_filesystem : <include>. ;
 exe convertmtt : convertmtt.cpp   ../Global ../MT ..//boost_filesystem : <include>. ;
+exe writemtt : writemtt.cpp   ../Global ../MT ..//boost_filesystem : <include>. ;
 exe grav_jointinv : grav_jointinv.cpp  joint ../Joint ../MT : <include>. ;
 exe mergetomo : mergetomo.cpp  ../Tomo  ../Global : <include>. ;
 exe eikonal : eikonal.cpp  ../Tomo  ../Global : <include>. ;

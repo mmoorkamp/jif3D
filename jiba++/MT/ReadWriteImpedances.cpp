@@ -6,15 +6,17 @@
 //============================================================================
 
 #include <fstream>
+#include <iomanip>
 #include <boost/cast.hpp>
 #include "../Global/FatalException.h"
 #include "../Global/NumUtil.h"
+#include "../Global/convert.h"
 #include "../ModelBase/NetCDFTools.h"
 #include "ReadWriteImpedances.h"
 
 namespace jiba
   {
-
+    using namespace std;
     const std::string FreqDimName = "Frequency";
 
     //write one compoment of the impedance tensor to a netcdf file
@@ -108,7 +110,7 @@ namespace jiba
             6);
         WriteImpedanceComp(DataFile, StatNumDim, FreqDim, Impedances, "Zyy_im",
             7);
-        //now we deal with the errors, if no parameter has been explicitely passed
+        //now we deal with the errors, if no parameter has been explicitly passed
         //Errors is empty, so we just fill the vector with zeros
         jiba::rvec ZErr(Errors);
         if (ZErr.empty())
@@ -246,4 +248,95 @@ namespace jiba
             throw jiba::FatalException("File not found: " + filename);
           }
       }
+
+
+    void WriteImpedancesToMtt(const std::string &filenamebase,
+	        std::vector<double> &Frequencies, jiba::rvec &Imp,
+	        jiba::rvec &Err)
+          {
+	const double convfactor = 4.0 * 1e-4 * acos(-1.0);
+	jiba::rvec Impedances = 1.0/convfactor * Imp;
+	jiba::rvec Errors = 1.0/convfactor * Err;
+	const size_t nfreq = Frequencies.size();
+	const size_t nimp = Impedances.size();
+	    const size_t ndatapersite = nfreq * 8;
+	    const size_t nsites =  nimp / ndatapersite;
+	    assert (nimp % ndatapersite == 0);
+	    for (size_t i = 0; i < nsites; ++i)
+		{
+
+
+            ofstream outfile;
+            std::string currfilename = filenamebase + jiba::stringify(i) + ".mtt";
+            outfile.open(currfilename.c_str());
+
+            for (unsigned int j = 0; j < nfreq; ++j) //write mtt-file
+              {
+        	const size_t startindex = (j * nsites + i) * 8;
+                    outfile << setw(9) << setfill(' ') << setprecision(4)
+                        << setiosflags(ios::scientific) << Frequencies.at(j);
+                    outfile << "  " << resetiosflags(ios::scientific)
+                        << setprecision(5) <<  " 1 \n";
+
+                    outfile << setw(9) << setfill(' ') << setprecision(4)
+                        << setiosflags(ios::fixed) << Impedances(startindex)
+                        << " ";
+                    outfile << setw(9) << setfill(' ') << setprecision(4)
+                        << setiosflags(ios::fixed) << Impedances(startindex + 1)
+                        << " ";
+                    outfile << setw(9) << setfill(' ') << setprecision(4)
+                        << setiosflags(ios::fixed) << Impedances(startindex + 2)
+                        << " ";
+                    outfile << setw(9) << setfill(' ') << setprecision(4)
+                        << setiosflags(ios::fixed) << Impedances(startindex + 3)
+                        << " ";
+                    outfile << setw(9) << setfill(' ') << setprecision(4)
+                        << setiosflags(ios::fixed) << Impedances(startindex + 4)
+                        << " ";
+                    outfile << setw(9) << setfill(' ') << setprecision(4)
+                        << setiosflags(ios::fixed) << Impedances(startindex + 5)
+                        << " ";
+                    outfile << setw(9) << setfill(' ') << setprecision(4)
+                        << setiosflags(ios::fixed) << Impedances(startindex + 6)
+                        << " ";
+                    outfile << setw(9) << setfill(' ') << setprecision(4)
+                        << setiosflags(ios::fixed) << Impedances(startindex + 7)
+                        << " ";
+                    outfile << "\n";
+                    outfile << setw(9) << setfill(' ') << setprecision(4)
+                        << setiosflags(ios::fixed) << Errors(startindex) << " ";
+                    outfile << setw(9) << setfill(' ') << setprecision(4)
+                        << setiosflags(ios::fixed) << Errors(startindex  +2) << " ";
+                    outfile << setw(9) << setfill(' ') << setprecision(4)
+                        << setiosflags(ios::fixed) << Errors(startindex + 4) << " ";
+                    outfile << setw(9) << setfill(' ') << setprecision(4)
+                        << setiosflags(ios::fixed) << Errors(startindex + 6) << " ";
+                    outfile << setw(9) << setfill(' ') << setprecision(4)
+                        << setiosflags(ios::fixed) << 0.0 << " ";
+                    outfile << setw(9) << setfill(' ') << setprecision(4)
+                        << setiosflags(ios::fixed) << 0.0 << " ";
+                    outfile << setw(9) << setfill(' ') << setprecision(4)
+                        << setiosflags(ios::fixed) << 0.0 << " ";
+                    outfile << setw(9) << setfill(' ') << setprecision(4)
+                        << setiosflags(ios::fixed) << 0.0 << " ";
+                    outfile << "\n";
+                    outfile << setw(9) << setfill(' ') << setprecision(4)
+                        << setiosflags(ios::fixed) << 0.0 << " ";
+                    outfile << setw(9) << setfill(' ') << setprecision(4)
+                        << setiosflags(ios::fixed) << 0.0 << " ";
+                    outfile << setw(9) << setfill(' ') << setprecision(4)
+                        << setiosflags(ios::fixed) << 0.0 << " ";
+                    outfile << setw(9) << setfill(' ') << setprecision(4)
+                        << setiosflags(ios::fixed) << 0.0 << " ";
+                    outfile << setw(9) << setfill(' ') << setprecision(4)
+                        << setiosflags(ios::fixed) << 0.0 << " ";
+                    outfile << "\n" << resetiosflags(ios::fixed);
+                    //write out mtt file entries
+
+
+              }
+            outfile.close();
+		}
+          }
+
   }
