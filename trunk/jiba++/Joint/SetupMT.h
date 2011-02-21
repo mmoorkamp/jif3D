@@ -31,7 +31,7 @@ namespace jiba
     class SetupMT
       {
     private:
-	//! The objective function object for magnetotelluric data using X§D as a forward engine
+	//! The objective function object for magnetotelluric data using X3D as a forward engine
       boost::shared_ptr<jiba::ThreeDModelObjective<jiba::X3DMTCalculator> >
           MTObjective;
       //! The relative data error to assume for construction of the data variance
