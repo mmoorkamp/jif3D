@@ -17,7 +17,7 @@
  * the program.
  *
  * Note that this is research code with a focus on numerical correctness and maintainability. This has two implications:
- *   - User input is rarely checked for correctness. The code performs some checks for consistency, but non-sensical values
+ *   - User input is rarely checked for correctness. The code performs some checks for consistency, but nonsensical values
  *     and incoherent model descriptions in the input files can cause crashes or random results.
  *   - While I have followed basic performance guidelines and used state of the art methods wherever possible, I have
  *     not performed any detailed speed optimizations of the code. Also, if there is a choice between clarity and speed
@@ -60,9 +60,13 @@ These two libraries are optional and have to be activated in the code through ap
  gcc 4.3 under ubuntu 8/10,
  gcc 4.4 under ubuntu 10/04
  intel 11.0 under ubuntu 8/10
+ intel 12.0.2 under ubuntu 10/04
 
  Sun 5.10 is known to fail, this is an issue with partial template specialization in
  the boost libraries.
+
+ Sun 5.11 compiles most of the code, CUDA does not support the sun compilers though. However this
+ can be quite easily fixed by removing the Gravity classes that use CUDA.
 
  Also, Visual Studio currently does not compile the code as we are using the c++ interface
  for the netcdf library that has not been ported to Windows, yet. An possible alternative
@@ -90,6 +94,9 @@ These two libraries are optional and have to be activated in the code through ap
  * With the technical part of the extension to 3D complete, the forward codes for gravity and seismics and the joint inversion methods
  * have been delivered to the project sponsors.
  *
+ * \version Mar 2011
+ * This is the final version that is part of the first phase of the JIBA project. The joint inversion code should be relatively
+ * stable and well documented. Also, we fixed a number of bugs and added new features for the last year.
  *
  * \section License
  * The joint inversion and gravity forward modeling codes, as well as the associated tools are distributed to the sponsors of the JIBA project under the terms

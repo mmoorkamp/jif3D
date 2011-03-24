@@ -111,9 +111,6 @@ namespace jiba
     rvec WaveletCompressedGravityCalculator::CachedLQDerivative(
         const ThreeDGravityModel &Model, const rvec &Misfit)
       {
-        const size_t ngrid = Model.GetDensities().num_elements();
-        const size_t nmod = ngrid + Model.GetBackgroundThicknesses().size();
-        rvec result(nmod);
         //when calculating the gradient from cached results we only
         //have to multiply the misfit vector with the transposed sensitivities
         return boost::numeric::ublas::prec_prod(trans(SparseSens), Misfit);

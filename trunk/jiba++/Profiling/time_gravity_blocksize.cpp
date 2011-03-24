@@ -56,44 +56,58 @@ void MakeTestModel(jiba::ThreeDGravityModel &Model, const size_t size)
 
 int main()
   {
-
-
+    //for each block size we perform several runs and average the run time
+    //to reduce the influence of other running programs
     const size_t nrunspersize = 5;
     std::string filename = "blocksize.time";
+    //we create a calculator and implementation object manually
+    //we do not use the factory function to have maximum control
     boost::shared_ptr<jiba::ThreeDGravityCalculator> Calculator;
     boost::shared_ptr<jiba::TensorCudaGravityImp> Implementation(
         new jiba::TensorCudaGravityImp);
 
+    //we test for a number of different blocksizes
+    //64 and 256 are recommended values from the NVidia documentation
     std::vector<double> blocksizes;
-
     blocksizes += 64, 76, 90, 107, 128, 152, 181, 192, 215, 256;
+
     const size_t nruns = blocksizes.size();
     std::ofstream outfile(filename.c_str());
     std::cout << " Starting calculations. " << std::endl;
+    //go through the different block sizes
     for (size_t i = 0; i < nruns; ++i)
       {
+        //we use a fixed model size with modelsize cells in each spatial direction
         const size_t modelsize = 80;
+        //to show that something is happening we print the current block size to the screent
         std::cout << "Blocksize: " << blocksizes.at(i) << std::endl;
         jiba::ThreeDGravityModel GravityTest;
+        //set the block size in the implementation object
         Implementation->SetCUDABlockSize(blocksizes.at(i));
+        //and assemble the calculator object
         Calculator = boost::shared_ptr<jiba::ThreeDGravityCalculator>(
             new jiba::MinMemGravityCalculator(Implementation));
         double rawruntime = 0.0;
+        //now we perform several runs and measure the time
         for (size_t j = 0; j < nrunspersize; ++j)
           {
             rawruntime = 0.0;
+            //create a random test model
             MakeTestModel(GravityTest, modelsize);
-
+            //save the time when we started
             boost::posix_time::ptime firststarttime =
                 boost::posix_time::microsec_clock::local_time();
+            //perform the calculation
             jiba::rvec gravmeas(Calculator->Calculate(GravityTest));
-
+            //and the time we stop
             boost::posix_time::ptime firstendtime =
                 boost::posix_time::microsec_clock::local_time();
+            //add to the time for averaging
             rawruntime += (firstendtime - firststarttime).total_microseconds();
           }
+        //divide by number of runs and output the average
         rawruntime /= nrunspersize;
         outfile << blocksizes.at(i) << " " << rawruntime << std::endl;
       }
-
+    //end of program
   }

@@ -237,10 +237,10 @@ namespace jiba
         //the first cell always has the coordinate 0
         outfile
             << "Binding_cell_in_X-direction     X-coordinate of centre of Binding cell (m)  \n";
-        outfile << " 1                             " << XCellSizes[0]/2.0 << " \n";
+        outfile << " 1                             " << 0.0 << " \n";
         outfile
             << "Binding_cell_in_Y-direction     Y-coordinate of centre of Binding cell (m) \n";
-        outfile << " 1                             " << YCellSizes[0]/2.0 << " \n";
+        outfile << " 1                             " << 0.0 << " \n";
         //if something went wrong during writing we throw an exception
         if (outfile.bad())
           {
@@ -271,7 +271,7 @@ namespace jiba
                 << jiba::stringify(i) << " " << ModelFilename
                 << "                          " << ModelFilename
                 << jiba::stringify(i) << "a.source             "
-                << ModelFilename << jiba::stringify(i) << ".bsource\n";
+                << ModelFilename << jiba::stringify(i) << "b.source\n";
           }
         //in principle some other parameters for the forward calculation can be changed
         //at the moment we leave them at their default values

@@ -47,8 +47,7 @@ namespace jiba
     std::complex<double> ImpedanceHalfspace(const double frequency,
         const double conductivity)
       {
-        std::complex<double> omegamu = std::complex<double>(0.0, 2.0 * M_PI
-            * mag_mu * frequency);
+        std::complex<double> omegamu = std::complex<double>(0.0, twopimu * frequency);
         return sqrt(omegamu / conductivity);
       }
   }
