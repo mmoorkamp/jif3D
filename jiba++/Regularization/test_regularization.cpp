@@ -129,7 +129,7 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
           GradModelVec(i) = Slowness;
         }
       zero = Regularization.CalcMisfit(StartModel+GradModelVec);
-      BOOST_CHECK_SMALL(zero,1e-11);
+      BOOST_CHECK_SMALL(zero,2e-11);
 
       Regularization.CalcMisfit(PertModel);
       CheckGradient(Regularization,PertModel);

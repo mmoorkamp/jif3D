@@ -278,7 +278,8 @@ namespace jiba
             boost::shared_ptr<jiba::MatOpRegularization> GravReg(
                 Regularization->clone());
             jiba::rvec GravCovar(3 * ngrid);
-            SetupModelCovar(GravCovar, GravModel, GravReg->GetDataCovar(),
+            jiba::rvec Ones(GravModel.size(),1.0);
+            SetupModelCovar(GravCovar, Ones, GravReg->GetDataCovar(),
                 ngrid);
             GravReg->SetDataCovar(GravCovar);
 

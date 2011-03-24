@@ -67,7 +67,7 @@ int main()
       GravityCalculator
           = boost::shared_ptr<jiba::FullSensitivityGravityCalculator>(
               jiba::CreateGravityCalculator<
-                  jiba::FullSensitivityGravityCalculator>::MakeScalar());
+                  jiba::FullSensitivityGravityCalculator>::MakeScalar(true));
       break;
     case jiba::ftg:
       jiba::ReadTensorGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
@@ -75,7 +75,7 @@ int main()
       GravityCalculator
           = boost::shared_ptr<jiba::FullSensitivityGravityCalculator>(
               jiba::CreateGravityCalculator<
-                  jiba::FullSensitivityGravityCalculator>::MakeTensor());
+                  jiba::FullSensitivityGravityCalculator>::MakeTensor(true));
       break;
     default:
       //in case we couldn't identify the data in the netcdf file
@@ -179,6 +179,8 @@ int main()
     std::fill_n(Ones.begin(), ndata, 1.0);
 
     double lambda = 1e-14;
+    std::cout << "Lambda: ";
+    std::cin >> lambda;
     jiba::DataSpaceInversion()(GravityCalculator->SetSensitivities(),
         DataDiffVec, ModelWeight, Ones, lambda, InvModel);
 
@@ -187,7 +189,7 @@ int main()
      1e-14);
 
      InvModel = boost::numeric::ublas::prod(InvMat, Ones);*/
-     std::copy(InvModel.begin(), InvModel.end(), Model.SetDensities().origin());
+    std::copy(InvModel.begin(), InvModel.end(), Model.SetDensities().origin());
 
     //calculate the predicted data
     double newgrid = 0.0, newz = 0.0;
@@ -203,6 +205,9 @@ int main()
      }*/
     std::cout << "Calculating response of inversion model." << std::endl;
     jiba::rvec InvData(GravityCalculator->Calculate(Model));
+
+    misfit = CalcMisfit(Data, InvData, DataDiffVec);
+    std::cout << "Final misfit: " << misfit << std::endl;
     //and write out the data and model
     //here we have to distinguish again between scalar and ftg data
     std::string modelfilename = "pseudo";
@@ -215,6 +220,11 @@ int main()
           Model.GetMeasPosZ());
       jiba::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc",
           InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
+          Model.GetMeasPosZ());
+      jiba::SaveTensorGravityMeasurements(
+          modelfilename + ".inv_ftg.nc",
+          jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeTensor()->Calculate(
+              Model), Model.GetMeasPosX(), Model.GetMeasPosY(),
           Model.GetMeasPosZ());
       break;
     case jiba::ftg:
