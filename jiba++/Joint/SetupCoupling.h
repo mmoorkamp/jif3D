@@ -35,12 +35,18 @@ namespace jiba
     class SetupCoupling
       {
     private:
-      //! The transformation between generalized model parameters and slowness
+      //! The transformation between generalized model parameters and slowness including selecting the right range from the model vector
       boost::shared_ptr<jiba::GeneralModelTransform> SlowTrans;
-      //! The transformation between generalized model parameters and conductivity
+      //! The transformation between generalized model parameters and conductivity including selecting the right range from the model vector
       boost::shared_ptr<jiba::GeneralModelTransform> CondTrans;
-      //! The transformation between generalized model parameters and density
+      //! The transformation between generalized model parameters and density including selecting the right range from the model vector
       boost::shared_ptr<jiba::GeneralModelTransform> DensTrans;
+      //! The transformation between generalized model parameters and slowness without selecting the right range from the model vector
+      boost::shared_ptr<jiba::GeneralModelTransform> SlowCrossTrans;
+      //! The transformation between generalized model parameters and conductivity without selecting the right range from the model vector
+      boost::shared_ptr<jiba::GeneralModelTransform> CondCrossTrans;
+      //! The transformation between generalized model parameters and density without selecting the right range from the model vector
+      boost::shared_ptr<jiba::GeneralModelTransform> DensCrossTrans;
       //! The minimal conductivity in S/m
       double mincond;
       //! The maximum conductivity in S/m
@@ -66,12 +72,13 @@ namespace jiba
        * @param GravityTransform The parameter transform for the gravity objective function
        * @param MTTransform The parameter transform for the MT objective function
        * @param RegTransform The parameter transform for the regularization
+       * @param Wavelet Parametrize the inversion by a wavelet transform of the model parameters
        */
       void SetupTransforms(const po::variables_map &vm, boost::shared_ptr<
           jiba::GeneralModelTransform> &TomoTransform, boost::shared_ptr<
           jiba::GeneralModelTransform> &GravityTransform, boost::shared_ptr<
           jiba::GeneralModelTransform> &MTTransform, boost::shared_ptr<
-          jiba::GeneralModelTransform> &RegTransform);
+          jiba::GeneralModelTransform> &RegTransform, bool Wavelet = false);
       //! Set the model vector for the inversion, its length and content depends on the coupling method
       /*! For the direct coupling joint inversion the model parameter vector only contains a slowness value
        * for each cell, while for the cross-gradient it contains slowness, density and conductivity. Also

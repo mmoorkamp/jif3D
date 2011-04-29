@@ -254,7 +254,8 @@ namespace jiba
       {
         const size_t nfreq = Frequencies.size();
         //the filename is always a.project
-        std::ofstream outfile((RootDir / "a.project").file_string().c_str());
+        std::string filename = (RootDir / "a.project").string();
+        std::ofstream outfile(filename.c_str());
         //write out some information that x3d expects
         outfile << "  Version_of_X3D code (yyyy-mm-dd)\n";
         outfile << "  2006-06-06\n\n";

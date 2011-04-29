@@ -9,6 +9,7 @@
 #include "SetupCoupling.h"
 #include "../Global/FileUtil.h"
 #include "../Regularization/CrossGradient.h"
+#include "../Inversion/WaveletModelTransform.h"
 
 namespace ublas = boost::numeric::ublas;
 
@@ -63,7 +64,8 @@ namespace jiba
         boost::shared_ptr<jiba::GeneralModelTransform> &TomoTransform,
         boost::shared_ptr<jiba::GeneralModelTransform> &GravityTransform,
         boost::shared_ptr<jiba::GeneralModelTransform> &MTTransform,
-        boost::shared_ptr<jiba::GeneralModelTransform> &RegTransform)
+        boost::shared_ptr<jiba::GeneralModelTransform> &RegTransform,
+        bool Wavelet)
       {
 
         //we need the geometry of the starting model to setup
@@ -80,6 +82,10 @@ namespace jiba
         //we need to set transformations for each data type
         //that extract the right part of the model vector
         //and then transform from generalized to physical parameters
+        boost::shared_ptr<jiba::GeneralModelTransform> WaveletTrans(
+            new jiba::WaveletModelTransform(StartModel.GetData().shape()[0],
+                StartModel.GetData().shape()[1],
+                StartModel.GetData().shape()[2]));
         if (vm.count("crossgrad"))
           {
             //each set of transformations is chained together in a similar way
@@ -87,12 +93,26 @@ namespace jiba
             //the TanHTransform sorts out the constraints
             //and the ExpansionTransform puts the derivatives in the right part of the whole model vector
             //first we do slowness
+
+            //we declare a local variable, so that we can use all properties
+            //of ChainedTransform before we assign it to the function parameter
+            //of type GeneralTransform
             boost::shared_ptr<jiba::ChainedTransform> SlownessTransform(
+                new jiba::ChainedTransform);
+            boost::shared_ptr<jiba::ChainedTransform> SlownessCrossTransform(
                 new jiba::ChainedTransform);
             SlownessTransform->AddTransform(boost::shared_ptr<
                 jiba::GeneralModelTransform>(new jiba::SectionTransform(0,
                 ngrid)));
+            if (Wavelet)
+              {
+                SlownessTransform->AddTransform(WaveletTrans);
+                SlownessCrossTransform->AddTransform(WaveletTrans);
+              }
             SlownessTransform->AddTransform(boost::shared_ptr<
+                jiba::GeneralModelTransform>(new jiba::TanhTransform(minslow,
+                maxslow)));
+            SlownessCrossTransform->AddTransform(boost::shared_ptr<
                 jiba::GeneralModelTransform>(new jiba::TanhTransform(minslow,
                 maxslow)));
             SlownessTransform->AddTransform(boost::shared_ptr<
@@ -101,12 +121,23 @@ namespace jiba
             //then we do density
             boost::shared_ptr<jiba::ChainedTransform> DensityTransform(
                 new jiba::ChainedTransform);
+            boost::shared_ptr<jiba::ChainedTransform> DensityCrossTransform(
+                new jiba::ChainedTransform);
             DensityTransform->AddTransform(boost::shared_ptr<
                 jiba::GeneralModelTransform>(new jiba::SectionTransform(ngrid,
                 2 * ngrid)));
+            if (Wavelet)
+              {
+                DensityTransform->AddTransform(WaveletTrans);
+                DensityCrossTransform->AddTransform(WaveletTrans);
+              }
             DensityTransform->AddTransform(boost::shared_ptr<
                 jiba::GeneralModelTransform>(new jiba::TanhTransform(mindens,
                 maxdens)));
+            DensityCrossTransform->AddTransform(boost::shared_ptr<
+                jiba::GeneralModelTransform>(new jiba::TanhTransform(mindens,
+                maxdens)));
+
             DensityTransform->AddTransform(boost::shared_ptr<
                 jiba::GeneralModelTransform>(new jiba::ExpansionTransform(3
                 * ngrid, ngrid, 2 * ngrid)));
@@ -114,15 +145,27 @@ namespace jiba
             //to reduce the range of inversion parameters
             boost::shared_ptr<jiba::ChainedTransform> ConductivityTransform(
                 new jiba::ChainedTransform);
+            boost::shared_ptr<jiba::ChainedTransform>
+                ConductivityCrossTransform(new jiba::ChainedTransform);
             jiba::rvec RefModel(ngrid);
             std::fill(RefModel.begin(), RefModel.end(), 1.0);
             ConductivityTransform->AddTransform(boost::shared_ptr<
                 jiba::GeneralModelTransform>(new jiba::SectionTransform(2
                 * ngrid, 3 * ngrid)));
+            if (Wavelet)
+              {
+                ConductivityTransform->AddTransform(WaveletTrans);
+                ConductivityCrossTransform->AddTransform(WaveletTrans);
+              }
             ConductivityTransform->AddTransform(boost::shared_ptr<
                 jiba::GeneralModelTransform>(new jiba::TanhTransform(std::log(
                 mincond), std::log(maxcond))));
+            ConductivityCrossTransform->AddTransform(boost::shared_ptr<
+                jiba::GeneralModelTransform>(new jiba::TanhTransform(std::log(
+                mincond), std::log(maxcond))));
             ConductivityTransform->AddTransform(boost::shared_ptr<
+                jiba::GeneralModelTransform>(new jiba::LogTransform(RefModel)));
+            ConductivityCrossTransform->AddTransform(boost::shared_ptr<
                 jiba::GeneralModelTransform>(new jiba::LogTransform(RefModel)));
             ConductivityTransform->AddTransform(boost::shared_ptr<
                 jiba::GeneralModelTransform>(new jiba::ExpansionTransform(3
@@ -132,6 +175,9 @@ namespace jiba
             GravityTransform = DensityTransform;
             MTTransform = ConductivityTransform;
             RegTransform = TomoTransform;
+            SlowCrossTrans = SlownessCrossTransform;
+            CondCrossTrans = ConductivityCrossTransform;
+            DensCrossTrans = DensityCrossTransform;
           }
         else
           {
@@ -212,14 +258,14 @@ namespace jiba
                 ublas::subrange(InvModel, 2 * ngrid, 3 * ngrid)
                     = CondTrans->PhysicalToGeneralized(MTModel);
               }
-            //then we constrcut the three cross gradient terms
+            //then we construct the three cross gradient terms
             //the double section transform takes two sections of the model
             //and feeds them to the objective function
             boost::shared_ptr<jiba::CrossGradient> SeisGravCross(
                 new jiba::CrossGradient(SeisMod));
             boost::shared_ptr<jiba::GeneralModelTransform> SeisGravTrans(
                 new jiba::DoubleSectionTransform(3 * ngrid, 0, ngrid, ngrid, 2
-                    * ngrid));
+                    * ngrid, SlowCrossTrans, DensCrossTrans));
             //for each cross-gradient term we ask for a weight
             double seisgravlambda = 1.0;
             std::cout << "Weight for seismic-gravity cross-gradient term: ";
@@ -233,7 +279,7 @@ namespace jiba
                 new jiba::CrossGradient(SeisMod));
             boost::shared_ptr<jiba::GeneralModelTransform> SeisMTTrans(
                 new jiba::DoubleSectionTransform(3 * ngrid, 0, ngrid,
-                    2 * ngrid, 3 * ngrid));
+                    2 * ngrid, 3 * ngrid, SlowCrossTrans, CondCrossTrans));
 
             double seismtlambda = 1.0;
             std::cout << "Weight for seismic-MT cross-gradient term: ";
@@ -247,7 +293,7 @@ namespace jiba
                 new jiba::CrossGradient(SeisMod));
             boost::shared_ptr<jiba::GeneralModelTransform> GravMTTrans(
                 new jiba::DoubleSectionTransform(3 * ngrid, ngrid, 2 * ngrid, 2
-                    * ngrid, 3 * ngrid));
+                    * ngrid, 3 * ngrid, DensCrossTrans, CondCrossTrans));
 
             double gravmtlambda = 1.0;
             std::cout << "Weight for gravity-MT cross-gradient term: ";
@@ -278,9 +324,8 @@ namespace jiba
             boost::shared_ptr<jiba::MatOpRegularization> GravReg(
                 Regularization->clone());
             jiba::rvec GravCovar(3 * ngrid);
-            jiba::rvec Ones(GravModel.size(),1.0);
-            SetupModelCovar(GravCovar, Ones, GravReg->GetDataCovar(),
-                ngrid);
+            jiba::rvec Ones(GravModel.size(), 1.0);
+            SetupModelCovar(GravCovar, Ones, GravReg->GetDataCovar(), ngrid);
             GravReg->SetDataCovar(GravCovar);
 
             //and finally conductivities

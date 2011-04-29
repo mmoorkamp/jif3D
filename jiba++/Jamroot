@@ -33,6 +33,7 @@ use-project /Joint : Joint ;
 
 local BOOST_TEST_LOG_LEVEL = all ;
 lib boost_filesystem : : <name>boost_filesystem ;
+lib boost_system : : <name>boost_system ;
 lib boost_program_options : : <name>boost_program_options  ;
 lib lapack : : <name>lapack ;
 lib f77blas : : <name>f77blas ;

@@ -47,6 +47,7 @@ namespace po = boost::program_options;
 /** \addtogroup joint Joint inversion routines */
 /* @{ */
 
+//! Use a parameter transform to translate the model vector to a model object and write the model to files for plotting and saving
 template<class ModelType>
 void SaveModel(const jiba::rvec &InvModel,
     const jiba::GeneralModelTransform &Transform, ModelType &ModelObject,
@@ -60,6 +61,7 @@ void SaveModel(const jiba::rvec &InvModel,
     ModelObject.WriteNetCDF(filename + ".nc");
   }
 
+//! Store the current misfit for all individual objectives with appropriate formating in an output stream
 void StoreMisfit(std::ofstream &misfitfile, const size_t iteration,
     const double Misfit, const jiba::JointObjective &Objective)
   {
@@ -75,6 +77,7 @@ void StoreMisfit(std::ofstream &misfitfile, const size_t iteration,
     misfitfile << std::endl;
   }
 
+//! Check whether we have reached the target misfit for one of the objective functions in the JointObjective object
 bool CheckConvergence(const jiba::JointObjective &Objective)
   {
     bool terminate = true;
@@ -118,7 +121,7 @@ int main(int argc, char *argv[])
     jiba::SetupInversion InversionSetup;
     jiba::SetupRegularization RegSetup;
     jiba::SetupCoupling CouplingSetup;
-
+    bool WaveletParm = false;
     //we also create a number of options that are specific to our joint inversion
     //or act globally so that they cannot be associated with one subsystem
     po::options_description desc("General options");
@@ -126,7 +129,9 @@ int main(int argc, char *argv[])
         po::value<int>(), "The number of openmp threads")("covmod", po::value<
         std::string>(), "A file containing the model covariance")("tempdir",
         po::value<std::string>(),
-        "The name of the directory to store temporary files in");
+        "The name of the directory to store temporary files in")("wavelet",
+        po::value(&WaveletParm)->default_value(false),
+        "Parametrize inversion by wavelet coefficients");
     //we need to add the description for each part to the boost program options object
     //that way the user can get a help output and the parser object recongnizes these options
     desc.add(TomoSetup.SetupOptions());
@@ -206,7 +211,7 @@ int main(int argc, char *argv[])
     //coupling setup is responsible to set the appropriate transformation
     //as we have to use different ones depending on the chose coupling mechanism
     CouplingSetup.SetupTransforms(vm, TomoTransform, GravityTransform,
-        MTTransform, RegTransform);
+        MTTransform, RegTransform, WaveletParm);
 
     //read in the tomography model and setup the options that are applicable
     //for the seismic tomography part of the inversion

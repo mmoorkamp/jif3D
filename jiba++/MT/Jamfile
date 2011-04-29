@@ -1,10 +1,10 @@
 import testing ; 
 using gfortran ;
 
-lib mt : B_epol1.for B_hpol.for  MT2DForward.cpp ReadWriteX3D.cpp ReadWriteImpedances.cpp
+lib mt : ReadWriteX3D.cpp ReadWriteImpedances.cpp
          ThreeDMTModel.cpp X3DModel.cpp MTEquations.cpp 
          MT3DCalculator.cpp X3DMTCalculator.cpp
-         ..//ModelBase ..//Inversion ;
+         ..//ModelBase ..//Inversion ..//boost_filesystem ..//boost_system ;
 
 
 

@@ -63,6 +63,18 @@ namespace jiba
         }
       };
 
+    //! Checks whether the input is a power of two
+    /*! Is there a positive m with 2^m=n~?
+     * @param n A positive integer n
+     * @return Is n a power of 2
+     */
+    inline bool IsPowerOfTwo(const size_t n)
+      {
+        size_t next = 1;
+        while (next < n)
+          next *= 2;
+        return next == n;
+      }
   /* @} */
   }
 #endif /*NUMUTIL_H_*/

@@ -6,11 +6,18 @@
 //============================================================================
 
 #include "Wavelet.h"
+#include "FatalException.h"
+#include "NumUtil.h"
 #include <numeric>
+
+/*! \file Wavelet.cpp
+ * Simple implementations of the discrete wavelet transform and its inverse based on Daubechies-4 wavelets.
+ * The basic algorithm is described in Numerical Recipes in C, pp. 595-598
+ */
 
 namespace jiba
   {
-    //calculate the coefficient for the wavelet filter
+    //calculate the coefficients for the wavelet filter
     static const double c0 = (1.0 + std::sqrt(3.0)) / (4.0 * std::sqrt(2.0));
     static const double c1 = (3.0 + std::sqrt(3.0)) / (4.0 * std::sqrt(2.0));
     static const double c2 = (3.0 - std::sqrt(3.0)) / (4.0 * std::sqrt(2.0));
@@ -29,7 +36,7 @@ namespace jiba
         //also note the different stride for j and i
         for (size_t i = 0, j = 0; j < length - 3; j += 2, ++i)
           {
-            Temp( i) = c0 * Invec(j) + c1 * Invec(j + 1) + c2 * Invec(j + 2)
+            Temp(i) = c0 * Invec(j) + c1 * Invec(j + 1) + c2 * Invec(j + 2)
                 + c3 * Invec(j + 3);
             Temp(i + offset) = c3 * Invec(j) - c2 * Invec(j + 1) + c1 * Invec(j
                 + 2) - c0 * Invec(j + 3);
@@ -59,8 +66,8 @@ namespace jiba
             * Invec(0) - c2 * Invec(length / 2);
         for (size_t i = 0, j = 2; i < offset - 1; ++i, j += 2)
           {
-            Temp( j) = c2 * Invec(i) + c1 * Invec(i + offset) + c0 * Invec(i
-                + 1) + c3 * Invec(i + offset + 1);
+            Temp(j) = c2 * Invec(i) + c1 * Invec(i + offset) + c0
+                * Invec(i + 1) + c3 * Invec(i + offset + 1);
             Temp(j + 1) = c3 * Invec(i) - c0 * Invec(i + offset) + c1 * Invec(i
                 + 1) - c2 * Invec(i + offset + 1);
           }
@@ -150,7 +157,7 @@ namespace jiba
                         for (size_t l = j + k, m = 0; m < DimSize; ++m, l
                             += preStride)
                           {
-                            WorkVector( m) = InArray[l];
+                            WorkVector(m) = InArray[l];
                           }
 
                         Driver(WorkVector, DimSize);
@@ -166,6 +173,7 @@ namespace jiba
             preStride = Stride;
           }
       }
+
     /*! Perform a multidimensional wavelet transform on the input data. InArray is a one dimensional array
      * of DimSizes[0]*DimSizes[1]* ... *DimSizes[ndim-1] elements. We assume that the last dimension varies
      * fastest (c storage order).
@@ -175,12 +183,26 @@ namespace jiba
      */
     void WaveletTransform(double *InArray, const size_t *DimSizes, size_t ndim)
       {
+        //we make sure that each dimension has a size that is a power of two
+        for (size_t i = 0; i < ndim; ++i)
+          {
+            if (!IsPowerOfTwo(DimSizes[i]))
+              throw jiba::FatalException(
+                  "Array dimension is not a power of two.");
+          }
         WaveletTransformImp(InArray, DimSizes, ndim, ForwardWaveletDriver());
       }
 
     void InvWaveletTransform(double *InArray, const size_t *DimSizes,
         size_t ndim)
       {
+        //we make sure that each dimension has a size that is a power of two
+        for (size_t i = 0; i < ndim; ++i)
+          {
+            if (!IsPowerOfTwo(DimSizes[i]))
+              throw jiba::FatalException(
+                  "Array dimension is not a power of two.");
+          }
         WaveletTransformImp(InArray, DimSizes, ndim, InverseWaveletDriver());
       }
 

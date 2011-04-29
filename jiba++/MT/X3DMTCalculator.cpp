@@ -51,9 +51,10 @@ namespace jiba
         fs::directory_iterator end_itr; // default construction yields past-the-end
         for (fs::directory_iterator itr(fs::current_path()); itr != end_itr; ++itr)
           {
-            if (boost::algorithm::starts_with(itr->filename(), NameRoot))
+            if (boost::algorithm::starts_with(itr->path().filename().string(),
+                NameRoot))
               {
-                fs::remove_all(itr->filename());
+                fs::remove_all(itr->path().filename());
               }
           }
       }

@@ -34,7 +34,7 @@ namespace jiba
     private:
       /*! These pointers hold the memory on the graphics card as allocated
       * before the calculation. We make them class variables so that we
-      * can use them in different parts of the program and only have to
+      * can use them in different parts of the class and only have to
       * do the allocation once for all measurements
       * */
       double *d_xcoord, *d_ycoord, *d_zcoord;
