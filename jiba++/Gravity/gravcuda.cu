@@ -54,16 +54,18 @@ void  PrepareData(double **d_xcoord, double **d_ycoord, double **d_zcoord,
       int dev = 0;
       cudaDeviceProp deviceProp;
       cudaGetDeviceProperties(&deviceProp, dev);
-      if (deviceProp.major < 1)
+      if (deviceProp.major < 1 || deviceProp.major == 9999 )
         {
-          fprintf(stderr, "cutil error: device does not support CUDA.\n");
+          fprintf(stderr, "Cutil error: Device does not support CUDA.\n");
           exit(-1);
         }
-      if (deviceProp.minor < 3)
+      int version = deviceProp.major * 10 + deviceProp.minor;
+      if (version < 13)
         {
-          fprintf(stderr, "cutil error: device does not double precision.\n");
+          fprintf(stderr, "Cutil error: Device does not support double precision.\n");
           exit(-1);
         }
+
       cudaSetDevice(dev);
       cudaGetLastError();
       //determine the memory requirements in bytes
