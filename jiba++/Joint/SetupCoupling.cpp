@@ -78,14 +78,21 @@ namespace jiba
         StartModel.ReadNetCDF(modelfilename, false);
 
         const size_t ngrid = StartModel.GetNModelElements();
+
+        boost::shared_ptr<jiba::GeneralModelTransform> WaveletTrans;
+
+        if (Wavelet)
+        {
+        	WaveletTrans =  boost::shared_ptr<jiba::GeneralModelTransform>(
+                    new jiba::WaveletModelTransform(StartModel.GetData().shape()[0],
+                        StartModel.GetData().shape()[1],
+                        StartModel.GetData().shape()[2]));
+        }
         //if we want to do a cross-gradient type joint inversion
         //we need to set transformations for each data type
         //that extract the right part of the model vector
         //and then transform from generalized to physical parameters
-        boost::shared_ptr<jiba::GeneralModelTransform> WaveletTrans(
-            new jiba::WaveletModelTransform(StartModel.GetData().shape()[0],
-                StartModel.GetData().shape()[1],
-                StartModel.GetData().shape()[2]));
+
         if (vm.count("crossgrad"))
           {
             //each set of transformations is chained together in a similar way
