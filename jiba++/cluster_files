@@ -5,8 +5,14 @@ find -wholename *gcc-4.4.3*release*.so -exec cp '{}' ~/jiba_dist \;
 #copy a few selcted executables to the dsitribution directory
 cp ~/workspace/jiba++/Joint/bin/gcc-4.4.3/release/threading-multi/jointinv ~/jiba_dist
 cp ~/workspace/jiba++/Tomo/bin/gcc-4.4.3/release/threading-multi/tomogrid ~/jiba_dist
+cp ~/workspace/jiba++/Tomo/bin/gcc-4.4.3/release/threading-multi/makeseismesh ~/jiba_dist
 cp ~/workspace/jiba++/Hacks/bin/gcc-4.4.3/release/threading-multi/mtinv ~/jiba_dist
+cp ~/workspace/jiba++/MT/bin/gcc-4.4.3/release/threading-multi/makemtmesh ~/jiba_dist
+cp ~/workspace/jiba++/Gravity/bin/gcc-4.4.3/release/threading-multi/makegravmesh ~/jiba_dist
 #change the dynamic library path so that the executable find the .so files 
 chrpath -r /home/mmoorkamp/jiba_dist ~/jiba_dist/jointinv
 chrpath -r /home/mmoorkamp/jiba_dist ~/jiba_dist/tomogrid
 chrpath -r /home/mmoorkamp/jiba_dist ~/jiba_dist/mtinv
+chrpath -r /home/mmoorkamp/jiba_dist ~/jiba_dist/makeseismesh
+chrpath -r /home/mmoorkamp/jiba_dist ~/jiba_dist/makemtmesh
+chrpath -r /home/mmoorkamp/jiba_dist ~/jiba_dist/makegravmesh
