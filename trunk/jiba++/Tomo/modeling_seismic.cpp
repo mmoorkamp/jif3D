@@ -300,8 +300,9 @@ namespace jiba
           ok = 0;
         if (!ok)
           {
-            throw jiba::FatalException(
-                "Interpolation point is out of the grid!");
+        	std::string error = "Interpolation point is out of the grid! x: " + stringify(x) + " y: "
+        			+stringify(y) + " z: " + stringify(z) + "\n";
+            throw jiba::FatalException(error);
           }
 
         /* Get interpolation distances */
