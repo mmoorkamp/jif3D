@@ -528,7 +528,7 @@ T[0][0][0]=%g\n",*HS,*T);
          *                   will be performed (via init_nearest()).
          * The following 8 lines were added :
          */
-        if (X0 > fxs || X1 < fxs || Y0 > fys || Y1 < fxs || Z0 > fzs || Z1
+        if (X0 > fxs || X1 < fxs || Y0 > fys || Y1 < fys || Z0 > fzs || Z1
             < fzs)
           {
             X0 = xsc;
