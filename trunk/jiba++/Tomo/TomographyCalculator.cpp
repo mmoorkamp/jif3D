@@ -11,8 +11,8 @@
 namespace jiba
   {
 
-    TomographyCalculator::TomographyCalculator() :
-      nairlayers(3), geo(), grid(), data(), raypath()
+    TomographyCalculator::TomographyCalculator(bool saverays) :
+        writerays(saverays), nairlayers(3), geo(), grid(), data(), raypath()
       {
       }
 
@@ -25,8 +25,8 @@ namespace jiba
         const size_t npos)
       {
         //the actual size of the forward grid is always one cell extra in each direction
-        const size_t oldngrid = (grid.nx + 1) * (grid.ny + 1) * (grid.nz + 1
-            + nairlayers);
+        const size_t oldngrid = (grid.nx + 1) * (grid.ny + 1)
+            * (grid.nz + 1 + nairlayers);
         //if the grid size changed we have to (re)allocate
         if (oldngrid != ngrid)
           {
@@ -80,12 +80,11 @@ namespace jiba
         for (size_t i = 0; i < grid.nx; ++i)
           for (size_t j = 0; j < grid.ny; ++j)
             {
-              const size_t layerindex = i * (grid.nz + 1) * (grid.ny + 1) + j
-                  * (grid.nz + 1);
+              const size_t layerindex = i * (grid.nz + 1) * (grid.ny + 1)
+                  + j * (grid.nz + 1);
               //fill the airlayers
               std::fill_n(grid.slow.begin() + layerindex, nairlayers, grid.h);
-              std::fill_n(
-                  grid.slow.begin() + layerindex + grid.nz - nairlayers,
+              std::fill_n(grid.slow.begin() + layerindex + grid.nz - nairlayers,
                   nairlayers, grid.h);
               //then copy the actual model
               for (size_t k = nairlayers; k < grid.nz - nairlayers; ++k)
@@ -98,16 +97,16 @@ namespace jiba
         data.ndata_seis_act = ndata;
         //our indices are 0 based, the forward uses a base of 1
         std::transform(Model.GetSourceIndices().begin(),
-            Model.GetSourceIndices().end(), data.sno.begin(), boost::bind(
-                std::plus<int>(), _1, 1));
+            Model.GetSourceIndices().end(), data.sno.begin(),
+            boost::bind(std::plus<int>(), _1, 1));
 
         //also we have different storage for source and receivers
         //but the forward stores the positions in a single array
         //our indices are 0 based, the forward uses a base of 1
         //and we have to add the number of shots that we already stored
         std::transform(Model.GetReceiverIndices().begin(),
-            Model.GetReceiverIndices().end(), data.rno.begin(), boost::bind(
-                std::plus<int>(), _1, nshot + 1));
+            Model.GetReceiverIndices().end(), data.rno.begin(),
+            boost::bind(std::plus<int>(), _1, nshot + 1));
 
         geo.nrec = nmeas;
         geo.nshot = nshot;
@@ -119,35 +118,40 @@ namespace jiba
             geo.y.begin());
         //we also have to adjust for the offset by the airlayers
         std::transform(Model.GetSourcePosZ().begin(),
-            Model.GetSourcePosZ().end(), geo.z.begin(), boost::bind(std::plus<
-                double>(), _1, grid.h * nairlayers));
+            Model.GetSourcePosZ().end(), geo.z.begin(),
+            boost::bind(std::plus<double>(), _1, grid.h * nairlayers));
         //and then all measurement position
         std::copy(Model.GetMeasPosX().begin(), Model.GetMeasPosX().end(),
             geo.x.begin() + nshot);
         std::copy(Model.GetMeasPosY().begin(), Model.GetMeasPosY().end(),
             geo.y.begin() + nshot);
         std::transform(Model.GetMeasPosZ().begin(), Model.GetMeasPosZ().end(),
-            geo.z.begin() + nshot, boost::bind(std::plus<double>(), _1, grid.h
-                * nairlayers));
+            geo.z.begin() + nshot,
+            boost::bind(std::plus<double>(), _1, grid.h * nairlayers));
 
         //now we can do the forward modeling
         ForwardModRay(geo, grid, &data, &raypath[0]);
-        PlotRaypath("ray.vtk", &raypath[0], ndata, grid.h, nairlayers);
+        //we only write out the file with the rays, if the corresponding
+        //option is set to true
+        if (writerays)
+          {
+            PlotRaypath("ray.vtk", &raypath[0], ndata, grid.h, nairlayers);
+          }
         //and return the result as a vector
         jiba::rvec result(ndata, 0.0);
         /*for (size_t i = 0; i < ndata; ++i)
-          {
-            const size_t nray = raypath[i].nray;
-            for (size_t j = 0; j < nray; ++j)
-              {
-                const size_t offset = (grid.nz - 2 * nairlayers) * grid.ny
-                    * floor(raypath[i].x[j]) + (grid.nz - 2 * nairlayers)
-                    * floor(raypath[i].y[j]) + floor(raypath[i].z[j])
-                    - nairlayers;
-                result(i) += raypath[i].len[j] * grid.h * Model.GetSlownesses().data()[offset];
-              }
+         {
+         const size_t nray = raypath[i].nray;
+         for (size_t j = 0; j < nray; ++j)
+         {
+         const size_t offset = (grid.nz - 2 * nairlayers) * grid.ny
+         * floor(raypath[i].x[j]) + (grid.nz - 2 * nairlayers)
+         * floor(raypath[i].y[j]) + floor(raypath[i].z[j])
+         - nairlayers;
+         result(i) += raypath[i].len[j] * grid.h * Model.GetSlownesses().data()[offset];
+         }
 
-          }*/
+         }*/
         std::copy(data.tcalc.begin(), data.tcalc.end(), result.begin());
         return result;
       }
@@ -172,9 +176,9 @@ namespace jiba
             for (size_t j = 0; j < nray; ++j)
               {
                 const size_t offset = (grid.nz - 2 * nairlayers) * grid.ny
-                    * floor(raypath[i].x[j]) + (grid.nz - 2 * nairlayers)
-                    * floor(raypath[i].y[j]) + floor(raypath[i].z[j])
-                    - nairlayers;
+                    * floor(raypath[i].x[j])
+                    + (grid.nz - 2 * nairlayers) * floor(raypath[i].y[j])
+                    + floor(raypath[i].z[j]) - nairlayers;
 
                 DerivMod(offset) += 2.0 * raypath[i].len[j] * grid.h
                     * Misfit(i);

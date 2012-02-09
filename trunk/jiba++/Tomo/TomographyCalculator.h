@@ -24,6 +24,8 @@ namespace jiba
       //! This type definition is necessary so that ThreeDModelObjective can correctly deduce the native type for a model object for this class
       typedef ThreeDSeismicModel ModelType;
     private:
+      //! Do we want to write out the file showing the ray distribution
+      bool writerays;
       //! The number of air layers on top of the model
       size_t nairlayers;
       //! Information about the source receiver geometry in the format of Bjoern's code
@@ -37,7 +39,12 @@ namespace jiba
       //! Perform the dynamic allocation for the c-structures above
       void Allocate(const size_t ngrid, const size_t ndata, const size_t npos);
     public:
-      TomographyCalculator();
+      //! We can tell the forward modelling object to write out the rays whenever it performs a calculation
+      /*! Writing out rays is helpful to show coverage and identify problems, but the
+       * files can be several Gigabytes, so we have this as an option.
+       * @param saverays If True we write out a .vtk file showing the rays in the model
+       */
+      TomographyCalculator(bool saverays = false);
       virtual ~TomographyCalculator();
       //! Return the raypath structure for the last forward modelling
       const std::vector<jiba::RP_STRUCT> &GetRayPath() const
