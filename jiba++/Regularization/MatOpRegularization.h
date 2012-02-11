@@ -27,7 +27,7 @@ namespace jiba
     class MatOpRegularization: public jiba::ObjectiveFunction
       {
     private:
-      //! The operator matrix for the first spatial derivative is sparse so we provide a typedef for convenience
+      //! The operator matrix for the spatial derivatives is sparse so we provide a typedef for convenience
       typedef boost::numeric::ublas::compressed_matrix<double,
           boost::numeric::ublas::column_major> comp_mat;
       /*! The implementation of the data difference is independent
@@ -79,19 +79,25 @@ namespace jiba
       virtual jiba::rvec ImplGradient(const jiba::rvec &Model,
           const jiba::rvec &Diff)
         {
+          //set the gradient vector for each individual direction to the correct size
           const size_t nmod = Model.size();
           XGrad.resize(nmod);
           YGrad.resize(nmod);
           ZGrad.resize(nmod);
+          //define some ranges on the difference vector (length 3*nmod)
+          //that correspond to the gradients for each spatial direction
           ublas::vector_range<const jiba::rvec> xrange(Diff, ublas::range(0,
               nmod));
           ublas::vector_range<const jiba::rvec> yrange(Diff, ublas::range(nmod,
               2 * nmod));
           ublas::vector_range<const jiba::rvec> zrange(Diff, ublas::range(2
               * nmod, 3 * nmod));
+          //The gradient is simply the transpose of the operator matrix
+          //time the misfit, we calculate this for each direction
           ublas::axpy_prod(ublas::trans(XOperatorMatrix), xrange, XGrad);
           ublas::axpy_prod(ublas::trans(YOperatorMatrix), yrange, YGrad);
           ublas::axpy_prod(ublas::trans(ZOperatorMatrix), zrange, ZGrad);
+          //the total gradient is the weighted sum of all individual gradients
           return 2.0 * (sqrt(xweight) * XGrad + sqrt(yweight) * YGrad + sqrt(
               zweight) * ZGrad);
         }
@@ -125,7 +131,7 @@ namespace jiba
        * @return A pointer to copy of the derived object
        */
       virtual MatOpRegularization *clone() const = 0;
-      //! We never want to terminate the inversion because the regularization has reached a particular value, so we return 0
+      //! We never want to terminate the inversion because the regularization has reached a particular value, so we return -1
       virtual double ConvergenceLimit() const
         {
           return -1.0;
