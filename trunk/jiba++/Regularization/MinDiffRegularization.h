@@ -5,10 +5,9 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-
 #ifndef MINDIFFREGULARIZATION_H_
 #define MINDIFFREGULARIZATION_H_
-#include "../Inversion/ObjectiveFunction.h"
+#include "MatOpRegularization.h"
 
 namespace jiba
   {
@@ -20,41 +19,36 @@ namespace jiba
      * model is specified it is assumed to be zero and therefore the smallest model
      * is sought.
      */
-    class MinDiffRegularization: public ObjectiveFunction
+    class MinDiffRegularization: public MatOpRegularization
       {
     private:
-      //! The reference model that we want to regularize to
-      jiba::rvec Reference;
-      //! The misfit is simply the difference between the vectors
-      virtual void ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff)
+      void ConstructOperator(const jiba::ThreeDModelBase &ModelGeometry)
         {
-          if (Reference.empty())
+          const size_t ngrid = ModelGeometry.GetData().num_elements();
+
+          for (size_t i = 0; i < ngrid; ++i)
             {
-              Reference.resize(Model.size());
-              std::fill(Reference.begin(), Reference.end(), 0.0);
+              XOperatorMatrix(i, i) = 1.0;
             }
-          assert(Model.size() == Reference.size());
-          Diff = Model - Reference;
-        }
-      //! The gradient is particularly simple
-      virtual jiba::rvec ImplGradient(const jiba::rvec &Model,
-          const jiba::rvec &Diff)
-        {
-          return 2.0 * Diff;
-        }
+        } //end of for loop for x
+
     public:
-      //! Set the reference model for the roughness calculation, this is optional
-      void SetReferenceModel(const jiba::rvec &Model)
+      //! The clone function provides a virtual constructor
+      virtual MinDiffRegularization *clone() const
         {
-          Reference = Model;
+          return new MinDiffRegularization(*this);
         }
-      MinDiffRegularization()
+
+      MinDiffRegularization(const jiba::ThreeDModelBase &Geometry) :
+          MatOpRegularization(Geometry)
         {
+          ConstructOperator(Geometry);
         }
       virtual ~MinDiffRegularization()
         {
         }
-      };
+      }
+    ;
   /* @} */
   }
 

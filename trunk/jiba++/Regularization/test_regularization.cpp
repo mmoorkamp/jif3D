@@ -39,16 +39,24 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
         }
     }
 
-
   BOOST_AUTO_TEST_CASE (mindiff_test)
     {
       srand(time(NULL));
-      const size_t msize = 18;
+      jiba::ThreeDGravityModel GravModel;
+      const size_t nx = 5;
+      const size_t ny = 4;
+      const size_t nz = 3;
+      GravModel.SetDensities().resize(boost::extents[nx][ny][nz]);
+      GravModel.SetXCellSizes().resize(boost::extents[nx]);
+      GravModel.SetYCellSizes().resize(boost::extents[ny]);
+      GravModel.SetZCellSizes().resize(boost::extents[nz]);
+
+      const size_t msize = nx*ny*nz;
       jiba::rvec StartModel(msize), PertModel(msize);
       std::generate(StartModel.begin(),StartModel.end(),rand);
       std::generate(PertModel.begin(),PertModel.end(),rand);
 
-      jiba::MinDiffRegularization Regularization;
+      jiba::MinDiffRegularization Regularization(GravModel);
       Regularization.SetReferenceModel(StartModel);
       jiba::rvec Diff = StartModel - PertModel;
       double Misfit = Regularization.CalcMisfit(PertModel);
@@ -243,7 +251,7 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
 
       GradReg->SetReferenceModel(StartModel);
 
-      boost::shared_ptr<jiba::MinDiffRegularization> DiffReg(new jiba::MinDiffRegularization);
+      boost::shared_ptr<jiba::MinDiffRegularization> DiffReg(new jiba::MinDiffRegularization(GravModel));
       DiffReg->SetReferenceModel(StartModel);
       jiba::JointObjective Objective;
       Objective.AddObjective(GradReg,boost::shared_ptr<jiba::ModelCopyTransform>(new jiba::ModelCopyTransform),0.05);
