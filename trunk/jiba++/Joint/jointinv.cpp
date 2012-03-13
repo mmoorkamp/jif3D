@@ -105,7 +105,7 @@ bool CheckConvergence(const jiba::JointObjective &Objective)
   }
 
 /*! \file jointinv.cpp
- * The main joint inversion program. The main taks of the program is to read in the appropriate files
+ * The main joint inversion program. The main task of the program is to read in the appropriate files
  * and options and from these settings assemble the objects that perform the actual work. Also,
  * the main program manages the output of inversion results and data among other statistics.
  */
@@ -271,7 +271,8 @@ int main(int argc, char *argv[])
     StoreMisfit(misfitfile, 0, InitialMisfit, *Objective);
 
     std::string modelfilename = "result";
-
+    //write out the seismic source and receiver positions for plotting
+    //and general quality control
     jiba::Write3DDataToVTK(modelfilename + ".rec.vtk", "Receiver", jiba::rvec(
         TomoModel.GetMeasPosX().size()), TomoModel.GetMeasPosX(),
         TomoModel.GetMeasPosY(), TomoModel.GetMeasPosZ());
@@ -289,27 +290,38 @@ int main(int argc, char *argv[])
 
     bool terminate = false;
     jiba::rvec OldModel(InvModel);
+    //this is the core inversion loop, we make optimization steps
+    //until either we reach the maximum number of iterations
+    //or fulfill a termination criterion
     while (iteration < maxiter && !terminate)
       {
         terminate = true;
+        //we catch all jiba internal exceptions so that we can graciously
+        //exit and write out some final information before stopping the program
         try
           {
             std::cout << "\n\n Iteration: " << iteration << std::endl;
+            //we save the current model so we can go back to it
+            //in case the optimization step fails
             OldModel = InvModel;
+            //update the inversion model
             Optimizer->MakeStep(InvModel);
 
             ++iteration;
-
+            //we save all models at each iteration, so we can look at the development
+            // and use intermediate models in case something goes wrong
             SaveModel(InvModel, *TomoTransform.get(), TomoModel, modelfilename
                 + jiba::stringify(iteration) + ".tomo.inv");
             SaveModel(InvModel, *MTTransform.get(), MTModel, modelfilename
                 + jiba::stringify(iteration) + ".mt.inv");
             SaveModel(InvModel, *GravityTransform.get(), GravModel,
                 modelfilename + jiba::stringify(iteration) + ".grav.inv");
+            //write out some information about misfit to the screen
             std::cout << "Currrent Misfit: " << Optimizer->GetMisfit()
                 << std::endl;
             std::cout << "Currrent Gradient: " << Optimizer->GetGradNorm()
                 << std::endl;
+            //and write the current misfit for all objectives to a misfit file
             StoreMisfit(misfitfile, iteration, Optimizer->GetMisfit(),
                 *Objective);
             std::cout << "\n\n";
@@ -319,8 +331,9 @@ int main(int argc, char *argv[])
             InvModel = OldModel;
             iteration = maxiter;
           }
-
+        //we stop when either we do not make any improvement any more
         terminate = CheckConvergence(*Objective);
+        //or the file abort exists in the current directory
         terminate = terminate || jiba::WantAbort();
       }
 
