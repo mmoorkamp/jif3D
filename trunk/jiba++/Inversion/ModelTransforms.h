@@ -11,6 +11,7 @@
 #include "../Global/FatalException.h"
 #include "ModelDistributor.h"
 #include <boost/math/special_functions/atanh.hpp>
+#include <numeric>
 
 /*! \file ModelTransforms.h
  * This file contains various classes to transform model parameters within an inversion.
@@ -55,7 +56,7 @@ namespace jiba
         }
       //! The constructor needs the reference model, this has to have the same size as the inversion model
       NormalizeTransform(const jiba::rvec &Ref) :
-        Reference(Ref)
+          Reference(Ref)
         {
         }
       virtual ~NormalizeTransform()
@@ -111,7 +112,7 @@ namespace jiba
        * @param Ref The reference model vector \f$m_0\f$
        */
       LogTransform(const jiba::rvec &Ref) :
-        Reference(Ref)
+          Reference(Ref)
         {
         }
       virtual ~LogTransform()
@@ -140,8 +141,7 @@ namespace jiba
         {
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
-            Output(i) = min + (1.0 + std::tanh(FullModel(i))) / 2.0 * (max
-                - min);
+            Output(i) = min + (1.0 + std::tanh(FullModel(i))) / 2.0 * (max - min);
           return Output;
         }
       //! Transform the physical model parameters to generalized model parameters
@@ -152,11 +152,10 @@ namespace jiba
             {
               if (FullModel(i) >= max || FullModel(i) <= min)
                 {
-                  std::cerr << i << " " << FullModel(i) << " " << max << " "
-                      << min << std::endl;
+                  std::cerr << i << " " << FullModel(i) << " " << max << " " << min
+                      << std::endl;
                 }
-              const double argument = 2.0 * (FullModel(i) - min) / (max - min)
-                  - 1;
+              const double argument = 2.0 * (FullModel(i) - min) / (max - min) - 1;
               Output(i) = boost::math::atanh(argument);
             }
           return Output;
@@ -169,8 +168,8 @@ namespace jiba
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
-              Output(i) = (max - min) / (2.0 * std::pow(
-                  std::cosh(FullModel(i)), 2)) * Derivative(i);
+              Output(i) = (max - min) / (2.0 * std::pow(std::cosh(FullModel(i)), 2))
+                  * Derivative(i);
             }
           return Output;
         }
@@ -181,7 +180,7 @@ namespace jiba
        * @param maxval The maximum value for the physical model parameters.
        */
       TanhTransform(const double minval = 1.0, const double maxval = 5.0) :
-        min(minval), max(maxval)
+          min(minval), max(maxval)
         {
         }
       virtual ~TanhTransform()
@@ -205,8 +204,7 @@ namespace jiba
       //! Transform the normalized model parameters back to physical parameters
       virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
         {
-          jiba::rvec Slowness(SlownessTransform->GeneralizedToPhysical(
-              FullModel));
+          jiba::rvec Slowness(SlownessTransform->GeneralizedToPhysical(FullModel));
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
@@ -229,15 +227,12 @@ namespace jiba
       virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
           const jiba::rvec &Derivative) const
         {
-          jiba::rvec Slowness(SlownessTransform->GeneralizedToPhysical(
-              FullModel));
-          jiba::rvec SlowDeriv(SlownessTransform->Derivative(FullModel,
-              Derivative));
+          jiba::rvec Slowness(SlownessTransform->GeneralizedToPhysical(FullModel));
+          jiba::rvec SlowDeriv(SlownessTransform->Derivative(FullModel, Derivative));
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
-              Output(i) = -1.0 / (Slowness(i) * Slowness(i)) / 5000.0
-                  * SlowDeriv(i);
+              Output(i) = -1.0 / (Slowness(i) * Slowness(i)) / 5000.0 * SlowDeriv(i);
             }
           return Output;
         }
@@ -249,7 +244,7 @@ namespace jiba
        * @param SlowTrans A pointer to an object that gives slowness
        */
       DensityTransform(boost::shared_ptr<GeneralModelTransform> SlowTrans) :
-        SlownessTransform(SlowTrans)
+          SlownessTransform(SlowTrans)
         {
         }
       virtual ~DensityTransform()
@@ -277,13 +272,12 @@ namespace jiba
       //! Transform the normalized model parameters back to physical parameters
       virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
         {
-          jiba::rvec Slowness(SlownessTransform->GeneralizedToPhysical(
-              FullModel));
+          jiba::rvec Slowness(SlownessTransform->GeneralizedToPhysical(FullModel));
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
-              Output(i) = std::exp(-(a / (Slowness(i) * Slowness(i)) + b
-                  / Slowness(i) + c));
+              Output(i) = std::exp(
+                  -(a / (Slowness(i) * Slowness(i)) + b / Slowness(i) + c));
             }
           return Output;
         }
@@ -294,8 +288,8 @@ namespace jiba
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
-              double vel = (-b + sqrt(b * b - 4.0 * a * (c + std::log(
-                  FullModel(i))))) / (2.0 * a);
+              double vel = (-b + sqrt(b * b - 4.0 * a * (c + std::log(FullModel(i)))))
+                  / (2.0 * a);
               Output(i) = 1.0 / vel;
             }
           return SlownessTransform->PhysicalToGeneralized(Output);
@@ -304,16 +298,15 @@ namespace jiba
       virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
           const jiba::rvec &Derivative) const
         {
-          jiba::rvec Slowness(SlownessTransform->GeneralizedToPhysical(
-              FullModel));
-          jiba::rvec SlowDeriv(SlownessTransform->Derivative(FullModel,
-              Derivative));
+          jiba::rvec Slowness(SlownessTransform->GeneralizedToPhysical(FullModel));
+          jiba::rvec SlowDeriv(SlownessTransform->Derivative(FullModel, Derivative));
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
-              Output(i) = std::exp(-(a / (Slowness(i) * Slowness(i)) + b
-                  / Slowness(i) + c)) * (2.0 * a * std::pow(Slowness(i), -3)
-                  + b / (Slowness(i) * Slowness(i))) * SlowDeriv(i);
+              Output(i) =
+                  std::exp(-(a / (Slowness(i) * Slowness(i)) + b / Slowness(i) + c))
+                      * (2.0 * a * std::pow(Slowness(i), -3)
+                          + b / (Slowness(i) * Slowness(i))) * SlowDeriv(i);
             }
           return Output;
         }
@@ -326,7 +319,7 @@ namespace jiba
        * @param SlowTrans A pointer to an object that gives slowness
        */
       ConductivityTransform(boost::shared_ptr<GeneralModelTransform> SlowTrans) :
-        a(2.31e-7), b(-5.79e-4), c(0.124), SlownessTransform(SlowTrans)
+          a(2.31e-7), b(-5.79e-4), c(0.124), SlownessTransform(SlowTrans)
         {
         }
       virtual ~ConductivityTransform()
@@ -433,7 +426,7 @@ namespace jiba
        * @param end  The index of the successor of the last element (as in typical c/c++ loops)
        */
       SectionTransform(size_t start, size_t end) :
-        startindex(start), endindex(end)
+          startindex(start), endindex(end)
         {
           if (startindex >= endindex)
             throw jiba::FatalException("Startindex is greater than Endindex !");
@@ -449,27 +442,27 @@ namespace jiba
      * from two different SectionTransform objects. We therefore have a similar class to extract two sections, each of which
      * is continuous in memory.
      */
-    class DoubleSectionTransform: public jiba::GeneralModelTransform
+    class MultiSectionTransform: public jiba::GeneralModelTransform
       {
     private:
       size_t length;
-      size_t startindex1;
-      size_t endindex1;
-      size_t startindex2;
-      size_t endindex2;
-      boost::shared_ptr<GeneralModelTransform> Transform1;
-      boost::shared_ptr<GeneralModelTransform> Transform2;
+      std::vector<size_t> startindices;
+      std::vector<size_t> endindices;
+      std::vector<boost::shared_ptr<GeneralModelTransform> > Transforms;
     public:
       virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
         {
-          jiba::rvec Result(endindex1 - startindex1 + endindex2 - startindex2);
-          ublas::subrange(Result, 0, endindex1 - startindex1)
-              = Transform1->GeneralizedToPhysical(ublas::subrange(FullModel,
-                  startindex1, endindex1));
-          ublas::subrange(Result, endindex1 - startindex1, endindex1
-              - startindex1 + endindex2 - startindex2)
-              = Transform2->GeneralizedToPhysical(ublas::subrange(FullModel,
-                  startindex2, endindex2));
+          const size_t outlength = std::accumulate(endindices.begin(), endindices.end(),
+              0) - std::accumulate(startindices.begin(), startindices.end(), 0);
+          jiba::rvec Result(outlength);
+
+          const size_t nsections = startindices.size();
+          for (size_t i = 0; i < nsections; ++i)
+            {
+              ublas::subrange(Result, startindices[i], endindices[i]) =
+                  Transforms[i]->GeneralizedToPhysical(
+                      ublas::subrange(FullModel, startindices[i], endindices[i]));
+            }
           return Result;
         }
       virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
@@ -481,31 +474,29 @@ namespace jiba
         {
           jiba::rvec Result(length);
           Result.clear();
-          ublas::subrange(Result, startindex1, endindex1)
-              = Transform1->Derivative(ublas::subrange(FullModel, 0, endindex1
-                  - startindex1), ublas::subrange(Derivative, 0, endindex1
-                  - startindex1));
-          ublas::subrange(Result, startindex2, endindex2)
-              = Transform1->Derivative(ublas::subrange(FullModel, endindex1
-                  - startindex1, endindex1 - startindex1 + endindex2
-                  - startindex2), ublas::subrange(Derivative, endindex1
-                  - startindex1, endindex1 - startindex1 + endindex2
-                  - startindex2));
+          const size_t nsections = startindices.size();
+          for (size_t i = 0; i < nsections; ++i)
+            {
+              ublas::subrange(Result, startindices[i], endindices[i]) =
+                  Transforms[i]->Derivative(
+                      ublas::subrange(FullModel, startindices[i], endindices[i]),
+                      ublas::subrange(Derivative, startindices[i], endindices[i]));
+            }
           return Result;
         }
-      DoubleSectionTransform(size_t l, size_t start1, size_t end1,
-          size_t start2, size_t end2,
-          boost::shared_ptr<GeneralModelTransform> T1 = boost::shared_ptr<
-              GeneralModelTransform>(new ModelCopyTransform()),
-          boost::shared_ptr<GeneralModelTransform> T2 = boost::shared_ptr<
-              GeneralModelTransform>(new ModelCopyTransform())) :
-        length(l), startindex1(start1), endindex1(end1), startindex2(start2),
-            endindex2(end2), Transform1(T1), Transform2(T2)
+      void AddSection(size_t startindex, size_t endindex,
+          boost::shared_ptr<GeneralModelTransform> Trans)
         {
-          if (startindex1 >= endindex1 || startindex2 >= endindex2)
-            throw jiba::FatalException("Startindex is greater than Endindex !");
+          startindices.push_back(startindex);
+          endindices.push_back(endindex);
+          Transforms.push_back(Trans);
         }
-      virtual ~DoubleSectionTransform()
+      MultiSectionTransform(size_t l) :
+          length(l)
+        {
+
+        }
+      virtual ~MultiSectionTransform()
         {
 
         }
@@ -539,7 +530,7 @@ namespace jiba
           return Result;
         }
       ExpansionTransform(size_t l, size_t start, size_t end) :
-        length(l), startindex(start), endindex(end)
+          length(l), startindex(start), endindex(end)
         {
           if (startindex >= endindex)
             throw jiba::FatalException("Startindex is greater than Endindex !");
