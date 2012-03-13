@@ -113,7 +113,7 @@ int main()
       GravityCalculator
           = boost::shared_ptr<jiba::FullSensitivityGravityCalculator>(
               jiba::CreateGravityCalculator<
-                  jiba::FullSensitivityGravityCalculator>::MakeScalar());
+                  jiba::FullSensitivityGravityCalculator>::MakeScalar(true));
       break;
     case jiba::ftg:
       jiba::ReadTensorGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
@@ -121,7 +121,7 @@ int main()
       GravityCalculator
           = boost::shared_ptr<jiba::FullSensitivityGravityCalculator>(
               jiba::CreateGravityCalculator<
-                  jiba::FullSensitivityGravityCalculator>::MakeTensor());
+                  jiba::FullSensitivityGravityCalculator>::MakeTensor(true));
       DepthExponent = -3.0;
       break;
     default:
@@ -163,8 +163,8 @@ int main()
     //we use this code to examine the behaviour of the sensitivities
     //so we write out the raw sensitivities for each measurement
     std::cout << "Writing out raw sensitivities." << std::endl;
-    WriteSensitivities(modelfilename, "raw_sens",
-        GravityCalculator->GetSensitivities(), Model);
+    //WriteSensitivities(modelfilename, "raw_sens",
+    //    GravityCalculator->GetSensitivities(), Model);
 
     //create objects for the depth weighting
     jiba::rvec WeightVector(zsize), ModelWeight(nmod);
@@ -202,9 +202,9 @@ int main()
     jiba::ConstructDepthWeighting(Model.GetZCellSizes(), z0, WeightVector,
         jiba::WeightingTerm(DepthExponent));
     //and output the scaling weights
-    std::ofstream weightfile("weights.out");
-    std::copy(WeightVector.begin(), WeightVector.end(), std::ostream_iterator<
-        double>(weightfile, "\n"));
+    //std::ofstream weightfile("weights.out");
+    //std::copy(WeightVector.begin(), WeightVector.end(), std::ostream_iterator<
+    //    double>(weightfile, "\n"));
 
     //we can choose the influence of the background on the inversion
     double backgroundweight = 1.0;
@@ -278,7 +278,7 @@ int main()
 
     Model.WriteVTK(modelfilename + ".inv.vtk");
     Model.WriteNetCDF(modelfilename + ".inv.nc");
-    WriteSensitivities(modelfilename, "fil_sens",
-        GravityCalculator->GetSensitivities(), Model);
+    //WriteSensitivities(modelfilename, "fil_sens",
+    //    GravityCalculator->GetSensitivities(), Model);
     std::cout << std::endl;
   }
