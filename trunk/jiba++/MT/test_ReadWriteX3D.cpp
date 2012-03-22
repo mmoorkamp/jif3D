@@ -5,7 +5,6 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-
 #define BOOST_TEST_MODULE ReadWriteX3D test
 #define BOOST_TEST_MAIN ...
 #include <boost/test/included/unit_test.hpp>
@@ -24,7 +23,8 @@ BOOST_AUTO_TEST_CASE  (read_write_X3D_test)
       const size_t ysize = rand() % 10 + 2;
       const size_t zsize = rand() % 10 + 2;
       const size_t nbglayers = rand() % 10 + 2;
-      const double Depth = 12.3;
+      std::vector<double> Depths(2);
+      std::fill(Depths.begin(),Depths.end(),12.3);
       jiba::ThreeDModelBase::t3DModelDim XCellSizes(boost::extents[xsize]), YCellSizes(boost::extents[ysize]),
       ZCellSizes(boost::extents[zsize]);
       jiba::ThreeDModelBase::t3DModelData Data(boost::extents[xsize][ysize][zsize]);
@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE  (read_write_X3D_test)
       std::generate_n(bg_conductivities.begin(),nbglayers,drand48);
 
       const std::string filename("x3d.in");
-      jiba::Write3DModelForX3D(filename,XCellSizes, YCellSizes, ZCellSizes,Depth,
+      jiba::Write3DModelForX3D(filename,XCellSizes, YCellSizes, ZCellSizes,Depths,
           Data,bg_thicknesses,bg_conductivities);
 
       jiba::ThreeDModelBase::t3DModelDim InXCellSizes, InYCellSizes,InZCellSizes;
