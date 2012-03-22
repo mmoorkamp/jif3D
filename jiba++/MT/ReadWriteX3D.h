@@ -5,7 +5,6 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-
 #ifndef READWRITEX3D_H_
 #define READWRITEX3D_H_
 
@@ -17,11 +16,10 @@
 #include "../ModelBase/ThreeDModelBase.h"
 #include "X3DModel.h"
 
-
 namespace jiba
   {
-  /** \addtogroup mtmodelling Forward modelling of magnetotelluric data */
-  /* @{ */
+    /** \addtogroup mtmodelling Forward modelling of magnetotelluric data */
+    /* @{ */
     //! Read an ascii 3D MT model in the format used by x3D, not feature complete !
     /*! Read in a file with a 3D MT model in the format used by x3D. Note that
      * we do not support all possible models that can be described in the model
@@ -39,17 +37,15 @@ namespace jiba
     void Read3DModelFromX3D(const std::string &filename,
         ThreeDModelBase::t3DModelDim &XCellSizes,
         ThreeDModelBase::t3DModelDim &YCellSizes,
-        ThreeDModelBase::t3DModelDim &ZCellSizes,
-        ThreeDModelBase::t3DModelData &Data,
-        std::vector<double> &bg_conductivities,
-        std::vector<double> &bg_thicknesses);
+        ThreeDModelBase::t3DModelDim &ZCellSizes, ThreeDModelBase::t3DModelData &Data,
+        std::vector<double> &bg_conductivities, std::vector<double> &bg_thicknesses);
     //! Write a 3D model to an ascii file compatible with x3D
     /*! Write a file with a 3D MT model in the format used by x3D.
      * @param filename The name of the file
      * @param XCellSizes The size of the cells in x-direction [m]
      * @param YCellSizes The size of the cells in y-direction [m]
      * @param ZCellSizes The size of the cells in z-direction [m]
-     * @param ObservationDepth The depth of the observation sites in m, currently all sites have to be located at the same depth
+     * @param ObservationDepths The depth to each of the observation sites in m
      * @param Data The conductivities in Siemens
      * @param bg_conductivities The conductivities in Siemens of the background layers
      * @param bg_thicknesses The thicknesses in m of the background layers
@@ -58,7 +54,7 @@ namespace jiba
         const ThreeDModelBase::t3DModelDim &XCellSizes,
         const ThreeDModelBase::t3DModelDim &YCellSizes,
         const ThreeDModelBase::t3DModelDim &ZCellSizes,
-        const double ObservationDepth,
+        const std::vector<double> &ObservationDepths,
         const ThreeDModelBase::t3DModelData &Data,
         const std::vector<double> &bg_conductivities,
         const std::vector<double> &bg_thicknesses);
@@ -71,21 +67,25 @@ namespace jiba
      * @param ResultFilename The filename root for the results
      * @param ModelFilename The filename for the model in x3d format
      */
-    void WriteProjectFile(const boost::filesystem::path &RootDir ,const std::vector<double> &Frequencies,
-        X3DModel::ProblemType Type, const std::string &ResultFilename,
-        const std::string &ModelFilename);
+    void WriteProjectFile(const boost::filesystem::path &RootDir,
+        const std::vector<double> &Frequencies, X3DModel::ProblemType Type,
+        const std::string &ResultFilename, const std::string &ModelFilename);
 
     //!Write a file containing information about sources (electric or magnetic)
     /*! Write a file that contains the dipole moments of electric or magnetic dipoles
      * for x3d.
      * @param filename The name of the ascii file we want to write
-     * @param SourceDepth The depth of the dipoles in m
-     * @param XPolMoments The x-component of the dipole moment
-     * @param YPolMoments The y-component of the dipole moment
+     * @param SourceXIndex The indices in x-direction within the model for each source
+     * @param SourceYIndex The indices in y-direction within the model for each source
+     * @param SourceDepths The depth of the dipoles in m
+     * @param XPolMoments The x-component of the dipole moment for each source position
+     * @param YPolMoments The y-component of the dipole moment for each source position
      */
-    void WriteSourceFile(const std::string &filename, const double SourceDepth,
-        const boost::multi_array<std::complex<double>, 2> &XPolMoments,
-        const boost::multi_array<std::complex<double>, 2> &YPolMoments);
+    void WriteSourceFile(const std::string &filename,
+        const std::vector<size_t> &SourceXIndex, const std::vector<size_t> &SourceYIndex,
+        const std::vector<double> &SourceDepths,
+        const std::vector<std::complex<double> > &XPolMoments,
+        const std::vector<std::complex<double> > &YPolMoments);
 
     //! Read one .emo file produced by x3d that contains the electric and magnetic fields at the observation sites
     /*! x3d produces files with ending .emo that contain the electric and magnetic fields at the
@@ -97,9 +97,8 @@ namespace jiba
      * @param Hx The x-component of the magnetic field in A/m
      * @param Hy The y-component of the magnetic field in A/m
      */
-    void ReadEMO(const std::string &filename,
-        std::vector<std::complex<double> > &Ex, std::vector<
-            std::complex<double> > &Ey, std::vector<std::complex<double> > &Hx,
+    void ReadEMO(const std::string &filename, std::vector<std::complex<double> > &Ex,
+        std::vector<std::complex<double> > &Ey, std::vector<std::complex<double> > &Hx,
         std::vector<std::complex<double> > &Hy);
 
     //! Read one .ema file produced by x3d that contains the electric field at all model cells
@@ -115,13 +114,11 @@ namespace jiba
      * @param ncellsy The number of cells in y-direction
      * @param ncellsz The number of cells in z-direction
      */
-    void ReadEMA(const std::string &filename,
-        std::vector<std::complex<double> > &Ex, std::vector<
-            std::complex<double> > &Ey, std::vector<std::complex<double> > &Ez,
+    void ReadEMA(const std::string &filename, std::vector<std::complex<double> > &Ex,
+        std::vector<std::complex<double> > &Ey, std::vector<std::complex<double> > &Ez,
         const size_t ncellsx, const size_t ncellsy, const size_t ncellsz);
 
-
-    /* @} */
+  /* @} */
   }
 
 #endif /* READWRITEX3D_H_ */

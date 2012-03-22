@@ -5,7 +5,6 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-
 #define BOOST_TEST_MODULE X3DCalculator test
 #define BOOST_TEST_MAIN ...
 #include <boost/test/included/unit_test.hpp>
