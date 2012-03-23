@@ -402,40 +402,40 @@ namespace jiba
         outfile << "ARRAY\n";
         outfile << MomentComp;
         outfile << "\n$\n";
-
       }
 
     void WriteGeometryInfo(std::ofstream &outfile, const size_t xindex,
         const size_t yindex)
       {
-        outfile << " Scale  ( the ARRAY will be multiplied by this Scale ) \n 1.0 \n\n";
+        //write the keywords for x3d
+        outfile << "Scale  ( the ARRAY will be multiplied by this Scale ) \n 1.0 \n\n";
         outfile << "First and last cells in X-direction \n";
-        outfile << xindex << " " << xindex << "\n";
+        //our c++ indices start at zero, x3d starts at 1
+        //so we add one to all indices
+        outfile << xindex + 1 << " " << xindex + 1 << "\n";
         outfile << "First and last cells in Y-direction \n";
-        outfile << yindex << " " << yindex << "\n\n";
+        outfile << yindex + 1 << " " << yindex + 1 << "\n\n";
       }
 
     void WriteEmptyArray(std::ofstream &outfile)
       {
         outfile << "ARRAY\n";
         outfile << "0.0\n";
+        outfile << "$\n";
       }
 
     void WriteSourceFile(const std::string &filename,
         const std::vector<size_t> &SourceXIndex, const std::vector<size_t> &SourceYIndex,
         const std::vector<double> &SourceDepths,
         const std::vector<std::complex<double> > &XPolMoments,
-        const std::vector<std::complex<double> > &YPolMoments)
+        const std::vector<std::complex<double> > &YPolMoments, const size_t maxx,
+        const size_t maxy)
       {
         typedef boost::multi_array_types::index_range range;
         //const size_t nx = XPolMoments.shape()[0];
         //const size_t ny = XPolMoments.shape()[1];
         const size_t nmeas = XPolMoments.size();
         assert(nmeas == YPolMoments.size());
-        const size_t minx = *std::min_element(SourceXIndex.begin(), SourceXIndex.end());
-        const size_t maxx = *std::max_element(SourceXIndex.begin(), SourceXIndex.end());
-        const size_t miny = *std::min_element(SourceYIndex.begin(), SourceYIndex.end());
-        const size_t maxy = *std::max_element(SourceYIndex.begin(), SourceYIndex.end());
 
         //write out the required header for the source file
         //x3d is very picky about this
@@ -446,13 +446,13 @@ namespace jiba
             << " is imaginary_part_of_the_sources assigned in this file?(Y / N; Default N)\n";
         outfile << " Y\n";
         outfile << "First and last cells in X-direction(nxSf, nxSl)\n";
-        outfile << minx << "  " << maxx << "\n";
+        outfile << "1  " << maxx << "\n";
         outfile << "First and last cells in Y-direction(nySf, nySl)\n";
-        outfile << miny << "  " << maxy << "\n";
+        outfile << "1  " << maxy << "\n";
         for (size_t i = 0; i < nmeas; ++i)
           {
             outfile << "zS(m)  (Depth to the source level)\n";
-            outfile << SourceDepths[i] << "\n $\n";
+            outfile << SourceDepths[i] << "\n$\n";
             //myarray[ boost::indices[range()][range() < 5 ][4 <= range().stride(2) <= 7] ];
             //write real part of x-component
             WriteGeometryInfo(outfile, SourceXIndex[i], SourceYIndex[i]);

@@ -80,12 +80,15 @@ namespace jiba
      * @param SourceDepths The depth of the dipoles in m
      * @param XPolMoments The x-component of the dipole moment for each source position
      * @param YPolMoments The y-component of the dipole moment for each source position
+     * @param maxx The number of cells of the modelling domain in x-direction
+     * @param maxy The number of cells of the modelling domain in y-direction
      */
     void WriteSourceFile(const std::string &filename,
         const std::vector<size_t> &SourceXIndex, const std::vector<size_t> &SourceYIndex,
         const std::vector<double> &SourceDepths,
         const std::vector<std::complex<double> > &XPolMoments,
-        const std::vector<std::complex<double> > &YPolMoments);
+        const std::vector<std::complex<double> > &YPolMoments, const size_t maxx,
+        const size_t maxy);
 
     //! Read one .emo file produced by x3d that contains the electric and magnetic fields at the observation sites
     /*! x3d produces files with ending .emo that contain the electric and magnetic fields at the
