@@ -5,7 +5,6 @@
 // Copyright   : 2010, mmoorkamp
 //============================================================================
 
-
 #ifndef THREEDMODELOBJECTIVE_H_
 #define THREEDMODELOBJECTIVE_H_
 
@@ -70,8 +69,7 @@ namespace jiba
       virtual void
       ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff);
       //! The implementation of the gradient calculation
-      virtual jiba::rvec ImplGradient(const jiba::rvec &Model,
-          const jiba::rvec &Diff);
+      virtual jiba::rvec ImplGradient(const jiba::rvec &Model, const jiba::rvec &Diff);
       //! So far transformations have no effect
       virtual void SetDataTransformAction()
         {
@@ -120,8 +118,7 @@ namespace jiba
       void SetCoarseModelGeometry(const ModelType &Model)
         {
           if (Model.GetData().num_elements() == 0)
-            throw jiba::FatalException(
-                "Cannot have empty model in objective function.");
+            throw jiba::FatalException("Cannot have empty model in objective function.");
           CoarseModel = Model;
         }
       //! Set the geometry of a finely discretized model to ensure numerical precision
@@ -137,8 +134,7 @@ namespace jiba
       void SetFineModelGeometry(const ModelType &Model)
         {
           if (Model.GetData().num_elements() == 0)
-            throw jiba::FatalException(
-                "Cannot have empty model in objective function.");
+            throw jiba::FatalException("Cannot have empty model in objective function.");
           FineModel = Model;
           //set the coordinates of the refiner object according to the fine model
           //we want to use for the forward calculation
@@ -164,7 +160,7 @@ namespace jiba
     template<class ThreeDCalculatorType>
     ThreeDModelObjective<ThreeDCalculatorType>::ThreeDModelObjective(
         const ThreeDCalculatorType &Calc) :
-      Calculator(Calc), wantrefinement(false)
+        Calculator(Calc), wantrefinement(false)
       {
       }
 
@@ -198,11 +194,13 @@ namespace jiba
             SynthData = Calculator.Calculate(CoarseModel);
           }
 
-        assert(SynthData.size() == ObservedData.size());
+        if (SynthData.size() != ObservedData.size())
+          throw jiba::FatalException(
+              " ThreeDModelObjective: Forward calculation does not give same amount of data !");
         Diff.resize(ObservedData.size());
         //calculate the difference between observed and synthetic
-        std::transform(SynthData.begin(), SynthData.end(),
-            ObservedData.begin(), Diff.begin(), std::minus<double>());
+        std::transform(SynthData.begin(), SynthData.end(), ObservedData.begin(),
+            Diff.begin(), std::minus<double>());
       }
 
     //The implementation of the gradient calculation
@@ -213,8 +211,7 @@ namespace jiba
         assert(Model.size() == CoarseModel.GetData().num_elements());
         //as we have stored the model vector from the misfit calculation
         //in the model object, we can check if the call is correct
-        if (!std::equal(Model.begin(), Model.end(),
-            CoarseModel.GetData().origin()))
+        if (!std::equal(Model.begin(), Model.end(), CoarseModel.GetData().origin()))
           throw jiba::FatalException(
               "Gradient calculation needs identical model to forward !");
         //calculate the gradient
