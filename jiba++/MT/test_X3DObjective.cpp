@@ -50,14 +50,15 @@ void  MakeMTModel(jiba::X3DModel &Model)
       Model.SetFrequencies().push_back(2.0);
       Model.SetFrequencies().push_back(5.0);
       Model.SetFrequencies().push_back(10.0);
-
+      srand48(time(0));
       for (size_t i = 0; i < xsize; ++i)
         {
           for (size_t j = 0; j < ysize; ++j)
             {
               double currx = Model.GetXCoordinates()[i] + deltax / 2.0;
               double curry = Model.GetYCoordinates()[j] + deltay / 2.0;
-              Model.AddMeasurementPoint(currx, curry, 250.0);
+              double currz =  drand48() * deltaz * zsize;
+              Model.AddMeasurementPoint(currx, curry, currz);
             }
         }
     }
