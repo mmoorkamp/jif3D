@@ -21,6 +21,7 @@ exe convertmtt : convertmtt.cpp   ../Global ../MT ..//boost_filesystem : <includ
 exe writemtt : writemtt.cpp   ../Global ../MT ..//boost_filesystem : <include>. ;
 exe grav_jointinv : grav_jointinv.cpp  joint ../Joint ../MT : <include>. ;
 exe mergetomo : mergetomo.cpp  ../Tomo  ../Global : <include>. ;
+exe tomoregion : tomoregion.cpp  ../Tomo  ../Global : <include>. ;
 exe eikonal : eikonal.cpp  ../Tomo  ../Global : <include>. ;
 exe eikonal2D : eikonal2D.cpp  ../Tomo  ../Global : <include>. ;
 exe opttest : opttest.cpp  ../Joint ../MT ..//optpp ..//newmat joint ..//boost_program_options : 
