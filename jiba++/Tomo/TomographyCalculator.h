@@ -18,6 +18,11 @@ namespace jiba
     /** \addtogroup tomo Seismic tomography classes and functions */
     /* @{ */
     //! This class provides a convenient interface to the Podvin and Lecomte code and Bjoern's additions
+    /*! This class calculates first arrival tomography data and the associated gradients for inversion.
+     * It is mainly a driver for the eikonal solver by Podvin and Lecomte and the ray tracing routines
+     * written by B. Heincke. Given a three-dimensional model of seismic slownesses in s/m it calculates
+     * the time it takes the first arrival to travel for a set of specified source-receiver configurations.
+     */
     class TomographyCalculator
       {
     public:
@@ -44,7 +49,7 @@ namespace jiba
        * files can be several Gigabytes, so we have this as an option.
        * @param saverays If True we write out a .vtk file showing the rays in the model
        */
-      TomographyCalculator(bool saverays = false);
+      explicit TomographyCalculator(bool saverays = false);
       virtual ~TomographyCalculator();
       //! Return the raypath structure for the last forward modelling
       const std::vector<jiba::RP_STRUCT> &GetRayPath() const
