@@ -5,7 +5,6 @@
 // Copyright   : 2008, mmoorkamp
 //============================================================================
 
-
 #ifdef HAVE_CONFIG_H
 #include "OPT++_config.h"
 #endif
@@ -74,22 +73,22 @@ void init_model(int ndim, ColumnVector& x)
   {
     if (ndim != InvModel.size())
       {
-        std::cerr << "Ndim: " << ndim << " does not match Model size "
-            << InvModel.size() << std::endl;
+        std::cerr << "Ndim: " << ndim << " does not match Model size " << InvModel.size()
+            << std::endl;
         exit(1);
       }
     for (size_t i = 0; i < InvModel.size(); ++i)
       x(i + 1) = InvModel(i);
   }
 
-void eval_objective(int mode, int n, const ColumnVector& x, double& fx,
-    ColumnVector& g, int& result)
+void eval_objective(int mode, int n, const ColumnVector& x, double& fx, ColumnVector& g,
+    int& result)
   {
 
     if (n != InvModel.size())
       {
-        std::cerr << "N: " << n << " does not match Model size "
-            << InvModel.size() << std::endl;
+        std::cerr << "N: " << n << " does not match Model size " << InvModel.size()
+            << std::endl;
         return;
       }
     for (size_t i = 0; i < InvModel.size(); ++i)
@@ -121,9 +120,9 @@ int main(int argc, char *argv[])
     jiba::SetupCoupling CouplingSetup;
 
     po::options_description desc("General options");
-    desc.add_options()("help", "produce help message")("threads",
-        po::value<int>(), "The number of openmp threads")("covmod", po::value<
-        std::string>(), "A file containing the model covariance");
+    desc.add_options()("help", "produce help message")("threads", po::value<int>(),
+        "The number of openmp threads")("covmod", po::value<std::string>(),
+        "A file containing the model covariance");
 
     desc.add(TomoSetup.SetupOptions());
     desc.add(GravitySetup.SetupOptions());
@@ -150,7 +149,7 @@ int main(int argc, char *argv[])
 
     if (vm.count("threads"))
       {
-        omp_set_num_threads(vm["threads"].as<int> ());
+        omp_set_num_threads(vm["threads"].as<int>());
       }
 
     jiba::rvec CovModVec;
@@ -159,7 +158,7 @@ int main(int argc, char *argv[])
         jiba::ThreeDSeismicModel CovModel;
         //we store the covariances in a seismic model file
         //but we do not have to have an equidistant grid
-        CovModel.ReadNetCDF(vm["covmod"].as<std::string> (), false);
+        CovModel.ReadNetCDF(vm["covmod"].as<std::string>(), false);
         const size_t ncovmod = CovModel.GetSlownesses().num_elements();
         CovModVec.resize(ncovmod);
         std::copy(CovModel.GetSlownesses().origin(),
@@ -169,41 +168,36 @@ int main(int argc, char *argv[])
     boost::shared_ptr<jiba::GeneralModelTransform> TomoTransform, MTTransform,
         GravityTransform, RegTransform;
 
-    CouplingSetup.SetupTransforms(vm, TomoTransform, GravityTransform,
+    jiba::ThreeDSeismicModel StartModel;
+    CouplingSetup.SetupTransforms(vm, StartModel, TomoTransform, GravityTransform,
         MTTransform, RegTransform);
 
-    jiba::ThreeDSeismicModel TomoModel;
-    bool havetomo = TomoSetup.SetupObjective(vm, GetObjective(), TomoModel,
-        TomoTransform);
-    bool havegrav =
-        GravitySetup.SetupObjective(vm, GetObjective(), GravityTransform);
+    bool havetomo = TomoSetup.SetupObjective(vm, GetObjective(), TomoTransform);
+    bool havegrav = GravitySetup.SetupObjective(vm, GetObjective(), GravityTransform);
 
-    if (havetomo && havegrav && !EqualGridGeometry(TomoModel,
-        GravitySetup.GetModel()))
+    if (havetomo && havegrav && !EqualGridGeometry(StartModel, GravitySetup.GetModel()))
       {
         throw jiba::FatalException(
             "Gravity model does not have the same geometry as starting model");
       }
 
     bool havemt = MTSetup.SetupObjective(vm, GetObjective(), MTTransform);
-    if (havetomo && havemt && !EqualGridGeometry(MTSetup.GetModel(), TomoModel))
+    if (havetomo && havemt && !EqualGridGeometry(MTSetup.GetModel(), StartModel))
       {
         throw jiba::FatalException(
             "MT model does not have the same geometry as starting model");
       }
 
-    boost::shared_ptr<jiba::MatOpRegularization> Regularization =
-        RegSetup.SetupObjective(vm, TomoModel, RegTransform, CovModVec);
-    CouplingSetup.SetupModelVector(vm, InvModel, TomoModel,
-        GravitySetup.GetModel(), MTSetup.GetModel(), GetObjective(), Regularization,
-        RegSetup.GetSubStart());
+    boost::shared_ptr<jiba::MatOpRegularization> Regularization = RegSetup.SetupObjective(
+        vm, StartModel, RegTransform, CovModVec);
+    CouplingSetup.SetupModelVector(vm, InvModel, StartModel, GravitySetup.GetModel(),
+        MTSetup.GetModel(), GetObjective(), Regularization, RegSetup.GetSubStart());
 
     size_t maxiter = 1;
     std::cout << "Maximum iterations: ";
     std::cin >> maxiter;
 
-    boost::posix_time::ptime starttime =
-        boost::posix_time::microsec_clock::local_time();
+    boost::posix_time::ptime starttime = boost::posix_time::microsec_clock::local_time();
 
     std::cout << "Performing inversion." << std::endl;
 
@@ -212,26 +206,28 @@ int main(int argc, char *argv[])
     //calculate initial misfit
     misfitfile << "0 " << GetObjective().CalcMisfit(InvModel) << " ";
     std::copy(GetObjective().GetIndividualFits().begin(),
-        GetObjective().GetIndividualFits().end(), std::ostream_iterator<double>(
-            misfitfile, " "));
+        GetObjective().GetIndividualFits().end(),
+        std::ostream_iterator<double>(misfitfile, " "));
     misfitfile << std::endl;
 
     std::string modelfilename = "result";
 
-    jiba::Write3DDataToVTK(modelfilename + ".rec.vtk", "Receiver", jiba::rvec(
-        TomoModel.GetMeasPosX().size()), TomoModel.GetMeasPosX(),
-        TomoModel.GetMeasPosY(), TomoModel.GetMeasPosZ());
-    jiba::Write3DDataToVTK(modelfilename + ".sor.vtk", "Source", jiba::rvec(
-        TomoModel.GetSourcePosX().size()), TomoModel.GetSourcePosX(),
-        TomoModel.GetSourcePosY(), TomoModel.GetSourcePosZ());
+    jiba::Write3DDataToVTK(modelfilename + ".rec.vtk", "Receiver",
+        jiba::rvec(TomoSetup.GetModel().GetMeasPosX().size()),
+        TomoSetup.GetModel().GetMeasPosX(), TomoSetup.GetModel().GetMeasPosY(),
+        TomoSetup.GetModel().GetMeasPosZ());
+    jiba::Write3DDataToVTK(modelfilename + ".sor.vtk", "Source",
+        jiba::rvec(TomoSetup.GetModel().GetSourcePosX().size()),
+        TomoSetup.GetModel().GetSourcePosX(), TomoSetup.GetModel().GetSourcePosY(),
+        TomoSetup.GetModel().GetSourcePosZ());
 
     jiba::ThreeDGravityModel GravModel(GravitySetup.GetModel());
     jiba::X3DModel MTModel(MTSetup.GetModel());
 
     if (!havemt)
-      MTModel = TomoModel;
+      MTModel = StartModel;
     if (!havegrav)
-      GravModel = TomoModel;
+      GravModel = StartModel;
 
     std::cout << "Performing inversion." << std::endl;
 
@@ -262,39 +258,38 @@ int main(int argc, char *argv[])
     jiba::rvec DensInvModel(GravityTransform->GeneralizedToPhysical(InvModel));
     jiba::rvec TomoInvModel(TomoTransform->GeneralizedToPhysical(InvModel));
 
-    std::copy(TomoInvModel.begin(), TomoInvModel.begin()
-        + TomoModel.GetSlownesses().num_elements(),
-        TomoModel.SetSlownesses().origin());
-    std::copy(DensInvModel.begin(), DensInvModel.begin()
-        + GravModel.SetDensities().num_elements(),
+    std::copy(TomoInvModel.begin(),
+        TomoInvModel.begin() + StartModel.GetSlownesses().num_elements(),
+        StartModel.SetSlownesses().origin());
+    std::copy(DensInvModel.begin(),
+        DensInvModel.begin() + GravModel.SetDensities().num_elements(),
         GravModel.SetDensities().origin());
 
     //calculate the predicted refraction data
     std::cout << "Calculating response of inversion model." << std::endl;
-    jiba::rvec TomoInvData(jiba::TomographyCalculator().Calculate(TomoModel));
-    jiba::SaveTraveltimes(modelfilename + ".inv_tt.nc", TomoInvData, TomoModel);
+    jiba::rvec TomoInvData(jiba::TomographyCalculator().Calculate(StartModel));
+    jiba::SaveTraveltimes(modelfilename + ".inv_tt.nc", TomoInvData, StartModel);
 
-    jiba::rvec ScalGravInvData(jiba::CreateGravityCalculator<
-        jiba::MinMemGravityCalculator>::MakeScalar()->Calculate(GravModel));
-    jiba::rvec FTGInvData(jiba::CreateGravityCalculator<
-        jiba::MinMemGravityCalculator>::MakeTensor()->Calculate(GravModel));
-    jiba::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc",
-        ScalGravInvData, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
-        GravModel.GetMeasPosZ());
-    jiba::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc",
-        FTGInvData, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
-        GravModel.GetMeasPosZ());
+    jiba::rvec ScalGravInvData(
+        jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeScalar()->Calculate(
+            GravModel));
+    jiba::rvec FTGInvData(
+        jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeTensor()->Calculate(
+            GravModel));
+    jiba::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc", ScalGravInvData,
+        GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ());
+    jiba::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc", FTGInvData,
+        GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ());
     //and write out the data and model
     //here we have to distinguish again between scalar and ftg data
     std::cout << "Writing out inversion results." << std::endl;
 
-    TomoModel.WriteNetCDF(modelfilename + ".tomo.inv.nc");
-    TomoModel.WriteVTK(modelfilename + ".tomo.inv.vtk");
+    StartModel.WriteNetCDF(modelfilename + ".tomo.inv.nc");
+    StartModel.WriteVTK(modelfilename + ".tomo.inv.vtk");
     GravModel.WriteVTK(modelfilename + ".grav.inv.vtk");
     GravModel.WriteNetCDF(modelfilename + ".grav.inv.nc");
     std::cout << "Number of evaluations: " << GetObjective().GetNEval() << std::endl;
-    boost::posix_time::ptime endtime =
-        boost::posix_time::microsec_clock::local_time();
+    boost::posix_time::ptime endtime = boost::posix_time::microsec_clock::local_time();
     double cachedruntime = (endtime - starttime).total_seconds();
     std::cout << "Runtime: " << cachedruntime << " s" << std::endl;
     std::cout << std::endl;
