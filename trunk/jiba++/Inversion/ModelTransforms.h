@@ -457,11 +457,14 @@ namespace jiba
           jiba::rvec Result(outlength);
 
           const size_t nsections = startindices.size();
+          size_t resultstartindex = 0;
           for (size_t i = 0; i < nsections; ++i)
             {
-              ublas::subrange(Result, startindices[i], endindices[i]) =
+              const size_t resultendindex = resultstartindex + endindices[i] - startindices[i];
+              ublas::subrange(Result, resultstartindex, resultendindex) =
                   Transforms[i]->GeneralizedToPhysical(
                       ublas::subrange(FullModel, startindices[i], endindices[i]));
+              resultstartindex = resultendindex;
             }
           return Result;
         }
