@@ -9,8 +9,6 @@
 #include "ThreeDGravityImplementation.h"
 #include "ThreeDGravityCalculator.h"
 
-#include <boost/numeric/bindings/atlas/cblas2.hpp>
-#include <boost/numeric/bindings/atlas/cblas3.hpp>
 namespace jiba
   {
 
