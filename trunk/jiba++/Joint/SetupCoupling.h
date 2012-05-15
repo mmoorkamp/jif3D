@@ -5,7 +5,6 @@
 // Copyright   : 2010, mmoorkamp
 //============================================================================
 
-
 #ifndef SETUPCOUPLING_H_
 #define SETUPCOUPLING_H_
 
@@ -41,6 +40,7 @@ namespace jiba
       boost::shared_ptr<jiba::GeneralModelTransform> CondTrans;
       //! The transformation between generalized model parameters and density including selecting the right range from the model vector
       boost::shared_ptr<jiba::GeneralModelTransform> DensTrans;
+      boost::shared_ptr<jiba::GeneralModelTransform> RegTrans;
       //! The transformation between generalized model parameters and slowness without selecting the right range from the model vector
       boost::shared_ptr<jiba::GeneralModelTransform> SlowCrossTrans;
       //! The transformation between generalized model parameters and conductivity without selecting the right range from the model vector
@@ -59,6 +59,18 @@ namespace jiba
       double mindens;
       //! The maximum density in g/cm3
       double maxdens;
+      void SetupCrossGradModel(jiba::rvec &InvModel,
+          const jiba::ThreeDSeismicModel &SeisMod, const jiba::ThreeDGravityModel GravMod,
+          const jiba::ThreeDMTModel &MTMod, jiba::JointObjective &Objective,
+          boost::shared_ptr<jiba::MatOpRegularization> Regularization, bool substart);
+      void SetupFixedCouplingModel(jiba::rvec &InvModel,
+          const jiba::ThreeDSeismicModel &SeisMod, const jiba::ThreeDGravityModel GravMod,
+          const jiba::ThreeDMTModel &MTMod, jiba::JointObjective &Objective,
+          boost::shared_ptr<jiba::MatOpRegularization> Regularization, bool substart);
+      void SetupSaltModel(jiba::rvec &InvModel, const jiba::ThreeDSeismicModel &SeisMod,
+          const jiba::ThreeDGravityModel GravMod, const jiba::ThreeDMTModel &MTMod,
+          jiba::JointObjective &Objective,
+          boost::shared_ptr<jiba::MatOpRegularization> Regularization, bool substart);
     public:
       //! Return an options descriptions object for boost::program_options that contains information about options for coupling the methods
       po::options_description SetupOptions();
@@ -74,11 +86,13 @@ namespace jiba
        * @param RegTransform The parameter transform for the regularization
        * @param Wavelet Parametrize the inversion by a wavelet transform of the model parameters
        */
-      void SetupTransforms(const po::variables_map &vm, boost::shared_ptr<
-          jiba::GeneralModelTransform> &TomoTransform, boost::shared_ptr<
-          jiba::GeneralModelTransform> &GravityTransform, boost::shared_ptr<
-          jiba::GeneralModelTransform> &MTTransform, boost::shared_ptr<
-          jiba::GeneralModelTransform> &RegTransform, bool Wavelet = false);
+      void SetupTransforms(const po::variables_map &vm,
+          ThreeDSeismicModel &StartModel,
+          boost::shared_ptr<jiba::GeneralModelTransform> &TomoTransform,
+          boost::shared_ptr<jiba::GeneralModelTransform> &GravityTransform,
+          boost::shared_ptr<jiba::GeneralModelTransform> &MTTransform,
+          boost::shared_ptr<jiba::GeneralModelTransform> &RegTransform, bool Wavelet =
+              false);
       //! Set the model vector for the inversion, its length and content depends on the coupling method
       /*! For the direct coupling joint inversion the model parameter vector only contains a slowness value
        * for each cell, while for the cross-gradient it contains slowness, density and conductivity. Also
@@ -94,11 +108,10 @@ namespace jiba
        * @param substart Do we want to substract the starting model for roughness calculations
        */
       void SetupModelVector(const po::variables_map &vm, jiba::rvec &InvModel,
-          const jiba::ThreeDSeismicModel &SeisMod,
-          const jiba::ThreeDGravityModel GravMod,
+          const jiba::ThreeDSeismicModel &SeisMod, const jiba::ThreeDGravityModel GravMod,
           const jiba::ThreeDMTModel &MTMod, jiba::JointObjective &Objective,
-          boost::shared_ptr<jiba::MatOpRegularization> Regularization,
-          bool substart);
+          boost::shared_ptr<jiba::MatOpRegularization> Regularization, bool substart);
+
       SetupCoupling();
       virtual ~SetupCoupling();
       };

@@ -5,7 +5,6 @@
 // Copyright   : 2010, mmoorkamp
 //============================================================================
 
-
 #ifndef SETUPGRAVITY_H_
 #define SETUPGRAVITY_H_
 
@@ -38,20 +37,20 @@ namespace jiba
       double scalminerr;
       //! The minimum error for the ftg data to assume for construction of the data variance
       double ftgminerr;
-      //! Stores the grid for the gravity model and the starting model
-      jiba::ThreeDGravityModel GravModel;
+      //! Stores the grid for the scalar gravity model and the starting model
+      jiba::ThreeDGravityModel ScalGravModel;
+      //! Stores the grid for the FTG gravity model and the starting model
+      jiba::ThreeDGravityModel FTGGravModel;
       //! Possible pointer to the scalar gravity objective function, gets assigned below depending on user input
-      boost::shared_ptr<jiba::ThreeDModelObjective<DiskGravityCalculator> >
-          ScalGravObjective;
+      boost::shared_ptr<jiba::ThreeDModelObjective<DiskGravityCalculator> > ScalGravObjective;
       //! Possible pointer to the tensor gravity objective function, gets assigned below depending on user input
-      boost::shared_ptr<jiba::ThreeDModelObjective<DiskGravityCalculator> >
-          FTGObjective;
+      boost::shared_ptr<jiba::ThreeDModelObjective<DiskGravityCalculator> > FTGObjective;
       //! Does the user want scalar gravity calculations and have we set up everything?
       bool HaveScal;
       //! Does the user want tensor gravity calculations and have we set up everything?
       bool HaveFTG;
     public:
-	 //! Does the user want scalar gravity calculations and have we set up everything?
+      //! Does the user want scalar gravity calculations and have we set up everything?
       bool GetHaveScal() const
         {
           return HaveScal;
@@ -72,9 +71,13 @@ namespace jiba
           return *FTGObjective;
         }
       //! Return the gravity model that was read in
-      const jiba::ThreeDGravityModel &GetModel()
+      const jiba::ThreeDGravityModel &GetScalModel() const
         {
-          return GravModel;
+          return ScalGravModel;
+        }
+      const jiba::ThreeDGravityModel &GetFTGModel() const
+        {
+          return FTGGravModel;
         }
       //! Return an options descriptions object for boost::program_options that contains information about gravity options
       po::options_description SetupOptions();
@@ -84,14 +87,16 @@ namespace jiba
        * @param vm The variable map from boost::program_options that contains the actually set options
        * @param Objective An existing JointObjective object that the newly created gravity objective(s) are added to
        * @param Transform A transformation object to transform generalized to physical parameters
+       * @param xorigin The origin for the inversion grid in x-direction
+       * @param yorigin The origin for the inversion grid in y-direction
        * @param TempDir A directory to store temporary files with sensitivity information
        * @return True if the weight for one of the gravity objectives is greater zero, i.e. we added an objective function to JointObjective, false otherwise
        */
       bool
-      SetupObjective(const po::variables_map &vm,
-          jiba::JointObjective &Objective, boost::shared_ptr<
-              jiba::GeneralModelTransform> &Transform,
-          boost::filesystem::path TempDir = boost::filesystem::current_path());
+      SetupObjective(const po::variables_map &vm, jiba::JointObjective &Objective,
+          boost::shared_ptr<jiba::GeneralModelTransform> &Transform, double xorigin = 0.0,
+          double yorigin = 0.0, boost::filesystem::path TempDir =
+              boost::filesystem::current_path());
       SetupGravity();
       virtual ~SetupGravity();
       };

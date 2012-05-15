@@ -5,7 +5,6 @@
 // Copyright   : 2010, mmoorkamp
 //============================================================================
 
-
 #ifndef SETUPTOMO_H_
 #define SETUPTOMO_H_
 
@@ -32,15 +31,20 @@ namespace jiba
     class SetupTomo
       {
     private:
-	//! A shared pointer to the objective function object for seismic tomography data
-      boost::shared_ptr<jiba::ThreeDModelObjective<jiba::TomographyCalculator> >
-          TomoObjective;
+      //! A shared pointer to the objective function object for seismic tomography data
+      boost::shared_ptr<jiba::ThreeDModelObjective<jiba::TomographyCalculator> > TomoObjective;
       //! The picking  error in ms to assume for construction of the data variance
       double pickerr;
       //! Storage for the name of the refinement model, can optionally be set on the command line
       std::string FineModelName;
+      //! The tomography model
+      jiba::ThreeDSeismicModel TomoModel;
     public:
-	//! read only access to the objective function object for seismic tomography data
+      const jiba::ThreeDSeismicModel &GetModel() const
+        {
+          return TomoModel;
+        }
+      //! read only access to the objective function object for seismic tomography data
       const jiba::ThreeDModelObjective<jiba::TomographyCalculator> &GetTomoObjective()
         {
           return *TomoObjective;
@@ -52,14 +56,15 @@ namespace jiba
        * the program options.
        * @param vm The variable map from boost::program_options that contains the actually set options
        * @param Objective An existing JointObjective object that the newly created tomography objective is added to
-       * @param StartModel The starting model geometry
        * @param Transform A transformation object to transform generalized to physical parameters
+       * @param xorigin The origin for the inversion grid in x-direction
+       * @param yorigin The origin for the inversion grid in y-direction
        * @return True if the weight the tomography objective is greater zero, i.e. we added an objective function to JointObjective, false otherwise
        */
       bool
-      SetupObjective(const po::variables_map &vm,
-          jiba::JointObjective &Objective, ThreeDSeismicModel &StartModel,
-          boost::shared_ptr<jiba::GeneralModelTransform> Transform);
+      SetupObjective(const po::variables_map &vm, jiba::JointObjective &Objective,
+          boost::shared_ptr<jiba::GeneralModelTransform> Transform, double xorigin = 0.0,
+          double yorigin = 0.0);
       SetupTomo();
       virtual ~SetupTomo();
       };

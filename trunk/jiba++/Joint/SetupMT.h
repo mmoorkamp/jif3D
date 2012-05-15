@@ -5,7 +5,6 @@
 // Copyright   : 2010, mmoorkamp
 //============================================================================
 
-
 #ifndef SETUPMT_H_
 #define SETUPMT_H_
 
@@ -31,9 +30,8 @@ namespace jiba
     class SetupMT
       {
     private:
-	//! The objective function object for magnetotelluric data using X3D as a forward engine
-      boost::shared_ptr<jiba::ThreeDModelObjective<jiba::X3DMTCalculator> >
-          MTObjective;
+      //! The objective function object for magnetotelluric data using X3D as a forward engine
+      boost::shared_ptr<jiba::ThreeDModelObjective<jiba::X3DMTCalculator> > MTObjective;
       //! The relative data error to assume for construction of the data variance
       double relerr;
       //! The file name for a model with cell refinements
@@ -41,7 +39,7 @@ namespace jiba
       //! The object containing the geometry of the MT inversion model, has to match the geometry of the starting model
       jiba::X3DModel MTModel;
     public:
-	//! Get read-only access to the objective function object, for example to output misfit information
+      //! Get read-only access to the objective function object, for example to output misfit information
       const jiba::ThreeDModelObjective<jiba::X3DMTCalculator> &GetMTObjective()
         {
           return *MTObjective;
@@ -54,16 +52,19 @@ namespace jiba
        * @param vm The variable map from boost::program_options that contains the actually set options
        * @param Objective An existing JointObjective object that the newly created MT objective is added to
        * @param Transform A transformation object to transform generalized to physical parameters
+       * @param xorigin The origin for the inversion grid in x-direction
+       * @param yorigin The origin for the inversion grid in y-direction
        * @param TempDir Set the directory to which all temporary files are written, this directory must exist
        * @return True if the weight for  the MT objective is greater zero, i.e. we added an objective function to JointObjective, false otherwise
        */
       bool
-      SetupObjective(const po::variables_map &vm,
-          jiba::JointObjective &Objective, boost::shared_ptr<
-              jiba::GeneralModelTransform> Transform,
-          boost::filesystem::path TempDir = boost::filesystem::current_path());
-      //! Return the MT model that has been set for the inversion
-      const jiba::X3DModel &GetModel()
+      SetupObjective(const po::variables_map &vm, jiba::JointObjective &Objective,
+          boost::shared_ptr<jiba::GeneralModelTransform> Transform, double xorigin = 0.0,
+          double yorigin = 0.0, boost::filesystem::path TempDir =
+              boost::filesystem::current_path());
+          //! Return the MT model that has been set for the inversion
+          const
+      jiba::X3DModel &GetModel() const
         {
           return MTModel;
         }
