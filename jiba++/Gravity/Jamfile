@@ -4,33 +4,32 @@ lib gravity : ThreeDGravityModel.cpp
               ScalarOMPGravityImp.cpp  TensorOMPGravityImp.cpp
               ThreeDGravityImplementation.cpp CachedGravityCalculator.cpp FullSensitivityGravityCalculator.cpp
               ThreeDGravityCalculator.cpp MinMemGravityCalculator.cpp 
+              GravityInterface.cpp  TensorCudaGravityImp.cpp ScalarCudaGravityImp.cpp
               ReadWriteGravityData.cpp 
-              ../ModelBase//modelbase
+              gravcuda.cu  
+              DiskGravityCalculator.cpp
+              ..//cudart   ../Global//global ../Inversion//inversion ..//boost_filesystem ../ModelBase//modelbase
               : <include>boost : : <include>. ;
                
-lib gravity-extra : GravityInterface.cpp  TensorCudaGravityImp.cpp ScalarCudaGravityImp.cpp
-             gravcuda.cu  
-             DepthWeighting.cpp DiskGravityCalculator.cpp
-             WaveletCompressedGravityCalculator.cpp 
-             ..//cudart   ../Global//global ../Inversion//inversion ..//boost_filesystem ;
+             
                     
 alias core :  ../ModelBase//modelbase ../Global ..//netcdf_c++ ..//netcdf ..//cudart ..//cutil ..//boost_filesystem  ..//boost_program_options ;
 
-unit-test Model_test : test_ThreeDGravityModel.cpp gravity gravity-extra core : : <include>. ;
-unit-test scalar_test : test_ScalarCalculation.cpp gravity gravity-extra core : : <include>. ;
-unit-test tensor_test : test_TensorCalculation.cpp gravity gravity-extra core : : <include>. ;
-unit-test gravity_objective_test : test_GravityObjective.cpp gravity gravity-extra core : : <include>. ;
-unit-test transform_test : test_transforms.cpp  gravity  gravity-extra core ..//vecopt : : <include>. ;
-unit-test R_test : test_Rinterface.cpp gravity gravity-extra core ..//vecopt : : <include>. ;
-unit-test weighting_test : test_weighting.cpp gravity gravity-extra ../Inversion//inversion core  : : <include>. ;
-unit-test readwrite_test : test_readwritedata.cpp gravity gravity-extra ../Inversion//inversion core  : : <include>. ;
+unit-test Model_test : test_ThreeDGravityModel.cpp gravity core : : <include>. ;
+unit-test scalar_test : test_ScalarCalculation.cpp gravity core : : <include>. ;
+unit-test tensor_test : test_TensorCalculation.cpp gravity core : : <include>. ;
+unit-test gravity_objective_test : test_GravityObjective.cpp gravity core : : <include>. ;
+unit-test transform_test : test_transforms.cpp  gravity core ..//vecopt : : <include>. ;
+unit-test R_test : test_Rinterface.cpp gravity core ..//vecopt : : <include>. ;
+#unit-test weighting_test : test_weighting.cpp DepthWeighting.cpp ../Inversion/LinearInversion.cpp ../Inversion/MatrixTools.cpp gravity  ../Inversion//inversion core  : : <include>. ;
+unit-test readwrite_test : test_readwritedata.cpp gravity  ../Inversion//inversion core  : : <include>. ;
 
-exe gravforward : gravforward.cpp gravity gravity-extra core : <include>. ;
-exe gravgrid : gravgrid.cpp gravity gravity-extra core : <include>. ;
-exe gravinv : gravinv.cpp gravity gravity-extra core ../Inversion//inversion
+exe gravforward : gravforward.cpp gravity  core : <include>. ;
+exe gravgrid : gravgrid.cpp gravity  core : <include>. ;
+exe gravinv : gravinv.cpp DepthWeighting.cpp ../Inversion/LinearInversion.cpp ../Inversion/MatrixTools.cpp gravity  core ../Inversion//inversion
               ..//vecopt : <include>. ;
-exe gravsens : gravsens.cpp gravity gravity-extra core ../Inversion//inversion
+exe gravsens : gravsens.cpp gravity  core ../Inversion//inversion
               ..//vecopt : <include>. ;              
-exe gravnoise : gravnoise.cpp gravity  gravity-extra core : <include>. ;
+exe gravnoise : gravnoise.cpp gravity   core : <include>. ;
 
 exe makegravmesh : makegravmesh.cpp gravity  core : <include>. ;
