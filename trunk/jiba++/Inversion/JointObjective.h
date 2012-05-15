@@ -5,15 +5,14 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-
 #ifndef JOINTOBJECTIVE_H_
 #define JOINTOBJECTIVE_H_
 
 #include "ObjectiveFunction.h"
 #include "ModelDistributor.h"
 #include "../Global/FatalException.h"
-#include "../Gravity/ThreeDGravityModel.h"
 #include <boost/shared_ptr.hpp>
+
 namespace jiba
   {
     /** \addtogroup inversion General routines for inversion */
@@ -52,8 +51,7 @@ namespace jiba
       virtual void
       ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff);
       //the implementation of the gradient calculation
-      virtual jiba::rvec ImplGradient(const jiba::rvec &Model,
-          const jiba::rvec &Diff);
+      virtual jiba::rvec ImplGradient(const jiba::rvec &Model, const jiba::rvec &Diff);
     public:
       //! Read only access to the individual objective function objects, for output and maintenance purposes
       const ObjectiveFunction &GetObjective(const size_t i) const
@@ -79,8 +77,8 @@ namespace jiba
        * @param DisplayName A name for the objective function for display purposes
        */
       void AddObjective(boost::shared_ptr<ObjectiveFunction> Obj,
-          boost::shared_ptr<GeneralModelTransform> Transform,
-          const double lambda = 1.0, std::string DisplayName = "Objective")
+          boost::shared_ptr<GeneralModelTransform> Transform, const double lambda = 1.0,
+          std::string DisplayName = "Objective")
         {
           Objectives.push_back(Obj);
           Weights.push_back(lambda);
