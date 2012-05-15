@@ -1,7 +1,6 @@
 import testing ; 
 
-lib inversion : MatrixTools.cpp  LinearInversion.cpp 
-				NonLinearOptimization.cpp
+lib inversion : NonLinearOptimization.cpp
 				GradientBasedOptimization.cpp
 				NonLinearConjugateGradient.cpp
 				LimitedMemoryQuasiNewton.cpp
@@ -12,7 +11,7 @@ lib inversion : MatrixTools.cpp  LinearInversion.cpp
 
 
 
-unit-test inversion_test : test_inversion.cpp inversion : : <include>. ;
+unit-test inversion_test : test_inversion.cpp LinearInversion.cpp inversion : : <include>. ;
 unit-test transform_test : test_transform.cpp  ../Global//global : : <include>. ;
 unit-test optstep_test : test_optstep.cpp  inversion : : <include>. ;
 
