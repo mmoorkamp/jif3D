@@ -5,10 +5,10 @@ alias joint : ../Tomo ../Gravity ../Inversion ../Global ../Regularization ;
 
 exe gravregion : gravregion.cpp joint : <include>. ;
 exe plotsaltrel : plotsaltrel.cpp joint ../Joint : <include>. ;	
-exe fittingtest : fittingtest.cpp ../Inversion ../Joint : <include>. ;
-exe sparsetest : sparsetest.cpp ../Inversion ..//vecopt : <include>. ;
-exe wcompress : wcompress.cpp  ../Gravity ../Global : <include>. ;
-exe gravconsist : gravconsist.cpp  ../Gravity ../Global ../Inversion : <include>. ;
+# exe fittingtest : fittingtest.cpp ../Inversion ../Joint : <include>. ;
+# exe sparsetest : sparsetest.cpp ../Inversion ..//vecopt : <include>. ;
+# exe wcompress : wcompress.cpp  ../Gravity ../Global : <include>. ;
+# exe gravconsist : gravconsist.cpp  ../Gravity ../Global ../Inversion : <include>. ;
 exe tomoinv : tomoinv.cpp  joint : <include>. ;
 exe plotgrav : plotgrav.cpp  joint : <include>. ;
 exe parrun : parrun.cpp ..//boost_filesystem ;
@@ -26,5 +26,5 @@ exe eikonal : eikonal.cpp  ../Tomo  ../Global : <include>. ;
 exe eikonal2D : eikonal2D.cpp  ../Tomo  ../Global : <include>. ;
 exe opttest : opttest.cpp  ../Joint ../MT ..//optpp ..//newmat joint ..//boost_program_options : 
               <include>/usr/local/include/opt++ <define>use_namespace <define>HAVE_STD ;
-exe invariantftginv : invariantftginv.cpp  ../Gravity//gravity ../Gravity//gravity-extra ../Global ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ../Inversion//inversion
-              ..//vecopt ..//cudart : <include>. ;
+# exe invariantftginv : invariantftginv.cpp  ../Gravity//gravity ../Global ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ../Inversion//inversion
+              #..//vecopt ..//cudart : <include>. ;

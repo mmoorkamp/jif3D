@@ -175,7 +175,7 @@ int main(int argc, char *argv[])
     bool havetomo = TomoSetup.SetupObjective(vm, GetObjective(), TomoTransform);
     bool havegrav = GravitySetup.SetupObjective(vm, GetObjective(), GravityTransform);
 
-    if (havetomo && havegrav && !EqualGridGeometry(StartModel, GravitySetup.GetModel()))
+    if (havetomo && havegrav && !EqualGridGeometry(StartModel, GravitySetup.GetScalModel()))
       {
         throw jiba::FatalException(
             "Gravity model does not have the same geometry as starting model");
@@ -190,7 +190,7 @@ int main(int argc, char *argv[])
 
     boost::shared_ptr<jiba::MatOpRegularization> Regularization = RegSetup.SetupObjective(
         vm, StartModel, RegTransform, CovModVec);
-    CouplingSetup.SetupModelVector(vm, InvModel, StartModel, GravitySetup.GetModel(),
+    CouplingSetup.SetupModelVector(vm, InvModel, StartModel, GravitySetup.GetScalModel(),
         MTSetup.GetModel(), GetObjective(), Regularization, RegSetup.GetSubStart());
 
     size_t maxiter = 1;
@@ -221,7 +221,7 @@ int main(int argc, char *argv[])
         TomoSetup.GetModel().GetSourcePosX(), TomoSetup.GetModel().GetSourcePosY(),
         TomoSetup.GetModel().GetSourcePosZ());
 
-    jiba::ThreeDGravityModel GravModel(GravitySetup.GetModel());
+    jiba::ThreeDGravityModel GravModel(GravitySetup.GetScalModel());
     jiba::X3DModel MTModel(MTSetup.GetModel());
 
     if (!havemt)
