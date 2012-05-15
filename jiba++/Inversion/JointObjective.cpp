@@ -5,10 +5,10 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-
 #include "JointObjective.h"
 #include "../Global/convert.h"
 #include <boost/format.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <iostream>
 #include <iomanip>
 
@@ -20,8 +20,7 @@ namespace jiba
     static const std::string MisfitFormat = " %15s ";
 
     JointObjective::JointObjective(bool Verbose) :
-      Objectives(), Weights(), IndividualFits(), Distributor(), PrintMisfit(
-          Verbose)
+        Objectives(), Weights(), IndividualFits(), Distributor(), PrintMisfit(Verbose)
       {
 
       }
@@ -31,12 +30,11 @@ namespace jiba
 
       }
 
-    void JointObjective::ImplDataDifference(const jiba::rvec &Model,
-        jiba::rvec &Diff)
+    void JointObjective::ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff)
       {
-        size_t totaldata = 0;
         const size_t nobjective = Objectives.size();
         IndividualFits.resize(nobjective);
+        std::vector<double> times(nobjective);
         //if we set verbose in the constructor
         //write out a description of the objective functions to the screen
         if (PrintMisfit)
@@ -48,36 +46,35 @@ namespace jiba
             std::cout << std::endl;
           }
         //go through all the objective function objects and calculate the misfit
-        //also count how much data points we have in total
+        Diff.resize(nobjective);
         for (size_t i = 0; i < nobjective; ++i)
           {
+
+            boost::posix_time::ptime starttime =
+                boost::posix_time::microsec_clock::local_time();
             //the call to the Distributor object makes sure that each
             //individual objective functions gets the right type of parameters
             //converted from the inversion parameter vector
-            IndividualFits.at(i) = Objectives.at(i)->CalcMisfit(Distributor(
-                Model, i));
+            IndividualFits.at(i) = Objectives.at(i)->CalcMisfit(Distributor(Model, i));
+            boost::posix_time::ptime endtime =
+                boost::posix_time::microsec_clock::local_time();
+            times.at(i) = (endtime - starttime).total_seconds();
             if (PrintMisfit)
               {
                 std::cout << format(MisfitFormat) % IndividualFits.at(i);
               }
-            totaldata += Objectives.at(i)->GetDataDifference().size();
+            Diff(i) = sqrt(Weights.at(i) * IndividualFits.at(i));
           }
-        Diff.resize(totaldata);
-        size_t currstart = 0;
-        //now form a single misfit vector that combines all the individual misfits
-        //the total misfit will be the squared sum, so we have to weight
-        //each element by the square root of the weight
-        for (size_t i = 0; i < nobjective; ++i)
-          {
-            const size_t ndata = Objectives.at(i)->GetDataDifference().size();
-            ublas::vector_range<jiba::rvec>(Diff, ublas::range(currstart,
-                currstart + ndata)) = sqrt(Weights.at(i))
-                * Objectives.at(i)->GetDataDifference();
-            currstart += ndata;
-          }
+
         if (PrintMisfit)
           {
             std::cout << std::endl;
+            std::cout << "Runtimes: \n";
+            for (size_t i = 0; i < nobjective; ++i)
+              {
+                std::cout << format(MisfitFormat) % times.at(i);
+              }
+            std::cout << "\n" << std::endl;
           }
       }
 
@@ -88,6 +85,7 @@ namespace jiba
         jiba::rvec Gradient(Model.size());
         Gradient.clear();
         const size_t nobjective = Objectives.size();
+        std::vector<double> times(nobjective);
         IndividualGradNorms.resize(nobjective);
         //add up the contribution to the gradient from each method
         //considering the weighting and the transformation
@@ -103,8 +101,13 @@ namespace jiba
             // and then pass it to the corresponding parameter transformation
             //class in the model distributor to account for the effect of those
             //transformations.
+            boost::posix_time::ptime starttime =
+                boost::posix_time::microsec_clock::local_time();
             CurrGrad = Distributor.TransformGradient(Model,
                 Objectives.at(i)->CalcGradient(Distributor(Model, i)), i);
+            boost::posix_time::ptime endtime =
+                boost::posix_time::microsec_clock::local_time();
+            times.at(i) = (endtime - starttime).total_seconds();
             //We store the norm of each gradient for information during the inversion
             IndividualGradNorms.at(i) = ublas::norm_2(CurrGrad);
             if (PrintMisfit)
@@ -116,6 +119,11 @@ namespace jiba
           }
         if (PrintMisfit)
           {
+            std::cout << "\nRuntimes: \n";
+            for (size_t i = 0; i < nobjective; ++i)
+              {
+                std::cout << format(MisfitFormat) % times.at(i);
+              }
             std::cout << "\n" << std::endl;
           }
         return Gradient;
