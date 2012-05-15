@@ -83,16 +83,16 @@ int main(int argc, char *argv[])
         true));
     GravitySetup.SetupObjective(vm, *Objective.get(), Transform);
 
-    jiba::rvec InvModel(GravitySetup.GetModel().GetDensities().num_elements());
-    std::copy(GravitySetup.GetModel().GetDensities().origin(),
-        GravitySetup.GetModel().GetDensities().origin()
-            + GravitySetup.GetModel().GetDensities().num_elements(),
+    jiba::rvec InvModel(GravitySetup.GetScalModel().GetDensities().num_elements());
+    std::copy(GravitySetup.GetScalModel().GetDensities().origin(),
+        GravitySetup.GetScalModel().GetDensities().origin()
+            + GravitySetup.GetScalModel().GetDensities().num_elements(),
         InvModel.begin());
 
 
 
     boost::shared_ptr<jiba::MatOpRegularization> Regularization =
-        RegSetup.SetupObjective(vm, GravitySetup.GetModel(), Transform,  CovModVec);
+        RegSetup.SetupObjective(vm, GravitySetup.GetScalModel(), Transform,  CovModVec);
 
     double scalgravlambda = 1.0;
     double ftglambda = 1.0;
@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
     std::cin >> maxiter;
     std::string modelfilename("result");
     std::ofstream misfitfile("misfit.out");
-    jiba::ThreeDGravityModel GravModel(GravitySetup.GetModel());
+    jiba::ThreeDGravityModel GravModel(GravitySetup.GetScalModel());
     do
       {
         try
