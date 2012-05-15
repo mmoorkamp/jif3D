@@ -5,7 +5,6 @@
 // Copyright   : 2010, mmoorkamp
 //============================================================================
 
-
 #include "SetupGravity.h"
 #include "../Inversion/ModelTransforms.h"
 #include "../Gravity/ReadWriteGravityData.h"
@@ -17,8 +16,8 @@ namespace jiba
   {
 
     SetupGravity::SetupGravity() :
-      scalrelerr(0.02), ftgrelerr(0.02), scalminerr(0.0), ftgminerr(1e-9),
-          HaveScal(false), HaveFTG(false)
+        scalrelerr(0.02), ftgrelerr(0.02), scalminerr(0.0), ftgminerr(1e-9), HaveScal(
+            false), HaveFTG(false)
       {
 
       }
@@ -32,12 +31,12 @@ namespace jiba
       {
         po::options_description desc("Gravity options");
 
-        desc.add_options()("gpu", "Perform gravity calculation on GPU")(
-            "scalrelerr", po::value(&scalrelerr)->default_value(0.02),
+        desc.add_options()("gpu", "Perform gravity calculation on GPU")("scalrelerr",
+            po::value(&scalrelerr)->default_value(0.02),
             "The relative error for the scalar gravity data")("scalminerr",
             po::value(&scalminerr)->default_value(0.0),
-            "The minimum absolute error for the scalar gravity data")(
-            "ftgrelerr", po::value(&scalrelerr)->default_value(0.02),
+            "The minimum absolute error for the scalar gravity data")("ftgrelerr",
+            po::value(&scalrelerr)->default_value(0.02),
             "The relative error for the FTG gravity data")("ftgminerr",
             po::value(&ftgminerr)->default_value(1e-9),
             "The minimum absolute error for the FTG gravity data");
@@ -46,9 +45,9 @@ namespace jiba
       }
 
     bool SetupGravity::SetupObjective(const po::variables_map &vm,
-        jiba::JointObjective &Objective, boost::shared_ptr<
-            jiba::GeneralModelTransform> &Transform,
-        boost::filesystem::path TempDir)
+        jiba::JointObjective &Objective,
+        boost::shared_ptr<jiba::GeneralModelTransform> &Transform, double xorigin,
+        double yorigin, boost::filesystem::path TempDir)
       {
         //if we want to use CUDA for forward modeling
         //we set a variable for easier access later and print
@@ -70,7 +69,8 @@ namespace jiba
         std::cout << "FTG Lambda: ";
         std::cin >> ftglambda;
 
-        jiba::ThreeDGravityModel::tMeasPosVec PosX, PosY, PosZ;
+        jiba::ThreeDGravityModel::tMeasPosVec ScalPosX, ScalPosY, ScalPosZ;
+        jiba::ThreeDGravityModel::tMeasPosVec FTGPosX, FTGPosY, FTGPosZ;
         //if the weight is different from zero
         //we have to read in scalar gravity data
         if (scalgravlambda > 0.0)
@@ -78,8 +78,8 @@ namespace jiba
             std::string scalgravdatafilename = jiba::AskFilename(
                 "Scalar Gravity Data Filename: ");
 
-            jiba::ReadScalarGravityMeasurements(scalgravdatafilename,
-                ScalGravData, PosX, PosY, PosZ);
+            jiba::ReadScalarGravityMeasurements(scalgravdatafilename, ScalGravData,
+                ScalPosX, ScalPosY, ScalPosZ);
             HaveScal = true;
           }
 
@@ -87,30 +87,43 @@ namespace jiba
         //we have to read in ftg data
         if (ftglambda > 0.0)
           {
-            std::string ftgdatafilename = jiba::AskFilename(
-                "FTG Data Filename: ");
-            jiba::ReadTensorGravityMeasurements(ftgdatafilename, FTGData, PosX,
-                PosY, PosZ);
+            std::string ftgdatafilename = jiba::AskFilename("FTG Data Filename: ");
+            jiba::ReadTensorGravityMeasurements(ftgdatafilename, FTGData, FTGPosX,
+                FTGPosY, FTGPosZ);
             HaveFTG = true;
           }
         //if the inversion includes any type of gravity data
         //we need the model geometry
         if (scalgravlambda > 0.0 || ftglambda > 0.0)
           {
-            std::string gravmodelfilename = jiba::AskFilename(
-                "Gravity Model Filename: ");
-            GravModel.ReadNetCDF(gravmodelfilename);
+            std::string gravmodelfilename = jiba::AskFilename("Gravity Model Filename: ");
+            ScalGravModel.ReadNetCDF(gravmodelfilename);
+            FTGGravModel.ReadNetCDF(gravmodelfilename);
 
-            GravModel.ClearMeasurementPoints();
-            for (size_t i = 0; i < PosX.size(); ++i)
+            ScalGravModel.ClearMeasurementPoints();
+            FTGGravModel.ClearMeasurementPoints();
+            if (ftglambda > 0.0)
               {
-                GravModel.AddMeasurementPoint(PosX.at(i), PosY.at(i),
-                    PosZ.at(i));
+                for (size_t i = 0; i < FTGPosX.size(); ++i)
+                  {
+                    FTGGravModel.AddMeasurementPoint(FTGPosX.at(i), FTGPosY.at(i),
+                        FTGPosZ.at(i));
+                  }
               }
+            if (scalgravlambda > 0.0)
+              {
+                for (size_t i = 0; i < ScalPosX.size(); ++i)
+                  {
+                    ScalGravModel.AddMeasurementPoint(ScalPosX.at(i), ScalPosY.at(i),
+                        ScalPosZ.at(i));
+                  }
+              }
+            ScalGravModel.SetOrigin(xorigin, yorigin, 0.0);
+            FTGGravModel.SetOrigin(xorigin, yorigin, 0.0);
           }
         if (Transform.get() == NULL)
           {
-            jiba::rvec RefVec(GravModel.GetDensities().num_elements());
+            jiba::rvec RefVec(ScalGravModel.GetDensities().num_elements());
             std::fill(RefVec.begin(), RefVec.end(), 1.0);
             Transform = boost::shared_ptr<jiba::GeneralModelTransform>(
                 new jiba::NormalizeTransform(RefVec));
@@ -128,33 +141,29 @@ namespace jiba
             boost::shared_ptr<jiba::ThreeDGravityImplementation> Implementation;
             if (wantcuda)
               {
-                Implementation = boost::shared_ptr<
-                    jiba::ThreeDGravityImplementation>(
+                Implementation = boost::shared_ptr<jiba::ThreeDGravityImplementation>(
                     new jiba::ScalarCudaGravityImp);
               }
             else
               {
-                Implementation = boost::shared_ptr<
-                    jiba::ThreeDGravityImplementation>(
+                Implementation = boost::shared_ptr<jiba::ThreeDGravityImplementation>(
                     new jiba::ScalarOMPGravityImp);
               }
             boost::shared_ptr<jiba::DiskGravityCalculator> ScalarCalculator(
                 new jiba::DiskGravityCalculator(Implementation, TempDir));
 
-            ScalGravObjective = boost::shared_ptr<jiba::ThreeDModelObjective<
-                DiskGravityCalculator> >(new jiba::ThreeDModelObjective<
-                DiskGravityCalculator>(*ScalarCalculator));
+            ScalGravObjective = boost::shared_ptr<
+                jiba::ThreeDModelObjective<DiskGravityCalculator> >(
+                new jiba::ThreeDModelObjective<DiskGravityCalculator>(*ScalarCalculator));
             ScalGravObjective->SetObservedData(ScalGravData);
-            ScalGravObjective->SetCoarseModelGeometry(GravModel);
-            ScalGravObjective->SetDataCovar(jiba::ConstructError(ScalGravData,
-                scalrelerr, scalminerr));
+            ScalGravObjective->SetCoarseModelGeometry(ScalGravModel);
+            ScalGravObjective->SetDataCovar(
+                jiba::ConstructError(ScalGravData, scalrelerr, scalminerr));
 
-            Objective.AddObjective(ScalGravObjective, Transform,
-                scalgravlambda, "ScalGrav");
-            std::cout << "Scalar Gravity ndata: " << ScalGravData.size()
-                << std::endl;
-            std::cout << "Scalar Gravity lambda: " << scalgravlambda
-                << std::endl;
+            Objective.AddObjective(ScalGravObjective, Transform, scalgravlambda,
+                "ScalGrav");
+            std::cout << "Scalar Gravity ndata: " << ScalGravData.size() << std::endl;
+            std::cout << "Scalar Gravity lambda: " << scalgravlambda << std::endl;
           }
         if (ftglambda > 0.0)
           {
@@ -164,26 +173,24 @@ namespace jiba
             boost::shared_ptr<jiba::ThreeDGravityImplementation> Implementation;
             if (wantcuda)
               {
-                Implementation = boost::shared_ptr<
-                    jiba::ThreeDGravityImplementation>(
+                Implementation = boost::shared_ptr<jiba::ThreeDGravityImplementation>(
                     new jiba::TensorCudaGravityImp);
               }
             else
               {
-                Implementation = boost::shared_ptr<
-                    jiba::ThreeDGravityImplementation>(
+                Implementation = boost::shared_ptr<jiba::ThreeDGravityImplementation>(
                     new jiba::TensorOMPGravityImp);
               }
             boost::shared_ptr<jiba::DiskGravityCalculator> TensorCalculator(
                 new jiba::DiskGravityCalculator(Implementation, TempDir));
 
-            FTGObjective = boost::shared_ptr<jiba::ThreeDModelObjective<
-                DiskGravityCalculator> >(new jiba::ThreeDModelObjective<
-                DiskGravityCalculator>(*TensorCalculator));
+            FTGObjective = boost::shared_ptr<
+                jiba::ThreeDModelObjective<DiskGravityCalculator> >(
+                new jiba::ThreeDModelObjective<DiskGravityCalculator>(*TensorCalculator));
             FTGObjective->SetObservedData(FTGData);
-            FTGObjective->SetCoarseModelGeometry(GravModel);
-            FTGObjective->SetDataCovar(jiba::ConstructError(FTGData, ftgrelerr,
-                ftgminerr));
+            FTGObjective->SetCoarseModelGeometry(FTGGravModel);
+            FTGObjective->SetDataCovar(
+                jiba::ConstructError(FTGData, ftgrelerr, ftgminerr));
 
             Objective.AddObjective(FTGObjective, Transform, ftglambda, "FTG");
             std::cout << "FTG ndata: " << FTGData.size() << std::endl;

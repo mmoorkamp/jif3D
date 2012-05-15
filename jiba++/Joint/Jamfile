@@ -1,8 +1,10 @@
 import testing ; 
 
 
-alias joint : ../Tomo ../Gravity ../Inversion ../Global ../Regularization ;
+alias joint : ../Tomo ../Gravity ../MT ../Inversion ../Global ../Regularization ;
 	
-lib setup : SetupGravity.cpp SetupInversion.cpp SetupMT.cpp SetupRegularization.cpp SetupTomo.cpp SetupCoupling.cpp joint : <include>boost : : <include>. ;
+lib setup : SaltRelConstraint.cpp SetupGravity.cpp SetupInversion.cpp SetupMT.cpp SetupRegularization.cpp SetupTomo.cpp SetupCoupling.cpp joint : <include>boost : : <include>. ;
 
-exe jointinv : jointinv.cpp  joint setup ../MT ..//boost_program_options : <include>. ;
+
+unit-test saltrel_test :  test_saltrel_objective.cpp joint setup : <include>. ;
+exe jointinv : jointinv.cpp  joint setup  ..//boost_program_options : <include>. ;

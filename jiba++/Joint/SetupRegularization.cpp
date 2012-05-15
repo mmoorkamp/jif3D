@@ -7,6 +7,7 @@
 
 #include "../Regularization/GradientRegularization.h"
 #include "../Regularization/CurvatureRegularization.h"
+#include "../Regularization/MinDiffRegularization.h"
 #include "../Tomo/ThreeDSeismicModel.h"
 #include "SetupRegularization.h"
 
@@ -21,7 +22,7 @@ namespace jiba
           {
             //we use a seismic model file as a container for the tear information
             //but this model does not have to obey the gridding rules
-            TearModel.ReadNetCDF(vm[OptionName].as<std::string> (), false);
+            TearModel.ReadNetCDF(vm[OptionName].as<std::string>(), false);
           }
         else
           {
@@ -57,13 +58,19 @@ namespace jiba
             po::value(&zweight)->default_value(1.0),
             "The weight for the regularization in z-direction")("curvreg",
             "Use model curvature for regularization. If not set use gradient.")(
-            "tearmodx", po::value<std::string>(),
+            "mindiff",
+            "Minize the model vector (or difference to starting model if substart is set")(
+            "tearmodx",
+            po::value<std::string>(),
             "Filename for a model containing information about tear zones in x-direction.")(
-            "tearmody", po::value<std::string>(),
+            "tearmody",
+            po::value<std::string>(),
             "Filename for a model containing information about tear zones in y-direction.")(
-            "tearmodz", po::value<std::string>(),
+            "tearmodz",
+            po::value<std::string>(),
             "Filename for a model containing information about tear zones in z-direction.")(
-            "beta", po::value(&beta)->default_value(0.0),
+            "beta",
+            po::value(&beta)->default_value(0.0),
             "The weight for the model parameter minimization in the regularization")(
             "substart", po::value(&substart)->default_value(false),
             "Substract the starting model when calculating the roughness");
@@ -76,6 +83,14 @@ namespace jiba
         boost::shared_ptr<jiba::GeneralModelTransform> Transform,
         const jiba::rvec &CovModVec)
       {
+        //if we only want to use a minimum model, we do not
+        //have to worry about tear models etc. so we create the object
+        //and return
+        if (vm.count("mindiff"))
+          {
+            return boost::shared_ptr<jiba::MinDiffRegularization>(
+                new jiba::MinDiffRegularization(StartModel));
+          }
         //setup possible tearing for the regularization for the three directions
         jiba::ThreeDSeismicModel TearModX, TearModY, TearModZ;
         SetTearModel(vm, "tearmodx", StartModel, TearModX);
@@ -98,9 +113,10 @@ namespace jiba
           }
         else
           {
+
             Regularization = boost::shared_ptr<jiba::MatOpRegularization>(
-                new jiba::GradientRegularization(StartModel, TearModX,
-                    TearModY, TearModZ, beta));
+                new jiba::GradientRegularization(StartModel, TearModX, TearModY,
+                    TearModZ, beta));
           }
         //We either pass an empty covariance vector then the regularization class
         //takes care of setting the covariance to 1
