@@ -4,7 +4,7 @@ using gfortran ;
 lib mt : ReadWriteX3D.cpp ReadWriteImpedances.cpp
          ThreeDMTModel.cpp X3DModel.cpp MTEquations.cpp 
          MT3DCalculator.cpp X3DMTCalculator.cpp
-         ..//ModelBase ..//Inversion ..//boost_filesystem ..//boost_system ;
+         ..//ModelBase  ..//boost_filesystem ..//boost_system ;
 
 
 
