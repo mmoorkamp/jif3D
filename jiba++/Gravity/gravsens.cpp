@@ -19,6 +19,7 @@
 #include "../Global/convert.h"
 #include "../Global/FileUtil.h"
 #include "../Inversion/MatrixTools.h"
+#include "../Inversion/GeneralizedInverse.h"
 #include "../ModelBase/VTKTools.h"
 #include "FullSensitivityGravityCalculator.h"
 #include "ThreeDGravityModel.h"

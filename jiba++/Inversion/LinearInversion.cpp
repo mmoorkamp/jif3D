@@ -5,10 +5,16 @@
 // Copyright   : 2008, MM
 //============================================================================
 
+#include <boost/numeric/bindings/lapack/lapack.hpp>
+#include <boost/numeric/bindings/lapack/geev.hpp>
+#include <boost/numeric/bindings/traits/ublas_matrix.hpp>
+#include <boost/numeric/bindings/traits/ublas_vector.hpp>
+#include <boost/numeric/bindings/traits/vector_traits.hpp>
 #include <boost/numeric/bindings/atlas/cblas2.hpp>
 #include <boost/numeric/bindings/atlas/cblas3.hpp>
 #include "LinearInversion.h"
 #include "../Inversion/MatrixTools.h"
+#include "../Inversion/GeneralizedInverse.h"
 
 namespace jiba
   {

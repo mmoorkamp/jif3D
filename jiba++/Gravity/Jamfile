@@ -8,7 +8,7 @@ lib gravity : ThreeDGravityModel.cpp
               ReadWriteGravityData.cpp 
               gravcuda.cu  
               DiskGravityCalculator.cpp
-              ..//cudart   ../Global//global ../Inversion//inversion ..//boost_filesystem ../ModelBase//modelbase
+              ..//cudart   ../Global//global ..//boost_filesystem ../ModelBase//modelbase
               : <include>boost : : <include>. ;
                
              
@@ -28,7 +28,7 @@ exe gravforward : gravforward.cpp gravity  core : <include>. ;
 exe gravgrid : gravgrid.cpp gravity  core : <include>. ;
 exe gravinv : gravinv.cpp DepthWeighting.cpp ../Inversion/LinearInversion.cpp ../Inversion/MatrixTools.cpp gravity  core ../Inversion//inversion
               ..//vecopt : <include>. ;
-exe gravsens : gravsens.cpp gravity  core ../Inversion//inversion
+exe gravsens : gravsens.cpp gravity  core ../Inversion//inversion ../Inversion//lininv
               ..//vecopt : <include>. ;              
 exe gravnoise : gravnoise.cpp gravity   core : <include>. ;
 

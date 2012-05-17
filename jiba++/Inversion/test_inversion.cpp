@@ -8,12 +8,14 @@
 #define BOOST_TEST_MODULE Inversion test
 #define BOOST_TEST_MAIN ...
 #include <boost/test/included/unit_test.hpp>
+#include <boost/test/floating_point_comparison.hpp>
 #include <stdlib.h>
 #include <algorithm>
 #include <numeric>
 #include "MatrixTools.h"
 #include "LinearInversion.h"
-#include <boost/test/floating_point_comparison.hpp>
+#include "GeneralizedInverse.h"
+
 
 BOOST_AUTO_TEST_SUITE( Inversion_Test_Suite )
 
