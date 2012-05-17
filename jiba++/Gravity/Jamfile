@@ -18,10 +18,10 @@ alias core :  ../ModelBase//modelbase ../Global ..//netcdf_c++ ..//netcdf ..//cu
 unit-test Model_test : test_ThreeDGravityModel.cpp gravity core : : <include>. ;
 unit-test scalar_test : test_ScalarCalculation.cpp gravity core : : <include>. ;
 unit-test tensor_test : test_TensorCalculation.cpp gravity core : : <include>. ;
-unit-test gravity_objective_test : test_GravityObjective.cpp gravity core : : <include>. ;
+unit-test gravity_objective_test : test_GravityObjective.cpp gravity core ../Inversion//inversion : : <include>. ;
 unit-test transform_test : test_transforms.cpp  gravity core ..//vecopt : : <include>. ;
 unit-test R_test : test_Rinterface.cpp gravity core ..//vecopt : : <include>. ;
-#unit-test weighting_test : test_weighting.cpp DepthWeighting.cpp ../Inversion/LinearInversion.cpp ../Inversion/MatrixTools.cpp gravity  ../Inversion//inversion core  : : <include>. ;
+# unit-test weighting_test : test_weighting.cpp DepthWeighting.cpp  gravity  ../Inversion core  : : <include>. ;
 unit-test readwrite_test : test_readwritedata.cpp gravity  ../Inversion//inversion core  : : <include>. ;
 
 exe gravforward : gravforward.cpp gravity  core : <include>. ;
