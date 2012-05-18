@@ -84,8 +84,8 @@ void  MakeMTModel(jiba::X3DModel &Model)
       MakeMTModel(Model);
       BOOST_CHECK_NO_THROW(Objective.SetCoarseModelGeometry(Model));
       Model.ClearMeasurementPoints();
-      Model.AddMeasurementPoint(10.0,12.0,250.0);
-      Model.AddMeasurementPoint(13.0,14.0,350.0);
+      Model.AddMeasurementPoint(10.0,12.0,0.0);
+      Model.AddMeasurementPoint(13.0,14.0,30.0);
       Objective.SetCoarseModelGeometry(Model);
       BOOST_CHECK_THROW(Objective.CalcMisfit(jiba::rvec(Model.GetConductivities().num_elements())),jiba::FatalException);
     }
