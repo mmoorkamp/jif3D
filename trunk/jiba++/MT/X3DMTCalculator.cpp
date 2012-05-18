@@ -17,6 +17,7 @@
 #include <boost/algorithm/string.hpp>
 #include "../Global/FatalException.h"
 #include "../Global/convert.h"
+#include "../ModelBase/CellBoundaries.h"
 #include "X3DMTCalculator.h"
 #include "ReadWriteX3D.h"
 #include "MTEquations.h"
@@ -178,6 +179,14 @@ namespace jiba
                 fs::path RootName = TempDir / MakeUniqueName(X3DModel::MT, i);
                 fs::path DirName = RootName.string() + dirext;
                 std::vector<double> CurrFreq(1, Model.GetFrequencies()[i]);
+                std::vector<double> ShiftDepth;
+                for (size_t j = 0; j < nmeas; ++j)
+                  {
+                    ShiftDepth.push_back(
+                        Model.GetZCoordinates()[FindNearestCellBoundary(
+                            Model.GetMeasPosZ()[j], Model.GetZCoordinates(),
+                            Model.GetZCellSizes())]);
+                  }
                 //writing out files causes problems in parallel
                 // so we make sure it is done one at a time
 #pragma omp critical(forward_write_files)
@@ -187,8 +196,8 @@ namespace jiba
                         resultfilename, modelfilename);
                     Write3DModelForX3D((DirName / modelfilename).string(),
                         Model.GetXCellSizes(), Model.GetYCellSizes(),
-                        Model.GetZCellSizes(), Model.GetMeasPosZ(),
-                        Model.GetConductivities(), Model.GetBackgroundConductivities(),
+                        Model.GetZCellSizes(), ShiftDepth, Model.GetConductivities(),
+                        Model.GetBackgroundConductivities(),
                         Model.GetBackgroundThicknesses());
                   }
                 //run x3d in parallel
@@ -241,11 +250,11 @@ namespace jiba
               }
             //finished with one frequency
           }
+        omp_destroy_lock(&lck);
         //we cannot throw from within the openmp section so if there was an exception
         //inside the parallel region we set FatalErrror to true and throw a new exception here
         if (FatalError)
           throw jiba::FatalException("Problem in MT forward calculation.");
-        omp_destroy_lock(&lck);
         return result;
 
       }
@@ -310,14 +319,17 @@ namespace jiba
         std::vector<std::complex<double> > &Ux, std::vector<std::complex<double> > &Uy,
         std::vector<std::complex<double> > &Uz, const std::vector<size_t> &SourceXIndex,
         const std::vector<size_t> &SourceYIndex,
-        const std::vector<double> ObservationDepths, const size_t ncellsx,
+        const std::vector<double> ObservationDepths,
+        const jiba::ThreeDModelBase::t3DModelDim &ZCellBoundaries,
+        const jiba::ThreeDModelBase::t3DModelDim &ZCellSizes, const size_t ncellsx,
         const size_t ncellsy, const size_t ncellsz)
       {
         std::string DirName = RootName + dirext + "/";
 #pragma omp critical(calcU_writesource)
           {
             WriteSourceFile(DirName + sourceafilename, SourceXIndex, SourceYIndex,
-                ObservationDepths, XPolMoments, YPolMoments, ncellsx, ncellsy);
+                ObservationDepths, XPolMoments, YPolMoments, ZCellBoundaries, ZCellSizes,
+                ncellsx, ncellsy);
           }
         RunX3D(RootName);
 #pragma omp critical(calcU_readema)
@@ -367,6 +379,15 @@ namespace jiba
                   throw FatalException(
                       "In X3D gradient calculation, directory does not exist: "
                           + ForwardDirName.string());
+
+                std::vector<double> ShiftDepth;
+                for (size_t j = 0; j < nmeas; ++j)
+                  {
+                    ShiftDepth.push_back(
+                        Model.GetZCoordinates()[FindNearestCellBoundary(
+                            Model.GetMeasPosZ()[j], Model.GetZCoordinates(),
+                            Model.GetZCellSizes())]);
+                  }
 
                 //read the fields from the forward calculation
                 std::vector<std::complex<double> > Ex1_obs, Ex2_obs, Ey1_obs, Ey2_obs,
@@ -418,8 +439,8 @@ namespace jiba
                     //x3d writes out the fields in all cells at that depth
                     //we therefore have to shift the index by the index of the site
                     //times number of the horizontal cells
-                    const size_t offset = (nmodx * nmody) * j
-                        + StationIndex[0] * nmody + StationIndex[1];
+                    const size_t offset = (nmodx * nmody) * j + StationIndex[0] * nmody
+                        + StationIndex[1];
                     SourceXIndex.at(j) = StationIndex[0];
                     SourceYIndex.at(j) = StationIndex[1];
                     const size_t siteindex = freq_index + j * 8;
@@ -449,24 +470,24 @@ namespace jiba
                         resultfilename, modelfilename);
                     Write3DModelForX3D((EdipDirName / modelfilename).string(),
                         Model.GetXCellSizes(), Model.GetYCellSizes(),
-                        Model.GetZCellSizes(), Model.GetMeasPosZ(),
-                        Model.GetConductivities(), Model.GetBackgroundConductivities(),
+                        Model.GetZCellSizes(), ShiftDepth, Model.GetConductivities(),
+                        Model.GetBackgroundConductivities(),
                         Model.GetBackgroundThicknesses());
                     //write an empty source file for the second source polarization
                     WriteSourceFile((EdipDirName / sourcebfilename).string(),
                         SourceXIndex, SourceYIndex, Model.GetMeasPosZ(), Zeros, Zeros,
-                        nmodx, nmody);
+                        Model.GetZCoordinates(), Model.GetZCellSizes(), nmodx, nmody);
                   }
                 std::vector<std::complex<double> > Ux1_el, Ux2_el, Uy1_el, Uy2_el, Uz1_el,
                     Uz2_el;
                 //calculate the first polarization and read the adjoint fields
                 CalcU(EdipName.string(), XPolMoments1, YPolMoments1, Ux1_el, Uy1_el,
-                    Uz1_el, SourceXIndex, SourceYIndex, Model.GetMeasPosZ(), nmodx,
-                    nmody, nmodz);
+                    Uz1_el, SourceXIndex, SourceYIndex, Model.GetMeasPosZ(),
+                    Model.GetZCoordinates(), Model.GetZCellSizes(), nmodx, nmody, nmodz);
                 //calculate the second polarization
                 CalcU(EdipName.string(), XPolMoments2, YPolMoments2, Ux2_el, Uy2_el,
-                    Uz2_el, SourceXIndex, SourceYIndex, Model.GetMeasPosZ(), nmodx,
-                    nmody, nmodz);
+                    Uz2_el, SourceXIndex, SourceYIndex, Model.GetMeasPosZ(),
+                    Model.GetZCoordinates(), Model.GetZCellSizes(), nmodx, nmody, nmodz);
 
                 //now we calculate the response to magnetic dipole sources
                 const std::complex<double> omega_mu = -1.0
@@ -483,13 +504,13 @@ namespace jiba
                         resultfilename, modelfilename);
                     Write3DModelForX3D((MdipDirName / modelfilename).string(),
                         Model.GetXCellSizes(), Model.GetYCellSizes(),
-                        Model.GetZCellSizes(), Model.GetMeasPosZ(),
-                        Model.GetConductivities(), Model.GetBackgroundConductivities(),
+                        Model.GetZCellSizes(), ShiftDepth, Model.GetConductivities(),
+                        Model.GetBackgroundConductivities(),
                         Model.GetBackgroundThicknesses());
                     //write an empty source file for the second source polarization
                     WriteSourceFile((MdipDirName / sourcebfilename).string(),
                         SourceXIndex, SourceYIndex, Model.GetMeasPosZ(), Zeros, Zeros,
-                        nmodx, nmody);
+                        Model.GetZCoordinates(), Model.GetZCellSizes(), nmodx, nmody);
                   }
                 //make the sources for the magnetic dipoles
                 for (size_t j = 0; j < nmeas; ++j)
@@ -502,8 +523,8 @@ namespace jiba
                     //x3d writes out the fields in all cells at that depth
                     //we therefore have to shift the index by the index of the site
                     //times number of the horizontal cells
-                    const size_t offset = (nmodx * nmody) * j
-                        + StationIndex[0] * nmody + StationIndex[1];
+                    const size_t offset = (nmodx * nmody) * j + StationIndex[0] * nmody
+                        + StationIndex[1];
 
                     //const size_t siteindex = freq_index + j * 8;
                     std::complex<double> Zxx, Zxy, Zyx, Zyy;
@@ -518,12 +539,12 @@ namespace jiba
                     Uz1_mag, Uz2_mag;
                 //calculate the first polarization and read the adjoint fields
                 CalcU(MdipName.string(), XPolMoments1, YPolMoments1, Ux1_mag, Uy1_mag,
-                    Uz1_mag, SourceXIndex, SourceYIndex, Model.GetMeasPosZ(), nmodx,
-                    nmody, nmodz);
+                    Uz1_mag, SourceXIndex, SourceYIndex, Model.GetMeasPosZ(),
+                    Model.GetZCoordinates(), Model.GetZCellSizes(), nmodx, nmody, nmodz);
                 //calculate the second polarization and read the adjoint fields
                 CalcU(MdipName.string(), XPolMoments2, YPolMoments2, Ux2_mag, Uy2_mag,
-                    Uz2_mag, SourceXIndex, SourceYIndex, Model.GetMeasPosZ(), nmodx,
-                    nmody, nmodz);
+                    Uz2_mag, SourceXIndex, SourceYIndex, Model.GetMeasPosZ(),
+                    Model.GetZCoordinates(), Model.GetZCellSizes(), nmodx, nmody, nmodz);
 
                 const double cell_sizex = Model.GetXCellSizes()[0];
                 const double cell_sizey = Model.GetYCellSizes()[0];

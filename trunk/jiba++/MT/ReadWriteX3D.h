@@ -80,6 +80,8 @@ namespace jiba
      * @param SourceDepths The depth of the dipoles in m
      * @param XPolMoments The x-component of the dipole moment for each source position
      * @param YPolMoments The y-component of the dipole moment for each source position
+     * @param ZCellBoundaries The cell boundaries of the modelling domain in z-direction
+     * @param ZCellSizes The cell sizes of the modelling domain in z-direction
      * @param maxx The number of cells of the modelling domain in x-direction
      * @param maxy The number of cells of the modelling domain in y-direction
      */
@@ -87,7 +89,10 @@ namespace jiba
         const std::vector<size_t> &SourceXIndex, const std::vector<size_t> &SourceYIndex,
         const std::vector<double> &SourceDepths,
         const std::vector<std::complex<double> > &XPolMoments,
-        const std::vector<std::complex<double> > &YPolMoments, const size_t maxx,
+        const std::vector<std::complex<double> > &YPolMoments,
+        const jiba::ThreeDModelBase::t3DModelDim &ZCellBoundaries,
+        const jiba::ThreeDModelBase::t3DModelDim &ZCellSizes,
+        const size_t maxx,
         const size_t maxy);
 
     //! Read one .emo file produced by x3d that contains the electric and magnetic fields at the observation sites

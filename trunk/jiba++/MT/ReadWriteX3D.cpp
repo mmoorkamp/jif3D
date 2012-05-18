@@ -8,12 +8,14 @@
 #include <cassert>
 #include <fstream>
 #include <iomanip>
+#include <algorithm>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 #include <boost/multi_array/index_range.hpp>
 #include "../Global/FileUtil.h"
 #include "../Global/FatalException.h"
 #include "../Global/convert.h"
+#include "../ModelBase/CellBoundaries.h"
 #include "ReadWriteX3D.h"
 
 namespace jiba
@@ -391,44 +393,56 @@ namespace jiba
         Ez = ResortFields(Ez, ncellsx, ncellsy, ncellsz);
       }
 
-    void WriteSourceComp(std::ofstream &outfile, double MomentComp)
+    void WriteSourceComp(std::ofstream &outfile,
+        const boost::multi_array<double, 2> &Moments)
       {
-        const size_t valuesperline = 1;
+        const size_t nx = Moments.shape()[0];
+        const size_t ny = Moments.shape()[1];
+        const size_t valuesperline = std::min(static_cast<size_t>(35), nx + 1);
         const size_t valuewidth = 27;
         const size_t valueprec = 18;
 
         outfile << "FORMAT\n (" << valuesperline << "E" << valuewidth << "." << valueprec
             << ") \n";
         outfile << "ARRAY\n";
-        outfile << MomentComp;
-        outfile << "\n$\n";
+        for (size_t j = 0; j < ny; ++j)
+          {
+            for (size_t k = 0; k < nx; ++k)
+              {
+                outfile << std::scientific << std::setw(valuewidth)
+                    << std::setprecision(valueprec) << Moments[k][j];
+                if (k > 0 && ((k + 1) % valuesperline) == 0)
+                  outfile << "\n";
+              }
+            outfile << "\n";
+          }
+        outfile << "$\n";
+        //finished writing out all moments
       }
 
-    void WriteGeometryInfo(std::ofstream &outfile, const size_t xindex,
-        const size_t yindex)
+    void WriteGeometryInfo(std::ofstream &outfile, const size_t endx, const size_t endy)
       {
-        //write the keywords for x3d
-        outfile << "Scale  ( the ARRAY will be multiplied by this Scale ) \n 1.0 \n\n";
+        outfile << " Scale  ( the ARRAY will be multiplied by this Scale ) \n 1.0 \n\n";
         outfile << "First and last cells in X-direction \n";
-        //our c++ indices start at zero, x3d starts at 1
-        //so we add one to all indices
-        outfile << xindex + 1 << " " << xindex + 1 << "\n";
+        outfile << " 1  " << endx << "\n";
         outfile << "First and last cells in Y-direction \n";
-        outfile << yindex + 1 << " " << yindex + 1 << "\n\n";
+        outfile << " 1  " << endy << "\n\n";
       }
 
-    void WriteEmptyArray(std::ofstream &outfile)
+    void WriteEmptyArray(std::ofstream &outfile, const size_t XSize, const size_t YSize)
       {
         outfile << "ARRAY\n";
-        outfile << "0.0\n";
-        outfile << "$\n";
+        outfile << YSize << "Lines: " << XSize << "*0.\n";
       }
 
     void WriteSourceFile(const std::string &filename,
         const std::vector<size_t> &SourceXIndex, const std::vector<size_t> &SourceYIndex,
         const std::vector<double> &SourceDepths,
         const std::vector<std::complex<double> > &XPolMoments,
-        const std::vector<std::complex<double> > &YPolMoments, const size_t maxx,
+        const std::vector<std::complex<double> > &YPolMoments,
+        const jiba::ThreeDModelBase::t3DModelDim &ZCellBoundaries,
+        const jiba::ThreeDModelBase::t3DModelDim &ZCellSizes,
+        const size_t maxx,
         const size_t maxy)
       {
         typedef boost::multi_array_types::index_range range;
@@ -437,6 +451,17 @@ namespace jiba
         const size_t nmeas = XPolMoments.size();
         assert(nmeas == YPolMoments.size());
 
+        std::vector<size_t> ZIndices;
+        for (size_t i = 0; i < nmeas; ++i)
+          {
+            size_t zindex = FindNearestCellBoundary(SourceDepths[i], ZCellBoundaries, ZCellSizes);
+            if (std::find(ZIndices.begin(), ZIndices.end(), zindex) == ZIndices.end())
+              {
+                ZIndices.push_back(zindex);
+              }
+          }
+
+        size_t ndepths = ZIndices.size();
         //write out the required header for the source file
         //x3d is very picky about this
         std::ofstream outfile(filename.c_str());
@@ -449,34 +474,58 @@ namespace jiba
         outfile << "1  " << maxx << "\n";
         outfile << "First and last cells in Y-direction(nySf, nySl)\n";
         outfile << "1  " << maxy << "\n";
-        for (size_t i = 0; i < nmeas; ++i)
+        for (size_t i = 0; i < ndepths; ++i)
           {
+            boost::multi_array<double, 2> RealXMoments(boost::extents[maxx][maxy]),
+                RealYMoments(boost::extents[maxx][maxy]), ImagXMoments(
+                    boost::extents[maxx][maxy]), ImagYMoments(boost::extents[maxx][maxy]);
+            const size_t nelements = maxx * maxy;
+            std::fill_n(RealXMoments.origin(), nelements, 0.0);
+            std::fill_n(RealYMoments.origin(), nelements, 0.0);
+            std::fill_n(ImagXMoments.origin(), nelements, 0.0);
+            std::fill_n(ImagYMoments.origin(), nelements, 0.0);
+            for (size_t j = 0; j < nmeas; ++j)
+              {
+                size_t zindex = FindNearestCellBoundary(SourceDepths[j], ZCellBoundaries, ZCellSizes);
+                if (zindex == ZIndices[i])
+                  {
+                    RealXMoments[SourceXIndex[j]][SourceYIndex[j]] = std::real(
+                        XPolMoments[j]);
+                    ImagXMoments[SourceXIndex[j]][SourceYIndex[j]] = std::imag(
+                        XPolMoments[j]);
+                    RealYMoments[SourceXIndex[j]][SourceYIndex[j]] = std::real(
+                        YPolMoments[j]);
+                    ImagYMoments[SourceXIndex[j]][SourceYIndex[j]] = std::imag(
+                        YPolMoments[j]);
+                  }
+              }
+
             outfile << "zS(m)  (Depth to the source level)\n";
-            outfile << SourceDepths[i] << "\n$\n";
+            outfile << ZCellBoundaries[ZIndices[i]] << "\n$\n";
             //myarray[ boost::indices[range()][range() < 5 ][4 <= range().stride(2) <= 7] ];
             //write real part of x-component
-            WriteGeometryInfo(outfile, SourceXIndex[i], SourceYIndex[i]);
-            WriteSourceComp(outfile, std::real(XPolMoments[i]));
+            WriteGeometryInfo(outfile, maxx, maxy);
+            WriteSourceComp(outfile, RealXMoments);
 
             //write imaginary part of x-component
-            WriteGeometryInfo(outfile, SourceXIndex[i], SourceYIndex[i]);
-            WriteSourceComp(outfile, std::imag(XPolMoments[i]));
+            WriteGeometryInfo(outfile, maxx, maxy);
+            WriteSourceComp(outfile, ImagXMoments);
 
             //write real part of y-component
-            WriteGeometryInfo(outfile, SourceXIndex[i], SourceYIndex[i]);
-            WriteSourceComp(outfile, std::real(YPolMoments[i]));
+            WriteGeometryInfo(outfile, maxx, maxy);
+            WriteSourceComp(outfile, RealYMoments);
 
             //write imaginary part of y-component
-            WriteGeometryInfo(outfile, SourceXIndex[i], SourceYIndex[i]);
-            WriteSourceComp(outfile, std::imag(YPolMoments[i]));
+            WriteGeometryInfo(outfile, maxx, maxy);
+            WriteSourceComp(outfile, ImagYMoments);
 
             //write real part of z-component, we assume it is 0
-            WriteGeometryInfo(outfile, SourceXIndex[i], SourceYIndex[i]);
-            WriteEmptyArray(outfile);
+            WriteGeometryInfo(outfile, maxx, maxy);
+            WriteEmptyArray(outfile, maxx, maxy);
 
             //write imaginary part of z-component, we assume it is 0
-            WriteGeometryInfo(outfile, SourceXIndex[i], SourceYIndex[i]);
-            WriteEmptyArray(outfile);
+            WriteGeometryInfo(outfile, maxx, maxy);
+            WriteEmptyArray(outfile, maxx, maxy);
           }
         if (outfile.bad())
           {
