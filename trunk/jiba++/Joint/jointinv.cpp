@@ -248,7 +248,7 @@ int main(int argc, char *argv[])
     //depending on the chosen coupling mechanism it will have different size
     //so we fill its content in the object Coupling setup
     jiba::rvec InvModel;
-    CouplingSetup.SetupModelVector(vm, InvModel, TomoSetup.GetModel(),
+    CouplingSetup.SetupModelVector(vm, InvModel, StartModel, TomoSetup.GetModel(),
         GravitySetup.GetScalModel(), MTSetup.GetModel(), *Objective.get(), Regularization,
         RegSetup.GetSubStart());
     //finally ask for the maximum number of iterations
