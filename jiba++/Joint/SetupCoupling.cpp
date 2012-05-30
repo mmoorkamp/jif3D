@@ -247,21 +247,26 @@ namespace jiba
       }
 
     void SetupCoupling::SetupCrossGradModel(jiba::rvec &InvModel,
-        const jiba::ThreeDSeismicModel &SeisMod, const jiba::ThreeDGravityModel GravMod,
+        const jiba::ThreeDModelBase &ModelGeometry,
+        const jiba::ThreeDSeismicModel &SeisMod, const jiba::ThreeDGravityModel &GravMod,
         const jiba::ThreeDMTModel &MTMod, jiba::JointObjective &Objective,
         boost::shared_ptr<jiba::MatOpRegularization> Regularization, bool substart)
       {
-        const size_t ngrid = SeisMod.GetSlownesses().num_elements();
+        const size_t ngrid = ModelGeometry.GetNModelElements();
         InvModel.resize(3 * ngrid, 0.0);
 
         jiba::rvec SeisModel(ngrid, 0.0);
-        std::copy(SeisMod.GetSlownesses().origin(),
-            SeisMod.GetSlownesses().origin() + ngrid, SeisModel.begin());
-        std::cout << "Transforming slowness model. " << std::endl;
-        ublas::subrange(InvModel, 0, ngrid) = SlowTrans->PhysicalToGeneralized(SeisModel);
+        if (SeisMod.GetNModelElements() == ngrid)
+          {
+            std::copy(SeisMod.GetSlownesses().origin(),
+                SeisMod.GetSlownesses().origin() + ngrid, SeisModel.begin());
+            std::cout << "Transforming slowness model. " << std::endl;
+            ublas::subrange(InvModel, 0, ngrid) = SlowTrans->PhysicalToGeneralized(
+                SeisModel);
+          }
 
         jiba::rvec GravModel(ngrid, 1.0);
-        if (GravMod.GetDensities().num_elements() == ngrid)
+        if (GravMod.GetNModelElements() == ngrid)
           {
             std::copy(GravMod.GetDensities().origin(),
                 GravMod.GetDensities().origin() + ngrid, GravModel.begin());
@@ -271,7 +276,7 @@ namespace jiba
           }
 
         jiba::rvec MTModel(ngrid, 1.0);
-        if (MTMod.GetConductivities().num_elements() == ngrid)
+        if (MTMod.GetNModelElements() == ngrid)
           {
 
             std::copy(MTMod.GetConductivities().origin(),
@@ -291,7 +296,7 @@ namespace jiba
         //the double section transform takes two sections of the model
         //and feeds them to the objective function
         boost::shared_ptr<jiba::CrossGradient> SeisGravCross(
-            new jiba::CrossGradient(SeisMod));
+            new jiba::CrossGradient(ModelGeometry));
         boost::shared_ptr<jiba::MultiSectionTransform> SeisGravTrans(
             new jiba::MultiSectionTransform(3 * ngrid));
         SeisGravTrans->AddSection(0, ngrid, SlowCrossTrans);
@@ -307,7 +312,7 @@ namespace jiba
                 "SeisGrav");
           }
         boost::shared_ptr<jiba::CrossGradient> SeisMTCross(
-            new jiba::CrossGradient(SeisMod));
+            new jiba::CrossGradient(ModelGeometry));
         boost::shared_ptr<jiba::MultiSectionTransform> SeisMTTrans(
             new jiba::MultiSectionTransform(3 * ngrid));
         SeisMTTrans->AddSection(0, ngrid, SlowCrossTrans);
@@ -321,7 +326,7 @@ namespace jiba
             Objective.AddObjective(SeisMTCross, SeisMTTrans, seismtlambda, "SeisMT");
           }
         boost::shared_ptr<jiba::CrossGradient> GravMTCross(
-            new jiba::CrossGradient(SeisMod));
+            new jiba::CrossGradient(ModelGeometry));
         boost::shared_ptr<jiba::MultiSectionTransform> GravMTTrans(
             new jiba::MultiSectionTransform(3 * ngrid));
         GravMTTrans->AddSection(ngrid, 2 * ngrid, DensCrossTrans);
@@ -388,21 +393,26 @@ namespace jiba
       }
 
     void SetupCoupling::SetupSaltModel(jiba::rvec &InvModel,
-        const jiba::ThreeDSeismicModel &SeisMod, const jiba::ThreeDGravityModel GravMod,
+        const jiba::ThreeDModelBase &ModelGeometry,
+        const jiba::ThreeDSeismicModel &SeisMod, const jiba::ThreeDGravityModel &GravMod,
         const jiba::ThreeDMTModel &MTMod, jiba::JointObjective &Objective,
         boost::shared_ptr<jiba::MatOpRegularization> Regularization, bool substart)
       {
-        const size_t ngrid = SeisMod.GetSlownesses().num_elements();
+        const size_t ngrid = ModelGeometry.GetNModelElements();
         InvModel.resize(3 * ngrid, 0.0);
 
         jiba::rvec SeisModel(ngrid, 0.0);
-        std::copy(SeisMod.GetSlownesses().origin(),
-            SeisMod.GetSlownesses().origin() + ngrid, SeisModel.begin());
-        std::cout << "Transforming slowness model. " << std::endl;
-        ublas::subrange(InvModel, 0, ngrid) = SlowTrans->PhysicalToGeneralized(SeisModel);
+        if (SeisMod.GetNModelElements() == ngrid)
+          {
+            std::copy(SeisMod.GetSlownesses().origin(),
+                SeisMod.GetSlownesses().origin() + ngrid, SeisModel.begin());
+            std::cout << "Transforming slowness model. " << std::endl;
+            ublas::subrange(InvModel, 0, ngrid) = SlowTrans->PhysicalToGeneralized(
+                SeisModel);
+          }
 
         jiba::rvec GravModel(ngrid, 1.0);
-        if (GravMod.GetDensities().num_elements() == ngrid)
+        if (GravMod.GetNModelElements() == ngrid)
           {
             std::copy(GravMod.GetDensities().origin(),
                 GravMod.GetDensities().origin() + ngrid, GravModel.begin());
@@ -412,12 +422,11 @@ namespace jiba
           }
         else
           {
-            ublas::subrange(InvModel, ngrid, 2 * ngrid) = SeisModel;
-            std::cout << "No gravity model, substituting seismic model ! " << std::endl;
+            std::fill_n(ublas::subrange(InvModel, ngrid, 2 * ngrid).begin(), ngrid, 0.0);
           }
 
         jiba::rvec MTModel(ngrid, 1.0);
-        if (MTMod.GetConductivities().num_elements() == ngrid)
+        if (MTMod.GetNModelElements() == ngrid)
           {
 
             std::copy(MTMod.GetConductivities().origin(),
@@ -440,8 +449,9 @@ namespace jiba
           }
         //we currently hacked out the density transform
         boost::shared_ptr<jiba::SaltRelConstraint> SaltRel(
-            new jiba::SaltRelConstraint(boost::shared_ptr<jiba::GeneralModelTransform>(
-            new jiba::ModelCopyTransform()),
+            new jiba::SaltRelConstraint(
+                boost::shared_ptr<jiba::GeneralModelTransform>(
+                    new jiba::ModelCopyTransform()),
                 boost::shared_ptr<jiba::GeneralModelTransform>(
                     new jiba::SlowCondTrans(
                         boost::shared_ptr<jiba::GeneralModelTransform>(
@@ -527,14 +537,20 @@ namespace jiba
       }
 
     void SetupCoupling::SetupFixedCouplingModel(jiba::rvec &InvModel,
-        const jiba::ThreeDSeismicModel &SeisMod, const jiba::ThreeDGravityModel GravMod,
+        const jiba::ThreeDModelBase &ModelGeometry,
+        const jiba::ThreeDSeismicModel &SeisMod, const jiba::ThreeDGravityModel &GravMod,
         const jiba::ThreeDMTModel &MTMod, jiba::JointObjective &Objective,
         boost::shared_ptr<jiba::MatOpRegularization> Regularization, bool substart)
       {
-        const size_t ngrid = SeisMod.GetSlownesses().num_elements();
+        const size_t ngrid = ModelGeometry.GetNModelElements();
+
         //if we want direct parameter coupling
         //we just need a single regularization term
         //as we invert for slowness, the regularization also works on slowness
+        if (SeisMod.GetNModelElements() != ngrid)
+          {
+            throw jiba::FatalException("Size of seismic model does not match model geometry !");
+          }
         InvModel.resize(ngrid);
         std::copy(SeisMod.GetSlownesses().origin(),
             SeisMod.GetSlownesses().origin() + ngrid, InvModel.begin());
@@ -556,9 +572,9 @@ namespace jiba
       }
 
     void SetupCoupling::SetupModelVector(const po::variables_map &vm,
-        jiba::rvec &InvModel, const jiba::ThreeDSeismicModel &SeisMod,
-        const jiba::ThreeDGravityModel GravMod, const jiba::ThreeDMTModel &MTMod,
-        jiba::JointObjective &Objective,
+        jiba::rvec &InvModel, const jiba::ThreeDModelBase &ModelGeometry,
+        const jiba::ThreeDSeismicModel &SeisMod, const jiba::ThreeDGravityModel &GravMod,
+        const jiba::ThreeDMTModel &MTMod, jiba::JointObjective &Objective,
         boost::shared_ptr<jiba::MatOpRegularization> Regularization, bool substart)
       {
         //if we want to do corss-gradient type inversion
@@ -566,20 +582,20 @@ namespace jiba
         //and three regularization terms
         if (vm.count("crossgrad"))
           {
-            SetupCrossGradModel(InvModel, SeisMod, GravMod, MTMod, Objective,
-                Regularization, substart);
+            SetupCrossGradModel(InvModel, ModelGeometry, SeisMod, GravMod, MTMod,
+                Objective, Regularization, substart);
           }
         else
           {
             if (vm.count("saltrel"))
               {
-                SetupSaltModel(InvModel, SeisMod, GravMod, MTMod, Objective,
-                    Regularization, substart);
+                SetupSaltModel(InvModel, ModelGeometry, SeisMod, GravMod, MTMod,
+                    Objective, Regularization, substart);
               }
             else
               {
-                SetupFixedCouplingModel(InvModel, SeisMod, GravMod, MTMod, Objective,
-                    Regularization, substart);
+                SetupFixedCouplingModel(InvModel, ModelGeometry, SeisMod, GravMod, MTMod,
+                    Objective, Regularization, substart);
               }
           }
       }

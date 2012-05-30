@@ -60,15 +60,21 @@ namespace jiba
       //! The maximum density in g/cm3
       double maxdens;
       void SetupCrossGradModel(jiba::rvec &InvModel,
-          const jiba::ThreeDSeismicModel &SeisMod, const jiba::ThreeDGravityModel GravMod,
-          const jiba::ThreeDMTModel &MTMod, jiba::JointObjective &Objective,
+          const jiba::ThreeDModelBase &ModelGeometry,
+          const jiba::ThreeDSeismicModel &SeisMod,
+          const jiba::ThreeDGravityModel &GravMod, const jiba::ThreeDMTModel &MTMod,
+          jiba::JointObjective &Objective,
           boost::shared_ptr<jiba::MatOpRegularization> Regularization, bool substart);
       void SetupFixedCouplingModel(jiba::rvec &InvModel,
-          const jiba::ThreeDSeismicModel &SeisMod, const jiba::ThreeDGravityModel GravMod,
-          const jiba::ThreeDMTModel &MTMod, jiba::JointObjective &Objective,
+          const jiba::ThreeDModelBase &ModelGeometry,
+          const jiba::ThreeDSeismicModel &SeisMod,
+          const jiba::ThreeDGravityModel &GravMod, const jiba::ThreeDMTModel &MTMod,
+          jiba::JointObjective &Objective,
           boost::shared_ptr<jiba::MatOpRegularization> Regularization, bool substart);
-      void SetupSaltModel(jiba::rvec &InvModel, const jiba::ThreeDSeismicModel &SeisMod,
-          const jiba::ThreeDGravityModel GravMod, const jiba::ThreeDMTModel &MTMod,
+      void SetupSaltModel(jiba::rvec &InvModel,
+          const jiba::ThreeDModelBase &ModelGeometry,
+          const jiba::ThreeDSeismicModel &SeisMod,
+          const jiba::ThreeDGravityModel &GravMod, const jiba::ThreeDMTModel &MTMod,
           jiba::JointObjective &Objective,
           boost::shared_ptr<jiba::MatOpRegularization> Regularization, bool substart);
     public:
@@ -86,8 +92,7 @@ namespace jiba
        * @param RegTransform The parameter transform for the regularization
        * @param Wavelet Parametrize the inversion by a wavelet transform of the model parameters
        */
-      void SetupTransforms(const po::variables_map &vm,
-          ThreeDSeismicModel &StartModel,
+      void SetupTransforms(const po::variables_map &vm, ThreeDSeismicModel &StartModel,
           boost::shared_ptr<jiba::GeneralModelTransform> &TomoTransform,
           boost::shared_ptr<jiba::GeneralModelTransform> &GravityTransform,
           boost::shared_ptr<jiba::GeneralModelTransform> &MTTransform,
@@ -99,6 +104,7 @@ namespace jiba
        * depending on the approach we have to set a different number of regularization and coupling objective functions
        * which is done here as well.
        * @param vm The variables map containing the options set by the user
+       * @param ModelGeometry The object carrying information about the grid
        * @param InvModel Contains the inversion parameter vector at the end
        * @param SeisMod The seismic starting model
        * @param GravMod The gravity starting model
@@ -108,8 +114,10 @@ namespace jiba
        * @param substart Do we want to substract the starting model for roughness calculations
        */
       void SetupModelVector(const po::variables_map &vm, jiba::rvec &InvModel,
-          const jiba::ThreeDSeismicModel &SeisMod, const jiba::ThreeDGravityModel GravMod,
-          const jiba::ThreeDMTModel &MTMod, jiba::JointObjective &Objective,
+          const jiba::ThreeDModelBase &ModelGeometry,
+          const jiba::ThreeDSeismicModel &SeisMod,
+          const jiba::ThreeDGravityModel &GravMod, const jiba::ThreeDMTModel &MTMod,
+          jiba::JointObjective &Objective,
           boost::shared_ptr<jiba::MatOpRegularization> Regularization, bool substart);
 
       SetupCoupling();
