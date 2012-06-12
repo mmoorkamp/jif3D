@@ -348,8 +348,8 @@ namespace jiba
         std::cin >> seisreglambda;
         boost::shared_ptr<jiba::MatOpRegularization> SeisReg(Regularization->clone());
         jiba::rvec TomoCovar(3 * ngrid);
-        SetupModelCovar(TomoCovar, SeisModel, SeisReg->GetDataCovar(), ngrid);
-        SeisReg->SetDataCovar(TomoCovar);
+        SetupModelCovar(TomoCovar, SeisModel, SeisReg->GetDataError(), ngrid);
+        SeisReg->SetDataError(TomoCovar);
 
         //then the regularization of densities
         double gravreglambda = 1.0;
@@ -358,8 +358,8 @@ namespace jiba
         boost::shared_ptr<jiba::MatOpRegularization> GravReg(Regularization->clone());
         jiba::rvec GravCovar(3 * ngrid);
         jiba::rvec Ones(GravModel.size(), 1.0);
-        SetupModelCovar(GravCovar, Ones, GravReg->GetDataCovar(), ngrid);
-        GravReg->SetDataCovar(GravCovar);
+        SetupModelCovar(GravCovar, Ones, GravReg->GetDataError(), ngrid);
+        GravReg->SetDataError(GravCovar);
 
         //and finally conductivities
         double mtreglambda = 1.0;
@@ -367,8 +367,8 @@ namespace jiba
         std::cin >> mtreglambda;
         boost::shared_ptr<jiba::MatOpRegularization> MTReg(Regularization->clone());
         jiba::rvec MTCovar(3 * ngrid);
-        SetupModelCovar(MTCovar, MTModel, MTReg->GetDataCovar(), ngrid);
-        MTReg->SetDataCovar(MTCovar);
+        SetupModelCovar(MTCovar, MTModel, MTReg->GetDataError(), ngrid);
+        MTReg->SetDataError(MTCovar);
         //if we specify on the command line that we want to subtract the
         //starting model, we set the corresponding reference model
         //in the regularization object
@@ -492,8 +492,8 @@ namespace jiba
         std::cin >> seisreglambda;
         boost::shared_ptr<jiba::MatOpRegularization> SeisReg(Regularization->clone());
         jiba::rvec TomoCovar(3 * ngrid);
-        SetupModelCovar(TomoCovar, SeisModel, SeisReg->GetDataCovar(), ngrid);
-        SeisReg->SetDataCovar(TomoCovar);
+        SetupModelCovar(TomoCovar, SeisModel, SeisReg->GetDataError(), ngrid);
+        SeisReg->SetDataError(TomoCovar);
 
         //then the regularization of densities
         double gravreglambda = 1.0;
@@ -502,8 +502,8 @@ namespace jiba
         boost::shared_ptr<jiba::MatOpRegularization> GravReg(Regularization->clone());
         jiba::rvec GravCovar(3 * ngrid);
         jiba::rvec Ones(GravModel.size(), 1.0);
-        SetupModelCovar(GravCovar, Ones, GravReg->GetDataCovar(), ngrid);
-        GravReg->SetDataCovar(GravCovar);
+        SetupModelCovar(GravCovar, Ones, GravReg->GetDataError(), ngrid);
+        GravReg->SetDataError(GravCovar);
 
         //and finally conductivities
         double mtreglambda = 1.0;
@@ -511,8 +511,8 @@ namespace jiba
         std::cin >> mtreglambda;
         boost::shared_ptr<jiba::MatOpRegularization> MTReg(Regularization->clone());
         jiba::rvec MTCovar(3 * ngrid);
-        SetupModelCovar(MTCovar, MTModel, MTReg->GetDataCovar(), ngrid);
-        MTReg->SetDataCovar(MTCovar);
+        SetupModelCovar(MTCovar, MTModel, MTReg->GetDataError(), ngrid);
+        MTReg->SetDataError(MTCovar);
         //if we specify on the command line that we want to subtract the
         //starting model, we set the corresponding reference model
         //in the regularization object
@@ -560,8 +560,8 @@ namespace jiba
         if (reglambda > 0.0)
           {
             jiba::rvec TomoCovar(3 * ngrid);
-            SetupModelCovar(TomoCovar, InvModel, Regularization->GetDataCovar(), ngrid);
-            Regularization->SetDataCovar(TomoCovar);
+            SetupModelCovar(TomoCovar, InvModel, Regularization->GetDataError(), ngrid);
+            Regularization->SetDataError(TomoCovar);
           }
         if (substart)
           {

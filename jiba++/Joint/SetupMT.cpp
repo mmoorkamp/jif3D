@@ -94,7 +94,7 @@ namespace jiba
             jiba::rvec MinErr(jiba::ConstructMTError(MTData, relerr));
             std::transform(MTError.begin(), MTError.end(), MinErr.begin(),
                 MTError.begin(), std::max<double>);
-            MTObjective->SetDataCovar(MTError);
+            MTObjective->SetDataError(MTError);
             //add the MT part to the JointObjective that will be used
             //for the inversion
             Objective.AddObjective(MTObjective, Transform, mtlambda, "MT");

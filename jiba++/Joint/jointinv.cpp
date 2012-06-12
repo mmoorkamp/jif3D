@@ -352,9 +352,13 @@ int main(int argc, char *argv[])
     //we use the results from this calculation to save the final inversion synthetic data
     Objective->CalcMisfit(InvModel);
 
-    jiba::rvec TomoInvData(TomoSetup.GetTomoObjective().GetSyntheticData());
-    jiba::SaveTraveltimes(modelfilename + ".inv_tt.nc", TomoInvData, TomoModel);
-
+    if (havetomo)
+      {
+        jiba::rvec TomoInvData(TomoSetup.GetTomoObjective().GetSyntheticData());
+        jiba::SaveTraveltimes(modelfilename + ".inv_tt.nc", TomoInvData, TomoModel);
+        jiba::rvec TomoDiff(TomoSetup.GetTomoObjective().GetDataDifference());
+        jiba::SaveTraveltimes(modelfilename + ".diff_tt.nc", TomoDiff, TomoModel);
+      }
     //if we are inverting gravity data and have specified site locations
     if (havegrav)
       {
@@ -367,6 +371,10 @@ int main(int argc, char *argv[])
             jiba::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc",
                 ScalGravInvData, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
                 GravModel.GetMeasPosZ());
+            jiba::rvec ScalDiff(GravitySetup.GetScalGravObjective().GetDataDifference());
+            jiba::SaveScalarGravityMeasurements(modelfilename + ".diff_sgd.nc", ScalDiff,
+                GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
+                GravModel.GetMeasPosZ());
             jiba::Write3DDataToVTK(modelfilename + ".inv_sgd.vtk", "grav_accel",
                 ScalGravInvData, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
                 GravModel.GetMeasPosZ());
@@ -378,7 +386,11 @@ int main(int argc, char *argv[])
             jiba::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc", FTGInvData,
                 GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
                 GravModel.GetMeasPosZ());
-            jiba::Write3DTensorDataToVTK(modelfilename + ".inv_ftg.vtk", "U", FTGInvData,
+            jiba::rvec FTGDiff(GravitySetup.GetFTGObjective().GetDataDifference());
+            jiba::SaveTensorGravityMeasurements(modelfilename + ".diff_ftg.nc", FTGDiff,
+                GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
+                GravModel.GetMeasPosZ());
+            jiba::Write3DTensorDataToVTK(modelfilename + ".diff_ftg.vtk", "U", FTGInvData,
                 GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
                 GravModel.GetMeasPosZ());
           }
@@ -389,9 +401,13 @@ int main(int argc, char *argv[])
       {
         //calculate MT inversion result
         jiba::rvec MTInvData(MTSetup.GetMTObjective().GetSyntheticData());
-        jiba::WriteImpedancesToNetCDF(modelfilename + "inv_mt.nc",
+        jiba::WriteImpedancesToNetCDF(modelfilename + ".inv_mt.nc",
             MTModel.GetFrequencies(), MTModel.GetMeasPosX(), MTModel.GetMeasPosY(),
-            MTModel.GetMeasPosZ(), MTInvData, MTSetup.GetMTObjective().GetDataCovar());
+            MTModel.GetMeasPosZ(), MTInvData, MTSetup.GetMTObjective().GetDataError());
+        jiba::rvec MTDiff(MTSetup.GetMTObjective().GetDataDifference());
+        jiba::WriteImpedancesToNetCDF(modelfilename + ".diff_mt.nc",
+            MTModel.GetFrequencies(), MTModel.GetMeasPosX(), MTModel.GetMeasPosY(),
+            MTModel.GetMeasPosZ(), MTDiff, MTSetup.GetMTObjective().GetDataError());
       }
 
     std::ofstream datadiffile("data.diff");

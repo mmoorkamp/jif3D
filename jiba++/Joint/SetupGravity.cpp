@@ -157,7 +157,7 @@ namespace jiba
                 new jiba::ThreeDModelObjective<DiskGravityCalculator>(*ScalarCalculator));
             ScalGravObjective->SetObservedData(ScalGravData);
             ScalGravObjective->SetCoarseModelGeometry(ScalGravModel);
-            ScalGravObjective->SetDataCovar(
+            ScalGravObjective->SetDataError(
                 jiba::ConstructError(ScalGravData, scalrelerr, scalminerr));
 
             Objective.AddObjective(ScalGravObjective, Transform, scalgravlambda,
@@ -189,7 +189,7 @@ namespace jiba
                 new jiba::ThreeDModelObjective<DiskGravityCalculator>(*TensorCalculator));
             FTGObjective->SetObservedData(FTGData);
             FTGObjective->SetCoarseModelGeometry(FTGGravModel);
-            FTGObjective->SetDataCovar(
+            FTGObjective->SetDataError(
                 jiba::ConstructError(FTGData, ftgrelerr, ftgminerr));
 
             Objective.AddObjective(FTGObjective, Transform, ftglambda, "FTG");
