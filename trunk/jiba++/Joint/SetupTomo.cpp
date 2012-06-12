@@ -79,9 +79,9 @@ namespace jiba
             //we assume the same error for all measurements
             //this is either the default value set in the constructor
             //or set by the user
-            jiba::rvec TomoCovar(TomoData.size());
-            std::fill(TomoCovar.begin(), TomoCovar.end(), pickerr);
-            TomoObjective->SetDataCovar(TomoCovar);
+            jiba::rvec TomoError(TomoData.size());
+            std::fill(TomoError.begin(), TomoError.end(), pickerr);
+            TomoObjective->SetDataError(TomoError);
 
             if (vm.count("tomofine"))
               {
