@@ -9,6 +9,8 @@
 #ifndef TENSOROMPGRAVITYIMP_H_
 #define TENSOROMPGRAVITYIMP_H_
 
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/base_object.hpp>
 #include "ThreeDGravityImplementation.h"
 
 namespace jiba
@@ -33,6 +35,13 @@ namespace jiba
           const ThreeDGravityModel &Model, rmat &Sensitivities);
       //! The gravity tensor has 9 elements and we return all of them even though they are not all independent
       static const size_t ndatapermeas = 9;
+      friend class boost::serialization::access;
+      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version)
+        {
+          ar & boost::serialization::base_object<ThreeDGravityImplementation>(*this);
+        }
     public:
       //! How many data do we return before any transformation
       virtual size_t RawDataPerMeasurement()

@@ -190,7 +190,7 @@ int main(int argc, char *argv[])
 
     boost::shared_ptr<jiba::MatOpRegularization> Regularization = RegSetup.SetupObjective(
         vm, StartModel, RegTransform, CovModVec);
-    CouplingSetup.SetupModelVector(vm, InvModel, StartModel, GravitySetup.GetScalModel(),
+    CouplingSetup.SetupModelVector(vm, InvModel, StartModel, TomoSetup.GetModel(), GravitySetup.GetScalModel(),
         MTSetup.GetModel(), GetObjective(), Regularization, RegSetup.GetSubStart());
 
     size_t maxiter = 1;

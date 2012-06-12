@@ -5,10 +5,11 @@
 // Copyright   : 2008, mmoorkamp
 //============================================================================
 
+#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <boost/bind.hpp>
-
+#include <boost/foreach.hpp>
 #include "DepthWeighting.h"
 #include "../Inversion/LinearInversion.h"
 
@@ -59,9 +60,10 @@ namespace jiba
         //we need the depth to the interfaces
         partial_sum(ZSizes.begin(), ZSizes.end(), zvalues.begin());
         //the sensitivities can be negative, so we examine the absolute value
-        transform(profile.begin(), profile.end(), profile.begin(), std::abs<
-            double>);
-
+        BOOST_FOREACH( double & value, profile )
+        {
+            value = std::abs(value);
+        }
         //then we normalize so the largest element (usually the top cell) has value 1
         transform(profile.begin(), profile.end(), profile.begin(), boost::bind(
             std::divides<double>(), _1, *std::max_element(profile.begin(),

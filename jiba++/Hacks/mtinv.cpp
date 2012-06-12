@@ -5,15 +5,20 @@
 // Copyright   : 2008, MM
 //============================================================================
 
-
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <cmath>
 #include <omp.h>
+#include <boost/mpi.hpp>
 #include <boost/bind.hpp>
 #include <boost/program_options.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+
+#include <boost/mpi/packed_oarchive.hpp>
+#include <boost/mpi/packed_iarchive.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/serialization.hpp>
 #include "../Global/convert.h"
 #include "../Global/FatalException.h"
 #include "../Global/NumUtil.h"
@@ -26,7 +31,7 @@
 #include "../Inversion/LimitedMemoryQuasiNewton.h"
 #include "../Inversion/JointObjective.h"
 #include "../Inversion/ModelTransforms.h"
-#include "../Inversion/ThreeDModelObjective.h"
+#include "../Inversion/MPIThreeDModelObjective.h"
 #include "../MT/X3DModel.h"
 #include "../MT/X3DMTCalculator.h"
 #include "../MT/ReadWriteImpedances.h"
@@ -36,19 +41,50 @@
 namespace ublas = boost::numeric::ublas;
 namespace po = boost::program_options;
 
+
+//BOOST_CLASS_EXPORT( jiba::VectorTransform )
+BOOST_CLASS_EXPORT( jiba::CopyTransform )
+
+BOOST_CLASS_EXPORT( jiba::GeneralModelTransform )
+BOOST_CLASS_EXPORT( jiba::ModelCopyTransform )
+BOOST_CLASS_EXPORT( jiba::TanhTransform )
+BOOST_CLASS_EXPORT( jiba::DensityTransform )
+//BOOST_CLASS_EXPORT( jiba::ChainedTransform )
+//BOOST_CLASS_EXPORT( jiba::SectionTransform )
+//BOOST_CLASS_EXPORT( jiba::MultiSectionTransform )
+BOOST_CLASS_EXPORT( jiba::ObjectiveFunction )
+BOOST_CLASS_EXPORT( jiba::X3DMTCalculator )
+BOOST_CLASS_EXPORT( jiba::X3DModel )
+BOOST_CLASS_EXPORT( jiba::ModelRefiner )
+//BOOST_CLASS_EXPORT( jiba::ThreeDModelObjective<jiba::X3DMTCalculator> )
+//BOOST_CLASS_EXPORT( jiba::MPIThreeDModelObjective<jiba::X3DMTCalculator> )
+//BOOST_CLASS_EXPORT( jiba::JointObjective )
 int main(int argc, char *argv[])
   {
+
 
     double mincond = 1e-6;
     double maxcond = 10;
 
+    boost::mpi::environment env(argc, argv);
+    boost::mpi::communicator world;
+    bool is_generator = world.rank() > 0;
+    boost::mpi::communicator local = world.split(is_generator ? 0 : 1);
+    std::vector<int> mpiindices(local.size());
+    for (int i = 0; i < world.size(); ++i)
+      {
+        if (i > 0)
+          mpiindices.push_back(i);
+      }
+    boost::shared_ptr<jiba::JointObjective> Objective(new jiba::JointObjective(true));
+
     po::options_description desc("General options");
-    desc.add_options()("help", "produce help message")("threads",
-        po::value<int>(), "The number of openmp threads")("covmod", po::value<
-        std::string>(), "A file containing the model covariance")("mincond",
+    desc.add_options()("help", "produce help message")("threads", po::value<int>(),
+        "The number of openmp threads")("covmod", po::value<std::string>(),
+        "A file containing the model covariance")("mincond",
         po::value(&mincond)->default_value(1e-6),
-        "The minimum value for conductivity in S/m")("maxcond", po::value(
-        &maxcond)->default_value(10),
+        "The minimum value for conductivity in S/m")("maxcond",
+        po::value(&maxcond)->default_value(10),
         "The maximum value for conductivity in S/m");
 
     jiba::SetupRegularization RegSetup;
@@ -67,14 +103,14 @@ int main(int argc, char *argv[])
 
     if (vm.count("threads"))
       {
-        omp_set_num_threads(vm["threads"].as<int> ());
+        omp_set_num_threads(vm["threads"].as<int>());
       }
 
     jiba::rvec CovModVec;
     if (vm.count("covmod"))
       {
         jiba::X3DModel CovModel;
-        CovModel.ReadNetCDF(vm["covmod"].as<std::string> ());
+        CovModel.ReadNetCDF(vm["covmod"].as<std::string>());
         const size_t ncovmod = CovModel.GetConductivities().num_elements();
         CovModVec.resize(ncovmod);
         std::copy(CovModel.GetConductivities().origin(),
@@ -94,10 +130,10 @@ int main(int argc, char *argv[])
     //read in data
     jiba::rvec Data, ZError;
     std::vector<double> XCoord, YCoord, ZCoord, Frequencies;
-    jiba::ReadImpedancesFromNetCDF(datafilename, Frequencies, XCoord, YCoord,
-        ZCoord, Data, ZError);
-    std::copy(Frequencies.begin(), Frequencies.end(), std::back_inserter(
-        Model.SetFrequencies()));
+    jiba::ReadImpedancesFromNetCDF(datafilename, Frequencies, XCoord, YCoord, ZCoord,
+        Data, ZError);
+    std::copy(Frequencies.begin(), Frequencies.end(),
+        std::back_inserter(Model.SetFrequencies()));
     //if we don't have data inversion doesn't make sense;
     if (Data.empty())
       {
@@ -111,8 +147,7 @@ int main(int argc, char *argv[])
 
     jiba::rvec FirstFreq(XCoord.size());
     std::copy(Data.begin(), Data.begin() + XCoord.size(), FirstFreq.begin());
-    jiba::Write3DDataToVTK(datafilename + ".vtk", "Z", FirstFreq, XCoord,
-        YCoord, ZCoord);
+    jiba::Write3DDataToVTK(datafilename + ".vtk", "Z", FirstFreq, XCoord, YCoord, ZCoord);
 
     //we define a few constants that are used throughout the inversion
     const size_t ndata = Data.size();
@@ -120,8 +155,8 @@ int main(int argc, char *argv[])
 
     //create objects for the misfit and a very basic error estimate
     jiba::rvec MTDataError = jiba::ConstructMTError(Data, errorlevel);
-    std::transform(ZError.begin(), ZError.end(), MTDataError.begin(),
-        ZError.begin(), std::max<double>);
+    std::transform(ZError.begin(), ZError.end(), MTDataError.begin(), ZError.begin(),
+        std::max<double>);
 
     for (size_t i = 0; i < Model.GetConductivities().shape()[2]; ++i)
       {
@@ -129,8 +164,8 @@ int main(int argc, char *argv[])
       }
     jiba::rvec InvModel(Model.GetConductivities().num_elements());
     std::copy(Model.GetConductivities().origin(),
-        Model.GetConductivities().origin()
-            + Model.GetConductivities().num_elements(), InvModel.begin());
+        Model.GetConductivities().origin() + Model.GetConductivities().num_elements(),
+        InvModel.begin());
     Model.WriteVTK("start.vtk");
 
     boost::shared_ptr<jiba::ChainedTransform> ConductivityTransform(
@@ -140,32 +175,29 @@ int main(int argc, char *argv[])
     std::fill(RefModel.begin(), RefModel.end(), 1.0);
     //because the tanh transform is used inside a logarithmic transform
     //we need to take the natural logarithm of the actual minimum and maximum
-    ConductivityTransform->AddTransform(boost::shared_ptr<
-        jiba::GeneralModelTransform>(new jiba::TanhTransform(std::log(mincond),
-        std::log(maxcond))));
-    ConductivityTransform->AddTransform(boost::shared_ptr<
-        jiba::GeneralModelTransform>(new jiba::LogTransform(RefModel)));
+    ConductivityTransform->AddTransform(
+        boost::shared_ptr<jiba::GeneralModelTransform>(
+            new jiba::TanhTransform(std::log(mincond), std::log(maxcond))));
+    ConductivityTransform->AddTransform(
+        boost::shared_ptr<jiba::GeneralModelTransform>(new jiba::LogTransform(RefModel)));
 
     InvModel = ConductivityTransform->PhysicalToGeneralized(InvModel);
 
     std::ofstream startmodfile("start.mod");
-    std::copy(InvModel.begin(), InvModel.end(), std::ostream_iterator<double>(
-        startmodfile, "\n"));
+    std::copy(InvModel.begin(), InvModel.end(),
+        std::ostream_iterator<double>(startmodfile, "\n"));
 
     jiba::X3DMTCalculator Calculator;
-
-    boost::shared_ptr<jiba::ThreeDModelObjective<jiba::X3DMTCalculator> >
-        X3DObjective(new jiba::ThreeDModelObjective<jiba::X3DMTCalculator>(
-            Calculator));
+    boost::shared_ptr<jiba::MPIThreeDModelObjective<jiba::X3DMTCalculator> > X3DObjective(
+        new jiba::MPIThreeDModelObjective<jiba::X3DMTCalculator>(Calculator, local, world,
+            0, mpiindices));
 
     X3DObjective->SetObservedData(Data);
     X3DObjective->SetCoarseModelGeometry(Model);
-    X3DObjective->SetDataCovar(ZError);
+    X3DObjective->SetDataError(ZError);
 
-    boost::shared_ptr<jiba::JointObjective> Objective(new jiba::JointObjective(
-        true));
-    boost::shared_ptr<jiba::MatOpRegularization> Regularization =
-        RegSetup.SetupObjective(vm, Model, ConductivityTransform, CovModVec);
+    boost::shared_ptr<jiba::MatOpRegularization> Regularization = RegSetup.SetupObjective(
+        vm, Model, ConductivityTransform, CovModVec);
 
     double lambda = 1.0;
     std::cout << "Lambda: ";
@@ -179,6 +211,8 @@ int main(int argc, char *argv[])
     std::cin >> maxiter;
     std::cout << "Performing inversion." << std::endl;
 
+    boost::mpi::broadcast(world, Calculator, 0);
+
     boost::shared_ptr<jiba::GradientBasedOptimization> Optimizer =
         InversionSetup.ConfigureInversion(vm, Objective, InvModel, CovModVec);
 
@@ -186,18 +220,17 @@ int main(int argc, char *argv[])
     misfitfile << "0 " << Objective->CalcMisfit(InvModel) << " ";
     std::ofstream difffile("diff.out");
     std::copy(X3DObjective->GetDataDifference().begin(),
-        X3DObjective->GetDataDifference().end(), std::ostream_iterator<double>(
-            difffile, "\n"));
+        X3DObjective->GetDataDifference().end(),
+        std::ostream_iterator<double>(difffile, "\n"));
     std::flush(difffile);
 
     std::copy(Objective->GetIndividualFits().begin(),
-        Objective->GetIndividualFits().end(), std::ostream_iterator<double>(
-            misfitfile, " "));
+        Objective->GetIndividualFits().end(),
+        std::ostream_iterator<double>(misfitfile, " "));
     misfitfile << std::endl;
 
     size_t iteration = 0;
-    boost::posix_time::ptime starttime =
-        boost::posix_time::microsec_clock::local_time();
+    boost::posix_time::ptime starttime = boost::posix_time::microsec_clock::local_time();
 
     bool terminate = false;
     do
@@ -208,25 +241,21 @@ int main(int argc, char *argv[])
             Optimizer->MakeStep(InvModel);
             std::copy(InvModel.begin(), InvModel.end(),
                 Model.SetConductivities().origin());
-            Model.WriteVTK(modelfilename + jiba::stringify(iteration)
-                + ".mt.raw.vtk");
+            Model.WriteVTK(modelfilename + jiba::stringify(iteration) + ".mt.raw.vtk");
 
-            jiba::rvec CondInvModel =
-                ConductivityTransform->GeneralizedToPhysical(InvModel);
+            jiba::rvec CondInvModel = ConductivityTransform->GeneralizedToPhysical(
+                InvModel);
             std::copy(CondInvModel.begin(), CondInvModel.end(),
                 Model.SetConductivities().origin());
-            Model.WriteVTK(modelfilename + jiba::stringify(iteration)
-                + ".mt.inv.vtk");
-            std::cout << "Current Misfit: " << Optimizer->GetMisfit()
-                << std::endl;
-            std::cout << "Current Gradient: " << Optimizer->GetGradNorm()
-                << std::endl;
+            Model.WriteVTK(modelfilename + jiba::stringify(iteration) + ".mt.inv.vtk");
+            std::cout << "Current Misfit: " << Optimizer->GetMisfit() << std::endl;
+            std::cout << "Current Gradient: " << Optimizer->GetGradNorm() << std::endl;
             std::cout << std::endl;
 
             misfitfile << iteration + 1 << " " << Optimizer->GetMisfit() << " ";
             std::copy(Objective->GetIndividualFits().begin(),
-                Objective->GetIndividualFits().end(), std::ostream_iterator<
-                    double>(misfitfile, " "));
+                Objective->GetIndividualFits().end(),
+                std::ostream_iterator<double>(misfitfile, " "));
             misfitfile << " " << Objective->GetNEval();
             misfitfile << std::endl;
             iteration++;
@@ -239,24 +268,23 @@ int main(int argc, char *argv[])
       } while (iteration < maxiter && !terminate
         && Objective->GetIndividualFits()[0] > ndata);
 
-    boost::posix_time::ptime endtime =
-        boost::posix_time::microsec_clock::local_time();
+    boost::posix_time::ptime endtime = boost::posix_time::microsec_clock::local_time();
     double cachedruntime = (endtime - starttime).total_seconds();
     std::cout << "Runtime: " << cachedruntime << " s" << std::endl;
     std::cout << std::endl;
     InvModel = ConductivityTransform->GeneralizedToPhysical(InvModel);
 
-    std::copy(InvModel.begin(), InvModel.begin()
-        + Model.GetConductivities().num_elements(),
+    std::copy(InvModel.begin(),
+        InvModel.begin() + Model.GetConductivities().num_elements(),
         Model.SetConductivities().origin());
 
     //calculate the predicted data
     std::cout << "Calculating response of inversion model." << std::endl;
     jiba::rvec InvData(jiba::X3DMTCalculator().Calculate(Model));
-    jiba::WriteImpedancesToNetCDF(modelfilename + ".inv_imp.nc", Frequencies,
-        XCoord, YCoord, ZCoord, InvData);
-    jiba::WriteImpedancesToNetCDF(modelfilename + ".diff_imp.nc", Frequencies,
-        XCoord, YCoord, ZCoord, X3DObjective->GetDataDifference());
+    jiba::WriteImpedancesToNetCDF(modelfilename + ".inv_imp.nc", Frequencies, XCoord,
+        YCoord, ZCoord, InvData);
+    jiba::WriteImpedancesToNetCDF(modelfilename + ".diff_imp.nc", Frequencies, XCoord,
+        YCoord, ZCoord, X3DObjective->GetDataDifference());
 
     //and write out the data and model
     //here we have to distinguish again between scalar and ftg data

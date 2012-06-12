@@ -46,11 +46,11 @@ BOOST_AUTO_TEST_CASE(measpos_test)
     BaseTest.SetOrigin(oldshiftx, oldshifty, oldshiftz);
     for (size_t i = 0; i < nmeas; ++i)
       {
-        BOOST_CHECK_CLOSE (MeasX.at(i) + oldshiftx, BaseTest.GetMeasPosX().at(i), std::numeric_limits<
+        BOOST_CHECK_CLOSE (MeasX.at(i) - oldshiftx, BaseTest.GetMeasPosX().at(i), std::numeric_limits<
             float>::epsilon());
-        BOOST_CHECK_CLOSE (MeasY.at(i) + oldshifty, BaseTest.GetMeasPosY().at(i), std::numeric_limits<
+        BOOST_CHECK_CLOSE (MeasY.at(i) - oldshifty, BaseTest.GetMeasPosY().at(i), std::numeric_limits<
             float>::epsilon());
-        BOOST_CHECK_CLOSE (MeasZ.at(i) + oldshiftz, BaseTest.GetMeasPosZ().at(i), std::numeric_limits<
+        BOOST_CHECK_CLOSE (MeasZ.at(i) - oldshiftz, BaseTest.GetMeasPosZ().at(i), std::numeric_limits<
             float>::epsilon());
       }
     const double newshiftx = rand();
@@ -59,11 +59,11 @@ BOOST_AUTO_TEST_CASE(measpos_test)
     BaseTest.SetOrigin(newshiftx, newshifty, newshiftz);
     for (size_t i = 0; i < nmeas; ++i)
       {
-        BOOST_CHECK_CLOSE (MeasX.at(i) + newshiftx, BaseTest.GetMeasPosX().at(i), std::numeric_limits<
+        BOOST_CHECK_CLOSE (MeasX.at(i) - newshiftx, BaseTest.GetMeasPosX().at(i), std::numeric_limits<
             float>::epsilon());
-        BOOST_CHECK_CLOSE (MeasY.at(i) + newshifty, BaseTest.GetMeasPosY().at(i), std::numeric_limits<
+        BOOST_CHECK_CLOSE (MeasY.at(i) - newshifty, BaseTest.GetMeasPosY().at(i), std::numeric_limits<
             float>::epsilon());
-        BOOST_CHECK_CLOSE (MeasZ.at(i) + newshiftz, BaseTest.GetMeasPosZ().at(i), std::numeric_limits<
+        BOOST_CHECK_CLOSE (MeasZ.at(i) - newshiftz, BaseTest.GetMeasPosZ().at(i), std::numeric_limits<
             float>::epsilon());
       }
   }

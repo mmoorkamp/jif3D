@@ -9,8 +9,10 @@
 #ifndef TOMOGRAPHYCALCULATOR_H_
 #define TOMOGRAPHYCALCULATOR_H_
 
-#include "ThreeDSeismicModel.h"
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/export.hpp>
 #include "../Global/VecMat.h"
+#include "ThreeDSeismicModel.h"
 #include "modeling_seismic.h"
 
 namespace jiba
@@ -43,6 +45,18 @@ namespace jiba
       std::vector<jiba::RP_STRUCT> raypath;
       //! Perform the dynamic allocation for the c-structures above
       void Allocate(const size_t ngrid, const size_t ndata, const size_t npos);
+      friend class boost::serialization::access;
+      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version)
+        {
+          ar & writerays;
+          ar & nairlayers;
+          ar & geo;
+          ar & grid;
+          ar & data;
+          ar & raypath;
+        }
     public:
       //! We can tell the forward modelling object to write out the rays whenever it performs a calculation
       /*! Writing out rays is helpful to show coverage and identify problems, but the
@@ -73,5 +87,7 @@ namespace jiba
       };
   /* @} */
   }
+
+BOOST_CLASS_EXPORT_KEY(jiba::TomographyCalculator)
 
 #endif /* TOMOGRAPHYCALCULATOR_H_ */

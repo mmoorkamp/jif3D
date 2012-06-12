@@ -9,6 +9,8 @@
 #ifndef MATOPREGULARIZATION_H_
 #define MATOPREGULARIZATION_H_
 
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/base_object.hpp>
 #include "../Inversion/ObjectiveFunction.h"
 #include "../Global/VecMat.h"
 #include "../ModelBase/ThreeDModelBase.h"
@@ -100,6 +102,23 @@ namespace jiba
           //the total gradient is the weighted sum of all individual gradients
           return 2.0 * (sqrt(xweight) * XGrad + sqrt(yweight) * YGrad + sqrt(
               zweight) * ZGrad);
+        }
+      friend class boost::serialization::access;
+      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version)
+        {
+          ar & boost::serialization::base_object<ObjectiveFunction>(*this);
+          ar & xweight;
+          ar & yweight;
+          ar & zweight;
+          ar & XOperatorMatrix;
+          ar & YOperatorMatrix;
+          ar & ZOperatorMatrix;
+          ar & XGrad;
+          ar & YGrad;
+          ar & ZGrad;
+          ar & Reference;
         }
     protected:
       //! The weight of the regularization in x-direction

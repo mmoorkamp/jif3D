@@ -9,10 +9,11 @@
 #ifndef CROSSGRADIENT_H_
 #define CROSSGRADIENT_H_
 
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/base_object.hpp>
 #include "../Inversion/ObjectiveFunction.h"
 #include "GradientRegularization.h"
 #include "../ModelBase/ThreeDModelBase.h"
-#include "../Gravity/ThreeDGravityModel.h"
 
 namespace jiba
   {
@@ -38,6 +39,16 @@ namespace jiba
       GradientRegularization SecondGradient;
       //! The model geometry for the two models, this is always identical to the geometry in GradientRegularization objects
       ThreeDModelBase ModelGeometry;
+      friend class boost::serialization::access;
+      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version)
+        {
+          ar & boost::serialization::base_object<ObjectiveFunction>(*this);
+          ar & FirstGradient;
+          ar & SecondGradient;
+          ar & ModelGeometry;
+        }
     public:
       //! The clone function provides a virtual constructor
       virtual CrossGradient *clone() const

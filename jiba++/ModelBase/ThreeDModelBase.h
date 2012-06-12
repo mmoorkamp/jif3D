@@ -5,7 +5,6 @@
 // Copyright   : 2008, MM
 //============================================================================
 
-
 #ifndef THREEDMODELBASE_H_
 #define THREEDMODELBASE_H_
 
@@ -13,6 +12,8 @@
 #include <omp.h>
 #include <string>
 #include <boost/multi_array.hpp>
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/vector.hpp>
 
 /*! \file ThreeDModelBase.h
  * Contains the base class for all 3D models.
@@ -88,10 +89,72 @@ namespace jiba
       //! Calculate the coordinates of the model cells from the sizes of each cell, this is a helper function used by ThreeDModelBase
       void CalcCoordinates(t3DModelDim &Coordinates, const t3DModelDim Sizes,
           bool &ChangeFlag) const;
+      friend class boost::serialization::access;
+      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      template<class Archive>
+      void save(Archive & ar, const unsigned int version) const
+        {
+          //we can directly serialize std::vector, so MeasPos are simple
+          ar & MeasPosX;
+          ar & MeasPosY;
+          ar & MeasPosZ;
+          //multi-array does not have serialization support
+          //so we have to store the shape of the arrays
+          ar & Data.shape()[0];
+          ar & Data.shape()[1];
+          ar & Data.shape()[2];
+          //then serialize the raw data
+          ar & boost::serialization::make_array(Data.origin(), Data.num_elements());
+          ar
+              & boost::serialization::make_array(XCellSizes.origin(),
+                  XCellSizes.num_elements());
+          ar
+              & boost::serialization::make_array(YCellSizes.origin(),
+                  YCellSizes.num_elements());
+          ar
+              & boost::serialization::make_array(ZCellSizes.origin(),
+                  ZCellSizes.num_elements());
+          //finally we need the origin of the model
+          ar & XOrigin;
+          ar & YOrigin;
+          ar & ZOrigin;
+        }
+      template<class Archive>
+      void load(Archive & ar, const unsigned int version)
+        {
+          //we can directly serialize std::vector, so MeasPos are simple
+          ar & MeasPosX;
+          ar & MeasPosY;
+          ar & MeasPosZ;
+          //multi-array does not have serialization support
+          //so we have to load the shape of the arrays
+          size_t nx, ny, nz;
+          ar & nx;
+          ar & ny;
+          ar & nz;
+          Data.resize(boost::extents[nx][ny][nz]);
+          XCellSizes.resize(boost::extents[nx]);
+          YCellSizes.resize(boost::extents[ny]);
+          ZCellSizes.resize(boost::extents[nz]);
+          ar & boost::serialization::make_array(Data.origin(), Data.num_elements());
+          ar
+              & boost::serialization::make_array(XCellSizes.origin(),
+                  XCellSizes.num_elements());
+          ar
+              & boost::serialization::make_array(YCellSizes.origin(),
+                  YCellSizes.num_elements());
+          ar
+              & boost::serialization::make_array(ZCellSizes.origin(),
+                  ZCellSizes.num_elements());
+          ar & XOrigin;
+          ar & YOrigin;
+          ar & ZOrigin;
+        }
+      BOOST_SERIALIZATION_SPLIT_MEMBER()
     protected:
       //! The origin of the coordinate system in x-direction in m
       double XOrigin;
-      //! The rigin of the coordinate system in y-direction in m
+      //! The origin of the coordinate system in y-direction in m
       double YOrigin;
       //! The origin of the coordinate system in z-direction in m
       double ZOrigin;
@@ -114,8 +177,8 @@ namespace jiba
           return ZCellSizes;
         }
       //! Read data and associated cell sizes from a netcdf file
-      void ReadDataFromNetCDF(const NcFile &NetCDFFile,
-          const std::string &DataName, const std::string &UnitsName);
+      void ReadDataFromNetCDF(const NcFile &NetCDFFile, const std::string &DataName,
+          const std::string &UnitsName);
       //! Write data and associated cell sizes to a netcdf file
       void WriteDataToNetCDF(NcFile &NetCDFFile, const std::string &DataName,
           const std::string &UnitsName) const;
@@ -241,6 +304,11 @@ namespace jiba
           CalcCoordinates(GridZCoordinates, ZCellSizes, ZCellSizesChanged);
           omp_unset_lock(&lck_model_zcoord);
           return GridZCoordinates;
+        }
+      //! The derived model classes also manage the synthetic data configuration, for parallel calculations we can signal how many chunks can be calculated independently (e.g. how many frequencies)
+      virtual size_t GetNIndependentChunks() const
+        {
+          return 1;
         }
       //! Given three coordinates in m, find the indices of the model cell that correponds to these coordinates
       boost::array<ThreeDModelBase::t3DModelData::index, 3>

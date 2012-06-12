@@ -9,7 +9,8 @@
 #define THREEDGRAVITYMODEL_H_
 
 #include <string>
-#include <boost/numeric/ublas/vector.hpp>
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/base_object.hpp>
 #include "../ModelBase/ThreeDModelBase.h"
 #include "../Global/VecMat.h"
 
@@ -70,6 +71,15 @@ namespace jiba
       tBackgroundVec bg_densities;
       //! The thicknesses of the background layers
       tBackgroundVec bg_thicknesses;
+      friend class boost::serialization::access;
+      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version)
+        {
+          ar & boost::serialization::base_object<ThreeDModelBase>(*this);
+          ar & bg_thicknesses;
+          ar & bg_densities;
+        }
     public:
 	//! Set the siyes of the grid cells in x-direction in m
       t3DModelDim &SetXCellSizes()

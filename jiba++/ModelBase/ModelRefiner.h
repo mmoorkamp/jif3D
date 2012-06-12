@@ -5,9 +5,10 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-
 #ifndef MODELREFINER_H_
 #define MODELREFINER_H_
+
+#include <boost/serialization/serialization.hpp>
 #include "ThreeDModelBase.h"
 #include "../Global/VecMat.h"
 
@@ -41,6 +42,53 @@ namespace jiba
           const ThreeDModelBase::t3DModelDim &RefCoordinates,
           const ThreeDModelBase::t3DModelDim &OldSizes,
           ThreeDModelBase::t3DModelDim &NewSizes);
+      friend class boost::serialization::access;
+      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      template<class Archive>
+      void save(Archive & ar, const unsigned int version) const
+        {
+          //we have to split saving and loading because we cannot
+          //directly serialize a multi_array
+          //so we store the number of elements in each array
+          ar & RefiningXCoordinates.shape()[0];
+          ar & RefiningYCoordinates.shape()[0];
+          ar & RefiningZCoordinates.shape()[0];
+          //and then save the contents as an ordinary continuous array
+          ar
+              & boost::serialization::make_array(RefiningXCoordinates.origin(),
+                  RefiningXCoordinates.num_elements());
+          ar
+              & boost::serialization::make_array(RefiningYCoordinates.origin(),
+                  RefiningYCoordinates.num_elements());
+          ar
+              & boost::serialization::make_array(RefiningZCoordinates.origin(),
+                  RefiningZCoordinates.num_elements());
+        }
+      template<class Archive>
+      void load(Archive & ar, const unsigned int version)
+        {
+          //for loading we first need to get the number of elements
+          // in each multi-array
+          size_t nx, ny, nz;
+          ar & nx;
+          ar & ny;
+          ar & nz;
+          //allocate memory
+          RefiningXCoordinates.resize(boost::extents[nx]);
+          RefiningYCoordinates.resize(boost::extents[ny]);
+          RefiningZCoordinates.resize(boost::extents[nz]);
+          //and then do a raw read into the preallocated multi-arrays
+          ar
+              & boost::serialization::make_array(RefiningXCoordinates.origin(),
+                  RefiningXCoordinates.num_elements());
+          ar
+              & boost::serialization::make_array(RefiningYCoordinates.origin(),
+                  RefiningYCoordinates.num_elements());
+          ar
+              & boost::serialization::make_array(RefiningZCoordinates.origin(),
+                  RefiningZCoordinates.num_elements());
+        }
+      BOOST_SERIALIZATION_SPLIT_MEMBER()
     public:
       //! Set the refinement coordinates for the x-Axis
       /*! This function takes a vector with the coordinates along the x-Axis
@@ -80,8 +128,7 @@ namespace jiba
        * @param InputModel The original coarse model
        * @param RefinedModel The refined model with extra cell boundaries
        */
-      void RefineAxes(const ThreeDModelBase &InputModel,
-          ThreeDModelBase &RefinedModel);
+      void RefineAxes(const ThreeDModelBase &InputModel, ThreeDModelBase &RefinedModel);
       //! Project the values from the coarse input model onto the refined model, assumes RefinedModel has allocated memory for the new grid
       /*! This function is usually called after RefineAxes. It assumes that the grid of cell values has been allocated
        * in RefinedModel to hold the refined values. It maps the cell values of the coarse model onto
@@ -92,8 +139,7 @@ namespace jiba
       void ProjectValues(const ThreeDModelBase &InputModel,
           ThreeDModelBase &RefinedModel);
       //! A convenience function that combines the calls to RefineAxes and ProjectValues
-      void RefineModel(const ThreeDModelBase &InputModel,
-          ThreeDModelBase &RefinedModel)
+      void RefineModel(const ThreeDModelBase &InputModel, ThreeDModelBase &RefinedModel)
         {
           RefineAxes(InputModel, RefinedModel);
           ProjectValues(InputModel, RefinedModel);
@@ -107,7 +153,8 @@ namespace jiba
        * @param RefinedModel The grid information for the refined model is taken from this class
        * @return The gradient for each cell of the coarse model
        */
-      jiba::rvec CombineGradient(const jiba::rvec &FineGradient, const ThreeDModelBase &CoarseModel,const ThreeDModelBase &RefinedModel);
+      jiba::rvec CombineGradient(const jiba::rvec &FineGradient,
+          const ThreeDModelBase &CoarseModel, const ThreeDModelBase &RefinedModel);
       ModelRefiner();
       virtual ~ModelRefiner();
       };

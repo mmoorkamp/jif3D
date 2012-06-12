@@ -77,7 +77,7 @@ int main()
     TomoObjective->SetObservedData(Data);
     TomoObjective->SetFineModelGeometry(Model);
     TomoObjective->SetCoarseModelGeometry(Model);
-    TomoObjective->SetDataCovar(DataError);
+    TomoObjective->SetDataError(DataError);
 
     boost::shared_ptr<jiba::JointObjective> Objective(
         new jiba::JointObjective());

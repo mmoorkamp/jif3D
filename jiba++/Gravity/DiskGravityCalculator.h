@@ -9,6 +9,8 @@
 #define DISKGRAVITYCALCULATOR_H_
 
 #include <boost/filesystem.hpp>
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/base_object.hpp>
 #include "FullSensitivityGravityCalculator.h"
 
 namespace jiba
@@ -34,13 +36,22 @@ namespace jiba
       //calculate the raw derivative without any transformation from the sensitivities stored in the file
       virtual rvec CalculateRawLQDerivative(const ThreeDGravityModel &Model,
           const rvec &Misfit);
+      friend class boost::serialization::access;
+      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version)
+        {
+          ar & boost::serialization::base_object<FullSensitivityGravityCalculator>(*this);
+          ar & filename;
+          ar & TempDir;
+        }
     public:
       //! Handle the current row of the sensitivity matrix by storing it in a file
       virtual void HandleSensitivities(const size_t measindex);
       //! The constructor needs a shared pointer to an implementation object, usually handled by CreateGravityCalculator
-      explicit DiskGravityCalculator(boost::shared_ptr<
-          ThreeDGravityImplementation> TheImp, boost::filesystem::path TDir =
-          boost::filesystem::current_path());
+      explicit DiskGravityCalculator(
+          boost::shared_ptr<ThreeDGravityImplementation> TheImp,
+          boost::filesystem::path TDir = boost::filesystem::current_path());
       //! We need to define the copy constructor to make sure that filename stays unique among all created objects
       explicit DiskGravityCalculator(const DiskGravityCalculator &Old);
       //! We have to define a copy operator to make sure filename stays unique

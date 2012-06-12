@@ -10,6 +10,8 @@
 #define THREEDGRAVITYIMPLEMENTATION_H_
 
 #include <boost/shared_ptr.hpp>
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/shared_ptr.hpp>
 #include "ThreeDGravityModel.h"
 #include "../Global/VecMat.h"
 #include "../Global/VectorTransform.h"
@@ -47,6 +49,19 @@ namespace jiba
       //! Calculate the response of the gridded domain for a single measurement, this function has to be implemented in the derived class.
       virtual rvec CalcGridded(const size_t measindex, const ThreeDGravityModel &Model,
           rmat &Sensitivities) = 0;
+      friend class boost::serialization::access;
+      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version)
+        {
+          ar & Transform;
+          ar & XCoord;
+          ar & YCoord;
+          ar & ZCoord;
+          ar & XSizes;
+          ar & YSizes;
+          ar & ZSizes;
+        }
     protected:
       /*! The access functions for the coordinates are not thread safe
        * so we cache the values once in the default implementation of calculate.

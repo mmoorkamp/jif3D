@@ -5,10 +5,12 @@
 // Copyright   : 2008, mmoorkamp
 //============================================================================
 
-
 #ifndef MINMEMGRAVITYCALCULATOR_H_
 #define MINMEMGRAVITYCALCULATOR_H_
 
+#include <boost/shared_ptr.hpp>
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/base_object.hpp>
 #include "ThreeDGravityCalculator.h"
 
 namespace jiba
@@ -22,6 +24,14 @@ namespace jiba
      */
     class MinMemGravityCalculator: public jiba::ThreeDGravityCalculator
       {
+    private:
+      friend class boost::serialization::access;
+      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version)
+        {
+          ar & boost::serialization::base_object<ThreeDGravityCalculator>(*this);
+        }
     public:
       //! The implementation of the forward calculation
       virtual rvec Calculate(const ThreeDGravityModel &Model);
@@ -30,8 +40,7 @@ namespace jiba
         {
         }
       //! The constructor takes a shared pointer to an implementation object
-      MinMemGravityCalculator(
-          boost::shared_ptr<ThreeDGravityImplementation> TheImp);
+      MinMemGravityCalculator(boost::shared_ptr<ThreeDGravityImplementation> TheImp);
       virtual ~MinMemGravityCalculator();
       };
   /* @} */

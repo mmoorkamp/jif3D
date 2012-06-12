@@ -9,6 +9,8 @@
 #ifndef CACHEDGRAVITYCALCULATOR_H_
 #define CACHEDGRAVITYCALCULATOR_H_
 
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/base_object.hpp>
 #include "ThreeDGravityCalculator.h"
 
 namespace jiba
@@ -47,6 +49,21 @@ namespace jiba
       ThreeDGravityModel::tBackgroundVec OldBackgroundThick;
       //! The density of the background layers for the previous calculation
       ThreeDGravityModel::tBackgroundVec OldBackgroundDens;
+      friend class boost::serialization::access;
+      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version)
+        {
+          ar & boost::serialization::base_object<ThreeDGravityCalculator>(*this);
+          ar & OldXSizes;
+          ar & OldYSizes;
+          ar & OldZSizes;
+          ar & OldMeasPosX;
+          ar & OldMeasPosY;
+          ar & OldMeasPosZ;
+          ar & OldBackgroundThick;
+          ar & OldBackgroundDens;
+        }
       //! Copy the cell sizes from the current model to store them for caching
       void CopySizes(const ThreeDGravityModel::t3DModelDim &NewXSizes,
           const ThreeDGravityModel::t3DModelDim &NewYSizes,
