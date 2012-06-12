@@ -5,10 +5,11 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-
 #ifndef THREEDSEISMICMODEL_H_
 #define THREEDSEISMICMODEL_H_
 
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/base_object.hpp>
 #include "../ModelBase/ThreeDModelBase.h"
 
 namespace jiba
@@ -55,6 +56,18 @@ namespace jiba
       tIndexVec SourceIndices;
       //! The index in the position vectors for the receivers
       tIndexVec ReceiverIndices;
+      friend class boost::serialization::access;
+      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version)
+        {
+          ar & boost::serialization::base_object<ThreeDModelBase>(*this);
+          ar & SourcePosX;
+          ar & SourcePosY;
+          ar & SourcePosZ;
+          ar & SourceIndices;
+          ar & ReceiverIndices;
+        }
     public:
       //! The seismic model has the same cell size for all cells in all directions so we just have one function to set it
       /*! This function sets both the size of all cells as well as the number of cells in x,y and z-direction
@@ -85,12 +98,11 @@ namespace jiba
           return ThreeDModelBase::SetData();
         }
       //! Add a source to the model
-      void AddSource(const double xcoord, const double ycoord,
-          const double zcoord)
+      void AddSource(const double xcoord, const double ycoord, const double zcoord)
         {
-          SourcePosX.push_back(xcoord + XOrigin);
-          SourcePosY.push_back(ycoord + YOrigin);
-          SourcePosZ.push_back(zcoord + ZOrigin);
+          SourcePosX.push_back(xcoord - XOrigin);
+          SourcePosY.push_back(ycoord - YOrigin);
+          SourcePosZ.push_back(zcoord - ZOrigin);
         }
       //! read only access to the x-positions of the sources in m
       const ThreeDModelBase::tMeasPosVec &GetSourcePosX() const
@@ -158,8 +170,8 @@ namespace jiba
           const size_t nmeas = Source.GetMeasPosX().size();
           for (size_t i = 0; i < nmeas; ++i)
             {
-              AddMeasurementPoint(Source.GetMeasPosX()[i],
-                  Source.GetMeasPosY()[i], Source.GetMeasPosZ()[i]);
+              AddMeasurementPoint(Source.GetMeasPosX()[i], Source.GetMeasPosY()[i],
+                  Source.GetMeasPosZ()[i]);
             }
 
           ReceiverIndices = Source.ReceiverIndices;

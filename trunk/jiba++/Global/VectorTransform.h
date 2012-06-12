@@ -5,11 +5,13 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-
 #ifndef VECTORTRANSFORM_H_
 #define VECTORTRANSFORM_H_
-#include "../Global/VecMat.h"
+
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/base_object.hpp>
 #include <cassert>
+#include "../Global/VecMat.h"
 
 /*! \file VectorTransform.h
  * Provide function objects that transform one vector to another. The main purpose is to
@@ -37,6 +39,14 @@ namespace jiba
      */
     class VectorTransform
       {
+    private:
+      friend class boost::serialization::access;
+      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version)
+        {
+
+        }
     public:
       //! How many consecutive elements in the input vector form a logical block of data that this transform works on
       virtual size_t GetInputSize() = 0;
@@ -60,8 +70,18 @@ namespace jiba
     class CopyTransform: public VectorTransform
       {
     private:
-      const size_t ninput;
-      const size_t noutput;
+      size_t ninput;
+      size_t noutput;
+      friend class boost::serialization::access;
+      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version)
+        {
+          ar & boost::serialization::base_object<VectorTransform>(*this);
+          ar & ninput;
+          ar & noutput;
+        }
+
     public:
       virtual size_t GetInputSize()
         {
@@ -73,7 +93,7 @@ namespace jiba
         }
       //! This transform only copies its input, but we can specify an expected size to perform error checking in code that uses the transform
       CopyTransform(size_t intendedsize = 1) :
-        ninput(intendedsize), noutput(intendedsize)
+          ninput(intendedsize), noutput(intendedsize)
         {
         }
       virtual ~CopyTransform()
@@ -100,19 +120,21 @@ namespace jiba
      * @param Transform The transformation class to apply to the data
      * @return A vector that contains the transformed data
      */
-    template <class VectorTransform>
+    template<class VectorTransform>
     jiba::rvec ApplyTransform(const jiba::rvec &InputVector, VectorTransform &Transform)
       {
         const size_t insize = InputVector.size();
         const size_t step = Transform.GetInputSize();
         const size_t nout = Transform.GetOutputSize();
-        assert(insize % step  == 0);
-        jiba::rvec Output(insize/step * nout );
-        for (size_t i = 0; i < insize; i +=step)
+        assert(insize % step == 0);
+        jiba::rvec Output(insize / step * nout);
+        for (size_t i = 0; i < insize; i += step)
           {
-            jiba::rvec temp(Transform.Transform(ublas::vector_range<const jiba::rvec>(
-                          InputVector, ublas::range(i, i + step))));
-            copy(temp.begin(),temp.end(),Output.begin()+i/step*nout);
+            jiba::rvec temp(
+                Transform.Transform(
+                    ublas::vector_range<const jiba::rvec>(InputVector,
+                        ublas::range(i, i + step))));
+            copy(temp.begin(), temp.end(), Output.begin() + i / step * nout);
           }
         return Output;
       }

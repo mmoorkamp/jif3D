@@ -9,11 +9,15 @@
 #ifndef OBJECTIVEFUNCTION_H_
 #define OBJECTIVEFUNCTION_H_
 
-#include "../Global/VecMat.h"
-#include "../Global/VectorTransform.h"
+#include <cassert>
 #include <boost/shared_ptr.hpp>
 #include <boost/numeric/conversion/cast.hpp>
-#include <cassert>
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/export.hpp>
+#include "../Global/VecMat.h"
+#include "../Global/VectorTransform.h"
+
 
 namespace jiba
   {
@@ -42,6 +46,16 @@ namespace jiba
       jiba::rvec CovarDiag;
       //! A possible storage for a data transformation object, whether and how this is used depends on the derived class
       boost::shared_ptr<VectorTransform> DataTransform;
+      friend class boost::serialization::access;
+      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version)
+        {
+          ar & nEval;
+          ar & DataDifference;
+          ar & CovarDiag;
+          ar & DataTransform;
+        }
       //! The abstract interface for functions that implement the calculation  of the data difference
       /*! This function has to be implemented in derived classes to calculate the data misfit from a given model vector.
        * Note that the model vector does not contain any information about model geometry,  etc. Therefore
@@ -110,12 +124,12 @@ namespace jiba
           SetDataTransformAction();
         }
       //! We assume that the data covariance is in diagonal form and store its square root as vector, if we do not assign a covariance it is assumed to be 1
-      void SetDataCovar(const jiba::rvec &Cov)
+      void SetDataError(const jiba::rvec &Cov)
         {
           CovarDiag = Cov;
         }
       //! Return a read-only version of the diagonal of the data covariance
-      const jiba::rvec &GetDataCovar() const
+      const jiba::rvec &GetDataError() const
         {
           return CovarDiag;
         }
@@ -169,6 +183,7 @@ namespace jiba
       virtual ~ObjectiveFunction();
       };
   /* @} */
-  }
 
+  }
+//BOOST_CLASS_EXPORT_KEY(jiba::ObjectiveFunction)
 #endif /* OBJECTIVEFUNCTION_H_ */

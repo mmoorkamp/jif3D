@@ -88,17 +88,16 @@ namespace jiba
                   nairlayers, grid.h);
               //then copy the actual model
               for (size_t k = nairlayers; k < grid.nz - nairlayers; ++k)
-                grid.slow[layerindex + k] = Model.GetSlownesses()[i][j][k
-                    - nairlayers] * grid.h;
+                grid.slow[layerindex + k] = Model.GetSlownesses()[i][j][k - nairlayers]
+                    * grid.h;
             }
 
         //fill the data structure
         data.ndata_seis = ndata;
         data.ndata_seis_act = ndata;
         //our indices are 0 based, the forward uses a base of 1
-        std::transform(Model.GetSourceIndices().begin(),
-            Model.GetSourceIndices().end(), data.sno.begin(),
-            boost::bind(std::plus<int>(), _1, 1));
+        std::transform(Model.GetSourceIndices().begin(), Model.GetSourceIndices().end(),
+            data.sno.begin(), boost::bind(std::plus<int>(), _1, 1));
 
         //also we have different storage for source and receivers
         //but the forward stores the positions in a single array
@@ -117,9 +116,8 @@ namespace jiba
         std::copy(Model.GetSourcePosY().begin(), Model.GetSourcePosY().end(),
             geo.y.begin());
         //we also have to adjust for the offset by the airlayers
-        std::transform(Model.GetSourcePosZ().begin(),
-            Model.GetSourcePosZ().end(), geo.z.begin(),
-            boost::bind(std::plus<double>(), _1, grid.h * nairlayers));
+        std::transform(Model.GetSourcePosZ().begin(), Model.GetSourcePosZ().end(),
+            geo.z.begin(), boost::bind(std::plus<double>(), _1, grid.h * nairlayers));
         //and then all measurement position
         std::copy(Model.GetMeasPosX().begin(), Model.GetMeasPosX().end(),
             geo.x.begin() + nshot);
@@ -180,10 +178,11 @@ namespace jiba
                     + (grid.nz - 2 * nairlayers) * floor(raypath[i].y[j])
                     + floor(raypath[i].z[j]) - nairlayers;
 
-                DerivMod(offset) += 2.0 * raypath[i].len[j] * grid.h
-                    * Misfit(i);
+                DerivMod(offset) += 2.0 * raypath[i].len[j] * grid.h * Misfit(i);
               }
           }
         return DerivMod;
       }
   }
+
+BOOST_CLASS_EXPORT_IMPLEMENT(jiba::TomographyCalculator)

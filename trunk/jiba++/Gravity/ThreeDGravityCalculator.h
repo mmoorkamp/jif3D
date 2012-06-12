@@ -9,9 +9,11 @@
 #ifndef THREEDGRAVITYCALCULATOR_H_
 #define THREEDGRAVITYCALCULATOR_H_
 
+#include <boost/shared_ptr.hpp>
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/shared_ptr.hpp>
 #include "ThreeDGravityModel.h"
 #include "ThreeDGravityImplementation.h"
-#include <boost/shared_ptr.hpp>
 
 namespace jiba
   {
@@ -53,6 +55,15 @@ namespace jiba
        * decide how to handle this information
        */
       rmat CurrentSensitivities;
+      friend class boost::serialization::access;
+      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version)
+        {
+          ar & CurrentSensitivities;
+          ar & Transform;
+          ar & Imp;
+        }
     protected:
       //! In some cases we might want to apply a transformation to the data, e.g. FTG to an invariant
       boost::shared_ptr<VectorTransform> Transform;

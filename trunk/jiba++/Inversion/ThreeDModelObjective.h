@@ -8,6 +8,9 @@
 #ifndef THREEDMODELOBJECTIVE_H_
 #define THREEDMODELOBJECTIVE_H_
 
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/export.hpp>
 #include "../ModelBase/ModelRefiner.h"
 #include "../Global/FatalException.h"
 #include "../Inversion/ObjectiveFunction.h"
@@ -36,7 +39,7 @@ namespace jiba
       typedef ThreeDCalculatorType CalculatorType;
       //! The forward calculation class must contain a type definition that sets the type of the model object
       typedef typename CalculatorType::ModelType ModelType;
-    private:
+    protected:
       //! The object that calculates the synthetic data its type is set by the template parameter
       CalculatorType Calculator;
       //! The skeleton for the physical property model used in the inversion that contains geometry information etc.
@@ -66,6 +69,25 @@ namespace jiba
       //! The vector of observed data for all stations. The exact ordering of the data depends on the calculator object.
       jiba::rvec ObservedData;
       //! Calculate the difference between observed and synthetic data for a given model
+      friend class boost::serialization::access;
+      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version)
+        {
+          ar & boost::serialization::base_object<ObjectiveFunction>(*this);
+          ar & Calculator;
+          ar & CoarseModel;
+          ar & FineModel;
+          ar & wantrefinement;
+          ar & Refiner;
+          ar & ObservedData;
+        }
+    protected:
+      ThreeDModelObjective()
+        {
+
+        }
+    private:
       virtual void
       ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff);
       //! The implementation of the gradient calculation
@@ -103,7 +125,7 @@ namespace jiba
       jiba::rvec GetSyntheticData() const
         {
           jiba::rvec Synthetic(GetDataDifference());
-          Synthetic = ublas::element_prod(Synthetic, GetDataCovar());
+          Synthetic = ublas::element_prod(Synthetic, GetDataError());
           Synthetic += ObservedData;
           return Synthetic;
         }
@@ -153,7 +175,7 @@ namespace jiba
        * this class for requirements on the forward calculation object.
        * @param Calc The forward calculation object
        */
-      ThreeDModelObjective(const ThreeDCalculatorType &Calc);
+      explicit ThreeDModelObjective(const ThreeDCalculatorType &Calc);
       virtual ~ThreeDModelObjective();
       };
 
@@ -228,6 +250,7 @@ namespace jiba
         return Calculator.LQDerivative(CoarseModel, Diff);
 
       }
+
   }
 
 #endif /* THREEDMODELOBJECTIVE_H_ */

@@ -5,7 +5,6 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-
 #ifndef MODELDISTRIBUTOR_H_
 #define MODELDISTRIBUTOR_H_
 
@@ -13,6 +12,8 @@
 #include <vector>
 #include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/shared_ptr.hpp>
 #include "../Global/VecMat.h"
 
 namespace jiba
@@ -27,6 +28,14 @@ namespace jiba
      */
     class GeneralModelTransform
       {
+    private:
+      friend class boost::serialization::access;
+      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version)
+        {
+
+        }
     public:
       GeneralModelTransform()
         {
@@ -65,8 +74,16 @@ namespace jiba
       };
 
     //! This is the simplest transformation, the generalized and physical parameters are identical
-    class ModelCopyTransform : public GeneralModelTransform
+    class ModelCopyTransform: public GeneralModelTransform
       {
+    private:
+      friend class boost::serialization::access;
+      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version)
+        {
+          ar & boost::serialization::base_object<GeneralModelTransform>(*this);
+        }
     public:
       ModelCopyTransform()
         {
@@ -79,11 +96,11 @@ namespace jiba
           return FullModel;
         }
       virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
-      {
-    	return FullModel;
-      }
+        {
+          return FullModel;
+        }
       virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
-                const jiba::rvec &Derivative) const
+          const jiba::rvec &Derivative) const
         {
           return Derivative;
         }
@@ -101,8 +118,8 @@ namespace jiba
     class ModelDistributor
       {
     public:
-      ModelDistributor():
-        Transformers()
+      ModelDistributor() :
+          Transformers()
         {
         }
       virtual ~ModelDistributor()
@@ -111,6 +128,13 @@ namespace jiba
     private:
       //! This vector stores a shared pointer to a Transformer object for each objective function
       std::vector<boost::shared_ptr<GeneralModelTransform> > Transformers;
+      friend class boost::serialization::access;
+      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version)
+        {
+          ar & Transformers;
+        }
     public:
       //! Add a transformation object
       /*! For each objective function we need to add a transformation object that

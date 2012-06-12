@@ -13,7 +13,7 @@ lib gravity : ThreeDGravityModel.cpp
                
              
                     
-alias core :  ../ModelBase//modelbase ../Global ..//netcdf_c++ ..//netcdf ..//cudart ..//cutil ..//boost_filesystem  ..//boost_program_options ;
+alias core :  ../ModelBase//modelbase ../Global ..//netcdf_c++ ..//netcdf ..//cudart ..//cutil ..//boost_filesystem  ..//boost_program_options ..//boost_system ;
 
 unit-test Model_test : test_ThreeDGravityModel.cpp gravity core : : <include>. ;
 unit-test scalar_test : test_ScalarCalculation.cpp gravity core : : <include>. ;

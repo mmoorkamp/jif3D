@@ -8,10 +8,13 @@
 #ifndef JOINTOBJECTIVE_H_
 #define JOINTOBJECTIVE_H_
 
+#include <boost/shared_ptr.hpp>
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include "../Global/FatalException.h"
 #include "ObjectiveFunction.h"
 #include "ModelDistributor.h"
-#include "../Global/FatalException.h"
-#include <boost/shared_ptr.hpp>
 
 namespace jiba
   {
@@ -47,6 +50,20 @@ namespace jiba
       ModelDistributor Distributor;
       //! Do we want to print misfit and gradient information to the screen
       bool PrintMisfit;
+      friend class boost::serialization::access;
+      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version)
+        {
+          ar & boost::serialization::base_object<ObjectiveFunction>(*this);
+          ar & Objectives;
+          ar & Weights;
+          ar & IndividualFits;
+          ar & IndividualGradNorms;
+          ar & Names;
+          ar & Distributor;
+          ar & PrintMisfit;
+        }
       //the implementation of the misfit calculation
       virtual void
       ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff);

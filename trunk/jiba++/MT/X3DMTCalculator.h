@@ -5,11 +5,12 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-
 #ifndef X3DMTCALCULATOR_H_
 #define X3DMTCALCULATOR_H_
 
+#include <limits>
 #include <boost/filesystem.hpp>
+#include <boost/serialization/serialization.hpp>
 #include "MT3DCalculator.h"
 #include "X3DModel.h"
 
@@ -49,10 +50,29 @@ namespace jiba
       //! Make a unique string identifier for this object, basis for MakeUniqueName
       std::string ObjectID();
       //! Create a unique name for each object, calculation type and frequency so that we can write to different directories and execute in parallel
-      std::string MakeUniqueName(X3DModel::ProblemType Type,
-          const size_t FreqIndex);
+      std::string MakeUniqueName(X3DModel::ProblemType Type, const size_t FreqIndex);
       //! The directory to store all temporary files
       boost::filesystem::path TempDir;
+      rvec CalculateFrequency(const X3DModel &Model, size_t freqindex);
+      rvec LQDerivativeFreq(const X3DModel &Model, const rvec &Misfit, size_t freqindex);
+      friend class boost::serialization::access;
+      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version)
+        {
+          if (Archive::is_saving::value)
+            {
+              std::string DirName(TempDir.string());
+              ar & DirName;
+            }
+          if (Archive::is_loading::value)
+            {
+              std::string DirName;
+              ar & DirName;
+              TempDir = DirName;
+            }
+
+        }
     public:
       //! Given a conductivity model, calculate a vector of impedances
       /*! For a conductivity model given by the input parameter Model, we calculate the synthetic magnetotelluric data. When compiled with
@@ -62,7 +82,8 @@ namespace jiba
        * @param Model The description of the conductivity model including sites locations and frequencies.
        * @return The synthetic MT data in the format described above.
        */
-      rvec Calculate(const ModelType &Model);
+      rvec Calculate(const ModelType &Model, size_t minfreqindex = 0,
+          size_t maxfreqindex = std::numeric_limits<size_t>::max());
       //! Given a conductivity model and the misfit for each datum, calculate the derivative of the objective function with respect to the model parameters.
       /*! We use an adjoint approach to calculate the gradient of the objective functions with respect to the model parameters. As this approach requires
        * some of the fields from the forward calculation, the gradient will only be correct if the function Calculate of the same object has been called for
@@ -71,10 +92,10 @@ namespace jiba
        * @param Misfit The data misfit associated with the model.
        * @return The gradient of the objective function with respect to the model parameters for the given model. The storage ordering is identical to X3DModel.
        */
-      rvec LQDerivative(const ModelType &Model, const rvec &Misfit);
+      rvec LQDerivative(const ModelType &Model, const rvec &Misfit, size_t minfreqindex =
+          0, size_t maxfreqindex = std::numeric_limits<size_t>::max());
       //! The constructor takes an optional argument to change the directory were temporary files are stored
-      X3DMTCalculator(boost::filesystem::path TDir =
-          boost::filesystem::current_path());
+      X3DMTCalculator(boost::filesystem::path TDir = boost::filesystem::current_path());
       virtual ~X3DMTCalculator();
       };
   /* @} */

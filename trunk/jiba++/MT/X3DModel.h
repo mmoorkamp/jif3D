@@ -9,6 +9,7 @@
 #ifndef X3DMODEL_H_
 #define X3DMODEL_H_
 
+#include <boost/serialization/serialization.hpp>
 #include "ThreeDMTModel.h"
 
 namespace jiba
@@ -28,6 +29,15 @@ namespace jiba
       std::vector<double> bg_thicknesses;
       //! The conductivities of the background layers in S/m
       std::vector<double> bg_conductivities;
+      friend class boost::serialization::access;
+      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version)
+        {
+          ar & boost::serialization::base_object<ThreeDMTModel>(*this);
+          ar & bg_thicknesses;
+          ar & bg_conductivities;
+        }
     public:
       //! The problem type we want to perform the calculation for
       /*! We can use this enum to specify which type of forward calculation

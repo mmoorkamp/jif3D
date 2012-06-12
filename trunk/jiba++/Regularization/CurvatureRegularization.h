@@ -9,6 +9,8 @@
 #ifndef CURVATUREREGULARIZATION_H_
 #define CURVATUREREGULARIZATION_H_
 
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/base_object.hpp>
 #include "MatOpRegularization.h"
 #include "MakeTearModel.h"
 
@@ -39,6 +41,15 @@ namespace jiba
           const jiba::ThreeDModelBase &TearModelX,
           const jiba::ThreeDModelBase &TearModelY,
           const jiba::ThreeDModelBase &TearModelZ);
+      friend class boost::serialization::access;
+      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version)
+        {
+          ar & boost::serialization::base_object<MatOpRegularization>(*this);
+          ar & Eps;
+
+        }
     public:
       //! The clone function provides a virtual constructor
       virtual CurvatureRegularization *clone() const

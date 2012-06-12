@@ -8,10 +8,14 @@
 #ifndef MODELTRANSFORMS_H_
 #define MODELTRANSFORMS_H_
 
+#include <numeric>
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/math/special_functions/atanh.hpp>
 #include "../Global/FatalException.h"
 #include "ModelDistributor.h"
-#include <boost/math/special_functions/atanh.hpp>
-#include <numeric>
 
 /*! \file ModelTransforms.h
  * This file contains various classes to transform model parameters within an inversion.
@@ -35,6 +39,14 @@ namespace jiba
     private:
       //! The Reference model we devide the model parameters by
       const jiba::rvec Reference;
+      friend class boost::serialization::access;
+      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version)
+        {
+          ar & boost::serialization::base_object<GeneralModelTransform>(*this);
+          ar & Reference;
+        }
     public:
       //! Transform the normalized model parameters back to physical parameters
       virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
@@ -75,6 +87,14 @@ namespace jiba
     private:
       //! Each model parameter is divided by the reference values before taking the logarithm
       const jiba::rvec Reference;
+      friend class boost::serialization::access;
+      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version)
+        {
+          ar & boost::serialization::base_object<GeneralModelTransform>(*this);
+          ar & Reference;
+        }
     public:
       //! Transform the normalized model parameters back to physical parameters
       virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
@@ -131,10 +151,19 @@ namespace jiba
     class TanhTransform: public jiba::GeneralModelTransform
       {
     private:
-      //! The minimum value for the pysical model parameters
-      const double min;
-      //! The maximum value for the pysical model parameters
-      const double max;
+      //! The minimum value for the physical model parameters
+      double min;
+      //! The maximum value for the physical model parameters
+      double max;
+      friend class boost::serialization::access;
+      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version)
+        {
+          ar & boost::serialization::base_object<GeneralModelTransform>(*this);
+          ar & min;
+          ar & max;
+        }
     public:
       //! Transform the normalized model parameters back to physical parameters
       virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
@@ -200,6 +229,17 @@ namespace jiba
     private:
       //! A pointer to a transformation that gives slowness
       boost::shared_ptr<GeneralModelTransform> SlownessTransform;
+      friend class boost::serialization::access;
+      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version)
+        {
+          ar & boost::serialization::base_object<GeneralModelTransform>(*this);
+          ar & SlownessTransform;
+        }
+      DensityTransform()
+        {
+        }
     public:
       //! Transform the normalized model parameters back to physical parameters
       virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
@@ -252,7 +292,7 @@ namespace jiba
         }
       };
 
-    //! Transform generalized model parameters to conductivity
+//! Transform generalized model parameters to conductivity
     /*! Similarly to DensityTransform, this class transforms
      * generalized model parameters to conductivity taking an
      * intermediate step through slowness. This is motivated
@@ -268,6 +308,17 @@ namespace jiba
       //! The constant term of the transform
       const double c;
       boost::shared_ptr<GeneralModelTransform> SlownessTransform;
+      friend class boost::serialization::access;
+      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version)
+        {
+          ar & boost::serialization::base_object<GeneralModelTransform>(*this);
+          ar & a;
+          ar & b;
+          ar & c;
+          ar & SlownessTransform;
+        }
     public:
       //! Transform the normalized model parameters back to physical parameters
       virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
@@ -341,6 +392,14 @@ namespace jiba
     private:
       //! We store pointers to each transform in the chain in this vector
       std::vector<boost::shared_ptr<GeneralModelTransform> > Transforms;
+      friend class boost::serialization::access;
+      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version)
+        {
+          ar & boost::serialization::base_object<GeneralModelTransform>(*this);
+          ar & Transforms;
+        }
     public:
       //! Transform the normalized model parameters back to physical parameters
       virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
@@ -402,6 +461,19 @@ namespace jiba
       size_t startindex;
       //! The index of the last element to copy
       size_t endindex;
+      friend class boost::serialization::access;
+      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version)
+        {
+          ar & boost::serialization::base_object<GeneralModelTransform>(*this);
+          ar & startindex;
+          ar & endindex;
+        }
+      SectionTransform()
+        {
+
+        }
     public:
       //! Return the segment specified by the indices in the constructor from the full vector
       virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
@@ -449,6 +521,21 @@ namespace jiba
       std::vector<size_t> startindices;
       std::vector<size_t> endindices;
       std::vector<boost::shared_ptr<GeneralModelTransform> > Transforms;
+      friend class boost::serialization::access;
+      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version)
+        {
+          ar & boost::serialization::base_object<GeneralModelTransform>(*this);
+          ar & length;
+          ar & startindices;
+          ar & endindices;
+          ar & Transforms;
+        }
+      MultiSectionTransform()
+        {
+
+        }
     public:
       virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
         {
@@ -460,7 +547,8 @@ namespace jiba
           size_t resultstartindex = 0;
           for (size_t i = 0; i < nsections; ++i)
             {
-              const size_t resultendindex = resultstartindex + endindices[i] - startindices[i];
+              const size_t resultendindex = resultstartindex + endindices[i]
+                  - startindices[i];
               ublas::subrange(Result, resultstartindex, resultendindex) =
                   Transforms[i]->GeneralizedToPhysical(
                       ublas::subrange(FullModel, startindices[i], endindices[i]));
@@ -515,6 +603,16 @@ namespace jiba
       size_t length;
       size_t startindex;
       size_t endindex;
+      friend class boost::serialization::access;
+      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version)
+        {
+          ar & boost::serialization::base_object<GeneralModelTransform>(*this);
+          ar & length;
+          ar & startindex;
+          ar & endindex;
+        }
     public:
       virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
         {

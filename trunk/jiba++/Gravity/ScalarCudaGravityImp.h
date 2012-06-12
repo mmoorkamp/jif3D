@@ -8,6 +8,8 @@
 #ifndef SCALARCUDAGRAVITYIMP_H_
 #define SCALARCUDAGRAVITYIMP_H_
 
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/base_object.hpp>
 #include "ThreeDGravityImplementation.h"
 
 namespace jiba
@@ -42,6 +44,23 @@ namespace jiba
       size_t blocksize;
       //! This is a scalar calculation so we get one value per measurement
       static const size_t ndatapermeas = 1;
+      friend class boost::serialization::access;
+      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version)
+        {
+          ar & boost::serialization::base_object<ThreeDGravityImplementation>(*this);
+          ar & d_xcoord;
+          ar & d_ycoord;
+          ar & d_zcoord;
+          ar & d_xsize;
+          ar & d_ysize;
+          ar & d_zsize;
+          ar & d_result;
+          ar & currsens;
+          ar & currsenssize;
+          ar & blocksize;
+        }
       //! Calculate the response of the background, currently this is done on the CPU
       virtual rvec CalcBackground(const size_t measindex, const double xwidth,
           const double ywidth, const double zwidth,
