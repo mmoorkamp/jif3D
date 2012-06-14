@@ -14,7 +14,7 @@
 
 namespace jiba
   {
-    /** \addtogroup inversion General routines for inversion */
+    /** \addtogroup Regularization classes to regularize the inversion */
     /* @{ */
     //! Regularize by calculating the difference to a reference model
     /*! This class can be used to regularize the inversion by
@@ -33,7 +33,7 @@ namespace jiba
             {
               XOperatorMatrix(i, i) = 1.0;
             }
-        } //end of for loop for x
+        }
       friend class boost::serialization::access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
