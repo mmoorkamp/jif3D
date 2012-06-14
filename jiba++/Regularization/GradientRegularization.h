@@ -16,8 +16,8 @@
 
 namespace jiba
   {
-    /** \addtogroup inversion General routines for inversion */
-    /* @{ */
+  /** \addtogroup Regularization classes to regularize the inversion */
+      /* @{ */
     //! Minimize the first derivative between the cells of a 3D Model
     /*! This class provides regularization in terms of the first derivative
      * of the model. We can provide a reference model. Then the regularization

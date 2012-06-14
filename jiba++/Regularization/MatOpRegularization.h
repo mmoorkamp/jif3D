@@ -5,7 +5,6 @@
 // Copyright   : 2010, mmoorkamp
 //============================================================================
 
-
 #ifndef MATOPREGULARIZATION_H_
 #define MATOPREGULARIZATION_H_
 
@@ -17,6 +16,8 @@
 
 namespace jiba
   {
+    /** \addtogroup Regularization classes to regularize the inversion */
+    /* @{ */
     //! A base class for regularization Functionals that can be expressed as Matrix operators
     /*! The two standard forms of regularization, model gradient and laplacian of the model,
      * can be easily expressed as sparse matrix operations on the model vector. Independent
@@ -59,10 +60,8 @@ namespace jiba
           //in the three coordinate directions separately
           Diff.resize(3 * nmod);
           ublas::vector_range<jiba::rvec> xrange(Diff, ublas::range(0, nmod));
-          ublas::vector_range<jiba::rvec> yrange(Diff, ublas::range(nmod, 2
-              * nmod));
-          ublas::vector_range<jiba::rvec> zrange(Diff, ublas::range(2 * nmod, 3
-              * nmod));
+          ublas::vector_range<jiba::rvec> yrange(Diff, ublas::range(nmod, 2 * nmod));
+          ublas::vector_range<jiba::rvec> zrange(Diff, ublas::range(2 * nmod, 3 * nmod));
           jiba::rvec x(Model - Reference);
           //calculate the action of the regularization operator
           //on the model vector for the three coordinate directions
@@ -78,8 +77,7 @@ namespace jiba
           zrange *= sqrt(zweight);
         }
       //! The gradient of the regularization with respect to the model parameters
-      virtual jiba::rvec ImplGradient(const jiba::rvec &Model,
-          const jiba::rvec &Diff)
+      virtual jiba::rvec ImplGradient(const jiba::rvec &Model, const jiba::rvec &Diff)
         {
           //set the gradient vector for each individual direction to the correct size
           const size_t nmod = Model.size();
@@ -88,20 +86,19 @@ namespace jiba
           ZGrad.resize(nmod);
           //define some ranges on the difference vector (length 3*nmod)
           //that correspond to the gradients for each spatial direction
-          ublas::vector_range<const jiba::rvec> xrange(Diff, ublas::range(0,
-              nmod));
-          ublas::vector_range<const jiba::rvec> yrange(Diff, ublas::range(nmod,
-              2 * nmod));
-          ublas::vector_range<const jiba::rvec> zrange(Diff, ublas::range(2
-              * nmod, 3 * nmod));
+          ublas::vector_range<const jiba::rvec> xrange(Diff, ublas::range(0, nmod));
+          ublas::vector_range<const jiba::rvec> yrange(Diff,
+              ublas::range(nmod, 2 * nmod));
+          ublas::vector_range<const jiba::rvec> zrange(Diff,
+              ublas::range(2 * nmod, 3 * nmod));
           //The gradient is simply the transpose of the operator matrix
           //time the misfit, we calculate this for each direction
           ublas::axpy_prod(ublas::trans(XOperatorMatrix), xrange, XGrad);
           ublas::axpy_prod(ublas::trans(YOperatorMatrix), yrange, YGrad);
           ublas::axpy_prod(ublas::trans(ZOperatorMatrix), zrange, ZGrad);
           //the total gradient is the weighted sum of all individual gradients
-          return 2.0 * (sqrt(xweight) * XGrad + sqrt(yweight) * YGrad + sqrt(
-              zweight) * ZGrad);
+          return 2.0
+              * (sqrt(xweight) * XGrad + sqrt(yweight) * YGrad + sqrt(zweight) * ZGrad);
         }
       friend class boost::serialization::access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
@@ -197,11 +194,10 @@ namespace jiba
        * @param Geometry An object that describes the model geometry
        */
       explicit MatOpRegularization(const jiba::ThreeDModelBase &Geometry) :
-        xweight(1.0), yweight(1.0), zweight(1.0), XOperatorMatrix(
-            Geometry.GetNModelElements(), Geometry.GetNModelElements()),
-            YOperatorMatrix(Geometry.GetNModelElements(),
-                Geometry.GetNModelElements()), ZOperatorMatrix(
-                Geometry.GetNModelElements(), Geometry.GetNModelElements())
+          xweight(1.0), yweight(1.0), zweight(1.0), XOperatorMatrix(
+              Geometry.GetNModelElements(), Geometry.GetNModelElements()), YOperatorMatrix(
+              Geometry.GetNModelElements(), Geometry.GetNModelElements()), ZOperatorMatrix(
+              Geometry.GetNModelElements(), Geometry.GetNModelElements())
         {
         }
       virtual ~MatOpRegularization()
@@ -209,7 +205,7 @@ namespace jiba
 
         }
       };
-
+  /* @} */
   }
 
 #endif /* MATOPREGULARIZATION_H_ */

@@ -5,7 +5,6 @@
 // Copyright   : 2010, mmoorkamp
 //============================================================================
 
-
 #ifndef CURVATUREREGULARIZATION_H_
 #define CURVATUREREGULARIZATION_H_
 
@@ -16,6 +15,8 @@
 
 namespace jiba
   {
+    /** \addtogroup Regularization classes to regularize the inversion */
+    /* @{ */
     //! Minimize the laplacian of the Model
     /*! This objective function can be used to minimize the laplacian over a 3D model in order
      * to regularize the inversion. For each cell that is not on the model boundary of the model
@@ -73,7 +74,7 @@ namespace jiba
       CurvatureRegularization(const jiba::ThreeDModelBase &Geometry,
           jiba::ThreeDModelBase &TearModelX, jiba::ThreeDModelBase &TearModelY,
           jiba::ThreeDModelBase &TearModelZ, const double ModEps = 1e-8) :
-        MatOpRegularization(Geometry), Eps(ModEps)
+          MatOpRegularization(Geometry), Eps(ModEps)
         {
           //in debug mode we check that the geometry of the tear models
           //matches the geometry we specify for the inversion domain
@@ -104,7 +105,7 @@ namespace jiba
        */
       explicit CurvatureRegularization(const jiba::ThreeDModelBase &Geometry,
           const double ModEps = 1e-8) :
-        MatOpRegularization(Geometry), Eps(ModEps)
+          MatOpRegularization(Geometry), Eps(ModEps)
         {
           jiba::ThreeDModelBase TearModel;
           //if we do not want tears in the regularization we temporarily
@@ -115,7 +116,7 @@ namespace jiba
         }
       virtual ~CurvatureRegularization();
       };
-
+    /* @} */
   }
 
 #endif /* CURVATUREREGULARIZATION_H_ */
