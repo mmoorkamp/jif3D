@@ -5,7 +5,6 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-
 #ifndef OBJECTIVEFUNCTION_H_
 #define OBJECTIVEFUNCTION_H_
 
@@ -17,7 +16,6 @@
 #include <boost/serialization/export.hpp>
 #include "../Global/VecMat.h"
 #include "../Global/VectorTransform.h"
-
 
 namespace jiba
   {
@@ -42,8 +40,8 @@ namespace jiba
       size_t nEval;
       //! The difference between observed and synthetic data for the last forward calculation
       jiba::rvec DataDifference;
-      //! The diagonal elements of the covariance matrix
-      jiba::rvec CovarDiag;
+      //! The inverse of the covariance matrix
+      jiba::comp_mat InvCovMat;
       //! A possible storage for a data transformation object, whether and how this is used depends on the derived class
       boost::shared_ptr<VectorTransform> DataTransform;
       friend class boost::serialization::access;
@@ -53,7 +51,7 @@ namespace jiba
         {
           ar & nEval;
           ar & DataDifference;
-          ar & CovarDiag;
+          ar & InvCovMat;
           ar & DataTransform;
         }
       //! The abstract interface for functions that implement the calculation  of the data difference
@@ -126,12 +124,34 @@ namespace jiba
       //! We assume that the data covariance is in diagonal form and store its square root as vector, if we do not assign a covariance it is assumed to be 1
       void SetDataError(const jiba::rvec &Cov)
         {
-          CovarDiag = Cov;
+          //the last parameter false is important here so that ublas
+          //does not try to preserve which is broken in boost 1.49
+          InvCovMat.resize(Cov.size(), Cov.size(), false);
+          for (size_t i = 0; i < Cov.size(); ++i)
+            {
+              InvCovMat(i, i) = 1.0 / std::pow(Cov(i), 2);
+            }
         }
       //! Return a read-only version of the diagonal of the data covariance
-      const jiba::rvec &GetDataError() const
+      const jiba::rvec GetDataError() const
         {
+          assert(InvCovMat.size1() == InvCovMat.size2());
+          jiba::rvec CovarDiag(InvCovMat.size1());
+          for (size_t i = 0; i < InvCovMat.size1(); ++i)
+            {
+              CovarDiag(i) = 1.0 / sqrt(InvCovMat(i, i));
+            }
           return CovarDiag;
+        }
+      //! Set the inverse of the data covariance matrix
+      void SetInvCovMat(const jiba::comp_mat &Mat)
+        {
+          InvCovMat = Mat;
+        }
+      //! Access the inverse of the data covariance matrix
+      const jiba::comp_mat &GetInvCovMat() const
+        {
+          return InvCovMat;
         }
       //! Calculate the Chi-squared data misfit for the given model
       /*! This function calculates the value of the objective function \f$ \Phi(m) = (d -f(m))C_D(d -f(m))\f$ for a given model vector m.
@@ -146,17 +166,23 @@ namespace jiba
           ImplDataDifference(Model, DataDifference);
           //if we didn't assign a data covariance we assume it is 1
           const size_t ndata = DataDifference.size();
-          if (CovarDiag.size() != ndata)
+          if (InvCovMat.size1() != ndata || InvCovMat.size2() != ndata)
             {
-              CovarDiag.resize(DataDifference.size());
-              std::fill(CovarDiag.begin(), CovarDiag.end(), 1.0);
+              //the last parameter false is important here so that ublas
+              //does not try to preserve which is broken in boost 1.49
+              InvCovMat.resize(DataDifference.size(), DataDifference.size(), false);
+              for (size_t i = 0; i < DataDifference.size(); ++i)
+                {
+                  InvCovMat(i, i) = 1.0;
+                }
             }
           //go through the data and weigh each misfit by its covariance
           //add up to get the Chi-square misfit
-          DataDifference = ublas::element_div(DataDifference, CovarDiag);
+          jiba::rvec RawDiff(DataDifference);
+          DataDifference = ublas::prod(InvCovMat, DataDifference);
           ++nEval;
           //we return the chi-squared misfit, not the RMS
-          return ublas::inner_prod(DataDifference, DataDifference);
+          return ublas::inner_prod(RawDiff, DataDifference);
         }
       //! Calculate the gradient associated with the last misfit calculation
       /*! This function returns the gradient of the objective function with respect to the model
@@ -172,12 +198,13 @@ namespace jiba
        */
       jiba::rvec CalcGradient(const jiba::rvec &Model)
         {
-          assert(CovarDiag.size() == DataDifference.size());
+          assert(InvCovMat.size1() == DataDifference.size());
+          assert(InvCovMat.size2() == DataDifference.size());
           //for the gradient we need the difference between predicted and observed data
           //weighted by the squared covariance
-          jiba::rvec GradDiff(ublas::element_div(DataDifference, CovarDiag));
+          //jiba::rvec GradDiff(ublas::element_div(DataDifference, CovarDiag));
           ++nEval;
-          return ImplGradient(Model, GradDiff);
+          return ImplGradient(Model, DataDifference);
         }
       ObjectiveFunction();
       virtual ~ObjectiveFunction();
