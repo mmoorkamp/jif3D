@@ -47,7 +47,7 @@ namespace jiba
       //and here are the smallest powers of two that can store the model
       boost::multi_array_types::size_type transformsize[3];
       //the sparse matrix that holds the compressed sensitivities
-      jiba::rsparse SparseSens;
+      jiba::map_mat SparseSens;
       //we try depth weighting to solve some numerical problems
       jiba::rvec WhiteningVector;
       virtual rvec CalculateNewModel(const ThreeDGravityModel &Model);
@@ -55,7 +55,7 @@ namespace jiba
       virtual rvec CachedLQDerivative(const ThreeDGravityModel &Model, const rvec &Misfit);
     public:
       //! Get the compressed matrix of sensitivities in the wavelet domain
-      const jiba::rsparse &GetSensitivities() const {return SparseSens;}
+      const jiba::map_mat &GetSensitivities() const {return SparseSens;}
       //! Set the desired accuracy for the cached calculations
       /*! More precisely accuracy determines the ratio of the norms of the discarded
        * elements in each row of the sensitivity matrix to the norm of the original
