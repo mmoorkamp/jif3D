@@ -2,7 +2,7 @@ import testing ;
 
 lib regularization :
                   GradientRegularization.cpp CurvatureRegularization.cpp 
-                  CrossGradient.cpp
+                  CrossGradient.cpp OneDRegularization.cpp
                   ..//ModelBase
                  : <include>boost : : <include>. ;
                  
