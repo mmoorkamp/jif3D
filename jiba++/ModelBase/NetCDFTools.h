@@ -66,17 +66,13 @@ namespace jiba
     void ReadVec(NcFile &NetCDFFile, const std::string &DataName, const std::string &DimName,
         VectorType &Position)
       {
-        //create a netcdf dimension for the Station number
-        NcDim *Dim = NetCDFFile.get_dim(DimName.c_str());
-        //determine the size of that dimension
-        const size_t nvalues = Dim->size();
-
+      // create netcdf variable with the same name as the dimension
+        NcVar *Var = NetCDFFile.get_var(DataName.c_str());
+        const size_t nvalues = Var->num_vals();
         //allocate memory in the class variable
         Position.resize(nvalues);
-        // create netcdf variable with the same name as the dimension
-        NcVar *SizeVar = NetCDFFile.get_var(DataName.c_str());
         //read coordinate values from netcdf file
-        SizeVar->get(&Position[0], nvalues);
+        Var->get(&Position[0], nvalues);
       }
 
     //! Write a vectorial quantity to a netcdf file
