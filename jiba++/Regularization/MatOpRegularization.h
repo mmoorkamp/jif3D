@@ -30,9 +30,6 @@ namespace jiba
     class MatOpRegularization: public jiba::ObjectiveFunction
       {
     private:
-      //! The operator matrix for the spatial derivatives is sparse so we provide a typedef for convenience
-      typedef boost::numeric::ublas::compressed_matrix<double,
-          boost::numeric::ublas::column_major> comp_mat;
       /*! The implementation of the data difference is independent
        * of the form of the matrix. We calculate the model roughness
        * for all three directions and combine the results depending
