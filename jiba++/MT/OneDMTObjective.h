@@ -8,6 +8,8 @@
 #ifndef THREEDMODELOBJECTIVE_H_
 #define THREEDMODELOBJECTIVE_H_
 
+#include <fstream>
+
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
@@ -23,7 +25,8 @@ namespace jiba
       {
 
     private:
-
+      std::ofstream ModelLog;
+      std::ofstream ModelGrad;
       jiba::OneDMTCalculator Calculator;
 
       jiba::X3DModel MTModel;
@@ -43,13 +46,14 @@ namespace jiba
       virtual void ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff)
         {
           //make sure the sizes match
-          std::cout << "Model: " << Model << std::endl;
+          //std::cout << "Model: " << Model << std::endl;
           assert(Model.size() == MTModel.GetBackgroundConductivities().size());
           //Copy the model vector into the object with the geometry information
           MTModel.SetBackgroundConductivities(
               std::vector<double>(Model.begin(), Model.end()));
           jiba::rvec SynthData;
           SynthData = Calculator.Calculate(MTModel);
+          ModelLog << Model(0) << " " << Model(1) << "\n";
           if (SynthData.size() != ObservedData.size())
             throw jiba::FatalException(
                 " ThreeDModelObjective: Forward calculation does not give same amount of data !");
@@ -61,6 +65,23 @@ namespace jiba
       //! The implementation of the gradient calculation
       virtual jiba::rvec ImplGradient(const jiba::rvec &Model, const jiba::rvec &Diff)
         {
+          double misfit = CalcMisfit(Model);
+          const size_t nlayers = Model.size();
+          jiba::rvec result(nlayers);
+          for (size_t index = 0; index < nlayers; ++index)
+            {
+              double delta = Model(index) * 0.01;
+              jiba::rvec Forward(Model);
+              jiba::rvec Backward(Model);
+              Forward(index) += delta;
+              Backward(index) -= delta;
+              double ForFDGrad = (CalcMisfit(Forward) - misfit) / (delta);
+              double BackFDGrad = (misfit - CalcMisfit(Backward)) / delta;
+              result(index) = (ForFDGrad + BackFDGrad) / 2.0;
+
+            }
+          ModelGrad << " " << result(0) << " " << result(1) << "\n";
+          return result;
           assert(Model.size() == MTModel.GetBackgroundConductivities().size());
           //as we have stored the model vector from the misfit calculation
           //in the model object, we can check if the call is correct
@@ -72,7 +93,8 @@ namespace jiba
           //calculate the gradient
           jiba::rvec Deriv = Calculator.LQDerivative(MTModel, Diff);
           //std::cout << Calculator.GetGamma() << std::endl;
-          std::cout << "Deriv: " << Deriv << std::endl;
+          //std::cout << "Deriv: " << Deriv << std::endl;
+
           return Deriv;
         }
       //! So far transformations have no effect
@@ -136,11 +158,13 @@ namespace jiba
        */
       OneDMTObjective()
         {
-
+          ModelLog.open("mtmodel.log");
+          ModelGrad.open("mtgrad.log");
         }
       virtual ~OneDMTObjective()
         {
-
+          ModelLog.close();
+          ModelGrad.close();
         }
       };
 

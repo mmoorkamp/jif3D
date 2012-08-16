@@ -21,15 +21,11 @@ namespace jiba
       //! This type definition is necessary so that ThreeDModelObjective can correctly deduce the native type for a model object for this class
       typedef X3DModel ModelType;
     private:
-      jiba::cmat Gamma;
+      jiba::cmat alpha;
       jiba::cmat gammakj;
       jiba::cmat gammaj;
       jiba::cvec Z;
     public:
-      const jiba::cmat &GetGamma()
-        {
-          return Gamma;
-        }
       rvec Calculate(const ModelType &Model);
       rvec LQDerivative(const ModelType &Model, const rvec &Misfit);
       OneDMTCalculator();
