@@ -178,8 +178,8 @@ namespace jiba
             }
           //go through the data and weigh each misfit by its covariance
           //add up to get the Chi-square misfit
-          jiba::rvec RawDiff(DataDifference);
-          DataDifference = ublas::prod(InvCovMat, DataDifference);
+          jiba::rvec RawDiff(DataDifference), TmpDiff(ndata);
+          ublas::axpy_prod(InvCovMat, DataDifference, TmpDiff, true);
           ++nEval;
           //we return the chi-squared misfit, not the RMS
           return ublas::inner_prod(RawDiff, DataDifference);

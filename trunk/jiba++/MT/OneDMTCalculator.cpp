@@ -32,21 +32,21 @@ namespace jiba
         std::complex<double> omegamu;
         std::complex<double> kcurr, klow;
         std::complex<double> xi;
-        std::vector<std::complex<double> > alpha(nlayers, 0);
+
         std::complex<double> adm;
         double d;
         double sigmacurr, sigmalow;
 
         jiba::rvec result(nfreq * 2);
         Z.resize(nfreq);
-        Gamma.resize(nlayers, nfreq);
         gammakj.resize(nlayers, nfreq);
         gammaj.resize(nlayers, nfreq);
+        alpha.resize(nlayers, nfreq);
         for (size_t i = 0; i < nfreq; ++i)
           {
             const double omega = 2. * PI * Model.GetFrequencies().at(i);
-            omegamu = -I * 4e-7 * PI * omega;
-            fill(alpha.begin(), alpha.end(), 0);
+            omegamu = I * 4e-7 * PI * omega;
+            alpha(nlayers - 1, i) = 0.0;
             sigmacurr = Model.GetBackgroundConductivities().back();
             kcurr = sqrt(omegamu * sigmacurr);
             gammakj(nlayers - 1, i) = 0.5 / kcurr;
@@ -62,15 +62,15 @@ namespace jiba
                     klow *= -1.0;
                   }
                 xi = omegamu * (sigmacurr - sigmalow) / std::pow(kcurr + klow, 2);
-                alpha.at(layerindex + 1) = (xi + alpha.at(layerindex + 1))
-                    / (1. + xi * alpha.at(layerindex + 1));
+                alpha(layerindex + 1, i) = (xi + alpha(layerindex + 1, i))
+                    / (1. + xi * alpha(layerindex + 1, i));
                 d = Model.GetBackgroundThicknesses().at(layerindex);
                 std::complex<double> dk = kcurr * d;
                 std::complex<double> xi1 = exp(-dk);
-                alpha.at(layerindex) = alpha.at(layerindex + 1) * xi1 * xi1;
-                gammaj(layerindex, i) = (1. + alpha.at(layerindex + 1))
-                    / (1. / xi1 + xi1 * alpha.at(layerindex + 1));
-                std::complex<double> mu = alpha.at(layerindex);
+                alpha(layerindex, i) = alpha(layerindex + 1, i) * xi1 * xi1;
+                gammaj(layerindex, i) = (1. + alpha(layerindex + 1, i))
+                    / (1. / xi1 + xi1 * alpha(layerindex + 1, i));
+                std::complex<double> mu = alpha(layerindex, i);
                 std::complex<double> c = 1. + mu;
                 gammakj(layerindex, i) = d
                     * (2.0 * mu / (c * c)
@@ -78,8 +78,8 @@ namespace jiba
                             * (std::pow(mu / (c * xi1), 2) - std::pow(xi1 / c, 2)
                                 + (1. - mu) / c) / dk);
               }
-            adm = kcurr / (-I * omega) * ((1. - alpha.at(0)) / (1. + alpha.at(0)));
-            Z(i) = jiba::mag_mu * conj(1. / adm);
+            alpha(0, i) = kcurr / (omegamu) * ((1. - alpha(0, i)) / (1. + alpha(0, i)));
+            Z(i) = 1. / alpha(0, i);
             result(2 * i) = Z(i).real();
             result(2 * i + 1) = Z(i).imag();
           }
@@ -93,22 +93,22 @@ namespace jiba
         jiba::rvec result(nlayers, 0.0);
         for (size_t i = 0; i < nfreq; ++i)
           {
-            Gamma(0, i) = gammakj(0, i);
+            alpha(0, i) = gammakj(0, i);
             for (size_t layerindex = 0; layerindex < nlayers - 1; ++layerindex)
               {
-                Gamma(layerindex + 1, i) = std::pow(gammaj(layerindex, i), 2)
+                alpha(layerindex + 1, i) = std::pow(gammaj(layerindex, i), 2)
                     * gammakj(layerindex + 1, i) / gammakj(layerindex, i)
-                    * Gamma(layerindex, i);
+                    * alpha(layerindex, i);
               }
             for (size_t j = 0; j < nlayers; ++j)
               {
                 result(j) += std::real(
-                    Gamma(j, i) * Z(i) * Z(i)
+                    alpha(j, i) * Z(i) * Z(i)
                         * std::complex<double>(Misfit(2 * i), Misfit(2 * i + 1)));
                 if (boost::math::isnan(result(j)))
                   {
-                    std::cout << j << " " << i << " " << Model.GetFrequencies().at(i) << " " << Gamma(j, i) << " " << Z(i)
-                        << std::endl;
+                    std::cout << j << " " << i << " " << Model.GetFrequencies().at(i)
+                        << " " << alpha(j, i) << " " << Z(i) << std::endl;
                   }
               }
           }

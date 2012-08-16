@@ -89,7 +89,7 @@ namespace jiba
           ublas::vector_range<const jiba::rvec> zrange(Diff,
               ublas::range(2 * nmod, 3 * nmod));
           //The gradient is simply the transpose of the operator matrix
-          //time the misfit, we calculate this for each direction
+          //times the misfit, we calculate this for each direction
           ublas::axpy_prod(ublas::trans(XOperatorMatrix), xrange, XGrad);
           ublas::axpy_prod(ublas::trans(YOperatorMatrix), yrange, YGrad);
           ublas::axpy_prod(ublas::trans(ZOperatorMatrix), zrange, ZGrad);

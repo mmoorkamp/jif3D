@@ -5,7 +5,6 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-
 #include "GradientRegularization.h"
 #include <cassert>
 namespace jiba
@@ -13,8 +12,7 @@ namespace jiba
 
     void GradientRegularization::ConstructOperator(
         const jiba::ThreeDModelBase &ModelGeometry,
-        const jiba::ThreeDModelBase &TearModelX,
-        const jiba::ThreeDModelBase &TearModelY,
+        const jiba::ThreeDModelBase &TearModelX, const jiba::ThreeDModelBase &TearModelY,
         const jiba::ThreeDModelBase &TearModelZ)
       {
         const size_t xsize = ModelGeometry.GetModelShape()[0];
@@ -39,13 +37,13 @@ namespace jiba
                     //whether we want a tear for the cell boundary in that direction
                     if (TearModelX.GetData()[i][j][k])
                       {
-                        XOperatorMatrix(index, ModelGeometry.IndexToOffset(i
-                            + 1, j, k)) = 1.0;
-                        XOperatorMatrix(index, index) = CenterValue;
+                        XOperatorMatrix.push_back(index,
+                            ModelGeometry.IndexToOffset(i + 1, j, k), 1.0);
+                        XOperatorMatrix.push_back(index, index, CenterValue);
                       }
                   }
               }
-          }//end of for loop for x
+          } //end of for loop for x
 
         for (size_t i = 0; i < xsize; ++i)
           {
@@ -62,13 +60,13 @@ namespace jiba
 
                     if (TearModelY.GetData()[i][j][k])
                       {
-                        YOperatorMatrix(index, ModelGeometry.IndexToOffset(i, j
-                            + 1, k)) = 1.0;
-                        YOperatorMatrix(index, index) = CenterValue;
+                        YOperatorMatrix.push_back(index,
+                            ModelGeometry.IndexToOffset(i, j + 1, k), 1.0);
+                        YOperatorMatrix.push_back(index, index, CenterValue);
                       }
                   }
               }
-          }//end of for loop for x
+          } //end of for loop for x
 
         for (size_t i = 0; i < xsize; ++i)
           {
@@ -84,12 +82,12 @@ namespace jiba
                     //whether we want a tear for the cell boundary in that direction
                     if (TearModelZ.GetData()[i][j][k])
                       {
-                        ZOperatorMatrix(index, ModelGeometry.IndexToOffset(i,
-                            j, k + 1)) = 1.0;
-                        ZOperatorMatrix(index, index) = CenterValue;
+                        ZOperatorMatrix.push_back(index,
+                            ModelGeometry.IndexToOffset(i, j, k + 1), 1.0);
+                        ZOperatorMatrix.push_back(index, index, CenterValue);
                       }
                   }
               }
-          }//end of for loop for x
+          } //end of for loop for x
       }
   }
