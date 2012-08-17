@@ -37,9 +37,9 @@ namespace jiba
                     //whether we want a tear for the cell boundary in that direction
                     if (TearModelX.GetData()[i][j][k])
                       {
-                        XOperatorMatrix.push_back(index,
-                            ModelGeometry.IndexToOffset(i + 1, j, k), 1.0);
-                        XOperatorMatrix.push_back(index, index, CenterValue);
+                        XOperatorMatrix(index, ModelGeometry.IndexToOffset(i + 1, j, k)) =
+                            1.0;
+                        XOperatorMatrix(index, index) = CenterValue;
                       }
                   }
               }
@@ -60,9 +60,9 @@ namespace jiba
 
                     if (TearModelY.GetData()[i][j][k])
                       {
-                        YOperatorMatrix.push_back(index,
-                            ModelGeometry.IndexToOffset(i, j + 1, k), 1.0);
-                        YOperatorMatrix.push_back(index, index, CenterValue);
+                        YOperatorMatrix(index, ModelGeometry.IndexToOffset(i, j + 1, k)) =
+                            1.0;
+                        YOperatorMatrix(index, index) = CenterValue;
                       }
                   }
               }
@@ -82,9 +82,9 @@ namespace jiba
                     //whether we want a tear for the cell boundary in that direction
                     if (TearModelZ.GetData()[i][j][k])
                       {
-                        ZOperatorMatrix.push_back(index,
-                            ModelGeometry.IndexToOffset(i, j, k + 1), 1.0);
-                        ZOperatorMatrix.push_back(index, index, CenterValue);
+                        ZOperatorMatrix(index, ModelGeometry.IndexToOffset(i, j, k + 1)) =
+                            1.0;
+                        ZOperatorMatrix(index, index) = CenterValue;
                       }
                   }
               }
