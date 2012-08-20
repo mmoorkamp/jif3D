@@ -63,7 +63,6 @@ namespace jiba
         //otherwise we perform some checks here
         if (!CovModVec.empty())
           {
-
             const size_t nparm = InvModel.size();
             const size_t ncovmod = CovModVec.size();
 

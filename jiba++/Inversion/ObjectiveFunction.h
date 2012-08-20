@@ -16,6 +16,7 @@
 #include <boost/serialization/export.hpp>
 #include "../Global/VecMat.h"
 #include "../Global/VectorTransform.h"
+#include "../Global/FatalException.h"
 
 namespace jiba
   {
@@ -42,8 +43,6 @@ namespace jiba
       jiba::rvec DataDifference;
       //! The inverse of the covariance matrix
       jiba::comp_mat InvCovMat;
-      //! A possible storage for a data transformation object, whether and how this is used depends on the derived class
-      boost::shared_ptr<VectorTransform> DataTransform;
       friend class boost::serialization::access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
@@ -52,7 +51,6 @@ namespace jiba
           ar & nEval;
           ar & DataDifference;
           ar & InvCovMat;
-          ar & DataTransform;
         }
       //! The abstract interface for functions that implement the calculation  of the data difference
       /*! This function has to be implemented in derived classes to calculate the data misfit from a given model vector.
@@ -77,17 +75,6 @@ namespace jiba
        */
       virtual jiba::rvec ImplGradient(const jiba::rvec &Model,
           const jiba::rvec &Diff) = 0;
-      //! We might have to do something in the derived class when we assign the data transform
-      virtual void SetDataTransformAction()
-        {
-
-        }
-    protected:
-      //! Access to the data transform class for derived classes
-      boost::shared_ptr<VectorTransform> GetDataTransform()
-        {
-          return DataTransform;
-        }
     public:
       //! Some objective functions can reach a meaningful value that signals convergence, e.g. an RMS of 1 for data misfit, while regularization cannot
       /*! When we minimize data misfit we do not want to go significantly below a misfit that corresponds to the data error, i.e an RMS of 1.
@@ -115,12 +102,6 @@ namespace jiba
         {
           return nEval;
         }
-      //! Assign a class that transforms the data from the forward calculation
-      void SetDataTransform(boost::shared_ptr<VectorTransform> Transform)
-        {
-          DataTransform = Transform;
-          SetDataTransformAction();
-        }
       //! We assume that the data covariance is in diagonal form and store its square root as vector, if we do not assign a covariance it is assumed to be 1
       void SetDataError(const jiba::rvec &Cov)
         {
@@ -146,6 +127,10 @@ namespace jiba
       //! Set the inverse of the data covariance matrix
       void SetInvCovMat(const jiba::comp_mat &Mat)
         {
+          if (Mat.size1() != Mat.size2())
+            {
+              throw jiba::FatalException("Covariance matrix needs to be square !");
+            }
           InvCovMat = Mat;
         }
       //! Access the inverse of the data covariance matrix
@@ -168,6 +153,9 @@ namespace jiba
           const size_t ndata = DataDifference.size();
           if (InvCovMat.size1() != ndata || InvCovMat.size2() != ndata)
             {
+              std::cerr << "Setting covariance all to 1.0, original size: "
+                  << InvCovMat.size1() << " " << InvCovMat.size2() << " should be: "
+                  << ndata << std::endl;
               //the last parameter false is important here so that ublas
               //does not try to preserve which is broken in boost 1.49
               InvCovMat.resize(DataDifference.size(), DataDifference.size(), false);
@@ -178,11 +166,21 @@ namespace jiba
             }
           //go through the data and weigh each misfit by its covariance
           //add up to get the Chi-square misfit
-          jiba::rvec RawDiff(DataDifference), TmpDiff(ndata);
+          jiba::rvec TmpDiff(ndata);
+          //it is essential here to store  the result of the vector matrix
+          //multiplication in a temporary vector instead of reusing
+          //DataDifference and saving some memory, the penalty
+          //in terms of runtime is enormous
           ublas::axpy_prod(InvCovMat, DataDifference, TmpDiff, true);
           ++nEval;
           //we return the chi-squared misfit, not the RMS
-          return ublas::inner_prod(RawDiff, DataDifference);
+          double Chi = ublas::inner_prod(DataDifference, TmpDiff);
+          //for the Gradient calculation we need the data difference
+          //weighted by the covariance matrix, so we assign
+          //the weighted values in TmpDiff to the object property DataDifference
+          // for reuse in CalcGradient below.
+          DataDifference = TmpDiff;
+          return Chi;
         }
       //! Calculate the gradient associated with the last misfit calculation
       /*! This function returns the gradient of the objective function with respect to the model

@@ -13,7 +13,7 @@ namespace jiba
   {
 
     ObjectiveFunction::ObjectiveFunction() :
-        nEval(0), DataDifference(), InvCovMat(), DataTransform()
+        nEval(0), DataDifference(), InvCovMat()
       {
 
       }
