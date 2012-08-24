@@ -34,7 +34,7 @@ namespace jiba
       {
         //when we have to calculate a new model
         //delete the file with the old sensitivities
-        boost::filesystem::remove_all(filename);
+        boost::filesystem::remove_all(FullPath);
         //then forward the call to the implementation object
         return Imp.get()->Calculate(Model, *this);
       }
@@ -43,7 +43,7 @@ namespace jiba
       {
         //whenever we have a new row of the sensitivity matrix
         //we append to the existing file
-        std::fstream outfile(filename.c_str(), std::ios::out | std::ios::binary
+        std::fstream outfile(FullPath.string().c_str(), std::ios::out | std::ios::binary
             | std::ios::app);
         //depending on whether we have FTG or scalar data
         //the current segment of the sensitivity matrix can have several rows
@@ -65,8 +65,7 @@ namespace jiba
         const ThreeDGravityModel &Model)
       {
         //open the file where the sensitivities are stored
-        boost::filesystem::path fullpath = TempDir / filename;
-        std::fstream infile(fullpath.string().c_str(), std::ios::in | std::ios::binary);
+        std::fstream infile(FullPath.string().c_str(), std::ios::in | std::ios::binary);
 
         const size_t nmeas = Model.GetMeasPosX().size()
             * Imp.get()->RawDataPerMeasurement();
@@ -96,7 +95,7 @@ namespace jiba
               {
                 std::string error =
                     "In CalculateRawData, cannot read sensitivities from binary file: "
-                        + filename;
+                        + FullPath.string();
                 throw FatalException(error);
               }
           }
@@ -109,15 +108,15 @@ namespace jiba
       {
         //when we are in this routine we read the sensitivities
         //from a previously created binary file
-        boost::filesystem::path fullpath = TempDir / filename;
-        std::fstream infile(fullpath.string().c_str(), std::ios::in | std::ios::binary);
+        std::fstream infile(FullPath.string().c_str(), std::ios::in | std::ios::binary);
 
         const size_t nmeas = Model.GetMeasPosX().size()
             * Imp.get()->RawDataPerMeasurement();
         const size_t ngrid = Model.GetDensities().num_elements();
         const size_t nmod = ngrid + Model.GetBackgroundThicknesses().size();
-
-        rvec result(nmod, 0.0);
+        //we read the sensitivities row by row and multiply
+        //by the corresponding misfit to calculate the gradient
+        rvec Gradient(nmod, 0.0);
         rvec CurrSens(nmod, 0.0);
         //for each measurement
         for (size_t i = 0; i < nmeas; ++i)
@@ -129,27 +128,26 @@ namespace jiba
               {
                 //if reading was successful, we can compute the gradient
                 //this is equivalent to J^T * delta d
-                result += CurrSens * Misfit(i);
+                Gradient += CurrSens * Misfit(i);
               }
             else
               {
                 std::string error =
                     "In CalculateRawLQDerivative, cannot read sensitivities from binary file: "
-                        + filename;
+                        + FullPath.string();
                 throw FatalException(error);
               }
           }
-        return result;
+        return Gradient;
       }
 
     DiskGravityCalculator::DiskGravityCalculator(boost::shared_ptr<
         ThreeDGravityImplementation> TheImp, boost::filesystem::path TDir) :
-      FullSensitivityGravityCalculator(TheImp), filename()
+      FullSensitivityGravityCalculator(TheImp)
       {
         if (!boost::filesystem::is_directory(TDir))
           throw FatalException("TDir is not a directory: " + TDir.string());
-        TempDir = TDir;
-        filename = MakeFilename();
+         FullPath = TDir / MakeFilename();
       }
 
     //! We need to define the copy constructor to make sure that filename stays unique among all created objects
@@ -157,8 +155,10 @@ namespace jiba
         const DiskGravityCalculator &Old) :
       FullSensitivityGravityCalculator(Old)
       {
-        TempDir = Old.TempDir;
-        filename = MakeFilename();
+        //we keep the original directory, as this can be a temp directory
+        //but generate a new filename for the new object to avoid overwriting
+        //the file from the original object
+        FullPath = Old.FullPath.parent_path() / MakeFilename() ;
       }
 
     //! We have to define a copy operator to make sure filename stays unique
@@ -178,7 +178,7 @@ namespace jiba
     DiskGravityCalculator::~DiskGravityCalculator()
       {
         //make sure we clean up the file when the object disappears
-        boost::filesystem::remove_all(filename);
+        boost::filesystem::remove_all(FullPath);
       }
 
   }
