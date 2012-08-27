@@ -46,6 +46,15 @@ namespace jiba
         boost::assign::map_list_of(X3DModel::MT, "MT")(X3DModel::EDIP, "EDIP")(
             X3DModel::MDIP, "MDIP");
 
+    //check that the .hnk file for x3d are in a certain directory
+    bool CheckHNK(const fs::path &TargetDir)
+      {
+        return fs::exists(TargetDir / "ndec15.hnk")
+            && fs::exists(TargetDir / "ndec20.hnk")
+            && fs::exists(TargetDir / "ndec30.hnk")
+            && fs::exists(TargetDir / "ndec40.hnk");
+      }
+
     void X3DMTCalculator::CleanUp()
       {
         std::string NameRoot(ObjectID());
@@ -65,6 +74,13 @@ namespace jiba
         if (!fs::is_directory(TDir))
           throw FatalException("TDir is not a directory: " + TDir.string());
         TempDir = TDir;
+        //we make sure that the .hnk files are there
+        //this is a common problem and when we check for use later
+        //we are inside an openmp thread and swallow all sensible error messages.
+        if (!CheckHNK(fs::path()))
+        {
+        	throw jiba::FatalException("Cannot find .hnk files in current directory! " );
+        }
       }
 
     X3DMTCalculator::~X3DMTCalculator()
@@ -72,14 +88,7 @@ namespace jiba
         CleanUp();
       }
 
-    //check that the .hnk file for x3d are in a certain directory
-    bool CheckHNK(const fs::path &TargetDir)
-      {
-        return fs::exists(TargetDir / "ndec15.hnk")
-            && fs::exists(TargetDir / "ndec20.hnk")
-            && fs::exists(TargetDir / "ndec30.hnk")
-            && fs::exists(TargetDir / "ndec40.hnk");
-      }
+
 
     //copy the .hnk files for x3d from SourceDir to TargetDir
     void CopyHNK(const fs::path &SourceDir, const fs::path &TargetDir)
