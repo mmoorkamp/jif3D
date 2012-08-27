@@ -12,20 +12,18 @@ exe plotsaltrel : plotsaltrel.cpp joint ../Joint : <include>. ;
 exe tomoinv : tomoinv.cpp  joint : <include>. ;
 exe plotgrav : plotgrav.cpp  joint : <include>. ;
 exe parrun : parrun.cpp ..//boost_filesystem ..//boost_system ;
-exe mtinv :  mtinv.cpp  ../Inversion ../Global ../Regularization ../MT ../Joint ..//boost_filesystem ..//boost_system ..//boost_mpi ..//boost_serialization : <include>. <library>/mpi//mpi ;
 exe picksort : picksort.cpp  ../Global  ../Tomo ..//boost_filesystem ..//boost_system : <include>. ;
 exe joinpicks : joinpicks.cpp  ../Global  ../Tomo ..//boost_filesystem ..//boost_system : <include>. ;
 exe srcrecdist : srcrecdist.cpp  ../Global  ../Tomo ..//boost_filesystem ..//boost_system : <include>. ;
 exe calccross : calccross.cpp  ../Global  ../Tomo ../Regularization ../Inversion ..//boost_filesystem ..//boost_system : <include>. ;
 exe convertmtt : convertmtt.cpp   ../Global ../MT ..//boost_filesystem ..//boost_system : <include>. ;
+exe onedmtinv : onedmtinv.cpp   joint ../MT ..//boost_program_options ..//boost_filesystem ..//boost_system : <include>. ;
 exe writemtt : writemtt.cpp   ../Global ../MT ..//boost_filesystem ..//boost_system : <include>. ;
 exe grav_jointinv : grav_jointinv.cpp  joint ../Joint ../MT : <include>. ;
 exe mergetomo : mergetomo.cpp  ../Tomo  ../Global : <include>. ;
 exe tomoregion : tomoregion.cpp  ../Tomo  ../Global : <include>. ;
 exe eikonal : eikonal.cpp  ../Tomo  ../Global : <include>. ;
 exe eikonal2D : eikonal2D.cpp  ../Tomo  ../Global : <include>. ;
-exe serialization : serialization.cpp  joint ..//boost_serialization : <include>. ;
-exe serialization_mpi : serialization_mpi.cpp  joint ..//boost_system ..//boost_mpi ..//boost_serialization : <include>. <library>/mpi//mpi ;
 exe opttest : opttest.cpp  ../Joint ../MT ..//optpp ..//newmat joint ..//boost_program_options : 
               <include>/usr/local/include/opt++ <define>use_namespace <define>HAVE_STD ;
 # exe invariantftginv : invariantftginv.cpp  ../Gravity//gravity ../Global ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ../Inversion//inversion
