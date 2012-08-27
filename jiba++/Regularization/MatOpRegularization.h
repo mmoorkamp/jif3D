@@ -169,6 +169,18 @@ namespace jiba
         {
           return XGrad;
         }
+      const comp_mat &GetXOperator() const
+        {
+    	  return XOperatorMatrix;
+        }
+      const comp_mat &GetYOperator() const
+        {
+          return YOperatorMatrix;
+        }
+      const comp_mat &GetZOperator() const
+        {
+          return ZOperatorMatrix;
+         }
       //! Read only access to the gradient of the regularization functional that works in y-direction
       const jiba::rvec &GetYGrad() const
         {
