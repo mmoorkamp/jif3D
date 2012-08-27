@@ -14,6 +14,7 @@
 #include "../Global/FatalException.h"
 #include "../Global/Wavelet.h"
 #include "../Global/NumUtil.h"
+#include "../Global/convert.h"
 #include "ModelDistributor.h"
 
 namespace jiba
@@ -93,13 +94,13 @@ namespace jiba
         {
           if (!IsPowerOfTwo(nx))
             throw jiba::FatalException(
-                "X-dimension of grid is not a power of two.");
+                "X-dimension of grid is not a power of two: " + jiba::stringify(nx));
           if (!IsPowerOfTwo(ny))
             throw jiba::FatalException(
-                "Y-dimension of grid is not a power of two.");
+                "Y-dimension of grid is not a power of two: " + jiba::stringify(ny));
           if (!IsPowerOfTwo(nz))
             throw jiba::FatalException(
-                "Z-dimension of grid is not a power of two.");
+                "Z-dimension of grid is not a power of two: " + jiba::stringify(nz));
           Grid.resize(boost::extents[nx][ny][nz]);
         }
       };
