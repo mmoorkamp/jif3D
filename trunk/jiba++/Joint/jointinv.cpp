@@ -219,13 +219,17 @@ int main(int argc, char *argv[])
     //for the seismic tomography part of the inversion
     bool havetomo = TomoSetup.SetupObjective(vm, *Objective.get(), TomoTransform, xorigin,
         yorigin);
+    if (havetomo && !EqualGridGeometry(TomoSetup.GetModel(), StartModel))
+      {
+        throw jiba::FatalException(
+            "Tomography model does not have the same geometry as starting model");
+      }
     //setup the gravity part of the joint inversion
     bool havegrav = GravitySetup.SetupObjective(vm, *Objective.get(), GravityTransform,
         xorigin, yorigin, TempDir);
     //if we have a seismic and a gravity objective function, we have
     //to make sure that the starting models have the same geometry (not considering refinement)
-    if (havetomo && havegrav
-        && !EqualGridGeometry(StartModel, GravitySetup.GetScalModel()))
+    if (havegrav && !EqualGridGeometry(StartModel, GravitySetup.GetScalModel()))
       {
         throw jiba::FatalException(
             "Gravity model does not have the same geometry as starting model");
@@ -235,7 +239,7 @@ int main(int argc, char *argv[])
         yorigin, TempDir);
     //if we have a seismic and a MT objective function, we have
     //to make sure that the starting models have the same geometry (not considering refinement)
-    if (havetomo && havemt && !EqualGridGeometry(MTSetup.GetModel(), StartModel))
+    if (havemt && !EqualGridGeometry(MTSetup.GetModel(), StartModel))
       {
         throw jiba::FatalException(
             "MT model does not have the same geometry as starting model");
@@ -264,12 +268,6 @@ int main(int argc, char *argv[])
     boost::shared_ptr<jiba::GradientBasedOptimization> Optimizer =
         InversionSetup.ConfigureInversion(vm, Objective, InvModel, CovModVec);
 
-    size_t iteration = 0;
-    std::ofstream misfitfile("misfit.out");
-    //calculate initial misfit
-    double InitialMisfit = Objective->CalcMisfit(InvModel);
-    StoreMisfit(misfitfile, 0, InitialMisfit, *Objective);
-
     std::string modelfilename = "result";
     //write out the seismic source and receiver positions for plotting
     //and general quality control
@@ -284,6 +282,21 @@ int main(int argc, char *argv[])
             TomoSetup.GetModel().GetSourcePosX(), TomoSetup.GetModel().GetSourcePosY(),
             TomoSetup.GetModel().GetSourcePosZ());
       }
+
+    if (havemt)
+      {
+        jiba::Write3DDataToVTK(modelfilename + ".mt_sites.vtk", "MT Sites",
+            jiba::rvec(MTSetup.GetModel().GetMeasPosX().size()),
+            MTSetup.GetModel().GetMeasPosX(), MTSetup.GetModel().GetMeasPosY(),
+            MTSetup.GetModel().GetMeasPosZ());
+      }
+
+    size_t iteration = 0;
+    std::ofstream misfitfile("misfit.out");
+    //calculate initial misfit
+    double InitialMisfit = Objective->CalcMisfit(InvModel);
+    StoreMisfit(misfitfile, 0, InitialMisfit, *Objective);
+
     jiba::ThreeDGravityModel GravModel(GravitySetup.GetScalModel());
     jiba::X3DModel MTModel(MTSetup.GetModel());
     jiba::ThreeDSeismicModel TomoModel(TomoSetup.GetModel());
