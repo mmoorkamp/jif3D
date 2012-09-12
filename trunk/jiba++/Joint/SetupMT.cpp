@@ -57,6 +57,16 @@ namespace jiba
             //of the tomography starting model
             MTModel.ReadNetCDF(mtmodelfilename);
 
+            //if x3d sees that a layer is completely homogeneous with the background
+            //it optimizes this layer away which messes up our gradient calculation
+            // as it does not output the field values for this layer
+            //so we make the starting model slightly inhomogeneous to ensure
+            //that this never happens
+            for (size_t i = 0; i < MTModel.GetConductivities().shape()[2]; ++i)
+              {
+                MTModel.SetConductivities()[0][0][i] *= (1 + 0.0001 * (i + 1));
+              }
+
             //read in MT data, the position of the measurement sites, frequencies and impedances
             std::vector<double> MTXPos, MTYPos, MTZPos, Frequencies;
             jiba::rvec MTData, MTError;
