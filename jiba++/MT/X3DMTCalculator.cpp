@@ -78,17 +78,15 @@ namespace jiba
         //this is a common problem and when we check for use later
         //we are inside an openmp thread and swallow all sensible error messages.
         if (!CheckHNK(fs::path()))
-        {
-        	throw jiba::FatalException("Cannot find .hnk files in current directory! " );
-        }
+          {
+            throw jiba::FatalException("Cannot find .hnk files in current directory! ");
+          }
       }
 
     X3DMTCalculator::~X3DMTCalculator()
       {
         CleanUp();
       }
-
-
 
     //copy the .hnk files for x3d from SourceDir to TargetDir
     void CopyHNK(const fs::path &SourceDir, const fs::path &TargetDir)
@@ -233,7 +231,7 @@ namespace jiba
       {
         //we define nfreq as int to make the compiler happy in the openmp loop
         assert(minfreqindex <= maxfreqindex);
-        const int nfreq = std::min(maxfreqindex,Model.GetFrequencies().size());
+        const int nfreq = std::min(maxfreqindex, Model.GetFrequencies().size());
         const size_t nmeas = Model.GetMeasPosX().size();
         const size_t nmodx = Model.GetXCoordinates().size();
         const size_t nmody = Model.GetYCoordinates().size();
@@ -363,6 +361,14 @@ namespace jiba
         //boost::filesystem::remove_all(emaname);
       }
 
+    inline bool CheckField(const std::vector<std::complex<double> > &Field, size_t nelem)
+      {
+        if (Field.size() != nelem)
+          throw jiba::FatalException(
+              "Number of read in elements in Field: " + jiba::stringify(Field.size())
+                  + " does not match expected: " + jiba::stringify(nelem));
+      }
+
     rvec X3DMTCalculator::LQDerivativeFreq(const X3DModel &Model, const rvec &Misfit,
         size_t freqindex)
       {
@@ -403,14 +409,16 @@ namespace jiba
             ReadEMO((ForwardDirName / emoBname).string(), Ex2_obs, Ey2_obs, Hx2_obs,
                 Hy2_obs);
           }
-        assert(Ex1_obs.size()==nobs * nmeas);
-        assert(Ex2_obs.size()==nobs * nmeas);
-        assert(Ey1_obs.size()==nobs * nmeas);
-        assert(Ey2_obs.size()==nobs * nmeas);
-        assert(Hx1_obs.size()==nobs * nmeas);
-        assert(Hx2_obs.size()==nobs * nmeas);
-        assert(Hy1_obs.size()==nobs * nmeas);
-        assert(Hy2_obs.size()==nobs * nmeas);
+        const size_t nfield = nobs * nmeas;
+        CheckField(Ex1_obs, nfield);
+        CheckField(Ex2_obs, nfield);
+        CheckField(Ey1_obs, nfield);
+        CheckField(Ey2_obs, nfield);
+        CheckField(Hx1_obs, nfield);
+        CheckField(Hx2_obs, nfield);
+        CheckField(Hy1_obs, nfield);
+        CheckField(Hy2_obs, nfield);
+
         std::vector<std::complex<double> > Ex1_all, Ex2_all, Ey1_all, Ey2_all, Ez1_all,
             Ez2_all;
         //for the gradient calculation we also need the electric fields
@@ -571,8 +579,8 @@ namespace jiba
         return Gradient;
       }
 
-    rvec X3DMTCalculator::LQDerivative(const X3DModel &Model, const rvec &Misfit, size_t minfreqindex,
-        size_t maxfreqindex)
+    rvec X3DMTCalculator::LQDerivative(const X3DModel &Model, const rvec &Misfit,
+        size_t minfreqindex, size_t maxfreqindex)
       {
         //we define nfreq as int to make the compiler happy in the openmp loop
         const int nfreq = Model.GetFrequencies().size();
