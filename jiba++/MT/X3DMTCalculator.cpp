@@ -46,6 +46,14 @@ namespace jiba
         boost::assign::map_list_of(X3DModel::MT, "MT")(X3DModel::EDIP, "EDIP")(
             X3DModel::MDIP, "MDIP");
 
+    inline void CheckField(const std::vector<std::complex<double> > &Field, size_t nelem)
+      {
+        if (Field.size() != nelem)
+          throw jiba::FatalException(
+              "Number of read in elements in Field: " + jiba::stringify(Field.size())
+                  + " does not match expected: " + jiba::stringify(nelem));
+      }
+
     //check that the .hnk file for x3d are in a certain directory
     bool CheckHNK(const fs::path &TargetDir)
       {
@@ -192,7 +200,15 @@ namespace jiba
             ReadEMO((DirName / emoAname).string(), Ex1, Ey1, Hx1, Hy1);
             ReadEMO((DirName / emoBname).string(), Ex2, Ey2, Hx2, Hy2);
           }
-
+        const size_t nval = (nmodx*nmody * nmeas);
+        CheckField(Ex1, nval);
+        CheckField(Ex2, nval);
+        CheckField(Ey1, nval);
+        CheckField(Ey2, nval);
+        CheckField(Hx1, nval);
+        CheckField(Hx2, nval);
+        CheckField(Hy1, nval);
+        CheckField(Hy2, nval);
         //calculate impedances from the field spectra for all measurement sites
         for (size_t j = 0; j < nmeas; ++j)
           {
@@ -226,6 +242,24 @@ namespace jiba
         return result;
       }
 
+    void CompareDepths(const std::vector<double> &BGDepths,const jiba::ThreeDModelBase::t3DModelDim &ModelDepths)
+    {
+    	size_t mindex = 0;
+    	for (size_t i = 0; i < BGDepths.size(); ++i)
+    	{
+    		while (ModelDepths[mindex] < BGDepths[i] && mindex < ModelDepths.size())
+    		{
+    			++mindex;
+    		}
+    		if (mindex < ModelDepths.size() && ModelDepths[mindex] != BGDepths[i])
+    		{
+    			throw jiba::FatalException(
+    			              "Depth to background layer: " + jiba::stringify(BGDepths[i])
+    			                  + " does not match grid cell depth: " + jiba::stringify(ModelDepths[mindex]));
+    		}
+    	}
+    }
+
     rvec X3DMTCalculator::Calculate(const X3DModel &Model, size_t minfreqindex,
         size_t maxfreqindex)
       {
@@ -245,6 +279,10 @@ namespace jiba
         Model.GetXCoordinates();
         Model.GetYCoordinates();
         Model.GetZCoordinates();
+        std::vector<double> BGDepths(Model.GetBackgroundThicknesses().size(),0.0);
+        std::partial_sum(Model.GetBackgroundThicknesses().begin(),Model.GetBackgroundThicknesses().end(),BGDepths.begin());
+        CompareDepths(BGDepths,Model.GetZCoordinates());
+
         omp_lock_t lck;
         omp_init_lock(&lck);
         //we parallelize by frequency, this is relatively simple
@@ -361,13 +399,7 @@ namespace jiba
         //boost::filesystem::remove_all(emaname);
       }
 
-    inline bool CheckField(const std::vector<std::complex<double> > &Field, size_t nelem)
-      {
-        if (Field.size() != nelem)
-          throw jiba::FatalException(
-              "Number of read in elements in Field: " + jiba::stringify(Field.size())
-                  + " does not match expected: " + jiba::stringify(nelem));
-      }
+
 
     rvec X3DMTCalculator::LQDerivativeFreq(const X3DModel &Model, const rvec &Misfit,
         size_t freqindex)
