@@ -88,6 +88,8 @@ namespace jiba
 
         }
     private:
+      //The synthetic data from the last forward calculation
+      jiba::rvec SynthData;
       virtual void
       ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff);
       //! The implementation of the gradient calculation
@@ -124,10 +126,7 @@ namespace jiba
        */
       jiba::rvec GetSyntheticData() const
         {
-          jiba::rvec Synthetic(GetDataDifference());
-          Synthetic = ublas::element_prod(Synthetic, GetDataError());
-          Synthetic += ObservedData;
-          return Synthetic;
+          return SynthData;
         }
       //! Set a skeleton for the  model that contains all information about cell sizes, site coordinates etc.
       /*! During the inversion we only copy a vector of values, so we have to store the
@@ -200,7 +199,6 @@ namespace jiba
         //Copy the model vector into the object with the geometry information
         std::copy(Model.begin(), Model.end(), CoarseModel.SetData().origin());
 
-        jiba::rvec SynthData;
         //depending on whether we want to refine the inversion model
         //for the forward calculation or not we call the forward
         //calculation object with different models

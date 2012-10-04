@@ -200,7 +200,7 @@ namespace jiba
             ReadEMO((DirName / emoAname).string(), Ex1, Ey1, Hx1, Hy1);
             ReadEMO((DirName / emoBname).string(), Ex2, Ey2, Hx2, Hy2);
           }
-        const size_t nval = (nmodx*nmody * nmeas);
+        const size_t nval = (nmodx * nmody * nmeas);
         CheckField(Ex1, nval);
         CheckField(Ex2, nval);
         CheckField(Ey1, nval);
@@ -242,23 +242,25 @@ namespace jiba
         return result;
       }
 
-    void CompareDepths(const std::vector<double> &BGDepths,const jiba::ThreeDModelBase::t3DModelDim &ModelDepths)
-    {
-    	size_t mindex = 0;
-    	for (size_t i = 0; i < BGDepths.size(); ++i)
-    	{
-    		while (ModelDepths[mindex] < BGDepths[i] && mindex < ModelDepths.size())
-    		{
-    			++mindex;
-    		}
-    		if (mindex < ModelDepths.size() && ModelDepths[mindex] != BGDepths[i])
-    		{
-    			throw jiba::FatalException(
-    			              "Depth to background layer: " + jiba::stringify(BGDepths[i])
-    			                  + " does not match grid cell depth: " + jiba::stringify(ModelDepths[mindex]));
-    		}
-    	}
-    }
+    void CompareDepths(const std::vector<double> &BGDepths,
+        const jiba::ThreeDModelBase::t3DModelDim &ModelDepths)
+      {
+        size_t mindex = 0;
+        for (size_t i = 0; i < BGDepths.size(); ++i)
+          {
+            while (ModelDepths[mindex] < BGDepths[i] && mindex < ModelDepths.size())
+              {
+                ++mindex;
+              }
+            if (mindex < ModelDepths.size() && ModelDepths[mindex] != BGDepths[i])
+              {
+                throw jiba::FatalException(
+                    "Depth to background layer: " + jiba::stringify(BGDepths[i])
+                        + " does not match grid cell depth: "
+                        + jiba::stringify(ModelDepths[mindex]));
+              }
+          }
+      }
 
     rvec X3DMTCalculator::Calculate(const X3DModel &Model, size_t minfreqindex,
         size_t maxfreqindex)
@@ -279,9 +281,10 @@ namespace jiba
         Model.GetXCoordinates();
         Model.GetYCoordinates();
         Model.GetZCoordinates();
-        std::vector<double> BGDepths(Model.GetBackgroundThicknesses().size(),0.0);
-        std::partial_sum(Model.GetBackgroundThicknesses().begin(),Model.GetBackgroundThicknesses().end(),BGDepths.begin());
-        CompareDepths(BGDepths,Model.GetZCoordinates());
+        std::vector<double> BGDepths(Model.GetBackgroundThicknesses().size(), 0.0);
+        std::partial_sum(Model.GetBackgroundThicknesses().begin(),
+            Model.GetBackgroundThicknesses().end(), BGDepths.begin());
+        CompareDepths(BGDepths, Model.GetZCoordinates());
 
         omp_lock_t lck;
         omp_init_lock(&lck);
@@ -398,8 +401,6 @@ namespace jiba
           }
         //boost::filesystem::remove_all(emaname);
       }
-
-
 
     rvec X3DMTCalculator::LQDerivativeFreq(const X3DModel &Model, const rvec &Misfit,
         size_t freqindex)
