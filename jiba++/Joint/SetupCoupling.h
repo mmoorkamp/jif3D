@@ -59,6 +59,16 @@ namespace jiba
       double mindens;
       //! The maximum density in g/cm3
       double maxdens;
+      //! The a coefficient for the slowness-density transform
+      double density_a;
+      //! The b coefficient for the slowness-density transform
+      double density_b;
+      //! The a coefficient for the slowness-conductivity transform
+      double cond_a;
+      //! The b coefficient for the slowness-conductivity transform
+      double cond_b;
+      //! The c coefficient for the slowness-conductivity transform
+      double cond_c;
       void SetupCrossGradModel(jiba::rvec &InvModel,
           const jiba::ThreeDModelBase &ModelGeometry,
           const jiba::ThreeDSeismicModel &SeisMod,
