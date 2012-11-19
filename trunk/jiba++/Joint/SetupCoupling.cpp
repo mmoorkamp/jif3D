@@ -57,7 +57,17 @@ namespace jiba
             po::value(&mincond)->default_value(1e-4))("maxcond",
             po::value(&maxcond)->default_value(5))("mindens",
             po::value(&mindens)->default_value(0.5))("maxdens",
-            po::value(&maxdens)->default_value(4.0));
+            po::value(&maxdens)->default_value(4.0))("density_a",
+            po::value(&density_a)->default_value(5000),
+            "The slope of the velocity-density relationship")("density_b",
+            po::value(&density_b)->default_value(8500),
+            "The offset of the velocity-density relationship")("cond_a",
+            po::value(&cond_a)->default_value(2.31e-7),
+            "The quadratic term of the velocity-conductivity relationship")("cond_b",
+            po::value(&cond_b)->default_value(-5.79e-4),
+            "The linear term of the velocity-conductivity relationship")("cond_c",
+            po::value(&cond_c)->default_value(0.124),
+            "The constant term of the velocity-conductivity relationship");
 
         return desc;
       }
@@ -200,9 +210,10 @@ namespace jiba
                 TomoTransform = boost::shared_ptr<jiba::GeneralModelTransform>(
                     new jiba::TanhTransform(minslow, maxslow));
                 GravityTransform = boost::shared_ptr<jiba::GeneralModelTransform>(
-                    new jiba::DensityTransform(TomoTransform));
+                    new jiba::DensityTransform(TomoTransform, density_a, density_b));
                 MTTransform = boost::shared_ptr<jiba::GeneralModelTransform>(
-                    new jiba::ConductivityTransform(TomoTransform));
+                    new jiba::ConductivityTransform(TomoTransform, cond_a, cond_b,
+                        cond_c));
 
                 RegTransform = TomoTransform;
               }
@@ -549,7 +560,8 @@ namespace jiba
         //as we invert for slowness, the regularization also works on slowness
         if (SeisMod.GetNModelElements() != ngrid)
           {
-            throw jiba::FatalException("Size of seismic model does not match model geometry !");
+            throw jiba::FatalException(
+                "Size of seismic model does not match model geometry !");
           }
         InvModel.resize(ngrid);
         std::copy(SeisMod.GetSlownesses().origin(),
