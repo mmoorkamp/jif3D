@@ -229,6 +229,8 @@ namespace jiba
     private:
       //! A pointer to a transformation that gives slowness
       boost::shared_ptr<GeneralModelTransform> SlownessTransform;
+      double a;
+      double b;
       friend class boost::serialization::access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
@@ -236,34 +238,36 @@ namespace jiba
         {
           ar & boost::serialization::base_object<GeneralModelTransform>(*this);
           ar & SlownessTransform;
+          ar & a;
+          ar & b;
         }
       DensityTransform()
         {
         }
     public:
-      //! Transform the normalized model parameters back to physical parameters
+      //! Transform the normalized model parameters back to physical parameters, in this case from Slowness to Density
       virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
         {
           jiba::rvec Slowness(SlownessTransform->GeneralizedToPhysical(FullModel));
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
-              Output(i) = (1.0 / Slowness(i) + 8500.0) / 5000.0;
+              Output(i) = (1.0 / Slowness(i) + b) / a;
             }
           return Output;
         }
-      //! Transform the physical model parameters to generalized model parameters
+      //! Transform from Density to Slowness
       virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
         {
 
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
-              Output(i) = 1.0 / (5000.0 * FullModel(i) - 8500.0);
+              Output(i) = 1.0 / (a * FullModel(i) - b);
             }
           return SlownessTransform->PhysicalToGeneralized(Output);
         }
-      //! Transform the derivative with respect to the physical parameters to normalized parameters
+      //! Transform the derivative with respect to the Slowness to Density
       virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
           const jiba::rvec &Derivative) const
         {
@@ -272,7 +276,7 @@ namespace jiba
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
-              Output(i) = -1.0 / (Slowness(i) * Slowness(i)) / 5000.0 * SlowDeriv(i);
+              Output(i) = -1.0 / (Slowness(i) * Slowness(i)) / a * SlowDeriv(i);
             }
           return Output;
         }
@@ -281,10 +285,15 @@ namespace jiba
        * takes a pointer to a transformation object that it uses to
        * transform the generalized model parameters to slowness before
        * then transforming to density.
+       * We assume a functional relationship of the form \f$ \rho = (1/s +b)/a \f$,
+       * the coefficients are specified in the constructor.
        * @param SlowTrans A pointer to an object that gives slowness
+       * @param aval The slope a of the functional relationship
+       * @param bval The offset value (see equation above)
        */
-      DensityTransform(boost::shared_ptr<GeneralModelTransform> SlowTrans) :
-          SlownessTransform(SlowTrans)
+      DensityTransform(boost::shared_ptr<GeneralModelTransform> SlowTrans,
+          double aval = 5000, double bval = 8500) :
+          SlownessTransform(SlowTrans), a(aval), b(bval)
         {
         }
       virtual ~DensityTransform()
@@ -320,30 +329,30 @@ namespace jiba
           ar & SlownessTransform;
         }
     public:
-      //! Transform the normalized model parameters back to physical parameters
+      //! Transform Generalized parameters in terms of slowness to conductivity using a functional relationship
       virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
         {
           jiba::rvec Slowness(SlownessTransform->GeneralizedToPhysical(FullModel));
-          jiba::rvec Output(FullModel.size());
+          jiba::rvec Conductivity(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
-              Output(i) = std::exp(
+              Conductivity(i) = std::exp(
                   -(a / (Slowness(i) * Slowness(i)) + b / Slowness(i) + c));
             }
-          return Output;
+          return Conductivity;
         }
-      //! Transform the physical model parameters to generalized model parameters
+      //! Transform Conductivity to Slowness and then Generalized Parameters
       virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
         {
-
-          jiba::rvec Output(FullModel.size());
-          for (size_t i = 0; i < FullModel.size(); ++i)
+          size_t nvals = FullModel.size();
+          jiba::rvec Slowness(nvals);
+          for (size_t i = 0; i < nvals; ++i)
             {
               double vel = (-b + sqrt(b * b - 4.0 * a * (c + std::log(FullModel(i)))))
                   / (2.0 * a);
-              Output(i) = 1.0 / vel;
+              Slowness(i) = 1.0 / vel;
             }
-          return SlownessTransform->PhysicalToGeneralized(Output);
+          return SlownessTransform->PhysicalToGeneralized(Slowness);
         }
       //! Transform the derivative with respect to the physical parameters to normalized parameters
       virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
@@ -367,10 +376,16 @@ namespace jiba
        * transform the generalized model parameters to slowness before
        * then transforming to conductivity. In addition we can specify
        * the coefficients for the transformation.
+       * We assume a functional relationship of the form
+       * \f$ \rho = \exp( -a/v^2 + b/v +c) \f$.
        * @param SlowTrans A pointer to an object that gives slowness
+       * @param aval The coefficient for the quadratic term
+       * @param bval The coefficient for the linear term
+       * @param cval The offset in the exponential
        */
-      ConductivityTransform(boost::shared_ptr<GeneralModelTransform> SlowTrans) :
-          a(2.31e-7), b(-5.79e-4), c(0.124), SlownessTransform(SlowTrans)
+      ConductivityTransform(boost::shared_ptr<GeneralModelTransform> SlowTrans,
+          double aval = 2.31e-7, double bval = -5.79e-4, double cval = 0.124) :
+          a(aval), b(bval), c(cval), SlownessTransform(SlowTrans)
         {
         }
       virtual ~ConductivityTransform()
