@@ -40,7 +40,6 @@ namespace jiba
       boost::shared_ptr<jiba::GeneralModelTransform> CondTrans;
       //! The transformation between generalized model parameters and density including selecting the right range from the model vector
       boost::shared_ptr<jiba::GeneralModelTransform> DensTrans;
-      boost::shared_ptr<jiba::GeneralModelTransform> RegTrans;
       //! The transformation between generalized model parameters and slowness without selecting the right range from the model vector
       boost::shared_ptr<jiba::GeneralModelTransform> SlowCrossTrans;
       //! The transformation between generalized model parameters and conductivity without selecting the right range from the model vector
@@ -99,15 +98,13 @@ namespace jiba
        * @param TomoTransform The parameter transform for the seismic objective function
        * @param GravityTransform The parameter transform for the gravity objective function
        * @param MTTransform The parameter transform for the MT objective function
-       * @param RegTransform The parameter transform for the regularization
        * @param Wavelet Parametrize the inversion by a wavelet transform of the model parameters
        */
       void SetupTransforms(const po::variables_map &vm, ThreeDSeismicModel &StartModel,
           boost::shared_ptr<jiba::GeneralModelTransform> &TomoTransform,
           boost::shared_ptr<jiba::GeneralModelTransform> &GravityTransform,
           boost::shared_ptr<jiba::GeneralModelTransform> &MTTransform,
-          boost::shared_ptr<jiba::GeneralModelTransform> &RegTransform, bool Wavelet =
-              false);
+          bool Wavelet = false);
       //! Set the model vector for the inversion, its length and content depends on the coupling method
       /*! For the direct coupling joint inversion the model parameter vector only contains a slowness value
        * for each cell, while for the cross-gradient it contains slowness, density and conductivity. Also
