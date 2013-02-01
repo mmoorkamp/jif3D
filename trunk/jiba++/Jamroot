@@ -1,6 +1,7 @@
 project 
     : requirements <include>/usr/local/include <include>/usr/local/R-2.6.2/include 
         <include>/usr/local/cuda/include
+        <include>/usr/local/CUDA_SDK/C/common/inc
         <threading>multi 
         <define>BIND_FORTRAN_LOWERCASE_UNDERSCORE 
     	<variant>release:<define>NDEBUG
@@ -32,9 +33,11 @@ use-project /Inversion : Inversion ;
 use-project /Joint : Joint ;
 
 local BOOST_TEST_LOG_LEVEL = all ;
-lib boost_filesystem : : <name>boost_filesystem ;
-lib boost_system : : <name>boost_system ;
-lib boost_program_options : : <name>boost_program_options  ;
+lib boost_filesystem : : <name>boost_filesystem <search>/usr/local/lib  ;
+lib boost_system : : <name>boost_system <search>/usr/local/lib ;
+lib boost_program_options : : <name>boost_program_options  <search>/usr/local/lib ;
+lib boost_mpi : : <name>boost_mpi  <search>/usr/local/lib ;
+lib boost_serialization : : <name>boost_serialization  <search>/usr/local/lib ;
 lib lapack : : <name>lapack ;
 lib f77blas : : <name>f77blas ;
 lib cblas : : <name>cblas ;
