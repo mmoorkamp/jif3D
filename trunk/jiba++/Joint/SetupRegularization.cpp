@@ -5,6 +5,7 @@
 // Copyright   : 2010, mmoorkamp
 //============================================================================
 
+#include "../Global/convert.h"
 #include "../Regularization/GradientRegularization.h"
 #include "../Regularization/CurvatureRegularization.h"
 #include "../Regularization/MinDiffRegularization.h"
@@ -14,9 +15,8 @@
 namespace jiba
   {
 
-    void SetTearModel(const po::variables_map &vm,
-        const std::string &OptionName, const ThreeDModelBase &StartModel,
-        jiba::ThreeDSeismicModel &TearModel)
+    void SetTearModel(const po::variables_map &vm, const std::string &OptionName,
+        const ThreeDModelBase &StartModel, jiba::ThreeDSeismicModel &TearModel)
       {
         if (vm.count(OptionName))
           {
@@ -27,8 +27,7 @@ namespace jiba
         else
           {
             TearModel.SetCellSize(StartModel.GetXCellSizes()[0],
-                StartModel.GetXCellSizes().size(),
-                StartModel.GetYCellSizes().size(),
+                StartModel.GetXCellSizes().size(), StartModel.GetYCellSizes().size(),
                 StartModel.GetZCellSizes().size());
             std::fill_n(TearModel.SetSlownesses().origin(),
                 TearModel.GetSlownesses().num_elements(), 1.0);
@@ -57,20 +56,15 @@ namespace jiba
             "The weight for the regularization in y-direction")("zreg",
             po::value(&zweight)->default_value(1.0),
             "The weight for the regularization in z-direction")("curvreg",
-            "Use model curvature for regularization. If not set use gradient.")(
-            "mindiff",
+            "Use model curvature for regularization. If not set use gradient.")("mindiff",
             "Minize the model vector (or difference to starting model if substart is set")(
-            "tearmodx",
-            po::value<std::string>(),
+            "tearmodx", po::value<std::string>(),
             "Filename for a model containing information about tear zones in x-direction.")(
-            "tearmody",
-            po::value<std::string>(),
+            "tearmody", po::value<std::string>(),
             "Filename for a model containing information about tear zones in y-direction.")(
-            "tearmodz",
-            po::value<std::string>(),
+            "tearmodz", po::value<std::string>(),
             "Filename for a model containing information about tear zones in z-direction.")(
-            "beta",
-            po::value(&beta)->default_value(0.0),
+            "beta", po::value(&beta)->default_value(0.0),
             "The weight for the model parameter minimization in the regularization")(
             "substart", po::value(&substart)->default_value(false),
             "Substract the starting model when calculating the roughness");
@@ -80,7 +74,6 @@ namespace jiba
 
     boost::shared_ptr<jiba::MatOpRegularization> SetupRegularization::SetupObjective(
         const po::variables_map &vm, const ThreeDModelBase &StartModel,
-        boost::shared_ptr<jiba::GeneralModelTransform> Transform,
         const jiba::rvec &CovModVec)
       {
         //if we only want to use a minimum model, we do not
@@ -107,16 +100,16 @@ namespace jiba
         if (vm.count("curvreg"))
           {
             Regularization = boost::shared_ptr<jiba::MatOpRegularization>(
-                new jiba::CurvatureRegularization(StartModel, TearModX,
-                    TearModY, TearModZ, beta));
+                new jiba::CurvatureRegularization(StartModel, TearModX, TearModY,
+                    TearModZ, beta));
 
           }
         else
           {
 
             Regularization = boost::shared_ptr<jiba::MatOpRegularization>(
-                new jiba::GradientRegularization(StartModel, TearModX, TearModY,
-                    TearModZ, beta));
+                new jiba::GradientRegularization(StartModel, TearModX, TearModY, TearModZ,
+                    beta));
           }
         //We either pass an empty covariance vector then the regularization class
         //takes care of setting the covariance to 1
@@ -127,7 +120,12 @@ namespace jiba
             //vector has to have a length 3 times the length of the model vector
             //here we copy the covariances to the appropriate position
             const size_t ngrid = StartModel.GetNModelElements();
-            assert(CovModVec.size() == ngrid);
+            if (CovModVec.size() != ngrid)
+              {
+                throw jiba::FatalException(
+                    "Size of model covariance: " + jiba::stringify(CovModVec.size())
+                        + " does not match model size: " + jiba::stringify(ngrid));
+              }
             jiba::rvec Cov(ngrid * 3);
             ublas::subrange(Cov, 0, ngrid) = CovModVec;
             ublas::subrange(Cov, ngrid, 2 * ngrid) = CovModVec;

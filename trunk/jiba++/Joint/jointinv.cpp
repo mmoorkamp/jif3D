@@ -208,12 +208,12 @@ int main(int argc, char *argv[])
     //calculation. The exact type of transformation depends on the chosen coupling
     //and is assigned below
     boost::shared_ptr<jiba::GeneralModelTransform> TomoTransform, MTTransform,
-        GravityTransform, RegTransform;
+        GravityTransform;
     //coupling setup is responsible to set the appropriate transformation
     //as we have to use different ones depending on the chose coupling mechanism
     jiba::ThreeDSeismicModel StartModel;
     CouplingSetup.SetupTransforms(vm, StartModel, TomoTransform, GravityTransform,
-        MTTransform, RegTransform, WaveletParm);
+        MTTransform, WaveletParm);
 
     //read in the tomography model and setup the options that are applicable
     //for the seismic tomography part of the inversion
@@ -246,7 +246,7 @@ int main(int argc, char *argv[])
       }
     //now we setup the regularization
     boost::shared_ptr<jiba::MatOpRegularization> Regularization = RegSetup.SetupObjective(
-        vm, StartModel, RegTransform, CovModVec);
+        vm, StartModel, CovModVec);
 
     //the vector InvModel will hold the current inversion model
     //depending on the chosen coupling mechanism it will have different size

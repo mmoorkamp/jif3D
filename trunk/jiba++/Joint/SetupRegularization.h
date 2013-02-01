@@ -65,7 +65,6 @@ namespace jiba
        */
       boost::shared_ptr<jiba::MatOpRegularization> SetupObjective(
           const po::variables_map &vm, const ThreeDModelBase &StartModel,
-          boost::shared_ptr<jiba::GeneralModelTransform> Transform,
           const jiba::rvec &CovModVec);
       SetupRegularization();
       virtual ~SetupRegularization();

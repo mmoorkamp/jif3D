@@ -77,7 +77,7 @@ namespace jiba
         boost::shared_ptr<jiba::GeneralModelTransform> &TomoTransform,
         boost::shared_ptr<jiba::GeneralModelTransform> &GravityTransform,
         boost::shared_ptr<jiba::GeneralModelTransform> &MTTransform,
-        boost::shared_ptr<jiba::GeneralModelTransform> &RegTransform, bool Wavelet)
+        bool Wavelet)
       {
 
         //we need the geometry of the starting model to setup
@@ -196,7 +196,6 @@ namespace jiba
             TomoTransform = SlownessTransform;
             GravityTransform = DensityTransform;
             MTTransform = ConductivityTransform;
-            RegTransform = TomoTransform;
             SlowCrossTrans = SlownessCrossTransform;
             CondCrossTrans = ConductivityCrossTransform;
             DensCrossTrans = DensityCrossTransform;
@@ -214,8 +213,6 @@ namespace jiba
                 MTTransform = boost::shared_ptr<jiba::GeneralModelTransform>(
                     new jiba::ConductivityTransform(TomoTransform, cond_a, cond_b,
                         cond_c));
-
-                RegTransform = TomoTransform;
               }
             else
               {
@@ -240,21 +237,15 @@ namespace jiba
                     boost::shared_ptr<jiba::GeneralModelTransform>(
                         new jiba::TanhTransform(std::log(mincond), std::log(maxcond))));
 
-                RegTransform = boost::shared_ptr<jiba::ModelCopyTransform>(
-                    new jiba::ModelCopyTransform());
-
                 TomoTransform = SlownessTransform;
                 GravityTransform = DensityTransform;
                 MTTransform = ConductivityTransform;
-                RegTransform = TomoTransform;
               }
 
           }
         SlowTrans = TomoTransform;
         CondTrans = MTTransform;
         DensTrans = GravityTransform;
-        RegTrans = RegTransform;
-
       }
 
     void SetupCoupling::SetupCrossGradModel(jiba::rvec &InvModel,
@@ -579,7 +570,7 @@ namespace jiba
           {
             Regularization->SetReferenceModel(InvModel);
           }
-        Objective.AddObjective(Regularization, RegTrans, reglambda, "Reg");
+        Objective.AddObjective(Regularization, SlowTrans, reglambda, "Reg");
         InvModel = SlowTrans->PhysicalToGeneralized(InvModel);
       }
 
