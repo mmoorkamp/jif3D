@@ -248,7 +248,7 @@ namespace jiba
         size_t mindex = 0;
         for (size_t i = 0; i < BGDepths.size(); ++i)
           {
-            while (ModelDepths[mindex] < BGDepths[i] && mindex < ModelDepths.size())
+            while (mindex < ModelDepths.size() && ModelDepths[mindex] < BGDepths[i] )
               {
                 ++mindex;
               }
