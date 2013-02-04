@@ -26,6 +26,11 @@ namespace jiba
 
       boost::shared_ptr<GeneralModelTransform> SlowTransform;
     public:
+      //! We setup a clone function to have a virtual constructor and create polymorphic copies
+      virtual SlowCondTrans* clone() const
+        {
+          return new SlowCondTrans(*this);
+        }
       //! Transform the normalized model parameters back to physical parameters
       virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
         {
@@ -47,7 +52,8 @@ namespace jiba
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
-              Output(i) = (2.0 * c)/(-b + sqrt(b * b - 4.0 * c * (std::log(FullModel(i)) + a)));
+              Output(i) = (2.0 * c)
+                  / (-b + sqrt(b * b - 4.0 * c * (std::log(FullModel(i)) + a)));
             }
           return SlowTransform->PhysicalToGeneralized(Output);
         }
@@ -62,7 +68,7 @@ namespace jiba
             {
               using boost::math::pow;
               Output(i) = std::exp(-a - b / Slow(i) - c / pow<2>(Slow(i)))
-                  * (2.0 * c /pow<3>(Slow(i)) + b/Slow(i)) * SlowDeriv(i);
+                  * (2.0 * c / pow<3>(Slow(i)) + b / Slow(i)) * SlowDeriv(i);
             }
           return Output;
         }

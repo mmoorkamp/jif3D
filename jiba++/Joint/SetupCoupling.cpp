@@ -39,7 +39,10 @@ namespace jiba
           }
       }
 
-    SetupCoupling::SetupCoupling()
+
+    SetupCoupling::SetupCoupling() :
+        mincond(0.0), maxcond(0.0), minslow(0.0), maxslow(0.0), mindens(0.0), maxdens(
+            0.0), density_a(0.0), density_b(0.0), cond_a(0.0), cond_b(0.0), cond_c(0.0)
       {
       }
 
@@ -76,8 +79,7 @@ namespace jiba
         ThreeDSeismicModel &StartModel,
         boost::shared_ptr<jiba::GeneralModelTransform> &TomoTransform,
         boost::shared_ptr<jiba::GeneralModelTransform> &GravityTransform,
-        boost::shared_ptr<jiba::GeneralModelTransform> &MTTransform,
-        bool Wavelet)
+        boost::shared_ptr<jiba::GeneralModelTransform> &MTTransform, bool Wavelet)
       {
 
         //we need the geometry of the starting model to setup
@@ -117,88 +119,75 @@ namespace jiba
             //we declare a local variable, so that we can use all properties
             //of ChainedTransform before we assign it to the function parameter
             //of type GeneralTransform
+            //we start with tomography
             boost::shared_ptr<jiba::ChainedTransform> SlownessTransform(
                 new jiba::ChainedTransform);
-            boost::shared_ptr<jiba::ChainedTransform> SlownessCrossTransform(
-                new jiba::ChainedTransform);
-            SlownessTransform->AddTransform(
-                boost::shared_ptr<jiba::GeneralModelTransform>(
-                    new jiba::SectionTransform(0, ngrid)));
+
             if (Wavelet)
               {
-                SlownessTransform->AddTransform(WaveletTrans);
-                SlownessCrossTransform->AddTransform(WaveletTrans);
+                SlownessTransform->AppendTransform(WaveletTrans);
               }
-            SlownessTransform->AddTransform(
+            SlownessTransform->AppendTransform(
                 boost::shared_ptr<jiba::GeneralModelTransform>(
                     new jiba::TanhTransform(minslow, maxslow)));
-            SlownessCrossTransform->AddTransform(
+            SlowCrossTrans = boost::shared_ptr<jiba::GeneralModelTransform>(
+                SlownessTransform->clone());
+            SlownessTransform->PrependTransform(
                 boost::shared_ptr<jiba::GeneralModelTransform>(
-                    new jiba::TanhTransform(minslow, maxslow)));
-            SlownessTransform->AddTransform(
+                    new jiba::SectionTransform(0, ngrid)));
+            SlownessTransform->AppendTransform(
                 boost::shared_ptr<jiba::GeneralModelTransform>(
                     new jiba::ExpansionTransform(3 * ngrid, 0, ngrid)));
+
             //then we do density
             boost::shared_ptr<jiba::ChainedTransform> DensityTransform(
                 new jiba::ChainedTransform);
-            boost::shared_ptr<jiba::ChainedTransform> DensityCrossTransform(
-                new jiba::ChainedTransform);
-            DensityTransform->AddTransform(
-                boost::shared_ptr<jiba::GeneralModelTransform>(
-                    new jiba::SectionTransform(ngrid, 2 * ngrid)));
             if (Wavelet)
               {
-                DensityTransform->AddTransform(WaveletTrans);
-                DensityCrossTransform->AddTransform(WaveletTrans);
+                DensityTransform->AppendTransform(WaveletTrans);
               }
-            DensityTransform->AddTransform(
+            DensityTransform->AppendTransform(
                 boost::shared_ptr<jiba::GeneralModelTransform>(
                     new jiba::TanhTransform(mindens, maxdens)));
-            DensityCrossTransform->AddTransform(
+            DensCrossTrans = boost::shared_ptr<jiba::GeneralModelTransform>(
+                DensityTransform->clone());
+            DensityTransform->PrependTransform(
                 boost::shared_ptr<jiba::GeneralModelTransform>(
-                    new jiba::TanhTransform(mindens, maxdens)));
-
-            DensityTransform->AddTransform(
+                    new jiba::SectionTransform(ngrid, 2 * ngrid)));
+            DensityTransform->AppendTransform(
                 boost::shared_ptr<jiba::GeneralModelTransform>(
                     new jiba::ExpansionTransform(3 * ngrid, ngrid, 2 * ngrid)));
             //and then conductivity, conductivity has a LogTransform in addition
             //to reduce the range of inversion parameters
             boost::shared_ptr<jiba::ChainedTransform> ConductivityTransform(
                 new jiba::ChainedTransform);
-            boost::shared_ptr<jiba::ChainedTransform> ConductivityCrossTransform(
-                new jiba::ChainedTransform);
+
             jiba::rvec RefModel(ngrid);
             std::fill(RefModel.begin(), RefModel.end(), 1.0);
-            ConductivityTransform->AddTransform(
-                boost::shared_ptr<jiba::GeneralModelTransform>(
-                    new jiba::SectionTransform(2 * ngrid, 3 * ngrid)));
+
             if (Wavelet)
               {
-                ConductivityTransform->AddTransform(WaveletTrans);
-                ConductivityCrossTransform->AddTransform(WaveletTrans);
+                ConductivityTransform->AppendTransform(WaveletTrans);
               }
-            ConductivityTransform->AddTransform(
+            ConductivityTransform->AppendTransform(
                 boost::shared_ptr<jiba::GeneralModelTransform>(
                     new jiba::TanhTransform(std::log(mincond), std::log(maxcond))));
-            ConductivityCrossTransform->AddTransform(
-                boost::shared_ptr<jiba::GeneralModelTransform>(
-                    new jiba::TanhTransform(std::log(mincond), std::log(maxcond))));
-            ConductivityTransform->AddTransform(
+            ConductivityTransform->AppendTransform(
                 boost::shared_ptr<jiba::GeneralModelTransform>(
                     new jiba::LogTransform(RefModel)));
-            ConductivityCrossTransform->AddTransform(
+            CondCrossTrans = boost::shared_ptr<jiba::GeneralModelTransform>(
+                ConductivityTransform->clone());
+
+            ConductivityTransform->PrependTransform(
                 boost::shared_ptr<jiba::GeneralModelTransform>(
-                    new jiba::LogTransform(RefModel)));
-            ConductivityTransform->AddTransform(
+                    new jiba::SectionTransform(2 * ngrid, 3 * ngrid)));
+            ConductivityTransform->AppendTransform(
                 boost::shared_ptr<jiba::GeneralModelTransform>(
                     new jiba::ExpansionTransform(3 * ngrid, 2 * ngrid, 3 * ngrid)));
 
             TomoTransform = SlownessTransform;
             GravityTransform = DensityTransform;
             MTTransform = ConductivityTransform;
-            SlowCrossTrans = SlownessCrossTransform;
-            CondCrossTrans = ConductivityCrossTransform;
-            DensCrossTrans = DensityCrossTransform;
           }
         else
           {
@@ -218,24 +207,25 @@ namespace jiba
               {
                 boost::shared_ptr<jiba::ChainedTransform> SlownessTransform(
                     new jiba::ChainedTransform);
-                SlownessTransform->AddTransform(WaveletTrans);
-                SlownessTransform->AddTransform(
+                SlownessTransform->AppendTransform(WaveletTrans);
+                SlownessTransform->AppendTransform(
                     boost::shared_ptr<jiba::GeneralModelTransform>(
                         new jiba::TanhTransform(minslow, maxslow)));
 
                 boost::shared_ptr<jiba::ChainedTransform> DensityTransform(
                     new jiba::ChainedTransform);
-                DensityTransform->AddTransform(WaveletTrans);
-                DensityTransform->AddTransform(
+                DensityTransform->AppendTransform(WaveletTrans);
+                DensityTransform->AppendTransform(
                     boost::shared_ptr<jiba::GeneralModelTransform>(
-                        new jiba::TanhTransform(mindens, maxdens)));
+                        new jiba::DensityTransform(TomoTransform, density_a, density_b)));
 
                 boost::shared_ptr<jiba::ChainedTransform> ConductivityTransform(
                     new jiba::ChainedTransform);
-                ConductivityTransform->AddTransform(WaveletTrans);
-                ConductivityTransform->AddTransform(
+                ConductivityTransform->AppendTransform(WaveletTrans);
+                ConductivityTransform->AppendTransform(
                     boost::shared_ptr<jiba::GeneralModelTransform>(
-                        new jiba::TanhTransform(std::log(mincond), std::log(maxcond))));
+                        new jiba::ConductivityTransform(TomoTransform, cond_a, cond_b,
+                            cond_c)));
 
                 TomoTransform = SlownessTransform;
                 GravityTransform = DensityTransform;

@@ -37,6 +37,8 @@ namespace jiba
 
         }
     public:
+      //! We setup a clone function to have a virtual constructor and create polymorphic copies
+      virtual GeneralModelTransform* clone() const = 0;
       GeneralModelTransform()
         {
         }
@@ -85,6 +87,11 @@ namespace jiba
           ar & boost::serialization::base_object<GeneralModelTransform>(*this);
         }
     public:
+      //! We setup a clone function to have a virtual constructor and create polymorphic copies
+      virtual ModelCopyTransform* clone() const
+        {
+          return new ModelCopyTransform(*this);
+        }
       ModelCopyTransform()
         {
         }
