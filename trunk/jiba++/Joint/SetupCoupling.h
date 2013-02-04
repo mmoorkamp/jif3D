@@ -68,18 +68,21 @@ namespace jiba
       double cond_b;
       //! The c coefficient for the slowness-conductivity transform
       double cond_c;
+      //! Internal function to setup coupling and regularization when using the cross-gradient approach
       void SetupCrossGradModel(jiba::rvec &InvModel,
           const jiba::ThreeDModelBase &ModelGeometry,
           const jiba::ThreeDSeismicModel &SeisMod,
           const jiba::ThreeDGravityModel &GravMod, const jiba::ThreeDMTModel &MTMod,
           jiba::JointObjective &Objective,
           boost::shared_ptr<jiba::MatOpRegularization> Regularization, bool substart);
+      //! Internal function to setup coupling and regularization when using a fixed parameter relationship
       void SetupFixedCouplingModel(jiba::rvec &InvModel,
           const jiba::ThreeDModelBase &ModelGeometry,
           const jiba::ThreeDSeismicModel &SeisMod,
           const jiba::ThreeDGravityModel &GravMod, const jiba::ThreeDMTModel &MTMod,
           jiba::JointObjective &Objective,
           boost::shared_ptr<jiba::MatOpRegularization> Regularization, bool substart);
+      //! Internal function to setup coupling and regularization when using a parameter relationship designed for salt (unstable at the moment)
       void SetupSaltModel(jiba::rvec &InvModel,
           const jiba::ThreeDModelBase &ModelGeometry,
           const jiba::ThreeDSeismicModel &SeisMod,

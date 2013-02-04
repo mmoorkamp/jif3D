@@ -48,6 +48,11 @@ namespace jiba
           ar & Reference;
         }
     public:
+      //! We setup a clone function to have a virtual constructor and create polymorphic copies
+      virtual NormalizeTransform* clone() const
+        {
+          return new NormalizeTransform(*this);
+        }
       //! Transform the normalized model parameters back to physical parameters
       virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
         {
@@ -96,6 +101,11 @@ namespace jiba
           ar & Reference;
         }
     public:
+      //! We setup a clone function to have a virtual constructor and create polymorphic copies
+      virtual LogTransform* clone() const
+        {
+          return new LogTransform(*this);
+        }
       //! Transform the normalized model parameters back to physical parameters
       virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
         {
@@ -165,6 +175,11 @@ namespace jiba
           ar & max;
         }
     public:
+      //! We setup a clone function to have a virtual constructor and create polymorphic copies
+      virtual TanhTransform* clone() const
+        {
+          return new TanhTransform(*this);
+        }
       //! Transform the normalized model parameters back to physical parameters
       virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
         {
@@ -241,10 +256,16 @@ namespace jiba
           ar & a;
           ar & b;
         }
-      DensityTransform()
+      DensityTransform() :
+          a(0), b(0)
         {
         }
     public:
+      //! We setup a clone function to have a virtual constructor and create polymorphic copies
+      virtual DensityTransform* clone() const
+        {
+          return new DensityTransform(*this);
+        }
       //! Transform the normalized model parameters back to physical parameters, in this case from Slowness to Density
       virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
         {
@@ -291,8 +312,8 @@ namespace jiba
        * @param aval The slope a of the functional relationship
        * @param bval The offset value (see equation above)
        */
-      DensityTransform(boost::shared_ptr<GeneralModelTransform> SlowTrans,
-          double aval = 5000, double bval = 8500) :
+      DensityTransform(boost::shared_ptr<GeneralModelTransform> SlowTrans, double aval =
+          5000, double bval = 8500) :
           SlownessTransform(SlowTrans), a(aval), b(bval)
         {
         }
@@ -329,6 +350,11 @@ namespace jiba
           ar & SlownessTransform;
         }
     public:
+      //! We setup a clone function to have a virtual constructor and create polymorphic copies
+      virtual ConductivityTransform* clone() const
+        {
+          return new ConductivityTransform(*this);
+        }
       //! Transform Generalized parameters in terms of slowness to conductivity using a functional relationship
       virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
         {
@@ -416,6 +442,11 @@ namespace jiba
           ar & Transforms;
         }
     public:
+      //! We setup a clone function to have a virtual constructor and create polymorphic copies
+      virtual ChainedTransform* clone() const
+        {
+          return new ChainedTransform(*this);
+        }
       //! Transform the normalized model parameters back to physical parameters
       virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
         {
@@ -446,10 +477,15 @@ namespace jiba
             }
           return Output;
         }
-      //! Add a transform to the chain
-      void AddTransform(boost::shared_ptr<GeneralModelTransform> Trans)
+      //! Add a transform to the back of the chain
+      void AppendTransform(boost::shared_ptr<GeneralModelTransform> Trans)
         {
           Transforms.push_back(Trans);
+        }
+      //! Add a transform to the front of the chain
+      void PrependTransform(boost::shared_ptr<GeneralModelTransform> Trans)
+        {
+          Transforms.insert(Transforms.begin(), Trans);
         }
       ChainedTransform()
         {
@@ -485,11 +521,17 @@ namespace jiba
           ar & startindex;
           ar & endindex;
         }
-      SectionTransform()
+      SectionTransform() :
+          startindex(0), endindex(0)
         {
 
         }
     public:
+      //! We setup a clone function to have a virtual constructor and create polymorphic copies
+      virtual SectionTransform* clone() const
+        {
+          return new SectionTransform(*this);
+        }
       //! Return the segment specified by the indices in the constructor from the full vector
       virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
         {
@@ -547,11 +589,17 @@ namespace jiba
           ar & endindices;
           ar & Transforms;
         }
-      MultiSectionTransform()
+      MultiSectionTransform() :
+          length(0)
         {
 
         }
     public:
+      //! We setup a clone function to have a virtual constructor and create polymorphic copies
+      virtual MultiSectionTransform* clone() const
+        {
+          return new MultiSectionTransform(*this);
+        }
       virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
         {
           const size_t outlength = std::accumulate(endindices.begin(), endindices.end(),
@@ -581,12 +629,15 @@ namespace jiba
           jiba::rvec Result(length);
           Result.clear();
           const size_t nsections = startindices.size();
+          size_t currstart = 0;
           for (size_t i = 0; i < nsections; ++i)
             {
               ublas::subrange(Result, startindices[i], endindices[i]) =
                   Transforms[i]->Derivative(
                       ublas::subrange(FullModel, startindices[i], endindices[i]),
-                      ublas::subrange(Derivative, startindices[i], endindices[i]));
+                      ublas::subrange(Derivative, currstart,
+                          currstart + endindices[i] - startindices[i]));
+              currstart += endindices[i] - startindices[i];
             }
           return Result;
         }
@@ -629,6 +680,11 @@ namespace jiba
           ar & endindex;
         }
     public:
+      //! We setup a clone function to have a virtual constructor and create polymorphic copies
+      virtual ExpansionTransform* clone() const
+        {
+          return new ExpansionTransform(*this);
+        }
       virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
         {
           return FullModel;

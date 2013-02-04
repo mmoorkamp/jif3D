@@ -175,7 +175,8 @@ int main(int argc, char *argv[])
     bool havetomo = TomoSetup.SetupObjective(vm, GetObjective(), TomoTransform);
     bool havegrav = GravitySetup.SetupObjective(vm, GetObjective(), GravityTransform);
 
-    if (havetomo && havegrav && !EqualGridGeometry(StartModel, GravitySetup.GetScalModel()))
+    if (havetomo && havegrav
+        && !EqualGridGeometry(StartModel, GravitySetup.GetScalModel()))
       {
         throw jiba::FatalException(
             "Gravity model does not have the same geometry as starting model");
@@ -189,9 +190,10 @@ int main(int argc, char *argv[])
       }
 
     boost::shared_ptr<jiba::MatOpRegularization> Regularization = RegSetup.SetupObjective(
-        vm, StartModel, RegTransform, CovModVec);
-    CouplingSetup.SetupModelVector(vm, InvModel, StartModel, TomoSetup.GetModel(), GravitySetup.GetScalModel(),
-        MTSetup.GetModel(), GetObjective(), Regularization, RegSetup.GetSubStart());
+        vm, StartModel, CovModVec);
+    CouplingSetup.SetupModelVector(vm, InvModel, StartModel, TomoSetup.GetModel(),
+        GravitySetup.GetScalModel(), MTSetup.GetModel(), GetObjective(), Regularization,
+        RegSetup.GetSubStart());
 
     size_t maxiter = 1;
     std::cout << "Maximum iterations: ";

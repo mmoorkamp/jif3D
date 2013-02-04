@@ -5,7 +5,6 @@
 // Copyright   : 2011, mmoorkamp
 //============================================================================
 
-
 #ifndef WAVELETMODELTRANSFORM_H_
 #define WAVELETMODELTRANSFORM_H_
 
@@ -36,8 +35,8 @@ namespace jiba
       //! We need to transform the vector of model parameters to a 3D grid with correct geometry, this member is used to create this grid
       mutable boost::multi_array<double, 3> Grid;
       //! Copy the model vector to the 3D grid and perform either a forward or inverse wavelet transform, then copy back to a vector
-      jiba::rvec Transform(const jiba::rvec &Vector, boost::function1<void,
-          boost::multi_array<double, 3> > &WaveTrans) const
+      jiba::rvec Transform(const jiba::rvec &Vector,
+          boost::function1<void, boost::multi_array<double, 3> > &WaveTrans) const
         {
           if (Vector.size() > Grid.num_elements())
             throw FatalException(
@@ -68,6 +67,10 @@ namespace jiba
         }
 
     public:
+      virtual WaveletModelTransform* clone() const
+        {
+          return new WaveletModelTransform(*this);
+        }
       //! Transform generalized model parameters (wavelet coefficients) to physical parameters
       virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
         {
@@ -90,7 +93,7 @@ namespace jiba
         }
       //! When we construct the model transform, we specify the size of the grid (each size needs to be a power of two)
       WaveletModelTransform(const size_t nx, const size_t ny, const size_t nz) :
-        xsize(nx), ysize(ny), zsize(nz)
+          xsize(nx), ysize(ny), zsize(nz)
         {
           if (!IsPowerOfTwo(nx))
             throw jiba::FatalException(
