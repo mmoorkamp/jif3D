@@ -85,10 +85,10 @@ int main(int argc, char *argv[])
     std::fill(RefModel.begin(), RefModel.end(), 1.0);
     //because the tanh transform is used inside a logarithmic transform
     //we need to take the natural logarithm of the actual minimum and maximum
-    ConductivityTransform->AddTransform(
+    ConductivityTransform->AppendTransform(
         boost::shared_ptr<jiba::GeneralModelTransform>(
             new jiba::TanhTransform(std::log(mincond), std::log(maxcond))));
-    ConductivityTransform->AddTransform(
+    ConductivityTransform->AppendTransform(
         boost::shared_ptr<jiba::GeneralModelTransform>(new jiba::LogTransform(RefModel)));
     // ConductivityTransform->AddTransform(
     //    boost::shared_ptr<jiba::GeneralModelTransform>(new jiba::ModelCopyTransform));
