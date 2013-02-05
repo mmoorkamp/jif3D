@@ -156,7 +156,8 @@ namespace jiba
      * \f$ m^{\star} =  \mbox{atanh} \left(2.0 * \frac{m - m_{min}} {m_{max} - m_{min}} \right) \f$ between the generalized
      * model parameters \f$ m \f$ and the generalized model parameters \f$ m^{\star} \f$. The generalized model
      * parameters can then vary over the whole range, while the physical model parameters will always been between
-     * the two bounds.
+     * the two bounds. Note that with this transform the maximum and minimum values will be mapped to infinity
+     * so in practice \f$ m_min < m < m_max \f$.
      */
     class TanhTransform: public jiba::GeneralModelTransform
       {
@@ -235,7 +236,8 @@ namespace jiba
     //! Transform generalized model parameters for slowness to density
     /*! This transformation class can be used to transform generalized
      * model parameters for slowness to density using a linear
-     * relationship between velocity and density. This type of transformation
+     * relationship between velocity and density
+     * \f$ \rho = (1/s + b)/a \f$. This type of transformation
      * is motivated by the common velocity-density relationships
      * used in inversion problems and also observed for the Faeroe data.
      */
@@ -244,7 +246,9 @@ namespace jiba
     private:
       //! A pointer to a transformation that gives slowness
       boost::shared_ptr<GeneralModelTransform> SlownessTransform;
+      //! The slope for the linear relationship
       double a;
+      //! b/a is the abscissa of the linear relationship
       double b;
       friend class boost::serialization::access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
@@ -322,11 +326,15 @@ namespace jiba
         }
       };
 
-//! Transform generalized model parameters to conductivity
+    //! Transform generalized model parameters to conductivity
     /*! Similarly to DensityTransform, this class transforms
      * generalized model parameters to conductivity taking an
      * intermediate step through slowness. This is motivated
      * by the parametrization used in the SINDRI project.
+     * The equation for the transform is
+     * \f$ \sigma = \exp( -a/s^2 - b/s -c), \f$
+     * where s is slowness and the coefficient a,b,c can be specified
+     * in the constructor.
      */
     class ConductivityTransform: public jiba::GeneralModelTransform
       {
@@ -496,80 +504,16 @@ namespace jiba
         }
       };
 
-    namespace ublas = boost::numeric::ublas;
-    //! This transform takes a section of the model vector that can be specified in the constructor
-    /*! For cross-gradient type joint inversion the inversion model vector consists of a number
-     * of segments of equal size, that correspond to one method each. To calculate the misfit
-     * and gradient for one of those segments, we have to extract the appropriate range
-     * from the inversion model vector using this transform. This transform extracts
-     * a range that is continuous in memory and can be specified by an index for the first element
-     * and one index for the last element.
-     */
-    class SectionTransform: public jiba::GeneralModelTransform
-      {
-    private:
-      //! The index of the first element to copy
-      size_t startindex;
-      //! The index of the last element to copy
-      size_t endindex;
-      friend class boost::serialization::access;
-      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
-      template<class Archive>
-      void serialize(Archive & ar, const unsigned int version)
-        {
-          ar & boost::serialization::base_object<GeneralModelTransform>(*this);
-          ar & startindex;
-          ar & endindex;
-        }
-      SectionTransform() :
-          startindex(0), endindex(0)
-        {
-
-        }
-    public:
-      //! We setup a clone function to have a virtual constructor and create polymorphic copies
-      virtual SectionTransform* clone() const
-        {
-          return new SectionTransform(*this);
-        }
-      //! Return the segment specified by the indices in the constructor from the full vector
-      virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
-        {
-          return ublas::subrange(FullModel, startindex, endindex);
-        }
-      //! The inverse transformation just returns the input vector
-      virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
-        {
-          return FullModel;
-        }
-      //! The transformation of the derivative simply returns the derivative passed into the function
-      virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
-          const jiba::rvec &Derivative) const
-        {
-          return Derivative;
-        }
-      //! The constructor tales the specifications for the range
-      /*! We have to specify the length of the complete model vector,
-       * the startindex and the endindex.
-       * @param start The index of the first element of the section we want to extract
-       * @param end  The index of the successor of the last element (as in typical c/c++ loops)
-       */
-      SectionTransform(size_t start, size_t end) :
-          startindex(start), endindex(end)
-        {
-          if (startindex >= endindex)
-            throw jiba::FatalException("Startindex is greater than Endindex !");
-        }
-      virtual ~SectionTransform()
-        {
-
-        }
-      };
 
     //! For the cross-gradient we sometimes have to extract to sections from the model vector that are not continuous in memory
-    /*! For cases were we want to extract two sections that are not continuous in memory, we cannot simply piece a transform
-     * from two different SectionTransform objects. We therefore have a similar class to extract two sections, each of which
-     * is continuous in memory.
+    /*! For cases were we want to extract several sections from the generalized model parameters
+     * that are not continuous in memory, we cannot simply piece a transform
+     * from two different SectionTransform objects. For example for the cross-gradient between seismic and MT
+     * we currently store the model in the order slowness, density, conductivity. So we have to extract the
+     * first n model parameters and the last n model parameters and form a vector of length 2n that
+     * is fed to the cross-gradient function. This class generalizes this problem to an arbitrary number
+     * of sections. In principle each section can have a different length n1, n2, ... and the resulting
+     * transformed vector will have length n1+n2+...
      */
     class MultiSectionTransform: public jiba::GeneralModelTransform
       {
@@ -595,6 +539,7 @@ namespace jiba
 
         }
     public:
+
       //! We setup a clone function to have a virtual constructor and create polymorphic copies
       virtual MultiSectionTransform* clone() const
         {
@@ -602,40 +547,47 @@ namespace jiba
         }
       virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
         {
+          using boost::numeric::ublas::subrange;
+    	  //we calculate the total length of the transformed vector from
+    	  //the length of each section
           const size_t outlength = std::accumulate(endindices.begin(), endindices.end(),
               0) - std::accumulate(startindices.begin(), startindices.end(), 0);
           jiba::rvec Result(outlength);
 
           const size_t nsections = startindices.size();
+          //the result will be continuous in memory and always
+          //start at 0, each section will just follow after the other
           size_t resultstartindex = 0;
           for (size_t i = 0; i < nsections; ++i)
             {
               const size_t resultendindex = resultstartindex + endindices[i]
                   - startindices[i];
-              ublas::subrange(Result, resultstartindex, resultendindex) =
+              subrange(Result, resultstartindex, resultendindex) =
                   Transforms[i]->GeneralizedToPhysical(
-                      ublas::subrange(FullModel, startindices[i], endindices[i]));
+                      subrange(FullModel, startindices[i], endindices[i]));
               resultstartindex = resultendindex;
             }
           return Result;
         }
       virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
         {
+    	  // !! THIS NEEDS TO BE CHECKED
           return FullModel;
         }
       virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
           const jiba::rvec &Derivative) const
         {
+          using boost::numeric::ublas::subrange;
           jiba::rvec Result(length);
           Result.clear();
           const size_t nsections = startindices.size();
           size_t currstart = 0;
           for (size_t i = 0; i < nsections; ++i)
             {
-              ublas::subrange(Result, startindices[i], endindices[i]) =
+              subrange(Result, startindices[i], endindices[i]) =
                   Transforms[i]->Derivative(
-                      ublas::subrange(FullModel, startindices[i], endindices[i]),
-                      ublas::subrange(Derivative, currstart,
+                      subrange(FullModel, startindices[i], endindices[i]),
+                      subrange(Derivative, currstart,
                           currstart + endindices[i] - startindices[i]));
               currstart += endindices[i] - startindices[i];
             }
@@ -653,65 +605,19 @@ namespace jiba
         {
 
         }
+      MultiSectionTransform(size_t l, size_t startindex, size_t endindex,
+              boost::shared_ptr<GeneralModelTransform> Trans) :
+               length(l)
+      {
+    	  AddSection(startindex,endindex,Trans);
+      }
       virtual ~MultiSectionTransform()
         {
 
         }
       };
 
-    //! When we chain several transforms and the first one is a SectionTransform, we have to "blow up" the derivative vector at the end
-    /*! T
-     *
-     */
-    class ExpansionTransform: public jiba::GeneralModelTransform
-      {
-    private:
-      size_t length;
-      size_t startindex;
-      size_t endindex;
-      friend class boost::serialization::access;
-      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
-      template<class Archive>
-      void serialize(Archive & ar, const unsigned int version)
-        {
-          ar & boost::serialization::base_object<GeneralModelTransform>(*this);
-          ar & length;
-          ar & startindex;
-          ar & endindex;
-        }
-    public:
-      //! We setup a clone function to have a virtual constructor and create polymorphic copies
-      virtual ExpansionTransform* clone() const
-        {
-          return new ExpansionTransform(*this);
-        }
-      virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
-        {
-          return FullModel;
-        }
-      virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
-        {
-          return FullModel;
-        }
-      virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
-          const jiba::rvec &Derivative) const
-        {
-          jiba::rvec Result(length);
-          Result.clear();
-          ublas::subrange(Result, startindex, endindex) = Derivative;
-          return Result;
-        }
-      ExpansionTransform(size_t l, size_t start, size_t end) :
-          length(l), startindex(start), endindex(end)
-        {
-          if (startindex >= endindex)
-            throw jiba::FatalException("Startindex is greater than Endindex !");
-        }
-      virtual ~ExpansionTransform()
-        {
 
-        }
-      };
   /* @} */
   }
 #endif /* MODELTRANSFORMS_H_ */

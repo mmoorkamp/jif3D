@@ -132,12 +132,8 @@ namespace jiba
                     new jiba::TanhTransform(minslow, maxslow)));
             SlowCrossTrans = boost::shared_ptr<jiba::GeneralModelTransform>(
                 SlownessTransform->clone());
-            SlownessTransform->PrependTransform(
-                boost::shared_ptr<jiba::GeneralModelTransform>(
-                    new jiba::SectionTransform(0, ngrid)));
-            SlownessTransform->AppendTransform(
-                boost::shared_ptr<jiba::GeneralModelTransform>(
-                    new jiba::ExpansionTransform(3 * ngrid, 0, ngrid)));
+            TomoTransform = boost::shared_ptr<jiba::GeneralModelTransform>(new jiba::MultiSectionTransform(3*ngrid,0,ngrid,SlownessTransform));
+
 
             //then we do density
             boost::shared_ptr<jiba::ChainedTransform> DensityTransform(
@@ -151,12 +147,8 @@ namespace jiba
                     new jiba::TanhTransform(mindens, maxdens)));
             DensCrossTrans = boost::shared_ptr<jiba::GeneralModelTransform>(
                 DensityTransform->clone());
-            DensityTransform->PrependTransform(
-                boost::shared_ptr<jiba::GeneralModelTransform>(
-                    new jiba::SectionTransform(ngrid, 2 * ngrid)));
-            DensityTransform->AppendTransform(
-                boost::shared_ptr<jiba::GeneralModelTransform>(
-                    new jiba::ExpansionTransform(3 * ngrid, ngrid, 2 * ngrid)));
+            GravityTransform = boost::shared_ptr<jiba::GeneralModelTransform>(new jiba::MultiSectionTransform(3*ngrid,ngrid,2*ngrid,DensityTransform));
+
             //and then conductivity, conductivity has a LogTransform in addition
             //to reduce the range of inversion parameters
             boost::shared_ptr<jiba::ChainedTransform> ConductivityTransform(
@@ -177,17 +169,7 @@ namespace jiba
                     new jiba::LogTransform(RefModel)));
             CondCrossTrans = boost::shared_ptr<jiba::GeneralModelTransform>(
                 ConductivityTransform->clone());
-
-            ConductivityTransform->PrependTransform(
-                boost::shared_ptr<jiba::GeneralModelTransform>(
-                    new jiba::SectionTransform(2 * ngrid, 3 * ngrid)));
-            ConductivityTransform->AppendTransform(
-                boost::shared_ptr<jiba::GeneralModelTransform>(
-                    new jiba::ExpansionTransform(3 * ngrid, 2 * ngrid, 3 * ngrid)));
-
-            TomoTransform = SlownessTransform;
-            GravityTransform = DensityTransform;
-            MTTransform = ConductivityTransform;
+            MTTransform = boost::shared_ptr<jiba::GeneralModelTransform>(new jiba::MultiSectionTransform(3*ngrid,2*ngrid,3*ngrid,ConductivityTransform));
           }
         else
           {
