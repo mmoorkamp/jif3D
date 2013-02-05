@@ -20,6 +20,7 @@
 #include "CurvatureRegularization.h"
 #include "MinimumSupport.h"
 #include "CrossGradient.h"
+#include "DotStructureConstraint.h"
 #include <boost/test/floating_point_comparison.hpp>
 
 BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
@@ -95,32 +96,34 @@ BOOST_AUTO_TEST_CASE (gradreg_test)
 	CheckGradient(Regularization,PertModel);
 }
 
-BOOST_AUTO_TEST_CASE (minsupp_test)
-{
-	srand(time(NULL));
-	jiba::ThreeDGravityModel GravModel;
-	const size_t nx = 5;
-	const size_t ny = 4;
-	const size_t nz = 3;
-	GravModel.SetDensities().resize(boost::extents[nx][ny][nz]);
-	GravModel.SetXCellSizes().resize(boost::extents[nx]);
-	GravModel.SetYCellSizes().resize(boost::extents[ny]);
-	GravModel.SetZCellSizes().resize(boost::extents[nz]);
+/*
+ BOOST_AUTO_TEST_CASE (minsupp_test)
+ {
+ srand(time(NULL));
+ jiba::ThreeDGravityModel GravModel;
+ const size_t nx = 5;
+ const size_t ny = 4;
+ const size_t nz = 3;
+ GravModel.SetDensities().resize(boost::extents[nx][ny][nz]);
+ GravModel.SetXCellSizes().resize(boost::extents[nx]);
+ GravModel.SetYCellSizes().resize(boost::extents[ny]);
+ GravModel.SetZCellSizes().resize(boost::extents[nz]);
 
-	const size_t msize = nx*ny*nz;
-	jiba::rvec StartModel(msize), PertModel(msize);
-	std::generate(StartModel.begin(),StartModel.end(),rand);
-	std::generate(PertModel.begin(),PertModel.end(),rand);
+ const size_t msize = nx*ny*nz;
+ jiba::rvec StartModel(msize), PertModel(msize);
+ std::generate(StartModel.begin(),StartModel.end(),rand);
+ std::generate(PertModel.begin(),PertModel.end(),rand);
 
-	boost::shared_ptr<jiba::MatOpRegularization> Regularization(new jiba::GradientRegularization(GravModel));
-	Regularization->SetReferenceModel(StartModel);
-	double beta = std::accumulate(StartModel.begin(), StartModel.end(),0.0)/StartModel.size();
-	jiba::MinimumSupport MinSupp(Regularization,beta);
+ boost::shared_ptr<jiba::MatOpRegularization> Regularization(new jiba::GradientRegularization(GravModel));
+ Regularization->SetReferenceModel(StartModel);
+ double beta = std::accumulate(StartModel.begin(), StartModel.end(),0.0)/StartModel.size();
+ jiba::MinimumSupport MinSupp(Regularization,beta);
 
-	double Misfit = MinSupp.CalcMisfit(PertModel);
+ double Misfit = MinSupp.CalcMisfit(PertModel);
 
-	CheckGradient(MinSupp,PertModel);
-}
+ CheckGradient(MinSupp,PertModel);
+ }
+ */
 
 //this needs to be extended and refined
 BOOST_AUTO_TEST_CASE (curvreg_test)
@@ -262,6 +265,40 @@ BOOST_AUTO_TEST_CASE (crossgrad_test)
 	BOOST_CHECK(zero < 1e-10);
 	Regularization.CalcMisfit(PertModel);
 	CheckGradient(Regularization,PertModel);
+}
+
+BOOST_AUTO_TEST_CASE (dotgrad_test)
+{
+	jiba::ThreeDGravityModel GravModel;
+	GravModel.SetDensities().resize(boost::extents[3][3][3]);
+	srand48(time(NULL));
+	const int msize = GravModel.GetDensities().num_elements();
+	jiba::rvec PertModel(msize *2);
+	for (int i = 0; i < msize; ++i)
+	{
+		PertModel(i) = i + 1;
+		PertModel(i + msize) = 1.0 + double ( i %2 == 0) * (i+1);
+	}
+
+	jiba::CrossGradient CrossReg(GravModel);
+	jiba::DotStructureConstraint DotReg(GravModel);
+	//if the two models are scaled versions of each other
+	//the cross-gradient should be zero
+	jiba::rvec ZeroModel(msize*2);
+	for (int i = 0; i < msize; ++i)
+	{
+		ZeroModel(i) = drand48();
+		ZeroModel(i + msize) = 3.2 * ZeroModel(i);
+	}
+	double zero = DotReg.CalcMisfit(ZeroModel);
+	//practically it is very small
+	BOOST_CHECK(zero < 1e-10);
+
+	double cross = CrossReg.CalcMisfit(PertModel);
+	double dot = DotReg.CalcMisfit(PertModel);
+	BOOST_CHECK_CLOSE(cross,dot,0.0001);
+	DotReg.CalcMisfit(PertModel);
+	CheckGradient(DotReg,PertModel);
 }
 
 BOOST_AUTO_TEST_CASE (gradjoint_test)
