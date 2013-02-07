@@ -76,8 +76,13 @@ namespace jiba
 		for (size_t i = 0; i < halfmod; ++i)
 		{
 			Gradient(i) =
-					(FirstGradient.GetXGrad()(i) + FirstGradient.GetYGrad()(i)
-							+ FirstGradient.GetZGrad()(i))
+					(FirstGradient.GetXGrad()(i)
+							* FirstGradient.GetDataDifference()(i)
+							+ FirstGradient.GetYGrad()(i)
+									* FirstGradient.GetDataDifference()(
+											i + halfmod)
+							+ FirstGradient.GetZGrad()(i)
+							* FirstGradient.GetDataDifference()(i + nmod))
 							* (bm::pow<2>(SecondGradient.GetDataDifference()(i))
 									+ bm::pow<2>(
 											SecondGradient.GetDataDifference()(
@@ -85,18 +90,16 @@ namespace jiba
 									+ bm::pow<2>(
 											SecondGradient.GetDataDifference()(
 													i + nmod)))
-							- 2
-									* (FirstGradient.GetDataDifference()(i)
+							- (FirstGradient.GetDataDifference()(i)
+									* SecondGradient.GetDataDifference()(i)
+									+ FirstGradient.GetDataDifference()(
+											i + halfmod)
 											* SecondGradient.GetDataDifference()(
-													i)
-											+ FirstGradient.GetDataDifference()(
 													i + halfmod)
-													* SecondGradient.GetDataDifference()(
-															i + halfmod)
-											+ FirstGradient.GetDataDifference()(
-													i + nmod)
-													* SecondGradient.GetDataDifference()(
-															i + nmod))
+									+ FirstGradient.GetDataDifference()(
+											i + nmod)
+											* SecondGradient.GetDataDifference()(
+													i + nmod))
 
 									* (FirstGradient.GetXGrad()(i)
 											* SecondGradient.GetDataDifference()(
@@ -109,8 +112,14 @@ namespace jiba
 															i + nmod));
 
 			Gradient(i + halfmod) =
-					(SecondGradient.GetXGrad()(i) + SecondGradient.GetYGrad()(i)
-							+ SecondGradient.GetZGrad()(i))
+					(SecondGradient.GetXGrad()(i)
+							* SecondGradient.GetDataDifference()(i)
+							+ SecondGradient.GetYGrad()(i)
+									* SecondGradient.GetDataDifference()(
+											i + halfmod)
+							+ SecondGradient.GetZGrad()(i)
+									* SecondGradient.GetDataDifference()(
+											i + nmod))
 							* (bm::pow<2>(FirstGradient.GetDataDifference()(i))
 									+ bm::pow<2>(
 											FirstGradient.GetDataDifference()(
@@ -118,18 +127,16 @@ namespace jiba
 									+ bm::pow<2>(
 											FirstGradient.GetDataDifference()(
 													i + nmod)))
-							- 2
-									* (SecondGradient.GetDataDifference()(i)
+							- (SecondGradient.GetDataDifference()(i)
+									* FirstGradient.GetDataDifference()(i)
+									+ SecondGradient.GetDataDifference()(
+											i + halfmod)
 											* FirstGradient.GetDataDifference()(
-													i)
-											+ SecondGradient.GetDataDifference()(
 													i + halfmod)
-													* FirstGradient.GetDataDifference()(
-															i + halfmod)
-											+ SecondGradient.GetDataDifference()(
-													i + nmod)
-													* FirstGradient.GetDataDifference()(
-															i + nmod))
+									+ SecondGradient.GetDataDifference()(
+											i + nmod)
+											* FirstGradient.GetDataDifference()(
+													i + nmod))
 
 									* (SecondGradient.GetXGrad()(i)
 											* FirstGradient.GetDataDifference()(
@@ -141,7 +148,7 @@ namespace jiba
 													* FirstGradient.GetDataDifference()(
 															i + nmod));
 		}
-		return Gradient;
+		return 2.0 * Gradient;
 	}
 
 	DotStructureConstraint::~DotStructureConstraint()

@@ -276,8 +276,8 @@ BOOST_AUTO_TEST_CASE (dotgrad_test)
 	jiba::rvec PertModel(msize *2);
 	for (int i = 0; i < msize; ++i)
 	{
-		PertModel(i) = i + 1;
-		PertModel(i + msize) = 1.0 + double ( i %2 == 0) * (i+1);
+		PertModel(i) = drand48();
+		PertModel(i + msize) = drand48();
 	}
 
 	jiba::CrossGradient CrossReg(GravModel);
