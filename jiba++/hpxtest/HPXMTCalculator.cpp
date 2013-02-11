@@ -12,6 +12,8 @@
 #include <map>
 #include <hpx/include/lcos.hpp>
 #include <hpx/include/iostreams.hpp>
+#include <hpx/include/actions.hpp>
+#include <hpx/include/util.hpp>
 #include <boost/assign/list_of.hpp> // for 'map_list_of()'
 #include <boost/multi_array.hpp>
 #include <boost/filesystem/operations.hpp>
@@ -27,6 +29,10 @@
 #include "../MT/MTEquations.h"
 
 namespace fs = boost::filesystem;
+
+jiba::rvec CalculateFrequency(const jiba::X3DModel &Model, size_t freqindex, std::string TempDirName);
+
+HPX_DEFINE_PLAIN_ACTION(CalculateFrequency, CalculateFrequency_action);
 
 namespace jiba
   {
@@ -607,23 +613,33 @@ jiba::rvec CalculateFrequency(const jiba::X3DModel &Model, size_t freqindex,
             Model.GetBackgroundThicknesses());
       }
     //run x3d in parallel
-    jiba::RunX3D(RootName.string());
-    std::vector<std::complex<double> > Ex1, Ex2, Ey1, Ey2, Hx1, Hx2, Hy1, Hy2;
-    std::complex<double> Zxx, Zxy, Zyx, Zyy;
-    //read in the electric and magnetic field at the observe sites
-      {
-        jiba::ReadEMO((DirName / jiba::emoAname).string(), Ex1, Ey1, Hx1, Hy1);
-        jiba::ReadEMO((DirName / jiba::emoBname).string(), Ex2, Ey2, Hx2, Hy2);
-      }
+    //jiba::RunX3D(RootName.string());
     const size_t nval = (nmodx * nmody * nmeas);
-    jiba::CheckField(Ex1, nval);
-    jiba::CheckField(Ex2, nval);
-    jiba::CheckField(Ey1, nval);
-    jiba::CheckField(Ey2, nval);
-    jiba::CheckField(Hx1, nval);
-    jiba::CheckField(Hx2, nval);
-    jiba::CheckField(Hy1, nval);
-    jiba::CheckField(Hy2, nval);
+    std::vector<std::complex<double> > Ex1(nval), Ex2(nval), Ey1(nval), Ey2(nval), Hx1(
+        nval), Hx2(nval), Hy1(nval), Hy2(nval);
+    std::fill_n(Ex1.begin(), nval, 1.0);
+    std::fill_n(Ex2.begin(), nval, 2.0);
+    std::fill_n(Ey1.begin(), nval, 3.0);
+    std::fill_n(Ey2.begin(), nval, 4.0);
+    std::fill_n(Hx1.begin(), nval, 5.0);
+    std::fill_n(Hx2.begin(), nval, 6.0);
+    std::fill_n(Hy1.begin(), nval, 7.0);
+    std::fill_n(Hy2.begin(), nval, 8.0);
+    std::complex<double> Zxx, Zxy, Zyx, Zyy;
+    /*    //read in the electric and magnetic field at the observe sites
+     {
+     jiba::ReadEMO((DirName / jiba::emoAname).string(), Ex1, Ey1, Hx1, Hy1);
+     jiba::ReadEMO((DirName / jiba::emoBname).string(), Ex2, Ey2, Hx2, Hy2);
+     }
+
+     jiba::CheckField(Ex1, nval);
+     jiba::CheckField(Ex2, nval);
+     jiba::CheckField(Ey1, nval);
+     jiba::CheckField(Ey2, nval);
+     jiba::CheckField(Hx1, nval);
+     jiba::CheckField(Hx2, nval);
+     jiba::CheckField(Hy1, nval);
+     jiba::CheckField(Hy2, nval);*/
     //calculate impedances from the field spectra for all measurement sites
     for (size_t j = 0; j < nmeas; ++j)
       {

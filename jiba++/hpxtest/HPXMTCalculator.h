@@ -11,14 +11,10 @@
 #include <limits>
 #include <boost/filesystem.hpp>
 #include <boost/serialization/serialization.hpp>
-#include "../MT/MT3DCalculator.h"
 #include "../MT/X3DModel.h"
-#include <hpx/include/actions.hpp>
-#include <hpx/include/util.hpp>
+#include "../Global/VecMat.h"
 
-jiba::rvec CalculateFrequency(const jiba::X3DModel &Model, size_t freqindex, std::string TempDirName);
 
-HPX_DEFINE_PLAIN_ACTION(CalculateFrequency, CalculateFrequency_action);
 
 namespace jiba
   {
@@ -55,7 +51,6 @@ namespace jiba
       void CleanUp();
       //! The directory to store all temporary files
       boost::filesystem::path TempDir;
-      //rvec CalculateFrequency(const X3DModel &Model, size_t freqindex);
       rvec LQDerivativeFreq(const X3DModel &Model, const rvec &Misfit, size_t freqindex);
       friend class boost::serialization::access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
