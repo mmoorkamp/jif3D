@@ -34,11 +34,12 @@ namespace jiba
           throw jiba::FatalException(
               "Specified depth: " + jiba::stringify(Coordinate)
                   + " is outside domain limit: "
-                  + jiba::stringify(CellBoundaries[ncells - 1]+ CellSizes[ncells - 1]));
+                  + jiba::stringify(CellBoundaries[ncells - 1] + CellSizes[ncells - 1]));
         //we implictly assume the coordinates to start at zero
         //so the boundary values are the upper limits of the cells
         //and we search for the index of the next higher cell boundary
-        while (Coordinate > (CellBoundaries[result] + CellSizes[result]) && result < ncells)
+        while (Coordinate > (CellBoundaries[result] + CellSizes[result])
+            && result < ncells)
           {
             ++result;
           }
@@ -49,9 +50,9 @@ namespace jiba
         if (uppdiff < lowdiff)
           return result;
         else
-          return std::min(result + 1, ncells -1);
+          return std::min(result + 1, ncells - 1);
         //if we get here something is seriously wrong
-        return -1;
+        throw jiba::FatalException("Unexpected error in FindNearestCellBoundary !");
       }
   }
 
