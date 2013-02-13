@@ -8,6 +8,7 @@
 #ifndef MULTISECTIONTRANSFORM_H_
 #define MULTISECTIONTRANSFORM_H_
 
+#include <numeric>
 #include <vector>
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/base_object.hpp>
