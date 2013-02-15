@@ -51,9 +51,8 @@ namespace jiba
         std::ofstream gravrel("gravrel.out");
         for (size_t i = 0; i < ncells; ++i)
           {
-            int xi, yi, zi;
-            Geometry.OffsetToIndex(i, xi, yi, zi);
-            if (Geometry.GetSlownesses()[xi][yi][zi] > 0.0)
+
+            if (Geometry.GetSlownesses().data()[i] > 0.0)
               {
                 //we assume the order slowness, density, conductivity in the model vector
                 Diff(i) = pow<2>((PredDens(i) - Model(i + ncells)) / refdens)
