@@ -32,17 +32,17 @@ namespace jiba
         if (!std::equal(Model1.GetXCellSizes().origin(),
             Model1.GetXCellSizes().origin()
                 + Model1.GetXCellSizes().num_elements(),
-            Model2.GetXCellSizes().origin(),roughEqual()))
+            Model2.GetXCellSizes().origin(),roughEqual<double,double>()))
           return false;
         if (!std::equal(Model1.GetYCellSizes().origin(),
             Model1.GetYCellSizes().origin()
                 + Model1.GetYCellSizes().num_elements(),
-            Model2.GetYCellSizes().origin(),roughEqual()))
+            Model2.GetYCellSizes().origin(),roughEqual<double,double>()))
           return false;
         if (!std::equal(Model1.GetZCellSizes().origin(),
             Model1.GetZCellSizes().origin()
                 + Model1.GetZCellSizes().num_elements(),
-            Model2.GetZCellSizes().origin(),roughEqual()))
+            Model2.GetZCellSizes().origin(),roughEqual<double,double>()))
           return false;
         //we only get here if everything is equal
         return true;
