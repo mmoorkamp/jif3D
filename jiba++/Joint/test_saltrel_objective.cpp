@@ -40,15 +40,16 @@ jiba  ::rvec CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec 
       const size_t ncells = 10;
       const size_t nparam = ncells * 3;
       jiba::rvec ModelVector(nparam);
+
+  	jiba::ThreeDSeismicModel RelModel, ExclModel;
+  	RelModel.SetSlownesses().resize(boost::extents[ncells][1][1]);
+  	ExclModel.SetSlownesses().resize(boost::extents[ncells][1][1]);
+  	std::fill_n(RelModel.SetSlownesses().origin(),ncells,1.0);
+  	std::fill_n(ExclModel.SetSlownesses().origin(),ncells,0.0);
+
       boost::shared_ptr<jiba::GeneralModelTransform> DensTrans =
       boost::shared_ptr<jiba::GeneralModelTransform> (new jiba::DensityTransform(
               boost::shared_ptr<jiba::GeneralModelTransform>(new jiba::ModelCopyTransform()),RelModel));
-
-  	jiba::ThreeDSeismicModel RelModel, ExclModel;
-  	RelModel.SetSlownesses().resize(boost::extents[nx][ny][nz]);
-  	ExclModel.SetSlownesses().resize(boost::extents[nx][ny][nz]);
-  	std::fill_n(RelModel.SetSlownesses().origin(),ncells,1.0);
-  	std::fill_n(ExclModel.SetSlownesses().origin(),ncells,0.0);
 
       boost::shared_ptr<jiba::GeneralModelTransform> CondTrans =
       boost::shared_ptr<jiba::GeneralModelTransform> (new jiba::ConductivityTransform(
