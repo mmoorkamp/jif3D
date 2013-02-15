@@ -148,13 +148,15 @@ namespace jiba
 		 * We assume a functional relationship of the form
 		 * \f$ \rho = \exp( -a/v^2 + b/v +c) \f$.
 		 * @param SlowTrans A pointer to an object that gives slowness
+		 * @RModel A model object indicating where the relationship should not be applied (value 0) and where it should be applied (value 1)
+		 * @rvalue Value for density for model cells where the parameter relationship does not apply
 		 * @param aval The coefficient for the quadratic term
 		 * @param bval The coefficient for the linear term
 		 * @param cval The offset in the exponential
 		 */
 		ConductivityTransform(
 				boost::shared_ptr<GeneralModelTransform> SlowTrans,
-				const jiba::ThreeDModelBase &RModel, double rvalue,
+				const jiba::ThreeDModelBase &RModel, double rvalue = 3.3,
 				double aval = 2.31e-7, double bval = -5.79e-4, double cval =
 						0.124) :
 				a(aval), b(bval), c(cval), SlownessTransform(SlowTrans), replacevalue(rvalue),
