@@ -70,7 +70,10 @@ namespace jiba
 				"cond_b", po::value(&cond_b)->default_value(-5.79e-4),
 				"The linear term of the velocity-conductivity relationship")(
 				"cond_c", po::value(&cond_c)->default_value(0.124),
-				"The constant term of the velocity-conductivity relationship");
+				"The constant term of the velocity-conductivity relationship")
+				("relmodel",po::value(&RelModelName),"Name of a model file that specifies where to apply the parameter relationship")
+				("DensReplace",po::value(&DensReplace)->default_value(0.0),"Value to use for Density where relationship is not valid")
+				("CondReplace",po::value(&CondReplace)->default_value(3.3),"Value to use for Conductivity where relationship is not valid");
 
 		return desc;
 	}
@@ -183,18 +186,37 @@ namespace jiba
 		}
 		else
 		{
+			// We can specify a model file where we want
+			// the parameter relationship to be valid
+			jiba::ThreeDSeismicModel RelModel;
+			if (vm.count("relmodel"))
+			{
+				RelModel.ReadNetCDF(RelModelName,false);
+			}
+			else
+			{
+				const size_t nx = StartModel.GetSlownesses().shape()[0];
+				const size_t ny = StartModel.GetSlownesses().shape()[1];
+				const size_t nz = StartModel.GetSlownesses().shape()[2];
+				RelModel.SetDensities().resize(boost::extents[nx][ny][nz]);
+				std::fill_n(RelModel.SetDensities().origin(),nx*ny*nz,1.0);
+
+			}
 			//if we want direct parameter coupling we do not need the section transforms
 			//but we directly calculate conductivity and density from slowness
 			if (!Wavelet)
 			{
 				TomoTransform = boost::shared_ptr<jiba::GeneralModelTransform>(
 						new jiba::TanhTransform(minslow, maxslow));
+
 				GravityTransform =
 						boost::shared_ptr<jiba::GeneralModelTransform>(
 								new jiba::DensityTransform(TomoTransform,
+										RelModel,DensReplace,
 										density_a, density_b));
 				MTTransform = boost::shared_ptr<jiba::GeneralModelTransform>(
 						new jiba::ConductivityTransform(TomoTransform, cond_a,
+								RelModel,CondReplace,
 								cond_b, cond_c));
 			}
 			else
@@ -212,6 +234,7 @@ namespace jiba
 				DensityTransform->AppendTransform(
 						boost::shared_ptr<jiba::GeneralModelTransform>(
 								new jiba::DensityTransform(TomoTransform,
+										RelModel,DensReplace,
 										density_a, density_b)));
 
 				boost::shared_ptr<jiba::ChainedTransform> ConductivityTransform(
@@ -220,6 +243,7 @@ namespace jiba
 				ConductivityTransform->AppendTransform(
 						boost::shared_ptr<jiba::GeneralModelTransform>(
 								new jiba::ConductivityTransform(TomoTransform,
+										RelModel,CondReplace,
 										cond_a, cond_b, cond_c)));
 
 				TomoTransform = SlownessTransform;
