@@ -16,6 +16,7 @@
 #include "../Gravity/ThreeDGravityModel.h"
 #include <boost/program_options.hpp>
 #include <boost/shared_ptr.hpp>
+#include <string>
 
 namespace jiba
   {
@@ -68,6 +69,10 @@ namespace jiba
       double cond_b;
       //! The c coefficient for the slowness-conductivity transform
       double cond_c;
+      //!
+      std::string RelModelName;
+      double DensReplace;
+      double CondReplace;
       //! Internal function to setup coupling and regularization when using the cross-gradient approach
       void SetupCrossGradModel(jiba::rvec &InvModel,
           const jiba::ThreeDModelBase &ModelGeometry,
