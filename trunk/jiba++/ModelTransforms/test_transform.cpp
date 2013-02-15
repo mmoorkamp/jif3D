@@ -10,7 +10,6 @@
 #include <boost/test/included/unit_test.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 #include <stdlib.h>
-#include "ModelDistributor.h"
 #include "ModelTransforms.h"
 #include "../Gravity/ThreeDGravityModel.h"
 
