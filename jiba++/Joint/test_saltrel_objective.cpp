@@ -6,6 +6,7 @@
 #include <vector>
 #include "SaltRelConstraint.h"
 #include "../Inversion/ModelTransforms.h"
+#include "../Gravity/ThreeDGravityModel.h"
 #include "SaltRelTrans.h"
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/random/linear_congruential.hpp>
@@ -41,11 +42,14 @@ jiba  ::rvec CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec 
       jiba::rvec ModelVector(nparam);
       boost::shared_ptr<jiba::GeneralModelTransform> DensTrans =
       boost::shared_ptr<jiba::GeneralModelTransform> (new jiba::DensityTransform(
-              boost::shared_ptr<jiba::GeneralModelTransform>(new jiba::ModelCopyTransform())));
+              boost::shared_ptr<jiba::GeneralModelTransform>(new jiba::ModelCopyTransform()),RelModel));
+
+  	jiba::ThreeDGravityModel RelModel;
+  	RelModel.SetDensities().resize(boost::extents[nx][ny][nz]);
 
       boost::shared_ptr<jiba::GeneralModelTransform> CondTrans =
       boost::shared_ptr<jiba::GeneralModelTransform> (new jiba::ConductivityTransform(
-              boost::shared_ptr<jiba::GeneralModelTransform>(new jiba::ModelCopyTransform())));
+              boost::shared_ptr<jiba::GeneralModelTransform>(new jiba::ModelCopyTransform()),RelModel));
 
       const double minslow = 2e-4;
       const double maxslow = 5e-4;

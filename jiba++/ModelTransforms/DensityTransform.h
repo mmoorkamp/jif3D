@@ -143,7 +143,7 @@ namespace jiba
 		 * @param bval The offset value (see equation above)
 		 */
 		DensityTransform(boost::shared_ptr<GeneralModelTransform> SlowTrans,
-				const jiba::ThreeDModelBase &RModel, double rvalue,
+				const jiba::ThreeDModelBase &RModel, double rvalue = 0.0,
 				double aval = 5000, double bval = 8500) :
 				SlownessTransform(SlowTrans), RelModel(RModel), replacevalue(rvalue), a(aval), b(bval)
 		{
