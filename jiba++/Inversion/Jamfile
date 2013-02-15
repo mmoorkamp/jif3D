@@ -12,7 +12,6 @@ lib inversion : NonLinearOptimization.cpp
 lib lininv : GeneralizedInverse.cpp LinearInversion.cpp ..//vecopt ;
 
 unit-test inversion_test : test_inversion.cpp inversion lininv : : <include>. ;
-unit-test transform_test : test_transform.cpp  ../Global//global : : <include>. ;
 unit-test optstep_test : test_optstep.cpp  inversion : : <include>. ;
 
 

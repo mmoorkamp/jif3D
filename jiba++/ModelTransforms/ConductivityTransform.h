@@ -39,6 +39,10 @@ namespace jiba
 		//! The constant term of the transform
 		const double c;
 		boost::shared_ptr<GeneralModelTransform> SlownessTransform;
+		//! An object indicating where to apply the parameter relationship (value 1)
+		jiba::ThreeDModelBase RelModel;
+		//! The value to use for density where the relationship is not valid
+		double replacevalue;
 		friend class boost::serialization::access;
 		//! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
 		template<class Archive>
@@ -51,6 +55,8 @@ namespace jiba
 			ar & b;
 			ar & c;
 			ar & SlownessTransform;
+			ar & RelModel;
+			ar & replacevalue;
 		}
 	public:
 		//! We setup a clone function to have a virtual constructor and create polymorphic copies
@@ -67,10 +73,17 @@ namespace jiba
 			jiba::rvec Conductivity(FullModel.size());
 			for (size_t i = 0; i < FullModel.size(); ++i)
 			{
+				if (RelModel.GetData().data()[i])
+				{
 				Conductivity(i) =
 						std::exp(
 								-(a / (Slowness(i) * Slowness(i))
 										+ b / Slowness(i) + c));
+				}
+				else
+				{
+					Conductivity(i) = replacevalue;
+				}
 			}
 			return Conductivity;
 		}
@@ -82,10 +95,17 @@ namespace jiba
 			jiba::rvec Slowness(nvals);
 			for (size_t i = 0; i < nvals; ++i)
 			{
+				if (RelModel.GetData().data()[i])
+				{
 				double vel = (-b
 						+ sqrt(b * b - 4.0 * a * (c + std::log(FullModel(i)))))
 						/ (2.0 * a);
 				Slowness(i) = 1.0 / vel;
+				}
+				else
+				{
+					Slowness(i) = replacevalue;
+				}
 			}
 			return SlownessTransform->PhysicalToGeneralized(Slowness);
 		}
@@ -97,18 +117,25 @@ namespace jiba
 					SlownessTransform->GeneralizedToPhysical(FullModel));
 			jiba::rvec SlowDeriv(
 					SlownessTransform->Derivative(FullModel, Derivative));
-			jiba::rvec Output(FullModel.size());
+			jiba::rvec Gradient(FullModel.size());
 			for (size_t i = 0; i < FullModel.size(); ++i)
 			{
-				Output(i) =
+				if (RelModel.GetData().data()[i])
+				{
+				Gradient(i) =
 						std::exp(
 								-(a / (Slowness(i) * Slowness(i))
 										+ b / Slowness(i) + c))
 								* (2.0 * a * std::pow(Slowness(i), -3)
 										+ b / (Slowness(i) * Slowness(i)))
 								* SlowDeriv(i);
+				}
+				else
+				{
+					Gradient = 0.0;
+				}
 			}
-			return Output;
+			return Gradient;
 		}
 		//! The constructor needs a pointer to an object that gives slowness
 		/*! To reduce the amount of code in the main program this class
@@ -125,9 +152,11 @@ namespace jiba
 		 */
 		ConductivityTransform(
 				boost::shared_ptr<GeneralModelTransform> SlowTrans,
+				const jiba::ThreeDModelBase &RModel, double rvalue,
 				double aval = 2.31e-7, double bval = -5.79e-4, double cval =
 						0.124) :
-				a(aval), b(bval), c(cval), SlownessTransform(SlowTrans)
+				a(aval), b(bval), c(cval), SlownessTransform(SlowTrans), replacevalue(rvalue),
+				RelModel(RModel)
 		{
 		}
 		virtual ~ConductivityTransform()

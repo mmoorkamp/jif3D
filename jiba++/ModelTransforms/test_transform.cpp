@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include "ModelDistributor.h"
 #include "ModelTransforms.h"
-#include "WaveletModelTransform.h"
+#include "../Gravity/ThreeDGravityModel.h"
 
 //a general function to test various ModelTransforms
 void TestTransform(const jiba::GeneralModelTransform &Transform, const size_t nelements,
@@ -93,10 +93,15 @@ BOOST_AUTO_TEST_SUITE( Distributor_Test_Suite )
         const size_t ny = 8;
         const size_t nz = 8;
         const size_t nelements = nx * ny * nz;
+
+        jiba::ThreeDGravityModel Model;
+        Model.SetDensities().resize(boost::extents[nx][ny][nz]);
+
         jiba::rvec Reference(nelements);
         for (size_t i = 0; i < nelements; ++i)
           {
             Reference(i) = 2.0 + drand48();
+            Model.SetDensities().data()[i] = drand48() > 0.5 ;
           }
         TestTransform(jiba::NormalizeTransform(Reference), nelements);
         TestTransform(jiba::LogTransform(Reference), nelements);
@@ -112,11 +117,11 @@ BOOST_AUTO_TEST_SUITE( Distributor_Test_Suite )
         TestTransform(
             jiba::DensityTransform(
                 boost::shared_ptr<jiba::GeneralModelTransform>(
-                    new jiba::TanhTransform(0.0, 1000.0))), nelements);
+                    new jiba::TanhTransform(0.0, 1000.0)),Model), nelements);
         TestTransform(
             jiba::ConductivityTransform(
                 boost::shared_ptr<jiba::GeneralModelTransform>(
-                    new jiba::TanhTransform(0.0, 10.0))), nelements, 0.001, 0.5);
+                    new jiba::TanhTransform(0.0, 10.0)),Model), nelements, 0.001, 0.5);
         jiba::ChainedTransform TransformForward;
         TransformForward.AppendTransform(
             boost::shared_ptr<jiba::GeneralModelTransform>(

@@ -16,6 +16,7 @@
 #include "../ModelTransforms/MultiSectionTransform.h"
 #include "../ModelTransforms/NormalizeTransforms.h"
 #include "../ModelTransforms/TanhTransform.h"
+#include "../ModelTransforms/WaveletModelTransform.h"
 #include "ModelDistributor.h"
 
 /*! \file ModelTransforms.h
