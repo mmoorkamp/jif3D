@@ -6,7 +6,7 @@
 #include <vector>
 #include "SaltRelConstraint.h"
 #include "../Inversion/ModelTransforms.h"
-#include "../Gravity/ThreeDGravityModel.h"
+#include "../Tomo/ThreeDSeismicModel.h"
 #include "SaltRelTrans.h"
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/random/linear_congruential.hpp>
@@ -44,8 +44,11 @@ jiba  ::rvec CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec 
       boost::shared_ptr<jiba::GeneralModelTransform> (new jiba::DensityTransform(
               boost::shared_ptr<jiba::GeneralModelTransform>(new jiba::ModelCopyTransform()),RelModel));
 
-  	jiba::ThreeDGravityModel RelModel;
-  	RelModel.SetDensities().resize(boost::extents[nx][ny][nz]);
+  	jiba::ThreeDSeismicModel RelModel, ExclModel;
+  	RelModel.SetSlownesses().resize(boost::extents[nx][ny][nz]);
+  	ExclModel.SetSlownesses().resize(boost::extents[nx][ny][nz]);
+  	std::fill_n(RelModel.SetSlownesses().origin(),ncells,1.0);
+  	std::fill_n(ExclModel.SetSlownesses().origin(),ncells,0.0);
 
       boost::shared_ptr<jiba::GeneralModelTransform> CondTrans =
       boost::shared_ptr<jiba::GeneralModelTransform> (new jiba::ConductivityTransform(
@@ -62,6 +65,7 @@ jiba  ::rvec CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec 
       ublas::subrange(ModelVector,2* ncells,3*ncells) = CondTrans->GeneralizedToPhysical(ublas::subrange(ModelVector,0,ncells));
       //check that constraint values are small when everything obeys the background relationship
       jiba::SaltRelConstraint SaltObjective(DensTrans,CondTrans);
+      SaltObjective.SetExcludeCells(ExclModel);
       BOOST_CHECK_SMALL(SaltObjective.CalcMisfit(ModelVector),1e-12);
       //then also the gradient should be zero
       jiba::rvec ZeroGradient = SaltObjective.CalcGradient(ModelVector);
