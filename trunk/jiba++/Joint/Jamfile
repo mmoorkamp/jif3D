@@ -7,4 +7,4 @@ lib setup : SaltRelConstraint.cpp SetupGravity.cpp SetupInversion.cpp SetupMT.cp
 
 
 unit-test saltrel_test :  test_saltrel_objective.cpp joint setup : <include>. ;
-exe jointinv : jointinv.cpp  joint setup  ..//boost_program_options : <include>. ;
+exe jointinv : jointinv.cpp  joint setup  ..//boost_program_options ..//boost_system : <include>. ;
