@@ -11,7 +11,9 @@
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/base_object.hpp>
 #include <boost/shared_ptr.hpp>
+#include "../ModelBase/ThreeDModelBase.h"
 #include "GeneralModelTransform.h"
+
 
 
 namespace jiba
@@ -132,7 +134,7 @@ namespace jiba
 				}
 				else
 				{
-					Gradient = 0.0;
+					Gradient(i) = 0.0;
 				}
 			}
 			return Gradient;
