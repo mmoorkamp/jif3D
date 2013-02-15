@@ -31,6 +31,7 @@ use-project /ModelBase : ModelBase ;
 use-project /Profiling : Profiling ;
 use-project /Inversion : Inversion ;
 use-project /Joint : Joint ;
+use-project /ModelTransforms : ModelTransforms ;
 
 local BOOST_TEST_LOG_LEVEL = all ;
 lib boost_filesystem : : <name>boost_filesystem <search>/usr/local/lib  ;
