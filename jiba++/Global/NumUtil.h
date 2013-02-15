@@ -68,9 +68,10 @@ namespace jiba
         N1, N2, bool>
       {
       //! Functors for the standard library have their functionality in operator()
-      bool operator()(N1 number1, N2 number2, N1 epsilon = std::numeric_limits<N1>::epsilon) const
+      bool operator()(N1 number1, N2 number2) const
         {
-    	  return std::abs(lhs - rhs) < epsilon;
+    	  N1 epsilon = std::numeric_limits<N1>::epsilon();
+          return std::abs(number1 - number2) < epsilon;
         }
       };
 
