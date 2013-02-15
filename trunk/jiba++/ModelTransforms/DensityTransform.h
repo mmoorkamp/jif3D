@@ -72,36 +72,36 @@ namespace jiba
 			assert(RelModel.GetData().num_elements() == FullModel.size());
 			jiba::rvec Slowness(
 					SlownessTransform->GeneralizedToPhysical(FullModel));
-			jiba::rvec Output(FullModel.size());
+			jiba::rvec Density(FullModel.size());
 			for (size_t i = 0; i < FullModel.size(); ++i)
 			{
 				if (RelModel.GetData().data()[i])
 				{
-					Output(i) = (1.0 / Slowness(i) + b) / a;
+					Density(i) = (1.0 / Slowness(i) + b) / a;
 				}
 				else
 				{
-					Output(i) = replacemodel;
+					Density(i) = replacevalue;
 				}
 
 			}
-			return Output;
+			return Density;
 		}
 		//! Transform from Density to Slowness
 		virtual jiba::rvec PhysicalToGeneralized(
 				const jiba::rvec &FullModel) const
 		{
 
-			jiba::rvec Output(FullModel.size());
+			jiba::rvec Slowness(FullModel.size());
 			for (size_t i = 0; i < FullModel.size(); ++i)
 			{
 				if (RelModel.GetData().data()[i])
 				{
-				  Output(i) = 1.0 / (a * FullModel(i) - b);
+					Slowness(i) = 1.0 / (a * FullModel(i) - b);
 				}
 				else
 				{
-					Output(i) = replacevalue;
+					Slowness(i) = replacevalue;
 				}
 			}
 			return SlownessTransform->PhysicalToGeneralized(Output);
