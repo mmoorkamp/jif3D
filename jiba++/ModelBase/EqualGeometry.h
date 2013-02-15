@@ -10,6 +10,7 @@
 #define EQUALGEOMETRY_H_
 
 #include "ThreeDModelBase.h"
+#include "../Global/NumUtil.h"
 
 namespace jiba
   {
@@ -31,17 +32,17 @@ namespace jiba
         if (!std::equal(Model1.GetXCellSizes().origin(),
             Model1.GetXCellSizes().origin()
                 + Model1.GetXCellSizes().num_elements(),
-            Model2.GetXCellSizes().origin()))
+            Model2.GetXCellSizes().origin(),roughEqual()))
           return false;
         if (!std::equal(Model1.GetYCellSizes().origin(),
             Model1.GetYCellSizes().origin()
                 + Model1.GetYCellSizes().num_elements(),
-            Model2.GetYCellSizes().origin()))
+            Model2.GetYCellSizes().origin(),roughEqual()))
           return false;
         if (!std::equal(Model1.GetZCellSizes().origin(),
             Model1.GetZCellSizes().origin()
                 + Model1.GetZCellSizes().num_elements(),
-            Model2.GetZCellSizes().origin()))
+            Model2.GetZCellSizes().origin(),roughEqual()))
           return false;
         //we only get here if everything is equal
         return true;
