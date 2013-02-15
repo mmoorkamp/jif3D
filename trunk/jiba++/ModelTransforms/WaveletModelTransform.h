@@ -14,7 +14,7 @@
 #include "../Global/Wavelet.h"
 #include "../Global/NumUtil.h"
 #include "../Global/convert.h"
-#include "ModelDistributor.h"
+#include "GeneralModelTransform.h"
 
 namespace jiba
   {
