@@ -104,7 +104,7 @@ namespace jiba
 					Slowness(i) = replacevalue;
 				}
 			}
-			return SlownessTransform->PhysicalToGeneralized(Output);
+			return SlownessTransform->PhysicalToGeneralized(Slowness);
 		}
 		//! Transform the derivative with respect to the Slowness to Density
 		virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
