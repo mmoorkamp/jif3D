@@ -10,7 +10,7 @@
 #include <boost/test/included/unit_test.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 #include <stdlib.h>
-#include "ModelTransforms.h"
+#include "../Inversion/ModelTransforms.h"
 #include "../Gravity/ThreeDGravityModel.h"
 
 //a general function to test various ModelTransforms
@@ -120,9 +120,7 @@ BOOST_AUTO_TEST_CASE (Wavelet_transform_test)
 		Reference(i) = 2.0 + drand48();
 	}
 	jiba::WaveletModelTransform WT(nx, ny, nz);
-	std::cout << "Testing wavelet \n\n" << std::endl;
 	TestTransform(WT, nelements);
-	std::cout << "End Testing wavelet \n\n" << std::endl;
 }
 
 BOOST_AUTO_TEST_CASE (Tanh_transform_test)
@@ -145,12 +143,12 @@ BOOST_AUTO_TEST_CASE (Density_transform_test)
 
 	for (size_t i = 0; i < nelements; ++i)
 	{
-		Model.SetDensities().data()[i] = drand48() > 0.5;
+		Model.SetDensities().data()[i] = 1.0;
 	}
 	TestTransform(
 			jiba::DensityTransform(
 					boost::shared_ptr<jiba::GeneralModelTransform>(
-							new jiba::TanhTransform(0.0, 1000.0)),Model), nelements);
+							new jiba::TanhTransform(0.0, 1000.0)),Model,1.0), nelements);
 }
 
 BOOST_AUTO_TEST_CASE (Conductivity_transform_test)
@@ -165,12 +163,12 @@ BOOST_AUTO_TEST_CASE (Conductivity_transform_test)
 
 	for (size_t i = 0; i < nelements; ++i)
 	{
-		Model.SetDensities().data()[i] = drand48() > 0.5;
+		Model.SetDensities().data()[i] = 1.0;
 	}
 	TestTransform(
 			jiba::ConductivityTransform(
 					boost::shared_ptr<jiba::GeneralModelTransform>(
-							new jiba::TanhTransform(0.0, 10.0)),Model), nelements, 0.001, 0.5);
+							new jiba::TanhTransform(0.0, 10.0)),Model,1.0), nelements, 0.001, 0.5);
 }
 
 BOOST_AUTO_TEST_CASE (FChained_transform_test)
@@ -187,7 +185,7 @@ BOOST_AUTO_TEST_CASE (FChained_transform_test)
 	for (size_t i = 0; i < nelements; ++i)
 	{
 		Reference(i) = 2.0 + drand48();
-		Model.SetDensities().data()[i] = drand48() > 0.5;
+		Model.SetDensities().data()[i] = 1.0;
 	}
 	jiba::ChainedTransform TransformForward;
 	TransformForward.AppendTransform(
@@ -213,18 +211,18 @@ BOOST_AUTO_TEST_CASE (RCHained_transform_test)
 	for (size_t i = 0; i < nelements; ++i)
 	{
 		Reference(i) = 2.0 + drand48();
-		Model.SetDensities().data()[i] = drand48() > 0.5;
+		Model.SetDensities().data()[i] = 1.0;
 	}
 	jiba::ChainedTransform TransformReverse;
-	TransformForward.PrependTransform(
+	TransformReverse.PrependTransform(
 			boost::shared_ptr<jiba::GeneralModelTransform>(
 					new jiba::LogTransform(Reference)));
-	TransformForward.PrependTransform(
+	TransformReverse.PrependTransform(
 			boost::shared_ptr<jiba::GeneralModelTransform>(
 					new jiba::TanhTransform(-5, 5.0)));
 	TestTransform(TransformReverse, nelements);
 }
-}
+
 
 BOOST_AUTO_TEST_CASE (wavelet_check_test)
 {
