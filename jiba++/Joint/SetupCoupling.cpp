@@ -8,7 +8,7 @@
 #include "SetupCoupling.h"
 #include "../Global/FileUtil.h"
 #include "../Regularization/CrossGradient.h"
-#include "../Inversion/WaveletModelTransform.h"
+#include "../Inversion/ModelTransforms.h"
 #include "SaltRelConstraint.h"
 #include "SaltRelTrans.h"
 
@@ -198,8 +198,8 @@ namespace jiba
 				const size_t nx = StartModel.GetSlownesses().shape()[0];
 				const size_t ny = StartModel.GetSlownesses().shape()[1];
 				const size_t nz = StartModel.GetSlownesses().shape()[2];
-				RelModel.SetDensities().resize(boost::extents[nx][ny][nz]);
-				std::fill_n(RelModel.SetDensities().origin(),nx*ny*nz,1.0);
+				RelModel.SetSlownesses().resize(boost::extents[nx][ny][nz]);
+				std::fill_n(RelModel.SetSlownesses().origin(),nx*ny*nz,1.0);
 
 			}
 			//if we want direct parameter coupling we do not need the section transforms
@@ -215,8 +215,8 @@ namespace jiba
 										RelModel,DensReplace,
 										density_a, density_b));
 				MTTransform = boost::shared_ptr<jiba::GeneralModelTransform>(
-						new jiba::ConductivityTransform(TomoTransform, cond_a,
-								RelModel,CondReplace,
+						new jiba::ConductivityTransform(TomoTransform, 
+								RelModel,CondReplace, cond_a,
 								cond_b, cond_c));
 			}
 			else
