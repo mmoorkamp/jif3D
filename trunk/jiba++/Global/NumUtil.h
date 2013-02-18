@@ -64,7 +64,7 @@ namespace jiba
         }
       };
 
-    template<class N1, class N2> struct roughEqual: public std::binary_function<
+    template<class N1, class N2> struct roughlyEqual: public std::binary_function<
         N1, N2, bool>
       {
       //! Functors for the standard library have their functionality in operator()
