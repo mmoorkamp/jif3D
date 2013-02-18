@@ -25,35 +25,60 @@ inline bool EqualGridGeometry(const jiba::ThreeDModelBase &Model1,
 		const jiba::ThreeDModelBase &Model2) {
 	//we first make a cheap test and then the more expensive ones
 	if (Model1.GetNModelElements() != Model2.GetNModelElements())
+           { 
+                std::cerr << "Models have different sizes: " << Model1.GetNModelElements() << " " << Model2.GetNModelElements() << std::endl;
 		return false;
+           }
 	// as soon as one fails we return false
 	//we check the sizes of the cells in all three directions
 	const std::size_t nx = Model1.GetXCellSizes().num_elements();
+	const std::size_t ny =  Model1.GetYCellSizes().num_elements();
+        const std::size_t nz = Model1.GetZCellSizes().num_elements();
+
+        if (nx !=  Model2.GetXCellSizes().num_elements())
+          {
+               std::cerr << "Different number of cells in x-direction " << nx << " " << Model2.GetXCellSizes().num_elements() << std::endl;
+               return false;
+          }
+
+     if (ny !=  Model2.GetYCellSizes().num_elements())
+          {
+               std::cerr << "Different number of cells in y-direction " << ny << " " << Model2.GetYCellSizes().num_elements() << std::endl;
+               return false;
+          }
+
+
+     if (nz !=  Model2.GetZCellSizes().num_elements())
+          {
+               std::cerr << "Different number of cells in z-direction " << nz << " " << Model2.GetZCellSizes().num_elements() << std::endl;
+               return false;
+          }
+
 
 	for (std::size_t i = 0; i < nx; ++i) {
-		if (!roughlyEqual(Model1.GetXCellSizes()[i],
+		if (!roughlyEqual<double,double>()(Model1.GetXCellSizes()[i],
 				Model2.GetXCellSizes()[i])) {
 			std::cerr << "Cell sizes in x-direction do not match "
 					<< Model1.GetXCellSizes()[i] << " "
-					<< Model1.GetXCellSizes()[i] << std::endl;
+					<< Model2.GetXCellSizes()[i] << std::endl;
 			return false;
 		}
 	}
-	for (std::size_t i = 0; i < nx; ++i) {
-		if (!roughlyEqual(Model1.GetYCellSizes()[i],
+	for (std::size_t i = 0; i < ny; ++i) {
+		if (!roughlyEqual<double,double>()(Model1.GetYCellSizes()[i],
 				Model2.GetYCellSizes()[i])) {
 			std::cerr << "Cell sizes in y-direction do not match "
 					<< Model1.GetYCellSizes()[i] << " "
-					<< Model1.GetYCellSizes()[i] << std::endl;
+					<< Model2.GetYCellSizes()[i] << std::endl;
 			return false;
 		}
 	}
-	for (std::size_t i = 0; i < nx; ++i) {
-		if (!roughlyEqual(Model1.GetZCellSizes()[i],
+	for (std::size_t i = 0; i < nz; ++i) {
+		if (!roughlyEqual<double,double>()(Model1.GetZCellSizes()[i],
 				Model2.GetZCellSizes()[i])) {
 			std::cerr << "Cell sizes in z-direction do not match "
 					<< Model1.GetZCellSizes()[i] << " "
-					<< Model1.GetZCellSizes()[i] << std::endl;
+					<< Model2.GetZCellSizes()[i] << std::endl;
 			return false;
 		}
 	}
