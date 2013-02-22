@@ -6,8 +6,8 @@
 //============================================================================
 
 #include "../Inversion/ModelTransforms.h"
+#include "../Gravity/ThreeDGravityModel.h"
 #include "../Joint/SaltRelConstraint.h"
-#include "../Joint/SaltRelTrans.h"
 #include "../ModelBase/VTKTools.h"
 #include <fstream>
 
@@ -43,16 +43,17 @@
 
 int main()
   {
-
+    jiba::ThreeDGravityModel RModel;
+    RModel.SetDensities().resize(boost::extents[1][1][1]);
     boost::shared_ptr<jiba::GeneralModelTransform> DensTrans(
         new jiba::DensityTransform(
             boost::shared_ptr<jiba::GeneralModelTransform>(
-                new jiba::ModelCopyTransform())));
+                new jiba::ModelCopyTransform()),RModel));
 
     boost::shared_ptr<jiba::GeneralModelTransform> CondTrans(
-        new jiba::SlowCondTrans(
+        new jiba::ConductivityTransform(
             boost::shared_ptr<jiba::GeneralModelTransform>(
-                new jiba::ModelCopyTransform())));
+                new jiba::ModelCopyTransform()),RModel));
     jiba::SaltRelConstraint SaltRel(DensTrans, CondTrans);
 
     double minvel = 2000;
