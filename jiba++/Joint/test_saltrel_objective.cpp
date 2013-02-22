@@ -7,7 +7,6 @@
 #include "SaltRelConstraint.h"
 #include "../Inversion/ModelTransforms.h"
 #include "../Tomo/ThreeDSeismicModel.h"
-#include "SaltRelTrans.h"
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/random/linear_congruential.hpp>
 #include <boost/random/uniform_real.hpp>
@@ -20,7 +19,6 @@ jiba  ::rvec CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec 
       Objective.CalcMisfit(Model);
       jiba::rvec Gradient = Objective.CalcGradient(Model);
       jiba::rvec FDGrad(Model.size(),0.0);
-      double Misfit = Objective.CalcMisfit(Model);
       for (size_t i = 0; i < Gradient.size(); ++i)
         {
           double delta = Model(i) * 0.0001;
@@ -29,7 +27,6 @@ jiba  ::rvec CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec 
           Forward(i) += delta;
           Backward(i) -= delta;
           FDGrad(i) = (Objective.CalcMisfit(Forward) - Objective.CalcMisfit(Backward))/(2.0 * delta);
-          std::cout << i << std::endl;
           BOOST_CHECK_CLOSE(FDGrad(i),Gradient(i),0.1);
         }
       return FDGrad;

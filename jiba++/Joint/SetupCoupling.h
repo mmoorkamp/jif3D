@@ -88,7 +88,7 @@ namespace jiba
           jiba::JointObjective &Objective,
           boost::shared_ptr<jiba::MatOpRegularization> Regularization, bool substart);
       //! Internal function to setup coupling and regularization when using a parameter relationship designed for salt (unstable at the moment)
-      void SetupSaltModel(jiba::rvec &InvModel,
+      void SetupSaltModel(const po::variables_map &vm, jiba::rvec &InvModel,
           const jiba::ThreeDModelBase &ModelGeometry,
           const jiba::ThreeDSeismicModel &SeisMod,
           const jiba::ThreeDGravityModel &GravMod, const jiba::ThreeDMTModel &MTMod,
@@ -111,8 +111,8 @@ namespace jiba
       void SetupTransforms(const po::variables_map &vm, ThreeDSeismicModel &StartModel,
           boost::shared_ptr<jiba::GeneralModelTransform> &TomoTransform,
           boost::shared_ptr<jiba::GeneralModelTransform> &GravityTransform,
-          boost::shared_ptr<jiba::GeneralModelTransform> &MTTransform,
-          bool Wavelet = false);
+          boost::shared_ptr<jiba::GeneralModelTransform> &MTTransform, bool Wavelet =
+              false);
       //! Set the model vector for the inversion, its length and content depends on the coupling method
       /*! For the direct coupling joint inversion the model parameter vector only contains a slowness value
        * for each cell, while for the cross-gradient it contains slowness, density and conductivity. Also
