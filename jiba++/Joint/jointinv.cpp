@@ -369,7 +369,7 @@ int main(int argc, char *argv[])
       {
         jiba::rvec TomoInvData(TomoSetup.GetTomoObjective().GetSyntheticData());
         jiba::SaveTraveltimes(modelfilename + ".inv_tt.nc", TomoInvData, TomoModel);
-        jiba::rvec TomoDiff(TomoSetup.GetTomoObjective().GetDataDifference());
+        jiba::rvec TomoDiff(TomoSetup.GetTomoObjective().GetIndividualMisfit());
         jiba::SaveTraveltimes(modelfilename + ".diff_tt.nc", TomoDiff, TomoModel);
       }
     //if we are inverting gravity data and have specified site locations
@@ -384,7 +384,7 @@ int main(int argc, char *argv[])
             jiba::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc",
                 ScalGravInvData, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
                 GravModel.GetMeasPosZ());
-            jiba::rvec ScalDiff(GravitySetup.GetScalGravObjective().GetDataDifference());
+            jiba::rvec ScalDiff(GravitySetup.GetScalGravObjective().GetIndividualMisfit());
             jiba::SaveScalarGravityMeasurements(modelfilename + ".diff_sgd.nc", ScalDiff,
                 GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
                 GravModel.GetMeasPosZ());
@@ -399,7 +399,7 @@ int main(int argc, char *argv[])
             jiba::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc", FTGInvData,
                 GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
                 GravModel.GetMeasPosZ());
-            jiba::rvec FTGDiff(GravitySetup.GetFTGObjective().GetDataDifference());
+            jiba::rvec FTGDiff(GravitySetup.GetFTGObjective().GetIndividualMisfit());
             jiba::SaveTensorGravityMeasurements(modelfilename + ".diff_ftg.nc", FTGDiff,
                 GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
                 GravModel.GetMeasPosZ());
@@ -417,7 +417,7 @@ int main(int argc, char *argv[])
         jiba::WriteImpedancesToNetCDF(modelfilename + ".inv_mt.nc",
             MTModel.GetFrequencies(), MTModel.GetMeasPosX(), MTModel.GetMeasPosY(),
             MTModel.GetMeasPosZ(), MTInvData, MTSetup.GetMTObjective().GetDataError());
-        jiba::rvec MTDiff(MTSetup.GetMTObjective().GetDataDifference());
+        jiba::rvec MTDiff(MTSetup.GetMTObjective().GetIndividualMisfit());
         jiba::WriteImpedancesToNetCDF(modelfilename + ".diff_mt.nc",
             MTModel.GetFrequencies(), MTModel.GetMeasPosX(), MTModel.GetMeasPosY(),
             MTModel.GetMeasPosZ(), MTDiff, MTSetup.GetMTObjective().GetDataError());
