@@ -11,6 +11,7 @@
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/base_object.hpp>
 #include "../Global/VecMat.h"
+#include "GeneralModelTransform.h"
 
 namespace jiba
   {

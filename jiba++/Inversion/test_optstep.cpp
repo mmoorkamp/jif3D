@@ -16,6 +16,8 @@
 #include "LimitedMemoryQuasiNewton.h"
 #include "ObjectiveFunction.h"
 #include "JointObjective.h"
+#include "../ModelTransforms/ModelCopyTransform.h"
+
 
 class Rosenbrock: public jiba::ObjectiveFunction
   {
