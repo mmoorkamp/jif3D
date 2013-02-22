@@ -9,12 +9,16 @@
 #define OBJECTIVEFUNCTION_H_
 
 #include <cassert>
+#include <cmath>
+#include <algorithm>
+#include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/export.hpp>
 #include "../Global/VecMat.h"
+#include "../Global/NumUtil.h"
 #include "../Global/VectorTransform.h"
 #include "../Global/FatalException.h"
 
@@ -41,6 +45,8 @@ namespace jiba
       size_t nEval;
       //! The difference between observed and synthetic data for the last forward calculation
       jiba::rvec DataDifference;
+      //! We store the misfit for each datum, as it we need it for the final evaluation of the inversion results
+      jiba::rvec IndividualMisfits;
       //! The inverse of the covariance matrix
       jiba::comp_mat InvCovMat;
       friend class boost::serialization::access;
@@ -91,6 +97,11 @@ namespace jiba
       const jiba::rvec &GetDataDifference() const
         {
           return DataDifference;
+        }
+      //! Get the error weighted misfit for each datum
+      const jiba::rvec GetIndividualMisfit() const
+        {
+          return IndividualMisfits;
         }
       //! Get the number of observed data
       size_t GetNData() const
@@ -159,7 +170,7 @@ namespace jiba
               //the last parameter false is important here so that ublas
               //does not try to preserve which is broken in boost 1.49
               InvCovMat.resize(DataDifference.size(), DataDifference.size(), false);
-              for (size_t i = 0; i < DataDifference.size(); ++i)
+              for (size_t i = 0; i < ndata; ++i)
                 {
                   InvCovMat(i, i) = 1.0;
                 }
@@ -173,8 +184,17 @@ namespace jiba
           //in terms of runtime is enormous
           ublas::axpy_prod(InvCovMat, DataDifference, TmpDiff, true);
           ++nEval;
+          //we store the individual misfits for use at the end of the inversion
+          //otherwise it is difficult to restore it from the covariance matrix and the
+          //weighted datadifference
+          IndividualMisfits = ublas::element_prod(DataDifference, TmpDiff);
           //we return the chi-squared misfit, not the RMS
-          double Chi = ublas::inner_prod(DataDifference, TmpDiff);
+          double Chi = ublas::sum(IndividualMisfits);
+          for (size_t i = 0; i < ndata; ++i)
+            {
+              IndividualMisfits(i) = sqrt(IndividualMisfits(i))
+                  * jiba::sign(DataDifference(i));
+            }
           //for the Gradient calculation we need the data difference
           //weighted by the covariance matrix, so we assign
           //the weighted values in TmpDiff to the object property DataDifference
