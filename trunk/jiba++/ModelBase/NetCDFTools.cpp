@@ -7,7 +7,7 @@
 
 #include "NetCDFTools.h"
 #include "../Global/FatalException.h"
-
+#include <cassert>
 namespace jiba
   {
     //This internal function should not appear in the doxygen documentation
