@@ -54,7 +54,7 @@ namespace jiba
           return Derivative;
         }
       };
-    /* @} */
+  /* @} */
   }
 
 #endif /* MODELCOPYTRANSFORM_H_ */

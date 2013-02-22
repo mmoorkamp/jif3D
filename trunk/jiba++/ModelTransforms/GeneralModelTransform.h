@@ -69,8 +69,7 @@ namespace jiba
       virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
           const jiba::rvec &Derivative) const = 0;
       };
-    /* @} */
+  /* @} */
   }
-
 
 #endif /* GENERALMODELTRANSFORM_H_ */
