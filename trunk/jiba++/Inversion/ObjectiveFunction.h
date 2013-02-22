@@ -10,8 +10,6 @@
 
 #include <cassert>
 #include <cmath>
-#include <algorithm>
-#include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/serialization/serialization.hpp>
@@ -19,7 +17,6 @@
 #include <boost/serialization/export.hpp>
 #include "../Global/VecMat.h"
 #include "../Global/NumUtil.h"
-#include "../Global/VectorTransform.h"
 #include "../Global/FatalException.h"
 
 namespace jiba
