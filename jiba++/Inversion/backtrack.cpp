@@ -43,7 +43,7 @@ namespace OPTPP
         double a, b;
         int i;
         double fplus, t1, t2, t3, tlmbda, minlambda;
-        double scl, rellength, sln, initslope;
+        double scl, sln, initslope;
 
         double lambda = 1.;
         double plmbda = -1.0;
@@ -52,7 +52,7 @@ namespace OPTPP
 
         int n = search_dir.size();
         jiba::rvec xplus(n);
-        double fx, tmp1, tmp2;
+        double fx(0.0);
         int iter;
 
         sln = ublas::norm_2(search_dir);
@@ -72,14 +72,6 @@ namespace OPTPP
             std::cout << "Not a descent direction !" << std::endl;
           }
 
-        rellength = 0.;
-
-        for (i = 0; i < n; ++i)
-          {
-            tmp1 = fabs(search_dir(i));
-            tmp2 = fabs(model(i));
-            rellength = std::max(rellength, tmp1) / tmp2;
-          }
 
         minlambda = stpmin; // / rellength;
 
