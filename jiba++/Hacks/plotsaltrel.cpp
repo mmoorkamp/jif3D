@@ -105,8 +105,8 @@ int main()
     jiba::Write3DModelToVTK("saltrel.vtk", "SaltReal", VelAxis, LogCondAxis, DensAxis,
         Misfit);
 
-    jiba::SlowCondTrans SlowCond(
-        boost::shared_ptr<jiba::GeneralModelTransform>(new jiba::ModelCopyTransform()));
+    jiba::ConductivityTransform SlowCond(
+        boost::shared_ptr<jiba::GeneralModelTransform>(new jiba::ModelCopyTransform()),RModel);
     jiba::rvec Model(nvel);
     size_t i = 0;
     for (double vel = minvel; vel < maxvel; vel += velstep)
