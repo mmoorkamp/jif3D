@@ -5,15 +5,15 @@
 // Copyright   : 2008, mmoorkamp
 //============================================================================
 
-
+#include "../Global/FatalException.h"
 #include "ThreeDGravityCalculator.h"
 
 namespace jiba
   {
 
-    ThreeDGravityCalculator::ThreeDGravityCalculator(boost::shared_ptr<
-        ThreeDGravityImplementation> TheImp) :
-      CurrentSensitivities(),  Transform(), Imp(TheImp)
+    ThreeDGravityCalculator::ThreeDGravityCalculator(
+        boost::shared_ptr<ThreeDGravityImplementation> TheImp) :
+        CurrentSensitivities(), Transform(), Imp(TheImp)
       {
 
       }
@@ -22,19 +22,30 @@ namespace jiba
       {
       }
 
-    void ThreeDGravityCalculator::CheckModelConsistency(
-        const ThreeDGravityModel &Model)
+    void ThreeDGravityCalculator::CheckModelConsistency(const ThreeDGravityModel &Model)
       {
-        //get the amount of cells in each direction
-        const size_t xsize = Model.GetDensities().shape()[0];
-        const size_t ysize = Model.GetDensities().shape()[1];
-        const size_t zsize = Model.GetDensities().shape()[2];
         //do some sanity checks
-        assert(xsize == Model.GetXCellSizes().shape()[0]);
-        assert(ysize == Model.GetYCellSizes().shape()[0]);
-        assert(zsize == Model.GetZCellSizes().shape()[0]);
+        // we can assign cell sizes and model grid independently
+        // so we have to check every time
+        if (Model.GetDensities().shape()[0] != Model.GetXCellSizes().shape()[0])
+          {
+            throw jiba::FatalException(
+                "Model x-dimension does not match size for specification of cell sizes.");
+          }
+        if (Model.GetDensities().shape()[1] != Model.GetYCellSizes().shape()[0])
+          {
+            throw jiba::FatalException(
+                "Model y-dimension does not match size for specification of cell sizes.");
+          }
+        if (Model.GetDensities().shape()[2] != Model.GetZCellSizes().shape()[0])
+          {
+            throw jiba::FatalException(
+                "Model x-dimension does not match size for specification of cell sizes.");
+          }
 
         // make sure we have coordinates for all sites
+        //these should always be equal, so we use an assertion
+        //to catch strange cases that should not occur
         const size_t nmeas = Model.GetMeasPosX().size();
         assert(nmeas == Model.GetMeasPosY().size());
         assert(nmeas == Model.GetMeasPosZ().size());
