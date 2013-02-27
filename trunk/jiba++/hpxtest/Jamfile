@@ -3,7 +3,7 @@ import testing ;
 
 #lib hpx_mt : HPXMTCalculator.cpp ..//MT
 #         ..//ModelBase  ..//boost_filesystem ..//boost_system 
-#          : <cflags>"`pkg-config --cflags hpx_application`"
+#          : <cflags>"`pkg-config --cflags hpx_component_debug `"
 #           
 #           ;
 
@@ -11,8 +11,7 @@ import testing ;
 
 
      
-exe HPXcalc_test : test_HPXCalculator.cpp HPXMTCalculator.cpp ..//MT  ..//ModelBase ..//Inversion ..//boost_filesystem ..//boost_system 
+exe HPXcalc_test : test_HPXCalculator.cpp HPXMTCalculator.cpp CalcFreq.cpp ..//MT  ..//ModelBase  ..//boost_system ..//boost_filesystem
    : <include>. 
-     <linkflags>"`pkg-config --cflags --libs hpx_application`"
-     <cflags>"`pkg-config --cflags hpx_application`"
+
      ;

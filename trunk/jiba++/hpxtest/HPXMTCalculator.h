@@ -5,8 +5,8 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-#ifndef X3DMTCALCULATOR_H_
-#define X3DMTCALCULATOR_H_
+#ifndef HPXMTCALCULATOR_H_
+#define HPXMTCALCULATOR_H_
 
 #include <limits>
 #include <boost/filesystem.hpp>
@@ -81,16 +81,6 @@ namespace jiba
        */
       rvec Calculate(const ModelType &Model, size_t minfreqindex = 0,
           size_t maxfreqindex = std::numeric_limits<size_t>::max());
-      //! Given a conductivity model and the misfit for each datum, calculate the derivative of the objective function with respect to the model parameters.
-      /*! We use an adjoint approach to calculate the gradient of the objective functions with respect to the model parameters. As this approach requires
-       * some of the fields from the forward calculation, the gradient will only be correct if the function Calculate of the same object has been called for
-       * the same model beforehand. It is safe to calculate different models with separate objects between those calls.
-       * @param Model The description of the conductivity model. Has to be the same as for the previous call to calculate.
-       * @param Misfit The data misfit associated with the model.
-       * @return The gradient of the objective function with respect to the model parameters for the given model. The storage ordering is identical to X3DModel.
-       */
-      rvec LQDerivative(const ModelType &Model, const rvec &Misfit, size_t minfreqindex =
-          0, size_t maxfreqindex = std::numeric_limits<size_t>::max());
       //! The constructor takes an optional argument to change the directory were temporary files are stored
       HPXMTCalculator(boost::filesystem::path TDir = boost::filesystem::current_path());
       virtual ~HPXMTCalculator();
@@ -98,4 +88,4 @@ namespace jiba
   /* @} */
   }
 
-#endif /* X3DMTCALCULATOR_H_ */
+#endif /* HPXMTCALCULATOR_H_ */

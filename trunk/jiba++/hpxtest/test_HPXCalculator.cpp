@@ -9,9 +9,12 @@
 #include "../Global/NumUtil.h"
 #include "HPXMTCalculator.h"
 #include "../MT/X3DModel.h"
+#include "../MT/X3DMTCalculator.h"
 #include "../MT/MTEquations.h"
 #include "../MT/MT2DForward.h"
 #include "../MT/ReadWriteImpedances.h"
+
+
 
 int hpx_main(int argc, char* argv[])
   {
@@ -40,32 +43,41 @@ int hpx_main(int argc, char* argv[])
     bg_conductivities.back() *= 1.001;
     std::fill_n(bg_thicknesses.begin(), nbglayers, 200.0);
 
+
     Model.SetBackgroundConductivities(bg_conductivities);
     Model.SetBackgroundThicknesses(bg_thicknesses);
     Model.SetFrequencies().push_back(freq);
+    Model.SetFrequencies().push_back(freq);
+    Model.SetFrequencies().push_back(freq);
+    Model.SetFrequencies().push_back(freq);
 
-    jiba::HPXMTCalculator Calculator;
+   jiba::X3DMTCalculator X3DCalculator;
+   jiba::HPXMTCalculator HPXCalculator;
+
     for (size_t i = 0; i < xsize / 2; ++i)
       for (size_t j = 0; j < ysize / 2; ++j)
         {
           Model.AddMeasurementPoint(Model.GetXCoordinates()[i] + deltax / 2.0,
               Model.GetYCoordinates()[j] + deltay / 2.0, 0.0);
         }
-
-    jiba::rvec Impedance = Calculator.Calculate(Model);
+    std::cout << "X3D " << std::endl;
+    jiba::rvec X3DImpedance = X3DCalculator.Calculate(Model);
+    //std::cout << "HPX " << std::endl;
+    jiba::rvec HPXImpedance = HPXCalculator.Calculate(Model);
     std::complex<double> HsImp = jiba::ImpedanceHalfspace(freq, cond);
     const double prec = 0.05;
-    const size_t nsites = Impedance.size() / 8;
+    const size_t nsites = HPXImpedance.size() / 8;
     for (size_t i = 0; i < nsites; ++i)
       {
-        std::cout << Impedance(i * 8 + 2) << " " << HsImp.real() << "     "
-            << Impedance(i * 8 + 3) << " " << HsImp.imag() << std::endl;
-        std::cout << Impedance(i * 8 + 4) << " " << -HsImp.real() << "     "
-            << Impedance(i * 8 + 5) << " " << -HsImp.imag() << std::endl;
+        std::cout << HPXImpedance(i * 8 + 2) << " " << X3DImpedance(i * 8 + 2) << "     "
+            << HPXImpedance(i * 8 + 3) << " " << X3DImpedance(i * 8 + 3) << std::endl;
+        std::cout << HPXImpedance(i * 8 + 4) << " " << X3DImpedance(i * 8 + 4) << "     "
+            << HPXImpedance(i * 8 + 5) << " " << X3DImpedance(i * 8 + 5) << std::endl;
 
       }
     // Any HPX application logic goes here...
     return hpx::finalize();
+    return 1;
   }
 
 int main(int argc, char* argv[])
@@ -73,6 +85,7 @@ int main(int argc, char* argv[])
 
     // Initialize HPX, run hpx_main as the first HPX thread, and
     // wait for hpx::finalize being called.
+
     return hpx::init(argc, argv);
 
   }
