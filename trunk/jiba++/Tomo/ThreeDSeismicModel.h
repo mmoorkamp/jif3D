@@ -8,6 +8,7 @@
 #ifndef THREEDSEISMICMODEL_H_
 #define THREEDSEISMICMODEL_H_
 
+#include <cassert>
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/base_object.hpp>
 #include "../ModelBase/ThreeDModelBase.h"
