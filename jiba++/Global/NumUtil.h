@@ -8,6 +8,8 @@
 #ifndef NUMUTIL_H_
 #define NUMUTIL_H_
 #include <cmath>
+#include <cstddef>
+#include <functional>
 #include <limits>
 
 /*! \file NumUtil.h
