@@ -14,7 +14,7 @@
 #include "X3DMTCalculator.h"
 #include "X3DModel.h"
 #include "MTEquations.h"
-#include "MT2DForward.h"
+//#include "MT2DForward.h"
 #include "ReadWriteImpedances.h"
 
 BOOST_AUTO_TEST_SUITE( X3DCalculator_Suite )
@@ -51,8 +51,8 @@ BOOST_AUTO_TEST_CASE  (X3D_forward_hs_test)
       Model.SetFrequencies().push_back(freq);
 
       jiba::X3DMTCalculator Calculator;
-      for (size_t i = 0; i < xsize; ++i)
-      for (size_t j = 0; j < ysize; ++j)
+      for (size_t i = 0; i < xsize/2; ++i)
+      for (size_t j = 0; j < ysize/2; ++j)
         {
           Model.AddMeasurementPoint(Model.GetXCoordinates()[i] + deltax/2.0,Model.GetYCoordinates()[j] + deltay/2.0,0.0);
         }
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE  (X3D_forward_hs_test)
       jiba::rvec Impedance = Calculator.Calculate(Model);
       std::complex<double> HsImp = jiba::ImpedanceHalfspace(freq,cond);
       const double prec = 0.05;
-      for (size_t i = 0; i < xsize * ysize; ++i)
+      for (size_t i = 0; i < xsize * ysize/4; ++i)
         {
           BOOST_CHECK_CLOSE(Impedance(i*8+2),HsImp.real(),prec);
           BOOST_CHECK_CLOSE(Impedance(i*8+3),HsImp.imag(),prec);
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE  (X3D_forward_hs_test)
 
     }
 
-  BOOST_AUTO_TEST_CASE (X3D_forward_2D_test)
+  /*BOOST_AUTO_TEST_CASE (X3D_forward_2D_test)
     {
       const size_t xsize = 100;
       const size_t ysize = 100;
@@ -192,5 +192,5 @@ BOOST_AUTO_TEST_CASE  (X3D_forward_hs_test)
         }
       jiba::WriteImpedancesToNetCDF("imp2Dprof.nc",Freq,XCoordProf,YCoordProf,ZCoordProf,Imp3DProfile);
     }
-
+*/
   BOOST_AUTO_TEST_SUITE_END()

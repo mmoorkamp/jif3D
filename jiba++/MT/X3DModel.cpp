@@ -5,7 +5,7 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-
+#include <cassert>
 #include "X3DModel.h"
 #include "../Global/NumUtil.h"
 namespace jiba
