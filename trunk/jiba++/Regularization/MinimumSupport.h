@@ -21,6 +21,11 @@ namespace jiba
       double beta;
       boost::shared_ptr<jiba::MatOpRegularization> RegFunc;
     public:
+      //! The clone function provides a virtual constructor
+      virtual MinimumSupport *clone() const
+        {
+          return new MinimumSupport(*this);
+        }
       virtual void ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff);
       virtual jiba::rvec ImplGradient(const jiba::rvec &Model, const jiba::rvec &Diff);
       MinimumSupport(boost::shared_ptr<jiba::MatOpRegularization> RF, double b = 1.0);

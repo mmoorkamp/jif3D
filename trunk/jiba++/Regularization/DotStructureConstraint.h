@@ -34,6 +34,11 @@ namespace jiba
 
 		}
 	public:
+    //! The clone function provides a virtual constructor
+    virtual DotStructureConstraint *clone() const
+      {
+        return new DotStructureConstraint(*this);
+      }
 		//! The implementation of the objective function calculation
 		virtual void
 		ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff);

@@ -43,6 +43,11 @@ private:
       return Gradient;
     }
 public:
+  //! The clone function provides a virtual constructor
+  virtual Rosenbrock *clone() const
+    {
+      return new Rosenbrock(*this);
+    }
   Rosenbrock()
     {
     }

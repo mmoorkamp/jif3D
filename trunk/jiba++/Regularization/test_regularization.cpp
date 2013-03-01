@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE (gradreg_test)
 	CheckGradient(Regularization,PertModel);
 }
 
-/*
+
  BOOST_AUTO_TEST_CASE (minsupp_test)
  {
  srand(time(NULL));
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE (gradreg_test)
  std::generate(StartModel.begin(),StartModel.end(),rand);
  std::generate(PertModel.begin(),PertModel.end(),rand);
 
- boost::shared_ptr<jiba::MatOpRegularization> Regularization(new jiba::GradientRegularization(GravModel));
+ boost::shared_ptr<jiba::MatOpRegularization> Regularization(new jiba::MinDiffRegularization(GravModel));
  Regularization->SetReferenceModel(StartModel);
  double beta = std::accumulate(StartModel.begin(), StartModel.end(),0.0)/StartModel.size();
  jiba::MinimumSupport MinSupp(Regularization,beta);
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE (gradreg_test)
 
  CheckGradient(MinSupp,PertModel);
  }
- */
+
 
 //this needs to be extended and refined
 BOOST_AUTO_TEST_CASE (curvreg_test)

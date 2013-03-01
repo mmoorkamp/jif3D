@@ -5,7 +5,6 @@
 // Copyright   : 2010, mmoorkamp
 //============================================================================
 
-
 #ifndef SETUPREGULARIZATION_H_
 #define SETUPREGULARIZATION_H_
 
@@ -41,6 +40,8 @@ namespace jiba
       double yweight;
       //! The regularization weight in z-direction
       double zweight;
+      //! The smallness parameter b for minimum support regularization
+      double minsuppb;
     public:
       //! Do we want to substract the starting model from the current model to calculate the roughness
       bool GetSubStart()
@@ -63,7 +64,7 @@ namespace jiba
        * @param CovModVec The model covariance vector, can be empty if covariance is assumed 1 or has to have one value for each cell in StartModel
        * @return A shared pointer to the configured regularization objective function object
        */
-      boost::shared_ptr<jiba::MatOpRegularization> SetupObjective(
+      boost::shared_ptr<jiba::ObjectiveFunction> SetupObjective(
           const po::variables_map &vm, const ThreeDModelBase &StartModel,
           const jiba::rvec &CovModVec);
       SetupRegularization();

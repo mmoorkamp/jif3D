@@ -189,7 +189,7 @@ int main(int argc, char *argv[])
             "MT model does not have the same geometry as starting model");
       }
 
-    boost::shared_ptr<jiba::MatOpRegularization> Regularization = RegSetup.SetupObjective(
+    boost::shared_ptr<jiba::ObjectiveFunction> Regularization = RegSetup.SetupObjective(
         vm, StartModel, CovModVec);
     CouplingSetup.SetupModelVector(vm, InvModel, StartModel, TomoSetup.GetModel(),
         GravitySetup.GetScalModel(), MTSetup.GetModel(), GetObjective(), Regularization,

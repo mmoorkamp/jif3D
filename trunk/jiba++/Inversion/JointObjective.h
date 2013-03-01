@@ -70,6 +70,11 @@ namespace jiba
       //the implementation of the gradient calculation
       virtual jiba::rvec ImplGradient(const jiba::rvec &Model, const jiba::rvec &Diff);
     public:
+      //! The clone function provides a virtual constructor
+      virtual JointObjective *clone() const
+        {
+          return new JointObjective(*this);
+        }
       //! Read only access to the individual objective function objects, for output and maintenance purposes
       const ObjectiveFunction &GetObjective(const size_t i) const
         {

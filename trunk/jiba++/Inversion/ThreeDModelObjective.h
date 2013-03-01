@@ -100,6 +100,11 @@ namespace jiba
           //TODO Implement transformation if necessary
         }
     public:
+      //! The clone function provides a virtual constructor
+      virtual ThreeDModelObjective<ThreeDCalculatorType> *clone() const
+        {
+          return new ThreeDModelObjective<ThreeDCalculatorType>(*this);
+        }
       //! Set the observed  data
       /*! We have to set the observed data in a format consistent with the calculator object.
        * As we provide an abstract interface here, the user has to make sure that the calculator

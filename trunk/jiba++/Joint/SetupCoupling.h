@@ -41,12 +41,18 @@ namespace jiba
       boost::shared_ptr<jiba::GeneralModelTransform> CondTrans;
       //! The transformation between generalized model parameters and density including selecting the right range from the model vector
       boost::shared_ptr<jiba::GeneralModelTransform> DensTrans;
-      //! The transformation between generalized model parameters and slowness without selecting the right range from the model vector
+      //! The transformation between generalized model parameters and slowness for the cross-gradient functional
       boost::shared_ptr<jiba::GeneralModelTransform> SlowCrossTrans;
-      //! The transformation between generalized model parameters and conductivity without selecting the right range from the model vector
+      //! The transformation between generalized model parameters and conductivity for the cross-gradient functional
       boost::shared_ptr<jiba::GeneralModelTransform> CondCrossTrans;
-      //! The transformation between generalized model parameters and density without selecting the right range from the model vector
+      //! The transformation between generalized model parameters and density for the cross-gradient functional
       boost::shared_ptr<jiba::GeneralModelTransform> DensCrossTrans;
+      //! The transformation between generalized model parameters and slowness for the regularization functional
+      boost::shared_ptr<jiba::ChainedTransform> SlowRegTrans;
+      //! The transformation between generalized model parameters and conductivity for the regularization functional
+      boost::shared_ptr<jiba::ChainedTransform> CondRegTrans;
+      //! The transformation between generalized model parameters and density for the regularization functional
+      boost::shared_ptr<jiba::ChainedTransform> DensRegTrans;
       //! The minimal conductivity in S/m
       double mincond;
       //! The maximum conductivity in S/m
@@ -71,7 +77,9 @@ namespace jiba
       double cond_c;
       //!
       std::string RelModelName;
+      //! The replacement value for density where the parameter relationship is not valid
       double DensReplace;
+      //! The replacement value for conductivity where the parameter relationship is not valid
       double CondReplace;
       //! Internal function to setup coupling and regularization when using the cross-gradient approach
       void SetupCrossGradModel(jiba::rvec &InvModel,
@@ -79,21 +87,21 @@ namespace jiba
           const jiba::ThreeDSeismicModel &SeisMod,
           const jiba::ThreeDGravityModel &GravMod, const jiba::ThreeDMTModel &MTMod,
           jiba::JointObjective &Objective,
-          boost::shared_ptr<jiba::MatOpRegularization> Regularization, bool substart);
+          boost::shared_ptr<jiba::ObjectiveFunction> Regularization, bool substart);
       //! Internal function to setup coupling and regularization when using a fixed parameter relationship
       void SetupFixedCouplingModel(jiba::rvec &InvModel,
           const jiba::ThreeDModelBase &ModelGeometry,
           const jiba::ThreeDSeismicModel &SeisMod,
           const jiba::ThreeDGravityModel &GravMod, const jiba::ThreeDMTModel &MTMod,
           jiba::JointObjective &Objective,
-          boost::shared_ptr<jiba::MatOpRegularization> Regularization, bool substart);
+          boost::shared_ptr<jiba::ObjectiveFunction> Regularization, bool substart);
       //! Internal function to setup coupling and regularization when using a parameter relationship designed for salt (unstable at the moment)
       void SetupSaltModel(const po::variables_map &vm, jiba::rvec &InvModel,
           const jiba::ThreeDModelBase &ModelGeometry,
           const jiba::ThreeDSeismicModel &SeisMod,
           const jiba::ThreeDGravityModel &GravMod, const jiba::ThreeDMTModel &MTMod,
           jiba::JointObjective &Objective,
-          boost::shared_ptr<jiba::MatOpRegularization> Regularization, bool substart);
+          boost::shared_ptr<jiba::ObjectiveFunction> Regularization, bool substart);
     public:
       //! Return an options descriptions object for boost::program_options that contains information about options for coupling the methods
       po::options_description SetupOptions();
@@ -133,7 +141,7 @@ namespace jiba
           const jiba::ThreeDSeismicModel &SeisMod,
           const jiba::ThreeDGravityModel &GravMod, const jiba::ThreeDMTModel &MTMod,
           jiba::JointObjective &Objective,
-          boost::shared_ptr<jiba::MatOpRegularization> Regularization, bool substart);
+          boost::shared_ptr<jiba::ObjectiveFunction> Regularization, bool substart);
 
       SetupCoupling();
       virtual ~SetupCoupling();
