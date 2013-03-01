@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
             + GravitySetup.GetScalModel().GetDensities().num_elements(),
         InvModel.begin());
 
-    boost::shared_ptr<jiba::MatOpRegularization> Regularization = RegSetup.SetupObjective(
+    boost::shared_ptr<jiba::ObjectiveFunction> Regularization = RegSetup.SetupObjective(
         vm, GravitySetup.GetScalModel(), CovModVec);
 
     double reglambda = 1.0;

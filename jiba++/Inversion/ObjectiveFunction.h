@@ -79,6 +79,14 @@ namespace jiba
       virtual jiba::rvec ImplGradient(const jiba::rvec &Model,
           const jiba::rvec &Diff) = 0;
     public:
+      //! We need a virtual constructor to create a new object from a pointer to a base class;
+      /*! There are situations where we only have a pointer to the base class, but we need
+       * a copy of the derived class without knowing what derived type it has. This virtual
+       * constructor definition allows us to do this. Each derived class has to define this
+       * function a return a pointer to a copy of itself.
+       * @return A pointer to copy of the derived object
+       */
+      virtual ObjectiveFunction *clone() const = 0;
       //! Some objective functions can reach a meaningful value that signals convergence, e.g. an RMS of 1 for data misfit, while regularization cannot
       /*! When we minimize data misfit we do not want to go significantly below a misfit that corresponds to the data error, i.e an RMS of 1.
        * When we reach this value the objective function has converged. For a regularization objective function we do not have such a value, the current

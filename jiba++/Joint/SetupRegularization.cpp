@@ -9,6 +9,7 @@
 #include "../Regularization/GradientRegularization.h"
 #include "../Regularization/CurvatureRegularization.h"
 #include "../Regularization/MinDiffRegularization.h"
+#include "../Regularization/MinimumSupport.h"
 #include "../Tomo/ThreeDSeismicModel.h"
 #include "SetupRegularization.h"
 
@@ -35,7 +36,9 @@ namespace jiba
 
       }
 
-    SetupRegularization::SetupRegularization()
+    SetupRegularization::SetupRegularization() :
+        beta(0.0), substart(false), xweight(1.0), yweight(1.0), zweight(1.0), minsuppb(
+            1.0)
       {
       }
 
@@ -67,12 +70,13 @@ namespace jiba
             "beta", po::value(&beta)->default_value(0.0),
             "The weight for the model parameter minimization in the regularization")(
             "substart", po::value(&substart)->default_value(false),
-            "Substract the starting model when calculating the roughness");
+            "Substract the starting model when calculating the roughness")("minsupp", po::value(&minsuppb),
+            "Use minimum support regularization (EXPERIMENTAL)");
 
         return desc;
       }
 
-    boost::shared_ptr<jiba::MatOpRegularization> SetupRegularization::SetupObjective(
+    boost::shared_ptr<jiba::ObjectiveFunction> SetupRegularization::SetupObjective(
         const po::variables_map &vm, const ThreeDModelBase &StartModel,
         const jiba::rvec &CovModVec)
       {
@@ -83,6 +87,13 @@ namespace jiba
           {
             return boost::shared_ptr<jiba::MinDiffRegularization>(
                 new jiba::MinDiffRegularization(StartModel));
+          }
+        if (vm.count("minsupp"))
+          {
+            return boost::shared_ptr<jiba::MinimumSupport>(
+                new jiba::MinimumSupport(
+                    boost::shared_ptr<jiba::MinDiffRegularization>(
+                        new jiba::MinDiffRegularization(StartModel)), minsuppb));
           }
         //setup possible tearing for the regularization for the three directions
         jiba::ThreeDSeismicModel TearModX, TearModY, TearModZ;

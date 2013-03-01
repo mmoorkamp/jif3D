@@ -102,8 +102,11 @@ namespace jiba
             MTObjective->SetCoarseModelGeometry(MTModel);
             MTObjective->SetObservedData(MTData);
             jiba::rvec MinErr(jiba::ConstructMTError(MTData, relerr));
-            std::transform(MTError.begin(), MTError.end(), MinErr.begin(),
-                MTError.begin(), std::max<double>);
+            for (size_t i = 0; i < MTError.size(); ++i)
+              {
+                MTError(i) = std::max(MTError(i), MinErr(i));
+              }
+
             MTObjective->SetDataError(MTError);
             //add the MT part to the JointObjective that will be used
             //for the inversion

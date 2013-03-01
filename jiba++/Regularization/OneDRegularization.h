@@ -25,6 +25,11 @@ namespace jiba
       comp_mat OperatorMatrix;
       jiba::rvec RefMod;
     public:
+      //! The clone function provides a virtual constructor
+      virtual OneDRegularization *clone() const
+        {
+          return new OneDRegularization(*this);
+        }
       //! Set the reference model for the roughness calculation, this is optional
       void SetReferenceModel(const jiba::rvec &Model)
         {

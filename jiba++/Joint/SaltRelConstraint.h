@@ -26,6 +26,11 @@ namespace jiba
       boost::shared_ptr<jiba::GeneralModelTransform> DensityTransform;
       boost::shared_ptr<jiba::GeneralModelTransform> ConductivityTransform;
     public:
+      //! The clone function provides a virtual constructor
+      virtual SaltRelConstraint *clone() const
+        {
+          return new SaltRelConstraint(*this);
+        }
       void SetExcludeCells(const jiba::ThreeDSeismicModel &Geo)
         {
           Geometry = Geo;
