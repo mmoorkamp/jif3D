@@ -9,7 +9,7 @@
 #define SETUPREGULARIZATION_H_
 
 #include "../Inversion/ModelTransforms.h"
-#include "../Regularization/MatOpRegularization.h"
+#include "../Regularization/RegularizationFunction.h"
 #include "../ModelBase/ThreeDModelBase.h"
 #include <boost/program_options.hpp>
 #include <boost/shared_ptr.hpp>
@@ -64,7 +64,7 @@ namespace jiba
        * @param CovModVec The model covariance vector, can be empty if covariance is assumed 1 or has to have one value for each cell in StartModel
        * @return A shared pointer to the configured regularization objective function object
        */
-      boost::shared_ptr<jiba::ObjectiveFunction> SetupObjective(
+      boost::shared_ptr<jiba::RegularizationFunction> SetupObjective(
           const po::variables_map &vm, const ThreeDModelBase &StartModel,
           const jiba::rvec &CovModVec);
       SetupRegularization();

@@ -9,12 +9,13 @@
 #define MINIMUMSUPPORT_H_
 
 #include <boost/shared_ptr.hpp>
+#include "RegularizationFunction.h"
 #include "MatOpRegularization.h"
 
 namespace jiba
   {
 
-    class MinimumSupport: public jiba::ObjectiveFunction
+    class MinimumSupport: public jiba::RegularizationFunction
       {
     private:
       jiba::rvec RegDiff;

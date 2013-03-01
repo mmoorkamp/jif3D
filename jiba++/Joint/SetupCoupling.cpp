@@ -241,7 +241,7 @@ namespace jiba
         const jiba::ThreeDModelBase &ModelGeometry,
         const jiba::ThreeDSeismicModel &SeisMod, const jiba::ThreeDGravityModel &GravMod,
         const jiba::ThreeDMTModel &MTMod, jiba::JointObjective &Objective,
-        boost::shared_ptr<jiba::ObjectiveFunction> Regularization, bool substart)
+        boost::shared_ptr<jiba::RegularizationFunction> Regularization, bool substart)
       {
         const size_t ngrid = ModelGeometry.GetNModelElements();
         InvModel.resize(3 * ngrid, 0.0);
@@ -337,7 +337,7 @@ namespace jiba
         double seisreglambda = 1.0;
         std::cout << " Weight for seismic regularization: ";
         std::cin >> seisreglambda;
-        boost::shared_ptr<jiba::ObjectiveFunction> SeisReg(Regularization->clone());
+        boost::shared_ptr<jiba::RegularizationFunction> SeisReg(Regularization->clone());
         jiba::rvec TomoCovar(3 * ngrid);
         SetupModelCovar(TomoCovar, SeisModel, SeisReg->GetDataError(), ngrid);
         SeisReg->SetDataError(TomoCovar);
@@ -346,7 +346,7 @@ namespace jiba
         double gravreglambda = 1.0;
         std::cout << " Weight for gravity regularization: ";
         std::cin >> gravreglambda;
-        boost::shared_ptr<jiba::ObjectiveFunction> GravReg(Regularization->clone());
+        boost::shared_ptr<jiba::RegularizationFunction> GravReg(Regularization->clone());
         jiba::rvec GravCovar(3 * ngrid);
         jiba::rvec Ones(GravModel.size(), 1.0);
         SetupModelCovar(GravCovar, Ones, GravReg->GetDataError(), ngrid);
@@ -356,19 +356,19 @@ namespace jiba
         double mtreglambda = 1.0;
         std::cout << " Weight for MT regularization: ";
         std::cin >> mtreglambda;
-        boost::shared_ptr<jiba::ObjectiveFunction> MTReg(Regularization->clone());
+        boost::shared_ptr<jiba::RegularizationFunction> MTReg(Regularization->clone());
         jiba::rvec MTCovar(3 * ngrid);
         SetupModelCovar(MTCovar, MTModel, MTReg->GetDataError(), ngrid);
         MTReg->SetDataError(MTCovar);
         //if we specify on the command line that we want to subtract the
         //starting model, we set the corresponding reference model
         //in the regularization object
-//        if (substart)
-//          {
-//            SeisReg->SetReferenceModel(SeisModel);
-//            GravReg->SetReferenceModel(GravModel);
-//            MTReg->SetReferenceModel(MTModel);
-//          }
+        if (substart)
+          {
+            SeisReg->SetReferenceModel(SeisModel);
+            GravReg->SetReferenceModel(GravModel);
+            MTReg->SetReferenceModel(MTModel);
+          }
         if (seisreglambda > 0.0)
           {
             Objective.AddObjective(SeisReg, SlowRegTrans, seisreglambda, "SeisReg");
@@ -387,7 +387,7 @@ namespace jiba
         const jiba::ThreeDModelBase &ModelGeometry,
         const jiba::ThreeDSeismicModel &SeisMod, const jiba::ThreeDGravityModel &GravMod,
         const jiba::ThreeDMTModel &MTMod, jiba::JointObjective &Objective,
-        boost::shared_ptr<jiba::ObjectiveFunction> Regularization, bool substart)
+        boost::shared_ptr<jiba::RegularizationFunction> Regularization, bool substart)
       {
         const size_t ngrid = ModelGeometry.GetNModelElements();
         InvModel.resize(3 * ngrid, 0.0);
@@ -488,7 +488,7 @@ namespace jiba
         double seisreglambda = 1.0;
         std::cout << " Weight for seismic regularization: ";
         std::cin >> seisreglambda;
-        boost::shared_ptr<jiba::ObjectiveFunction> SeisReg(Regularization->clone());
+        boost::shared_ptr<jiba::RegularizationFunction> SeisReg(Regularization->clone());
         jiba::rvec TomoCovar(3 * ngrid);
         SetupModelCovar(TomoCovar, SeisModel, SeisReg->GetDataError(), ngrid);
         SeisReg->SetDataError(TomoCovar);
@@ -497,7 +497,7 @@ namespace jiba
         double gravreglambda = 1.0;
         std::cout << " Weight for gravity regularization: ";
         std::cin >> gravreglambda;
-        boost::shared_ptr<jiba::ObjectiveFunction> GravReg(Regularization->clone());
+        boost::shared_ptr<jiba::RegularizationFunction> GravReg(Regularization->clone());
         jiba::rvec GravCovar(3 * ngrid);
         jiba::rvec Ones(GravModel.size(), 1.0);
         SetupModelCovar(GravCovar, Ones, GravReg->GetDataError(), ngrid);
@@ -507,7 +507,7 @@ namespace jiba
         double mtreglambda = 1.0;
         std::cout << " Weight for MT regularization: ";
         std::cin >> mtreglambda;
-        boost::shared_ptr<jiba::ObjectiveFunction> MTReg(Regularization->clone());
+        boost::shared_ptr<jiba::RegularizationFunction> MTReg(Regularization->clone());
         jiba::rvec MTCovar(3 * ngrid);
         SetupModelCovar(MTCovar, MTModel, MTReg->GetDataError(), ngrid);
         MTReg->SetDataError(MTCovar);
@@ -515,12 +515,12 @@ namespace jiba
         //if we specify on the command line that we want to subtract the
         //starting model, we set the corresponding reference model
         //in the regularization object
-/*        if (substart)
+        if (substart)
           {
             SeisReg->SetReferenceModel(SeisModel);
             GravReg->SetReferenceModel(GravModel);
             MTReg->SetReferenceModel(MTModel);
-          }*/
+          }
         if (seisreglambda > 0.0)
           {
             Objective.AddObjective(SeisReg, SlowRegTrans, seisreglambda, "SeisReg");
@@ -541,7 +541,7 @@ namespace jiba
         const jiba::ThreeDModelBase &ModelGeometry,
         const jiba::ThreeDSeismicModel &SeisMod, const jiba::ThreeDGravityModel &GravMod,
         const jiba::ThreeDMTModel &MTMod, jiba::JointObjective &Objective,
-        boost::shared_ptr<jiba::ObjectiveFunction> Regularization, bool substart)
+        boost::shared_ptr<jiba::RegularizationFunction> Regularization, bool substart)
       {
         const size_t ngrid = ModelGeometry.GetNModelElements();
 
@@ -565,10 +565,10 @@ namespace jiba
             SetupModelCovar(TomoCovar, InvModel, Regularization->GetDataError(), ngrid);
             Regularization->SetDataError(TomoCovar);
           }
-/*        if (substart)
+        if (substart)
           {
             Regularization->SetReferenceModel(InvModel);
-          }*/
+          }
         Objective.AddObjective(Regularization, SlowTrans, reglambda, "Reg");
         InvModel = SlowTrans->PhysicalToGeneralized(InvModel);
       }
@@ -577,7 +577,7 @@ namespace jiba
         jiba::rvec &InvModel, const jiba::ThreeDModelBase &ModelGeometry,
         const jiba::ThreeDSeismicModel &SeisMod, const jiba::ThreeDGravityModel &GravMod,
         const jiba::ThreeDMTModel &MTMod, jiba::JointObjective &Objective,
-        boost::shared_ptr<jiba::ObjectiveFunction> Regularization, bool substart)
+        boost::shared_ptr<jiba::RegularizationFunction> Regularization, bool substart)
       {
         //if we want to do corss-gradient type inversion
         //we need three cross-gradient objective functions
