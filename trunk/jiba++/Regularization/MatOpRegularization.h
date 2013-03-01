@@ -10,7 +10,7 @@
 
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/base_object.hpp>
-#include "../Inversion/ObjectiveFunction.h"
+#include "RegularizationFunction.h"
 #include "../Global/VecMat.h"
 #include "../ModelBase/ThreeDModelBase.h"
 
@@ -27,7 +27,7 @@ namespace jiba
      * and ZOperatorMatrix. These calculate the model roughness in x-direction, y-direction and z-direction, respectively.
      *
      */
-    class MatOpRegularization: public jiba::ObjectiveFunction
+    class MatOpRegularization: public jiba::RegularizationFunction
       {
     private:
       /*! The implementation of the data difference is independent
@@ -44,10 +44,11 @@ namespace jiba
           //before roughness calculation, we set the vector to the right size
           //and fill it with zeros. That way we do not have to consider this special
           //case any more
-          if (Reference.size() != nmod)
+          if (GetReferenceModel().size() != nmod)
             {
-              Reference.resize(nmod);
-              Reference.clear();
+              jiba::rvec RefMod(nmod);
+              RefMod.clear();
+              SetReferenceModel(RefMod);
             }
           //make sure that the operator matrix has the right dimension
           assert(XOperatorMatrix.size1() == nmod);
@@ -59,7 +60,7 @@ namespace jiba
           ublas::vector_range<jiba::rvec> xrange(Diff, ublas::range(0, nmod));
           ublas::vector_range<jiba::rvec> yrange(Diff, ublas::range(nmod, 2 * nmod));
           ublas::vector_range<jiba::rvec> zrange(Diff, ublas::range(2 * nmod, 3 * nmod));
-          jiba::rvec x(Model - Reference);
+          jiba::rvec x(Model - GetReferenceModel());
           //calculate the action of the regularization operator
           //on the model vector for the three coordinate directions
           //and store the difference in the corresponding range of
@@ -102,7 +103,7 @@ namespace jiba
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
         {
-          ar & boost::serialization::base_object<ObjectiveFunction>(*this);
+          ar & boost::serialization::base_object<RegularizationFunction>(*this);
           ar & xweight;
           ar & yweight;
           ar & zweight;
@@ -112,7 +113,6 @@ namespace jiba
           ar & XGrad;
           ar & YGrad;
           ar & ZGrad;
-          ar & Reference;
         }
     protected:
       //! The weight of the regularization in x-direction
@@ -133,8 +133,6 @@ namespace jiba
       jiba::rvec YGrad;
       //! The gradient of the z-direction part of the regularization functional
       jiba::rvec ZGrad;
-      //! The storage for a reference model
-      jiba::rvec Reference;
     public:
       //! We need a virtual constructor to create a new object from a pointer to a base class;
       /*! There are situations where we only have a pointer to the base class, but we need
@@ -143,7 +141,10 @@ namespace jiba
        * function a return a pointer to a copy of itself.
        * @return A pointer to copy of the derived object
        */
-      virtual MatOpRegularization *clone() const = 0;
+      virtual MatOpRegularization *clone() const
+      {
+        return new MatOpRegularization(*this);
+      }
       //! We never want to terminate the inversion because the regularization has reached a particular value, so we return -1
       virtual double ConvergenceLimit() const
         {
@@ -171,7 +172,7 @@ namespace jiba
         }
       const comp_mat &GetXOperator() const
         {
-    	  return XOperatorMatrix;
+          return XOperatorMatrix;
         }
       const comp_mat &GetYOperator() const
         {
@@ -180,7 +181,7 @@ namespace jiba
       const comp_mat &GetZOperator() const
         {
           return ZOperatorMatrix;
-         }
+        }
       //! Read only access to the gradient of the regularization functional that works in y-direction
       const jiba::rvec &GetYGrad() const
         {
@@ -190,11 +191,6 @@ namespace jiba
       const jiba::rvec &GetZGrad() const
         {
           return ZGrad;
-        }
-      //! Set the reference model for the roughness calculation, this is optional
-      void SetReferenceModel(const jiba::rvec &Model)
-        {
-          Reference = Model;
         }
       //! We have to specify the model geometry when constructing a regularization object
       /*! In order to understand the spatial relationship between the elements of the

@@ -31,8 +31,7 @@
 #include "../Global/Noise.h"
 #include "../Inversion/ModelTransforms.h"
 #include "../Inversion/JointObjective.h"
-#include "../Regularization/MinDiffRegularization.h"
-#include "../Regularization/GradientRegularization.h"
+#include "../Regularization/RegularizationFunction.h"
 #include "../ModelBase/VTKTools.h"
 #include "../ModelBase/NetCDFTools.h"
 #include "../ModelBase/EqualGeometry.h"
@@ -189,7 +188,7 @@ int main(int argc, char *argv[])
             "MT model does not have the same geometry as starting model");
       }
 
-    boost::shared_ptr<jiba::ObjectiveFunction> Regularization = RegSetup.SetupObjective(
+    boost::shared_ptr<jiba::RegularizationFunction> Regularization = RegSetup.SetupObjective(
         vm, StartModel, CovModVec);
     CouplingSetup.SetupModelVector(vm, InvModel, StartModel, TomoSetup.GetModel(),
         GravitySetup.GetScalModel(), MTSetup.GetModel(), GetObjective(), Regularization,

@@ -76,7 +76,7 @@ namespace jiba
         return desc;
       }
 
-    boost::shared_ptr<jiba::ObjectiveFunction> SetupRegularization::SetupObjective(
+    boost::shared_ptr<jiba::RegularizationFunction> SetupRegularization::SetupObjective(
         const po::variables_map &vm, const ThreeDModelBase &StartModel,
         const jiba::rvec &CovModVec)
       {

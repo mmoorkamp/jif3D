@@ -10,7 +10,7 @@
 
 #include "../Inversion/ModelTransforms.h"
 #include "../Inversion/JointObjective.h"
-#include "../Regularization/MatOpRegularization.h"
+#include "../Regularization/RegularizationFunction.h"
 #include "../Tomo/ThreeDSeismicModel.h"
 #include "../MT/X3DModel.h"
 #include "../Gravity/ThreeDGravityModel.h"
@@ -87,21 +87,21 @@ namespace jiba
           const jiba::ThreeDSeismicModel &SeisMod,
           const jiba::ThreeDGravityModel &GravMod, const jiba::ThreeDMTModel &MTMod,
           jiba::JointObjective &Objective,
-          boost::shared_ptr<jiba::ObjectiveFunction> Regularization, bool substart);
+          boost::shared_ptr<jiba::RegularizationFunction> Regularization, bool substart);
       //! Internal function to setup coupling and regularization when using a fixed parameter relationship
       void SetupFixedCouplingModel(jiba::rvec &InvModel,
           const jiba::ThreeDModelBase &ModelGeometry,
           const jiba::ThreeDSeismicModel &SeisMod,
           const jiba::ThreeDGravityModel &GravMod, const jiba::ThreeDMTModel &MTMod,
           jiba::JointObjective &Objective,
-          boost::shared_ptr<jiba::ObjectiveFunction> Regularization, bool substart);
+          boost::shared_ptr<jiba::RegularizationFunction> Regularization, bool substart);
       //! Internal function to setup coupling and regularization when using a parameter relationship designed for salt (unstable at the moment)
       void SetupSaltModel(const po::variables_map &vm, jiba::rvec &InvModel,
           const jiba::ThreeDModelBase &ModelGeometry,
           const jiba::ThreeDSeismicModel &SeisMod,
           const jiba::ThreeDGravityModel &GravMod, const jiba::ThreeDMTModel &MTMod,
           jiba::JointObjective &Objective,
-          boost::shared_ptr<jiba::ObjectiveFunction> Regularization, bool substart);
+          boost::shared_ptr<jiba::RegularizationFunction> Regularization, bool substart);
     public:
       //! Return an options descriptions object for boost::program_options that contains information about options for coupling the methods
       po::options_description SetupOptions();
@@ -141,7 +141,7 @@ namespace jiba
           const jiba::ThreeDSeismicModel &SeisMod,
           const jiba::ThreeDGravityModel &GravMod, const jiba::ThreeDMTModel &MTMod,
           jiba::JointObjective &Objective,
-          boost::shared_ptr<jiba::ObjectiveFunction> Regularization, bool substart);
+          boost::shared_ptr<jiba::RegularizationFunction> Regularization, bool substart);
 
       SetupCoupling();
       virtual ~SetupCoupling();
