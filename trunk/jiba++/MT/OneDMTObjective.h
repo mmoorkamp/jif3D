@@ -25,12 +25,8 @@ namespace jiba
       {
 
     private:
-      std::ofstream ModelLog;
-      std::ofstream ModelGrad;
       jiba::OneDMTCalculator Calculator;
-
       jiba::X3DModel MTModel;
-
       jiba::rvec ObservedData;
       //! Calculate the difference between observed and synthetic data for a given model
       friend class boost::serialization::access;
@@ -53,7 +49,6 @@ namespace jiba
               std::vector<double>(Model.begin(), Model.end()));
           jiba::rvec SynthData;
           SynthData = Calculator.Calculate(MTModel);
-          ModelLog << Model(0) << " " << Model(1) << "\n";
           if (SynthData.size() != ObservedData.size())
             throw jiba::FatalException(
                 " ThreeDModelObjective: Forward calculation does not give same amount of data !");
@@ -80,7 +75,6 @@ namespace jiba
               result(index) = (ForFDGrad + BackFDGrad) / 2.0;
 
             }
-          ModelGrad << " " << result(0) << " " << result(1) << "\n";
           return result;
           assert(Model.size() == MTModel.GetBackgroundConductivities().size());
           //as we have stored the model vector from the misfit calculation
@@ -103,6 +97,11 @@ namespace jiba
           //TODO Implement transformation if necessary
         }
     public:
+      //! The clone function provides a virtual constructor
+      virtual OneDMTObjective *clone() const
+        {
+          return new OneDMTObjective(*this);
+        }
       //! Set the observed  data
       /*! We have to set the observed data in a format consistent with the calculator object.
        * As we provide an abstract interface here, the user has to make sure that the calculator
@@ -158,13 +157,9 @@ namespace jiba
        */
       OneDMTObjective()
         {
-          ModelLog.open("mtmodel.log");
-          ModelGrad.open("mtgrad.log");
         }
       virtual ~OneDMTObjective()
         {
-          ModelLog.close();
-          ModelGrad.close();
         }
       };
 
