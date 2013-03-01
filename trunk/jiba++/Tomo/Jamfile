@@ -11,7 +11,7 @@ lib tomo :  modeling_seismic.cpp ThreeDSeismicModel.cpp TomographyCalculator.cpp
 unit-test seismic_test :  test_modeling_seismic.cpp tomo ../ModelBase//modelbase : <include>. ;
 #unit-test tomo_objective_test :  test_tomo_objective.cpp tomo ../ModelBase//modelbase  ../Inversion : <include>. ;
 
-exe makeseismesh : makeseismesh.cpp tomo  core : <include>. ;
-exe tomogrid : tomogrid.cpp tomo  core : <include>. ;
-exe refinemodel : refinemodel.cpp tomo  core : <include>. ;
-exe reldiff : reldiff.cpp tomo  core : <include>. ;
+exe makeseismesh : makeseismesh.cpp tomo  core :  ;
+exe tomogrid : tomogrid.cpp tomo  core :  ;
+exe refinemodel : refinemodel.cpp tomo  core :  ;
+exe reldiff : reldiff.cpp tomo  core :  ;
