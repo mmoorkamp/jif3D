@@ -133,10 +133,11 @@ namespace jiba
                     new jiba::TanhTransform(minslow, maxslow)));
             SlowCrossTrans = boost::shared_ptr<jiba::GeneralModelTransform>(
                 SlownessTransform->clone());
-            SlowRegTrans = boost::shared_ptr<jiba::ChainedTransform>(
-                SlownessTransform->clone());
             TomoTransform = boost::shared_ptr<jiba::GeneralModelTransform>(
                 new jiba::MultiSectionTransform(3 * ngrid, 0, ngrid, SlownessTransform));
+            SlowRegTrans = boost::shared_ptr<jiba::ChainedTransform>(
+                new jiba::ChainedTransform);
+            SlowRegTrans->AppendTransform(TomoTransform);
 
             //then we do density
             boost::shared_ptr<jiba::ChainedTransform> DensityTransform(
@@ -146,11 +147,12 @@ namespace jiba
                     new jiba::TanhTransform(mindens, maxdens)));
             DensCrossTrans = boost::shared_ptr<jiba::GeneralModelTransform>(
                 DensityTransform->clone());
-            DensRegTrans = boost::shared_ptr<jiba::ChainedTransform>(
-                DensityTransform->clone());
             GravityTransform = boost::shared_ptr<jiba::GeneralModelTransform>(
                 new jiba::MultiSectionTransform(3 * ngrid, ngrid, 2 * ngrid,
                     DensityTransform));
+            DensRegTrans = boost::shared_ptr<jiba::ChainedTransform>(
+                new jiba::ChainedTransform);
+            DensRegTrans->AppendTransform(GravityTransform);
 
             //and then conductivity, conductivity has a LogTransform in addition
             //to reduce the range of inversion parameters
@@ -166,11 +168,12 @@ namespace jiba
                     new jiba::LogTransform(RefModel)));
             CondCrossTrans = boost::shared_ptr<jiba::GeneralModelTransform>(
                 ConductivityTransform->clone());
-            CondRegTrans = boost::shared_ptr<jiba::ChainedTransform>(
-                ConductivityTransform->clone());
             MTTransform = boost::shared_ptr<jiba::GeneralModelTransform>(
                 new jiba::MultiSectionTransform(3 * ngrid, 2 * ngrid, 3 * ngrid,
                     ConductivityTransform));
+            CondRegTrans = boost::shared_ptr<jiba::ChainedTransform>(
+                new jiba::ChainedTransform);
+            CondRegTrans->AppendTransform(MTTransform);
             //if we want to regularize in the wavelet  domain
             //we need to add a wavelet transform to the regularization
             if (Wavelet)
