@@ -9,8 +9,7 @@
 #include <fstream>
 #include <iomanip>
 #include <algorithm>
-#include <boost/function.hpp>
-#include <boost/bind.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/multi_array/index_range.hpp>
 #include "../Global/FileUtil.h"
 #include "../Global/FatalException.h"
@@ -32,6 +31,10 @@ namespace jiba
         ThreeDModelBase::t3DModelDim &ZCellSizes, ThreeDModelBase::t3DModelData &Data,
         std::vector<double> &bg_conductivities, std::vector<double> &bg_thicknesses)
       {
+        if (!boost::filesystem::exists(filename))
+          {
+            throw jiba::FatalException("File does not exist: " + filename);
+          }
         std::ifstream infile(filename.c_str());
         //find the line in the file that describes the cell size in the horizontal directions
         //all cells have the same size
@@ -307,6 +310,10 @@ namespace jiba
         std::vector<std::complex<double> > &Ey, std::vector<std::complex<double> > &Hx,
         std::vector<std::complex<double> > &Hy)
       {
+        if (!boost::filesystem::exists(filename))
+          {
+            throw jiba::FatalException("File does not exist: " + filename);
+          }
         std::ifstream infile(filename.c_str());
         //find the description line for the electric fields
         FindToken(infile, "#        x (m)");
@@ -354,6 +361,10 @@ namespace jiba
         std::vector<std::complex<double> > &Ey, std::vector<std::complex<double> > &Ez,
         const size_t ncellsx, const size_t ncellsy, const size_t ncellsz)
       {
+        if (!boost::filesystem::exists(filename))
+          {
+            throw jiba::FatalException("File does not exist: " + filename);
+          }
         std::ifstream infile(filename.c_str());
         //find the description line for the electric fields
         FindToken(infile, "#        x (m)");
@@ -441,8 +452,7 @@ namespace jiba
         const std::vector<std::complex<double> > &XPolMoments,
         const std::vector<std::complex<double> > &YPolMoments,
         const jiba::ThreeDModelBase::t3DModelDim &ZCellBoundaries,
-        const jiba::ThreeDModelBase::t3DModelDim &ZCellSizes,
-        const size_t maxx,
+        const jiba::ThreeDModelBase::t3DModelDim &ZCellSizes, const size_t maxx,
         const size_t maxy)
       {
         typedef boost::multi_array_types::index_range range;
@@ -454,7 +464,8 @@ namespace jiba
         std::vector<size_t> ZIndices;
         for (size_t i = 0; i < nmeas; ++i)
           {
-            size_t zindex = FindNearestCellBoundary(SourceDepths[i], ZCellBoundaries, ZCellSizes);
+            size_t zindex = FindNearestCellBoundary(SourceDepths[i], ZCellBoundaries,
+                ZCellSizes);
             if (std::find(ZIndices.begin(), ZIndices.end(), zindex) == ZIndices.end())
               {
                 ZIndices.push_back(zindex);
@@ -486,7 +497,8 @@ namespace jiba
             std::fill_n(ImagYMoments.origin(), nelements, 0.0);
             for (size_t j = 0; j < nmeas; ++j)
               {
-                size_t zindex = FindNearestCellBoundary(SourceDepths[j], ZCellBoundaries, ZCellSizes);
+                size_t zindex = FindNearestCellBoundary(SourceDepths[j], ZCellBoundaries,
+                    ZCellSizes);
                 if (zindex == ZIndices[i])
                   {
                     RealXMoments[SourceXIndex[j]][SourceYIndex[j]] = std::real(
