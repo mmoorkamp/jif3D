@@ -36,7 +36,7 @@ namespace jiba
       mutable boost::multi_array<double, 3> Grid;
       //! Copy the model vector to the 3D grid and perform either a forward or inverse wavelet transform, then copy back to a vector
       jiba::rvec Transform(const jiba::rvec &Vector,
-          boost::function1<void, boost::multi_array<double, 3> > &WaveTrans) const
+          boost::function1<void, boost::multi_array<double, 3> &> &WaveTrans) const
         {
           if (Vector.size() > Grid.num_elements())
             throw FatalException(
@@ -74,15 +74,15 @@ namespace jiba
       //! Transform generalized model parameters (wavelet coefficients) to physical parameters
       virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
         {
-          boost::function1<void, boost::multi_array<double, 3> > func =
-              &jiba::InvWaveletTransform<boost::multi_array<double, 3> >;
+          boost::function1<void, boost::multi_array<double, 3> &> func =
+              &jiba::WaveletTransform<boost::multi_array<double, 3> >;
           return Transform(FullModel, func);
         }
       //! Transform physical parameters to generalized model parameters (wavelet coefficients)
       virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
         {
-          boost::function1<void, boost::multi_array<double, 3> > func =
-              &jiba::WaveletTransform<boost::multi_array<double, 3> >;
+          boost::function1<void, boost::multi_array<double, 3> &> func =
+              &jiba::InvWaveletTransform<boost::multi_array<double, 3> >;
           return Transform(FullModel, func);
         }
       //! Transform the derivative with respect to physical parameters into the wavelet domain
