@@ -5,6 +5,8 @@
 // Copyright   : 2008, mmoorkamp
 //============================================================================
 
+#ifndef WAVELET_H_
+#define WAVELET_H_
 #include "VecMat.h"
 
 /*! \file Wavelet.h
@@ -53,3 +55,4 @@ namespace jiba
 
   //end of namespace jiba
   }
+#endif /* WAVELET_H_ */
