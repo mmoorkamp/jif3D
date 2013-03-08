@@ -22,6 +22,7 @@ namespace jiba
     static const double c1 = (3.0 + std::sqrt(3.0)) / (4.0 * std::sqrt(2.0));
     static const double c2 = (3.0 - std::sqrt(3.0)) / (4.0 * std::sqrt(2.0));
     static const double c3 = (1.0 - std::sqrt(3.0)) / (4.0 * std::sqrt(2.0));
+
     /*! Apply a 4 coefficient Daubechies wavelet filter to the input vector.
      * @param Invec The vector with the input data, will contain the result of the transform. Size must be a power of 2
      * @param maxindex The maximum index to which to apply the filter, must be a power of 2
@@ -46,9 +47,11 @@ namespace jiba
             + c2 * Invec(0) + c3 * Invec(1);
         Temp(length - 1) = c3 * Invec(length - 2) - c2 * Invec(length - 1) + c1
             * Invec(0) - c0 * Invec(1);
-        //copy the result back to Invec
+        //copy the result back to Invec, we only copy up to maxindex
         std::copy(Temp.begin(), Temp.begin() + maxindex, Invec.begin());
       }
+
+
     /*! Apply a 4 coefficient inverse Daubechies wavelet filter to the input vector.
      * @param Invec The vector with the input data, will contain the result of the transform. Size must be a power of 2
      * @param maxindex The maximum index to which to apply the filter, must be a power of 2 and less than the size of Invec

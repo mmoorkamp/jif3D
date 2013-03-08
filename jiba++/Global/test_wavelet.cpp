@@ -6,7 +6,7 @@
 //============================================================================
 
 
-//test the wvaelet forward and inverse transforms
+//test the wavelet forward and inverse transforms
 #define BOOST_TEST_MODULE Wavelet test
 #define BOOST_TEST_MAIN ...
 
