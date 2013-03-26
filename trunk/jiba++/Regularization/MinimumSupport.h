@@ -18,9 +18,12 @@ namespace jiba
     class MinimumSupport: public jiba::RegularizationFunction
       {
     private:
+      size_t ModelNumber;
       jiba::rvec RegDiff;
       double beta;
+
       boost::shared_ptr<jiba::MatOpRegularization> RegFunc;
+      jiba::ThreeDModelBase Geometry;
     public:
       //! The clone function provides a virtual constructor
       virtual MinimumSupport *clone() const
