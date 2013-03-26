@@ -3,6 +3,9 @@ import mpi ;
 
 alias joint : ../Tomo ../Gravity ../Inversion ../Global ../Regularization ;
 
+lib gsl : : <name>gsl ;
+lib cblas : : <name>cblas ;
+
 exe gravregion : gravregion.cpp joint : <include>. ;
 exe plotsaltrel : plotsaltrel.cpp joint ../Joint : <include>. ;	
 # exe fittingtest : fittingtest.cpp ../Inversion ../Joint : <include>. ;
@@ -24,6 +27,8 @@ exe mergetomo : mergetomo.cpp  ../Tomo  ../Global : <include>. ;
 exe tomoregion : tomoregion.cpp  ../Tomo  ../Global : <include>. ;
 exe eikonal : eikonal.cpp  ../Tomo  ../Global : <include>. ;
 exe eikonal2D : eikonal2D.cpp  ../Tomo  ../Global : <include>. ;
+exe modelwave : modelwave.cpp  ../Tomo  ../Global : <include>. ;
+#exe testwave : testwave.cpp  ../Tomo  ../Global cblas gsl   : <include>. ;
 exe opttest : opttest.cpp  ../Joint ../MT ..//optpp ..//newmat joint ..//boost_program_options : 
               <include>/usr/local/include/opt++ <define>use_namespace <define>HAVE_STD ;
 # exe invariantftginv : invariantftginv.cpp  ../Gravity//gravity ../Global ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ../Inversion//inversion
