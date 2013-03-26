@@ -134,6 +134,7 @@ namespace jiba
       //! The gradient of the z-direction part of the regularization functional
       jiba::rvec ZGrad;
     public:
+      jiba::ThreeDModelBase ModelGeo;
       //! We need a virtual constructor to create a new object from a pointer to a base class;
       /*! There are situations where we only have a pointer to the base class, but we need
        * a copy of the derived class without knowing what derived type it has. This virtual
@@ -142,9 +143,9 @@ namespace jiba
        * @return A pointer to copy of the derived object
        */
       virtual MatOpRegularization *clone() const
-      {
-        return new MatOpRegularization(*this);
-      }
+        {
+          return new MatOpRegularization(*this);
+        }
       //! We never want to terminate the inversion because the regularization has reached a particular value, so we return -1
       virtual double ConvergenceLimit() const
         {
@@ -202,7 +203,8 @@ namespace jiba
           xweight(1.0), yweight(1.0), zweight(1.0), XOperatorMatrix(
               Geometry.GetNModelElements(), Geometry.GetNModelElements()), YOperatorMatrix(
               Geometry.GetNModelElements(), Geometry.GetNModelElements()), ZOperatorMatrix(
-              Geometry.GetNModelElements(), Geometry.GetNModelElements())
+              Geometry.GetNModelElements(), Geometry.GetNModelElements()), ModelGeo(
+              Geometry)
         {
         }
       virtual ~MatOpRegularization()

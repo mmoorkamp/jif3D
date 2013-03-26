@@ -42,6 +42,7 @@ namespace jiba
           ar & boost::serialization::base_object<MatOpRegularization>(*this);
         }
     public:
+
       //! The clone function provides a virtual constructor
       virtual MinDiffRegularization *clone() const
         {

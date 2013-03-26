@@ -7,36 +7,63 @@
 
 #include <boost/math/special_functions/pow.hpp>
 #include "MinimumSupport.h"
+#include "../ModelBase/VTKTools.h"
+#include "../Global/convert.h"
 
 namespace jiba
   {
     namespace bm = boost::math;
     void MinimumSupport::ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff)
       {
-        RegFunc->CalcMisfit(Model);
-        RegDiff = RegFunc->GetDataDifference();
-        Diff.resize(Model.size(), false);
-        const double b = beta * beta;
         const size_t nmod = Model.size();
+        if (GetReferenceModel().size() != nmod)
+          {
+            jiba::rvec RefMod(nmod);
+            RefMod.clear();
+            SetReferenceModel(RefMod);
+          }
+        jiba::rvec X(Model - GetReferenceModel());
+        RegFunc->CalcMisfit(X);
+        const size_t nx = RegFunc->ModelGeo.GetXCellSizes().size();
+        const size_t ny = RegFunc->ModelGeo.GetYCellSizes().size();
+        const size_t nz = RegFunc->ModelGeo.GetZCellSizes().size();
+
+        Write3DModelToVTK("wave" + stringify(ModelNumber) + ".vtk", "WaveCoeff",
+            RegFunc->ModelGeo.GetXCellSizes(), RegFunc->ModelGeo.GetYCellSizes(),
+            RegFunc->ModelGeo.GetZCellSizes(),
+            boost::const_multi_array_ref<double, 3>(&X(0), boost::extents[nx][ny][nz]));
+
+        RegDiff = RegFunc->GetDataDifference();
+        Diff.resize(nmod, false);
+        const double b = beta * beta;
+
         for (size_t i = 0; i < nmod; ++i)
           {
             double mag = bm::pow<2>(RegDiff(i)) + bm::pow<2>(RegDiff(nmod + i))
                 + bm::pow<2>(RegDiff(2 * nmod + i));
-            Diff(i) = sqrt(mag / (b + mag));
+            Diff(i) = sqrt(Geometry.GetData().data()[i] * mag / (b + mag));
           }
+
+        Write3DModelToVTK("supp" + stringify(ModelNumber) + ".vtk", "Support",
+            RegFunc->ModelGeo.GetXCellSizes(), RegFunc->ModelGeo.GetYCellSizes(),
+            RegFunc->ModelGeo.GetZCellSizes(),
+            boost::const_multi_array_ref<double, 3>(&Diff(0),
+                boost::extents[nx][ny][nz]));
+        ++ModelNumber;
       }
 
     jiba::rvec MinimumSupport::ImplGradient(const jiba::rvec &Model,
         const jiba::rvec &Diff)
       {
-        jiba::rvec Grad = RegFunc->CalcGradient(Model);
+        jiba::rvec X(Model - GetReferenceModel());
+        jiba::rvec Grad = RegFunc->CalcGradient(X);
         const double b = beta * beta;
         const size_t nmod = Model.size();
         for (size_t i = 0; i < Grad.size(); ++i)
           {
             double mag = bm::pow<2>(RegDiff(i)) + bm::pow<2>(RegDiff(nmod + i))
                 + bm::pow<2>(RegDiff(2 * nmod + i));
-            Grad(i) = 2 * b * (RegDiff(i) + RegDiff(nmod + i) + RegDiff(2 * nmod + i))
+            Grad(i) = Geometry.GetData().data()[i] * 2 * b * (RegDiff(i) + RegDiff(nmod + i) + RegDiff(2 * nmod + i))
                 / bm::pow<2>(b + mag);
           }
         jiba::comp_mat Mat(
@@ -46,8 +73,24 @@ namespace jiba
 
     MinimumSupport::MinimumSupport(boost::shared_ptr<jiba::MatOpRegularization> RF,
         double b) :
-        beta(b), RegFunc(RF)
+         ModelNumber(0), beta(b), RegFunc(RF), Geometry(RF->ModelGeo)
       {
+
+        std::fill_n(Geometry.SetData().origin(), Geometry.SetData().num_elements(), 1.0);
+        const size_t nx = RegFunc->ModelGeo.GetXCellSizes().size();
+        const size_t ny = RegFunc->ModelGeo.GetYCellSizes().size();
+        const size_t nz = RegFunc->ModelGeo.GetZCellSizes().size();
+        for (size_t i = 3*nx/4; i < nx; ++i)
+          {
+            for (size_t j = 3*ny/4; j < ny; ++j)
+              {
+                for (size_t k = 3*nz/4; k < nz; ++k)
+                  {
+                    Geometry.SetData()[i][j][k] *= 100;
+                  }
+              }
+          }
+
       }
 
     MinimumSupport::~MinimumSupport()
