@@ -215,20 +215,13 @@ namespace jiba
             MTTransform = boost::shared_ptr<jiba::GeneralModelTransform>(
                 new jiba::ConductivityTransform(TomoTransform, RelModel, CondReplace,
                     cond_a, cond_b, cond_c));
-
+            SlowRegTrans = boost::shared_ptr<jiba::ChainedTransform>(
+                new jiba::ChainedTransform);
+            SlowRegTrans->AppendTransform(TomoTransform);
             if (Wavelet)
               {
-
-                boost::shared_ptr<jiba::ChainedTransform> SlownessTransform(
-                    new jiba::ChainedTransform);
-
-                SlownessTransform->AppendTransform(
-                    boost::shared_ptr<jiba::GeneralModelTransform>(
-                        new jiba::TanhTransform(minslow, maxslow)));
-                SlownessTransform->AppendTransform(WaveletTrans);
-
-                SlowRegTrans = SlownessTransform;
-
+                std::cout << " Using wavelet parametrization " << std::endl;
+                SlowRegTrans->AppendTransform(WaveletTrans);
               }
 
           }
@@ -567,9 +560,12 @@ namespace jiba
           }
         if (substart)
           {
-            Regularization->SetReferenceModel(InvModel);
+
+            jiba::rvec RefModel = SlowTrans->PhysicalToGeneralized(InvModel);
+            RefModel = SlowRegTrans->GeneralizedToPhysical(RefModel);
+            Regularization->SetReferenceModel(RefModel);
           }
-        Objective.AddObjective(Regularization, SlowTrans, reglambda, "Reg");
+        Objective.AddObjective(Regularization, SlowRegTrans, reglambda, "Reg");
         InvModel = SlowTrans->PhysicalToGeneralized(InvModel);
       }
 
@@ -579,9 +575,10 @@ namespace jiba
         const jiba::ThreeDMTModel &MTMod, jiba::JointObjective &Objective,
         boost::shared_ptr<jiba::RegularizationFunction> Regularization, bool substart)
       {
-        //if we want to do corss-gradient type inversion
-        //we need three cross-gradient objective functions
-        //and three regularization terms
+         //depending on the type of coupling the model vector looks quite different
+        //and we have to setup a number of different things
+        //so we separate it into different functions even though it means
+        //passing around many parameters
         if (vm.count("crossgrad"))
           {
             SetupCrossGradModel(InvModel, ModelGeometry, SeisMod, GravMod, MTMod,
