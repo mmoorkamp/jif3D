@@ -1,0 +1,54 @@
+First, a word of warning.: THIS IS AN BETA RELEASE. This doesn't mean so much that the codes 
+will permanently crash, I use them all the time and a lot of them already for a few years, 
+but mostly that there is hardly any documentation, if at all. I plan to include some tutorial 
+examples in a later release, but for now you have to read the help texts that appear at the 
+start of some programs, look at the source code, or ask me to figure out what is happening. 
+If you are prepared to put up with it, you're most welcome to use the codes and send me 
+feedback through the Sourceforge project sites at http://sourceforge.net/projects/jif3d
+
+PREPARATION
+
+Make sure you have the following libraries installed and in the default search path for your 
+compiler. Under linux you might be able to install them as part of your distribution. One of
+the things still missing is some sort of autoconfiguration that enables and disables features
+with the availability of libraries. So at the moment you have to install all dependencies
+even if you do not plan to use the features (e.g. GPU computing) or work through compiler error
+messages.
+
+* Boost 1.52 or later from www.boost.org
+* netcdf from http://www.unidata.ucar.edu/software/netcdf/
+* The boost bindings for Lapack and Atlas from 
+      news.tiker.net/filebrowser/software/boost-bindings
+* Nvidia's CUDA version 4.0 or higher from https://developer.nvidia.com/what-cuda
+
+
+We are using boost-build as a build system. It is included in any distribution of boost or can be obtained
+separately from http://www.boost.org/boost-build2/ where you also find some instructions.
+
+
+
+LOCATING LIBRARIES AND INCLUDES
+
+You will have to edit the files Jamroot and cuda.jam to reflect the location of libraries
+on your system. In the future we will hopefully be able to make this more convenient.
+
+COMPILATION
+
+If all goes well, you simply have to type b2 or bjam (on older systems) and the compilation 
+will start (it works for me :-) ). I have successfully compiled this library and the programs 
+with g++ 4.4/4.6, intel c++ 12 on linux. There are some problems with the sun compilers on linux because they don't seem to like boost, 
+otherwise my codes should not pose any problems.
+clang version 3.2 (trunk 128812) also compiles the library and all programs.
+
+
+FINISH
+
+At the moment the compiled executable are scattered in different sub-directories created by the build system. You can build
+some documentation using doxygen by typing
+
+doxygen Doxyfile.web (for linked html pages) or
+doxygen Doxyfile.manual (for a pdf manual)
+
+The style of this documentation is currently aimed at C++ developers. A more detailed user manual is in preparation. 
+
+Have fun
