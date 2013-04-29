@@ -1,14 +1,48 @@
 #!/bin/bash
+#read in version information
+ARGS=1                 # Expect one command-line argument.
+version=0.1
+ if [ $# -ne "$ARGS" ]  # If not 1 arg...
+ then
+   echo "Need Version number as argument"    # current working directory
+   exit 100
+ else
+   version=$1
+ fi
 #prepare all files for release to another system
+rm -rf dist/jif*
 #collect all source files and build files
 find -name "*.h" > distfiles
 find -name "*.hpp" >> distfiles
 find -name "*.cpp" >> distfiles
 find -name "*.cu" >> distfiles
-find -name "Jam*" >> distfiles
+find -name "Jamfile" >> distfiles
+find -name "Jamroot" >> distfiles
 find -name "*.jam" >> distfiles
 find -name "*.for" >> distfiles
 echo "README" >> distfiles
 find -name "Doxyfile.*" >> distfiles
+echo "INSTALL" >> distfiles
+echo "gpl-v3.txt" >> distfiles
+
 #create a tar archive with the files listed above
-tar cf jiba.tar -T distfiles 
+tar cf jif3d.tar -T distfiles 
+mv jif3d.tar dist
+cd dist
+#extract the files, but put gplib directory in the front
+tar --transform 's,^,jif3d/,' -x -f jif3d.tar
+mv jif3d jif3d-$version
+cd jif3d-$version
+IFS=:
+mkdir include
+currdir=`pwd`
+#add license information
+for file in $(find -name "*.h" -printf "%p$IFS")
+do
+   #set -- $file 
+   echo "$file"
+   cp "$file" tmp
+   cat ../../gplshort tmp > "$file"
+done
+cd ..
+tar cf jif3d-$version.tar   jif3d-$version
