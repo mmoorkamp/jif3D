@@ -15,6 +15,12 @@ namespace jiba
   {
     /** \addtogroup mtmodelling Forward modelling of magnetotelluric data */
     /* @{ */
+    //! This class uses the Cagniard algorithm to calculate the MT response of a 1D layered halfspace
+    /*! This is an implementation of the Cagniard algorithm
+     * to calculate magnetotelluric impedances for a layered half-space. It also
+     * implements the calculation of the derivative of a least-squares objective
+     * function using an adjoint approach and the equations in Avdeeva, 2006.
+     */
     class OneDMTCalculator
       {
     public:
@@ -26,7 +32,9 @@ namespace jiba
       jiba::cmat gammaj;
       jiba::cvec Z;
     public:
+      //! Given a model of layer thicknesses and conductivities we calculate MT impedances
       rvec Calculate(const ModelType &Model);
+      //! Given a model and a misfit vector, calculate the derivative of a least-squares objective function using an adjoint approach
       rvec LQDerivative(const ModelType &Model, const rvec &Misfit);
       OneDMTCalculator();
       virtual ~OneDMTCalculator();

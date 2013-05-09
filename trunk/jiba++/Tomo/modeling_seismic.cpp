@@ -1,3 +1,10 @@
+//============================================================================
+// Name        : modeling_seismic.h
+// Author      : Jul 6, 2009
+// Version     :
+// Copyright   : 2009, mmoorkamp (modification) and B. Heincke
+//============================================================================
+
 #include "modeling_seismic.h"
 #include "ReadWriteTomographyData.h"
 #include "PodvinTime3D.h"
@@ -26,13 +33,12 @@ namespace jiba
       } CELL_STRUCT;
 
     // Calculate rays from the observed travel time field
-    int RayCalc(float *tt, int nx, int ny, int nz, float Xs, float Ys,
-        float Zs, float *Xr, float *Yr, float *Zr, int nrec, RP_STRUCT *rp);
+    int RayCalc(float *tt, int nx, int ny, int nz, float Xs, float Ys, float Zs,
+        float *Xr, float *Yr, float *Zr, int nrec, RP_STRUCT *rp);
     jiba::rvec TimeGrad(int x, int y, int z, float *tt, int ny, int nz);
-    CELL_STRUCT RayBackTrace(double gradx, double grady, double gradz,
-        CELL_STRUCT cell, float *tt, int ny, int nz);
-    int ResortRays(RP_STRUCT *raypath, const DATA_STRUCT &data,
-        const GRID_STRUCT &grid);
+    CELL_STRUCT RayBackTrace(double gradx, double grady, double gradz, CELL_STRUCT cell,
+        float *tt, int ny, int nz);
+    int ResortRays(RP_STRUCT *raypath, const DATA_STRUCT &data, const GRID_STRUCT &grid);
 
     /*-------------------------------------------------------------*/
     /*Performing the forward modeling(using the Podvin&Lecomte eikonal solver) and calculating conventional rays */
@@ -46,8 +52,8 @@ namespace jiba
     /*		direction one higher than the number of grid cell centers.*/
     /*		Therefore the grid have to be readjusted*/
 
-    int ForwardModRay(const GEOMETRY &geo, const GRID_STRUCT &grid,
-        DATA_STRUCT *data, RP_STRUCT *raypath)
+    int ForwardModRay(const GEOMETRY &geo, const GRID_STRUCT &grid, DATA_STRUCT *data,
+        RP_STRUCT *raypath)
       {
 
         const float delta_num = (float) 0.001;
@@ -79,7 +85,7 @@ namespace jiba
         std::sort(uniqueshots.begin(), uniqueshots.end());
         uniqueshots.erase(std::unique(uniqueshots.begin(), uniqueshots.end()),
             uniqueshots.end());
-       // assert(uniqueshots.size() == geo.nshot);
+        // assert(uniqueshots.size() == geo.nshot);
         //we need and unsigned version for the openmp loop
         const int nshot = uniqueshots.size();
 #pragma omp parallel default(shared)
@@ -102,16 +108,16 @@ namespace jiba
                 /*Normalized positions of the shots and receivers (referring to the grid cell nodes and NOT of the grid cell centers)*/
                 std::fill(tt.begin(), tt.end(), 0.0);
 
-                Xs = ((geo.x[uniqueshots[i]-1]) / grid.h); /*normalized x-coordinate of the shot locations according to grid cell nodes*/
-                Ys = ((geo.y[uniqueshots[i]-1]) / grid.h); /*normalized y-coordinate of the shot locations according to grid cell nodes*/
-                Zs = ((geo.z[uniqueshots[i]-1]) / grid.h); /*normalized z-coordinate of the shot locations according to grid cell nodes*/
+                Xs = ((geo.x[uniqueshots[i] - 1]) / grid.h); /*normalized x-coordinate of the shot locations according to grid cell nodes*/
+                Ys = ((geo.y[uniqueshots[i] - 1]) / grid.h); /*normalized y-coordinate of the shot locations according to grid cell nodes*/
+                Zs = ((geo.z[uniqueshots[i] - 1]) / grid.h); /*normalized z-coordinate of the shot locations according to grid cell nodes*/
 
                 /***************************************************************************************/
                 /*Podvin&Lecomte forward algorithm*/
                 /*tt is the calculated traveltime for each grid cell node*/
                 std::vector<float> SlowBuffer(grid.slow);
-                jiba::PodvinTime3D().time_3d(&SlowBuffer[0], &tt[0], nx3, ny3,
-                    nz3, Xs, Ys, Zs, delta_num, 0);
+                jiba::PodvinTime3D().time_3d(&SlowBuffer[0], &tt[0], nx3, ny3, nz3, Xs,
+                    Ys, Zs, delta_num, 0);
 
                 /***************************************************************************************/
 
@@ -143,15 +149,15 @@ namespace jiba
                     Yr[j] = ((geo.y[nact_rec[j] - 1]) / grid.h); /*normalized y-coordinate of the receiver locations according to grid cell EDGES*/
                     Zr[j] = ((geo.z[nact_rec[j] - 1]) / grid.h); /*normalized z-coordinate of the receiver locations according to grid cell EDGES*/
 
-                    data->tcalc[nact_datapos[j]] =  interpolate(Xr[j], Yr[j], Zr[j], grid, &tt[0]) ;
+                    data->tcalc[nact_datapos[j]] = interpolate(Xr[j], Yr[j], Zr[j], grid,
+                        &tt[0]);
 
                     if (nact_datapos[j] >= data->ndata_seis)
                       {
                         throw jiba::FatalException(
                             "NOT enough memory is allocated: used "
-                                + jiba::stringify(nact_datapos[j] + 1)
-                                + "allocated " + jiba::stringify(
-                                data->ndata_seis) + "\n");
+                                + jiba::stringify(nact_datapos[j] + 1) + "allocated "
+                                + jiba::stringify(data->ndata_seis) + "\n");
                       }
 
                   }
@@ -168,8 +174,8 @@ namespace jiba
                   raypath_tmp[j].n = nact_datapos[j];
 
                 /*Calculate the rays*/
-                RayCalc(&tt[0], nx3, ny3, nz3, Xs, Ys, Zs, &Xr[0], &Yr[0],
-                    &Zr[0], count, &raypath_tmp[0]);
+                RayCalc(&tt[0], nx3, ny3, nz3, Xs, Ys, Zs, &Xr[0], &Yr[0], &Zr[0], count,
+                    &raypath_tmp[0]);
 
                 /*Copy the temporary raypath structures in structures that fit with the data structure*/
                 for (size_t j = 0; j < count; j++)
@@ -189,12 +195,9 @@ namespace jiba
                         raypath[nact_datapos[j]].len.resize(1);
                         raypath[nact_datapos[j]].ele.resize(1);
                       }
-                    raypath[nact_datapos[j]].x.resize(
-                        raypath[nact_datapos[j]].nray + 1);
-                    raypath[nact_datapos[j]].y.resize(
-                        raypath[nact_datapos[j]].nray + 1);
-                    raypath[nact_datapos[j]].z.resize(
-                        raypath[nact_datapos[j]].nray + 1);
+                    raypath[nact_datapos[j]].x.resize(raypath[nact_datapos[j]].nray + 1);
+                    raypath[nact_datapos[j]].y.resize(raypath[nact_datapos[j]].nray + 1);
+                    raypath[nact_datapos[j]].z.resize(raypath[nact_datapos[j]].nray + 1);
 
                     for (size_t k = 0; k < raypath_tmp[j].nray; k++)
                       {
@@ -204,12 +207,12 @@ namespace jiba
                         raypath[nact_datapos[j]].y[k] = raypath_tmp[j].y[k];
                         raypath[nact_datapos[j]].z[k] = raypath_tmp[j].z[k];
                       }
-                    raypath[nact_datapos[j]].x[raypath_tmp[j].nray]
-                        = raypath_tmp[j].x[raypath_tmp[j].nray];
-                    raypath[nact_datapos[j]].y[raypath_tmp[j].nray]
-                        = raypath_tmp[j].y[raypath_tmp[j].nray];
-                    raypath[nact_datapos[j]].z[raypath_tmp[j].nray]
-                        = raypath_tmp[j].z[raypath_tmp[j].nray];
+                    raypath[nact_datapos[j]].x[raypath_tmp[j].nray] =
+                        raypath_tmp[j].x[raypath_tmp[j].nray];
+                    raypath[nact_datapos[j]].y[raypath_tmp[j].nray] =
+                        raypath_tmp[j].y[raypath_tmp[j].nray];
+                    raypath[nact_datapos[j]].z[raypath_tmp[j].nray] =
+                        raypath_tmp[j].z[raypath_tmp[j].nray];
                   }
 
               }
@@ -225,16 +228,16 @@ namespace jiba
             if (data->tcalc[i] == -1.0)
               {
 
-                throw jiba::FatalException("For the shot-receiver combination"
-                    + jiba::stringify(i + 1)
-                    + "no traveltime was calculated\n->Check the program\n");
+                throw jiba::FatalException(
+                    "For the shot-receiver combination" + jiba::stringify(i + 1)
+                        + "no traveltime was calculated\n->Check the program\n");
               }
 
             if (raypath[i].nray % 1 != 0)
               {
-                throw jiba::FatalException("For the shot-receiver combination"
-                    + jiba::stringify(i + 1)
-                    + "no raypath was calculated\n->Check the program\n");
+                throw jiba::FatalException(
+                    "For the shot-receiver combination" + jiba::stringify(i + 1)
+                        + "no raypath was calculated\n->Check the program\n");
               }
           }
 
@@ -278,8 +281,7 @@ namespace jiba
         return (int) ceil((val));
       }
     //! Interpolate from the solution at the grid points from the eikonal solver to actual station positions
-    float interpolate(float x, float y, float z, const GRID_STRUCT &grid,
-        float *data)
+    float interpolate(float x, float y, float z, const GRID_STRUCT &grid, float *data)
       {
         float u, v, w;
         int ok, nx2, ny2, nz2, nyz2;
@@ -300,8 +302,8 @@ namespace jiba
           ok = 0;
         if (!ok)
           {
-        	std::string error = "Interpolation point is out of the grid! x: " + stringify(x) + " y: "
-        			+stringify(y) + " z: " + stringify(z) + "\n";
+            std::string error = "Interpolation point is out of the grid! x: "
+                + stringify(x) + " y: " + stringify(y) + " z: " + stringify(z) + "\n";
             throw jiba::FatalException(error);
           }
 
@@ -311,13 +313,13 @@ namespace jiba
         w = z - (float) floor(z);
 
         /* And now interpolate */
-        ival = (1 - u) * (1 - v) * (1 - w) * dd(lo(x), lo(y), lo(z)) + (u) * (1
+        ival = (1 - u) * (1 - v) * (1 - w) * dd(lo(x), lo(y), lo(z))+ (u) * (1
             - v) * (1 - w) * dd(hi(x), lo(y), lo(z)) + (u) * (v) * (1 - w)
-            * dd(hi(x), hi(y), lo(z)) + (1 - u) * (v) * (1 - w) * dd(lo(x), hi(
+        * dd(hi(x), hi(y), lo(z)) + (1 - u) * (v) * (1 - w) * dd(lo(x), hi(
                 y), lo(z)) +
 
         (1 - u) * (1 - v) * (w) * dd(lo(x), lo(y), hi(z)) + (u) * (1 - v) * (w)
-            * dd(hi(x), lo(y), hi(z)) + (u) * (v) * (w) * dd(hi(x), hi(y),
+        * dd(hi(x), lo(y), hi(z)) + (u) * (v) * (w) * dd(hi(x), hi(y),
             hi(z)) + (1 - u) * (v) * (w) * dd(lo(x), hi(y), hi(z));
 
         return (ival);
@@ -336,15 +338,14 @@ namespace jiba
 
 #define cell_index(x,y,z) ray_cell_index[nyz1*(x) + (nz1)*(y) + (z)]
 
-    int RayCalc(float *tt, int nx, int ny, int nz, float Xs, float Ys,
-        float Zs, float *Xr, float *Yr, float *Zr, int nrec, RP_STRUCT *rp)
+    int RayCalc(float *tt, int nx, int ny, int nz, float Xs, float Ys, float Zs,
+        float *Xr, float *Yr, float *Zr, int nrec, RP_STRUCT *rp)
       {
         int a, b, c;
         int i, count;
         int nx1, ny1, nz1;
         long nyz1;
         std::vector<int> ray_cell_index; /*if 0=no ray in the cell; 1= ray path found in the cell*/
-
 
         jiba::rvec gradient; /*Components of the gradient*/
         CELL_STRUCT next_cell, cell;
@@ -364,16 +365,16 @@ namespace jiba
               for (b = 0; b < ny1; b++)
                 for (c = 0; c < nz1; c++)
                   {
-                    cell_index(a,b,c) = 0;
+                    cell_index(a,b,c)= 0;
                   }
 
-            /****************************************************/
-            /*Determine the rays starting at the receiver position:*/
+                /****************************************************/
+                /*Determine the rays starting at the receiver position:*/
 
-            /*Check, if shot and receiver are in the same cell*/
-            if (floor((double) Xs) == floor((double) Xr[i]) && floor(
-                (double) Ys) == floor((double) Yr[i]) && floor((double) Zs)
-                == floor((double) Zr[i]))
+                /*Check, if shot and receiver are in the same cell*/
+            if (floor((double) Xs) == floor((double) Xr[i])
+                && floor((double) Ys) == floor((double) Yr[i])
+                && floor((double) Zs) == floor((double) Zr[i]))
               {
                 rp[i].len.resize(1);
                 rp[i].x.resize(2);
@@ -381,8 +382,9 @@ namespace jiba
                 rp[i].z.resize(2);
                 rp[i].ele.resize(1);
 
-                rp[i].len[0] = sqrt((double) (Xs - Xr[i]) * (Xs - Xr[i]) + (Ys
-                    - Yr[i]) * (Ys - Yr[i]) + (Zs - Zr[i]) * (Zs - Zr[i])); /*Ray segment length*/
+                rp[i].len[0] = sqrt(
+                    (double) (Xs - Xr[i]) * (Xs - Xr[i]) + (Ys - Yr[i]) * (Ys - Yr[i])
+                        + (Zs - Zr[i]) * (Zs - Zr[i])); /*Ray segment length*/
                 rp[i].x[0] = (double) Xr[i];
                 rp[i].y[0] = (double) Yr[i];
                 rp[i].z[0] = (double) Zr[i];
@@ -416,8 +418,8 @@ namespace jiba
             gradient = TimeGrad(cell.xno, cell.yno, cell.zno, tt, ny, nz);
 
             /*Calculate the ray segment through the first grid cell*/
-            next_cell = RayBackTrace(gradient(0), gradient(1), gradient(2),
-                cell, tt, ny, nz);
+            next_cell = RayBackTrace(gradient(0), gradient(1), gradient(2), cell, tt, ny,
+                nz);
 
             rp[i].len.resize(1);
             rp[i].x.resize(1);
@@ -425,24 +427,23 @@ namespace jiba
             rp[i].z.resize(1);
             rp[i].ele.resize(1);
 
-            rp[i].len[0] = sqrt((next_cell.xpos + next_cell.xno - cell.xpos
-                - cell.xno) * (next_cell.xpos + next_cell.xno - cell.xpos
-                - cell.xno) + (next_cell.ypos + next_cell.yno - cell.ypos
-                - cell.yno) * (next_cell.ypos + next_cell.yno - cell.ypos
-                - cell.yno) + (next_cell.zpos + next_cell.zno - cell.zpos
-                - cell.zno) * (next_cell.zpos + next_cell.zno - cell.zpos
-                - cell.zno)); /*Ray segment length*/
+            rp[i].len[0] = sqrt(
+                (next_cell.xpos + next_cell.xno - cell.xpos - cell.xno)
+                    * (next_cell.xpos + next_cell.xno - cell.xpos - cell.xno)
+                    + (next_cell.ypos + next_cell.yno - cell.ypos - cell.yno)
+                        * (next_cell.ypos + next_cell.yno - cell.ypos - cell.yno)
+                    + (next_cell.zpos + next_cell.zno - cell.zpos - cell.zno)
+                        * (next_cell.zpos + next_cell.zno - cell.zpos - cell.zno)); /*Ray segment length*/
             rp[i].x[0] = (double) Xr[i];
             rp[i].y[0] = (double) Yr[i];
             rp[i].z[0] = (double) Zr[i];
             rp[i].ele[0] = nyz1 * cell.xno + nz1 * cell.yno + cell.zno; /*Determine the position number of the cell, which the ray intersects*/
 
-            cell_index(cell.xno,cell.yno,cell.zno) = 1;
+            cell_index(cell.xno,cell.yno,cell.zno)= 1;
 
             /*Check, if the ray leave the cell*/
-            if (next_cell.xno == 0 || next_cell.xno == nx1 || next_cell.yno
-                == 0 || next_cell.yno == ny1 || next_cell.zno == 0
-                || next_cell.zno == nz1)
+            if (next_cell.xno == 0 || next_cell.xno == nx1 || next_cell.yno == 0
+                || next_cell.yno == ny1 || next_cell.zno == 0 || next_cell.zno == nz1)
               {
                 //printf(
                 //    "The ray from the shot-receiver\ncombination %d leaves the model\n\n",
@@ -455,9 +456,9 @@ namespace jiba
             /******************************************************/
             /*Calculate iteratively the ray segments through the grid*/
 
-            while (fabs(Xs - next_cell.xpos - next_cell.xno) > 1 || fabs(Ys
-                - next_cell.ypos - next_cell.yno) > 1 || fabs(Zs
-                - next_cell.zpos - next_cell.zno) > 1)
+            while (fabs(Xs - next_cell.xpos - next_cell.xno) > 1
+                || fabs(Ys - next_cell.ypos - next_cell.yno) > 1
+                || fabs(Zs - next_cell.zpos - next_cell.zno) > 1)
               {
                 cell = next_cell;
 
@@ -465,27 +466,27 @@ namespace jiba
                 gradient = TimeGrad(cell.xno, cell.yno, cell.zno, tt, ny, nz);
 
                 /*Calculate the ray segment through the corresponding grid cell*/
-                next_cell = RayBackTrace(gradient[0], gradient[1], gradient[2],
-                    cell, tt, ny, nz);
+                next_cell = RayBackTrace(gradient[0], gradient[1], gradient[2], cell, tt,
+                    ny, nz);
 
-                rp[i].len.push_back(sqrt((next_cell.xpos + next_cell.xno
-                    - cell.xpos - cell.xno) * (next_cell.xpos + next_cell.xno
-                    - cell.xpos - cell.xno) + (next_cell.ypos + next_cell.yno
-                    - cell.ypos - cell.yno) * (next_cell.ypos + next_cell.yno
-                    - cell.ypos - cell.yno) + (next_cell.zpos + next_cell.zno
-                    - cell.zpos - cell.zno) * (next_cell.zpos + next_cell.zno
-                    - cell.zpos - cell.zno))); /*Ray segment length*/
+                rp[i].len.push_back(
+                    sqrt(
+                        (next_cell.xpos + next_cell.xno - cell.xpos - cell.xno)
+                            * (next_cell.xpos + next_cell.xno - cell.xpos - cell.xno)
+                            + (next_cell.ypos + next_cell.yno - cell.ypos - cell.yno)
+                                * (next_cell.ypos + next_cell.yno - cell.ypos - cell.yno)
+                            + (next_cell.zpos + next_cell.zno - cell.zpos - cell.zno)
+                                * (next_cell.zpos + next_cell.zno - cell.zpos - cell.zno))); /*Ray segment length*/
                 rp[i].x.push_back((double) cell.xpos + cell.xno);
                 rp[i].y.push_back((double) cell.ypos + cell.yno);
                 rp[i].z.push_back((double) cell.zpos + cell.zno);
                 rp[i].ele.push_back(nyz1 * cell.xno + nz1 * cell.yno + cell.zno); /*Determine the position number of the cell, which the ray intersects*/
 
-                cell_index(cell.xno,cell.yno,cell.zno) = 1;
+                cell_index(cell.xno,cell.yno,cell.zno)= 1;
 
                 /*Check, if the ray leave the cell*/
-                if (next_cell.xno == 0 || next_cell.xno == nx1 || next_cell.yno
-                    == 0 || next_cell.yno == ny1 || next_cell.zno == 0
-                    || next_cell.zno == nz1)
+                if (next_cell.xno == 0 || next_cell.xno == nx1 || next_cell.yno == 0
+                    || next_cell.yno == ny1 || next_cell.zno == 0 || next_cell.zno == nz1)
                   {
                     //printf(
                     //    "The ray from the shot-receiver\ncombination %d leaves the model\n\n",
@@ -511,16 +512,20 @@ namespace jiba
             rp[i].y.push_back((double) next_cell.ypos + next_cell.yno);
             rp[i].z.push_back((double) next_cell.zpos + next_cell.zno);
 
-            rp[i].len.push_back(sqrt((Xs - next_cell.xpos - next_cell.xno)
-                * (Xs - next_cell.xpos - next_cell.xno) + (Ys - next_cell.ypos
-                - next_cell.yno) * (Ys - next_cell.ypos - next_cell.yno) + (Zs
-                - next_cell.zpos - next_cell.zno) * (Zs - next_cell.zpos
-                - next_cell.zno))); /*Ray segment length*/
+            rp[i].len.push_back(
+                sqrt(
+                    (Xs - next_cell.xpos - next_cell.xno)
+                        * (Xs - next_cell.xpos - next_cell.xno)
+                        + (Ys - next_cell.ypos - next_cell.yno)
+                            * (Ys - next_cell.ypos - next_cell.yno)
+                        + (Zs - next_cell.zpos - next_cell.zno)
+                            * (Zs - next_cell.zpos - next_cell.zno))); /*Ray segment length*/
             rp[i].x.push_back((double) Xs);
             rp[i].y.push_back((double) Ys);
             rp[i].z.push_back((double) Zs);
-            rp[i].ele.push_back(nyz1 * (int) floor((double) Xs) + nz1
-                * (int) floor((double) Ys) + (int) floor((double) Zs)); /*Determine the position number of the cell, which the ray intersects*/
+            rp[i].ele.push_back(
+                nyz1 * (int) floor((double) Xs) + nz1 * (int) floor((double) Ys)
+                    + (int) floor((double) Zs)); /*Determine the position number of the cell, which the ray intersects*/
             rp[i].nray = count + 1; /*Number of the segments of the ray*/
 
             fertig: ;
@@ -551,20 +556,20 @@ namespace jiba
 
         nyz = ny * nz;
 
-        grad[0] = (-Traveltimes(x+1,y,z) - Traveltimes(x+1,y,z+1)
-            - Traveltimes(x+1,y+1,z) - Traveltimes(x+1,y+1,z+1)
-            + Traveltimes(x,y,z) + Traveltimes(x,y,z+1) + Traveltimes(x,y+1,z)
-            + Traveltimes(x,y+1,z+1)) / 4; /*x-component*/
+        grad[0] = (-Traveltimes(x+1,y,z)- Traveltimes(x+1,y,z+1)
+        - Traveltimes(x+1,y+1,z) - Traveltimes(x+1,y+1,z+1)
+        + Traveltimes(x,y,z) + Traveltimes(x,y,z+1) + Traveltimes(x,y+1,z)
+        + Traveltimes(x,y+1,z+1)) / 4; /*x-component*/
 
-        grad[1] = (-Traveltimes(x,y+1,z) - Traveltimes(x,y+1,z+1)
-            - Traveltimes(x+1,y+1,z) - Traveltimes(x+1,y+1,z+1)
-            + Traveltimes(x,y,z) + Traveltimes(x,y,z+1) + Traveltimes(x+1,y,z)
-            + Traveltimes(x+1,y,z+1)) / 4; /*y-component*/
+        grad[1] = (-Traveltimes(x,y+1,z)- Traveltimes(x,y+1,z+1)
+        - Traveltimes(x+1,y+1,z) - Traveltimes(x+1,y+1,z+1)
+        + Traveltimes(x,y,z) + Traveltimes(x,y,z+1) + Traveltimes(x+1,y,z)
+        + Traveltimes(x+1,y,z+1)) / 4; /*y-component*/
 
-        grad[2] = (-Traveltimes(x,y,z+1) - Traveltimes(x,y+1,z+1)
-            - Traveltimes(x+1,y,z+1) - Traveltimes(x+1,y+1,z+1)
-            + Traveltimes(x,y,z) + Traveltimes(x,y+1,z) + Traveltimes(x+1,y,z)
-            + Traveltimes(x+1,y+1,z)) / 4; /*z-component*/
+        grad[2] = (-Traveltimes(x,y,z+1)- Traveltimes(x,y+1,z+1)
+        - Traveltimes(x+1,y,z+1) - Traveltimes(x+1,y+1,z+1)
+        + Traveltimes(x,y,z) + Traveltimes(x,y+1,z) + Traveltimes(x+1,y,z)
+        + Traveltimes(x+1,y+1,z)) / 4; /*z-component*/
 
         return (grad);
       }
@@ -580,8 +585,8 @@ namespace jiba
 
     /*	Output: Cell structure of the next cell reached by the ray */
 
-    CELL_STRUCT RayBackTrace(double gradx, double grady, double gradz,
-        CELL_STRUCT cell, float *tt, int ny, int nz)
+    CELL_STRUCT RayBackTrace(double gradx, double grady, double gradz, CELL_STRUCT cell,
+        float *tt, int ny, int nz)
       {
         double eps = 0.01; /*Stabilize the program;*/
         double tmp_xpos, tmp_ypos, tmp_zpos;
@@ -614,8 +619,7 @@ namespace jiba
                 tmp_ypos = cell.ypos - ((cell.xpos - 1) * (grady / gradx));
                 tmp_zpos = cell.zpos - ((cell.xpos - 1) * (gradz / gradx));
 
-                if (1 >= tmp_ypos && tmp_ypos >= 0 && 1 >= tmp_zpos && tmp_zpos
-                    >= 0)
+                if (1 >= tmp_ypos && tmp_ypos >= 0 && 1 >= tmp_zpos && tmp_zpos >= 0)
                   {
                     next_cell.xpos = 0;
                     next_cell.ypos = tmp_ypos;
@@ -637,8 +641,7 @@ namespace jiba
                 tmp_ypos = cell.ypos - (cell.xpos * (grady / gradx));
                 tmp_zpos = cell.zpos - (cell.xpos * (gradz / gradx));
 
-                if (1 >= tmp_ypos && tmp_ypos >= 0 && 1 >= tmp_zpos && tmp_zpos
-                    >= 0)
+                if (1 >= tmp_ypos && tmp_ypos >= 0 && 1 >= tmp_zpos && tmp_zpos >= 0)
                   {
                     next_cell.xpos = 1;
                     next_cell.ypos = tmp_ypos;
@@ -666,8 +669,7 @@ namespace jiba
                 tmp_xpos = cell.xpos - ((cell.ypos - 1) * (gradx / grady));
                 tmp_zpos = cell.zpos - ((cell.ypos - 1) * (gradz / grady));
 
-                if (1 >= tmp_xpos && tmp_xpos >= 0 && 1 >= tmp_zpos && tmp_zpos
-                    >= 0)
+                if (1 >= tmp_xpos && tmp_xpos >= 0 && 1 >= tmp_zpos && tmp_zpos >= 0)
                   {
                     next_cell.xpos = tmp_xpos;
                     next_cell.ypos = 0;
@@ -688,8 +690,7 @@ namespace jiba
                 tmp_xpos = cell.xpos - (cell.ypos * (gradx / grady));
                 tmp_zpos = cell.zpos - (cell.ypos * (gradz / grady));
 
-                if (1 >= tmp_xpos && tmp_xpos >= 0 && 1 >= tmp_zpos && tmp_zpos
-                    >= 0)
+                if (1 >= tmp_xpos && tmp_xpos >= 0 && 1 >= tmp_zpos && tmp_zpos >= 0)
                   {
                     next_cell.xpos = tmp_xpos;
                     next_cell.ypos = 1;
@@ -718,8 +719,7 @@ namespace jiba
                 tmp_xpos = cell.xpos - ((cell.zpos - 1) * (gradx / gradz));
                 tmp_ypos = cell.ypos - ((cell.zpos - 1) * (grady / gradz));
 
-                if (1 >= tmp_xpos && tmp_xpos >= 0 && 1 >= tmp_ypos && tmp_ypos
-                    >= 0)
+                if (1 >= tmp_xpos && tmp_xpos >= 0 && 1 >= tmp_ypos && tmp_ypos >= 0)
                   {
                     next_cell.xpos = tmp_xpos;
                     next_cell.ypos = tmp_ypos;
@@ -740,8 +740,7 @@ namespace jiba
                 tmp_xpos = cell.xpos - (cell.zpos * (gradx / gradz));
                 tmp_ypos = cell.ypos - (cell.zpos * (grady / gradz));
 
-                if (1 >= tmp_xpos && tmp_xpos >= 0 && 1 >= tmp_ypos && tmp_ypos
-                    >= 0)
+                if (1 >= tmp_xpos && tmp_xpos >= 0 && 1 >= tmp_ypos && tmp_ypos >= 0)
                   {
                     next_cell.xpos = tmp_xpos;
                     next_cell.ypos = tmp_ypos;
@@ -761,8 +760,7 @@ namespace jiba
 
         /*Ray enter the cell from the positive or negative x-plane*/
         /*CASE II: The ray run along the surface of the cell*/
-        if (((cell.dirx_i == 1 && gradx > 0)
-            || (cell.dirx_i == -1 && gradx < 0)))
+        if (((cell.dirx_i == 1 && gradx > 0) || (cell.dirx_i == -1 && gradx < 0)))
           {
             if (grady < 0)
               {
@@ -773,10 +771,9 @@ namespace jiba
 
                     /*Comparison of the gradients(in the neighboring cells) to determine the next cell:*/
                     /*Calculate the traveltime gradient*/
-                    gradient1 = TimeGrad(cell.xno + cell.dirx_i, cell.yno - 1,
-                        cell.zno, tt, ny, nz);
-                    gradient2 = TimeGrad(cell.xno, cell.yno - 1, cell.zno, tt,
-                        ny, nz);
+                    gradient1 = TimeGrad(cell.xno + cell.dirx_i, cell.yno - 1, cell.zno,
+                        tt, ny, nz);
+                    gradient2 = TimeGrad(cell.xno, cell.yno - 1, cell.zno, tt, ny, nz);
                     if (gradient1[0] + gradient2[0] >= 0)
                       diff = cell.dirx_i;
                     else
@@ -811,10 +808,9 @@ namespace jiba
 
                     /*Comparison of the gradients(in the neighboring cells) to determine the next cell:*/
                     /*Calculate the traveltime gradient*/
-                    gradient1 = TimeGrad(cell.xno + cell.dirx_i, cell.yno + 1,
-                        cell.zno, tt, ny, nz);
-                    gradient2 = TimeGrad(cell.xno, cell.yno + 1, cell.zno, tt,
-                        ny, nz);
+                    gradient1 = TimeGrad(cell.xno + cell.dirx_i, cell.yno + 1, cell.zno,
+                        tt, ny, nz);
+                    gradient2 = TimeGrad(cell.xno, cell.yno + 1, cell.zno, tt, ny, nz);
                     if (gradient1[0] + gradient2[0] >= 0)
                       diff = cell.dirx_i;
                     else
@@ -849,10 +845,9 @@ namespace jiba
 
                     /*Comparison of the gradients(in the neighboring cells) to determine the next cell:*/
                     /*Calculate the traveltime gradient*/
-                    gradient1 = TimeGrad(cell.xno + cell.dirx_i, cell.yno,
-                        cell.zno - 1, tt, ny, nz);
-                    gradient2 = TimeGrad(cell.xno, cell.yno, cell.zno - 1, tt,
-                        ny, nz);
+                    gradient1 = TimeGrad(cell.xno + cell.dirx_i, cell.yno, cell.zno - 1,
+                        tt, ny, nz);
+                    gradient2 = TimeGrad(cell.xno, cell.yno, cell.zno - 1, tt, ny, nz);
                     if (gradient1[0] + gradient2[0] >= 0)
                       diff = cell.dirx_i;
                     else
@@ -887,10 +882,9 @@ namespace jiba
                   {
                     /*Comparison of the gradients(in the neighboring cells) to determine the next cell:*/
                     /*Calculate the traveltime gradient*/
-                    gradient1 = TimeGrad(cell.xno + cell.dirx_i, cell.yno,
-                        cell.zno + 1, tt, ny, nz);
-                    gradient2 = TimeGrad(cell.xno, cell.yno, cell.zno + 1, tt,
-                        ny, nz);
+                    gradient1 = TimeGrad(cell.xno + cell.dirx_i, cell.yno, cell.zno + 1,
+                        tt, ny, nz);
+                    gradient2 = TimeGrad(cell.xno, cell.yno, cell.zno + 1, tt, ny, nz);
                     if (gradient1[0] + gradient2[0] >= 0)
                       diff = cell.dirx_i;
                     else
@@ -920,8 +914,7 @@ namespace jiba
 
         /*Ray enter the cell from the positive or negative y-plane*/
         /*CASE II: The ray run along the surface of the cell*/
-        if (((cell.diry_i == 1 && grady > 0)
-            || (cell.diry_i == -1 && grady < 0)))
+        if (((cell.diry_i == 1 && grady > 0) || (cell.diry_i == -1 && grady < 0)))
           {
             if (gradx < 0)
               {
@@ -931,10 +924,9 @@ namespace jiba
                   {
                     /*Comparison of the gradients(in the neighboring cells) to determine the next cell:*/
                     /*Calculate the traveltime gradient*/
-                    gradient1 = TimeGrad(cell.xno - 1, cell.yno + cell.diry_i,
-                        cell.zno, tt, ny, nz);
-                    gradient2 = TimeGrad(cell.xno - 1, cell.yno, cell.zno, tt,
-                        ny, nz);
+                    gradient1 = TimeGrad(cell.xno - 1, cell.yno + cell.diry_i, cell.zno,
+                        tt, ny, nz);
+                    gradient2 = TimeGrad(cell.xno - 1, cell.yno, cell.zno, tt, ny, nz);
                     if (gradient1[1] + gradient2[1] >= 0)
                       diff = cell.diry_i;
                     else
@@ -967,10 +959,9 @@ namespace jiba
                   {
                     /*Comparison of the gradients(in the neighboring cells) to determine the next cell:*/
                     /*Calculate the traveltime gradient*/
-                    gradient1 = TimeGrad(cell.xno + 1, cell.yno + cell.diry_i,
-                        cell.zno, tt, ny, nz);
-                    gradient2 = TimeGrad(cell.xno + 1, cell.yno, cell.zno, tt,
-                        ny, nz);
+                    gradient1 = TimeGrad(cell.xno + 1, cell.yno + cell.diry_i, cell.zno,
+                        tt, ny, nz);
+                    gradient2 = TimeGrad(cell.xno + 1, cell.yno, cell.zno, tt, ny, nz);
                     if (gradient1[1] + gradient2[1] >= 0)
                       diff = cell.diry_i;
                     else
@@ -1003,10 +994,9 @@ namespace jiba
                   {
                     /*Comparison of the gradients(in the neighboring cells) to determine the next cell:*/
                     /*Calculate the traveltime gradient*/
-                    gradient1 = TimeGrad(cell.xno, cell.yno + cell.diry_i,
-                        cell.zno - 1, tt, ny, nz);
-                    gradient2 = TimeGrad(cell.xno, cell.yno, cell.zno - 1, tt,
-                        ny, nz);
+                    gradient1 = TimeGrad(cell.xno, cell.yno + cell.diry_i, cell.zno - 1,
+                        tt, ny, nz);
+                    gradient2 = TimeGrad(cell.xno, cell.yno, cell.zno - 1, tt, ny, nz);
                     if (gradient1[1] + gradient2[1] >= 0)
                       diff = cell.diry_i;
                     else
@@ -1042,10 +1032,9 @@ namespace jiba
 
                     /*Comparison of the gradients(in the neighboring cells) to determine the next cell:*/
                     /*Calculate the traveltime gradient*/
-                    gradient1 = TimeGrad(cell.xno, cell.yno + cell.diry_i,
-                        cell.zno + 1, tt, ny, nz);
-                    gradient2 = TimeGrad(cell.xno, cell.yno, cell.zno + 1, tt,
-                        ny, nz);
+                    gradient1 = TimeGrad(cell.xno, cell.yno + cell.diry_i, cell.zno + 1,
+                        tt, ny, nz);
+                    gradient2 = TimeGrad(cell.xno, cell.yno, cell.zno + 1, tt, ny, nz);
                     if (gradient1[1] + gradient2[1] >= 0)
                       diff = cell.diry_i;
                     else
@@ -1075,8 +1064,7 @@ namespace jiba
 
         /*Ray enter the cell from the positive or negative z-plane*/
         /*CASE II: The ray run along the surface of the cell*/
-        if (((cell.dirz_i == 1 && gradz > 0)
-            || (cell.dirz_i == -1 && gradz < 0)))
+        if (((cell.dirz_i == 1 && gradz > 0) || (cell.dirz_i == -1 && gradz < 0)))
           {
             if (gradx < 0)
               {
@@ -1086,10 +1074,9 @@ namespace jiba
                   {
                     /*Comparison of the gradients(in the neighboring cells) to determine the next cell:*/
                     /*Calculate the traveltime gradient*/
-                    gradient1 = TimeGrad(cell.xno - 1, cell.yno, cell.zno
-                        + cell.dirz_i, tt, ny, nz);
-                    gradient2 = TimeGrad(cell.xno - 1, cell.yno, cell.zno, tt,
-                        ny, nz);
+                    gradient1 = TimeGrad(cell.xno - 1, cell.yno, cell.zno + cell.dirz_i,
+                        tt, ny, nz);
+                    gradient2 = TimeGrad(cell.xno - 1, cell.yno, cell.zno, tt, ny, nz);
                     if (gradient1[2] + gradient2[2] >= 0)
                       diff = cell.dirz_i;
                     else
@@ -1125,10 +1112,9 @@ namespace jiba
 
                     /*Comparison of the gradients(in the neighboring cells) to determine the next cell:*/
                     /*Calculate the traveltime gradient*/
-                    gradient1 = TimeGrad(cell.xno + 1, cell.yno, cell.zno
-                        + cell.dirz_i, tt, ny, nz);
-                    gradient2 = TimeGrad(cell.xno + 1, cell.yno, cell.zno, tt,
-                        ny, nz);
+                    gradient1 = TimeGrad(cell.xno + 1, cell.yno, cell.zno + cell.dirz_i,
+                        tt, ny, nz);
+                    gradient2 = TimeGrad(cell.xno + 1, cell.yno, cell.zno, tt, ny, nz);
                     if (gradient1[2] + gradient2[2] >= 0)
                       diff = cell.dirz_i;
                     else
@@ -1161,10 +1147,9 @@ namespace jiba
                   {
                     /*Comparison of the gradients(in the neighboring cells) to determine the next cell:*/
                     /*Calculate the traveltime gradient*/
-                    gradient1 = TimeGrad(cell.xno, cell.yno - 1, cell.zno
-                        + cell.dirz_i, tt, ny, nz);
-                    gradient2 = TimeGrad(cell.xno, cell.yno - 1, cell.zno, tt,
-                        ny, nz);
+                    gradient1 = TimeGrad(cell.xno, cell.yno - 1, cell.zno + cell.dirz_i,
+                        tt, ny, nz);
+                    gradient2 = TimeGrad(cell.xno, cell.yno - 1, cell.zno, tt, ny, nz);
                     if (gradient1[2] + gradient2[2] >= 0)
                       diff = cell.dirz_i;
                     else
@@ -1199,10 +1184,9 @@ namespace jiba
 
                     /*Comparison of the gradients(in the neighboring cells) to determine the next cell:*/
                     /*Calculate the traveltime gradient*/
-                    gradient1 = TimeGrad(cell.xno, cell.yno + 1, cell.zno
-                        + cell.dirz_i, tt, ny, nz);
-                    gradient2 = TimeGrad(cell.xno, cell.yno + 1, cell.zno, tt,
-                        ny, nz);
+                    gradient1 = TimeGrad(cell.xno, cell.yno + 1, cell.zno + cell.dirz_i,
+                        tt, ny, nz);
+                    gradient2 = TimeGrad(cell.xno, cell.yno + 1, cell.zno, tt, ny, nz);
                     if (gradient1[2] + gradient2[2] >= 0)
                       {
                         diff = cell.dirz_i;
@@ -1251,8 +1235,7 @@ namespace jiba
     /*				data				:= Data structure*/
     /*				grid				:= Grid structure */
 
-    int ResortRays(RP_STRUCT *raypath, const DATA_STRUCT &data,
-        const GRID_STRUCT &grid)
+    int ResortRays(RP_STRUCT *raypath, const DATA_STRUCT &data, const GRID_STRUCT &grid)
       {
         long c, d, e;
         long nx, ny, nz, nyz, ny1, nz1, nyz1;
@@ -1279,11 +1262,11 @@ namespace jiba
               e = raypath[a].ele[b] - c * nyz - d * ny;
               if (raypath[a].ele[b] == (c * nyz + d * nz + e))
                 {
-                  if (raypath[a].x[b] - (double) (c) <= eps && raypath[a].x[b
-                      + 1] - (double) c <= eps)
+                  if (raypath[a].x[b] - (double) (c) <= eps
+                      && raypath[a].x[b + 1] - (double) c <= eps)
                     {
-                      if (grid.slow[c * nyz1 + d * nz1 + e] > grid.slow[(c - 1)
-                          * nyz1 + d * nz1 + e])
+                      if (grid.slow[c * nyz1 + d * nz1 + e]
+                          > grid.slow[(c - 1) * nyz1 + d * nz1 + e])
                         {
                           raypath[a].ele[b] = ((c - 1) * nyz + d * nz + e);
                         }
@@ -1292,8 +1275,8 @@ namespace jiba
                   if (raypath[a].x[b] - (double) c >= 1.0 - eps
                       && raypath[a].x[b + 1] - (double) c >= 1.0 - eps)
                     {
-                      if (grid.slow[c * nyz1 + d * nz1 + e] > grid.slow[(c + 1)
-                          * nyz1 + d * nz1 + e])
+                      if (grid.slow[c * nyz1 + d * nz1 + e]
+                          > grid.slow[(c + 1) * nyz1 + d * nz1 + e])
                         {
                           raypath[a].ele[b] = ((c + 1) * nyz + d * nz + e);
                         }
@@ -1302,8 +1285,8 @@ namespace jiba
                   if (raypath[a].y[b] - (double) d <= eps
                       && raypath[a].y[b + 1] - (double) d <= eps)
                     {
-                      if (grid.slow[c * nyz1 + d * nz1 + e] > grid.slow[c
-                          * nyz1 + (d - 1) * nz1 + e])
+                      if (grid.slow[c * nyz1 + d * nz1 + e]
+                          > grid.slow[c * nyz1 + (d - 1) * nz1 + e])
                         {
                           raypath[a].ele[b] = (c * nyz + (d - 1) * nz + e);
                         }
@@ -1312,8 +1295,8 @@ namespace jiba
                   if (raypath[a].y[b] - (double) d >= 1.0 - eps
                       && raypath[a].y[b + 1] - (double) d >= 1.0 - eps)
                     {
-                      if (grid.slow[c * nyz1 + d * nz1 + e] > grid.slow[c
-                          * nyz1 + (d + 1) * nz1 + e])
+                      if (grid.slow[c * nyz1 + d * nz1 + e]
+                          > grid.slow[c * nyz1 + (d + 1) * nz1 + e])
                         {
                           raypath[a].ele[b] = (c * nyz + (d + 1) * nz + e);
                         }
@@ -1322,8 +1305,8 @@ namespace jiba
                   if (raypath[a].z[b] - (double) e <= eps
                       && raypath[a].z[b + 1] - (double) e <= eps)
                     {
-                      if (grid.slow[c * nyz1 + d * nz1 + e] > grid.slow[c
-                          * nyz1 + d * nz1 + (e - 1)])
+                      if (grid.slow[c * nyz1 + d * nz1 + e]
+                          > grid.slow[c * nyz1 + d * nz1 + (e - 1)])
                         {
                           raypath[a].ele[b] = (c * nyz + d * nz + (e - 1));
                         }
@@ -1331,8 +1314,8 @@ namespace jiba
                   if (raypath[a].z[b] - (double) e >= 1.0 - eps
                       && raypath[a].z[b + 1] - (double) e >= 1.0 - eps)
                     {
-                      if (grid.slow[c * nyz1 + d * nz1 + e] > grid.slow[c
-                          * nyz1 + d * nz1 + (e + 1)])
+                      if (grid.slow[c * nyz1 + d * nz1 + e]
+                          > grid.slow[c * nyz1 + d * nz1 + (e + 1)])
                         {
                           raypath[a].ele[b] = (c * nyz + d * nz + (e + 1));
                         }

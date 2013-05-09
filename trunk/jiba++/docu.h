@@ -7,11 +7,11 @@
 
 //This file exists purely to hold the text for the doxygen main page
 
-/*! \mainpage jiba++
+/*! \mainpage jif3D
  *
  * \section Introduction
  *
- * jiba++ is a C++ framework for joint inversion of different types of geophysical data for sub-basalt, sub-salt and other
+ * jif3D is a C++ framework for joint inversion of different types of geophysical data for sub-basalt, sub-salt and other
  * challenging imaging problems. The general idea of the joint inversion is similar to the jiba program by Heincke et al.,
  * however it is developed from scratch to provide maximal modularity and avoid lincence clashes between different parts of
  * the program.
@@ -59,8 +59,9 @@ These two libraries are optional and have to be activated in the code through ap
  gcc 4.2 under SuSE Linux 10.1 and 11.0,
  gcc 4.3 under ubuntu 8/10,
  gcc 4.4 under ubuntu 10/04
+ gcc 4.6 under ubuntu 12/04
  intel 11.0 under ubuntu 8/10
- intel 12.0.2 under ubuntu 10/04
+ intel 12.0.2 under ubuntu 10/04 and ubuntu 12/04
 
  Sun 5.10 is known to fail, this is an issue with partial template specialization in
  the boost libraries.
@@ -98,12 +99,26 @@ These two libraries are optional and have to be activated in the code through ap
  * This is the final version that is part of the first phase of the JIBA project. The joint inversion code should be relatively
  * stable and well documented. Also, we fixed a number of bugs and added new features for the last year.
  *
- * \section License
- * The joint inversion and gravity forward modeling codes, as well as the associated tools are distributed to the sponsors of the JIBA project under the terms
- * and conditions defined in the project contract.
+ * \version May 2013
+ * The initial open-source beta release. This version contains many new and experimental features. The documentation
+ * has been improved, but is still incomplete.
  *
- * The seismic modeling code written by Podvin and Lecomte is being distributed as part of the jiba++ code, but is licensed under the LGPL (see http://www.gnu.org/licenses/lgpl-2.1.html
- * for details). Note that this license is different from the public version of time3d and the result of a special agreement with the authors.
+ * \section License
+ * All code is distributed under the GNU General Public License (GPL) v3. The full text of the license
+ * can be found at http://http://opensource.org/licenses/GPL-3.0
+ *
+ * The seismic modeling code written by Podvin and Lecomte is being distributed as part of the jif3d code and is also licensed under the GPL.
+ *
+ * \section Papers
+ * Two papers describe different aspects of jif3d
+ *   - Moorkamp, M., Heincke, B., Jegen, M., Roberts, A.W., Hobbs, R.W. A framework for 3-D joint inversion of MT, gravity and seismic refraction data
+        (2011) Geophysical Journal International, 184 (1), pp. 477-493.
+      explains the overall concept of out framework and compares different coupling mechanisms.
+
+    - Moorkamp, M., Jegen, M., Roberts, A., Hobbs, R. Massively parallel forward modeling of scalar
+      and tensor gravimetry data (2010) Computers and Geosciences, 36 (5), pp. 680-686
+      evaluates the performance of our GPGPU gravity forward modelling code.
+   If you use this code in an academic context, we kindly ask you to cite the relevant publications.
  */
 #ifndef DOCU_H_
 #define DOCU_H_

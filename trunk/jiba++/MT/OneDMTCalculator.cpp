@@ -23,6 +23,15 @@ namespace jiba
         // TODO Auto-generated destructor stub
       }
 
+    /*! Given a X3D model object, this function reads out the
+     * background conductivities, background thicknesses and frequencies
+     * to calculate the magnetotelluric response of a layered half-space.
+     * The gridded part of the model object is ignored. Given N frequencies
+     * it returns a real vector of size 2N with the real and imaginary parts
+     * of the impedance.
+     * @param Model A X3D model object containing background conductivities, thicknesses and N calculation frequencies
+     * @return A real vector of size 2N with the real and imaginary parts of the corresponding MT impedances.
+     */
     jiba::rvec OneDMTCalculator::Calculate(const ModelType &Model)
       {
         const size_t nfreq = Model.GetFrequencies().size();

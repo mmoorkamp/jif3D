@@ -20,7 +20,7 @@
 
 namespace jiba
   {
-
+    //! Calculate the data misfit for MT observations assuming a 1D layered half-space as Earth structure.
     class OneDMTObjective: public jiba::ObjectiveFunction
       {
 

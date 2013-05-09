@@ -6,14 +6,20 @@ project
         <define>BIND_FORTRAN_LOWERCASE_UNDERSCORE 
     	<variant>release:<define>NDEBUG
     	<variant>profile:<define>NDEBUG  
-    	<toolset>gcc:<cflags>" -ansi -fopenmp -Wall -Wextra  -Wno-long-long -Wno-unused-parameter  -pedantic"
-    	<toolset>gcc:<linkflags>" -fopenmp  "
-    	<toolset>intel:<cxxflags>" -openmp   -prof-gen=srcpos"
+    	<toolset>gcc<variant>debug:<cflags>" -ggdb3"
+    	#<toolset>gcc:<cflags>" -ansi  -Wall -Wextra  -Wno-long-long -Wno-unused-parameter  -pedantic"
+    	#<toolset>gcc:<cflags>"`pkg-config --cflags hpx_application`"
+    	<toolset>gcc:<cflags>" -fopenmp  -std=c++0x "
+    	#<toolset>gcc:<linkflags>"  `pkg-config --libs hpx_application` "
+    	<toolset>gcc:<linkflags>"  -fopenmp "
+    	<toolset>intel:<cxxflags>" -openmp  -std=c++0x -prof-gen=srcpos"
     	<toolset>intel:<define>TESTR
     	<toolset>intel:<linkflags>" -openmp   "
     	<toolset>sun:<define>BOOST_UBLAS_UNSUPPORTED_COMPILER=0
     	<toolset>sun:<cflags>" -library=stlport4" 
     	<toolset>sun:<linkflags>" -library=stlport4" 
+    	#<linkflags>"`pkg-config --cflags --libs hpx_application_debug ` -liostreamsd "
+        #<cflags>"`pkg-config --cflags hpx_application_debug `"
     ;
     
 path-constant TOP : . ;
@@ -31,6 +37,7 @@ use-project /ModelBase : ModelBase ;
 use-project /Profiling : Profiling ;
 use-project /Inversion : Inversion ;
 use-project /Joint : Joint ;
+use-project /hpxtest : hpxtest ;
 use-project /ModelTransforms : ModelTransforms ;
 
 local BOOST_TEST_LOG_LEVEL = all ;
@@ -39,6 +46,7 @@ lib boost_system : : <name>boost_system <search>/usr/local/lib ;
 lib boost_program_options : : <name>boost_program_options  <search>/usr/local/lib ;
 lib boost_mpi : : <name>boost_mpi  <search>/usr/local/lib ;
 lib boost_serialization : : <name>boost_serialization  <search>/usr/local/lib ;
+lib boost_thread : : <name>boost_thread  <search>/usr/local/lib ;
 lib lapack : : <name>lapack ;
 lib f77blas : : <name>f77blas ;
 lib cblas : : <name>cblas ;
@@ -63,7 +71,5 @@ build-project Regularization ;
 build-project Profiling ;
 build-project Hacks ;
 build-project Joint ;
-build-project Joint ;
 build-project ModelTransforms ;
-
-
+#build-project hpxtest ;
