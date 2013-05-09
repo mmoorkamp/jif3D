@@ -17,7 +17,7 @@ namespace jiba
     /* @{ */
 
     //! This is the base class for all function objects that transform generalized model parameters to concrete model parameters
-    /*! As described for the class ModelDistributor we need a flexible mechanism to decouple the inversion parameters from the
+    /*! As described for the class ModelDistributor, we need a flexible mechanism to decouple the inversion parameters from the
      * concrete physical parameters that each method works with. This base class provides the interface for all function objects
      * that implement such a transformation.
      */

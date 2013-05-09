@@ -14,7 +14,12 @@
 
 namespace jiba
   {
-
+    //! This class provides a common denominator for the Matrix based regularization functions and other regularization functions such as MinimumSupport
+    /*! The main purpose of this class is to provide a common base
+     * for matrix based regularization and MinimumSupport based regularization. This
+     * makes setting up the appropriate regularization easier as we can access
+     * common functionality through a point to the base class.
+     */
     class RegularizationFunction: public jiba::ObjectiveFunction
       {
     private:
@@ -36,12 +41,21 @@ namespace jiba
         {
           Reference = Model;
         }
+      //! Read only access to the reference model
       const jiba::rvec &GetReferenceModel() const
         {
           return Reference;
         }
-      RegularizationFunction();
-      virtual ~RegularizationFunction();
+      RegularizationFunction()
+        {
+          // as this class only provides a common interface and minimal
+          //storage, we declare constructor and destructor here
+          //and omit the .cpp file
+        }
+      virtual ~RegularizationFunction()
+        {
+
+        }
       };
 
   } /* namespace jiba */
