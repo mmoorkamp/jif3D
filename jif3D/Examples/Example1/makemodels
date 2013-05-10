@@ -1,0 +1,64 @@
+#!/bin/bash
+
+rm *.nc 
+#generate a seismic mesh
+../Tomo/bin/gcc-4.6/release/threading-multi/makeseismesh << eof
+20
+20
+10
+500
+3000
+6000
+start_tomo.nc
+eof
+
+#create an anomaly
+ncap2 -s "Slowness(0:3,5:10,5:15)=Slowness(0:3,5:10,5:15)*1.2; Slowness(0:3,11:15,5:15)=Slowness(0:3,11:15,5:15)/1.2" start_tomo.nc tomo_ano.nc
+
+
+#calculate synthetic data
+../Tomo/bin/gcc-4.6/release/threading-multi/tomogrid << eof
+1000
+9000
+2000
+1000
+9000
+2000
+0
+1000
+9000
+2000
+1000
+9000
+2000
+0
+tomo_ano.nc
+0.02
+eof
+
+#create density model
+ncap2 -s "Density=1.0/5000.0*(1.0/Slowness+8500)" tomo_ano.nc dens_ano.nc
+ncatted -O -a units,Density,m,c,"g/cm3" dens_ano.nc
+#create the background
+ncap2 -S makedens dens_ano.nc tmp1.nc
+cp tmp1.nc dens_ano.nc
+
+
+#create a conductivity model
+ncap2 -s "Conductivity = exp(-(2.31e-7/Slowness^2-5.79e-4/Slowness+0.124))" tomo_ano.nc cond_ano.nc
+ncatted -O -a units,Conductivity,m,c,"S/m" cond_ano.nc
+
+../Gravity/bin/gcc-4.6/release/threading-multi/gravgrid << eof
+1400
+8400
+500
+1400
+8400
+500
+0
+dens_ano.nc
+0.0
+0.0
+0
+0
+eof

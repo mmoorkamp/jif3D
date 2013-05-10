@@ -24,17 +24,19 @@ echo "README" >> distfiles
 find -name "Doxyfile.*" >> distfiles
 echo "INSTALL" >> distfiles
 echo "gpl-v3.txt" >> distfiles
+echo "gplshort" >> distfiles
 
 #create a tar archive with the files listed above
-tar cf jif3d.tar -T distfiles 
-mv jif3d.tar dist
-cd dist
+tar cf jif3d.tar -T distfiles
+tar cf Examples.tar Examples
+tar Af jif3d.tar Examples.tar
+mv jif3d.tar ../dist
+cd ../dist
 #extract the files, but put gplib directory in the front
 tar --transform 's,^,jif3d/,' -x -f jif3d.tar
 mv jif3d jif3d-$version
 cd jif3d-$version
 IFS=:
-mkdir include
 currdir=`pwd`
 #add license information
 for file in $(find -name "*.h" -printf "%p$IFS")
@@ -42,7 +44,7 @@ do
    #set -- $file 
    echo "$file"
    cp "$file" tmp
-   cat ../../gplshort tmp > "$file"
+   cat gplshort tmp > "$file"
 done
 cd ..
 tar cf jif3d-$version.tar   jif3d-$version
