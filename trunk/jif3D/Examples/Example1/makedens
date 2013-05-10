@@ -1,0 +1,3 @@
+defdim("bg_layers",10); 
+bg_densities = Density(:,1,1); 
+bg_thicknesses[$bg_layers] = 500;

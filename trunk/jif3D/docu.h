@@ -22,6 +22,9 @@
  *   - While I have followed basic performance guidelines and used state of the art methods wherever possible, I have
  *     not performed any detailed speed optimizations of the code. Also, if there is a choice between clarity and speed
  *     I usually opt for clarity. However, some basic profiling indicates that there are no major bottlenecks caused by this.
+ *   - Documentation is incomplete at the moment and a user manual does not exist, yet. We are working on
+ *     this, but you currently have to look at the sources and this documentation to figure out what
+ *     the code does and how it can be used.
  *
    \section Requirements
 
@@ -45,6 +48,11 @@ These two libraries are optional and have to be activated in the code through ap
  Depending on the path you chose to install the libraries to, you might
  have to modify the Jamroot file. Refer to http://www.boost.org/doc/tools/build/index.html
  for a description of the syntax.
+
+ \section Getting the code
+
+ You can check out the latest development version through svn via svn://svn.code.sf.net/p/jif3d/jif3dsvn/trunk/jif3d
+ Alternatively you can download a release from http://sourceforge.net/projects/jif3d/
 
  \section Compilation
 
@@ -105,7 +113,7 @@ These two libraries are optional and have to be activated in the code through ap
  *
  * \section License
  * All code is distributed under the GNU General Public License (GPL) v3. The full text of the license
- * can be found at http://http://opensource.org/licenses/GPL-3.0
+ * can be found at http://opensource.org/licenses/GPL-3.0
  *
  * The seismic modeling code written by Podvin and Lecomte is being distributed as part of the jif3d code and is also licensed under the GPL.
  *
@@ -119,6 +127,13 @@ These two libraries are optional and have to be activated in the code through ap
       and tensor gravimetry data (2010) Computers and Geosciences, 36 (5), pp. 680-686
       evaluates the performance of our GPGPU gravity forward modelling code.
    If you use this code in an academic context, we kindly ask you to cite the relevant publications.
+
+   \section Acknowledgements
+
+   The initial development of the framework was sponsored by Chevron, ExxonMobil, Nexen, RWE Dea,
+   Shell, Statoil and Wintershall within the JIBA consortium. P. Podvin kindly made his eikonal
+   solver publicly available. A. Avdeeva supported us with implementing the gradient calculation
+   for the MT part of the joint inversion.
  */
 #ifndef DOCU_H_
 #define DOCU_H_
