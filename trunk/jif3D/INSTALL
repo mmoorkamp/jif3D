@@ -1,8 +1,9 @@
 First, a word of warning.: THIS IS AN BETA RELEASE. This doesn't mean so much that the codes 
-will permanently crash, I use them all the time and a lot of them already for a few years, 
-but mostly that there is hardly any documentation, if at all. I plan to include some tutorial 
-examples in a later release, but for now you have to read the help texts that appear at the 
-start of some programs, look at the source code, or ask me to figure out what is happening. 
+will permanently crash, we use them all the time and a lot of them already for a few years, 
+but mostly that there is hardly any documentation, if at all. We plan to include some  more 
+tutorial  examples in a later release, but for now you have to read the help texts that 
+appear at the  start of some programs, look at the source code, or ask us to figure 
+out what is happening. A good idea is usually to call a program with the --help option.
 If you are prepared to put up with it, you're most welcome to use the codes and send me 
 feedback through the Sourceforge project sites at http://sourceforge.net/projects/jif3d
 
@@ -22,33 +23,52 @@ messages.
 * Nvidia's CUDA version 4.0 or higher from https://developer.nvidia.com/what-cuda
 
 
-We are using boost-build as a build system. It is included in any distribution of boost or can be obtained
-separately from http://www.boost.org/boost-build2/ where you also find some instructions.
+We are using boost-build as a build system. It is included in any distribution of boost 
+or can be obtained separately from http://www.boost.org/boost-build2/ where 
+you also find some instructions.
 
 
 
 LOCATING LIBRARIES AND INCLUDES
 
 You will have to edit the files Jamroot and cuda.jam to reflect the location of libraries
-on your system. In the future we will hopefully be able to make this more convenient.
+on your system. Under certain circumstance you might have to edit the compiler flags,
+however this should usually not be necessary.
+In the future we will hopefully be able to make this more convenient.
 
 COMPILATION
 
 If all goes well, you simply have to type b2 or bjam (on older systems) and the compilation 
-will start (it works for me :-) ). I have successfully compiled this library and the programs 
-with g++ 4.4/4.6, intel c++ 12 on linux. There are some problems with the sun compilers on linux because they don't seem to like boost, 
-otherwise my codes should not pose any problems.
+will start (it works for me :-) ). We have successfully compiled this library and the programs 
+with g++ 4.4/4.6 and intel c++ 12 on linux. 
 clang version 3.2 (trunk 128812) also compiles the library and all programs.
+Each compilation run executes a number of automatic tests that check for correctness
+of program behaviour. A few tests occassionally fail randomly as I have not checked for
+some rare pathological cases. Usually running the compilation again should fix this.
+If failures in the tests persist, let me know and we will look into it.
 
 
 FINISH
 
-At the moment the compiled executable are scattered in different sub-directories created by the build system. You can build
-some documentation using doxygen by typing
+At the moment the compiled executable are scattered in different sub-directories 
+created by the build system. The main joint inversion executable will be placed
+in a sub-directory of Joint/bin other tools will be in the bin directories of
+the MT, Gravity and Tomo directories. The Hacks directory contains various
+useful tools, however they have been written with specific problems in mind
+and might not work under all circumstances. 
+
+You can build some documentation using doxygen by typing
 
 doxygen Doxyfile.web (for linked html pages) or
 doxygen Doxyfile.manual (for a pdf manual)
 
-The style of this documentation is currently aimed at C++ developers. A more detailed user manual is in preparation. 
+The style of this documentation is currently aimed at C++ developers. 
+A more detailed user manual is in preparation. 
+
+A good place to start at the moment is to have a look at the example in the Examples directory.
+You will need to have the netcdf operators http://nco.sourceforge.net/ installed for this
+to run. This example will generate simple models, calculate synthetic data and run a
+seismic/gravity joint inversion on it. It will give you a first idea about the file formats
+and options for the joint inversion program.
 
 Have fun

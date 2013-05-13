@@ -1,0 +1,28 @@
+This example demonstrates a very simple use case for the joint inversion code. In order
+to run this you will need the netcdf operators from http://nco.sourceforge.net/ (under
+Linux often available through the package manager) installed.
+
+The bash script makemodels generates a synthetic test model and the associated synthetic
+seismic and gravity data. In all likelyhood you will need to modify the path to
+the executable depending on the compiler you use. The paths should match the names of
+the subdirectories where the build system placed the executables. This is shown
+when compiling the codes or you can inspect the bin subdirectories. The script
+contains a brief explanation of what each program does. Calling the different
+programs manually at the command line will usually display a prompt that
+clarifies the values that are input into the program.
+
+
+There are two joint inversion scripts. run_cross runs a cross-gradient coupling
+based inversion of the seismic and gravity data. run_rel runs a joint inversion
+using a fixed relationship between density and velocity.
+
+Each run will produce a misfit.out file that contains the chi-squared misfit
+for each dataset without normalization (i.e. we expect the final misfit to
+be on the order of the number of data). You will also get result* files.
+result1.tomo.inv.vtk, for example, contains the slowness model after the
+first iteration in .vtk format. These files can be visualized using Paraview
+(http://www.paraview.org/), Visit (https://wci.llnl.gov/codes/visit/) and
+a range of other programs. The final seismic model will be in the files
+result.tomo.inv.vtk and result.tomo.inv.nc, while the associated synthetic
+traveltime data is in the file result.inv_tt.nc. The ray distribution for
+the final iteration is in the file ray.vtk
