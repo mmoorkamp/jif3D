@@ -1,19 +1,29 @@
 //============================================================================
-// Name        : test_inversion.h
+// Name        : test_transform.cpp
 // Author      : Max Moorkamp
 // Version     :
 // Copyright   : 2008, MM
 //============================================================================
 
-#define BOOST_TEST_MODULE Distributor test
+#define BOOST_TEST_MODULE Transform test
 #define BOOST_TEST_MAIN ...
 #include <boost/test/included/unit_test.hpp>
 #include <boost/test/floating_point_comparison.hpp>
+#include <boost/lambda/lambda.hpp>
 #include <stdlib.h>
 #include "../Inversion/ModelTransforms.h"
 #include "../Gravity/ThreeDGravityModel.h"
 
+/*!
+ * \file test_transform.cpp
+ * This file contains some tests necessary to verify the functionality of the
+ * different model transforms.
+ */
+
 //a general function to test various ModelTransforms
+//it checks whether consecutive forward and inverse transforms
+//give back the original vector and checks the implementation
+//of the gradient against a finite difference approximation
 void TestTransform(const jiba::GeneralModelTransform &Transform, const size_t nelements,
     const double min = 2.0, const double max = 3.0)
   {
@@ -28,18 +38,16 @@ void TestTransform(const jiba::GeneralModelTransform &Transform, const size_t ne
         Physical(i) = min + (max - min) * drand48();
         Derivative(i) = drand48() - 1.0;
       }
-
-    Generalized = Transform.PhysicalToGeneralized(Physical);
-    jiba::rvec Compare = Transform.GeneralizedToPhysical(Generalized);
     //first we check whether backwards and forwards transformation produces
     //the right result
+    Generalized = Transform.PhysicalToGeneralized(Physical);
+    jiba::rvec Compare = Transform.GeneralizedToPhysical(Generalized);
     for (size_t i = 0; i < nelements; ++i)
       {
         BOOST_CHECK_CLOSE(Physical(i), Compare(i), 1e-5);
       }
     //then we check the derivative from the transformation class
     //against a finite difference
-
     for (size_t i = 0; i < nelements; ++i)
       {
         One.clear();
@@ -57,32 +65,36 @@ void TestTransform(const jiba::GeneralModelTransform &Transform, const size_t ne
 
   }
 
-BOOST_AUTO_TEST_SUITE (Distributor_Test_Suite)
-
+BOOST_AUTO_TEST_SUITE (Transform_Test_Suite)
+//Test the functionality of ModelCopyTransform
+//This transformation simply copies its input arguments
     BOOST_AUTO_TEST_CASE (basic_copy_test)
       {
-        srand48(time(NULL));
-        jiba::ModelDistributor Distributor;
-        Distributor.AddTransformer(
-            boost::shared_ptr<jiba::GeneralModelTransform>(
-                new jiba::ModelCopyTransform()));
-        Distributor.AddTransformer(
-            boost::shared_ptr<jiba::GeneralModelTransform>(
-                new jiba::ModelCopyTransform()));
-        jiba::rvec Input(50);
+        jiba::ModelCopyTransform CTrans;
+        //generate a random input vector
+        const size_t nelements = 5 + rand() % 100;
+        jiba::rvec Input(nelements);
         std::generate(Input.begin(), Input.end(), drand48);
-
-        jiba::rvec Output1(Distributor(Input, 0));
-        jiba::rvec Output2(Distributor(Input, 1));
-
-        BOOST_CHECK(std::equal(Input.begin(),Input.end(),Output1.begin()));
-        BOOST_CHECK(std::equal(Input.begin(),Input.end(),Output2.begin()));
+        //for this particular transform each transformation
+        //direction should always return the original result
+        jiba::rvec Output1(CTrans.GeneralizedToPhysical(Input));
+        jiba::rvec Output2(CTrans.PhysicalToGeneralized(Input));
+        //check that all values are identical
+        BOOST_CHECK(std::equal(Input.begin(), Input.end(), Output1.begin()));
+        BOOST_CHECK(std::equal(Input.begin(), Input.end(), Output2.begin()));
+        TestTransform(CTrans, nelements);
       }
 
     BOOST_AUTO_TEST_CASE (Normalize_transform_test)
       {
-        const size_t nelements = 61;
+        //generate a random vector
+        const size_t nelements = 5 + rand() % 100;
         jiba::rvec Reference(nelements);
+        //we need the elements of the reference vector
+        //to be > 0, so we have to add a number to the
+        //output of the random generator, this is a pain
+        //with generate and lambda function, so we use a plain
+        //old loop
         for (size_t i = 0; i < nelements; ++i)
           {
             Reference(i) = 2.0 + drand48();
@@ -93,7 +105,7 @@ BOOST_AUTO_TEST_SUITE (Distributor_Test_Suite)
     BOOST_AUTO_TEST_CASE (Log_transform_test)
       {
 
-        const size_t nelements = 67;
+        const size_t nelements = 5 + rand() % 100;
         jiba::rvec Reference(nelements);
         for (size_t i = 0; i < nelements; ++i)
           {
@@ -104,42 +116,51 @@ BOOST_AUTO_TEST_SUITE (Distributor_Test_Suite)
 
     BOOST_AUTO_TEST_CASE (Wavelet_transform_test)
       {
+        //for the wavelet transform we need
+        //to specify the 3 dimensions of the grid
+        //each dimension has to be a power of 2
         const size_t nx = 4;
         const size_t ny = 8;
         const size_t nz = 8;
         const size_t nelements = nx * ny * nz;
 
-        jiba::rvec Reference(nelements);
-        for (size_t i = 0; i < nelements; ++i)
-          {
-            Reference(i) = 2.0 + drand48();
-          }
         jiba::WaveletModelTransform WT(nx, ny, nz);
         TestTransform(WT, nelements);
       }
 
+    BOOST_AUTO_TEST_CASE (wavelet_throw_test)
+      {
+        //check that WaveletModelTransform throws when one dimension is not a power of two
+        BOOST_CHECK_THROW(jiba::WaveletModelTransform(3, 4, 8), jiba::FatalException);
+        BOOST_CHECK_THROW(jiba::WaveletModelTransform(4, 5, 8), jiba::FatalException);
+        BOOST_CHECK_THROW(jiba::WaveletModelTransform(4, 4, 9), jiba::FatalException);
+      }
+
     BOOST_AUTO_TEST_CASE (Tanh_transform_test)
       {
-
-        const size_t nelements = 78;
-
+        const size_t nelements = 5 + rand() % 100;
         TestTransform(jiba::TanhTransform(0.0, 1000), nelements);
       }
 
     BOOST_AUTO_TEST_CASE (Density_transform_test)
       {
-        const size_t nx = 4;
-        const size_t ny = 8;
-        const size_t nz = 8;
+        //for density transform we can use a model object
+        //to indicate where we want to apply the relationship
+        //so we use a ThreeDGravityModel object
+        const size_t nx = 5;
+        const size_t ny = 7;
+        const size_t nz = 9;
         const size_t nelements = nx * ny * nz;
 
         jiba::ThreeDGravityModel Model;
         Model.SetDensities().resize(boost::extents[nx][ny][nz]);
-
-        for (size_t i = 0; i < nelements; ++i)
-          {
-            Model.SetDensities().data()[i] = 1.0;
-          }
+        std::fill_n(Model.SetDensities().origin(), nelements, 1.0);
+        //the density transform needs a transform that translates
+        //the general parameters into slowness, before it then
+        //translates slowness to density. Here we use TanhTransform
+        //which does not make physical sense, but it is non-linear
+        // and therefore well suited for testing the combined
+        //transformation and gradient calculation
         TestTransform(
             jiba::DensityTransform(
                 boost::shared_ptr<jiba::GeneralModelTransform>(
@@ -148,6 +169,9 @@ BOOST_AUTO_TEST_SUITE (Distributor_Test_Suite)
 
     BOOST_AUTO_TEST_CASE (Conductivity_transform_test)
       {
+        //for conductivity transform we can use a model object
+        //to indicate where we want to apply the relationship
+        //so we use a ThreeDGravityModel object
         const size_t nx = 4;
         const size_t ny = 8;
         const size_t nz = 8;
@@ -155,11 +179,13 @@ BOOST_AUTO_TEST_SUITE (Distributor_Test_Suite)
 
         jiba::ThreeDGravityModel Model;
         Model.SetDensities().resize(boost::extents[nx][ny][nz]);
-
-        for (size_t i = 0; i < nelements; ++i)
-          {
-            Model.SetDensities().data()[i] = 1.0;
-          }
+        std::fill_n(Model.SetDensities().origin(), nelements, 1.0);
+        //the conductivity transform needs a transform that translates
+        //the general parameters into slowness, before it then
+        //translates slowness to conductivity. Here we use TanhTransform
+        //which does not make physical sense, but it is non-linear
+        // and therefore well suited for testing the combined
+        //transformation and gradient calculation
         TestTransform(
             jiba::ConductivityTransform(
                 boost::shared_ptr<jiba::GeneralModelTransform>(
@@ -169,20 +195,16 @@ BOOST_AUTO_TEST_SUITE (Distributor_Test_Suite)
 
     BOOST_AUTO_TEST_CASE (FChained_transform_test)
       {
-        const size_t nx = 4;
-        const size_t ny = 8;
-        const size_t nz = 8;
-        const size_t nelements = nx * ny * nz;
-
-        jiba::ThreeDGravityModel Model;
-        Model.SetDensities().resize(boost::extents[nx][ny][nz]);
-
+        //test the chaining of several transformations
+        //here we append consecutive transforms
+        //in the order they will be applied
+        const size_t nelements = 5 + rand() % 100;
         jiba::rvec Reference(nelements);
         for (size_t i = 0; i < nelements; ++i)
           {
             Reference(i) = 2.0 + drand48();
-            Model.SetDensities().data()[i] = 1.0;
           }
+
         jiba::ChainedTransform TransformForward;
         TransformForward.AppendTransform(
             boost::shared_ptr<jiba::GeneralModelTransform>(
@@ -195,20 +217,15 @@ BOOST_AUTO_TEST_SUITE (Distributor_Test_Suite)
 
     BOOST_AUTO_TEST_CASE (RCHained_transform_test)
       {
-        const size_t nx = 4;
-        const size_t ny = 8;
-        const size_t nz = 8;
-        const size_t nelements = nx * ny * nz;
-
-        jiba::ThreeDGravityModel Model;
-        Model.SetDensities().resize(boost::extents[nx][ny][nz]);
-
+        const size_t nelements = 5 + rand() % 100;
         jiba::rvec Reference(nelements);
         for (size_t i = 0; i < nelements; ++i)
           {
             Reference(i) = 2.0 + drand48();
-            Model.SetDensities().data()[i] = 1.0;
           }
+        //test the chaining of several transformations
+        //here we prepend consecutive transforms, i.e.
+        //we specify them in the reverse order they will be applied
         jiba::ChainedTransform TransformReverse;
         TransformReverse.PrependTransform(
             boost::shared_ptr<jiba::GeneralModelTransform>(
@@ -217,13 +234,5 @@ BOOST_AUTO_TEST_SUITE (Distributor_Test_Suite)
             boost::shared_ptr<jiba::GeneralModelTransform>(
                 new jiba::TanhTransform(-5, 5.0)));
         TestTransform(TransformReverse, nelements);
-      }
-
-    BOOST_AUTO_TEST_CASE (wavelet_check_test)
-      {
-//check that WaveletModelTransform throws when one dimension is not a power of two
-        BOOST_CHECK_THROW(jiba::WaveletModelTransform(3,4,8), jiba::FatalException);
-        BOOST_CHECK_THROW(jiba::WaveletModelTransform(4,5,8), jiba::FatalException);
-        BOOST_CHECK_THROW(jiba::WaveletModelTransform(4,4,9), jiba::FatalException);
       }
     BOOST_AUTO_TEST_SUITE_END()
