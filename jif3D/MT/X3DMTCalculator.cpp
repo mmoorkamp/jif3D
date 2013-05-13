@@ -248,7 +248,7 @@ namespace jiba
         size_t mindex = 0;
         for (size_t i = 0; i < BGDepths.size(); ++i)
           {
-            while (mindex < ModelDepths.size() && ModelDepths[mindex] < BGDepths[i] )
+            while (mindex < ModelDepths.size() && ModelDepths[mindex] < BGDepths[i])
               {
                 ++mindex;
               }
@@ -267,7 +267,8 @@ namespace jiba
       {
         //we define nfreq as int to make the compiler happy in the openmp loop
         assert(minfreqindex <= maxfreqindex);
-        const int nfreq = std::min(maxfreqindex, Model.GetFrequencies().size());
+        maxfreqindex = std::min(maxfreqindex, Model.GetFrequencies().size());
+        const size_t nfreq = maxfreqindex - minfreqindex;
         const size_t nmeas = Model.GetMeasPosX().size();
         const size_t nmodx = Model.GetXCoordinates().size();
         const size_t nmody = Model.GetYCoordinates().size();
@@ -293,7 +294,7 @@ namespace jiba
         // as we do not have the source for x3d, this is our only possibility anyway
         //the const qualified variables above are predetermined to be shared by the openmp standard
 #pragma omp parallel for shared(result)
-        for (int i = minfreqindex; i < nfreq; ++i)
+        for (int i = minfreqindex; i < maxfreqindex; ++i)
           {
             //the openmp standard specifies that we cannot leave a parallel construct
             //by throwing an exception, so we catch all exceptions and just
@@ -335,7 +336,7 @@ namespace jiba
 
     cmat MisfitToA(const rvec &Misfit, const size_t startindex)
       {
-        assert(startindex <= Misfit.size()-8);
+        assert(startindex <= Misfit.size() - 8);
         cmat result(2, 2);
         result(0, 0) = std::complex<double>(Misfit(startindex), Misfit(startindex + 1));
         result(0, 1) = std::complex<double>(Misfit(startindex + 2),
@@ -616,7 +617,8 @@ namespace jiba
         size_t minfreqindex, size_t maxfreqindex)
       {
         //we define nfreq as int to make the compiler happy in the openmp loop
-        const int nfreq = Model.GetFrequencies().size();
+        maxfreqindex = std::min(maxfreqindex, Model.GetFrequencies().size());
+        const int nfreq = maxfreqindex - minfreqindex;
         //a few commonly used quantities for shorter notation
         const size_t nmodx = Model.GetConductivities().shape()[0];
         const size_t nmody = Model.GetConductivities().shape()[1];
@@ -644,7 +646,7 @@ namespace jiba
         //here the explicitly shared variable is Gradient
         //all others are predetermined to be shared
 #pragma omp parallel for shared(Gradient)
-        for (int i = 0; i < nfreq; ++i)
+        for (int i = minfreqindex; i < maxfreqindex; ++i)
           {
             try
               {

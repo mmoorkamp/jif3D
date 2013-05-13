@@ -53,7 +53,9 @@ namespace jiba
       std::string MakeUniqueName(X3DModel::ProblemType Type, const size_t FreqIndex);
       //! The directory to store all temporary files
       boost::filesystem::path TempDir;
+      //! Calculate synthetic MT data for a single frequency
       rvec CalculateFrequency(const X3DModel &Model, size_t freqindex);
+      //! Calculate a least squares derivative for a single frequency
       rvec LQDerivativeFreq(const X3DModel &Model, const rvec &Misfit, size_t freqindex);
       friend class boost::serialization::access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
@@ -80,6 +82,8 @@ namespace jiba
        * The ordering is \f$Re(Z_xx),Im(Z_xx),Re(Z_xy),\ldots,Im(Z_yy)\f$ for the first frequency for all sites, then second frequency for all sites etc.
        *
        * @param Model The description of the conductivity model including sites locations and frequencies.
+       * @param minfreqindex The index of the first frequency for which to calculate the gradient
+       * @param maxfreqindex The index one larger than the index of the last frequency for which to calculate the gradient (C++ loop convention)
        * @return The synthetic MT data in the format described above.
        */
       rvec Calculate(const ModelType &Model, size_t minfreqindex = 0,
@@ -90,6 +94,8 @@ namespace jiba
        * the same model beforehand. It is safe to calculate different models with separate objects between those calls.
        * @param Model The description of the conductivity model. Has to be the same as for the previous call to calculate.
        * @param Misfit The data misfit associated with the model.
+       * @param minfreqindex The index of the first frequency for which to calculate the gradient
+       * @param maxfreqindex The index one larger than the index of the last frequency for which to calculate the gradient (C++ loop convention)
        * @return The gradient of the objective function with respect to the model parameters for the given model. The storage ordering is identical to X3DModel.
        */
       rvec LQDerivative(const ModelType &Model, const rvec &Misfit, size_t minfreqindex =
