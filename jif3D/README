@@ -1,59 +1,36 @@
-jiba++ Joint inversion code
-
-Copyright 2008-2011 Max Moorkamp  All rights reserved.
+jif3D Joint inversion framework
 
 
-This file describes the dependencies and compilation steps for the
-jiba++ joint inversion code.
+This file contains some general information about the joint inversion
+framework jif3D. For installation instructions please refer to the file INSTALL.
 
-
-Requirements
-
-The code uses a number of libraries and tools all of which are freely available, 
-but have to be installed before compilation. Please refer to the respective 
-documentation on how to install these components.
-
-* Boost Jam
-* Boost
-These two are available from http://www.boost.org/users/download/
-
-* The boost bindings for Lapack and Atlas from news.tiker.net/filebrowser/software/boost-bindings
-* netcdf from http://www.unidata.ucar.edu/software/netcdf/
-* atlas from http://math-atlas.sourceforge.net/
-* lapack from http://www.netlib.org/lapack/
-* cuda from http://www.nvidia.com/object/cuda_home.html#
-
-Alternatively you can install all but cuda through the package manager on Ubuntu.
-Depending on the path you chose to install the libraries to, you might
-have to modify the Jamroot file. Refer to http://www.boost.org/doc/tools/build/index.html
-for a description of the syntax.
-
-Compilation
-
-Once you have installed everything and set the correct path you should only
-have to run "bjam" from the jiba++ directory. Depending on your compiler
-and whether you are doing a debug or release compilation, the programs and
-libraries will be put in different directories. These will be output during
-compilation.
-
-This code has been compiled with
-
-gcc 4.2 under SuSE Linux 10.1 and 11.0
-gcc 4.3 under ubuntu 8/10
-gcc 4.4 under ubuntu 10/04
-intel 11.0 under ubuntu 8/10
-intel 11.1 under ubuntu 10/04
-intel 12.0 under ubuntu 10/04
-
-Sun 5.10 is known to fail, this is an issue with partial template spezialization in
-the boost libraries.
-Sun 5.11 also fails because of CUDA and some minor issues with templates and linking, these should be resolveable though.
-
-No tests have been performed under Windows. We are using the C++ interface to the netcdf libraries, however, and these
-have not been natively ported to Windows. This mean that Visual C++ will not compile the code. Cygwin should work but
-is completely untested.
-
+jif3D is a framework for joint inversion of seismic, gravity and magnetotelluric
+data in 3D. It is written in C++ and designed for modularity, so it can be used
+as a base for further developments and relatively easily extended to included
+new coupling mechanisms and new types of data. At the moment the core of the 
+framework is the program jointinv. It performs 3D joint inversion of first arrival
+travel time data, scalar and tensor (FTG) gravity measurements and magnetotelluric (MT)
+impedances. Please note while the seismic and gravity forward codes are part of this
+distribution, the MT forward code, x3d, is closed-source and not part of the framework.
+You can obtain x3d by purchasing an academic or commercial license from its author D. Avdeev.
+In the future, we will work on including an open-source MT forward solver. Given the
+existing facilities for handling MT data, this should be relatively easy.
+ 
 Documentation
 
-You can generate a documentation for the classes and programs using the doxygen program. There are two files Doxyfile.manual and
-Doxyfile.web. These are optimized for generating a printed documentation using latex and online html documentation, respectively.
+You can generate a documentation for the classes and programs using the doxygen program. 
+There are two files Doxyfile.manual and Doxyfile.web. 
+These are optimized for generating a printed documentation using latex 
+and online html documentation, respectively. Currently the documentation is
+largely limited to describing the different C++ classes that comprise the framework
+and the associated functions. An area for improvement is to create a coherent and
+structured description of file formats, requirements etc. in a tutorial style manual.
+
+
+SUPPORT
+
+If you have any questions, comments, suggestions or find a bug in the code, you can
+post in the discussion forum https://sourceforge.net/p/jif3d/discussion/ or submit a
+ticket https://sourceforge.net/p/jif3d/tickets/ In both cases you need to create a free
+sourceforge account to be able to post something. We will try to answer your questions
+and fix bugs as quickly as possible.  
