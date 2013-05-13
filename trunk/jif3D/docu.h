@@ -49,7 +49,7 @@ These two libraries are optional and have to be activated in the code through ap
  have to modify the Jamroot file. Refer to http://www.boost.org/doc/tools/build/index.html
  for a description of the syntax.
 
- \section Getting the code
+ \section code Getting the code
 
  You can check out the latest development version through svn via svn://svn.code.sf.net/p/jif3d/jif3dsvn/trunk/jif3d
  Alternatively you can download a release from http://sourceforge.net/projects/jif3d/
@@ -72,10 +72,9 @@ These two libraries are optional and have to be activated in the code through ap
  intel 12.0.2 under ubuntu 10/04 and ubuntu 12/04
 
  Sun 5.10 is known to fail, this is an issue with partial template specialization in
- the boost libraries.
-
- Sun 5.11 compiles most of the code, CUDA does not support the sun compilers though. However this
- can be quite easily fixed by removing the Gravity classes that use CUDA.
+ the boost libraries. Sun 5.11 compiles most of the code, CUDA does not support the
+ sun compilers though. However this can be quite easily fixed by removing the
+ Gravity classes that use CUDA.
 
  Also, Visual Studio currently does not compile the code as we are using the c++ interface
  for the netcdf library that has not been ported to Windows, yet. An possible alternative
