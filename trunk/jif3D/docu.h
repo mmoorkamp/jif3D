@@ -76,8 +76,8 @@ These two libraries are optional and have to be activated in the code through ap
  sun compilers though. However this can be quite easily fixed by removing the
  Gravity classes that use CUDA.
 
- Also, Visual Studio currently does not compile the code as we are using the c++ interface
- for the netcdf library that has not been ported to Windows, yet. An possible alternative
+ Also, Visual Studio currently does not compile the code as we are using the C++ interface
+ for the netcdf library that has not been ported to Windows, yet. A possible alternative
  is cygwin and the code should compile there. However, this has not been tested.
 
  *
@@ -117,7 +117,7 @@ These two libraries are optional and have to be activated in the code through ap
  * The seismic modeling code written by Podvin and Lecomte is being distributed as part of the jif3d code and is also licensed under the GPL.
  *
  * \section Papers
- * Two papers describe different aspects of jif3d
+ * Two papers describe different theoretical aspects of jif3d
  *   - Moorkamp, M., Heincke, B., Jegen, M., Roberts, A.W., Hobbs, R.W. A framework for 3-D joint inversion of MT, gravity and seismic refraction data
         (2011) Geophysical Journal International, 184 (1), pp. 477-493.
       explains the overall concept of out framework and compares different coupling mechanisms.
@@ -125,6 +125,12 @@ These two libraries are optional and have to be activated in the code through ap
     - Moorkamp, M., Jegen, M., Roberts, A., Hobbs, R. Massively parallel forward modeling of scalar
       and tensor gravimetry data (2010) Computers and Geosciences, 36 (5), pp. 680-686
       evaluates the performance of our GPGPU gravity forward modelling code.
+
+   We currently have a paper under review that shows the application of the framework to a real dataset
+
+     - Moorkamp, M. Roberts, A., Heincke, B., Jegen, M. and Hobbs, R.,  Retrieving velocity-conductivity relationships through structural
+       joint inversion, submitted to GRL, http://swww2.le.ac.uk/departments/geology/people/moorkamp-m/personal/preprint-of-grl-paper
+
    If you use this code in an academic context, we kindly ask you to cite the relevant publications.
 
    \section Acknowledgements
