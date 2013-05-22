@@ -70,30 +70,28 @@ namespace jiba
     class CopyTransform: public VectorTransform
       {
     private:
-      size_t ninput;
-      size_t noutput;
+      //! The number of elements we expect to transform, this is purely used for potential error checking between creating the object and using it
+      size_t ntrans;
       friend class boost::serialization::access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
         {
           ar & boost::serialization::base_object<VectorTransform>(*this);
-          ar & ninput;
-          ar & noutput;
+          ar & ntrans;
         }
-
     public:
       virtual size_t GetInputSize()
         {
-          return ninput;
+          return ntrans;
         }
       virtual size_t GetOutputSize()
         {
-          return noutput;
+          return ntrans;
         }
       //! This transform only copies its input, but we can specify an expected size to perform error checking in code that uses the transform
       CopyTransform(size_t intendedsize = 1) :
-          ninput(intendedsize), noutput(intendedsize)
+          ntrans(intendedsize)
         {
         }
       virtual ~CopyTransform()

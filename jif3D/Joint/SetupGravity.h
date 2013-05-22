@@ -70,11 +70,22 @@ namespace jiba
         {
           return *FTGObjective;
         }
-      //! Return the gravity model that was read in
+      //! Return the scalar gravity starting model and measurement positions  that were read in
+      /*! The model object also contains the measurement positions. As
+       * we might have different stations for scalar and FTG gravity
+       * data, we return two model objects. The densities will be identical for both of them.
+       * @return The model object containing the starting model and measurement positions.
+       */
       const jiba::ThreeDGravityModel &GetScalModel() const
         {
           return ScalGravModel;
         }
+      //! Return the FTG gravity starting model and measurement positions  that were read in
+      /*! The model object also contains the measurement positions. As
+       * we might have different stations for scalar and FTG gravity
+       * data, we return two model objects. The densities will be identical for both of them.
+       * @return The model object containing the starting model and measurement positions.
+       */
       const jiba::ThreeDGravityModel &GetFTGModel() const
         {
           return FTGGravModel;

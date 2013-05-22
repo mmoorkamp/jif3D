@@ -25,10 +25,11 @@ namespace jiba
     class MinDiffRegularization: public MatOpRegularization
       {
     private:
+      //! For simplicity in the class hierarchy we use a matrix to calculate the difference
       void ConstructOperator(const jiba::ThreeDModelBase &ModelGeometry)
         {
           const size_t ngrid = ModelGeometry.GetData().num_elements();
-
+          //The operator matrix is simply the identity matrix
           for (size_t i = 0; i < ngrid; ++i)
             {
               XOperatorMatrix(i, i) = 1.0;
@@ -42,13 +43,12 @@ namespace jiba
           ar & boost::serialization::base_object<MatOpRegularization>(*this);
         }
     public:
-
       //! The clone function provides a virtual constructor
       virtual MinDiffRegularization *clone() const
         {
           return new MinDiffRegularization(*this);
         }
-
+      //! The constructor needs the model geometry
       MinDiffRegularization(const jiba::ThreeDModelBase &Geometry) :
           MatOpRegularization(Geometry)
         {

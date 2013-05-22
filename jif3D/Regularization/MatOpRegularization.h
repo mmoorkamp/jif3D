@@ -171,14 +171,17 @@ namespace jiba
         {
           return XGrad;
         }
+      //! Return the operator matrix for regularization in x-direction
       const comp_mat &GetXOperator() const
         {
           return XOperatorMatrix;
         }
+      //! Return the operator matrix for regularization in y-direction
       const comp_mat &GetYOperator() const
         {
           return YOperatorMatrix;
         }
+      //! Return the operator matrix for regularization in z-direction
       const comp_mat &GetZOperator() const
         {
           return ZOperatorMatrix;

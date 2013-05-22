@@ -37,9 +37,13 @@ namespace jiba
       double pickerr;
       //! Storage for the name of the refinement model, can optionally be set on the command line
       std::string FineModelName;
-      //! The tomography model
+      //! The tomography starting model
       jiba::ThreeDSeismicModel TomoModel;
     public:
+      //! Read only access to the starting model for seismic tomography
+      /*! Read only access to the starting model for seismic tomography
+       * @return The object containing the starting model.
+       */
       const jiba::ThreeDSeismicModel &GetModel() const
         {
           return TomoModel;

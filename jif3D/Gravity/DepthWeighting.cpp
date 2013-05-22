@@ -27,14 +27,15 @@ namespace jiba
     /*! Calculate the derivative of the function f at  given z and z0
      * @param z The depth value
      * @param z0 The parametric depth value
+     * @return The derivative of the depth weighting function
      */
     double WeightingTerm::deriv(const double z, const double z0) const
       {
         return n * pow(z + z0, n - 1);
       }
-    /*! Calculate the average value of f in the intervall [z1,z2]
-     * @param z1 The lower bound of the intervall
-     * @param z2 The upper bound of the intervall
+    /*! Calculate the average value of f in the interval [z1,z2]
+     * @param z1 The lower bound of the interval
+     * @param z2 The upper bound of the interval
      * @param z0 The parametric depth value
      * @return The average value of f
      */
