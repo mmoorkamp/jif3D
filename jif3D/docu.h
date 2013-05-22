@@ -130,7 +130,7 @@ These two libraries are optional and have to be activated in the code through ap
    \section Acknowledgements
 
    The initial development of the framework was sponsored by Chevron, ExxonMobil, Nexen, RWE Dea,
-   Shell, Statoil and Wintershall within the jif3D consortium. P. Podvin kindly made his eikonal
+   Shell, Statoil and Wintershall within the jiba consortium. P. Podvin kindly made his eikonal
    solver publicly available. A. Avdeeva supported us with implementing the gradient calculation
    for the MT part of the joint inversion.
  */
