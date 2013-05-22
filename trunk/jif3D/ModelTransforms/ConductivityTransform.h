@@ -38,6 +38,7 @@ namespace jiba
       const double b;
       //! The constant term of the transform
       const double c;
+      //! Pointer to an object that translates generalized parameters to slowness, before we translate slowness to conductivity
       boost::shared_ptr<GeneralModelTransform> SlownessTransform;
       //! An object indicating where to apply the parameter relationship (value 1)
       jiba::ThreeDModelBase RelModel;
@@ -133,8 +134,8 @@ namespace jiba
        * We assume a functional relationship of the form
        * \f$ \rho = \exp( -a/v^2 + b/v +c) \f$.
        * @param SlowTrans A pointer to an object that gives slowness
-       * @RModel A model object indicating where the relationship should not be applied (value 0) and where it should be applied (value 1)
-       * @rvalue Value for density for model cells where the parameter relationship does not apply
+       * @param RModel A model object indicating where the relationship should not be applied (value 0) and where it should be applied (value 1)
+       * @param rvalue Value for density for model cells where the parameter relationship does not apply
        * @param aval The coefficient for the quadratic term
        * @param bval The coefficient for the linear term
        * @param cval The offset in the exponential

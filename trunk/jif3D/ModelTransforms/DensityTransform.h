@@ -70,6 +70,7 @@ namespace jiba
           jiba::rvec Density(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
+              //check if we should apply the transform for this grid cell
               if (RelModel.GetData().data()[i])
                 {
                   Density(i) = (1.0 / Slowness(i) + b) / a;
@@ -85,10 +86,10 @@ namespace jiba
       //! Transform from Density to Slowness
       virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
         {
-
           jiba::rvec Slowness(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
+              //check if we should apply the transform for this grid cell
               if (RelModel.GetData().data()[i])
                 {
                   Slowness(i) = 1.0 / (a * FullModel(i) - b);
@@ -109,6 +110,7 @@ namespace jiba
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
+              //check if we should apply the transform for this grid cell
               if (RelModel.GetData().data()[i])
                 {
                   Output(i) = -1.0 / (Slowness(i) * Slowness(i)) / a * SlowDeriv(i);
@@ -128,8 +130,8 @@ namespace jiba
        * We assume a functional relationship of the form \f$ \rho = (1/s +b)/a \f$,
        * the coefficients are specified in the constructor.
        * @param SlowTrans A pointer to an object that gives slowness
-       * @RModel A model object indicating where the relationship should not be applied (value 0) and where it should be applied (value 1)
-       * @rvalue Value for density for model cells where the parameter relationship does not apply
+       * @param RModel A model object indicating where the relationship should not be applied (value 0) and where it should be applied (value 1)
+       * @param rvalue Value for density for model cells where the parameter relationship does not apply
        * @param aval The slope a of the functional relationship
        * @param bval The offset value (see equation above)
        */

@@ -60,7 +60,6 @@ namespace jiba
        * have been set.
        * @param vm The variable map from boost::program_options that contains the actually set options
        * @param StartModel The starting model containing a description of the cell geometry
-       * @param Transform A transformation object to transform generalized inversion parameters to physical parameters that we want to regularize
        * @param CovModVec The model covariance vector, can be empty if covariance is assumed 1 or has to have one value for each cell in StartModel
        * @return A shared pointer to the configured regularization objective function object
        */

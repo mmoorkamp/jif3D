@@ -23,6 +23,7 @@ namespace jiba
       const double c;
       //! The final scale factor to scale the output by
       const double scale;
+      //! An object transforming generalized parameters to conductivity before we transform conductivity to velocity
       boost::shared_ptr<GeneralModelTransform> ResTransform;
     public:
       //! Transform the normalized model parameters back to physical parameters
@@ -33,8 +34,7 @@ namespace jiba
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
               double lres = std::log10(1.0 / Cond(i));
-              Output(i) = scale
-                  * std::pow(10.0, a + b * lres + c * lres * lres);
+              Output(i) = scale * std::pow(10.0, a + b * lres + c * lres * lres);
             }
           return Output;
         }
@@ -45,8 +45,8 @@ namespace jiba
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
-              double res = (-b + sqrt(b * b + 4.0 * c * (std::log10(
-                  FullModel(i)) - a))) / (2.0 * c);
+              double res = (-b + sqrt(b * b + 4.0 * c * (std::log10(FullModel(i)) - a)))
+                  / (2.0 * c);
               Output(i) = std::pow(10.0, -res / scale);
             }
           return ResTransform->PhysicalToGeneralized(Output);
@@ -60,15 +60,16 @@ namespace jiba
           jiba::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
-              Output(i) = std::pow(10.0, a - b * std::log10(Res(i)) + c
-                  * std::pow(std::log10(Res(i)), 2)) * (2.0 * c * std::log10(
-                  Res(i)) / Res(i) - b / Res(i)) * ResDeriv(i) * scale;
+              Output(i) = std::pow(10.0,
+                  a - b * std::log10(Res(i)) + c * std::pow(std::log10(Res(i)), 2))
+                  * (2.0 * c * std::log10(Res(i)) / Res(i) - b / Res(i)) * ResDeriv(i)
+                  * scale;
             }
           return Output;
         }
-      Durham1DTrans(boost::shared_ptr<GeneralModelTransform> ResTrans,
-          const double f1, const double f2, const double f3, const double f4) :
-        a(f1), b(f2), c(f3), scale(f4), ResTransform(ResTrans)
+      Durham1DTrans(boost::shared_ptr<GeneralModelTransform> ResTrans, const double f1,
+          const double f2, const double f3, const double f4) :
+          a(f1), b(f2), c(f3), scale(f4), ResTransform(ResTrans)
         {
 
         }

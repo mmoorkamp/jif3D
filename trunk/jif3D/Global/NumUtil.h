@@ -41,7 +41,7 @@ namespace jiba
     public:
       //! The constructor takes the first value of the sequence
       IntSequence(int start) :
-        value(start)
+          value(start)
         {
         }
       //! Return a new valuye from the sequence
@@ -56,8 +56,7 @@ namespace jiba
      * std::sort(Vector.begin(),Vector.end(),absLess<double,double>()) to sort a vector of numbers by their absolute values.
      *
      */
-    template<class N1, class N2> struct absLess: public std::binary_function<
-        N1, N2, bool>
+    template<class N1, class N2> struct absLess: public std::binary_function<N1, N2, bool>
       {
       //! Functors for the standard library have their functionality in operator()
       bool operator()(N1 number1, N2 number2) const
@@ -65,14 +64,19 @@ namespace jiba
           return std::abs(number1) < std::abs(number2);
         }
       };
-
-    template<class N1, class N2> struct roughlyEqual: public std::binary_function<
-        N1, N2, bool>
+    //! Compare two numbers within a given tolerance
+    /*! When comparing two floating point numbers, we typically
+     * cannot simply compare them, due to rounding issues, so we
+     * compare within the  tolerance specified by the numeric_limits::epsilon
+     * specified for the type.
+     */
+    template<class N1, class N2> struct roughlyEqual: public std::binary_function<N1, N2,
+        bool>
       {
       //! Functors for the standard library have their functionality in operator()
       bool operator()(N1 number1, N2 number2) const
         {
-    	  N1 epsilon = std::numeric_limits<N1>::epsilon();
+          N1 epsilon = std::numeric_limits<N1>::epsilon();
           return std::abs(number1 - number2) < epsilon;
         }
       };

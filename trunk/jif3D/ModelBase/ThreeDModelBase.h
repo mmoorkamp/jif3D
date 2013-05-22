@@ -90,7 +90,7 @@ namespace jiba
       void CalcCoordinates(t3DModelDim &Coordinates, const t3DModelDim Sizes,
           bool &ChangeFlag) const;
       friend class boost::serialization::access;
-      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      //! Provide serialization to be able to store objects
       template<class Archive>
       void save(Archive & ar, const unsigned int version) const
         {
@@ -119,6 +119,7 @@ namespace jiba
           ar & YOrigin;
           ar & ZOrigin;
         }
+      //! Provide serialization to be able to load objects
       template<class Archive>
       void load(Archive & ar, const unsigned int version)
         {
@@ -151,7 +152,7 @@ namespace jiba
           ar & ZOrigin;
         }
       BOOST_SERIALIZATION_SPLIT_MEMBER()
-    protected:
+      protected:
       //! The origin of the coordinate system in x-direction in m
       double XOrigin;
       //! The origin of the coordinate system in y-direction in m
@@ -325,8 +326,8 @@ namespace jiba
       //! We need to define a copy constructor to deal with openmp locks
       ThreeDModelBase(const ThreeDModelBase &source);
       virtual ~ThreeDModelBase();
-      };
-  /* @} */
-  }
+    };
+/* @} */
+}
 
 #endif /*THREEDMODELBASE_H_*/

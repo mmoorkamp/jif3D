@@ -88,8 +88,9 @@ namespace jiba
 
         }
     private:
-      //The synthetic data from the last forward calculation
+      //! The synthetic data from the last forward calculation
       jiba::rvec SynthData;
+      //! The implementation of the objective function
       virtual void
       ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff);
       //! The implementation of the gradient calculation
@@ -125,9 +126,10 @@ namespace jiba
           return ObservedData;
         }
       //! Return the synthetic data calculated for the last forward call
-      /*! We do not store the synthetic data, but only the data difference which we need frequently.
-       * As we only need the synthetic data occasionally, we generate it from the data difference
-       * when needed and save memory.
+      /*! We store the synthetic data from the last forward call as a real vector.
+       * This simplifies access to the synthetic data and typically data volumes
+       * are small enough that this does not pose a serious limitation.
+       * @return A real vector containing the synthetic data in the same order as the observed data
        */
       jiba::rvec GetSyntheticData() const
         {

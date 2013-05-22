@@ -56,6 +56,7 @@ namespace jiba
        * to transform a starting model that is given in terms of physical parameters
        * to generalized model parameters.
        * @param FullModel The physical model vector
+       * @return The generalized model parameters
        */
       virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const = 0;
       //! For the inversion we also need the derivative of the transformation

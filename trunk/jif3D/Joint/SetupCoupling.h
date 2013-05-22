@@ -75,7 +75,7 @@ namespace jiba
       double cond_b;
       //! The c coefficient for the slowness-conductivity transform
       double cond_c;
-      //!
+      //! The name for model file containing information where the parameter relationship should be applied
       std::string RelModelName;
       //! The replacement value for density where the parameter relationship is not valid
       double DensReplace;
@@ -111,12 +111,13 @@ namespace jiba
        * This function looks at the program options and sets the appropriate transforms for seismics, MT, gravity and
        * regularization.
        * @param vm The variables map containing the options set by the user
+       * @param GeometryModel The model containing the geometry of the grid, will read in within this routine
        * @param TomoTransform The parameter transform for the seismic objective function
        * @param GravityTransform The parameter transform for the gravity objective function
        * @param MTTransform The parameter transform for the MT objective function
        * @param Wavelet Parametrize the inversion by a wavelet transform of the model parameters
        */
-      void SetupTransforms(const po::variables_map &vm, ThreeDSeismicModel &StartModel,
+      void SetupTransforms(const po::variables_map &vm, ThreeDSeismicModel &GeometryModel,
           boost::shared_ptr<jiba::GeneralModelTransform> &TomoTransform,
           boost::shared_ptr<jiba::GeneralModelTransform> &GravityTransform,
           boost::shared_ptr<jiba::GeneralModelTransform> &MTTransform, bool Wavelet =

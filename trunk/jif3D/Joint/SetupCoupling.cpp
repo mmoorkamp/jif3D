@@ -81,7 +81,7 @@ namespace jiba
       }
 
     void SetupCoupling::SetupTransforms(const po::variables_map &vm,
-        ThreeDSeismicModel &StartModel,
+        ThreeDSeismicModel &GeometryModel,
         boost::shared_ptr<jiba::GeneralModelTransform> &TomoTransform,
         boost::shared_ptr<jiba::GeneralModelTransform> &GravityTransform,
         boost::shared_ptr<jiba::GeneralModelTransform> &MTTransform, bool Wavelet)
@@ -92,9 +92,9 @@ namespace jiba
         std::string modelfilename = jiba::AskFilename("Inversion Model Geometry: ");
         //although we specify the starting model as a seismic model
         //it does not need to have the same grid specifications
-        StartModel.ReadNetCDF(modelfilename, false);
+        GeometryModel.ReadNetCDF(modelfilename, false);
 
-        const std::size_t ngrid = StartModel.GetNModelElements();
+        const std::size_t ngrid = GeometryModel.GetNModelElements();
 
         //we declare WaveletTrans here so that we can use identical
         //transform for the different physical properties below
@@ -105,8 +105,8 @@ namespace jiba
         if (Wavelet)
           {
             WaveletTrans = boost::shared_ptr<jiba::GeneralModelTransform>(
-                new jiba::WaveletModelTransform(StartModel.GetData().shape()[0],
-                    StartModel.GetData().shape()[1], StartModel.GetData().shape()[2]));
+                new jiba::WaveletModelTransform(GeometryModel.GetData().shape()[0],
+                    GeometryModel.GetData().shape()[1], GeometryModel.GetData().shape()[2]));
           }
         //if we want to do a cross-gradient type joint inversion
         //we need to set transformations for each data type
@@ -196,9 +196,9 @@ namespace jiba
               }
             else
               {
-                const size_t nx = StartModel.GetSlownesses().shape()[0];
-                const size_t ny = StartModel.GetSlownesses().shape()[1];
-                const size_t nz = StartModel.GetSlownesses().shape()[2];
+                const size_t nx = GeometryModel.GetSlownesses().shape()[0];
+                const size_t ny = GeometryModel.GetSlownesses().shape()[1];
+                const size_t nz = GeometryModel.GetSlownesses().shape()[2];
                 RelModel.SetSlownesses().resize(boost::extents[nx][ny][nz]);
                 std::fill_n(RelModel.SetSlownesses().origin(), nx * ny * nz, 1.0);
 
