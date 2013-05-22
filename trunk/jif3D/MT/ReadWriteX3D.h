@@ -16,7 +16,7 @@
 #include "../ModelBase/ThreeDModelBase.h"
 #include "X3DModel.h"
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup mtmodelling Forward modelling of magnetotelluric data */
     /* @{ */
@@ -90,8 +90,8 @@ namespace jiba
         const std::vector<double> &SourceDepths,
         const std::vector<std::complex<double> > &XPolMoments,
         const std::vector<std::complex<double> > &YPolMoments,
-        const jiba::ThreeDModelBase::t3DModelDim &ZCellBoundaries,
-        const jiba::ThreeDModelBase::t3DModelDim &ZCellSizes,
+        const jif3D::ThreeDModelBase::t3DModelDim &ZCellBoundaries,
+        const jif3D::ThreeDModelBase::t3DModelDim &ZCellSizes,
         const size_t maxx,
         const size_t maxy);
 

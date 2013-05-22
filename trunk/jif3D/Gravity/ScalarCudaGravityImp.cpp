@@ -12,7 +12,7 @@
 #include "BasicGravElements.h"
 #include "GravityBackground.h"
 
-namespace jiba
+namespace jif3D
   {
     // These are forward calculations for the functions declared in gravcuda.cu that
     // need to be called from here, they provide the interface to CUDA and purely

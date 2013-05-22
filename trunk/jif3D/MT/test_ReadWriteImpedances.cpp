@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_CASE  (read_write_netcdf_test)
       std::vector<double> Frequencies(nfreq);
       std::vector<double> XCoord(nstat),YCoord(nstat),ZCoord(nstat);
       const size_t ndata = nfreq*nstat*8;
-      jiba::rvec Impedances(ndata), Error(ndata);
+      jif3D::rvec Impedances(ndata), Error(ndata);
 
       std::generate_n(Frequencies.begin(),nfreq,drand48);
       std::sort(Frequencies.begin(),Frequencies.end());
@@ -36,12 +36,12 @@ BOOST_AUTO_TEST_CASE  (read_write_netcdf_test)
         {
           Error(i) = Error(i - 1);
         }
-      jiba::WriteImpedancesToNetCDF(filename,Frequencies,XCoord,YCoord,ZCoord,Impedances,Error);
+      jif3D::WriteImpedancesToNetCDF(filename,Frequencies,XCoord,YCoord,ZCoord,Impedances,Error);
 
       std::vector<double> ReadFrequencies;
       std::vector<double> ReadXCoord,ReadYCoord,ReadZCoord;
-      jiba::rvec ReadImpedances, ReadError;
-      jiba::ReadImpedancesFromNetCDF(filename,ReadFrequencies,ReadXCoord,ReadYCoord,ReadZCoord,ReadImpedances, ReadError);
+      jif3D::rvec ReadImpedances, ReadError;
+      jif3D::ReadImpedancesFromNetCDF(filename,ReadFrequencies,ReadXCoord,ReadYCoord,ReadZCoord,ReadImpedances, ReadError);
       for (size_t i = 0; i < nfreq; ++i)
         {
           BOOST_CHECK_CLOSE(Frequencies[i],ReadFrequencies[i],0.001);

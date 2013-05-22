@@ -12,7 +12,7 @@
 #include <cassert>
 #include <algorithm>
 
-namespace jiba
+namespace jif3D
   {
     //we use these names when writing the model to a netcdf file
     static const std::string SlownessName = "Slowness";
@@ -104,7 +104,7 @@ namespace jiba
                 GetXCellSizes().num_elements(), CellSize)
                 == GetXCellSizes().end())
               {
-                throw jiba::FatalException(
+                throw jif3D::FatalException(
                     "Non-equal grid spacing in x-direction !");
               }
             //then for y
@@ -112,7 +112,7 @@ namespace jiba
                 GetYCellSizes().num_elements(), CellSize)
                 == GetYCellSizes().end())
               {
-                throw jiba::FatalException(
+                throw jif3D::FatalException(
                     "Non-equal grid spacing in y-direction !");
               }
             //finally for z, in each cases the cell size we search for is the same
@@ -120,7 +120,7 @@ namespace jiba
                 GetZCellSizes().num_elements(), CellSize)
                 == GetZCellSizes().end())
               {
-                throw jiba::FatalException(
+                throw jif3D::FatalException(
                     "Non-equal grid spacing in z-direction !");
               }
           }

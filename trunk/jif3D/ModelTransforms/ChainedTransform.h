@@ -14,7 +14,7 @@
 #include <boost/shared_ptr.hpp>
 #include "GeneralModelTransform.h"
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup inversion General routines for inversion */
     /* @{ */
@@ -28,7 +28,7 @@ namespace jiba
      * parameters the order is reversed and we use the chain rule to calculate
      * the derivatives.
      */
-    class ChainedTransform: public jiba::GeneralModelTransform
+    class ChainedTransform: public jif3D::GeneralModelTransform
       {
     private:
       //! We store pointers to each transform in the chain in this vector
@@ -48,28 +48,28 @@ namespace jiba
           return new ChainedTransform(*this);
         }
       //! Transform the normalized model parameters back to physical parameters
-      virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
+      virtual jif3D::rvec GeneralizedToPhysical(const jif3D::rvec &FullModel) const
         {
-          jiba::rvec Output(FullModel);
+          jif3D::rvec Output(FullModel);
 
           for (size_t j = 0; j < Transforms.size(); ++j)
             Output = Transforms.at(j)->GeneralizedToPhysical(Output);
           return Output;
         }
       //! Transform the physical model parameters to generalized model parameters
-      virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
+      virtual jif3D::rvec PhysicalToGeneralized(const jif3D::rvec &FullModel) const
         {
-          jiba::rvec Output(FullModel);
+          jif3D::rvec Output(FullModel);
           for (int i = Transforms.size() - 1; i >= 0; --i)
             Output = Transforms.at(i)->PhysicalToGeneralized(Output);
           return Output;
         }
       //! Transform the derivative with respect to the physical parameters to normalized parameters
-      virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
-          const jiba::rvec &Derivative) const
+      virtual jif3D::rvec Derivative(const jif3D::rvec &FullModel,
+          const jif3D::rvec &Derivative) const
         {
-          jiba::rvec Output(Derivative);
-          jiba::rvec TransModel(FullModel);
+          jif3D::rvec Output(Derivative);
+          jif3D::rvec TransModel(FullModel);
           for (size_t j = 0; j < Transforms.size(); ++j)
             {
               Output = Transforms.at(j)->Derivative(TransModel, Output);

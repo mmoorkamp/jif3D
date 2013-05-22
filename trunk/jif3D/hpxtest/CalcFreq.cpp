@@ -38,18 +38,18 @@ const std::string emaBname = resultfilename + "0b.ema";
 const std::string runext = "_run";
 const std::string dirext = "_dir";
 //associate a type of calculation with a name string
-const std::map<jiba::X3DModel::ProblemType, std::string> Extension =
-    boost::assign::map_list_of(jiba::X3DModel::MT, "MT")(jiba::X3DModel::EDIP, "EDIP")(
-        jiba::X3DModel::MDIP, "MDIP");
+const std::map<jif3D::X3DModel::ProblemType, std::string> Extension =
+    boost::assign::map_list_of(jif3D::X3DModel::MT, "MT")(jif3D::X3DModel::EDIP, "EDIP")(
+        jif3D::X3DModel::MDIP, "MDIP");
 
 
 
 inline void CheckField(const std::vector<std::complex<double> > &Field, size_t nelem)
   {
     if (Field.size() != nelem)
-      throw jiba::FatalException(
-          "Number of read in elements in Field: " + jiba::stringify(Field.size())
-              + " does not match expected: " + jiba::stringify(nelem));
+      throw jif3D::FatalException(
+          "Number of read in elements in Field: " + jif3D::stringify(Field.size())
+              + " does not match expected: " + jif3D::stringify(nelem));
   }
 
 //check that the .hnk file for x3d are in a certain directory
@@ -82,10 +82,10 @@ std::string ObjectID()
     //make a unique filename for the sensitivity file created by this object
     //we use boost uuid to generate a unique identifier tag
     //and translate it to a string to generate the filename
-    return "mt" + jiba::stringify(getpid()) + jiba::stringify(tag);
+    return "mt" + jif3D::stringify(getpid()) + jif3D::stringify(tag);
   }
 
-std::string MakeUniqueName(jiba::X3DModel::ProblemType Type, const size_t FreqIndex)
+std::string MakeUniqueName(jif3D::X3DModel::ProblemType Type, const size_t FreqIndex)
   {
     //we assemble the name from the id of the process
     //and the address of the current object
@@ -93,7 +93,7 @@ std::string MakeUniqueName(jiba::X3DModel::ProblemType Type, const size_t FreqIn
     //the type of calculation
     result += Extension.find(Type)->second;
     //and the frequency index
-    result += jiba::stringify(FreqIndex);
+    result += jif3D::stringify(FreqIndex);
     return result;
   }
 //create a script that changes to the correct directory
@@ -125,35 +125,35 @@ void RunX3D(const std::string &NameRoot)
     //for the system call, otherwise the GNU compiler picks up
     //a version from the c library that gives trouble in threaded environments
     if (std::system(runname.c_str()))
-      throw jiba::FatalException("Cannot execute run script: " + runname);
+      throw jif3D::FatalException("Cannot execute run script: " + runname);
   }
 
-jiba::rvec HPXCalculateFrequency(const jiba::X3DModel &Model, size_t freqindex,
+jif3D::rvec HPXCalculateFrequency(const jif3D::X3DModel &Model, size_t freqindex,
     std::string TempDirName)
   {
 
     const size_t nmeas = Model.GetMeasPosX().size();
     const size_t nmodx = Model.GetXCoordinates().size();
     const size_t nmody = Model.GetYCoordinates().size();
-    jiba::rvec result(nmeas * 8);
+    jif3D::rvec result(nmeas * 8);
     fs::path TempDir = TempDirName;
-    fs::path RootName = TempDir / MakeUniqueName(jiba::X3DModel::MT, freqindex);
+    fs::path RootName = TempDir / MakeUniqueName(jif3D::X3DModel::MT, freqindex);
     fs::path DirName = RootName.string() + dirext;
     std::vector<double> CurrFreq(1, Model.GetFrequencies()[freqindex]);
     std::vector<double> ShiftDepth;
     for (size_t j = 0; j < nmeas; ++j)
       {
         ShiftDepth.push_back(
-            Model.GetZCoordinates()[jiba::FindNearestCellBoundary(Model.GetMeasPosZ()[j],
+            Model.GetZCoordinates()[jif3D::FindNearestCellBoundary(Model.GetMeasPosZ()[j],
                 Model.GetZCoordinates(), Model.GetZCellSizes())]);
       }
     //writing out files causes problems in parallel
     // so we make sure it is done one at a time
       {
         MakeRunFile(RootName.string(), DirName.string());
-        jiba::WriteProjectFile(DirName.string(), CurrFreq, jiba::X3DModel::MT,
+        jif3D::WriteProjectFile(DirName.string(), CurrFreq, jif3D::X3DModel::MT,
             resultfilename, modelfilename);
-        jiba::Write3DModelForX3D((DirName / modelfilename).string(),
+        jif3D::Write3DModelForX3D((DirName / modelfilename).string(),
             Model.GetXCellSizes(), Model.GetYCellSizes(), Model.GetZCellSizes(),
             ShiftDepth, Model.GetConductivities(), Model.GetBackgroundConductivities(),
             Model.GetBackgroundThicknesses());
@@ -165,8 +165,8 @@ jiba::rvec HPXCalculateFrequency(const jiba::X3DModel &Model, size_t freqindex,
     std::complex<double> Zxx, Zxy, Zyx, Zyy;
     //read in the electric and magnetic field at the observe sites
 
-    jiba::ReadEMO((DirName / emoAname).string(), Ex1, Ey1, Hx1, Hy1);
-    jiba::ReadEMO((DirName / emoBname).string(), Ex2, Ey2, Hx2, Hy2);
+    jif3D::ReadEMO((DirName / emoAname).string(), Ex1, Ey1, Hx1, Hy1);
+    jif3D::ReadEMO((DirName / emoBname).string(), Ex2, Ey2, Hx2, Hy2);
 
     CheckField(Ex1, nval);
     CheckField(Ex2, nval);
@@ -180,7 +180,7 @@ jiba::rvec HPXCalculateFrequency(const jiba::X3DModel &Model, size_t freqindex,
     for (size_t j = 0; j < nmeas; ++j)
       {
         //find out where our site is located in the model
-        boost::array<jiba::ThreeDModelBase::t3DModelData::index, 3> StationIndex =
+        boost::array<jif3D::ThreeDModelBase::t3DModelData::index, 3> StationIndex =
             Model.FindAssociatedIndices(Model.GetMeasPosX()[j], Model.GetMeasPosY()[j],
                 Model.GetMeasPosZ()[j]);
         //for each site we have a separate observation depth in x3d
@@ -191,7 +191,7 @@ jiba::rvec HPXCalculateFrequency(const jiba::X3DModel &Model, size_t freqindex,
         const size_t offset = (nmodx * nmody) * j + StationIndex[0] * nmody
             + StationIndex[1];
         const size_t meas_index = j * 8;
-        jiba::FieldsToImpedance(Ex1[offset], Ex2[offset], Ey1[offset], Ey2[offset],
+        jif3D::FieldsToImpedance(Ex1[offset], Ex2[offset], Ey1[offset], Ey2[offset],
             Hx1[offset], Hx2[offset], Hy1[offset], Hy2[offset], Zxx, Zxy, Zyx, Zyy);
         //in order to guarantee a coherent state of the array
         //we lock the access before writing

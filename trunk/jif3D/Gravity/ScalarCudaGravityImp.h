@@ -12,7 +12,7 @@
 #include <boost/serialization/base_object.hpp>
 #include "ThreeDGravityImplementation.h"
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup gravity Gravity forward modeling, display and inversion */
     /* @{ */
@@ -25,7 +25,7 @@ namespace jiba
      * This class cannot be copied as this would make a mess with management
      * of cuda resources.
      */
-    class ScalarCudaGravityImp: public jiba::ThreeDGravityImplementation
+    class ScalarCudaGravityImp: public jif3D::ThreeDGravityImplementation
       {
     private:
       // These pointers hold the memory on the graphics card as allocated
@@ -69,8 +69,8 @@ namespace jiba
       virtual rvec CalcGridded(const size_t measindex,
           const ThreeDGravityModel &Model, rmat &Sensitivities);
       //! This class cannot be copied, so copy constructor and assignment are private
-      jiba::ScalarCudaGravityImp &operator=(const jiba::ScalarCudaGravityImp&);
-      ScalarCudaGravityImp(const jiba::ScalarCudaGravityImp&);
+      jif3D::ScalarCudaGravityImp &operator=(const jif3D::ScalarCudaGravityImp&);
+      ScalarCudaGravityImp(const jif3D::ScalarCudaGravityImp&);
     public:
       //! How many data do we return before any transformation
       virtual size_t RawDataPerMeasurement()

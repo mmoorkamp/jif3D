@@ -19,17 +19,17 @@
 int main(int argc, char *argv[])
   {
 
-    std::string ScalarFilename = jiba::AskFilename("Scalar data Filename: ");
-    std::string FTGFilename = jiba::AskFilename("FTG data Filename: ");
+    std::string ScalarFilename = jif3D::AskFilename("Scalar data Filename: ");
+    std::string FTGFilename = jif3D::AskFilename("FTG data Filename: ");
     std::vector<double> ScalX, ScalY, ScalZ, FTGX, FTGY, FTGZ;
-    jiba::rvec ScalDat, FTGDat;
-    jiba::ReadScalarGravityMeasurements(ScalarFilename, ScalDat, ScalX, ScalY,
+    jif3D::rvec ScalDat, FTGDat;
+    jif3D::ReadScalarGravityMeasurements(ScalarFilename, ScalDat, ScalX, ScalY,
         ScalZ);
-    jiba::ReadTensorGravityMeasurements(FTGFilename, FTGDat, FTGX, FTGY, FTGZ);
+    jif3D::ReadTensorGravityMeasurements(FTGFilename, FTGDat, FTGX, FTGY, FTGZ);
 
-    jiba::Write3DDataToVTK(ScalarFilename + ".vtk", "grav_accel", ScalDat,
+    jif3D::Write3DDataToVTK(ScalarFilename + ".vtk", "grav_accel", ScalDat,
         ScalX, ScalY, ScalZ);
-    jiba::Write3DTensorDataToVTK(FTGFilename + ".vtk", "U", FTGDat, FTGX, FTGY,
+    jif3D::Write3DTensorDataToVTK(FTGFilename + ".vtk", "U", FTGDat, FTGX, FTGY,
         FTGZ);
 
   }

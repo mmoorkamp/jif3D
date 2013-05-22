@@ -11,7 +11,7 @@
  * a file with the input data. It outputs the calculated data and the inversion model in netcdf and vtk file format
  * and the the raw and depth-weighted sensitivities in .vtk format for plotting.
  *
- * This program is a good example for the level of abstraction in jiba++ and uses a lot of the current features. For the most
+ * This program is a good example for the level of abstraction in jif3D++ and uses a lot of the current features. For the most
  * part it is completely transparent to the fact whether we invert scalar or FTG data. Only the reading and writing of data
  * requires knowledge of the data type.
  */
@@ -35,11 +35,11 @@ namespace ublas = boost::numeric::ublas;
 
 //write the sensitivities for each measurement to a file
 void WriteSensitivities(const std::string &nameroot,
-    const std::string &sensname, const jiba::rmat &Sens,
-    const jiba::ThreeDGravityModel &Model)
+    const std::string &sensname, const jif3D::rmat &Sens,
+    const jif3D::ThreeDGravityModel &Model)
   {
     //create a data structure that mimics the geometry of the models
-    jiba::ThreeDModelBase::t3DModelData
+    jif3D::ThreeDModelBase::t3DModelData
         SensModel(
             boost::extents[Model.GetDensities().shape()[0]][Model.GetDensities().shape()[1]][Model.GetDensities().shape()[2]]);
     const size_t ngrid = Model.GetDensities().num_elements();
@@ -48,14 +48,14 @@ void WriteSensitivities(const std::string &nameroot,
     for (size_t i = 0; i < ndata; ++i)
       {
         //extract the corresponding row of the sensitivity matrix
-        boost::numeric::ublas::matrix_row<const jiba::rmat> sensrow(Sens, i);
+        boost::numeric::ublas::matrix_row<const jif3D::rmat> sensrow(Sens, i);
         //copy to the Model structure to map to its geometric position
         std::copy(sensrow.begin(), sensrow.begin() + ngrid, SensModel.data());
         //write out a .vtk and a netcdf file
-        jiba::Write3DModelToVTK(nameroot + sensname + jiba::stringify(i)
+        jif3D::Write3DModelToVTK(nameroot + sensname + jif3D::stringify(i)
             + ".vtk", sensname, Model.GetXCellSizes(), Model.GetYCellSizes(),
             Model.GetZCellSizes(), SensModel);
-        jiba::Write3DModelToNetCDF(nameroot + sensname + jiba::stringify(i)
+        jif3D::Write3DModelToNetCDF(nameroot + sensname + jif3D::stringify(i)
             + ".nc", sensname, " ", Model.GetXCellSizes(),
             Model.GetYCellSizes(), Model.GetZCellSizes(), SensModel);
       }
@@ -63,8 +63,8 @@ void WriteSensitivities(const std::string &nameroot,
   }
 
 //calculate the normalized misfit between observed and synthetic data
-double CalcMisfit(const jiba::rvec &ObservedData,
-    const jiba::rvec &SyntheticData, jiba::rvec &Misfit)
+double CalcMisfit(const jif3D::rvec &ObservedData,
+    const jif3D::rvec &SyntheticData, jif3D::rvec &Misfit)
   {
     std::transform(ObservedData.begin(), ObservedData.end(),
         SyntheticData.begin(), Misfit.begin(), std::minus<double>());
@@ -77,21 +77,21 @@ double CalcMisfit(const jiba::rvec &ObservedData,
 int main()
   {
     //these objects hold information about the measurements and their geometry
-    jiba::rvec Data;
-    jiba::ThreeDGravityModel::tMeasPosVec PosX, PosY, PosZ;
+    jif3D::rvec Data;
+    jif3D::ThreeDGravityModel::tMeasPosVec PosX, PosY, PosZ;
 
     //first we read in the starting model and the measured data
-    std::string modelfilename = jiba::AskFilename("Starting model Filename: ");
-    std::string datafilename = jiba::AskFilename( "Data Filename: ");
+    std::string modelfilename = jif3D::AskFilename("Starting model Filename: ");
+    std::string datafilename = jif3D::AskFilename( "Data Filename: ");
 
     //we read in the starting modelfile
-    jiba::ThreeDGravityModel Model;
+    jif3D::ThreeDGravityModel Model;
     Model.ReadNetCDF(modelfilename);
     //get the name of the file containing the data and read it in
 
     //we figure out the type of data (scalar or ftg) from the variables
     //that are in the netcdf file
-    jiba::GravityDataType DataType = jiba::IdentifyGravityDatafileType(
+    jif3D::GravityDataType DataType = jif3D::IdentifyGravityDatafileType(
         datafilename);
 
     //Li and Oldenburg recommend a depth weighting exponent of -2.0
@@ -99,7 +99,7 @@ int main()
     //for FTG
     double DepthExponent = -2.0;
     //create the pointer for the calculator object without assigning anything
-    boost::shared_ptr<jiba::FullSensitivityGravityCalculator> GravityCalculator;
+    boost::shared_ptr<jif3D::FullSensitivityGravityCalculator> GravityCalculator;
     //now we have to do a few things differently depending on whether we deal
     //with scalar or FTG data
     //1. We have to read the data differently
@@ -107,21 +107,21 @@ int main()
     //3. We need a different exponent for depth-weighting
     switch (DataType)
       {
-    case jiba::scalar:
-      jiba::ReadScalarGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
+    case jif3D::scalar:
+      jif3D::ReadScalarGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
       //assign a scalar forward calculation object to the pointer
       GravityCalculator
-          = boost::shared_ptr<jiba::FullSensitivityGravityCalculator>(
-              jiba::CreateGravityCalculator<
-                  jiba::FullSensitivityGravityCalculator>::MakeScalar(true));
+          = boost::shared_ptr<jif3D::FullSensitivityGravityCalculator>(
+              jif3D::CreateGravityCalculator<
+                  jif3D::FullSensitivityGravityCalculator>::MakeScalar(true));
       break;
-    case jiba::ftg:
-      jiba::ReadTensorGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
+    case jif3D::ftg:
+      jif3D::ReadTensorGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
       //assign a ftg forward calculation object to the pointer
       GravityCalculator
-          = boost::shared_ptr<jiba::FullSensitivityGravityCalculator>(
-              jiba::CreateGravityCalculator<
-                  jiba::FullSensitivityGravityCalculator>::MakeTensor(true));
+          = boost::shared_ptr<jif3D::FullSensitivityGravityCalculator>(
+              jif3D::CreateGravityCalculator<
+                  jif3D::FullSensitivityGravityCalculator>::MakeTensor(true));
       DepthExponent = -3.0;
       break;
     default:
@@ -156,7 +156,7 @@ int main()
       }
     //calculate the response of the starting model
     std::cout << "Calculating response of starting model." << std::endl;
-    jiba::rvec StartingData(GravityCalculator->Calculate(Model));
+    jif3D::rvec StartingData(GravityCalculator->Calculate(Model));
 
     std::cout << "Gridded model size: " << ngrid << " Complete size: " << nmod
         << std::endl;
@@ -167,9 +167,9 @@ int main()
     //    GravityCalculator->GetSensitivities(), Model);
 
     //create objects for the depth weighting
-    jiba::rvec WeightVector(zsize), ModelWeight(nmod);
+    jif3D::rvec WeightVector(zsize), ModelWeight(nmod);
     //create objects for the misfit and a very basic error estimate
-    jiba::rvec DataDiffVec(ndata), DataError(ndata);
+    jif3D::rvec DataDiffVec(ndata), DataError(ndata);
 
     //we create a simple error estimate by assuming 2% error
     //for each measurement
@@ -182,25 +182,25 @@ int main()
     //and also equalise the sensitivity matrix
     for (size_t i = 0; i < ndata; ++i)
       {
-        boost::numeric::ublas::matrix_row<jiba::rmat> CurrentRow(
+        boost::numeric::ublas::matrix_row<jif3D::rmat> CurrentRow(
             GravityCalculator->SetSensitivities(), i);
         CurrentRow /= Data(i);
       }
     std::cout << "Calculating depth weighting." << std::endl;
     //now we perform the depth weighting for the sensitivities
-    jiba::rvec SensProfile;
+    jif3D::rvec SensProfile;
     //we find a measurement site close to the centre of the model and extract the
     //sensitivity variation with depth
-    jiba::ExtractMiddleSens(Model, GravityCalculator->GetSensitivities(),
+    jif3D::ExtractMiddleSens(Model, GravityCalculator->GetSensitivities(),
         GravityCalculator->GetDataPerMeasurement(), SensProfile);
     //we fit a curve of the form 1/(z+z0)^n to the extracted sensitivities
-    double z0 = FitZ0(SensProfile, Model.GetZCellSizes(), jiba::WeightingTerm(
+    double z0 = FitZ0(SensProfile, Model.GetZCellSizes(), jif3D::WeightingTerm(
         DepthExponent));
     std::cout << "Estimated z0: " << z0 << std::endl;
 
     //calculate the depth scaling
-    jiba::ConstructDepthWeighting(Model.GetZCellSizes(), z0, WeightVector,
-        jiba::WeightingTerm(DepthExponent));
+    jif3D::ConstructDepthWeighting(Model.GetZCellSizes(), z0, WeightVector,
+        jif3D::WeightingTerm(DepthExponent));
     //and output the scaling weights
     //std::ofstream weightfile("weights.out");
     //std::copy(WeightVector.begin(), WeightVector.end(), std::ostream_iterator<
@@ -228,9 +228,9 @@ int main()
     //here comes the core inversion
     //the problem is linear so we only perform a single inversion step
     std::cout << "Performing inversion." << std::endl;
-    jiba::rvec InvModel(nmod);
+    jif3D::rvec InvModel(nmod);
     std::fill(InvModel.begin(), InvModel.end(), 0.0);
-    jiba::DataSpaceInversion()(GravityCalculator->SetSensitivities(),
+    jif3D::DataSpaceInversion()(GravityCalculator->SetSensitivities(),
         DataDiffVec, ModelWeight, DataError, lambda, InvModel);
 
     //add the result of the inversion to the starting model
@@ -238,14 +238,14 @@ int main()
     std::transform(InvModel.begin(), InvModel.begin() + ngrid,
         Model.SetDensities().origin(), Model.SetDensities().origin(),
         std::plus<double>());
-    jiba::ThreeDGravityModel::tBackgroundVec Background(
+    jif3D::ThreeDGravityModel::tBackgroundVec Background(
         Model.GetBackgroundDensities());
     std::transform(InvModel.begin() + ngrid, InvModel.end(),
         Background.begin(), Background.begin(), std::plus<double>());
     Model.SetBackgroundDensities(Background);
     //calculate the predicted data
     std::cout << "Calculating response of inversion model." << std::endl;
-    jiba::rvec InvData(GravityCalculator->Calculate(Model));
+    jif3D::rvec InvData(GravityCalculator->Calculate(Model));
     misfit = CalcMisfit(Data, InvData, DataDiffVec);
     std::cout << "Final misfit: " << misfit << std::endl;
     //and write out the data and model
@@ -253,19 +253,19 @@ int main()
     std::cout << "Writing out inversion results." << std::endl;
     switch (DataType)
       {
-    case jiba::scalar:
-      jiba::Write3DDataToVTK(modelfilename + ".inv_sgd.vtk", "grav_accel",
+    case jif3D::scalar:
+      jif3D::Write3DDataToVTK(modelfilename + ".inv_sgd.vtk", "grav_accel",
           InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
           Model.GetMeasPosZ());
-      jiba::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc",
+      jif3D::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc",
           InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
           Model.GetMeasPosZ());
       break;
-    case jiba::ftg:
-      jiba::Write3DTensorDataToVTK(modelfilename + ".inv_ftg.vtk",
+    case jif3D::ftg:
+      jif3D::Write3DTensorDataToVTK(modelfilename + ".inv_ftg.vtk",
           "grav_accel", InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
           Model.GetMeasPosZ());
-      jiba::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc",
+      jif3D::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc",
           InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
           Model.GetMeasPosZ());
       break;

@@ -42,23 +42,23 @@ namespace ublas = boost::numeric::ublas;
 namespace po = boost::program_options;
 
 
-//BOOST_CLASS_EXPORT( jiba::VectorTransform )
-BOOST_CLASS_EXPORT( jiba::CopyTransform )
+//BOOST_CLASS_EXPORT( jif3D::VectorTransform )
+BOOST_CLASS_EXPORT( jif3D::CopyTransform )
 
-BOOST_CLASS_EXPORT( jiba::GeneralModelTransform )
-BOOST_CLASS_EXPORT( jiba::ModelCopyTransform )
-BOOST_CLASS_EXPORT( jiba::TanhTransform )
-BOOST_CLASS_EXPORT( jiba::DensityTransform )
-//BOOST_CLASS_EXPORT( jiba::ChainedTransform )
-//BOOST_CLASS_EXPORT( jiba::SectionTransform )
-//BOOST_CLASS_EXPORT( jiba::MultiSectionTransform )
-BOOST_CLASS_EXPORT( jiba::ObjectiveFunction )
-BOOST_CLASS_EXPORT( jiba::X3DMTCalculator )
-BOOST_CLASS_EXPORT( jiba::X3DModel )
-BOOST_CLASS_EXPORT( jiba::ModelRefiner )
-//BOOST_CLASS_EXPORT( jiba::ThreeDModelObjective<jiba::X3DMTCalculator> )
-//BOOST_CLASS_EXPORT( jiba::MPIThreeDModelObjective<jiba::X3DMTCalculator> )
-//BOOST_CLASS_EXPORT( jiba::JointObjective )
+BOOST_CLASS_EXPORT( jif3D::GeneralModelTransform )
+BOOST_CLASS_EXPORT( jif3D::ModelCopyTransform )
+BOOST_CLASS_EXPORT( jif3D::TanhTransform )
+BOOST_CLASS_EXPORT( jif3D::DensityTransform )
+//BOOST_CLASS_EXPORT( jif3D::ChainedTransform )
+//BOOST_CLASS_EXPORT( jif3D::SectionTransform )
+//BOOST_CLASS_EXPORT( jif3D::MultiSectionTransform )
+BOOST_CLASS_EXPORT( jif3D::ObjectiveFunction )
+BOOST_CLASS_EXPORT( jif3D::X3DMTCalculator )
+BOOST_CLASS_EXPORT( jif3D::X3DModel )
+BOOST_CLASS_EXPORT( jif3D::ModelRefiner )
+//BOOST_CLASS_EXPORT( jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator> )
+//BOOST_CLASS_EXPORT( jif3D::MPIThreeDModelObjective<jif3D::X3DMTCalculator> )
+//BOOST_CLASS_EXPORT( jif3D::JointObjective )
 int main(int argc, char *argv[])
   {
 
@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
         if (i > 0)
           mpiindices.push_back(i);
       }
-    boost::shared_ptr<jiba::JointObjective> Objective(new jiba::JointObjective(true));
+    boost::shared_ptr<jif3D::JointObjective> Objective(new jif3D::JointObjective(true));
 
     po::options_description desc("General options");
     desc.add_options()("help", "produce help message")("threads", po::value<int>(),
@@ -87,8 +87,8 @@ int main(int argc, char *argv[])
         po::value(&maxcond)->default_value(10),
         "The maximum value for conductivity in S/m");
 
-    jiba::SetupRegularization RegSetup;
-    jiba::SetupInversion InversionSetup;
+    jif3D::SetupRegularization RegSetup;
+    jif3D::SetupInversion InversionSetup;
     desc.add(RegSetup.SetupOptions());
     desc.add(InversionSetup.SetupOptions());
     po::variables_map vm;
@@ -106,10 +106,10 @@ int main(int argc, char *argv[])
         omp_set_num_threads(vm["threads"].as<int>());
       }
 
-    jiba::rvec CovModVec;
+    jif3D::rvec CovModVec;
     if (vm.count("covmod"))
       {
-        jiba::X3DModel CovModel;
+        jif3D::X3DModel CovModel;
         CovModel.ReadNetCDF(vm["covmod"].as<std::string>());
         const size_t ncovmod = CovModel.GetConductivities().num_elements();
         CovModVec.resize(ncovmod);
@@ -118,19 +118,19 @@ int main(int argc, char *argv[])
       }
 
     //first we read in the starting model and the measured data
-    std::string modelfilename = jiba::AskFilename("Starting model Filename: ");
+    std::string modelfilename = jif3D::AskFilename("Starting model Filename: ");
 
     //we read in the starting modelfile
-    jiba::X3DModel Model;
+    jif3D::X3DModel Model;
     Model.ReadNetCDF(modelfilename);
 
     //get the name of the file containing the data and read it in
-    std::string datafilename = jiba::AskFilename("Data Filename: ");
+    std::string datafilename = jif3D::AskFilename("Data Filename: ");
 
     //read in data
-    jiba::rvec Data, ZError;
+    jif3D::rvec Data, ZError;
     std::vector<double> XCoord, YCoord, ZCoord, Frequencies;
-    jiba::ReadImpedancesFromNetCDF(datafilename, Frequencies, XCoord, YCoord, ZCoord,
+    jif3D::ReadImpedancesFromNetCDF(datafilename, Frequencies, XCoord, YCoord, ZCoord,
         Data, ZError);
     std::copy(Frequencies.begin(), Frequencies.end(),
         std::back_inserter(Model.SetFrequencies()));
@@ -145,16 +145,16 @@ int main(int argc, char *argv[])
         Model.AddMeasurementPoint(XCoord[i], YCoord[i], ZCoord[i]);
       }
 
-    jiba::rvec FirstFreq(XCoord.size());
+    jif3D::rvec FirstFreq(XCoord.size());
     std::copy(Data.begin(), Data.begin() + XCoord.size(), FirstFreq.begin());
-    jiba::Write3DDataToVTK(datafilename + ".vtk", "Z", FirstFreq, XCoord, YCoord, ZCoord);
+    jif3D::Write3DDataToVTK(datafilename + ".vtk", "Z", FirstFreq, XCoord, YCoord, ZCoord);
 
     //we define a few constants that are used throughout the inversion
     const size_t ndata = Data.size();
     const double errorlevel = 0.02;
 
     //create objects for the misfit and a very basic error estimate
-    jiba::rvec MTDataError = jiba::ConstructMTError(Data, errorlevel);
+    jif3D::rvec MTDataError = jif3D::ConstructMTError(Data, errorlevel);
     std::transform(ZError.begin(), ZError.end(), MTDataError.begin(), ZError.begin(),
         std::max<double>);
 
@@ -162,24 +162,24 @@ int main(int argc, char *argv[])
       {
         Model.SetConductivities()[0][0][i] *= (1 + 0.0001 * (i + 1));
       }
-    jiba::rvec InvModel(Model.GetConductivities().num_elements());
+    jif3D::rvec InvModel(Model.GetConductivities().num_elements());
     std::copy(Model.GetConductivities().origin(),
         Model.GetConductivities().origin() + Model.GetConductivities().num_elements(),
         InvModel.begin());
     Model.WriteVTK("start.vtk");
 
-    boost::shared_ptr<jiba::ChainedTransform> ConductivityTransform(
-        new jiba::ChainedTransform);
+    boost::shared_ptr<jif3D::ChainedTransform> ConductivityTransform(
+        new jif3D::ChainedTransform);
 
-    jiba::rvec RefModel(InvModel);
+    jif3D::rvec RefModel(InvModel);
     std::fill(RefModel.begin(), RefModel.end(), 1.0);
     //because the tanh transform is used inside a logarithmic transform
     //we need to take the natural logarithm of the actual minimum and maximum
     ConductivityTransform->AddTransform(
-        boost::shared_ptr<jiba::GeneralModelTransform>(
-            new jiba::TanhTransform(std::log(mincond), std::log(maxcond))));
+        boost::shared_ptr<jif3D::GeneralModelTransform>(
+            new jif3D::TanhTransform(std::log(mincond), std::log(maxcond))));
     ConductivityTransform->AddTransform(
-        boost::shared_ptr<jiba::GeneralModelTransform>(new jiba::LogTransform(RefModel)));
+        boost::shared_ptr<jif3D::GeneralModelTransform>(new jif3D::LogTransform(RefModel)));
 
     InvModel = ConductivityTransform->PhysicalToGeneralized(InvModel);
 
@@ -187,16 +187,16 @@ int main(int argc, char *argv[])
     std::copy(InvModel.begin(), InvModel.end(),
         std::ostream_iterator<double>(startmodfile, "\n"));
 
-    jiba::X3DMTCalculator Calculator;
-    boost::shared_ptr<jiba::MPIThreeDModelObjective<jiba::X3DMTCalculator> > X3DObjective(
-        new jiba::MPIThreeDModelObjective<jiba::X3DMTCalculator>(Calculator, local, world,
+    jif3D::X3DMTCalculator Calculator;
+    boost::shared_ptr<jif3D::MPIThreeDModelObjective<jif3D::X3DMTCalculator> > X3DObjective(
+        new jif3D::MPIThreeDModelObjective<jif3D::X3DMTCalculator>(Calculator, local, world,
             0, mpiindices));
 
     X3DObjective->SetObservedData(Data);
     X3DObjective->SetCoarseModelGeometry(Model);
     X3DObjective->SetDataError(ZError);
 
-    boost::shared_ptr<jiba::MatOpRegularization> Regularization = RegSetup.SetupObjective(
+    boost::shared_ptr<jif3D::MatOpRegularization> Regularization = RegSetup.SetupObjective(
         vm, Model, ConductivityTransform, CovModVec);
 
     double lambda = 1.0;
@@ -213,7 +213,7 @@ int main(int argc, char *argv[])
 
     boost::mpi::broadcast(world, Calculator, 0);
 
-    boost::shared_ptr<jiba::GradientBasedOptimization> Optimizer =
+    boost::shared_ptr<jif3D::GradientBasedOptimization> Optimizer =
         InversionSetup.ConfigureInversion(vm, Objective, InvModel, CovModVec);
 
     std::ofstream misfitfile("misfit.out");
@@ -241,13 +241,13 @@ int main(int argc, char *argv[])
             Optimizer->MakeStep(InvModel);
             std::copy(InvModel.begin(), InvModel.end(),
                 Model.SetConductivities().origin());
-            Model.WriteVTK(modelfilename + jiba::stringify(iteration) + ".mt.raw.vtk");
+            Model.WriteVTK(modelfilename + jif3D::stringify(iteration) + ".mt.raw.vtk");
 
-            jiba::rvec CondInvModel = ConductivityTransform->GeneralizedToPhysical(
+            jif3D::rvec CondInvModel = ConductivityTransform->GeneralizedToPhysical(
                 InvModel);
             std::copy(CondInvModel.begin(), CondInvModel.end(),
                 Model.SetConductivities().origin());
-            Model.WriteVTK(modelfilename + jiba::stringify(iteration) + ".mt.inv.vtk");
+            Model.WriteVTK(modelfilename + jif3D::stringify(iteration) + ".mt.inv.vtk");
             std::cout << "Current Misfit: " << Optimizer->GetMisfit() << std::endl;
             std::cout << "Current Gradient: " << Optimizer->GetGradNorm() << std::endl;
             std::cout << std::endl;
@@ -259,8 +259,8 @@ int main(int argc, char *argv[])
             misfitfile << " " << Objective->GetNEval();
             misfitfile << std::endl;
             iteration++;
-            terminate = jiba::WantAbort();
-          } catch (jiba::FatalException &e)
+            terminate = jif3D::WantAbort();
+          } catch (jif3D::FatalException &e)
           {
             std::cerr << e.what() << std::endl;
             terminate = true;
@@ -280,10 +280,10 @@ int main(int argc, char *argv[])
 
     //calculate the predicted data
     std::cout << "Calculating response of inversion model." << std::endl;
-    jiba::rvec InvData(jiba::X3DMTCalculator().Calculate(Model));
-    jiba::WriteImpedancesToNetCDF(modelfilename + ".inv_imp.nc", Frequencies, XCoord,
+    jif3D::rvec InvData(jif3D::X3DMTCalculator().Calculate(Model));
+    jif3D::WriteImpedancesToNetCDF(modelfilename + ".inv_imp.nc", Frequencies, XCoord,
         YCoord, ZCoord, InvData);
-    jiba::WriteImpedancesToNetCDF(modelfilename + ".diff_imp.nc", Frequencies, XCoord,
+    jif3D::WriteImpedancesToNetCDF(modelfilename + ".diff_imp.nc", Frequencies, XCoord,
         YCoord, ZCoord, X3DObjective->GetDataDifference());
 
     //and write out the data and model

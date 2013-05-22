@@ -13,7 +13,7 @@
 #include "DepthWeighting.h"
 #include "../Inversion/LinearInversion.h"
 
-namespace jiba
+namespace jif3D
   {
     /*! Calculate the value of the function f
      * @param z The depth value
@@ -51,13 +51,13 @@ namespace jiba
      * @param WeightFunction The function object that gives the form of the weighting terms and it derivatives, e.g. an instance of the class WeightingTerm
      * @return An estimate of z0 for which the weighting function matches the sensitivity decay most closely
      */
-    double FitZ0(const jiba::rvec &SensProfile,
+    double FitZ0(const jif3D::rvec &SensProfile,
         const ThreeDModelBase::t3DModelDim &ZSizes,
-        const jiba::WeightingTerm &WeightFunction)
+        const jif3D::WeightingTerm &WeightFunction)
       {
 
         const size_t zsize = SensProfile.size();
-        jiba::rvec profile(SensProfile), zvalues(zsize);
+        jif3D::rvec profile(SensProfile), zvalues(zsize);
         //we need the depth to the interfaces
         partial_sum(ZSizes.begin(), ZSizes.end(), zvalues.begin());
         //the sensitivities can be negative, so we examine the absolute value
@@ -75,14 +75,14 @@ namespace jiba
 
         //setup the "inversion"
         const size_t ndata = zvalues.size();
-        jiba::rmat sens(zsize, 1);
-        jiba::rvec weights(1);
-        jiba::rvec InvModel(1), DeltaModel(1);
+        jif3D::rmat sens(zsize, 1);
+        jif3D::rvec weights(1);
+        jif3D::rvec InvModel(1), DeltaModel(1);
         weights(0) = 1.0;
         InvModel(0) = startz;
         DeltaModel(0) = 0.0;
         const size_t iterations = 100;
-        jiba::rvec error(ndata), delta(ndata), calculated(ndata);
+        jif3D::rvec error(ndata), delta(ndata), calculated(ndata);
         std::fill_n(error.begin(), zsize, 1.0);
 
         std::ofstream outfile("match.out");
@@ -109,7 +109,7 @@ namespace jiba
                 delta( j) = profile(j) - calculated(j);
               }
             // do one step of the inversion
-            jiba::ModelSpaceInversion()(sens, delta, weights, error, 0.0, DeltaModel);
+            jif3D::ModelSpaceInversion()(sens, delta, weights, error, 0.0, DeltaModel);
             //and adjust the model (no fancy line search here)
             stepsize = boost::numeric::ublas::norm_2(DeltaModel);
             InvModel -= DeltaModel;
@@ -138,7 +138,7 @@ namespace jiba
      */
     void ConstructDepthWeighting(const ThreeDModelBase::t3DModelDim &ZSizes,
         const double z0, rvec &WeightVector,
-        const jiba::WeightingTerm &WeightFunction)
+        const jif3D::WeightingTerm &WeightFunction)
       {
         const size_t nz = ZSizes.size();
 
@@ -167,9 +167,9 @@ namespace jiba
      * @param MeasPerPos How many measurements per site,e.g. 1 for only scalar and 9 for only FTG
      * @param SensProfile The depth profile of the sensitivity below the site
      */
-    void ExtractMiddleSens(const jiba::ThreeDGravityModel &Model,
-        const jiba::rmat &Sensitivities, const size_t MeasPerPos,
-        jiba::rvec &SensProfile)
+    void ExtractMiddleSens(const jif3D::ThreeDGravityModel &Model,
+        const jif3D::rmat &Sensitivities, const size_t MeasPerPos,
+        jif3D::rvec &SensProfile)
       {
     	const size_t nmeas = Model.GetMeasPosX().size();
         const double midx =
@@ -178,7 +178,7 @@ namespace jiba
             Model.GetYCoordinates()[Model.GetYCoordinates().size() - 1] / 2.0;
 
 
-        jiba::rvec distances(nmeas);
+        jif3D::rvec distances(nmeas);
         for (size_t i = 0; i < nmeas; ++i)
           {
             distances( i) = sqrt(pow(Model.GetMeasPosX()[i] - midx, 2) + pow(
@@ -186,12 +186,12 @@ namespace jiba
           }
         const size_t midindex = distance(distances.begin(), std::min_element(
             distances.begin(), distances.end()));
-        boost::array<jiba::ThreeDModelBase::t3DModelData::index, 3> modelindex(
+        boost::array<jif3D::ThreeDModelBase::t3DModelData::index, 3> modelindex(
             Model.FindAssociatedIndices(Model.GetMeasPosX()[midindex],
                 Model.GetMeasPosY()[midindex], 0.0));
         //we store the sensitivities for the background at the end of the matrix
         //so we can ignore it here
-        boost::numeric::ublas::matrix_row<const jiba::rmat> MiddleSens(Sensitivities, midindex * MeasPerPos);
+        boost::numeric::ublas::matrix_row<const jif3D::rmat> MiddleSens(Sensitivities, midindex * MeasPerPos);
 
         const size_t ysize = Model.GetDensities().shape()[1];
         const size_t zsize = Model.GetDensities().shape()[2];

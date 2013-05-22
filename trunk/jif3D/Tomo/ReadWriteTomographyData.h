@@ -14,7 +14,7 @@
 #include "ThreeDSeismicModel.h"
 #include "modeling_seismic.h"
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup tomo Seismic tomography classes and functions */
     /* @{ */
@@ -25,8 +25,8 @@ namespace jiba
      *             source-receiver combinations in the Model object
      * @param Model The model object containing information about the source and receiver setup
      */
-    void SaveTraveltimes(const std::string &filename, const jiba::rvec &Data,
-        const jiba::ThreeDSeismicModel &Model);
+    void SaveTraveltimes(const std::string &filename, const jif3D::rvec &Data,
+        const jif3D::ThreeDSeismicModel &Model);
     //!Read a collection of travel times and associated positions from a netcdf file
     /*! Read traveltimes together with the source receiver configuration from a netcdf file.
      * @param filename The name of the file to store the data
@@ -34,8 +34,8 @@ namespace jiba
      *         source-receiver combinations in the Model object
      * @param Model The model object containing information about the source and receiver setup
      */
-    void ReadTraveltimes(const std::string &filename, jiba::rvec &Data,
-        jiba::ThreeDSeismicModel &Model);
+    void ReadTraveltimes(const std::string &filename, jif3D::rvec &Data,
+        jif3D::ThreeDSeismicModel &Model);
 
     //! Plot the travel time field, i.e. the travel time at each grid cell in a vtk file
     /*! Write the travel time field to a .vtk file. This is a template so that we can
@@ -83,7 +83,7 @@ namespace jiba
      * @param gridspacing The spacing of the grid cells
      * @param nairlayers The number of airlayers
      */
-    void PlotRaypath(const std::string &filename, jiba::RP_STRUCT *raypath,
+    void PlotRaypath(const std::string &filename, jif3D::RP_STRUCT *raypath,
         const size_t nmeas, const double gridspacing, const size_t nairlayers);
   /* @} */
   }

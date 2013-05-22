@@ -10,14 +10,14 @@
 #include <stdexcept>
 
 /*! \file FatalException.h
- * The general include file for exceptions within jiba++.
+ * The general include file for exceptions within jif3D++.
  */
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup util General utility routines */
     /* @{ */
 
-    //! The standard exception for fatal errors inside the jiba library
+    //! The standard exception for fatal errors inside the jif3D library
     /*! The FatalException class is thrown when there is a problem that cannot be fixed within the program
      * It is derived from runtime_error to make error message handling easier.
      */

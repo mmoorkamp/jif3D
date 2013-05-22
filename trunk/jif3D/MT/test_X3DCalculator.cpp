@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_CASE  (X3D_forward_hs_test)
       const size_t ysize = 20;
       const size_t zsize = 10;
       const size_t nbglayers = 5;
-      jiba::X3DModel Model;
+      jif3D::X3DModel Model;
 
       Model.SetZCellSizes().resize(boost::extents[zsize]);
 
@@ -50,15 +50,15 @@ BOOST_AUTO_TEST_CASE  (X3D_forward_hs_test)
       Model.SetBackgroundThicknesses(bg_thicknesses);
       Model.SetFrequencies().push_back(freq);
 
-      jiba::X3DMTCalculator Calculator;
+      jif3D::X3DMTCalculator Calculator;
       for (size_t i = 0; i < xsize/2; ++i)
       for (size_t j = 0; j < ysize/2; ++j)
         {
           Model.AddMeasurementPoint(Model.GetXCoordinates()[i] + deltax/2.0,Model.GetYCoordinates()[j] + deltay/2.0,0.0);
         }
 
-      jiba::rvec Impedance = Calculator.Calculate(Model);
-      std::complex<double> HsImp = jiba::ImpedanceHalfspace(freq,cond);
+      jif3D::rvec Impedance = Calculator.Calculate(Model);
+      std::complex<double> HsImp = jif3D::ImpedanceHalfspace(freq,cond);
       const double prec = 0.05;
       for (size_t i = 0; i < xsize * ysize/4; ++i)
         {
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE  (X3D_forward_hs_test)
       const size_t ysize = 100;
       const size_t zsize = 20;
       const size_t nbglayers = 5;
-      jiba::X3DModel Model;
+      jif3D::X3DModel Model;
 
       Model.SetConductivities().resize(boost::extents[xsize][ysize][zsize]);
       std::vector<double> bg_thicknesses(nbglayers),bg_conductivities(nbglayers);
@@ -121,9 +121,9 @@ BOOST_AUTO_TEST_CASE  (X3D_forward_hs_test)
           Model.AddMeasurementPoint(Model.GetXCoordinates()[i] + deltax/2.0,Model.GetYCoordinates()[i] + deltay/2.0,0.0);
         }
 
-      jiba::X3DMTCalculator Calculator;
+      jif3D::X3DMTCalculator Calculator;
       std::cout << "Calculating 3D forward " << std::endl;
-      jiba::rvec Impedance3D = Calculator.Calculate(Model);
+      jif3D::rvec Impedance3D = Calculator.Calculate(Model);
       std::vector<double> Freq(Model.GetFrequencies().size());
       std::copy(Model.GetFrequencies().begin(),Model.GetFrequencies().end(),Freq.begin());
       std::vector<double> XCoord(xsize*ysize),YCoord(xsize*ysize),ZCoord(xsize*ysize);
@@ -132,8 +132,8 @@ BOOST_AUTO_TEST_CASE  (X3D_forward_hs_test)
       std::copy(Model.GetMeasPosX().begin(),Model.GetMeasPosX().end(),XCoord.begin());
       std::copy(Model.GetMeasPosY().begin(),Model.GetMeasPosY().end(),YCoord.begin());
 
-      jiba::WriteImpedancesToNetCDF("imp2D.nc",Freq,XCoord,YCoord,ZCoord,Impedance3D);
-      jiba::rvec Imp3DProfile(xsize*8);
+      jif3D::WriteImpedancesToNetCDF("imp2D.nc",Freq,XCoord,YCoord,ZCoord,Impedance3D);
+      jif3D::rvec Imp3DProfile(xsize*8);
       for (size_t i = 0; i < xsize; ++i)
         {
           std::copy(Impedance3D.begin()+i*ysize*8+400,Impedance3D.begin()+i*ysize*8+8+400,Imp3DProfile.begin()+i*8);
@@ -141,11 +141,11 @@ BOOST_AUTO_TEST_CASE  (X3D_forward_hs_test)
       std::vector<double> XCoordProf(xsize),YCoordProf(xsize),ZCoordProf(xsize);
       std::fill_n(ZCoordProf.begin(),xsize,0.0);
       std::fill_n(YCoordProf.begin(),xsize,0.0);
-      std::generate_n(XCoordProf.begin(),xsize,jiba::IntSequence(0));
-      jiba::WriteImpedancesToNetCDF("imp3Dprof.nc",Freq,XCoordProf,YCoordProf,ZCoordProf,Imp3DProfile);
+      std::generate_n(XCoordProf.begin(),xsize,jif3D::IntSequence(0));
+      jif3D::WriteImpedancesToNetCDF("imp3Dprof.nc",Freq,XCoordProf,YCoordProf,ZCoordProf,Imp3DProfile);
       Model.WriteVTK("mod2D.vtk");
 
-      jiba::MT2DForward Forward2D;
+      jif3D::MT2DForward Forward2D;
       const size_t nx2D = 100;
       const size_t nz2D = 50;
       Forward2D.SetXSizes().resize(boost::extents[nx2D]);
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE  (X3D_forward_hs_test)
           BOOST_CHECK(fabs(Imp3DProfile(i*8+6)/Imp3DProfile(i*8+4)) < 1e-3);
           BOOST_CHECK(fabs(Imp3DProfile(i*8+7)/Imp3DProfile(i*8+5)) < 1e-3);
         }
-      jiba::WriteImpedancesToNetCDF("imp2Dprof.nc",Freq,XCoordProf,YCoordProf,ZCoordProf,Imp3DProfile);
+      jif3D::WriteImpedancesToNetCDF("imp2Dprof.nc",Freq,XCoordProf,YCoordProf,ZCoordProf,Imp3DProfile);
     }
 */
   BOOST_AUTO_TEST_SUITE_END()

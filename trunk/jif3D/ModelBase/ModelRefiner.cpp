@@ -8,7 +8,7 @@
 #include <numeric>
 #include "ModelRefiner.h"
 #include "../Global/FatalException.h"
-namespace jiba
+namespace jif3D
   {
 
     void ModelRefiner::RefineOneAxis(
@@ -68,7 +68,7 @@ namespace jiba
           }
         else
           {
-            throw jiba::FatalException(
+            throw jif3D::FatalException(
                 "Negative cell size in model refinement !");
           }
       }
@@ -167,7 +167,7 @@ namespace jiba
           }
       }
 
-    jiba::rvec ModelRefiner::CombineGradient(const jiba::rvec &FineGradient,
+    jif3D::rvec ModelRefiner::CombineGradient(const jif3D::rvec &FineGradient,
         const ThreeDModelBase &CoarseModel, const ThreeDModelBase &RefinedModel)
       {
         //save the original size of the grid
@@ -178,7 +178,7 @@ namespace jiba
         //of the original coarse grid cell in the new refined grid
         //in all three directions
         ThreeDModelBase GradientModel(RefinedModel);
-        jiba::rvec CoarseGradient(CoarseModel.GetData().num_elements());
+        jif3D::rvec CoarseGradient(CoarseModel.GetData().num_elements());
         std::copy(FineGradient.begin(), FineGradient.end(),
             GradientModel.SetData().origin());
         size_t startx = 0, endx = 0, starty = 0, endy = 0, startz = 0, endz = 0;

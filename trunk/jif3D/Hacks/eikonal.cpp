@@ -139,7 +139,7 @@ int main()
     const size_t nz = 5;
     const int ngrid = nx * ny * nz;
     boost::multi_array<double, 3> U(boost::extents[nx][ny][nz]);
-    jiba::ThreeDSeismicModel Model;
+    jif3D::ThreeDSeismicModel Model;
     Model.SetSlownesses().resize(boost::extents[nx][ny][nz]);
 
     const double sourcex_index = 5;
@@ -196,14 +196,14 @@ int main()
         std::cout << nactive << std::endl;
         std::vector<double> Active(ngrid);
         std::copy(L.begin(), L.end(), Active.begin());
-        jiba::PlotTimeField("front" + jiba::stringify(iteration) + ".vtk",
+        jif3D::PlotTimeField("front" + jif3D::stringify(iteration) + ".vtk",
             &Active[0], deltax, nx, ny, nz);
         iteration++;
         std::copy(U.origin(), U.origin() + U.num_elements(),
             std::ostream_iterator<double>(std::cout, " "));
         std::cout << std::endl;
       } while (nactive > 0);
-    jiba::PlotTimeField("times.vtk", U.origin(), deltax, nx, ny, nz);
+    jif3D::PlotTimeField("times.vtk", U.origin(), deltax, nx, ny, nz);
      std::cout << "U[8][8][4]: " <<  U[8][8][4] << std::endl;
      std::cout << "U[8][5][2]: " <<  U[8][sourcey_index][sourcez_index] << std::endl;
      /*std::cout << U[11][10][10] << std::endl;

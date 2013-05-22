@@ -13,7 +13,7 @@
 #include <boost/math/special_functions/atanh.hpp>
 #include "GeneralModelTransform.h"
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup inversion General routines for inversion */
     /* @{ */
@@ -27,7 +27,7 @@ namespace jiba
      * the two bounds. Note that with this transform the maximum and minimum values will be mapped to infinity
      * so in practice \f$ m_min < m < m_max \f$.
      */
-    class TanhTransform: public jiba::GeneralModelTransform
+    class TanhTransform: public jif3D::GeneralModelTransform
       {
     private:
       //! The minimum value for the physical model parameters
@@ -50,17 +50,17 @@ namespace jiba
           return new TanhTransform(*this);
         }
       //! Transform the normalized model parameters back to physical parameters
-      virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
+      virtual jif3D::rvec GeneralizedToPhysical(const jif3D::rvec &FullModel) const
         {
-          jiba::rvec Output(FullModel.size());
+          jif3D::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             Output(i) = min + (1.0 + std::tanh(FullModel(i))) / 2.0 * (max - min);
           return Output;
         }
       //! Transform the physical model parameters to generalized model parameters
-      virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
+      virtual jif3D::rvec PhysicalToGeneralized(const jif3D::rvec &FullModel) const
         {
-          jiba::rvec Output(FullModel.size());
+          jif3D::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
               if (FullModel(i) >= max || FullModel(i) <= min)
@@ -74,11 +74,11 @@ namespace jiba
           return Output;
         }
       //! Transform the derivative with respect to the physical parameters to normalized parameters
-      virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
-          const jiba::rvec &Derivative) const
+      virtual jif3D::rvec Derivative(const jif3D::rvec &FullModel,
+          const jif3D::rvec &Derivative) const
         {
 
-          jiba::rvec Output(FullModel.size());
+          jif3D::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
               Output(i) = (max - min) / (2.0 * std::pow(std::cosh(FullModel(i)), 2))

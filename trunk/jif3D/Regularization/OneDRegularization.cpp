@@ -7,7 +7,7 @@
 
 #include "OneDRegularization.h"
 
-namespace jiba
+namespace jif3D
   {
 
     OneDRegularization::OneDRegularization(const size_t nlayers) :
@@ -28,7 +28,7 @@ namespace jiba
         // TODO Auto-generated destructor stub
       }
 
-    void OneDRegularization::ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff)
+    void OneDRegularization::ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff)
       {
         Diff.resize(Model.size());
         if (RefMod.size() != Model.size())
@@ -36,16 +36,16 @@ namespace jiba
             RefMod.resize(Model.size(), false);
             RefMod.clear();
           }
-        jiba::rvec x(Model - RefMod);
+        jif3D::rvec x(Model - RefMod);
         Diff = ublas::prec_prod(OperatorMatrix, x);
       }
 
-    jiba::rvec OneDRegularization::ImplGradient(const jiba::rvec &Model,
-        const jiba::rvec &Diff)
+    jif3D::rvec OneDRegularization::ImplGradient(const jif3D::rvec &Model,
+        const jif3D::rvec &Diff)
       {
         const size_t nlayers = Model.size();
-        jiba::rvec Result(ublas::prec_prod(ublas::trans(OperatorMatrix), Diff));
+        jif3D::rvec Result(ublas::prec_prod(ublas::trans(OperatorMatrix), Diff));
         return 2.0 * Result;
 
       }
-  } /* namespace jiba */
+  } /* namespace jif3D */

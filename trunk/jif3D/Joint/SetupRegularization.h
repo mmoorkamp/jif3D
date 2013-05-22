@@ -14,7 +14,7 @@
 #include <boost/program_options.hpp>
 #include <boost/shared_ptr.hpp>
 
-namespace jiba
+namespace jif3D
   {
     namespace po = boost::program_options;
 
@@ -63,9 +63,9 @@ namespace jiba
        * @param CovModVec The model covariance vector, can be empty if covariance is assumed 1 or has to have one value for each cell in StartModel
        * @return A shared pointer to the configured regularization objective function object
        */
-      boost::shared_ptr<jiba::RegularizationFunction> SetupObjective(
+      boost::shared_ptr<jif3D::RegularizationFunction> SetupObjective(
           const po::variables_map &vm, const ThreeDModelBase &StartModel,
-          const jiba::rvec &CovModVec);
+          const jif3D::rvec &CovModVec);
       SetupRegularization();
       virtual ~SetupRegularization();
       };

@@ -15,7 +15,7 @@
 #include "ThreeDSeismicModel.h"
 #include "modeling_seismic.h"
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup tomo Seismic tomography classes and functions */
     /* @{ */
@@ -36,13 +36,13 @@ namespace jiba
       //! The number of air layers on top of the model
       size_t nairlayers;
       //! Information about the source receiver geometry in the format of Bjoern's code
-      jiba::GEOMETRY geo;
+      jif3D::GEOMETRY geo;
       //! Information about the model grid in the format of Bjoern's code
-      jiba::GRID_STRUCT grid;
+      jif3D::GRID_STRUCT grid;
       //! Information about the data in the format of Bjoern's code
-      jiba::DATA_STRUCT data;
+      jif3D::DATA_STRUCT data;
       //! The various segments of each raypath through the model cells
-      std::vector<jiba::RP_STRUCT> raypath;
+      std::vector<jif3D::RP_STRUCT> raypath;
       //! Perform the dynamic allocation for the c-structures above
       void Allocate(const size_t ngrid, const size_t ndata, const size_t npos);
       friend class boost::serialization::access;
@@ -66,7 +66,7 @@ namespace jiba
       explicit TomographyCalculator(bool saverays = false);
       virtual ~TomographyCalculator();
       //! Return the raypath structure for the last forward modelling
-      const std::vector<jiba::RP_STRUCT> &GetRayPath() const
+      const std::vector<jif3D::RP_STRUCT> &GetRayPath() const
         {
           return raypath;
         }
@@ -88,6 +88,6 @@ namespace jiba
   /* @} */
   }
 
-BOOST_CLASS_EXPORT_KEY(jiba::TomographyCalculator)
+BOOST_CLASS_EXPORT_KEY(jif3D::TomographyCalculator)
 
 #endif /* TOMOGRAPHYCALCULATOR_H_ */

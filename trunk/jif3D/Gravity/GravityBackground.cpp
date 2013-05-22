@@ -8,7 +8,7 @@
 #include "BasicGravElements.h"
 #include "ThreeDGravityModel.h"
 #include "../Global/VecMat.h"
-namespace jiba
+namespace jif3D
   {
 
     /*! Calculate the effect of the background layers for a single scalar measurement

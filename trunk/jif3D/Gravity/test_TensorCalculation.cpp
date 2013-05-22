@@ -28,14 +28,14 @@ BOOST_AUTO_TEST_SUITE( TensorGravity_Test_Suite )
 //check some general properties of the FTG tensor that hold for any measurement above the surface
 BOOST_AUTO_TEST_CASE  (random_tensor_test)
     {
-      jiba::ThreeDGravityModel GravityTest;
+      jif3D::ThreeDGravityModel GravityTest;
 
       const size_t nmeas = 15;
       const size_t ncells = 15;
       MakeRandomModel(GravityTest,ncells,nmeas);
 
-      boost::shared_ptr<jiba::MinMemGravityCalculator> Calculator(jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeTensor());
-      jiba::rvec tensormeas(Calculator->Calculate(GravityTest));
+      boost::shared_ptr<jif3D::MinMemGravityCalculator> Calculator(jif3D::CreateGravityCalculator<jif3D::MinMemGravityCalculator>::MakeTensor());
+      jif3D::rvec tensormeas(Calculator->Calculate(GravityTest));
       for (size_t i = 0; i < nmeas; ++i)
         {
           // check that tensor is traceless
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE  (random_tensor_test)
   //compare the result from the tensor calculation with finite difference scalar calculations
   BOOST_AUTO_TEST_CASE(fd_tensor_test)
     {
-      jiba::ThreeDGravityModel GravityTest;
+      jif3D::ThreeDGravityModel GravityTest;
       //we want to control the position of the measurements ourselves
       const size_t nmeas = 0;
       const size_t ncells = 10;
@@ -74,11 +74,11 @@ BOOST_AUTO_TEST_CASE  (random_tensor_test)
       GravityTest.AddMeasurementPoint(xpos - delta, ypos, zpos);
       GravityTest.AddMeasurementPoint(xpos + delta, ypos, zpos);
       //perform the calculations
-      boost::shared_ptr<jiba::MinMemGravityCalculator> ScalarCalculator(jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeScalar());
-      boost::shared_ptr<jiba::MinMemGravityCalculator> TensorCalculator(jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeTensor());
-      jiba::rvec tensormeas(
+      boost::shared_ptr<jif3D::MinMemGravityCalculator> ScalarCalculator(jif3D::CreateGravityCalculator<jif3D::MinMemGravityCalculator>::MakeScalar());
+      boost::shared_ptr<jif3D::MinMemGravityCalculator> TensorCalculator(jif3D::CreateGravityCalculator<jif3D::MinMemGravityCalculator>::MakeTensor());
+      jif3D::rvec tensormeas(
           TensorCalculator->Calculate(GravityTest));
-      jiba::rvec scalarmeas(
+      jif3D::rvec scalarmeas(
           ScalarCalculator->Calculate(GravityTest));
       //extract the tensor components
       double uzz = tensormeas(8);
@@ -98,19 +98,19 @@ BOOST_AUTO_TEST_CASE  (random_tensor_test)
   //for tensor calculations
   BOOST_AUTO_TEST_CASE(tensor_caching_test)
     {
-      jiba::ThreeDGravityModel GravityTest;
+      jif3D::ThreeDGravityModel GravityTest;
       const size_t nmeas = 15;
       MakeRandomModel(GravityTest,nmeas);
-      boost::shared_ptr<jiba::FullSensitivityGravityCalculator> TensorCalculator(jiba::CreateGravityCalculator<jiba::FullSensitivityGravityCalculator>::MakeTensor());
+      boost::shared_ptr<jif3D::FullSensitivityGravityCalculator> TensorCalculator(jif3D::CreateGravityCalculator<jif3D::FullSensitivityGravityCalculator>::MakeTensor());
 
       //Calculate twice, once with normal calculation, once cached
       boost::posix_time::ptime startfirst =
       boost::posix_time::microsec_clock::local_time();
-      jiba::rvec tensormeas1(
+      jif3D::rvec tensormeas1(
           TensorCalculator->Calculate(GravityTest));
       boost::posix_time::ptime endfirst =
       boost::posix_time::microsec_clock::local_time();
-      jiba::rvec tensormeas2(
+      jif3D::rvec tensormeas2(
           TensorCalculator->Calculate(GravityTest));
       boost::posix_time::ptime endsecond =
       boost::posix_time::microsec_clock::local_time();
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE  (random_tensor_test)
 
       //check that invalidating the cache works
       TensorCalculator->SetSensitivities() *= 10;
-      jiba::rvec meas3(TensorCalculator->Calculate(GravityTest));
+      jif3D::rvec meas3(TensorCalculator->Calculate(GravityTest));
       //compare all tensor elements
       for (size_t i = 0; i < tensormeas1.size(); ++i)
         {
@@ -135,19 +135,19 @@ BOOST_AUTO_TEST_CASE  (random_tensor_test)
   //for tensor calculations
   BOOST_AUTO_TEST_CASE(tensor_disk_test)
     {
-      jiba::ThreeDGravityModel GravityTest;
+      jif3D::ThreeDGravityModel GravityTest;
       const size_t nmeas = 5;
       MakeRandomModel(GravityTest,nmeas);
-      boost::shared_ptr<jiba::DiskGravityCalculator> TensorCalculator(jiba::CreateGravityCalculator<jiba::DiskGravityCalculator>::MakeTensor());
+      boost::shared_ptr<jif3D::DiskGravityCalculator> TensorCalculator(jif3D::CreateGravityCalculator<jif3D::DiskGravityCalculator>::MakeTensor());
 
       //Calculate twice, once with normal calculation, once cached
       boost::posix_time::ptime startfirst =
       boost::posix_time::microsec_clock::local_time();
-      jiba::rvec tensormeas1(
+      jif3D::rvec tensormeas1(
           TensorCalculator->Calculate(GravityTest));
       boost::posix_time::ptime endfirst =
       boost::posix_time::microsec_clock::local_time();
-      jiba::rvec tensormeas2(
+      jif3D::rvec tensormeas2(
           TensorCalculator->Calculate(GravityTest));
       boost::posix_time::ptime endsecond =
       boost::posix_time::microsec_clock::local_time();
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE  (random_tensor_test)
 
       //check that invalidating the cache works
       TensorCalculator->SetSensitivities() *= 10;
-      jiba::rvec meas3(TensorCalculator->Calculate(GravityTest));
+      jif3D::rvec meas3(TensorCalculator->Calculate(GravityTest));
       //compare all tensor elements
       for (size_t i = 0; i < tensormeas1.size(); ++i)
         {
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE  (random_tensor_test)
   //check whether the diagonal elements of the tensor obey the poisson equation
   BOOST_AUTO_TEST_CASE(tensor_poisson_test)
     {
-      jiba::ThreeDGravityModel GravityTest;
+      jif3D::ThreeDGravityModel GravityTest;
       const size_t nhorcells = 10;
       const size_t nzcells = 10;
       GravityTest.SetXCellSizes().resize(boost::extents[nhorcells]);
@@ -195,32 +195,32 @@ BOOST_AUTO_TEST_CASE  (random_tensor_test)
       std::vector<double> bg_dens(1,density), bg_thick(1,100.0);
       GravityTest.SetBackgroundDensities(bg_dens);
       GravityTest.SetBackgroundThicknesses(bg_thick);
-      boost::shared_ptr<jiba::MinMemGravityCalculator> TensorCalculator(jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeTensor());
-      jiba::rvec TensorMeas(TensorCalculator->Calculate(GravityTest));
-      const double PoissTerm = -4.0 * M_PI * jiba::Grav_const * density;
+      boost::shared_ptr<jif3D::MinMemGravityCalculator> TensorCalculator(jif3D::CreateGravityCalculator<jif3D::MinMemGravityCalculator>::MakeTensor());
+      jif3D::rvec TensorMeas(TensorCalculator->Calculate(GravityTest));
+      const double PoissTerm = -4.0 * M_PI * jif3D::Grav_const * density;
 
       const double Trace1 = TensorMeas(0) + TensorMeas(4) + TensorMeas(8);
       const double Trace2 = TensorMeas(9) + TensorMeas(13) + TensorMeas(17);
 
       BOOST_CHECK_CLOSE(PoissTerm, Trace1-Trace2,
           std::numeric_limits<float>::epsilon());
-      BOOST_CHECK_CLOSE(density, Trace2/(4.0 * M_PI * jiba::Grav_const),
+      BOOST_CHECK_CLOSE(density, Trace2/(4.0 * M_PI * jif3D::Grav_const),
           std::numeric_limits<float>::epsilon());
 
     }
 
   BOOST_AUTO_TEST_CASE(tensor_cuda_test)
     {
-      jiba::ThreeDGravityModel GravityTest;
+      jif3D::ThreeDGravityModel GravityTest;
       const size_t nmeas = 7;
       const size_t ncells = 7;
       MakeRandomModel(GravityTest,ncells, nmeas);
-      boost::shared_ptr<jiba::MinMemGravityCalculator> CPUCalculator(jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeTensor());
-      boost::shared_ptr<jiba::MinMemGravityCalculator> CudaCalculator(jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeTensor(true));
+      boost::shared_ptr<jif3D::MinMemGravityCalculator> CPUCalculator(jif3D::CreateGravityCalculator<jif3D::MinMemGravityCalculator>::MakeTensor());
+      boost::shared_ptr<jif3D::MinMemGravityCalculator> CudaCalculator(jif3D::CreateGravityCalculator<jif3D::MinMemGravityCalculator>::MakeTensor(true));
 
-      jiba::rvec cpumeas(
+      jif3D::rvec cpumeas(
           CPUCalculator->Calculate(GravityTest));
-      jiba::rvec cudameas(
+      jif3D::rvec cudameas(
           CudaCalculator->Calculate(GravityTest));
       BOOST_CHECK(cpumeas.size() == cudameas.size());
       for (size_t i = 0; i < cpumeas.size(); ++i)
@@ -232,20 +232,20 @@ BOOST_AUTO_TEST_CASE  (random_tensor_test)
       const size_t nruns = 10;
       for (size_t i = 0; i < nruns; ++i)
         {
-          jiba::rvec newcuda(CudaCalculator->Calculate(GravityTest));
+          jif3D::rvec newcuda(CudaCalculator->Calculate(GravityTest));
           BOOST_CHECK(std::equal(newcuda.begin(),newcuda.end(),cudameas.begin()));
         }
     }
 
   BOOST_AUTO_TEST_CASE(tensor_cuda_caching_test)
     {
-      jiba::ThreeDGravityModel GravityTest;
+      jif3D::ThreeDGravityModel GravityTest;
       const size_t nmeas = 20;
       MakeRandomModel(GravityTest, nmeas);
-      boost::shared_ptr<jiba::FullSensitivityGravityCalculator> Calculator(jiba::CreateGravityCalculator<jiba::FullSensitivityGravityCalculator>::MakeTensor(true));
+      boost::shared_ptr<jif3D::FullSensitivityGravityCalculator> Calculator(jif3D::CreateGravityCalculator<jif3D::FullSensitivityGravityCalculator>::MakeTensor(true));
 
-      jiba::rvec meas1(Calculator->Calculate(GravityTest));
-      jiba::rvec meas2(Calculator->Calculate(GravityTest));
+      jif3D::rvec meas1(Calculator->Calculate(GravityTest));
+      jif3D::rvec meas2(Calculator->Calculate(GravityTest));
 
       for (size_t i = 0; i < meas1.size(); ++i)
         {
@@ -255,31 +255,31 @@ BOOST_AUTO_TEST_CASE  (random_tensor_test)
     }
   BOOST_AUTO_TEST_CASE(tensor_cuda_resize_test)
     {
-      jiba::ThreeDGravityModel GravityTest;
+      jif3D::ThreeDGravityModel GravityTest;
 
       const size_t nmeas = 20;
       MakeRandomModel(GravityTest, nmeas);
-      boost::shared_ptr<jiba::FullSensitivityGravityCalculator> Calculator(jiba::CreateGravityCalculator<jiba::FullSensitivityGravityCalculator>::MakeTensor(true));
-      jiba::rvec meas1(Calculator->Calculate(GravityTest));
+      boost::shared_ptr<jif3D::FullSensitivityGravityCalculator> Calculator(jif3D::CreateGravityCalculator<jif3D::FullSensitivityGravityCalculator>::MakeTensor(true));
+      jif3D::rvec meas1(Calculator->Calculate(GravityTest));
       GravityTest.ClearMeasurementPoints();
       MakeRandomModel(GravityTest,nmeas*2);
-      BOOST_CHECK_NO_THROW( jiba::rvec meas2(Calculator->Calculate(GravityTest)));
+      BOOST_CHECK_NO_THROW( jif3D::rvec meas2(Calculator->Calculate(GravityTest)));
     }
 
   BOOST_AUTO_TEST_CASE (lqderivative_test)
     {
-      jiba::ThreeDGravityModel GravityTest;
+      jif3D::ThreeDGravityModel GravityTest;
       const size_t ncells = 10;
       const size_t nmeas = 10;
       MakeRandomModel(GravityTest,ncells, nmeas,false);
-      boost::shared_ptr<jiba::FullSensitivityGravityCalculator> TensorCalculator(jiba::CreateGravityCalculator<jiba::FullSensitivityGravityCalculator>::MakeTensor());
-      jiba::rvec Misfit(nmeas*TensorCalculator->GetDataPerMeasurement());
+      boost::shared_ptr<jif3D::FullSensitivityGravityCalculator> TensorCalculator(jif3D::CreateGravityCalculator<jif3D::FullSensitivityGravityCalculator>::MakeTensor());
+      jif3D::rvec Misfit(nmeas*TensorCalculator->GetDataPerMeasurement());
       std::generate(Misfit.begin(),Misfit.end(),drand48);
-      jiba::rvec Deriv(TensorCalculator->LQDerivative(GravityTest,Misfit));
+      jif3D::rvec Deriv(TensorCalculator->LQDerivative(GravityTest,Misfit));
       TensorCalculator->Calculate(GravityTest);
-      jiba::rvec Compare(2.0 * boost::numeric::ublas::prec_prod(ublas::trans(TensorCalculator->GetSensitivities()),Misfit));
+      jif3D::rvec Compare(2.0 * boost::numeric::ublas::prec_prod(ublas::trans(TensorCalculator->GetSensitivities()),Misfit));
       //and test the caching, too
-      jiba::rvec Deriv2(TensorCalculator->LQDerivative(GravityTest,Misfit));
+      jif3D::rvec Deriv2(TensorCalculator->LQDerivative(GravityTest,Misfit));
       const size_t ngrid = GravityTest.GetDensities().num_elements();
       BOOST_CHECK(Deriv.size() == ngrid);
       BOOST_CHECK(Compare.size() == ngrid);

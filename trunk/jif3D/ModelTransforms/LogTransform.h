@@ -12,7 +12,7 @@
 #include <boost/serialization/base_object.hpp>
 #include "GeneralModelTransform.h"
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup inversion General routines for inversion */
     /* @{ */
@@ -24,11 +24,11 @@ namespace jiba
      * to be positive and that we can capture large variations in physical parameters
      * in a relatively small range of inversion parameters.
      */
-    class LogTransform: public jiba::GeneralModelTransform
+    class LogTransform: public jif3D::GeneralModelTransform
       {
     private:
       //! Each model parameter is divided by the reference values before taking the logarithm
-      const jiba::rvec Reference;
+      const jif3D::rvec Reference;
       friend class boost::serialization::access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
@@ -44,29 +44,29 @@ namespace jiba
           return new LogTransform(*this);
         }
       //! Transform the normalized model parameters back to physical parameters
-      virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
+      virtual jif3D::rvec GeneralizedToPhysical(const jif3D::rvec &FullModel) const
         {
           assert(FullModel.size() == Reference.size());
-          jiba::rvec Output(FullModel.size());
+          jif3D::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             Output(i) = std::exp(FullModel(i)) * Reference(i);
           return Output;
         }
       //! Transform the physical model parameters to generalized model parameters
-      virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
+      virtual jif3D::rvec PhysicalToGeneralized(const jif3D::rvec &FullModel) const
         {
           assert(FullModel.size() == Reference.size());
-          jiba::rvec Output(FullModel.size());
+          jif3D::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             Output(i) = std::log(FullModel(i) / Reference(i));
           return Output;
         }
       //! Transform the derivative with respect to the physical parameters to normalized parameters
-      virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
-          const jiba::rvec &Derivative) const
+      virtual jif3D::rvec Derivative(const jif3D::rvec &FullModel,
+          const jif3D::rvec &Derivative) const
         {
 
-          jiba::rvec Output(FullModel.size());
+          jif3D::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
               Output(i) = Reference(i) * std::exp(FullModel(i)) * Derivative(i);
@@ -78,7 +78,7 @@ namespace jiba
        * the general description for this class.
        * @param Ref The reference model vector \f$m_0\f$
        */
-      LogTransform(const jiba::rvec &Ref) :
+      LogTransform(const jif3D::rvec &Ref) :
           Reference(Ref)
         {
         }

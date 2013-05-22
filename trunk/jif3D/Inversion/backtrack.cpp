@@ -34,8 +34,8 @@ extern "C"
 namespace OPTPP
   {
 
-    int backtrack(jiba::ObjectiveFunction* nlp, jiba::rvec& search_dir,
-        jiba::rvec& grad, const jiba::rvec &model, double &misfit, double *stp,
+    int backtrack(jif3D::ObjectiveFunction* nlp, jif3D::rvec& search_dir,
+        jif3D::rvec& grad, const jif3D::rvec &model, double &misfit, double *stp,
         int itnmax, double ftol, double stpmax, double stpmin)
       {
         /* Local variables */
@@ -51,7 +51,7 @@ namespace OPTPP
         double one;
 
         int n = search_dir.size();
-        jiba::rvec xplus(n);
+        jif3D::rvec xplus(n);
         double fx(0.0);
         int iter;
 

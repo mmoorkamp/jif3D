@@ -19,7 +19,7 @@
 #include "../Global/NumUtil.h"
 #include "../Global/FatalException.h"
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup inversion General routines for inversion */
     /* @{ */
@@ -41,11 +41,11 @@ namespace jiba
       //! How many forward plus gradient evaluations did we perform
       size_t nEval;
       //! The difference between observed and synthetic data for the last forward calculation
-      jiba::rvec DataDifference;
+      jif3D::rvec DataDifference;
       //! We store the misfit for each datum, as it we need it for the final evaluation of the inversion results
-      jiba::rvec IndividualMisfits;
+      jif3D::rvec IndividualMisfits;
       //! The inverse of the covariance matrix
-      jiba::comp_mat InvCovMat;
+      jif3D::comp_mat InvCovMat;
       friend class boost::serialization::access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
@@ -66,7 +66,7 @@ namespace jiba
        * @param Diff The vector of unweighted differences between calculated and observed data, calculated in the derived class
        */
       virtual void
-      ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff) = 0;
+      ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff) = 0;
       //! The abstract interface for the gradient calculation
       /*! Here derived classes have to implement the calculation of the derivative of the objective function
        * with respect to the model parameters. It is important that the model vector Model and the data difference Diff correspond
@@ -76,8 +76,8 @@ namespace jiba
        * @param Diff The difference between observed and calculated data that corresponds to the model
        * @return The gradient of the objective function with respect to the model parameters
        */
-      virtual jiba::rvec ImplGradient(const jiba::rvec &Model,
-          const jiba::rvec &Diff) = 0;
+      virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model,
+          const jif3D::rvec &Diff) = 0;
     public:
       //! We need a virtual constructor to create a new object from a pointer to a base class;
       /*! There are situations where we only have a pointer to the base class, but we need
@@ -99,12 +99,12 @@ namespace jiba
           return boost::numeric_cast<double>(GetNData());
         }
       //! Access to the difference between observed and calculated data
-      const jiba::rvec &GetDataDifference() const
+      const jif3D::rvec &GetDataDifference() const
         {
           return DataDifference;
         }
       //! Get the error weighted misfit for each datum
-      const jiba::rvec GetIndividualMisfit() const
+      const jif3D::rvec GetIndividualMisfit() const
         {
           return IndividualMisfits;
         }
@@ -119,7 +119,7 @@ namespace jiba
           return nEval;
         }
       //! We assume that the data covariance is in diagonal form and store its square root as vector, if we do not assign a covariance it is assumed to be 1
-      void SetDataError(const jiba::rvec &Cov)
+      void SetDataError(const jif3D::rvec &Cov)
         {
           //the last parameter false is important here so that ublas
           //does not try to preserve which is broken in boost 1.49
@@ -130,10 +130,10 @@ namespace jiba
             }
         }
       //! Return a read-only version of the diagonal of the data covariance
-      const jiba::rvec GetDataError() const
+      const jif3D::rvec GetDataError() const
         {
           assert(InvCovMat.size1() == InvCovMat.size2());
-          jiba::rvec CovarDiag(InvCovMat.size1());
+          jif3D::rvec CovarDiag(InvCovMat.size1());
           for (size_t i = 0; i < InvCovMat.size1(); ++i)
             {
               CovarDiag(i) = 1.0 / sqrt(InvCovMat(i, i));
@@ -141,16 +141,16 @@ namespace jiba
           return CovarDiag;
         }
       //! Set the inverse of the data covariance matrix
-      void SetInvCovMat(const jiba::comp_mat &Mat)
+      void SetInvCovMat(const jif3D::comp_mat &Mat)
         {
           if (Mat.size1() != Mat.size2())
             {
-              throw jiba::FatalException("Covariance matrix needs to be square !");
+              throw jif3D::FatalException("Covariance matrix needs to be square !");
             }
           InvCovMat = Mat;
         }
       //! Access the inverse of the data covariance matrix
-      const jiba::comp_mat &GetInvCovMat() const
+      const jif3D::comp_mat &GetInvCovMat() const
         {
           return InvCovMat;
         }
@@ -161,7 +161,7 @@ namespace jiba
        * @param Model The model vector. The interpretation of the values depends on the derived class.
        * @return The \f$ \chi^2 \f$ misfit of the given model
        */
-      double CalcMisfit(const jiba::rvec &Model)
+      double CalcMisfit(const jif3D::rvec &Model)
         {
           //calculate the data difference in the derived class
           ImplDataDifference(Model, DataDifference);
@@ -182,7 +182,7 @@ namespace jiba
             }
           //go through the data and weigh each misfit by its covariance
           //add up to get the Chi-square misfit
-          jiba::rvec TmpDiff(ndata);
+          jif3D::rvec TmpDiff(ndata);
           //it is essential here to store  the result of the vector matrix
           //multiplication in a temporary vector instead of reusing
           //DataDifference and saving some memory, the penalty
@@ -198,7 +198,7 @@ namespace jiba
           for (size_t i = 0; i < ndata; ++i)
             {
               IndividualMisfits(i) = sqrt(IndividualMisfits(i))
-                  * jiba::sign(DataDifference(i));
+                  * jif3D::sign(DataDifference(i));
             }
           //for the Gradient calculation we need the data difference
           //weighted by the covariance matrix, so we assign
@@ -219,13 +219,13 @@ namespace jiba
        * @param Model The model vector, has to be the same as for the last call to CalcMisfit
        * @return The gradient of the objective function with respect to the model parameters
        */
-      jiba::rvec CalcGradient(const jiba::rvec &Model)
+      jif3D::rvec CalcGradient(const jif3D::rvec &Model)
         {
           assert(InvCovMat.size1() == DataDifference.size());
           assert(InvCovMat.size2() == DataDifference.size());
           //for the gradient we need the difference between predicted and observed data
           //weighted by the squared covariance
-          //jiba::rvec GradDiff(ublas::element_div(DataDifference, CovarDiag));
+          //jif3D::rvec GradDiff(ublas::element_div(DataDifference, CovarDiag));
           ++nEval;
           return ImplGradient(Model, DataDifference);
         }
@@ -235,5 +235,5 @@ namespace jiba
   /* @} */
 
   }
-//BOOST_CLASS_EXPORT_KEY(jiba::ObjectiveFunction)
+//BOOST_CLASS_EXPORT_KEY(jif3D::ObjectiveFunction)
 #endif /* OBJECTIVEFUNCTION_H_ */

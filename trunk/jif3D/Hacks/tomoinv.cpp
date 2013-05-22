@@ -33,21 +33,21 @@ namespace ublas = boost::numeric::ublas;
 int main()
   {
     //these objects hold information about the measurements and their geometry
-    jiba::rvec Data;
+    jif3D::rvec Data;
 
     //first we read in the starting model and the measured data
     std::string modelfilename, datafilename;
     std::cout << "Starting model Filename: ";
     std::cin >> modelfilename;
     //we read in the starting modelfile
-    jiba::ThreeDSeismicModel Model;
+    jif3D::ThreeDSeismicModel Model;
     Model.ReadNetCDF(modelfilename);
     //get the name of the file containing the data and read it in
     std::cout << "Data Filename: ";
     std::cin >> datafilename;
 
     //read in data
-    jiba::ReadTraveltimes(datafilename, Data, Model);
+    jif3D::ReadTraveltimes(datafilename, Data, Model);
     //if we don't have data inversion doesn't make sense;
     if (Data.empty())
       {
@@ -59,36 +59,36 @@ int main()
 
     const size_t ndata = Data.size();
     //create objects for the misfit and a very basic error estimate
-    jiba::rvec DataError(ndata);
+    jif3D::rvec DataError(ndata);
     std::fill_n(DataError.begin(), ndata, 5.0);
 
-    jiba::rvec InvModel(Model.GetSlownesses().num_elements());
+    jif3D::rvec InvModel(Model.GetSlownesses().num_elements());
     std::copy(Model.GetSlownesses().origin(), Model.GetSlownesses().origin()
         + Model.GetSlownesses().num_elements(), InvModel.begin());
 
-    jiba::rvec RefModel(InvModel);
+    jif3D::rvec RefModel(InvModel);
     for (size_t i = 0; i < InvModel.size(); ++i)
       InvModel(i) = log(InvModel(i) / RefModel(i));
-    jiba::TomographyCalculator Calculator;
-    boost::shared_ptr<jiba::ThreeDModelObjective<jiba::TomographyCalculator> >
+    jif3D::TomographyCalculator Calculator;
+    boost::shared_ptr<jif3D::ThreeDModelObjective<jif3D::TomographyCalculator> >
         TomoObjective(
-            new jiba::ThreeDModelObjective<jiba::TomographyCalculator>(
+            new jif3D::ThreeDModelObjective<jif3D::TomographyCalculator>(
                 Calculator));
     TomoObjective->SetObservedData(Data);
     TomoObjective->SetFineModelGeometry(Model);
     TomoObjective->SetCoarseModelGeometry(Model);
     TomoObjective->SetDataError(DataError);
 
-    boost::shared_ptr<jiba::JointObjective> Objective(
-        new jiba::JointObjective());
-    boost::shared_ptr<jiba::ObjectiveFunction> Regularization(
-        new jiba::GradientRegularization(Model));
+    boost::shared_ptr<jif3D::JointObjective> Objective(
+        new jif3D::JointObjective());
+    boost::shared_ptr<jif3D::ObjectiveFunction> Regularization(
+        new jif3D::GradientRegularization(Model));
 
     double lambda = 1.0;
     std::cout << "Lambda: ";
     std::cin >> lambda;
-    boost::shared_ptr<jiba::GeneralModelTransform> ModelTransform(
-        new jiba::LogTransform(RefModel));
+    boost::shared_ptr<jif3D::GeneralModelTransform> ModelTransform(
+        new jif3D::LogTransform(RefModel));
     Objective->AddObjective(TomoObjective, ModelTransform);
     Objective->AddObjective(Regularization, ModelTransform, lambda);
 
@@ -97,7 +97,7 @@ int main()
     std::cin >> maxiter;
     std::cout << "Performing inversion." << std::endl;
 
-    jiba::LimitedMemoryQuasiNewton LBFGS(Objective, 5);
+    jif3D::LimitedMemoryQuasiNewton LBFGS(Objective, 5);
     std::ofstream misfitfile("misfit.out");
     misfitfile << "0 " << Objective->CalcMisfit(InvModel) << " ";
     size_t iteration = 0;
@@ -115,15 +115,15 @@ int main()
             misfitfile << std::endl;
             LBFGS.MakeStep(InvModel);
 
-            jiba::rvec TomoModel = ModelTransform->GeneralizedToPhysical(
+            jif3D::rvec TomoModel = ModelTransform->GeneralizedToPhysical(
                 InvModel);
             std::copy(TomoModel.begin(), TomoModel.end(),
                 Model.SetSlownesses().origin());
-            Model.WriteVTK(modelfilename + jiba::stringify(iteration)
+            Model.WriteVTK(modelfilename + jif3D::stringify(iteration)
                 + ".tomo.inv.vtk");
 
             std::cout << std::endl;
-          } catch (jiba::FatalException &e)
+          } catch (jif3D::FatalException &e)
           {
             std::cerr << e.what() << std::endl;
             iteration = maxiter;
@@ -137,8 +137,8 @@ int main()
 
     //calculate the predicted data
     std::cout << "Calculating response of inversion model." << std::endl;
-    jiba::rvec InvData(jiba::TomographyCalculator().Calculate(Model));
-    jiba::SaveTraveltimes(modelfilename + ".inv_tt.nc", InvData, Model);
+    jif3D::rvec InvData(jif3D::TomographyCalculator().Calculate(Model));
+    jif3D::SaveTraveltimes(modelfilename + ".inv_tt.nc", InvData, Model);
     //and write out the data and model
     //here we have to distinguish again between scalar and ftg data
     std::cout << "Writing out inversion results." << std::endl;

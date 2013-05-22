@@ -10,12 +10,12 @@
 int main()
   {
     const size_t n = 100;
-    jiba::rsparse SparseMat(n, n), Inverse(n, n);
+    jif3D::rsparse SparseMat(n, n), Inverse(n, n);
     for (size_t i = 0; i < n; ++i)
       {
         SparseMat(i, i) =  4.0;
       }
 
-    jiba::InvertMatrix(SparseMat, Inverse);
+    jif3D::InvertMatrix(SparseMat, Inverse);
   }
 

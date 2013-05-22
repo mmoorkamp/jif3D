@@ -77,7 +77,7 @@ int main()
     const double z_length = rand();
     for (unsigned int i = 0; i < nruns; ++i)
       {
-        mybox = jiba::CalcGravBoxTerm(x_meas, y_meas, z_meas, x_corn, y_corn,
+        mybox = jif3D::CalcGravBoxTerm(x_meas, y_meas, z_meas, x_corn, y_corn,
             z_corn, x_length, y_length, z_length);
       }
     boost::posix_time::ptime myendtime =

@@ -14,7 +14,7 @@
 /*! \file LinearInversion.h
  * Linear inversion routines for general use.
  */
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup inversion General routines for inversion
      * These are all general inversion classes that implement standard

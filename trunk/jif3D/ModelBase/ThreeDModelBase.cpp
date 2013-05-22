@@ -12,7 +12,7 @@
 #include "../Global/FatalException.h"
 #include "NetCDFTools.h"
 #include "VTKTools.h"
-namespace jiba
+namespace jif3D
   {
 
     ThreeDModelBase::ThreeDModelBase() :
@@ -182,7 +182,7 @@ namespace jiba
         if (XCellSizes.size() != Data.shape()[0] || YCellSizes.size()
             != Data.shape()[1] || ZCellSizes.size() != Data.shape()[2])
           {
-            throw jiba::FatalException(
+            throw jif3D::FatalException(
                 "Cell size specification does not match data !");
           }
       }
@@ -203,7 +203,7 @@ namespace jiba
 
     void ThreeDModelBase::ReadMeasPosNetCDF(const std::string filename)
       {
-        jiba::ReadMeasPosNetCDF(filename, MeasPosX, MeasPosY, MeasPosZ);
+        jif3D::ReadMeasPosNetCDF(filename, MeasPosX, MeasPosY, MeasPosZ);
       }
 
     void ThreeDModelBase::ReadMeasPosAscii(const std::string filename)

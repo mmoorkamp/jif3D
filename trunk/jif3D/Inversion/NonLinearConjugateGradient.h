@@ -11,7 +11,7 @@
 
 #include "GradientBasedOptimization.h"
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup inversion General routines for inversion */
     /* @{ */
@@ -21,13 +21,13 @@ namespace jiba
      * and the last gradient. Some of our tests indicate however that L-BFGS
      * performs better at a moderate cost of additional storage.
      */
-    class NonLinearConjugateGradient: public jiba::GradientBasedOptimization
+    class NonLinearConjugateGradient: public jif3D::GradientBasedOptimization
       {
     private:
       //! The gradient at the last iteration
-      jiba::rvec OldGradient;
+      jif3D::rvec OldGradient;
       //! The last search direction
-      jiba::rvec OldDirection;
+      jif3D::rvec OldDirection;
       //! A scaling factor similar to L-BFGS to make help that after the first iteration we have the right step size
       double gamma;
       //! See Tarantolla
@@ -35,14 +35,14 @@ namespace jiba
       //! The step-size
       double mu;
       //! Implements a single NLCG step including line search
-      virtual void StepImplementation(jiba::rvec &CurrentModel);
+      virtual void StepImplementation(jif3D::rvec &CurrentModel);
     public:
       //! We only have to provide a shared pointer to an objective function object
       /*! The constructor needs to know what to minimize
        * @param ObjFunction A shared pointer to an objective function obejct
        */
       explicit NonLinearConjugateGradient(boost::shared_ptr<
-          jiba::ObjectiveFunction> ObjFunction);
+          jif3D::ObjectiveFunction> ObjFunction);
       virtual ~NonLinearConjugateGradient();
       };
   /* @} */

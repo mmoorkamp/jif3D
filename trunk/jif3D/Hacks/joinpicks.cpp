@@ -12,13 +12,13 @@
 
 int main()
   {
-    std::string filename1 = jiba::AskFilename("First pick file: ");
-    std::string filename2 = jiba::AskFilename("Second pick file: ");
+    std::string filename1 = jif3D::AskFilename("First pick file: ");
+    std::string filename2 = jif3D::AskFilename("Second pick file: ");
 
-    jiba::ThreeDSeismicModel PickModel1, PickModel2;
-    jiba::rvec Times1, Times2;
-    jiba::ReadTraveltimes(filename1, Times1, PickModel1);
-    jiba::ReadTraveltimes(filename2, Times2, PickModel2);
+    jif3D::ThreeDSeismicModel PickModel1, PickModel2;
+    jif3D::rvec Times1, Times2;
+    jif3D::ReadTraveltimes(filename1, Times1, PickModel1);
+    jif3D::ReadTraveltimes(filename2, Times2, PickModel2);
 
     const size_t nsources1 = PickModel1.GetSourcePosX().size();
     const size_t nmeas1 = PickModel1.GetMeasPosX().size();
@@ -46,10 +46,10 @@ int main()
             + nsources1, PickModel2.GetReceiverIndices()[i] + nmeas1);
       }
 
-    jiba::rvec JointTimes(ntimes1 + ntimes2);
+    jif3D::rvec JointTimes(ntimes1 + ntimes2);
     std::copy(Times1.begin(), Times1.end(), JointTimes.begin());
     std::copy(Times2.begin(), Times2.end(), JointTimes.begin() + ntimes1);
 
-    std::string outfilename = jiba::AskFilename("Outfile name: ",false);
-    jiba::SaveTraveltimes(outfilename, JointTimes, PickModel1);
+    std::string outfilename = jif3D::AskFilename("Outfile name: ",false);
+    jif3D::SaveTraveltimes(outfilename, JointTimes, PickModel1);
   }

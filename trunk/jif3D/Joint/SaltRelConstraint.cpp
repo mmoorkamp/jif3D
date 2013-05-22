@@ -11,15 +11,15 @@
 
 using boost::math::pow;
 
-namespace jiba
+namespace jif3D
   {
 
     const double refslow = 1.0 / 3000.0;
     const double refdens = 2.0;
     const double refcond = 0.1;
     SaltRelConstraint::SaltRelConstraint(
-        boost::shared_ptr<jiba::GeneralModelTransform> DensTrans,
-        boost::shared_ptr<jiba::GeneralModelTransform> CondTrans) :
+        boost::shared_ptr<jif3D::GeneralModelTransform> DensTrans,
+        boost::shared_ptr<jif3D::GeneralModelTransform> CondTrans) :
         DensityTransform(DensTrans), ConductivityTransform(CondTrans)
       {
 
@@ -29,7 +29,7 @@ namespace jiba
       {
       }
 
-    double SaltTerm(const jiba::rvec &Model, const size_t index)
+    double SaltTerm(const jif3D::rvec &Model, const size_t index)
       {
         const size_t ncells = Model.size() / 3;
         return pow<2>((Model(index) - 1.0 / saltvel) / refslow)
@@ -37,14 +37,14 @@ namespace jiba
             + pow<2>((Model(index + 2 * ncells) - 1.0 / saltres) / refcond);
       }
 
-    void SaltRelConstraint::ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff)
+    void SaltRelConstraint::ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff)
       {
         const size_t ncells = Model.size() / 3;
         Diff.resize(ncells);
         //predict densities from slownesses, the first ncells vector entries contain the slownesses
-        jiba::rvec PredDens(
+        jif3D::rvec PredDens(
             DensityTransform->GeneralizedToPhysical(ublas::subrange(Model, 0, ncells)));
-        jiba::rvec PredCond(
+        jif3D::rvec PredCond(
             ConductivityTransform->GeneralizedToPhysical(
                 ublas::subrange(Model, 0, ncells)));
         std::ofstream condrel("condrel.out");
@@ -77,17 +77,17 @@ namespace jiba
           }
       }
 
-    jiba::rvec SaltRelConstraint::ImplGradient(const jiba::rvec &Model,
-        const jiba::rvec &Diff)
+    jif3D::rvec SaltRelConstraint::ImplGradient(const jif3D::rvec &Model,
+        const jif3D::rvec &Diff)
       {
         const size_t nparam = Model.size();
         const size_t ncells = Model.size() / 3;
-        jiba::rvec Gradient(nparam, 0.0);
-        jiba::rvec DensDiff(ncells, 0.0), CondDiff(ncells, 0.0), SaltDiff(ncells, 0.0);
+        jif3D::rvec Gradient(nparam, 0.0);
+        jif3D::rvec DensDiff(ncells, 0.0), CondDiff(ncells, 0.0), SaltDiff(ncells, 0.0);
         //predict densities from slownesses, the first ncells vector entries contain the slownesses
-        jiba::rvec PredDens(
+        jif3D::rvec PredDens(
             DensityTransform->GeneralizedToPhysical(ublas::subrange(Model, 0, ncells)));
-        jiba::rvec PredCond(
+        jif3D::rvec PredCond(
             ConductivityTransform->GeneralizedToPhysical(
                 ublas::subrange(Model, 0, ncells)));
         for (size_t i = 0; i < ncells; ++i)

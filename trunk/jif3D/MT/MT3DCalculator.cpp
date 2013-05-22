@@ -8,7 +8,7 @@
 
 #include "MT3DCalculator.h"
 
-namespace jiba
+namespace jif3D
   {
     /*! Calculate the response of a synthetic MT model. All information
      * about frequencies, site locations etc. is contained in the Model

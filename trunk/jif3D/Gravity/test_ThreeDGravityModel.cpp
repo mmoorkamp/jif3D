@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_SUITE( GravityModel_Test_Suite )
 //Test the default state of the object
 BOOST_AUTO_TEST_CASE  (constructors_test)
     {
-      const jiba::ThreeDGravityModel ConstBaseTest; // 1 //
+      const jif3D::ThreeDGravityModel ConstBaseTest; // 1 //
       BOOST_CHECK_EQUAL(ConstBaseTest.GetXCellSizes().size(), (size_t) 0);
       BOOST_CHECK_EQUAL(ConstBaseTest.GetYCellSizes().size(), (size_t) 0);
       BOOST_CHECK_EQUAL(ConstBaseTest.GetZCellSizes().size(), (size_t) 0);
@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE  (constructors_test)
 
   BOOST_AUTO_TEST_CASE(indexoffset_test)
     {
-      jiba::ThreeDGravityModel ModelTest;
+      jif3D::ThreeDGravityModel ModelTest;
       size_t xsize = rand() % 100 + 1;
       size_t ysize = rand() % 100 + 1;
       size_t zsize = rand() % 100 +1;
@@ -59,8 +59,8 @@ BOOST_AUTO_TEST_CASE  (constructors_test)
   //Test the access function for the cell dimensions
   BOOST_AUTO_TEST_CASE(cell_dimension_access_function_test)
     {
-      jiba::ThreeDGravityModel BaseTest;
-      jiba::ThreeDModelBase::t3DModelDim TestDim(boost::extents[5]);
+      jif3D::ThreeDGravityModel BaseTest;
+      jif3D::ThreeDModelBase::t3DModelDim TestDim(boost::extents[5]);
       for (size_t i = 0; i < 5; ++i)
         TestDim[i] = i;
       BaseTest.SetXCellSizes().resize(boost::extents[5]);
@@ -80,8 +80,8 @@ BOOST_AUTO_TEST_CASE  (constructors_test)
   BOOST_AUTO_TEST_CASE(coordinate_calculation_test)
     {
       const size_t nelements = 5;
-      jiba::ThreeDGravityModel BaseTest;
-      jiba::ThreeDModelBase::t3DModelDim TestDim(boost::extents[nelements]);
+      jif3D::ThreeDGravityModel BaseTest;
+      jif3D::ThreeDModelBase::t3DModelDim TestDim(boost::extents[nelements]);
       for (size_t i = 0; i < nelements; ++i)
         TestDim[i] = rand();
       BaseTest.SetXCellSizes().resize(boost::extents[nelements]);
@@ -90,13 +90,13 @@ BOOST_AUTO_TEST_CASE  (constructors_test)
       BaseTest.SetYCellSizes() = TestDim;
       BaseTest.SetZCellSizes().resize(boost::extents[nelements]);
       BaseTest.SetZCellSizes() = TestDim;
-      jiba::ThreeDModelBase::t3DModelDim XCoordinates(BaseTest.GetXCoordinates());
-      jiba::ThreeDModelBase::t3DModelDim YCoordinates(BaseTest.GetYCoordinates());
-      jiba::ThreeDModelBase::t3DModelDim ZCoordinates(BaseTest.GetZCoordinates());
+      jif3D::ThreeDModelBase::t3DModelDim XCoordinates(BaseTest.GetXCoordinates());
+      jif3D::ThreeDModelBase::t3DModelDim YCoordinates(BaseTest.GetYCoordinates());
+      jif3D::ThreeDModelBase::t3DModelDim ZCoordinates(BaseTest.GetZCoordinates());
       BOOST_CHECK_EQUAL(XCoordinates[0],0.0);
       BOOST_CHECK_EQUAL(YCoordinates[0],0.0);
       BOOST_CHECK_EQUAL(ZCoordinates[0],0.0);
-      jiba::ThreeDModelBase::t3DModelDim CompCoord(boost::extents[nelements]);
+      jif3D::ThreeDModelBase::t3DModelDim CompCoord(boost::extents[nelements]);
       std::partial_sum(TestDim.begin(), TestDim.end(), CompCoord.begin());
       BOOST_CHECK(std::equal(CompCoord.begin(), CompCoord.end()-1,
               BaseTest.GetXCoordinates().begin()+1));
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE  (constructors_test)
   BOOST_AUTO_TEST_CASE(find_indices_test)
     {
       const size_t nelements = 5;
-      jiba::ThreeDGravityModel BaseTest;
+      jif3D::ThreeDGravityModel BaseTest;
       BaseTest.SetXCellSizes().resize(boost::extents[nelements]);
       BaseTest.SetYCellSizes().resize(boost::extents[nelements]);
       BaseTest.SetZCellSizes().resize(boost::extents[nelements]);
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE  (constructors_test)
           BaseTest.SetZCellSizes()[i] = 2.5;
 
         }
-      boost::array<jiba::ThreeDModelBase::t3DModelData::index, 3> indices(
+      boost::array<jif3D::ThreeDModelBase::t3DModelData::index, 3> indices(
           BaseTest.FindAssociatedIndices(2.2, 2.2, 2.2));
       BOOST_CHECK_EQUAL(indices[0], 1);
       BOOST_CHECK_EQUAL(indices[1], 1);
@@ -131,13 +131,13 @@ BOOST_AUTO_TEST_CASE  (constructors_test)
   //Check whether storing the model in a netcdf file and reading it in again creates the same model
   BOOST_AUTO_TEST_CASE(netcdf_read_write_test)
     {
-      jiba::ThreeDGravityModel GravityTest;
+      jif3D::ThreeDGravityModel GravityTest;
 
       srand(time(NULL));
 
-      jiba::ThreeDModelBase::t3DModelDim XDim = GenerateDimension(11);
-      jiba::ThreeDModelBase::t3DModelDim YDim = GenerateDimension(23);
-      jiba::ThreeDModelBase::t3DModelDim ZDim = GenerateDimension(14);
+      jif3D::ThreeDModelBase::t3DModelDim XDim = GenerateDimension(11);
+      jif3D::ThreeDModelBase::t3DModelDim YDim = GenerateDimension(23);
+      jif3D::ThreeDModelBase::t3DModelDim ZDim = GenerateDimension(14);
       const size_t xsize = XDim.size();
       const size_t ysize = YDim.size();
       const size_t zsize = ZDim.size();
@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE  (constructors_test)
 
       GravityTest.SetDensities().resize(boost::extents[xsize][ysize][zsize]);
 
-      jiba::ThreeDModelBase::t3DModelData TestData(
+      jif3D::ThreeDModelBase::t3DModelData TestData(
           boost::extents[xsize][ysize][zsize]);
       for (size_t i = 0; i < xsize; ++i)
       for (size_t j = 0; j < ysize; ++j)
@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE  (constructors_test)
               GravityTest.GetZCellSizes().begin()));
 
       GravityTest.WriteNetCDF("test.nc");
-      jiba::ThreeDGravityModel NetCDFReadTest;
+      jif3D::ThreeDGravityModel NetCDFReadTest;
       NetCDFReadTest.ReadNetCDF("test.nc");
       BOOST_CHECK(std::equal(XDim.begin(), XDim.end(),
               NetCDFReadTest.GetXCellSizes().begin()));
@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE  (constructors_test)
           outfile << posx.at(i) << " " << posy.at(i) << " " << posz.at(i) << "\n";
         }
       outfile.close();
-      jiba::ThreeDGravityModel TestModel;
+      jif3D::ThreeDGravityModel TestModel;
       TestModel.ReadMeasPosAscii(filename);
       for (size_t i = 0; i < nmeas; ++i)
         {
@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE  (constructors_test)
 
   BOOST_AUTO_TEST_CASE(netcdf_measpos_test)
     {
-      jiba::ThreeDGravityModel GravityTest;
+      jif3D::ThreeDGravityModel GravityTest;
       const size_t nmeas = 10;
       MakeRandomModel(GravityTest, nmeas);
     }

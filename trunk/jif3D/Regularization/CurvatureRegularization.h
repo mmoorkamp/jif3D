@@ -13,7 +13,7 @@
 #include "MatOpRegularization.h"
 #include "MakeTearModel.h"
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup Regularization classes to regularize the inversion */
     /* @{ */
@@ -24,7 +24,7 @@ namespace jiba
      * we specify a reference model (see description for MatOpRegularization), this reference model
      * is substracted before the calculation of the laplacian.
      */
-    class CurvatureRegularization: public jiba::MatOpRegularization
+    class CurvatureRegularization: public jif3D::MatOpRegularization
       {
     private:
       //! A small number to stabilize the matrix operator
@@ -38,10 +38,10 @@ namespace jiba
        * @param TearModelY Specify tearing in y-direction. The geometry has to match ModelGeometry. A value of 0 in a cell signifies that we want to exclude this cell from regularization in y-direction.
        * @param TearModelZ Specify tearing in z-direction. The geometry has to match ModelGeometry. A value of 0 in a cell signifies that we want to exclude this cell from regularization in z-direction.
        */
-      void ConstructOperator(const jiba::ThreeDModelBase &ModelGeometry,
-          const jiba::ThreeDModelBase &TearModelX,
-          const jiba::ThreeDModelBase &TearModelY,
-          const jiba::ThreeDModelBase &TearModelZ);
+      void ConstructOperator(const jif3D::ThreeDModelBase &ModelGeometry,
+          const jif3D::ThreeDModelBase &TearModelX,
+          const jif3D::ThreeDModelBase &TearModelY,
+          const jif3D::ThreeDModelBase &TearModelZ);
       friend class boost::serialization::access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
@@ -71,9 +71,9 @@ namespace jiba
        * @param TearModelZ Contains information about tears in the regularization in z-direction  (Down)
        * @param ModEps The weight of the absolute value minimization of the model vector.
        */
-      CurvatureRegularization(const jiba::ThreeDModelBase &Geometry,
-          jiba::ThreeDModelBase &TearModelX, jiba::ThreeDModelBase &TearModelY,
-          jiba::ThreeDModelBase &TearModelZ, const double ModEps = 1e-8) :
+      CurvatureRegularization(const jif3D::ThreeDModelBase &Geometry,
+          jif3D::ThreeDModelBase &TearModelX, jif3D::ThreeDModelBase &TearModelY,
+          jif3D::ThreeDModelBase &TearModelZ, const double ModEps = 1e-8) :
           MatOpRegularization(Geometry), Eps(ModEps)
         {
           //in debug mode we check that the geometry of the tear models
@@ -103,11 +103,11 @@ namespace jiba
        * @param Geometry A 3D model class that describes the cell geometries
        * @param ModEps The weight of the absolute value minimization of the model vector.
        */
-      explicit CurvatureRegularization(const jiba::ThreeDModelBase &Geometry,
+      explicit CurvatureRegularization(const jif3D::ThreeDModelBase &Geometry,
           const double ModEps = 1e-8) :
           MatOpRegularization(Geometry), Eps(ModEps)
         {
-          jiba::ThreeDModelBase TearModel;
+          jif3D::ThreeDModelBase TearModel;
           //if we do not want tears in the regularization we temporarily
           //construct a dummy tear object that contains 1 everywhere
           //and therefore applies the normal regularization everywhere

@@ -23,7 +23,7 @@ int hpx_main(int argc, char* argv[])
     const size_t ysize = 20;
     const size_t zsize = 10;
     const size_t nbglayers = 5;
-    jiba::X3DModel Model;
+    jif3D::X3DModel Model;
 
     Model.SetZCellSizes().resize(boost::extents[zsize]);
 
@@ -51,8 +51,8 @@ int hpx_main(int argc, char* argv[])
     Model.SetFrequencies().push_back(freq);
     Model.SetFrequencies().push_back(freq);
 
-   jiba::X3DMTCalculator X3DCalculator;
-   jiba::HPXMTCalculator HPXCalculator;
+   jif3D::X3DMTCalculator X3DCalculator;
+   jif3D::HPXMTCalculator HPXCalculator;
 
     for (size_t i = 0; i < xsize / 2; ++i)
       for (size_t j = 0; j < ysize / 2; ++j)
@@ -61,10 +61,10 @@ int hpx_main(int argc, char* argv[])
               Model.GetYCoordinates()[j] + deltay / 2.0, 0.0);
         }
     std::cout << "X3D " << std::endl;
-    jiba::rvec X3DImpedance = X3DCalculator.Calculate(Model);
+    jif3D::rvec X3DImpedance = X3DCalculator.Calculate(Model);
     //std::cout << "HPX " << std::endl;
-    jiba::rvec HPXImpedance = HPXCalculator.Calculate(Model);
-    std::complex<double> HsImp = jiba::ImpedanceHalfspace(freq, cond);
+    jif3D::rvec HPXImpedance = HPXCalculator.Calculate(Model);
+    std::complex<double> HsImp = jif3D::ImpedanceHalfspace(freq, cond);
     const double prec = 0.05;
     const size_t nsites = HPXImpedance.size() / 8;
     for (size_t i = 0; i < nsites; ++i)

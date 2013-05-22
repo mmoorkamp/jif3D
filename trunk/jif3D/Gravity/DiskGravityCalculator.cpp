@@ -16,7 +16,7 @@
 #include "DiskGravityCalculator.h"
 #include <fstream>
 
-namespace jiba
+namespace jif3D
   {
 
     std::string DiskGravityCalculator::MakeFilename()
@@ -26,7 +26,7 @@ namespace jiba
         //make a unique filename for the sensitivity file created by this object
         //we use boost uuid to generate a unique identifier tag
         //and translate it to a string to generate the filename
-        return "grav" + jiba::stringify(getpid()) + jiba::stringify(tag);
+        return "grav" + jif3D::stringify(getpid()) + jif3D::stringify(tag);
       }
 
     rvec DiskGravityCalculator::CalculateNewModel(
@@ -53,7 +53,7 @@ namespace jiba
           {
             //we have to copy the current row in a vector
             //because the matrix is stored in column major order
-            jiba::rvec Row(ublas::matrix_row<jiba::rmat>(
+            jif3D::rvec Row(ublas::matrix_row<jif3D::rmat>(
                 SetCurrentSensitivities(), i));
             //write the current row to a file
             outfile.write(reinterpret_cast<char *> (&Row[0]), ncolumns

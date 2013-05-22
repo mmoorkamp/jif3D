@@ -25,9 +25,9 @@ BOOST_AUTO_TEST_CASE  (read_write_X3D_test)
       const size_t nbglayers = rand() % 10 + 2;
       std::vector<double> Depths(2);
       std::fill(Depths.begin(),Depths.end(),12.3);
-      jiba::ThreeDModelBase::t3DModelDim XCellSizes(boost::extents[xsize]), YCellSizes(boost::extents[ysize]),
+      jif3D::ThreeDModelBase::t3DModelDim XCellSizes(boost::extents[xsize]), YCellSizes(boost::extents[ysize]),
       ZCellSizes(boost::extents[zsize]);
-      jiba::ThreeDModelBase::t3DModelData Data(boost::extents[xsize][ysize][zsize]);
+      jif3D::ThreeDModelBase::t3DModelData Data(boost::extents[xsize][ysize][zsize]);
       std::vector<double> bg_thicknesses(nbglayers),bg_conductivities(nbglayers);
 
       const double deltax = 11.2;
@@ -40,13 +40,13 @@ BOOST_AUTO_TEST_CASE  (read_write_X3D_test)
       std::generate_n(bg_conductivities.begin(),nbglayers,drand48);
 
       const std::string filename("x3d.in");
-      jiba::Write3DModelForX3D(filename,XCellSizes, YCellSizes, ZCellSizes,Depths,
+      jif3D::Write3DModelForX3D(filename,XCellSizes, YCellSizes, ZCellSizes,Depths,
           Data,bg_thicknesses,bg_conductivities);
 
-      jiba::ThreeDModelBase::t3DModelDim InXCellSizes, InYCellSizes,InZCellSizes;
-      jiba::ThreeDModelBase::t3DModelData InData;
+      jif3D::ThreeDModelBase::t3DModelDim InXCellSizes, InYCellSizes,InZCellSizes;
+      jif3D::ThreeDModelBase::t3DModelData InData;
       std::vector<double> Inbg_thicknesses,Inbg_conductivities;
-      jiba::Read3DModelFromX3D(filename, InXCellSizes, InYCellSizes, InZCellSizes,
+      jif3D::Read3DModelFromX3D(filename, InXCellSizes, InYCellSizes, InZCellSizes,
           InData,Inbg_thicknesses,Inbg_conductivities);
       BOOST_CHECK(InXCellSizes.size() == xsize);
       BOOST_CHECK(InYCellSizes.size() == ysize);
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE  (read_write_X3D_test)
     {
       std::string filename("csmt010a.emo");
       std::vector<std::complex<double> > Ex,Ey,Hx,Hy;
-      jiba::ReadEMO(filename,Ex,Ey,Hx,Hy);
+      jif3D::ReadEMO(filename,Ex,Ey,Hx,Hy);
       BOOST_CHECK(Ex.size() ==7200*2);
       BOOST_CHECK(Ex.size() == Ey.size());
       BOOST_CHECK(Ex.size() == Hx.size());
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE  (read_write_X3D_test)
     {
       std::string filename("csmt010a.ema");
       std::vector<std::complex<double> > Ex,Ey,Ez;
-      jiba::ReadEMA(filename,Ex,Ey,Ez,80,90,14);
+      jif3D::ReadEMA(filename,Ex,Ey,Ez,80,90,14);
       BOOST_CHECK(Ex.size() ==7200 * 14);
       BOOST_CHECK(Ex.size() == Ey.size());
     }

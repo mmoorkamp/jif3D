@@ -11,7 +11,7 @@
 #include "BasicGravElements.h"
 #include "GravityBackground.h"
 
-namespace jiba
+namespace jif3D
   {
 
     // These are forward calculations for the functions declared in gravcuda.cu that

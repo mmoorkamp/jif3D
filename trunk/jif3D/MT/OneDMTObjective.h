@@ -18,16 +18,16 @@
 #include "../Inversion/ObjectiveFunction.h"
 #include "OneDMTCalculator.h"
 
-namespace jiba
+namespace jif3D
   {
     //! Calculate the data misfit for MT observations assuming a 1D layered half-space as Earth structure.
-    class OneDMTObjective: public jiba::ObjectiveFunction
+    class OneDMTObjective: public jif3D::ObjectiveFunction
       {
 
     private:
-      jiba::OneDMTCalculator Calculator;
-      jiba::X3DModel MTModel;
-      jiba::rvec ObservedData;
+      jif3D::OneDMTCalculator Calculator;
+      jif3D::X3DModel MTModel;
+      jif3D::rvec ObservedData;
       //! Calculate the difference between observed and synthetic data for a given model
       friend class boost::serialization::access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
@@ -39,7 +39,7 @@ namespace jiba
           ar & ObservedData;
         }
     private:
-      virtual void ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff)
+      virtual void ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff)
         {
           //make sure the sizes match
           //std::cout << "Model: " << Model << std::endl;
@@ -47,10 +47,10 @@ namespace jiba
           //Copy the model vector into the object with the geometry information
           MTModel.SetBackgroundConductivities(
               std::vector<double>(Model.begin(), Model.end()));
-          jiba::rvec SynthData;
+          jif3D::rvec SynthData;
           SynthData = Calculator.Calculate(MTModel);
           if (SynthData.size() != ObservedData.size())
-            throw jiba::FatalException(
+            throw jif3D::FatalException(
                 " ThreeDModelObjective: Forward calculation does not give same amount of data !");
           Diff.resize(ObservedData.size());
           //calculate the difference between observed and synthetic
@@ -58,16 +58,16 @@ namespace jiba
               Diff.begin(), std::minus<double>());
         }
       //! The implementation of the gradient calculation
-      virtual jiba::rvec ImplGradient(const jiba::rvec &Model, const jiba::rvec &Diff)
+      virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model, const jif3D::rvec &Diff)
         {
           double misfit = CalcMisfit(Model);
           const size_t nlayers = Model.size();
-          jiba::rvec result(nlayers);
+          jif3D::rvec result(nlayers);
           for (size_t index = 0; index < nlayers; ++index)
             {
               double delta = Model(index) * 0.01;
-              jiba::rvec Forward(Model);
-              jiba::rvec Backward(Model);
+              jif3D::rvec Forward(Model);
+              jif3D::rvec Backward(Model);
               Forward(index) += delta;
               Backward(index) -= delta;
               double ForFDGrad = (CalcMisfit(Forward) - misfit) / (delta);
@@ -82,10 +82,10 @@ namespace jiba
 
           if (!std::equal(Model.begin(), Model.end(),
               MTModel.GetBackgroundConductivities().begin()))
-            throw jiba::FatalException(
+            throw jif3D::FatalException(
                 "Gradient calculation needs identical model to forward !");
           //calculate the gradient
-          jiba::rvec Deriv = Calculator.LQDerivative(MTModel, Diff);
+          jif3D::rvec Deriv = Calculator.LQDerivative(MTModel, Diff);
           //std::cout << Calculator.GetGamma() << std::endl;
           //std::cout << "Deriv: " << Deriv << std::endl;
 
@@ -109,15 +109,15 @@ namespace jiba
        * example by adding measurement points to the model object in the right order.
        * @param Data A vector with real values containing the observed data
        */
-      void SetObservedData(const jiba::rvec &Data)
+      void SetObservedData(const jif3D::rvec &Data)
         {
           if (Data.empty())
-            throw jiba::FatalException(
+            throw jif3D::FatalException(
                 "Cannot have empty observations in objective function.");
           ObservedData = Data;
         }
       //! Return a read only version of the observed data
-      const jiba::rvec &GetObservedData() const
+      const jif3D::rvec &GetObservedData() const
         {
           return ObservedData;
         }
@@ -126,9 +126,9 @@ namespace jiba
        * As we only need the synthetic data occasionally, we generate it from the data difference
        * when needed and save memory.
        */
-      jiba::rvec GetSyntheticData() const
+      jif3D::rvec GetSyntheticData() const
         {
-          jiba::rvec Synthetic(GetDataDifference());
+          jif3D::rvec Synthetic(GetDataDifference());
           Synthetic = ublas::element_prod(Synthetic, GetDataError());
           Synthetic += ObservedData;
           return Synthetic;
@@ -141,10 +141,10 @@ namespace jiba
        * of the inversion model. For forward modeling this can be refined to the geometry of the FineConductivityModel
        * @param Model The skeleton object that contains all information about geometry, background and the location of the sites
        */
-      void SetModelGeometry(const jiba::X3DModel &TheModel)
+      void SetModelGeometry(const jif3D::X3DModel &TheModel)
         {
           if (TheModel.GetBackgroundConductivities().size() == 0)
-            throw jiba::FatalException("Cannot have empty model in objective function.");
+            throw jif3D::FatalException("Cannot have empty model in objective function.");
           MTModel = TheModel;
         }
     public:

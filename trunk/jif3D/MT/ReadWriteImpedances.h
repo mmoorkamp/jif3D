@@ -11,7 +11,7 @@
 
 #include "../Global/VecMat.h"
 
-namespace jiba
+namespace jif3D
     {
     /** \addtogroup mtmodelling Forward modelling of magnetotelluric data */
     /* @{ */
@@ -34,8 +34,8 @@ namespace jiba
 	    const std::vector<double> &StatXCoord,
 	    const std::vector<double> &StatYCoord,
 	    const std::vector<double> &StatZCoord,
-	    const jiba::rvec &Impedances, const jiba::rvec &Errors =
-		    jiba::rvec());
+	    const jif3D::rvec &Impedances, const jif3D::rvec &Errors =
+		    jif3D::rvec());
 
     //! Read magnetotelluric impedances from a netcdf file
     /*! Read MT impedances for several stations from a netcdf file.
@@ -54,7 +54,7 @@ namespace jiba
     void ReadImpedancesFromNetCDF(const std::string &filename, std::vector<
 	    double> &Frequencies, std::vector<double> &StatXCoord, std::vector<
 	    double> &StatYCoord, std::vector<double> &StatZCoord,
-	    jiba::rvec &Impedances, jiba::rvec &ImpError);
+	    jif3D::rvec &Impedances, jif3D::rvec &ImpError);
 
     //! A very basic routine to read impedances at a single site from a .mtt file in the format used by University of Goettingen
     /*! A very basic routine to read impedances at a single site from a .mtt file in the
@@ -66,8 +66,8 @@ namespace jiba
      *        but the values for the real and imaginary part of each element are always identical
      */
     void ReadImpedancesFromMTT(const std::string &filename,
-	    std::vector<double> &Frequencies, jiba::rvec &Impedances,
-	    jiba::rvec &Errors);
+	    std::vector<double> &Frequencies, jif3D::rvec &Impedances,
+	    jif3D::rvec &Errors);
 
     //! A very basic routine to write impedances for several sites to  .mtt files in the format used by University of Goettingen.
     /*! A very basic routine to write impedances for several sites to  .mtt files in the format used by University of Goettingen.
@@ -78,8 +78,8 @@ namespace jiba
      *        but the values for the real and imaginary part of each element are always identical
      */
     void WriteImpedancesToMtt(const std::string &filenamebase,
-	        std::vector<double> &Frequencies, jiba::rvec &Imp,
-	        jiba::rvec &Err);
+	        std::vector<double> &Frequencies, jif3D::rvec &Imp,
+	        jif3D::rvec &Err);
     /* @} */
     }
 

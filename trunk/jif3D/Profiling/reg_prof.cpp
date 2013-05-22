@@ -17,7 +17,7 @@ int main()
     for (size_t nelem = 10; nelem < 100; nelem += 1)
       {
 
-        jiba::ThreeDGravityModel GravModel;
+        jif3D::ThreeDGravityModel GravModel;
         const size_t nx = nelem;
         const size_t ny = nelem;
         const size_t nz = nelem;
@@ -27,15 +27,15 @@ int main()
         GravModel.SetZCellSizes().resize(boost::extents[nz]);
 
         const size_t msize = GravModel.GetDensities().num_elements();
-        jiba::rvec StartModel(msize), PertModel(msize);
-        jiba::rvec ConstMod(msize);
+        jif3D::rvec StartModel(msize), PertModel(msize);
+        jif3D::rvec ConstMod(msize);
         std::fill(ConstMod.begin(), ConstMod.end(), 1.0);
         std::generate(StartModel.begin(), StartModel.end(), rand);
         std::generate(PertModel.begin(), PertModel.end(), rand);
 
         boost::posix_time::ptime firststarttime =
             boost::posix_time::microsec_clock::local_time();
-        jiba::GradientRegularization Regularization(GravModel, 0.0);
+        jif3D::GradientRegularization Regularization(GravModel, 0.0);
         boost::posix_time::ptime firstendtime =
             boost::posix_time::microsec_clock::local_time();
         Regularization.SetReferenceModel(StartModel);

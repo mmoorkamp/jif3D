@@ -13,10 +13,10 @@
 #include "ObjectiveFunction.h"
 #include "GradientRegularization.h"
 
-namespace jiba
+namespace jif3D
 {
 
-	class DotStructureConstraint: public jiba::ObjectiveFunction
+	class DotStructureConstraint: public jif3D::ObjectiveFunction
 	{
 	private:
 		//! The object to calculate the spatial gradient for the first model
@@ -41,11 +41,11 @@ namespace jiba
       }
 		//! The implementation of the objective function calculation
 		virtual void
-		ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff);
+		ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff);
 		//! The gradient of the objective function with respect to the model parameters
-		virtual jiba::rvec ImplGradient(const jiba::rvec &Model,
-				const jiba::rvec &Diff);
-		explicit DotStructureConstraint(const jiba::ThreeDModelBase &Geometry) :
+		virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model,
+				const jif3D::rvec &Diff);
+		explicit DotStructureConstraint(const jif3D::ThreeDModelBase &Geometry) :
 				FirstGradient(Geometry, 0.0), SecondGradient(Geometry, 0.0), ModelGeometry(
 						Geometry)
 		{
@@ -54,5 +54,5 @@ namespace jiba
 		virtual ~DotStructureConstraint();
 	};
 
-} /* namespace jiba */
+} /* namespace jif3D */
 #endif /* DOTSTRUCTURECONSTRAINT_H_ */

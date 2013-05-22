@@ -22,7 +22,7 @@
  * for the inversion of noisy data.
  */
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup util General utility routines */
     /* @{ */
@@ -35,7 +35,7 @@ namespace jiba
      * @param relerror The relative error for each datum, e.g. 0.02 corresponds to 2%
      * @param abserror The minimum absolute error for each datum in the same units as the data vector
      */
-    inline void AddNoise(jiba::rvec &Data, const double relerror,
+    inline void AddNoise(jif3D::rvec &Data, const double relerror,
         const double abserror = 0)
       {
         //create a random number generator object without specifying the distribution
@@ -66,14 +66,14 @@ namespace jiba
      * @param absmin The absolute minimum data value considered for error calculation, this reduced the influence of very small data
      * @return The vector of error estimates
      */
-    inline jiba::rvec ConstructError(const jiba::rvec &Data,
+    inline jif3D::rvec ConstructError(const jif3D::rvec &Data,
         const double relerror, const double absmin = 0.0)
       {
         assert(relerror >= 0.0);
         assert(absmin >= 0.0);
         const size_t ndata = Data.size();
         //create objects for the misfit and a very basic error estimate
-        jiba::rvec DataError(ndata);
+        jif3D::rvec DataError(ndata);
         for (size_t i = 0; i < ndata; ++i)
           {
             DataError(i) = std::max(std::abs(Data(i)) * relerror, absmin);
@@ -91,12 +91,12 @@ namespace jiba
      * @param relerror The relative error of the maximum tensor element
      * @return The vector of error estimates
      */
-    inline jiba::rvec ConstructMTError(const jiba::rvec &Data,
+    inline jif3D::rvec ConstructMTError(const jif3D::rvec &Data,
         const double relerror)
       {
         assert(relerror >= 0.0);
         const size_t ndata = Data.size();
-        jiba::rvec DataError(ndata);
+        jif3D::rvec DataError(ndata);
         const size_t ntensorelem = 8;
         assert((Data.size() % ntensorelem) == 0);
         const size_t ntensor = ndata / 8;
@@ -105,7 +105,7 @@ namespace jiba
             //find the maximum tensor element
             const double maxdata = std::abs(*std::max_element(Data.begin() + i
                 * ntensorelem, Data.begin() + (i + 1) * ntensorelem,
-                jiba::absLess<double, double>()));
+                jif3D::absLess<double, double>()));
             assert(maxdata > 0);
             std::fill_n(DataError.begin() + i * ntensorelem, ntensorelem,
                 maxdata * relerror);

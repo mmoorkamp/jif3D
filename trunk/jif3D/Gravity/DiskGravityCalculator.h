@@ -13,14 +13,14 @@
 #include <boost/serialization/base_object.hpp>
 #include "FullSensitivityGravityCalculator.h"
 
-namespace jiba
+namespace jif3D
   {
     //! This class works similar to FullSensitivityCalculator, only that it stores the sensitivities on the disk, not in memory
     /*! When we do not have enough RAM to store the sensitivities we can store them on the disk if
      * we do not want to recalculate them each time. On construction we generate a filename that consists
      * of the ID of the program and the memory location of the object and therefore should be unique.
      */
-    class DiskGravityCalculator: public jiba::FullSensitivityGravityCalculator
+    class DiskGravityCalculator: public jif3D::FullSensitivityGravityCalculator
       {
     private:
       //! This routine creates a unique filename for each object, used upon construction

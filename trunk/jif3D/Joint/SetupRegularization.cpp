@@ -13,11 +13,11 @@
 #include "../Tomo/ThreeDSeismicModel.h"
 #include "SetupRegularization.h"
 
-namespace jiba
+namespace jif3D
   {
 
     void SetTearModel(const po::variables_map &vm, const std::string &OptionName,
-        const ThreeDModelBase &StartModel, jiba::ThreeDSeismicModel &TearModel)
+        const ThreeDModelBase &StartModel, jif3D::ThreeDSeismicModel &TearModel)
       {
         if (vm.count(OptionName))
           {
@@ -76,27 +76,27 @@ namespace jiba
         return desc;
       }
 
-    boost::shared_ptr<jiba::RegularizationFunction> SetupRegularization::SetupObjective(
+    boost::shared_ptr<jif3D::RegularizationFunction> SetupRegularization::SetupObjective(
         const po::variables_map &vm, const ThreeDModelBase &StartModel,
-        const jiba::rvec &CovModVec)
+        const jif3D::rvec &CovModVec)
       {
         //if we only want to use a minimum model, we do not
         //have to worry about tear models etc. so we create the object
         //and return
         if (vm.count("mindiff"))
           {
-            return boost::shared_ptr<jiba::MinDiffRegularization>(
-                new jiba::MinDiffRegularization(StartModel));
+            return boost::shared_ptr<jif3D::MinDiffRegularization>(
+                new jif3D::MinDiffRegularization(StartModel));
           }
         if (vm.count("minsupp"))
           {
-            return boost::shared_ptr<jiba::MinimumSupport>(
-                new jiba::MinimumSupport(
-                    boost::shared_ptr<jiba::MinDiffRegularization>(
-                        new jiba::MinDiffRegularization(StartModel)), minsuppb));
+            return boost::shared_ptr<jif3D::MinimumSupport>(
+                new jif3D::MinimumSupport(
+                    boost::shared_ptr<jif3D::MinDiffRegularization>(
+                        new jif3D::MinDiffRegularization(StartModel)), minsuppb));
           }
         //setup possible tearing for the regularization for the three directions
-        jiba::ThreeDSeismicModel TearModX, TearModY, TearModZ;
+        jif3D::ThreeDSeismicModel TearModX, TearModY, TearModZ;
         SetTearModel(vm, "tearmodx", StartModel, TearModX);
         SetTearModel(vm, "tearmody", StartModel, TearModY);
         SetTearModel(vm, "tearmodz", StartModel, TearModZ);
@@ -107,19 +107,19 @@ namespace jiba
 
         //decide whether we want to use gradient base regularization
         //or curvature based regularization, the default is gradient
-        boost::shared_ptr<jiba::MatOpRegularization> Regularization;
+        boost::shared_ptr<jif3D::MatOpRegularization> Regularization;
         if (vm.count("curvreg"))
           {
-            Regularization = boost::shared_ptr<jiba::MatOpRegularization>(
-                new jiba::CurvatureRegularization(StartModel, TearModX, TearModY,
+            Regularization = boost::shared_ptr<jif3D::MatOpRegularization>(
+                new jif3D::CurvatureRegularization(StartModel, TearModX, TearModY,
                     TearModZ, beta));
 
           }
         else
           {
 
-            Regularization = boost::shared_ptr<jiba::MatOpRegularization>(
-                new jiba::GradientRegularization(StartModel, TearModX, TearModY, TearModZ,
+            Regularization = boost::shared_ptr<jif3D::MatOpRegularization>(
+                new jif3D::GradientRegularization(StartModel, TearModX, TearModY, TearModZ,
                     beta));
           }
         //We either pass an empty covariance vector then the regularization class
@@ -133,11 +133,11 @@ namespace jiba
             const size_t ngrid = StartModel.GetNModelElements();
             if (CovModVec.size() != ngrid)
               {
-                throw jiba::FatalException(
-                    "Size of model covariance: " + jiba::stringify(CovModVec.size())
-                        + " does not match model size: " + jiba::stringify(ngrid));
+                throw jif3D::FatalException(
+                    "Size of model covariance: " + jif3D::stringify(CovModVec.size())
+                        + " does not match model size: " + jif3D::stringify(ngrid));
               }
-            jiba::rvec Cov(ngrid * 3);
+            jif3D::rvec Cov(ngrid * 3);
             ublas::subrange(Cov, 0, ngrid) = CovModVec;
             ublas::subrange(Cov, ngrid, 2 * ngrid) = CovModVec;
             ublas::subrange(Cov, 2 * ngrid, 3 * ngrid) = CovModVec;

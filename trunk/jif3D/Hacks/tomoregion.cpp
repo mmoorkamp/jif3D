@@ -12,11 +12,11 @@
 
 int main()
   {
-    std::string datafilename = jiba::AskFilename("Data Filename: ");
+    std::string datafilename = jif3D::AskFilename("Data Filename: ");
 
-    jiba::rvec TomoData;
-    jiba::ThreeDSeismicModel Orig, New;
-    jiba::ReadTraveltimes(datafilename, TomoData, Orig);
+    jif3D::rvec TomoData;
+    jif3D::ThreeDSeismicModel Orig, New;
+    jif3D::ReadTraveltimes(datafilename, TomoData, Orig);
 
     double minx, maxx, miny, maxy;
     std::cout << "Minimum Northing value: ";
@@ -75,10 +75,10 @@ int main()
             New.AddMeasurementConfiguration(NewSourceIndex.at(OldSourceIndex),NewMeasIndex.at(OldRecIndex));
           }
       }
-    jiba::rvec NewTomoData(TmpData.size());
+    jif3D::rvec NewTomoData(TmpData.size());
     std::copy(TmpData.begin(),TmpData.end(),NewTomoData.begin());
     std::string newdatafilename = datafilename + ".cut.nc";
-    jiba::SaveTraveltimes(newdatafilename,NewTomoData,New);
+    jif3D::SaveTraveltimes(newdatafilename,NewTomoData,New);
 
   }
 

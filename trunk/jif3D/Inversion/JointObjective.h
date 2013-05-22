@@ -16,7 +16,7 @@
 #include "ObjectiveFunction.h"
 #include "ModelDistributor.h"
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup inversion General routines for inversion */
     /* @{ */
@@ -66,9 +66,9 @@ namespace jiba
         }
       //the implementation of the misfit calculation
       virtual void
-      ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff);
+      ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff);
       //the implementation of the gradient calculation
-      virtual jiba::rvec ImplGradient(const jiba::rvec &Model, const jiba::rvec &Diff);
+      virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model, const jif3D::rvec &Diff);
     public:
       //! The clone function provides a virtual constructor
       virtual JointObjective *clone() const
@@ -120,7 +120,7 @@ namespace jiba
       void SetWeights(const std::vector<double> &W)
         {
           if (W.size() != Weights.size())
-            throw jiba::FatalException(
+            throw jif3D::FatalException(
                 "Number of weights has to match the number of objective functions !");
           std::copy(W.begin(), W.end(), Weights.begin());
         }

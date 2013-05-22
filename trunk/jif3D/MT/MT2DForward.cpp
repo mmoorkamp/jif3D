@@ -8,7 +8,7 @@
 
 #include "MT2DForward.h"
 #include "Tarits2DMT.h"
-namespace jiba
+namespace jif3D
   {
 
     MT2DForward::MT2DForward() :

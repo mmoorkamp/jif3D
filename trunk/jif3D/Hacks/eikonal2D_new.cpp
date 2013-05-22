@@ -156,7 +156,7 @@ int main()
         std::cout << nactive << std::endl;
         std::vector<double> Active(ngrid);
         std::copy(L.begin(), L.end(), Active.begin());
-        jiba::PlotTimeField("front" + jiba::stringify(iteration) + ".vtk",
+        jif3D::PlotTimeField("front" + jif3D::stringify(iteration) + ".vtk",
             &Active[0], deltax, nx, ny, 1);
         iteration++;
       } while (nactive > 0);
@@ -168,7 +168,7 @@ int main()
         }
       std::cout << std::endl;
       }
-    jiba::PlotTimeField("times.vtk", U.origin(), deltax, nx, ny, 1);
+    jif3D::PlotTimeField("times.vtk", U.origin(), deltax, nx, ny, 1);
     //std::cout << "U[49][49]: " << U[49][49] << std::endl;
     //std::cout << "U[4][1]: " << U[4][sourcey_index] << std::endl;
     /*std::cout << U[11][10][10] << std::endl;

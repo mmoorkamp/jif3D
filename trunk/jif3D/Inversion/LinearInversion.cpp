@@ -16,7 +16,7 @@
 #include "../Inversion/MatrixTools.h"
 #include "../Inversion/GeneralizedInverse.h"
 
-namespace jiba
+namespace jif3D
   {
     namespace lapack = boost::numeric::bindings::lapack;
     namespace atlas = boost::numeric::bindings::atlas;
@@ -46,12 +46,12 @@ namespace jiba
         //apply the model covariance to the sensitivity matrix
         for (size_t i = 0; i < nparm; ++i)
           {
-            boost::numeric::ublas::matrix_column<jiba::rmat> CurrentColumn(
+            boost::numeric::ublas::matrix_column<jif3D::rmat> CurrentColumn(
                 Sensitivities, i);
             CurrentColumn *= sqrt(WeightVector(i));
           }
         //calculate the data space matrix gamma
-        jiba::rmat Gamma(nmeas, nmeas);
+        jif3D::rmat Gamma(nmeas, nmeas);
         atlas::gemm(CblasNoTrans, CblasTrans, 1.0, Sensitivities,
             Sensitivities, 0.0, Gamma);
         //apply damping
@@ -66,7 +66,7 @@ namespace jiba
         //equation 9 in Siripurnvaraporn and Egbert
         for (size_t i = 0; i < nparm; ++i)
           {
-            boost::numeric::ublas::matrix_column<jiba::rmat> CurrentColumn(
+            boost::numeric::ublas::matrix_column<jif3D::rmat> CurrentColumn(
                 Sensitivities, i);
             CurrentColumn *= sqrt(WeightVector(i));
           }
@@ -92,12 +92,12 @@ namespace jiba
         atlas::gemv(1.0, Sensitivities, InvModel, 1.0, Data);
         for (size_t i = 0; i < nmeas; ++i)
           {
-            boost::numeric::ublas::matrix_row<jiba::rmat>(Sensitivities, i)
+            boost::numeric::ublas::matrix_row<jif3D::rmat>(Sensitivities, i)
                 /= sqrt(DataError(i));
             Data(i) /= sqrt(DataError(i));
           }
 
-        jiba::rmat Gamma(nparm, nparm);
+        jif3D::rmat Gamma(nparm, nparm);
         atlas::gemm(CblasTrans, CblasNoTrans, 1.0, Sensitivities,
             Sensitivities, 0.0, Gamma);
         for (size_t i = 0; i < nparm; ++i)
@@ -125,18 +125,18 @@ namespace jiba
         const size_t nparm = Sensitivities.size2();
         for (size_t i = 0; i < nmeas; ++i)
           {
-            boost::numeric::ublas::matrix_row<jiba::rmat>(Sensitivities, i)
+            boost::numeric::ublas::matrix_row<jif3D::rmat>(Sensitivities, i)
                 /= sqrt(DataError(i));
             Data(i) /= sqrt(DataError(i));
           }
-        jiba::rmat Gamma(nparm, nparm);
+        jif3D::rmat Gamma(nparm, nparm);
         atlas::gemm(CblasTrans, CblasNoTrans, 1.0, Sensitivities,
             Sensitivities, 0.0, Gamma);
         for (size_t i = 0; i < nparm; ++i)
           {
             Gamma(i, i) += lambda * 1. / WeightVector(i);
           }
-        jiba::rvec y(nparm);
+        jif3D::rvec y(nparm);
         atlas::gemv(CblasTrans, 1.0, Sensitivities, Data, 0.0, y);
         for (size_t i = 0; i < nparm; ++i)
           {

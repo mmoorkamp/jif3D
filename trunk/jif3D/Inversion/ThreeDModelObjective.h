@@ -15,7 +15,7 @@
 #include "../Global/FatalException.h"
 #include "../Inversion/ObjectiveFunction.h"
 
-namespace jiba
+namespace jif3D
   {
     //! This is a generic class for objective functions that use a Calculator object to calculate 3D synthetic data
     /*! The different types of synthetic data calculations we currently perform during the joint inversion
@@ -25,14 +25,14 @@ namespace jiba
      * This template has 3 requirements on the calculator object.
      *   - A public typedef ModelType that specifies the model object type required for the forward calculation
      *   - A function  with signature void Calculate(const ModelType &); to calculate synthetic data for a given model
-     *   - A function with signature jiba::rvec LQDerivative(const ModelType &,const jiba::rvec &); to calculate
+     *   - A function with signature jif3D::rvec LQDerivative(const ModelType &,const jif3D::rvec &); to calculate
      *      the derivative of a least squares objective function for a given model and misfit.
      * If all these requirements are met this class can use the calculator object to calculate misfit
      * and the derivative of the objective function.
      *
      */
     template<class ThreeDCalculatorType>
-    class ThreeDModelObjective: public jiba::ObjectiveFunction
+    class ThreeDModelObjective: public jif3D::ObjectiveFunction
       {
     public:
       //! We create a shorthand for the template parameter that determines the type of the forward calculation object
@@ -65,9 +65,9 @@ namespace jiba
        * inversion and refines it using the geometry of FineModel. This model
        * is then used for the forward calculation.
        */
-      jiba::ModelRefiner Refiner;
+      jif3D::ModelRefiner Refiner;
       //! The vector of observed data for all stations. The exact ordering of the data depends on the calculator object.
-      jiba::rvec ObservedData;
+      jif3D::rvec ObservedData;
       //! Calculate the difference between observed and synthetic data for a given model
       friend class boost::serialization::access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
@@ -89,12 +89,12 @@ namespace jiba
         }
     private:
       //! The synthetic data from the last forward calculation
-      jiba::rvec SynthData;
+      jif3D::rvec SynthData;
       //! The implementation of the objective function
       virtual void
-      ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff);
+      ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff);
       //! The implementation of the gradient calculation
-      virtual jiba::rvec ImplGradient(const jiba::rvec &Model, const jiba::rvec &Diff);
+      virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model, const jif3D::rvec &Diff);
       //! So far transformations have no effect
       virtual void SetDataTransformAction()
         {
@@ -113,15 +113,15 @@ namespace jiba
        * example by adding measurement points to the model object in the right order.
        * @param Data A vector with real values containing the observed data
        */
-      void SetObservedData(const jiba::rvec &Data)
+      void SetObservedData(const jif3D::rvec &Data)
         {
           if (Data.empty())
-            throw jiba::FatalException(
+            throw jif3D::FatalException(
                 "Cannot have empty observations in objective function.");
           ObservedData = Data;
         }
       //! Return a read only version of the observed data
-      const jiba::rvec &GetObservedData() const
+      const jif3D::rvec &GetObservedData() const
         {
           return ObservedData;
         }
@@ -131,7 +131,7 @@ namespace jiba
        * are small enough that this does not pose a serious limitation.
        * @return A real vector containing the synthetic data in the same order as the observed data
        */
-      jiba::rvec GetSyntheticData() const
+      jif3D::rvec GetSyntheticData() const
         {
           return SynthData;
         }
@@ -146,7 +146,7 @@ namespace jiba
       void SetCoarseModelGeometry(const ModelType &Model)
         {
           if (Model.GetData().num_elements() == 0)
-            throw jiba::FatalException("Cannot have empty model in objective function.");
+            throw jif3D::FatalException("Cannot have empty model in objective function.");
           CoarseModel = Model;
         }
       //! Set the geometry of a finely discretized model to ensure numerical precision
@@ -162,7 +162,7 @@ namespace jiba
       void SetFineModelGeometry(const ModelType &Model)
         {
           if (Model.GetData().num_elements() == 0)
-            throw jiba::FatalException("Cannot have empty model in objective function.");
+            throw jif3D::FatalException("Cannot have empty model in objective function.");
           FineModel = Model;
           //set the coordinates of the refiner object according to the fine model
           //we want to use for the forward calculation
@@ -199,7 +199,7 @@ namespace jiba
 
     template<class ThreeDCalculatorType>
     void ThreeDModelObjective<ThreeDCalculatorType>::ImplDataDifference(
-        const jiba::rvec &Model, jiba::rvec &Diff)
+        const jif3D::rvec &Model, jif3D::rvec &Diff)
       {
         //make sure the sizes match
         assert(Model.size() == CoarseModel.GetData().num_elements());
@@ -222,7 +222,7 @@ namespace jiba
           }
 
         if (SynthData.size() != ObservedData.size())
-          throw jiba::FatalException(
+          throw jif3D::FatalException(
               " ThreeDModelObjective: Forward calculation does not give same amount of data !");
         Diff.resize(ObservedData.size());
         //calculate the difference between observed and synthetic
@@ -232,21 +232,21 @@ namespace jiba
 
     //The implementation of the gradient calculation
     template<class ThreeDCalculatorType>
-    jiba::rvec ThreeDModelObjective<ThreeDCalculatorType>::ImplGradient(
-        const jiba::rvec &Model, const jiba::rvec &Diff)
+    jif3D::rvec ThreeDModelObjective<ThreeDCalculatorType>::ImplGradient(
+        const jif3D::rvec &Model, const jif3D::rvec &Diff)
       {
         assert(Model.size() == CoarseModel.GetData().num_elements());
         //as we have stored the model vector from the misfit calculation
         //in the model object, we can check if the call is correct
         if (!std::equal(Model.begin(), Model.end(), CoarseModel.GetData().origin()))
-          throw jiba::FatalException(
+          throw jif3D::FatalException(
               "Gradient calculation needs identical model to forward !");
         //calculate the gradient
         if (wantrefinement)
           {
             Refiner.RefineModel(CoarseModel, FineModel);
             //calculate the gradient for the fine model
-            jiba::rvec FineGradient(Calculator.LQDerivative(FineModel, Diff));
+            jif3D::rvec FineGradient(Calculator.LQDerivative(FineModel, Diff));
             //and return the projection of the fine gradient onto the coarse model
             return Refiner.CombineGradient(FineGradient, CoarseModel, FineModel);
           }

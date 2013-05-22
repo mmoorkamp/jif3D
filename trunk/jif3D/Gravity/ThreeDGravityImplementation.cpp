@@ -9,7 +9,7 @@
 #include "ThreeDGravityImplementation.h"
 #include "ThreeDGravityCalculator.h"
 
-namespace jiba
+namespace jif3D
   {
 
     ThreeDGravityImplementation::ThreeDGravityImplementation() :

@@ -13,10 +13,10 @@
 
 namespace ublas = boost::numeric::ublas;
 
-namespace jiba
+namespace jif3D
   {
-    void SetupModelCovar(jiba::rvec &Covar, const jiba::rvec &InvModel,
-        const jiba::rvec &OldCov, size_t ngrid)
+    void SetupModelCovar(jif3D::rvec &Covar, const jif3D::rvec &InvModel,
+        const jif3D::rvec &OldCov, size_t ngrid)
       {
         assert(Covar.size() == 3 * ngrid);
         assert(InvModel.size() == ngrid);
@@ -82,14 +82,14 @@ namespace jiba
 
     void SetupCoupling::SetupTransforms(const po::variables_map &vm,
         ThreeDSeismicModel &GeometryModel,
-        boost::shared_ptr<jiba::GeneralModelTransform> &TomoTransform,
-        boost::shared_ptr<jiba::GeneralModelTransform> &GravityTransform,
-        boost::shared_ptr<jiba::GeneralModelTransform> &MTTransform, bool Wavelet)
+        boost::shared_ptr<jif3D::GeneralModelTransform> &TomoTransform,
+        boost::shared_ptr<jif3D::GeneralModelTransform> &GravityTransform,
+        boost::shared_ptr<jif3D::GeneralModelTransform> &MTTransform, bool Wavelet)
       {
 
         //we need the geometry of the starting model to setup
         //the transformations
-        std::string modelfilename = jiba::AskFilename("Inversion Model Geometry: ");
+        std::string modelfilename = jif3D::AskFilename("Inversion Model Geometry: ");
         //although we specify the starting model as a seismic model
         //it does not need to have the same grid specifications
         GeometryModel.ReadNetCDF(modelfilename, false);
@@ -98,14 +98,14 @@ namespace jiba
 
         //we declare WaveletTrans here so that we can use identical
         //transform for the different physical properties below
-        boost::shared_ptr<jiba::GeneralModelTransform> WaveletTrans;
+        boost::shared_ptr<jif3D::GeneralModelTransform> WaveletTrans;
         //but we only assign something to it if we actually want to
         //work in the wavelet domain as the constructor checks that
         //the grid size is a power of two, but this is not required otherwise
         if (Wavelet)
           {
-            WaveletTrans = boost::shared_ptr<jiba::GeneralModelTransform>(
-                new jiba::WaveletModelTransform(GeometryModel.GetData().shape()[0],
+            WaveletTrans = boost::shared_ptr<jif3D::GeneralModelTransform>(
+                new jif3D::WaveletModelTransform(GeometryModel.GetData().shape()[0],
                     GeometryModel.GetData().shape()[1], GeometryModel.GetData().shape()[2]));
           }
         //if we want to do a cross-gradient type joint inversion
@@ -125,54 +125,54 @@ namespace jiba
             //of ChainedTransform before we assign it to the function parameter
             //of type GeneralTransform
             //we start with tomography
-            boost::shared_ptr<jiba::ChainedTransform> SlownessTransform(
-                new jiba::ChainedTransform);
+            boost::shared_ptr<jif3D::ChainedTransform> SlownessTransform(
+                new jif3D::ChainedTransform);
 
             SlownessTransform->AppendTransform(
-                boost::shared_ptr<jiba::GeneralModelTransform>(
-                    new jiba::TanhTransform(minslow, maxslow)));
-            SlowCrossTrans = boost::shared_ptr<jiba::GeneralModelTransform>(
+                boost::shared_ptr<jif3D::GeneralModelTransform>(
+                    new jif3D::TanhTransform(minslow, maxslow)));
+            SlowCrossTrans = boost::shared_ptr<jif3D::GeneralModelTransform>(
                 SlownessTransform->clone());
-            TomoTransform = boost::shared_ptr<jiba::GeneralModelTransform>(
-                new jiba::MultiSectionTransform(3 * ngrid, 0, ngrid, SlownessTransform));
-            SlowRegTrans = boost::shared_ptr<jiba::ChainedTransform>(
-                new jiba::ChainedTransform);
+            TomoTransform = boost::shared_ptr<jif3D::GeneralModelTransform>(
+                new jif3D::MultiSectionTransform(3 * ngrid, 0, ngrid, SlownessTransform));
+            SlowRegTrans = boost::shared_ptr<jif3D::ChainedTransform>(
+                new jif3D::ChainedTransform);
             SlowRegTrans->AppendTransform(TomoTransform);
 
             //then we do density
-            boost::shared_ptr<jiba::ChainedTransform> DensityTransform(
-                new jiba::ChainedTransform);
+            boost::shared_ptr<jif3D::ChainedTransform> DensityTransform(
+                new jif3D::ChainedTransform);
             DensityTransform->AppendTransform(
-                boost::shared_ptr<jiba::GeneralModelTransform>(
-                    new jiba::TanhTransform(mindens, maxdens)));
-            DensCrossTrans = boost::shared_ptr<jiba::GeneralModelTransform>(
+                boost::shared_ptr<jif3D::GeneralModelTransform>(
+                    new jif3D::TanhTransform(mindens, maxdens)));
+            DensCrossTrans = boost::shared_ptr<jif3D::GeneralModelTransform>(
                 DensityTransform->clone());
-            GravityTransform = boost::shared_ptr<jiba::GeneralModelTransform>(
-                new jiba::MultiSectionTransform(3 * ngrid, ngrid, 2 * ngrid,
+            GravityTransform = boost::shared_ptr<jif3D::GeneralModelTransform>(
+                new jif3D::MultiSectionTransform(3 * ngrid, ngrid, 2 * ngrid,
                     DensityTransform));
-            DensRegTrans = boost::shared_ptr<jiba::ChainedTransform>(
-                new jiba::ChainedTransform);
+            DensRegTrans = boost::shared_ptr<jif3D::ChainedTransform>(
+                new jif3D::ChainedTransform);
             DensRegTrans->AppendTransform(GravityTransform);
 
             //and then conductivity, conductivity has a LogTransform in addition
             //to reduce the range of inversion parameters
-            boost::shared_ptr<jiba::ChainedTransform> ConductivityTransform(
-                new jiba::ChainedTransform);
-            jiba::rvec RefModel(ngrid);
+            boost::shared_ptr<jif3D::ChainedTransform> ConductivityTransform(
+                new jif3D::ChainedTransform);
+            jif3D::rvec RefModel(ngrid);
             std::fill(RefModel.begin(), RefModel.end(), 1.0);
             ConductivityTransform->AppendTransform(
-                boost::shared_ptr<jiba::GeneralModelTransform>(
-                    new jiba::TanhTransform(std::log(mincond), std::log(maxcond))));
+                boost::shared_ptr<jif3D::GeneralModelTransform>(
+                    new jif3D::TanhTransform(std::log(mincond), std::log(maxcond))));
             ConductivityTransform->AppendTransform(
-                boost::shared_ptr<jiba::GeneralModelTransform>(
-                    new jiba::LogTransform(RefModel)));
-            CondCrossTrans = boost::shared_ptr<jiba::GeneralModelTransform>(
+                boost::shared_ptr<jif3D::GeneralModelTransform>(
+                    new jif3D::LogTransform(RefModel)));
+            CondCrossTrans = boost::shared_ptr<jif3D::GeneralModelTransform>(
                 ConductivityTransform->clone());
-            MTTransform = boost::shared_ptr<jiba::GeneralModelTransform>(
-                new jiba::MultiSectionTransform(3 * ngrid, 2 * ngrid, 3 * ngrid,
+            MTTransform = boost::shared_ptr<jif3D::GeneralModelTransform>(
+                new jif3D::MultiSectionTransform(3 * ngrid, 2 * ngrid, 3 * ngrid,
                     ConductivityTransform));
-            CondRegTrans = boost::shared_ptr<jiba::ChainedTransform>(
-                new jiba::ChainedTransform);
+            CondRegTrans = boost::shared_ptr<jif3D::ChainedTransform>(
+                new jif3D::ChainedTransform);
             CondRegTrans->AppendTransform(MTTransform);
             //if we want to regularize in the wavelet  domain
             //we need to add a wavelet transform to the regularization
@@ -189,7 +189,7 @@ namespace jiba
           {
             // We can specify a model file where we want
             // the parameter relationship to be valid
-            jiba::ThreeDSeismicModel RelModel;
+            jif3D::ThreeDSeismicModel RelModel;
             if (vm.count("relmodel"))
               {
                 RelModel.ReadNetCDF(RelModelName, false);
@@ -206,17 +206,17 @@ namespace jiba
             //if we want direct parameter coupling we do not need the section transforms
             //but we directly calculate conductivity and density from slowness
 
-            TomoTransform = boost::shared_ptr<jiba::GeneralModelTransform>(
-                new jiba::TanhTransform(minslow, maxslow));
+            TomoTransform = boost::shared_ptr<jif3D::GeneralModelTransform>(
+                new jif3D::TanhTransform(minslow, maxslow));
 
-            GravityTransform = boost::shared_ptr<jiba::GeneralModelTransform>(
-                new jiba::DensityTransform(TomoTransform, RelModel, DensReplace,
+            GravityTransform = boost::shared_ptr<jif3D::GeneralModelTransform>(
+                new jif3D::DensityTransform(TomoTransform, RelModel, DensReplace,
                     density_a, density_b));
-            MTTransform = boost::shared_ptr<jiba::GeneralModelTransform>(
-                new jiba::ConductivityTransform(TomoTransform, RelModel, CondReplace,
+            MTTransform = boost::shared_ptr<jif3D::GeneralModelTransform>(
+                new jif3D::ConductivityTransform(TomoTransform, RelModel, CondReplace,
                     cond_a, cond_b, cond_c));
-            SlowRegTrans = boost::shared_ptr<jiba::ChainedTransform>(
-                new jiba::ChainedTransform);
+            SlowRegTrans = boost::shared_ptr<jif3D::ChainedTransform>(
+                new jif3D::ChainedTransform);
             SlowRegTrans->AppendTransform(TomoTransform);
             if (Wavelet)
               {
@@ -230,16 +230,16 @@ namespace jiba
         DensTrans = GravityTransform;
       }
 
-    void SetupCoupling::SetupCrossGradModel(jiba::rvec &InvModel,
-        const jiba::ThreeDModelBase &ModelGeometry,
-        const jiba::ThreeDSeismicModel &SeisMod, const jiba::ThreeDGravityModel &GravMod,
-        const jiba::ThreeDMTModel &MTMod, jiba::JointObjective &Objective,
-        boost::shared_ptr<jiba::RegularizationFunction> Regularization, bool substart)
+    void SetupCoupling::SetupCrossGradModel(jif3D::rvec &InvModel,
+        const jif3D::ThreeDModelBase &ModelGeometry,
+        const jif3D::ThreeDSeismicModel &SeisMod, const jif3D::ThreeDGravityModel &GravMod,
+        const jif3D::ThreeDMTModel &MTMod, jif3D::JointObjective &Objective,
+        boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart)
       {
         const size_t ngrid = ModelGeometry.GetNModelElements();
         InvModel.resize(3 * ngrid, 0.0);
 
-        jiba::rvec SeisModel(ngrid, 0.0);
+        jif3D::rvec SeisModel(ngrid, 0.0);
         if (SeisMod.GetNModelElements() == ngrid)
           {
             std::copy(SeisMod.GetSlownesses().origin(),
@@ -249,7 +249,7 @@ namespace jiba
                 SlowTrans->PhysicalToGeneralized(SeisModel), 0, ngrid);
           }
 
-        jiba::rvec GravModel(ngrid, 1.0);
+        jif3D::rvec GravModel(ngrid, 1.0);
         if (GravMod.GetNModelElements() == ngrid)
           {
             std::copy(GravMod.GetDensities().origin(),
@@ -259,7 +259,7 @@ namespace jiba
                 DensTrans->PhysicalToGeneralized(GravModel), ngrid, 2 * ngrid);
           }
 
-        jiba::rvec MTModel(ngrid, 1.0);
+        jif3D::rvec MTModel(ngrid, 1.0);
         if (MTMod.GetNModelElements() == ngrid)
           {
 
@@ -279,10 +279,10 @@ namespace jiba
         //then we construct the three cross gradient terms
         //the double section transform takes two sections of the model
         //and feeds them to the objective function
-        boost::shared_ptr<jiba::CrossGradient> SeisGravCross(
-            new jiba::CrossGradient(ModelGeometry));
-        boost::shared_ptr<jiba::MultiSectionTransform> SeisGravTrans(
-            new jiba::MultiSectionTransform(3 * ngrid));
+        boost::shared_ptr<jif3D::CrossGradient> SeisGravCross(
+            new jif3D::CrossGradient(ModelGeometry));
+        boost::shared_ptr<jif3D::MultiSectionTransform> SeisGravTrans(
+            new jif3D::MultiSectionTransform(3 * ngrid));
         SeisGravTrans->AddSection(0, ngrid, SlowCrossTrans);
         SeisGravTrans->AddSection(ngrid, 2 * ngrid, DensCrossTrans);
 
@@ -295,10 +295,10 @@ namespace jiba
             Objective.AddObjective(SeisGravCross, SeisGravTrans, seisgravlambda,
                 "SeisGrav");
           }
-        boost::shared_ptr<jiba::CrossGradient> SeisMTCross(
-            new jiba::CrossGradient(ModelGeometry));
-        boost::shared_ptr<jiba::MultiSectionTransform> SeisMTTrans(
-            new jiba::MultiSectionTransform(3 * ngrid));
+        boost::shared_ptr<jif3D::CrossGradient> SeisMTCross(
+            new jif3D::CrossGradient(ModelGeometry));
+        boost::shared_ptr<jif3D::MultiSectionTransform> SeisMTTrans(
+            new jif3D::MultiSectionTransform(3 * ngrid));
         SeisMTTrans->AddSection(0, ngrid, SlowCrossTrans);
         SeisMTTrans->AddSection(2 * ngrid, 3 * ngrid, CondCrossTrans);
 
@@ -309,10 +309,10 @@ namespace jiba
           {
             Objective.AddObjective(SeisMTCross, SeisMTTrans, seismtlambda, "SeisMT");
           }
-        boost::shared_ptr<jiba::CrossGradient> GravMTCross(
-            new jiba::CrossGradient(ModelGeometry));
-        boost::shared_ptr<jiba::MultiSectionTransform> GravMTTrans(
-            new jiba::MultiSectionTransform(3 * ngrid));
+        boost::shared_ptr<jif3D::CrossGradient> GravMTCross(
+            new jif3D::CrossGradient(ModelGeometry));
+        boost::shared_ptr<jif3D::MultiSectionTransform> GravMTTrans(
+            new jif3D::MultiSectionTransform(3 * ngrid));
         GravMTTrans->AddSection(ngrid, 2 * ngrid, DensCrossTrans);
         GravMTTrans->AddSection(2 * ngrid, 3 * ngrid, CondCrossTrans);
 
@@ -330,8 +330,8 @@ namespace jiba
         double seisreglambda = 1.0;
         std::cout << " Weight for seismic regularization: ";
         std::cin >> seisreglambda;
-        boost::shared_ptr<jiba::RegularizationFunction> SeisReg(Regularization->clone());
-        jiba::rvec TomoCovar(3 * ngrid);
+        boost::shared_ptr<jif3D::RegularizationFunction> SeisReg(Regularization->clone());
+        jif3D::rvec TomoCovar(3 * ngrid);
         SetupModelCovar(TomoCovar, SeisModel, SeisReg->GetDataError(), ngrid);
         SeisReg->SetDataError(TomoCovar);
 
@@ -339,9 +339,9 @@ namespace jiba
         double gravreglambda = 1.0;
         std::cout << " Weight for gravity regularization: ";
         std::cin >> gravreglambda;
-        boost::shared_ptr<jiba::RegularizationFunction> GravReg(Regularization->clone());
-        jiba::rvec GravCovar(3 * ngrid);
-        jiba::rvec Ones(GravModel.size(), 1.0);
+        boost::shared_ptr<jif3D::RegularizationFunction> GravReg(Regularization->clone());
+        jif3D::rvec GravCovar(3 * ngrid);
+        jif3D::rvec Ones(GravModel.size(), 1.0);
         SetupModelCovar(GravCovar, Ones, GravReg->GetDataError(), ngrid);
         GravReg->SetDataError(GravCovar);
 
@@ -349,8 +349,8 @@ namespace jiba
         double mtreglambda = 1.0;
         std::cout << " Weight for MT regularization: ";
         std::cin >> mtreglambda;
-        boost::shared_ptr<jiba::RegularizationFunction> MTReg(Regularization->clone());
-        jiba::rvec MTCovar(3 * ngrid);
+        boost::shared_ptr<jif3D::RegularizationFunction> MTReg(Regularization->clone());
+        jif3D::rvec MTCovar(3 * ngrid);
         SetupModelCovar(MTCovar, MTModel, MTReg->GetDataError(), ngrid);
         MTReg->SetDataError(MTCovar);
         //if we specify on the command line that we want to subtract the
@@ -376,16 +376,16 @@ namespace jiba
           }
       }
 
-    void SetupCoupling::SetupSaltModel(const po::variables_map &vm, jiba::rvec &InvModel,
-        const jiba::ThreeDModelBase &ModelGeometry,
-        const jiba::ThreeDSeismicModel &SeisMod, const jiba::ThreeDGravityModel &GravMod,
-        const jiba::ThreeDMTModel &MTMod, jiba::JointObjective &Objective,
-        boost::shared_ptr<jiba::RegularizationFunction> Regularization, bool substart)
+    void SetupCoupling::SetupSaltModel(const po::variables_map &vm, jif3D::rvec &InvModel,
+        const jif3D::ThreeDModelBase &ModelGeometry,
+        const jif3D::ThreeDSeismicModel &SeisMod, const jif3D::ThreeDGravityModel &GravMod,
+        const jif3D::ThreeDMTModel &MTMod, jif3D::JointObjective &Objective,
+        boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart)
       {
         const size_t ngrid = ModelGeometry.GetNModelElements();
         InvModel.resize(3 * ngrid, 0.0);
 
-        jiba::rvec SeisModel(ngrid, 0.0);
+        jif3D::rvec SeisModel(ngrid, 0.0);
         if (SeisMod.GetNModelElements() == ngrid)
           {
             std::copy(SeisMod.GetSlownesses().origin(),
@@ -395,7 +395,7 @@ namespace jiba
                 SlowTrans->PhysicalToGeneralized(SeisModel), 0, ngrid);
           }
 
-        jiba::rvec GravModel(ngrid, 1.0);
+        jif3D::rvec GravModel(ngrid, 1.0);
         if (GravMod.GetNModelElements() == ngrid)
           {
             std::copy(GravMod.GetDensities().origin(),
@@ -409,7 +409,7 @@ namespace jiba
             std::fill_n(ublas::subrange(InvModel, ngrid, 2 * ngrid).begin(), ngrid, 0.0);
           }
 
-        jiba::rvec MTModel(ngrid, 1.0);
+        jif3D::rvec MTModel(ngrid, 1.0);
         if (MTMod.GetNModelElements() == ngrid)
           {
 
@@ -432,7 +432,7 @@ namespace jiba
                 0.0);
           }
 
-        jiba::ThreeDSeismicModel RelModel;
+        jif3D::ThreeDSeismicModel RelModel;
         if (vm.count("relmodel"))
           {
             RelModel.ReadNetCDF(RelModelName, false);
@@ -448,18 +448,18 @@ namespace jiba
           }
 
         //we currently hacked out the density transform
-        boost::shared_ptr<jiba::SaltRelConstraint> SaltRel(
-            new jiba::SaltRelConstraint(
-                boost::shared_ptr<jiba::GeneralModelTransform>(
-                    new jiba::ModelCopyTransform()),
-                boost::shared_ptr<jiba::GeneralModelTransform>(
-                    new jiba::ConductivityTransform(
-                        boost::shared_ptr<jiba::GeneralModelTransform>(
-                            new jiba::ModelCopyTransform()), RelModel))));
+        boost::shared_ptr<jif3D::SaltRelConstraint> SaltRel(
+            new jif3D::SaltRelConstraint(
+                boost::shared_ptr<jif3D::GeneralModelTransform>(
+                    new jif3D::ModelCopyTransform()),
+                boost::shared_ptr<jif3D::GeneralModelTransform>(
+                    new jif3D::ConductivityTransform(
+                        boost::shared_ptr<jif3D::GeneralModelTransform>(
+                            new jif3D::ModelCopyTransform()), RelModel))));
 
         SaltRel->SetExcludeCells(RelModel);
-        boost::shared_ptr<jiba::MultiSectionTransform> SaltRelTrans(
-            new jiba::MultiSectionTransform(3 * ngrid));
+        boost::shared_ptr<jif3D::MultiSectionTransform> SaltRelTrans(
+            new jif3D::MultiSectionTransform(3 * ngrid));
         SaltRelTrans->AddSection(0, ngrid, SlowCrossTrans);
         //evil HACK !
         SaltRelTrans->AddSection(0, ngrid, SlowCrossTrans);
@@ -481,8 +481,8 @@ namespace jiba
         double seisreglambda = 1.0;
         std::cout << " Weight for seismic regularization: ";
         std::cin >> seisreglambda;
-        boost::shared_ptr<jiba::RegularizationFunction> SeisReg(Regularization->clone());
-        jiba::rvec TomoCovar(3 * ngrid);
+        boost::shared_ptr<jif3D::RegularizationFunction> SeisReg(Regularization->clone());
+        jif3D::rvec TomoCovar(3 * ngrid);
         SetupModelCovar(TomoCovar, SeisModel, SeisReg->GetDataError(), ngrid);
         SeisReg->SetDataError(TomoCovar);
 
@@ -490,9 +490,9 @@ namespace jiba
         double gravreglambda = 1.0;
         std::cout << " Weight for gravity regularization: ";
         std::cin >> gravreglambda;
-        boost::shared_ptr<jiba::RegularizationFunction> GravReg(Regularization->clone());
-        jiba::rvec GravCovar(3 * ngrid);
-        jiba::rvec Ones(GravModel.size(), 1.0);
+        boost::shared_ptr<jif3D::RegularizationFunction> GravReg(Regularization->clone());
+        jif3D::rvec GravCovar(3 * ngrid);
+        jif3D::rvec Ones(GravModel.size(), 1.0);
         SetupModelCovar(GravCovar, Ones, GravReg->GetDataError(), ngrid);
         GravReg->SetDataError(GravCovar);
 
@@ -500,8 +500,8 @@ namespace jiba
         double mtreglambda = 1.0;
         std::cout << " Weight for MT regularization: ";
         std::cin >> mtreglambda;
-        boost::shared_ptr<jiba::RegularizationFunction> MTReg(Regularization->clone());
-        jiba::rvec MTCovar(3 * ngrid);
+        boost::shared_ptr<jif3D::RegularizationFunction> MTReg(Regularization->clone());
+        jif3D::rvec MTCovar(3 * ngrid);
         SetupModelCovar(MTCovar, MTModel, MTReg->GetDataError(), ngrid);
         MTReg->SetDataError(MTCovar);
 
@@ -530,11 +530,11 @@ namespace jiba
           }
       }
 
-    void SetupCoupling::SetupFixedCouplingModel(jiba::rvec &InvModel,
-        const jiba::ThreeDModelBase &ModelGeometry,
-        const jiba::ThreeDSeismicModel &SeisMod, const jiba::ThreeDGravityModel &GravMod,
-        const jiba::ThreeDMTModel &MTMod, jiba::JointObjective &Objective,
-        boost::shared_ptr<jiba::RegularizationFunction> Regularization, bool substart)
+    void SetupCoupling::SetupFixedCouplingModel(jif3D::rvec &InvModel,
+        const jif3D::ThreeDModelBase &ModelGeometry,
+        const jif3D::ThreeDSeismicModel &SeisMod, const jif3D::ThreeDGravityModel &GravMod,
+        const jif3D::ThreeDMTModel &MTMod, jif3D::JointObjective &Objective,
+        boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart)
       {
         const size_t ngrid = ModelGeometry.GetNModelElements();
 
@@ -543,7 +543,7 @@ namespace jiba
         //as we invert for slowness, the regularization also works on slowness
         if (SeisMod.GetNModelElements() != ngrid)
           {
-            throw jiba::FatalException(
+            throw jif3D::FatalException(
                 "Size of seismic model does not match model geometry !");
           }
         InvModel.resize(ngrid);
@@ -554,14 +554,14 @@ namespace jiba
         std::cin >> reglambda;
         if (reglambda > 0.0)
           {
-            jiba::rvec TomoCovar(3 * ngrid);
+            jif3D::rvec TomoCovar(3 * ngrid);
             SetupModelCovar(TomoCovar, InvModel, Regularization->GetDataError(), ngrid);
             Regularization->SetDataError(TomoCovar);
           }
         if (substart)
           {
 
-            jiba::rvec RefModel = SlowTrans->PhysicalToGeneralized(InvModel);
+            jif3D::rvec RefModel = SlowTrans->PhysicalToGeneralized(InvModel);
             RefModel = SlowRegTrans->GeneralizedToPhysical(RefModel);
             Regularization->SetReferenceModel(RefModel);
           }
@@ -570,10 +570,10 @@ namespace jiba
       }
 
     void SetupCoupling::SetupModelVector(const po::variables_map &vm,
-        jiba::rvec &InvModel, const jiba::ThreeDModelBase &ModelGeometry,
-        const jiba::ThreeDSeismicModel &SeisMod, const jiba::ThreeDGravityModel &GravMod,
-        const jiba::ThreeDMTModel &MTMod, jiba::JointObjective &Objective,
-        boost::shared_ptr<jiba::RegularizationFunction> Regularization, bool substart)
+        jif3D::rvec &InvModel, const jif3D::ThreeDModelBase &ModelGeometry,
+        const jif3D::ThreeDSeismicModel &SeisMod, const jif3D::ThreeDGravityModel &GravMod,
+        const jif3D::ThreeDMTModel &MTMod, jif3D::JointObjective &Objective,
+        boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart)
       {
          //depending on the type of coupling the model vector looks quite different
         //and we have to setup a number of different things

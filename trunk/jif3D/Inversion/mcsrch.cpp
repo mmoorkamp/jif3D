@@ -36,8 +36,8 @@ namespace OPTPP
         double *dy, double *stp, double fp, double dp, bool *brackt,
         double stpmin, double stpmax, int *info);
 
-    int mcsrch(jiba::ObjectiveFunction* nlp, const jiba::rvec& s,
-        jiba::rvec &Grad, const jiba::rvec &model, double &misfit, double *stp,
+    int mcsrch(jif3D::ObjectiveFunction* nlp, const jif3D::rvec& s,
+        jif3D::rvec &Grad, const jif3D::rvec &model, double &misfit, double *stp,
         int itnmax, double ftol, double xtol, double gtol, double stpmax,
         double stpmin, bool Verbose)
       {
@@ -144,7 +144,7 @@ namespace OPTPP
         int n = s.size();
 
         double fvalue;
-        jiba::rvec xc(n);
+        jif3D::rvec xc(n);
 
         infoc = 1;
 
@@ -169,7 +169,7 @@ namespace OPTPP
 
         if (dginit >= zero)
           {
-            throw jiba::FatalException(
+            throw jif3D::FatalException(
                 "\nmcsrch: Initial search direction not a descent direction");
           }
 

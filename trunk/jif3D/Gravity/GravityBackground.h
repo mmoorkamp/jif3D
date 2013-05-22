@@ -9,7 +9,7 @@
 #ifndef GRAVITYBACKGROUND_H_
 #define GRAVITYBACKGROUND_H_
 
-namespace jiba
+namespace jif3D
   {
     rvec CalcScalarBackground(const size_t measindex, const double xwidth,
         const double ywidth, const double zwidth,

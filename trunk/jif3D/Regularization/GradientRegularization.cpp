@@ -7,13 +7,13 @@
 
 #include "GradientRegularization.h"
 #include <cassert>
-namespace jiba
+namespace jif3D
   {
 
     void GradientRegularization::ConstructOperator(
-        const jiba::ThreeDModelBase &ModelGeometry,
-        const jiba::ThreeDModelBase &TearModelX, const jiba::ThreeDModelBase &TearModelY,
-        const jiba::ThreeDModelBase &TearModelZ)
+        const jif3D::ThreeDModelBase &ModelGeometry,
+        const jif3D::ThreeDModelBase &TearModelX, const jif3D::ThreeDModelBase &TearModelY,
+        const jif3D::ThreeDModelBase &TearModelZ)
       {
         const size_t xsize = ModelGeometry.GetModelShape()[0];
         const size_t ysize = ModelGeometry.GetModelShape()[1];

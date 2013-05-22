@@ -13,7 +13,7 @@
 #include <boost/serialization/base_object.hpp>
 #include "ThreeDGravityImplementation.h"
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup gravity Gravity forward modeling, display and inversion */
     /* @{ */
@@ -23,7 +23,7 @@ namespace jiba
      * It only implements the calculation of the background and the gridded part.
      * The assembly of the two parts is performed by the base class ThreeDGravityImplementation.
      */
-    class TensorOMPGravityImp: public jiba::ThreeDGravityImplementation
+    class TensorOMPGravityImp: public jif3D::ThreeDGravityImplementation
       {
     private:
       //! Implement the calculation of the background response

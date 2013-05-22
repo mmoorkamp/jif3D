@@ -8,7 +8,7 @@
 
 #include "MatrixTools.h"
 
-namespace jiba
+namespace jif3D
   {
 
     namespace ublas = boost::numeric::ublas;
@@ -19,10 +19,10 @@ namespace jiba
      * @param Matrix The real square matrix
      * @return det(Matrix)
      */
-    double Determinant(const jiba::rmat &Matrix)
+    double Determinant(const jif3D::rmat &Matrix)
       {
         assert(Matrix.size1() == Matrix.size2());
-        jiba::rmat Factor(Matrix);
+        jif3D::rmat Factor(Matrix);
         typedef ublas::permutation_matrix<std::size_t> pmatrix;
         pmatrix pm(Factor.size1());
         lu_factorize(Factor,pm);

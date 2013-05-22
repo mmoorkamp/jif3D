@@ -19,7 +19,7 @@ using namespace std;
 
 int main()
   {
-    jiba::ThreeDSeismicModel Model;
+    jif3D::ThreeDSeismicModel Model;
     int nx, ny, nz;
     double cellsize;
     //first we enter the number of cells in each direction
@@ -58,6 +58,6 @@ int main()
       }
     //finally we ask for a name for the meshfile to write to
     //and save the created mesh with the velocity information
-    std::string MeshFilename = jiba::AskFilename("Meshfile name: ", false);
+    std::string MeshFilename = jif3D::AskFilename("Meshfile name: ", false);
     Model.WriteNetCDF(MeshFilename);
   }

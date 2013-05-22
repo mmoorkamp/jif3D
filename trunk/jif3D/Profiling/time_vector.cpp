@@ -12,7 +12,7 @@ int main()
   {
     const size_t nelements = 1e6;
 
-    jiba::rvec ModelCov(nelements), CovGrad(nelements), OldGradient(nelements);
+    jif3D::rvec ModelCov(nelements), CovGrad(nelements), OldGradient(nelements);
     double omega = 0.0, alpha = 0.0;
     std::generate(ModelCov.begin(), ModelCov.end(), drand48);
     std::generate(CovGrad.begin(), CovGrad.end(), drand48);

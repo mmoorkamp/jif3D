@@ -11,7 +11,7 @@
 #include "../Global/VecMat.h"
 #include "ObjectiveFunction.h"
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup Regularization classes to regularize the inversion */
     /* @{ */
@@ -19,13 +19,13 @@ namespace jiba
     /*! For our 1D experiments we need a special regularization class
      *
      */
-    class OneDRegularization: public jiba::ObjectiveFunction
+    class OneDRegularization: public jif3D::ObjectiveFunction
       {
     private:
       //! The matrix we apply to the model vector to calculate the regularization
       comp_mat OperatorMatrix;
       //! The reference model substracted before calculating the regularization
-      jiba::rvec RefMod;
+      jif3D::rvec RefMod;
     public:
       //! The clone function provides a virtual constructor
       virtual OneDRegularization *clone() const
@@ -39,15 +39,15 @@ namespace jiba
        * automatically.
        * @param Model The model vector to be substracted from the current model.
        */
-      void SetReferenceModel(const jiba::rvec &Model)
+      void SetReferenceModel(const jif3D::rvec &Model)
         {
           RefMod = Model;
         }
-      virtual void ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff);
-      virtual jiba::rvec ImplGradient(const jiba::rvec &Model, const jiba::rvec &Diff);
+      virtual void ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff);
+      virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model, const jif3D::rvec &Diff);
       OneDRegularization(const size_t nlayers);
       virtual ~OneDRegularization();
       };
 
-  } /* namespace jiba */
+  } /* namespace jif3D */
 #endif /* ONEDREGULARIZATION_H_ */

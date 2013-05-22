@@ -14,19 +14,19 @@
 
 BOOST_AUTO_TEST_SUITE( Tomo_Objective_Test_Suite )
 
-jiba  ::rvec CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
+jif3D  ::rvec CheckGradient(jif3D::ObjectiveFunction &Objective, const jif3D::rvec &Model)
     {
       Objective.CalcMisfit(Model);
-      jiba::rvec Gradient = Objective.CalcGradient(Model);
+      jif3D::rvec Gradient = Objective.CalcGradient(Model);
 
       std::ofstream gradfile("tomograd.out");
-      jiba::rvec FDGrad(Model.size(),0.0);
+      jif3D::rvec FDGrad(Model.size(),0.0);
       double Misfit = Objective.CalcMisfit(Model);
       for (size_t i = 0; i < Gradient.size(); ++i)
         {
           double delta = Model(i) * 0.0001;
-          jiba::rvec Forward(Model);
-          jiba::rvec Backward(Model);
+          jif3D::rvec Forward(Model);
+          jif3D::rvec Backward(Model);
           Forward(i) += delta;
           Backward(i) -= delta;
           FDGrad(i) = (Objective.CalcMisfit(Forward) - Objective.CalcMisfit(Backward))/(2.0 * delta);
@@ -40,7 +40,7 @@ jiba  ::rvec CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec 
 
   BOOST_AUTO_TEST_CASE (derivative_test)
     {
-      jiba::ThreeDSeismicModel TomoModel;
+      jif3D::ThreeDSeismicModel TomoModel;
       const size_t xsize = 5;
       const size_t ysize = 6;
       const size_t zsize = 7;
@@ -90,21 +90,21 @@ jiba  ::rvec CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec 
             }
         }
 
-      jiba::rvec InvModel(TomoModel.GetSlownesses().num_elements());
+      jif3D::rvec InvModel(TomoModel.GetSlownesses().num_elements());
       std::copy(TomoModel.GetSlownesses().origin(),
           TomoModel.GetSlownesses().origin()
           + TomoModel.GetSlownesses().num_elements(), InvModel.begin());
 
-      jiba::TomographyCalculator Calculator;
-      jiba::rvec ObservedTimes(Calculator.Calculate(TomoModel));
+      jif3D::TomographyCalculator Calculator;
+      jif3D::rvec ObservedTimes(Calculator.Calculate(TomoModel));
 
-      jiba::ThreeDModelObjective<jiba::TomographyCalculator> TomoObjective(
+      jif3D::ThreeDModelObjective<jif3D::TomographyCalculator> TomoObjective(
           Calculator);
       TomoObjective.SetObservedData(ObservedTimes);
       TomoObjective.SetFineModelGeometry(TomoModel);
       TomoObjective.SetCoarseModelGeometry(TomoModel);
       TomoModel.WriteVTK("tomotest.vtk");
-      jiba::rvec TomoCovar(ObservedTimes.size());
+      jif3D::rvec TomoCovar(ObservedTimes.size());
       //we assume a general error of 50 ms for the seismic data
       std::fill(TomoCovar.begin(), TomoCovar.end(), 0.05);
       TomoObjective.SetDataCovar(TomoCovar);
@@ -114,7 +114,7 @@ jiba  ::rvec CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec 
       BOOST_CHECK(ZeroMisfit == 0.0);
 
       //for the same model the synthetic data should equal the observed data
-      jiba::rvec SynthData = TomoObjective.GetSyntheticData();
+      jif3D::rvec SynthData = TomoObjective.GetSyntheticData();
       BOOST_CHECK(ObservedTimes.size() == SynthData.size());
       BOOST_CHECK(std::equal(ObservedTimes.begin(),ObservedTimes.end(),SynthData.begin()));
       //check the gradient by perturbing the travel times
@@ -123,11 +123,11 @@ jiba  ::rvec CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec 
       double Misfit = TomoObjective.CalcMisfit(InvModel);
       BOOST_CHECK(Misfit > 0.0);
 
-      jiba::rvec Gradient = TomoObjective.CalcGradient(InvModel);
+      jif3D::rvec Gradient = TomoObjective.CalcGradient(InvModel);
       std::copy(Gradient.begin(),Gradient.end(),TomoModel.SetSlownesses().origin());
       TomoModel.WriteVTK("tomograd.vtk");
 
-      jiba::rvec FDGrad = CheckGradient(TomoObjective, InvModel);
+      jif3D::rvec FDGrad = CheckGradient(TomoObjective, InvModel);
       std::copy(FDGrad.begin(),FDGrad.end(),TomoModel.SetSlownesses().origin());
       TomoModel.WriteVTK("tomofd.vtk");
 

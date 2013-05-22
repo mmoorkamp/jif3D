@@ -15,7 +15,7 @@
  * Contains a template to calculate the inner product of two vectors given a norm by the diagonal of covariance matrix
  */
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup util General utility routines */
     /* @{ */

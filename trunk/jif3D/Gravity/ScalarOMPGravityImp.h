@@ -13,7 +13,7 @@
 #include <boost/serialization/base_object.hpp>
 #include "ThreeDGravityImplementation.h"
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup gravity Gravity forward modeling, display and inversion */
     /* @{ */
@@ -22,7 +22,7 @@ namespace jiba
      * This is the standard implementation and as openmp uses pragma directives can
      * also be used in serial with a compiler that does not understand openmp.
      */
-    class ScalarOMPGravityImp: public jiba::ThreeDGravityImplementation
+    class ScalarOMPGravityImp: public jif3D::ThreeDGravityImplementation
       {
     private:
       //! We calculate scalar data, so we have one data point per site

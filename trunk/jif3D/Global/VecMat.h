@@ -23,7 +23,7 @@
 
 namespace ublas = boost::numeric::ublas;
 
-namespace jiba
+namespace jif3D
   {
     //! A matrix with complex entries
     typedef boost::numeric::ublas::matrix<std::complex<double>,boost::numeric::ublas::column_major>

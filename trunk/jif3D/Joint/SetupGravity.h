@@ -15,7 +15,7 @@
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 
-namespace jiba
+namespace jif3D
   {
     namespace po = boost::program_options;
 
@@ -38,13 +38,13 @@ namespace jiba
       //! The minimum error for the ftg data to assume for construction of the data variance
       double ftgminerr;
       //! Stores the grid for the scalar gravity model and the starting model
-      jiba::ThreeDGravityModel ScalGravModel;
+      jif3D::ThreeDGravityModel ScalGravModel;
       //! Stores the grid for the FTG gravity model and the starting model
-      jiba::ThreeDGravityModel FTGGravModel;
+      jif3D::ThreeDGravityModel FTGGravModel;
       //! Possible pointer to the scalar gravity objective function, gets assigned below depending on user input
-      boost::shared_ptr<jiba::ThreeDModelObjective<DiskGravityCalculator> > ScalGravObjective;
+      boost::shared_ptr<jif3D::ThreeDModelObjective<DiskGravityCalculator> > ScalGravObjective;
       //! Possible pointer to the tensor gravity objective function, gets assigned below depending on user input
-      boost::shared_ptr<jiba::ThreeDModelObjective<DiskGravityCalculator> > FTGObjective;
+      boost::shared_ptr<jif3D::ThreeDModelObjective<DiskGravityCalculator> > FTGObjective;
       //! Does the user want scalar gravity calculations and have we set up everything?
       bool HaveScal;
       //! Does the user want tensor gravity calculations and have we set up everything?
@@ -61,12 +61,12 @@ namespace jiba
           return HaveFTG;
         }
       //! read-only access to the objective function for scalar gravity data
-      const jiba::ThreeDModelObjective<DiskGravityCalculator> &GetScalGravObjective()
+      const jif3D::ThreeDModelObjective<DiskGravityCalculator> &GetScalGravObjective()
         {
           return *ScalGravObjective;
         }
       //! read-only access to the objective function for tensor gravity data
-      const jiba::ThreeDModelObjective<DiskGravityCalculator> &GetFTGObjective()
+      const jif3D::ThreeDModelObjective<DiskGravityCalculator> &GetFTGObjective()
         {
           return *FTGObjective;
         }
@@ -76,7 +76,7 @@ namespace jiba
        * data, we return two model objects. The densities will be identical for both of them.
        * @return The model object containing the starting model and measurement positions.
        */
-      const jiba::ThreeDGravityModel &GetScalModel() const
+      const jif3D::ThreeDGravityModel &GetScalModel() const
         {
           return ScalGravModel;
         }
@@ -86,7 +86,7 @@ namespace jiba
        * data, we return two model objects. The densities will be identical for both of them.
        * @return The model object containing the starting model and measurement positions.
        */
-      const jiba::ThreeDGravityModel &GetFTGModel() const
+      const jif3D::ThreeDGravityModel &GetFTGModel() const
         {
           return FTGGravModel;
         }
@@ -104,8 +104,8 @@ namespace jiba
        * @return True if the weight for one of the gravity objectives is greater zero, i.e. we added an objective function to JointObjective, false otherwise
        */
       bool
-      SetupObjective(const po::variables_map &vm, jiba::JointObjective &Objective,
-          boost::shared_ptr<jiba::GeneralModelTransform> &Transform, double xorigin = 0.0,
+      SetupObjective(const po::variables_map &vm, jif3D::JointObjective &Objective,
+          boost::shared_ptr<jif3D::GeneralModelTransform> &Transform, double xorigin = 0.0,
           double yorigin = 0.0, boost::filesystem::path TempDir =
               boost::filesystem::current_path());
       SetupGravity();

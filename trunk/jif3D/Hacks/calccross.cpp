@@ -17,10 +17,10 @@
 
 int main()
   {
-    std::string ModelName1 = jiba::AskFilename("Model file 1: ");
-    std::string ModelName2 = jiba::AskFilename("Model file 2: ");
+    std::string ModelName1 = jif3D::AskFilename("Model file 1: ");
+    std::string ModelName2 = jif3D::AskFilename("Model file 2: ");
 
-    jiba::ThreeDSeismicModel Model1, Model2;
+    jif3D::ThreeDSeismicModel Model1, Model2;
 
     Model1.ReadNetCDF(ModelName1);
     Model2.ReadNetCDF(ModelName2);
@@ -32,17 +32,17 @@ int main()
         std::cerr << "Model sizes do not match !";
         return 100;
       }
-    jiba::rvec ModelVec(2 * nparam);
+    jif3D::rvec ModelVec(2 * nparam);
     std::copy(Model1.GetSlownesses().origin(), Model1.GetSlownesses().origin()
         + nparam, ModelVec.begin());
     std::copy(Model2.GetSlownesses().origin(), Model2.GetSlownesses().origin()
         + nparam, ModelVec.begin() + nparam);
 
-    jiba::CrossGradient CGObjective(Model1);
+    jif3D::CrossGradient CGObjective(Model1);
 
     CGObjective.CalcMisfit(ModelVec);
 
-    jiba::rvec DiffVec(nparam);
+    jif3D::rvec DiffVec(nparam);
     for (size_t i = 0; i < nparam; ++i)
       {
         DiffVec(i) = std::pow(CGObjective.GetDataDifference()(i), 2)
@@ -52,7 +52,7 @@ int main()
 
     std::copy(DiffVec.begin(), DiffVec.end(), Model1.SetSlownesses().origin());
 
-    std::string outfilename = jiba::AskFilename("Outfile name: ", false);
+    std::string outfilename = jif3D::AskFilename("Outfile name: ", false);
     Model1.WriteNetCDF(outfilename);
 
   }

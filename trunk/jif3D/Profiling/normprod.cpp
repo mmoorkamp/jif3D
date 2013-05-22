@@ -13,7 +13,7 @@
 int main()
   {
     const size_t nelements = 1e6;
-    jiba::rvec a(nelements), b(nelements), NormDiag(nelements);
+    jif3D::rvec a(nelements), b(nelements), NormDiag(nelements);
 
     std::generate(a.begin(), a.end(), drand48);
     std::generate(b.begin(), b.end(), drand48);
@@ -26,7 +26,7 @@ int main()
       {
         boost::posix_time::ptime firststarttime =
             boost::posix_time::microsec_clock::local_time();
-        double myresult = jiba::NormProd(a, b, NormDiag);
+        double myresult = jif3D::NormProd(a, b, NormDiag);
         boost::posix_time::ptime firstendtime =
             boost::posix_time::microsec_clock::local_time();
 

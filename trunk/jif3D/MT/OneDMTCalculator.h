@@ -11,7 +11,7 @@
 #include "../Global/VecMat.h"
 #include "X3DModel.h"
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup mtmodelling Forward modelling of magnetotelluric data */
     /* @{ */
@@ -27,10 +27,10 @@ namespace jiba
       //! This type definition is necessary so that ThreeDModelObjective can correctly deduce the native type for a model object for this class
       typedef X3DModel ModelType;
     private:
-      jiba::cmat alpha;
-      jiba::cmat gammakj;
-      jiba::cmat gammaj;
-      jiba::cvec Z;
+      jif3D::cmat alpha;
+      jif3D::cmat gammakj;
+      jif3D::cmat gammaj;
+      jif3D::cvec Z;
     public:
       //! Given a model of layer thicknesses and conductivities we calculate MT impedances
       rvec Calculate(const ModelType &Model);
@@ -40,5 +40,5 @@ namespace jiba
       virtual ~OneDMTCalculator();
       };
   /* @} */
-  } /* namespace jiba */
+  } /* namespace jif3D */
 #endif /* ONEDMTCALCULATOR_H_ */

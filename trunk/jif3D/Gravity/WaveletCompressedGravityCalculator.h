@@ -11,7 +11,7 @@
 
 #include "CachedGravityCalculator.h"
 
-namespace jiba
+namespace jif3D
   {
     //! Store sensitivity information in a sparse matrix after compression with a 3D wavelet transform and thresholding
     /*! This calculator class performs a 3D wavelet transformation on the row of the sensitivity matrix after
@@ -26,7 +26,7 @@ namespace jiba
      * sensitivities occupy completely different coefficient in the wavelet domain than the model. Use with
      * extreme care !
      */
-    class WaveletCompressedGravityCalculator: public jiba::CachedGravityCalculator
+    class WaveletCompressedGravityCalculator: public jif3D::CachedGravityCalculator
       {
     private:
       //we store some array sizes when we calculate a new model, so we do not
@@ -47,15 +47,15 @@ namespace jiba
       //and here are the smallest powers of two that can store the model
       boost::multi_array_types::size_type transformsize[3];
       //the sparse matrix that holds the compressed sensitivities
-      jiba::map_mat SparseSens;
+      jif3D::map_mat SparseSens;
       //we try depth weighting to solve some numerical problems
-      jiba::rvec WhiteningVector;
+      jif3D::rvec WhiteningVector;
       virtual rvec CalculateNewModel(const ThreeDGravityModel &Model);
       virtual rvec CalculateCachedResult(const ThreeDGravityModel &Model);
       virtual rvec CachedLQDerivative(const ThreeDGravityModel &Model, const rvec &Misfit);
     public:
       //! Get the compressed matrix of sensitivities in the wavelet domain
-      const jiba::map_mat &GetSensitivities() const {return SparseSens;}
+      const jif3D::map_mat &GetSensitivities() const {return SparseSens;}
       //! Set the desired accuracy for the cached calculations
       /*! More precisely accuracy determines the ratio of the norms of the discarded
        * elements in each row of the sensitivity matrix to the norm of the original
@@ -69,7 +69,7 @@ namespace jiba
        * experience this does not work.
        * @return A reference to the WhiteningVector
        */
-      jiba::rvec &SetWitheningVector(){return WhiteningVector;}
+      jif3D::rvec &SetWitheningVector(){return WhiteningVector;}
       virtual void HandleSensitivities(const size_t measindex);
       //! The constructor takes a shared pointer to an implementation object
       WaveletCompressedGravityCalculator(boost::shared_ptr<ThreeDGravityImplementation> TheImp);

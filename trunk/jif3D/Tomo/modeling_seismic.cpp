@@ -14,7 +14,7 @@
 #include <vector>
 #include <iostream>
 
-namespace jiba
+namespace jif3D
   {
 
     /*! Structure to organize the cell parameters during back tracing the rays*/
@@ -35,7 +35,7 @@ namespace jiba
     // Calculate rays from the observed travel time field
     int RayCalc(float *tt, int nx, int ny, int nz, float Xs, float Ys, float Zs,
         float *Xr, float *Yr, float *Zr, int nrec, RP_STRUCT *rp);
-    jiba::rvec TimeGrad(int x, int y, int z, float *tt, int ny, int nz);
+    jif3D::rvec TimeGrad(int x, int y, int z, float *tt, int ny, int nz);
     CELL_STRUCT RayBackTrace(double gradx, double grady, double gradz, CELL_STRUCT cell,
         float *tt, int ny, int nz);
     int ResortRays(RP_STRUCT *raypath, const DATA_STRUCT &data, const GRID_STRUCT &grid);
@@ -116,12 +116,12 @@ namespace jiba
                 /*Podvin&Lecomte forward algorithm*/
                 /*tt is the calculated traveltime for each grid cell node*/
                 std::vector<float> SlowBuffer(grid.slow);
-                jiba::PodvinTime3D().time_3d(&SlowBuffer[0], &tt[0], nx3, ny3, nz3, Xs,
+                jif3D::PodvinTime3D().time_3d(&SlowBuffer[0], &tt[0], nx3, ny3, nz3, Xs,
                     Ys, Zs, delta_num, 0);
 
                 /***************************************************************************************/
 
-                //jiba::PlotTimeField("times.vtk", &tt[0], grid.h, nx3, ny3, nz3);
+                //jif3D::PlotTimeField("times.vtk", &tt[0], grid.h, nx3, ny3, nz3);
                 /*Determine the receivers that are activate for the corresponding shot:*/
                 count = 0;
 
@@ -154,10 +154,10 @@ namespace jiba
 
                     if (nact_datapos[j] >= data->ndata_seis)
                       {
-                        throw jiba::FatalException(
+                        throw jif3D::FatalException(
                             "NOT enough memory is allocated: used "
-                                + jiba::stringify(nact_datapos[j] + 1) + "allocated "
-                                + jiba::stringify(data->ndata_seis) + "\n");
+                                + jif3D::stringify(nact_datapos[j] + 1) + "allocated "
+                                + jif3D::stringify(data->ndata_seis) + "\n");
                       }
 
                   }
@@ -228,15 +228,15 @@ namespace jiba
             if (data->tcalc[i] == -1.0)
               {
 
-                throw jiba::FatalException(
-                    "For the shot-receiver combination" + jiba::stringify(i + 1)
+                throw jif3D::FatalException(
+                    "For the shot-receiver combination" + jif3D::stringify(i + 1)
                         + "no traveltime was calculated\n->Check the program\n");
               }
 
             if (raypath[i].nray % 1 != 0)
               {
-                throw jiba::FatalException(
-                    "For the shot-receiver combination" + jiba::stringify(i + 1)
+                throw jif3D::FatalException(
+                    "For the shot-receiver combination" + jif3D::stringify(i + 1)
                         + "no raypath was calculated\n->Check the program\n");
               }
           }
@@ -304,7 +304,7 @@ namespace jiba
           {
             std::string error = "Interpolation point is out of the grid! x: "
                 + stringify(x) + " y: " + stringify(y) + " z: " + stringify(z) + "\n";
-            throw jiba::FatalException(error);
+            throw jif3D::FatalException(error);
           }
 
         /* Get interpolation distances */
@@ -347,7 +347,7 @@ namespace jiba
         long nyz1;
         std::vector<int> ray_cell_index; /*if 0=no ray in the cell; 1= ray path found in the cell*/
 
-        jiba::rvec gradient; /*Components of the gradient*/
+        jif3D::rvec gradient; /*Components of the gradient*/
         CELL_STRUCT next_cell, cell;
 
         nx1 = nx - 1; /* nx:Number of nodes; nx1= number of cells in x-direction*/
@@ -549,10 +549,10 @@ namespace jiba
 
 #define Traveltimes(a,b,c) tt[nyz*(a) + nz*(b) + (c)]
 
-    jiba::rvec TimeGrad(int x, int y, int z, float *tt, int ny, int nz)
+    jif3D::rvec TimeGrad(int x, int y, int z, float *tt, int ny, int nz)
       {
         int nyz;
-        jiba::rvec grad(3);
+        jif3D::rvec grad(3);
 
         nyz = ny * nz;
 
@@ -590,7 +590,7 @@ namespace jiba
       {
         double eps = 0.01; /*Stabilize the program;*/
         double tmp_xpos, tmp_ypos, tmp_zpos;
-        jiba::rvec gradient1, gradient2;
+        jif3D::rvec gradient1, gradient2;
         int diff;
         CELL_STRUCT next_cell;
 

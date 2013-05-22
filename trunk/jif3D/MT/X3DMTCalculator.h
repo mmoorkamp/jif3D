@@ -14,7 +14,7 @@
 #include "MT3DCalculator.h"
 #include "X3DModel.h"
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup mtmodelling Forward modelling of magnetotelluric data */
     /* @{ */

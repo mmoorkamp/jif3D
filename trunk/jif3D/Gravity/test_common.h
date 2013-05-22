@@ -15,12 +15,12 @@
 #include <boost/lambda/lambda.hpp>
 
 //a helper function to create a model dimension of random size
-jiba::ThreeDModelBase::t3DModelDim GenerateDimension(const size_t maxcells)
+jif3D::ThreeDModelBase::t3DModelDim GenerateDimension(const size_t maxcells)
   {
     //we want between 1 and maxcells+1 cells
     const size_t DimLength = rand() % maxcells + 1;
     //allocate memory
-    jiba::ThreeDModelBase::t3DModelDim TestDim(boost::extents[DimLength]);
+    jif3D::ThreeDModelBase::t3DModelDim TestDim(boost::extents[DimLength]);
     //and assign random sizes between 10 and 35
     for (size_t i = 0; i < DimLength; ++i)
       {
@@ -30,14 +30,14 @@ jiba::ThreeDModelBase::t3DModelDim GenerateDimension(const size_t maxcells)
   }
 
 //create a random density model
-void MakeRandomModel(jiba::ThreeDGravityModel &Model, const size_t maxcells,
+void MakeRandomModel(jif3D::ThreeDGravityModel &Model, const size_t maxcells,
     const size_t nmeas = 10, const bool withbackground = true)
   {
     srand( time(NULL));
     //make three random axis, each with possibly different lengths and cell sizes
-    jiba::ThreeDModelBase::t3DModelDim XDim = GenerateDimension(maxcells);
-    jiba::ThreeDModelBase::t3DModelDim YDim = GenerateDimension(maxcells);
-    jiba::ThreeDModelBase::t3DModelDim ZDim = GenerateDimension(maxcells);
+    jif3D::ThreeDModelBase::t3DModelDim XDim = GenerateDimension(maxcells);
+    jif3D::ThreeDModelBase::t3DModelDim YDim = GenerateDimension(maxcells);
+    jif3D::ThreeDModelBase::t3DModelDim ZDim = GenerateDimension(maxcells);
     const size_t xsize = XDim.size();
     const size_t ysize = YDim.size();
     const size_t zsize = ZDim.size();

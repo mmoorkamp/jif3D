@@ -8,7 +8,7 @@
 #include <boost/bind.hpp>
 #include "TomographyCalculator.h"
 #include "ReadWriteTomographyData.h"
-namespace jiba
+namespace jif3D
   {
 
     TomographyCalculator::TomographyCalculator(bool saverays) :
@@ -136,7 +136,7 @@ namespace jiba
             PlotRaypath("ray.vtk", &raypath[0], ndata, grid.h, nairlayers);
           }
         //and return the result as a vector
-        jiba::rvec result(ndata, 0.0);
+        jif3D::rvec result(ndata, 0.0);
         /*for (size_t i = 0; i < ndata; ++i)
          {
          const size_t nray = raypath[i].nray;
@@ -164,7 +164,7 @@ namespace jiba
         const size_t nmod = Model.GetSlownesses().num_elements();
         const size_t ndata = Misfit.size();
         assert(ndata == data.ndata_seis);
-        jiba::rvec DerivMod(nmod);
+        jif3D::rvec DerivMod(nmod);
         std::fill(DerivMod.begin(), DerivMod.end(), 0.0);
         //the gradient is simply the length of the raypath
         //through each cell weighted by the data misfit
@@ -185,4 +185,4 @@ namespace jiba
       }
   }
 
-BOOST_CLASS_EXPORT_IMPLEMENT(jiba::TomographyCalculator)
+BOOST_CLASS_EXPORT_IMPLEMENT(jif3D::TomographyCalculator)

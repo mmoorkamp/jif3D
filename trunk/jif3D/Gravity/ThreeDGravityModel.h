@@ -18,7 +18,7 @@
  * This file contains the class ThreeDGravityModel and associated helper functions and constants
  *
  */
-namespace jiba
+namespace jif3D
   {
 
     /** \addtogroup gravity Gravity forward modeling, display and inversion

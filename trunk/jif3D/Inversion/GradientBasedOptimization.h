@@ -11,7 +11,7 @@
 
 #include "NonLinearOptimization.h"
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup inversion General routines for inversion */
     /* @{ */
@@ -27,13 +27,13 @@ namespace jiba
      * between two steps of the inversion you have to call InvalidateCache in order to ensure
      * proper calculation of misfit and gradient.
      */
-    class GradientBasedOptimization: public jiba::NonLinearOptimization
+    class GradientBasedOptimization: public jif3D::NonLinearOptimization
       {
     private:
       //! Have we evaluated the misfit and gradient for the current model?
       bool HaveEvaluated_;
       //! Calculate the misfit and the gradient for the current model
-      virtual void EvaluateModel(const jiba::rvec &CurrentModel);
+      virtual void EvaluateModel(const jif3D::rvec &CurrentModel);
     protected:
       //! Derived classes can call this function to indicate that they have updated the misfit and raw gradient
       void HaveEvaluated()
@@ -41,11 +41,11 @@ namespace jiba
           HaveEvaluated_ = true;
         }
       //! the gradient gamma  for the current model
-      jiba::rvec RawGrad;
+      jif3D::rvec RawGrad;
       //! the direction of steepest ascent C_M gamma for the current model
-      jiba::rvec CovGrad;
+      jif3D::rvec CovGrad;
       //! the search direction for the current opimization step
-      jiba::rvec SearchDir;
+      jif3D::rvec SearchDir;
     public:
       //! Signal that the model has been changed and new misfit and gradient have to be calculated
       void InvalidateCache()
@@ -59,7 +59,7 @@ namespace jiba
         }
       //! The constructor needs the objective function object, without it optimization does not make much sense
       explicit GradientBasedOptimization(boost::shared_ptr<
-          jiba::ObjectiveFunction> ObjFunction);
+          jif3D::ObjectiveFunction> ObjFunction);
       virtual ~GradientBasedOptimization();
       };
   /* @} */

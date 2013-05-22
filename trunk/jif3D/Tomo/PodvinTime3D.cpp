@@ -60,7 +60,7 @@
 #define INIT_RECURS_LIMIT    1
 #endif /* INIT_RECURS_LIMIT */
 
-namespace jiba
+namespace jif3D
   {
 
     PodvinTime3D::PodvinTime3D() :

@@ -15,7 +15,7 @@
 
 int main()
   {
-    std::string filename = jiba::AskFilename(
+    std::string filename = jif3D::AskFilename(
         "File with station names/positions: ");
     std::ifstream StationFile;
 
@@ -34,18 +34,18 @@ int main()
     std::cout << "Number of stations: " << nstats << std::endl;
     if (nstats > 0)
       {
-        jiba::rvec Impedances, Errors;
+        jif3D::rvec Impedances, Errors;
         std::vector<double> Frequencies, StatXCoord(nstats),
             StatYCoord(nstats), StatZCoord(nstats);
         StationFile.open(filename.c_str());
         std::vector<double> CurrFrequencies;
-        jiba::rvec CurrImpedances, CurrErrors;
+        jif3D::rvec CurrImpedances, CurrErrors;
         std::string StationName;
         StationFile >> StatXCoord.front() >> StatYCoord.front()
             >> StatZCoord.front() >> StationName;
         if (StationFile.good())
           {
-            jiba::ReadImpedancesFromMTT(StationName, Frequencies,
+            jif3D::ReadImpedancesFromMTT(StationName, Frequencies,
                 CurrImpedances, CurrErrors);
           }
 
@@ -75,19 +75,19 @@ int main()
                 StatXCoord.at(stationindex + 1) = xcoord;
                 StatYCoord.at(stationindex + 1) = ycoord;
                 StatZCoord.at(stationindex + 1) = zcoord;
-                jiba::ReadImpedancesFromMTT(StationName, CurrFrequencies,
+                jif3D::ReadImpedancesFromMTT(StationName, CurrFrequencies,
                     CurrImpedances, CurrErrors);
                 std::cout << stationindex + 1 << " " << StationName << " "
                     << CurrFrequencies.size() << " " << nfreq << std::endl;
                 if (CurrFrequencies.size() != nfreq)
-                  throw jiba::FatalException(
+                  throw jif3D::FatalException(
                       "Number of frequencies in current file does not match number of frequencies in first file !");
 
               }
             ++stationindex;
           }
-        std::string outfilename = jiba::AskFilename("Output file: ", false);
-        jiba::WriteImpedancesToNetCDF(outfilename, Frequencies, StatXCoord,
+        std::string outfilename = jif3D::AskFilename("Output file: ", false);
+        jif3D::WriteImpedancesToNetCDF(outfilename, Frequencies, StatXCoord,
             StatYCoord, StatZCoord, Impedances, Errors);
       }
   }

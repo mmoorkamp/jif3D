@@ -17,9 +17,9 @@
 #include "../Global/NumUtil.h"
 
 //check that one axis contains the coarse and the fine coordinates
-void CheckAxis(const jiba::ThreeDModelBase::t3DModelDim &Refiner,
-    const jiba::ThreeDModelBase::t3DModelDim &FineCoordinates,
-    const jiba::ThreeDModelBase::t3DModelDim &CoarseCoordinates)
+void CheckAxis(const jif3D::ThreeDModelBase::t3DModelDim &Refiner,
+    const jif3D::ThreeDModelBase::t3DModelDim &FineCoordinates,
+    const jif3D::ThreeDModelBase::t3DModelDim &CoarseCoordinates)
   {
     std::vector<double> All;
     std::copy(Refiner.origin(), Refiner.origin() + Refiner.num_elements(),
@@ -35,10 +35,10 @@ void CheckAxis(const jiba::ThreeDModelBase::t3DModelDim &Refiner,
     BOOST_CHECK(std::equal(FineCoordinates.origin(),FineCoordinates.origin()+FineCoordinates.num_elements(),All.begin()));
   }
 
-void MakeModelandRefinement(jiba::ThreeDGravityModel &CoarseModel,
-    jiba::ModelRefiner &Refiner, jiba::ThreeDModelBase::t3DModelDim &XRefiner,
-    jiba::ThreeDModelBase::t3DModelDim &YRefiner,
-    jiba::ThreeDModelBase::t3DModelDim &ZRefiner)
+void MakeModelandRefinement(jif3D::ThreeDGravityModel &CoarseModel,
+    jif3D::ModelRefiner &Refiner, jif3D::ThreeDModelBase::t3DModelDim &XRefiner,
+    jif3D::ThreeDModelBase::t3DModelDim &YRefiner,
+    jif3D::ThreeDModelBase::t3DModelDim &ZRefiner)
   {
     size_t ncoarsecellsx = 2;
     size_t ncoarsecellsy = 3;
@@ -79,13 +79,13 @@ void MakeModelandRefinement(jiba::ThreeDGravityModel &CoarseModel,
 
 BOOST_AUTO_TEST_CASE(basic_axis_refinement)
   {
-    jiba::ThreeDGravityModel CoarseModel;
-    jiba::ThreeDGravityModel FineModel;
+    jif3D::ThreeDGravityModel CoarseModel;
+    jif3D::ThreeDGravityModel FineModel;
 
-    jiba::ModelRefiner Refiner;
-    jiba::ThreeDModelBase::t3DModelDim XRefiner;
-    jiba::ThreeDModelBase::t3DModelDim YRefiner;
-    jiba::ThreeDModelBase::t3DModelDim ZRefiner;
+    jif3D::ModelRefiner Refiner;
+    jif3D::ThreeDModelBase::t3DModelDim XRefiner;
+    jif3D::ThreeDModelBase::t3DModelDim YRefiner;
+    jif3D::ThreeDModelBase::t3DModelDim ZRefiner;
     MakeModelandRefinement(CoarseModel, Refiner, XRefiner, YRefiner, ZRefiner);
     Refiner.RefineAxes(CoarseModel, FineModel);
 
@@ -114,19 +114,19 @@ BOOST_AUTO_TEST_CASE(basic_axis_refinement)
 
 BOOST_AUTO_TEST_CASE(model_projection)
   {
-    jiba::ThreeDGravityModel CoarseModel;
-    jiba::ThreeDGravityModel FineModel;
+    jif3D::ThreeDGravityModel CoarseModel;
+    jif3D::ThreeDGravityModel FineModel;
 
-    jiba::ModelRefiner Refiner;
-    jiba::ThreeDModelBase::t3DModelDim XRefiner;
-    jiba::ThreeDModelBase::t3DModelDim YRefiner;
-    jiba::ThreeDModelBase::t3DModelDim ZRefiner;
+    jif3D::ModelRefiner Refiner;
+    jif3D::ThreeDModelBase::t3DModelDim XRefiner;
+    jif3D::ThreeDModelBase::t3DModelDim YRefiner;
+    jif3D::ThreeDModelBase::t3DModelDim ZRefiner;
     MakeModelandRefinement(CoarseModel, Refiner, XRefiner, YRefiner, ZRefiner);
 
     CoarseModel.SetDensities().resize(
         boost::extents[CoarseModel.GetXCellSizes().size()][CoarseModel.GetYCellSizes().size()][CoarseModel.GetZCellSizes().size()]);
     std::generate_n(CoarseModel.SetDensities().origin(),
-        CoarseModel.SetDensities().num_elements(), jiba::IntSequence(1.0));
+        CoarseModel.SetDensities().num_elements(), jif3D::IntSequence(1.0));
     CoarseModel.WriteVTK("coarse.vtk");
 
     Refiner.RefineAxes(CoarseModel, FineModel);
@@ -135,9 +135,9 @@ BOOST_AUTO_TEST_CASE(model_projection)
     const size_t newnz = FineModel.GetZCellSizes().size();
     BOOST_CHECK(FineModel.GetDensities().num_elements() == newnx * newny *newnz);
     Refiner.ProjectValues(CoarseModel, FineModel);
-    jiba::rvec FineGradient(FineModel.GetDensities().num_elements());
+    jif3D::rvec FineGradient(FineModel.GetDensities().num_elements());
     std::fill(FineGradient.begin(), FineGradient.end(), 1.0);
-    jiba::rvec CoarseGradient = Refiner.CombineGradient(FineGradient,
+    jif3D::rvec CoarseGradient = Refiner.CombineGradient(FineGradient,
         CoarseModel, FineModel);
     BOOST_CHECK(std::count(CoarseGradient.begin(),CoarseGradient.end(),60) == int(CoarseGradient.size()));
     FineModel.WriteVTK("fine.vtk");

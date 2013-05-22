@@ -11,7 +11,7 @@
 #include <boost/serialization/serialization.hpp>
 #include "../Global/VecMat.h"
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup inversion General routines for inversion */
     /* @{ */
@@ -50,7 +50,7 @@ namespace jiba
        * @param FullModel The generalized model vector including all parameters
        * @return The physical quantities for one method
        */
-      virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const = 0;
+      virtual jif3D::rvec GeneralizedToPhysical(const jif3D::rvec &FullModel) const = 0;
       //! Transform the physical model vector to a generalized model vector
       /*! This is the inverse transform to GeneralizedToPhysical. It is used
        * to transform a starting model that is given in terms of physical parameters
@@ -58,7 +58,7 @@ namespace jiba
        * @param FullModel The physical model vector
        * @return The generalized model parameters
        */
-      virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const = 0;
+      virtual jif3D::rvec PhysicalToGeneralized(const jif3D::rvec &FullModel) const = 0;
       //! For the inversion we also need the derivative of the transformation
       /*! To calculate the derivative of the generalized parameters we need to apply the chain rule, as each method only gives
        * us the derivative with respect to the physical parameters. This function returns a vector with all the derivative values
@@ -67,8 +67,8 @@ namespace jiba
        * @param Derivative The gradient with respect to the untransformed parameters
        * @return The derivatives of the generalized parameters with respect to the physical parameter
        */
-      virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
-          const jiba::rvec &Derivative) const = 0;
+      virtual jif3D::rvec Derivative(const jif3D::rvec &FullModel,
+          const jif3D::rvec &Derivative) const = 0;
       };
   /* @} */
   }

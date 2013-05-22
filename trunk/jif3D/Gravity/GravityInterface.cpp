@@ -20,10 +20,10 @@
 //however the forward calculations are parallelized and can be used
 //we just cannot have parallel calls through this interface
 
-static boost::shared_ptr<jiba::ThreeDGravityModel> GravModel;
-static boost::shared_ptr<jiba::ThreeDGravityCalculator> ScalarGravCalculator;
-static boost::shared_ptr<jiba::ThreeDGravityCalculator> TensorGravCalculator;
-typedef boost::function0<jiba::ThreeDGravityModel::t3DModelDim &>
+static boost::shared_ptr<jif3D::ThreeDGravityModel> GravModel;
+static boost::shared_ptr<jif3D::ThreeDGravityCalculator> ScalarGravCalculator;
+static boost::shared_ptr<jif3D::ThreeDGravityCalculator> TensorGravCalculator;
+typedef boost::function0<jif3D::ThreeDGravityModel::t3DModelDim &>
     tcoordinatefunc;
 
 void AllocateModel(const int *storescalar, const int *storetensor)
@@ -32,37 +32,37 @@ void AllocateModel(const int *storescalar, const int *storetensor)
     bool cachescalar = (storescalar > 0);
     bool cachetensor = (storetensor > 0);
     // we create a new model object that we can use for the calculations
-    GravModel = boost::shared_ptr<jiba::ThreeDGravityModel>(
-        new jiba::ThreeDGravityModel);
+    GravModel = boost::shared_ptr<jif3D::ThreeDGravityModel>(
+        new jif3D::ThreeDGravityModel);
     //depending on whether we want to save the sensitivities
     //or not we allocate different forward calculation objects
     //for FTG and scalar
     if (cachescalar)
       {
-        ScalarGravCalculator = jiba::CreateGravityCalculator<
-            jiba::FullSensitivityGravityCalculator>::MakeScalar();
+        ScalarGravCalculator = jif3D::CreateGravityCalculator<
+            jif3D::FullSensitivityGravityCalculator>::MakeScalar();
       }
     else
       {
-        ScalarGravCalculator = jiba::CreateGravityCalculator<
-            jiba::MinMemGravityCalculator>::MakeScalar();
+        ScalarGravCalculator = jif3D::CreateGravityCalculator<
+            jif3D::MinMemGravityCalculator>::MakeScalar();
       }
     if (cachetensor)
       {
-        TensorGravCalculator = jiba::CreateGravityCalculator<
-            jiba::FullSensitivityGravityCalculator>::MakeTensor();
+        TensorGravCalculator = jif3D::CreateGravityCalculator<
+            jif3D::FullSensitivityGravityCalculator>::MakeTensor();
       }
     else
       {
-        TensorGravCalculator = jiba::CreateGravityCalculator<
-            jiba::MinMemGravityCalculator>::MakeTensor();
+        TensorGravCalculator = jif3D::CreateGravityCalculator<
+            jif3D::MinMemGravityCalculator>::MakeTensor();
       }
 
   }
 
 //Check whether a mesh coordinate has changed and copy values if necessary
 void CheckGridCoordinate(const double *Sizes, const unsigned int *n,
-    const jiba::ThreeDGravityModel::t3DModelDim &Dim,
+    const jif3D::ThreeDGravityModel::t3DModelDim &Dim,
     tcoordinatefunc ChangeFunc)
   {
     //first we have to check whether the vectors have the same length
@@ -82,7 +82,7 @@ void CheckGridCoordinate(const double *Sizes, const unsigned int *n,
 
 //check whether a measurement position has changed
 bool CheckMeasPos(const double *Sizes, const unsigned int *n,
-    const jiba::ThreeDGravityModel::tMeasPosVec &Meas)
+    const jif3D::ThreeDGravityModel::tMeasPosVec &Meas)
   {
     bool same = (*n == Meas.size());
     if (same)
@@ -103,11 +103,11 @@ void SetupModel(const double *XSizes, const unsigned int *nx,
     //we check whether the geometry has changed to take advantage of possible accelerations
     //through sensitivity matrix storage
     CheckGridCoordinate(XSizes, nx, GravModel->GetXCellSizes(), boost::bind(
-        &jiba::ThreeDGravityModel::SetXCellSizes, GravModel));
+        &jif3D::ThreeDGravityModel::SetXCellSizes, GravModel));
     CheckGridCoordinate(YSizes, ny, GravModel->GetYCellSizes(), boost::bind(
-        &jiba::ThreeDGravityModel::SetYCellSizes, GravModel));
+        &jif3D::ThreeDGravityModel::SetYCellSizes, GravModel));
     CheckGridCoordinate(ZSizes, nz, GravModel->GetZCellSizes(), boost::bind(
-        &jiba::ThreeDGravityModel::SetZCellSizes, GravModel));
+        &jif3D::ThreeDGravityModel::SetZCellSizes, GravModel));
     //allocates space for densities
     GravModel->SetDensities().resize(boost::extents[*nx][*ny][*nz]);
     //and copy as well
@@ -152,7 +152,7 @@ void CalcScalarForward(const double *XSizes, const unsigned int *nx,
     SetupModel(XSizes, nx, YSizes, ny, ZSizes, nz, Densities, XMeasPos,
         YMeasPos, ZMeasPos, nmeas);
     SetupBackground(BG_Thicknesses, BG_Densities, *nbg_layers);
-    jiba::rvec scalarmeas(ScalarGravCalculator->Calculate(*GravModel.get()));
+    jif3D::rvec scalarmeas(ScalarGravCalculator->Calculate(*GravModel.get()));
     std::copy(scalarmeas.begin(), scalarmeas.end(), GravAcceleration);
   }
 
@@ -168,7 +168,7 @@ void CalcTensorForward(const double *XSizes, const unsigned int *nx,
     SetupModel(XSizes, nx, YSizes, ny, ZSizes, nz, Densities, XMeasPos,
         YMeasPos, ZMeasPos, nmeas);
     SetupBackground(BG_Thicknesses, BG_Densities, *nbg_layers);
-    jiba::rvec tensormeas(TensorGravCalculator->Calculate(*GravModel.get()));
+    jif3D::rvec tensormeas(TensorGravCalculator->Calculate(*GravModel.get()));
 
     std::copy(tensormeas.begin(), tensormeas.end(), GravTensor);
   }

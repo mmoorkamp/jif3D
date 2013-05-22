@@ -14,7 +14,7 @@
 #include "../ModelBase/NetCDFTools.h"
 #include "ReadWriteImpedances.h"
 
-namespace jiba
+namespace jif3D
   {
     using namespace std;
     const std::string FreqDimName = "Frequency";
@@ -22,12 +22,12 @@ namespace jiba
     //write one compoment of the impedance tensor to a netcdf file
     //this is an internal helper function
     void WriteImpedanceComp(NcFile &NetCDFFile, NcDim *StatNumDim,
-        NcDim *FreqDim, const jiba::rvec &Impedances,
+        NcDim *FreqDim, const jif3D::rvec &Impedances,
         const std::string &CompName, const size_t compindex)
       {
         NcVar *CompVar = NetCDFFile.add_var(CompName.c_str(), ncDouble,
             FreqDim, StatNumDim);
-        jiba::rvec Component(FreqDim->size() * StatNumDim->size());
+        jif3D::rvec Component(FreqDim->size() * StatNumDim->size());
         for (size_t i = 0; i < Component.size(); ++i)
           {
             Component(i) = Impedances(i * 8 + compindex);
@@ -39,7 +39,7 @@ namespace jiba
 
     //read one component of the impedance tensor from a netcdf file
     //this is an internal helper function
-    void ReadImpedanceComp(NcFile &NetCDFFile, jiba::rvec &Impedances,
+    void ReadImpedanceComp(NcFile &NetCDFFile, jif3D::rvec &Impedances,
         const std::string &CompName, const size_t compindex,
         const bool MustExist = true)
       {
@@ -50,7 +50,7 @@ namespace jiba
           {
             const size_t nvalues = Impedances.size() / 8;
             assert(nvalues == boost::numeric_cast<size_t>(SizeVar->edges()[0] * SizeVar->edges()[1]));
-            jiba::rvec Temp(nvalues);
+            jif3D::rvec Temp(nvalues);
             SizeVar->get(&Temp[0], SizeVar->edges()[0], SizeVar->edges()[1]);
 
             for (size_t i = 0; i < nvalues; ++i)
@@ -64,8 +64,8 @@ namespace jiba
         const std::vector<double> &Frequencies,
         const std::vector<double> &StatXCoord,
         const std::vector<double> &StatYCoord,
-        const std::vector<double> &StatZCoord, const jiba::rvec &Impedances,
-        const jiba::rvec &Errors)
+        const std::vector<double> &StatZCoord, const jif3D::rvec &Impedances,
+        const jif3D::rvec &Errors)
       {
         const size_t nstats = StatXCoord.size();
         const size_t nfreqs = Frequencies.size();
@@ -112,7 +112,7 @@ namespace jiba
             7);
         //now we deal with the errors, if no parameter has been explicitly passed
         //Errors is empty, so we just fill the vector with zeros
-        jiba::rvec ZErr(Errors);
+        jif3D::rvec ZErr(Errors);
         if (ZErr.empty())
           {
             ZErr.resize(nimp);
@@ -130,7 +130,7 @@ namespace jiba
     void ReadImpedancesFromNetCDF(const std::string &filename, std::vector<
         double> &Frequencies, std::vector<double> &StatXCoord, std::vector<
         double> &StatYCoord, std::vector<double> &StatZCoord,
-        jiba::rvec &Impedances, jiba::rvec &ImpError)
+        jif3D::rvec &Impedances, jif3D::rvec &ImpError)
       {
         //open the netcdf file readonly
         NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
@@ -169,8 +169,8 @@ namespace jiba
       }
 
     void ReadImpedancesFromMTT(const std::string &filename,
-        std::vector<double> &Frequencies, jiba::rvec &Impedances,
-        jiba::rvec &Errors)
+        std::vector<double> &Frequencies, jif3D::rvec &Impedances,
+        jif3D::rvec &Errors)
       {
         std::ifstream infile;
         double currentreal, currentimag;
@@ -245,16 +245,16 @@ namespace jiba
           }
         else
           {
-            throw jiba::FatalException("File not found: " + filename);
+            throw jif3D::FatalException("File not found: " + filename);
           }
       }
 
     void WriteImpedancesToMtt(const std::string &filenamebase, std::vector<
-        double> &Frequencies, jiba::rvec &Imp, jiba::rvec &Err)
+        double> &Frequencies, jif3D::rvec &Imp, jif3D::rvec &Err)
       {
         const double convfactor = 4.0 * 1e-4 * acos(-1.0);
-        jiba::rvec Impedances = 1.0 / convfactor * Imp;
-        jiba::rvec Errors = 1.0 / convfactor * Err;
+        jif3D::rvec Impedances = 1.0 / convfactor * Imp;
+        jif3D::rvec Errors = 1.0 / convfactor * Err;
         const size_t nfreq = Frequencies.size();
         const size_t nimp = Impedances.size();
         const size_t ndatapersite = nfreq * 8;
@@ -264,7 +264,7 @@ namespace jiba
           {
 
             ofstream outfile;
-            std::string currfilename = filenamebase + jiba::stringify(i)
+            std::string currfilename = filenamebase + jif3D::stringify(i)
                 + ".mtt";
             outfile.open(currfilename.c_str());
 

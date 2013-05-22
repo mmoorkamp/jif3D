@@ -30,7 +30,7 @@ bool  Between(const double limit1, const double limit2, const double value)
     {
       const size_t nbglayers = 5;
       const size_t nfreq = 6;
-      jiba::X3DModel Model;
+      jif3D::X3DModel Model;
       std::vector<double> bg_thicknesses(nbglayers),bg_conductivities(nbglayers);
 
       const double freq = 1.0;
@@ -46,14 +46,14 @@ bool  Between(const double limit1, const double limit2, const double value)
           Model.SetFrequencies().push_back(freq*(i+1));
         }
 
-      jiba::OneDMTCalculator Calculator;
+      jif3D::OneDMTCalculator Calculator;
 
-      jiba::rvec Impedance = Calculator.Calculate(Model);
+      jif3D::rvec Impedance = Calculator.Calculate(Model);
 
       const double prec = 0.05;
       for (size_t i = 0; i < nfreq; ++i)
         {
-          std::complex<double> HsImp = jiba::ImpedanceHalfspace(freq*(i+1),cond);
+          std::complex<double> HsImp = jif3D::ImpedanceHalfspace(freq*(i+1),cond);
           BOOST_CHECK_CLOSE(Impedance(i*2),HsImp.real(),prec);
           BOOST_CHECK_CLOSE(Impedance(i*2+1),HsImp.imag(),prec);
         }
@@ -64,7 +64,7 @@ bool  Between(const double limit1, const double limit2, const double value)
     {
       const size_t nbglayers = 5;
 
-      jiba::X3DModel Model;
+      jif3D::X3DModel Model;
       std::vector<double> bg_thicknesses(nbglayers),bg_conductivities(nbglayers);
 
       const double freqhigh = 100.0;
@@ -81,24 +81,24 @@ bool  Between(const double limit1, const double limit2, const double value)
       Model.SetFrequencies().push_back(freqlow);
       const size_t nfreq = Model.GetFrequencies().size();
 
-      jiba::OneDMTCalculator Calculator;
+      jif3D::OneDMTCalculator Calculator;
 
-      jiba::rvec Impedance = Calculator.Calculate(Model);
+      jif3D::rvec Impedance = Calculator.Calculate(Model);
 
       const double prec = 1.0;
       std::complex<double> HighZ(Impedance(0),Impedance(1));
       std::complex<double> LowZ(Impedance(2),Impedance(3));
-      BOOST_CHECK_CLOSE(1.0/bg_conductivities.front(),jiba::AppRes(HighZ,freqhigh),prec);
-      BOOST_CHECK_CLOSE(1.0/bg_conductivities.back(),jiba::AppRes(LowZ,freqlow),prec);
-      BOOST_CHECK_CLOSE(45.0,jiba::ImpedancePhase(HighZ),prec);
-      BOOST_CHECK_CLOSE(45.0,jiba::ImpedancePhase(LowZ),prec);
+      BOOST_CHECK_CLOSE(1.0/bg_conductivities.front(),jif3D::AppRes(HighZ,freqhigh),prec);
+      BOOST_CHECK_CLOSE(1.0/bg_conductivities.back(),jif3D::AppRes(LowZ,freqlow),prec);
+      BOOST_CHECK_CLOSE(45.0,jif3D::ImpedancePhase(HighZ),prec);
+      BOOST_CHECK_CLOSE(45.0,jif3D::ImpedancePhase(LowZ),prec);
     }
 
   BOOST_AUTO_TEST_CASE (OneDMT_basic_deriv_test)
     {
       const size_t nbglayers = 7;
       const size_t nfreq = 11;
-      jiba::X3DModel Model;
+      jif3D::X3DModel Model;
       std::vector<double> bg_thicknesses(nbglayers),bg_conductivities(nbglayers);
 
       const double freqhigh = 100.0;
@@ -118,7 +118,7 @@ bool  Between(const double limit1, const double limit2, const double value)
 
 
 
-      jiba::X3DModel TrueModel(Model);
+      jif3D::X3DModel TrueModel(Model);
 
       for (size_t i = 0; i < nbglayers; ++i)
         {
@@ -127,26 +127,26 @@ bool  Between(const double limit1, const double limit2, const double value)
 
       TrueModel.SetBackgroundConductivities(bg_conductivities);
 
-      jiba::OneDMTCalculator Calculator;
-      jiba::rvec Observed = Calculator.Calculate(TrueModel);
+      jif3D::OneDMTCalculator Calculator;
+      jif3D::rvec Observed = Calculator.Calculate(TrueModel);
 
-      jiba::OneDMTObjective Objective;
+      jif3D::OneDMTObjective Objective;
       Objective.SetObservedData(Observed);
       Objective.SetModelGeometry(Model);
-      Objective.SetDataError(jiba::ConstructError(Observed, 0.02, 0.0));
-      jiba::rvec ModelVec(nbglayers);
+      Objective.SetDataError(jif3D::ConstructError(Observed, 0.02, 0.0));
+      jif3D::rvec ModelVec(nbglayers);
       std::copy(Model.GetBackgroundConductivities().begin(),Model.GetBackgroundConductivities().end(),ModelVec.begin());
       double misfit = Objective.CalcMisfit(ModelVec);
       BOOST_CHECK(misfit > 0.0);
-      jiba::rvec Gradient = Objective.CalcGradient(ModelVec);
+      jif3D::rvec Gradient = Objective.CalcGradient(ModelVec);
 
       std::ofstream outfile("grad.comp");
 
       for (size_t index = 0; index < nbglayers; ++index)
         {
           double delta = ModelVec(index) * 0.001;
-          jiba::rvec Forward(ModelVec);
-          jiba::rvec Backward(ModelVec);
+          jif3D::rvec Forward(ModelVec);
+          jif3D::rvec Backward(ModelVec);
           Forward(index) += delta;
           Backward(index) -= delta;
           double ForFDGrad = (Objective.CalcMisfit(Forward) - misfit)/(delta);

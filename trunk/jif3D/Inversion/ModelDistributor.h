@@ -16,7 +16,7 @@
 #include "../Global/VecMat.h"
 #include "../ModelTransforms/GeneralModelTransform.h"
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup inversion General routines for inversion */
     /* @{ */
@@ -70,7 +70,7 @@ namespace jiba
        * @param TransIndex The index of the transformation object
        * @return The physical parameters using the selected transformation
        */
-      jiba::rvec operator()(const jiba::rvec &FullModel, const size_t TransIndex)
+      jif3D::rvec operator()(const jif3D::rvec &FullModel, const size_t TransIndex)
         {
           assert(TransIndex < Transformers.size());
           return Transformers.at(TransIndex)->GeneralizedToPhysical(FullModel);
@@ -84,8 +84,8 @@ namespace jiba
        * @param TransIndex The index of the transformation object
        * @return The gradient with respect to the inversion parameters
        */
-      jiba::rvec TransformGradient(const jiba::rvec &FullModel,
-          const jiba::rvec &RawGradient, const size_t TransIndex)
+      jif3D::rvec TransformGradient(const jif3D::rvec &FullModel,
+          const jif3D::rvec &RawGradient, const size_t TransIndex)
         {
           assert(TransIndex < Transformers.size());
           return Transformers.at(TransIndex)->Derivative(FullModel, RawGradient);

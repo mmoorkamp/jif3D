@@ -13,7 +13,7 @@
 #include "ObjectiveFunction.h"
 #include "../Global/VecMat.h"
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup inversion General routines for inversion */
     /* @{ */
@@ -38,7 +38,7 @@ namespace jiba
        * \see GradientBasedOptimization.
        * @param CurrentModel The vector of current model parameters
        */
-      virtual void EvaluateModel(const jiba::rvec &CurrentModel) = 0;
+      virtual void EvaluateModel(const jif3D::rvec &CurrentModel) = 0;
       //! Perform a single step of the optimization
       /*! This is the main implementation of the optimization algorithm. It needs to update
        * the current model vector by performing a single step in the optimization. The implementation
@@ -46,16 +46,16 @@ namespace jiba
        * information for the current model and everything else that is updated there is correct.
        * @param CurrentModel The current model, contains the updated model on exit
        */
-      virtual void StepImplementation(jiba::rvec &CurrentModel) = 0;
+      virtual void StepImplementation(jif3D::rvec &CurrentModel) = 0;
       //! The diagonal elements of the model covariance matrix
-      jiba::rvec ModelCovDiag;
+      jif3D::rvec ModelCovDiag;
       //! The objective function object
-      boost::shared_ptr<jiba::ObjectiveFunction> Objective;
+      boost::shared_ptr<jif3D::ObjectiveFunction> Objective;
     protected:
       //! The current misfit of the objective function
       double Misfit;
       //! Direct access to the objective function object for derived classes
-      jiba::ObjectiveFunction &GetObjective()
+      jif3D::ObjectiveFunction &GetObjective()
         {
           return *Objective.get();
         }
@@ -66,12 +66,12 @@ namespace jiba
           return Misfit;
         }
       //! Read-only access to the diagonal elements of the model covariance
-      const jiba::rvec &GetModelCovDiag() const
+      const jif3D::rvec &GetModelCovDiag() const
         {
           return ModelCovDiag;
         }
       //! Set the diagonal elements of the model covariance
-      void SetModelCovDiag(const jiba::rvec &Cov)
+      void SetModelCovDiag(const jif3D::rvec &Cov)
         {
           ModelCovDiag = Cov;
         }
@@ -80,10 +80,10 @@ namespace jiba
        * model and calling the implementation of the step.
        * @param CurrentModel The current model vector, contains the updated model on exit.
        */
-      void MakeStep(jiba::rvec &CurrentModel);
+      void MakeStep(jif3D::rvec &CurrentModel);
       //! The constructor needs the objective function object, without it optimization does not make much sense
       explicit NonLinearOptimization(
-          boost::shared_ptr<jiba::ObjectiveFunction> ObjFunction);
+          boost::shared_ptr<jif3D::ObjectiveFunction> ObjFunction);
       virtual ~NonLinearOptimization();
       };
   /* @} */

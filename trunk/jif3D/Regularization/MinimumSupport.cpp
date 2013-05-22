@@ -10,19 +10,19 @@
 #include "../ModelBase/VTKTools.h"
 #include "../Global/convert.h"
 
-namespace jiba
+namespace jif3D
   {
     namespace bm = boost::math;
-    void MinimumSupport::ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff)
+    void MinimumSupport::ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff)
       {
         const size_t nmod = Model.size();
         if (GetReferenceModel().size() != nmod)
           {
-            jiba::rvec RefMod(nmod);
+            jif3D::rvec RefMod(nmod);
             RefMod.clear();
             SetReferenceModel(RefMod);
           }
-        jiba::rvec X(Model - GetReferenceModel());
+        jif3D::rvec X(Model - GetReferenceModel());
         RegFunc->CalcMisfit(X);
         const size_t nx = RegFunc->ModelGeo.GetXCellSizes().size();
         const size_t ny = RegFunc->ModelGeo.GetYCellSizes().size();
@@ -52,11 +52,11 @@ namespace jiba
         ++ModelNumber;
       }
 
-    jiba::rvec MinimumSupport::ImplGradient(const jiba::rvec &Model,
-        const jiba::rvec &Diff)
+    jif3D::rvec MinimumSupport::ImplGradient(const jif3D::rvec &Model,
+        const jif3D::rvec &Diff)
       {
-        jiba::rvec X(Model - GetReferenceModel());
-        jiba::rvec Grad = RegFunc->CalcGradient(X);
+        jif3D::rvec X(Model - GetReferenceModel());
+        jif3D::rvec Grad = RegFunc->CalcGradient(X);
         const double b = beta * beta;
         const size_t nmod = Model.size();
         for (size_t i = 0; i < Grad.size(); ++i)
@@ -66,12 +66,12 @@ namespace jiba
             Grad(i) = Geometry.GetData().data()[i] * 2 * b * (RegDiff(i) + RegDiff(nmod + i) + RegDiff(2 * nmod + i))
                 / bm::pow<2>(b + mag);
           }
-        jiba::comp_mat Mat(
+        jif3D::comp_mat Mat(
             RegFunc->GetXOperator() + RegFunc->GetYOperator() + RegFunc->GetZOperator());
         return ublas::prod(trans(Mat), Grad);
       }
 
-    MinimumSupport::MinimumSupport(boost::shared_ptr<jiba::MatOpRegularization> RF,
+    MinimumSupport::MinimumSupport(boost::shared_ptr<jif3D::MatOpRegularization> RF,
         double b) :
          ModelNumber(0), beta(b), RegFunc(RF), Geometry(RF->ModelGeo)
       {
@@ -97,4 +97,4 @@ namespace jiba
       {
       }
 
-  } /* namespace jiba */
+  } /* namespace jif3D */

@@ -173,7 +173,7 @@
 #ifndef PODVINTIME3D_H_
 #define PODVINTIME3D_H_
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup tomo Seismic tomography classes and functions */
     /* @{ */

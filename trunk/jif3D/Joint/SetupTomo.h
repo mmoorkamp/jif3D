@@ -14,7 +14,7 @@
 #include "../Tomo/ThreeDSeismicModel.h"
 #include <boost/program_options.hpp>
 
-namespace jiba
+namespace jif3D
   {
     namespace po = boost::program_options;
 
@@ -32,24 +32,24 @@ namespace jiba
       {
     private:
       //! A shared pointer to the objective function object for seismic tomography data
-      boost::shared_ptr<jiba::ThreeDModelObjective<jiba::TomographyCalculator> > TomoObjective;
+      boost::shared_ptr<jif3D::ThreeDModelObjective<jif3D::TomographyCalculator> > TomoObjective;
       //! The picking  error in ms to assume for construction of the data variance
       double pickerr;
       //! Storage for the name of the refinement model, can optionally be set on the command line
       std::string FineModelName;
       //! The tomography starting model
-      jiba::ThreeDSeismicModel TomoModel;
+      jif3D::ThreeDSeismicModel TomoModel;
     public:
       //! Read only access to the starting model for seismic tomography
       /*! Read only access to the starting model for seismic tomography
        * @return The object containing the starting model.
        */
-      const jiba::ThreeDSeismicModel &GetModel() const
+      const jif3D::ThreeDSeismicModel &GetModel() const
         {
           return TomoModel;
         }
       //! read only access to the objective function object for seismic tomography data
-      const jiba::ThreeDModelObjective<jiba::TomographyCalculator> &GetTomoObjective()
+      const jif3D::ThreeDModelObjective<jif3D::TomographyCalculator> &GetTomoObjective()
         {
           return *TomoObjective;
         }
@@ -66,8 +66,8 @@ namespace jiba
        * @return True if the weight the tomography objective is greater zero, i.e. we added an objective function to JointObjective, false otherwise
        */
       bool
-      SetupObjective(const po::variables_map &vm, jiba::JointObjective &Objective,
-          boost::shared_ptr<jiba::GeneralModelTransform> Transform, double xorigin = 0.0,
+      SetupObjective(const po::variables_map &vm, jif3D::JointObjective &Objective,
+          boost::shared_ptr<jif3D::GeneralModelTransform> Transform, double xorigin = 0.0,
           double yorigin = 0.0);
       SetupTomo();
       virtual ~SetupTomo();

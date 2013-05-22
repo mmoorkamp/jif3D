@@ -9,10 +9,10 @@
 
 #ifndef RESTRANS_H_
 #define RESTRANS_H_
-namespace jiba
+namespace jif3D
   {
     //! The transformation used for calculating velocity and density from resistivity for the synthetic tests developed in Durham
-    class Durham1DTrans: public jiba::GeneralModelTransform
+    class Durham1DTrans: public jif3D::GeneralModelTransform
       {
     private:
       //! The constant in the conversion equation
@@ -27,10 +27,10 @@ namespace jiba
       boost::shared_ptr<GeneralModelTransform> ResTransform;
     public:
       //! Transform the normalized model parameters back to physical parameters
-      virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
+      virtual jif3D::rvec GeneralizedToPhysical(const jif3D::rvec &FullModel) const
         {
-          jiba::rvec Cond(ResTransform->GeneralizedToPhysical(FullModel));
-          jiba::rvec Output(FullModel.size());
+          jif3D::rvec Cond(ResTransform->GeneralizedToPhysical(FullModel));
+          jif3D::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
               double lres = std::log10(1.0 / Cond(i));
@@ -39,10 +39,10 @@ namespace jiba
           return Output;
         }
       //! Transform the physical model parameters to generalized model parameters
-      virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
+      virtual jif3D::rvec PhysicalToGeneralized(const jif3D::rvec &FullModel) const
         {
 
-          jiba::rvec Output(FullModel.size());
+          jif3D::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
               double res = (-b + sqrt(b * b + 4.0 * c * (std::log10(FullModel(i)) - a)))
@@ -52,12 +52,12 @@ namespace jiba
           return ResTransform->PhysicalToGeneralized(Output);
         }
       //! Transform the derivative with respect to the physical parameters to normalized parameters
-      virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
-          const jiba::rvec &Derivative) const
+      virtual jif3D::rvec Derivative(const jif3D::rvec &FullModel,
+          const jif3D::rvec &Derivative) const
         {
-          jiba::rvec Res(ResTransform->GeneralizedToPhysical(FullModel));
-          jiba::rvec ResDeriv(ResTransform->Derivative(FullModel, Derivative));
-          jiba::rvec Output(FullModel.size());
+          jif3D::rvec Res(ResTransform->GeneralizedToPhysical(FullModel));
+          jif3D::rvec ResDeriv(ResTransform->Derivative(FullModel, Derivative));
+          jif3D::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
               Output(i) = std::pow(10.0,

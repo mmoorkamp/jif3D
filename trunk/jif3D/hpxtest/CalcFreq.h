@@ -17,7 +17,7 @@
 #include "../Global/VecMat.h"
 
 
-jiba::rvec HPXCalculateFrequency(const jiba::X3DModel &Model, size_t freqindex,
+jif3D::rvec HPXCalculateFrequency(const jif3D::X3DModel &Model, size_t freqindex,
     std::string TempDirName);
 
 HPX_DEFINE_PLAIN_ACTION(HPXCalculateFrequency, CalculateFrequency_action);

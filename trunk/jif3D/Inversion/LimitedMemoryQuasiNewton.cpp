@@ -10,11 +10,11 @@
 #include "../Global/NormProd.h"
 #include "LimitedMemoryQuasiNewton.h"
 #include "mcsrch.h"
-namespace jiba
+namespace jif3D
   {
 
     LimitedMemoryQuasiNewton::LimitedMemoryQuasiNewton(boost::shared_ptr<
-        jiba::ObjectiveFunction> ObjFunction, const size_t n) :
+        jif3D::ObjectiveFunction> ObjFunction, const size_t n) :
       GradientBasedOptimization(ObjFunction), mu(1.0), LineIter(20),
           MaxPairs(n), SHistory(), YHistory()
       {
@@ -26,14 +26,14 @@ namespace jiba
 
       }
 
-    void LimitedMemoryQuasiNewton::StepImplementation(jiba::rvec &CurrentModel)
+    void LimitedMemoryQuasiNewton::StepImplementation(jif3D::rvec &CurrentModel)
       {
         //we start assuming the search direction is the direction of steepest ascent
         SearchDir = CovGrad;
         const size_t nmod = CovGrad.size();
         const size_t npairs = SHistory.size();
 
-        jiba::rvec Alpha(npairs), Rho(npairs);
+        jif3D::rvec Alpha(npairs), Rho(npairs);
 
         //we store the elements in reverse order
         //and apply algorithm 9.1 from Nocedal and Wright
@@ -73,8 +73,8 @@ namespace jiba
 
         if (status < 0)
           {
-            throw jiba::FatalException("Cannot find suitable step. Status: "
-                + jiba::stringify(status));
+            throw jif3D::FatalException("Cannot find suitable step. Status: "
+                + jif3D::stringify(status));
           }
         //if we have found a good stepsize, update the model
         CurrentModel += mu * SearchDir;
@@ -82,9 +82,9 @@ namespace jiba
         if (npairs < MaxPairs)
           {
             //allocate storage for a new correction pair
-            boost::shared_ptr<jiba::rvec> NewS(new jiba::rvec(nmod));
+            boost::shared_ptr<jif3D::rvec> NewS(new jif3D::rvec(nmod));
             SHistory.push_back(NewS);
-            boost::shared_ptr<jiba::rvec> NewY(new jiba::rvec(nmod));
+            boost::shared_ptr<jif3D::rvec> NewY(new jif3D::rvec(nmod));
             YHistory.push_back(NewY);
           }
         else

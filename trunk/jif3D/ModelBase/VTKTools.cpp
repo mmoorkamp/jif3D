@@ -9,7 +9,7 @@
 #include <fstream>
 #include "../Global/FatalException.h"
 
-namespace jiba
+namespace jif3D
   {
 
     //! A helper function to write the Coordinates for the 3 axes into a .vtk file
@@ -124,7 +124,7 @@ namespace jiba
      */
     void Write3DDataToVTK(const std::string &filename,
         const std::string &DataName,
-        const jiba::rvec &Data,
+        const jif3D::rvec &Data,
         const ThreeDGravityModel::tMeasPosVec &PosX,
         const ThreeDGravityModel::tMeasPosVec &PosY,
         const ThreeDGravityModel::tMeasPosVec &PosZ)
@@ -157,7 +157,7 @@ namespace jiba
          */
     void Write3DTensorDataToVTK(const std::string &filename,
         const std::string &DataName,
-        const jiba::rvec &Data,
+        const jif3D::rvec &Data,
         const ThreeDGravityModel::tMeasPosVec &PosX,
         const ThreeDGravityModel::tMeasPosVec &PosY,
         const ThreeDGravityModel::tMeasPosVec &PosZ)

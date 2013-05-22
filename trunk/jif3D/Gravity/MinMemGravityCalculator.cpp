@@ -10,7 +10,7 @@
 #include <iostream>
 
 
-namespace jiba
+namespace jif3D
   {
 
     MinMemGravityCalculator::MinMemGravityCalculator(boost::shared_ptr<

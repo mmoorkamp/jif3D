@@ -27,14 +27,14 @@ BOOST_AUTO_TEST_CASE (wavelet_transform_pair)
         //we use integers, because drand48 can generate very small values
         //that reach the numerical precision and give false alarms
         const size_t length = 64;
-        jiba::rvec Vector(length);
+        jif3D::rvec Vector(length);
         std::generate_n(Vector.begin(), length, rand);
         //store the original
-        jiba::rvec Original(Vector);
+        jif3D::rvec Original(Vector);
         //do the forward
-        jiba::WaveletTransform(Vector);
+        jif3D::WaveletTransform(Vector);
         //and the inverse
-        jiba::InvWaveletTransform(Vector);
+        jif3D::InvWaveletTransform(Vector);
         //check that they are still the same
         for (size_t i = 0; i < length; ++i)
           {
@@ -52,21 +52,21 @@ BOOST_AUTO_TEST_CASE (wavelet_transform_pair)
 
         //first make a 1D vector
         const size_t length = 64;
-        jiba::rvec Vector(length);
+        jif3D::rvec Vector(length);
         std::generate_n(Vector.begin(), length, drand48);
         //then a multi_array that is 1D and copy the vector
         boost::multi_array<double, 1> InArray(boost::extents[length]);
         std::copy(Vector.begin(), Vector.end(), InArray.origin());
         //forward transform both and check that they match
-        jiba::WaveletTransform(Vector);
-        jiba::WaveletTransform(InArray);
+        jif3D::WaveletTransform(Vector);
+        jif3D::WaveletTransform(InArray);
         for (size_t i = 0; i < length; ++i)
           {
             BOOST_CHECK_CLOSE(Vector(i),*(InArray.origin()+i),1e-3);
           }
         //inverse transform both and check
-        jiba::InvWaveletTransform(Vector);
-        jiba::InvWaveletTransform(InArray);
+        jif3D::InvWaveletTransform(Vector);
+        jif3D::InvWaveletTransform(InArray);
         for (size_t i = 0; i < length; ++i)
           {
             BOOST_CHECK_CLOSE(Vector(i),*(InArray.origin()+i),1e-3);
@@ -83,8 +83,8 @@ BOOST_AUTO_TEST_CASE (wavelet_transform_pair)
         std::generate_n(InArray.origin(), pow(length, 3), rand);
 
         boost::multi_array<double, 3> Original(InArray);
-        jiba::WaveletTransform(InArray);
-        jiba::InvWaveletTransform(InArray);
+        jif3D::WaveletTransform(InArray);
+        jif3D::InvWaveletTransform(InArray);
         for (size_t i = 0; i < InArray.num_elements(); ++i)
           {
             BOOST_CHECK_CLOSE(*(Original.origin()+i),*(InArray.origin()+i),1e-3);

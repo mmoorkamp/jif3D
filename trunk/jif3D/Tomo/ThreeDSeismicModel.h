@@ -13,7 +13,7 @@
 #include <boost/serialization/base_object.hpp>
 #include "../ModelBase/ThreeDModelBase.h"
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup tomo Seismic tomography classes and functions
      * This module contains the functionality for seismic refraction forward modeling and data handling.
@@ -40,7 +40,7 @@ namespace jiba
      * We therefore have an additional function AddMeasurementConfiguration that takes the index of the source and receiver for an individual measurement.
      *
      */
-    class ThreeDSeismicModel: public jiba::ThreeDModelBase
+    class ThreeDSeismicModel: public jif3D::ThreeDModelBase
       {
     public:
       //! We need vectors of indices to associate a source with a receiver for a given shot

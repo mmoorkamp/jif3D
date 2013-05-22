@@ -29,13 +29,13 @@ BOOST_AUTO_TEST_CASE  (addnoise)
     {
       //we use a million data points
       const size_t ndata = 1e6;
-      jiba::rvec Data(ndata);
+      jif3D::rvec Data(ndata);
       std::fill_n(Data.begin(),ndata,1.0);
-      jiba::rvec Noisy(Data);
+      jif3D::rvec Noisy(Data);
       //test relative noise level
       const double relerror = 0.1;
-      jiba::AddNoise(Noisy,relerror,0.0);
-      jiba::rvec Diff(Data-Noisy);
+      jif3D::AddNoise(Noisy,relerror,0.0);
+      jif3D::rvec Diff(Data-Noisy);
 
       accumulator_set<double, stats<tag::mean,tag::variance > > acc;
       std::for_each( Diff.begin(), Diff.end(), boost::bind<void>( boost::ref(acc), _1 ) );
@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE  (addnoise)
       //now check absolute noise level
       Noisy = Data;
       const double abserror = 1;
-      jiba::AddNoise(Noisy,0.0,abserror);
+      jif3D::AddNoise(Noisy,0.0,abserror);
       Diff = Data - Noisy;
       accumulator_set<double, stats<tag::mean,tag::variance > > acc2;
       std::for_each( Diff.begin(), Diff.end(), boost::bind<void>( boost::ref(acc2), _1 ) );

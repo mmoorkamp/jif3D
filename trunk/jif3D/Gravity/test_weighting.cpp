@@ -26,10 +26,10 @@ BOOST_AUTO_TEST_CASE(weightingderiv_test)
       const double exponent = -2.0;
       const double z = 0.4;
       //we compare the analytical derivative to a numerical derivative
-      double value1 = jiba::WeightingTerm(exponent)(z, z0);
+      double value1 = jif3D::WeightingTerm(exponent)(z, z0);
       const double delta = std::numeric_limits<float>::epsilon();
-      double value2 = jiba::WeightingTerm(exponent)(z + 2.0 * delta, z0);
-      double deriv = jiba::WeightingTerm(exponent).deriv(z + delta, z0);
+      double value2 = jif3D::WeightingTerm(exponent)(z + 2.0 * delta, z0);
+      double deriv = jif3D::WeightingTerm(exponent).deriv(z + delta, z0);
       BOOST_CHECK_CLOSE(deriv, (value2-value1)/(2.0*delta), 0.1);
     }
   BOOST_AUTO_TEST_CASE(weightingaverage_test)
@@ -43,20 +43,20 @@ BOOST_AUTO_TEST_CASE(weightingderiv_test)
       const double z1 = 200.0;
       const double z2 = 201.0;
       //out analytical average
-      const double WeightingAverage = jiba::WeightingTerm(exponent).average(z1,
+      const double WeightingAverage = jif3D::WeightingTerm(exponent).average(z1,
           z2, z0);
       const double eps = 0.001;
       const int steps = (z2 - z1) / eps;
       double myavg = 0.0;
       //sum up values in the interval and divide by the number of interval
       for (int i = 0; i < steps; ++i)
-        myavg += jiba::WeightingTerm(exponent)(z1 + i * eps, z0);
+        myavg += jif3D::WeightingTerm(exponent)(z1 + i * eps, z0);
       myavg /= steps;
       BOOST_CHECK_CLOSE(WeightingAverage, myavg, 0.001);
     }
   BOOST_AUTO_TEST_CASE(fitz0_test)
     {
-      jiba::ThreeDGravityModel Model;
+      jif3D::ThreeDGravityModel Model;
       const size_t nz = 20;
       //we only need the model to make FitZ0 happy
       //all it does is determine the starting index
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(weightingderiv_test)
       Model.SetYCellSizes()[0] = 10.0;
       Model.AddMeasurementPoint(5, 5, -1);
       //we make up some "sensitivities"
-      jiba::rvec PseudoSens(nz);
+      jif3D::rvec PseudoSens(nz);
       //we want to get back this number
       const double z0 = 237.0;
       //this is the exponent we use to fit the gravity data
@@ -80,18 +80,18 @@ BOOST_AUTO_TEST_CASE(weightingderiv_test)
         {
           Model.SetZCellSizes()[i] = nz * i;
           currdepth += Model.GetZCellSizes()[i];
-          PseudoSens[i] = jiba::WeightingTerm(exponent)(currdepth, z0);
+          PseudoSens[i] = jif3D::WeightingTerm(exponent)(currdepth, z0);
         }
       //FitZ0 should find z0 specified above
-      double foundz0 = jiba::FitZ0(PseudoSens, Model.GetZCellSizes(),
-          jiba::WeightingTerm(exponent));
+      double foundz0 = jif3D::FitZ0(PseudoSens, Model.GetZCellSizes(),
+          jif3D::WeightingTerm(exponent));
       //in reality the gradient is small at the end, so we can have 1% difference
       BOOST_CHECK_CLOSE(z0, foundz0, 1);
     }
 
   BOOST_AUTO_TEST_CASE(extract_test)
     {
-      jiba::ThreeDGravityModel Model;
+      jif3D::ThreeDGravityModel Model;
 
       const size_t ncells = 3;
       Model.SetXCellSizes().resize(boost::extents[ncells]);
@@ -110,17 +110,17 @@ BOOST_AUTO_TEST_CASE(weightingderiv_test)
       const double density = 2.1;
       std::fill_n(Model.SetDensities().origin(),
           Model.SetDensities().num_elements(), density);
-      boost::shared_ptr<jiba::FullSensitivityGravityCalculator>
-          Calculator(jiba::CreateGravityCalculator<
-              jiba::FullSensitivityGravityCalculator>::MakeTensor());
+      boost::shared_ptr<jif3D::FullSensitivityGravityCalculator>
+          Calculator(jif3D::CreateGravityCalculator<
+              jif3D::FullSensitivityGravityCalculator>::MakeTensor());
       Calculator->Calculate(Model);
-      jiba::rvec SensProfile;
-      jiba::ExtractMiddleSens(Model, Calculator->GetSensitivities(),
+      jif3D::rvec SensProfile;
+      jif3D::ExtractMiddleSens(Model, Calculator->GetSensitivities(),
           Calculator->GetDataPerMeasurement(), SensProfile);
       size_t offset = Model.IndexToOffset(1, 1, 0);
-      jiba::rvec Compare(ncells);
+      jif3D::rvec Compare(ncells);
       size_t startindex = offset;
-      boost::numeric::ublas::matrix_row<const jiba::rmat> Row(Calculator->GetSensitivities(),Calculator->GetDataPerMeasurement());
+      boost::numeric::ublas::matrix_row<const jif3D::rmat> Row(Calculator->GetSensitivities(),Calculator->GetDataPerMeasurement());
       std::copy(Row.begin() + startindex,
           Row.begin() + startindex + ncells,
           Compare.begin());

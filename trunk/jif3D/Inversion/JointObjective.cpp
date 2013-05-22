@@ -15,7 +15,7 @@
 using boost::format;
 using boost::io::group;
 
-namespace jiba
+namespace jif3D
   {
     static const std::string MisfitFormat = " %15s ";
 
@@ -30,7 +30,7 @@ namespace jiba
 
       }
 
-    void JointObjective::ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff)
+    void JointObjective::ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff)
       {
         const size_t nobjective = Objectives.size();
         IndividualFits.resize(nobjective);
@@ -78,11 +78,11 @@ namespace jiba
           }
       }
 
-    jiba::rvec JointObjective::ImplGradient(const jiba::rvec &Model,
-        const jiba::rvec &Diff)
+    jif3D::rvec JointObjective::ImplGradient(const jif3D::rvec &Model,
+        const jif3D::rvec &Diff)
       {
         //initialize the gradient vector
-        jiba::rvec Gradient(Model.size());
+        jif3D::rvec Gradient(Model.size());
         Gradient.clear();
         const size_t nobjective = Objectives.size();
         std::vector<double> times(nobjective);
@@ -90,7 +90,7 @@ namespace jiba
         //add up the contribution to the gradient from each method
         //considering the weighting and the transformation
         //that has been applied to the model parameters
-        jiba::rvec CurrGrad(Model.size());
+        jif3D::rvec CurrGrad(Model.size());
         if (PrintMisfit)
           {
             std::cout << "Individual Grad Norms: \n";

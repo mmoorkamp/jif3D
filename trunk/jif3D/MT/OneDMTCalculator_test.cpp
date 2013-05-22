@@ -7,7 +7,7 @@
 
 #include "OneDMTCalculator.h"
 
-namespace jiba
+namespace jif3D
   {
 
-  } /* namespace jiba */
+  } /* namespace jif3D */

@@ -13,7 +13,7 @@
 #include <boost/serialization/base_object.hpp>
 #include "../ModelBase/ThreeDModelBase.h"
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup mtmodelling Forward modelling of magnetotelluric data */
     /* @{ */
@@ -24,7 +24,7 @@ namespace jiba
      * All other functionality and properties that are specific to a certain
      * forward code have to be implemented in a derived class.
      */
-    class ThreeDMTModel: public jiba::ThreeDModelBase
+    class ThreeDMTModel: public jif3D::ThreeDModelBase
       {
     private:
       //! The calculation frequencies in Hz

@@ -13,13 +13,13 @@
 namespace OPTPP
   {
     //! A version of the More and Thuente line search algorithm taken from Opt++
-    int mcsrch(jiba::ObjectiveFunction* nlp, const jiba::rvec& s,
-        jiba::rvec &Grad, const jiba::rvec &model, double &misfit, double *stp,
+    int mcsrch(jif3D::ObjectiveFunction* nlp, const jif3D::rvec& s,
+        jif3D::rvec &Grad, const jif3D::rvec &model, double &misfit, double *stp,
         int itnmax, double ftol, double xtol, double gtol, double stpmax,
         double stpmin, bool Verbose = false);
     //! A backtracking line search taken from Opt++
-    int backtrack(jiba::ObjectiveFunction* nlp, jiba::rvec& search_dir,
-        jiba::rvec& grad, const jiba::rvec &model, double &misfit, double *stp,
+    int backtrack(jif3D::ObjectiveFunction* nlp, jif3D::rvec& search_dir,
+        jif3D::rvec& grad, const jif3D::rvec &model, double &misfit, double *stp,
         int itnmax, double ftol, double stpmax, double stpmin);
 
   }
