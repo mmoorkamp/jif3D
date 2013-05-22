@@ -10,7 +10,7 @@ version=0.1
    version=$1
  fi
 #prepare all files for release to another system
-rm -rf dist/jif*
+rm -rf ../dist/jif*
 #collect all source files and build files
 find -name "*.h" > distfiles
 find -name "*.hpp" >> distfiles

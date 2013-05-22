@@ -1,8 +1,18 @@
 jif3D Joint inversion framework
 
 
+General information
+
 This file contains some general information about the joint inversion
 framework jif3D. For installation instructions please refer to the file INSTALL.
+Please be aware that this is still a beta version. At the moment, the intended
+audience is developers and experienced researchers with a good knowledge
+of joint inversion. If you are new to inversion and have not developed any code
+so far, it is likely that you will have a hard time getting the code to do what you
+want. We are actively working on improving the documentation and making the 
+interface more user friendly.
+
+Scope
 
 jif3D is a framework for joint inversion of seismic, gravity and magnetotelluric
 data in 3D. It is written in C++ and designed for modularity, so it can be used
@@ -27,7 +37,13 @@ and the associated functions. An area for improvement is to create a coherent an
 structured description of file formats, requirements etc. in a tutorial style manual.
 
 
-SUPPORT
+Examples
+
+The Examples directory contains several scripts to build example models, calculate
+synthetic data and invert it. It is a good starting point, but you will need an
+understanding of bash scripts and netcdf files to make the most of it.
+
+Support
 
 If you have any questions, comments, suggestions or find a bug in the code, you can
 post in the discussion forum https://sourceforge.net/p/jif3d/discussion/ or submit a
