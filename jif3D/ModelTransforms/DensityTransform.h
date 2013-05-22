@@ -14,7 +14,7 @@
 #include "../ModelBase/ThreeDModelBase.h"
 #include "GeneralModelTransform.h"
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup inversion General routines for inversion */
     /* @{ */
@@ -27,13 +27,13 @@ namespace jiba
      * is motivated by the common velocity-density relationships
      * used in inversion problems and also observed for the Faeroe data.
      */
-    class DensityTransform: public jiba::GeneralModelTransform
+    class DensityTransform: public jif3D::GeneralModelTransform
       {
     private:
       //! A pointer to a transformation that gives slowness
       boost::shared_ptr<GeneralModelTransform> SlownessTransform;
       //! An object indicating where to apply the parameter relationship (value 1)
-      jiba::ThreeDModelBase RelModel;
+      jif3D::ThreeDModelBase RelModel;
       //! The value to use for density where the relationship is not valid
       double replacevalue;
       //! The slope for the linear relationship
@@ -63,11 +63,11 @@ namespace jiba
           return new DensityTransform(*this);
         }
       //! Transform the normalized model parameters back to physical parameters, in this case from Slowness to Density
-      virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
+      virtual jif3D::rvec GeneralizedToPhysical(const jif3D::rvec &FullModel) const
         {
           assert(RelModel.GetData().num_elements() == FullModel.size());
-          jiba::rvec Slowness(SlownessTransform->GeneralizedToPhysical(FullModel));
-          jiba::rvec Density(FullModel.size());
+          jif3D::rvec Slowness(SlownessTransform->GeneralizedToPhysical(FullModel));
+          jif3D::rvec Density(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
               //check if we should apply the transform for this grid cell
@@ -84,9 +84,9 @@ namespace jiba
           return Density;
         }
       //! Transform from Density to Slowness
-      virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
+      virtual jif3D::rvec PhysicalToGeneralized(const jif3D::rvec &FullModel) const
         {
-          jiba::rvec Slowness(FullModel.size());
+          jif3D::rvec Slowness(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
               //check if we should apply the transform for this grid cell
@@ -102,12 +102,12 @@ namespace jiba
           return SlownessTransform->PhysicalToGeneralized(Slowness);
         }
       //! Transform the derivative with respect to the Slowness to Density
-      virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
-          const jiba::rvec &Derivative) const
+      virtual jif3D::rvec Derivative(const jif3D::rvec &FullModel,
+          const jif3D::rvec &Derivative) const
         {
-          jiba::rvec Slowness(SlownessTransform->GeneralizedToPhysical(FullModel));
-          jiba::rvec SlowDeriv(SlownessTransform->Derivative(FullModel, Derivative));
-          jiba::rvec Output(FullModel.size());
+          jif3D::rvec Slowness(SlownessTransform->GeneralizedToPhysical(FullModel));
+          jif3D::rvec SlowDeriv(SlownessTransform->Derivative(FullModel, Derivative));
+          jif3D::rvec Output(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
               //check if we should apply the transform for this grid cell
@@ -136,7 +136,7 @@ namespace jiba
        * @param bval The offset value (see equation above)
        */
       DensityTransform(boost::shared_ptr<GeneralModelTransform> SlowTrans,
-          const jiba::ThreeDModelBase &RModel, double rvalue = 0.0, double aval = 5000,
+          const jif3D::ThreeDModelBase &RModel, double rvalue = 0.0, double aval = 5000,
           double bval = 8500) :
           SlownessTransform(SlowTrans), RelModel(RModel), replacevalue(rvalue), a(aval), b(
               bval)

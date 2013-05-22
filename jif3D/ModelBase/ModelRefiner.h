@@ -12,7 +12,7 @@
 #include "ThreeDModelBase.h"
 #include "../Global/VecMat.h"
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup modelbase Basic classes and routines for 3D models */
     /* @{ */
@@ -153,7 +153,7 @@ namespace jiba
        * @param RefinedModel The grid information for the refined model is taken from this class
        * @return The gradient for each cell of the coarse model
        */
-      jiba::rvec CombineGradient(const jiba::rvec &FineGradient,
+      jif3D::rvec CombineGradient(const jif3D::rvec &FineGradient,
           const ThreeDModelBase &CoarseModel, const ThreeDModelBase &RefinedModel);
       ModelRefiner();
       virtual ~ModelRefiner();

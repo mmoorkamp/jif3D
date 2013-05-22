@@ -26,17 +26,17 @@ BOOST_AUTO_TEST_SUITE( GravityObjective_Test_Suite )
 //we check the gradient from the forward modeling by comparing it to the result
 //of a finite difference computation, this is the same for FTG and scalar data
 //and therefore in a separate function
-void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
+void  CheckGradient(jif3D::ObjectiveFunction &Objective, const jif3D::rvec &Model)
     {
       Objective.CalcMisfit(Model);
-      jiba::rvec Gradient = Objective.CalcGradient(Model);
+      jif3D::rvec Gradient = Objective.CalcGradient(Model);
 
       BOOST_CHECK(Model.size() == Gradient.size());
       for (size_t i = 0; i < Gradient.size(); ++i)
         {
           double delta = Model(i) * 0.01;
-          jiba::rvec Forward(Model);
-          jiba::rvec Backward(Model);
+          jif3D::rvec Forward(Model);
+          jif3D::rvec Backward(Model);
           Forward(i) += delta;
           Backward(i) -= delta;
           if (delta> 0.0)
@@ -50,21 +50,21 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
   //check the derivative for the FTG tensor
   BOOST_AUTO_TEST_CASE (tensor_fdderiv_test)
     {
-      jiba::ThreeDGravityModel GravityTest;
+      jif3D::ThreeDGravityModel GravityTest;
       const size_t nmeas = 3;
       const size_t ncells = 5;
       MakeRandomModel(GravityTest,ncells,nmeas,false);
-      boost::shared_ptr<jiba::FullSensitivityGravityCalculator> TensorCalculator(jiba::CreateGravityCalculator<jiba::FullSensitivityGravityCalculator>::MakeTensor());
-      jiba::rvec Observed(TensorCalculator->Calculate(GravityTest));
+      boost::shared_ptr<jif3D::FullSensitivityGravityCalculator> TensorCalculator(jif3D::CreateGravityCalculator<jif3D::FullSensitivityGravityCalculator>::MakeTensor());
+      jif3D::rvec Observed(TensorCalculator->Calculate(GravityTest));
       //we have to have different data from our observed data
       //otherwise our gradient will be zero
       Observed *= 1.1;
 
-      jiba::ThreeDModelObjective<jiba::FullSensitivityGravityCalculator> FTGObjective(*TensorCalculator.get());
+      jif3D::ThreeDModelObjective<jif3D::FullSensitivityGravityCalculator> FTGObjective(*TensorCalculator.get());
 
       FTGObjective.SetObservedData(Observed);
       FTGObjective.SetCoarseModelGeometry(GravityTest);
-      jiba::rvec InvModel(GravityTest.GetDensities().num_elements());
+      jif3D::rvec InvModel(GravityTest.GetDensities().num_elements());
       std::copy(GravityTest.GetDensities().origin(),
           GravityTest.GetDensities().origin()
           + GravityTest.GetDensities().num_elements(), InvModel.begin());
@@ -74,18 +74,18 @@ void  CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
 
   BOOST_AUTO_TEST_CASE (scalar_fdderiv_test)
     {
-      jiba::ThreeDGravityModel GravityTest;
+      jif3D::ThreeDGravityModel GravityTest;
       const size_t nmeas = 3;
       const size_t ncells = 5;
       MakeRandomModel(GravityTest,ncells,nmeas,false);
-      boost::shared_ptr<jiba::FullSensitivityGravityCalculator> ScalarCalculator(jiba::CreateGravityCalculator<jiba::FullSensitivityGravityCalculator>::MakeScalar());
-      jiba::rvec Observed(ScalarCalculator->Calculate(GravityTest));
+      boost::shared_ptr<jif3D::FullSensitivityGravityCalculator> ScalarCalculator(jif3D::CreateGravityCalculator<jif3D::FullSensitivityGravityCalculator>::MakeScalar());
+      jif3D::rvec Observed(ScalarCalculator->Calculate(GravityTest));
       Observed *= 1.1;
 
-      jiba::ThreeDModelObjective<jiba::FullSensitivityGravityCalculator> ScalarObjective(*ScalarCalculator.get());
+      jif3D::ThreeDModelObjective<jif3D::FullSensitivityGravityCalculator> ScalarObjective(*ScalarCalculator.get());
       ScalarObjective.SetObservedData(Observed);
       ScalarObjective.SetCoarseModelGeometry(GravityTest);
-      jiba::rvec InvModel(GravityTest.GetDensities().num_elements());
+      jif3D::rvec InvModel(GravityTest.GetDensities().num_elements());
       std::copy(GravityTest.GetDensities().origin(),
           GravityTest.GetDensities().origin()
           + GravityTest.GetDensities().num_elements(), InvModel.begin());

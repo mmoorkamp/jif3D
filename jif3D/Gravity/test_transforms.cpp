@@ -23,8 +23,8 @@ BOOST_AUTO_TEST_SUITE( Gravity_Transforms_Suite )
 
 BOOST_AUTO_TEST_CASE(ftginvar_test)
     {
-      jiba::FTGInvariant InvarTrans;
-      jiba::rvec TestInput(9);
+      jif3D::FTGInvariant InvarTrans;
+      jif3D::rvec TestInput(9);
       TestInput(0) = 1.0;
       TestInput(1) = 2.0;
       TestInput(2) = 3.0;
@@ -34,8 +34,8 @@ BOOST_AUTO_TEST_CASE(ftginvar_test)
       TestInput(6) = 3.0;
       TestInput(7) = 5.0;
       TestInput(8) = 6.0;
-      jiba::rvec Invar(InvarTrans.Transform(TestInput));
-      jiba::rmat Deriv(InvarTrans.Derivative(TestInput));
+      jif3D::rvec Invar(InvarTrans.Transform(TestInput));
+      jif3D::rmat Deriv(InvarTrans.Derivative(TestInput));
       BOOST_CHECK(Invar.size() == 1);
       BOOST_CHECK(Deriv.size1() == 1);
       BOOST_CHECK(Deriv.size2() == 9);
@@ -54,22 +54,22 @@ BOOST_AUTO_TEST_CASE(ftginvar_test)
 
   BOOST_AUTO_TEST_CASE(ftginvar_sens_test)
     {
-      boost::shared_ptr<jiba::FullSensitivityGravityCalculator> InvCalculator =
-          boost::shared_ptr<jiba::FullSensitivityGravityCalculator>(
-              jiba::CreateGravityCalculator<
-                  jiba::FullSensitivityGravityCalculator>::MakeTensor());
-      boost::shared_ptr<jiba::VectorTransform> Transform = boost::shared_ptr<
-          jiba::FTGInvariant>(new jiba::FTGInvariant());
+      boost::shared_ptr<jif3D::FullSensitivityGravityCalculator> InvCalculator =
+          boost::shared_ptr<jif3D::FullSensitivityGravityCalculator>(
+              jif3D::CreateGravityCalculator<
+                  jif3D::FullSensitivityGravityCalculator>::MakeTensor());
+      boost::shared_ptr<jif3D::VectorTransform> Transform = boost::shared_ptr<
+          jif3D::FTGInvariant>(new jif3D::FTGInvariant());
       InvCalculator->SetDataTransform(Transform);
 
-      jiba::ThreeDGravityModel GravityTest;
+      jif3D::ThreeDGravityModel GravityTest;
 
       const size_t nmeas = 10;
       const size_t ncells = 10;
       MakeRandomModel(GravityTest, ncells,nmeas, true);
 
-      jiba::rvec InvDirect(InvCalculator->Calculate(GravityTest));
-      jiba::rvec InvCached(InvCalculator->Calculate(GravityTest));
+      jif3D::rvec InvDirect(InvCalculator->Calculate(GravityTest));
+      jif3D::rvec InvCached(InvCalculator->Calculate(GravityTest));
       BOOST_CHECK(InvDirect.size()==InvCached.size());
       for (size_t i = 0; i < InvDirect.size(); ++i)
         {
@@ -80,33 +80,33 @@ BOOST_AUTO_TEST_CASE(ftginvar_test)
 
   BOOST_AUTO_TEST_CASE(ftginvar_deriv_test)
     {
-      boost::shared_ptr<jiba::FullSensitivityGravityCalculator>
+      boost::shared_ptr<jif3D::FullSensitivityGravityCalculator>
           CacheCalculator = boost::shared_ptr<
-              jiba::FullSensitivityGravityCalculator>(
-              jiba::CreateGravityCalculator<
-                  jiba::FullSensitivityGravityCalculator>::MakeTensor());
+              jif3D::FullSensitivityGravityCalculator>(
+              jif3D::CreateGravityCalculator<
+                  jif3D::FullSensitivityGravityCalculator>::MakeTensor());
 
-      boost::shared_ptr<jiba::MinMemGravityCalculator>
+      boost::shared_ptr<jif3D::MinMemGravityCalculator>
           CompCalculator =
-              boost::shared_ptr<jiba::MinMemGravityCalculator>(
-                  jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeTensor());
+              boost::shared_ptr<jif3D::MinMemGravityCalculator>(
+                  jif3D::CreateGravityCalculator<jif3D::MinMemGravityCalculator>::MakeTensor());
 
-      boost::shared_ptr<jiba::VectorTransform> Transform = boost::shared_ptr<
-          jiba::FTGInvariant>(new jiba::FTGInvariant());
+      boost::shared_ptr<jif3D::VectorTransform> Transform = boost::shared_ptr<
+          jif3D::FTGInvariant>(new jif3D::FTGInvariant());
       CacheCalculator->SetDataTransform(Transform);
       CompCalculator->SetDataTransform(Transform);
 
-      jiba::ThreeDGravityModel GravityTest;
+      jif3D::ThreeDGravityModel GravityTest;
 
       const size_t nmeas = 10;
       const size_t ncells = 10;
       MakeRandomModel(GravityTest,ncells, nmeas, true);
 
-      jiba::rvec Misfit(nmeas);
+      jif3D::rvec Misfit(nmeas);
       std::fill(Misfit.begin(), Misfit.end(), 1.0);
-      jiba::rvec InvDirect(CompCalculator->LQDerivative(GravityTest, Misfit));
-      jiba::rvec InvCached1(CacheCalculator->LQDerivative(GravityTest, Misfit));
-      jiba::rvec InvCached2(CacheCalculator->LQDerivative(GravityTest, Misfit));
+      jif3D::rvec InvDirect(CompCalculator->LQDerivative(GravityTest, Misfit));
+      jif3D::rvec InvCached1(CacheCalculator->LQDerivative(GravityTest, Misfit));
+      jif3D::rvec InvCached2(CacheCalculator->LQDerivative(GravityTest, Misfit));
       BOOST_CHECK(InvDirect.size()==InvCached1.size());
       BOOST_CHECK(InvDirect.size()==InvCached2.size());
       for (size_t i = 0; i < InvDirect.size(); ++i)
@@ -119,30 +119,30 @@ BOOST_AUTO_TEST_CASE(ftginvar_test)
 
   BOOST_AUTO_TEST_CASE(diff_calc_test)
     {
-      boost::shared_ptr<jiba::FullSensitivityGravityCalculator>
-          RawCalculator(jiba::CreateGravityCalculator<
-              jiba::FullSensitivityGravityCalculator>::MakeTensor());
-      boost::shared_ptr<jiba::FullSensitivityGravityCalculator>
-          InvCalculator(jiba::CreateGravityCalculator<
-              jiba::FullSensitivityGravityCalculator>::MakeTensor());
-      boost::shared_ptr<jiba::VectorTransform> Transform = boost::shared_ptr<
-          jiba::FTGInvariant>(new jiba::FTGInvariant());
+      boost::shared_ptr<jif3D::FullSensitivityGravityCalculator>
+          RawCalculator(jif3D::CreateGravityCalculator<
+              jif3D::FullSensitivityGravityCalculator>::MakeTensor());
+      boost::shared_ptr<jif3D::FullSensitivityGravityCalculator>
+          InvCalculator(jif3D::CreateGravityCalculator<
+              jif3D::FullSensitivityGravityCalculator>::MakeTensor());
+      boost::shared_ptr<jif3D::VectorTransform> Transform = boost::shared_ptr<
+          jif3D::FTGInvariant>(new jif3D::FTGInvariant());
       InvCalculator->SetDataTransform(Transform);
 
-      jiba::ThreeDGravityModel GravityTest;
+      jif3D::ThreeDGravityModel GravityTest;
       const size_t nmeas = 10;
       const size_t ncells = 10;
       MakeRandomModel(GravityTest, ncells, nmeas, true);
 
-      jiba::rvec RawData(RawCalculator->Calculate(GravityTest));
-      const jiba::rmat RawSens(RawCalculator->GetSensitivities());
+      jif3D::rvec RawData(RawCalculator->Calculate(GravityTest));
+      const jif3D::rmat RawSens(RawCalculator->GetSensitivities());
 
-      jiba::rvec InvData(InvCalculator->Calculate(GravityTest));
+      jif3D::rvec InvData(InvCalculator->Calculate(GravityTest));
 
 
 
       const size_t nmod = RawSens.size2();
-      jiba::rmat InvarSens(nmeas,nmod);
+      jif3D::rmat InvarSens(nmeas,nmod);
 
       for (size_t i = 0; i < nmeas; ++i)
         {
@@ -163,10 +163,10 @@ BOOST_AUTO_TEST_CASE(ftginvar_test)
             }
         }
 
-      jiba::rvec Misfit(nmeas);
+      jif3D::rvec Misfit(nmeas);
       std::fill(Misfit.begin(),Misfit.end(),1.0);
-      jiba::rvec InvDeriv(InvCalculator->LQDerivative(GravityTest,Misfit));
-      jiba::rvec CompDeriv(2.0 * ublas::prod(trans(InvarSens),Misfit));
+      jif3D::rvec InvDeriv(InvCalculator->LQDerivative(GravityTest,Misfit));
+      jif3D::rvec CompDeriv(2.0 * ublas::prod(trans(InvarSens),Misfit));
       for (size_t i =0; i < InvDeriv.size();++i)
         {
           BOOST_CHECK_CLOSE(InvDeriv(i),CompDeriv(i),std::numeric_limits<float>::epsilon());
@@ -175,16 +175,16 @@ BOOST_AUTO_TEST_CASE(ftginvar_test)
 
   BOOST_AUTO_TEST_CASE(finitediff_test)
     {
-      jiba::FTGInvariant InvarTrans;
-      jiba::rvec TestInput(9);
+      jif3D::FTGInvariant InvarTrans;
+      jif3D::rvec TestInput(9);
       std::generate(TestInput.begin(), TestInput.end(), rand);
 
-      jiba::rvec Invar(InvarTrans.Transform(TestInput));
-      jiba::rmat Deriv(InvarTrans.Derivative(TestInput));
+      jif3D::rvec Invar(InvarTrans.Transform(TestInput));
+      jif3D::rmat Deriv(InvarTrans.Derivative(TestInput));
       const double delta = 0.001;
       for (size_t i = 0; i < TestInput.size(); ++i)
         {
-          jiba::rvec DeltaInput(TestInput);
+          jif3D::rvec DeltaInput(TestInput);
           DeltaInput(i) *= 1.0 + delta;
           double FD = (InvarTrans.Transform(DeltaInput)(0) - Invar(0)) / (delta
               * TestInput(i));

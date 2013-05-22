@@ -20,9 +20,9 @@
 int main()
   {
     //read in the name of the original model
-    std::string modelfilename = jiba::AskFilename("Model Filename: ");
+    std::string modelfilename = jif3D::AskFilename("Model Filename: ");
     //and then create an object containing the old model
-    jiba::ThreeDSeismicModel TomoModel;
+    jif3D::ThreeDSeismicModel TomoModel;
     TomoModel.ReadNetCDF(modelfilename,false);
 
     //seismic models have to have an equally spaced grid in all directions
@@ -63,9 +63,9 @@ int main()
         return 100;
       }
     //setup the coordinates for the refined axes
-    jiba::ThreeDModelBase::t3DModelDim XRefiner(boost::extents[newnx]);
-    jiba::ThreeDModelBase::t3DModelDim YRefiner(boost::extents[newny]);
-    jiba::ThreeDModelBase::t3DModelDim ZRefiner(boost::extents[newnz]);
+    jif3D::ThreeDModelBase::t3DModelDim XRefiner(boost::extents[newnx]);
+    jif3D::ThreeDModelBase::t3DModelDim YRefiner(boost::extents[newny]);
+    jif3D::ThreeDModelBase::t3DModelDim ZRefiner(boost::extents[newnz]);
     for (size_t i = 0; i < newnx; ++i)
       {
         XRefiner[i] = NewDelta * i;
@@ -79,12 +79,12 @@ int main()
         ZRefiner[i] = NewDelta * i;
       }
     //now pass this information to the model refiner object
-    jiba::ModelRefiner Refiner;
+    jif3D::ModelRefiner Refiner;
     Refiner.SetXCoordinates(XRefiner);
     Refiner.SetYCoordinates(YRefiner);
     Refiner.SetZCoordinates(ZRefiner);
     //and create the refined model
-    jiba::ThreeDSeismicModel FineModel;
+    jif3D::ThreeDSeismicModel FineModel;
     Refiner.RefineModel(TomoModel, FineModel);
     //finally write out the refined model with an appropriate filename;
     FineModel.WriteNetCDF(modelfilename+".fine.nc");

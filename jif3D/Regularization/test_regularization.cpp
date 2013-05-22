@@ -25,15 +25,15 @@
 
 BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
 
-    void CheckGradient(jiba::ObjectiveFunction &Objective, const jiba::rvec &Model)
+    void CheckGradient(jif3D::ObjectiveFunction &Objective, const jif3D::rvec &Model)
       {
         Objective.CalcMisfit(Model);
-        jiba::rvec Gradient = Objective.CalcGradient(Model);
+        jif3D::rvec Gradient = Objective.CalcGradient(Model);
         for (size_t i = 0; i < Gradient.size(); ++i)
           {
             double delta = Model(i) * 0.00001;
-            jiba::rvec Forward(Model);
-            jiba::rvec Backward(Model);
+            jif3D::rvec Forward(Model);
+            jif3D::rvec Backward(Model);
             Forward(i) += delta;
             Backward(i) -= delta;
             double FDGrad = (Objective.CalcMisfit(Forward)
@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
     BOOST_AUTO_TEST_CASE (mindiff_test)
       {
         srand(time(NULL));
-        jiba::ThreeDGravityModel GravModel;
+        jif3D::ThreeDGravityModel GravModel;
         const size_t nx = 5;
         const size_t ny = 4;
         const size_t nz = 3;
@@ -55,13 +55,13 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
         GravModel.SetZCellSizes().resize(boost::extents[nz]);
 
         const size_t msize = nx * ny * nz;
-        jiba::rvec StartModel(msize), PertModel(msize);
+        jif3D::rvec StartModel(msize), PertModel(msize);
         std::generate(StartModel.begin(), StartModel.end(), rand);
         std::generate(PertModel.begin(), PertModel.end(), rand);
 
-        jiba::MinDiffRegularization Regularization(GravModel);
+        jif3D::MinDiffRegularization Regularization(GravModel);
         Regularization.SetReferenceModel(StartModel);
-        jiba::rvec Diff = StartModel - PertModel;
+        jif3D::rvec Diff = StartModel - PertModel;
         double Misfit = Regularization.CalcMisfit(PertModel);
         BOOST_CHECK_CLOSE(Misfit, ublas::inner_prod(Diff, Diff), 0.001);
         CheckGradient(Regularization, PertModel);
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
 
     BOOST_AUTO_TEST_CASE (gradreg_test)
       {
-        jiba::ThreeDGravityModel GravModel;
+        jif3D::ThreeDGravityModel GravModel;
         const size_t nx = 5;
         const size_t ny = 4;
         const size_t nz = 3;
@@ -79,13 +79,13 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
         GravModel.SetZCellSizes().resize(boost::extents[nz]);
 
         const size_t msize = GravModel.GetDensities().num_elements();
-        jiba::rvec StartModel(msize), PertModel(msize);
-        jiba::rvec ConstMod(msize);
+        jif3D::rvec StartModel(msize), PertModel(msize);
+        jif3D::rvec ConstMod(msize);
         std::fill(ConstMod.begin(), ConstMod.end(), 1.0);
         std::generate(StartModel.begin(), StartModel.end(), rand);
         std::generate(PertModel.begin(), PertModel.end(), rand);
 
-        jiba::GradientRegularization Regularization(GravModel, 0.0);
+        jif3D::GradientRegularization Regularization(GravModel, 0.0);
         Regularization.SetReferenceModel(StartModel);
         Regularization.SetDataError(StartModel);
         Regularization.SetXWeight(5.0);
@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
     BOOST_AUTO_TEST_CASE (minsupp_test)
       {
         srand(time(NULL));
-        jiba::ThreeDGravityModel GravModel;
+        jif3D::ThreeDGravityModel GravModel;
         const size_t nx = 5;
         const size_t ny = 4;
         const size_t nz = 3;
@@ -110,16 +110,16 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
         GravModel.SetZCellSizes().resize(boost::extents[nz]);
 
         const size_t msize = nx * ny * nz;
-        jiba::rvec StartModel(msize), PertModel(msize);
+        jif3D::rvec StartModel(msize), PertModel(msize);
         std::generate(StartModel.begin(), StartModel.end(), rand);
         std::generate(PertModel.begin(), PertModel.end(), rand);
 
-        boost::shared_ptr<jiba::MatOpRegularization> Regularization(
-            new jiba::MinDiffRegularization(GravModel));
+        boost::shared_ptr<jif3D::MatOpRegularization> Regularization(
+            new jif3D::MinDiffRegularization(GravModel));
         Regularization->SetReferenceModel(StartModel);
         double beta = std::accumulate(StartModel.begin(), StartModel.end(), 0.0)
             / StartModel.size();
-        jiba::MinimumSupport MinSupp(Regularization, beta);
+        jif3D::MinimumSupport MinSupp(Regularization, beta);
 
         double Misfit = MinSupp.CalcMisfit(PertModel);
 
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
     BOOST_AUTO_TEST_CASE (mingradsupp_test)
       {
         srand(time(NULL));
-        jiba::ThreeDGravityModel GravModel;
+        jif3D::ThreeDGravityModel GravModel;
         const size_t nx = 5;
         const size_t ny = 4;
         const size_t nz = 3;
@@ -139,16 +139,16 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
         GravModel.SetZCellSizes().resize(boost::extents[nz]);
 
         const size_t msize = nx * ny * nz;
-        jiba::rvec StartModel(msize), PertModel(msize);
+        jif3D::rvec StartModel(msize), PertModel(msize);
         std::generate(StartModel.begin(), StartModel.end(), rand);
         std::generate(PertModel.begin(), PertModel.end(), rand);
 
-        boost::shared_ptr<jiba::MatOpRegularization> Regularization(
-            new jiba::GradientRegularization(GravModel));
+        boost::shared_ptr<jif3D::MatOpRegularization> Regularization(
+            new jif3D::GradientRegularization(GravModel));
         Regularization->SetReferenceModel(StartModel);
         double beta = std::accumulate(StartModel.begin(), StartModel.end(), 0.0)
             / StartModel.size();
-        jiba::MinimumSupport MinSupp(Regularization, beta);
+        jif3D::MinimumSupport MinSupp(Regularization, beta);
 
         double Misfit = MinSupp.CalcMisfit(PertModel);
 
@@ -158,8 +158,8 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
 //this needs to be extended and refined
     BOOST_AUTO_TEST_CASE (curvreg_test)
       {
-        jiba::ThreeDGravityModel GravModel;
-        jiba::ThreeDSeismicModel GradModel;
+        jif3D::ThreeDGravityModel GravModel;
+        jif3D::ThreeDSeismicModel GradModel;
         const size_t nx = 5;
         const size_t ny = 6;
         const size_t nz = 7;
@@ -171,13 +171,13 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
         GradModel.SetCellSize(cellsize, nx, ny, nz);
 
         const size_t msize = GravModel.GetDensities().num_elements();
-        jiba::rvec StartModel(msize), PertModel(msize), GradModelVec(msize);
-        jiba::rvec ConstMod(msize);
+        jif3D::rvec StartModel(msize), PertModel(msize), GradModelVec(msize);
+        jif3D::rvec ConstMod(msize);
         std::fill(ConstMod.begin(), ConstMod.end(), 1.0);
         std::generate(StartModel.begin(), StartModel.end(), rand);
         std::generate(PertModel.begin(), PertModel.end(), rand);
 
-        jiba::CurvatureRegularization Regularization(GravModel, 0.0);
+        jif3D::CurvatureRegularization Regularization(GravModel, 0.0);
         Regularization.SetReferenceModel(StartModel);
         Regularization.SetDataError(StartModel);
         Regularization.SetXWeight(5.0);
@@ -209,9 +209,9 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
 //this needs to be extended and refined
     BOOST_AUTO_TEST_CASE (curvreg_tear_test)
       {
-        jiba::ThreeDGravityModel GravModel;
-        jiba::ThreeDSeismicModel GradModel;
-        jiba::ThreeDSeismicModel TearX, TearY, TearZ;
+        jif3D::ThreeDGravityModel GravModel;
+        jif3D::ThreeDSeismicModel GradModel;
+        jif3D::ThreeDSeismicModel TearX, TearY, TearZ;
         const size_t nx = 5;
         const size_t ny = 6;
         const size_t nz = 7;
@@ -237,13 +237,13 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
               TearZ.SetSlownesses().data()[i] = 0.0;
           }
         const size_t msize = GravModel.GetDensities().num_elements();
-        jiba::rvec StartModel(msize), PertModel(msize), GradModelVec(msize);
-        jiba::rvec ConstMod(msize);
+        jif3D::rvec StartModel(msize), PertModel(msize), GradModelVec(msize);
+        jif3D::rvec ConstMod(msize);
         std::fill(ConstMod.begin(), ConstMod.end(), 1.0);
         std::generate(StartModel.begin(), StartModel.end(), rand);
         std::generate(PertModel.begin(), PertModel.end(), rand);
 
-        jiba::CurvatureRegularization Regularization(GravModel, TearX, TearY, TearZ);
+        jif3D::CurvatureRegularization Regularization(GravModel, TearX, TearY, TearZ);
         Regularization.SetReferenceModel(StartModel);
         Regularization.SetDataError(StartModel);
         Regularization.SetXWeight(5.0);
@@ -274,21 +274,21 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
 
     BOOST_AUTO_TEST_CASE (crossgrad_test)
       {
-        jiba::ThreeDGravityModel GravModel;
+        jif3D::ThreeDGravityModel GravModel;
         GravModel.SetDensities().resize(boost::extents[3][3][3]);
         srand48(time(NULL));
         const int msize = GravModel.GetDensities().num_elements();
-        jiba::rvec PertModel(msize * 2);
+        jif3D::rvec PertModel(msize * 2);
         for (int i = 0; i < msize; ++i)
           {
             PertModel(i) = i + 1;
             PertModel(i + msize) = 1.0 + double(i % 2 == 0) * (i + 1);
           }
 
-        jiba::CrossGradient Regularization(GravModel);
+        jif3D::CrossGradient Regularization(GravModel);
         //if the two models are scaled versions of each other
         //the cross-gradient should be zero
-        jiba::rvec ZeroModel(msize * 2);
+        jif3D::rvec ZeroModel(msize * 2);
         for (int i = 0; i < msize; ++i)
           {
             ZeroModel(i) = drand48();
@@ -303,22 +303,22 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
 
     BOOST_AUTO_TEST_CASE (dotgrad_test)
       {
-        jiba::ThreeDGravityModel GravModel;
+        jif3D::ThreeDGravityModel GravModel;
         GravModel.SetDensities().resize(boost::extents[3][3][3]);
         srand48(time(NULL));
         const int msize = GravModel.GetDensities().num_elements();
-        jiba::rvec PertModel(msize * 2);
+        jif3D::rvec PertModel(msize * 2);
         for (int i = 0; i < msize; ++i)
           {
             PertModel(i) = drand48();
             PertModel(i + msize) = drand48();
           }
 
-        jiba::CrossGradient CrossReg(GravModel);
-        jiba::DotStructureConstraint DotReg(GravModel);
+        jif3D::CrossGradient CrossReg(GravModel);
+        jif3D::DotStructureConstraint DotReg(GravModel);
         //if the two models are scaled versions of each other
         //the cross-gradient should be zero
-        jiba::rvec ZeroModel(msize * 2);
+        jif3D::rvec ZeroModel(msize * 2);
         for (int i = 0; i < msize; ++i)
           {
             ZeroModel(i) = drand48();
@@ -338,28 +338,28 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
     BOOST_AUTO_TEST_CASE (gradjoint_test)
       {
         srand(time(NULL));
-        jiba::ThreeDGravityModel GravModel;
+        jif3D::ThreeDGravityModel GravModel;
         GravModel.SetDensities().resize(boost::extents[5][4][3]);
 
         const size_t msize = GravModel.GetDensities().num_elements();
-        jiba::rvec StartModel(msize), PertModel(msize);
+        jif3D::rvec StartModel(msize), PertModel(msize);
 
         std::generate(StartModel.begin(), StartModel.end(), rand);
         std::generate(PertModel.begin(), PertModel.end(), rand);
-        boost::shared_ptr<jiba::GradientRegularization> GradReg(
-            new jiba::GradientRegularization(GravModel));
+        boost::shared_ptr<jif3D::GradientRegularization> GradReg(
+            new jif3D::GradientRegularization(GravModel));
 
         GradReg->SetReferenceModel(StartModel);
 
-        boost::shared_ptr<jiba::MinDiffRegularization> DiffReg(
-            new jiba::MinDiffRegularization(GravModel));
+        boost::shared_ptr<jif3D::MinDiffRegularization> DiffReg(
+            new jif3D::MinDiffRegularization(GravModel));
         DiffReg->SetReferenceModel(StartModel);
-        jiba::JointObjective Objective;
+        jif3D::JointObjective Objective;
         Objective.AddObjective(GradReg,
-            boost::shared_ptr<jiba::ModelCopyTransform>(new jiba::ModelCopyTransform),
+            boost::shared_ptr<jif3D::ModelCopyTransform>(new jif3D::ModelCopyTransform),
             0.05);
         Objective.AddObjective(DiffReg,
-            boost::shared_ptr<jiba::ModelCopyTransform>(new jiba::ModelCopyTransform),
+            boost::shared_ptr<jif3D::ModelCopyTransform>(new jif3D::ModelCopyTransform),
             1.23);
         CheckGradient(Objective, PertModel);
       }

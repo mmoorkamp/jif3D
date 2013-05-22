@@ -18,7 +18,7 @@
 #include "ScalarOMPGravityImp.h"
 #include "ReadWriteGravityData.h"
 
-namespace jiba
+namespace jif3D
   {
     static const std::string DensityName = "Density";
     static const std::string DensityUnit = "g/cm3";

@@ -13,7 +13,7 @@
 #include "../ModelBase/VTKTools.h"
 #include "../ModelBase/NetCDFTools.h"
 
-namespace jiba
+namespace jif3D
   {
 
     WaveletCompressedGravityCalculator::WaveletCompressedGravityCalculator(
@@ -95,13 +95,13 @@ namespace jiba
         //them in the compressed sensitivity matrix
         for (size_t l = 0; l < nbglayers; ++l)
           CurrRow[xsize + 1][0][l] = Model.GetBackgroundDensities().at(l);
-        jiba::WaveletTransform(CurrRow);
+        jif3D::WaveletTransform(CurrRow);
 
-        jiba::rvec TransDens(CurrRow.num_elements());
+        jif3D::rvec TransDens(CurrRow.num_elements());
         std::copy(CurrRow.origin(), CurrRow.origin() + CurrRow.num_elements(),
             TransDens.begin());
 
-        jiba::rvec SparseResult(boost::numeric::ublas::prec_prod(SparseSens,
+        jif3D::rvec SparseResult(boost::numeric::ublas::prec_prod(SparseSens,
             TransDens));
 
         return SparseResult;
@@ -128,7 +128,7 @@ namespace jiba
         const size_t sparserowoffset = measindex * Imp->GetDataPerMeasurement();
         for (size_t i = 0; i < Imp->GetDataPerMeasurement(); ++i)
           {
-            boost::numeric::ublas::matrix_row<jiba::rmat> SensRow(
+            boost::numeric::ublas::matrix_row<jif3D::rmat> SensRow(
                 SetCurrentSensitivities(), i);
 
             //SensRow and CurrRow have different sizes, but we have to
@@ -147,7 +147,7 @@ namespace jiba
             for (size_t l = 0; l < nbglayers; ++l)
               CurrRow[xsize + 1][0][l] = SetCurrentSensitivities()(i, xsize
                   * ysize * zsize + l);
-            jiba::WaveletTransform(CurrRow);
+            jif3D::WaveletTransform(CurrRow);
 
             double normall = std::inner_product(CurrRow.origin(),
                 CurrRow.origin() + CurrRow.num_elements(), CurrRow.origin(),

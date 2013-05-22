@@ -15,7 +15,7 @@
 #include "ThreeDGravityModel.h"
 #include "ThreeDGravityImplementation.h"
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup gravity Gravity forward modeling, display and inversion */
     /* @{ */

@@ -13,7 +13,7 @@
 /*! \file Interpolate.h
  * This file contains routines for interpolation and extrapolation.
  */
-namespace jiba
+namespace jif3D
   {
 
     /** \addtogroup util General utility routines */

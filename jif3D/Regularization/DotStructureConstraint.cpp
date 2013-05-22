@@ -8,11 +8,11 @@
 #include "DotStructureConstraint.h"
 #include "../Global/NumUtil.h"
 
-namespace jiba
+namespace jif3D
 {
 	namespace bm = boost::math;
-	void DotStructureConstraint::ImplDataDifference(const jiba::rvec &Model,
-			jiba::rvec &Diff)
+	void DotStructureConstraint::ImplDataDifference(const jif3D::rvec &Model,
+			jif3D::rvec &Diff)
 	{
 		const size_t nmod = Model.size();
 		//We have two complete models and three components of the cross gradient
@@ -22,10 +22,10 @@ namespace jiba
 		//we need the spatial gradients of both models, so we use the
 		//appropriate objective function objects for this
 		FirstGradient.CalcMisfit(
-				ublas::vector_range<const jiba::rvec>(Model,
+				ublas::vector_range<const jif3D::rvec>(Model,
 						ublas::range(0, ndiff)));
 		SecondGradient.CalcMisfit(
-				ublas::vector_range<const jiba::rvec>(Model,
+				ublas::vector_range<const jif3D::rvec>(Model,
 						ublas::range(ndiff, nmod)));
 		for (size_t i = 0; i < ndiff; ++i)
 		{
@@ -60,18 +60,18 @@ namespace jiba
 		}
 	}
 
-	jiba::rvec DotStructureConstraint::ImplGradient(const jiba::rvec &Model,
-			const jiba::rvec &Diff)
+	jif3D::rvec DotStructureConstraint::ImplGradient(const jif3D::rvec &Model,
+			const jif3D::rvec &Diff)
 	{
 		const size_t nmod = Model.size();
 		const size_t halfmod = nmod / 2;
 		FirstGradient.CalcGradient(
-				ublas::vector_range<const jiba::rvec>(Model,
+				ublas::vector_range<const jif3D::rvec>(Model,
 						ublas::range(0, halfmod)));
 		SecondGradient.CalcGradient(
-				ublas::vector_range<const jiba::rvec>(Model,
+				ublas::vector_range<const jif3D::rvec>(Model,
 						ublas::range(halfmod, nmod)));
-		jiba::rvec Gradient(nmod);
+		jif3D::rvec Gradient(nmod);
 		Gradient.clear();
 		for (size_t i = 0; i < halfmod; ++i)
 		{
@@ -156,4 +156,4 @@ namespace jiba
 		// TODO Auto-generated destructor stub
 	}
 
-} /* namespace jiba */
+} /* namespace jif3D */

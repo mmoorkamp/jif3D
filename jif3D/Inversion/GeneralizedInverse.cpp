@@ -13,7 +13,7 @@
 #include <boost/numeric/bindings/traits/vector_traits.hpp>
 #include <boost/numeric/bindings/atlas/cblas3.hpp>
 
-namespace jiba
+namespace jif3D
   {
     namespace atlas = boost::numeric::bindings::atlas;
     namespace ublas = boost::numeric::ublas;

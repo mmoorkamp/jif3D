@@ -22,7 +22,7 @@
 //Test the default state of the object
 BOOST_AUTO_TEST_CASE(constructors_test)
   {
-    const jiba::ThreeDModelBase ConstBaseTest; // 1 //
+    const jif3D::ThreeDModelBase ConstBaseTest; // 1 //
     BOOST_CHECK_EQUAL(ConstBaseTest.GetXCellSizes().size(), (size_t)0 );
     BOOST_CHECK_EQUAL(ConstBaseTest.GetYCellSizes().size(), (size_t)0 );
     BOOST_CHECK_EQUAL(ConstBaseTest.GetZCellSizes().size(), (size_t)0 );
@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(constructors_test)
 
 BOOST_AUTO_TEST_CASE(measpos_test)
   {
-    jiba::ThreeDModelBase BaseTest;
+    jif3D::ThreeDModelBase BaseTest;
     const double oldshiftx = rand();
     const double oldshifty = rand();
     const double oldshiftz = rand();
@@ -70,39 +70,39 @@ BOOST_AUTO_TEST_CASE(measpos_test)
 
 BOOST_AUTO_TEST_CASE(equal_geometry_test)
   {
-    jiba::ThreeDGravityModel Model1;
+    jif3D::ThreeDGravityModel Model1;
     srand(time(0));
     MakeRandomModel(Model1, rand() % 20, 1);
     //we cannot use a ThreeDBaseModel as a concrete object
     //so we use a derived ThreeDGravityModel instead
-    jiba::ThreeDGravityModel Model2(Model1);
+    jif3D::ThreeDGravityModel Model2(Model1);
     //check that we recognize to equal model geometries as equal
-    BOOST_CHECK(jiba::EqualGridGeometry(Model1,Model2));
+    BOOST_CHECK(jif3D::EqualGridGeometry(Model1,Model2));
     //do we recognize differences in x-direction
     const size_t xsize = Model1.GetXCellSizes().num_elements();
-    jiba::ThreeDGravityModel DiffX(Model1);
+    jif3D::ThreeDGravityModel DiffX(Model1);
     DiffX.SetXCellSizes()[rand() % xsize] += 0.1;
-    BOOST_CHECK(!jiba::EqualGridGeometry(Model1,DiffX));
+    BOOST_CHECK(!jif3D::EqualGridGeometry(Model1,DiffX));
 
     //do we recognize differences in y-direction
     const size_t ysize = Model1.GetYCellSizes().num_elements();
-    jiba::ThreeDGravityModel DiffY(Model1);
+    jif3D::ThreeDGravityModel DiffY(Model1);
     DiffY.SetYCellSizes()[rand() % ysize] += 0.1;
-    BOOST_CHECK(!jiba::EqualGridGeometry(Model1,DiffY));
+    BOOST_CHECK(!jif3D::EqualGridGeometry(Model1,DiffY));
 
     //do we recognize differences in z-direction
     const size_t zsize = Model1.GetZCellSizes().num_elements();
-    jiba::ThreeDGravityModel DiffZ(Model1);
+    jif3D::ThreeDGravityModel DiffZ(Model1);
     DiffZ.SetZCellSizes()[rand() % zsize] += 0.1;
-    BOOST_CHECK(!jiba::EqualGridGeometry(Model1,DiffZ));
+    BOOST_CHECK(!jif3D::EqualGridGeometry(Model1,DiffZ));
   }
 
 BOOST_AUTO_TEST_CASE(concurrent_coordinates_test)
   {
-    jiba::ThreeDGravityModel Model;
+    jif3D::ThreeDGravityModel Model;
     srand(time(0));
     MakeRandomModel(Model, rand() % 20, 1);
-    jiba::ThreeDGravityModel ModelCopy(Model);
+    jif3D::ThreeDGravityModel ModelCopy(Model);
 
 #pragma omp parallel default(shared)
       {

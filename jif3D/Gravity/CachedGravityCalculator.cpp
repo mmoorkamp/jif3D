@@ -8,7 +8,7 @@
 
 #include "CachedGravityCalculator.h"
 
-namespace jiba
+namespace jif3D
   {
 
     CachedGravityCalculator::CachedGravityCalculator(boost::shared_ptr<

@@ -8,11 +8,11 @@
 
 #include "NonLinearOptimization.h"
 
-namespace jiba
+namespace jif3D
   {
 
     NonLinearOptimization::NonLinearOptimization(boost::shared_ptr<
-        jiba::ObjectiveFunction> ObjFunction) :
+        jif3D::ObjectiveFunction> ObjFunction) :
       ModelCovDiag(), Objective(ObjFunction), Misfit()
       {
 
@@ -23,7 +23,7 @@ namespace jiba
 
       }
 
-    void NonLinearOptimization::MakeStep(jiba::rvec &CurrentModel)
+    void NonLinearOptimization::MakeStep(jif3D::rvec &CurrentModel)
       {
         if (ModelCovDiag.size() != CurrentModel.size())
           {

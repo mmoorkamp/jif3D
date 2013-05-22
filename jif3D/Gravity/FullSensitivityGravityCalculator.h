@@ -12,7 +12,7 @@
 #include <boost/serialization/base_object.hpp>
 #include "CachedGravityCalculator.h"
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup gravity Gravity forward modeling, display and inversion */
     /* @{ */
@@ -28,7 +28,7 @@ namespace jiba
      * Important note: The stored sensitivities are the raw sensitivities irrespective of any
      * transformation. This is necessary to calculate correct gradients for transformed data.
      */
-    class FullSensitivityGravityCalculator: public jiba::CachedGravityCalculator
+    class FullSensitivityGravityCalculator: public jif3D::CachedGravityCalculator
       {
     private:
       //! The full sensitivity matrix G for the gravity measurements, we use it to calculate the forward response through d = G*m

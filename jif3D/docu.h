@@ -12,7 +12,7 @@
  * \section Introduction
  *
  * jif3D is a C++ framework for joint inversion of different types of geophysical data for sub-basalt, sub-salt and other
- * challenging imaging problems. The general idea of the joint inversion is similar to the jiba program by Heincke et al.,
+ * challenging imaging problems. The general idea of the joint inversion is similar to the jif3D program by Heincke et al.,
  * however it is developed from scratch to provide maximal modularity and avoid lincence clashes between different parts of
  * the program.
  *
@@ -57,7 +57,7 @@ These two libraries are optional and have to be activated in the code through ap
  \section Compilation
 
  Once you have installed everything and set the correct path you should only
- have to run "bjam" from the jiba++ directory. Depending on your compiler
+ have to run "bjam" from the jif3D directory. Depending on your compiler
  and whether you are doing a debug or release compilation, the programs and
  libraries will be put in different directories. These will be output during
  compilation.
@@ -103,7 +103,7 @@ These two libraries are optional and have to be activated in the code through ap
  * have been delivered to the project sponsors.
  *
  * \version Mar 2011
- * This is the final version that is part of the first phase of the JIBA project. The joint inversion code should be relatively
+ * This is the final version that is part of the first phase of the jif3D project. The joint inversion code should be relatively
  * stable and well documented. Also, we fixed a number of bugs and added new features for the last year.
  *
  * \version May 2013
@@ -130,7 +130,7 @@ These two libraries are optional and have to be activated in the code through ap
    \section Acknowledgements
 
    The initial development of the framework was sponsored by Chevron, ExxonMobil, Nexen, RWE Dea,
-   Shell, Statoil and Wintershall within the JIBA consortium. P. Podvin kindly made his eikonal
+   Shell, Statoil and Wintershall within the jif3D consortium. P. Podvin kindly made his eikonal
    solver publicly available. A. Avdeeva supported us with implementing the gradient calculation
    for the MT part of the joint inversion.
  */

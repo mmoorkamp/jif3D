@@ -13,7 +13,7 @@
 #include "../Global/FatalException.h"
 #include <boost/shared_ptr.hpp>
 
-namespace jiba
+namespace jif3D
   {
 
     class MultiplicativeObjective : public JointObjective
@@ -21,13 +21,13 @@ namespace jiba
       private:
       //the implementation of the misfit calculation
       virtual void
-      ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff);
+      ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff);
       //the implementation of the gradient calculation
-      virtual jiba::rvec ImplGradient(const jiba::rvec &Model, const jiba::rvec &Diff);
+      virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model, const jif3D::rvec &Diff);
     public:
       MultiplicativeObjective(bool Verbose = false);
       virtual ~MultiplicativeObjective();
       };
 
-  } /* namespace jiba */
+  } /* namespace jif3D */
 #endif /* MULTIPLICATIVEOBJECTIVE_H_ */

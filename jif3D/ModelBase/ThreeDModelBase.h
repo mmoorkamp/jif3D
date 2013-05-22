@@ -18,7 +18,7 @@
 /*! \file ThreeDModelBase.h
  * Contains the base class for all 3D models.
  */
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup modelbase Basic classes and routines for 3D models
      * This module contains classes that are associated with 3D rectilinear gridded models in general

@@ -13,7 +13,7 @@ int main()
   {
     const int nelements = 1e6;
 
-    jiba::rvec a(nelements), b(nelements);
+    jif3D::rvec a(nelements), b(nelements);
 
     std::generate(a.begin(), a.end(), drand48);
     std::generate(b.begin(), b.end(), drand48);

@@ -18,7 +18,7 @@ BOOST_AUTO_TEST_SUITE( VectorTransform_Test_Suite )
 //We take a random number of input and output parameters
 //and copy the elements from the input that fit into the output
 //if we have more output parameters we fill with zeros
-class  TestTransform : public jiba::VectorTransform
+class  TestTransform : public jif3D::VectorTransform
     {
     private:
       //the number of input parameters
@@ -36,9 +36,9 @@ class  TestTransform : public jiba::VectorTransform
           return nout;
         }
       //the transform that tests the functionality
-      virtual jiba::rvec Transform(const jiba::rvec &InputVector)
+      virtual jif3D::rvec Transform(const jif3D::rvec &InputVector)
         {
-          jiba::rvec Out(nout);
+          jif3D::rvec Out(nout);
           std::fill(Out.begin(),Out.end(),0.0);
           size_t end = std::min(nin,nout);
           for (size_t i = 0; i < end; ++i)
@@ -48,9 +48,9 @@ class  TestTransform : public jiba::VectorTransform
           return Out;
         }
       //we are not interested in the derivative here
-      virtual jiba::rmat Derivative(const jiba::rvec &InputVector)
+      virtual jif3D::rmat Derivative(const jif3D::rvec &InputVector)
         {
-          return jiba::rmat();
+          return jif3D::rmat();
 
         }
       TestTransform(const size_t inputsize,const size_t outputsize):
@@ -74,10 +74,10 @@ class  TestTransform : public jiba::VectorTransform
           //the number of elements in the vector can be different again
           const size_t nelements = nin * ((rand() % 10) + 1);
           //make a random input vector
-          jiba::rvec InVector(nelements);
+          jif3D::rvec InVector(nelements);
           std::generate(InVector.begin(),InVector.end(),drand48);
           //transform the vector
-          jiba::rvec OutVector(jiba::ApplyTransform(InVector,Transform));
+          jif3D::rvec OutVector(jif3D::ApplyTransform(InVector,Transform));
           //check that the transform has been applied correctly
           //regardless of the size of the input/output
           if (nin <= nout)

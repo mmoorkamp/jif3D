@@ -27,8 +27,8 @@
 namespace ublas = boost::numeric::ublas;
 
 //calculate the normalized misfit between observed and synthetic data
-double CalcMisfit(const jiba::rvec &ObservedData,
-    const jiba::rvec &SyntheticData, jiba::rvec &Misfit)
+double CalcMisfit(const jif3D::rvec &ObservedData,
+    const jif3D::rvec &SyntheticData, jif3D::rvec &Misfit)
   {
     std::transform(ObservedData.begin(), ObservedData.end(),
         SyntheticData.begin(), Misfit.begin(), std::minus<double>());
@@ -41,41 +41,41 @@ double CalcMisfit(const jiba::rvec &ObservedData,
 int main()
   {
     //these objects hold information about the measurements and their geometry
-    jiba::rvec Data;
-    jiba::ThreeDGravityModel::tMeasPosVec PosX, PosY, PosZ;
+    jif3D::rvec Data;
+    jif3D::ThreeDGravityModel::tMeasPosVec PosX, PosY, PosZ;
 
-    std::string datafilename = jiba::AskFilename("Data Filename: ");
+    std::string datafilename = jif3D::AskFilename("Data Filename: ");
 
     //get the name of the file containing the data and read it in
 
     //we figure out the type of data (scalar or ftg) from the variables
     //that are in the netcdf file
-    jiba::GravityDataType DataType = jiba::IdentifyGravityDatafileType(
+    jif3D::GravityDataType DataType = jif3D::IdentifyGravityDatafileType(
         datafilename);
 
     //create the pointer for the calculator object without assigning anything
-    boost::shared_ptr<jiba::FullSensitivityGravityCalculator> GravityCalculator;
+    boost::shared_ptr<jif3D::FullSensitivityGravityCalculator> GravityCalculator;
     //now we have to do a few things differently depending on whether we deal
     //with scalar or FTG data
     //1. We have to read the data differently
     //2. We need a different forward modeling object
     switch (DataType)
       {
-    case jiba::scalar:
-      jiba::ReadScalarGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
+    case jif3D::scalar:
+      jif3D::ReadScalarGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
       //assign a scalar forward calculation object to the pointer
       GravityCalculator
-          = boost::shared_ptr<jiba::FullSensitivityGravityCalculator>(
-              jiba::CreateGravityCalculator<
-                  jiba::FullSensitivityGravityCalculator>::MakeScalar(true));
+          = boost::shared_ptr<jif3D::FullSensitivityGravityCalculator>(
+              jif3D::CreateGravityCalculator<
+                  jif3D::FullSensitivityGravityCalculator>::MakeScalar(true));
       break;
-    case jiba::ftg:
-      jiba::ReadTensorGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
+    case jif3D::ftg:
+      jif3D::ReadTensorGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
       //assign a ftg forward calculation object to the pointer
       GravityCalculator
-          = boost::shared_ptr<jiba::FullSensitivityGravityCalculator>(
-              jiba::CreateGravityCalculator<
-                  jiba::FullSensitivityGravityCalculator>::MakeTensor(true));
+          = boost::shared_ptr<jif3D::FullSensitivityGravityCalculator>(
+              jif3D::CreateGravityCalculator<
+                  jif3D::FullSensitivityGravityCalculator>::MakeTensor(true));
       break;
     default:
       //in case we couldn't identify the data in the netcdf file
@@ -102,7 +102,7 @@ int main()
     const double minymeas = *std::min_element(PosY.begin(), PosY.end());
     const double minzmeas = *std::min_element(PosZ.begin(), PosZ.end());
 
-    jiba::rvec XPosDiff(nmeas), YPosDiff(nmeas);
+    jif3D::rvec XPosDiff(nmeas), YPosDiff(nmeas);
     std::adjacent_difference(PosX.begin(), PosX.end(), XPosDiff.begin());
     std::adjacent_difference(PosY.begin(), PosY.end(), YPosDiff.begin());
 
@@ -118,7 +118,7 @@ int main()
     const int nz = 1;
     const double deltaz = 1.0;
     std::cout << "Nx: " << nx << " Ny: " << ny << std::endl;
-    jiba::ThreeDGravityModel Model;
+    jif3D::ThreeDGravityModel Model;
 
     Model.SetXCellSizes().resize(boost::extents[nx]);
     Model.SetYCellSizes().resize(boost::extents[ny]);
@@ -147,15 +147,15 @@ int main()
     //calculate the response of the starting model
     //we need this to get the sensitivities
     std::cout << "Calculating response of starting model." << std::endl;
-    jiba::rvec StartingData(GravityCalculator->Calculate(Model));
+    jif3D::rvec StartingData(GravityCalculator->Calculate(Model));
     std::cout << "Gridded model size: " << ngrid << " Complete size: " << nmod
         << std::endl;
 
     //create objects for the depth weighting
-    jiba::rvec ModelWeight(nmod);
+    jif3D::rvec ModelWeight(nmod);
     std::fill(ModelWeight.begin(), ModelWeight.end(), 1.0);
     //create objects for the misfit and a very basic error estimate
-    jiba::rvec DataDiffVec(ndata);
+    jif3D::rvec DataDiffVec(ndata);
 
     double misfit = CalcMisfit(Data, StartingData, DataDiffVec);
     std::cout << "Initial misfit: " << misfit << std::endl;
@@ -164,7 +164,7 @@ int main()
     //and also equalise the sensitivity matrix
     for (size_t i = 0; i < ndata; ++i)
       {
-        boost::numeric::ublas::matrix_row<jiba::rmat> CurrentRow(
+        boost::numeric::ublas::matrix_row<jif3D::rmat> CurrentRow(
             GravityCalculator->SetSensitivities(), i);
         CurrentRow /= Data(i);
       }
@@ -172,20 +172,20 @@ int main()
     //here comes the core inversion
     //the problem is linear so we only perform a single inversion step
     std::cout << "Performing inversion." << std::endl;
-    jiba::rvec InvModel(nmod);
+    jif3D::rvec InvModel(nmod);
     std::fill(InvModel.begin(), InvModel.end(), defaultdensity);
 
-    jiba::rvec Ones(ndata);
+    jif3D::rvec Ones(ndata);
     std::fill_n(Ones.begin(), ndata, 1.0);
 
     double lambda = 1e-14;
     std::cout << "Lambda: ";
     std::cin >> lambda;
-    jiba::DataSpaceInversion()(GravityCalculator->SetSensitivities(),
+    jif3D::DataSpaceInversion()(GravityCalculator->SetSensitivities(),
         DataDiffVec, ModelWeight, Ones, lambda, InvModel);
 
-    /*jiba::rmat InvMat;
-     jiba::GeneralizedInverse()(GravityCalculator->SetSensitivities(), InvMat,
+    /*jif3D::rmat InvMat;
+     jif3D::GeneralizedInverse()(GravityCalculator->SetSensitivities(), InvMat,
      1e-14);
 
      InvModel = boost::numeric::ublas::prod(InvMat, Ones);*/
@@ -204,7 +204,7 @@ int main()
      Model.AddMeasurementPoint(x, y, newz);
      }*/
     std::cout << "Calculating response of inversion model." << std::endl;
-    jiba::rvec InvData(GravityCalculator->Calculate(Model));
+    jif3D::rvec InvData(GravityCalculator->Calculate(Model));
 
     misfit = CalcMisfit(Data, InvData, DataDiffVec);
     std::cout << "Final misfit: " << misfit << std::endl;
@@ -214,30 +214,30 @@ int main()
     std::cout << "Writing out inversion results." << std::endl;
     switch (DataType)
       {
-    case jiba::scalar:
-      jiba::Write3DDataToVTK(modelfilename + ".inv_sgd.vtk", "grav_accel",
+    case jif3D::scalar:
+      jif3D::Write3DDataToVTK(modelfilename + ".inv_sgd.vtk", "grav_accel",
           InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
           Model.GetMeasPosZ());
-      jiba::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc",
+      jif3D::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc",
           InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
           Model.GetMeasPosZ());
-      jiba::SaveTensorGravityMeasurements(
+      jif3D::SaveTensorGravityMeasurements(
           modelfilename + ".inv_ftg.nc",
-          jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeTensor()->Calculate(
+          jif3D::CreateGravityCalculator<jif3D::MinMemGravityCalculator>::MakeTensor()->Calculate(
               Model), Model.GetMeasPosX(), Model.GetMeasPosY(),
           Model.GetMeasPosZ());
       break;
-    case jiba::ftg:
+    case jif3D::ftg:
 
-      jiba::SaveScalarGravityMeasurements(
+      jif3D::SaveScalarGravityMeasurements(
           modelfilename + ".inv_sgd.nc",
-          jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeScalar()->Calculate(
+          jif3D::CreateGravityCalculator<jif3D::MinMemGravityCalculator>::MakeScalar()->Calculate(
               Model), Model.GetMeasPosX(), Model.GetMeasPosY(),
           Model.GetMeasPosZ());
-      jiba::Write3DTensorDataToVTK(modelfilename + ".inv_ftg.vtk",
+      jif3D::Write3DTensorDataToVTK(modelfilename + ".inv_ftg.vtk",
           "grav_accel", InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
           Model.GetMeasPosZ());
-      jiba::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc",
+      jif3D::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc",
           InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
           Model.GetMeasPosZ());
       break;

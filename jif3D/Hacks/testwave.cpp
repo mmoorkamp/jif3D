@@ -31,7 +31,7 @@ int main()
     //gsl_wavelet_transform_forward(w, gsldata, 1, n*n, work);
     gsl_wavelet2d_transform_forward(w, gsldata, n, n, n, work);
 
-    jiba::WaveletTransform(Data);
+    jif3D::WaveletTransform(Data);
 
     for (size_t i = 0; i < n * n; ++i)
       {

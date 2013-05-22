@@ -8,7 +8,7 @@
 #include <cassert>
 #include "X3DModel.h"
 #include "../Global/NumUtil.h"
-namespace jiba
+namespace jif3D
   {
     //we use these names for storing the model in NetCDF and vtk files
     static const std::string ConductivityName = "Conductivity";

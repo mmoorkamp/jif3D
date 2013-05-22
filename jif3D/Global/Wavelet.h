@@ -14,18 +14,18 @@
  * The basic algorithm is described in Numerical Recipes in C, pp. 595-598
  */
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup util General utility routines */
     /* @{ */
     //! Apply the Daubechies 4 coefficient wavelet filter to a vector
-    void Daub4(jiba::rvec &Invec, const size_t maxindex);
+    void Daub4(jif3D::rvec &Invec, const size_t maxindex);
     //! Apply the inverse Daubechies 4 coefficient wavelet filter to a vector
-    void InvDaub4(jiba::rvec &Invec, const size_t maxindex);
+    void InvDaub4(jif3D::rvec &Invec, const size_t maxindex);
     //! Perform a forward wavelet transform on the input vector
-    void WaveletTransform(jiba::rvec &Invec);
+    void WaveletTransform(jif3D::rvec &Invec);
     //! Perform an inverse wavelet transform on the input vector
-    void InvWaveletTransform(jiba::rvec &Invec);
+    void InvWaveletTransform(jif3D::rvec &Invec);
     //! Multidimensional wavelet transform on a boost multiarray type
     template<typename MultiArrayType>
     void WaveletTransform(MultiArrayType &InArray);
@@ -53,6 +53,6 @@ namespace jiba
             InArray.num_dimensions());
       }
 
-  //end of namespace jiba
+  //end of namespace jif3D
   }
 #endif /* WAVELET_H_ */

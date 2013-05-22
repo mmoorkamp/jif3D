@@ -22,13 +22,13 @@ BOOST_AUTO_TEST_CASE  (test_fileextension)
     {
      //first hte simplest case with a single dot
       std::string OneDot("test.ext");
-      BOOST_CHECK(boost::algorithm::equals( jiba::GetFileExtension(OneDot),".ext"));
+      BOOST_CHECK(boost::algorithm::equals( jif3D::GetFileExtension(OneDot),".ext"));
       //when there are several dots we consider the part after the last dot as the extension
       std::string TwoDots("test.false.ext");
-      BOOST_CHECK(boost::algorithm::equals( jiba::GetFileExtension(TwoDots),".ext"));
+      BOOST_CHECK(boost::algorithm::equals( jif3D::GetFileExtension(TwoDots),".ext"));
       //no dot measn no extension
       std::string NoDots("test");
-      BOOST_CHECK(boost::algorithm::equals( jiba::GetFileExtension(NoDots),""));
+      BOOST_CHECK(boost::algorithm::equals( jif3D::GetFileExtension(NoDots),""));
     }
 
 //check whether we correctly find a token if it is in a file
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE  (test_fileextension)
       //now open the file for reading and find the token
       std::ifstream infile;
       infile.open(filename.c_str());
-      std::string found = jiba::FindToken(infile,Token);
+      std::string found = jif3D::FindToken(infile,Token);
       //we also make sure that the next thing we read from the file
       //is the second line we wrote
       std::string AfterComp;
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE  (test_fileextension)
       std::ifstream infile;
       infile.open(filename.c_str());
       //make sure FindToken throws an exception
-      BOOST_CHECK_THROW(jiba::FindToken(infile,Token),jiba::FatalException);
+      BOOST_CHECK_THROW(jif3D::FindToken(infile,Token),jif3D::FatalException);
 
 
       boost::filesystem::remove(filename.c_str());

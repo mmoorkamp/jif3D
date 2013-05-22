@@ -15,7 +15,7 @@
 #include <boost/shared_ptr.hpp>
 #include "GeneralModelTransform.h"
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup inversion General routines for inversion */
     /* @{ */
@@ -30,7 +30,7 @@ namespace jiba
      * of sections. In principle each section can have a different length n1, n2, ... and the resulting
      * transformed vector will have length n1+n2+...
      */
-    class MultiSectionTransform: public jiba::GeneralModelTransform
+    class MultiSectionTransform: public jif3D::GeneralModelTransform
       {
     private:
       //! The length of the model vector containing the full model
@@ -74,14 +74,14 @@ namespace jiba
        * @param FullModel The full model vector containing all information in generalized form
        * @return A vector pieced together from different sections of the full model and with appropriate transformations applied
        */
-      virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
+      virtual jif3D::rvec GeneralizedToPhysical(const jif3D::rvec &FullModel) const
         {
           using boost::numeric::ublas::subrange;
           //we calculate the total length of the transformed vector from
           //the length of each section
           const size_t outlength = std::accumulate(endindices.begin(), endindices.end(),
               0) - std::accumulate(startindices.begin(), startindices.end(), 0);
-          jiba::rvec Result(outlength);
+          jif3D::rvec Result(outlength);
 
           const size_t nsections = startindices.size();
           //the result will be continuous in memory and always
@@ -108,9 +108,9 @@ namespace jiba
        * @param FullModel The (potentially shorter) vector containing the information pieced together by GeneralizedToPhysical
        * @return The (potentially longer) output vector where the information in the input vector has been copied to the appropriate section, all other values are zero
        */
-      virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
+      virtual jif3D::rvec PhysicalToGeneralized(const jif3D::rvec &FullModel) const
         {
-          jiba::rvec Result(length);
+          jif3D::rvec Result(length);
           Result.clear();
           const size_t nsections = startindices.size();
           size_t currstart = 0;
@@ -134,11 +134,11 @@ namespace jiba
        * @param Derivative The derivative vector with derivative for the different sections
        * @return The drievative for the full model vector
        */
-      virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
-          const jiba::rvec &Derivative) const
+      virtual jif3D::rvec Derivative(const jif3D::rvec &FullModel,
+          const jif3D::rvec &Derivative) const
         {
           using boost::numeric::ublas::subrange;
-          jiba::rvec Result(length);
+          jif3D::rvec Result(length);
           Result.clear();
           const size_t nsections = startindices.size();
           size_t currstart = 0;

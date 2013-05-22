@@ -20,16 +20,16 @@
 
 int main()
   {
-    jiba::X3DModel CoarseMod, FineMesh;
+    jif3D::X3DModel CoarseMod, FineMesh;
     //read the file with the original conductivity model
-    std::string coarsemodname = jiba::AskFilename("Original model: ");
+    std::string coarsemodname = jif3D::AskFilename("Original model: ");
     CoarseMod.ReadNetCDF(coarsemodname);
     //read the file with the mesh for refinement
-    std::string finemeshname = jiba::AskFilename("Refinement mesh: ");
+    std::string finemeshname = jif3D::AskFilename("Refinement mesh: ");
     FineMesh.ReadNetCDF(finemeshname);
     //create a ModelRefiner object and pass the information about
     //the coordinates of the fine model
-    jiba::ModelRefiner Refiner;
+    jif3D::ModelRefiner Refiner;
     Refiner.SetXCoordinates(FineMesh.GetXCoordinates());
     Refiner.SetYCoordinates(FineMesh.GetYCoordinates());
     Refiner.SetZCoordinates(FineMesh.GetZCoordinates());
@@ -41,6 +41,6 @@ int main()
         CoarseMod.GetBackgroundConductivities());
     FineMesh.SetBackgroundThicknesses(CoarseMod.GetBackgroundThicknesses());
     //ask for the name of the output file and write a new netcdf file
-    std::string outname = jiba::AskFilename("Outputfile: ", false);
+    std::string outname = jif3D::AskFilename("Outputfile: ", false);
     FineMesh.WriteNetCDF(outname);
   }

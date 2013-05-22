@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
   {
     std::string ModelFilename, MeasPosFilename;
 
-    jiba::ThreeDGravityModel GravModel;
+    jif3D::ThreeDGravityModel GravModel;
     //depending on the number of calling arguments
     switch (argc)
       {
@@ -63,18 +63,18 @@ int main(int argc, char *argv[])
     std::ofstream outfile("accur.out");
     for (size_t i = 0; i < nruns; ++i)
       {
-        boost::shared_ptr<jiba::WaveletCompressedGravityCalculator>
-            WCalculator(jiba::CreateGravityCalculator<
-                jiba::WaveletCompressedGravityCalculator>::MakeTensor());
+        boost::shared_ptr<jif3D::WaveletCompressedGravityCalculator>
+            WCalculator(jif3D::CreateGravityCalculator<
+                jif3D::WaveletCompressedGravityCalculator>::MakeTensor());
 
         const double z0 = 5.0;
         const double DepthExponent = -3.0;
         const size_t zsize = GravModel.GetDensities().shape()[2];
-        jiba::rvec WeightVector(zsize);
+        jif3D::rvec WeightVector(zsize);
 
-        jiba::ConstructDepthWeighting(GravModel.GetZCellSizes(), z0,
-            WeightVector, jiba::WeightingTerm(DepthExponent));
-        jiba::rvec ModelWeight(GravModel.GetDensities().num_elements());
+        jif3D::ConstructDepthWeighting(GravModel.GetZCellSizes(), z0,
+            WeightVector, jif3D::WeightingTerm(DepthExponent));
+        jif3D::rvec ModelWeight(GravModel.GetDensities().num_elements());
         ;
         std::fill_n(ModelWeight.begin(), ModelWeight.size(), 0);
         for (size_t i = 0; i < GravModel.GetDensities().num_elements(); ++i)
@@ -84,8 +84,8 @@ int main(int argc, char *argv[])
         WCalculator->SetWitheningVector().resize(ModelWeight.size());
         std::copy(ModelWeight.begin(),ModelWeight.end(),WCalculator->SetWitheningVector().begin());
         WCalculator->SetAccuracy(accuracy);
-        jiba::rvec Wavelet1(WCalculator->Calculate(GravModel));
-        jiba::rvec Wavelet2(WCalculator->Calculate(GravModel));
+        jif3D::rvec Wavelet1(WCalculator->Calculate(GravModel));
+        jif3D::rvec Wavelet2(WCalculator->Calculate(GravModel));
 
         const size_t nmeas = GravModel.GetMeasPosX().size();
         const size_t ndata = WCalculator->GetDataPerMeasurement();

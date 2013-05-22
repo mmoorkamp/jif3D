@@ -8,7 +8,7 @@
 
 #include "MTEquations.h"
 
-namespace jiba
+namespace jif3D
   {
     /*! Transform the field spectra to impedance values in S.I. units.
      * @param Ex1 The electric field in x-direction for the first source polarization

@@ -17,7 +17,7 @@
  * time_gravity_size --help.
  */
 
-void MakeTestModel(jiba::ThreeDGravityModel &Model, const size_t size)
+void MakeTestModel(jif3D::ThreeDGravityModel &Model, const size_t size)
   {
     Model.SetXCellSizes().resize(boost::extents[size]);
     Model.SetYCellSizes().resize(boost::extents[size]);
@@ -79,7 +79,7 @@ int main(int ac, char* av[])
     std::string filename;
     bool wantcuda = false;
     bool wantcached = false;
-    boost::shared_ptr<jiba::ThreeDGravityCalculator> Calculator;
+    boost::shared_ptr<jif3D::ThreeDGravityCalculator> Calculator;
 
 
     if (vm.count("gpu"))
@@ -94,11 +94,11 @@ int main(int ac, char* av[])
         if (vm.count("threads"))
           {
             omp_set_num_threads(vm["threads"].as<int>());
-            filename += jiba::stringify(vm["threads"].as<int>());
+            filename += jif3D::stringify(vm["threads"].as<int>());
           }
         else
           {
-            filename += jiba::stringify(omp_get_max_threads());
+            filename += jif3D::stringify(omp_get_max_threads());
           }
       }
 
@@ -114,13 +114,13 @@ int main(int ac, char* av[])
         filename += "ftg.time";
         if (wantcached)
           {
-            Calculator = jiba::CreateGravityCalculator<
-                jiba::FullSensitivityGravityCalculator>::MakeTensor(wantcuda);
+            Calculator = jif3D::CreateGravityCalculator<
+                jif3D::FullSensitivityGravityCalculator>::MakeTensor(wantcuda);
           }
         else
           {
-            Calculator = jiba::CreateGravityCalculator<
-                jiba::MinMemGravityCalculator>::MakeTensor(wantcuda);
+            Calculator = jif3D::CreateGravityCalculator<
+                jif3D::MinMemGravityCalculator>::MakeTensor(wantcuda);
 
           }
 
@@ -130,13 +130,13 @@ int main(int ac, char* av[])
         filename += "scalar.time";
         if (wantcached)
           {
-            Calculator = jiba::CreateGravityCalculator<
-                jiba::FullSensitivityGravityCalculator>::MakeScalar(wantcuda);
+            Calculator = jif3D::CreateGravityCalculator<
+                jif3D::FullSensitivityGravityCalculator>::MakeScalar(wantcuda);
           }
         else
           {
-            Calculator = jiba::CreateGravityCalculator<
-                jiba::MinMemGravityCalculator>::MakeScalar(wantcuda);
+            Calculator = jif3D::CreateGravityCalculator<
+                jif3D::MinMemGravityCalculator>::MakeScalar(wantcuda);
           }
       }
 
@@ -147,7 +147,7 @@ int main(int ac, char* av[])
       {
         const size_t modelsize = (i + 1) * 2;
         std::cout << "Current model size: " << pow(modelsize, 3) << std::endl;
-        jiba::ThreeDGravityModel GravityTest;
+        jif3D::ThreeDGravityModel GravityTest;
 
         double rawruntime = 0.0;
         double cachedruntime = 0.0;
@@ -161,7 +161,7 @@ int main(int ac, char* av[])
 
             boost::posix_time::ptime firststarttime =
                 boost::posix_time::microsec_clock::local_time();
-            jiba::rvec gravmeas(Calculator->Calculate(GravityTest));
+            jif3D::rvec gravmeas(Calculator->Calculate(GravityTest));
 
             boost::posix_time::ptime firstendtime =
                 boost::posix_time::microsec_clock::local_time();
@@ -172,7 +172,7 @@ int main(int ac, char* av[])
               {
                 boost::posix_time::ptime secondstarttime =
                     boost::posix_time::microsec_clock::local_time();
-                jiba::rvec gravmeas2(Calculator->Calculate(GravityTest));
+                jif3D::rvec gravmeas2(Calculator->Calculate(GravityTest));
                 boost::posix_time::ptime secondendtime =
                     boost::posix_time::microsec_clock::local_time();
 

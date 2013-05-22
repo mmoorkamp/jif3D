@@ -10,7 +10,7 @@
 #include "../Global/NumUtil.h"
 #include "../ModelBase/NetCDFTools.h"
 
-namespace jiba
+namespace jif3D
   {
 
     static const std::string ScalarGravityName = "Scalar_gravity";
@@ -79,7 +79,7 @@ namespace jiba
      * @param PosZ The z-coordinate (Depth) of each measurement in m
      */
     void SaveScalarGravityMeasurements(const std::string &filename,
-        const jiba::rvec &Data, const ThreeDGravityModel::tMeasPosVec &PosX,
+        const jif3D::rvec &Data, const ThreeDGravityModel::tMeasPosVec &PosX,
         const ThreeDGravityModel::tMeasPosVec &PosY,
         const ThreeDGravityModel::tMeasPosVec &PosZ)
       {
@@ -122,7 +122,7 @@ namespace jiba
      * @param PosZ The z-coordinate (Depth) of each measurement in m
      */
     void ReadScalarGravityMeasurements(const std::string &filename,
-        jiba::rvec &Data, ThreeDGravityModel::tMeasPosVec &PosX,
+        jif3D::rvec &Data, ThreeDGravityModel::tMeasPosVec &PosX,
         ThreeDGravityModel::tMeasPosVec &PosY,
         ThreeDGravityModel::tMeasPosVec &PosZ)
       {
@@ -142,7 +142,7 @@ namespace jiba
      * @param PosZ The z-coordinate (Depth) of each measurement in m
      */
     void ReadTensorGravityMeasurements(const std::string &filename,
-        jiba::rvec &Data, ThreeDGravityModel::tMeasPosVec &PosX,
+        jif3D::rvec &Data, ThreeDGravityModel::tMeasPosVec &PosX,
         ThreeDGravityModel::tMeasPosVec &PosY,
         ThreeDGravityModel::tMeasPosVec &PosZ)
       {
@@ -174,7 +174,7 @@ namespace jiba
      * @param PosZ The z-coordinate (Depth) of each measurement in m
      */
     void SaveTensorGravityMeasurements(const std::string &filename,
-        const jiba::rvec &Data, const ThreeDGravityModel::tMeasPosVec &PosX,
+        const jif3D::rvec &Data, const ThreeDGravityModel::tMeasPosVec &PosX,
         const ThreeDGravityModel::tMeasPosVec &PosY,
         const ThreeDGravityModel::tMeasPosVec &PosZ)
       {

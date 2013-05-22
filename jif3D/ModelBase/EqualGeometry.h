@@ -13,7 +13,7 @@
 #include "../Global/FatalException.h"
 #include "ThreeDModelBase.h"
 
-namespace jiba {
+namespace jif3D {
 //! Test if two models have the same grid geometry
 /*! This function can be used to test whether two 3D models have the same grid geometry, i.e. the same number of cells
  * in each direction with the same sizes.
@@ -21,8 +21,8 @@ namespace jiba {
  * @param Model2 the second model for the comparison
  * @return True if the geometries are equal, false otherwise
  */
-inline bool EqualGridGeometry(const jiba::ThreeDModelBase &Model1,
-		const jiba::ThreeDModelBase &Model2) {
+inline bool EqualGridGeometry(const jif3D::ThreeDModelBase &Model1,
+		const jif3D::ThreeDModelBase &Model2) {
 	//we first make a cheap test and then the more expensive ones
 	if (Model1.GetNModelElements() != Model2.GetNModelElements())
            { 

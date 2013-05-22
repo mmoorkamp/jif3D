@@ -14,7 +14,7 @@
 #include "../ModelBase/ThreeDModelBase.h"
 #include "GeneralModelTransform.h"
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup inversion General routines for inversion */
     /* @{ */
@@ -29,7 +29,7 @@ namespace jiba
      * where s is slowness and the coefficient a,b,c can be specified
      * in the constructor.
      */
-    class ConductivityTransform: public jiba::GeneralModelTransform
+    class ConductivityTransform: public jif3D::GeneralModelTransform
       {
     private:
       //! The coefficient for the quadratic term of the transform
@@ -41,7 +41,7 @@ namespace jiba
       //! Pointer to an object that translates generalized parameters to slowness, before we translate slowness to conductivity
       boost::shared_ptr<GeneralModelTransform> SlownessTransform;
       //! An object indicating where to apply the parameter relationship (value 1)
-      jiba::ThreeDModelBase RelModel;
+      jif3D::ThreeDModelBase RelModel;
       //! The value to use for density where the relationship is not valid
       double replacevalue;
       friend class boost::serialization::access;
@@ -64,10 +64,10 @@ namespace jiba
           return new ConductivityTransform(*this);
         }
       //! Transform Generalized parameters in terms of slowness to conductivity using a functional relationship
-      virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
+      virtual jif3D::rvec GeneralizedToPhysical(const jif3D::rvec &FullModel) const
         {
-          jiba::rvec Slowness(SlownessTransform->GeneralizedToPhysical(FullModel));
-          jiba::rvec Conductivity(FullModel.size());
+          jif3D::rvec Slowness(SlownessTransform->GeneralizedToPhysical(FullModel));
+          jif3D::rvec Conductivity(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
               if (RelModel.GetData().data()[i])
@@ -83,10 +83,10 @@ namespace jiba
           return Conductivity;
         }
       //! Transform Conductivity to Slowness and then Generalized Parameters
-      virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
+      virtual jif3D::rvec PhysicalToGeneralized(const jif3D::rvec &FullModel) const
         {
           size_t nvals = FullModel.size();
-          jiba::rvec Slowness(nvals);
+          jif3D::rvec Slowness(nvals);
           for (size_t i = 0; i < nvals; ++i)
             {
               if (RelModel.GetData().data()[i])
@@ -103,12 +103,12 @@ namespace jiba
           return SlownessTransform->PhysicalToGeneralized(Slowness);
         }
       //! Transform the derivative with respect to the physical parameters to normalized parameters
-      virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
-          const jiba::rvec &Derivative) const
+      virtual jif3D::rvec Derivative(const jif3D::rvec &FullModel,
+          const jif3D::rvec &Derivative) const
         {
-          jiba::rvec Slowness(SlownessTransform->GeneralizedToPhysical(FullModel));
-          jiba::rvec SlowDeriv(SlownessTransform->Derivative(FullModel, Derivative));
-          jiba::rvec Gradient(FullModel.size());
+          jif3D::rvec Slowness(SlownessTransform->GeneralizedToPhysical(FullModel));
+          jif3D::rvec SlowDeriv(SlownessTransform->Derivative(FullModel, Derivative));
+          jif3D::rvec Gradient(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
             {
               if (RelModel.GetData().data()[i])
@@ -141,7 +141,7 @@ namespace jiba
        * @param cval The offset in the exponential
        */
       ConductivityTransform(boost::shared_ptr<GeneralModelTransform> SlowTrans,
-          const jiba::ThreeDModelBase &RModel, double rvalue = 3.3, double aval = 2.31e-7,
+          const jif3D::ThreeDModelBase &RModel, double rvalue = 3.3, double aval = 2.31e-7,
           double bval = -5.79e-4, double cval = 0.124) :
           a(aval), b(bval), c(cval), SlownessTransform(SlowTrans), RelModel(RModel), replacevalue(
               rvalue)

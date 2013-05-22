@@ -12,7 +12,7 @@
 #include <boost/serialization/base_object.hpp>
 #include "MatOpRegularization.h"
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup Regularization classes to regularize the inversion */
     /* @{ */
@@ -26,7 +26,7 @@ namespace jiba
       {
     private:
       //! For simplicity in the class hierarchy we use a matrix to calculate the difference
-      void ConstructOperator(const jiba::ThreeDModelBase &ModelGeometry)
+      void ConstructOperator(const jif3D::ThreeDModelBase &ModelGeometry)
         {
           const size_t ngrid = ModelGeometry.GetData().num_elements();
           //The operator matrix is simply the identity matrix
@@ -49,7 +49,7 @@ namespace jiba
           return new MinDiffRegularization(*this);
         }
       //! The constructor needs the model geometry
-      MinDiffRegularization(const jiba::ThreeDModelBase &Geometry) :
+      MinDiffRegularization(const jif3D::ThreeDModelBase &Geometry) :
           MatOpRegularization(Geometry)
         {
           ConstructOperator(Geometry);

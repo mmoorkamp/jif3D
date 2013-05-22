@@ -11,7 +11,7 @@
 
 #include "../Global/VectorTransform.h"
 #include <cassert>
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup gravity Gravity forward modeling, display and inversion */
     /* @{ */
@@ -28,7 +28,7 @@ namespace jiba
       //! we return one invariant as output at each call
       static const size_t noutput = 1;
       //! calculate the invariant from 9 observations
-      double CalcInvariant(const jiba::rvec &Data)
+      double CalcInvariant(const jif3D::rvec &Data)
         {
           return Data(0) * Data(4) + Data(4) * Data(8) + Data(0) * Data(8)
               - Data(3) * Data(1) - Data(7) * Data(5) - Data(2) * Data(6);
@@ -49,10 +49,10 @@ namespace jiba
        * @param InputVector The tensor elements as a vector in c-storage order, has to have 9 elements
        * @return A vector with a single element, the calculated invariant.
        */
-      virtual jiba::rvec Transform(const jiba::rvec &InputVector)
+      virtual jif3D::rvec Transform(const jif3D::rvec &InputVector)
         {
           assert(InputVector.size() == ninput);
-          jiba::rvec result(1);
+          jif3D::rvec result(1);
           result(0) = CalcInvariant(InputVector);
           return result;
         }
@@ -62,11 +62,11 @@ namespace jiba
        * @param InputVector The tensor elements as a vector in c-storage order, has to have 9 elements
        * @return A 1x9 matrix of partial derivatives
        */
-      virtual jiba::rmat Derivative(const jiba::rvec &InputVector)
+      virtual jif3D::rmat Derivative(const jif3D::rvec &InputVector)
         {
           const size_t ndata = InputVector.size();
           assert(ndata == ninput);
-          jiba::rmat InvarSens(noutput, ninput);
+          jif3D::rmat InvarSens(noutput, ninput);
 
           InvarSens(0, 0) = InputVector(4) + InputVector(8);
           InvarSens(0, 1) = -InputVector(3);

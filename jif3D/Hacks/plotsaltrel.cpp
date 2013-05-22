@@ -11,7 +11,7 @@
 #include "../ModelBase/VTKTools.h"
 #include <fstream>
 
-//class DensTransform: public jiba::GeneralModelTransform
+//class DensTransform: public jif3D::GeneralModelTransform
 //  {
 //public:
 //  DensTransform()
@@ -20,22 +20,22 @@
 //  virtual ~DensTransform()
 //    {
 //    }
-//  virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
+//  virtual jif3D::rvec GeneralizedToPhysical(const jif3D::rvec &FullModel) const
 //    {
-//      jiba::rvec result(1);
+//      jif3D::rvec result(1);
 //      result(0) = 2.2;
 //      return result;
 //    }
-//  virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
+//  virtual jif3D::rvec PhysicalToGeneralized(const jif3D::rvec &FullModel) const
 //    {
-//      jiba::rvec result(1);
+//      jif3D::rvec result(1);
 //      result(0) = 2.2;
 //      return result;
 //    }
-//  virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
-//      const jiba::rvec &Derivative) const
+//  virtual jif3D::rvec Derivative(const jif3D::rvec &FullModel,
+//      const jif3D::rvec &Derivative) const
 //    {
-//      jiba::rvec result(1);
+//      jif3D::rvec result(1);
 //      result(0) = 0.0;
 //      return result;
 //    }
@@ -43,18 +43,18 @@
 
 int main()
   {
-    jiba::ThreeDGravityModel RModel;
+    jif3D::ThreeDGravityModel RModel;
     RModel.SetDensities().resize(boost::extents[1][1][1]);
-    boost::shared_ptr<jiba::GeneralModelTransform> DensTrans(
-        new jiba::DensityTransform(
-            boost::shared_ptr<jiba::GeneralModelTransform>(
-                new jiba::ModelCopyTransform()),RModel));
+    boost::shared_ptr<jif3D::GeneralModelTransform> DensTrans(
+        new jif3D::DensityTransform(
+            boost::shared_ptr<jif3D::GeneralModelTransform>(
+                new jif3D::ModelCopyTransform()),RModel));
 
-    boost::shared_ptr<jiba::GeneralModelTransform> CondTrans(
-        new jiba::ConductivityTransform(
-            boost::shared_ptr<jiba::GeneralModelTransform>(
-                new jiba::ModelCopyTransform()),RModel));
-    jiba::SaltRelConstraint SaltRel(DensTrans, CondTrans);
+    boost::shared_ptr<jif3D::GeneralModelTransform> CondTrans(
+        new jif3D::ConductivityTransform(
+            boost::shared_ptr<jif3D::GeneralModelTransform>(
+                new jif3D::ModelCopyTransform()),RModel));
+    jif3D::SaltRelConstraint SaltRel(DensTrans, CondTrans);
 
     double minvel = 2000;
     double maxvel = 6000;
@@ -90,7 +90,7 @@ int main()
             for (double dens = mindens; dens < maxdens; dens += densstep)
               {
 
-                jiba::rvec Model(3);
+                jif3D::rvec Model(3);
                 Model(0) = 1.0 / vel;
                 Model(1) = dens;
                 Model(2) = pow(10, logcond);
@@ -102,19 +102,19 @@ int main()
           }
         ++currvelindex;
       }
-    jiba::Write3DModelToVTK("saltrel.vtk", "SaltReal", VelAxis, LogCondAxis, DensAxis,
+    jif3D::Write3DModelToVTK("saltrel.vtk", "SaltReal", VelAxis, LogCondAxis, DensAxis,
         Misfit);
 
-    jiba::ConductivityTransform SlowCond(
-        boost::shared_ptr<jiba::GeneralModelTransform>(new jiba::ModelCopyTransform()),RModel);
-    jiba::rvec Model(nvel);
+    jif3D::ConductivityTransform SlowCond(
+        boost::shared_ptr<jif3D::GeneralModelTransform>(new jif3D::ModelCopyTransform()),RModel);
+    jif3D::rvec Model(nvel);
     size_t i = 0;
     for (double vel = minvel; vel < maxvel; vel += velstep)
       {
         Model(i) = 1.0 / vel;
         ++i;
       }
-    jiba::rvec Cond = SlowCond.GeneralizedToPhysical(Model);
+    jif3D::rvec Cond = SlowCond.GeneralizedToPhysical(Model);
     std::ofstream outfile("velres.dat");
     for (i = 0; i < nvel; ++i)
       {

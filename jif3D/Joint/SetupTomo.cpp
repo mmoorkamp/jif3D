@@ -11,7 +11,7 @@
 #include "SetupTomo.h"
 #include <iostream>
 
-namespace jiba
+namespace jif3D
   {
 
     SetupTomo::SetupTomo() :
@@ -35,11 +35,11 @@ namespace jiba
       }
 
     bool SetupTomo::SetupObjective(const po::variables_map &vm,
-        jiba::JointObjective &Objective,
-        boost::shared_ptr<jiba::GeneralModelTransform> Transform, double xorigin,
+        jif3D::JointObjective &Objective,
+        boost::shared_ptr<jif3D::GeneralModelTransform> Transform, double xorigin,
         double yorigin)
       {
-        jiba::rvec TomoData;
+        jif3D::rvec TomoData;
 
         double tomolambda = 1.0;
         std::cout << "Tomography Lambda: ";
@@ -48,7 +48,7 @@ namespace jiba
         if (tomolambda > 0.0)
           {
             //first we read in the starting model and the measured data
-            std::string modelfilename = jiba::AskFilename(
+            std::string modelfilename = jif3D::AskFilename(
                 "Tomography inversion model Filename: ");
             //we read in the starting modelfile
             //the starting model does not necessarily obey the gridding rules for seismic data
@@ -58,34 +58,34 @@ namespace jiba
             TomoModel.WriteVTK(modelfilename + ".vtk");
 
             //get the name of the file containing the data and read it in
-            std::string tomodatafilename = jiba::AskFilename(
+            std::string tomodatafilename = jif3D::AskFilename(
                 "Tomography Data Filename: ");
 
             //read in data
-            jiba::ReadTraveltimes(tomodatafilename, TomoData, TomoModel);
+            jif3D::ReadTraveltimes(tomodatafilename, TomoData, TomoModel);
             TomoModel.SetOrigin(xorigin, yorigin, 0.0);
             bool writerays = false;
             if (vm.count("writerays"))
               {
                 writerays = true;
               }
-            jiba::TomographyCalculator Calculator(writerays);
+            jif3D::TomographyCalculator Calculator(writerays);
 
             TomoObjective = boost::shared_ptr<
-                jiba::ThreeDModelObjective<jiba::TomographyCalculator> >(
-                new jiba::ThreeDModelObjective<jiba::TomographyCalculator>(Calculator));
+                jif3D::ThreeDModelObjective<jif3D::TomographyCalculator> >(
+                new jif3D::ThreeDModelObjective<jif3D::TomographyCalculator>(Calculator));
             TomoObjective->SetObservedData(TomoData);
             TomoObjective->SetCoarseModelGeometry(TomoModel);
             //we assume the same error for all measurements
             //this is either the default value set in the constructor
             //or set by the user
-            jiba::rvec TomoError(TomoData.size());
+            jif3D::rvec TomoError(TomoData.size());
             std::fill(TomoError.begin(), TomoError.end(), pickerr);
             TomoObjective->SetDataError(TomoError);
 
             if (vm.count("tomofine"))
               {
-                jiba::ThreeDSeismicModel TomoFineGeometry;
+                jif3D::ThreeDSeismicModel TomoFineGeometry;
                 TomoFineGeometry.ReadNetCDF(FineModelName);
                 //copy measurement configuration to refined model
                 TomoFineGeometry.CopyMeasurementConfigurations(TomoModel);

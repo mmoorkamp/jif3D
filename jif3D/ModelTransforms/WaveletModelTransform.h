@@ -16,14 +16,14 @@
 #include "../Global/convert.h"
 #include "GeneralModelTransform.h"
 
-namespace jiba
+namespace jif3D
   {
     //! This class can be used to express the parameters in the wavelet domain and apply regularization there
     /*! This is an experimental transformation class to test whether it works to parametrize the
      * joint inversion model in terms of wavelet parameters. Currently the model has to have
      * a number of cells in each direction that is a power of 2.
      */
-    class WaveletModelTransform: public jiba::GeneralModelTransform
+    class WaveletModelTransform: public jif3D::GeneralModelTransform
       {
     private:
       //! The size of the grid in x-direction
@@ -35,7 +35,7 @@ namespace jiba
       //! We need to transform the vector of model parameters to a 3D grid with correct geometry, this member is used to create this grid
       mutable boost::multi_array<double, 3> Grid;
       //! Copy the model vector to the 3D grid and perform either a forward or inverse wavelet transform, then copy back to a vector
-      jiba::rvec Transform(const jiba::rvec &Vector,
+      jif3D::rvec Transform(const jif3D::rvec &Vector,
           boost::function1<void, boost::multi_array<double, 3> &> &WaveTrans) const
         {
           if (Vector.size() > Grid.num_elements())
@@ -55,7 +55,7 @@ namespace jiba
                   Grid[j][k][l] = Vector(j * (xslicesize) + k * zsize + l);
               }
           WaveTrans(Grid);
-          jiba::rvec result(Vector.size());
+          jif3D::rvec result(Vector.size());
           for (size_t j = 0; j < xsize; ++j)
             for (size_t k = 0; k < ysize; ++k)
               {
@@ -72,22 +72,22 @@ namespace jiba
           return new WaveletModelTransform(*this);
         }
       //! Transform generalized model parameters (wavelet coefficients) to physical parameters
-      virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
+      virtual jif3D::rvec GeneralizedToPhysical(const jif3D::rvec &FullModel) const
         {
           boost::function1<void, boost::multi_array<double, 3> &> func =
-              &jiba::WaveletTransform<boost::multi_array<double, 3> >;
+              &jif3D::WaveletTransform<boost::multi_array<double, 3> >;
           return Transform(FullModel, func);
         }
       //! Transform physical parameters to generalized model parameters (wavelet coefficients)
-      virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
+      virtual jif3D::rvec PhysicalToGeneralized(const jif3D::rvec &FullModel) const
         {
           boost::function1<void, boost::multi_array<double, 3> &> func =
-              &jiba::InvWaveletTransform<boost::multi_array<double, 3> >;
+              &jif3D::InvWaveletTransform<boost::multi_array<double, 3> >;
           return Transform(FullModel, func);
         }
       //! Transform the derivative with respect to physical parameters into the wavelet domain
-      virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
-          const jiba::rvec &Derivative) const
+      virtual jif3D::rvec Derivative(const jif3D::rvec &FullModel,
+          const jif3D::rvec &Derivative) const
         {
           return GeneralizedToPhysical(Derivative);
         }
@@ -96,14 +96,14 @@ namespace jiba
           xsize(nx), ysize(ny), zsize(nz)
         {
           if (!IsPowerOfTwo(nx))
-            throw jiba::FatalException(
-                "X-dimension of grid is not a power of two: " + jiba::stringify(nx));
+            throw jif3D::FatalException(
+                "X-dimension of grid is not a power of two: " + jif3D::stringify(nx));
           if (!IsPowerOfTwo(ny))
-            throw jiba::FatalException(
-                "Y-dimension of grid is not a power of two: " + jiba::stringify(ny));
+            throw jif3D::FatalException(
+                "Y-dimension of grid is not a power of two: " + jif3D::stringify(ny));
           if (!IsPowerOfTwo(nz))
-            throw jiba::FatalException(
-                "Z-dimension of grid is not a power of two: " + jiba::stringify(nz));
+            throw jif3D::FatalException(
+                "Z-dimension of grid is not a power of two: " + jif3D::stringify(nz));
           Grid.resize(boost::extents[nx][ny][nz]);
         }
       };

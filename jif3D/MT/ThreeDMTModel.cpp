@@ -8,7 +8,7 @@
 
 #include "ThreeDMTModel.h"
 
-namespace jiba
+namespace jif3D
   {
 
     ThreeDMTModel::ThreeDMTModel() :

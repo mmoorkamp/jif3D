@@ -11,7 +11,7 @@
 
 #include "../Global/VecMat.h"
 #include "../Global/NumUtil.h"
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup gravity Gravity forward modeling, display and inversion */
     /* @{ */
@@ -53,7 +53,7 @@ namespace jiba
         //the measurement is outside the layer
         if ((measz <= top) || (measz >= bottom))
           {
-            return 2.0 * M_PI * Grav_const * thick * jiba::sign(top - measz);
+            return 2.0 * M_PI * Grav_const * thick * jif3D::sign(top - measz);
           }
         //if we get here it means the measurement is inside the layer
         return 2.0 * M_PI * Grav_const * (thick - 2.0 * (measz - top));
@@ -71,6 +71,6 @@ namespace jiba
         return 4.0 * M_PI * Grav_const;
       }
   /* @} */
-  //end of namespace jiba
+  //end of namespace jif3D
   }
 #endif /* BASICGRAVELEMENTS_H_ */

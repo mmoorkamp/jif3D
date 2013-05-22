@@ -8,11 +8,11 @@
 
 #include "GradientBasedOptimization.h"
 
-namespace jiba
+namespace jif3D
   {
 
     GradientBasedOptimization::GradientBasedOptimization(boost::shared_ptr<
-        jiba::ObjectiveFunction> ObjFunction) :
+        jif3D::ObjectiveFunction> ObjFunction) :
       NonLinearOptimization(ObjFunction), HaveEvaluated_(false), RawGrad(),
           CovGrad(), SearchDir()
       {
@@ -25,7 +25,7 @@ namespace jiba
       }
 
     void GradientBasedOptimization::EvaluateModel(
-        const jiba::rvec &CurrentModel)
+        const jif3D::rvec &CurrentModel)
       {
         if (!HaveEvaluated_)
           {

@@ -10,7 +10,7 @@
 #include "BasicGravElements.h"
 #include "GravityBackground.h"
 
-namespace jiba
+namespace jif3D
   {
 
     TensorOMPGravityImp::TensorOMPGravityImp()

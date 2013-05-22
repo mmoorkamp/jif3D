@@ -44,9 +44,9 @@ int main(int argc, char *argv[])
         "The number of openmp threads")("covmod", po::value<std::string>(),
         "A file containing the model covariance");
 
-    jiba::SetupRegularization RegSetup;
-    jiba::SetupInversion InversionSetup;
-    jiba::SetupGravity GravitySetup;
+    jif3D::SetupRegularization RegSetup;
+    jif3D::SetupInversion InversionSetup;
+    jif3D::SetupGravity GravitySetup;
     desc.add(RegSetup.SetupOptions());
     desc.add(InversionSetup.SetupOptions());
     desc.add(GravitySetup.SetupOptions());
@@ -65,10 +65,10 @@ int main(int argc, char *argv[])
         omp_set_num_threads(vm["threads"].as<int>());
       }
 
-    jiba::rvec CovModVec;
+    jif3D::rvec CovModVec;
     if (vm.count("covmod"))
       {
-        jiba::ThreeDGravityModel CovModel;
+        jif3D::ThreeDGravityModel CovModel;
         CovModel.ReadNetCDF(vm["covmod"].as<std::string>());
         const size_t ncovmod = CovModel.GetDensities().num_elements();
         CovModVec.resize(ncovmod);
@@ -76,18 +76,18 @@ int main(int argc, char *argv[])
             CovModel.GetDensities().origin() + ncovmod, CovModVec.begin());
       }
 
-    boost::shared_ptr<jiba::GeneralModelTransform> Transform;
+    boost::shared_ptr<jif3D::GeneralModelTransform> Transform;
 
-    boost::shared_ptr<jiba::JointObjective> Objective(new jiba::JointObjective(true));
+    boost::shared_ptr<jif3D::JointObjective> Objective(new jif3D::JointObjective(true));
     GravitySetup.SetupObjective(vm, *Objective.get(), Transform);
 
-    jiba::rvec InvModel(GravitySetup.GetScalModel().GetDensities().num_elements());
+    jif3D::rvec InvModel(GravitySetup.GetScalModel().GetDensities().num_elements());
     std::copy(GravitySetup.GetScalModel().GetDensities().origin(),
         GravitySetup.GetScalModel().GetDensities().origin()
             + GravitySetup.GetScalModel().GetDensities().num_elements(),
         InvModel.begin());
 
-    boost::shared_ptr<jiba::ObjectiveFunction> Regularization = RegSetup.SetupObjective(
+    boost::shared_ptr<jif3D::ObjectiveFunction> Regularization = RegSetup.SetupObjective(
         vm, GravitySetup.GetScalModel(), CovModVec);
 
     double reglambda = 1.0;
@@ -98,9 +98,9 @@ int main(int argc, char *argv[])
 
     std::cout << "Performing inversion." << std::endl;
 
-    //jiba::rvec Ones(CovModVec);
+    //jif3D::rvec Ones(CovModVec);
     //std::fill(Ones.begin(),Ones.end(),1.0);
-    boost::shared_ptr<jiba::GradientBasedOptimization> Optimizer =
+    boost::shared_ptr<jif3D::GradientBasedOptimization> Optimizer =
         InversionSetup.ConfigureInversion(vm, Objective, InvModel, CovModVec);
 
     size_t iteration = 0;
@@ -109,7 +109,7 @@ int main(int argc, char *argv[])
     std::cin >> maxiter;
     std::string modelfilename("result");
     std::ofstream misfitfile("misfit.out");
-    jiba::ThreeDGravityModel GravModel(GravitySetup.GetScalModel());
+    jif3D::ThreeDGravityModel GravModel(GravitySetup.GetScalModel());
     do
       {
         try
@@ -117,11 +117,11 @@ int main(int argc, char *argv[])
             std::cout << "Iteration: " << iteration << std::endl;
             Optimizer->MakeStep(InvModel);
 
-            jiba::rvec DensInvModel = Transform->GeneralizedToPhysical(InvModel);
+            jif3D::rvec DensInvModel = Transform->GeneralizedToPhysical(InvModel);
             std::copy(DensInvModel.begin(), DensInvModel.end(),
                 GravModel.SetDensities().origin());
             GravModel.WriteVTK(
-                modelfilename + jiba::stringify(iteration) + ".grav.inv.vtk");
+                modelfilename + jif3D::stringify(iteration) + ".grav.inv.vtk");
 
             ++iteration;
             std::cout << "Gradient Norm: " << Optimizer->GetGradNorm() << std::endl;
@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
 
             misfitfile << " " << Objective->GetNEval();
             misfitfile << std::endl;
-          } catch (jiba::FatalException &e)
+          } catch (jif3D::FatalException &e)
           {
             std::cerr << e.what() << std::endl;
             iteration = maxiter;
@@ -145,7 +145,7 @@ int main(int argc, char *argv[])
       } while (iteration < maxiter && Optimizer->GetMisfit() > 1
         && Optimizer->GetGradNorm() > 1e-6);
 
-    jiba::rvec DensInvModel(Transform->GeneralizedToPhysical(InvModel));
+    jif3D::rvec DensInvModel(Transform->GeneralizedToPhysical(InvModel));
 
     std::copy(DensInvModel.begin(),
         DensInvModel.begin() + GravModel.SetDensities().num_elements(),
@@ -154,23 +154,23 @@ int main(int argc, char *argv[])
     //calculate the predicted data
     std::cout << "Calculating response of inversion model." << std::endl;
 
-    boost::shared_ptr<jiba::MinMemGravityCalculator> ScalGravityCalculator =
-        boost::shared_ptr<jiba::MinMemGravityCalculator>(
-            jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeScalar());
-    jiba::rvec GravInvData(ScalGravityCalculator->Calculate(GravModel));
-    jiba::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc", GravInvData,
+    boost::shared_ptr<jif3D::MinMemGravityCalculator> ScalGravityCalculator =
+        boost::shared_ptr<jif3D::MinMemGravityCalculator>(
+            jif3D::CreateGravityCalculator<jif3D::MinMemGravityCalculator>::MakeScalar());
+    jif3D::rvec GravInvData(ScalGravityCalculator->Calculate(GravModel));
+    jif3D::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc", GravInvData,
         GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ());
 
-    boost::shared_ptr<jiba::MinMemGravityCalculator> FTGGravityCalculator =
-        boost::shared_ptr<jiba::MinMemGravityCalculator>(
-            jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeTensor());
-    jiba::rvec FTGInvData(FTGGravityCalculator->Calculate(GravModel));
-    jiba::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc", FTGInvData,
+    boost::shared_ptr<jif3D::MinMemGravityCalculator> FTGGravityCalculator =
+        boost::shared_ptr<jif3D::MinMemGravityCalculator>(
+            jif3D::CreateGravityCalculator<jif3D::MinMemGravityCalculator>::MakeTensor());
+    jif3D::rvec FTGInvData(FTGGravityCalculator->Calculate(GravModel));
+    jif3D::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc", FTGInvData,
         GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ());
 
-    jiba::Write3DDataToVTK(modelfilename + ".inv_sgd.vtk", "grav_accel", GravInvData,
+    jif3D::Write3DDataToVTK(modelfilename + ".inv_sgd.vtk", "grav_accel", GravInvData,
         GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ());
-    jiba::Write3DTensorDataToVTK(modelfilename + ".inv_ftg.vtk", "U", FTGInvData,
+    jif3D::Write3DTensorDataToVTK(modelfilename + ".inv_ftg.vtk", "U", FTGInvData,
         GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ());
     //and write out the data and model
     //here we have to distinguish again between scalar and ftg data

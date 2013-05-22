@@ -9,7 +9,7 @@
 #include "OneDMTCalculator.h"
 #include "MTEquations.h"
 
-namespace jiba
+namespace jif3D
   {
 
     OneDMTCalculator::OneDMTCalculator()
@@ -32,7 +32,7 @@ namespace jiba
      * @param Model A X3D model object containing background conductivities, thicknesses and N calculation frequencies
      * @return A real vector of size 2N with the real and imaginary parts of the corresponding MT impedances.
      */
-    jiba::rvec OneDMTCalculator::Calculate(const ModelType &Model)
+    jif3D::rvec OneDMTCalculator::Calculate(const ModelType &Model)
       {
         const size_t nfreq = Model.GetFrequencies().size();
         const size_t nlayers = Model.GetBackgroundThicknesses().size();
@@ -46,7 +46,7 @@ namespace jiba
         double d;
         double sigmacurr, sigmalow;
 
-        jiba::rvec result(nfreq * 2);
+        jif3D::rvec result(nfreq * 2);
         Z.resize(nfreq);
         gammakj.resize(nlayers, nfreq);
         gammaj.resize(nlayers, nfreq);
@@ -95,11 +95,11 @@ namespace jiba
         return result;
       }
 
-    jiba::rvec OneDMTCalculator::LQDerivative(const ModelType &Model, const rvec &Misfit)
+    jif3D::rvec OneDMTCalculator::LQDerivative(const ModelType &Model, const rvec &Misfit)
       {
         const size_t nfreq = Model.GetFrequencies().size();
         const size_t nlayers = Model.GetBackgroundThicknesses().size();
-        jiba::rvec result(nlayers, 0.0);
+        jif3D::rvec result(nlayers, 0.0);
         for (size_t i = 0; i < nfreq; ++i)
           {
             alpha(0, i) = gammakj(0, i);
@@ -124,4 +124,4 @@ namespace jiba
         return 2.0 * result;
       }
 
-  } /* namespace jiba */
+  } /* namespace jif3D */

@@ -13,7 +13,7 @@
 #include <boost/numeric/bindings/atlas/cblas3.hpp>
 #endif
 
-namespace jiba
+namespace jif3D
   {
 
 #ifdef HAVEATLAS
@@ -42,7 +42,7 @@ namespace jiba
         const size_t endindex = (measindex + 1)
             * Imp.get()->RawDataPerMeasurement();
         //construct a range that we can assign the current sensitivities to
-        ublas::matrix_range<jiba::rmat> mr(Sensitivities, ublas::range(
+        ublas::matrix_range<jif3D::rmat> mr(Sensitivities, ublas::range(
             startindex, endindex), ublas::range(0, Sensitivities.size2()));
         mr = SetCurrentSensitivities();
       }
@@ -131,11 +131,11 @@ namespace jiba
             for (size_t i = 0; i < Misfit.size(); i += nout)
               {
                 size_t outindex = i / nout * nin;
-                ublas::vector_range<jiba::rvec> OutRange(ProcessedMisfit,
+                ublas::vector_range<jif3D::rvec> OutRange(ProcessedMisfit,
                     ublas::range(outindex, outindex + nin));
-                ublas::vector_range<const jiba::rvec> InRange(Misfit,
+                ublas::vector_range<const jif3D::rvec> InRange(Misfit,
                     ublas::range(i, i + nout));
-                ublas::vector_range<const jiba::rvec> DataRange(Data,
+                ublas::vector_range<const jif3D::rvec> DataRange(Data,
                     ublas::range(outindex, outindex + nin));
                 OutRange = ublas::prod(trans(Transform->Derivative(DataRange)),
                     InRange);

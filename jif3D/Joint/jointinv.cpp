@@ -49,10 +49,10 @@ namespace po = boost::program_options;
 
 //! Use a parameter transform to translate the model vector to a model object and write the model to files for plotting and saving
 template<class ModelType>
-void SaveModel(const jiba::rvec &InvModel, const jiba::GeneralModelTransform &Transform,
+void SaveModel(const jif3D::rvec &InvModel, const jif3D::GeneralModelTransform &Transform,
     ModelType &ModelObject, const std::string &filename)
   {
-    jiba::rvec TransModel = Transform.GeneralizedToPhysical(InvModel);
+    jif3D::rvec TransModel = Transform.GeneralizedToPhysical(InvModel);
     assert(TransModel.size() >= ModelObject.GetNModelElements());
     std::copy(TransModel.begin(), TransModel.begin() + ModelObject.GetNModelElements(),
         ModelObject.SetData().origin());
@@ -62,7 +62,7 @@ void SaveModel(const jiba::rvec &InvModel, const jiba::GeneralModelTransform &Tr
 
 //! Store the current misfit for all individual objectives with appropriate formating in an output stream
 void StoreMisfit(std::ofstream &misfitfile, const size_t iteration, const double Misfit,
-    const jiba::JointObjective &Objective)
+    const jif3D::JointObjective &Objective)
   {
     misfitfile << std::setw(5) << iteration << " " << std::setw(15) << Misfit << " ";
     for (size_t i = 0; i < Objective.GetIndividualFits().size(); ++i)
@@ -75,7 +75,7 @@ void StoreMisfit(std::ofstream &misfitfile, const size_t iteration, const double
   }
 
 //! Check whether we have reached the target misfit for one of the objective functions in the JointObjective object
-bool CheckConvergence(const jiba::JointObjective &Objective)
+bool CheckConvergence(const jif3D::JointObjective &Objective)
   {
     bool terminate = true;
     for (size_t i = 0; i < Objective.GetIndividualFits().size() - 1; ++i)
@@ -111,12 +111,12 @@ int main(int argc, char *argv[])
     //first we create objects that manage the setup of individual parts
     //that way we can reuse these objects so that other programs use
     //exactly the same options
-    jiba::SetupTomo TomoSetup;
-    jiba::SetupGravity GravitySetup;
-    jiba::SetupMT MTSetup;
-    jiba::SetupInversion InversionSetup;
-    jiba::SetupRegularization RegSetup;
-    jiba::SetupCoupling CouplingSetup;
+    jif3D::SetupTomo TomoSetup;
+    jif3D::SetupGravity GravitySetup;
+    jif3D::SetupMT MTSetup;
+    jif3D::SetupInversion InversionSetup;
+    jif3D::SetupRegularization RegSetup;
+    jif3D::SetupCoupling CouplingSetup;
     bool WaveletParm = false;
     double xorigin, yorigin;
     //we also create a number of options that are specific to our joint inversion
@@ -187,10 +187,10 @@ int main(int argc, char *argv[])
           }
       }
 
-    jiba::rvec CovModVec;
+    jif3D::rvec CovModVec;
     if (vm.count("covmod"))
       {
-        jiba::ThreeDSeismicModel CovModel;
+        jif3D::ThreeDSeismicModel CovModel;
         //we store the covariances in a seismic model file
         //but we do not have to have an equidistant grid
         CovModel.ReadNetCDF(vm["covmod"].as<std::string>(), false);
@@ -200,18 +200,18 @@ int main(int argc, char *argv[])
             CovModel.GetSlownesses().origin() + ncovmod, CovModVec.begin());
       }
     //we want some output so we set Verbose in the constructor to true
-    boost::shared_ptr<jiba::JointObjective> Objective;
-    Objective = boost::shared_ptr<jiba::JointObjective>(new jiba::JointObjective(true));
+    boost::shared_ptr<jif3D::JointObjective> Objective;
+    Objective = boost::shared_ptr<jif3D::JointObjective>(new jif3D::JointObjective(true));
 
     //we need a number of transformation objects to translate the generalized model parameters
     //used by the inversion algorithm to physically meaningful parameters for the forward
     //calculation. The exact type of transformation depends on the chosen coupling
     //and is assigned below
-    boost::shared_ptr<jiba::GeneralModelTransform> TomoTransform, MTTransform,
+    boost::shared_ptr<jif3D::GeneralModelTransform> TomoTransform, MTTransform,
         GravityTransform;
     //coupling setup is responsible to set the appropriate transformation
     //as we have to use different ones depending on the chose coupling mechanism
-    jiba::ThreeDSeismicModel StartModel;
+    jif3D::ThreeDSeismicModel StartModel;
     CouplingSetup.SetupTransforms(vm, StartModel, TomoTransform, GravityTransform,
         MTTransform, WaveletParm);
 
@@ -221,7 +221,7 @@ int main(int argc, char *argv[])
         yorigin);
     if (havetomo && !EqualGridGeometry(TomoSetup.GetModel(), StartModel))
       {
-        throw jiba::FatalException(
+        throw jif3D::FatalException(
             "Tomography model does not have the same geometry as starting model");
       }
     //setup the gravity part of the joint inversion
@@ -231,7 +231,7 @@ int main(int argc, char *argv[])
     //to make sure that the starting models have the same geometry (not considering refinement)
     if (havegrav && !EqualGridGeometry(StartModel, GravitySetup.GetScalModel()))
       {
-        throw jiba::FatalException(
+        throw jif3D::FatalException(
             "Gravity model does not have the same geometry as starting model");
       }
     //setup the MT part of the joint inversion
@@ -241,17 +241,17 @@ int main(int argc, char *argv[])
     //to make sure that the starting models have the same geometry (not considering refinement)
     if (havemt && !EqualGridGeometry(MTSetup.GetModel(), StartModel))
       {
-        throw jiba::FatalException(
+        throw jif3D::FatalException(
             "MT model does not have the same geometry as starting model");
       }
     //now we setup the regularization
-    boost::shared_ptr<jiba::RegularizationFunction> Regularization = RegSetup.SetupObjective(
+    boost::shared_ptr<jif3D::RegularizationFunction> Regularization = RegSetup.SetupObjective(
         vm, StartModel, CovModVec);
 
     //the vector InvModel will hold the current inversion model
     //depending on the chosen coupling mechanism it will have different size
     //so we fill its content in the object Coupling setup
-    jiba::rvec InvModel;
+    jif3D::rvec InvModel;
     CouplingSetup.SetupModelVector(vm, InvModel, StartModel, TomoSetup.GetModel(),
         GravitySetup.GetScalModel(), MTSetup.GetModel(), *Objective.get(), Regularization,
         RegSetup.GetSubStart());
@@ -265,7 +265,7 @@ int main(int argc, char *argv[])
 
     std::cout << "Performing inversion." << std::endl;
 
-    boost::shared_ptr<jiba::GradientBasedOptimization> Optimizer =
+    boost::shared_ptr<jif3D::GradientBasedOptimization> Optimizer =
         InversionSetup.ConfigureInversion(vm, Objective, InvModel, CovModVec);
 
     std::string modelfilename = "result";
@@ -273,20 +273,20 @@ int main(int argc, char *argv[])
     //and general quality control
     if (havetomo)
       {
-        jiba::Write3DDataToVTK(modelfilename + ".rec.vtk", "Receiver",
-            jiba::rvec(TomoSetup.GetModel().GetMeasPosX().size()),
+        jif3D::Write3DDataToVTK(modelfilename + ".rec.vtk", "Receiver",
+            jif3D::rvec(TomoSetup.GetModel().GetMeasPosX().size()),
             TomoSetup.GetModel().GetMeasPosX(), TomoSetup.GetModel().GetMeasPosY(),
             TomoSetup.GetModel().GetMeasPosZ());
-        jiba::Write3DDataToVTK(modelfilename + ".sor.vtk", "Source",
-            jiba::rvec(TomoSetup.GetModel().GetSourcePosX().size()),
+        jif3D::Write3DDataToVTK(modelfilename + ".sor.vtk", "Source",
+            jif3D::rvec(TomoSetup.GetModel().GetSourcePosX().size()),
             TomoSetup.GetModel().GetSourcePosX(), TomoSetup.GetModel().GetSourcePosY(),
             TomoSetup.GetModel().GetSourcePosZ());
       }
 
     if (havemt)
       {
-        jiba::Write3DDataToVTK(modelfilename + ".mt_sites.vtk", "MT Sites",
-            jiba::rvec(MTSetup.GetModel().GetMeasPosX().size()),
+        jif3D::Write3DDataToVTK(modelfilename + ".mt_sites.vtk", "MT Sites",
+            jif3D::rvec(MTSetup.GetModel().GetMeasPosX().size()),
             MTSetup.GetModel().GetMeasPosX(), MTSetup.GetModel().GetMeasPosY(),
             MTSetup.GetModel().GetMeasPosZ());
       }
@@ -297,9 +297,9 @@ int main(int argc, char *argv[])
     double InitialMisfit = Objective->CalcMisfit(InvModel);
     StoreMisfit(misfitfile, 0, InitialMisfit, *Objective);
 
-    jiba::ThreeDGravityModel GravModel(GravitySetup.GetScalModel());
-    jiba::X3DModel MTModel(MTSetup.GetModel());
-    jiba::ThreeDSeismicModel TomoModel(TomoSetup.GetModel());
+    jif3D::ThreeDGravityModel GravModel(GravitySetup.GetScalModel());
+    jif3D::X3DModel MTModel(MTSetup.GetModel());
+    jif3D::ThreeDSeismicModel TomoModel(TomoSetup.GetModel());
 
     if (!havetomo)
       TomoModel = StartModel;
@@ -309,14 +309,14 @@ int main(int argc, char *argv[])
       GravModel = StartModel;
 
     bool terminate = false;
-    jiba::rvec OldModel(InvModel);
+    jif3D::rvec OldModel(InvModel);
     //this is the core inversion loop, we make optimization steps
     //until either we reach the maximum number of iterations
     //or fulfill a termination criterion
     while (iteration < maxiter && !terminate)
       {
         terminate = true;
-        //we catch all jiba internal exceptions so that we can graciously
+        //we catch all jif3D internal exceptions so that we can graciously
         //exit and write out some final information before stopping the program
         try
           {
@@ -331,18 +331,18 @@ int main(int argc, char *argv[])
             //we save all models at each iteration, so we can look at the development
             // and use intermediate models in case something goes wrong
             SaveModel(InvModel, *TomoTransform.get(), TomoModel,
-                modelfilename + jiba::stringify(iteration) + ".tomo.inv");
+                modelfilename + jif3D::stringify(iteration) + ".tomo.inv");
             SaveModel(InvModel, *MTTransform.get(), MTModel,
-                modelfilename + jiba::stringify(iteration) + ".mt.inv");
+                modelfilename + jif3D::stringify(iteration) + ".mt.inv");
             SaveModel(InvModel, *GravityTransform.get(), GravModel,
-                modelfilename + jiba::stringify(iteration) + ".grav.inv");
+                modelfilename + jif3D::stringify(iteration) + ".grav.inv");
             //write out some information about misfit to the screen
             std::cout << "Currrent Misfit: " << Optimizer->GetMisfit() << std::endl;
             std::cout << "Currrent Gradient: " << Optimizer->GetGradNorm() << std::endl;
             //and write the current misfit for all objectives to a misfit file
             StoreMisfit(misfitfile, iteration, Optimizer->GetMisfit(), *Objective);
             std::cout << "\n\n";
-          } catch (jiba::FatalException &e)
+          } catch (jif3D::FatalException &e)
           {
             std::cerr << e.what() << std::endl;
             InvModel = OldModel;
@@ -351,7 +351,7 @@ int main(int argc, char *argv[])
         //we stop when either we do not make any improvement any more
         terminate = CheckConvergence(*Objective);
         //or the file abort exists in the current directory
-        terminate = terminate || jiba::WantAbort();
+        terminate = terminate || jif3D::WantAbort();
       }
 
     SaveModel(InvModel, *TomoTransform.get(), TomoModel, modelfilename + ".tomo.inv");
@@ -367,10 +367,10 @@ int main(int argc, char *argv[])
 
     if (havetomo)
       {
-        jiba::rvec TomoInvData(TomoSetup.GetTomoObjective().GetSyntheticData());
-        jiba::SaveTraveltimes(modelfilename + ".inv_tt.nc", TomoInvData, TomoModel);
-        jiba::rvec TomoDiff(TomoSetup.GetTomoObjective().GetIndividualMisfit());
-        jiba::SaveTraveltimes(modelfilename + ".diff_tt.nc", TomoDiff, TomoModel);
+        jif3D::rvec TomoInvData(TomoSetup.GetTomoObjective().GetSyntheticData());
+        jif3D::SaveTraveltimes(modelfilename + ".inv_tt.nc", TomoInvData, TomoModel);
+        jif3D::rvec TomoDiff(TomoSetup.GetTomoObjective().GetIndividualMisfit());
+        jif3D::SaveTraveltimes(modelfilename + ".diff_tt.nc", TomoDiff, TomoModel);
       }
     //if we are inverting gravity data and have specified site locations
     if (havegrav)
@@ -379,31 +379,31 @@ int main(int argc, char *argv[])
         //here we have to distinguish again between scalar and ftg data
         if (GravitySetup.GetHaveScal())
           {
-            jiba::rvec ScalGravInvData(
+            jif3D::rvec ScalGravInvData(
                 GravitySetup.GetScalGravObjective().GetSyntheticData());
-            jiba::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc",
+            jif3D::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc",
                 ScalGravInvData, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
                 GravModel.GetMeasPosZ());
-            jiba::rvec ScalDiff(GravitySetup.GetScalGravObjective().GetIndividualMisfit());
-            jiba::SaveScalarGravityMeasurements(modelfilename + ".diff_sgd.nc", ScalDiff,
+            jif3D::rvec ScalDiff(GravitySetup.GetScalGravObjective().GetIndividualMisfit());
+            jif3D::SaveScalarGravityMeasurements(modelfilename + ".diff_sgd.nc", ScalDiff,
                 GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
                 GravModel.GetMeasPosZ());
-            jiba::Write3DDataToVTK(modelfilename + ".inv_sgd.vtk", "grav_accel",
+            jif3D::Write3DDataToVTK(modelfilename + ".inv_sgd.vtk", "grav_accel",
                 ScalGravInvData, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
                 GravModel.GetMeasPosZ());
 
           }
         if (GravitySetup.GetHaveFTG())
           {
-            jiba::rvec FTGInvData(GravitySetup.GetFTGObjective().GetSyntheticData());
-            jiba::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc", FTGInvData,
+            jif3D::rvec FTGInvData(GravitySetup.GetFTGObjective().GetSyntheticData());
+            jif3D::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc", FTGInvData,
                 GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
                 GravModel.GetMeasPosZ());
-            jiba::rvec FTGDiff(GravitySetup.GetFTGObjective().GetIndividualMisfit());
-            jiba::SaveTensorGravityMeasurements(modelfilename + ".diff_ftg.nc", FTGDiff,
+            jif3D::rvec FTGDiff(GravitySetup.GetFTGObjective().GetIndividualMisfit());
+            jif3D::SaveTensorGravityMeasurements(modelfilename + ".diff_ftg.nc", FTGDiff,
                 GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
                 GravModel.GetMeasPosZ());
-            jiba::Write3DTensorDataToVTK(modelfilename + ".diff_ftg.vtk", "U", FTGInvData,
+            jif3D::Write3DTensorDataToVTK(modelfilename + ".diff_ftg.vtk", "U", FTGInvData,
                 GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
                 GravModel.GetMeasPosZ());
           }
@@ -413,12 +413,12 @@ int main(int argc, char *argv[])
     if (havemt)
       {
         //calculate MT inversion result
-        jiba::rvec MTInvData(MTSetup.GetMTObjective().GetSyntheticData());
-        jiba::WriteImpedancesToNetCDF(modelfilename + ".inv_mt.nc",
+        jif3D::rvec MTInvData(MTSetup.GetMTObjective().GetSyntheticData());
+        jif3D::WriteImpedancesToNetCDF(modelfilename + ".inv_mt.nc",
             MTModel.GetFrequencies(), MTModel.GetMeasPosX(), MTModel.GetMeasPosY(),
             MTModel.GetMeasPosZ(), MTInvData, MTSetup.GetMTObjective().GetDataError());
-        jiba::rvec MTDiff(MTSetup.GetMTObjective().GetIndividualMisfit());
-        jiba::WriteImpedancesToNetCDF(modelfilename + ".diff_mt.nc",
+        jif3D::rvec MTDiff(MTSetup.GetMTObjective().GetIndividualMisfit());
+        jif3D::WriteImpedancesToNetCDF(modelfilename + ".diff_mt.nc",
             MTModel.GetFrequencies(), MTModel.GetMeasPosX(), MTModel.GetMeasPosY(),
             MTModel.GetMeasPosZ(), MTDiff, MTSetup.GetMTObjective().GetDataError());
       }

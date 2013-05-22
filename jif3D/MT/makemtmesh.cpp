@@ -28,7 +28,7 @@ using namespace std;
 int main()
   {
 
-    jiba::X3DModel Model;
+    jif3D::X3DModel Model;
     int nx, ny, nz;
     double deltax, deltay, deltaz;
     //first find out the basic mesh parameters
@@ -59,7 +59,7 @@ int main()
     fill_n(Model.SetConductivities().origin(),
         Model.GetConductivities().num_elements(), defaultconductivity);
     //ask for a filename to write the mesh to
-    std::string MeshFilename = jiba::AskFilename("Meshfile name: ", false);
+    std::string MeshFilename = jif3D::AskFilename("Meshfile name: ", false);
     //we set the calculation frequencies to a dummy value
     //the forward modeling program asks for those anyway
     Model.SetFrequencies().assign(1, 10.0);

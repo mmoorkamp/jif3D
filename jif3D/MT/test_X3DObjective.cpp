@@ -21,7 +21,7 @@
 
 BOOST_AUTO_TEST_SUITE( X3DCalculator_Suite )
 
-void  MakeMTModel(jiba::X3DModel &Model)
+void  MakeMTModel(jif3D::X3DModel &Model)
     {
       const size_t xsize = 3;
       const size_t ysize = 4;
@@ -72,12 +72,12 @@ void  MakeMTModel(jiba::X3DModel &Model)
 
   BOOST_AUTO_TEST_CASE (X3D_fail_test)
     {
-      jiba::X3DModel Model;
-      jiba::rvec Observed;
-      jiba::X3DMTCalculator Calculator;
-      jiba::ThreeDModelObjective<jiba::X3DMTCalculator> Objective(Calculator);
-      BOOST_CHECK_THROW(Objective.SetObservedData(Observed),jiba::FatalException);
-      BOOST_CHECK_THROW(Objective.SetCoarseModelGeometry(Model),jiba::FatalException);
+      jif3D::X3DModel Model;
+      jif3D::rvec Observed;
+      jif3D::X3DMTCalculator Calculator;
+      jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator> Objective(Calculator);
+      BOOST_CHECK_THROW(Objective.SetObservedData(Observed),jif3D::FatalException);
+      BOOST_CHECK_THROW(Objective.SetCoarseModelGeometry(Model),jif3D::FatalException);
       Observed.resize(10);
       Observed.clear();
       BOOST_CHECK_NO_THROW(Objective.SetObservedData(Observed));
@@ -87,45 +87,45 @@ void  MakeMTModel(jiba::X3DModel &Model)
       Model.AddMeasurementPoint(10.0,12.0,0.0);
       Model.AddMeasurementPoint(13.0,14.0,30.0);
       Objective.SetCoarseModelGeometry(Model);
-      BOOST_CHECK_THROW(Objective.CalcMisfit(jiba::rvec(Model.GetConductivities().num_elements())),jiba::FatalException);
+      BOOST_CHECK_THROW(Objective.CalcMisfit(jif3D::rvec(Model.GetConductivities().num_elements())),jif3D::FatalException);
     }
 
   BOOST_AUTO_TEST_CASE (X3D_basic_deriv_test)
     {
 
-      jiba::X3DModel Model;
+      jif3D::X3DModel Model;
       MakeMTModel(Model);
       const size_t xsize = Model.GetXCoordinates().size();
       const size_t ysize = Model.GetYCoordinates().size();
       const size_t zsize = Model.GetZCoordinates().size();
       const size_t nmod = xsize * ysize * zsize;
 
-      jiba::X3DModel TrueModel(Model);
+      jif3D::X3DModel TrueModel(Model);
       std::fill_n(TrueModel.SetConductivities().origin(),nmod,0.012);
 
-      jiba::X3DMTCalculator Calculator;
-      jiba::rvec Observed = Calculator.Calculate(TrueModel);
+      jif3D::X3DMTCalculator Calculator;
+      jif3D::rvec Observed = Calculator.Calculate(TrueModel);
 
       std::vector<double> Freq(TrueModel.GetFrequencies());
 
-      jiba::WriteImpedancesToNetCDF("gradimp.nc",Freq,TrueModel.GetMeasPosX(),TrueModel.GetMeasPosY(),TrueModel.GetMeasPosZ(),Observed);
+      jif3D::WriteImpedancesToNetCDF("gradimp.nc",Freq,TrueModel.GetMeasPosX(),TrueModel.GetMeasPosY(),TrueModel.GetMeasPosZ(),Observed);
 
-      jiba::ThreeDModelObjective<jiba::X3DMTCalculator> Objective(Calculator);
+      jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator> Objective(Calculator);
       Objective.SetObservedData(Observed);
       Objective.SetCoarseModelGeometry(Model);
-      jiba::rvec ModelVec(nmod);
+      jif3D::rvec ModelVec(nmod);
       std::copy(Model.GetConductivities().origin(),Model.GetConductivities().origin()+nmod,ModelVec.begin());
       double misfit = Objective.CalcMisfit(ModelVec);
       BOOST_CHECK(misfit > 0.0);
-      jiba::rvec Gradient = Objective.CalcGradient(ModelVec);
+      jif3D::rvec Gradient = Objective.CalcGradient(ModelVec);
 
       std::ofstream outfile("grad.comp");
 
       for (size_t index = 0; index < nmod; ++index)
         {
           double delta = ModelVec(index) * 0.001;
-          jiba::rvec Forward(ModelVec);
-          jiba::rvec Backward(ModelVec);
+          jif3D::rvec Forward(ModelVec);
+          jif3D::rvec Backward(ModelVec);
           Forward(index) += delta;
           Backward(index) -= delta;
           double ForFDGrad = (Objective.CalcMisfit(Forward) - misfit)/(delta);

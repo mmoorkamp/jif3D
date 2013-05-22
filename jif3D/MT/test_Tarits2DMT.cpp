@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE  (EPOL_test)
 
   BOOST_AUTO_TEST_CASE(MT2DForward_test)
     {
-      jiba::MT2DForward Forward;
+      jif3D::MT2DForward Forward;
       const size_t nx = 100;
       const size_t nz = 100;
       Forward.SetXSizes().resize(boost::extents[nx]);

@@ -12,7 +12,7 @@
 #include "../Global/VecMat.h"
 #include "ThreeDMTModel.h"
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup mtmodelling Forward modelling of magnetotelluric data */
     /* @{ */

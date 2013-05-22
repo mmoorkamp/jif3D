@@ -12,7 +12,7 @@
 /*--------------------------------------------------------------*/
 /* Define function:*/
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup tomo Seismic tomography classes and functions */
     /* @{ */

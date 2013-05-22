@@ -11,7 +11,7 @@
 #include <limits>
 #include "BasicGravElements.h"
 
-namespace jiba
+namespace jif3D
   {
     //! Calculate a single geometric term for the gravitational acceleration due to a rectangular prism
     /*! Calculate one term for the gravitational potential of a box, we use the nomenclature of eq. 4-6 in Li and Chouteau.

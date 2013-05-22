@@ -15,7 +15,7 @@
 /*! \file NumUtil.h
  * This file contains a collection of various simple numerical routines.
  */
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup util General utility routines */
     /* @{ */

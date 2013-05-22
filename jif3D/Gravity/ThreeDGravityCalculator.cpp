@@ -8,7 +8,7 @@
 #include "../Global/FatalException.h"
 #include "ThreeDGravityCalculator.h"
 
-namespace jiba
+namespace jif3D
   {
 
     ThreeDGravityCalculator::ThreeDGravityCalculator(
@@ -29,17 +29,17 @@ namespace jiba
         // so we have to check every time
         if (Model.GetDensities().shape()[0] != Model.GetXCellSizes().shape()[0])
           {
-            throw jiba::FatalException(
+            throw jif3D::FatalException(
                 "Model x-dimension does not match size for specification of cell sizes.");
           }
         if (Model.GetDensities().shape()[1] != Model.GetYCellSizes().shape()[0])
           {
-            throw jiba::FatalException(
+            throw jif3D::FatalException(
                 "Model y-dimension does not match size for specification of cell sizes.");
           }
         if (Model.GetDensities().shape()[2] != Model.GetZCellSizes().shape()[0])
           {
-            throw jiba::FatalException(
+            throw jif3D::FatalException(
                 "Model x-dimension does not match size for specification of cell sizes.");
           }
 

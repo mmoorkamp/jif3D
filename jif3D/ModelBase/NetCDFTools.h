@@ -18,7 +18,7 @@
  * are also useful on their own.
  */
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup modelbase Basic classes and routines for 3D models */
     /* @{ */

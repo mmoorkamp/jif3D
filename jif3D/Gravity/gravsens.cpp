@@ -30,9 +30,9 @@ namespace atlas = boost::numeric::bindings::atlas;
 
 int main()
   {
-    jiba::ThreeDGravityModel Model;
+    jif3D::ThreeDGravityModel Model;
 
-    std::string modelfilename = jiba::AskFilename("Mesh Filename: ");
+    std::string modelfilename = jif3D::AskFilename("Mesh Filename: ");
 
     //get the name of the file containing the mesh information
 
@@ -40,10 +40,10 @@ int main()
     Model.ReadNetCDF(modelfilename);
 
     //we also read in data, but we only use the information about the measurements
-    jiba::rvec Data;
-    jiba::ThreeDGravityModel::tMeasPosVec PosX, PosY, PosZ;
-    std::string datafilename = jiba::AskFilename("Data Filename: ");
-    jiba::ReadScalarGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
+    jif3D::rvec Data;
+    jif3D::ThreeDGravityModel::tMeasPosVec PosX, PosY, PosZ;
+    std::string datafilename = jif3D::AskFilename("Data Filename: ");
+    jif3D::ReadScalarGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
     const size_t nmeas = PosX.size();
     //set the measurement points in the model to those of the data
     Model.ClearMeasurementPoints();
@@ -54,15 +54,15 @@ int main()
 
     //calculate the response, we don't actually care about the densities
     //and the model response, but we need the sensitivity matrix
-    boost::shared_ptr<jiba::FullSensitivityGravityCalculator>
-            ScalarCalculator(jiba::CreateGravityCalculator<
-                jiba::FullSensitivityGravityCalculator>::MakeScalar());
+    boost::shared_ptr<jif3D::FullSensitivityGravityCalculator>
+            ScalarCalculator(jif3D::CreateGravityCalculator<
+                jif3D::FullSensitivityGravityCalculator>::MakeScalar());
     ScalarCalculator->Calculate(Model);
-    jiba::rmat Sensitivities(ScalarCalculator->GetSensitivities());
+    jif3D::rmat Sensitivities(ScalarCalculator->GetSensitivities());
     //do the SVD to get the eigenvalues and eigenvectors
-    jiba::rvec s;
-    jiba::rmat u, vt;
-    jiba::SVD(Sensitivities, s, u, vt);
+    jif3D::rvec s;
+    jif3D::rmat u, vt;
+    jif3D::SVD(Sensitivities, s, u, vt);
     //write out the eigenvalues
     std::ofstream evalfile((modelfilename + ".eval").c_str());
     std::copy(s.begin(), s.end(), std::ostream_iterator<double>(evalfile, "\n"));
@@ -82,7 +82,7 @@ int main()
     const size_t ysize = Model.GetDensities().shape()[1];
     const size_t zsize = Model.GetDensities().shape()[2];
     //make a structure with the shape of the model to plot the values
-    jiba::ThreeDModelBase::t3DModelData sens(
+    jif3D::ThreeDModelBase::t3DModelData sens(
         boost::extents[xsize][ysize][zsize]);
     //output the eigenvectors for the chosen indices
     //each eigenvector gets its own file
@@ -90,7 +90,7 @@ int main()
       {
         const double maxvalue = *std::max_element(row(vt, currindex).begin(), row(vt, currindex).end(),boost::bind(fabs,_1) < boost::bind(fabs,_2));
         std::transform(row(vt, currindex).begin(), row(vt, currindex).end(), sens.data(),boost::bind(std::multiplies<double>(),_1,1./maxvalue));
-        jiba::Write3DModelToVTK(modelfilename + ".sens."+jiba::stringify(currindex)+".vtk", "scalar_sens",
+        jif3D::Write3DModelToVTK(modelfilename + ".sens."+jif3D::stringify(currindex)+".vtk", "scalar_sens",
             Model.GetXCellSizes(), Model.GetYCellSizes(),
             Model.GetZCellSizes(), sens);
       }

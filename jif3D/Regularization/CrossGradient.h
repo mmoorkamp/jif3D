@@ -14,7 +14,7 @@
 #include "GradientRegularization.h"
 #include "../ModelBase/ThreeDModelBase.h"
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup Regularization classes to regularize the inversion */
     /* @{ */
@@ -31,7 +31,7 @@ namespace jiba
      * in  \f$ m_2\f$.
      *
      */
-    class CrossGradient: public jiba::ObjectiveFunction
+    class CrossGradient: public jif3D::ObjectiveFunction
       {
     private:
       //! The object to calculate the spatial gradient for the first model
@@ -63,16 +63,16 @@ namespace jiba
         }
       //! The implementation of the cross-gradient calculation
       virtual void
-      ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff);
+      ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff);
       //! The gradient of the cross-gradient objective function with respect to the model parameters
-      virtual jiba::rvec ImplGradient(const jiba::rvec &Model, const jiba::rvec &Diff);
+      virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model, const jif3D::rvec &Diff);
       //!The constructor takes any 3D model object as a parameter to extract the geometry information
       /*! The geometry information of the 3D model is passed to the cross-gradient function through
        * the constructor. Note that during the inversion we assume Model.size() == 2*Geometry.GetData().num_elements()
        * as explained in the general description of this class.
        * @param Geometry An object that contains the information about the model geometry (cell sizes etc.)
        */
-      explicit CrossGradient(const jiba::ThreeDModelBase &Geometry) :
+      explicit CrossGradient(const jif3D::ThreeDModelBase &Geometry) :
           FirstGradient(Geometry, 0.0), SecondGradient(Geometry, 0.0), ModelGeometry(
               Geometry)
         {

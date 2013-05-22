@@ -32,7 +32,7 @@ void ExtractIndex(size_t key, size_t &RecNo, size_t &SourceNo)
 
 int main()
   {
-    std::string PosFileName = jiba::AskFilename("File with positions: ");
+    std::string PosFileName = jif3D::AskFilename("File with positions: ");
     std::ifstream PosFile(PosFileName.c_str());
     std::vector<size_t> ShotNo, RecNo, Tracl;
     std::vector<double> SourceX, SourceY, RecX, RecY;
@@ -72,7 +72,7 @@ int main()
         SourceMap.insert(std::make_pair(ShotNo.at(i), SourcePos));
       }
 
-    std::string PickFileName = jiba::AskFilename("Pick-file name: ");
+    std::string PickFileName = jif3D::AskFilename("Pick-file name: ");
     std::ifstream PickFile(PickFileName.c_str());
     std::vector<size_t> ShotIndex, RecIndex;
     std::vector<double> TravelTime;
@@ -84,7 +84,7 @@ int main()
         PickFile.getline(Line, 255);
         try
           {
-            jiba::convert(Line, CurrTT);
+            jif3D::convert(Line, CurrTT);
             if (PickFile.good())
               {
 
@@ -99,7 +99,7 @@ int main()
           }
       }
 
-    jiba::ThreeDSeismicModel Model;
+    jif3D::ThreeDSeismicModel Model;
     size_t nrec = SourceRecMap.size();
     const double depth = 10.0;
 
@@ -171,9 +171,9 @@ int main()
     TravelTime.erase(std::remove(TravelTime.begin(), TravelTime.end(), -1.0),
         TravelTime.end());
     std::cout << "NTimes in file: " << TravelTime.size() << std::endl;
-    std::string outfilename = jiba::AskFilename("Output file: ", false);
-    jiba::rvec TT(TravelTime.size());
+    std::string outfilename = jif3D::AskFilename("Output file: ", false);
+    jif3D::rvec TT(TravelTime.size());
     std::copy(TravelTime.begin(), TravelTime.end(), TT.begin());
-    jiba::SaveTraveltimes(outfilename, TT, Model);
+    jif3D::SaveTraveltimes(outfilename, TT, Model);
   }
 

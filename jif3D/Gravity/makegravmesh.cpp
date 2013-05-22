@@ -20,7 +20,7 @@ using namespace std;
 int main()
   {
 
-    jiba::ThreeDGravityModel Model;
+    jif3D::ThreeDGravityModel Model;
     int nx, ny, nz;
     double deltax, deltay, deltaz;
     cout << "Nx: ";
@@ -47,7 +47,7 @@ int main()
     fill_n(Model.SetXCellSizes().begin(),nx,deltax);
     fill_n(Model.SetYCellSizes().begin(),ny,deltay);
     fill_n(Model.SetZCellSizes().begin(),nz,deltaz);
-    std::string MeshFilename = jiba::AskFilename("Meshfile name: ",false);
+    std::string MeshFilename = jif3D::AskFilename("Meshfile name: ",false);
     Model.WriteNetCDF(MeshFilename);
 
 

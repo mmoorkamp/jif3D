@@ -14,7 +14,7 @@
 #include <boost/program_options.hpp>
 #include <boost/shared_ptr.hpp>
 
-namespace jiba
+namespace jif3D
   {
     namespace po = boost::program_options;
 
@@ -48,10 +48,10 @@ namespace jiba
        * @param CovModVec The vector of covariances
        * @return A shared pointer to a new optimizer object
        */
-      boost::shared_ptr<jiba::GradientBasedOptimization> ConfigureInversion(
+      boost::shared_ptr<jif3D::GradientBasedOptimization> ConfigureInversion(
           const po::variables_map &vm, boost::shared_ptr<
-              jiba::ObjectiveFunction> ObjFunction, const jiba::rvec &InvModel,
-          const jiba::rvec &CovModVec);
+              jif3D::ObjectiveFunction> ObjFunction, const jif3D::rvec &InvModel,
+          const jif3D::rvec &CovModVec);
       SetupInversion();
       virtual ~SetupInversion();
       };

@@ -15,7 +15,7 @@
  * A collection of function to write 3D models and data with 3D positioning information
  * to files in simple .vtk format for plotting with Paraview or Visit
  */
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup modelbase Basic classes and routines for 3D models */
     /* @{ */
@@ -31,7 +31,7 @@ namespace jiba
     //! Write scalar data with 3D coordinate information into a .vtk file for plotting
     void Write3DDataToVTK(const std::string &filename,
         const std::string &DataName,
-        const jiba::rvec &Data,
+        const jif3D::rvec &Data,
         const ThreeDGravityModel::tMeasPosVec &PosX,
         const ThreeDGravityModel::tMeasPosVec &PosY,
         const ThreeDGravityModel::tMeasPosVec &PosZ);
@@ -39,7 +39,7 @@ namespace jiba
     //! Write \f$ 3 \times 3\f$ tensor data with 3D coordinate information into a .vtk file for plotting
     void Write3DTensorDataToVTK(const std::string &filename,
         const std::string &DataName,
-        const jiba::rvec &Data,
+        const jif3D::rvec &Data,
         const ThreeDGravityModel::tMeasPosVec &PosX,
         const ThreeDGravityModel::tMeasPosVec &PosY,
         const ThreeDGravityModel::tMeasPosVec &PosZ);

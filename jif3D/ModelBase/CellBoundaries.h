@@ -13,7 +13,7 @@
 #include "../Global/convert.h"
 #include "ThreeDModelBase.h"
 
-namespace jiba
+namespace jif3D
   {
     //! Given a coordinate within the modelling domain, return the index of the cell boundary closest to that coordinate.
     /*! Given a coordinate within the modelling domain, return the index of the cell boundary closest to that coordinate.
@@ -22,8 +22,8 @@ namespace jiba
      * @return The index of the nearest boundary.
      */
     inline size_t FindNearestCellBoundary(double Coordinate,
-        const jiba::ThreeDModelBase::t3DModelDim &CellBoundaries,
-        const jiba::ThreeDModelBase::t3DModelDim &CellSizes)
+        const jif3D::ThreeDModelBase::t3DModelDim &CellBoundaries,
+        const jif3D::ThreeDModelBase::t3DModelDim &CellSizes)
       {
         size_t result = 0;
         const size_t ncells = CellBoundaries.num_elements();
@@ -31,10 +31,10 @@ namespace jiba
         //we check whether the coordinate value is larger than the largest cell boundary
         //and throw an exception is true
         if (Coordinate > CellBoundaries[ncells - 1] + CellSizes[ncells - 1])
-          throw jiba::FatalException(
-              "Specified depth: " + jiba::stringify(Coordinate)
+          throw jif3D::FatalException(
+              "Specified depth: " + jif3D::stringify(Coordinate)
                   + " is outside domain limit: "
-                  + jiba::stringify(CellBoundaries[ncells - 1] + CellSizes[ncells - 1]));
+                  + jif3D::stringify(CellBoundaries[ncells - 1] + CellSizes[ncells - 1]));
         //we implictly assume the coordinates to start at zero
         //so the boundary values are the upper limits of the cells
         //and we search for the index of the next higher cell boundary
@@ -52,7 +52,7 @@ namespace jiba
         else
           return std::min(result + 1, ncells - 1);
         //if we get here something is seriously wrong
-        throw jiba::FatalException("Unexpected error in FindNearestCellBoundary !");
+        throw jif3D::FatalException("Unexpected error in FindNearestCellBoundary !");
       }
   }
 

@@ -20,7 +20,7 @@
  * in the file ModelTransforms.h .
  */
 
-namespace jiba
+namespace jif3D
   {
     /*! \addtogroup util General utility routines
      */
@@ -53,9 +53,9 @@ namespace jiba
       //! How many elements will one logical input block be transformed to
       virtual size_t GetOutputSize() = 0;
       //! Transform the input vector
-      virtual jiba::rvec Transform(const jiba::rvec &InputVector) = 0;
+      virtual jif3D::rvec Transform(const jif3D::rvec &InputVector) = 0;
       //! Give the matrix of partial derivatives with respect to the input parameters for the transformation \f$ \partial f/\partial m_i \f$.
-      virtual jiba::rmat Derivative(const jiba::rvec &InputVector) = 0;
+      virtual jif3D::rmat Derivative(const jif3D::rvec &InputVector) = 0;
       VectorTransform()
         {
         }
@@ -98,12 +98,12 @@ namespace jiba
         {
         }
       //! This "transformation" just passes the input parameter through
-      virtual jiba::rvec Transform(const jiba::rvec &InputVector)
+      virtual jif3D::rvec Transform(const jif3D::rvec &InputVector)
         {
           return InputVector;
         }
       //! When generalized and physical parameters are the same the derivative is 1 for all parameters
-      virtual jiba::rmat Derivative(const jiba::rvec &InputVector)
+      virtual jif3D::rmat Derivative(const jif3D::rvec &InputVector)
         {
           return ublas::identity_matrix<double>(InputVector.size());
         }
@@ -119,18 +119,18 @@ namespace jiba
      * @return A vector that contains the transformed data
      */
     template<class VectorTransform>
-    jiba::rvec ApplyTransform(const jiba::rvec &InputVector, VectorTransform &Transform)
+    jif3D::rvec ApplyTransform(const jif3D::rvec &InputVector, VectorTransform &Transform)
       {
         const size_t insize = InputVector.size();
         const size_t step = Transform.GetInputSize();
         const size_t nout = Transform.GetOutputSize();
         assert(insize % step == 0);
-        jiba::rvec Output(insize / step * nout);
+        jif3D::rvec Output(insize / step * nout);
         for (size_t i = 0; i < insize; i += step)
           {
-            jiba::rvec temp(
+            jif3D::rvec temp(
                 Transform.Transform(
-                    ublas::vector_range<const jiba::rvec>(InputVector,
+                    ublas::vector_range<const jif3D::rvec>(InputVector,
                         ublas::range(i, i + step))));
             copy(temp.begin(), temp.end(), Output.begin() + i / step * nout);
           }

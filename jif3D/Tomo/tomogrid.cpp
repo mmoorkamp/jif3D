@@ -27,7 +27,7 @@ using namespace std;
 int main(int argc, char *argv[])
   {
 
-    jiba::ThreeDSeismicModel SeisModel;
+    jif3D::ThreeDSeismicModel SeisModel;
 
     double recminx, recminy, recmaxx, recmaxy, recdeltax, recdeltay, recz;
     //ask for the measurement grid specifications
@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
     cin >> sorz;
 
     //ask for the name of the netcdf file containing the model
-    std::string ModelFilename = jiba::AskFilename("Model Filename: ");
+    std::string ModelFilename = jif3D::AskFilename("Model Filename: ");
     SeisModel.ReadNetCDF(ModelFilename);
 
     //setup the measurements in the forward modelling code
@@ -114,22 +114,22 @@ int main(int argc, char *argv[])
           }
       }
 
-    jiba::TomographyCalculator Calculator;
-    jiba::rvec TravelTimes(Calculator.Calculate(SeisModel));
+    jif3D::TomographyCalculator Calculator;
+    jif3D::rvec TravelTimes(Calculator.Calculate(SeisModel));
     double error = 0.0;
     std::cout << "Traveltime error (s): ";
     std::cin >> error;
     //if we want to add noise to the data
     if (error > 0.0)
       {
-        jiba::AddNoise(TravelTimes, 0.0, error);
+        jif3D::AddNoise(TravelTimes, 0.0, error);
       }
-    jiba::SaveTraveltimes(ModelFilename + ".tt.nc", TravelTimes, SeisModel);
+    jif3D::SaveTraveltimes(ModelFilename + ".tt.nc", TravelTimes, SeisModel);
     SeisModel.WriteVTK(ModelFilename + ".vtk");
-    jiba::Write3DDataToVTK(ModelFilename + ".rec.vtk", "Receiver", jiba::rvec(
+    jif3D::Write3DDataToVTK(ModelFilename + ".rec.vtk", "Receiver", jif3D::rvec(
         SeisModel.GetMeasPosX().size()), SeisModel.GetMeasPosX(),
         SeisModel.GetMeasPosY(), SeisModel.GetMeasPosZ());
-    jiba::Write3DDataToVTK(ModelFilename + ".sor.vtk", "Source", jiba::rvec(
+    jif3D::Write3DDataToVTK(ModelFilename + ".sor.vtk", "Source", jif3D::rvec(
         SeisModel.GetSourcePosX().size()), SeisModel.GetSourcePosX(),
         SeisModel.GetSourcePosY(), SeisModel.GetSourcePosZ());
   }

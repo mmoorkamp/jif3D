@@ -14,7 +14,7 @@
 #include "../Global/VecMat.h"
 #include "../ModelBase/ThreeDModelBase.h"
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup Regularization classes to regularize the inversion */
     /* @{ */
@@ -27,7 +27,7 @@ namespace jiba
      * and ZOperatorMatrix. These calculate the model roughness in x-direction, y-direction and z-direction, respectively.
      *
      */
-    class MatOpRegularization: public jiba::RegularizationFunction
+    class MatOpRegularization: public jif3D::RegularizationFunction
       {
     private:
       /*! The implementation of the data difference is independent
@@ -37,7 +37,7 @@ namespace jiba
        * @param Model The current model
        * @param Diff The difference vector, i.e. raw value of regularization, for each model cell.
        */
-      virtual void ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff)
+      virtual void ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff)
         {
           const size_t nmod = Model.size();
           //if we didn't specify a reference model that should be substracted
@@ -46,7 +46,7 @@ namespace jiba
           //case any more
           if (GetReferenceModel().size() != nmod)
             {
-              jiba::rvec RefMod(nmod);
+              jif3D::rvec RefMod(nmod);
               RefMod.clear();
               SetReferenceModel(RefMod);
             }
@@ -57,10 +57,10 @@ namespace jiba
           //the difference vector will contain the roughness values
           //in the three coordinate directions separately
           Diff.resize(3 * nmod);
-          ublas::vector_range<jiba::rvec> xrange(Diff, ublas::range(0, nmod));
-          ublas::vector_range<jiba::rvec> yrange(Diff, ublas::range(nmod, 2 * nmod));
-          ublas::vector_range<jiba::rvec> zrange(Diff, ublas::range(2 * nmod, 3 * nmod));
-          jiba::rvec x(Model - GetReferenceModel());
+          ublas::vector_range<jif3D::rvec> xrange(Diff, ublas::range(0, nmod));
+          ublas::vector_range<jif3D::rvec> yrange(Diff, ublas::range(nmod, 2 * nmod));
+          ublas::vector_range<jif3D::rvec> zrange(Diff, ublas::range(2 * nmod, 3 * nmod));
+          jif3D::rvec x(Model - GetReferenceModel());
           //calculate the action of the regularization operator
           //on the model vector for the three coordinate directions
           //and store the difference in the corresponding range of
@@ -75,7 +75,7 @@ namespace jiba
           zrange *= sqrt(zweight);
         }
       //! The gradient of the regularization with respect to the model parameters
-      virtual jiba::rvec ImplGradient(const jiba::rvec &Model, const jiba::rvec &Diff)
+      virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model, const jif3D::rvec &Diff)
         {
           //set the gradient vector for each individual direction to the correct size
           const size_t nmod = Model.size();
@@ -84,10 +84,10 @@ namespace jiba
           ZGrad.resize(nmod);
           //define some ranges on the difference vector (length 3*nmod)
           //that correspond to the gradients for each spatial direction
-          ublas::vector_range<const jiba::rvec> xrange(Diff, ublas::range(0, nmod));
-          ublas::vector_range<const jiba::rvec> yrange(Diff,
+          ublas::vector_range<const jif3D::rvec> xrange(Diff, ublas::range(0, nmod));
+          ublas::vector_range<const jif3D::rvec> yrange(Diff,
               ublas::range(nmod, 2 * nmod));
-          ublas::vector_range<const jiba::rvec> zrange(Diff,
+          ublas::vector_range<const jif3D::rvec> zrange(Diff,
               ublas::range(2 * nmod, 3 * nmod));
           //The gradient is simply the transpose of the operator matrix
           //times the misfit, we calculate this for each direction
@@ -128,13 +128,13 @@ namespace jiba
       //! Storage for the operator matrix in z-direction
       comp_mat ZOperatorMatrix;
       //! The gradient of the x-direction part of the regularization functional
-      jiba::rvec XGrad;
+      jif3D::rvec XGrad;
       //! The gradient of the y-direction part of the regularization functional
-      jiba::rvec YGrad;
+      jif3D::rvec YGrad;
       //! The gradient of the z-direction part of the regularization functional
-      jiba::rvec ZGrad;
+      jif3D::rvec ZGrad;
     public:
-      jiba::ThreeDModelBase ModelGeo;
+      jif3D::ThreeDModelBase ModelGeo;
       //! We need a virtual constructor to create a new object from a pointer to a base class;
       /*! There are situations where we only have a pointer to the base class, but we need
        * a copy of the derived class without knowing what derived type it has. This virtual
@@ -167,7 +167,7 @@ namespace jiba
           zweight = Weight;
         }
       //! Read only access to the gradient of the regularization functional that works in x-direction
-      const jiba::rvec &GetXGrad() const
+      const jif3D::rvec &GetXGrad() const
         {
           return XGrad;
         }
@@ -187,12 +187,12 @@ namespace jiba
           return ZOperatorMatrix;
         }
       //! Read only access to the gradient of the regularization functional that works in y-direction
-      const jiba::rvec &GetYGrad() const
+      const jif3D::rvec &GetYGrad() const
         {
           return YGrad;
         }
       //! Read only access to the gradient of the regularization functional that works in z-direction
-      const jiba::rvec &GetZGrad() const
+      const jif3D::rvec &GetZGrad() const
         {
           return ZGrad;
         }
@@ -202,7 +202,7 @@ namespace jiba
        * during the lifetime of the object and is therefore a parameter for the constructor.
        * @param Geometry An object that describes the model geometry
        */
-      explicit MatOpRegularization(const jiba::ThreeDModelBase &Geometry) :
+      explicit MatOpRegularization(const jif3D::ThreeDModelBase &Geometry) :
           xweight(1.0), yweight(1.0), zweight(1.0), XOperatorMatrix(
               Geometry.GetNModelElements(), Geometry.GetNModelElements()), YOperatorMatrix(
               Geometry.GetNModelElements(), Geometry.GetNModelElements()), ZOperatorMatrix(

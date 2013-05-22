@@ -38,17 +38,17 @@ int main(int argc, char *argv[])
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
 
-    std::string modelfilename = jiba::AskFilename("Model file: ");
-    std::string datafilename = jiba::AskFilename("Data file: ");
-    jiba::X3DModel Model;
+    std::string modelfilename = jif3D::AskFilename("Model file: ");
+    std::string datafilename = jif3D::AskFilename("Data file: ");
+    jif3D::X3DModel Model;
     Model.ReadNetCDF(modelfilename);
-    jiba::rvec Impedances, ImpError;
+    jif3D::rvec Impedances, ImpError;
     std::vector<double> Frequencies, StatXCoord, StatYCoord, StatZCoord;
-    jiba::ReadImpedancesFromMTT(datafilename, Frequencies, Impedances, ImpError);
+    jif3D::ReadImpedancesFromMTT(datafilename, Frequencies, Impedances, ImpError);
 
-    boost::shared_ptr<jiba::OneDMTObjective> MTObjective(new jiba::OneDMTObjective);
+    boost::shared_ptr<jif3D::OneDMTObjective> MTObjective(new jif3D::OneDMTObjective);
     const size_t nfreq = Frequencies.size();
-    jiba::rvec OneDImp(nfreq * 2);
+    jif3D::rvec OneDImp(nfreq * 2);
     for (size_t i = 0; i < nfreq; ++i)
       {
         OneDImp(i * 2) = Impedances(i * 8 + 2);
@@ -59,46 +59,46 @@ int main(int argc, char *argv[])
     Model.SetFrequencies() = Frequencies;
     MTObjective->SetModelGeometry(Model);
     MTObjective->SetObservedData(OneDImp);
-    jiba::rvec AvgImp(OneDImp.size());
+    jif3D::rvec AvgImp(OneDImp.size());
     for (size_t i =0; i < nfreq; ++i)
       {
         AvgImp(2*i) =(OneDImp(2*i) + OneDImp(2*i+1))/2.0;
         AvgImp(2*i+1) =AvgImp(2*i);
       }
-    jiba::rvec DataError(jiba::ConstructError(AvgImp, 0.05, 0.0));
+    jif3D::rvec DataError(jif3D::ConstructError(AvgImp, 0.05, 0.0));
     MTObjective->SetDataError(DataError);
 
-    jiba::rvec InvModel(nlayers);
+    jif3D::rvec InvModel(nlayers);
     std::copy(Model.GetBackgroundConductivities().begin(),
         Model.GetBackgroundConductivities().end(), InvModel.begin());
-    boost::shared_ptr<jiba::OneDRegularization> Regularization(
-        new jiba::OneDRegularization(nlayers));
+    boost::shared_ptr<jif3D::OneDRegularization> Regularization(
+        new jif3D::OneDRegularization(nlayers));
     //Regularization->SetReferenceModel(InvModel);
     double reglambda = 1.0;
     std::cout << "Lambda: ";
     std::cin >> reglambda;
 
-    boost::shared_ptr<jiba::ChainedTransform> ConductivityTransform(
-        new jiba::ChainedTransform);
+    boost::shared_ptr<jif3D::ChainedTransform> ConductivityTransform(
+        new jif3D::ChainedTransform);
 
-    jiba::rvec RefModel(InvModel);
+    jif3D::rvec RefModel(InvModel);
     std::fill(RefModel.begin(), RefModel.end(), 1.0);
     //because the tanh transform is used inside a logarithmic transform
     //we need to take the natural logarithm of the actual minimum and maximum
     ConductivityTransform->AppendTransform(
-        boost::shared_ptr<jiba::GeneralModelTransform>(
-            new jiba::TanhTransform(std::log(mincond), std::log(maxcond))));
+        boost::shared_ptr<jif3D::GeneralModelTransform>(
+            new jif3D::TanhTransform(std::log(mincond), std::log(maxcond))));
     ConductivityTransform->AppendTransform(
-        boost::shared_ptr<jiba::GeneralModelTransform>(new jiba::LogTransform(RefModel)));
+        boost::shared_ptr<jif3D::GeneralModelTransform>(new jif3D::LogTransform(RefModel)));
     // ConductivityTransform->AddTransform(
-    //    boost::shared_ptr<jiba::GeneralModelTransform>(new jiba::ModelCopyTransform));
+    //    boost::shared_ptr<jif3D::GeneralModelTransform>(new jif3D::ModelCopyTransform));
     InvModel = ConductivityTransform->PhysicalToGeneralized(InvModel);
 
-    boost::shared_ptr<jiba::JointObjective> Objective(new jiba::JointObjective(true));
+    boost::shared_ptr<jif3D::JointObjective> Objective(new jif3D::JointObjective(true));
     Objective->AddObjective(MTObjective, ConductivityTransform, 1.0, "MT");
     Objective->AddObjective(Regularization, ConductivityTransform, reglambda, "Reg");
 
-    jiba::LimitedMemoryQuasiNewton Optimizer(Objective);
+    jif3D::LimitedMemoryQuasiNewton Optimizer(Objective);
     Optimizer.SetModelCovDiag(InvModel);
     std::ofstream misfitfile("misfit.out");
     misfitfile << "0 " << Objective->CalcMisfit(InvModel) << " ";
@@ -126,12 +126,12 @@ int main(int argc, char *argv[])
             std::cout << "Current Misfit: " << Optimizer.GetMisfit() << std::endl;
             std::cout << "Current Gradient: " << Optimizer.GetGradNorm() << std::endl;
             std::cout << std::endl;
-            jiba::rvec CondInvModel = ConductivityTransform->GeneralizedToPhysical(
+            jif3D::rvec CondInvModel = ConductivityTransform->GeneralizedToPhysical(
                 InvModel);
             std::vector<double> Tmp(CondInvModel.begin(), CondInvModel.end());
             Model.SetBackgroundConductivities(Tmp);
 
-            Model.WriteNetCDF(modelfilename + jiba::stringify(iteration) + ".mt.inv.nc");
+            Model.WriteNetCDF(modelfilename + jif3D::stringify(iteration) + ".mt.inv.nc");
             misfitfile << iteration + 1 << " " << Optimizer.GetMisfit() << " ";
             std::copy(Objective->GetIndividualFits().begin(),
                 Objective->GetIndividualFits().end(),
@@ -139,8 +139,8 @@ int main(int argc, char *argv[])
             misfitfile << " " << Objective->GetNEval();
             misfitfile << std::endl;
             iteration++;
-            terminate = jiba::WantAbort();
-          } catch (jiba::FatalException &e)
+            terminate = jif3D::WantAbort();
+          } catch (jif3D::FatalException &e)
           {
             std::cerr << e.what() << std::endl;
             terminate = true;
@@ -159,8 +159,8 @@ int main(int argc, char *argv[])
 
     //calculate the predicted data
     std::cout << "Calculating response of inversion model." << std::endl;
-    jiba::rvec InvData(jiba::OneDMTCalculator().Calculate(Model));
-    jiba::rvec FullImp(nfreq * 8, 0.0), FullErr(nfreq * 8, 0.0);
+    jif3D::rvec InvData(jif3D::OneDMTCalculator().Calculate(Model));
+    jif3D::rvec FullImp(nfreq * 8, 0.0), FullErr(nfreq * 8, 0.0);
     for (size_t i = 0; i < nfreq; ++i)
       {
         FullImp(i * 8 + 2) = InvData(i * 2);
@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
         FullErr(i * 8 + 4) = DataError(i * 2);
         FullErr(i * 8 + 5) = DataError(i * 2);
       }
-    jiba::WriteImpedancesToMtt(modelfilename + ".inv_imp", Frequencies, FullImp, FullErr);
+    jif3D::WriteImpedancesToMtt(modelfilename + ".inv_imp", Frequencies, FullImp, FullErr);
 
     //and write out the data and model
     //here we have to distinguish again between scalar and ftg data

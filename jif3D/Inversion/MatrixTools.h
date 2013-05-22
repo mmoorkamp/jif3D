@@ -15,7 +15,7 @@
  * like  matrix inversion and calculation of the determinant.
  */
 
-namespace jiba
+namespace jif3D
   {
     namespace ublas = boost::numeric::ublas;
     /** \addtogroup inversion General routines for inversion */
@@ -50,7 +50,7 @@ namespace jiba
         return true;
       }
     //! Calculate the determinant of a real square matrix
-    double Determinant(const jiba::rmat &Matrix);
+    double Determinant(const jif3D::rmat &Matrix);
 
   /* @} */
   }

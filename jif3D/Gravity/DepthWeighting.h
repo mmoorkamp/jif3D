@@ -11,7 +11,7 @@
 
 #include "ThreeDGravityModel.h"
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup gravity Gravity forward modeling, display and inversion */
     /* @{ */
@@ -41,15 +41,15 @@ namespace jiba
       };
 
     //! Given the values of the sensitivity kernel with depth, find z0 that matches the decay
-    double FitZ0(const jiba::rvec &SensProfile,
-        const ThreeDModelBase::t3DModelDim &ZSizes, const jiba::WeightingTerm &WeightFunction);
+    double FitZ0(const jif3D::rvec &SensProfile,
+        const ThreeDModelBase::t3DModelDim &ZSizes, const jif3D::WeightingTerm &WeightFunction);
     //! Given a z0 and the model geometry, construct a vector of weights
     void ConstructDepthWeighting(
         const ThreeDModelBase::t3DModelDim &ZSizes, const double z0,
-        rvec &WeightVector, const jiba::WeightingTerm &WeightFunction);
+        rvec &WeightVector, const jif3D::WeightingTerm &WeightFunction);
     //! Extract sensitivities for a site that is closest to the middle of the modeling domain
-    void ExtractMiddleSens(const jiba::ThreeDGravityModel &Model,
-        const jiba::rmat &Sensitivities, const size_t MeasPerPos, jiba::rvec &SensProfile);
+    void ExtractMiddleSens(const jif3D::ThreeDGravityModel &Model,
+        const jif3D::rmat &Sensitivities, const size_t MeasPerPos, jif3D::rvec &SensProfile);
     /* @} */
   }
 #endif /* DEPTHWEIGHTING_H_ */

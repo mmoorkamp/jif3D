@@ -12,7 +12,7 @@
 #include <boost/serialization/base_object.hpp>
 #include "GeneralModelTransform.h"
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup inversion General routines for inversion */
     /* @{ */
@@ -23,11 +23,11 @@ namespace jiba
      * This makes the model parameters dimensionless and, at least in the beginning, on the
      * order of unity therefore helping to avoid problems with greatly varying magnitudes.
      */
-    class NormalizeTransform: public jiba::GeneralModelTransform
+    class NormalizeTransform: public jif3D::GeneralModelTransform
       {
     private:
       //! The Reference model we devide the model parameters by
-      const jiba::rvec Reference;
+      const jif3D::rvec Reference;
       friend class boost::serialization::access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
@@ -43,25 +43,25 @@ namespace jiba
           return new NormalizeTransform(*this);
         }
       //! Transform the normalized model parameters back to physical parameters
-      virtual jiba::rvec GeneralizedToPhysical(const jiba::rvec &FullModel) const
+      virtual jif3D::rvec GeneralizedToPhysical(const jif3D::rvec &FullModel) const
         {
           assert(FullModel.size() == Reference.size());
           return ublas::element_prod(FullModel, Reference);
         }
       //! Transform the physical model parameters to generalized model parameters
-      virtual jiba::rvec PhysicalToGeneralized(const jiba::rvec &FullModel) const
+      virtual jif3D::rvec PhysicalToGeneralized(const jif3D::rvec &FullModel) const
         {
           assert(FullModel.size() == Reference.size());
           return ublas::element_div(FullModel, Reference);
         }
       //! Transform the derivative with respect to the physical parameters to normalized parameters
-      virtual jiba::rvec Derivative(const jiba::rvec &FullModel,
-          const jiba::rvec &Derivative) const
+      virtual jif3D::rvec Derivative(const jif3D::rvec &FullModel,
+          const jif3D::rvec &Derivative) const
         {
           return GeneralizedToPhysical(Derivative);
         }
       //! The constructor needs the reference model, this has to have the same size as the inversion model
-      NormalizeTransform(const jiba::rvec &Ref) :
+      NormalizeTransform(const jif3D::rvec &Ref) :
           Reference(Ref)
         {
         }

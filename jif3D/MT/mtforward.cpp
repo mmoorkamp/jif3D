@@ -15,8 +15,8 @@
 
 int main()
   {
-    std::string modelfilename = jiba::AskFilename("Filename: ", true);
-    jiba::X3DModel MTModel;
+    std::string modelfilename = jif3D::AskFilename("Filename: ", true);
+    jif3D::X3DModel MTModel;
     MTModel.ReadNetCDF(modelfilename);
     std::cout << "Model size: " << MTModel.GetXCellSizes().size() << " "
         << MTModel.GetYCellSizes().size() << " "
@@ -51,7 +51,7 @@ int main()
           }
       }
 
-    std::string outfilename = jiba::AskFilename("Output filename: ", false);
+    std::string outfilename = jif3D::AskFilename("Output filename: ", false);
     std::cout << "Frequencies: ";
     double currfreq = 1.0;
     std::vector<double> frequencies;
@@ -61,10 +61,10 @@ int main()
           {
             std::string input;
             std::cin >> input;
-            jiba::convert(input, currfreq);
+            jif3D::convert(input, currfreq);
             frequencies.push_back(currfreq);
           }
-      } catch (jiba::BadConversion &e)
+      } catch (jif3D::BadConversion &e)
       {
 
       }
@@ -72,8 +72,8 @@ int main()
     std::copy(frequencies.begin(), frequencies.end(), std::back_inserter(
         MTModel.SetFrequencies()));
     std::cout << "Calculating forward response " << std::endl;
-    jiba::X3DMTCalculator Calculator;
-    jiba::rvec Impedances(Calculator.Calculate(MTModel));
+    jif3D::X3DMTCalculator Calculator;
+    jif3D::rvec Impedances(Calculator.Calculate(MTModel));
 
     double relnoise = 0.0;
     double absnoise = 0.0;
@@ -81,8 +81,8 @@ int main()
     std::cin >> relnoise;
     std::cout << "Absolute noise level: ";
     std::cin >> absnoise;
-    jiba::AddNoise(Impedances, relnoise, absnoise);
-    jiba::WriteImpedancesToNetCDF(outfilename, MTModel.GetFrequencies(),
+    jif3D::AddNoise(Impedances, relnoise, absnoise);
+    jif3D::WriteImpedancesToNetCDF(outfilename, MTModel.GetFrequencies(),
         MTModel.GetMeasPosX(), MTModel.GetMeasPosY(), MTModel.GetMeasPosZ(),
         Impedances);
     MTModel.WriteVTK(modelfilename + ".vtk");

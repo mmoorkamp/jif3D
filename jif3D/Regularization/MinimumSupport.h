@@ -12,29 +12,29 @@
 #include "RegularizationFunction.h"
 #include "MatOpRegularization.h"
 
-namespace jiba
+namespace jif3D
   {
 
-    class MinimumSupport: public jiba::RegularizationFunction
+    class MinimumSupport: public jif3D::RegularizationFunction
       {
     private:
       size_t ModelNumber;
-      jiba::rvec RegDiff;
+      jif3D::rvec RegDiff;
       double beta;
 
-      boost::shared_ptr<jiba::MatOpRegularization> RegFunc;
-      jiba::ThreeDModelBase Geometry;
+      boost::shared_ptr<jif3D::MatOpRegularization> RegFunc;
+      jif3D::ThreeDModelBase Geometry;
     public:
       //! The clone function provides a virtual constructor
       virtual MinimumSupport *clone() const
         {
           return new MinimumSupport(*this);
         }
-      virtual void ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff);
-      virtual jiba::rvec ImplGradient(const jiba::rvec &Model, const jiba::rvec &Diff);
-      MinimumSupport(boost::shared_ptr<jiba::MatOpRegularization> RF, double b = 1.0);
+      virtual void ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff);
+      virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model, const jif3D::rvec &Diff);
+      MinimumSupport(boost::shared_ptr<jif3D::MatOpRegularization> RF, double b = 1.0);
       virtual ~MinimumSupport();
       };
 
-  } /* namespace jiba */
+  } /* namespace jif3D */
 #endif /* MINIMUMSUPPORT_H_ */

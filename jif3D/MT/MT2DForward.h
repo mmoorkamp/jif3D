@@ -10,7 +10,7 @@
 #define MT2DFORWARD_H_
 #include <boost/multi_array.hpp>
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup mtmodelling Forward modelling of magnetotelluric data */
     /* @{ */

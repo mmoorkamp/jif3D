@@ -41,7 +41,7 @@ void WriteVectorToScript(std::ofstream &file, VectorType thevector,
 
 //Make a random model without background layers and write the information
 //about the model into a file so that R can understand it
-void PrepareModelForR(jiba::ThreeDGravityModel &GravityTest,
+void PrepareModelForR(jif3D::ThreeDGravityModel &GravityTest,
     std::ofstream &scriptfile)
   {
     //first we setup our local model with some test measurements
@@ -63,7 +63,7 @@ void PrepareModelForR(jiba::ThreeDGravityModel &GravityTest,
     WriteVectorToScript(scriptfile, GravityTest.GetMeasPosY(), "YMeasPos");
     WriteVectorToScript(scriptfile, GravityTest.GetMeasPosZ(), "ZMeasPos");
     //copy the 3D density model into a vector
-    jiba::rvec DensityVector(GravityTest.GetDensities().num_elements());
+    jif3D::rvec DensityVector(GravityTest.GetDensities().num_elements());
     copy(GravityTest.GetDensities().origin(),
         GravityTest.GetDensities().origin()
         + GravityTest.GetDensities().num_elements(), DensityVector.begin());
@@ -88,13 +88,13 @@ BOOST_AUTO_TEST_CASE(dummy_test)
 BOOST_AUTO_TEST_CASE(R_scalar_interface_test)
   {
     //create a 3D Gravity object
-    jiba::ThreeDGravityModel GravityTest;
+    jif3D::ThreeDGravityModel GravityTest;
     //create a random model and write the information into the R-script file
     std::ofstream Rscript("scalar_test.R");
     PrepareModelForR(GravityTest, Rscript);
     //calculate our results
-    boost::shared_ptr<jiba::MinMemGravityCalculator> ScalarCalculator(jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeScalar());
-    jiba::rvec scalarmeas(
+    boost::shared_ptr<jif3D::MinMemGravityCalculator> ScalarCalculator(jif3D::CreateGravityCalculator<jif3D::MinMemGravityCalculator>::MakeScalar());
+    jif3D::rvec scalarmeas(
         ScalarCalculator->Calculate(GravityTest));
 
     //finish the R script
@@ -132,12 +132,12 @@ BOOST_AUTO_TEST_CASE(R_scalar_interface_test)
 //this needs the current svn of boost test, as boost test in 1.35.0 has problems with the system call
 BOOST_AUTO_TEST_CASE(R_tensor_interface_test)
   {
-    jiba::ThreeDGravityModel GravityModel;
+    jif3D::ThreeDGravityModel GravityModel;
 
     std::ofstream Rscript("tensor_test.R");
     PrepareModelForR(GravityModel, Rscript);
-    boost::shared_ptr<jiba::MinMemGravityCalculator> TensorCalculator(jiba::CreateGravityCalculator<jiba::MinMemGravityCalculator>::MakeTensor());
-    jiba::rvec tensormeas(
+    boost::shared_ptr<jif3D::MinMemGravityCalculator> TensorCalculator(jif3D::CreateGravityCalculator<jif3D::MinMemGravityCalculator>::MakeTensor());
+    jif3D::rvec tensormeas(
         TensorCalculator->Calculate(GravityModel));
     Rscript << " result<-GravTensorForward(XSizes,YSizes,ZSizes,Densities,XMeasPos,YMeasPos,ZMeasPos)\n";
     Rscript << " sink(\"tensor_output\")\n";

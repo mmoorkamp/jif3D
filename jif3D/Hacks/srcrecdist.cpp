@@ -27,32 +27,32 @@ int main()
     static const std::string MeasPosYName = "MeasPosY";
     static const std::string MeasPosZName = "MeasPosZ";
 
-    std::string filename = jiba::AskFilename("Filename: ");
+    std::string filename = jif3D::AskFilename("Filename: ");
 
     NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
     std::vector<double> SourcePosX, SourcePosY, SourcePosZ;
 
     //read the positions of the sources
-    jiba::ReadVec(DataFile, SourcePosXName, SourceNumberName, SourcePosX);
-    jiba::ReadVec(DataFile, SourcePosYName, SourceNumberName, SourcePosY);
-    jiba::ReadVec(DataFile, SourcePosZName, SourceNumberName, SourcePosZ);
+    jif3D::ReadVec(DataFile, SourcePosXName, SourceNumberName, SourcePosX);
+    jif3D::ReadVec(DataFile, SourcePosYName, SourceNumberName, SourcePosY);
+    jif3D::ReadVec(DataFile, SourcePosZName, SourceNumberName, SourcePosZ);
     const size_t nsource = SourcePosX.size();
 
     //read the positions of the receivers
     std::vector<double> RecPosX, RecPosY, RecPosZ;
-    jiba::ReadVec(DataFile, MeasPosXName, ReceiverNumberName, RecPosX);
-    jiba::ReadVec(DataFile, MeasPosYName, ReceiverNumberName, RecPosY);
-    jiba::ReadVec(DataFile, MeasPosZName, ReceiverNumberName, RecPosZ);
+    jif3D::ReadVec(DataFile, MeasPosXName, ReceiverNumberName, RecPosX);
+    jif3D::ReadVec(DataFile, MeasPosYName, ReceiverNumberName, RecPosY);
+    jif3D::ReadVec(DataFile, MeasPosZName, ReceiverNumberName, RecPosZ);
     const size_t nmeas = RecPosX.size();
 
     std::vector<int> SourceIndices, ReceiverIndices;
     //now read the indices for the source receiver combinations
     //for each measurement
-    jiba::ReadVec(DataFile, SourceIndexName, MeasIndexName, SourceIndices);
-    jiba::ReadVec(DataFile, ReceiverIndexName, MeasIndexName, ReceiverIndices);
+    jif3D::ReadVec(DataFile, SourceIndexName, MeasIndexName, SourceIndices);
+    jif3D::ReadVec(DataFile, ReceiverIndexName, MeasIndexName, ReceiverIndices);
     const size_t nconf = SourceIndices.size();
-    jiba::rvec Data;
-    jiba::ReadVec(DataFile, TravelTimeName, MeasIndexName, Data);
+    jif3D::rvec Data;
+    jif3D::ReadVec(DataFile, TravelTimeName, MeasIndexName, Data);
     const size_t ntimes = Data.size();
 
     std::ofstream outfile((filename + ".diff.out").c_str());
@@ -79,7 +79,7 @@ int main()
         double coord = sqrt(PosX[i] * PosX[i] + PosY[i] * PosY[i]);
         pseudofile << coord << " " << Dist << " " << Data(i) << "\n";
       }
-    jiba::Write3DDataToVTK(filename + ".vtk", "Traveltimes", Data, PosX, PosY,
+    jif3D::Write3DDataToVTK(filename + ".vtk", "Traveltimes", Data, PosX, PosY,
         PosZ);
 
   }

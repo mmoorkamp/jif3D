@@ -81,7 +81,7 @@ int main()
         const double y_length = rand();
         const double z_length = rand();
 
-        mybox = jiba::CalcGravBoxTerm(x_meas, y_meas, z_meas, x_corn, y_corn,
+        mybox = jif3D::CalcGravBoxTerm(x_meas, y_meas, z_meas, x_corn, y_corn,
             z_corn, x_length, y_length, z_length);
 
         otherbox = block(x_meas - x_corn - x_length / 2, y_meas - y_corn

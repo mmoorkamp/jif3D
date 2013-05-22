@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(basic_quad_inter)
             double x3 = min + double(rand());
             double y3 = a * x3 * x3 + b * x3 + c;
             //interpolate the minimum
-            double zero = jiba::QuadraticInterpolation(x1, y1, x2, y2, x3, y3);
+            double zero = jif3D::QuadraticInterpolation(x1, y1, x2, y2, x3, y3);
             //check that it matches the true minimum
             BOOST_CHECK_CLOSE(zero,min,0.01);
           }

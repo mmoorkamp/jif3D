@@ -13,7 +13,7 @@
 #include <boost/serialization/base_object.hpp>
 #include "ThreeDGravityCalculator.h"
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup gravity Gravity forward modeling, display and inversion */
     /* @{ */
@@ -22,7 +22,7 @@ namespace jiba
      * when the forward response for a certain model geometry only has to be calculated once
      * or if the model is so big that the sensitivity matrix cannot be stored in memory or on disk any more.
      */
-    class MinMemGravityCalculator: public jiba::ThreeDGravityCalculator
+    class MinMemGravityCalculator: public jif3D::ThreeDGravityCalculator
       {
     private:
       friend class boost::serialization::access;

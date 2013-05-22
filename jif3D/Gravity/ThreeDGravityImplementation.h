@@ -16,7 +16,7 @@
 #include "../Global/VecMat.h"
 #include "../Global/VectorTransform.h"
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup gravity Gravity forward modeling, display and inversion */
     /* @{ */

@@ -13,7 +13,7 @@
 #include <boost/serialization/base_object.hpp>
 #include "ThreeDGravityCalculator.h"
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup gravity Gravity forward modeling, display and inversion */
     /* @{ */
@@ -26,7 +26,7 @@ namespace jiba
      *
      * Examples for derived classes are FullSensitivityGravityCalculator and WaveletCompressedGravityCalculator.
      */
-    class CachedGravityCalculator: public jiba::ThreeDGravityCalculator
+    class CachedGravityCalculator: public jif3D::ThreeDGravityCalculator
       {
     private:
       //! Have we performed a calculation before and build up cached information

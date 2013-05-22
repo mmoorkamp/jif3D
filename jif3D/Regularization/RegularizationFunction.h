@@ -12,7 +12,7 @@
 #include <boost/serialization/base_object.hpp>
 #include "ObjectiveFunction.h"
 
-namespace jiba
+namespace jif3D
   {
     //! This class provides a common denominator for the Matrix based regularization functions and other regularization functions such as MinimumSupport
     /*! The main purpose of this class is to provide a common base
@@ -20,11 +20,11 @@ namespace jiba
      * makes setting up the appropriate regularization easier as we can access
      * common functionality through a point to the base class.
      */
-    class RegularizationFunction: public jiba::ObjectiveFunction
+    class RegularizationFunction: public jif3D::ObjectiveFunction
       {
     private:
       //! The storage for a reference model
-      jiba::rvec Reference;
+      jif3D::rvec Reference;
       friend class boost::serialization::access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
@@ -37,12 +37,12 @@ namespace jiba
       //! The clone function provides a virtual constructor
       virtual RegularizationFunction *clone() const = 0;
       //! Set the reference model for the roughness calculation, this is optional
-      void SetReferenceModel(const jiba::rvec &Model)
+      void SetReferenceModel(const jif3D::rvec &Model)
         {
           Reference = Model;
         }
       //! Read only access to the reference model
-      const jiba::rvec &GetReferenceModel() const
+      const jif3D::rvec &GetReferenceModel() const
         {
           return Reference;
         }
@@ -58,5 +58,5 @@ namespace jiba
         }
       };
 
-  } /* namespace jiba */
+  } /* namespace jif3D */
 #endif /* REGULARIZATIONFUNCTION_H_ */

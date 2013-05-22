@@ -17,7 +17,7 @@
  * the ublas numeric bindings and therefore introduce a number of dependencies.
  */
 
-namespace jiba
+namespace jif3D
   {
 
     /** \addtogroup inversion General routines for inversion */

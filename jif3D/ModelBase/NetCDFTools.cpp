@@ -8,7 +8,7 @@
 #include "NetCDFTools.h"
 #include "../Global/FatalException.h"
 #include <cassert>
-namespace jiba
+namespace jif3D
   {
     //This internal function should not appear in the doxygen documentation
     // Read a single CellSize variable from a netcdf file
@@ -37,7 +37,7 @@ namespace jiba
         //so we throw an exception
         if (nvalues == 0)
           {
-            throw jiba::FatalException("Cell coordinate is empty: " + SizeName);
+            throw jif3D::FatalException("Cell coordinate is empty: " + SizeName);
           }
         //allocate memory in the class variable
         CellSize.resize(boost::extents[nvalues]);
@@ -54,7 +54,7 @@ namespace jiba
 
         if (pos != CellCoordinates.end())
           {
-            throw jiba::FatalException("Cell coordinates in netcdf file are not in increasing order.");
+            throw jif3D::FatalException("Cell coordinates in netcdf file are not in increasing order.");
           }
 
         // transform coordinates to cell sizes, assuming the start is at 0

@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_CASE  (interpolate_test)
       boost::variate_generator<boost::minstd_rand&, boost::uniform_real<> >
       Pos(generator, uni_dist);
 
-      jiba::GRID_STRUCT grid;
+      jif3D::GRID_STRUCT grid;
       grid.nx = ncells;
       grid.ny = ncells;
       grid.nz = ncells;
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE  (interpolate_test)
           float xpos = Pos();
           float ypos = Pos();
           float zpos = Pos();
-          float inter = jiba::interpolate(xpos, ypos, zpos, grid, data);
+          float inter = jif3D::interpolate(xpos, ypos, zpos, grid, data);
           float exact = xcomp * xpos + ycomp * ypos + zcomp * zpos;
           BOOST_CHECK_CLOSE(inter,exact,0.001);
         }
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE  (interpolate_test)
       int MSG = 0;
       std::fill_n(HS, nparam, 1.0);
       std::fill_n(T, nparam, 0.0);
-      jiba::PodvinTime3D().time_3d(HS, T, nx, ny, nz, XS, YS, ZS,
+      jif3D::PodvinTime3D().time_3d(HS, T, nx, ny, nz, XS, YS, ZS,
           HS_EPS_INIT, MSG);
       float dist = sqrt(XS * XS + YS * YS + ZS * ZS);
       BOOST_CHECK_CLOSE(T[0],dist,0.001);
@@ -81,10 +81,10 @@ BOOST_AUTO_TEST_CASE  (interpolate_test)
   BOOST_AUTO_TEST_CASE(basic_forward_ray_test)
     {
 
-      jiba::GEOMETRY geo;
-      jiba::GRID_STRUCT grid;
-      jiba::DATA_STRUCT data;
-      jiba::RP_STRUCT *raypath;
+      jif3D::GEOMETRY geo;
+      jif3D::GRID_STRUCT grid;
+      jif3D::DATA_STRUCT data;
+      jif3D::RP_STRUCT *raypath;
 
       const size_t ncells = 5;
       grid.nx = ncells;
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE  (interpolate_test)
       double dist = sqrt(pow(geo.x[0] - geo.x[1], 2) + pow(geo.y[0] - geo.y[1],
               2) + pow(geo.z[0] - geo.z[1], 2));
 
-      raypath = new jiba::RP_STRUCT[2];
+      raypath = new jif3D::RP_STRUCT[2];
 
       ForwardModRay(geo, grid, &data, raypath);
       double relerror = (data.tcalc[0] - dist *slow) / (dist*slow);
@@ -132,8 +132,8 @@ BOOST_AUTO_TEST_CASE  (interpolate_test)
           totallength += raypath[0].len[i];
         }
       BOOST_CHECK(std::abs(dist-totallength * grid.h) < slow * grid.h);
-      jiba::TomographyCalculator Calculator;
-      jiba::ThreeDSeismicModel Model;
+      jif3D::TomographyCalculator Calculator;
+      jif3D::ThreeDSeismicModel Model;
       Model.SetCellSize(grid.h, ncells, ncells, ncells);
       Model.AddMeasurementPoint(geo.x[1], geo.y[1], geo.z[1]);
       Model.AddSource(geo.x[0], geo.y[0], geo.z[0]);
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE  (interpolate_test)
       std::fill_n(Model.SetSlownesses().origin(), pow(double(ncells), 3), 0.1);
       Model.AddMeasurementConfiguration(0, 0);
       Model.AddMeasurementConfiguration(1, 1);
-      jiba::rvec time(Calculator.Calculate(Model));
+      jif3D::rvec time(Calculator.Calculate(Model));
       //compare the C++ result to the C-result
       //the C++ class adds a low velocity layer at the bottom and the top
       //so the models are not identical, still the influence of these layers should be small
@@ -159,10 +159,10 @@ BOOST_AUTO_TEST_CASE  (interpolate_test)
       //is smaller than the time it takes to go through one grid cell
       BOOST_CHECK(std::abs(dist-totallength * grid.h) < slow * grid.h);
       //now check that saving and restoring works
-      jiba::SaveTraveltimes("tt.nc",time,Model);
-      jiba::rvec ReadTime;
-      jiba::ThreeDSeismicModel ReadModel;
-      jiba::ReadTraveltimes("tt.nc",ReadTime,ReadModel);
+      jif3D::SaveTraveltimes("tt.nc",time,Model);
+      jif3D::rvec ReadTime;
+      jif3D::ThreeDSeismicModel ReadModel;
+      jif3D::ReadTraveltimes("tt.nc",ReadTime,ReadModel);
       BOOST_CHECK(std::equal(time.begin(),time.end(),ReadTime.begin()));
       BOOST_CHECK(std::equal(Model.GetSourcePosX().begin(),Model.GetSourcePosX().end(),ReadModel.GetSourcePosX().begin()));
       BOOST_CHECK(std::equal(Model.GetSourcePosY().begin(),Model.GetSourcePosY().end(),ReadModel.GetSourcePosY().begin()));

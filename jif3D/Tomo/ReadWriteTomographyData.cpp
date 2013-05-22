@@ -11,7 +11,7 @@
 #include "../Global/NumUtil.h"
 #include "../ModelBase/NetCDFTools.h"
 
-namespace jiba
+namespace jif3D
   {
     //we define these string variables to guarantee that we
     //use the exact same name for reading and writing the nectdf file
@@ -25,8 +25,8 @@ namespace jiba
     static const std::string SourceIndexName = "SourceIndex";
     static const std::string ReceiverIndexName = "ReceiverIndex";
 
-    void SaveTraveltimes(const std::string &filename, const jiba::rvec &Data,
-        const jiba::ThreeDSeismicModel &Model)
+    void SaveTraveltimes(const std::string &filename, const jif3D::rvec &Data,
+        const jif3D::ThreeDSeismicModel &Model)
       {
         //make sure all vectors have consistent sizes
         const size_t ndata = Data.size();
@@ -91,11 +91,11 @@ namespace jiba
 
       }
 
-    void ReadTraveltimes(const std::string &filename, jiba::rvec &Data,
-        jiba::ThreeDSeismicModel &Model)
+    void ReadTraveltimes(const std::string &filename, jif3D::rvec &Data,
+        jif3D::ThreeDSeismicModel &Model)
       {
         NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
-        jiba::ThreeDSeismicModel::tMeasPosVec PosX, PosY, PosZ;
+        jif3D::ThreeDSeismicModel::tMeasPosVec PosX, PosY, PosZ;
         //delete any old values in the model object
         Model.ClearMeasurementPoints();
         Model.ClearSourcePos();
@@ -136,7 +136,7 @@ namespace jiba
         ReadVec(DataFile, TravelTimeName, MeasIndexName, Data);
       }
 
-    void PlotRaypath(const std::string &filename, jiba::RP_STRUCT *raypath,
+    void PlotRaypath(const std::string &filename, jif3D::RP_STRUCT *raypath,
         const size_t nmeas, const double gridspacing, const size_t nairlayers)
       {
         std::ofstream outfile(filename.c_str());

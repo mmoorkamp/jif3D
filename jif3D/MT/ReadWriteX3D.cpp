@@ -17,7 +17,7 @@
 #include "../ModelBase/CellBoundaries.h"
 #include "ReadWriteX3D.h"
 
-namespace jiba
+namespace jif3D
   {
     static const size_t maxlength = 2048;
 
@@ -33,7 +33,7 @@ namespace jiba
       {
         if (!boost::filesystem::exists(filename))
           {
-            throw jiba::FatalException("File does not exist: " + filename);
+            throw jif3D::FatalException("File does not exist: " + filename);
           }
         std::ifstream infile(filename.c_str());
         //find the line in the file that describes the cell size in the horizontal directions
@@ -250,7 +250,7 @@ namespace jiba
         //if something went wrong during writing we throw an exception
         if (outfile.bad())
           {
-            throw jiba::FatalException("Problem writing model file.");
+            throw jif3D::FatalException("Problem writing model file.");
           }
       }
 
@@ -275,9 +275,9 @@ namespace jiba
         for (size_t i = 0; i < nfreq; ++i)
           {
             outfile << "  " << Frequencies.at(i) << "  " << ResultFilename
-                << jiba::stringify(i) << " " << ModelFilename
-                << "                          " << ModelFilename << jiba::stringify(i)
-                << "a.source             " << ModelFilename << jiba::stringify(i)
+                << jif3D::stringify(i) << " " << ModelFilename
+                << "                          " << ModelFilename << jif3D::stringify(i)
+                << "a.source             " << ModelFilename << jif3D::stringify(i)
                 << "b.source\n";
           }
         //in principle some other parameters for the forward calculation can be changed
@@ -302,7 +302,7 @@ namespace jiba
 
         if (outfile.bad())
           {
-            throw jiba::FatalException("Problem writing project file.");
+            throw jif3D::FatalException("Problem writing project file.");
           }
       }
 
@@ -312,7 +312,7 @@ namespace jiba
       {
         if (!boost::filesystem::exists(filename))
           {
-            throw jiba::FatalException("File does not exist: " + filename);
+            throw jif3D::FatalException("File does not exist: " + filename);
           }
         std::ifstream infile(filename.c_str());
         //find the description line for the electric fields
@@ -363,7 +363,7 @@ namespace jiba
       {
         if (!boost::filesystem::exists(filename))
           {
-            throw jiba::FatalException("File does not exist: " + filename);
+            throw jif3D::FatalException("File does not exist: " + filename);
           }
         std::ifstream infile(filename.c_str());
         //find the description line for the electric fields
@@ -387,16 +387,16 @@ namespace jiba
         //make sure all fields have the same size
         if (Ex.size() != ncellsx * ncellsy * ncellsz)
           {
-            throw jiba::FatalException(
+            throw jif3D::FatalException(
                 "In ReadEma, number of electric field values does not match grid size");
           }
         if (Ex.size() != Ey.size())
           {
-            throw jiba::FatalException("In ReadEma, size of Ex != Ey");
+            throw jif3D::FatalException("In ReadEma, size of Ex != Ey");
           }
         if (Ex.size() != Ez.size())
           {
-            throw jiba::FatalException("In ReadEma, size of Ex != Ez");
+            throw jif3D::FatalException("In ReadEma, size of Ex != Ez");
           }
         //we use a different storage ordering then in the .ema files
         Ex = ResortFields(Ex, ncellsx, ncellsy, ncellsz);
@@ -451,8 +451,8 @@ namespace jiba
         const std::vector<double> &SourceDepths,
         const std::vector<std::complex<double> > &XPolMoments,
         const std::vector<std::complex<double> > &YPolMoments,
-        const jiba::ThreeDModelBase::t3DModelDim &ZCellBoundaries,
-        const jiba::ThreeDModelBase::t3DModelDim &ZCellSizes, const size_t maxx,
+        const jif3D::ThreeDModelBase::t3DModelDim &ZCellBoundaries,
+        const jif3D::ThreeDModelBase::t3DModelDim &ZCellSizes, const size_t maxx,
         const size_t maxy)
       {
         typedef boost::multi_array_types::index_range range;
@@ -541,7 +541,7 @@ namespace jiba
           }
         if (outfile.bad())
           {
-            throw jiba::FatalException("Problem writing source file.");
+            throw jif3D::FatalException("Problem writing source file.");
           }
       }
 
@@ -562,5 +562,5 @@ namespace jiba
         return result;
       }
 
-  } //end of namespace jiba
+  } //end of namespace jif3D
 

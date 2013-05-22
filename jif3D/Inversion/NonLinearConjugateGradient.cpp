@@ -11,11 +11,11 @@
 #include "NonLinearConjugateGradient.h"
 #include "mcsrch.h"
 
-namespace jiba
+namespace jif3D
   {
 
     NonLinearConjugateGradient::NonLinearConjugateGradient(boost::shared_ptr<
-        jiba::ObjectiveFunction> ObjFunction) :
+        jif3D::ObjectiveFunction> ObjFunction) :
       GradientBasedOptimization(ObjFunction), OldGradient(), OldDirection(),
           OldOmega(1.0), mu(1.0)
       {
@@ -28,7 +28,7 @@ namespace jiba
       }
 
     void NonLinearConjugateGradient::StepImplementation(
-        jiba::rvec &CurrentModel)
+        jif3D::rvec &CurrentModel)
       {
         const size_t nmod = CovGrad.size();
         //if we are in the first iteration or we took
@@ -70,11 +70,11 @@ namespace jiba
           {
             status = OPTPP::mcsrch(&GetObjective(), SearchDir, RawGrad,
                 CurrentModel, Misfit, &mu, 20, 1e-4, 2.2e-16, 0.1, 1e9, 1e-9);
-            jiba::rvec y(ublas::element_prod(RawGrad, GetModelCovDiag())
+            jif3D::rvec y(ublas::element_prod(RawGrad, GetModelCovDiag())
                 - OldGradient);
             //This is the same calculation as for L-BFGS to scale the search direction for the next iteration
             //we therefore use the same nomenclature
-            jiba::rvec s(mu * SearchDir);
+            jif3D::rvec s(mu * SearchDir);
             double rho = 1.0 / NormProd(y, s, GetModelCovDiag());
             gamma = 1.0 / rho / NormProd(y, y, GetModelCovDiag());
           }

@@ -15,18 +15,18 @@
 
 int main()
   {
-    jiba::ThreeDSeismicModel Model;
-    std::string InfileName = jiba::AskFilename("Input Model: ");
+    jif3D::ThreeDSeismicModel Model;
+    std::string InfileName = jif3D::AskFilename("Input Model: ");
     Model.ReadNetCDF(InfileName);
 
     const size_t nx = Model.GetXCellSizes().size();
     const size_t ny = Model.GetYCellSizes().size();
     const size_t nz = Model.GetZCellSizes().size();
 
-    jiba::WaveletTransform(Model.SetSlownesses());
+    jif3D::WaveletTransform(Model.SetSlownesses());
 
-    jiba::ThreeDSeismicModel WaveHigh(Model);
-    jiba::ThreeDSeismicModel WaveLow(Model);
+    jif3D::ThreeDSeismicModel WaveHigh(Model);
+    jif3D::ThreeDSeismicModel WaveLow(Model);
 
     for (size_t i = 3 * nx / 4; i < nx; ++i)
       {
@@ -50,13 +50,13 @@ int main()
           }
       }
 
-    jiba::InvWaveletTransform(WaveHigh.SetSlownesses());
-    jiba::InvWaveletTransform(WaveLow.SetSlownesses());
+    jif3D::InvWaveletTransform(WaveHigh.SetSlownesses());
+    jif3D::InvWaveletTransform(WaveLow.SetSlownesses());
     WaveHigh.WriteNetCDF(InfileName + ".waveh.nc");
     WaveLow.WriteNetCDF(InfileName + ".wavel.nc");
     Model.WriteNetCDF(InfileName + ".wcoeff.nc");
 
-    jiba::rvec Elements(Model.GetSlownesses().num_elements());
+    jif3D::rvec Elements(Model.GetSlownesses().num_elements());
     std::copy(Model.GetSlownesses().origin(),
         Model.GetSlownesses().origin() + Model.GetSlownesses().num_elements(),
         Elements.begin());

@@ -9,7 +9,7 @@
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 
-namespace jiba
+namespace jif3D
   {
 
     ObjectiveFunction::ObjectiveFunction() :
@@ -24,4 +24,4 @@ namespace jiba
       }
 
   }
-//BOOST_CLASS_EXPORT_IMPLEMENT(jiba::ObjectiveFunction)
+//BOOST_CLASS_EXPORT_IMPLEMENT(jif3D::ObjectiveFunction)

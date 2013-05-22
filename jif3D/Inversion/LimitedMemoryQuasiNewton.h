@@ -13,7 +13,7 @@
 #include <boost/shared_ptr.hpp>
 #include <vector>
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup inversion General routines for inversion */
     /* @{ */
@@ -25,7 +25,7 @@ namespace jiba
      * We have to specify a number of correction pairs when constructing an object. For each correction pair
      * we need 2*M additional storage, where M is the number of model parameters.
      */
-    class LimitedMemoryQuasiNewton: public jiba::GradientBasedOptimization
+    class LimitedMemoryQuasiNewton: public jif3D::GradientBasedOptimization
       {
     private:
       //! the stepsize
@@ -35,11 +35,11 @@ namespace jiba
       //! The maximum number of correction pairs
       const size_t MaxPairs;
       //! The difference between the last MaxPairs updates, \f$s_k\f$ in eq. 9.4 of Nocedal and Wright
-      std::vector<boost::shared_ptr<jiba::rvec> > SHistory;
+      std::vector<boost::shared_ptr<jif3D::rvec> > SHistory;
       //! The difference between the last MaxPairs gradients, \f$y_k\f$ in eq. 9.4 of Nocedal and Wright
-      std::vector<boost::shared_ptr<jiba::rvec> > YHistory;
+      std::vector<boost::shared_ptr<jif3D::rvec> > YHistory;
       //! The implementation of a single step
-      virtual void StepImplementation(jiba::rvec &CurrentModel);
+      virtual void StepImplementation(jif3D::rvec &CurrentModel);
     public:
       //! Set the maximum number of forward evaluations the inversion spends in one line-search
       void SetLineSearchIterations(const size_t iter)
@@ -53,7 +53,7 @@ namespace jiba
        * @param n The maximum number of correction pairs
        */
       explicit LimitedMemoryQuasiNewton(boost::shared_ptr<
-          jiba::ObjectiveFunction> ObjFunction, const size_t n = 5);
+          jif3D::ObjectiveFunction> ObjFunction, const size_t n = 5);
       virtual ~LimitedMemoryQuasiNewton();
       };
   /* @} */

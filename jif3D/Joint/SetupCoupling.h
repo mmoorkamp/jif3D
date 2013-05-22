@@ -18,7 +18,7 @@
 #include <boost/shared_ptr.hpp>
 #include <string>
 
-namespace jiba
+namespace jif3D
   {
     namespace po = boost::program_options;
 
@@ -36,23 +36,23 @@ namespace jiba
       {
     private:
       //! The transformation between generalized model parameters and slowness including selecting the right range from the model vector
-      boost::shared_ptr<jiba::GeneralModelTransform> SlowTrans;
+      boost::shared_ptr<jif3D::GeneralModelTransform> SlowTrans;
       //! The transformation between generalized model parameters and conductivity including selecting the right range from the model vector
-      boost::shared_ptr<jiba::GeneralModelTransform> CondTrans;
+      boost::shared_ptr<jif3D::GeneralModelTransform> CondTrans;
       //! The transformation between generalized model parameters and density including selecting the right range from the model vector
-      boost::shared_ptr<jiba::GeneralModelTransform> DensTrans;
+      boost::shared_ptr<jif3D::GeneralModelTransform> DensTrans;
       //! The transformation between generalized model parameters and slowness for the cross-gradient functional
-      boost::shared_ptr<jiba::GeneralModelTransform> SlowCrossTrans;
+      boost::shared_ptr<jif3D::GeneralModelTransform> SlowCrossTrans;
       //! The transformation between generalized model parameters and conductivity for the cross-gradient functional
-      boost::shared_ptr<jiba::GeneralModelTransform> CondCrossTrans;
+      boost::shared_ptr<jif3D::GeneralModelTransform> CondCrossTrans;
       //! The transformation between generalized model parameters and density for the cross-gradient functional
-      boost::shared_ptr<jiba::GeneralModelTransform> DensCrossTrans;
+      boost::shared_ptr<jif3D::GeneralModelTransform> DensCrossTrans;
       //! The transformation between generalized model parameters and slowness for the regularization functional
-      boost::shared_ptr<jiba::ChainedTransform> SlowRegTrans;
+      boost::shared_ptr<jif3D::ChainedTransform> SlowRegTrans;
       //! The transformation between generalized model parameters and conductivity for the regularization functional
-      boost::shared_ptr<jiba::ChainedTransform> CondRegTrans;
+      boost::shared_ptr<jif3D::ChainedTransform> CondRegTrans;
       //! The transformation between generalized model parameters and density for the regularization functional
-      boost::shared_ptr<jiba::ChainedTransform> DensRegTrans;
+      boost::shared_ptr<jif3D::ChainedTransform> DensRegTrans;
       //! The minimal conductivity in S/m
       double mincond;
       //! The maximum conductivity in S/m
@@ -82,26 +82,26 @@ namespace jiba
       //! The replacement value for conductivity where the parameter relationship is not valid
       double CondReplace;
       //! Internal function to setup coupling and regularization when using the cross-gradient approach
-      void SetupCrossGradModel(jiba::rvec &InvModel,
-          const jiba::ThreeDModelBase &ModelGeometry,
-          const jiba::ThreeDSeismicModel &SeisMod,
-          const jiba::ThreeDGravityModel &GravMod, const jiba::ThreeDMTModel &MTMod,
-          jiba::JointObjective &Objective,
-          boost::shared_ptr<jiba::RegularizationFunction> Regularization, bool substart);
+      void SetupCrossGradModel(jif3D::rvec &InvModel,
+          const jif3D::ThreeDModelBase &ModelGeometry,
+          const jif3D::ThreeDSeismicModel &SeisMod,
+          const jif3D::ThreeDGravityModel &GravMod, const jif3D::ThreeDMTModel &MTMod,
+          jif3D::JointObjective &Objective,
+          boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart);
       //! Internal function to setup coupling and regularization when using a fixed parameter relationship
-      void SetupFixedCouplingModel(jiba::rvec &InvModel,
-          const jiba::ThreeDModelBase &ModelGeometry,
-          const jiba::ThreeDSeismicModel &SeisMod,
-          const jiba::ThreeDGravityModel &GravMod, const jiba::ThreeDMTModel &MTMod,
-          jiba::JointObjective &Objective,
-          boost::shared_ptr<jiba::RegularizationFunction> Regularization, bool substart);
+      void SetupFixedCouplingModel(jif3D::rvec &InvModel,
+          const jif3D::ThreeDModelBase &ModelGeometry,
+          const jif3D::ThreeDSeismicModel &SeisMod,
+          const jif3D::ThreeDGravityModel &GravMod, const jif3D::ThreeDMTModel &MTMod,
+          jif3D::JointObjective &Objective,
+          boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart);
       //! Internal function to setup coupling and regularization when using a parameter relationship designed for salt (unstable at the moment)
-      void SetupSaltModel(const po::variables_map &vm, jiba::rvec &InvModel,
-          const jiba::ThreeDModelBase &ModelGeometry,
-          const jiba::ThreeDSeismicModel &SeisMod,
-          const jiba::ThreeDGravityModel &GravMod, const jiba::ThreeDMTModel &MTMod,
-          jiba::JointObjective &Objective,
-          boost::shared_ptr<jiba::RegularizationFunction> Regularization, bool substart);
+      void SetupSaltModel(const po::variables_map &vm, jif3D::rvec &InvModel,
+          const jif3D::ThreeDModelBase &ModelGeometry,
+          const jif3D::ThreeDSeismicModel &SeisMod,
+          const jif3D::ThreeDGravityModel &GravMod, const jif3D::ThreeDMTModel &MTMod,
+          jif3D::JointObjective &Objective,
+          boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart);
     public:
       //! Return an options descriptions object for boost::program_options that contains information about options for coupling the methods
       po::options_description SetupOptions();
@@ -118,9 +118,9 @@ namespace jiba
        * @param Wavelet Parametrize the inversion by a wavelet transform of the model parameters
        */
       void SetupTransforms(const po::variables_map &vm, ThreeDSeismicModel &GeometryModel,
-          boost::shared_ptr<jiba::GeneralModelTransform> &TomoTransform,
-          boost::shared_ptr<jiba::GeneralModelTransform> &GravityTransform,
-          boost::shared_ptr<jiba::GeneralModelTransform> &MTTransform, bool Wavelet =
+          boost::shared_ptr<jif3D::GeneralModelTransform> &TomoTransform,
+          boost::shared_ptr<jif3D::GeneralModelTransform> &GravityTransform,
+          boost::shared_ptr<jif3D::GeneralModelTransform> &MTTransform, bool Wavelet =
               false);
       //! Set the model vector for the inversion, its length and content depends on the coupling method
       /*! For the direct coupling joint inversion the model parameter vector only contains a slowness value
@@ -137,12 +137,12 @@ namespace jiba
        * @param Regularization An object for regularization (gradient/curvature etc.)
        * @param substart Do we want to substract the starting model for roughness calculations
        */
-      void SetupModelVector(const po::variables_map &vm, jiba::rvec &InvModel,
-          const jiba::ThreeDModelBase &ModelGeometry,
-          const jiba::ThreeDSeismicModel &SeisMod,
-          const jiba::ThreeDGravityModel &GravMod, const jiba::ThreeDMTModel &MTMod,
-          jiba::JointObjective &Objective,
-          boost::shared_ptr<jiba::RegularizationFunction> Regularization, bool substart);
+      void SetupModelVector(const po::variables_map &vm, jif3D::rvec &InvModel,
+          const jif3D::ThreeDModelBase &ModelGeometry,
+          const jif3D::ThreeDSeismicModel &SeisMod,
+          const jif3D::ThreeDGravityModel &GravMod, const jif3D::ThreeDMTModel &MTMod,
+          jif3D::JointObjective &Objective,
+          boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart);
 
       SetupCoupling();
       virtual ~SetupCoupling();

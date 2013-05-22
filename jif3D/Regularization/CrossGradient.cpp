@@ -7,10 +7,10 @@
 
 #include "CrossGradient.h"
 
-namespace jiba
+namespace jif3D
   {
 
-    void CrossGradient::ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff)
+    void CrossGradient::ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff)
       {
         const size_t nmod = Model.size();
         //We have two complete models and three components of the cross gradient
@@ -19,49 +19,49 @@ namespace jiba
         //we need the spatial gradients of both models, so we use the
         //appropriate objective function objects for this
         FirstGradient.CalcMisfit(
-            ublas::vector_range<const jiba::rvec>(Model, ublas::range(0, nmod / 2)));
+            ublas::vector_range<const jif3D::rvec>(Model, ublas::range(0, nmod / 2)));
         SecondGradient.CalcMisfit(
-            ublas::vector_range<const jiba::rvec>(Model, ublas::range(nmod / 2, nmod)));
+            ublas::vector_range<const jif3D::rvec>(Model, ublas::range(nmod / 2, nmod)));
         //the gradient objective function stores the three directional components
         //as a vector of size 3*m, we create a range for each component
         //that makes the cross gradient calculation more simple below
-        ublas::vector_range<const jiba::rvec> FirstXGrad(
+        ublas::vector_range<const jif3D::rvec> FirstXGrad(
             FirstGradient.GetDataDifference(), ublas::range(0, nmod / 2));
-        ublas::vector_range<const jiba::rvec> FirstYGrad(
+        ublas::vector_range<const jif3D::rvec> FirstYGrad(
             FirstGradient.GetDataDifference(), ublas::range(nmod / 2, nmod));
-        ublas::vector_range<const jiba::rvec> FirstZGrad(
+        ublas::vector_range<const jif3D::rvec> FirstZGrad(
             FirstGradient.GetDataDifference(), ublas::range(nmod, Diff.size()));
-        ublas::vector_range<const jiba::rvec> SecondXGrad(
+        ublas::vector_range<const jif3D::rvec> SecondXGrad(
             SecondGradient.GetDataDifference(), ublas::range(0, nmod / 2));
-        ublas::vector_range<const jiba::rvec> SecondYGrad(
+        ublas::vector_range<const jif3D::rvec> SecondYGrad(
             SecondGradient.GetDataDifference(), ublas::range(nmod / 2, nmod));
-        ublas::vector_range<const jiba::rvec> SecondZGrad(
+        ublas::vector_range<const jif3D::rvec> SecondZGrad(
             SecondGradient.GetDataDifference(), ublas::range(nmod, Diff.size()));
         //now come the actual calculations of the cross-gradient objective
         //function, in the usual form of a difference vector that will be
         //summed and squared in the base class, we have three components
         //of the cross-gradient vector that we store consecutively
-        ublas::vector_range<jiba::rvec>(Diff, ublas::range(0, nmod / 2)) =
+        ublas::vector_range<jif3D::rvec>(Diff, ublas::range(0, nmod / 2)) =
             ublas::element_prod(FirstYGrad, SecondZGrad)
                 - ublas::element_prod(FirstZGrad, SecondYGrad);
-        ublas::vector_range<jiba::rvec>(Diff, ublas::range(nmod / 2, nmod)) =
+        ublas::vector_range<jif3D::rvec>(Diff, ublas::range(nmod / 2, nmod)) =
             ublas::element_prod(FirstZGrad, SecondXGrad)
                 - ublas::element_prod(FirstXGrad, SecondZGrad);
-        ublas::vector_range<jiba::rvec>(Diff, ublas::range(nmod, Diff.size())) =
+        ublas::vector_range<jif3D::rvec>(Diff, ublas::range(nmod, Diff.size())) =
             ublas::element_prod(FirstXGrad, SecondYGrad)
                 - ublas::element_prod(FirstYGrad, SecondXGrad);
       }
 
-    jiba::rvec CrossGradient::ImplGradient(const jiba::rvec &Model,
-        const jiba::rvec &Diff)
+    jif3D::rvec CrossGradient::ImplGradient(const jif3D::rvec &Model,
+        const jif3D::rvec &Diff)
       {
         const size_t nmod = Model.size();
         const size_t halfmod = nmod / 2;
         FirstGradient.CalcGradient(
-            ublas::vector_range<const jiba::rvec>(Model, ublas::range(0, halfmod)));
+            ublas::vector_range<const jif3D::rvec>(Model, ublas::range(0, halfmod)));
         SecondGradient.CalcGradient(
-            ublas::vector_range<const jiba::rvec>(Model, ublas::range(halfmod, nmod)));
-        jiba::rvec Gradient(nmod);
+            ublas::vector_range<const jif3D::rvec>(Model, ublas::range(halfmod, nmod)));
+        jif3D::rvec Gradient(nmod);
         Gradient.clear();
         const size_t xsize = ModelGeometry.GetModelShape()[0];
         const size_t ysize = ModelGeometry.GetModelShape()[1];

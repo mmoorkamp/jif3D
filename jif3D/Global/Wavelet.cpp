@@ -15,7 +15,7 @@
  * The basic algorithm is described in Numerical Recipes in C, pp. 595-598
  */
 
-namespace jiba
+namespace jif3D
   {
     //calculate the coefficients for the wavelet filter
     static const double c0 = (1.0 + std::sqrt(3.0)) / (4.0 * std::sqrt(2.0));
@@ -27,10 +27,10 @@ namespace jiba
      * @param Invec The vector with the input data, will contain the result of the transform. Size must be a power of 2
      * @param maxindex The maximum index to which to apply the filter, must be a power of 2
      */
-    void Daub4(jiba::rvec &Invec, const size_t maxindex)
+    void Daub4(jif3D::rvec &Invec, const size_t maxindex)
       {
         //we perform the operations on a temporary copy
-        jiba::rvec Temp(Invec);
+        jif3D::rvec Temp(Invec);
         const size_t length = maxindex;
         const size_t offset = length / 2;
         //the current value depends on the next three values, so we have to adjust the end of the loop
@@ -56,11 +56,11 @@ namespace jiba
      * @param Invec The vector with the input data, will contain the result of the transform. Size must be a power of 2
      * @param maxindex The maximum index to which to apply the filter, must be a power of 2 and less than the size of Invec
      */
-    void InvDaub4(jiba::rvec &Invec, const size_t maxindex)
+    void InvDaub4(jif3D::rvec &Invec, const size_t maxindex)
       {
         //this is the same strategy as the forward
         //only the equations and the order are slightly different
-        jiba::rvec Temp(Invec);
+        jif3D::rvec Temp(Invec);
         const size_t length = maxindex;
         const size_t offset = length / 2;
         Temp(0) = c2 * Invec(length / 2 - 1) + c1 * Invec(length - 1) + c0
@@ -116,7 +116,7 @@ namespace jiba
     /*! Perform a forward wavelet transform on the input vector
      * @param Invec The input vector, will contain the result, size must be power of 2
      */
-    void WaveletTransform(jiba::rvec &Invec)
+    void WaveletTransform(jif3D::rvec &Invec)
       {
         ForwardWaveletDriver()(Invec, Invec.size());
       }
@@ -124,7 +124,7 @@ namespace jiba
     /*! Perform an inverse wavelet transform on the input vector
      * @param Invec The input vector, will contain the result, size must be power of 2
      */
-    void InvWaveletTransform(jiba::rvec &Invec)
+    void InvWaveletTransform(jif3D::rvec &Invec)
       {
         InverseWaveletDriver()(Invec, Invec.size());
       }
@@ -144,7 +144,7 @@ namespace jiba
       {
         const size_t nElements = std::accumulate(DimSizes, DimSizes + ndim, 1,
             std::multiplies<size_t>());
-        jiba::rvec WorkVector(nElements);
+        jif3D::rvec WorkVector(nElements);
         size_t Stride = 1;
         size_t preStride = 1;
         for (size_t i = 0; i < ndim; ++i)
@@ -190,7 +190,7 @@ namespace jiba
         for (size_t i = 0; i < ndim; ++i)
           {
             if (!IsPowerOfTwo(DimSizes[i]))
-              throw jiba::FatalException(
+              throw jif3D::FatalException(
                   "Array dimension is not a power of two.");
           }
         WaveletTransformImp(InArray, DimSizes, ndim, ForwardWaveletDriver());
@@ -203,7 +203,7 @@ namespace jiba
         for (size_t i = 0; i < ndim; ++i)
           {
             if (!IsPowerOfTwo(DimSizes[i]))
-              throw jiba::FatalException(
+              throw jif3D::FatalException(
                   "Array dimension is not a power of two.");
           }
         WaveletTransformImp(InArray, DimSizes, ndim, InverseWaveletDriver());

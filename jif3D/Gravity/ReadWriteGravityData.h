@@ -11,7 +11,7 @@
 #include "ThreeDGravityModel.h"
 #include <string>
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup gravity Gravity forward modeling, display and inversion */
      /* @{ */
@@ -21,25 +21,25 @@ namespace jiba
     GravityDataType IdentifyGravityDatafileType(const std::string &filename);
     //!Read a collection of scalar gravity measurements and associated positions from a netcdf file
     void ReadScalarGravityMeasurements(const std::string &filename,
-        jiba::rvec &Data,
+        jif3D::rvec &Data,
         ThreeDGravityModel::tMeasPosVec &PosX,
         ThreeDGravityModel::tMeasPosVec &PosY,
         ThreeDGravityModel::tMeasPosVec &PosZ);
     //!Save a collection of scalar gravity measurements and associated positions to a netcdf file
     void SaveScalarGravityMeasurements(const std::string &filename,
-        const jiba::rvec &Data,
+        const jif3D::rvec &Data,
         const ThreeDGravityModel::tMeasPosVec &PosX,
         const ThreeDGravityModel::tMeasPosVec &PosY,
         const ThreeDGravityModel::tMeasPosVec &PosZ);
     //!Read a collection of tensor gravity measurements and associated positions from a netcdf file
     void ReadTensorGravityMeasurements(const std::string &filename,
-        jiba::rvec &Data,
+        jif3D::rvec &Data,
         ThreeDGravityModel::tMeasPosVec &PosX,
         ThreeDGravityModel::tMeasPosVec &PosY,
         ThreeDGravityModel::tMeasPosVec &PosZ);
     //!Save a collection of tensor gravity measurements and associated positions to a netcdf file
     void SaveTensorGravityMeasurements(const std::string &filename,
-        const jiba::rvec &Data,
+        const jif3D::rvec &Data,
         const ThreeDGravityModel::tMeasPosVec &PosX,
         const ThreeDGravityModel::tMeasPosVec &PosY,
         const ThreeDGravityModel::tMeasPosVec &PosZ);

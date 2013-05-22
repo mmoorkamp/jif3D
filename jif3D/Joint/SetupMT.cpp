@@ -11,7 +11,7 @@
 #include "SetupMT.h"
 #include <algorithm>
 
-namespace jiba
+namespace jif3D
   {
 
     SetupMT::SetupMT() :
@@ -34,8 +34,8 @@ namespace jiba
       }
 
     bool SetupMT::SetupObjective(const po::variables_map &vm,
-        jiba::JointObjective &Objective,
-        boost::shared_ptr<jiba::GeneralModelTransform> Transform, double xorigin,
+        jif3D::JointObjective &Objective,
+        boost::shared_ptr<jif3D::GeneralModelTransform> Transform, double xorigin,
         double yorigin, boost::filesystem::path TempDir)
       {
         //first we ask the user a few questions
@@ -50,9 +50,9 @@ namespace jiba
         if (mtlambda > 0.0)
           {
             //for inversion we need some data, so we ask for the filename
-            std::string mtdatafilename = jiba::AskFilename("MT data filename: ");
+            std::string mtdatafilename = jif3D::AskFilename("MT data filename: ");
 
-            std::string mtmodelfilename = jiba::AskFilename("MT Model Filename: ");
+            std::string mtmodelfilename = jif3D::AskFilename("MT Model Filename: ");
             //read in the model and check whether the geometry matches the one
             //of the tomography starting model
             MTModel.ReadNetCDF(mtmodelfilename);
@@ -69,8 +69,8 @@ namespace jiba
 
             //read in MT data, the position of the measurement sites, frequencies and impedances
             std::vector<double> MTXPos, MTYPos, MTZPos, Frequencies;
-            jiba::rvec MTData, MTError;
-            jiba::ReadImpedancesFromNetCDF(mtdatafilename, Frequencies, MTXPos, MTYPos,
+            jif3D::rvec MTData, MTError;
+            jif3D::ReadImpedancesFromNetCDF(mtdatafilename, Frequencies, MTXPos, MTYPos,
                 MTZPos, MTData, MTError);
 
             //set the model object so that we can use it to calculate synthetic data
@@ -84,24 +84,24 @@ namespace jiba
               }
             MTModel.SetOrigin(xorigin, yorigin, 0.0);
             //setup the objective function for the MT data
-            jiba::X3DMTCalculator Calculator(TempDir);
+            jif3D::X3DMTCalculator Calculator(TempDir);
 
             MTObjective = boost::shared_ptr<
-                jiba::ThreeDModelObjective<jiba::X3DMTCalculator> >(
-                new jiba::ThreeDModelObjective<jiba::X3DMTCalculator>(Calculator));
+                jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator> >(
+                new jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator>(Calculator));
             //if we specified the name for a refined model for forward calculations
             //we read in that model, set the measurement configuration for the observed
             //data and pass it to the objective function
             if (vm.count("mtfine"))
               {
-                jiba::X3DModel FineModel;
+                jif3D::X3DModel FineModel;
                 FineModel.ReadNetCDF(FineModelName);
                 FineModel.CopyMeasurementConfigurations(MTModel);
                 MTObjective->SetFineModelGeometry(FineModel);
               }
             MTObjective->SetCoarseModelGeometry(MTModel);
             MTObjective->SetObservedData(MTData);
-            jiba::rvec MinErr(jiba::ConstructMTError(MTData, relerr));
+            jif3D::rvec MinErr(jif3D::ConstructMTError(MTData, relerr));
             for (size_t i = 0; i < MTError.size(); ++i)
               {
                 MTError(i) = std::max(MTError(i), MinErr(i));

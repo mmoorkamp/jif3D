@@ -18,10 +18,10 @@
 
 int main()
   {
-    std::string firstname = jiba::AskFilename("First model file: ", true);
-    std::string secondname = jiba::AskFilename("Second model file: ", true);
-    jiba::ThreeDSeismicModel FirstModel;
-    jiba::ThreeDSeismicModel SecondModel;
+    std::string firstname = jif3D::AskFilename("First model file: ", true);
+    std::string secondname = jif3D::AskFilename("Second model file: ", true);
+    jif3D::ThreeDSeismicModel FirstModel;
+    jif3D::ThreeDSeismicModel SecondModel;
 
     FirstModel.ReadNetCDF(firstname);
     SecondModel.ReadNetCDF(secondname);

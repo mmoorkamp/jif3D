@@ -8,7 +8,7 @@
 
 #include "ModelDistributor.h"
 
-namespace jiba
+namespace jif3D
   {
 
     //so far everything is in the header file

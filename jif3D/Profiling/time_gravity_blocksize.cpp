@@ -19,7 +19,7 @@ using namespace boost::assign;
  * using CUDA for a fixed model size, but different CUDA thread block sizes.
  */
 
-void MakeTestModel(jiba::ThreeDGravityModel &Model, const size_t size)
+void MakeTestModel(jif3D::ThreeDGravityModel &Model, const size_t size)
   {
     Model.SetXCellSizes().resize(boost::extents[size]);
     Model.SetYCellSizes().resize(boost::extents[size]);
@@ -62,9 +62,9 @@ int main()
     std::string filename = "blocksize.time";
     //we create a calculator and implementation object manually
     //we do not use the factory function to have maximum control
-    boost::shared_ptr<jiba::ThreeDGravityCalculator> Calculator;
-    boost::shared_ptr<jiba::TensorCudaGravityImp> Implementation(
-        new jiba::TensorCudaGravityImp);
+    boost::shared_ptr<jif3D::ThreeDGravityCalculator> Calculator;
+    boost::shared_ptr<jif3D::TensorCudaGravityImp> Implementation(
+        new jif3D::TensorCudaGravityImp);
 
     //we test for a number of different blocksizes
     //64 and 256 are recommended values from the NVidia documentation
@@ -81,12 +81,12 @@ int main()
         const size_t modelsize = 80;
         //to show that something is happening we print the current block size to the screent
         std::cout << "Blocksize: " << blocksizes.at(i) << std::endl;
-        jiba::ThreeDGravityModel GravityTest;
+        jif3D::ThreeDGravityModel GravityTest;
         //set the block size in the implementation object
         Implementation->SetCUDABlockSize(blocksizes.at(i));
         //and assemble the calculator object
-        Calculator = boost::shared_ptr<jiba::ThreeDGravityCalculator>(
-            new jiba::MinMemGravityCalculator(Implementation));
+        Calculator = boost::shared_ptr<jif3D::ThreeDGravityCalculator>(
+            new jif3D::MinMemGravityCalculator(Implementation));
         double rawruntime = 0.0;
         //now we perform several runs and measure the time
         for (size_t j = 0; j < nrunspersize; ++j)
@@ -98,7 +98,7 @@ int main()
             boost::posix_time::ptime firststarttime =
                 boost::posix_time::microsec_clock::local_time();
             //perform the calculation
-            jiba::rvec gravmeas(Calculator->Calculate(GravityTest));
+            jif3D::rvec gravmeas(Calculator->Calculate(GravityTest));
             //and the time we stop
             boost::posix_time::ptime firstendtime =
                 boost::posix_time::microsec_clock::local_time();

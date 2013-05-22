@@ -15,7 +15,7 @@
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 
-namespace jiba
+namespace jif3D
   {
     namespace po = boost::program_options;
 
@@ -31,16 +31,16 @@ namespace jiba
       {
     private:
       //! The objective function object for magnetotelluric data using X3D as a forward engine
-      boost::shared_ptr<jiba::ThreeDModelObjective<jiba::X3DMTCalculator> > MTObjective;
+      boost::shared_ptr<jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator> > MTObjective;
       //! The relative data error to assume for construction of the data variance
       double relerr;
       //! The file name for a model with cell refinements
       std::string FineModelName;
       //! The object containing the geometry of the MT inversion model, has to match the geometry of the starting model
-      jiba::X3DModel MTModel;
+      jif3D::X3DModel MTModel;
     public:
       //! Get read-only access to the objective function object, for example to output misfit information
-      const jiba::ThreeDModelObjective<jiba::X3DMTCalculator> &GetMTObjective()
+      const jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator> &GetMTObjective()
         {
           return *MTObjective;
         }
@@ -58,13 +58,13 @@ namespace jiba
        * @return True if the weight for  the MT objective is greater zero, i.e. we added an objective function to JointObjective, false otherwise
        */
       bool
-      SetupObjective(const po::variables_map &vm, jiba::JointObjective &Objective,
-          boost::shared_ptr<jiba::GeneralModelTransform> Transform, double xorigin = 0.0,
+      SetupObjective(const po::variables_map &vm, jif3D::JointObjective &Objective,
+          boost::shared_ptr<jif3D::GeneralModelTransform> Transform, double xorigin = 0.0,
           double yorigin = 0.0, boost::filesystem::path TempDir =
               boost::filesystem::current_path());
           //! Return the MT model that has been set for the inversion
           const
-      jiba::X3DModel &GetModel() const
+      jif3D::X3DModel &GetModel() const
         {
           return MTModel;
         }

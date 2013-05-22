@@ -21,7 +21,7 @@
  * are easier to handle in generic algorithms like transform etc.
  */
 
-namespace jiba
+namespace jif3D
   {
     /*! \addtogroup util General utility routines
      * These routines are of very general use and do not belong to a certain geophysical method. This includes

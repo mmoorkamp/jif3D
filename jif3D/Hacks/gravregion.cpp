@@ -12,24 +12,24 @@
 int main()
   {
 
-    jiba::rvec Data;
-    jiba::ThreeDGravityModel::tMeasPosVec PosX, PosY, PosZ;
+    jif3D::rvec Data;
+    jif3D::ThreeDGravityModel::tMeasPosVec PosX, PosY, PosZ;
 
-    std::string datafilename = jiba::AskFilename("Data Filename: ");
+    std::string datafilename = jif3D::AskFilename("Data Filename: ");
     //we figure out the type of data (scalar or ftg) from the variables
     //that are in the netcdf file
-    jiba::GravityDataType DataType = jiba::IdentifyGravityDatafileType(
+    jif3D::GravityDataType DataType = jif3D::IdentifyGravityDatafileType(
         datafilename);
 
     size_t nmeasdata = 1;
     switch (DataType)
       {
-    case jiba::scalar:
-      jiba::ReadScalarGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
+    case jif3D::scalar:
+      jif3D::ReadScalarGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
       break;
-    case jiba::ftg:
+    case jif3D::ftg:
       nmeasdata = 9;
-      jiba::ReadTensorGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
+      jif3D::ReadTensorGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
       break;
     default:
       //in case we couldn't identify the data in the netcdf file
@@ -55,7 +55,7 @@ int main()
     std::cout << "Maximum Easting value: ";
     std::cin >> maxy;
 
-    jiba::ThreeDGravityModel::tMeasPosVec NewPosX, NewPosY, NewPosZ, NewData;
+    jif3D::ThreeDGravityModel::tMeasPosVec NewPosX, NewPosY, NewPosZ, NewData;
     const size_t npos = Data.size() / nmeasdata;
 
     for (size_t i = 0; i < npos; ++i)
@@ -72,17 +72,17 @@ int main()
               }
           }
       }
-    jiba::rvec FinData(NewData.size());
+    jif3D::rvec FinData(NewData.size());
     std::copy(NewData.begin(), NewData.end(), FinData.begin());
-    std::string outfilename = jiba::AskFilename("Output Filename: ", false);
+    std::string outfilename = jif3D::AskFilename("Output Filename: ", false);
     switch (DataType)
       {
-    case jiba::scalar:
-      jiba::SaveScalarGravityMeasurements(outfilename, FinData, NewPosX,
+    case jif3D::scalar:
+      jif3D::SaveScalarGravityMeasurements(outfilename, FinData, NewPosX,
           NewPosY, NewPosZ);
       break;
-    case jiba::ftg:
-      jiba::SaveTensorGravityMeasurements(outfilename, FinData, NewPosX,
+    case jif3D::ftg:
+      jif3D::SaveTensorGravityMeasurements(outfilename, FinData, NewPosX,
           NewPosY, NewPosZ);
       break;
     default:

@@ -19,10 +19,10 @@
 #include "../ModelTransforms/ModelCopyTransform.h"
 
 
-class Rosenbrock: public jiba::ObjectiveFunction
+class Rosenbrock: public jif3D::ObjectiveFunction
   {
 private:
-  virtual void ImplDataDifference(const jiba::rvec &Model, jiba::rvec &Diff)
+  virtual void ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff)
     {
       Diff.resize(2);
       double f1 = (Model(1) - Model(0) * Model(0));
@@ -31,13 +31,13 @@ private:
       Diff(0) = 10 * f1;
       Diff(1) = f2;
     }
-  virtual jiba::rvec ImplGradient(const jiba::rvec &Model,
-      const jiba::rvec &Diff)
+  virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model,
+      const jif3D::rvec &Diff)
     {
       double f1 = (Model(1) - Model(0) * Model(0));
       double f2 = 1. - Model(0);
 
-      jiba::rvec Gradient(2);
+      jif3D::rvec Gradient(2);
       Gradient(0) = -400. * f1 * Model(0) - 2. * f2;
       Gradient(1) = 200. * f1;
       return Gradient;
@@ -61,13 +61,13 @@ BOOST_AUTO_TEST_SUITE( OptStep_Test_Suite )
 BOOST_AUTO_TEST_CASE  (basic_nlcg_test)
     {
       boost::shared_ptr<Rosenbrock> Objective(new Rosenbrock());
-      jiba::NonLinearConjugateGradient NLCG(Objective);
-      jiba::rvec Cov(2);
+      jif3D::NonLinearConjugateGradient NLCG(Objective);
+      jif3D::rvec Cov(2);
       //std::fill_n(Cov.begin(), 2, 1.0);
       Cov(0) = 10.0;
       Cov(1) = 0.1;
       NLCG.SetModelCovDiag(Cov);
-      jiba::rvec Model(2);
+      jif3D::rvec Model(2);
       Model(0) = -1.2;
       Model(1) = 1.0;
       double Misfit = 1e10;
@@ -86,14 +86,14 @@ BOOST_AUTO_TEST_CASE  (basic_nlcg_test)
   BOOST_AUTO_TEST_CASE (basic_lbfgs_test)
     {
       boost::shared_ptr<Rosenbrock> Objective(new Rosenbrock());
-      jiba::LimitedMemoryQuasiNewton LBFGS(Objective, 5);
-      jiba::rvec Cov(2);
+      jif3D::LimitedMemoryQuasiNewton LBFGS(Objective, 5);
+      jif3D::rvec Cov(2);
       //std::fill_n(Cov.begin(), 2, 1.0);
       Cov(0) = 10.0;
       Cov(1) = 0.1;
       LBFGS.SetModelCovDiag(Cov);
 
-      jiba::rvec Model(2);
+      jif3D::rvec Model(2);
       Model(0) = -1.2;
       Model(1) = 1.0;
       double Misfit = 1e10;
@@ -111,28 +111,28 @@ BOOST_AUTO_TEST_CASE  (basic_nlcg_test)
 
   BOOST_AUTO_TEST_CASE (basic_jointobjective_test)
     {
-      boost::shared_ptr<jiba::JointObjective> Objective(new jiba::JointObjective());
+      boost::shared_ptr<jif3D::JointObjective> Objective(new jif3D::JointObjective());
       boost::shared_ptr<Rosenbrock> Rosen1(new Rosenbrock());
       boost::shared_ptr<Rosenbrock> Rosen2(new Rosenbrock());
       boost::shared_ptr<Rosenbrock> Rosen3(new Rosenbrock());
 
-      boost::shared_ptr<jiba::GeneralModelTransform> Transform(new jiba::ModelCopyTransform());
+      boost::shared_ptr<jif3D::GeneralModelTransform> Transform(new jif3D::ModelCopyTransform());
       Objective->AddObjective(Rosen1,Transform,0.8);
       Objective->AddObjective(Rosen2,Transform,0.2);
 
-      jiba::LimitedMemoryQuasiNewton JointLBFGS(Objective, 5);
-      jiba::LimitedMemoryQuasiNewton RosenLBFGS(Rosen3, 5);
-      jiba::rvec Cov(2);
+      jif3D::LimitedMemoryQuasiNewton JointLBFGS(Objective, 5);
+      jif3D::LimitedMemoryQuasiNewton RosenLBFGS(Rosen3, 5);
+      jif3D::rvec Cov(2);
       //std::fill_n(Cov.begin(), 2, 1.0);
       Cov(0) = 10.0;
       Cov(1) = 0.1;
       JointLBFGS.SetModelCovDiag(Cov);
       RosenLBFGS.SetModelCovDiag(Cov);
 
-      jiba::rvec JointModel(2);
+      jif3D::rvec JointModel(2);
       JointModel(0) = -1.2;
       JointModel(1) = 1.0;
-      jiba::rvec RosenModel(JointModel);
+      jif3D::rvec RosenModel(JointModel);
       double Misfit = 1e10;
       while (Misfit > 1e-9)
         {

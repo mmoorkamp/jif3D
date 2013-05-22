@@ -20,7 +20,7 @@
  * Utilities associated with the general handling of files and filenames.
  */
 
-namespace jiba
+namespace jif3D
   {
     /** \addtogroup util General utility routines */
     /* @{ */
@@ -90,7 +90,7 @@ namespace jiba
         std::cin >> filename;
         if (checkexists && !boost::filesystem::exists(filename))
           {
-            throw jiba::FatalException("File " + filename + " does not exist");
+            throw jif3D::FatalException("File " + filename + " does not exist");
           }
         return filename;
       }

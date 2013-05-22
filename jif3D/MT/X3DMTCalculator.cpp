@@ -24,7 +24,7 @@
 
 namespace fs = boost::filesystem;
 
-namespace jiba
+namespace jif3D
   {
     //define some names that are always the same
     //either because x3d uses this convention
@@ -49,9 +49,9 @@ namespace jiba
     inline void CheckField(const std::vector<std::complex<double> > &Field, size_t nelem)
       {
         if (Field.size() != nelem)
-          throw jiba::FatalException(
-              "Number of read in elements in Field: " + jiba::stringify(Field.size())
-                  + " does not match expected: " + jiba::stringify(nelem));
+          throw jif3D::FatalException(
+              "Number of read in elements in Field: " + jif3D::stringify(Field.size())
+                  + " does not match expected: " + jif3D::stringify(nelem));
       }
 
     //check that the .hnk file for x3d are in a certain directory
@@ -87,7 +87,7 @@ namespace jiba
         //we are inside an openmp thread and swallow all sensible error messages.
         if (!CheckHNK(fs::path()))
           {
-            throw jiba::FatalException("Cannot find .hnk files in current directory! ");
+            throw jif3D::FatalException("Cannot find .hnk files in current directory! ");
           }
       }
 
@@ -114,7 +114,7 @@ namespace jiba
     //perform parallel calculations
     std::string X3DMTCalculator::ObjectID()
       {
-        return std::string("p" + jiba::stringify(getpid()) + jiba::stringify(this));
+        return std::string("p" + jif3D::stringify(getpid()) + jif3D::stringify(this));
       }
 
     std::string X3DMTCalculator::MakeUniqueName(X3DModel::ProblemType Type,
@@ -126,7 +126,7 @@ namespace jiba
         //the type of calculation
         result += Extension.find(Type)->second;
         //and the frequency index
-        result += jiba::stringify(FreqIndex);
+        result += jif3D::stringify(FreqIndex);
         return result;
       }
     //create a script that changes to the correct directory
@@ -167,7 +167,7 @@ namespace jiba
         const size_t nmeas = Model.GetMeasPosX().size();
         const size_t nmodx = Model.GetXCoordinates().size();
         const size_t nmody = Model.GetYCoordinates().size();
-        jiba::rvec result(nmeas * 8);
+        jif3D::rvec result(nmeas * 8);
         fs::path RootName = TempDir / MakeUniqueName(X3DModel::MT, freqindex);
         fs::path DirName = RootName.string() + dirext;
         std::vector<double> CurrFreq(1, Model.GetFrequencies()[freqindex]);
@@ -243,7 +243,7 @@ namespace jiba
       }
 
     void CompareDepths(const std::vector<double> &BGDepths,
-        const jiba::ThreeDModelBase::t3DModelDim &ModelDepths)
+        const jif3D::ThreeDModelBase::t3DModelDim &ModelDepths)
       {
         size_t mindex = 0;
         for (size_t i = 0; i < BGDepths.size(); ++i)
@@ -254,10 +254,10 @@ namespace jiba
               }
             if (mindex < ModelDepths.size() && ModelDepths[mindex] != BGDepths[i])
               {
-                throw jiba::FatalException(
-                    "Depth to background layer: " + jiba::stringify(BGDepths[i])
+                throw jif3D::FatalException(
+                    "Depth to background layer: " + jif3D::stringify(BGDepths[i])
                         + " does not match grid cell depth: "
-                        + jiba::stringify(ModelDepths[mindex]));
+                        + jif3D::stringify(ModelDepths[mindex]));
               }
           }
       }
@@ -273,7 +273,7 @@ namespace jiba
         const size_t nmodx = Model.GetXCoordinates().size();
         const size_t nmody = Model.GetYCoordinates().size();
 
-        jiba::rvec result(nmeas * nfreq * 8);
+        jif3D::rvec result(nmeas * nfreq * 8);
         bool FatalError = false;
         result.clear();
         //we make a call to the coordinate functions to make sure
@@ -318,7 +318,7 @@ namespace jiba
         //we cannot throw from within the openmp section so if there was an exception
         //inside the parallel region we set FatalErrror to true and throw a new exception here
         if (FatalError)
-          throw jiba::FatalException("Problem in MT forward calculation.");
+          throw jif3D::FatalException("Problem in MT forward calculation.");
         return result;
 
       }
@@ -384,8 +384,8 @@ namespace jiba
         std::vector<std::complex<double> > &Uz, const std::vector<size_t> &SourceXIndex,
         const std::vector<size_t> &SourceYIndex,
         const std::vector<double> ObservationDepths,
-        const jiba::ThreeDModelBase::t3DModelDim &ZCellBoundaries,
-        const jiba::ThreeDModelBase::t3DModelDim &ZCellSizes, const size_t ncellsx,
+        const jif3D::ThreeDModelBase::t3DModelDim &ZCellBoundaries,
+        const jif3D::ThreeDModelBase::t3DModelDim &ZCellSizes, const size_t ncellsx,
         const size_t ncellsy, const size_t ncellsz)
       {
         std::string DirName = RootName + dirext + "/";
@@ -416,7 +416,7 @@ namespace jiba
         const size_t nmeas = Model.GetMeasPosX().size();
         const size_t nmod = nmodx * nmody * nmodz;
 
-        jiba::rvec Gradient(nmod, 0.0);
+        jif3D::rvec Gradient(nmod, 0.0);
 
         fs::path ForwardDirName = TempDir
             / (MakeUniqueName(X3DModel::MT, freqindex) + dirext);
@@ -535,7 +535,7 @@ namespace jiba
 
         //now we calculate the response to magnetic dipole sources
         const std::complex<double> omega_mu = -1.0
-            / (std::complex<double>(0.0, jiba::mag_mu) * 2.0 * M_PI
+            / (std::complex<double>(0.0, jif3D::mag_mu) * 2.0 * M_PI
                 * Model.GetFrequencies()[freqindex]);
 
         fs::path MdipName = TempDir / MakeUniqueName(X3DModel::MDIP, freqindex);
@@ -629,7 +629,7 @@ namespace jiba
         const size_t nmeas = Model.GetMeasPosX().size();
         const size_t nmod = nmodx * nmody * nmodz;
         assert(Misfit.size() == nmeas * nfreq * 8);
-        jiba::rvec Gradient(nmod, 0.0);
+        jif3D::rvec Gradient(nmod, 0.0);
         bool FatalError = false;
 
         //we make a call to the coordinate functions to make sure
@@ -665,7 +665,7 @@ namespace jiba
           }
         omp_destroy_lock(&lck);
         if (FatalError)
-          throw jiba::FatalException("Problem in MT gradient calculation.");
+          throw jif3D::FatalException("Problem in MT gradient calculation.");
 
         return 2.0 * Gradient;
       }

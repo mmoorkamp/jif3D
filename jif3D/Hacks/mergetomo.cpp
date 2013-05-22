@@ -19,12 +19,12 @@ using namespace std;
 int main()
   {
 
-    jiba::ThreeDSeismicModel BaseModel;
-    std::string ModelFilename = jiba::AskFilename("Base Filename: ");
+    jif3D::ThreeDSeismicModel BaseModel;
+    std::string ModelFilename = jif3D::AskFilename("Base Filename: ");
     BaseModel.ReadNetCDF(ModelFilename);
 
-    jiba::ThreeDSeismicModel AnomalyModel;
-    ModelFilename = jiba::AskFilename("Anomaly Filename: ");
+    jif3D::ThreeDSeismicModel AnomalyModel;
+    ModelFilename = jif3D::AskFilename("Anomaly Filename: ");
     AnomalyModel.ReadNetCDF(ModelFilename);
 
     const size_t ngrid = BaseModel.GetSlownesses().num_elements();

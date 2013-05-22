@@ -14,7 +14,7 @@
 #include "TensorOMPGravityImp.h"
 #include "TensorCudaGravityImp.h"
 
-namespace jiba
+namespace jif3D
   {
 
     //! Create a new calculator object that is ready to use

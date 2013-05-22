@@ -23,7 +23,7 @@ namespace fs = boost::filesystem;
 
 
 
-namespace jiba
+namespace jif3D
   {
 
   //check that the .hnk file for x3d are in a certain directory
@@ -65,7 +65,7 @@ namespace jiba
         //we are inside an openmp thread and swallow all sensible error messages.
         if (!CheckHNK(fs::path()))
           {
-            throw jiba::FatalException("Cannot find .hnk files in current directory! ");
+            throw jif3D::FatalException("Cannot find .hnk files in current directory! ");
           }
       }
 
@@ -77,7 +77,7 @@ namespace jiba
 
 
     void CompareDepths(const std::vector<double> &BGDepths,
-        const jiba::ThreeDModelBase::t3DModelDim &ModelDepths)
+        const jif3D::ThreeDModelBase::t3DModelDim &ModelDepths)
       {
         size_t mindex = 0;
         for (size_t i = 0; i < BGDepths.size(); ++i)
@@ -88,10 +88,10 @@ namespace jiba
               }
             if (mindex < ModelDepths.size() && ModelDepths[mindex] != BGDepths[i])
               {
-                throw jiba::FatalException(
-                    "Depth to background layer: " + jiba::stringify(BGDepths[i])
+                throw jif3D::FatalException(
+                    "Depth to background layer: " + jif3D::stringify(BGDepths[i])
                         + " does not match grid cell depth: "
-                        + jiba::stringify(ModelDepths[mindex]));
+                        + jif3D::stringify(ModelDepths[mindex]));
               }
           }
       }
@@ -110,7 +110,7 @@ namespace jiba
         const size_t nmodx = Model.GetXCoordinates().size();
         const size_t nmody = Model.GetYCoordinates().size();
 
-        jiba::rvec result(nmeas * nfreq * 8);
+        jif3D::rvec result(nmeas * nfreq * 8);
         result.clear();
         //we make a call to the coordinate functions to make sure
         //that we have updated the coordinate information and cached it
@@ -124,7 +124,7 @@ namespace jiba
         CompareDepths(BGDepths, Model.GetZCoordinates());
 
         hpx::naming::id_type const locality_id = hpx::find_here();
-        std::vector<future<jiba::rvec>> FreqResult;
+        std::vector<future<jif3D::rvec>> FreqResult;
         FreqResult.reserve(nfreq);
         CalculateFrequency_action FreqCalc;
         for (int i = minfreqindex; i < maxindex; ++i)
@@ -140,7 +140,7 @@ namespace jiba
           {
             size_t currindex = i - minfreqindex;
             size_t startindex = nmeas * currindex * 8;
-            jiba::rvec imp = FreqResult[currindex].get();
+            jif3D::rvec imp = FreqResult[currindex].get();
             std::cout << imp.size() << std::endl;
             std::copy(imp.begin(), imp.end(), result.begin() + startindex);
           }

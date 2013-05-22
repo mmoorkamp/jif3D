@@ -13,8 +13,8 @@ int main()
   {
     for (size_t nelem = 10; nelem < 1000000; nelem *= 2)
       {
-        jiba::comp_mat Matrix(nelem, nelem, 2);
-        jiba::rvec Vector(nelem), Result(nelem);
+        jif3D::comp_mat Matrix(nelem, nelem, 2);
+        jif3D::rvec Vector(nelem), Result(nelem);
 
         boost::posix_time::ptime firststarttime =
             boost::posix_time::microsec_clock::local_time();
