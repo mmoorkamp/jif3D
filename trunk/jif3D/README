@@ -50,3 +50,11 @@ post in the discussion forum https://sourceforge.net/p/jif3d/discussion/ or subm
 ticket https://sourceforge.net/p/jif3d/tickets/ In both cases you need to create a free
 sourceforge account to be able to post something. We will try to answer your questions
 and fix bugs as quickly as possible.  
+
+Acknowledgements
+
+The initial development of the framework was sponsored by Chevron, ExxonMobil, Nexen, RWE Dea,
+Shell, Statoil and Wintershall within the jiba consortium. P. Podvin kindly made his eikonal
+solver publicly available. A. Avdeeva supported us with implementing the gradient calculation
+for the MT part of the joint inversion.
+   
