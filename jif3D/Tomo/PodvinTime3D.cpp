@@ -2,13 +2,16 @@
 // Name        : PodvinTime3D.cpp
 // Author      : May 8, 2009
 // Version     :
-// Copyright   : 2009, mmoorkamp
+// Copyright   : 2009, mmoorkamp (modifications) and P. Podvin
 //============================================================================
 
 /*! \file PodvinTime3D.cpp
- * This file is mostly a copy and paste from the Podvin and Lecomte code
- *the only modifications are class specifications for the functions, removing the static declaration for the variables
- * and changing the name of the macro INFINITY to PODINFINITY.
+ * This file is mostly a copy and paste from the Podvin and Lecomte code time_3d
+ * (see also associated header file).
+ * The only modifications are class specifications for the functions,
+ * removing the static declaration for the variables
+ * and changing the name of the macro INFINITY to PODINFINITY for compatibility
+ * with other code.
  */
 
 #include "PodvinTime3D.h"
