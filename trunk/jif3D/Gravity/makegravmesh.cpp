@@ -6,7 +6,8 @@
 //============================================================================
 
 /*! \file makegravmesh.cpp
- * Make a netcdf gravity model file with a specified mesh. The densities in this file are all identical to the specified value.
+ * Make a netcdf gravity model file with a specified mesh.
+ * The densities in this file are all identical to the specified value.
  */
 
 

@@ -70,10 +70,20 @@ namespace jif3D
         return returnvector;
       }
 
-    //the general structure of this function is very similar to CalcScalarBackground
-    //however there are enough subtle differences in types and functions being called
-    //that it does not make too much sense to try to combine the too, particularly because
-    //the function is relatively short and simple
+
+    /*! Calculate the effect of the background layers for a single scalar measurement
+     * the general structure of this function is very similar to CalcScalarBackground
+     * however there are enough subtle differences in types and functions being called
+     * that it does not make too much sense to try to combine the two, particularly because
+     * the function is relatively short and simple
+     * @param measindex The index of the measurement in the Model
+     * @param xwidth The total width of the gridded domain in x-direction in m
+     * @param ywidth The total width of the gridded domain in y-direction in m
+     * @param zwidth The total width of the gridded domain in z-direction in m
+     * @param Model The Gravity model
+     * @param Sensitivities If the matrix passed here holds \f$ 1 \times nbg+ngrid \f$ or more elements, store sensitivity information in the right fields
+     * @return A vector with a 9 components that contains the gravitational effect of the background on the different tensor elements
+     */
     rvec CalcTensorBackground(const size_t measindex, const double xwidth,
         const double ywidth, const double zwidth,
         const ThreeDGravityModel &Model, rmat &Sensitivities)
