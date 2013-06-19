@@ -160,6 +160,61 @@ namespace jif3D
         if (std::system(runname.c_str()))
           throw FatalException("Cannot execute run script: " + runname);
       }
+    //! Interpolate magnetic and electric fields horizontally to allow for arbitrary horizontal site positions
+    std::complex<double> InterpolateField(std::vector<std::complex<double> > &Field,
+        const X3DModel &Model, size_t MeasIndex)
+      {
+        //get the coordinates of the measurement site of interest
+        double MeasPosX = Model.GetMeasPosX()[MeasIndex];
+        double MeasPosY = Model.GetMeasPosY()[MeasIndex];
+        //where are we in the model grid, we need the indices of the cell
+        //in which the site is located
+        boost::array<ThreeDModelBase::t3DModelData::index, 3> StationIndex =
+            Model.FindAssociatedIndices(MeasPosX, MeasPosY,
+                Model.GetMeasPosZ()[MeasIndex]);
+        //get the position of the cell center
+        double CellCenterX = Model.GetXCoordinates()[StationIndex[0]];
+        double CellCenterY = Model.GetYCoordinates()[StationIndex[1]];
+        //depending where we are with respect to the center
+        //we need to use different neighbor cells
+        int NextX = 0, NextY = 0;
+        MeasPosX > CellCenterX ?
+            NextX = StationIndex[0] + 1 : NextX = StationIndex[0] - 1;
+        MeasPosY > CellCenterY ?
+            NextY = StationIndex[1] + 1 : NextY = StationIndex[1] - 1;
+        //if one of the indices is out of range we cannot interpolate
+        //the means that the sites have to be at least gridspacing/2
+        //away from the boundaries
+        if (NextX < 0 || NextY < 0)
+          throw FatalException("Station outside interpolation range. ");
+        //get the coordinates of the centers of the adjacent cells
+        //as our grid is regular we only need 2 additional coordinates
+        //we can construct the coordinates of the 4 cells from these
+        //and the original coordinates
+        double NextCellCenterX = Model.GetXCoordinates()[NextX];
+        double NextCellCenterY = Model.GetYCoordinates()[NextY];
+        const size_t nmodx = Model.GetXCoordinates().size();
+        const size_t nmody = Model.GetYCoordinates().size();
+        //calculate the offset in memory for all the field values
+        const size_t Offset11 = (nmodx * nmody) * MeasIndex + StationIndex[0] * nmody
+            + StationIndex[1];
+        const size_t Offset12 = (nmodx * nmody) * MeasIndex + StationIndex[0] * nmody
+            + NextY;
+        const size_t Offset21 = (nmodx * nmody) * MeasIndex + NextX * nmody
+            + StationIndex[1];
+        const size_t Offset22 = (nmodx * nmody) * MeasIndex + NextX * nmody + NextY;
+        //implement bilinear interpolation equation on a regular grid
+        std::complex<double> InterField = Field[Offset11] * (NextCellCenterX - MeasPosX)
+            * (NextCellCenterY - MeasPosY);
+        InterField += Field[Offset21] * (MeasPosX - CellCenterX)
+            * (NextCellCenterY - MeasPosY);
+        InterField += Field[Offset12] * (NextCellCenterX - MeasPosX)
+            * (MeasPosY - CellCenterY);
+        InterField += Field[Offset22] * (MeasPosX - CellCenterX)
+            * (MeasPosY - CellCenterY);
+        InterField /= (NextCellCenterX - CellCenterX) * (NextCellCenterY - CellCenterY);
+        return InterField;
+      }
 
     rvec X3DMTCalculator::CalculateFrequency(const X3DModel &Model, size_t freqindex)
       {
@@ -224,8 +279,16 @@ namespace jif3D
             const size_t offset = (nmodx * nmody) * j + StationIndex[0] * nmody
                 + StationIndex[1];
             const size_t meas_index = j * 8;
-            FieldsToImpedance(Ex1[offset], Ex2[offset], Ey1[offset], Ey2[offset],
-                Hx1[offset], Hx2[offset], Hy1[offset], Hy2[offset], Zxx, Zxy, Zyx, Zyy);
+            std::complex<double> Ex1Inter = InterpolateField(Ex1, Model, j);
+            std::complex<double> Ex2Inter = InterpolateField(Ex2, Model, j);
+            std::complex<double> Ey1Inter = InterpolateField(Ey1, Model, j);
+            std::complex<double> Ey2Inter = InterpolateField(Ey2, Model, j);
+            std::complex<double> Hx1Inter = InterpolateField(Hx1, Model, j);
+            std::complex<double> Hx2Inter = InterpolateField(Hx2, Model, j);
+            std::complex<double> Hy1Inter = InterpolateField(Hy1, Model, j);
+            std::complex<double> Hy2Inter = InterpolateField(Hy2, Model, j);
+            FieldsToImpedance(Ex1Inter, Ex2Inter, Ey1Inter, Ey2Inter, Hx1Inter, Hx2Inter,
+                Hy1Inter, Hy2Inter, Zxx, Zxy, Zyx, Zyy);
             //in order to guarantee a coherent state of the array
             //we lock the access before writing
             //update the values and then unlock
@@ -558,22 +621,24 @@ namespace jif3D
         //make the sources for the magnetic dipoles
         for (size_t j = 0; j < nmeas; ++j)
           {
-            boost::array<ThreeDModelBase::t3DModelData::index, 3> StationIndex =
-                Model.FindAssociatedIndices(Model.GetMeasPosX()[j],
-                    Model.GetMeasPosY()[j], Model.GetMeasPosZ()[j]);
             //for each site we have a separate observation depth in x3d
             //even if they are at the same level, for each observation depth
             //x3d writes out the fields in all cells at that depth
             //we therefore have to shift the index by the index of the site
             //times number of the horizontal cells
-            const size_t offset = (nmodx * nmody) * j + StationIndex[0] * nmody
-                + StationIndex[1];
-
-            //const size_t siteindex = freq_index + j * 8;
+            //we interpolate the fields horizontally to allow
+            //for sites that are not in the center of the cells
+            std::complex<double> Ex1Inter = InterpolateField(Ex1_obs, Model, j);
+            std::complex<double> Ex2Inter = InterpolateField(Ex2_obs, Model, j);
+            std::complex<double> Ey1Inter = InterpolateField(Ey1_obs, Model, j);
+            std::complex<double> Ey2Inter = InterpolateField(Ey2_obs, Model, j);
+            std::complex<double> Hx1Inter = InterpolateField(Hx1_obs, Model, j);
+            std::complex<double> Hx2Inter = InterpolateField(Hx2_obs, Model, j);
+            std::complex<double> Hy1Inter = InterpolateField(Hy1_obs, Model, j);
+            std::complex<double> Hy2Inter = InterpolateField(Hy2_obs, Model, j);
             std::complex<double> Zxx, Zxy, Zyx, Zyy;
-            FieldsToImpedance(Ex1_obs[offset], Ex2_obs[offset], Ey1_obs[offset],
-                Ey2_obs[offset], Hx1_obs[offset], Hx2_obs[offset], Hy1_obs[offset],
-                Hy2_obs[offset], Zxx, Zxy, Zyx, Zyy);
+            FieldsToImpedance(Ex1Inter, Ex2Inter, Ey1Inter, Ey2Inter, Hx1Inter, Hx2Inter,
+                Hy1Inter, Hy2Inter, Zxx, Zxy, Zyx, Zyy);
             CalcHext(omega_mu, XPolMoments1.at(j), XPolMoments2.at(j), YPolMoments1.at(j),
                 YPolMoments2.at(j), Zxx, Zxy, Zyx, Zyy);
           }
