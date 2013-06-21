@@ -241,12 +241,16 @@ namespace jif3D
           }
         outfile << "\n";
         //the first cell always has the coordinate 0
+        //however this is the coordinate of the corner
+        //we write out the correct coordinate to have correct information
+        //but we do all the calculation internally and this information does not
+        //enter the calculation
         outfile
             << "Binding_cell_in_X-direction     X-coordinate of centre of Binding cell (m)  \n";
-        outfile << " 1                             " << 0.0 << " \n";
+        outfile << " 1                             " << XCellSizes[0]/2.0 << " \n";
         outfile
             << "Binding_cell_in_Y-direction     Y-coordinate of centre of Binding cell (m) \n";
-        outfile << " 1                             " << 0.0 << " \n";
+        outfile << " 1                             " << YCellSizes[0]/2.0 << " \n";
         //if something went wrong during writing we throw an exception
         if (outfile.bad())
           {
