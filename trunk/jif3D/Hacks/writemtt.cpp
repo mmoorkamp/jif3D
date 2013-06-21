@@ -33,10 +33,15 @@ int main()
     std::ofstream Zxy_phi("Zxy_phi.xyz");
     std::ofstream Zyx_phi("Zyx_phi.xyz");
     std::ofstream Zyy_phi("Zyy_phi.xyz");
+    std::ofstream Posfile("station.pos");
 
     const size_t nimp = Impedances.size();
     const size_t nval = nimp / 8;
     const size_t nstats = StatX.size();
+    for (size_t i = 0; i < nstats; ++i)
+      {
+        Posfile << StatX.at(i) << " " << StatY.at(i) << " " << StatZ.at(i) << std::endl;
+      }
     for (size_t i = 0; i < nval; ++i)
       {
         size_t freqindex = i / nstats;
