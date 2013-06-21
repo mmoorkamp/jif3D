@@ -9,6 +9,7 @@
 #include "../Global/FileUtil.h"
 #include "../Global/convert.h"
 #include "../Global/Noise.h"
+#include "../ModelBase/VTKTools.h"
 #include "X3DModel.h"
 #include "X3DMTCalculator.h"
 #include "ReadWriteImpedances.h"
@@ -19,8 +20,8 @@ int main()
     jif3D::X3DModel MTModel;
     MTModel.ReadNetCDF(modelfilename);
     std::cout << "Model size: " << MTModel.GetXCellSizes().size() << " "
-        << MTModel.GetYCellSizes().size() << " "
-        << MTModel.GetZCellSizes().size() << std::endl;
+        << MTModel.GetYCellSizes().size() << " " << MTModel.GetZCellSizes().size()
+        << std::endl;
     double minx, miny, maxx, maxy, deltax, deltay, z;
     //ask for the measurement grid specifications
     //first x-direction
@@ -69,8 +70,13 @@ int main()
 
       }
     std::sort(frequencies.begin(), frequencies.end());
-    std::copy(frequencies.begin(), frequencies.end(), std::back_inserter(
-        MTModel.SetFrequencies()));
+    std::copy(frequencies.begin(), frequencies.end(),
+        std::back_inserter(MTModel.SetFrequencies()));
+    jif3D::rvec StatNum(MTModel.GetMeasPosX().size());
+    std::generate(StatNum.begin(), StatNum.end(), jif3D::IntSequence(0));
+    //! Write scalar data with 3D coordinate information into a .vtk file for plotting
+    jif3D::Write3DDataToVTK(outfilename + ".vtk", "MTStats", StatNum,
+        MTModel.GetMeasPosX(), MTModel.GetMeasPosY(), MTModel.GetMeasPosZ());
     std::cout << "Calculating forward response " << std::endl;
     jif3D::X3DMTCalculator Calculator;
     jif3D::rvec Impedances(Calculator.Calculate(MTModel));
@@ -83,8 +89,7 @@ int main()
     std::cin >> absnoise;
     jif3D::AddNoise(Impedances, relnoise, absnoise);
     jif3D::WriteImpedancesToNetCDF(outfilename, MTModel.GetFrequencies(),
-        MTModel.GetMeasPosX(), MTModel.GetMeasPosY(), MTModel.GetMeasPosZ(),
-        Impedances);
+        MTModel.GetMeasPosX(), MTModel.GetMeasPosY(), MTModel.GetMeasPosZ(), Impedances);
     MTModel.WriteVTK(modelfilename + ".vtk");
   }
 
