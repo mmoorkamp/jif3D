@@ -32,9 +32,9 @@ namespace jif3D
     void Write3DDataToVTK(const std::string &filename,
         const std::string &DataName,
         const jif3D::rvec &Data,
-        const ThreeDGravityModel::tMeasPosVec &PosX,
-        const ThreeDGravityModel::tMeasPosVec &PosY,
-        const ThreeDGravityModel::tMeasPosVec &PosZ);
+        const ThreeDModelBase::tMeasPosVec &PosX,
+        const ThreeDModelBase::tMeasPosVec &PosY,
+        const ThreeDModelBase::tMeasPosVec &PosZ);
 
     //! Write \f$ 3 \times 3\f$ tensor data with 3D coordinate information into a .vtk file for plotting
     void Write3DTensorDataToVTK(const std::string &filename,

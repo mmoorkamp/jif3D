@@ -25,6 +25,7 @@ namespace jif3D
             std::ostream_iterator<double>(file, " "));
         file << "\n";
       }
+
     /*! Write a .vtk file to plot a 3D model
      * @param filename The name of the output file, should contain the ending .vtk
      * @param DataName The name of the model data, for information for plotting programs
@@ -33,8 +34,7 @@ namespace jif3D
      * @param ZCellSizes The sizes of the cells in z-direction in m
      * @param Data The model values within each cell, shape has to match the  cell sizes
      */
-    void Write3DModelToVTK(const std::string &filename,
-        const std::string &DataName,
+    void Write3DModelToVTK(const std::string &filename, const std::string &DataName,
         const ThreeDModelBase::t3DModelDim &XCellSizes,
         const ThreeDModelBase::t3DModelDim &YCellSizes,
         const ThreeDModelBase::t3DModelDim &ZCellSizes,
@@ -73,25 +73,21 @@ namespace jif3D
 
         typedef boost::multi_array_types::index_range range;
         ThreeDModelBase::t3DModelData::index_gen indices;
-
         for (size_t i = 0; i < nzvalues; ++i)
           {
             for (size_t j = 0; j < nyvalues; ++j)
               {
-                ThreeDModelBase::t3DModelData::const_array_view<1>::type
-                    myview = Data[indices[range(0, nxvalues)][j][i]];
+                ThreeDModelBase::t3DModelData::const_array_view<1>::type myview =
+                    Data[indices[range(0, nxvalues)][j][i]];
                 std::copy(myview.begin(), myview.end(),
                     std::ostream_iterator<double>(outfile, " "));
-                //for (size_t k = 0; k < nxvalues; ++k)
-                // {
-                //  outfile << Data[k][j][i] << " ";
-                // }
                 outfile << "\n";
               }
           }
         if (outfile.fail())
-          throw FatalException("Problem writing vtk  file");
+          throw FatalException("Problem writing vtk  file: " + filename);
       }
+
     //helper function that writes the common header information
     //for scalar and tensor data
     void WriteDataHeader(std::ofstream &outfile,
@@ -109,11 +105,11 @@ namespace jif3D
         //write the coordinates of each point
         for (size_t i = 0; i < ndata; ++i)
           {
-            outfile << PosX.at(i) << " " << PosY.at(i) << " " << PosZ.at(i)
-                << "\n";
+            outfile << PosX.at(i) << " " << PosY.at(i) << " " << PosZ.at(i) << "\n";
           }
         outfile << "POINT_DATA " << ndata << std::endl;
       }
+
     /*! Write a collection of scalar measurements to a .vtk file for plotting
      * @param filename The name of the file, should contain the ending .vtk
      * @param DataName The name of the data for information in the plotting program
@@ -122,10 +118,8 @@ namespace jif3D
      * @param PosY The position of the measurement points in y-direction in m
      * @param PosZ The position of the measurement points in z-direction in m
      */
-    void Write3DDataToVTK(const std::string &filename,
-        const std::string &DataName,
-        const jif3D::rvec &Data,
-        const ThreeDGravityModel::tMeasPosVec &PosX,
+    void Write3DDataToVTK(const std::string &filename, const std::string &DataName,
+        const jif3D::rvec &Data, const ThreeDGravityModel::tMeasPosVec &PosX,
         const ThreeDGravityModel::tMeasPosVec &PosY,
         const ThreeDGravityModel::tMeasPosVec &PosZ)
       {
@@ -141,33 +135,31 @@ namespace jif3D
         outfile << "SCALARS " << DataName << " double" << std::endl;
         outfile << "LOOKUP_TABLE default" << std::endl;
         //and then just the data values
-        std::copy(Data.begin(), Data.end(), std::ostream_iterator<double>(
-            outfile, " "));
+        std::copy(Data.begin(), Data.end(), std::ostream_iterator<double>(outfile, " "));
         outfile << std::endl;
         if (outfile.fail())
-          throw FatalException("Problem writing vtk  file");
+          throw FatalException("Problem writing vtk  file: " + filename);
       }
+
     /*! Write a collection of tensor measurements to a .vtk file for plotting
-         * @param filename The name of the file, should contain the ending .vtk
-         * @param DataName The name of the data for information in the plotting program
-         * @param Data The vector of data tensors, 1 tensor per position
-         * @param PosX The position of the measurement points in x-direction in m
-         * @param PosY The position of the measurement points in y-direction in m
-         * @param PosZ The position of the measurement points in z-direction in m
-         */
-    void Write3DTensorDataToVTK(const std::string &filename,
-        const std::string &DataName,
-        const jif3D::rvec &Data,
-        const ThreeDGravityModel::tMeasPosVec &PosX,
+     * @param filename The name of the file, should contain the ending .vtk
+     * @param DataName The name of the data for information in the plotting program
+     * @param Data The vector of data tensors, 1 tensor per position
+     * @param PosX The position of the measurement points in x-direction in m
+     * @param PosY The position of the measurement points in y-direction in m
+     * @param PosZ The position of the measurement points in z-direction in m
+     */
+    void Write3DTensorDataToVTK(const std::string &filename, const std::string &DataName,
+        const jif3D::rvec &Data, const ThreeDGravityModel::tMeasPosVec &PosX,
         const ThreeDGravityModel::tMeasPosVec &PosY,
         const ThreeDGravityModel::tMeasPosVec &PosZ)
       {
         //do some consistency checks
         const size_t ndata = Data.size();
         const size_t nmeas = PosX.size();
-        assert(ndata == nmeas*9);
-        assert(ndata == PosY.size()*9);
-        assert(ndata == PosZ.size()*9);
+        assert(ndata == nmeas * 9);
+        assert(ndata == PosY.size() * 9);
+        assert(ndata == PosZ.size() * 9);
 
         std::ofstream outfile(filename.c_str());
         //first we have to write some general information about the file format
@@ -179,16 +171,15 @@ namespace jif3D
         //and each tensor separated by two line breaks
         for (size_t i = 0; i < nmeas; ++i)
           {
-            outfile << Data(i*9) << " " << Data(i*9+1) << " "
-                << Data(i*9+2) << "\n";
-            outfile << Data(i*9+3) << " " << Data(i*9+4) << " "
-                << Data(i*9+5) << "\n";
-            outfile << Data(i*9+6) << " " << Data(i*9+7) << " "
-                << Data(i*9+8) << "\n";
-            outfile << "\n\n";
+            outfile << Data(i * 9) << " " << Data(i * 9 + 1) << " " << Data(i * 9 + 2)
+                << "\n";
+            outfile << Data(i * 9 + 3) << " " << Data(i * 9 + 4) << " " << Data(i * 9 + 5)
+                << "\n";
+            outfile << Data(i * 9 + 6) << " " << Data(i * 9 + 7) << " " << Data(i * 9 + 8)
+                << "\n\n\n";
           }
         outfile << std::endl;
         if (outfile.fail())
-          throw FatalException("Problem writing vtk  file");
+          throw FatalException("Problem writing vtk  file: " + filename);
       }
   }
