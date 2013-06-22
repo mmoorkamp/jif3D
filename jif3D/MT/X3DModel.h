@@ -52,6 +52,7 @@ namespace jif3D
       void SetBackgroundThicknesses(const std::vector<double> &value)
         {
           bg_thicknesses.clear();
+          bg_thicknesses.reserve(value.size());
           copy(value.begin(), value.end(), back_inserter(bg_thicknesses));
         }
       //! Return the thicknesses of the background layers in m
