@@ -78,8 +78,8 @@ namespace jif3D
      *        but the values for the real and imaginary part of each element are always identical
      */
     void WriteImpedancesToMtt(const std::string &filenamebase,
-	        std::vector<double> &Frequencies, jif3D::rvec &Imp,
-	        jif3D::rvec &Err);
+    		const std::vector<double> &Frequencies, const jif3D::rvec &Imp,
+    		const jif3D::rvec &Err);
     /* @} */
     }
 
