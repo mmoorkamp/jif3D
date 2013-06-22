@@ -249,8 +249,8 @@ namespace jif3D
           }
       }
 
-    void WriteImpedancesToMtt(const std::string &filenamebase, std::vector<
-        double> &Frequencies, jif3D::rvec &Imp, jif3D::rvec &Err)
+    void WriteImpedancesToMtt(const std::string &filenamebase,const std::vector<
+        double> &Frequencies,const jif3D::rvec &Imp,const  jif3D::rvec &Err)
       {
         const double convfactor = 4.0 * 1e-4 * acos(-1.0);
         jif3D::rvec Impedances = 1.0 / convfactor * Imp;
