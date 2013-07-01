@@ -16,7 +16,7 @@
 #include "../Global/NumUtil.h"
 #include "../Global/VectorTransform.h"
 #include "../ModelBase/VTKTools.h"
-#include "../ModelBase/NetCDFTools.h"
+#include "../ModelBase/NetCDFModelTools.h"
 #include "../Inversion/JointObjective.h"
 #include "../Inversion/ThreeDModelObjective.h"
 #include "../Inversion/LimitedMemoryQuasiNewton.h"

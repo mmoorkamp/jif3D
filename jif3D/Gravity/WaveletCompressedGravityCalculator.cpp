@@ -11,7 +11,7 @@
 #include "../Global/NumUtil.h"
 #include "../Global/convert.h"
 #include "../ModelBase/VTKTools.h"
-#include "../ModelBase/NetCDFTools.h"
+#include "../ModelBase/NetCDFModelTools.h"
 
 namespace jif3D
   {

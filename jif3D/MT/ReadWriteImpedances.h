@@ -26,7 +26,7 @@ namespace jif3D
      * @param Impedances The impedances (in Ohm, i.e. E/H) as a vector of real numbers.
      *        8 consecutive elements form the impedance matrix for one frequency and site,
      *        all impedances for one frequency and all stations form a contiguous block, the frequencies vary slowest.
-     * @param Errors OPtional parameter containing the impedance errors with the same number of Elements with Impedances.
+     * @param Errors Optional parameter containing the impedance errors with the same number of Elements with Impedances.
      *        As we only have one error estimate per element we write only the components corresponding to the real parts.
      */
     void WriteImpedancesToNetCDF(const std::string &filename,

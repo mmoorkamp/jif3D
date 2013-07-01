@@ -26,7 +26,7 @@
 #include "../Global/FileUtil.h"
 #include "../Global/Noise.h"
 #include "../ModelBase/VTKTools.h"
-#include "../ModelBase/NetCDFTools.h"
+#include "../ModelBase/NetCDFModelTools.h"
 #include "../Regularization/GradientRegularization.h"
 #include "../Inversion/LimitedMemoryQuasiNewton.h"
 #include "../Inversion/JointObjective.h"

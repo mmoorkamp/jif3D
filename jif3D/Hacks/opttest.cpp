@@ -33,7 +33,7 @@
 #include "../Inversion/JointObjective.h"
 #include "../Regularization/RegularizationFunction.h"
 #include "../ModelBase/VTKTools.h"
-#include "../ModelBase/NetCDFTools.h"
+#include "../ModelBase/NetCDFModelTools.h"
 #include "../ModelBase/EqualGeometry.h"
 #include "../Gravity/ReadWriteGravityData.h"
 #include "../Gravity/ThreeDGravityCalculator.h"

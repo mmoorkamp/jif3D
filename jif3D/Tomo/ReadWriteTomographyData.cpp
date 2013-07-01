@@ -9,7 +9,7 @@
 #include<fstream>
 #include "ReadWriteTomographyData.h"
 #include "../Global/NumUtil.h"
-#include "../ModelBase/NetCDFTools.h"
+#include "../ModelBase/NetCDFModelTools.h"
 
 namespace jif3D
   {

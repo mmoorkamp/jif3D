@@ -8,7 +8,7 @@
 #include <netcdfcpp.h>
 #include "ReadWriteGravityData.h"
 #include "../Global/NumUtil.h"
-#include "../ModelBase/NetCDFTools.h"
+#include "../ModelBase/NetCDFModelTools.h"
 
 namespace jif3D
   {

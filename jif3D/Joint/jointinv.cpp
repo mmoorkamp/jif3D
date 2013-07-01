@@ -19,7 +19,7 @@
 #include "../Global/VectorTransform.h"
 #include "../Global/FileUtil.h"
 #include "../ModelBase/VTKTools.h"
-#include "../ModelBase/NetCDFTools.h"
+#include "../ModelBase/NetCDFModelTools.h"
 #include "../ModelBase/EqualGeometry.h"
 #include "../Inversion/JointObjective.h"
 #include "../Inversion/ThreeDModelObjective.h"
