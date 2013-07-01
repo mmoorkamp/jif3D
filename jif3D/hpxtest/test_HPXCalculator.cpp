@@ -6,6 +6,7 @@
 //============================================================================
 
 #include <hpx/hpx_init.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include "../Global/NumUtil.h"
 #include "HPXMTCalculator.h"
 #include "../MT/X3DModel.h"
@@ -54,16 +55,24 @@ int hpx_main(int argc, char* argv[])
    jif3D::X3DMTCalculator X3DCalculator;
    jif3D::HPXMTCalculator HPXCalculator;
 
-    for (size_t i = 0; i < xsize / 2; ++i)
-      for (size_t j = 0; j < ysize / 2; ++j)
+    for (size_t i = 1; i < xsize / 2; ++i)
+      for (size_t j = 1; j < ysize / 2; ++j)
         {
           Model.AddMeasurementPoint(Model.GetXCoordinates()[i] + deltax / 2.0,
               Model.GetYCoordinates()[j] + deltay / 2.0, 0.0);
         }
     std::cout << "X3D " << std::endl;
+    boost::posix_time::ptime x3dstarttime =
+        boost::posix_time::microsec_clock::local_time();
     jif3D::rvec X3DImpedance = X3DCalculator.Calculate(Model);
-    //std::cout << "HPX " << std::endl;
+    boost::posix_time::ptime x3dendtime =
+        boost::posix_time::microsec_clock::local_time();
+    std::cout << "HPX " << std::endl;
+    boost::posix_time::ptime hpxstarttime =
+        boost::posix_time::microsec_clock::local_time();
     jif3D::rvec HPXImpedance = HPXCalculator.Calculate(Model);
+    boost::posix_time::ptime hpxendtime =
+        boost::posix_time::microsec_clock::local_time();
     std::complex<double> HsImp = jif3D::ImpedanceHalfspace(freq, cond);
     const double prec = 0.05;
     const size_t nsites = HPXImpedance.size() / 8;
@@ -75,6 +84,9 @@ int hpx_main(int argc, char* argv[])
             << HPXImpedance(i * 8 + 5) << " " << X3DImpedance(i * 8 + 5) << std::endl;
 
       }
+    std::cout << " Times: " << std::endl;
+    std::cout << "x3d: " << (x3dendtime - x3dstarttime).total_microseconds() << std::endl;
+    std::cout << "hpx: " << (hpxendtime - hpxstarttime).total_microseconds() << std::endl;
     // Any HPX application logic goes here...
     return hpx::finalize();
     return 1;
