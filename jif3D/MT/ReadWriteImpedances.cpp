@@ -12,6 +12,7 @@
 #include "../Global/NumUtil.h"
 #include "../Global/convert.h"
 #include "../ModelBase/NetCDFModelTools.h"
+#include "../Global/NetCDFTools.h"
 #include "ReadWriteImpedances.h"
 
 namespace jif3D
@@ -135,11 +136,11 @@ namespace jif3D
         //open the netcdf file readonly
         NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
         //read in the station coordinates in the three directions
-        ReadVec(DataFile, MeasPosXName, StationNumberName, StatXCoord);
-        ReadVec(DataFile, MeasPosYName, StationNumberName, StatYCoord);
-        ReadVec(DataFile, MeasPosZName, StationNumberName, StatZCoord);
+        ReadVec(DataFile, MeasPosXName, StatXCoord);
+        ReadVec(DataFile, MeasPosYName, StatYCoord);
+        ReadVec(DataFile, MeasPosZName, StatZCoord);
         //read in the frequencies
-        ReadVec(DataFile, FreqDimName, FreqDimName, Frequencies);
+        ReadVec(DataFile, FreqDimName, Frequencies);
         //for each frequency and each station we have 8 impedances
         //currently it is not possible to have a different number of frequencies
         //at each site

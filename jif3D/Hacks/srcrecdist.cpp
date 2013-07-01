@@ -5,9 +5,9 @@
 // Copyright   : 2010, mmoorkamp
 //============================================================================
 
-
 #include "../Global/VecMat.h"
 #include "../Global/FileUtil.h"
+#include "../Global/NetCDFTools.h"
 #include "../ModelBase/NetCDFModelTools.h"
 #include "../ModelBase/VTKTools.h"
 
@@ -33,26 +33,26 @@ int main()
     std::vector<double> SourcePosX, SourcePosY, SourcePosZ;
 
     //read the positions of the sources
-    jif3D::ReadVec(DataFile, SourcePosXName, SourceNumberName, SourcePosX);
-    jif3D::ReadVec(DataFile, SourcePosYName, SourceNumberName, SourcePosY);
-    jif3D::ReadVec(DataFile, SourcePosZName, SourceNumberName, SourcePosZ);
+    jif3D::ReadVec(DataFile, SourcePosXName, SourcePosX);
+    jif3D::ReadVec(DataFile, SourcePosYName, SourcePosY);
+    jif3D::ReadVec(DataFile, SourcePosZName, SourcePosZ);
     const size_t nsource = SourcePosX.size();
 
     //read the positions of the receivers
     std::vector<double> RecPosX, RecPosY, RecPosZ;
-    jif3D::ReadVec(DataFile, MeasPosXName, ReceiverNumberName, RecPosX);
-    jif3D::ReadVec(DataFile, MeasPosYName, ReceiverNumberName, RecPosY);
-    jif3D::ReadVec(DataFile, MeasPosZName, ReceiverNumberName, RecPosZ);
+    jif3D::ReadVec(DataFile, MeasPosXName, RecPosX);
+    jif3D::ReadVec(DataFile, MeasPosYName, RecPosY);
+    jif3D::ReadVec(DataFile, MeasPosZName, RecPosZ);
     const size_t nmeas = RecPosX.size();
 
     std::vector<int> SourceIndices, ReceiverIndices;
     //now read the indices for the source receiver combinations
     //for each measurement
-    jif3D::ReadVec(DataFile, SourceIndexName, MeasIndexName, SourceIndices);
-    jif3D::ReadVec(DataFile, ReceiverIndexName, MeasIndexName, ReceiverIndices);
+    jif3D::ReadVec(DataFile, SourceIndexName, SourceIndices);
+    jif3D::ReadVec(DataFile, ReceiverIndexName, ReceiverIndices);
     const size_t nconf = SourceIndices.size();
     jif3D::rvec Data;
-    jif3D::ReadVec(DataFile, TravelTimeName, MeasIndexName, Data);
+    jif3D::ReadVec(DataFile, TravelTimeName, Data);
     const size_t ntimes = Data.size();
 
     std::ofstream outfile((filename + ".diff.out").c_str());
@@ -67,19 +67,16 @@ int main()
     std::vector<double> PosX(ntimes), PosY(ntimes), PosZ(ntimes);
     for (size_t i = 0; i < ntimes; ++i)
       {
-        double XDist = SourcePosX[SourceIndices[i]]
-            - RecPosX[ReceiverIndices[i]];
-        double YDist = SourcePosY[SourceIndices[i]]
-            - RecPosY[ReceiverIndices[i]];
+        double XDist = SourcePosX[SourceIndices[i]] - RecPosX[ReceiverIndices[i]];
+        double YDist = SourcePosY[SourceIndices[i]] - RecPosY[ReceiverIndices[i]];
         double Dist = sqrt(XDist * XDist + YDist * YDist);
         outfile << Dist << " " << Data(i) << "\n";
-        PosX[i] = SourcePosX[SourceIndices[i]] - XDist / 2.0 -refx;
+        PosX[i] = SourcePosX[SourceIndices[i]] - XDist / 2.0 - refx;
         PosY[i] = SourcePosY[SourceIndices[i]] - YDist / 2.0 - refy;
         PosZ[i] = Dist;
         double coord = sqrt(PosX[i] * PosX[i] + PosY[i] * PosY[i]);
         pseudofile << coord << " " << Dist << " " << Data(i) << "\n";
       }
-    jif3D::Write3DDataToVTK(filename + ".vtk", "Traveltimes", Data, PosX, PosY,
-        PosZ);
+    jif3D::Write3DDataToVTK(filename + ".vtk", "Traveltimes", Data, PosX, PosY, PosZ);
 
   }

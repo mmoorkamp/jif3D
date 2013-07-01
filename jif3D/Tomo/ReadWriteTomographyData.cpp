@@ -9,6 +9,7 @@
 #include<fstream>
 #include "ReadWriteTomographyData.h"
 #include "../Global/NumUtil.h"
+#include "../Global/NetCDFTools.h"
 #include "../ModelBase/NetCDFModelTools.h"
 
 namespace jif3D
@@ -101,9 +102,9 @@ namespace jif3D
         Model.ClearSourcePos();
         Model.ClearMeasurementConfigurations();
         //read the positions of the sources
-        ReadVec(DataFile, SourcePosXName, SourceNumberName, PosX);
-        ReadVec(DataFile, SourcePosYName, SourceNumberName, PosY);
-        ReadVec(DataFile, SourcePosZName, SourceNumberName, PosZ);
+        ReadVec(DataFile, SourcePosXName, PosX);
+        ReadVec(DataFile, SourcePosYName, PosY);
+        ReadVec(DataFile, SourcePosZName, PosZ);
         const size_t nsource = PosX.size();
         //and add them to the model object
         for (size_t i = 0; i < nsource; ++i)
@@ -111,9 +112,9 @@ namespace jif3D
             Model.AddSource(PosX[i], PosY[i], PosZ[i]);
           }
         //read the positions of the receivers
-        ReadVec(DataFile, MeasPosXName, ReceiverNumberName, PosX);
-        ReadVec(DataFile, MeasPosYName, ReceiverNumberName, PosY);
-        ReadVec(DataFile, MeasPosZName, ReceiverNumberName, PosZ);
+        ReadVec(DataFile, MeasPosXName, PosX);
+        ReadVec(DataFile, MeasPosYName, PosY);
+        ReadVec(DataFile, MeasPosZName, PosZ);
         const size_t nmeas = PosX.size();
         //and add them as measurement positions to the model object
         for (size_t i = 0; i < nmeas; ++i)
@@ -123,8 +124,8 @@ namespace jif3D
         std::vector<int> SourceIndices, ReceiverIndices;
         //now read the indices for the source receiver combinations
         //for each measurement
-        ReadVec(DataFile, SourceIndexName, MeasIndexName, SourceIndices);
-        ReadVec(DataFile, ReceiverIndexName, MeasIndexName, ReceiverIndices);
+        ReadVec(DataFile, SourceIndexName, SourceIndices);
+        ReadVec(DataFile, ReceiverIndexName, ReceiverIndices);
         const size_t nconf = SourceIndices.size();
         //and configure the model object for these combinations
         for (size_t i = 0; i < nconf; ++i)
@@ -133,7 +134,7 @@ namespace jif3D
                 ReceiverIndices[i]);
           }
         //finally read in the traveltimes
-        ReadVec(DataFile, TravelTimeName, MeasIndexName, Data);
+        ReadVec(DataFile, TravelTimeName, Data);
       }
 
     void PlotRaypath(const std::string &filename, jif3D::RP_STRUCT *raypath,

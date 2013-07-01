@@ -8,6 +8,7 @@
 #include <netcdfcpp.h>
 #include "ReadWriteGravityData.h"
 #include "../Global/NumUtil.h"
+#include "../Global/NetCDFTools.h"
 #include "../ModelBase/NetCDFModelTools.h"
 
 namespace jif3D
@@ -25,24 +26,24 @@ namespace jif3D
     static const std::string UzzName = "Uzz";
 
     //! Read a component of an FTG matrix for all measurement positions
-    void ReadMatComp(NcFile &NetCDFFile, const std::string &CompName,
-        rvec &MatVec, size_t n)
+    void ReadMatComp(NcFile &NetCDFFile, const std::string &CompName, rvec &MatVec,
+        size_t n)
       {
         //read in the component from the netcdf file
         rvec tempdata(MatVec.size() / 9);
-        ReadVec(NetCDFFile, CompName, StationNumberName, tempdata);
+        ReadVec(NetCDFFile, CompName, tempdata);
         //copy to the right location in the matrix
         for (size_t i = 0; i < tempdata.size(); ++i)
           MatVec(i * 9 + n) = tempdata(i);
       }
 
     //! Write one component of an FTG matrix for all measurement positions
-    void WriteMatComp(NcFile &NetCDFFile, const std::string &CompName,
-        const rvec &MatVec, const size_t n, NcDim *Dimension)
+    void WriteMatComp(NcFile &NetCDFFile, const std::string &CompName, const rvec &MatVec,
+        const size_t n, NcDim *Dimension)
       {
         rvec tempdata(MatVec.size() / 9);
         for (size_t i = 0; i < tempdata.size(); ++i)
-          tempdata( i) = MatVec(i * 9 + n);
+          tempdata(i) = MatVec(i * 9 + n);
         WriteVec(NetCDFFile, CompName, tempdata, Dimension, "1/s2");
       }
 
@@ -90,13 +91,11 @@ namespace jif3D
         //create a netcdf file
         NcFile DataFile(filename.c_str(), NcFile::Replace);
         //we use the station number as a dimension
-        NcDim *StatNumDim = DataFile.add_dim(StationNumberName.c_str(),
-            Data.size());
+        NcDim *StatNumDim = DataFile.add_dim(StationNumberName.c_str(), Data.size());
         //this is just an index over the measurement vector
         //and does not have any special meaning
         std::vector<int> StationNumber;
-        std::generate_n(back_inserter(StationNumber), Data.size(), IntSequence(
-            0));
+        std::generate_n(back_inserter(StationNumber), Data.size(), IntSequence(0));
         NcVar *StatNumVar = DataFile.add_var(StationNumberName.c_str(), ncInt,
             StatNumDim);
         StatNumVar->put(&StationNumber[0], Data.size());
@@ -121,16 +120,15 @@ namespace jif3D
      * @param PosY The y-coordinate (Easting) of each measurement in m
      * @param PosZ The z-coordinate (Depth) of each measurement in m
      */
-    void ReadScalarGravityMeasurements(const std::string &filename,
-        jif3D::rvec &Data, ThreeDGravityModel::tMeasPosVec &PosX,
-        ThreeDGravityModel::tMeasPosVec &PosY,
+    void ReadScalarGravityMeasurements(const std::string &filename, jif3D::rvec &Data,
+        ThreeDGravityModel::tMeasPosVec &PosX, ThreeDGravityModel::tMeasPosVec &PosY,
         ThreeDGravityModel::tMeasPosVec &PosZ)
       {
         NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
-        ReadVec(DataFile, MeasPosXName, StationNumberName, PosX);
-        ReadVec(DataFile, MeasPosYName, StationNumberName, PosY);
-        ReadVec(DataFile, MeasPosZName, StationNumberName, PosZ);
-        ReadVec(DataFile, ScalarGravityName, StationNumberName, Data);
+        ReadVec(DataFile, MeasPosXName, PosX);
+        ReadVec(DataFile, MeasPosYName, PosY);
+        ReadVec(DataFile, MeasPosZName, PosZ);
+        ReadVec(DataFile, ScalarGravityName, Data);
       }
 
     /*! Read FTG measurements and their position from a netcdf file. Data will have
@@ -141,15 +139,14 @@ namespace jif3D
      * @param PosY The y-coordinate (Easting) of each measurement in m
      * @param PosZ The z-coordinate (Depth) of each measurement in m
      */
-    void ReadTensorGravityMeasurements(const std::string &filename,
-        jif3D::rvec &Data, ThreeDGravityModel::tMeasPosVec &PosX,
-        ThreeDGravityModel::tMeasPosVec &PosY,
+    void ReadTensorGravityMeasurements(const std::string &filename, jif3D::rvec &Data,
+        ThreeDGravityModel::tMeasPosVec &PosX, ThreeDGravityModel::tMeasPosVec &PosY,
         ThreeDGravityModel::tMeasPosVec &PosZ)
       {
         NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
-        ReadVec(DataFile, MeasPosXName, StationNumberName, PosX);
-        ReadVec(DataFile, MeasPosYName, StationNumberName, PosY);
-        ReadVec(DataFile, MeasPosZName, StationNumberName, PosZ);
+        ReadVec(DataFile, MeasPosXName, PosX);
+        ReadVec(DataFile, MeasPosYName, PosY);
+        ReadVec(DataFile, MeasPosZName, PosZ);
         assert(PosX.size() == PosY.size());
         assert(PosX.size() == PosZ.size());
 
@@ -182,7 +179,7 @@ namespace jif3D
         const size_t ndata = Data.size();
         assert(nmeas == PosY.size());
         assert(nmeas == PosZ.size());
-        assert(nmeas*9 == ndata);
+        assert(nmeas * 9 == ndata);
 
         NcFile DataFile(filename.c_str(), NcFile::Replace);
 

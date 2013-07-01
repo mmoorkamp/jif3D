@@ -5,8 +5,10 @@
 // Copyright   : 2008, MM
 //============================================================================
 
-#include "NetCDFModelTools.h"
+
 #include "../Global/FatalException.h"
+#include "../Global/NetCDFTools.h"
+#include "NetCDFModelTools.h"
 #include <cassert>
 namespace jif3D
   {
@@ -19,8 +21,8 @@ namespace jif3D
      * @param CellSize This will contain the cell sizes after the call
      * @return The number of cells
      */
-    size_t ReadSizesFromNetCDF(const NcFile &NetCDFFile,
-        const std::string &SizeName, ThreeDModelBase::t3DModelDim &CellSize)
+    size_t ReadSizesFromNetCDF(const NcFile &NetCDFFile, const std::string &SizeName,
+        ThreeDModelBase::t3DModelDim &CellSize)
       {
         //we store the information about the grid in a different way to
         //which we use it, we assume the first cell to have the upper left front corner at (0,0,0)
@@ -54,12 +56,13 @@ namespace jif3D
 
         if (pos != CellCoordinates.end())
           {
-            throw jif3D::FatalException("Cell coordinates in netcdf file are not in increasing order.");
+            throw jif3D::FatalException(
+                "Cell coordinates in netcdf file are not in increasing order.");
           }
 
         // transform coordinates to cell sizes, assuming the start is at 0
-        std::adjacent_difference(CellCoordinates.begin(),
-            CellCoordinates.end(), CellSize.begin());
+        std::adjacent_difference(CellCoordinates.begin(), CellCoordinates.end(),
+            CellSize.begin());
         //return the size of the current dimension
         return nvalues;
       }
@@ -81,8 +84,7 @@ namespace jif3D
         const size_t nvalues = CellSize.size();
         // Add a dimension and a variable with the same name to the netcdf file
         NcDim *SizeDim = NetCDFFile.add_dim(SizeName.c_str(), nvalues);
-        NcVar *SizeVar =
-            NetCDFFile.add_var(SizeName.c_str(), ncDouble, SizeDim);
+        NcVar *SizeVar = NetCDFFile.add_var(SizeName.c_str(), ncDouble, SizeDim);
         //All length is measured in meters
         SizeVar->add_att("units", "m");
         //We also store the name
@@ -92,13 +94,12 @@ namespace jif3D
         SizeVar->add_att("bounds", boundary_name.c_str());
         // we store the coordinates of the cells in the netcdf file
         ThreeDModelBase::t3DModelDim CellCoordinates(boost::extents[nvalues]);
-        std::partial_sum(CellSize.begin(), CellSize.end(),
-            CellCoordinates.begin());
+        std::partial_sum(CellSize.begin(), CellSize.end(), CellCoordinates.begin());
         //Write the values
         SizeVar->put(CellCoordinates.origin(), nvalues);
         //create the boundary variable
-        NcVar *BoundaryVar = NetCDFFile.add_var(boundary_name.c_str(),
-            ncDouble, SizeDim, BoundaryDim);
+        NcVar *BoundaryVar = NetCDFFile.add_var(boundary_name.c_str(), ncDouble, SizeDim,
+            BoundaryDim);
         BoundaryVar->add_att("units", "m");
 
         //the boundary variable contains two values per cell, the lower and upper boundary
@@ -125,21 +126,16 @@ namespace jif3D
      * @param ZCellSizes The sizes of the cells in z-direction in m (set by this routine)
      * @param Data The model data (set by this routine)
      */
-    void Read3DModelFromNetCDF(const NcFile &NetCDFFile,
-        const std::string &DataName, const std::string &UnitsName,
-        ThreeDModelBase::t3DModelDim &XCellSizes,
+    void Read3DModelFromNetCDF(const NcFile &NetCDFFile, const std::string &DataName,
+        const std::string &UnitsName, ThreeDModelBase::t3DModelDim &XCellSizes,
         ThreeDModelBase::t3DModelDim &YCellSizes,
-        ThreeDModelBase::t3DModelDim &ZCellSizes,
-        ThreeDModelBase::t3DModelData &Data)
+        ThreeDModelBase::t3DModelDim &ZCellSizes, ThreeDModelBase::t3DModelData &Data)
       {
 
         //Read the sizes of the blocks in x,y and z-direction from the file
-        const size_t nxvalues = ReadSizesFromNetCDF(NetCDFFile, "Northing",
-            XCellSizes);
-        const size_t nyvalues = ReadSizesFromNetCDF(NetCDFFile, "Easting",
-            YCellSizes);
-        const size_t nzvalues = ReadSizesFromNetCDF(NetCDFFile, "Depth",
-            ZCellSizes);
+        const size_t nxvalues = ReadSizesFromNetCDF(NetCDFFile, "Northing", XCellSizes);
+        const size_t nyvalues = ReadSizesFromNetCDF(NetCDFFile, "Easting", YCellSizes);
+        const size_t nzvalues = ReadSizesFromNetCDF(NetCDFFile, "Depth", ZCellSizes);
         //allocate memory for the data
         Data.resize(boost::extents[nxvalues][nyvalues][nzvalues]);
         //create netcdf variable for data
@@ -149,8 +145,7 @@ namespace jif3D
         std::string UnitInFile = Unit_Att->as_string(0);
         // if the units in the file are different from what we expect|
         if (UnitInFile.compare(UnitsName) != 0)
-          throw std::runtime_error(
-              "Units in file do not match expected units !");
+          throw std::runtime_error("Units in file do not match expected units !");
         //read netcdf data from file
         //we store the data in the order Depth, Easting, Northing
         //but internally we work with x,y,z storage ordering
@@ -160,8 +155,7 @@ namespace jif3D
         for (size_t i = 0; i < nzvalues; ++i)
           for (size_t j = 0; j < nyvalues; ++j)
             for (size_t k = 0; k < nxvalues; ++k)
-              Data[k][j][i] = databuffer[k + j * nxvalues + i * (nxvalues
-                  * nyvalues)];
+              Data[k][j][i] = databuffer[k + j * nxvalues + i * (nxvalues * nyvalues)];
         delete[] databuffer;
       }
     /*! Write the information about a rectangular mesh 3D model to a netcdf file
@@ -174,8 +168,7 @@ namespace jif3D
      * @param Data The model data, the shape has to match the length of the cell size vectors
      */
     void Write3DModelToNetCDF(NcFile &NetCDFFile, const std::string &DataName,
-        const std::string &UnitsName,
-        const ThreeDModelBase::t3DModelDim &XCellSizes,
+        const std::string &UnitsName, const ThreeDModelBase::t3DModelDim &XCellSizes,
         const ThreeDModelBase::t3DModelDim &YCellSizes,
         const ThreeDModelBase::t3DModelDim &ZCellSizes,
         const ThreeDModelBase::t3DModelData &Data)
@@ -195,15 +188,15 @@ namespace jif3D
         BIndices.push_back(2);
         BoundaryVar->put(&BIndices[0], 2);
         // Write the size information in x,y, and z-direction
-        NcDim *XSizeDim = WriteSizesToNetCDF(NetCDFFile, "Northing",
-            XCellSizes, BoundaryDim);
+        NcDim *XSizeDim = WriteSizesToNetCDF(NetCDFFile, "Northing", XCellSizes,
+            BoundaryDim);
         NcDim *YSizeDim = WriteSizesToNetCDF(NetCDFFile, "Easting", YCellSizes,
             BoundaryDim);
         NcDim *ZSizeDim = WriteSizesToNetCDF(NetCDFFile, "Depth", ZCellSizes,
             BoundaryDim);
 
-        NcVar *DataVar = NetCDFFile.add_var(DataName.c_str(), ncDouble,
-            ZSizeDim, YSizeDim, XSizeDim);
+        NcVar *DataVar = NetCDFFile.add_var(DataName.c_str(), ncDouble, ZSizeDim,
+            YSizeDim, XSizeDim);
         DataVar->add_att("units", UnitsName.c_str());
         DataVar->add_att("long_name", DataName.c_str());
         //Write the model data itself
@@ -220,24 +213,22 @@ namespace jif3D
             for (size_t k = 0; k < xsize; ++k)
               databuffer[k + j * xsize + i * (xsize * ysize)] = Data[k][j][i];
         //write the buffer to the file
-        DataVar->put(databuffer, ZSizeDim->size(), YSizeDim->size(),
-            XSizeDim->size());
+        DataVar->put(databuffer, ZSizeDim->size(), YSizeDim->size(), XSizeDim->size());
         //and delete it
         delete[] databuffer;
         NetCDFFile.add_att("Conventions", "CF-1.3");
       }
 
-    void ReadMeasPosNetCDF(const std::string filename,
-        ThreeDModelBase::tMeasPosVec &PosX, ThreeDModelBase::tMeasPosVec &PosY,
-        ThreeDModelBase::tMeasPosVec &PosZ)
+    void ReadMeasPosNetCDF(const std::string filename, ThreeDModelBase::tMeasPosVec &PosX,
+        ThreeDModelBase::tMeasPosVec &PosY, ThreeDModelBase::tMeasPosVec &PosZ)
       {
 
         //open the file
         NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
         //read the three coordinates for the measurements
-        ReadVec(DataFile, MeasPosXName, StationNumberName, PosX);
-        ReadVec(DataFile, MeasPosYName, StationNumberName, PosY);
-        ReadVec(DataFile, MeasPosZName, StationNumberName, PosZ);
+        ReadVec(DataFile, MeasPosXName, PosX);
+        ReadVec(DataFile, MeasPosYName, PosY);
+        ReadVec(DataFile, MeasPosZName, PosZ);
         //and make sure everything is consistent
         assert(PosX.size() == PosY.size());
         assert(PosX.size() == PosZ.size());
