@@ -24,8 +24,8 @@ namespace jif3D
             Model.FindAssociatedIndices(MeasPosX, MeasPosY,
                 Model.GetMeasPosZ()[MeasIndex]);
         //get the position of the cell center
-        double CellCenterX = Model.GetXCoordinates()[StationIndex[0]];
-        double CellCenterY = Model.GetYCoordinates()[StationIndex[1]];
+        double CellCenterX = Model.GetXCoordinates()[StationIndex[0]] + Model.GetXCellSizes()[StationIndex[0]]/2.0;
+        double CellCenterY = Model.GetYCoordinates()[StationIndex[1]] + Model.GetYCellSizes()[StationIndex[1]]/2.0;
         //depending where we are with respect to the center
         //we need to use different neighbor cells
         int NextX = 0, NextY = 0;
@@ -34,7 +34,7 @@ namespace jif3D
         MeasPosY > CellCenterY ?
             NextY = StationIndex[1] + 1 : NextY = StationIndex[1] - 1;
         //if one of the indices is out of range we cannot interpolate
-        //the means that the sites have to be at least gridspacing/2
+        //this means that the sites have to be at least gridspacing/2
         //away from the boundaries
         if (NextX < 0 || NextY < 0)
           throw FatalException("Station outside interpolation range. ");
@@ -42,8 +42,8 @@ namespace jif3D
         //as our grid is regular we only need 2 additional coordinates
         //we can construct the coordinates of the 4 cells from these
         //and the original coordinates
-        double NextCellCenterX = Model.GetXCoordinates()[NextX];
-        double NextCellCenterY = Model.GetYCoordinates()[NextY];
+        double NextCellCenterX = Model.GetXCoordinates()[NextX] + Model.GetXCellSizes()[NextX]/2.0;
+        double NextCellCenterY = Model.GetYCoordinates()[NextY] + Model.GetYCellSizes()[NextY]/2.0;
         const size_t nmodx = Model.GetXCoordinates().size();
         const size_t nmody = Model.GetYCoordinates().size();
         //calculate the offset in memory for all the field values
