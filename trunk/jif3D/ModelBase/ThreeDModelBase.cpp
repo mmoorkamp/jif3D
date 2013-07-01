@@ -10,7 +10,7 @@
 #include <fstream>
 #include <boost/bind.hpp>
 #include "../Global/FatalException.h"
-#include "NetCDFTools.h"
+#include "NetCDFModelTools.h"
 #include "VTKTools.h"
 namespace jif3D
   {

@@ -12,7 +12,7 @@
 #include <boost/bind.hpp>
 #include "ReadWriteX3D.h"
 #include "../ModelBase/VTKTools.h"
-#include "../ModelBase/NetCDFTools.h"
+#include "../ModelBase/NetCDFModelTools.h"
 
 BOOST_AUTO_TEST_SUITE( ReadWriteX3D_Suite )
 

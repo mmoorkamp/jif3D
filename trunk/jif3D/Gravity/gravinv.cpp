@@ -24,7 +24,7 @@
 #include "../Global/FileUtil.h"
 #include "../Inversion/LinearInversion.h"
 #include "../ModelBase/VTKTools.h"
-#include "../ModelBase/NetCDFTools.h"
+#include "../ModelBase/NetCDFModelTools.h"
 #include "ThreeDGravityModel.h"
 #include "ReadWriteGravityData.h"
 #include "FullSensitivityGravityCalculator.h"

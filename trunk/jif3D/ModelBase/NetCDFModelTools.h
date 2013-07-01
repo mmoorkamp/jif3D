@@ -1,18 +1,18 @@
 //============================================================================
-// Name        : NetCDFTools.h
+// Name        : NetCDFModelTools.h
 // Author      : Max Moorkamp
 // Version     :
 // Copyright   : 2008, MM
 //============================================================================
 
-#ifndef NETCDFTOOLS_H_
-#define NETCDFTOOLS_H_
+#ifndef NetCDFModelTools_H_
+#define NetCDFModelTools_H_
 
 #include <string>
 #include <netcdfcpp.h>
 #include "ThreeDModelBase.h"
 
-/*! \file NetCDFTools.h
+/*! \file NetCDFModelTools.h
  * This file contains various functions to read and write 3D gridded models to and from
  * netcdf files. These functions are used by ThreeDModelBase and derived classes, but
  * are also useful on their own.
@@ -88,4 +88,4 @@ namespace jif3D
       }
   /* @} */
   }
-#endif /*NETCDFTOOLS_H_*/
+#endif /*NetCDFModelTools_H_*/

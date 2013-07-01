@@ -8,7 +8,7 @@
 
 #include "../Global/VecMat.h"
 #include "../Global/FileUtil.h"
-#include "../ModelBase/NetCDFTools.h"
+#include "../ModelBase/NetCDFModelTools.h"
 #include "../ModelBase/VTKTools.h"
 
 int main()

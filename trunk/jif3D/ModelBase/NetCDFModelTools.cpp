@@ -1,11 +1,11 @@
 //============================================================================
-// Name        : NetCDFTools.cpp
+// Name        : NetCDFModelTools.cpp
 // Author      : Max Moorkamp
 // Version     :
 // Copyright   : 2008, MM
 //============================================================================
 
-#include "NetCDFTools.h"
+#include "NetCDFModelTools.h"
 #include "../Global/FatalException.h"
 #include <cassert>
 namespace jif3D

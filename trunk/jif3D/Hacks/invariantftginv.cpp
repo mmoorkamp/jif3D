@@ -14,7 +14,7 @@
 #include "../Global/convert.h"
 #include "../Global/Interpolate.h"
 #include "../ModelBase/VTKTools.h"
-#include "../ModelBase/NetCDFTools.h"
+#include "../ModelBase/NetCDFModelTools.h"
 #include "../Gravity/ThreeDGravityModel.h"
 #include "../Inversion/MatrixTools.h"
 #include "../Gravity/ReadWriteGravityData.h"

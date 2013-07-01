@@ -11,7 +11,7 @@
 #include "../Global/FatalException.h"
 #include "../Global/NumUtil.h"
 #include "../Global/convert.h"
-#include "../ModelBase/NetCDFTools.h"
+#include "../ModelBase/NetCDFModelTools.h"
 #include "ReadWriteImpedances.h"
 
 namespace jif3D
