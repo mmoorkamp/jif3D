@@ -13,8 +13,9 @@
 
 namespace jif3D
   {
-    void ReadCovarianceFromNetcdf(const std::string &filename, const jif3D::comp_mat &CoVar);
-    void WriteCovarianceToNetcdf(const std::string &filename, jif3D::comp_mat &CoVar);
+    void ReadCovarianceFromNetcdf(const std::string &filename, jif3D::comp_mat &CoVar);
+    void WriteCovarianceToNetcdf(const std::string &filename,
+        const jif3D::comp_mat &CoVar);
 
   }
 
