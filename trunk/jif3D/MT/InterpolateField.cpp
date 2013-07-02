@@ -10,7 +10,15 @@
 
 namespace jif3D
   {
-    //! Interpolate magnetic and electric fields horizontally to allow for arbitrary horizontal site positions
+    /*! x3d calculates the electric and magnetic fields at the centre of each cell.
+     * We therefore use bi-linear interpolation to get the field values at the
+     * actual measurement sites.
+     * @param Field The electric or magnetic fields as calculated by x3d
+     * @param Model The conductivity model used to calculate the fields
+     * @param MeasIndex The index of the measurement in the model object to perform the interpolation for
+     * @param MeasDepthIndices The vector of indices of the observe levels
+     * @return Interpolated field value at the measurement site
+     */
     std::complex<double> InterpolateField(std::vector<std::complex<double> > &Field,
         const X3DModel &Model, size_t MeasIndex,
         const std::vector<size_t> &MeasDepthIndices)
