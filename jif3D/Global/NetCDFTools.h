@@ -18,7 +18,7 @@ namespace jif3D {
    *  and other quantities throughout the project.
    * @param NetCDFFile The netcdf file object to read the vector from
    * @param DataName The name of the vector in the netcdf file
-   * @param Vec
+   * @param Vec The vector object (std::vector, ublas vector) that will contain the data
    */
   template<class VectorType>
   void ReadVec(NcFile &NetCDFFile, const std::string &DataName,
@@ -34,6 +34,14 @@ namespace jif3D {
     }
 
   //! Write a vectorial quantity to a netcdf file
+  /*! This helper function writes a single vectorial quantity
+   * to a netcdf file.
+   * @param NetCDFFile The netcdf file object, needs to be writeable
+   * @param Name The name of the quantity in the file
+   * @param Vec The values to be written
+   * @param Dimension The dimension object for the associated dimension, the dimension needs to have identical size to the vector
+   * @param unit The units of the values
+   */
   template<class VectorType>
   void WriteVec(NcFile &NetCDFFile, const std::string &Name,
       const VectorType &Vec, NcDim *Dimension, const std::string unit)
