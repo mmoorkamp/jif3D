@@ -9,8 +9,9 @@
 #define VTKTOOLS_H_
 
 #include "ThreeDModelBase.h"
-#include "../Gravity/ThreeDGravityModel.h"
 #include <string>
+#include "../Global/VecMat.h"
+
 /*! \file VTKTools.h
  * A collection of function to write 3D models and data with 3D positioning information
  * to files in simple .vtk format for plotting with Paraview or Visit
@@ -40,9 +41,9 @@ namespace jif3D
     void Write3DTensorDataToVTK(const std::string &filename,
         const std::string &DataName,
         const jif3D::rvec &Data,
-        const ThreeDGravityModel::tMeasPosVec &PosX,
-        const ThreeDGravityModel::tMeasPosVec &PosY,
-        const ThreeDGravityModel::tMeasPosVec &PosZ);
+        const ThreeDModelBase::tMeasPosVec &PosX,
+        const ThreeDModelBase::tMeasPosVec &PosY,
+        const ThreeDModelBase::tMeasPosVec &PosZ);
   /* @} */
 
   }

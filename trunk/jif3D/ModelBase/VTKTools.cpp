@@ -91,9 +91,9 @@ namespace jif3D
     //helper function that writes the common header information
     //for scalar and tensor data
     void WriteDataHeader(std::ofstream &outfile,
-        const ThreeDGravityModel::tMeasPosVec &PosX,
-        const ThreeDGravityModel::tMeasPosVec &PosY,
-        const ThreeDGravityModel::tMeasPosVec &PosZ)
+        const ThreeDModelBase::tMeasPosVec &PosX,
+        const ThreeDModelBase::tMeasPosVec &PosY,
+        const ThreeDModelBase::tMeasPosVec &PosZ)
       {
         const size_t ndata = PosX.size();
         outfile << "# vtk DataFile Version 2.0" << std::endl;
@@ -119,9 +119,9 @@ namespace jif3D
      * @param PosZ The position of the measurement points in z-direction in m
      */
     void Write3DDataToVTK(const std::string &filename, const std::string &DataName,
-        const jif3D::rvec &Data, const ThreeDGravityModel::tMeasPosVec &PosX,
-        const ThreeDGravityModel::tMeasPosVec &PosY,
-        const ThreeDGravityModel::tMeasPosVec &PosZ)
+        const jif3D::rvec &Data, const ThreeDModelBase::tMeasPosVec &PosX,
+        const ThreeDModelBase::tMeasPosVec &PosY,
+        const ThreeDModelBase::tMeasPosVec &PosZ)
       {
         //do some consistency checks
         const size_t ndata = Data.size();
@@ -150,9 +150,9 @@ namespace jif3D
      * @param PosZ The position of the measurement points in z-direction in m
      */
     void Write3DTensorDataToVTK(const std::string &filename, const std::string &DataName,
-        const jif3D::rvec &Data, const ThreeDGravityModel::tMeasPosVec &PosX,
-        const ThreeDGravityModel::tMeasPosVec &PosY,
-        const ThreeDGravityModel::tMeasPosVec &PosZ)
+        const jif3D::rvec &Data, const ThreeDModelBase::tMeasPosVec &PosX,
+        const ThreeDModelBase::tMeasPosVec &PosY,
+        const ThreeDModelBase::tMeasPosVec &PosZ)
       {
         //do some consistency checks
         const size_t ndata = Data.size();
