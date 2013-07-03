@@ -29,6 +29,13 @@ namespace jif3D
         const ThreeDModelBase::t3DModelDim &ZCellSizes,
         const ThreeDModelBase::t3DModelData &Data);
 
+    //! Read a 3D model and its geometry from a .vtk file
+    void Read3DModelFromVTK(const std::string &filename,
+        ThreeDModelBase::t3DModelDim &XCellSizes,
+        ThreeDModelBase::t3DModelDim &YCellSizes,
+        ThreeDModelBase::t3DModelDim &ZCellSizes,
+        ThreeDModelBase::t3DModelData &Data);
+
     //! Write scalar data with 3D coordinate information into a .vtk file for plotting
     void Write3DDataToVTK(const std::string &filename,
         const std::string &DataName,

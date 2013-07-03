@@ -26,6 +26,23 @@ namespace jif3D
         file << "\n";
       }
 
+    //! A helper function to read the Coordinates for the 3 axes from a .vtk file
+    void ReadCoordinatesTFromVTK(std::ifstream &file,
+        ThreeDModelBase::t3DModelDim &CellSizes)
+      {
+        std::string dummy;
+        int nvalues;
+        file >> dummy >> nvalues >> dummy;
+        std::vector<double> coordinates(nvalues);
+        for (int i = 0; i < nvalues; ++i)
+          {
+            file >> coordinates[i];
+          }
+        CellSizes.resize(boost::extents[nvalues - 1]);
+        std::adjacent_difference(coordinates.begin() + 1, coordinates.end(),
+            CellSizes.begin());
+      }
+
     /*! Write a .vtk file to plot a 3D model
      * @param filename The name of the output file, should contain the ending .vtk
      * @param DataName The name of the model data, for information for plotting programs
@@ -88,10 +105,64 @@ namespace jif3D
           throw FatalException("Problem writing vtk  file: " + filename);
       }
 
+    /*! Read a .vtk file containing a 3D model
+     * @param filename The name of the input file, should contain the ending .vtk
+     * @param XCellSizes The sizes of the cells in x-direction in m
+     * @param YCellSizes The sizes of the cells in y-direction in m
+     * @param ZCellSizes The sizes of the cells in z-direction in m
+     * @param Data The model values within each cell, shape has to match the  cell sizes
+     */
+    void Read3DModelFromVTK(const std::string &filename,
+        ThreeDModelBase::t3DModelDim &XCellSizes,
+        ThreeDModelBase::t3DModelDim &YCellSizes,
+        ThreeDModelBase::t3DModelDim &ZCellSizes, ThreeDModelBase::t3DModelData &Data)
+      {
+        std::ifstream infile(filename.c_str());
+        char dummy[255];
+        //read the header information, but we do not need it
+        infile.getline(dummy, 255);
+        infile.getline(dummy, 255);
+        infile.getline(dummy, 255);
+        infile.getline(dummy, 255);
+        //get the number of values in each direction
+        int nxvalues, nyvalues, nzvalues;
+        infile >> dummy >> nxvalues >> nyvalues >> nzvalues;
+        //for vtk we need both boundaries of the cells,
+        //but internally we just use the right boundary
+        //so we need on element less for each axis
+        nxvalues -= 1;
+        nyvalues -= 1;
+        nzvalues -= 1;
+        //read the coordinate of the axes
+        ReadCoordinatesTFromVTK(infile, XCellSizes);
+        ReadCoordinatesTFromVTK(infile, YCellSizes);
+        ReadCoordinatesTFromVTK(infile, ZCellSizes);
+        //skip some more vtk specific information
+        infile.getline(dummy, 255);
+        infile.getline(dummy, 255);
+        infile.getline(dummy, 255);
+        infile.getline(dummy, 255);
+        Data.resize(boost::extents[nxvalues][nyvalues][nzvalues]);
+        //read the values from the file, the storage ordering
+        //is different from our internal storage, so we
+        //have to use nested loops
+        for (int i = 0; i < nzvalues; ++i)
+          {
+            for (int j = 0; j < nyvalues; ++j)
+              {
+                for (int k = 0; k < nxvalues; ++k)
+                  {
+                    infile >> Data[k][j][i];
+                    if (infile.fail())
+                      throw FatalException("Problem reading vtk  file: " + filename);
+                  }
+              }
+          }
+      }
+
     //helper function that writes the common header information
     //for scalar and tensor data
-    void WriteDataHeader(std::ofstream &outfile,
-        const ThreeDModelBase::tMeasPosVec &PosX,
+    void WriteDataHeader(std::ofstream &outfile, const ThreeDModelBase::tMeasPosVec &PosX,
         const ThreeDModelBase::tMeasPosVec &PosY,
         const ThreeDModelBase::tMeasPosVec &PosZ)
       {
