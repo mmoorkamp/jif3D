@@ -10,7 +10,7 @@
 
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/base_object.hpp>
-#include "ObjectiveFunction.h"
+#include "../Inversion/ObjectiveFunction.h"
 
 namespace jif3D
   {

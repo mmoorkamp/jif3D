@@ -9,7 +9,7 @@
 #define ONEDREGULARIZATION_H_
 
 #include "../Global/VecMat.h"
-#include "ObjectiveFunction.h"
+#include "../Inversion/ObjectiveFunction.h"
 
 namespace jif3D
   {
