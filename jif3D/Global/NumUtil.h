@@ -73,11 +73,16 @@ namespace jif3D
     template<class N1, class N2> struct roughlyEqual: public std::binary_function<N1, N2,
         bool>
       {
+      N1 epsilon;
       //! Functors for the standard library have their functionality in operator()
       bool operator()(N1 number1, N2 number2) const
         {
-          N1 epsilon = std::numeric_limits<N1>::epsilon();
           return std::abs(number1 - number2) < epsilon;
+        }
+      roughlyEqual(N1 tol = std::numeric_limits<N1>::epsilon()) :
+          epsilon(tol)
+        {
+
         }
       };
 
