@@ -108,10 +108,9 @@ namespace jif3D
             //make sure we have enough space for the coordinates
             Coordinates.resize(boost::extents[nelements]);
             //sum up the sizes to get the coordinates
-            std::partial_sum(Sizes.begin(), Sizes.end(), Coordinates.begin());
             //in the current setup the first coordinate is always zero
             //this is not ideal and should be changed in the future
-            std::rotate(Coordinates.begin(), Coordinates.end() - 1, Coordinates.end());
+            std::partial_sum(Sizes.begin(), Sizes.end() - 1, Coordinates.begin() + 1);
             Coordinates[0] = 0.0;
             ChangeFlag = false;
           }

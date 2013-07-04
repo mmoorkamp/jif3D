@@ -1,10 +1,11 @@
 import testing ; 
-using gfortran ;
+#using gfortran ;
 
-lib mt : ReadWriteX3D.cpp ReadWriteImpedances.cpp
+lib mt : B_epol1.for B_hpol.for ReadWriteX3D.cpp ReadWriteImpedances.cpp
          ThreeDMTModel.cpp X3DModel.cpp MTEquations.cpp 
          MT3DCalculator.cpp X3DMTCalculator.cpp
          OneDMTCalculator.cpp InterpolateField.cpp
+         MT2DForward.cpp
          ..//ModelBase  ..//boost_filesystem ..//boost_system ;
 
 
@@ -12,7 +13,7 @@ lib mt : ReadWriteX3D.cpp ReadWriteImpedances.cpp
 # switched off unit-test 2DMT_test : test_Tarits2DMT.cpp mt ..//ModelBase ..//Inversion ..//gfortran ..//boost_filesystem : <include>. ;
 unit-test RWX3D_test : test_ReadWriteX3D.cpp mt  ..//ModelBase ..//Inversion ..//boost_filesystem ..//boost_system : <include>. ;
 unit-test X3Dcalc_test : test_X3DCalculator.cpp   mt  ..//ModelBase ..//Inversion ..//boost_filesystem ..//boost_system : <include>. ;
-#unit-test X3DObjective_test : test_X3DObjective.cpp mt  ..//ModelBase ..//Inversion ..//boost_filesystem ..//boost_system : <include>. ;
+unit-test X3DObjective_test : test_X3DObjective.cpp mt  ..//ModelBase ..//Inversion ..//boost_filesystem ..//boost_system : <include>. ;
 unit-test OneDMTCalculator_test : test_OneDMTCalculator.cpp mt  ..//ModelBase ..//Inversion ..//boost_filesystem ..//boost_system : <include>. ;
 unit-test ReadWriteImpedances_test : test_ReadWriteImpedances.cpp mt  ..//ModelBase ..//Inversion ..//boost_filesystem ..//boost_system : <include>. ;
 
