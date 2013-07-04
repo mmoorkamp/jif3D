@@ -7,7 +7,7 @@
 
 #include "../Global/FatalException.h"
 #include "InterpolateField.h"
-
+#include <iostream>
 namespace jif3D
   {
     /*! x3d calculates the electric and magnetic fields at the centre of each cell.
@@ -69,6 +69,17 @@ namespace jif3D
         const size_t Offset22 = (nmodx * nmody) * MeasDepthIndices[MeasIndex]
             + NextX * nmody + NextY;
         //implement bilinear interpolation equation on a regular grid
+        if (Offset11 >= Field.size() || Offset12 >= Field.size()
+            || Offset21 >= Field.size() || Offset22 >= Field.size())
+          {
+            std::cerr << "Invalid offset in interpolation. Offset11: " << Offset11
+                << " Offset12:" << Offset12
+                << " Offset21:" << Offset21
+                << " Offset22:" << Offset22
+                << " Field values: " << Field.size()
+                << " Measurement Index: " << MeasIndex << std::endl;
+            throw FatalException("Invalid offset in interpolation.");
+          }
         std::complex<double> InterField = Field[Offset11] * (NextCellCenterX - MeasPosX)
             * (NextCellCenterY - MeasPosY);
         InterField += Field[Offset21] * (MeasPosX - CellCenterX)
@@ -78,6 +89,10 @@ namespace jif3D
         InterField += Field[Offset22] * (MeasPosX - CellCenterX)
             * (MeasPosY - CellCenterY);
         InterField /= (NextCellCenterX - CellCenterX) * (NextCellCenterY - CellCenterY);
+        if (isnan(InterField.real()) || isnan(InterField.imag()))
+          {
+            throw FatalException("Nan in interpolated fields");
+          }
         return InterField;
       }
   }

@@ -247,10 +247,10 @@ namespace jif3D
         //enter the calculation
         outfile
             << "Binding_cell_in_X-direction     X-coordinate of centre of Binding cell (m)  \n";
-        outfile << " 1                             " << XCellSizes[0]/2.0 << " \n";
+        outfile << " 1                             " << XCellSizes[0] / 2.0 << " \n";
         outfile
             << "Binding_cell_in_Y-direction     Y-coordinate of centre of Binding cell (m) \n";
-        outfile << " 1                             " << YCellSizes[0]/2.0 << " \n";
+        outfile << " 1                             " << YCellSizes[0] / 2.0 << " \n";
         //if something went wrong during writing we throw an exception
         if (outfile.bad())
           {
@@ -356,9 +356,9 @@ namespace jif3D
               }
           }
         //make sure all fields have the same size
-        assert(Ex.size()==Ey.size());
-        assert(Ex.size()==Hx.size());
-        assert(Ex.size()==Hy.size());
+        assert(Ex.size() == Ey.size());
+        assert(Ex.size() == Hx.size());
+        assert(Ex.size() == Hy.size());
       }
 
     void ReadEMA(const std::string &filename, std::vector<std::complex<double> > &Ex,
@@ -391,8 +391,10 @@ namespace jif3D
         //make sure all fields have the same size
         if (Ex.size() != ncellsx * ncellsy * ncellsz)
           {
-            throw jif3D::FatalException(
-                "In ReadEma, number of electric field values does not match grid size");
+            throw
+        jif3D::FatalException(
+            "In ReadEma, number of electric field values: "+
+            jif3D::stringify(Ex.size()) +" does not match grid size: " + jif3D::stringify(ncellsx * ncellsy * ncellsz));
           }
         if (Ex.size() != Ey.size())
           {

@@ -162,39 +162,6 @@ namespace jif3D
           throw FatalException("Cannot execute run script: " + runname);
       }
 
-    size_t ConstructDepthIndices(std::vector<size_t> &MeasDepthIndices,
-        std::vector<double> &ShiftDepth, const X3DModel &Model)
-      {
-        const size_t nmeas = Model.GetMeasPosX().size();
-        std::vector<size_t> ZIndices;
-        size_t nlevels = 1;
-        //we have to do it once before the loop
-        //otherwise ZIndices will be empty and find below
-        //will not properly assign the iteratorr CurrIndex
-        size_t zindex = FindNearestCellBoundary(Model.GetMeasPosZ()[0],
-            Model.GetZCoordinates(), Model.GetZCellSizes());
-        ZIndices.push_back(zindex);
-        ShiftDepth.push_back(Model.GetZCoordinates()[zindex]);
-        std::vector<size_t>::iterator CurrIndex = std::find(ZIndices.begin(),
-            ZIndices.end(), zindex);
-        MeasDepthIndices.push_back(std::distance(ZIndices.begin(), CurrIndex));
-
-        for (size_t i = 1; i < nmeas; ++i)
-          {
-            size_t zindex = FindNearestCellBoundary(Model.GetMeasPosZ()[i],
-                Model.GetZCoordinates(), Model.GetZCellSizes());
-            CurrIndex = std::find(ZIndices.begin(), ZIndices.end(), zindex);
-            if (CurrIndex == ZIndices.end())
-              {
-                ZIndices.push_back(zindex);
-                ShiftDepth.push_back(Model.GetZCoordinates()[zindex]);
-                ++nlevels;
-              }
-            MeasDepthIndices.push_back(std::distance(ZIndices.begin(), CurrIndex));
-          }
-        return nlevels;
-      }
-
     rvec X3DMTCalculator::CalculateFrequency(const X3DModel &Model, size_t freqindex)
       {
 
@@ -207,7 +174,7 @@ namespace jif3D
         std::vector<double> CurrFreq(1, Model.GetFrequencies()[freqindex]);
         std::vector<double> ShiftDepth;
         std::vector<size_t> MeasDepthIndices;
-
+        //construct a vector of indices of unique station depths
         size_t nlevels = ConstructDepthIndices(MeasDepthIndices, ShiftDepth, Model);
         //writing out files causes problems in parallel
         // so we make sure it is done one at a time
@@ -243,17 +210,6 @@ namespace jif3D
         //calculate impedances from the field spectra for all measurement sites
         for (size_t j = 0; j < nmeas; ++j)
           {
-            //find out where our site is located in the model
-            boost::array<ThreeDModelBase::t3DModelData::index, 3> StationIndex =
-                Model.FindAssociatedIndices(Model.GetMeasPosX()[j],
-                    Model.GetMeasPosY()[j], Model.GetMeasPosZ()[j]);
-            //for each site we have a separate observation depth in x3d
-            //even if they are at the same level, for each observation depth
-            //x3d writes out the fields in all cells at that depth
-            //we therefore have to shift the index by the index of the site
-            //times number of the horizontal cells
-            const size_t offset = (nmodx * nmody) * MeasDepthIndices[j]
-                + StationIndex[0] * nmody + StationIndex[1];
             const size_t meas_index = j * 8;
             std::complex<double> Ex1Inter = InterpolateField(Ex1, Model, j,
                 MeasDepthIndices);
@@ -273,10 +229,8 @@ namespace jif3D
                 MeasDepthIndices);
             FieldsToImpedance(Ex1Inter, Ex2Inter, Ey1Inter, Ey2Inter, Hx1Inter, Hx2Inter,
                 Hy1Inter, Hy2Inter, Zxx, Zxy, Zyx, Zyy);
-            //in order to guarantee a coherent state of the array
-            //we lock the access before writing
-            //update the values and then unlock
-
+            //result is a local array for this frequency
+            //so we can directly use it even in a threaded environment
             result(meas_index) = Zxx.real();
             result(meas_index + 1) = Zxx.imag();
             result(meas_index + 2) = Zxy.real();
@@ -528,11 +482,19 @@ namespace jif3D
             SourceXIndex.at(j) = StationIndex[0];
             SourceYIndex.at(j) = StationIndex[1];
             const size_t siteindex = freq_start_index + j * 8;
+            std::complex<double> Hx1_obsInter = InterpolateField(Hx1_obs, Model, j,
+                MeasDepthIndices);
+            std::complex<double> Hx2_obsInter = InterpolateField(Hx2_obs, Model, j,
+                MeasDepthIndices);
+            std::complex<double> Hy1_obsInter = InterpolateField(Hy1_obs, Model, j,
+                MeasDepthIndices);
+            std::complex<double> Hy2_obsInter = InterpolateField(Hy2_obs, Model, j,
+                MeasDepthIndices);
+
             //this is an implementation of eq. 12 in Avdeev and Avdeeva
             //we do not have any beta, as this is part of the misfit
             cmat j_ext = CalcATimesH(MisfitToA(Misfit, siteindex),
-                MakeH(Hx1_obs[offset], Hx2_obs[offset], Hy1_obs[offset],
-                    Hy2_obs[offset]));
+                MakeH(Hx1_obsInter, Hx2_obsInter, Hy1_obsInter, Hy2_obsInter));
             XPolMoments1.at(j) = conj(j_ext(0, 0));
             YPolMoments1.at(j) = conj(j_ext(1, 0));
             XPolMoments2.at(j) = conj(j_ext(0, 1));

@@ -150,8 +150,7 @@ namespace jif3D
           ar & YOrigin;
           ar & ZOrigin;
         }
-      BOOST_SERIALIZATION_SPLIT_MEMBER()
-      protected:
+      BOOST_SERIALIZATION_SPLIT_MEMBER()protected:
       //! The origin of the coordinate system in x-direction in m
       double XOrigin;
       //! The origin of the coordinate system in y-direction in m
@@ -234,6 +233,14 @@ namespace jif3D
         }
       //! Set the origin of the coordinate system
       virtual void SetOrigin(const double x, const double y, const double z);
+      //! Set the size of the mesh and the coordinate axes
+      void SetMeshSize(const size_t nx, const size_t ny, const size_t nz)
+        {
+          XCellSizes.resize(boost::extents[nx]);
+          YCellSizes.resize(boost::extents[ny]);
+          ZCellSizes.resize(boost::extents[nz]);
+          Data.resize(boost::extents[nx][ny][nz]);
+        }
       //! From the three spatial indices, calculate the offset in memory
       int IndexToOffset(int xi, int yi, int zi) const
         {
