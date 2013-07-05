@@ -1,8 +1,8 @@
 //============================================================================
-// Name        : test_rwcovar.cpp
+// Name        : test_smatrix.cpp
 // Author      : Max Moorkamp
 // Version     :
-// Copyright   : 2010, MM
+// Copyright   : 2013, MM
 //============================================================================
 
 //test the file utility functions
@@ -14,7 +14,7 @@
 #include <cstdlib>
 #include "ReadWriteCovariance.h"
 
-BOOST_AUTO_TEST_SUITE( RWCovar_Test_Suite )
+BOOST_AUTO_TEST_SUITE( RWSMatrix_Test_Suite )
 
     BOOST_AUTO_TEST_CASE (test_readwrite)
       {
@@ -34,10 +34,10 @@ BOOST_AUTO_TEST_SUITE( RWCovar_Test_Suite )
             CovMat(index1, index2) = drand48();
             CovMat(index2, index1) = CovMat(index1, index2);
           }
-        jif3D::WriteCovarianceToNetcdf("cov.nc", CovMat);
+        jif3D::WriteCovarianceToNetcdf("cov.nc", CovMat,"Covar");
 
         jif3D::comp_mat Compare(matsize, matsize);
-        jif3D::ReadCovarianceFromNetcdf("cov.nc", Compare);
+        jif3D::ReadCovarianceFromNetcdf("cov.nc", Compare,"Covar");
 
         for (size_t i = 0; i < matsize; ++i)
           {

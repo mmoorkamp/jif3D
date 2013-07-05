@@ -1,5 +1,5 @@
 //============================================================================
-// Name        : ReadWriteCovariance.cpp
+// Name        : ReadWriteSparseMatrix.cpp
 // Author      : 1 Jul 2013
 // Version     : 
 // Copyright   : 2013, mm489
@@ -7,24 +7,23 @@
 
 #include <netcdfcpp.h>
 #include <vector>
-#include "ReadWriteCovariance.h"
+#include "ReadWriteSparseMatrix.h"
 #include "NetCDFTools.h"
 
 namespace jif3D
   {
-    const std::string CovarName = "Covariance";
-    const std::string CovDimName = "ncov";
+    const std::string CovDimName = "nvalues";
     const std::string Index1Name = "Index1";
     const std::string Index2Name = "Index2";
 
-    void ReadCovarianceFromNetcdf(const std::string &filename, jif3D::comp_mat &CoVar)
+    void ReadCovarianceFromNetcdf(const std::string &filename, jif3D::comp_mat &CoVar, const std::string &Name)
       {
         NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
         std::vector<int> Index1, Index2;
         std::vector<double> Values;
         ReadVec(DataFile, Index1Name, Index1);
         ReadVec(DataFile, Index2Name, Index2);
-        ReadVec(DataFile, CovarName, Values);
+        ReadVec(DataFile, Name, Values);
         size_t nvals = Values.size();
         for (size_t i = 0; i < nvals; ++i)
           {
@@ -34,7 +33,7 @@ namespace jif3D
       }
 
     void WriteCovarianceToNetcdf(const std::string &filename,
-        const jif3D::comp_mat &CoVar)
+        const jif3D::comp_mat &CoVar, const std::string &Name)
       {
         NcFile DataFile(filename.c_str(), NcFile::Replace);
 
@@ -57,7 +56,7 @@ namespace jif3D
         NcDim *CovNumDim = DataFile.add_dim(CovDimName.c_str(), nstats);
         WriteVec(DataFile, Index1Name, Index1, CovNumDim, "");
         WriteVec(DataFile, Index2Name, Index2, CovNumDim, "");
-        WriteVec(DataFile, CovarName, Values, CovNumDim, "");
+        WriteVec(DataFile, Name, Values, CovNumDim, "");
       }
 
   }

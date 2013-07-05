@@ -1,5 +1,5 @@
 //============================================================================
-// Name        : ReadWriteCovariance.h
+// Name        : ReadWriteSparseMatrix.h
 // Author      : 1 Jul 2013
 // Version     : 
 // Copyright   : 2013, mm489
@@ -13,9 +13,9 @@
 
 namespace jif3D
   {
-    void ReadCovarianceFromNetcdf(const std::string &filename, jif3D::comp_mat &CoVar);
+    void ReadSparseMatrixFromNetcdf(const std::string &filename, jif3D::comp_mat &CoVar, const std::string &Name);
     void WriteCovarianceToNetcdf(const std::string &filename,
-        const jif3D::comp_mat &CoVar);
+        const jif3D::comp_mat &CoVar, const std::string &Name);
 
   }
 
