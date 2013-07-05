@@ -104,6 +104,10 @@ namespace jif3D
             }
           SetFrequencies() = Source.GetFrequencies();
         }
+      //! Given three coordinates in m, find the indices of the model cell that correponds to these coordinates, this is a more efficient implementation than the one in the base class
+      virtual boost::array<ThreeDModelBase::t3DModelData::index, 3>
+      FindAssociatedIndices(const double xcoord, const double ycoord,
+          const double zcoord) const;
       //! Write all model information to a netcdf file
       void WriteNetCDF(const std::string filename) const;
       //! Read all model information from a netcdf file

@@ -116,6 +116,15 @@ namespace jif3D
           }
       }
 
+    /*! For a given position within the model mesh find the three indices of the
+     * corresponding cell in the mesh. This function is virtual as it provides
+     * functionality for the general case where cells can have varying sizes.
+     * For MT and seismic meshes we provide more efficient implementation.
+     * @param xcoord The coordinate in x-direction in m
+     * @param ycoord The coordinate in y-direction in m
+     * @param zcoord The coordinate in z-direction in m
+     * @return An array with the indices in x,y,z-direction, respectively
+     */
     boost::array<ThreeDModelBase::t3DModelData::index, 3> ThreeDModelBase::FindAssociatedIndices(
         const double xcoord, const double ycoord, const double zcoord) const
       {

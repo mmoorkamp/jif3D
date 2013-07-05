@@ -9,6 +9,7 @@
 #include "ThreeDSeismicModel.h"
 #include "../Global/FatalException.h"
 #include <boost/bind.hpp>
+#include <boost/numeric/conversion/cast.hpp>
 #include <cassert>
 #include <algorithm>
 
@@ -70,13 +71,27 @@ namespace jif3D
         ThreeDModelBase::SetOrigin(x, y, z);
       }
 
+
+    boost::array<ThreeDModelBase::t3DModelData::index, 3>
+    ThreeDSeismicModel::FindAssociatedIndices(const double xcoord, const double ycoord,
+        const double zcoord) const
+   {
+    	const int xindex = boost::numeric_cast<int>(floor((xcoord - XOrigin)/GetXCellSizes()[0]));
+    	const int yindex = boost::numeric_cast<int>(floor((ycoord - YOrigin)/GetYCellSizes()[0]));
+    	const int zindex = boost::numeric_cast<int>(floor((zcoord - ZOrigin)/GetZCellSizes()[0]));
+        //when we return the value we make sure that we cannot go out of bounds
+        boost::array<t3DModelData::index, 3> idx =
+              {
+                { std::max(xindex , 0), std::max(yindex , 0), std::max(zindex - 1,
+                    0) } };
+        return idx;
+   }
+
     void ThreeDSeismicModel::WriteNetCDF(const std::string filename) const
       {
-
         NcFile DataFile(filename.c_str(), NcFile::Replace);
         //write the 3D discretized part
         WriteDataToNetCDF(DataFile, SlownessName, SlownessUnit);
-
       }
 
     void ThreeDSeismicModel::ReadNetCDF(const std::string filename,
