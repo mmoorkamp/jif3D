@@ -10,6 +10,7 @@
 #include <boost/test/included/unit_test.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/bind.hpp>
+#include <cstdlib>
 #include "InterpolateField.h"
 #include "../ModelBase/CellBoundaries.h"
 #include "../Global/NumUtil.h"
@@ -96,4 +97,44 @@ BOOST_AUTO_TEST_SUITE( InterpolateFields_Suite )
         BOOST_CHECK_EQUAL(Imag.imag(), 15.0);
         BOOST_CHECK_EQUAL(Imag.real(), 0);
       }
+
+    BOOST_AUTO_TEST_CASE (functioninter_test)
+    {
+    	srand48(time(0));
+        const size_t nx = 11, ny = 12, nz = 5;
+        jif3D::X3DModel Model;
+        Model.SetMeshSize(nx, ny, nz);
+        const double deltax = 100, deltay = 70, deltaz = 80;
+        Model.SetHorizontalCellSize(deltax, deltay, nx, ny);
+        std::fill_n(Model.SetZCellSizes().origin(), nz, deltaz);
+        const double xcoeff = drand48();
+        const double ycoeff = drand48();
+
+        std::vector<std::complex<double> > Field(nx * ny);
+        for (size_t i = 0; i < nx; ++i)
+        {
+        	for (size_t j = 0; j < ny; ++j)
+        	{
+
+        			double xpos = deltax/2.0 + i * deltax;
+        			double ypos = deltay/2.0 + j * deltay;
+        			Field.at(ny * i + j) = xpos * xcoeff + ypos * ycoeff ;
+        	}
+        }
+        const size_t ntest = 50;
+        for (size_t i = 0; i < ntest; ++i)
+        {
+        	Model.ClearMeasurementPoints();
+        	double xpos =  deltax/2 + drand48() * (deltax * (nx-1));
+        	double ypos =  deltay/2 + drand48() * (deltay * (ny-1));
+        	double zpos =  0;
+        	Model.AddMeasurementPoint(xpos,ypos,zpos);
+        	std::vector<size_t> MeasDepthIndices;
+        	std::vector<double> ShiftDepth;
+            size_t nlevels = ConstructDepthIndices(MeasDepthIndices, ShiftDepth, Model);
+            std::complex<double> value = InterpolateField(Field, Model, 0, MeasDepthIndices);
+            double trueval = xpos * xcoeff + ypos * ycoeff ;
+            BOOST_CHECK_CLOSE(value.real(),trueval,0.01);
+        }
+    }
     BOOST_AUTO_TEST_SUITE_END()
