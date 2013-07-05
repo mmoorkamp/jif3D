@@ -6,6 +6,7 @@
 //============================================================================
 
 #include <algorithm>
+#include <cassert>
 #include "../Global/FatalException.h"
 #include "../Global/convert.h"
 #include "CellBoundaries.h"

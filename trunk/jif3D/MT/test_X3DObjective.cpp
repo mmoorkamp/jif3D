@@ -57,7 +57,7 @@ void  MakeMTModel(jif3D::X3DModel &Model)
             {
               double currx = Model.GetXCoordinates()[i] + deltax / 2.0;
               double curry = Model.GetYCoordinates()[j] + deltay / 2.0;
-              double currz =  drand48() * deltaz * zsize;
+              double currz =  (j-1) * deltaz;
               Model.AddMeasurementPoint(currx, curry, currz);
             }
         }
@@ -105,7 +105,8 @@ void  MakeMTModel(jif3D::X3DModel &Model)
 
       jif3D::X3DMTCalculator Calculator;
       jif3D::rvec Observed = Calculator.Calculate(TrueModel);
-
+      std::ofstream impfile("impedance.out");
+      std::copy(Observed.begin(),Observed.end(),std::ostream_iterator<double>(impfile,"\n"));
       std::vector<double> Freq(TrueModel.GetFrequencies());
 
       jif3D::WriteImpedancesToNetCDF("gradimp.nc",Freq,TrueModel.GetMeasPosX(),TrueModel.GetMeasPosY(),TrueModel.GetMeasPosZ(),Observed);
@@ -118,6 +119,10 @@ void  MakeMTModel(jif3D::X3DModel &Model)
       double misfit = Objective.CalcMisfit(ModelVec);
       BOOST_CHECK(misfit > 0.0);
       jif3D::rvec Gradient = Objective.CalcGradient(ModelVec);
+
+      jif3D::X3DModel GradientModel(Model);
+      std::copy(Gradient.begin(),Gradient.end(),GradientModel.SetConductivities().origin());
+      GradientModel.WriteNetCDF("gradmod.nc");
 
       std::ofstream outfile("grad.comp");
 
