@@ -14,9 +14,8 @@
 namespace jif3D
   {
     void ReadSparseMatrixFromNetcdf(const std::string &filename, jif3D::comp_mat &CoVar, const std::string &Name);
-    void WriteCovarianceToNetcdf(const std::string &filename,
+    void WriteSparseMatrixToNetcdf(const std::string &filename,
         const jif3D::comp_mat &CoVar, const std::string &Name);
-
   }
 
 #endif /*READWRITECOVARIANCE_H_*/

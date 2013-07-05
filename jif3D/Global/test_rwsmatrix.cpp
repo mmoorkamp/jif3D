@@ -12,7 +12,7 @@
 #include <boost/test/included/unit_test.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 #include <cstdlib>
-#include "ReadWriteCovariance.h"
+#include "ReadWriteSparseMatrix.h"
 
 BOOST_AUTO_TEST_SUITE( RWSMatrix_Test_Suite )
 
@@ -34,10 +34,10 @@ BOOST_AUTO_TEST_SUITE( RWSMatrix_Test_Suite )
             CovMat(index1, index2) = drand48();
             CovMat(index2, index1) = CovMat(index1, index2);
           }
-        jif3D::WriteCovarianceToNetcdf("cov.nc", CovMat,"Covar");
+        jif3D::WriteSparseMatrixToNetcdf("cov.nc", CovMat,"Covar");
 
         jif3D::comp_mat Compare(matsize, matsize);
-        jif3D::ReadCovarianceFromNetcdf("cov.nc", Compare,"Covar");
+        jif3D::ReadSparseMatrixFromNetcdf("cov.nc", Compare,"Covar");
 
         for (size_t i = 0; i < matsize; ++i)
           {

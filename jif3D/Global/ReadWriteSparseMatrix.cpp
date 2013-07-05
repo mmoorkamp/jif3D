@@ -16,7 +16,7 @@ namespace jif3D
     const std::string Index1Name = "Index1";
     const std::string Index2Name = "Index2";
 
-    void ReadCovarianceFromNetcdf(const std::string &filename, jif3D::comp_mat &CoVar, const std::string &Name)
+    void ReadSparseMatrixFromNetcdf(const std::string &filename, jif3D::comp_mat &CoVar, const std::string &Name)
       {
         NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
         std::vector<int> Index1, Index2;
@@ -32,7 +32,7 @@ namespace jif3D
           }
       }
 
-    void WriteCovarianceToNetcdf(const std::string &filename,
+    void WriteSparseMatrixToNetcdf(const std::string &filename,
         const jif3D::comp_mat &CoVar, const std::string &Name)
       {
         NcFile DataFile(filename.c_str(), NcFile::Replace);

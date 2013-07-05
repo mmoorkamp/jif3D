@@ -8,8 +8,10 @@
 #include "../MT/ReadWriteImpedances.h"
 #include "../Global/FileUtil.h"
 #include "../Global/Noise.h"
+#include "../Global/ReadWriteSparseMatrix.h"
 #include "SetupMT.h"
 #include <algorithm>
+#include <string>
 
 namespace jif3D
   {
@@ -29,7 +31,7 @@ namespace jif3D
         po::options_description desc("MT options");
         desc.add_options()("mtrelerr", po::value(&relerr)->default_value(0.02),
             "The relative error for the MT data")("mtfine", po::value(&FineModelName),
-            "The name for the model with the MT forward geometry");
+            "The name for the model with the MT forward geometry")("mtinvcovar","Inverse covariance matrix to use in MT misfit calculation.");
         return desc;
       }
 
@@ -101,14 +103,23 @@ namespace jif3D
               }
             MTObjective->SetCoarseModelGeometry(MTModel);
             MTObjective->SetObservedData(MTData);
-            jif3D::rvec MinErr(jif3D::ConstructMTError(MTData, relerr));
-            for (size_t i = 0; i < MTError.size(); ++i)
-              {
-                MTError(i) = std::max(MTError(i), MinErr(i));
-              }
-
-            MTObjective->SetDataError(MTError);
-            //add the MT part to the JointObjective that will be used
+            if (vm.count("mtinvcovar"))
+            {
+            	comp_mat InvCov;
+            	std::string InvCovFilename = vm["mtinvcovar"].as<std::string>();
+            	ReadSparseMatrixFromNetcdf(InvCovFilename,InvCov,"InvCovariance");
+            	MTObjective->SetInvCovMat(InvCov);
+            }
+            else
+            {
+            	jif3D::rvec MinErr(jif3D::ConstructMTError(MTData, relerr));
+            	for (size_t i = 0; i < MTError.size(); ++i)
+            	    {
+            	       MTError(i) = std::max(MTError(i), MinErr(i));
+            	    }
+            	  MTObjective->SetDataError(MTError);
+            }
+                        //add the MT part to the JointObjective that will be used
             //for the inversion
             Objective.AddObjective(MTObjective, Transform, mtlambda, "MT");
             //output some information to the screen
