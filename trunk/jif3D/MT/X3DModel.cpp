@@ -6,6 +6,7 @@
 //============================================================================
 
 #include <cassert>
+#include <boost/numeric/conversion/cast.hpp>
 #include "X3DModel.h"
 #include "../Global/NumUtil.h"
 namespace jif3D
@@ -58,6 +59,22 @@ namespace jif3D
           }
         return *this;
       }
+
+    boost::array<ThreeDModelBase::t3DModelData::index, 3>
+     X3DModel::FindAssociatedIndices(const double xcoord, const double ycoord,
+        const double zcoord) const
+   {
+    	const int xindex = boost::numeric_cast<int>(floor((xcoord - XOrigin)/GetXCellSizes()[0]));
+    	const int yindex = boost::numeric_cast<int>(floor((ycoord - YOrigin)/GetYCellSizes()[0]));
+        const int zindex = std::distance(GetZCoordinates().begin(),
+            std::lower_bound(GetZCoordinates().begin(), GetZCoordinates().end(), zcoord));
+        //when we return the value we make sure that we cannot go out of bounds
+        boost::array<t3DModelData::index, 3> idx =
+              {
+                { std::max(xindex , 0), std::max(yindex , 0), std::max(zindex - 1,
+                    0) } };
+        return idx;
+   }
 
     void X3DModel::WriteNetCDF(const std::string filename) const
       {

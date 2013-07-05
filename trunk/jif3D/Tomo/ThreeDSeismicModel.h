@@ -70,6 +70,10 @@ namespace jif3D
           ar & ReceiverIndices;
         }
     public:
+      //! Given three coordinates in m, find the indices of the model cell that correponds to these coordinates, this is a more efficient implementation than the one in the base class
+      virtual boost::array<ThreeDModelBase::t3DModelData::index, 3>
+      FindAssociatedIndices(const double xcoord, const double ycoord,
+          const double zcoord) const;
       //! The seismic model has the same cell size for all cells in all directions so we just have one function to set it
       /*! This function sets both the size of all cells as well as the number of cells in x,y and z-direction
        * @param Size The size of each cell in all directions in m

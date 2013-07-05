@@ -318,7 +318,7 @@ namespace jif3D
           return 1;
         }
       //! Given three coordinates in m, find the indices of the model cell that correponds to these coordinates
-      boost::array<ThreeDModelBase::t3DModelData::index, 3>
+      virtual boost::array<ThreeDModelBase::t3DModelData::index, 3>
       FindAssociatedIndices(const double xcoord, const double ycoord,
           const double zcoord) const;
       //! Read the Measurement positions from a netcdf file
