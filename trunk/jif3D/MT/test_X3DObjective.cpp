@@ -40,7 +40,7 @@ void  MakeMTModel(jif3D::X3DModel &Model)
       Model.SetHorizontalCellSize(deltax, deltay, xsize, ysize);
 
       std::fill_n(Model.SetZCellSizes().origin(), zsize, deltaz);
-      std::fill_n(Model.SetConductivities().origin(), nmod, 0.01);
+      std::fill_n(Model.SetConductivities().origin(), nmod, 0.02);
       std::fill_n(bg_conductivities.begin(), nbglayers, 0.011);
       std::fill_n(bg_thicknesses.begin(), nbglayers, 100.0);
 
@@ -55,8 +55,8 @@ void  MakeMTModel(jif3D::X3DModel &Model)
         {
           for (size_t j = 1; j < ysize-1; ++j)
             {
-              double currx = Model.GetXCoordinates()[i] + deltax / 2.0;
-              double curry = Model.GetYCoordinates()[j] + deltay / 2.0;
+              double currx = Model.GetXCoordinates()[i] + deltax / 3.0;
+              double curry = Model.GetYCoordinates()[j] + deltay / 4.0;
               double currz =  (j-1) * deltaz;
               Model.AddMeasurementPoint(currx, curry, currz);
             }

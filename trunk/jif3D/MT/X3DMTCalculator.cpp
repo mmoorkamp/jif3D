@@ -210,27 +210,38 @@ namespace jif3D
         //calculate impedances from the field spectra for all measurement sites
         for (size_t j = 0; j < nmeas; ++j)
           {
-            const size_t meas_index = j * 8;
-            std::complex<double> Ex1Inter = InterpolateField(Ex1, Model, j,
-                MeasDepthIndices);
-            std::complex<double> Ex2Inter = InterpolateField(Ex2, Model, j,
-                MeasDepthIndices);
-            std::complex<double> Ey1Inter = InterpolateField(Ey1, Model, j,
-                MeasDepthIndices);
-            std::complex<double> Ey2Inter = InterpolateField(Ey2, Model, j,
-                MeasDepthIndices);
-            std::complex<double> Hx1Inter = InterpolateField(Hx1, Model, j,
-                MeasDepthIndices);
-            std::complex<double> Hx2Inter = InterpolateField(Hx2, Model, j,
-                MeasDepthIndices);
-            std::complex<double> Hy1Inter = InterpolateField(Hy1, Model, j,
-                MeasDepthIndices);
-            std::complex<double> Hy2Inter = InterpolateField(Hy2, Model, j,
-                MeasDepthIndices);
-            FieldsToImpedance(Ex1Inter, Ex2Inter, Ey1Inter, Ey2Inter, Hx1Inter, Hx2Inter,
-                Hy1Inter, Hy2Inter, Zxx, Zxy, Zyx, Zyy);
+            boost::array<ThreeDModelBase::t3DModelData::index, 3> StationIndex =
+                Model.FindAssociatedIndices(Model.GetMeasPosX()[j],
+                    Model.GetMeasPosY()[j], Model.GetMeasPosZ()[j]);
+// with the current equations we cannot use interpolation as the position
+        	// of the source in the adjoint calculation is always smeared
+        	//across the whole cell, this works best for a cell in the centre
+        	//of the cell and any other position deteriorates convergence
+//            std::complex<double> Ex1Inter = InterpolateField(Ex1, Model, j,
+//                MeasDepthIndices);
+//            std::complex<double> Ex2Inter = InterpolateField(Ex2, Model, j,
+//                MeasDepthIndices);
+//            std::complex<double> Ey1Inter = InterpolateField(Ey1, Model, j,
+//                MeasDepthIndices);
+//            std::complex<double> Ey2Inter = InterpolateField(Ey2, Model, j,
+//                MeasDepthIndices);
+//            std::complex<double> Hx1Inter = InterpolateField(Hx1, Model, j,
+//                MeasDepthIndices);
+//            std::complex<double> Hx2Inter = InterpolateField(Hx2, Model, j,
+//                MeasDepthIndices);
+//            std::complex<double> Hy1Inter = InterpolateField(Hy1, Model, j,
+//                MeasDepthIndices);
+//            std::complex<double> Hy2Inter = InterpolateField(Hy2, Model, j,
+//                MeasDepthIndices);
+//            FieldsToImpedance(Ex1Inter, Ex2Inter, Ey1Inter, Ey2Inter, Hx1Inter, Hx2Inter,
+//                Hy1Inter, Hy2Inter, Zxx, Zxy, Zyx, Zyy);
+            const size_t offset = (nmodx * nmody) * MeasDepthIndices[j] + StationIndex[0] * nmody
+                + StationIndex[1];
+            FieldsToImpedance(Ex1[offset], Ex2[offset], Ey1[offset], Ey2[offset],
+                Hx1[offset], Hx2[offset], Hy1[offset], Hy2[offset], Zxx, Zxy, Zyx, Zyy);
             //result is a local array for this frequency
             //so we can directly use it even in a threaded environment
+            const size_t meas_index = j * 8;
             result(meas_index) = Zxx.real();
             result(meas_index + 1) = Zxx.imag();
             result(meas_index + 2) = Zxy.real();
@@ -482,19 +493,11 @@ namespace jif3D
             SourceXIndex.at(j) = StationIndex[0];
             SourceYIndex.at(j) = StationIndex[1];
             const size_t siteindex = freq_start_index + j * 8;
-            std::complex<double> Hx1_obsInter = InterpolateField(Hx1_obs, Model, j,
-                MeasDepthIndices);
-            std::complex<double> Hx2_obsInter = InterpolateField(Hx2_obs, Model, j,
-                MeasDepthIndices);
-            std::complex<double> Hy1_obsInter = InterpolateField(Hy1_obs, Model, j,
-                MeasDepthIndices);
-            std::complex<double> Hy2_obsInter = InterpolateField(Hy2_obs, Model, j,
-                MeasDepthIndices);
 
             //this is an implementation of eq. 12 in Avdeev and Avdeeva
             //we do not have any beta, as this is part of the misfit
             cmat j_ext = CalcATimesH(MisfitToA(Misfit, siteindex),
-                MakeH(Hx1_obsInter, Hx2_obsInter, Hy1_obsInter, Hy2_obsInter));
+                MakeH(Hx1_obs[offset], Hx2_obs[offset], Hy1_obs[offset], Hy2_obs[offset]));
             XPolMoments1.at(j) = conj(j_ext(0, 0));
             YPolMoments1.at(j) = conj(j_ext(1, 0));
             XPolMoments2.at(j) = conj(j_ext(0, 1));
@@ -558,32 +561,15 @@ namespace jif3D
         //make the sources for the magnetic dipoles
         for (size_t j = 0; j < nmeas; ++j)
           {
-            //for each site we have a separate observation depth in x3d
-            //even if they are at the same level, for each observation depth
-            //x3d writes out the fields in all cells at that depth
-            //we therefore have to shift the index by the index of the site
-            //times number of the horizontal cells
-            //we interpolate the fields horizontally to allow
-            //for sites that are not in the center of the cells
-            std::complex<double> Ex1Inter = InterpolateField(Ex1_obs, Model, j,
-                MeasDepthIndices);
-            std::complex<double> Ex2Inter = InterpolateField(Ex2_obs, Model, j,
-                MeasDepthIndices);
-            std::complex<double> Ey1Inter = InterpolateField(Ey1_obs, Model, j,
-                MeasDepthIndices);
-            std::complex<double> Ey2Inter = InterpolateField(Ey2_obs, Model, j,
-                MeasDepthIndices);
-            std::complex<double> Hx1Inter = InterpolateField(Hx1_obs, Model, j,
-                MeasDepthIndices);
-            std::complex<double> Hx2Inter = InterpolateField(Hx2_obs, Model, j,
-                MeasDepthIndices);
-            std::complex<double> Hy1Inter = InterpolateField(Hy1_obs, Model, j,
-                MeasDepthIndices);
-            std::complex<double> Hy2Inter = InterpolateField(Hy2_obs, Model, j,
-                MeasDepthIndices);
+            boost::array<ThreeDModelBase::t3DModelData::index, 3> StationIndex =
+                Model.FindAssociatedIndices(Model.GetMeasPosX()[j],
+                    Model.GetMeasPosY()[j], Model.GetMeasPosZ()[j]);
             std::complex<double> Zxx, Zxy, Zyx, Zyy;
-            FieldsToImpedance(Ex1Inter, Ex2Inter, Ey1Inter, Ey2Inter, Hx1Inter, Hx2Inter,
-                Hy1Inter, Hy2Inter, Zxx, Zxy, Zyx, Zyy);
+            const size_t offset = (nmodx * nmody) * MeasDepthIndices[j] + StationIndex[0] * nmody
+                + StationIndex[1];
+            FieldsToImpedance(Ex1_obs[offset], Ex2_obs[offset], Ey1_obs[offset], Ey2_obs[offset],
+                Hx1_obs[offset], Hx2_obs[offset], Hy1_obs[offset], Hy2_obs[offset], Zxx, Zxy, Zyx, Zyy);
+
             CalcHext(omega_mu, XPolMoments1.at(j), XPolMoments2.at(j), YPolMoments1.at(j),
                 YPolMoments2.at(j), Zxx, Zxy, Zyx, Zyy);
           }
