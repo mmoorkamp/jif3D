@@ -1,7 +1,7 @@
 import testing ; 
 
 
-alias joint : ../Tomo ../Gravity ../MT ../Inversion//inversion ../Global ../Regularization ;
+alias joint : ../Tomo ../Gravity ../MT ../Inversion//inversion ../Global//global ../Regularization ;
 	
 lib setup : SaltRelConstraint.cpp SetupGravity.cpp SetupInversion.cpp SetupMT.cpp SetupRegularization.cpp SetupTomo.cpp SetupCoupling.cpp joint : <include>boost : : <include>. ;
 
