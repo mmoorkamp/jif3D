@@ -29,107 +29,108 @@ using namespace std;
  */
 
 int main()
-{
+  {
 
-	jif3D::X3DModel Model;
-	int nx, ny, nz;
-	double deltax, deltay, deltaz;
-	//first find out the basic mesh parameters
-	//the number of cells in each coordinate direction
-	cout << "Nx: ";
-	cin >> nx;
-	cout << "Ny: ";
-	cin >> ny;
-	cout << "Nz: ";
-	cin >> nz;
-	//and the size of the cells in each direction
-	cout << "Cell size x [m]: ";
-	cin >> deltax;
-	cout << "Cell size y [m]: ";
-	cin >> deltay;
-	cout << "Cell size z [m]: ";
-	cin >> deltaz;
-	//set the cell sizes and allocate memory for the mesh
-	Model.SetHorizontalCellSize(deltax, deltay, nx, ny);
-	Model.SetZCellSizes().resize(boost::extents[nz]);
-	fill_n(Model.SetZCellSizes().begin(), nz, deltaz);
-	Model.SetConductivities().resize(boost::extents[nx][ny][nz]);
-	//ask for a conductivity to fill the mesh with
-	double bg_conductivity = 1.0;
-	std::cout << "Background Conductivity: ";
-	std::cin >> bg_conductivity;
-	double phase1cond, phase2cond, phase1frac;
-	std::cout << "Conductivity Phase 1:";
-	std::cin >> phase1cond;
-	std::cout << "Conductivity Phase 2:";
-	std::cin >> phase2cond;
-	std::cout << "Fraction Phase 1: ";
-	std::cin >> phase1frac;
-	srand48(time(0));
-	double frequency;
-	std::cout << "Frequency: ";
-	std::cin >> frequency;
-	double posx, posy, posz = 0;
-	posx = (deltax * nx) / 2.0;
-	posy = (deltay * ny) / 2.0;
-	Model.SetFrequencies().assign(1, frequency);
-	Model.AddMeasurementPoint(posx, posy, posz);
+    jif3D::X3DModel Model;
+    size_t nx, ny, nz;
+    double deltax, deltay, deltaz;
+    //first find out the basic mesh parameters
+    //the number of cells in each coordinate direction
+    cout << "Number of cells Nx: ";
+    cin >> nx;
+    cout << "Number of cells Ny: ";
+    cin >> ny;
+    cout << "Number of cells Nz: ";
+    cin >> nz;
+    //and the size of the cells in each direction
+    cout << "Cell size x [m]: ";
+    cin >> deltax;
+    cout << "Cell size y [m]: ";
+    cin >> deltay;
+    cout << "Cell size z [m]: ";
+    cin >> deltaz;
+    //set the cell sizes and allocate memory for the mesh
+    Model.SetHorizontalCellSize(deltax, deltay, nx, ny);
+    Model.SetZCellSizes().resize(boost::extents[nz]);
+    fill_n(Model.SetZCellSizes().begin(), nz, deltaz);
+    Model.SetConductivities().resize(boost::extents[nx][ny][nz]);
+    //ask for a conductivity to fill the mesh with
+    double bg_conductivity = 1.0;
+    std::cout << "Background Conductivity [S/m] : ";
+    std::cin >> bg_conductivity;
+    double phase1cond, phase2cond, phase1frac;
+    std::cout << "Conductivity Phase 1 [S/m] : ";
+    std::cin >> phase1cond;
+    std::cout << "Conductivity Phase 2 [S/m] : ";
+    std::cin >> phase2cond;
+    std::cout << "Fraction Phase 1: ";
+    std::cin >> phase1frac;
+    srand48(time(0));
+    double frequency;
+    std::cout << "Frequency [Hz] : ";
+    std::cin >> frequency;
+    double posx, posy, posz = 0;
+    posx = (deltax * nx) / 2.0;
+    posy = (deltay * ny) / 2.0;
+    Model.SetFrequencies().assign(1, frequency);
+    Model.AddMeasurementPoint(posx, posy, posz);
 
-	//ask for a filename to write the mesh to
-	std::string OutFilename = jif3D::AskFilename("Outfile name: ", false);
-	//we set the calculation frequencies to a dummy value
-	//the forward modeling program asks for those anyway
+    //ask for a filename to write the mesh to
+    std::string OutFilename = jif3D::AskFilename("Outfile name: ", false);
+    //we set the calculation frequencies to a dummy value
+    //the forward modeling program asks for those anyway
 
-	//fill the background
-	std::vector<double> bg_thicknesses(Model.GetZCellSizes().size(), deltaz);
-	std::vector<double> bg_conductivities(Model.GetZCellSizes().size(),
-			bg_conductivity);
-	Model.SetBackgroundThicknesses(bg_thicknesses);
-	Model.SetBackgroundConductivities(bg_conductivities);
-	size_t nrealmax;
-	std::cout << "Realizations: ";
-	std::cin >> nrealmax;
+    //fill the background
+    std::vector<double> bg_thicknesses(Model.GetZCellSizes().size(), deltaz);
+    std::vector<double> bg_conductivities(Model.GetZCellSizes().size(), bg_conductivity);
+    Model.SetBackgroundThicknesses(bg_thicknesses);
+    Model.SetBackgroundConductivities(bg_conductivities);
+    size_t nrealmax;
+    std::cout << "Realizations: ";
+    std::cin >> nrealmax;
 
-	std::ofstream zxy("zxy.out");
-	std::ofstream zyx("zyx.out");
-	std::ofstream zxx("zxx.out");
-	std::ofstream zyy("zyy.out");
-	for (size_t nreal = 0; nreal < nrealmax; ++nreal)
-	{
-		std::cout << "Realization: " << nreal << std::endl;
-		for (size_t i = 0; i < nx; ++i)
-		{
-			for (size_t j = 0; j < ny; ++j)
-			{
-				Model.SetConductivities()[i][j][0] = bg_conductivity;
-				for (size_t k = 1; k < nz; ++k)
-				{
-					if (drand48() < phase1frac)
-					{
-						Model.SetConductivities()[i][j][k] = phase1cond;
-					}
-					else
-					{
-						Model.SetConductivities()[i][j][k] = phase2cond;
-					}
-				}
-			}
-		}
-		std::string realstring(jif3D::stringify(nreal));
-		Model.WriteNetCDF(OutFilename + realstring + ".nc");
-		jif3D::X3DMTCalculator Calculator;
-		jif3D::rvec Impedances(Calculator.Calculate(Model));
-		jif3D::WriteImpedancesToNetCDF(OutFilename + realstring + "_data.nc",
-				Model.GetFrequencies(), Model.GetMeasPosX(),
-				Model.GetMeasPosY(), Model.GetMeasPosZ(), Impedances);
-		jif3D::rvec Errors(Impedances.size(), 0.0);
-		jif3D::WriteImpedancesToMtt(OutFilename + realstring + "_data.nc",
-				Model.GetFrequencies(), Impedances, Errors);
-		Model.WriteVTK(OutFilename + realstring + ".vtk");
-		zxx << nreal << " " << Impedances(0) << " " << Impedances(1) << std::endl;
-		zxy << nreal << " " << Impedances(2) << " " << Impedances(3) << std::endl;
-		zyx << nreal << " " << Impedances(4) << " " << Impedances(5) << std::endl;
-		zyy << nreal << " " << Impedances(6) << " " << Impedances(7) << std::endl;
-	}
+    std::ofstream zxy((OutFilename + "_zxy.out").c_str());
+    std::ofstream zyx((OutFilename + "_zyx.out").c_str());
+    std::ofstream zxx((OutFilename + "_zxx.out").c_str());
+    std::ofstream zyy((OutFilename + "_zyy.out").c_str());
 
-}
+#pragma omp parallel for shared(Model, zxy, zyx, zxx, zyy)
+    for (size_t nreal = 0; nreal < nrealmax; ++nreal)
+      {
+        jif3D::X3DModel RealModel(Model);
+        std::cout << "Realization: " << nreal << std::endl;
+        for (size_t i = 0; i < nx; ++i)
+          {
+            for (size_t j = 0; j < ny; ++j)
+              {
+                RealModel.SetConductivities()[i][j][0] = bg_conductivity;
+                for (size_t k = 1; k < nz; ++k)
+                  {
+                    if (drand48() < phase1frac)
+                      {
+                        RealModel.SetConductivities()[i][j][k] = phase1cond;
+                      }
+                    else
+                      {
+                        RealModel.SetConductivities()[i][j][k] = phase2cond;
+                      }
+                  }
+              }
+          }
+        std::string realstring(jif3D::stringify(nreal));
+
+        jif3D::X3DMTCalculator Calculator;
+        jif3D::rvec Impedances(Calculator.Calculate(Model));
+        jif3D::rvec Errors(Impedances.size(), 0.0);
+#pragma omp critical(write_files)
+          {
+            RealModel.WriteNetCDF(OutFilename + realstring + ".nc");
+            RealModel.WriteVTK(OutFilename + realstring + ".vtk");
+            zxx << nreal << " " << Impedances(0) << " " << Impedances(1) << std::endl;
+            zxy << nreal << " " << Impedances(2) << " " << Impedances(3) << std::endl;
+            zyx << nreal << " " << Impedances(4) << " " << Impedances(5) << std::endl;
+            zyy << nreal << " " << Impedances(6) << " " << Impedances(7) << std::endl;
+          }
+      }
+
+  }
