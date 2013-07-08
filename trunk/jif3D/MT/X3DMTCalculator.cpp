@@ -15,6 +15,9 @@
 #include <boost/multi_array.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
 #include "../Global/FatalException.h"
 #include "../Global/convert.h"
 #include "../ModelBase/CellBoundaries.h"
@@ -115,7 +118,12 @@ namespace jif3D
     //perform parallel calculations
     std::string X3DMTCalculator::ObjectID()
       {
-        return std::string("p" + jif3D::stringify(getpid()) + jif3D::stringify(this));
+        //a unique ID created on construction
+        boost::uuids::uuid tag = boost::uuids::random_generator()();
+        //make a unique filename for the sensitivity file created by this object
+        //we use boost uuid to generate a unique identifier tag
+        //and translate it to a string to generate the filename
+        return "mt" + jif3D::stringify(getpid()) + jif3D::stringify(tag);
       }
 
     std::string X3DMTCalculator::MakeUniqueName(X3DModel::ProblemType Type,
