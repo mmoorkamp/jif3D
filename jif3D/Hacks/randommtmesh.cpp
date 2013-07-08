@@ -120,7 +120,7 @@ int main()
         std::string realstring(jif3D::stringify(nreal));
 
         jif3D::X3DMTCalculator Calculator;
-        jif3D::rvec Impedances(Calculator.Calculate(Model));
+        jif3D::rvec Impedances(Calculator.Calculate(RealModel));
         jif3D::rvec Errors(Impedances.size(), 0.0);
 #pragma omp critical(write_files)
           {
