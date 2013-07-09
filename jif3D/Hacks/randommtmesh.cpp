@@ -98,7 +98,6 @@ int main()
     for (size_t nreal = 0; nreal < nrealmax; ++nreal)
       {
         jif3D::X3DModel RealModel(Model);
-        std::cout << "Realization: " << nreal << std::endl;
         for (size_t i = 0; i < nx; ++i)
           {
             for (size_t j = 0; j < ny; ++j)
@@ -124,6 +123,7 @@ int main()
         jif3D::rvec Errors(Impedances.size(), 0.0);
 #pragma omp critical(write_files)
           {
+            std::cout << "Realization: " << nreal << std::endl;
             RealModel.WriteNetCDF(OutFilename + realstring + ".nc");
             RealModel.WriteVTK(OutFilename + realstring + ".vtk");
             zxx << nreal << " " << Impedances(0) << " " << Impedances(1) << std::endl;
