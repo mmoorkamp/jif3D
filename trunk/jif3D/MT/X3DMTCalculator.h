@@ -45,6 +45,8 @@ namespace jif3D
       //! This type definition is necessary so that ThreeDModelObjective can correctly deduce the native type for a model object for this class
       typedef X3DModel ModelType;
     private:
+      //! The start of the names for files and directories created by this object
+      std::string NameRoot;
       //! Remove all files created for running x3d
       void CleanUp();
       //! Make a unique string identifier for this object, basis for MakeUniqueName
