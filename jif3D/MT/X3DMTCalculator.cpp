@@ -69,7 +69,6 @@ namespace jif3D
 
     void X3DMTCalculator::CleanUp()
       {
-        std::string NameRoot(ObjectID());
         fs::directory_iterator end_itr; // default construction yields past-the-end
         //go through the directory and delete any file that starts with NameRoot
         for (fs::directory_iterator itr(fs::current_path()); itr != end_itr; ++itr)
@@ -83,6 +82,7 @@ namespace jif3D
 
     X3DMTCalculator::X3DMTCalculator(boost::filesystem::path TDir)
       {
+        NameRoot = ObjectID();
         if (!fs::is_directory(TDir))
           throw FatalException("TDir is not a directory: " + TDir.string());
         TempDir = TDir;
@@ -131,7 +131,7 @@ namespace jif3D
       {
         //we assemble the name from the id of the process
         //and the address of the current object
-        std::string result(ObjectID());
+        std::string result(NameRoot);
         //the type of calculation
         result += Extension.find(Type)->second;
         //and the frequency index
