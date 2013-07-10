@@ -9,7 +9,9 @@
 #include <fstream>
 #include <string>
 #include <cmath>
+#ifdef HAVEOPENMP
 #include <omp.h>
+#endif
 #include <boost/program_options.hpp>
 #include "../Global/convert.h"
 #include "../Global/FatalException.h"
@@ -59,12 +61,12 @@ int main(int argc, char *argv[])
         std::cout << desc << "\n";
         return 1;
       }
-
+#ifdef HAVEOPENMP
     if (vm.count("threads"))
       {
         omp_set_num_threads(vm["threads"].as<int>());
       }
-
+#endif
     jif3D::rvec CovModVec;
     if (vm.count("covmod"))
       {

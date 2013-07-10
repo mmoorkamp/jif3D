@@ -9,7 +9,9 @@
 #include <fstream>
 #include <string>
 #include <cmath>
+#ifdef HAVEOPENMP
 #include <omp.h>
+#endif
 #include <boost/program_options.hpp>
 #include <boost/program_options/config.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -169,10 +171,12 @@ int main(int argc, char *argv[])
       {
         WaveletParm = true;
       }
+#ifdef HAVEOPENMP
     if (vm.count("threads"))
       {
         omp_set_num_threads(vm["threads"].as<int>());
       }
+#endif
     //some objects accept a directory name as a path to store temporary files
     //we check that this directory actually exists to avoid double checking
     //and early detection of problems

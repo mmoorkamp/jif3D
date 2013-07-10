@@ -10,7 +10,9 @@
 #include <fstream>
 #include <iomanip>
 #include <map>
+#ifdef HAVEOPENMP
 #include <omp.h>
+#endif
 #include <boost/assign/list_of.hpp> // for 'map_list_of()'
 #include <boost/multi_array.hpp>
 #include <boost/filesystem/operations.hpp>
@@ -177,7 +179,6 @@ namespace jif3D
 
     rvec X3DMTCalculator::CalculateFrequency(const X3DModel &Model, size_t freqindex)
       {
-
         const size_t nmeas = Model.GetMeasPosX().size();
         const size_t nmodx = Model.GetXCoordinates().size();
         const size_t nmody = Model.GetYCoordinates().size();
@@ -311,9 +312,10 @@ namespace jif3D
         std::partial_sum(Model.GetBackgroundThicknesses().begin(),
             Model.GetBackgroundThicknesses().end(), BGDepths.begin());
         CompareDepths(BGDepths, Model.GetZCoordinates());
-
+#ifdef HAVEOPENMP
         omp_lock_t lck;
         omp_init_lock(&lck);
+#endif
         //we parallelize by frequency, this is relatively simple
         //but we can use up to 20 processors for typical MT problems
         // as we do not have the source for x3d, this is our only possibility anyway
@@ -328,10 +330,14 @@ namespace jif3D
               {
                 rvec freqresult = CalculateFrequency(Model, i);
                 size_t startindex = nmeas * i * 8;
+#ifdef HAVEOPENMP
                 omp_set_lock(&lck);
+#endif
                 std::copy(freqresult.begin(), freqresult.end(),
                     result.begin() + startindex);
+#ifdef HAVEOPENMP
                 omp_unset_lock(&lck);
+#endif
               } catch (...)
               {
                 FatalError = true;
@@ -339,7 +345,9 @@ namespace jif3D
               }
             //finished with one frequency
           }
+#ifdef HAVEOPENMP
         omp_destroy_lock(&lck);
+#endif
         //we cannot throw from within the openmp section so if there was an exception
         //inside the parallel region we set FatalErrror to true and throw a new exception here
         if (FatalError)
@@ -647,9 +655,10 @@ namespace jif3D
         Model.GetXCoordinates();
         Model.GetYCoordinates();
         Model.GetZCoordinates();
-
+#ifdef HAVEOPENMP
         omp_lock_t lck;
         omp_init_lock(&lck);
+#endif
         //we parallelize the gradient calculation by frequency
         //see also the comments for the forward calculation
         //here the explicitly shared variable is Gradient
@@ -660,9 +669,13 @@ namespace jif3D
             try
               {
                 rvec tmp = LQDerivativeFreq(Model, Misfit, i);
+#ifdef HAVEOPENMP
                 omp_set_lock(&lck);
+#endif
                 Gradient += tmp;
+#ifdef HAVEOPENMP
                 omp_unset_lock(&lck);
+#endif
               } catch (...)
               {
                 //we cannot throw exceptions that leave the parallel region
@@ -672,7 +685,9 @@ namespace jif3D
               }
             //finished with one frequency
           }
+#ifdef HAVEOPENMP
         omp_destroy_lock(&lck);
+#endif
         if (FatalError)
           throw jif3D::FatalException("Problem in MT gradient calculation.");
 

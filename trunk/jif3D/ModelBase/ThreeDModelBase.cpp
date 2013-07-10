@@ -20,17 +20,20 @@ namespace jif3D
             true), ZCellSizesChanged(true), Data(), XCellSizes(), YCellSizes(), ZCellSizes(), GridXCoordinates(), GridYCoordinates(), GridZCoordinates(), XOrigin(
             0.0), YOrigin(0.0), ZOrigin(0.0)
       {
+#ifdef HAVEOPENMP
         omp_init_lock(&lck_model_xcoord);
         omp_init_lock(&lck_model_ycoord);
         omp_init_lock(&lck_model_zcoord);
-
+#endif
       }
 
     ThreeDModelBase::~ThreeDModelBase()
       {
+#ifdef HAVEOPENMP
         omp_destroy_lock(&lck_model_xcoord);
         omp_destroy_lock(&lck_model_ycoord);
         omp_destroy_lock(&lck_model_zcoord);
+#endif
       }
 
     //when we copy a model we always set the cell size change flags to true
@@ -47,9 +50,11 @@ namespace jif3D
         //each object needs its own lock for openmp
         //so we do not copy the value from the source object
         //but we reinitialize
+#ifdef HAVEOPENMP
         omp_init_lock(&lck_model_xcoord);
         omp_init_lock(&lck_model_ycoord);
         omp_init_lock(&lck_model_zcoord);
+#endif
       }
 
     ThreeDModelBase& ThreeDModelBase::operator=(const ThreeDModelBase& source)

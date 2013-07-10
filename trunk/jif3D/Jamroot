@@ -3,15 +3,16 @@ project
         <include>/usr/local/cuda/include
         <include>/usr/local/CUDA_SDK/C/common/inc
         <threading>multi 
-        <define>BIND_FORTRAN_LOWERCASE_UNDERSCORE 
+        <define>BIND_FORTRAN_LOWERCASE_UNDERSCORE
+        <define>HAVEOPENMP 
     	<variant>release:<define>NDEBUG
     	<variant>profile:<define>NDEBUG  
     	<toolset>gcc<variant>debug:<cflags>" -ggdb3"
     	#<toolset>gcc:<cflags>" -ansi  -Wall -Wextra  -Wno-long-long -Wno-unused-parameter  -pedantic"
     	#<toolset>gcc:<cflags>"`pkg-config --cflags hpx_application`"
-    	<toolset>gcc:<cflags>" -fopenmp  -std=c++0x "
+    	<toolset>gcc:<cflags>" -fopenmp -std=c++0x "
     	#<toolset>gcc:<linkflags>"  `pkg-config --libs hpx_application` "
-    	<toolset>gcc:<linkflags>"  -fopenmp "
+    	<toolset>gcc:<linkflags>" -fopenmp  "
     	<toolset>intel:<cxxflags>" -openmp  -std=c++0x -prof-gen=srcpos"
     	<toolset>intel:<define>TESTR
     	<toolset>intel:<linkflags>" -openmp   "
@@ -37,7 +38,7 @@ use-project /ModelBase : ModelBase ;
 use-project /Profiling : Profiling ;
 use-project /Inversion : Inversion ;
 use-project /Joint : Joint ;
-use-project /hpxtest : hpxtest ;
+#use-project /hpxtest : hpxtest ;
 use-project /ModelTransforms : ModelTransforms ;
 
 local BOOST_TEST_LOG_LEVEL = all ;

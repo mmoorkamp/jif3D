@@ -1,4 +1,6 @@
+#ifdef HAVEOPENMP
 #include <omp.h>
+#endif
 #include <iostream>
 #include <fstream>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -91,6 +93,7 @@ int main(int ac, char* av[])
     else
       {
         filename = "cpu_";
+#ifdef HAVEOPENMP
         if (vm.count("threads"))
           {
             omp_set_num_threads(vm["threads"].as<int>());
@@ -100,6 +103,7 @@ int main(int ac, char* av[])
           {
             filename += jif3D::stringify(omp_get_max_threads());
           }
+#endif
       }
 
 
