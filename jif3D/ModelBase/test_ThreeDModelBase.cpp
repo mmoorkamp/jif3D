@@ -14,7 +14,6 @@
 #include <boost/test/included/unit_test.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 #include <numeric>
-#include <omp.h>
 #include "../Gravity/test_common.h"
 #include "../Gravity/ThreeDGravityModel.h"
 #include "EqualGeometry.h"
