@@ -5,8 +5,9 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-
 #include "MTEquations.h"
+#include "../Global/convert.h"
+#include "../Global/FatalException.h"
 
 namespace jif3D
   {
@@ -24,12 +25,12 @@ namespace jif3D
      * @param Zyx The yx element of the impedance in S.I. units
      * @param Zyy The yy element of the impedance in S.I. units
      */
-    void FieldsToImpedance(const std::complex<double> &Ex1, const std::complex<
-        double> &Ex2, const std::complex<double> &Ey1, const std::complex<
-        double> &Ey2, const std::complex<double> &Hx1, const std::complex<
-        double> &Hx2, const std::complex<double> &Hy1, const std::complex<
-        double> &Hy2, std::complex<double> &Zxx, std::complex<double> &Zxy,
-        std::complex<double> &Zyx, std::complex<double> &Zyy)
+    void FieldsToImpedance(const std::complex<double> &Ex1,
+        const std::complex<double> &Ex2, const std::complex<double> &Ey1,
+        const std::complex<double> &Ey2, const std::complex<double> &Hx1,
+        const std::complex<double> &Hx2, const std::complex<double> &Hy1,
+        const std::complex<double> &Hy2, std::complex<double> &Zxx,
+        std::complex<double> &Zxy, std::complex<double> &Zyx, std::complex<double> &Zyy)
       {
         const std::complex<double> magdet(Hx1 * Hy2 - Hy1 * Hx2);
         Zxx = (Ex1 * Hy2 - Hy1 * Ex2) / magdet;
@@ -50,4 +51,63 @@ namespace jif3D
         std::complex<double> omegamu = std::complex<double>(0.0, twopimu * frequency);
         return sqrt(omegamu / conductivity);
       }
+
+    /*! Rotate the impedance elements by the given angle in radian, the input variables
+     * will contain the rotated values;
+     * @param angle Rotation angle clockwise from north in radian
+     * @param Zxx Zxx element of the impedance tensor
+     * @param Zxy Zxy element of the impedance tensor
+     * @param Zyx Zyx element of the impedance tensor
+     * @param Zyy Zyy element of the impedance tensor
+     */
+    void RotateImpedance(const double angle, std::complex<double> & Zxx,
+        std::complex<double> &Zxy, std::complex<double> &Zyx, std::complex<double> &Zyy)
+      {
+        std::complex<double> newxx, newxy, newyx, newyy;
+        const double cangle = cos(angle);
+        const double sangle = sin(angle);
+        newxx = Zxx * cangle * cangle + (Zxy + Zyx) * sangle * cangle
+            + Zyy * sangle * sangle;
+        newxy = Zxy * cangle * cangle - (Zxx - Zyy) * sangle * cangle
+            - Zyx * sangle * sangle;
+        newyx = Zyx * cangle * cangle - (Zxx - Zyy) * sangle * cangle
+            - Zxy * sangle * sangle;
+        newyy = Zyy * cangle * cangle - (Zxy + Zyx) * sangle * cangle
+            + Zxx * sangle * sangle;
+        Zxx = newxx;
+        Zxy = newxy;
+        Zyx = newyx;
+        Zyy = newyy;
+      }
+
+    jif3D::rvec RotateImpedanceVector(const double angle, const jif3D::rvec &Impedance)
+      {
+        jif3D::rvec Result(Impedance.size());
+        const size_t nelem = 8;
+        if (Impedance.size() % nelem != 0)
+          {
+            throw jif3D::FatalException(
+                "Size of impedance vector: " + stringify(Impedance.size())
+                    + " is not a multiple of 8!");
+          }
+        const size_t ntensors = Impedance.size() / nelem;
+        for (size_t i = 0; i < ntensors; ++i)
+          {
+            std::complex<double> Zxx(Impedance(i * nelem), Impedance(i * nelem + 1));
+            std::complex<double> Zxy(Impedance(i * nelem + 2), Impedance(i * nelem + 3));
+            std::complex<double> Zyx(Impedance(i * nelem + 4), Impedance(i * nelem + 5));
+            std::complex<double> Zyy(Impedance(i * nelem + 6), Impedance(i * nelem + 7));
+            RotateImpedance(angle, Zxx, Zxy, Zyx, Zyy);
+            Result(i * nelem) = Zxx.real();
+            Result(i * nelem + 1) = Zxx.imag();
+            Result(i * nelem + 2) = Zxy.real();
+            Result(i * nelem + 3) = Zxy.imag();
+            Result(i * nelem + 4) = Zyx.real();
+            Result(i * nelem + 5) = Zyx.imag();
+            Result(i * nelem + 6) = Zyy.real();
+            Result(i * nelem + 7) = Zyy.imag();
+          }
+        return Result;
+      }
+
   }
