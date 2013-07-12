@@ -47,7 +47,7 @@ namespace jif3D
           {
             const double error = std::max(std::abs(Data(i)) * relerror,
                 abserror);
-            //construct a gaussian distributiuon based on mean and standard deviation
+            //construct a Gaussian distribution based on mean and standard deviation
             boost::normal_distribution<> noise_dist(Data(i), error);
             boost::variate_generator<boost::lagged_fibonacci607&,
                 boost::normal_distribution<> > noise(generator, noise_dist);
@@ -99,7 +99,7 @@ namespace jif3D
         jif3D::rvec DataError(ndata);
         const size_t ntensorelem = 8;
         assert((Data.size() % ntensorelem) == 0);
-        const size_t ntensor = ndata / 8;
+        const size_t ntensor = ndata / ntensorelem;
         for (size_t i = 0; i < ntensor; ++i)
           {
             //find the maximum tensor element

@@ -5,7 +5,7 @@ lib mt : B_epol1.for B_hpol.for ReadWriteX3D.cpp ReadWriteImpedances.cpp
          ThreeDMTModel.cpp X3DModel.cpp MTEquations.cpp 
          MT3DCalculator.cpp X3DMTCalculator.cpp
          OneDMTCalculator.cpp InterpolateField.cpp
-         MT2DForward.cpp
+         MT2DForward.cpp MTCovar.cpp
          ..//ModelBase  ..//boost_filesystem ..//boost_system ;
 
 
@@ -17,6 +17,7 @@ unit-test InterpolateFields_test : test_InterpolateFields.cpp   mt  ..//ModelBas
 #unit-test X3DObjective_test : test_X3DObjective.cpp mt  ..//ModelBase ..//Inversion ..//boost_filesystem ..//boost_system : <include>. ;
 unit-test OneDMTCalculator_test : test_OneDMTCalculator.cpp mt  ..//ModelBase ..//Inversion ..//boost_filesystem ..//boost_system : <include>. ;
 unit-test ReadWriteImpedances_test : test_ReadWriteImpedances.cpp mt  ..//ModelBase ..//Inversion ..//boost_filesystem ..//boost_system : <include>. ;
+unit-test MTCovar_test : test_MTCovar.cpp mt  ..//ModelBase  : <include>. ;
 
 exe mtforward : mtforward.cpp mt  ..//ModelBase  ..//boost_filesystem ..//boost_system : <include>. ;
 exe makemtmesh : makemtmesh.cpp mt  ..//ModelBase  ..//boost_filesystem ..//boost_system : <include>. ;
