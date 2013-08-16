@@ -17,6 +17,7 @@
 #include "../MT/MTEquations.h"
 #include "../MT/MTCovar.h"
 #include "../Inversion/MatrixTools.h"
+#include "../ModelBase/VTKTools.h"
 
 int main()
   {
@@ -37,26 +38,39 @@ int main()
     jif3D::comp_mat InvCov(Errors.size(), Errors.size());
     for (size_t i = 0; i < ntensor; ++i)
       {
-        jif3D::covmat CovOrig(4, 4);
-        CovOrig(0, 0) = Errors(i * nelem);
-        CovOrig(1, 1) = Errors(i * nelem + 2);
-        CovOrig(2, 2) = Errors(i * nelem + 4);
-        CovOrig(3, 3) = Errors(i * nelem + 6);
-        jif3D::covmat RotCov = jif3D::RotateMTCovar(rangle, CovOrig);
-        jif3D::rmat InvCovLocal(RotCov.size1(), RotCov.size2());
-        jif3D::InvertMatrix(RotCov, InvCovLocal);
+        jif3D::rmat InvCovOrig(4, 4);
+        InvCovOrig(0, 0) = pow(1.0 / Errors(i * nelem), 2);
+        InvCovOrig(1, 1) = pow(1.0 / Errors(i * nelem + 2), 2);
+        InvCovOrig(2, 2) = pow(1.0 / Errors(i * nelem + 4), 2);
+        InvCovOrig(3, 3) = pow(1.0 / Errors(i * nelem + 6), 2);
+        jif3D::rmat RotInvCov = jif3D::RotateMTInvCovar(rangle, InvCovOrig);
+
         for (size_t j = 0; j < 4; ++j)
           {
             for (size_t k = 0; k < 4; ++k)
               {
-                InvCov(i * nelem + j * 2, i * nelem + k * 2) = InvCovLocal(j, k);
-                InvCov(i * nelem + j * 2 + 1, i * nelem + k * 2 + 1) = InvCovLocal(j, k);
+                InvCov(i * nelem + j * 2, i * nelem + k * 2) = RotInvCov(j, k);
+                InvCov(i * nelem + j * 2 + 1, i * nelem + k * 2 + 1) = RotInvCov(j, k);
               }
           }
-
       }
+
+    double MeanX = std::accumulate(StatX.begin(), StatX.end(), 0.0) / StatX.size();
+    double MeanY = std::accumulate(StatY.begin(), StatY.end(), 0.0) / StatY.size();
+    for (size_t i = 0; i < StatX.size(); ++i)
+      {
+        double newx = MeanX + (StatX.at(i) - MeanX) * cos(rangle)
+            - (StatY.at(i) - MeanY) * sin(rangle);
+        double newy = MeanY + (StatX.at(i) - MeanX) * sin(rangle)
+            + (StatY.at(i) - MeanY) * cos(rangle);
+        StatX.at(i) = newx;
+        StatY.at(i) = newy;
+      }
+
     jif3D::WriteSparseMatrixToNetcdf(ncfilename + "_invcov.nc", InvCov, "InvCovariance");
     jif3D::WriteImpedancesToNetCDF(ncfilename + "_rot.nc", Frequencies, StatX, StatY,
         StatZ, RotImp, Errors);
 
+    jif3D::Write3DDataToVTK(ncfilename + "_rot.statpos.vtk", "Station",
+        jif3D::rvec(ntensor, 1.0), StatX, StatY, StatZ);
   }
