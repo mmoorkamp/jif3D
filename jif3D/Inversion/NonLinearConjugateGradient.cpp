@@ -16,7 +16,7 @@ namespace jif3D
 
     NonLinearConjugateGradient::NonLinearConjugateGradient(boost::shared_ptr<
         jif3D::ObjectiveFunction> ObjFunction) :
-      GradientBasedOptimization(ObjFunction), OldGradient(), OldDirection(),
+      GradientBasedOptimization(ObjFunction), OldGradient(), OldDirection(), gamma(1.0),
           OldOmega(1.0), mu(1.0)
       {
 
@@ -83,7 +83,8 @@ namespace jif3D
             CovGrad *= -1.0;
             OldGradient.resize(0);
             status = OPTPP::mcsrch(&GetObjective(), CovGrad, RawGrad,
-                CurrentModel, Misfit, &mu, 20, 1e-4, 2.2e-16, 0.1, 1e9, 1e-9);
+                CurrentModel,
+                Misfit, &mu, 20, 1e-4, 2.2e-16, 0.1, 1e9, 1e-9);
           }
         CurrentModel += mu * SearchDir;
         //the line search already calculated the new gradient
