@@ -1,8 +1,8 @@
-#include <cutil.h>
-#include <cutil_inline.h>
+
 #include <stdio.h>
 #include "gravcuda_kernel.cu"
 #include "ftgcuda_kernel.cu"
+#include "../Global/CudaError.h"
 
 // Free all the memory allocated on the GPU
 extern "C"
@@ -16,7 +16,6 @@ void  FreeData(double **d_xcoord, double **d_ycoord, double **d_zcoord,
       CUDA_SAFE_CALL(cudaFree(*d_ysize));
       CUDA_SAFE_CALL(cudaFree(*d_zsize));
       CUDA_SAFE_CALL(cudaFree(*d_result));
-      CUT_CHECK_ERROR("Kernel execution failed");
       *d_xcoord = NULL;
       *d_ycoord = NULL;
       *d_zcoord = NULL;
@@ -45,7 +44,7 @@ void  PrepareData(double **d_xcoord, double **d_ycoord, double **d_zcoord,
       //initialize the device and perform basic checks
       // we always use the first device
       int deviceCount;
-      cutilSafeCallNoSync(cudaGetDeviceCount(&deviceCount));
+      CUDA_SAFE_CALL(cudaGetDeviceCount(&deviceCount));
       if (deviceCount == 0)
         {
           fprintf(stderr, "CUTIL CUDA error: no devices supporting CUDA.\n");
@@ -96,7 +95,6 @@ void  PrepareData(double **d_xcoord, double **d_ycoord, double **d_zcoord,
               cudaMemcpyHostToDevice));
       CUDA_SAFE_CALL(cudaMemcpy(*d_zsize, zsize, zmem_size,
               cudaMemcpyHostToDevice));
-      cutilCheckMsg("Allocation or memory copy failed");
     }
 
 /* Calculate the sensitivities for scalar gravity data for a single measurement position
@@ -121,11 +119,8 @@ void  SingleScalarMeas(const double x_meas, const double y_meas,
       CalcScalarMeas<<< grid, threads >>>(x_meas, y_meas, z_meas, d_xcoord, d_ycoord, d_zcoord,
           d_xsize, d_ysize, d_zsize, nx, ny,
           nz, d_result);
-      cutilCheckMsg("Kernel execution failed");
       CUDA_SAFE_CALL(cudaMemcpy(returnvalue, d_result, nelements * sizeof(double),
               cudaMemcpyDeviceToHost));
-
-      CUT_CHECK_ERROR("Result copy failed");
     }
 
 /* Calculate the sensitivities for scalar gravity data for a single measurement position
@@ -153,14 +148,12 @@ void  SingleFTGMeas(const double x_meas, const double y_meas,
       CalcUxxMeas<<< grid, threads >>>(x_meas, y_meas, z_meas, d_xcoord, d_ycoord, d_zcoord,
           d_xsize, d_ysize, d_zsize, nx, ny,
           nz, d_result);
-      cutilCheckMsg("Kernel execution failed for Uxx");
       CUDA_SAFE_CALL(cudaMemcpy(returnvalue, d_result, mem_elements,
               cudaMemcpyDeviceToHost));
 
       CalcUxyMeas<<< grid, threads >>>(x_meas, y_meas, z_meas, d_xcoord, d_ycoord, d_zcoord,
           d_xsize, d_ysize, d_zsize, nx, ny,
           nz, d_result);
-      cutilCheckMsg("Kernel execution failed for Uxy");
       CUDA_SAFE_CALL(cudaMemcpy(returnvalue + nelements, d_result, mem_elements,
               cudaMemcpyDeviceToHost));
 
@@ -168,7 +161,6 @@ void  SingleFTGMeas(const double x_meas, const double y_meas,
       CalcUxzMeas<<< grid, threads >>>(x_meas, y_meas, z_meas, d_xcoord, d_ycoord, d_zcoord,
           d_xsize, d_ysize, d_zsize, nx, ny,
           nz, d_result);
-      cutilCheckMsg("Kernel execution failed for Uxz");
       CUDA_SAFE_CALL(cudaMemcpy(returnvalue + 2*nelements, d_result, mem_elements,
               cudaMemcpyDeviceToHost));
 
@@ -176,7 +168,6 @@ void  SingleFTGMeas(const double x_meas, const double y_meas,
       CalcUyyMeas<<< grid, threads >>>(x_meas, y_meas, z_meas, d_xcoord, d_ycoord, d_zcoord,
                 d_xsize, d_ysize, d_zsize, nx, ny,
                 nz, d_result);
-      cutilCheckMsg("Kernel execution failed for Uyy");
       CUDA_SAFE_CALL(cudaMemcpy(returnvalue + 3* nelements, d_result, mem_elements,
               cudaMemcpyDeviceToHost));
 
@@ -184,7 +175,6 @@ void  SingleFTGMeas(const double x_meas, const double y_meas,
       CalcUyzMeas<<< grid, threads >>>(x_meas, y_meas, z_meas, d_xcoord, d_ycoord, d_zcoord,
                 d_xsize, d_ysize, d_zsize, nx, ny,
                 nz, d_result);
-      cutilCheckMsg("Kernel execution failed for Uyz");
       CUDA_SAFE_CALL(cudaMemcpy(returnvalue + 4*nelements, d_result, mem_elements,
               cudaMemcpyDeviceToHost));
 
@@ -192,9 +182,7 @@ void  SingleFTGMeas(const double x_meas, const double y_meas,
       CalcUzzMeas<<< grid, threads >>>(x_meas, y_meas, z_meas, d_xcoord, d_ycoord, d_zcoord,
                 d_xsize, d_ysize, d_zsize, nx, ny,
                 nz, d_result);
-      cutilCheckMsg("Kernel execution failed for Uzz");
       CUDA_SAFE_CALL(cudaMemcpy(returnvalue + 5* nelements, d_result, mem_elements,
               cudaMemcpyDeviceToHost));
 
-      CUT_CHECK_ERROR("Result copy failed");
     }
