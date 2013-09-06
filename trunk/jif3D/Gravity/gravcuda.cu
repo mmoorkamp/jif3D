@@ -47,10 +47,20 @@ void  PrepareData(double **d_xcoord, double **d_ycoord, double **d_zcoord,
       CUDA_SAFE_CALL(cudaGetDeviceCount(&deviceCount));
       if (deviceCount == 0)
         {
-          fprintf(stderr, "CUTIL CUDA error: no devices supporting CUDA.\n");
+          fprintf(stderr, "No devices supporting CUDA.\n");
           exit(-1);
         }
       int dev = 0;
+      while (cudaSetDevice(dev) == cudaErrorDeviceAlreadyInUse && dev <  deviceCount)
+        {
+          ++dev;
+        }
+      
+      if (dev == deviceCount)
+        {
+          fprintf(stderr, "No Device Currently available");
+          exit(-1);
+        }
       cudaDeviceProp deviceProp;
       cudaGetDeviceProperties(&deviceProp, dev);
       if (deviceProp.major < 1 || deviceProp.major == 9999 )
@@ -64,8 +74,7 @@ void  PrepareData(double **d_xcoord, double **d_ycoord, double **d_zcoord,
           fprintf(stderr, "Cutil error: Device does not support double precision.\n");
           exit(-1);
         }
-
-      cudaSetDevice(dev);
+      
       cudaGetLastError();
       //determine the memory requirements in bytes
       size_t xmem_size = sizeof(double) * nx;
