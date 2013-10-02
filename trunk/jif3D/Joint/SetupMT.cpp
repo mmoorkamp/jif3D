@@ -31,7 +31,10 @@ namespace jif3D
         po::options_description desc("MT options");
         desc.add_options()("mtrelerr", po::value(&relerr)->default_value(0.02),
             "The relative error for the MT data")("mtfine", po::value(&FineModelName),
-            "The name for the model with the MT forward geometry")("mtinvcovar","Inverse covariance matrix to use in MT misfit calculation.");
+            "The name for the model with the MT forward geometry")("mtinvcovar",
+            po::value<std::string>(&MTInvCovarName),
+            "Inverse covariance matrix to use in MT misfit calculation.")("inderrors",
+            "Use the individual errors for each element instead of the same for all elements");
         return desc;
       }
 
@@ -104,22 +107,29 @@ namespace jif3D
             MTObjective->SetCoarseModelGeometry(MTModel);
             MTObjective->SetObservedData(MTData);
             if (vm.count("mtinvcovar"))
-            {
-            	comp_mat InvCov;
-            	std::string InvCovFilename = vm["mtinvcovar"].as<std::string>();
-            	ReadSparseMatrixFromNetcdf(InvCovFilename,InvCov,"InvCovariance");
-            	MTObjective->SetInvCovMat(InvCov);
-            }
+              {
+                comp_mat InvCov(MTData.size(), MTData.size());
+                ReadSparseMatrixFromNetcdf(MTInvCovarName, InvCov, "InvCovariance");
+                MTObjective->SetInvCovMat(InvCov);
+              }
             else
-            {
-            	jif3D::rvec MinErr(jif3D::ConstructMTError(MTData, relerr));
-            	for (size_t i = 0; i < MTError.size(); ++i)
-            	    {
-            	       MTError(i) = std::max(MTError(i), MinErr(i));
-            	    }
-            	  MTObjective->SetDataError(MTError);
-            }
-                        //add the MT part to the JointObjective that will be used
+              {
+                jif3D::rvec MinErr(MTError.size());
+                if (vm.count("inderrors"))
+                  {
+                    MinErr = jif3D::ConstructError(MTData, relerr);
+                  }
+                else
+                  {
+                    MinErr = jif3D::ConstructMTError(MTData, relerr);
+                  }
+                for (size_t i = 0; i < MTError.size(); ++i)
+                  {
+                    MTError(i) = std::max(MTError(i), MinErr(i));
+                  }
+                MTObjective->SetDataError(MTError);
+              }
+            //add the MT part to the JointObjective that will be used
             //for the inversion
             Objective.AddObjective(MTObjective, Transform, mtlambda, "MT");
             //output some information to the screen

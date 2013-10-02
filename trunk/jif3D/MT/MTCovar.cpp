@@ -10,19 +10,20 @@
 namespace jif3D
   {
 
-    covmat RotateMTCovar(double angle, const covmat &Cov)
+    rmat RotateMTCovar(double angle, const rmat &InvCov, bool Inv)
       {
+        using boost::numeric::ublas::prec_prod;
         const size_t nelem = 4;
-        if (Cov.size1() != nelem || Cov.size2() != nelem)
+        if (InvCov.size1() != nelem || InvCov.size2() != nelem)
           {
             throw FatalException(
                 "Covariance matrix does not have correct size for rotation");
           }
-        covmat Result(Cov.size1(), Cov.size2());
+        rmat Result(InvCov.size1(), InvCov.size2());
         const double cangle = cos(angle);
         const double sangle = sin(angle);
 
-        jif3D::rmat P(Cov.size1(), Cov.size2());
+        jif3D::rmat P(InvCov.size1(), InvCov.size2());
         P(0, 0) = cangle * cangle;
         P(0, 1) = cangle * sangle;
         P(0, 2) = P(0, 1);
@@ -39,8 +40,17 @@ namespace jif3D
         P(3, 1) = -P(0, 1);
         P(3, 2) = -P(0, 1);
         P(3, 3) = P(0, 0);
-        jif3D::rmat temp = boost::numeric::ublas::prec_prod(Cov, P);
-        Result = boost::numeric::ublas::prec_prod(trans(P), temp);
+
+        if (Inv)
+          {
+            jif3D::rmat temp = prec_prod(InvCov, trans(P));
+            Result = prec_prod(P, temp);
+          }
+        else
+          {
+            jif3D::rmat temp = prec_prod(InvCov, P);
+            Result = prec_prod(trans(P), temp);
+          }
         return Result;
       }
 

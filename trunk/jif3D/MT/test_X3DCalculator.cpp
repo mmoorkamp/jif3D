@@ -85,7 +85,6 @@ BOOST_AUTO_TEST_SUITE( X3DCalculator_Suite )
         const double deltax = 100.0;
         const double deltay = 100.0;
         const double deltaz = 100.0;
-        const double bg_thick = 500.0;
         const double Period = 0.1;
         const double bg_cond = 0.1;
         const double anom_cond = 1.0;
@@ -168,21 +167,17 @@ BOOST_AUTO_TEST_SUITE( X3DCalculator_Suite )
             std::complex<double> Ex(Forward2D.GetEx_real()[0][i][0],
                 Forward2D.GetEx_imag()[0][i][0]);
             std::complex<double> Zxy(Ex / Hy);
-            BOOST_CHECK_CLOSE(Zxy.real(), Imp3DProfile((i - 1) * 8 + 2), 1.0);
-            BOOST_CHECK_CLOSE(Zxy.imag(), Imp3DProfile((i - 1) * 8 + 3), 1.0);
-            BOOST_CHECK_CLOSE(Zyx.real(), Imp3DProfile((i - 1) * 8 + 4), 1.0);
-            BOOST_CHECK_CLOSE(Zyx.imag(), Imp3DProfile((i - 1) * 8 + 5), 1.0);
-            Imp3DProfile((i-1) * 8 + 2) = Zxy.real();
-            Imp3DProfile((i-1) * 8 + 3) = Zxy.imag();
-            Imp3DProfile((i-1) * 8 + 4) = Zyx.real();
-            Imp3DProfile((i-1) * 8 + 5) = Zyx.imag();
-            BOOST_CHECK(fabs(Imp3DProfile((i-1) * 8 + 0) / Imp3DProfile((i-1) * 8 + 2)) < 1e-3);
-            BOOST_CHECK(fabs(Imp3DProfile((i-1) * 8 + 1) / Imp3DProfile((i-1) * 8 + 3)) < 1e-3);
-            BOOST_CHECK(fabs(Imp3DProfile((i-1) * 8 + 6) / Imp3DProfile((i-1) * 8 + 4)) < 1e-3);
-            BOOST_CHECK(fabs(Imp3DProfile((i-1) * 8 + 7) / Imp3DProfile((i-1) * 8 + 5)) < 1e-3);
+            BOOST_CHECK_CLOSE(Zxy.real(), Imp3DProfile((i - 1) * 8 + 2), 2.0);
+            BOOST_CHECK_CLOSE(Zxy.imag(), Imp3DProfile((i - 1) * 8 + 3), 2.0);
+            BOOST_CHECK_CLOSE(Zyx.real(), Imp3DProfile((i - 1) * 8 + 4), 2.0);
+            BOOST_CHECK_CLOSE(Zyx.imag(), Imp3DProfile((i - 1) * 8 + 5), 2.0);
+
+            BOOST_CHECK(fabs(Imp3DProfile((i - 1) * 8 + 0) / Zxy.real()) < 1e-3);
+            BOOST_CHECK(fabs(Imp3DProfile((i - 1) * 8 + 1) / Zxy.imag()) < 1e-3);
+            BOOST_CHECK(fabs(Imp3DProfile((i - 1) * 8 + 6) / Zyx.real()) < 1e-3);
+            BOOST_CHECK(fabs(Imp3DProfile((i - 1) * 8 + 7) / Zyx.imag()) < 1e-3);
           }
         jif3D::WriteImpedancesToNetCDF("imp2Dprof.nc", Model.GetFrequencies(),
-            Model.GetMeasPosX(), Model.GetMeasPosY(), Model.GetMeasPosZ(),
-            Imp3DProfile);
+            Model.GetMeasPosX(), Model.GetMeasPosY(), Model.GetMeasPosZ(), Imp3DProfile);
       }
     BOOST_AUTO_TEST_SUITE_END()
