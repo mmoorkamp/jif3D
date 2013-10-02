@@ -59,7 +59,6 @@ lib netcdf_c++ : : <name>netcdf_c++ ;
 lib gfortran : :  <name>gfortran ;
 lib cudart : : <name>cudart <search>/usr/local/cuda/lib64 ;
 lib cublas : : <name>cublas <search>/usr/local/cuda/lib64 ;
-lib cutil : : <name>cutil <search>/usr/local/CUDA_SDK/lib ;
 alias vecopt : lapack cblas atlas f77blas gfortran ;
 
 build-project Global ;

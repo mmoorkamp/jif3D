@@ -38,6 +38,8 @@ namespace jif3D
       std::string FineModelName;
       //! The object containing the geometry of the MT inversion model, has to match the geometry of the starting model
       jif3D::X3DModel MTModel;
+      //! The name of the netcdf file containing information about the inverse covariance matrix
+      std::string MTInvCovarName;
     public:
       //! Get read-only access to the objective function object, for example to output misfit information
       const jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator> &GetMTObjective()

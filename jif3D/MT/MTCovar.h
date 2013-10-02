@@ -17,7 +17,7 @@ namespace jif3D
     /* @{ */
     typedef boost::numeric::ublas::symmetric_matrix<double> covmat;
 
-    covmat RotateMTCovar(double angle,const covmat &Cov);
+    rmat RotateMTCovar(double angle,const rmat &Cov, bool Inv = false);
   /* @} */
   }
 

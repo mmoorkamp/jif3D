@@ -88,8 +88,12 @@ int main()
     std::cout << "Absolute noise level: ";
     std::cin >> absnoise;
     jif3D::AddNoise(Impedances, relnoise, absnoise);
+    jif3D::rvec Errors(Impedances.size(), 0.0);
+    std::transform(Impedances.begin(), Impedances.end(), Errors.begin(), [&]  (double d) -> double
+      { return std::max(std::abs(d * relnoise),absnoise);});
     jif3D::WriteImpedancesToNetCDF(outfilename, MTModel.GetFrequencies(),
-        MTModel.GetMeasPosX(), MTModel.GetMeasPosY(), MTModel.GetMeasPosZ(), Impedances);
+        MTModel.GetMeasPosX(), MTModel.GetMeasPosY(), MTModel.GetMeasPosZ(), Impedances,
+        Errors);
     MTModel.WriteVTK(modelfilename + ".vtk");
   }
 

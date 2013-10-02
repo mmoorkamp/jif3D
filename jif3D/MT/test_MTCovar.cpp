@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_SUITE( MTCovar_Suite )
           for (size_t j = i; j < 4; ++j)
             RandMat(i, j) = drand48();
 
-        jif3D::covmat CompMat = jif3D::RotateMTCovar(0.0 , RandMat);
+        jif3D::covmat CompMat = jif3D::RotateMTCovar(0.0, RandMat);
         for (size_t i = 0; i < 4; ++i)
           for (size_t j = 0; j < 4; ++j)
             {

@@ -22,12 +22,12 @@ namespace jif3D
 
     //write one compoment of the impedance tensor to a netcdf file
     //this is an internal helper function
-    void WriteImpedanceComp(NcFile &NetCDFFile, NcDim *StatNumDim,
-        NcDim *FreqDim, const jif3D::rvec &Impedances,
-        const std::string &CompName, const size_t compindex)
+    void WriteImpedanceComp(NcFile &NetCDFFile, NcDim *StatNumDim, NcDim *FreqDim,
+        const jif3D::rvec &Impedances, const std::string &CompName,
+        const size_t compindex)
       {
-        NcVar *CompVar = NetCDFFile.add_var(CompName.c_str(), ncDouble,
-            FreqDim, StatNumDim);
+        NcVar *CompVar = NetCDFFile.add_var(CompName.c_str(), ncDouble, FreqDim,
+            StatNumDim);
         jif3D::rvec Component(FreqDim->size() * StatNumDim->size());
         for (size_t i = 0; i < Component.size(); ++i)
           {
@@ -41,16 +41,17 @@ namespace jif3D
     //read one component of the impedance tensor from a netcdf file
     //this is an internal helper function
     void ReadImpedanceComp(NcFile &NetCDFFile, jif3D::rvec &Impedances,
-        const std::string &CompName, const size_t compindex,
-        const bool MustExist = true)
+        const std::string &CompName, const size_t compindex, const bool MustExist = true)
       {
-        NcError MyError(MustExist ? NcError::verbose_fatal
-            : NcError::silent_nonfatal);
+        NcError MyError(MustExist ? NcError::verbose_fatal : NcError::silent_nonfatal);
         NcVar *SizeVar;
         if ((SizeVar = NetCDFFile.get_var(CompName.c_str())))
           {
             const size_t nvalues = Impedances.size() / 8;
-            assert(nvalues == boost::numeric_cast<size_t>(SizeVar->edges()[0] * SizeVar->edges()[1]));
+            assert(
+                nvalues
+                    == boost::numeric_cast<size_t>(
+                        SizeVar->edges()[0] * SizeVar->edges()[1]));
             jif3D::rvec Temp(nvalues);
             SizeVar->get(&Temp[0], SizeVar->edges()[0], SizeVar->edges()[1]);
 
@@ -62,11 +63,9 @@ namespace jif3D
       }
 
     void WriteImpedancesToNetCDF(const std::string &filename,
-        const std::vector<double> &Frequencies,
-        const std::vector<double> &StatXCoord,
-        const std::vector<double> &StatYCoord,
-        const std::vector<double> &StatZCoord, const jif3D::rvec &Impedances,
-        const jif3D::rvec &Errors)
+        const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
+        const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
+        const jif3D::rvec &Impedances, const jif3D::rvec &Errors)
       {
         const size_t nstats = StatXCoord.size();
         const size_t nfreqs = Frequencies.size();
@@ -89,28 +88,18 @@ namespace jif3D
         WriteVec(DataFile, MeasPosYName, StatYCoord, StatNumDim, "m");
         WriteVec(DataFile, MeasPosZName, StatZCoord, StatNumDim, "m");
         //write out the frequencies that we store
-        NcDim *FreqDim = DataFile.add_dim(FreqDimName.c_str(),
-            Frequencies.size());
-        NcVar *FreqVar = DataFile.add_var(FreqDimName.c_str(), ncDouble,
-            FreqDim);
+        NcDim *FreqDim = DataFile.add_dim(FreqDimName.c_str(), Frequencies.size());
+        NcVar *FreqVar = DataFile.add_var(FreqDimName.c_str(), ncDouble, FreqDim);
         FreqVar->put(&Frequencies[0], nfreqs);
         //and now we can write all the impedance components
-        WriteImpedanceComp(DataFile, StatNumDim, FreqDim, Impedances, "Zxx_re",
-            0);
-        WriteImpedanceComp(DataFile, StatNumDim, FreqDim, Impedances, "Zxx_im",
-            1);
-        WriteImpedanceComp(DataFile, StatNumDim, FreqDim, Impedances, "Zxy_re",
-            2);
-        WriteImpedanceComp(DataFile, StatNumDim, FreqDim, Impedances, "Zxy_im",
-            3);
-        WriteImpedanceComp(DataFile, StatNumDim, FreqDim, Impedances, "Zyx_re",
-            4);
-        WriteImpedanceComp(DataFile, StatNumDim, FreqDim, Impedances, "Zyx_im",
-            5);
-        WriteImpedanceComp(DataFile, StatNumDim, FreqDim, Impedances, "Zyy_re",
-            6);
-        WriteImpedanceComp(DataFile, StatNumDim, FreqDim, Impedances, "Zyy_im",
-            7);
+        WriteImpedanceComp(DataFile, StatNumDim, FreqDim, Impedances, "Zxx_re", 0);
+        WriteImpedanceComp(DataFile, StatNumDim, FreqDim, Impedances, "Zxx_im", 1);
+        WriteImpedanceComp(DataFile, StatNumDim, FreqDim, Impedances, "Zxy_re", 2);
+        WriteImpedanceComp(DataFile, StatNumDim, FreqDim, Impedances, "Zxy_im", 3);
+        WriteImpedanceComp(DataFile, StatNumDim, FreqDim, Impedances, "Zyx_re", 4);
+        WriteImpedanceComp(DataFile, StatNumDim, FreqDim, Impedances, "Zyx_im", 5);
+        WriteImpedanceComp(DataFile, StatNumDim, FreqDim, Impedances, "Zyy_re", 6);
+        WriteImpedanceComp(DataFile, StatNumDim, FreqDim, Impedances, "Zyy_im", 7);
         //now we deal with the errors, if no parameter has been explicitly passed
         //Errors is empty, so we just fill the vector with zeros
         jif3D::rvec ZErr(Errors);
@@ -128,9 +117,9 @@ namespace jif3D
         WriteImpedanceComp(DataFile, StatNumDim, FreqDim, ZErr, "dZyy", 6);
       }
 
-    void ReadImpedancesFromNetCDF(const std::string &filename, std::vector<
-        double> &Frequencies, std::vector<double> &StatXCoord, std::vector<
-        double> &StatYCoord, std::vector<double> &StatZCoord,
+    void ReadImpedancesFromNetCDF(const std::string &filename,
+        std::vector<double> &Frequencies, std::vector<double> &StatXCoord,
+        std::vector<double> &StatYCoord, std::vector<double> &StatZCoord,
         jif3D::rvec &Impedances, jif3D::rvec &ImpError)
       {
         //open the netcdf file readonly
@@ -170,8 +159,7 @@ namespace jif3D
       }
 
     void ReadImpedancesFromMTT(const std::string &filename,
-        std::vector<double> &Frequencies, jif3D::rvec &Impedances,
-        jif3D::rvec &Errors)
+        std::vector<double> &Frequencies, jif3D::rvec &Impedances, jif3D::rvec &Errors)
       {
         std::ifstream infile;
         double currentreal, currentimag;
@@ -184,8 +172,7 @@ namespace jif3D
           }
         infile.close();
         if (((nentries - 1) % 23) != 0)
-          throw FatalException("Number of records does not match expected: "
-              + filename);
+          throw FatalException("Number of records does not match expected: " + filename);
         const int nrecords = (nentries - 1) / 23;
         Impedances.resize(nrecords * 8);
         Errors.resize(nrecords * 8);
@@ -202,16 +189,13 @@ namespace jif3D
                     //read number of degrees of freedom in file an throw away
                     infile >> currentreal;
 
-                    infile >> Impedances(currentrecord) >> Impedances(
-                        currentrecord + 1) >> Impedances(currentrecord + 2)
-                        >> Impedances(currentrecord + 3) >> Impedances(
-                        currentrecord + 4) >> Impedances(currentrecord + 5)
-                        >> Impedances(currentrecord + 6) >> Impedances(
-                        currentrecord + 7);
+                    infile >> Impedances(currentrecord) >> Impedances(currentrecord + 1)
+                        >> Impedances(currentrecord + 2) >> Impedances(currentrecord + 3)
+                        >> Impedances(currentrecord + 4) >> Impedances(currentrecord + 5)
+                        >> Impedances(currentrecord + 6) >> Impedances(currentrecord + 7);
                     // read in the impedance errors
-                    infile >> Errors(currentrecord)
-                        >> Errors(currentrecord + 2) >> Errors(currentrecord
-                        + 4) >> Errors(currentrecord + 6);
+                    infile >> Errors(currentrecord) >> Errors(currentrecord + 2)
+                        >> Errors(currentrecord + 4) >> Errors(currentrecord + 6);
                     //fpr the moment we ignore these values in the .mtt file
                     //Tx
                     infile >> currentreal >> currentimag;
@@ -250,8 +234,9 @@ namespace jif3D
           }
       }
 
-    void WriteImpedancesToMtt(const std::string &filenamebase,const std::vector<
-        double> &Frequencies,const jif3D::rvec &Imp,const  jif3D::rvec &Err)
+    void WriteImpedancesToMtt(const std::string &filenamebase,
+        const std::vector<double> &Frequencies, const jif3D::rvec &Imp,
+        const jif3D::rvec &Err)
       {
         const double convfactor = 4.0 * 1e-4 * acos(-1.0);
         jif3D::rvec Impedances = 1.0 / convfactor * Imp;
@@ -260,77 +245,45 @@ namespace jif3D
         const size_t nimp = Impedances.size();
         const size_t ndatapersite = nfreq * 8;
         const size_t nsites = nimp / ndatapersite;
-        assert (nimp % ndatapersite == 0);
+        assert(nimp % ndatapersite == 0);
         for (size_t i = 0; i < nsites; ++i)
           {
 
             ofstream outfile;
-            std::string currfilename = filenamebase + jif3D::stringify(i)
-                + ".mtt";
+            std::string currfilename = filenamebase + jif3D::stringify(i) + ".mtt";
             outfile.open(currfilename.c_str());
 
             for (unsigned int j = 0; j < nfreq; ++j) //write mtt-file
               {
                 const size_t startindex = (j * nsites + i) * 8;
-                outfile << setw(9) << setfill(' ') << setprecision(4)
-                    << setiosflags(ios::scientific) << Frequencies.at(j);
-                outfile << "  " << resetiosflags(ios::scientific)
-                    << setprecision(5) << " 1 \n";
+                outfile << Frequencies.at(j);
+                outfile << "   1 \n";
 
-                outfile << setw(9) << setfill(' ') << setprecision(4)
-                    << setiosflags(ios::fixed) << Impedances(startindex) << " ";
-                outfile << setw(9) << setfill(' ') << setprecision(4)
-                    << setiosflags(ios::fixed) << Impedances(startindex + 1)
-                    << " ";
-                outfile << setw(9) << setfill(' ') << setprecision(4)
-                    << setiosflags(ios::fixed) << Impedances(startindex + 2)
-                    << " ";
-                outfile << setw(9) << setfill(' ') << setprecision(4)
-                    << setiosflags(ios::fixed) << Impedances(startindex + 3)
-                    << " ";
-                outfile << setw(9) << setfill(' ') << setprecision(4)
-                    << setiosflags(ios::fixed) << Impedances(startindex + 4)
-                    << " ";
-                outfile << setw(9) << setfill(' ') << setprecision(4)
-                    << setiosflags(ios::fixed) << Impedances(startindex + 5)
-                    << " ";
-                outfile << setw(9) << setfill(' ') << setprecision(4)
-                    << setiosflags(ios::fixed) << Impedances(startindex + 6)
-                    << " ";
-                outfile << setw(9) << setfill(' ') << setprecision(4)
-                    << setiosflags(ios::fixed) << Impedances(startindex + 7)
-                    << " ";
+                outfile << Impedances(startindex) << " ";
+                outfile << Impedances(startindex + 1) << " ";
+                outfile << Impedances(startindex + 2) << " ";
+                outfile << Impedances(startindex + 3) << " ";
+                outfile << Impedances(startindex + 4) << " ";
+                outfile << Impedances(startindex + 5) << " ";
+                outfile << Impedances(startindex + 6) << " ";
+                outfile << Impedances(startindex + 7) << " ";
                 outfile << "\n";
-                outfile << setw(9) << setfill(' ') << setprecision(4)
-                    << setiosflags(ios::fixed) << Errors(startindex) << " ";
-                outfile << setw(9) << setfill(' ') << setprecision(4)
-                    << setiosflags(ios::fixed) << Errors(startindex + 2) << " ";
-                outfile << setw(9) << setfill(' ') << setprecision(4)
-                    << setiosflags(ios::fixed) << Errors(startindex + 4) << " ";
-                outfile << setw(9) << setfill(' ') << setprecision(4)
-                    << setiosflags(ios::fixed) << Errors(startindex + 6) << " ";
-                outfile << setw(9) << setfill(' ') << setprecision(4)
-                    << setiosflags(ios::fixed) << 0.0 << " ";
-                outfile << setw(9) << setfill(' ') << setprecision(4)
-                    << setiosflags(ios::fixed) << 0.0 << " ";
-                outfile << setw(9) << setfill(' ') << setprecision(4)
-                    << setiosflags(ios::fixed) << 0.0 << " ";
-                outfile << setw(9) << setfill(' ') << setprecision(4)
-                    << setiosflags(ios::fixed) << 0.0 << " ";
+                outfile << Errors(startindex) << " ";
+                outfile << Errors(startindex + 2) << " ";
+                outfile << Errors(startindex + 4) << " ";
+                outfile << Errors(startindex + 6) << " ";
+                outfile << 0.0 << " ";
+                outfile << 0.0 << " ";
+                outfile << 0.0 << " ";
+                outfile << 0.0 << " ";
                 outfile << "\n";
-                outfile << setw(9) << setfill(' ') << setprecision(4)
-                    << setiosflags(ios::fixed) << 0.0 << " ";
-                outfile << setw(9) << setfill(' ') << setprecision(4)
-                    << setiosflags(ios::fixed) << 0.0 << " ";
-                outfile << setw(9) << setfill(' ') << setprecision(4)
-                    << setiosflags(ios::fixed) << 0.0 << " ";
-                outfile << setw(9) << setfill(' ') << setprecision(4)
-                    << setiosflags(ios::fixed) << 0.0 << " ";
-                outfile << setw(9) << setfill(' ') << setprecision(4)
-                    << setiosflags(ios::fixed) << 0.0 << " ";
-                outfile << "\n" << resetiosflags(ios::fixed);
+                outfile << 0.0 << " ";
+                outfile << 0.0 << " ";
+                outfile << 0.0 << " ";
+                outfile << 0.0 << " ";
+                outfile << 0.0 << " ";
+                outfile << "\n";
                 //write out mtt file entries
-
 
               }
             outfile.close();
