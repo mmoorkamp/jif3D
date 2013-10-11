@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/math/constants/constants.hpp>
 #include <boost/program_options.hpp>
 #include "../Global/FileUtil.h"
 #include "../Global/convert.h"
@@ -43,7 +44,7 @@ void MakeInvCovar(jif3D::OneDMTObjective &MTObjective, const jif3D::rvec Imp,
         double freq = Frequencies[i / 2];
         std::cout << "Frequency " << freq << std::endl;
         double appres = jif3D::AppRes(Z, freq);
-        double phase = jif3D::ImpedancePhase(Z) / 180.0 * M_PI;
+        double phase = jif3D::ImpedancePhase(Z) / 180.0 * boost::math::constants::pi<double>();
         double sigma_p2 = std::pow(phase * phaseerr, 2);
         double sigma_r2 = std::pow(appres * reserr, 2);
         std::cout << "Z: " << Z << " " << appres << " " << phase << "\n";

@@ -1,7 +1,7 @@
 import testing ; 
 import mpi ;
 
-alias joint : ../Tomo ../Gravity ../Inversion ../Global ../Regularization ;
+alias joint : ../Tomo ../Gravity ../Inversion//inversion ../Global ../Regularization ;
 
 lib gsl : : <name>gsl ;
 lib cblas : : <name>cblas ;
@@ -24,7 +24,7 @@ exe convertmtt : convertmtt.cpp   ../Global ../MT ..//boost_filesystem  ..//boos
 exe onedmtinv : onedmtinv.cpp   joint ../MT ..//boost_program_options ..//boost_filesystem ..//boost_system : <include>. ;
 exe writemtt : writemtt.cpp   ../Global ../MT ..//boost_filesystem ..//boost_system : <include>. ;
 exe rotatemt : rotatemt.cpp   ../Global ../MT ../ModelBase ..//boost_filesystem ..//boost_system : <include>. ;
-exe grav_jointinv : grav_jointinv.cpp  joint ../Joint ../MT : <include>. ;
+exe grav_jointinv : grav_jointinv.cpp  ../Inversion//inversion ../Joint ../MT : <include>. ;
 exe mergetomo : mergetomo.cpp  ../Tomo  ../Global : <include>. ;
 exe vtk2netcdf : vtk2netcdf.cpp   ../Global ../ModelBase ../MT ..//boost_filesystem ..//boost_system : <include>. ;
 exe tomoregion : tomoregion.cpp  ../Tomo  ../Global : <include>. ;

@@ -9,6 +9,7 @@
 #include <fstream>
 #include <string>
 #include <boost/program_options.hpp>
+#include <boost/math/constants/constants.hpp>
 #include "../Global/FileUtil.h"
 #include "../Global/FatalException.h"
 #include "../Global/VecMat.h"
@@ -31,7 +32,7 @@ int main()
     std::cout << "Rotation angle [degree]: ";
     double dangle = 0.0;
     std::cin >> dangle;
-    double rangle = dangle / 180.0 * M_PI;
+    double rangle = dangle / 180.0 * boost::math::constants::pi<double>();
     jif3D::rvec RotImp = jif3D::RotateImpedanceVector(rangle, Impedances);
     const size_t nelem = 8;
     const size_t ntensor = Impedances.size() / nelem;

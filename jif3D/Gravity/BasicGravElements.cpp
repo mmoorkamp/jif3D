@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <numeric>
 #include <limits>
+#include <boost/math/constants/constants.hpp>
 #include "BasicGravElements.h"
 
 namespace jif3D
@@ -251,7 +252,7 @@ namespace jif3D
     double CalcGravSemiInfSheet(const double hor_dist, const double ver_dist,
         const double thick, const double density)
       {
-        return (2.0 * Grav_const * density * thick) * ((M_PI / 2.0) - atan2(
+        return (2.0 * Grav_const * density * thick) * ((boost::math::constants::pi<double>() / 2.0) - atan2(
             hor_dist, ver_dist));
       }
 

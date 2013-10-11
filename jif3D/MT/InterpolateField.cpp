@@ -8,6 +8,7 @@
 #include "../Global/FatalException.h"
 #include "InterpolateField.h"
 #include <iostream>
+#include <cmath>
 namespace jif3D
   {
     /*! x3d calculates the electric and magnetic fields at the centre of each cell.
@@ -89,7 +90,7 @@ namespace jif3D
         InterField += Field[Offset22] * (MeasPosX - CellCenterX)
             * (MeasPosY - CellCenterY);
         InterField /= (NextCellCenterX - CellCenterX) * (NextCellCenterY - CellCenterY);
-        if (isnan(InterField.real()) || isnan(InterField.imag()))
+        if (std::isnan(InterField.real()) || std::isnan(InterField.imag()))
           {
             throw FatalException("Nan in interpolated fields");
           }
