@@ -13,6 +13,7 @@
 #include <boost/assign/std/vector.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/numeric/conversion/cast.hpp>
+#include <boost/math/constants/constants.hpp>
 
 #include "test_common.h"
 #include "BasicGravElements.h"
@@ -123,7 +124,7 @@ BOOST_AUTO_TEST_CASE  (box_gravity_calc_test)
   BOOST_AUTO_TEST_CASE(background_test)
     {
       jif3D::ThreeDGravityModel GravityTest;
-      double analytic = 2 * M_PI * jif3D::Grav_const * (500.0 + 5.0 * 4500.0);
+      double analytic = 2 * boost::math::constants::pi<double>() * jif3D::Grav_const * (500.0 + 5.0 * 4500.0);
       std::vector<double> bg_dens, bg_thick;
       const size_t nmeas = 10;
       for (size_t i = 0; i < nmeas; ++i)
@@ -204,7 +205,7 @@ BOOST_AUTO_TEST_CASE  (box_gravity_calc_test)
       jif3D::rvec cudameas(CudaCalculator->Calculate(GravityTest));
       std::cout << "Finished CUDA " << std::endl;
       GravityTest.WriteNetCDF("layer.nc");
-      double analytic = 2 * M_PI * jif3D::Grav_const * (500.0 + 5.0 * 5500.0);
+      double analytic = 2 * boost::math::constants::pi<double>() * jif3D::Grav_const * (500.0 + 5.0 * 5500.0);
       jif3D::rmat ScalarSensitivities(ScalarCalculator->GetSensitivities());
       jif3D::rvec SensValues(prec_prod(ScalarSensitivities, DensityVector));
       //The second time the measurements will also be calculated from the sensitivities internally

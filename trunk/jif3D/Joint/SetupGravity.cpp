@@ -141,8 +141,12 @@ namespace jif3D
             boost::shared_ptr<jif3D::ThreeDGravityImplementation> Implementation;
             if (wantcuda)
               {
+#ifdef HAVEGPU
                 Implementation = boost::shared_ptr<jif3D::ThreeDGravityImplementation>(
                     new jif3D::ScalarCudaGravityImp);
+#else
+                throw jif3D::FatalException("Code has been compiled without GPU support !");
+#endif
               }
             else
               {
@@ -173,8 +177,12 @@ namespace jif3D
             boost::shared_ptr<jif3D::ThreeDGravityImplementation> Implementation;
             if (wantcuda)
               {
+#ifdef HAVEGPU
                 Implementation = boost::shared_ptr<jif3D::ThreeDGravityImplementation>(
                     new jif3D::TensorCudaGravityImp);
+#else
+                throw jif3D::FatalException("Code has been compiled without GPU support !");
+#endif
               }
             else
               {

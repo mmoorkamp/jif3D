@@ -13,6 +13,7 @@
 #include <boost/assign/std/vector.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/numeric/conversion/cast.hpp>
+#include <boost/math/constants/constants.hpp>
 
 #include "test_common.h"
 #include "BasicGravElements.h"
@@ -197,14 +198,14 @@ BOOST_AUTO_TEST_CASE  (random_tensor_test)
       GravityTest.SetBackgroundThicknesses(bg_thick);
       boost::shared_ptr<jif3D::MinMemGravityCalculator> TensorCalculator(jif3D::CreateGravityCalculator<jif3D::MinMemGravityCalculator>::MakeTensor());
       jif3D::rvec TensorMeas(TensorCalculator->Calculate(GravityTest));
-      const double PoissTerm = -4.0 * M_PI * jif3D::Grav_const * density;
+      const double PoissTerm = -4.0 * boost::math::constants::pi<double>() * jif3D::Grav_const * density;
 
       const double Trace1 = TensorMeas(0) + TensorMeas(4) + TensorMeas(8);
       const double Trace2 = TensorMeas(9) + TensorMeas(13) + TensorMeas(17);
 
       BOOST_CHECK_CLOSE(PoissTerm, Trace1-Trace2,
           std::numeric_limits<float>::epsilon());
-      BOOST_CHECK_CLOSE(density, Trace2/(4.0 * M_PI * jif3D::Grav_const),
+      BOOST_CHECK_CLOSE(density, Trace2/(4.0 * boost::math::constants::pi<double>() * jif3D::Grav_const),
           std::numeric_limits<float>::epsilon());
 
     }

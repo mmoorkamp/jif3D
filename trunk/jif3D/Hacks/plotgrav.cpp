@@ -8,7 +8,7 @@
 
 #include <iostream>
 #include <string>
-#include "ReadWriteGravityData.h"
+#include "../Gravity/ReadWriteGravityData.h"
 #include "../ModelBase/VTKTools.h"
 #include "../Global/FileUtil.h"
 

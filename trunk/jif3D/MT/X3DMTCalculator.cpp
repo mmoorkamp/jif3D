@@ -20,6 +20,7 @@
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
+#include <boost/math/constants/constants.hpp>
 #include "../Global/FatalException.h"
 #include "../Global/convert.h"
 #include "../ModelBase/CellBoundaries.h"
@@ -559,7 +560,7 @@ namespace jif3D
 
         //now we calculate the response to magnetic dipole sources
         const std::complex<double> omega_mu = -1.0
-            / (std::complex<double>(0.0, jif3D::mag_mu) * 2.0 * M_PI
+            / (std::complex<double>(0.0, jif3D::mag_mu) * 2.0 * boost::math::constants::pi<double>()
                 * Model.GetFrequencies()[freqindex]);
 
         fs::path MdipName = TempDir / MakeUniqueName(X3DModel::MDIP, freqindex);

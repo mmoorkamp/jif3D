@@ -4,16 +4,19 @@
 // Version     : 
 // Copyright   : 2009, mmoorkamp
 //============================================================================
-#include "../Global/VecMat.h"
+
 #include <complex>
+#include <boost/math/constants/constants.hpp>
+#include "../Global/VecMat.h"
+
 namespace jif3D
   {
     /** \addtogroup mtmodelling Forward modelling of magnetotelluric data */
     /* @{ */
     //! The value of magnetic permeability \f$ \mu = 4 \cdot 10^{-7} \pi\f$
-    const double mag_mu = 4e-7 * M_PI;
+    const double mag_mu = 4e-7 * boost::math::constants::pi<double>();
     //! Two pi times the magnetic permeability, needed for apparent resistivity calculation below
-    const double twopimu = 2.0 * M_PI * mag_mu;
+    const double twopimu = 2.0 * boost::math::constants::pi<double>() * mag_mu;
     //! Calculate the impedance of a half-space in S.I. units (Ohm)
     std::complex<double> ImpedanceHalfspace(const double frequency,
         const double conductivity);
@@ -37,7 +40,7 @@ namespace jif3D
     //! Return the phase of the magnetotelluric impedance in degree
     inline double ImpedancePhase(const std::complex<double> &Z)
       {
-        return 180.0 / M_PI * std::atan2(Z.imag(), Z.real());
+        return 180.0 / boost::math::constants::pi<double>() * std::atan2(Z.imag(), Z.real());
       }
   /* @} */
   }

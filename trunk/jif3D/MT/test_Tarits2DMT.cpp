@@ -7,11 +7,13 @@
 #include "MT2DForward.h"
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/lambda/lambda.hpp>
+#include <boost/math/constants/constants.hpp>
 
 BOOST_AUTO_TEST_SUITE( MT2D_Test_Suite )
 
 BOOST_AUTO_TEST_CASE  (EPOL_test)
     {
+	  const double pi = boost::math::constants::pi<double>()
       double T = 10.0;
       long nx = 100;
       long nz = 150;
@@ -44,7 +46,7 @@ BOOST_AUTO_TEST_CASE  (EPOL_test)
       std::complex<double> Hx(Hx_real[index],Hx_imag[index]);
       std::complex<double> Ey(Ey_real[index],Ey_imag[index]);
       std::complex<double> Z(Ey/Hx);
-      std::cout << "Z: " << Z << " arg: " << std::arg(Z) * 180.0/M_PI << " rho_a: " << T*abs(Z) * abs(Z)/(8.0e-7*M_PI*M_PI) << std::endl;
+      std::cout << "Z: " << Z << " arg: " << std::arg(Z) * 180.0/pi << " rho_a: " << T*abs(Z) * abs(Z)/(8.0e-7*pi*pi) << std::endl;
 
     }
 
@@ -77,7 +79,7 @@ BOOST_AUTO_TEST_CASE  (EPOL_test)
       std::complex<double> Hy(Hy_real[index],Hy_imag[index]);
       std::complex<double> Ex(Ex_real[index],Ex_imag[index]);
       std::complex<double> Z(Ex/Hy);
-      std::cout << "Z: " << Z << " arg: " << std::arg(Z) * 180.0/M_PI << " rho_a: " << T*abs(Z) * abs(Z)/(8.0e-7*M_PI*M_PI) << std::endl;
+      std::cout << "Z: " << Z << " arg: " << std::arg(Z) * 180.0/pi << " rho_a: " << T*abs(Z) * abs(Z)/(8.0e-7*pi*pi) << std::endl;
 
     }
 
@@ -107,11 +109,11 @@ BOOST_AUTO_TEST_CASE  (EPOL_test)
           std::complex<double> Hx(Forward.GetHx_real()[i][index][0],Forward.GetHx_imag()[i][index][0]);
           std::complex<double> Ey(Forward.GetEy_real()[i][index][0],Forward.GetEy_imag()[i][index][0]);
           std::complex<double> Zyx(Ey/Hx);
-          std::cout << "Z: " << Zyx << " arg: " << std::arg(Zyx) * 180.0/M_PI << " rho_a: " << Periods.at(i)*abs(Zyx) * abs(Zyx)/(8.0e-7*M_PI*M_PI) << std::endl;
+          std::cout << "Z: " << Zyx << " arg: " << std::arg(Zyx) * 180.0/pi << " rho_a: " << Periods.at(i)*abs(Zyx) * abs(Zyx)/(8.0e-7*pi*pi) << std::endl;
           std::complex<double> Hy(Forward.GetHy_real()[i][index][0],Forward.GetHy_imag()[i][index][0]);
           std::complex<double> Ex(Forward.GetEx_real()[i][index][0],Forward.GetEx_imag()[i][index][0]);
           std::complex<double> Zxy(Ex/Hy);
-          std::cout << "Z: " << Zxy << " arg: " << std::arg(Zxy) * 180.0/M_PI << " rho_a: " << Periods.at(i)*abs(Zxy) * abs(Zxy)/(8.0e-7*M_PI*M_PI) << std::endl;
+          std::cout << "Z: " << Zxy << " arg: " << std::arg(Zxy) * 180.0/pi << " rho_a: " << Periods.at(i)*abs(Zxy) * abs(Zxy)/(8.0e-7*pi*pi) << std::endl;
         }
     }
   BOOST_AUTO_TEST_SUITE_END()

@@ -10,9 +10,14 @@
 #define THREEDGRAVITYFACTORY_H_
 
 #include "ScalarOMPGravityImp.h"
-#include "ScalarCudaGravityImp.h"
 #include "TensorOMPGravityImp.h"
+
+#ifdef HAVEGPU
+#include "ScalarCudaGravityImp.h"
 #include "TensorCudaGravityImp.h"
+#else
+#include "../Global/FatalException.h"
+#endif
 
 namespace jif3D
   {
@@ -53,8 +58,12 @@ namespace jif3D
         boost::shared_ptr<ThreeDGravityImplementation> Imp;
         if (wantcuda)
           {
+#ifdef HAVEGPU
             Imp = boost::shared_ptr<ThreeDGravityImplementation>(
                 new ScalarCudaGravityImp);
+#else
+            throw jif3D::FatalException("Code has been compiled without GPU support !");
+#endif
           }
         else
           {
@@ -75,8 +84,12 @@ namespace jif3D
         boost::shared_ptr<ThreeDGravityImplementation> Imp;
         if (wantcuda)
           {
+#ifdef HAVEGPU
             Imp = boost::shared_ptr<ThreeDGravityImplementation>(
                 new TensorCudaGravityImp);
+#else
+            throw jif3D::FatalException("Code has been compiled without GPU support !");
+#endif
           }
         else
           {

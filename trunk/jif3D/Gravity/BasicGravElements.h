@@ -9,6 +9,7 @@
 #ifndef BASICGRAVELEMENTS_H_
 #define BASICGRAVELEMENTS_H_
 
+#include <boost/math/constants/constants.hpp>
 #include "../Global/VecMat.h"
 #include "../Global/NumUtil.h"
 namespace jif3D
@@ -53,10 +54,10 @@ namespace jif3D
         //the measurement is outside the layer
         if ((measz <= top) || (measz >= bottom))
           {
-            return 2.0 * M_PI * Grav_const * thick * jif3D::sign(top - measz);
+            return 2.0 * boost::math::constants::pi<double>() * Grav_const * thick * jif3D::sign(top - measz);
           }
         //if we get here it means the measurement is inside the layer
-        return 2.0 * M_PI * Grav_const * (thick - 2.0 * (measz - top));
+        return 2.0 * boost::math::constants::pi<double>() * Grav_const * (thick - 2.0 * (measz - top));
       }
     //! An infinite sheet has only an effect on \f$ U_{zz}\f$ if the measurement is take within the boundaries of that layer
     inline double CalcUzzInfSheetTerm(const double measz, const double top,
@@ -68,7 +69,7 @@ namespace jif3D
             return 0.0;
           }
         //if we get here we are inside the layer
-        return 4.0 * M_PI * Grav_const;
+        return 4.0 * boost::math::constants::pi<double>() * Grav_const;
       }
   /* @} */
   //end of namespace jif3D

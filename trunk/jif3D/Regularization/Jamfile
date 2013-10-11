@@ -4,9 +4,9 @@ lib regularization :
                   GradientRegularization.cpp CurvatureRegularization.cpp 
                   CrossGradient.cpp OneDRegularization.cpp MinimumSupport.cpp
                   DotStructureConstraint.cpp 
-                  ..//ModelBase
+                  ..//ModelBase ../Inversion//inversion
                  : <include>boost : : <include>. ;
                  
 
 
-unit-test regularization_test : test_regularization.cpp  ..//Inversion ..//Tomo regularization ..//Gravity : : <include>. ;
+unit-test regularization_test : test_regularization.cpp  ../Inversion//inversion ..//Tomo regularization ..//Gravity : : <include>. ;
