@@ -16,7 +16,7 @@
 #include <string>
 #include "ThreeDGravityModel.h"
 #include "ReadWriteGravityData.h"
-#include "MinMemGravityCalculator.h"
+#include "../GravMag/MinMemGravMagCalculator.h"
 #include "ThreeDGravityFactory.h"
 #include "../ModelBase/VTKTools.h"
 #include "../Global/FileUtil.h"
@@ -93,12 +93,12 @@ int main(int argc, char *argv[])
         GravModel.WriteNetCDF(ModelFilename + ".nc");
       }
     //save the measurements and some plots
-    boost::shared_ptr<jif3D::MinMemGravityCalculator>
+    boost::shared_ptr<jif3D::MinMemGravMagCalculator>
         TensorCalculator(jif3D::CreateGravityCalculator<
-            jif3D::MinMemGravityCalculator>::MakeTensor(wantcuda));
-    boost::shared_ptr<jif3D::MinMemGravityCalculator>
+            jif3D::MinMemGravMagCalculator>::MakeTensor(wantcuda));
+    boost::shared_ptr<jif3D::MinMemGravMagCalculator>
         ScalarCalculator(jif3D::CreateGravityCalculator<
-            jif3D::MinMemGravityCalculator>::MakeScalar(wantcuda));
+            jif3D::MinMemGravMagCalculator>::MakeScalar(wantcuda));
     jif3D::rvec ScalarResults(ScalarCalculator->Calculate(GravModel));
     jif3D::rvec TensorResults(TensorCalculator->Calculate(GravModel));
 

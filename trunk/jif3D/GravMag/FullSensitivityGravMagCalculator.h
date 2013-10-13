@@ -10,7 +10,7 @@
 
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/base_object.hpp>
-#include "CachedGravityCalculator.h"
+#include "CachedGravMagCalculator.h"
 
 namespace jif3D
   {
@@ -28,7 +28,7 @@ namespace jif3D
      * Important note: The stored sensitivities are the raw sensitivities irrespective of any
      * transformation. This is necessary to calculate correct gradients for transformed data.
      */
-    class FullSensitivityGravityCalculator: public jif3D::CachedGravityCalculator
+    class FullSensitivityGravMagCalculator: public jif3D::CachedGravMagCalculator
       {
     private:
       //! The full sensitivity matrix G for the gravity measurements, we use it to calculate the forward response through d = G*m
@@ -50,7 +50,7 @@ namespace jif3D
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
         {
-          ar & boost::serialization::base_object<ThreeDGravityCalculator>(*this);
+          ar & boost::serialization::base_object<ThreeDGravMagCalculator>(*this);
           ar & Sensitivities;
         }
     public:
@@ -68,9 +68,9 @@ namespace jif3D
       //! This function is called by the implementation classes and allows to integrate the results from a single measurement
       virtual void HandleSensitivities(const size_t measindex);
       //! The constructor takes a shared pointer to an implementation object
-      FullSensitivityGravityCalculator(
-          boost::shared_ptr<ThreeDGravityImplementation> TheImp);
-      virtual ~FullSensitivityGravityCalculator();
+      FullSensitivityGravMagCalculator(
+          boost::shared_ptr<ThreeDGravMagImplementation> TheImp);
+      virtual ~FullSensitivityGravMagCalculator();
       };
   /* @} */
   }

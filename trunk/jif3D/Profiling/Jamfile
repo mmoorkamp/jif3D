@@ -4,7 +4,7 @@ project
     : usage-requirements <include>../Gravity
     ;
 
-alias core :  ../ModelBase//modelbase ../Global ../Regularization ../Inversion ../Gravity ..//netcdf_c++ ..//netcdf ..//cudart ;
+alias core :  ../ModelBase//modelbase ../Global ../Regularization ../Inversion ../GravMag ../Gravity ..//netcdf_c++ ..//netcdf ..//cudart ;
     
 exe time_gravity_size : time_gravity_size.cpp core ..//boost_program_options ;
 exe time_gravity_blocksize : time_gravity_blocksize.cpp core ;

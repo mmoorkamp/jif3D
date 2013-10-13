@@ -17,8 +17,8 @@ namespace jif3D
   {
 
     WaveletCompressedGravityCalculator::WaveletCompressedGravityCalculator(
-        boost::shared_ptr<ThreeDGravityImplementation> TheImp) :
-      CachedGravityCalculator(TheImp), nmeas(), ngrid(), nbglayers(), nmod(),
+        boost::shared_ptr<ThreeDGravMagImplementation> TheImp) :
+      CachedGravMagCalculator(TheImp), nmeas(), ngrid(), nbglayers(), nmod(),
           xsize(), ysize(), zsize(), accuracy(0.01), CurrRow(),
           transformsize(), SparseSens(), WhiteningVector()
       {

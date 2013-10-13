@@ -6,25 +6,25 @@
 //============================================================================
 
 
-#include "CachedGravityCalculator.h"
+#include "CachedGravMagCalculator.h"
 
 namespace jif3D
   {
 
-    CachedGravityCalculator::CachedGravityCalculator(boost::shared_ptr<
-        ThreeDGravityImplementation> TheImp) :
-      ThreeDGravityCalculator(TheImp), HaveCache(false), OldXSizes(),
+    CachedGravMagCalculator::CachedGravMagCalculator(boost::shared_ptr<
+        ThreeDGravMagImplementation> TheImp) :
+      ThreeDGravMagCalculator(TheImp), HaveCache(false), OldXSizes(),
           OldYSizes(), OldZSizes(), OldMeasPosX(), OldMeasPosY(),
           OldMeasPosZ(), OldBackgroundThick(), OldBackgroundDens()
       {
 
       }
 
-    CachedGravityCalculator::~CachedGravityCalculator()
+    CachedGravMagCalculator::~CachedGravMagCalculator()
       {
       }
 
-    void CachedGravityCalculator::CopySizes(
+    void CachedGravMagCalculator::CopySizes(
         const ThreeDGravityModel::t3DModelDim &NewXSizes,
         const ThreeDGravityModel::t3DModelDim &NewYSizes,
         const ThreeDGravityModel::t3DModelDim &NewZSizes)
@@ -39,7 +39,7 @@ namespace jif3D
         std::copy(NewZSizes.begin(), NewZSizes.end(), OldZSizes.begin());
       }
 
-    void CachedGravityCalculator::CopyMeasPos(
+    void CachedGravMagCalculator::CopyMeasPos(
         const ThreeDGravityModel::tMeasPosVec &NewMeasPosX,
         const ThreeDGravityModel::tMeasPosVec &NewMeasPosY,
         const ThreeDGravityModel::tMeasPosVec &NewMeasPosZ)
@@ -52,7 +52,7 @@ namespace jif3D
         std::copy(NewMeasPosZ.begin(), NewMeasPosZ.end(), OldMeasPosZ.begin());
       }
 
-    bool CachedGravityCalculator::CheckMeasPosChange(
+    bool CachedGravMagCalculator::CheckMeasPosChange(
         const ThreeDGravityModel &Model)
       {
         bool change = true;
@@ -85,7 +85,7 @@ namespace jif3D
         return change;
       }
 
-    bool CachedGravityCalculator::CheckGeometryChange(
+    bool CachedGravMagCalculator::CheckGeometryChange(
         const ThreeDGravityModel &Model)
       {
         // by default we assume a change
@@ -119,7 +119,7 @@ namespace jif3D
         return change;
       }
 
-    bool CachedGravityCalculator::CheckBackgroundChange(
+    bool CachedGravMagCalculator::CheckBackgroundChange(
         const ThreeDGravityModel &Model)
       {
         // by default we assume a change
@@ -172,7 +172,7 @@ namespace jif3D
      * @param Model The 3D gravity model
      * @return The forward response for this model
      */
-    rvec CachedGravityCalculator::Calculate(const ThreeDGravityModel &Model)
+    rvec CachedGravMagCalculator::Calculate(const ThreeDGravityModel &Model)
       {
         //check that all modeling information is consistent
         CheckModelConsistency(Model);
@@ -199,7 +199,7 @@ namespace jif3D
         return result;
       }
 
-    rvec CachedGravityCalculator::LQDerivative(const ThreeDGravityModel &Model,
+    rvec CachedGravMagCalculator::LQDerivative(const ThreeDGravityModel &Model,
         const rvec &Misfit)
       {
         //check that all modeling information is consistent
@@ -217,7 +217,7 @@ namespace jif3D
         SetCurrentSensitivities().resize(Imp.get()->GetDataPerMeasurement(),
             Model.GetDensities().num_elements()
                 + Model.GetBackgroundDensities().size());
-        return ThreeDGravityCalculator::LQDerivative(Model, Misfit);
+        return ThreeDGravMagCalculator::LQDerivative(Model, Misfit);
 
       }
   }

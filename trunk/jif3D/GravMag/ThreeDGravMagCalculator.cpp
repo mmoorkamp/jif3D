@@ -6,23 +6,23 @@
 //============================================================================
 
 #include "../Global/FatalException.h"
-#include "ThreeDGravityCalculator.h"
+#include "ThreeDGravMagCalculator.h"
 
 namespace jif3D
   {
 
-    ThreeDGravityCalculator::ThreeDGravityCalculator(
-        boost::shared_ptr<ThreeDGravityImplementation> TheImp) :
+    ThreeDGravMagCalculator::ThreeDGravMagCalculator(
+        boost::shared_ptr<ThreeDGravMagImplementation> TheImp) :
         CurrentSensitivities(), Transform(), Imp(TheImp)
       {
 
       }
 
-    ThreeDGravityCalculator::~ThreeDGravityCalculator()
+    ThreeDGravMagCalculator::~ThreeDGravMagCalculator()
       {
       }
 
-    void ThreeDGravityCalculator::CheckModelConsistency(const ThreeDGravityModel &Model)
+    void ThreeDGravMagCalculator::CheckModelConsistency(const ThreeDGravityModel &Model)
       {
         //do some sanity checks
         // we can assign cell sizes and model grid independently
@@ -57,7 +57,7 @@ namespace jif3D
      * @param Misfit The misfit at which we need the derivative, has to match the type of data in the derived class
      * @return The partial derivative of the objective function, size and storage order depends on the type of data
      */
-    rvec ThreeDGravityCalculator::LQDerivative(const ThreeDGravityModel &Model,
+    rvec ThreeDGravMagCalculator::LQDerivative(const ThreeDGravityModel &Model,
         const rvec &Misfit)
       {
         CheckModelConsistency(Model);
@@ -69,7 +69,7 @@ namespace jif3D
      * @param Model The model for which we want the response
      * @return The calculated data, the length of the vector and the order of the data depends on the derived class
      */
-    rvec ThreeDGravityCalculator::Calculate(const ThreeDGravityModel &Model)
+    rvec ThreeDGravMagCalculator::Calculate(const ThreeDGravityModel &Model)
       {
         CheckModelConsistency(Model);
         return Imp->Calculate(Model, *this);

@@ -14,8 +14,8 @@
 #include <time.h>
 #include "DepthWeighting.h"
 #include "ThreeDGravityFactory.h"
-#include "ThreeDGravityCalculator.h"
-#include "FullSensitivityGravityCalculator.h"
+#include "../GravMag/ThreeDGravMagCalculator.h"
+#include "../GravMag/FullSensitivityGravMagCalculator.h"
 
 BOOST_AUTO_TEST_SUITE( Gravity_DepthWeighting_Suite )
 
@@ -110,9 +110,9 @@ BOOST_AUTO_TEST_CASE(weightingderiv_test)
       const double density = 2.1;
       std::fill_n(Model.SetDensities().origin(),
           Model.SetDensities().num_elements(), density);
-      boost::shared_ptr<jif3D::FullSensitivityGravityCalculator>
+      boost::shared_ptr<jif3D::FullSensitivityGravMagCalculator>
           Calculator(jif3D::CreateGravityCalculator<
-              jif3D::FullSensitivityGravityCalculator>::MakeTensor());
+              jif3D::FullSensitivityGravMagCalculator>::MakeTensor());
       Calculator->Calculate(Model);
       jif3D::rvec SensProfile;
       jif3D::ExtractMiddleSens(Model, Calculator->GetSensitivities(),

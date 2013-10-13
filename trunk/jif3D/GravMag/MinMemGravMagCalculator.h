@@ -11,7 +11,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/base_object.hpp>
-#include "ThreeDGravityCalculator.h"
+#include "ThreeDGravMagCalculator.h"
 
 namespace jif3D
   {
@@ -22,7 +22,7 @@ namespace jif3D
      * when the forward response for a certain model geometry only has to be calculated once
      * or if the model is so big that the sensitivity matrix cannot be stored in memory or on disk any more.
      */
-    class MinMemGravityCalculator: public jif3D::ThreeDGravityCalculator
+    class MinMemGravMagCalculator: public jif3D::ThreeDGravMagCalculator
       {
     private:
       friend class boost::serialization::access;
@@ -30,7 +30,7 @@ namespace jif3D
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
         {
-          ar & boost::serialization::base_object<ThreeDGravityCalculator>(*this);
+          ar & boost::serialization::base_object<ThreeDGravMagCalculator>(*this);
         }
     public:
       //! The implementation of the forward calculation
@@ -40,8 +40,8 @@ namespace jif3D
         {
         }
       //! The constructor takes a shared pointer to an implementation object
-      MinMemGravityCalculator(boost::shared_ptr<ThreeDGravityImplementation> TheImp);
-      virtual ~MinMemGravityCalculator();
+      MinMemGravMagCalculator(boost::shared_ptr<ThreeDGravMagImplementation> TheImp);
+      virtual ~MinMemGravMagCalculator();
       };
   /* @} */
   }

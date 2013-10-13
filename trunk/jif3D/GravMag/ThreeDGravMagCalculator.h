@@ -12,8 +12,8 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/shared_ptr.hpp>
-#include "ThreeDGravityModel.h"
-#include "ThreeDGravityImplementation.h"
+#include "../Gravity/ThreeDGravityModel.h"
+#include "ThreeDGravMagImplementation.h"
 
 namespace jif3D
   {
@@ -43,7 +43,7 @@ namespace jif3D
      * We can set a transformation to directly calculate derived quantities and the associated gradient. This transform
      * is forwarded to the implementation object and all returned data and gradients will be with respect to this transformation.
      */
-    class ThreeDGravityCalculator
+    class ThreeDGravMagCalculator
       {
     public:
       //! We want to use this class with the ThreeDObjective function class template, so we need to define ModelType as the class that contains the forward model
@@ -68,7 +68,7 @@ namespace jif3D
       //! In some cases we might want to apply a transformation to the data, e.g. FTG to an invariant
       boost::shared_ptr<VectorTransform> Transform;
       //! The shared pointer to the implementation object that does the actual calculation
-      boost::shared_ptr<ThreeDGravityImplementation> Imp;
+      boost::shared_ptr<ThreeDGravMagImplementation> Imp;
       //! Check the the information in the model is consistent, i.e. corresponding vectors have the same size
       void CheckModelConsistency(const ModelType &Model);
     public:
@@ -95,9 +95,9 @@ namespace jif3D
       //! Process the sensitivity information for the current measurement, called from the implementation class
       virtual void HandleSensitivities(const size_t measindex) = 0;
       //! This class is useless without an implementation object so we have to pass one to the constructor
-      ThreeDGravityCalculator(
-          boost::shared_ptr<ThreeDGravityImplementation> TheImp);
-      virtual ~ThreeDGravityCalculator();
+      ThreeDGravMagCalculator(
+          boost::shared_ptr<ThreeDGravMagImplementation> TheImp);
+      virtual ~ThreeDGravMagCalculator();
       };
 
   /* @} */

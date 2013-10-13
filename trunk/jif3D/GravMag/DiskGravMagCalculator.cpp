@@ -13,13 +13,13 @@
 #include "../Global/convert.h"
 #include "../Global/VecMat.h"
 #include "../Global/FatalException.h"
-#include "DiskGravityCalculator.h"
+#include "DiskGravMagCalculator.h"
 #include <fstream>
 
 namespace jif3D
   {
 
-    std::string DiskGravityCalculator::MakeFilename()
+    std::string DiskGravMagCalculator::MakeFilename()
       {
         //a unique ID created on construction
         boost::uuids::uuid tag = boost::uuids::random_generator()();
@@ -29,7 +29,7 @@ namespace jif3D
         return "grav" + jif3D::stringify(getpid()) + jif3D::stringify(tag);
       }
 
-    rvec DiskGravityCalculator::CalculateNewModel(
+    rvec DiskGravMagCalculator::CalculateNewModel(
         const ThreeDGravityModel &Model)
       {
         //when we have to calculate a new model
@@ -39,7 +39,7 @@ namespace jif3D
         return Imp.get()->Calculate(Model, *this);
       }
 
-    void DiskGravityCalculator::HandleSensitivities(const size_t measindex)
+    void DiskGravMagCalculator::HandleSensitivities(const size_t measindex)
       {
         //whenever we have a new row of the sensitivity matrix
         //we append to the existing file
@@ -61,7 +61,7 @@ namespace jif3D
           }
       }
 
-    rvec DiskGravityCalculator::CalculateRawData(
+    rvec DiskGravMagCalculator::CalculateRawData(
         const ThreeDGravityModel &Model)
       {
         //open the file where the sensitivities are stored
@@ -103,7 +103,7 @@ namespace jif3D
 
       }
 
-    rvec DiskGravityCalculator::CalculateRawLQDerivative(
+    rvec DiskGravMagCalculator::CalculateRawLQDerivative(
         const ThreeDGravityModel &Model, const rvec &Misfit)
       {
         //when we are in this routine we read the sensitivities
@@ -141,9 +141,9 @@ namespace jif3D
         return Gradient;
       }
 
-    DiskGravityCalculator::DiskGravityCalculator(boost::shared_ptr<
-        ThreeDGravityImplementation> TheImp, boost::filesystem::path TDir) :
-      FullSensitivityGravityCalculator(TheImp)
+    DiskGravMagCalculator::DiskGravMagCalculator(boost::shared_ptr<
+        ThreeDGravMagImplementation> TheImp, boost::filesystem::path TDir) :
+      FullSensitivityGravMagCalculator(TheImp)
       {
         if (!boost::filesystem::is_directory(TDir))
           throw FatalException("TDir is not a directory: " + TDir.string());
@@ -151,9 +151,9 @@ namespace jif3D
       }
 
     //! We need to define the copy constructor to make sure that filename stays unique among all created objects
-    DiskGravityCalculator::DiskGravityCalculator(
-        const DiskGravityCalculator &Old) :
-      FullSensitivityGravityCalculator(Old)
+    DiskGravMagCalculator::DiskGravMagCalculator(
+        const DiskGravMagCalculator &Old) :
+      FullSensitivityGravMagCalculator(Old)
       {
         //we keep the original directory, as this can be a temp directory
         //but generate a new filename for the new object to avoid overwriting
@@ -162,12 +162,12 @@ namespace jif3D
       }
 
     //! We have to define a copy operator to make sure filename stays unique
-    DiskGravityCalculator& DiskGravityCalculator::operator=(
-        const DiskGravityCalculator& source)
+    DiskGravMagCalculator& DiskGravMagCalculator::operator=(
+        const DiskGravMagCalculator& source)
       {
         if (this == &source)
           return *this;
-        FullSensitivityGravityCalculator::operator=(source);
+        FullSensitivityGravMagCalculator::operator=(source);
         //we only have to copy the base class information
         //DiskGravityCalculator only adds the field filename
         //this should be unqiue for each object, so we do
@@ -175,7 +175,7 @@ namespace jif3D
         return *this;
       }
 
-    DiskGravityCalculator::~DiskGravityCalculator()
+    DiskGravMagCalculator::~DiskGravMagCalculator()
       {
         //make sure we clean up the file when the object disappears
         boost::filesystem::remove_all(FullPath);

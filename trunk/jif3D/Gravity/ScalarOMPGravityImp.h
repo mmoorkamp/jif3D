@@ -11,7 +11,7 @@
 
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/base_object.hpp>
-#include "ThreeDGravityImplementation.h"
+#include "../GravMag/ThreeDGravMagImplementation.h"
 
 namespace jif3D
   {
@@ -22,7 +22,7 @@ namespace jif3D
      * This is the standard implementation and as openmp uses pragma directives can
      * also be used in serial with a compiler that does not understand openmp.
      */
-    class ScalarOMPGravityImp: public jif3D::ThreeDGravityImplementation
+    class ScalarOMPGravityImp: public jif3D::ThreeDGravMagImplementation
       {
     private:
       //! We calculate scalar data, so we have one data point per site
@@ -39,7 +39,7 @@ namespace jif3D
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
         {
-          ar & boost::serialization::base_object<ThreeDGravityImplementation>(*this);
+          ar & boost::serialization::base_object<ThreeDGravMagImplementation>(*this);
         }
     public:
       //! How many data do we return before any transformation

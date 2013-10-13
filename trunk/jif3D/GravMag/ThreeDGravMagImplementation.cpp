@@ -6,23 +6,23 @@
 //============================================================================
 
 
-#include "ThreeDGravityImplementation.h"
-#include "ThreeDGravityCalculator.h"
+#include "ThreeDGravMagImplementation.h"
+#include "ThreeDGravMagCalculator.h"
 
 namespace jif3D
   {
 
-    ThreeDGravityImplementation::ThreeDGravityImplementation() :
+    ThreeDGravMagImplementation::ThreeDGravMagImplementation() :
       Transform(), XCoord(), YCoord(), ZCoord(), XSizes(), YSizes(), ZSizes()
       {
 
       }
 
-    ThreeDGravityImplementation::~ThreeDGravityImplementation()
+    ThreeDGravMagImplementation::~ThreeDGravMagImplementation()
       {
       }
 
-    void ThreeDGravityImplementation::CacheGeometry(
+    void ThreeDGravMagImplementation::CacheGeometry(
         const ThreeDGravityModel &Model)
       {
 
@@ -65,8 +65,8 @@ namespace jif3D
      * @param Calculator A derived class of ThreeDGravityCalculator
      * @return A vector of measurements
      */
-    rvec ThreeDGravityImplementation::Calculate(
-        const ThreeDGravityModel &Model, ThreeDGravityCalculator &Calculator)
+    rvec ThreeDGravMagImplementation::Calculate(
+        const ThreeDGravityModel &Model, ThreeDGravMagCalculator &Calculator)
       {
 
         // get the number of measurements
@@ -128,7 +128,7 @@ namespace jif3D
      * @param Misfit The Misfit between observed and synthetic data
      * @return The derivative of a least-squares objective function with respect to the model parameters
      */
-    rvec ThreeDGravityImplementation::LQDerivative(
+    rvec ThreeDGravMagImplementation::LQDerivative(
         const ThreeDGravityModel &Model, const rvec &Misfit)
       {
         // get the number of measurements

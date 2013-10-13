@@ -17,10 +17,10 @@
 #include "../Inversion/MatrixTools.h"
 #include "../ModelBase/VTKTools.h"
 #include "../ModelBase/NetCDFModelTools.h"
-#include "ThreeDGravityModel.h"
-#include "ReadWriteGravityData.h"
-#include "../Gravity/FullSensitivityGravityCalculator.h"
-#include "../Gravity/MinMemGravityCalculator.h"
+#include "../Gravity/ThreeDGravityModel.h"
+#include "../Gravity/ReadWriteGravityData.h"
+#include "../GravMag/FullSensitivityGravMagCalculator.h"
+#include "../GravMag/MinMemGravMagCalculator.h"
 #include "DepthWeighting.h"
 #include "ThreeDGravityFactory.h"
 
@@ -54,7 +54,7 @@ int main()
         datafilename);
 
     //create the pointer for the calculator object without assigning anything
-    boost::shared_ptr<jif3D::FullSensitivityGravityCalculator> GravityCalculator;
+    boost::shared_ptr<jif3D::FullSensitivityGravMagCalculator> GravityCalculator;
     //now we have to do a few things differently depending on whether we deal
     //with scalar or FTG data
     //1. We have to read the data differently
@@ -65,17 +65,17 @@ int main()
       jif3D::ReadScalarGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
       //assign a scalar forward calculation object to the pointer
       GravityCalculator
-          = boost::shared_ptr<jif3D::FullSensitivityGravityCalculator>(
+          = boost::shared_ptr<jif3D::FullSensitivityGravMagCalculator>(
               jif3D::CreateGravityCalculator<
-                  jif3D::FullSensitivityGravityCalculator>::MakeScalar(true));
+                  jif3D::FullSensitivityGravMagCalculator>::MakeScalar(true));
       break;
     case jif3D::ftg:
       jif3D::ReadTensorGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
       //assign a ftg forward calculation object to the pointer
       GravityCalculator
-          = boost::shared_ptr<jif3D::FullSensitivityGravityCalculator>(
+          = boost::shared_ptr<jif3D::FullSensitivityGravMagCalculator>(
               jif3D::CreateGravityCalculator<
-                  jif3D::FullSensitivityGravityCalculator>::MakeTensor(true));
+                  jif3D::FullSensitivityGravMagCalculator>::MakeTensor(true));
       break;
     default:
       //in case we couldn't identify the data in the netcdf file
@@ -223,7 +223,7 @@ int main()
           Model.GetMeasPosZ());
       jif3D::SaveTensorGravityMeasurements(
           modelfilename + ".inv_ftg.nc",
-          jif3D::CreateGravityCalculator<jif3D::MinMemGravityCalculator>::MakeTensor()->Calculate(
+          jif3D::CreateGravityCalculator<jif3D::MinMemGravMagCalculator>::MakeTensor()->Calculate(
               Model), Model.GetMeasPosX(), Model.GetMeasPosY(),
           Model.GetMeasPosZ());
       break;
@@ -231,7 +231,7 @@ int main()
 
       jif3D::SaveScalarGravityMeasurements(
           modelfilename + ".inv_sgd.nc",
-          jif3D::CreateGravityCalculator<jif3D::MinMemGravityCalculator>::MakeScalar()->Calculate(
+          jif3D::CreateGravityCalculator<jif3D::MinMemGravMagCalculator>::MakeScalar()->Calculate(
               Model), Model.GetMeasPosX(), Model.GetMeasPosY(),
           Model.GetMeasPosZ());
       jif3D::Write3DTensorDataToVTK(modelfilename + ".inv_ftg.vtk",

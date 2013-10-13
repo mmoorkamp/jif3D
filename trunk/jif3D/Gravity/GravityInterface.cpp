@@ -7,8 +7,8 @@
 
 #include "GravityInterface.h"
 #include "ThreeDGravityModel.h"
-#include "MinMemGravityCalculator.h"
-#include "FullSensitivityGravityCalculator.h"
+#include "../GravMag/MinMemGravMagCalculator.h"
+#include "../GravMag/FullSensitivityGravMagCalculator.h"
 #include "ThreeDGravityFactory.h"
 #include <algorithm>
 #include <boost/shared_ptr.hpp>
@@ -21,8 +21,8 @@
 //we just cannot have parallel calls through this interface
 
 static boost::shared_ptr<jif3D::ThreeDGravityModel> GravModel;
-static boost::shared_ptr<jif3D::ThreeDGravityCalculator> ScalarGravCalculator;
-static boost::shared_ptr<jif3D::ThreeDGravityCalculator> TensorGravCalculator;
+static boost::shared_ptr<jif3D::ThreeDGravMagCalculator> ScalarGravCalculator;
+static boost::shared_ptr<jif3D::ThreeDGravMagCalculator> TensorGravCalculator;
 typedef boost::function0<jif3D::ThreeDGravityModel::t3DModelDim &>
     tcoordinatefunc;
 
@@ -40,22 +40,22 @@ void AllocateModel(const int *storescalar, const int *storetensor)
     if (cachescalar)
       {
         ScalarGravCalculator = jif3D::CreateGravityCalculator<
-            jif3D::FullSensitivityGravityCalculator>::MakeScalar();
+            jif3D::FullSensitivityGravMagCalculator>::MakeScalar();
       }
     else
       {
         ScalarGravCalculator = jif3D::CreateGravityCalculator<
-            jif3D::MinMemGravityCalculator>::MakeScalar();
+            jif3D::MinMemGravMagCalculator>::MakeScalar();
       }
     if (cachetensor)
       {
         TensorGravCalculator = jif3D::CreateGravityCalculator<
-            jif3D::FullSensitivityGravityCalculator>::MakeTensor();
+            jif3D::FullSensitivityGravMagCalculator>::MakeTensor();
       }
     else
       {
         TensorGravCalculator = jif3D::CreateGravityCalculator<
-            jif3D::MinMemGravityCalculator>::MakeTensor();
+            jif3D::MinMemGravMagCalculator>::MakeTensor();
       }
 
   }

@@ -11,7 +11,7 @@
 
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/base_object.hpp>
-#include "ThreeDGravityImplementation.h"
+#include "../GravMag/ThreeDGravMagImplementation.h"
 
 namespace jif3D
   {
@@ -23,7 +23,7 @@ namespace jif3D
      * It only implements the calculation of the background and the gridded part.
      * The assembly of the two parts is performed by the base class ThreeDGravityImplementation.
      */
-    class TensorOMPGravityImp: public jif3D::ThreeDGravityImplementation
+    class TensorOMPGravityImp: public jif3D::ThreeDGravMagImplementation
       {
     private:
       //! Implement the calculation of the background response
@@ -40,7 +40,7 @@ namespace jif3D
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
         {
-          ar & boost::serialization::base_object<ThreeDGravityImplementation>(*this);
+          ar & boost::serialization::base_object<ThreeDGravMagImplementation>(*this);
         }
     public:
       //! How many data do we return before any transformation
