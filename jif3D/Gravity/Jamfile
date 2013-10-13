@@ -2,19 +2,15 @@ import testing ;
 lib gravity : ThreeDGravityModel.cpp 
               GravityBackground.cpp BasicGravElements.cpp
               ScalarOMPGravityImp.cpp  TensorOMPGravityImp.cpp
-              ThreeDGravityImplementation.cpp CachedGravityCalculator.cpp FullSensitivityGravityCalculator.cpp
-              ThreeDGravityCalculator.cpp MinMemGravityCalculator.cpp 
-              GravityInterface.cpp   
-              ReadWriteGravityData.cpp 
-              DiskGravityCalculator.cpp
-                 ../Global//global ..//boost_filesystem ..//boost_system ../ModelBase//modelbase
+              GravityInterface.cpp   ReadWriteGravityData.cpp
+                 ../GravMag//gravmag ../Global//global ..//boost_filesystem ..//boost_system ../ModelBase//modelbase
               : <variant>gpu:<source>TensorCudaGravityImp.cpp 
                 <variant>gpu:<source>ScalarCudaGravityImp.cpp
                 <variant>gpu:<source>..//cudart
                 <variant>gpu:<source>gravcuda.cu ;
                
                     
-alias core :  ../ModelBase//modelbase ../Global ..//netcdf_c++ ..//netcdf  ..//boost_filesystem  ..//boost_program_options ..//boost_system ;
+alias core :  ../ModelBase//modelbase ../Global ../GravMag ..//netcdf_c++ ..//netcdf  ..//boost_filesystem  ..//boost_program_options ..//boost_system ;
 
 unit-test Model_test : test_ThreeDGravityModel.cpp gravity core : : <include>. ;
 unit-test scalar_test : test_ScalarCalculation.cpp gravity core : : <include>. ;

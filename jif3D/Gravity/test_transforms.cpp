@@ -14,9 +14,9 @@
 #include <time.h>
 #include "test_common.h"
 #include "GravityTransforms.h"
-#include "FullSensitivityGravityCalculator.h"
+#include "../GravMag/FullSensitivityGravMagCalculator.h"
 #include "ThreeDGravityFactory.h"
-#include "MinMemGravityCalculator.h"
+#include "../GravMag/MinMemGravMagCalculator.h"
 #include "../Global/NumUtil.h"
 
 BOOST_AUTO_TEST_SUITE( Gravity_Transforms_Suite )
@@ -54,10 +54,10 @@ BOOST_AUTO_TEST_CASE(ftginvar_test)
 
   BOOST_AUTO_TEST_CASE(ftginvar_sens_test)
     {
-      boost::shared_ptr<jif3D::FullSensitivityGravityCalculator> InvCalculator =
-          boost::shared_ptr<jif3D::FullSensitivityGravityCalculator>(
+      boost::shared_ptr<jif3D::FullSensitivityGravMagCalculator> InvCalculator =
+          boost::shared_ptr<jif3D::FullSensitivityGravMagCalculator>(
               jif3D::CreateGravityCalculator<
-                  jif3D::FullSensitivityGravityCalculator>::MakeTensor());
+                  jif3D::FullSensitivityGravMagCalculator>::MakeTensor());
       boost::shared_ptr<jif3D::VectorTransform> Transform = boost::shared_ptr<
           jif3D::FTGInvariant>(new jif3D::FTGInvariant());
       InvCalculator->SetDataTransform(Transform);
@@ -80,16 +80,16 @@ BOOST_AUTO_TEST_CASE(ftginvar_test)
 
   BOOST_AUTO_TEST_CASE(ftginvar_deriv_test)
     {
-      boost::shared_ptr<jif3D::FullSensitivityGravityCalculator>
+      boost::shared_ptr<jif3D::FullSensitivityGravMagCalculator>
           CacheCalculator = boost::shared_ptr<
-              jif3D::FullSensitivityGravityCalculator>(
+              jif3D::FullSensitivityGravMagCalculator>(
               jif3D::CreateGravityCalculator<
-                  jif3D::FullSensitivityGravityCalculator>::MakeTensor());
+                  jif3D::FullSensitivityGravMagCalculator>::MakeTensor());
 
-      boost::shared_ptr<jif3D::MinMemGravityCalculator>
+      boost::shared_ptr<jif3D::MinMemGravMagCalculator>
           CompCalculator =
-              boost::shared_ptr<jif3D::MinMemGravityCalculator>(
-                  jif3D::CreateGravityCalculator<jif3D::MinMemGravityCalculator>::MakeTensor());
+              boost::shared_ptr<jif3D::MinMemGravMagCalculator>(
+                  jif3D::CreateGravityCalculator<jif3D::MinMemGravMagCalculator>::MakeTensor());
 
       boost::shared_ptr<jif3D::VectorTransform> Transform = boost::shared_ptr<
           jif3D::FTGInvariant>(new jif3D::FTGInvariant());
@@ -119,12 +119,12 @@ BOOST_AUTO_TEST_CASE(ftginvar_test)
 
   BOOST_AUTO_TEST_CASE(diff_calc_test)
     {
-      boost::shared_ptr<jif3D::FullSensitivityGravityCalculator>
+      boost::shared_ptr<jif3D::FullSensitivityGravMagCalculator>
           RawCalculator(jif3D::CreateGravityCalculator<
-              jif3D::FullSensitivityGravityCalculator>::MakeTensor());
-      boost::shared_ptr<jif3D::FullSensitivityGravityCalculator>
+              jif3D::FullSensitivityGravMagCalculator>::MakeTensor());
+      boost::shared_ptr<jif3D::FullSensitivityGravMagCalculator>
           InvCalculator(jif3D::CreateGravityCalculator<
-              jif3D::FullSensitivityGravityCalculator>::MakeTensor());
+              jif3D::FullSensitivityGravMagCalculator>::MakeTensor());
       boost::shared_ptr<jif3D::VectorTransform> Transform = boost::shared_ptr<
           jif3D::FTGInvariant>(new jif3D::FTGInvariant());
       InvCalculator->SetDataTransform(Transform);

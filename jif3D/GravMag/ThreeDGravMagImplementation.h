@@ -12,7 +12,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/shared_ptr.hpp>
-#include "ThreeDGravityModel.h"
+#include "../Gravity/ThreeDGravityModel.h"
 #include "../Global/VecMat.h"
 #include "../Global/VectorTransform.h"
 
@@ -21,7 +21,7 @@ namespace jif3D
     /** \addtogroup gravity Gravity forward modeling, display and inversion */
     /* @{ */
     //this is just a forward declaration to avoid circular inclusions
-    class ThreeDGravityCalculator;
+    class ThreeDGravMagCalculator;
     //! The base class that provides the interface for the numerical implementation of the gravity forward calculations.
     /*! The calculation of the forward response is split into two class hierarchies that
      * have to be used in conjunction. The classes derived from ThreeDGravityImplementation
@@ -35,7 +35,7 @@ namespace jif3D
      * This type of design resembles the bridge pattern and allows to freely combine optimized implementations
      * for different platforms with different sensitivity handlings.
      */
-    class ThreeDGravityImplementation
+    class ThreeDGravMagImplementation
       {
     private:
       //! A data transform that we can apply to the calculated values, e.g. an invariant of the FTG data
@@ -95,11 +95,11 @@ namespace jif3D
         }
       //! For a given Model calculate the forward response for all measurements and return it as a real vector, the calculator object is passed to process the sensitivity information
       virtual rvec Calculate(const ThreeDGravityModel &Model,
-          ThreeDGravityCalculator &Calculator);
+          ThreeDGravMagCalculator &Calculator);
       //! Calculate the least-squres derivative vector for the given model and vector
       virtual rvec LQDerivative(const ThreeDGravityModel &Model, const rvec &Misfit);
-      ThreeDGravityImplementation();
-      virtual ~ThreeDGravityImplementation();
+      ThreeDGravMagImplementation();
+      virtual ~ThreeDGravMagImplementation();
       };
   /* @} */
   }

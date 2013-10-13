@@ -144,7 +144,7 @@ namespace jif3D
      * @return The vector holding the gravitational acceleration at each measurement site
      */
     rvec TensorCudaGravityImp::Calculate(const ThreeDGravityModel &Model,
-        ThreeDGravityCalculator &Calculator)
+        ThreeDGravMagCalculator &Calculator)
       {
 
         const unsigned int nx = Model.GetDensities().shape()[0];
@@ -157,7 +157,7 @@ namespace jif3D
             Model.GetXCellSizes().data(), Model.GetYCellSizes().data(),
             Model.GetZCellSizes().data(), nx, ny, nz);
         // call the base class that coordinates the calculation of gridded and background parts
-        rvec result(ThreeDGravityImplementation::Calculate(Model, Calculator));
+        rvec result(ThreeDGravMagImplementation::Calculate(Model, Calculator));
         // free memory
         FreeData(&d_xcoord, &d_ycoord, &d_zcoord, &d_xsize, &d_ysize, &d_zsize,
             &d_result);

@@ -38,8 +38,8 @@
 #include "../ModelBase/NetCDFModelTools.h"
 #include "../ModelBase/EqualGeometry.h"
 #include "../Gravity/ReadWriteGravityData.h"
-#include "../Gravity/ThreeDGravityCalculator.h"
-#include "../Gravity/MinMemGravityCalculator.h"
+#include "../GravMag/ThreeDGravMagCalculator.h"
+#include "../GravMag/MinMemGravMagCalculator.h"
 #include "../Gravity/ThreeDGravityFactory.h"
 #include "../Tomo/ThreeDSeismicModel.h"
 #include "../Tomo/ReadWriteTomographyData.h"
@@ -274,10 +274,10 @@ int main(int argc, char *argv[])
     jif3D::SaveTraveltimes(modelfilename + ".inv_tt.nc", TomoInvData, StartModel);
 
     jif3D::rvec ScalGravInvData(
-        jif3D::CreateGravityCalculator<jif3D::MinMemGravityCalculator>::MakeScalar()->Calculate(
+        jif3D::CreateGravityCalculator<jif3D::MinMemGravMagCalculator>::MakeScalar()->Calculate(
             GravModel));
     jif3D::rvec FTGInvData(
-        jif3D::CreateGravityCalculator<jif3D::MinMemGravityCalculator>::MakeTensor()->Calculate(
+        jif3D::CreateGravityCalculator<jif3D::MinMemGravMagCalculator>::MakeTensor()->Calculate(
             GravModel));
     jif3D::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc", ScalGravInvData,
         GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ());

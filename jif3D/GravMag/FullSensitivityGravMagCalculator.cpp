@@ -6,7 +6,7 @@
 //============================================================================
 
 
-#include "FullSensitivityGravityCalculator.h"
+#include "FullSensitivityGravMagCalculator.h"
 
 #ifdef HAVEATLAS
 #include <boost/numeric/bindings/atlas/cblas2.hpp>
@@ -20,19 +20,19 @@ namespace jif3D
     namespace atlas = boost::numeric::bindings::atlas;
 #endif
 
-    FullSensitivityGravityCalculator::FullSensitivityGravityCalculator(
-        boost::shared_ptr<ThreeDGravityImplementation> TheImp) :
-      CachedGravityCalculator(TheImp), Sensitivities()
+    FullSensitivityGravMagCalculator::FullSensitivityGravMagCalculator(
+        boost::shared_ptr<ThreeDGravMagImplementation> TheImp) :
+      CachedGravMagCalculator(TheImp), Sensitivities()
       {
 
       }
 
-    FullSensitivityGravityCalculator::~FullSensitivityGravityCalculator()
+    FullSensitivityGravMagCalculator::~FullSensitivityGravMagCalculator()
       {
 
       }
 
-    void FullSensitivityGravityCalculator::HandleSensitivities(
+    void FullSensitivityGravMagCalculator::HandleSensitivities(
         const size_t measindex)
       {
         //we have to identify the correct rows in the full sensitivity
@@ -47,7 +47,7 @@ namespace jif3D
         mr = SetCurrentSensitivities();
       }
 
-    rvec FullSensitivityGravityCalculator::CalculateNewModel(
+    rvec FullSensitivityGravMagCalculator::CalculateNewModel(
         const ThreeDGravityModel &Model)
       {
         //allocate enough memory for the sensitivities
@@ -64,7 +64,7 @@ namespace jif3D
     //calculate the untransformed data and then
     //apply the appropriate transformations for
     //the gradient or the transformed data
-    rvec FullSensitivityGravityCalculator::CalculateRawData(
+    rvec FullSensitivityGravMagCalculator::CalculateRawData(
         const ThreeDGravityModel &Model)
       {
         const size_t nmeas = Model.GetMeasPosX().size()
@@ -93,7 +93,7 @@ namespace jif3D
 
       }
 
-    rvec FullSensitivityGravityCalculator::CalculateCachedResult(
+    rvec FullSensitivityGravMagCalculator::CalculateCachedResult(
         const ThreeDGravityModel &Model)
       {
         //if we have to transform the data
@@ -106,7 +106,7 @@ namespace jif3D
         return CalculateRawData(Model);
       }
 
-    rvec FullSensitivityGravityCalculator::CachedLQDerivative(
+    rvec FullSensitivityGravMagCalculator::CachedLQDerivative(
         const ThreeDGravityModel &Model, const rvec &Misfit)
       {
         //first we calculate the raw data, the transformation might depend on this data
@@ -146,7 +146,7 @@ namespace jif3D
         return CalculateRawLQDerivative(Model, ProcessedMisfit);
       }
 
-    rvec FullSensitivityGravityCalculator::CalculateRawLQDerivative(
+    rvec FullSensitivityGravMagCalculator::CalculateRawLQDerivative(
         const ThreeDGravityModel &Model, const rvec &Misfit)
       {
         //when we have the sensitivities, the derivative of the objective function

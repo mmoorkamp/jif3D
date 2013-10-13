@@ -26,7 +26,7 @@ namespace jif3D
      * sensitivities occupy completely different coefficient in the wavelet domain than the model. Use with
      * extreme care !
      */
-    class WaveletCompressedGravityCalculator: public jif3D::CachedGravityCalculator
+    class WaveletCompressedGravityCalculator: public jif3D::CachedGravMagCalculator
       {
     private:
       //we store some array sizes when we calculate a new model, so we do not
@@ -72,7 +72,7 @@ namespace jif3D
       jif3D::rvec &SetWitheningVector(){return WhiteningVector;}
       virtual void HandleSensitivities(const size_t measindex);
       //! The constructor takes a shared pointer to an implementation object
-      WaveletCompressedGravityCalculator(boost::shared_ptr<ThreeDGravityImplementation> TheImp);
+      WaveletCompressedGravityCalculator(boost::shared_ptr<ThreeDGravMagImplementation> TheImp);
       virtual ~WaveletCompressedGravityCalculator();
       };
 

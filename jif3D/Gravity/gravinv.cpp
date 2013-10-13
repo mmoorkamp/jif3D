@@ -27,7 +27,7 @@
 #include "../ModelBase/NetCDFModelTools.h"
 #include "ThreeDGravityModel.h"
 #include "ReadWriteGravityData.h"
-#include "FullSensitivityGravityCalculator.h"
+#include "../GravMag/FullSensitivityGravMagCalculator.h"
 #include "DepthWeighting.h"
 #include "ThreeDGravityFactory.h"
 
@@ -99,7 +99,7 @@ int main()
     //for FTG
     double DepthExponent = -2.0;
     //create the pointer for the calculator object without assigning anything
-    boost::shared_ptr<jif3D::FullSensitivityGravityCalculator> GravityCalculator;
+    boost::shared_ptr<jif3D::FullSensitivityGravMagCalculator> GravityCalculator;
     //now we have to do a few things differently depending on whether we deal
     //with scalar or FTG data
     //1. We have to read the data differently
@@ -111,17 +111,17 @@ int main()
       jif3D::ReadScalarGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
       //assign a scalar forward calculation object to the pointer
       GravityCalculator
-          = boost::shared_ptr<jif3D::FullSensitivityGravityCalculator>(
+          = boost::shared_ptr<jif3D::FullSensitivityGravMagCalculator>(
               jif3D::CreateGravityCalculator<
-                  jif3D::FullSensitivityGravityCalculator>::MakeScalar(true));
+                  jif3D::FullSensitivityGravMagCalculator>::MakeScalar(true));
       break;
     case jif3D::ftg:
       jif3D::ReadTensorGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
       //assign a ftg forward calculation object to the pointer
       GravityCalculator
-          = boost::shared_ptr<jif3D::FullSensitivityGravityCalculator>(
+          = boost::shared_ptr<jif3D::FullSensitivityGravMagCalculator>(
               jif3D::CreateGravityCalculator<
-                  jif3D::FullSensitivityGravityCalculator>::MakeTensor(true));
+                  jif3D::FullSensitivityGravMagCalculator>::MakeTensor(true));
       DepthExponent = -3.0;
       break;
     default:

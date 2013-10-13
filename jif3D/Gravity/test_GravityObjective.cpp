@@ -18,8 +18,8 @@
 #include "../Inversion/ThreeDModelObjective.h"
 #include "ThreeDGravityFactory.h"
 #include "ThreeDGravityModel.h"
-#include "FullSensitivityGravityCalculator.h"
-#include "MinMemGravityCalculator.h"
+#include "../GravMag/FullSensitivityGravMagCalculator.h"
+#include "../GravMag/MinMemGravMagCalculator.h"
 
 BOOST_AUTO_TEST_SUITE( GravityObjective_Test_Suite )
 
@@ -54,13 +54,13 @@ void  CheckGradient(jif3D::ObjectiveFunction &Objective, const jif3D::rvec &Mode
       const size_t nmeas = 3;
       const size_t ncells = 5;
       MakeRandomModel(GravityTest,ncells,nmeas,false);
-      boost::shared_ptr<jif3D::FullSensitivityGravityCalculator> TensorCalculator(jif3D::CreateGravityCalculator<jif3D::FullSensitivityGravityCalculator>::MakeTensor());
+      boost::shared_ptr<jif3D::FullSensitivityGravMagCalculator> TensorCalculator(jif3D::CreateGravityCalculator<jif3D::FullSensitivityGravMagCalculator>::MakeTensor());
       jif3D::rvec Observed(TensorCalculator->Calculate(GravityTest));
       //we have to have different data from our observed data
       //otherwise our gradient will be zero
       Observed *= 1.1;
 
-      jif3D::ThreeDModelObjective<jif3D::FullSensitivityGravityCalculator> FTGObjective(*TensorCalculator.get());
+      jif3D::ThreeDModelObjective<jif3D::FullSensitivityGravMagCalculator> FTGObjective(*TensorCalculator.get());
 
       FTGObjective.SetObservedData(Observed);
       FTGObjective.SetCoarseModelGeometry(GravityTest);
@@ -78,11 +78,11 @@ void  CheckGradient(jif3D::ObjectiveFunction &Objective, const jif3D::rvec &Mode
       const size_t nmeas = 3;
       const size_t ncells = 5;
       MakeRandomModel(GravityTest,ncells,nmeas,false);
-      boost::shared_ptr<jif3D::FullSensitivityGravityCalculator> ScalarCalculator(jif3D::CreateGravityCalculator<jif3D::FullSensitivityGravityCalculator>::MakeScalar());
+      boost::shared_ptr<jif3D::FullSensitivityGravMagCalculator> ScalarCalculator(jif3D::CreateGravityCalculator<jif3D::FullSensitivityGravMagCalculator>::MakeScalar());
       jif3D::rvec Observed(ScalarCalculator->Calculate(GravityTest));
       Observed *= 1.1;
 
-      jif3D::ThreeDModelObjective<jif3D::FullSensitivityGravityCalculator> ScalarObjective(*ScalarCalculator.get());
+      jif3D::ThreeDModelObjective<jif3D::FullSensitivityGravMagCalculator> ScalarObjective(*ScalarCalculator.get());
       ScalarObjective.SetObservedData(Observed);
       ScalarObjective.SetCoarseModelGeometry(GravityTest);
       jif3D::rvec InvModel(GravityTest.GetDensities().num_elements());

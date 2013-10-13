@@ -10,7 +10,7 @@
 
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/base_object.hpp>
-#include "ThreeDGravityImplementation.h"
+#include "../GravMag/ThreeDGravMagImplementation.h"
 
 namespace jif3D
   {
@@ -31,7 +31,7 @@ namespace jif3D
      * This class cannot be copied as this would make a mess with management
      * of cuda resources.
      */
-    class TensorCudaGravityImp: public jif3D::ThreeDGravityImplementation
+    class TensorCudaGravityImp: public jif3D::ThreeDGravMagImplementation
       {
     private:
       /*! These pointers hold the memory on the graphics card as allocated
@@ -55,7 +55,7 @@ namespace jif3D
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
         {
-          ar & boost::serialization::base_object<ThreeDGravityImplementation>(*this);
+          ar & boost::serialization::base_object<ThreeDGravMagImplementation>(*this);
           ar & d_xcoord;
           ar & d_ycoord;
           ar & d_zcoord;
@@ -93,7 +93,7 @@ namespace jif3D
         }
       //! We reimplement the Calculate method to accommodate some specific CUDA issues
       virtual rvec Calculate(const ThreeDGravityModel &Model,
-          ThreeDGravityCalculator &Calculator);
+          ThreeDGravMagCalculator &Calculator);
       TensorCudaGravityImp();
       virtual ~TensorCudaGravityImp();
       };

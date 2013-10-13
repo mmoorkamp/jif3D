@@ -6,21 +6,21 @@
 //============================================================================
 
 
-#include "MinMemGravityCalculator.h"
+#include "MinMemGravMagCalculator.h"
 #include <iostream>
 
 
 namespace jif3D
   {
 
-    MinMemGravityCalculator::MinMemGravityCalculator(boost::shared_ptr<
-        ThreeDGravityImplementation> TheImp) :
-      ThreeDGravityCalculator(TheImp)
+    MinMemGravMagCalculator::MinMemGravMagCalculator(boost::shared_ptr<
+        ThreeDGravMagImplementation> TheImp) :
+      ThreeDGravMagCalculator(TheImp)
       {
 
       }
 
-    MinMemGravityCalculator::~MinMemGravityCalculator()
+    MinMemGravMagCalculator::~MinMemGravMagCalculator()
       {
 
       }
@@ -30,10 +30,10 @@ namespace jif3D
      * @param Model The Gravity model for the forward calculation
      * @return The resulting measurements (scalar or tensorial)
      */
-    rvec MinMemGravityCalculator::Calculate(const ThreeDGravityModel &Model)
+    rvec MinMemGravMagCalculator::Calculate(const ThreeDGravityModel &Model)
       {
         SetCurrentSensitivities().resize(0, 0);
-        return ThreeDGravityCalculator::Calculate(Model);
+        return ThreeDGravMagCalculator::Calculate(Model);
       }
 
   }

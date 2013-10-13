@@ -7,9 +7,9 @@
 #include <boost/program_options.hpp>
 #include "../Global/convert.h"
 #include "../Gravity/ThreeDGravityModel.h"
-#include "../Gravity/ThreeDGravityCalculator.h"
-#include "../Gravity/FullSensitivityGravityCalculator.h"
-#include "../Gravity/MinMemGravityCalculator.h"
+#include "../GravMag/ThreeDGravMagCalculator.h"
+#include "../GravMag/FullSensitivityGravMagCalculator.h"
+#include "../GravMag/MinMemGravMagCalculator.h"
 #include "../Gravity/ThreeDGravityFactory.h"
 
 /*! \file time_gravity_size.cpp
@@ -81,7 +81,7 @@ int main(int ac, char* av[])
     std::string filename;
     bool wantcuda = false;
     bool wantcached = false;
-    boost::shared_ptr<jif3D::ThreeDGravityCalculator> Calculator;
+    boost::shared_ptr<jif3D::ThreeDGravMagCalculator> Calculator;
 
 
     if (vm.count("gpu"))
@@ -119,12 +119,12 @@ int main(int ac, char* av[])
         if (wantcached)
           {
             Calculator = jif3D::CreateGravityCalculator<
-                jif3D::FullSensitivityGravityCalculator>::MakeTensor(wantcuda);
+                jif3D::FullSensitivityGravMagCalculator>::MakeTensor(wantcuda);
           }
         else
           {
             Calculator = jif3D::CreateGravityCalculator<
-                jif3D::MinMemGravityCalculator>::MakeTensor(wantcuda);
+                jif3D::MinMemGravMagCalculator>::MakeTensor(wantcuda);
 
           }
 
@@ -135,12 +135,12 @@ int main(int ac, char* av[])
         if (wantcached)
           {
             Calculator = jif3D::CreateGravityCalculator<
-                jif3D::FullSensitivityGravityCalculator>::MakeScalar(wantcuda);
+                jif3D::FullSensitivityGravMagCalculator>::MakeScalar(wantcuda);
           }
         else
           {
             Calculator = jif3D::CreateGravityCalculator<
-                jif3D::MinMemGravityCalculator>::MakeScalar(wantcuda);
+                jif3D::MinMemGravMagCalculator>::MakeScalar(wantcuda);
           }
       }
 

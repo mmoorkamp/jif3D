@@ -21,7 +21,7 @@
 #include "../Inversion/LinearInversion.h"
 #include "../Gravity/ThreeDGravityFactory.h"
 #include "../Gravity/DepthWeighting.h"
-#include "../Gravity/FullSensitivityGravityCalculator.h"
+#include "../GravMag/FullSensitivityGravMagCalculator.h"
 
 namespace atlas = boost::numeric::bindings::atlas;
 namespace ublas = boost::numeric::ublas;
@@ -74,7 +74,7 @@ double CalcMisfit(const jif3D::rvec &MeasData, const jif3D::rvec &CurrData,
 
 void LineSearch(jif3D::rvec &DeltaModel, jif3D::ThreeDGravityModel &Model,
     jif3D::rvec &DataVector, boost::shared_ptr<
-        jif3D::FullSensitivityGravityCalculator> GravityCalculator,
+        jif3D::FullSensitivityGravMagCalculator> GravityCalculator,
     const double lambda)
   {
     const size_t nmod = Model.GetDensities().size();
@@ -141,9 +141,9 @@ void LineSearch(jif3D::rvec &DeltaModel, jif3D::ThreeDGravityModel &Model,
 int main()
   {
     jif3D::ThreeDGravityModel Model;
-    boost::shared_ptr<jif3D::FullSensitivityGravityCalculator>
+    boost::shared_ptr<jif3D::FullSensitivityGravMagCalculator>
         GravityCalculator(jif3D::CreateGravityCalculator<
-            jif3D::FullSensitivityGravityCalculator>::MakeTensor());
+            jif3D::FullSensitivityGravMagCalculator>::MakeTensor());
     jif3D::rvec Data;
     jif3D::ThreeDGravityModel::tMeasPosVec PosX, PosY, PosZ;
 

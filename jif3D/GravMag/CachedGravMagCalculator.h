@@ -11,7 +11,7 @@
 
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/base_object.hpp>
-#include "ThreeDGravityCalculator.h"
+#include "ThreeDGravMagCalculator.h"
 
 namespace jif3D
   {
@@ -26,7 +26,7 @@ namespace jif3D
      *
      * Examples for derived classes are FullSensitivityGravityCalculator and WaveletCompressedGravityCalculator.
      */
-    class CachedGravityCalculator: public jif3D::ThreeDGravityCalculator
+    class CachedGravMagCalculator: public jif3D::ThreeDGravMagCalculator
       {
     private:
       //! Have we performed a calculation before and build up cached information
@@ -54,7 +54,7 @@ namespace jif3D
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
         {
-          ar & boost::serialization::base_object<ThreeDGravityCalculator>(*this);
+          ar & boost::serialization::base_object<ThreeDGravMagCalculator>(*this);
           ar & OldXSizes;
           ar & OldYSizes;
           ar & OldZSizes;
@@ -96,9 +96,9 @@ namespace jif3D
       //! We overwrite the base class method to use the caching information
       virtual rvec LQDerivative(const ThreeDGravityModel &Model, const rvec &Misfit);
       //! The constructor takes a shared pointer to an implementation object
-      CachedGravityCalculator(
-          boost::shared_ptr<ThreeDGravityImplementation> TheImp);
-      virtual ~CachedGravityCalculator();
+      CachedGravMagCalculator(
+          boost::shared_ptr<ThreeDGravMagImplementation> TheImp);
+      virtual ~CachedGravMagCalculator();
       };
   /* @} */
   }

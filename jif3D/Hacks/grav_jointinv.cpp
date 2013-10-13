@@ -27,8 +27,8 @@
 #include "../Regularization/MinDiffRegularization.h"
 #include "../Inversion/ModelTransforms.h"
 #include "../Gravity/ReadWriteGravityData.h"
-#include "../Gravity/ThreeDGravityCalculator.h"
-#include "../Gravity/MinMemGravityCalculator.h"
+#include "../GravMag/ThreeDGravMagCalculator.h"
+#include "../GravMag/MinMemGravMagCalculator.h"
 #include "../Gravity/DepthWeighting.h"
 #include "../Gravity/ThreeDGravityFactory.h"
 #include "../Joint/SetupRegularization.h"
@@ -156,16 +156,16 @@ int main(int argc, char *argv[])
     //calculate the predicted data
     std::cout << "Calculating response of inversion model." << std::endl;
 
-    boost::shared_ptr<jif3D::MinMemGravityCalculator> ScalGravityCalculator =
-        boost::shared_ptr<jif3D::MinMemGravityCalculator>(
-            jif3D::CreateGravityCalculator<jif3D::MinMemGravityCalculator>::MakeScalar());
+    boost::shared_ptr<jif3D::MinMemGravMagCalculator> ScalGravityCalculator =
+        boost::shared_ptr<jif3D::MinMemGravMagCalculator>(
+            jif3D::CreateGravityCalculator<jif3D::MinMemGravMagCalculator>::MakeScalar());
     jif3D::rvec GravInvData(ScalGravityCalculator->Calculate(GravModel));
     jif3D::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc", GravInvData,
         GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ());
 
-    boost::shared_ptr<jif3D::MinMemGravityCalculator> FTGGravityCalculator =
-        boost::shared_ptr<jif3D::MinMemGravityCalculator>(
-            jif3D::CreateGravityCalculator<jif3D::MinMemGravityCalculator>::MakeTensor());
+    boost::shared_ptr<jif3D::MinMemGravMagCalculator> FTGGravityCalculator =
+        boost::shared_ptr<jif3D::MinMemGravMagCalculator>(
+            jif3D::CreateGravityCalculator<jif3D::MinMemGravMagCalculator>::MakeTensor());
     jif3D::rvec FTGInvData(FTGGravityCalculator->Calculate(GravModel));
     jif3D::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc", FTGInvData,
         GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ());

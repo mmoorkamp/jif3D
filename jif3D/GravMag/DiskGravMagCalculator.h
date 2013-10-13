@@ -11,7 +11,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/base_object.hpp>
-#include "FullSensitivityGravityCalculator.h"
+#include "FullSensitivityGravMagCalculator.h"
 
 namespace jif3D
   {
@@ -20,7 +20,7 @@ namespace jif3D
      * we do not want to recalculate them each time. On construction we generate a filename that consists
      * of the ID of the program and the memory location of the object and therefore should be unique.
      */
-    class DiskGravityCalculator: public jif3D::FullSensitivityGravityCalculator
+    class DiskGravMagCalculator: public jif3D::FullSensitivityGravMagCalculator
       {
     private:
       //! This routine creates a unique filename for each object, used upon construction
@@ -39,21 +39,21 @@ namespace jif3D
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
         {
-          ar & boost::serialization::base_object<FullSensitivityGravityCalculator>(*this);
+          ar & boost::serialization::base_object<FullSensitivityGravMagCalculator>(*this);
           ar & FullPath;
         }
     public:
       //! Handle the current row of the sensitivity matrix by storing it in a file
       virtual void HandleSensitivities(const size_t measindex);
       //! The constructor needs a shared pointer to an implementation object, usually handled by CreateGravityCalculator
-      explicit DiskGravityCalculator(
-          boost::shared_ptr<ThreeDGravityImplementation> TheImp,
+      explicit DiskGravMagCalculator(
+          boost::shared_ptr<ThreeDGravMagImplementation> TheImp,
           boost::filesystem::path TDir = boost::filesystem::current_path());
       //! We need to define the copy constructor to make sure that filename stays unique among all created objects
-      explicit DiskGravityCalculator(const DiskGravityCalculator &Old);
+      explicit DiskGravMagCalculator(const DiskGravMagCalculator &Old);
       //! We have to define a copy operator to make sure filename stays unique
-      DiskGravityCalculator& operator=(const DiskGravityCalculator& source);
-      virtual ~DiskGravityCalculator();
+      DiskGravMagCalculator& operator=(const DiskGravMagCalculator& source);
+      virtual ~DiskGravMagCalculator();
       };
 
   }

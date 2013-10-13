@@ -31,7 +31,6 @@
 #include "../Tomo/ReadWriteTomographyData.h"
 #include "../Tomo/TomographyCalculator.h"
 #include "../Gravity/ReadWriteGravityData.h"
-#include "../Gravity/MinMemGravityCalculator.h"
 #include "../Gravity/ThreeDGravityFactory.h"
 #include "../MT/X3DModel.h"
 #include "../MT/X3DMTCalculator.h"

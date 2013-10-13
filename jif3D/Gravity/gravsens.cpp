@@ -21,7 +21,7 @@
 #include "../Inversion/MatrixTools.h"
 #include "../Inversion/GeneralizedInverse.h"
 #include "../ModelBase/VTKTools.h"
-#include "FullSensitivityGravityCalculator.h"
+#include "../GravMag/FullSensitivityGravMagCalculator.h"
 #include "ThreeDGravityModel.h"
 #include "ReadWriteGravityData.h"
 #include "ThreeDGravityFactory.h"
@@ -54,9 +54,9 @@ int main()
 
     //calculate the response, we don't actually care about the densities
     //and the model response, but we need the sensitivity matrix
-    boost::shared_ptr<jif3D::FullSensitivityGravityCalculator>
+    boost::shared_ptr<jif3D::FullSensitivityGravMagCalculator>
             ScalarCalculator(jif3D::CreateGravityCalculator<
-                jif3D::FullSensitivityGravityCalculator>::MakeScalar());
+                jif3D::FullSensitivityGravMagCalculator>::MakeScalar());
     ScalarCalculator->Calculate(Model);
     jif3D::rmat Sensitivities(ScalarCalculator->GetSensitivities());
     //do the SVD to get the eigenvalues and eigenvectors

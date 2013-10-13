@@ -55,11 +55,11 @@ namespace jif3D
     boost::shared_ptr<CalculatorClass> CreateGravityCalculator<CalculatorClass>::MakeScalar(
         bool wantcuda)
       {
-        boost::shared_ptr<ThreeDGravityImplementation> Imp;
+        boost::shared_ptr<ThreeDGravMagImplementation> Imp;
         if (wantcuda)
           {
 #ifdef HAVEGPU
-            Imp = boost::shared_ptr<ThreeDGravityImplementation>(
+            Imp = boost::shared_ptr<ThreeDGravMagImplementation>(
                 new ScalarCudaGravityImp);
 #else
             throw jif3D::FatalException("Code has been compiled without GPU support !");
@@ -67,7 +67,7 @@ namespace jif3D
           }
         else
           {
-            Imp = boost::shared_ptr<ThreeDGravityImplementation>(
+            Imp = boost::shared_ptr<ThreeDGravMagImplementation>(
                 new ScalarOMPGravityImp);
           }
         return boost::shared_ptr<CalculatorClass>(new CalculatorClass(Imp));
@@ -81,11 +81,11 @@ namespace jif3D
     boost::shared_ptr<CalculatorClass> CreateGravityCalculator<CalculatorClass>::MakeTensor(
         bool wantcuda)
       {
-        boost::shared_ptr<ThreeDGravityImplementation> Imp;
+        boost::shared_ptr<ThreeDGravMagImplementation> Imp;
         if (wantcuda)
           {
 #ifdef HAVEGPU
-            Imp = boost::shared_ptr<ThreeDGravityImplementation>(
+            Imp = boost::shared_ptr<ThreeDGravMagImplementation>(
                 new TensorCudaGravityImp);
 #else
             throw jif3D::FatalException("Code has been compiled without GPU support !");
@@ -93,7 +93,7 @@ namespace jif3D
           }
         else
           {
-            Imp = boost::shared_ptr<ThreeDGravityImplementation>(
+            Imp = boost::shared_ptr<ThreeDGravMagImplementation>(
                 new TensorOMPGravityImp);
           }
         return boost::shared_ptr<CalculatorClass>(new CalculatorClass(Imp));
