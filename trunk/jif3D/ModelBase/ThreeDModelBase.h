@@ -66,12 +66,8 @@ namespace jif3D
       //! Have the cell sizes for the z-coordinate changed
       mutable bool ZCellSizesChanged;
 #ifdef HAVEOPENMP
-      //! a locking variable to allow concurrent coordinate calculation calls for the x-component
-      mutable omp_lock_t lck_model_xcoord;
-      //! a locking variable to allow concurrent coordinate calculation calls for the y-component
-      mutable omp_lock_t lck_model_ycoord;
-      //! a locking variable to allow concurrent coordinate calculation calls for the z-component
-      mutable omp_lock_t lck_model_zcoord;
+      //! a locking variable to allow concurrent coordinate calculation calls
+      mutable omp_lock_t lck_model_coord;
 #endif
       //! The object containing the actual value, e.g. conductivity, velocity
       t3DModelData Data;
@@ -295,37 +291,19 @@ namespace jif3D
       //!Get the x (north) coordinates of the cells, might perform calculations and write operation but is now thread-safe
       const t3DModelDim &GetXCoordinates() const
         {
-#ifdef HAVEOPENMP
-          omp_set_lock(&lck_model_xcoord);
-#endif
           CalcCoordinates(GridXCoordinates, XCellSizes, XCellSizesChanged);
-#ifdef HAVEOPENMP
-          omp_unset_lock(&lck_model_xcoord);
-#endif
           return GridXCoordinates;
         }
       //!Get the y (east) coordinates of the cells, might perform calculations and write operation but is now thread-safe
       const t3DModelDim &GetYCoordinates() const
         {
-#ifdef HAVEOPENMP
-          omp_set_lock(&lck_model_ycoord);
-#endif
           CalcCoordinates(GridYCoordinates, YCellSizes, YCellSizesChanged);
-#ifdef HAVEOPENMP
-          omp_unset_lock(&lck_model_ycoord);
-#endif
           return GridYCoordinates;
         }
       //!Get the z (depth) coordinates of the cells, might perform calculations and write operation but is now thread-safe
       const t3DModelDim &GetZCoordinates() const
         {
-#ifdef HAVEOPENMP
-          omp_set_lock(&lck_model_zcoord);
-#endif
           CalcCoordinates(GridZCoordinates, ZCellSizes, ZCellSizesChanged);
-#ifdef HAVEOPENMP
-          omp_unset_lock(&lck_model_zcoord);
-#endif
           return GridZCoordinates;
         }
       //! The derived model classes also manage the synthetic data configuration, for parallel calculations we can signal how many chunks can be calculated independently (e.g. how many frequencies)

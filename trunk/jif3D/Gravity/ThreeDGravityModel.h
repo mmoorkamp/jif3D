@@ -81,17 +81,17 @@ namespace jif3D
           ar & bg_densities;
         }
     public:
-	//! Set the siyes of the grid cells in x-direction in m
+      //! Set the sizes of the grid cells in x-direction in m
       t3DModelDim &SetXCellSizes()
         {
           return ThreeDModelBase::SetXCellSizes();
         }
-      //! Set the siyes of the grid cells in y-direction in m
+      //! Set the sizes of the grid cells in y-direction in m
       t3DModelDim &SetYCellSizes()
         {
           return ThreeDModelBase::SetYCellSizes();
         }
-      //! Set the siyes of the grid cells in z-direction in m
+      //! Set the sizes of the grid cells in z-direction in m
       t3DModelDim &SetZCellSizes()
         {
           return ThreeDModelBase::SetZCellSizes();
@@ -144,9 +144,9 @@ namespace jif3D
       ThreeDGravityModel(const ThreeDGravityModel &source);
       virtual ~ThreeDGravityModel();
       //! We have a copy operator for other Gravity models
-      ThreeDGravityModel& operator= (const ThreeDGravityModel& source);
+      ThreeDGravityModel& operator=(const ThreeDGravityModel& source);
       //! All other models will be copied by the copy operator for the base class
-      ThreeDGravityModel& operator= (const ThreeDModelBase& source);
+      ThreeDGravityModel& operator=(const ThreeDModelBase& source);
       };
   /* @} */
   }

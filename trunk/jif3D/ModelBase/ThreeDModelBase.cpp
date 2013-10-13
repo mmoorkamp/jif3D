@@ -21,18 +21,14 @@ namespace jif3D
             0.0), YOrigin(0.0), ZOrigin(0.0)
       {
 #ifdef HAVEOPENMP
-        omp_init_lock(&lck_model_xcoord);
-        omp_init_lock(&lck_model_ycoord);
-        omp_init_lock(&lck_model_zcoord);
+        omp_init_lock(&lck_model_coord);
 #endif
       }
 
     ThreeDModelBase::~ThreeDModelBase()
       {
 #ifdef HAVEOPENMP
-        omp_destroy_lock(&lck_model_xcoord);
-        omp_destroy_lock(&lck_model_ycoord);
-        omp_destroy_lock(&lck_model_zcoord);
+        omp_destroy_lock(&lck_model_coord);
 #endif
       }
 
@@ -51,9 +47,7 @@ namespace jif3D
         //so we do not copy the value from the source object
         //but we reinitialize
 #ifdef HAVEOPENMP
-        omp_init_lock(&lck_model_xcoord);
-        omp_init_lock(&lck_model_ycoord);
-        omp_init_lock(&lck_model_zcoord);
+        omp_init_lock(&lck_model_coord);
 #endif
       }
 
@@ -110,6 +104,9 @@ namespace jif3D
         //if the sizes have changed and there is something to calculate
         if (ChangeFlag && nelements > 0)
           {
+#ifdef HAVEOPENMP
+            omp_set_lock(&lck_model_coord);
+#endif
             //make sure we have enough space for the coordinates
             Coordinates.resize(boost::extents[nelements]);
             //sum up the sizes to get the coordinates
@@ -118,6 +115,9 @@ namespace jif3D
             std::partial_sum(Sizes.begin(), Sizes.end() - 1, Coordinates.begin() + 1);
             Coordinates[0] = 0.0;
             ChangeFlag = false;
+#ifdef HAVEOPENMP
+            omp_unset_lock(&lck_model_coord);
+#endif
           }
       }
 
