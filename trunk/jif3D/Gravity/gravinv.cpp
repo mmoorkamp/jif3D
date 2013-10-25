@@ -5,7 +5,6 @@
 // Copyright   : 2008, MM
 //============================================================================
 
-
 /*! \file gravinv.cpp
  * Invert scalar or ftg gravity data. The program reads in a model file that specifies the starting model and
  * a file with the input data. It outputs the calculated data and the inversion model in netcdf and vtk file format
@@ -34,14 +33,12 @@
 namespace ublas = boost::numeric::ublas;
 
 //write the sensitivities for each measurement to a file
-void WriteSensitivities(const std::string &nameroot,
-    const std::string &sensname, const jif3D::rmat &Sens,
-    const jif3D::ThreeDGravityModel &Model)
+void WriteSensitivities(const std::string &nameroot, const std::string &sensname,
+    const jif3D::rmat &Sens, const jif3D::ThreeDGravityModel &Model)
   {
     //create a data structure that mimics the geometry of the models
-    jif3D::ThreeDModelBase::t3DModelData
-        SensModel(
-            boost::extents[Model.GetDensities().shape()[0]][Model.GetDensities().shape()[1]][Model.GetDensities().shape()[2]]);
+    jif3D::ThreeDModelBase::t3DModelData SensModel(
+        boost::extents[Model.GetDensities().shape()[0]][Model.GetDensities().shape()[1]][Model.GetDensities().shape()[2]]);
     const size_t ngrid = Model.GetDensities().num_elements();
     const size_t ndata = Sens.size1();
     //for each measurement
@@ -52,25 +49,25 @@ void WriteSensitivities(const std::string &nameroot,
         //copy to the Model structure to map to its geometric position
         std::copy(sensrow.begin(), sensrow.begin() + ngrid, SensModel.data());
         //write out a .vtk and a netcdf file
-        jif3D::Write3DModelToVTK(nameroot + sensname + jif3D::stringify(i)
-            + ".vtk", sensname, Model.GetXCellSizes(), Model.GetYCellSizes(),
+        jif3D::Write3DModelToVTK(nameroot + sensname + jif3D::stringify(i) + ".vtk",
+            sensname, Model.GetXCellSizes(), Model.GetYCellSizes(), Model.GetZCellSizes(),
+            SensModel);
+        jif3D::Write3DModelToNetCDF(nameroot + sensname + jif3D::stringify(i) + ".nc",
+            sensname, " ", Model.GetXCellSizes(), Model.GetYCellSizes(),
             Model.GetZCellSizes(), SensModel);
-        jif3D::Write3DModelToNetCDF(nameroot + sensname + jif3D::stringify(i)
-            + ".nc", sensname, " ", Model.GetXCellSizes(),
-            Model.GetYCellSizes(), Model.GetZCellSizes(), SensModel);
       }
 
   }
 
 //calculate the normalized misfit between observed and synthetic data
-double CalcMisfit(const jif3D::rvec &ObservedData,
-    const jif3D::rvec &SyntheticData, jif3D::rvec &Misfit)
+double CalcMisfit(const jif3D::rvec &ObservedData, const jif3D::rvec &SyntheticData,
+    jif3D::rvec &Misfit)
   {
-    std::transform(ObservedData.begin(), ObservedData.end(),
-        SyntheticData.begin(), Misfit.begin(), std::minus<double>());
+    std::transform(ObservedData.begin(), ObservedData.end(), SyntheticData.begin(),
+        Misfit.begin(), std::minus<double>());
     //we normalise the misfit by the observed data
-    std::transform(Misfit.begin(), Misfit.end(), ObservedData.begin(),
-        Misfit.begin(), std::divides<double>());
+    std::transform(Misfit.begin(), Misfit.end(), ObservedData.begin(), Misfit.begin(),
+        std::divides<double>());
     return ublas::norm_2(Misfit);
   }
 
@@ -82,7 +79,7 @@ int main()
 
     //first we read in the starting model and the measured data
     std::string modelfilename = jif3D::AskFilename("Starting model Filename: ");
-    std::string datafilename = jif3D::AskFilename( "Data Filename: ");
+    std::string datafilename = jif3D::AskFilename("Data Filename: ");
 
     //we read in the starting modelfile
     jif3D::ThreeDGravityModel Model;
@@ -91,15 +88,15 @@ int main()
 
     //we figure out the type of data (scalar or ftg) from the variables
     //that are in the netcdf file
-    jif3D::GravityDataType DataType = jif3D::IdentifyGravityDatafileType(
-        datafilename);
+    jif3D::GravityDataType DataType = jif3D::IdentifyGravityDatafileType(datafilename);
 
     //Li and Oldenburg recommend a depth weighting exponent of -2.0
     //for scalar gravity data, we make this the default, it will be changed
     //for FTG
     double DepthExponent = -2.0;
     //create the pointer for the calculator object without assigning anything
-    boost::shared_ptr<jif3D::FullSensitivityGravMagCalculator> GravityCalculator;
+    typedef typename jif3D::FullSensitivityGravMagCalculator<jif3D::ThreeDGravityModel> CalculatorType;
+    boost::shared_ptr<CalculatorType> GravityCalculator;
     //now we have to do a few things differently depending on whether we deal
     //with scalar or FTG data
     //1. We have to read the data differently
@@ -110,25 +107,20 @@ int main()
     case jif3D::scalar:
       jif3D::ReadScalarGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
       //assign a scalar forward calculation object to the pointer
-      GravityCalculator
-          = boost::shared_ptr<jif3D::FullSensitivityGravMagCalculator>(
-              jif3D::CreateGravityCalculator<
-                  jif3D::FullSensitivityGravMagCalculator>::MakeScalar(true));
+      GravityCalculator = boost::shared_ptr<CalculatorType>(
+          jif3D::CreateGravityCalculator<CalculatorType>::MakeScalar(true));
       break;
     case jif3D::ftg:
       jif3D::ReadTensorGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
       //assign a ftg forward calculation object to the pointer
-      GravityCalculator
-          = boost::shared_ptr<jif3D::FullSensitivityGravMagCalculator>(
-              jif3D::CreateGravityCalculator<
-                  jif3D::FullSensitivityGravMagCalculator>::MakeTensor(true));
+      GravityCalculator = boost::shared_ptr<CalculatorType>(
+          jif3D::CreateGravityCalculator<CalculatorType>::MakeTensor(true));
       DepthExponent = -3.0;
       break;
     default:
       //in case we couldn't identify the data in the netcdf file
       //print an error message and exit with an error code
-      std::cerr << "Cannot determine the type of data to invert. Aborting."
-          << std::endl;
+      std::cerr << "Cannot determine the type of data to invert. Aborting." << std::endl;
       exit(100);
       break;
       }
@@ -194,8 +186,8 @@ int main()
     jif3D::ExtractMiddleSens(Model, GravityCalculator->GetSensitivities(),
         GravityCalculator->GetDataPerMeasurement(), SensProfile);
     //we fit a curve of the form 1/(z+z0)^n to the extracted sensitivities
-    double z0 = FitZ0(SensProfile, Model.GetZCellSizes(), jif3D::WeightingTerm(
-        DepthExponent));
+    double z0 = FitZ0(SensProfile, Model.GetZCellSizes(),
+        jif3D::WeightingTerm(DepthExponent));
     std::cout << "Estimated z0: " << z0 << std::endl;
 
     //calculate the depth scaling
@@ -217,7 +209,7 @@ int main()
     // the weights only depend on the depth of the cell
     for (size_t i = 0; i < ngrid; ++i)
       {
-        ModelWeight( i) = WeightVector(i % zsize);
+        ModelWeight(i) = WeightVector(i % zsize);
       }
 
     //then we ask the user for the regularization parameter lambda
@@ -230,18 +222,17 @@ int main()
     std::cout << "Performing inversion." << std::endl;
     jif3D::rvec InvModel(nmod);
     std::fill(InvModel.begin(), InvModel.end(), 0.0);
-    jif3D::DataSpaceInversion()(GravityCalculator->SetSensitivities(),
-        DataDiffVec, ModelWeight, DataError, lambda, InvModel);
+    jif3D::DataSpaceInversion()(GravityCalculator->SetSensitivities(), DataDiffVec,
+        ModelWeight, DataError, lambda, InvModel);
 
     //add the result of the inversion to the starting model
     //we only add the gridded part, the  background is always 0 due to the weighting
     std::transform(InvModel.begin(), InvModel.begin() + ngrid,
         Model.SetDensities().origin(), Model.SetDensities().origin(),
         std::plus<double>());
-    jif3D::ThreeDGravityModel::tBackgroundVec Background(
-        Model.GetBackgroundDensities());
-    std::transform(InvModel.begin() + ngrid, InvModel.end(),
-        Background.begin(), Background.begin(), std::plus<double>());
+    jif3D::ThreeDGravityModel::tBackgroundVec Background(Model.GetBackgroundDensities());
+    std::transform(InvModel.begin() + ngrid, InvModel.end(), Background.begin(),
+        Background.begin(), std::plus<double>());
     Model.SetBackgroundDensities(Background);
     //calculate the predicted data
     std::cout << "Calculating response of inversion model." << std::endl;
@@ -254,24 +245,19 @@ int main()
     switch (DataType)
       {
     case jif3D::scalar:
-      jif3D::Write3DDataToVTK(modelfilename + ".inv_sgd.vtk", "grav_accel",
-          InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
-          Model.GetMeasPosZ());
-      jif3D::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc",
-          InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
-          Model.GetMeasPosZ());
+      jif3D::Write3DDataToVTK(modelfilename + ".inv_sgd.vtk", "grav_accel", InvData,
+          Model.GetMeasPosX(), Model.GetMeasPosY(), Model.GetMeasPosZ());
+      jif3D::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc", InvData,
+          Model.GetMeasPosX(), Model.GetMeasPosY(), Model.GetMeasPosZ());
       break;
     case jif3D::ftg:
-      jif3D::Write3DTensorDataToVTK(modelfilename + ".inv_ftg.vtk",
-          "grav_accel", InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
-          Model.GetMeasPosZ());
-      jif3D::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc",
-          InvData, Model.GetMeasPosX(), Model.GetMeasPosY(),
-          Model.GetMeasPosZ());
+      jif3D::Write3DTensorDataToVTK(modelfilename + ".inv_ftg.vtk", "grav_accel", InvData,
+          Model.GetMeasPosX(), Model.GetMeasPosY(), Model.GetMeasPosZ());
+      jif3D::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc", InvData,
+          Model.GetMeasPosX(), Model.GetMeasPosY(), Model.GetMeasPosZ());
       break;
     default:
-      std::cerr << " We should never reach this part. Fatal Error !"
-          << std::endl;
+      std::cerr << " We should never reach this part. Fatal Error !" << std::endl;
       exit(100);
       break;
       }

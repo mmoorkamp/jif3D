@@ -124,6 +124,8 @@ int main(int argc, char *argv[])
                 GravModel.SetDensities().origin());
             GravModel.WriteVTK(
                 modelfilename + jif3D::stringify(iteration) + ".grav.inv.vtk");
+            GravModel.WriteNetCDF(
+                modelfilename + jif3D::stringify(iteration) + ".grav.inv.nc");
 
             ++iteration;
             std::cout << "Gradient Norm: " << Optimizer->GetGradNorm() << std::endl;
@@ -156,16 +158,15 @@ int main(int argc, char *argv[])
     //calculate the predicted data
     std::cout << "Calculating response of inversion model." << std::endl;
 
-    boost::shared_ptr<jif3D::MinMemGravMagCalculator> ScalGravityCalculator =
-        boost::shared_ptr<jif3D::MinMemGravMagCalculator>(
-            jif3D::CreateGravityCalculator<jif3D::MinMemGravMagCalculator>::MakeScalar());
+    typedef typename jif3D::MinMemGravMagCalculator<jif3D::ThreeDGravityModel> CalculatorType;
+    boost::shared_ptr<CalculatorType> ScalGravityCalculator = boost::shared_ptr<
+        CalculatorType>(jif3D::CreateGravityCalculator<CalculatorType>::MakeScalar());
     jif3D::rvec GravInvData(ScalGravityCalculator->Calculate(GravModel));
     jif3D::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc", GravInvData,
         GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ());
 
-    boost::shared_ptr<jif3D::MinMemGravMagCalculator> FTGGravityCalculator =
-        boost::shared_ptr<jif3D::MinMemGravMagCalculator>(
-            jif3D::CreateGravityCalculator<jif3D::MinMemGravMagCalculator>::MakeTensor());
+    boost::shared_ptr<CalculatorType> FTGGravityCalculator = boost::shared_ptr<
+        CalculatorType>(jif3D::CreateGravityCalculator<CalculatorType>::MakeTensor());
     jif3D::rvec FTGInvData(FTGGravityCalculator->Calculate(GravModel));
     jif3D::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc", FTGInvData,
         GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ());

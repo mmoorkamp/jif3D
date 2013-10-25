@@ -72,7 +72,7 @@ void update_model(int, int, ColumnVector x)
 
 void init_model(int ndim, ColumnVector& x)
   {
-    if (ndim != InvModel.size())
+    if (size_t(ndim) != InvModel.size())
       {
         std::cerr << "Ndim: " << ndim << " does not match Model size " << InvModel.size()
             << std::endl;
@@ -86,7 +86,7 @@ void eval_objective(int mode, int n, const ColumnVector& x, double& fx, ColumnVe
     int& result)
   {
 
-    if (n != InvModel.size())
+    if (size_t(n) != InvModel.size())
       {
         std::cerr << "N: " << n << " does not match Model size " << InvModel.size()
             << std::endl;
@@ -190,8 +190,8 @@ int main(int argc, char *argv[])
             "MT model does not have the same geometry as starting model");
       }
 
-    boost::shared_ptr<jif3D::RegularizationFunction> Regularization = RegSetup.SetupObjective(
-        vm, StartModel, CovModVec);
+    boost::shared_ptr<jif3D::RegularizationFunction> Regularization =
+        RegSetup.SetupObjective(vm, StartModel, CovModVec);
     CouplingSetup.SetupModelVector(vm, InvModel, StartModel, TomoSetup.GetModel(),
         GravitySetup.GetScalModel(), MTSetup.GetModel(), GetObjective(), Regularization,
         RegSetup.GetSubStart());
@@ -203,8 +203,6 @@ int main(int argc, char *argv[])
     boost::posix_time::ptime starttime = boost::posix_time::microsec_clock::local_time();
 
     std::cout << "Performing inversion." << std::endl;
-
-    size_t iteration = 0;
     std::ofstream misfitfile("misfit.out");
     //calculate initial misfit
     misfitfile << "0 " << GetObjective().CalcMisfit(InvModel) << " ";
@@ -234,8 +232,7 @@ int main(int argc, char *argv[])
 
     std::cout << "Performing inversion." << std::endl;
 
-    static char *status_file =
-      { "tstLBFGS.out" };
+    std::string status_file = "tstLBFGS.out";
     int n = InvModel.size();
     //  Create a Nonlinear problem object
 
@@ -247,7 +244,7 @@ int main(int argc, char *argv[])
     OPTPP::OptLBFGS objfcn(&nlp);
     objfcn.setMaxIter(maxiter);
     objfcn.setUpdateModel(update_model);
-    if (!objfcn.setOutputFile(status_file, 0))
+    if (!objfcn.setOutputFile(status_file.c_str(), 0))
       cerr << "main: output file open failed" << endl;
     objfcn.setGradTol(1.e-6);
     objfcn.setMaxBacktrackIter(10);
@@ -255,7 +252,6 @@ int main(int argc, char *argv[])
     objfcn.optimize();
 
     objfcn.printStatus("Solution from LBFGS: More and Thuente's linesearch");
-
     objfcn.cleanup();
 
     jif3D::rvec DensInvModel(GravityTransform->GeneralizedToPhysical(InvModel));
@@ -274,10 +270,12 @@ int main(int argc, char *argv[])
     jif3D::SaveTraveltimes(modelfilename + ".inv_tt.nc", TomoInvData, StartModel);
 
     jif3D::rvec ScalGravInvData(
-        jif3D::CreateGravityCalculator<jif3D::MinMemGravMagCalculator>::MakeScalar()->Calculate(
+        jif3D::CreateGravityCalculator<
+            jif3D::MinMemGravMagCalculator<jif3D::ThreeDGravityModel> >::MakeScalar()->Calculate(
             GravModel));
     jif3D::rvec FTGInvData(
-        jif3D::CreateGravityCalculator<jif3D::MinMemGravMagCalculator>::MakeTensor()->Calculate(
+        jif3D::CreateGravityCalculator<
+            jif3D::MinMemGravMagCalculator<jif3D::ThreeDGravityModel> >::MakeTensor()->Calculate(
             GravModel));
     jif3D::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc", ScalGravInvData,
         GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ());

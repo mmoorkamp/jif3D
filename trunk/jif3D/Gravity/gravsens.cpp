@@ -54,9 +54,9 @@ int main()
 
     //calculate the response, we don't actually care about the densities
     //and the model response, but we need the sensitivity matrix
-    boost::shared_ptr<jif3D::FullSensitivityGravMagCalculator>
-            ScalarCalculator(jif3D::CreateGravityCalculator<
-                jif3D::FullSensitivityGravMagCalculator>::MakeScalar());
+    typedef typename jif3D::FullSensitivityGravMagCalculator<jif3D::ThreeDGravityModel> CalculatorType;
+    boost::shared_ptr<CalculatorType> ScalarCalculator(
+        jif3D::CreateGravityCalculator<CalculatorType>::MakeScalar());
     ScalarCalculator->Calculate(Model);
     jif3D::rmat Sensitivities(ScalarCalculator->GetSensitivities());
     //do the SVD to get the eigenvalues and eigenvectors
@@ -76,22 +76,24 @@ int main()
     std::cout << "Enter the last index for the eigenvalues to plot: ";
     std::cin >> endindex;
     //make sure we stay in the right range
-    startindex = std::max(size_t(0),startindex);
-    endindex = std::min(s.size(),endindex);
+    startindex = std::max(size_t(0), startindex);
+    endindex = std::min(s.size(), endindex);
     const size_t xsize = Model.GetDensities().shape()[0];
     const size_t ysize = Model.GetDensities().shape()[1];
     const size_t zsize = Model.GetDensities().shape()[2];
     //make a structure with the shape of the model to plot the values
-    jif3D::ThreeDModelBase::t3DModelData sens(
-        boost::extents[xsize][ysize][zsize]);
+    jif3D::ThreeDModelBase::t3DModelData sens(boost::extents[xsize][ysize][zsize]);
     //output the eigenvectors for the chosen indices
     //each eigenvector gets its own file
     for (size_t currindex = startindex; currindex < endindex; ++currindex)
       {
-        const double maxvalue = *std::max_element(row(vt, currindex).begin(), row(vt, currindex).end(),boost::bind(fabs,_1) < boost::bind(fabs,_2));
-        std::transform(row(vt, currindex).begin(), row(vt, currindex).end(), sens.data(),boost::bind(std::multiplies<double>(),_1,1./maxvalue));
-        jif3D::Write3DModelToVTK(modelfilename + ".sens."+jif3D::stringify(currindex)+".vtk", "scalar_sens",
-            Model.GetXCellSizes(), Model.GetYCellSizes(),
+        const double maxvalue = *std::max_element(row(vt, currindex).begin(),
+            row(vt, currindex).end(), boost::bind(fabs, _1) < boost::bind(fabs, _2));
+        std::transform(row(vt, currindex).begin(), row(vt, currindex).end(), sens.data(),
+            boost::bind(std::multiplies<double>(), _1, 1. / maxvalue));
+        jif3D::Write3DModelToVTK(
+            modelfilename + ".sens." + jif3D::stringify(currindex) + ".vtk",
+            "scalar_sens", Model.GetXCellSizes(), Model.GetYCellSizes(),
             Model.GetZCellSizes(), sens);
       }
   }

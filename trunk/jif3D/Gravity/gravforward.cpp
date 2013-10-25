@@ -61,8 +61,10 @@ int main(int argc, char *argv[])
     //create objects to calculate tensor and scalar data
     //we are not interested in sensitivities so we use a MinMem calculator to
     //allow for the calculation of large models.
-    boost::shared_ptr<jif3D::MinMemGravMagCalculator> TensorCalculator(jif3D::CreateGravityCalculator<jif3D::MinMemGravMagCalculator>::MakeTensor());
-    boost::shared_ptr<jif3D::MinMemGravMagCalculator> ScalarCalculator(jif3D::CreateGravityCalculator<jif3D::MinMemGravMagCalculator>::MakeScalar());
+    typedef typename jif3D::MinMemGravMagCalculator<jif3D::ThreeDGravityModel> CalculatorType;
+
+    boost::shared_ptr<CalculatorType> TensorCalculator(jif3D::CreateGravityCalculator<CalculatorType>::MakeTensor());
+    boost::shared_ptr<CalculatorType> ScalarCalculator(jif3D::CreateGravityCalculator<CalculatorType>::MakeScalar());
 
     //calculate both types of data
     jif3D::rvec ScalarResults(ScalarCalculator->Calculate(GravModel));

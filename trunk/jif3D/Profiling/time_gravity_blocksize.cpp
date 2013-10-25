@@ -61,7 +61,7 @@ int main()
     std::string filename = "blocksize.time";
     //we create a calculator and implementation object manually
     //we do not use the factory function to have maximum control
-    boost::shared_ptr<jif3D::ThreeDGravMagCalculator> Calculator;
+    boost::shared_ptr<jif3D::ThreeDGravMagCalculator<jif3D::ThreeDGravityModel> > Calculator;
     boost::shared_ptr<jif3D::TensorCudaGravityImp> Implementation(
         new jif3D::TensorCudaGravityImp);
 
@@ -84,8 +84,8 @@ int main()
         //set the block size in the implementation object
         Implementation->SetCUDABlockSize(blocksizes.at(i));
         //and assemble the calculator object
-        Calculator = boost::shared_ptr<jif3D::ThreeDGravMagCalculator>(
-            new jif3D::MinMemGravMagCalculator(Implementation));
+        Calculator = boost::shared_ptr<jif3D::ThreeDGravMagCalculator<jif3D::ThreeDGravityModel> >(
+            new jif3D::MinMemGravMagCalculator<jif3D::ThreeDGravityModel>(Implementation));
         double rawruntime = 0.0;
         //now we perform several runs and measure the time
         for (size_t j = 0; j < nrunspersize; ++j)

@@ -22,7 +22,7 @@ namespace jif3D
      * This is the standard implementation and as openmp uses pragma directives can
      * also be used in serial with a compiler that does not understand openmp.
      */
-    class ScalarOMPGravityImp: public jif3D::ThreeDGravMagImplementation
+    class ScalarOMPGravityImp: public jif3D::ThreeDGravMagImplementation<ThreeDGravityModel>
       {
     private:
       //! We calculate scalar data, so we have one data point per site

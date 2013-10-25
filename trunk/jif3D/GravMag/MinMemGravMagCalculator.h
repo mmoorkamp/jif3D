@@ -22,7 +22,8 @@ namespace jif3D
      * when the forward response for a certain model geometry only has to be calculated once
      * or if the model is so big that the sensitivity matrix cannot be stored in memory or on disk any more.
      */
-    class MinMemGravMagCalculator: public jif3D::ThreeDGravMagCalculator
+    template<class ThreeDModelType>
+    class MinMemGravMagCalculator: public jif3D::ThreeDGravMagCalculator<ThreeDModelType>
       {
     private:
       friend class boost::serialization::access;
@@ -30,19 +31,48 @@ namespace jif3D
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
         {
-          ar & boost::serialization::base_object<ThreeDGravMagCalculator>(*this);
+          ar
+              & boost::serialization::base_object<ThreeDGravMagCalculator<ThreeDModelType> >(
+                  *this);
         }
     public:
       //! The implementation of the forward calculation
-      virtual rvec Calculate(const ThreeDGravityModel &Model);
+      virtual rvec Calculate(const ThreeDModelType &Model);
       //! We have to implement this function even though it does not do anything
       virtual void HandleSensitivities(const size_t measindex)
         {
         }
       //! The constructor takes a shared pointer to an implementation object
-      MinMemGravMagCalculator(boost::shared_ptr<ThreeDGravMagImplementation> TheImp);
+      MinMemGravMagCalculator(
+          boost::shared_ptr<ThreeDGravMagImplementation<ThreeDModelType> > TheImp);
       virtual ~MinMemGravMagCalculator();
       };
+
+    template<class ThreeDModelType>
+    MinMemGravMagCalculator<ThreeDModelType>::MinMemGravMagCalculator(
+        boost::shared_ptr<ThreeDGravMagImplementation<ThreeDModelType> > TheImp) :
+        ThreeDGravMagCalculator<ThreeDModelType>(TheImp)
+      {
+
+      }
+
+    template<class ThreeDModelType>
+    MinMemGravMagCalculator<ThreeDModelType>::~MinMemGravMagCalculator()
+      {
+
+      }
+
+    /*! For this simple case the calculator class only checks the model for consistency,
+     * then calls the implementation object to do the calculation and returns the result
+     * @param Model The Gravity model for the forward calculation
+     * @return The resulting measurements (scalar or tensorial)
+     */
+    template<class ThreeDModelType>
+    rvec MinMemGravMagCalculator<ThreeDModelType>::Calculate(const ThreeDModelType &Model)
+      {
+        ThreeDGravMagCalculator<ThreeDModelType>::SetCurrentSensitivities().resize(0, 0);
+        return ThreeDGravMagCalculator<ThreeDModelType>::Calculate(Model);
+      }
   /* @} */
   }
 

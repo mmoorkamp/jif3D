@@ -35,7 +35,8 @@ BOOST_AUTO_TEST_CASE  (random_tensor_test)
       const size_t ncells = 15;
       MakeRandomModel(GravityTest,ncells,nmeas);
 
-      boost::shared_ptr<jif3D::MinMemGravMagCalculator> Calculator(jif3D::CreateGravityCalculator<jif3D::MinMemGravMagCalculator>::MakeTensor());
+      typedef typename jif3D::FullSensitivityGravMagCalculator<jif3D::ThreeDGravityModel> CalculatorType;
+      boost::shared_ptr<CalculatorType> Calculator(jif3D::CreateGravityCalculator<CalculatorType>::MakeTensor());
       jif3D::rvec tensormeas(Calculator->Calculate(GravityTest));
       for (size_t i = 0; i < nmeas; ++i)
         {
@@ -75,8 +76,9 @@ BOOST_AUTO_TEST_CASE  (random_tensor_test)
       GravityTest.AddMeasurementPoint(xpos - delta, ypos, zpos);
       GravityTest.AddMeasurementPoint(xpos + delta, ypos, zpos);
       //perform the calculations
-      boost::shared_ptr<jif3D::MinMemGravMagCalculator> ScalarCalculator(jif3D::CreateGravityCalculator<jif3D::MinMemGravMagCalculator>::MakeScalar());
-      boost::shared_ptr<jif3D::MinMemGravMagCalculator> TensorCalculator(jif3D::CreateGravityCalculator<jif3D::MinMemGravMagCalculator>::MakeTensor());
+      typedef typename jif3D::MinMemGravMagCalculator<jif3D::ThreeDGravityModel> CalculatorType;
+      boost::shared_ptr<CalculatorType> ScalarCalculator(jif3D::CreateGravityCalculator<CalculatorType>::MakeScalar());
+      boost::shared_ptr<CalculatorType> TensorCalculator(jif3D::CreateGravityCalculator<CalculatorType>::MakeTensor());
       jif3D::rvec tensormeas(
           TensorCalculator->Calculate(GravityTest));
       jif3D::rvec scalarmeas(
@@ -102,7 +104,8 @@ BOOST_AUTO_TEST_CASE  (random_tensor_test)
       jif3D::ThreeDGravityModel GravityTest;
       const size_t nmeas = 15;
       MakeRandomModel(GravityTest,nmeas);
-      boost::shared_ptr<jif3D::FullSensitivityGravMagCalculator> TensorCalculator(jif3D::CreateGravityCalculator<jif3D::FullSensitivityGravMagCalculator>::MakeTensor());
+      typedef typename jif3D::FullSensitivityGravMagCalculator<jif3D::ThreeDGravityModel> CalculatorType;
+      boost::shared_ptr<CalculatorType> TensorCalculator(jif3D::CreateGravityCalculator<CalculatorType>::MakeTensor());
 
       //Calculate twice, once with normal calculation, once cached
       boost::posix_time::ptime startfirst =
@@ -139,7 +142,8 @@ BOOST_AUTO_TEST_CASE  (random_tensor_test)
       jif3D::ThreeDGravityModel GravityTest;
       const size_t nmeas = 5;
       MakeRandomModel(GravityTest,nmeas);
-      boost::shared_ptr<jif3D::DiskGravMagCalculator> TensorCalculator(jif3D::CreateGravityCalculator<jif3D::DiskGravMagCalculator>::MakeTensor());
+      typedef typename jif3D::DiskGravMagCalculator<jif3D::ThreeDGravityModel> CalculatorType;
+      boost::shared_ptr<CalculatorType> TensorCalculator(jif3D::CreateGravityCalculator<CalculatorType>::MakeTensor());
 
       //Calculate twice, once with normal calculation, once cached
       boost::posix_time::ptime startfirst =
@@ -196,7 +200,8 @@ BOOST_AUTO_TEST_CASE  (random_tensor_test)
       std::vector<double> bg_dens(1,density), bg_thick(1,100.0);
       GravityTest.SetBackgroundDensities(bg_dens);
       GravityTest.SetBackgroundThicknesses(bg_thick);
-      boost::shared_ptr<jif3D::MinMemGravMagCalculator> TensorCalculator(jif3D::CreateGravityCalculator<jif3D::MinMemGravMagCalculator>::MakeTensor());
+      typedef typename jif3D::MinMemGravMagCalculator<jif3D::ThreeDGravityModel> CalculatorType;
+      boost::shared_ptr<CalculatorType> TensorCalculator(jif3D::CreateGravityCalculator<CalculatorType>::MakeTensor());
       jif3D::rvec TensorMeas(TensorCalculator->Calculate(GravityTest));
       const double PoissTerm = -4.0 * boost::math::constants::pi<double>() * jif3D::Grav_const * density;
 
@@ -216,8 +221,9 @@ BOOST_AUTO_TEST_CASE  (random_tensor_test)
       const size_t nmeas = 7;
       const size_t ncells = 7;
       MakeRandomModel(GravityTest,ncells, nmeas);
-      boost::shared_ptr<jif3D::MinMemGravMagCalculator> CPUCalculator(jif3D::CreateGravityCalculator<jif3D::MinMemGravMagCalculator>::MakeTensor());
-      boost::shared_ptr<jif3D::MinMemGravMagCalculator> CudaCalculator(jif3D::CreateGravityCalculator<jif3D::MinMemGravMagCalculator>::MakeTensor(true));
+      typedef typename jif3D::MinMemGravMagCalculator<jif3D::ThreeDGravityModel> CalculatorType;
+      boost::shared_ptr<CalculatorType> CPUCalculator(jif3D::CreateGravityCalculator<CalculatorType>::MakeTensor());
+      boost::shared_ptr<CalculatorType> CudaCalculator(jif3D::CreateGravityCalculator<CalculatorType>::MakeTensor(true));
 
       jif3D::rvec cpumeas(
           CPUCalculator->Calculate(GravityTest));
@@ -243,7 +249,8 @@ BOOST_AUTO_TEST_CASE  (random_tensor_test)
       jif3D::ThreeDGravityModel GravityTest;
       const size_t nmeas = 20;
       MakeRandomModel(GravityTest, nmeas);
-      boost::shared_ptr<jif3D::FullSensitivityGravMagCalculator> Calculator(jif3D::CreateGravityCalculator<jif3D::FullSensitivityGravMagCalculator>::MakeTensor(true));
+      typedef typename jif3D::FullSensitivityGravMagCalculator<jif3D::ThreeDGravityModel> CalculatorType;
+      boost::shared_ptr<CalculatorType> Calculator(jif3D::CreateGravityCalculator<CalculatorType>::MakeTensor(true));
 
       jif3D::rvec meas1(Calculator->Calculate(GravityTest));
       jif3D::rvec meas2(Calculator->Calculate(GravityTest));
@@ -260,7 +267,8 @@ BOOST_AUTO_TEST_CASE  (random_tensor_test)
 
       const size_t nmeas = 20;
       MakeRandomModel(GravityTest, nmeas);
-      boost::shared_ptr<jif3D::FullSensitivityGravMagCalculator> Calculator(jif3D::CreateGravityCalculator<jif3D::FullSensitivityGravMagCalculator>::MakeTensor(true));
+      typedef typename jif3D::FullSensitivityGravMagCalculator<jif3D::ThreeDGravityModel> CalculatorType;
+      boost::shared_ptr<CalculatorType> Calculator(jif3D::CreateGravityCalculator<CalculatorType>::MakeTensor(true));
       jif3D::rvec meas1(Calculator->Calculate(GravityTest));
       GravityTest.ClearMeasurementPoints();
       MakeRandomModel(GravityTest,nmeas*2);
@@ -273,7 +281,8 @@ BOOST_AUTO_TEST_CASE  (random_tensor_test)
       const size_t ncells = 10;
       const size_t nmeas = 10;
       MakeRandomModel(GravityTest,ncells, nmeas,false);
-      boost::shared_ptr<jif3D::FullSensitivityGravMagCalculator> TensorCalculator(jif3D::CreateGravityCalculator<jif3D::FullSensitivityGravMagCalculator>::MakeTensor());
+      typedef typename jif3D::FullSensitivityGravMagCalculator<jif3D::ThreeDGravityModel> CalculatorType;
+      boost::shared_ptr<CalculatorType> TensorCalculator(jif3D::CreateGravityCalculator<CalculatorType>::MakeTensor());
       jif3D::rvec Misfit(nmeas*TensorCalculator->GetDataPerMeasurement());
       std::generate(Misfit.begin(),Misfit.end(),drand48);
       jif3D::rvec Deriv(TensorCalculator->LQDerivative(GravityTest,Misfit));

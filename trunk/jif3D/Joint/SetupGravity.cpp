@@ -96,7 +96,8 @@ namespace jif3D
         //we need the model geometry
         if (scalgravlambda > 0.0 || ftglambda > 0.0)
           {
-            std::string gravmodelfilename = jif3D::AskFilename("Gravity Model Filename: ");
+            std::string gravmodelfilename = jif3D::AskFilename(
+                "Gravity Model Filename: ");
             ScalGravModel.ReadNetCDF(gravmodelfilename);
             FTGGravModel.ReadNetCDF(gravmodelfilename);
 
@@ -138,27 +139,30 @@ namespace jif3D
             //we want to set the path for temporary file storage
             //the factory function cannot perform this, so we
             //have to assemble the calculator object ourselves
-            boost::shared_ptr<jif3D::ThreeDGravMagImplementation> Implementation;
+            boost::shared_ptr<
+                jif3D::ThreeDGravMagImplementation<jif3D::ThreeDGravityModel> > Implementation;
             if (wantcuda)
               {
 #ifdef HAVEGPU
-                Implementation = boost::shared_ptr<jif3D::ThreeDGravMagImplementation>(
+                Implementation = boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::ThreeDGravityModel> >(
                     new jif3D::ScalarCudaGravityImp);
 #else
-                throw jif3D::FatalException("Code has been compiled without GPU support !");
+                throw jif3D::FatalException(
+                    "Code has been compiled without GPU support !");
 #endif
               }
             else
               {
-                Implementation = boost::shared_ptr<jif3D::ThreeDGravMagImplementation>(
+                Implementation = boost::shared_ptr<
+                    jif3D::ThreeDGravMagImplementation<jif3D::ThreeDGravityModel> >(
                     new jif3D::ScalarOMPGravityImp);
               }
-            boost::shared_ptr<jif3D::DiskGravMagCalculator> ScalarCalculator(
-                new jif3D::DiskGravMagCalculator(Implementation, TempDir));
+            boost::shared_ptr<CalculatorType> ScalarCalculator(
+                new CalculatorType(Implementation, TempDir));
 
             ScalGravObjective = boost::shared_ptr<
-                jif3D::ThreeDModelObjective<DiskGravMagCalculator> >(
-                new jif3D::ThreeDModelObjective<DiskGravMagCalculator>(*ScalarCalculator));
+                jif3D::ThreeDModelObjective<CalculatorType> >(
+                new jif3D::ThreeDModelObjective<CalculatorType>(*ScalarCalculator));
             ScalGravObjective->SetObservedData(ScalGravData);
             ScalGravObjective->SetCoarseModelGeometry(ScalGravModel);
             ScalGravObjective->SetDataError(
@@ -174,27 +178,30 @@ namespace jif3D
             //we want to set the path for temporary file storage
             //the factory function cannot perform this, so we
             //have to assemble the calculator object ourselves
-            boost::shared_ptr<jif3D::ThreeDGravMagImplementation> Implementation;
+            boost::shared_ptr<
+                jif3D::ThreeDGravMagImplementation<jif3D::ThreeDGravityModel> > Implementation;
             if (wantcuda)
               {
 #ifdef HAVEGPU
-                Implementation = boost::shared_ptr<jif3D::ThreeDGravMagImplementation>(
+                Implementation = boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::ThreeDGravityModel> >(
                     new jif3D::TensorCudaGravityImp);
 #else
-                throw jif3D::FatalException("Code has been compiled without GPU support !");
+                throw jif3D::FatalException(
+                    "Code has been compiled without GPU support !");
 #endif
               }
             else
               {
-                Implementation = boost::shared_ptr<jif3D::ThreeDGravMagImplementation>(
+                Implementation = boost::shared_ptr<
+                    jif3D::ThreeDGravMagImplementation<jif3D::ThreeDGravityModel> >(
                     new jif3D::TensorOMPGravityImp);
               }
-            boost::shared_ptr<jif3D::DiskGravMagCalculator> TensorCalculator(
-                new jif3D::DiskGravMagCalculator(Implementation, TempDir));
+            boost::shared_ptr<CalculatorType> TensorCalculator(
+                new CalculatorType(Implementation, TempDir));
 
-            FTGObjective = boost::shared_ptr<
-                jif3D::ThreeDModelObjective<DiskGravMagCalculator> >(
-                new jif3D::ThreeDModelObjective<DiskGravMagCalculator>(*TensorCalculator));
+            FTGObjective =
+                boost::shared_ptr<jif3D::ThreeDModelObjective<CalculatorType> >(
+                    new jif3D::ThreeDModelObjective<CalculatorType>(*TensorCalculator));
             FTGObjective->SetObservedData(FTGData);
             FTGObjective->SetCoarseModelGeometry(FTGGravModel);
             FTGObjective->SetDataError(

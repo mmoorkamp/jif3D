@@ -23,7 +23,7 @@ namespace jif3D
      * It only implements the calculation of the background and the gridded part.
      * The assembly of the two parts is performed by the base class ThreeDGravityImplementation.
      */
-    class TensorOMPGravityImp: public jif3D::ThreeDGravMagImplementation
+    class TensorOMPGravityImp: public jif3D::ThreeDGravMagImplementation<ThreeDGravityModel>
       {
     private:
       //! Implement the calculation of the background response

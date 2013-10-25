@@ -144,7 +144,7 @@ namespace jif3D
      * @return The vector holding the gravitational acceleration at each measurement site
      */
     rvec TensorCudaGravityImp::Calculate(const ThreeDGravityModel &Model,
-        ThreeDGravMagCalculator &Calculator)
+        ThreeDGravMagCalculator<ThreeDGravityModel> &Calculator)
       {
 
         const unsigned int nx = Model.GetDensities().shape()[0];
