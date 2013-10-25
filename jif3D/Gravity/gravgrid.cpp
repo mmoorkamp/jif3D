@@ -5,7 +5,6 @@
 // Copyright   : 2008, MM
 //============================================================================
 
-
 /*! \file gravgrid.cpp
  * A simple program to calculate evenly spaced gravity data from a model stored in a netcdf file.
  * The spacing and region for the measurements is specified interactively. The model is taken from
@@ -31,13 +30,12 @@ int main(int argc, char *argv[])
   {
     bool wantcuda = false;
     po::options_description desc("General options");
-    desc.add_options()("help", "produce help message")("cuda", po::value(
-        &wantcuda)->default_value(false), "Use cuda for forward calculations.");
+    desc.add_options()("help", "produce help message")("cuda",
+        po::value(&wantcuda)->default_value(false), "Use cuda for forward calculations.");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
-
 
     if (vm.count("help"))
       {
@@ -73,8 +71,7 @@ int main(int argc, char *argv[])
       {
         for (size_t j = 0; j <= nmeasy; ++j)
           {
-            GravModel.AddMeasurementPoint(minx + i * deltax, miny + j * deltay,
-                z);
+            GravModel.AddMeasurementPoint(minx + i * deltax, miny + j * deltay, z);
           }
       }
     //ask for the name of the netcdf file containing the model
@@ -92,13 +89,12 @@ int main(int argc, char *argv[])
         GravModel.ReadIgmas(ModelFilename);
         GravModel.WriteNetCDF(ModelFilename + ".nc");
       }
+    typedef typename jif3D::MinMemGravMagCalculator<jif3D::ThreeDGravityModel> CalculatorType;
     //save the measurements and some plots
-    boost::shared_ptr<jif3D::MinMemGravMagCalculator>
-        TensorCalculator(jif3D::CreateGravityCalculator<
-            jif3D::MinMemGravMagCalculator>::MakeTensor(wantcuda));
-    boost::shared_ptr<jif3D::MinMemGravMagCalculator>
-        ScalarCalculator(jif3D::CreateGravityCalculator<
-            jif3D::MinMemGravMagCalculator>::MakeScalar(wantcuda));
+    boost::shared_ptr<CalculatorType> TensorCalculator(
+        jif3D::CreateGravityCalculator<CalculatorType>::MakeTensor(wantcuda));
+    boost::shared_ptr<CalculatorType> ScalarCalculator(
+        jif3D::CreateGravityCalculator<CalculatorType>::MakeScalar(wantcuda));
     jif3D::rvec ScalarResults(ScalarCalculator->Calculate(GravModel));
     jif3D::rvec TensorResults(TensorCalculator->Calculate(GravModel));
 
@@ -116,20 +112,16 @@ int main(int argc, char *argv[])
     cin >> ftgabsnoise;
     jif3D::AddNoise(ScalarResults, scalrelnoise, scalabsnoise);
     jif3D::AddNoise(TensorResults, ftgrelnoise, ftgabsnoise);
-    jif3D::SaveScalarGravityMeasurements(ModelFilename + ".sgd.nc",
-        ScalarResults, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
-        GravModel.GetMeasPosZ());
-    jif3D::SaveTensorGravityMeasurements(ModelFilename + ".ftg.nc",
-        TensorResults, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
-        GravModel.GetMeasPosZ());
+    jif3D::SaveScalarGravityMeasurements(ModelFilename + ".sgd.nc", ScalarResults,
+        GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ());
+    jif3D::SaveTensorGravityMeasurements(ModelFilename + ".ftg.nc", TensorResults,
+        GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ());
     //write the model in .vtk format, at the moment the best plotting option
     GravModel.WriteVTK(ModelFilename + ".vtk");
 
-    jif3D::Write3DDataToVTK(ModelFilename + ".data.vtk", "grav_accel",
-        ScalarResults, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
-        GravModel.GetMeasPosZ());
-    jif3D::Write3DTensorDataToVTK(ModelFilename + ".ftgdata.vtk", "U",
-        TensorResults, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
-        GravModel.GetMeasPosZ());
+    jif3D::Write3DDataToVTK(ModelFilename + ".data.vtk", "grav_accel", ScalarResults,
+        GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ());
+    jif3D::Write3DTensorDataToVTK(ModelFilename + ".ftgdata.vtk", "U", TensorResults,
+        GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ());
 
   }

@@ -7,7 +7,7 @@ project
         <threading>multi 
         <define>BIND_FORTRAN_LOWERCASE_UNDERSCORE
         <define>HAVEOPENMP 
-        #<variant>gpu
+        <variant>gpu
     	<variant>release:<define>NDEBUG
     	<variant>profile:<define>NDEBUG  
     	<toolset>gcc<variant>debug:<cflags>" -ggdb3"
@@ -67,7 +67,7 @@ alias vecopt : lapack cblas atlas f77blas gfortran ;
 
 build-project Global ;
 build-project Gravity ;
-build-project GravMag ;
+#build-project GravMag ;
 build-project MT ;
 build-project Tomo ;
 build-project ModelBase ;

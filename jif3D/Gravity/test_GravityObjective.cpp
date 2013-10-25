@@ -54,13 +54,14 @@ void  CheckGradient(jif3D::ObjectiveFunction &Objective, const jif3D::rvec &Mode
       const size_t nmeas = 3;
       const size_t ncells = 5;
       MakeRandomModel(GravityTest,ncells,nmeas,false);
-      boost::shared_ptr<jif3D::FullSensitivityGravMagCalculator> TensorCalculator(jif3D::CreateGravityCalculator<jif3D::FullSensitivityGravMagCalculator>::MakeTensor());
+      typedef typename jif3D::FullSensitivityGravMagCalculator<jif3D::ThreeDGravityModel> CalculatorType;
+      boost::shared_ptr<CalculatorType> TensorCalculator(jif3D::CreateGravityCalculator<CalculatorType>::MakeTensor());
       jif3D::rvec Observed(TensorCalculator->Calculate(GravityTest));
       //we have to have different data from our observed data
       //otherwise our gradient will be zero
       Observed *= 1.1;
 
-      jif3D::ThreeDModelObjective<jif3D::FullSensitivityGravMagCalculator> FTGObjective(*TensorCalculator.get());
+      jif3D::ThreeDModelObjective<CalculatorType> FTGObjective(*TensorCalculator.get());
 
       FTGObjective.SetObservedData(Observed);
       FTGObjective.SetCoarseModelGeometry(GravityTest);
@@ -78,11 +79,12 @@ void  CheckGradient(jif3D::ObjectiveFunction &Objective, const jif3D::rvec &Mode
       const size_t nmeas = 3;
       const size_t ncells = 5;
       MakeRandomModel(GravityTest,ncells,nmeas,false);
-      boost::shared_ptr<jif3D::FullSensitivityGravMagCalculator> ScalarCalculator(jif3D::CreateGravityCalculator<jif3D::FullSensitivityGravMagCalculator>::MakeScalar());
+      typedef typename jif3D::FullSensitivityGravMagCalculator<jif3D::ThreeDGravityModel> CalculatorType;
+      boost::shared_ptr<CalculatorType> ScalarCalculator(jif3D::CreateGravityCalculator<CalculatorType>::MakeScalar());
       jif3D::rvec Observed(ScalarCalculator->Calculate(GravityTest));
       Observed *= 1.1;
 
-      jif3D::ThreeDModelObjective<jif3D::FullSensitivityGravMagCalculator> ScalarObjective(*ScalarCalculator.get());
+      jif3D::ThreeDModelObjective<CalculatorType> ScalarObjective(*ScalarCalculator.get());
       ScalarObjective.SetObservedData(Observed);
       ScalarObjective.SetCoarseModelGeometry(GravityTest);
       jif3D::rvec InvModel(GravityTest.GetDensities().num_elements());

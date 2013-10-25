@@ -21,8 +21,8 @@
 //we just cannot have parallel calls through this interface
 
 static boost::shared_ptr<jif3D::ThreeDGravityModel> GravModel;
-static boost::shared_ptr<jif3D::ThreeDGravMagCalculator> ScalarGravCalculator;
-static boost::shared_ptr<jif3D::ThreeDGravMagCalculator> TensorGravCalculator;
+static boost::shared_ptr<jif3D::ThreeDGravMagCalculator<jif3D::ThreeDGravityModel> > ScalarGravCalculator;
+static boost::shared_ptr<jif3D::ThreeDGravMagCalculator<jif3D::ThreeDGravityModel> > TensorGravCalculator;
 typedef boost::function0<jif3D::ThreeDGravityModel::t3DModelDim &>
     tcoordinatefunc;
 
@@ -40,22 +40,22 @@ void AllocateModel(const int *storescalar, const int *storetensor)
     if (cachescalar)
       {
         ScalarGravCalculator = jif3D::CreateGravityCalculator<
-            jif3D::FullSensitivityGravMagCalculator>::MakeScalar();
+            jif3D::FullSensitivityGravMagCalculator<jif3D::ThreeDGravityModel> >::MakeScalar();
       }
     else
       {
         ScalarGravCalculator = jif3D::CreateGravityCalculator<
-            jif3D::MinMemGravMagCalculator>::MakeScalar();
+            jif3D::MinMemGravMagCalculator<jif3D::ThreeDGravityModel> >::MakeScalar();
       }
     if (cachetensor)
       {
         TensorGravCalculator = jif3D::CreateGravityCalculator<
-            jif3D::FullSensitivityGravMagCalculator>::MakeTensor();
+            jif3D::FullSensitivityGravMagCalculator<jif3D::ThreeDGravityModel> >::MakeTensor();
       }
     else
       {
         TensorGravCalculator = jif3D::CreateGravityCalculator<
-            jif3D::MinMemGravMagCalculator>::MakeTensor();
+            jif3D::MinMemGravMagCalculator<jif3D::ThreeDGravityModel> >::MakeTensor();
       }
 
   }

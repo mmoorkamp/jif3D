@@ -28,6 +28,8 @@ namespace jif3D
      */
     class SetupGravity
       {
+    public:
+      typedef typename jif3D::DiskGravMagCalculator<jif3D::ThreeDGravityModel> CalculatorType;
     private:
       //! The relative error for the scalar data to assume for construction of the data variance
       double scalrelerr;
@@ -42,9 +44,9 @@ namespace jif3D
       //! Stores the grid for the FTG gravity model and the starting model
       jif3D::ThreeDGravityModel FTGGravModel;
       //! Possible pointer to the scalar gravity objective function, gets assigned below depending on user input
-      boost::shared_ptr<jif3D::ThreeDModelObjective<DiskGravMagCalculator> > ScalGravObjective;
+      boost::shared_ptr<jif3D::ThreeDModelObjective<CalculatorType> > ScalGravObjective;
       //! Possible pointer to the tensor gravity objective function, gets assigned below depending on user input
-      boost::shared_ptr<jif3D::ThreeDModelObjective<DiskGravMagCalculator> > FTGObjective;
+      boost::shared_ptr<jif3D::ThreeDModelObjective<CalculatorType> > FTGObjective;
       //! Does the user want scalar gravity calculations and have we set up everything?
       bool HaveScal;
       //! Does the user want tensor gravity calculations and have we set up everything?
@@ -61,12 +63,12 @@ namespace jif3D
           return HaveFTG;
         }
       //! read-only access to the objective function for scalar gravity data
-      const jif3D::ThreeDModelObjective<DiskGravMagCalculator> &GetScalGravObjective()
+      const jif3D::ThreeDModelObjective<CalculatorType> &GetScalGravObjective()
         {
           return *ScalGravObjective;
         }
       //! read-only access to the objective function for tensor gravity data
-      const jif3D::ThreeDModelObjective<DiskGravMagCalculator> &GetFTGObjective()
+      const jif3D::ThreeDModelObjective<CalculatorType> &GetFTGObjective()
         {
           return *FTGObjective;
         }

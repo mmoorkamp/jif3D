@@ -25,7 +25,7 @@ namespace jif3D
      * This class cannot be copied as this would make a mess with management
      * of cuda resources.
      */
-    class ScalarCudaGravityImp: public jif3D::ThreeDGravMagImplementation
+    class ScalarCudaGravityImp: public jif3D::ThreeDGravMagImplementation<ThreeDGravityModel>
       {
     private:
       // These pointers hold the memory on the graphics card as allocated
@@ -84,7 +84,7 @@ namespace jif3D
         }
       //! We reimplement the Calculate method to accommodate some specific CUDA issues
       virtual rvec Calculate(const ThreeDGravityModel &Model,
-          ThreeDGravMagCalculator &Calculator);
+          ThreeDGravMagCalculator<ThreeDGravityModel> &Calculator);
       ScalarCudaGravityImp();
       virtual ~ScalarCudaGravityImp();
       };

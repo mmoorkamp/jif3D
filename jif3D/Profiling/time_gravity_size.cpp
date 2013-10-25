@@ -10,6 +10,7 @@
 #include "../GravMag/ThreeDGravMagCalculator.h"
 #include "../GravMag/FullSensitivityGravMagCalculator.h"
 #include "../GravMag/MinMemGravMagCalculator.h"
+#include "../GravMag/DiskGravMagCalculator.h"
 #include "../Gravity/ThreeDGravityFactory.h"
 
 /*! \file time_gravity_size.cpp
@@ -57,14 +58,15 @@ void MakeTestModel(jif3D::ThreeDGravityModel &Model, const size_t size)
 namespace po = boost::program_options;
 int main(int ac, char* av[])
   {
-  //set up the command line options
+    //set up the command line options
+    int caching = 0;
     po::options_description desc("Allowed options");
     desc.add_options()("help", "produce help message")("scalar",
-        "Perform scalar calculation [default]")("ftg",
-        "Perform FTG calculation ")("cpu",
-        "Perform calculation on CPU [default]")("gpu",
-        "Perform calculation on GPU")("cached", "Also do cached calculation")(
-        "threads", po::value<int>(), "The number of openmp threads");
+        "Perform scalar calculation [default]")("ftg", "Perform FTG calculation ")("cpu",
+        "Perform calculation on CPU [default]")("gpu", "Perform calculation on GPU")(
+        "cachetype", po::value<int>(&caching)->default_value(0),
+        "0 = no caching, 1 = disk, 2 = memory")("threads", po::value<int>(),
+        "The number of openmp threads");
 
     po::variables_map vm;
     po::store(po::parse_command_line(ac, av, desc), vm);
@@ -80,9 +82,7 @@ int main(int ac, char* av[])
     const size_t nrunspersize = 5;
     std::string filename;
     bool wantcuda = false;
-    bool wantcached = false;
-    boost::shared_ptr<jif3D::ThreeDGravMagCalculator> Calculator;
-
+    boost::shared_ptr<jif3D::ThreeDGravMagCalculator<jif3D::ThreeDGravityModel> > Calculator;
 
     if (vm.count("gpu"))
       {
@@ -106,41 +106,52 @@ int main(int ac, char* av[])
 #endif
       }
 
-
-    if (vm.count("cached"))
-      {
-        wantcached = true;
-        filename += "cached_";
-      }
-
     if (vm.count("ftg"))
       {
         filename += "ftg.time";
-        if (wantcached)
+        switch (caching)
           {
-            Calculator = jif3D::CreateGravityCalculator<
-                jif3D::FullSensitivityGravMagCalculator>::MakeTensor(wantcuda);
-          }
-        else
-          {
-            Calculator = jif3D::CreateGravityCalculator<
-                jif3D::MinMemGravMagCalculator>::MakeTensor(wantcuda);
+        case 2:
+          Calculator =
+              jif3D::CreateGravityCalculator<
+                  jif3D::FullSensitivityGravMagCalculator<jif3D::ThreeDGravityModel> >::MakeTensor(
+                  wantcuda);
+          break;
+        case 1:
+          Calculator = jif3D::CreateGravityCalculator<
+              jif3D::DiskGravMagCalculator<jif3D::ThreeDGravityModel> >::MakeTensor(
+              wantcuda);
+          break;
+        case 0:
+          Calculator = jif3D::CreateGravityCalculator<
+              jif3D::MinMemGravMagCalculator<jif3D::ThreeDGravityModel> >::MakeTensor(
+              wantcuda);
+          break;
 
           }
-
       }
     else
       {
         filename += "scalar.time";
-        if (wantcached)
+        switch (caching)
           {
-            Calculator = jif3D::CreateGravityCalculator<
-                jif3D::FullSensitivityGravMagCalculator>::MakeScalar(wantcuda);
-          }
-        else
-          {
-            Calculator = jif3D::CreateGravityCalculator<
-                jif3D::MinMemGravMagCalculator>::MakeScalar(wantcuda);
+        case 2:
+          Calculator =
+              jif3D::CreateGravityCalculator<
+                  jif3D::FullSensitivityGravMagCalculator<jif3D::ThreeDGravityModel> >::MakeScalar(
+                  wantcuda);
+          break;
+        case 1:
+          Calculator = jif3D::CreateGravityCalculator<
+              jif3D::DiskGravMagCalculator<jif3D::ThreeDGravityModel> >::MakeScalar(
+              wantcuda);
+          break;
+        case 0:
+          Calculator = jif3D::CreateGravityCalculator<
+              jif3D::MinMemGravMagCalculator<jif3D::ThreeDGravityModel> >::MakeScalar(
+              wantcuda);
+          break;
+
           }
       }
 
@@ -172,7 +183,7 @@ int main(int ac, char* av[])
             rawruntime += (firstendtime - firststarttime).total_microseconds();
             //if we want to compare to the time using caching we calculate
             //a cached result right after the original run
-            if (wantcached)
+            if (caching > 0)
               {
                 boost::posix_time::ptime secondstarttime =
                     boost::posix_time::microsec_clock::local_time();
@@ -180,14 +191,13 @@ int main(int ac, char* av[])
                 boost::posix_time::ptime secondendtime =
                     boost::posix_time::microsec_clock::local_time();
 
-                cachedruntime
-                    += (secondendtime - secondstarttime).total_microseconds();
+                cachedruntime += (secondendtime - secondstarttime).total_microseconds();
               }
           }
         rawruntime /= nrunspersize;
         cachedruntime /= nrunspersize;
-        outfile << modelsize * modelsize * modelsize << " " << rawruntime
-            << " " << cachedruntime << std::endl;
+        outfile << modelsize * modelsize * modelsize << " " << rawruntime << " "
+            << cachedruntime << std::endl;
       }
 
   }

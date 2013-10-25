@@ -1,9 +1,5 @@
 import testing ; 
-lib gravmag : ThreeDGravMagImplementation.cpp CachedGravMagCalculator.cpp FullSensitivityGravMagCalculator.cpp
-              ThreeDGravMagCalculator.cpp MinMemGravMagCalculator.cpp 
-              DiskGravMagCalculator.cpp
-                 ../Global//global ..//boost_filesystem ..//boost_system ../ModelBase//modelbase
-                 ;
+
 
                
                     
