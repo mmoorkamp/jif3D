@@ -214,7 +214,7 @@ BOOST_AUTO_TEST_CASE  (random_tensor_test)
           std::numeric_limits<float>::epsilon());
 
     }
-
+#ifdef HAVEGPU
   BOOST_AUTO_TEST_CASE(tensor_cuda_test)
     {
       jif3D::ThreeDGravityModel GravityTest;
@@ -274,6 +274,7 @@ BOOST_AUTO_TEST_CASE  (random_tensor_test)
       MakeRandomModel(GravityTest,nmeas*2);
       BOOST_CHECK_NO_THROW( jif3D::rvec meas2(Calculator->Calculate(GravityTest)));
     }
+#endif
 
   BOOST_AUTO_TEST_CASE (lqderivative_test)
     {

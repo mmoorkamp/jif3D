@@ -143,8 +143,10 @@ namespace jif3D
         //these should always be equal, so we use an assertion
         //to catch strange cases that should not occur
         const size_t nmeas = Model.GetMeasPosX().size();
-        assert(nmeas == Model.GetMeasPosY().size());
-        assert(nmeas == Model.GetMeasPosZ().size());
+        if (nmeas != Model.GetMeasPosY().size() || nmeas != Model.GetMeasPosZ().size())
+          {
+            throw jif3D::FatalException("Inconsistent measurement configuration !");
+          }
       }
 
     /*! The least squares derivative is the building block for most types of objective functions, here we define

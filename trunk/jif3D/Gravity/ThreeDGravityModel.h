@@ -12,6 +12,7 @@
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/base_object.hpp>
 #include "../ModelBase/ThreeDModelBase.h"
+#include "../ModelBase/GridBackgroundModelCache.h"
 #include "../Global/VecMat.h"
 
 /*! \file ThreeDGravityModel.h
@@ -66,6 +67,7 @@ namespace jif3D
     public:
       //! The type of the background thickness and density vector, this is a std::vector because we want to easily append elements
       typedef std::vector<double> tBackgroundVec;
+      typedef jif3D::GridBackgroundModelCache<ThreeDGravityModel> ModelCacheType;
     private:
       //! The densities of the background layers
       tBackgroundVec bg_densities;

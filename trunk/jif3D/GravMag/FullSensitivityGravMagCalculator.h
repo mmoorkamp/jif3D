@@ -10,6 +10,7 @@
 
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/base_object.hpp>
+#include "../Global/FatalException.h"
 #include "CachedGravMagCalculator.h"
 
 namespace jif3D
@@ -140,8 +141,11 @@ namespace jif3D
         const size_t ngrid = Model.GetDensities().num_elements();
         const size_t nmod = ngrid + Model.GetBackgroundThicknesses().size();
 
-        assert(Sensitivities.size1() == nmeas);
-        assert(Sensitivities.size2() == nmod);
+        if (Sensitivities.size1() != nmeas || Sensitivities.size2() != nmod)
+          {
+            throw jif3D::FatalException(
+                "Size of sensitivity matrix does not match model configguration !");
+          }
         rvec DensVector(nmod);
         //copy the 3D model structure and the background into a vector of densities
         std::copy(Model.GetDensities().origin(), Model.GetDensities().origin() + ngrid,
@@ -169,7 +173,8 @@ namespace jif3D
         if (ThreeDGravMagCalculator<ThreeDModelType>::Transform)
           {
             //we apply the transform to the calculated raw data
-            return ApplyTransform(CalculateRawData(Model), *ThreeDGravMagCalculator<ThreeDModelType>::Transform);
+            return ApplyTransform(CalculateRawData(Model),
+                *ThreeDGravMagCalculator<ThreeDModelType>::Transform);
           }
         //otherwise we just return the raw data
         return CalculateRawData(Model);
@@ -193,21 +198,26 @@ namespace jif3D
             //otherwise we have to process each segment
             //of the misift of the transformed data
             //to calculate the correct gradient
-            const size_t nin = ThreeDGravMagCalculator<ThreeDModelType>::Transform->GetInputSize();
-            const size_t nout = ThreeDGravMagCalculator<ThreeDModelType>::Transform->GetOutputSize();
+            const size_t nin =
+                ThreeDGravMagCalculator<ThreeDModelType>::Transform->GetInputSize();
+            const size_t nout =
+                ThreeDGravMagCalculator<ThreeDModelType>::Transform->GetOutputSize();
             //the sensitivities are for the raw data
             //so our new processed misfit has to have the same size as the raw data
             ProcessedMisfit.resize(Misfit.size() / nout * nin);
             for (size_t i = 0; i < Misfit.size(); i += nout)
               {
                 size_t outindex = i / nout * nin;
-                ublas::vector_range < jif3D::rvec
-                    > OutRange(ProcessedMisfit, ublas::range(outindex, outindex + nin));
+                ublas::vector_range<jif3D::rvec> OutRange(ProcessedMisfit,
+                    ublas::range(outindex, outindex + nin));
                 ublas::vector_range<const jif3D::rvec> InRange(Misfit,
                     ublas::range(i, i + nout));
                 ublas::vector_range<const jif3D::rvec> DataRange(Data,
                     ublas::range(outindex, outindex + nin));
-                OutRange = ublas::prod(trans(ThreeDGravMagCalculator<ThreeDModelType>::Transform->Derivative(DataRange)), InRange);
+                OutRange = ublas::prod(
+                    trans(
+                        ThreeDGravMagCalculator<ThreeDModelType>::Transform->Derivative(
+                            DataRange)), InRange);
               }
 
           }
