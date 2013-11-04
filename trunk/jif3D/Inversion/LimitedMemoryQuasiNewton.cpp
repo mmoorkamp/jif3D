@@ -54,6 +54,12 @@ namespace jif3D
             gamma = 1.0 / Rho(npairs - 1) / NormProd(*YHistory.back(),
                 *YHistory.back(), GetModelCovDiag());
           }
+        else
+          {
+            //if we don't have the previous history, we use the length of the
+            //gradient as a scale
+            gamma = 1.0 / sqrt(NormProd(SearchDir,RawGrad,GetModelCovDiag()));
+          }
         SearchDir *= gamma;
         for (size_t i = 0; i < npairs; ++i)
           {
