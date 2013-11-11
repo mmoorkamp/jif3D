@@ -11,6 +11,7 @@
 
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/base_object.hpp>
+#include "../Gravity/ThreeDGravityModel.h"
 #include "../GravMag/ThreeDGravMagImplementation.h"
 
 namespace jif3D
