@@ -9,9 +9,9 @@
 #define THREEDGRAVITYIMPLEMENTATION_H_
 
 #include <boost/shared_ptr.hpp>
+#include <boost/multi_array.hpp>
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/shared_ptr.hpp>
-#include "../Gravity/ThreeDGravityModel.h"
 #include "../Global/VecMat.h"
 #include "../Global/VectorTransform.h"
 #include "ThreeDGravMagCalculator.h"

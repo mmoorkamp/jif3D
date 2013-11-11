@@ -81,8 +81,6 @@ namespace jif3D
       {
       }
 
-
-
     /*! This function compares the geometry and measurements of the passed
      * model with the information stored during the last call and either
      * calls CalculateCachedResult or CalculateNewModel which have to
@@ -94,7 +92,7 @@ namespace jif3D
     rvec CachedGravMagCalculator<ThreeDModelType>::Calculate(const ThreeDModelType &Model)
       {
         //check that all modeling information is consistent
-        CheckModelConsistency(Model);
+        this->CheckModelConsistency(Model);
         //check whether the model geometry has changed since the last calculation
         bool HasChanged = ModelCache.HasChanged(Model);
         //if we have cached information and nothing has changed, we use the cache
@@ -118,7 +116,7 @@ namespace jif3D
         const ThreeDModelType &Model, const rvec &Misfit)
       {
         //check that all modeling information is consistent
-        CheckModelConsistency(Model);
+        this->CheckModelConsistency(Model);
         //check whether the model geometry has changed since the last calculation
         bool HasChanged = ModelCache.HasChanged(Model);
         //if we have cached information and nothing has changed, we use the cache

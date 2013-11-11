@@ -12,7 +12,6 @@
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 #include "../Global/FatalException.h"
-#include "../Gravity/ThreeDGravityModel.h"
 #include "ThreeDGravMagImplementation.h"
 
 namespace jif3D

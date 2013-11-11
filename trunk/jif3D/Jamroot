@@ -16,7 +16,7 @@ project
     	<toolset>gcc:<cflags>" -fopenmp -std=c++0x "
     	#<toolset>gcc:<linkflags>"  `pkg-config --libs hpx_application` "
     	<toolset>gcc:<linkflags>" -fopenmp  "
-    	<toolset>intel:<cxxflags>" -openmp  -std=c++0x -prof-gen=srcpos"
+    	<toolset>intel:<cxxflags>" -openmp  -std=c++0x "
     	<toolset>intel:<define>TESTR
     	<toolset>intel:<linkflags>" -openmp   "
     	<toolset>sun:<define>BOOST_UBLAS_UNSUPPORTED_COMPILER=0
