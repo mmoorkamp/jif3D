@@ -21,6 +21,7 @@ namespace jif3D
     private:
       double Inclination;
       double Declination;
+      double FieldStrength;
       //! Calculate the response of the gridded part
       virtual rvec CalcGridded(const size_t measindex, const ThreeDMagneticModel &Model,
           rmat &Sensitivities);
@@ -39,7 +40,7 @@ namespace jif3D
         {
           return ndatapermeas;
         }
-      OMPMagneticImp(double Inc = 0, double Dec =0);
+      OMPMagneticImp(double Inc = 0, double Dec =0, double Fs = 1.0);
       virtual ~OMPMagneticImp();
       };
 

@@ -1,0 +1,9 @@
+import testing ; 
+lib magnetics : ThreeDMagneticModel.cpp 
+              OMPMagneticImp.cpp  
+                 ../Global//global ..//boost_filesystem ..//boost_system ../ModelBase//modelbase
+               ;
+               
+                    
+alias core :  ../ModelBase//modelbase ../Global ..//netcdf_c++ ..//netcdf  ..//boost_filesystem  ..//boost_program_options ..//boost_system ;
+
