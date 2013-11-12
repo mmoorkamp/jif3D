@@ -83,6 +83,11 @@ namespace jif3D
           ar & bg_densities;
         }
     public:
+      //! The implementation class for magnetic and gravity data needs to know the number of model parameters
+      size_t GetNModelParm() const
+      {
+    	  return GetData().num_elements() + bg_densities.size();
+      }
       //! Set the sizes of the grid cells in x-direction in m
       t3DModelDim &SetXCellSizes()
         {

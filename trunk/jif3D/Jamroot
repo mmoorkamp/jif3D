@@ -38,6 +38,7 @@ import cuda ;
 use-project /Global : Global ;
 use-project /Gravity : Gravity ;
 use-project /GravMag : GravMag ;
+use-project /Magnetics : Magnetics ;
 use-project /ModelBase : ModelBase ;
 use-project /Profiling : Profiling ;
 use-project /Inversion : Inversion ;
@@ -67,7 +68,7 @@ alias vecopt : lapack cblas atlas f77blas gfortran ;
 
 build-project Global ;
 build-project Gravity ;
-#build-project GravMag ;
+build-project Magnetics ;
 build-project MT ;
 build-project Tomo ;
 build-project ModelBase ;

@@ -28,6 +28,11 @@ namespace jif3D
           ar & boost::serialization::base_object<ThreeDModelBase>(*this);
         }
     public:
+      //! The implementation class for magnetic and gravity data needs to know the number of model parameters
+      size_t GetNModelParm() const
+      {
+    	  return GetData().num_elements();
+      }
       ThreeDMagneticModel();
       virtual ~ThreeDMagneticModel();
       //! Set the sizes of the grid cells in x-direction in m

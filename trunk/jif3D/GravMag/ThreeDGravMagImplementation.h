@@ -248,8 +248,7 @@ namespace jif3D
         const double modelzwidth = std::accumulate(Model.GetZCellSizes().begin(),
             Model.GetZCellSizes().end(), 0.0);
         //the total number of model parameters, gridded domain + background
-        const size_t nmod = Model.GetDensities().num_elements()
-            + Model.GetBackgroundDensities().size();
+        const size_t nmod = Model.GetNModelParm();
         //allocate enough memory for all derivatives in the result vector
         rvec DerivMod(nmod);
         std::fill(DerivMod.begin(), DerivMod.end(), 0.0);
