@@ -9,7 +9,7 @@ lib inversion : NonLinearOptimization.cpp
 				ObjectiveFunction.cpp JointObjective.cpp 
                  : <include>boost : : <include>. ;
 
-lib lininv : GeneralizedInverse.cpp LinearInversion.cpp ..//vecopt : <define>HAVEATLAS ;
+lib lininv : GeneralizedInverse.cpp LinearInversion.cpp ..//vecopt : <lapack>on ;
 
 unit-test inversion_test : test_inversion.cpp inversion lininv : : <include>. ;
 unit-test optstep_test : test_optstep.cpp  inversion : : <include>. ;
