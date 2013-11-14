@@ -4,10 +4,10 @@ lib gravity : ThreeDGravityModel.cpp
               ScalarOMPGravityImp.cpp  TensorOMPGravityImp.cpp
               GravityInterface.cpp   ReadWriteGravityData.cpp
                  ../Global//global ..//boost_filesystem ..//boost_system ../ModelBase//modelbase
-              : <variant>gpu:<source>TensorCudaGravityImp.cpp 
-                <variant>gpu:<source>ScalarCudaGravityImp.cpp
-                <variant>gpu:<source>..//cudart
-                <variant>gpu:<source>gravcuda.cu ;
+              : <gpu>on:<source>TensorCudaGravityImp.cpp 
+                <gpu>on:<source>ScalarCudaGravityImp.cpp
+                <gpu>on:<source>..//cudart
+                <gpu>on:<source>gravcuda.cu ;
                
                     
 alias core :  ../ModelBase//modelbase ../Global ..//netcdf_c++ ..//netcdf  ..//boost_filesystem  ..//boost_program_options ..//boost_system ;
@@ -18,13 +18,13 @@ unit-test tensor_test : test_TensorCalculation.cpp gravity core : : <include>. ;
 unit-test gravity_objective_test : test_GravityObjective.cpp gravity core ../Inversion//inversion : : <include>. ;
 unit-test transform_test : test_transforms.cpp  gravity core ..//vecopt : : <include>. ;
 unit-test R_test : test_Rinterface.cpp gravity core ..//vecopt : : <include>. ;
-# unit-test weighting_test : test_weighting.cpp DepthWeighting.cpp  gravity  ../Inversion core  : : <include>. ;
+# unit-test weighting_test : test_weighting.cpp DepthWeighting.cpp  gravity  ../Inversion//inversion core  : : <include>. ;
 unit-test readwrite_test : test_readwritedata.cpp gravity  ../Inversion//inversion core  : : <include>. ;
 
 exe gravforward : gravforward.cpp gravity  core : <include>. ;
 exe gravgrid : gravgrid.cpp gravity  core : <include>. ;
 exe gravinv : gravinv.cpp DepthWeighting.cpp ../Inversion/LinearInversion.cpp ../Inversion/MatrixTools.cpp gravity  core ../Inversion//inversion
-              ..//vecopt : <include>. ;
+              ..//vecopt : <lapack>on : <include>. ;
 exe gravsens : gravsens.cpp gravity  core ../Inversion//inversion ../Inversion//lininv
               ..//vecopt : <include>. ;              
 exe gravnoise : gravnoise.cpp gravity   core : <include>. ;

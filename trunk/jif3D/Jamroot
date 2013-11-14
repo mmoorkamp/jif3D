@@ -1,4 +1,10 @@
-variant gpu : <define>HAVEGPU ;
+import feature ;
+ 
+feature.feature gpu : off on : composite ;
+feature.compose <gpu>on : <define>HAVEGPU ; 
+
+feature.feature lapack : off on : composite ;
+feature.compose <lapack>on : <define>HAVELAPACK ; 
 
 project 
     : requirements <include>/usr/local/include <include>/usr/local/R-2.6.2/include 
@@ -7,7 +13,8 @@ project
         <threading>multi 
         <define>BIND_FORTRAN_LOWERCASE_UNDERSCORE
         <define>HAVEOPENMP 
-        #<variant>gpu
+        <gpu>on
+        <lapack>on
     	<variant>release:<define>NDEBUG
     	<variant>profile:<define>NDEBUG  
     	<toolset>gcc<variant>debug:<cflags>" -ggdb3"
@@ -16,7 +23,7 @@ project
     	<toolset>gcc:<cflags>" -fopenmp -std=c++0x "
     	#<toolset>gcc:<linkflags>"  `pkg-config --libs hpx_application` "
     	<toolset>gcc:<linkflags>" -fopenmp  "
-    	<toolset>intel:<cxxflags>" -openmp  -std=c++0x "
+    	<toolset>intel:<cxxflags>" -openmp  -std=c++11 "
     	<toolset>intel:<define>TESTR
     	<toolset>intel:<linkflags>" -openmp   "
     	<toolset>sun:<define>BOOST_UBLAS_UNSUPPORTED_COMPILER=0
