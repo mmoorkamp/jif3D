@@ -14,6 +14,7 @@ exe plotsaltrel : plotsaltrel.cpp joint ../Joint : <include>. ;
 # exe gravconsist : gravconsist.cpp  ../Gravity ../Global ../Inversion : <include>. ;
 exe tomoinv : tomoinv.cpp  joint : <include>. ;
 exe plotgrav : plotgrav.cpp  joint : <include>. ;
+exe cleanmt : cleanmt.cpp  ../MT joint : <include>. ;
 exe parrun : parrun.cpp ..//boost_filesystem ..//boost_system ;
 exe picksort : picksort.cpp  ../Global  ../Tomo ..//boost_filesystem ..//boost_system : <include>. ;
 exe randommtmesh : randommtmesh.cpp  ../Global  ../MT ../ModelBase ..//boost_filesystem ..//boost_system : <include>. ;
