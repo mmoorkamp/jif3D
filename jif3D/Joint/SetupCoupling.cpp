@@ -293,7 +293,7 @@ namespace jif3D
         if (seisgravlambda > 0.0)
           {
             Objective.AddObjective(SeisGravCross, SeisGravTrans, seisgravlambda,
-                "SeisGrav");
+                "SeisGrav",JointObjective::coupling);
           }
         boost::shared_ptr<jif3D::CrossGradient> SeisMTCross(
             new jif3D::CrossGradient(ModelGeometry));
@@ -307,7 +307,7 @@ namespace jif3D
         std::cin >> seismtlambda;
         if (seismtlambda > 0.0)
           {
-            Objective.AddObjective(SeisMTCross, SeisMTTrans, seismtlambda, "SeisMT");
+            Objective.AddObjective(SeisMTCross, SeisMTTrans, seismtlambda, "SeisMT",JointObjective::coupling);
           }
         boost::shared_ptr<jif3D::CrossGradient> GravMTCross(
             new jif3D::CrossGradient(ModelGeometry));
@@ -321,7 +321,7 @@ namespace jif3D
         std::cin >> gravmtlambda;
         if (gravmtlambda > 0.0)
           {
-            Objective.AddObjective(GravMTCross, GravMTTrans, seismtlambda, "GravMT");
+            Objective.AddObjective(GravMTCross, GravMTTrans, seismtlambda, "GravMT",JointObjective::coupling);
           }
         //finally we construct the regularization terms
         //we ask for a weight and construct a regularization object
@@ -364,15 +364,15 @@ namespace jif3D
           }
         if (seisreglambda > 0.0)
           {
-            Objective.AddObjective(SeisReg, SlowRegTrans, seisreglambda, "SeisReg");
+            Objective.AddObjective(SeisReg, SlowRegTrans, seisreglambda, "SeisReg",JointObjective::regularization);
           }
         if (gravreglambda > 0.0)
           {
-            Objective.AddObjective(GravReg, DensRegTrans, gravreglambda, "GravReg");
+            Objective.AddObjective(GravReg, DensRegTrans, gravreglambda, "GravReg",JointObjective::regularization);
           }
         if (mtreglambda > 0.0)
           {
-            Objective.AddObjective(MTReg, CondRegTrans, mtreglambda, "MTReg");
+            Objective.AddObjective(MTReg, CondRegTrans, mtreglambda, "MTReg",JointObjective::regularization);
           }
       }
 
@@ -472,7 +472,7 @@ namespace jif3D
         std::cin >> saltrellambda;
         if (saltrellambda > 0.0)
           {
-            Objective.AddObjective(SaltRel, SaltRelTrans, saltrellambda, "SaltRel");
+            Objective.AddObjective(SaltRel, SaltRelTrans, saltrellambda, "SaltRel",JointObjective::coupling);
           }
         //finally we construct the regularization terms
         //we ask for a weight and construct a regularization object
@@ -516,17 +516,17 @@ namespace jif3D
           }
         if (seisreglambda > 0.0)
           {
-            Objective.AddObjective(SeisReg, SlowRegTrans, seisreglambda, "SeisReg");
+            Objective.AddObjective(SeisReg, SlowRegTrans, seisreglambda, "SeisReg",JointObjective::regularization);
 
           }
         if (gravreglambda > 0.0)
           {
-            Objective.AddObjective(GravReg, DensRegTrans, gravreglambda, "GravReg");
+            Objective.AddObjective(GravReg, DensRegTrans, gravreglambda, "GravReg",JointObjective::regularization);
 
           }
         if (mtreglambda > 0.0)
           {
-            Objective.AddObjective(MTReg, CondRegTrans, mtreglambda, "MTReg");
+            Objective.AddObjective(MTReg, CondRegTrans, mtreglambda, "MTReg",JointObjective::regularization);
           }
       }
 
@@ -565,7 +565,7 @@ namespace jif3D
             RefModel = SlowRegTrans->GeneralizedToPhysical(RefModel);
             Regularization->SetReferenceModel(RefModel);
           }
-        Objective.AddObjective(Regularization, SlowRegTrans, reglambda, "Reg");
+        Objective.AddObjective(Regularization, SlowRegTrans, reglambda, "Reg",JointObjective::regularization);
         InvModel = SlowTrans->PhysicalToGeneralized(InvModel);
       }
 

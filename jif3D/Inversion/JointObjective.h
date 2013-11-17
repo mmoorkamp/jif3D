@@ -35,6 +35,9 @@ namespace jif3D
      */
     class JointObjective: public ObjectiveFunction
       {
+      public:
+    	//! For each objective function we keep track of its general purpose
+    	enum ObjectiveType { unspecified, datafit, coupling, regularization };
     private:
       //! This vector holds pointers to the individual objective functions
       std::vector<boost::shared_ptr<ObjectiveFunction> > Objectives;
@@ -50,6 +53,8 @@ namespace jif3D
       ModelDistributor Distributor;
       //! Do we want to print misfit and gradient information to the screen
       bool PrintMisfit;
+      //! We can specify for each objective function what general purpose it has in the optimization
+      std::vector<ObjectiveType> FunctionType;
       friend class boost::serialization::access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
@@ -85,6 +90,20 @@ namespace jif3D
         {
           return IndividualFits;
         }
+      //! Get the RMS values for each data objective
+      std::vector<double> GetRMS() const
+		{
+    	  std::vector<double> RMS;
+    	  for (size_t i = 0; i < Weights.size(); ++i)
+    	  {
+    		  if (FunctionType.at(i) == datafit)
+    		  {
+    			  double r  = sqrt(IndividualFits.at(i) / Objectives.at(i)->GetNData());
+    			  RMS.push_back(r);
+    		  }
+    	  }
+    	  return RMS;
+		}
       //! Get the vector of l2-norms of the gradient for each individual objective at the current iteration
       const std::vector<double> &GetIndividualGradNorms() const
         {
@@ -100,13 +119,38 @@ namespace jif3D
        */
       void AddObjective(boost::shared_ptr<ObjectiveFunction> Obj,
           boost::shared_ptr<GeneralModelTransform> Transform, const double lambda = 1.0,
-          std::string DisplayName = "Objective")
+          std::string DisplayName = "Objective", ObjectiveType Type = unspecified)
         {
           Objectives.push_back(Obj);
           Weights.push_back(lambda);
           Distributor.AddTransformer(Transform);
           Names.push_back(DisplayName);
+          FunctionType.push_back(Type);
         }
+      //! This is an experimental feature to adjust the weights for a certain type of objective function during the optimization
+      /*! It generally makes sense to slowly reduce the weight for the regularization term during the inversion.
+       * However, the theory for NLCG and L-BFGS does not allow this, see also the comments for SetWeights. This is
+       * an experimental feature that allows to multiply the weight of objective functions
+       * of a certain typeto be multiplied by a factor. USE AT YOUR OWN RISK.
+       *
+       * @param Which The type of objective function for which we want to adjust the weights
+       * @param factor The factor by which we multiply the current value
+       */
+      void MultiplyWeights(ObjectiveType Which, double factor = 1.0)
+      {
+    	  for (size_t i = 0; i < Weights.size(); ++i)
+    	  {
+    		  if (FunctionType.at(i) == Which)
+		      {
+    			Weights.at(i) *= factor;
+		       }
+    	  }
+      }
+      //! Read only access to the weights of the objective functions
+      const std::vector<double> &GetWeights() const
+		{
+    	  return Weights;
+		}
       //! Change the weighting of the different methods
       /*! This function can be used to change the weight for
        * each method in the joint inversion after all objectives
