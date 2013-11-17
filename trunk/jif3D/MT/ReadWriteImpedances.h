@@ -80,6 +80,27 @@ namespace jif3D
     void WriteImpedancesToMtt(const std::string &filenamebase,
     		const std::vector<double> &Frequencies, const jif3D::rvec &Imp,
     		const jif3D::rvec &Err);
+
+    //! Reads apparent resistivity and phase information from an ascii file with all stations joined together
+    /*!
+     * @param filename The name of the ascii file
+     * @param Frequencies The vector of frequencies in Hz for the impedances in the vector Impedances
+     * @param StatXCoord The x-coordinates (North) of the measurement stations for the impedances in m
+     * @param StatYCoord The y-coordinates (East) of the measurement stations for the impedances in m
+     * @param StatZCoord The z-coordinates (Down) of the measurement stations for the impedances in m
+     * @param Imp The impedances (in Ohm, i.e. E/H) as a vector of real numbers.
+     *        8 consecutive elements form the impedance matrix for one frequency and site,
+     *        all impedances for one frequency and all stations form a contiguous block, the frequencies vary slowest.
+     * @param Err Impedance errors with the same number of Elements with Impedances.
+     *        As we only have one error estimate per element we write only the components corresponding to the real parts.
+     */
+    void ReadAppResFromAscii(const std::string &filename,
+    		std::vector<double> &Frequencies,
+    	    std::vector<double> &StatXCoord,
+    	    std::vector<double> &StatYCoord,
+    	    std::vector<double> &StatZCoord,
+    		jif3D::rvec &Imp,
+    		jif3D::rvec &Err);
     /* @} */
     }
 

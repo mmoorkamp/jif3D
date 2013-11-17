@@ -91,7 +91,7 @@ namespace jif3D
                 TomoFineGeometry.CopyMeasurementConfigurations(TomoModel);
                 TomoObjective->SetFineModelGeometry(TomoFineGeometry);
               }
-            Objective.AddObjective(TomoObjective, Transform, tomolambda, "Tomo");
+            Objective.AddObjective(TomoObjective, Transform, tomolambda, "Tomo",JointObjective::datafit);
             std::cout << "Tomo ndata: " << TomoData.size() << std::endl;
             std::cout << "Tomo lambda: " << tomolambda << std::endl;
           }

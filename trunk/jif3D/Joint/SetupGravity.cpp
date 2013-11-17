@@ -169,7 +169,7 @@ namespace jif3D
                 jif3D::ConstructError(ScalGravData, scalrelerr, scalminerr));
 
             Objective.AddObjective(ScalGravObjective, Transform, scalgravlambda,
-                "ScalGrav");
+                "ScalGrav",JointObjective::datafit);
             std::cout << "Scalar Gravity ndata: " << ScalGravData.size() << std::endl;
             std::cout << "Scalar Gravity lambda: " << scalgravlambda << std::endl;
           }
@@ -207,7 +207,7 @@ namespace jif3D
             FTGObjective->SetDataError(
                 jif3D::ConstructError(FTGData, ftgrelerr, ftgminerr));
 
-            Objective.AddObjective(FTGObjective, Transform, ftglambda, "FTG");
+            Objective.AddObjective(FTGObjective, Transform, ftglambda, "FTG",JointObjective::datafit);
             std::cout << "FTG ndata: " << FTGData.size() << std::endl;
             std::cout << "FTG lambda: " << ftglambda << std::endl;
           }

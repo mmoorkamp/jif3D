@@ -75,6 +75,36 @@ void StoreMisfit(std::ofstream &misfitfile, const size_t iteration, const double
     misfitfile << std::endl;
   }
 
+//! Store the current RMS for all data objectives with appropriate formating in an output stream
+void StoreRMS(std::ofstream &rmsfile, const size_t iteration,  const jif3D::JointObjective &Objective)
+  {
+	std::vector<double> RMS = Objective.GetRMS();
+    rmsfile << std::setw(5) << iteration << " " << std::setw(15) << " ";
+    for (size_t i = 0; i < RMS.size(); ++i)
+      {
+        rmsfile << std::setw(15) << RMS.at(i) << " ";
+      }
+
+    rmsfile << " " << Objective.GetNEval();
+    rmsfile << std::endl;
+  }
+
+
+//! Store the Weights for all objectives with appropriate formating in an output stream
+void StoreWeights(std::ofstream &rmsfile, const size_t iteration,  const jif3D::JointObjective &Objective)
+  {
+	std::vector<double> Weights = Objective.GetWeights();
+    rmsfile << std::setw(5) << iteration << " " << std::setw(15) << " ";
+    for (size_t i = 0; i < Weights.size(); ++i)
+      {
+        rmsfile << std::setw(15) << Weights.at(i) << " ";
+      }
+
+    rmsfile << " " << Objective.GetNEval();
+    rmsfile << std::endl;
+  }
+
+
 //! Check whether we have reached the target misfit for one of the objective functions in the JointObjective object
 bool CheckConvergence(const jif3D::JointObjective &Objective)
   {
@@ -120,6 +150,7 @@ int main(int argc, char *argv[])
     jif3D::SetupCoupling CouplingSetup;
     bool WaveletParm = false;
     double xorigin, yorigin;
+    double coolingfactor = 1.0;
     //we also create a number of options that are specific to our joint inversion
     //or act globally so that they cannot be associated with one subsystem
     po::options_description desc("General options");
@@ -131,7 +162,8 @@ int main(int argc, char *argv[])
         po::value(&xorigin)->default_value(0.0),
         "The origin for the inversion grid in x-direction")("yorigin",
         po::value(&yorigin)->default_value(0.0),
-        "The origin for the inversion grid in y-direction");
+        "The origin for the inversion grid in y-direction")("coolingfactor",po::value(&coolingfactor)->default_value(1.0),
+        		"The factor to multiply the weight for the regularization at each iteration EXPERIMENTAL");
     //we need to add the description for each part to the boost program options object
     //that way the user can get a help output and the parser object recongnizes these options
     desc.add(TomoSetup.SetupOptions());
@@ -296,10 +328,13 @@ int main(int argc, char *argv[])
 
     size_t iteration = 0;
     std::ofstream misfitfile("misfit.out");
+    std::ofstream rmsfile("rms.out");
+    std::ofstream weightfile("weights.out");
     //calculate initial misfit
     double InitialMisfit = Objective->CalcMisfit(InvModel);
     StoreMisfit(misfitfile, 0, InitialMisfit, *Objective);
-
+    StoreRMS(rmsfile,0,*Objective);
+    StoreWeights(weightfile,0,*Objective);
     jif3D::ThreeDGravityModel GravModel(GravitySetup.GetScalModel());
     jif3D::X3DModel MTModel(MTSetup.GetModel());
     jif3D::ThreeDSeismicModel TomoModel(TomoSetup.GetModel());
@@ -330,6 +365,7 @@ int main(int argc, char *argv[])
             //update the inversion model
             Optimizer->MakeStep(InvModel);
 
+            Objective->MultiplyWeights(jif3D::JointObjective::regularization,coolingfactor);
             ++iteration;
             //we save all models at each iteration, so we can look at the development
             // and use intermediate models in case something goes wrong
@@ -344,6 +380,8 @@ int main(int argc, char *argv[])
             std::cout << "Currrent Gradient: " << Optimizer->GetGradNorm() << std::endl;
             //and write the current misfit for all objectives to a misfit file
             StoreMisfit(misfitfile, iteration, Optimizer->GetMisfit(), *Objective);
+            StoreRMS(rmsfile,iteration,*Objective);
+            StoreWeights(weightfile,iteration,*Objective);
             std::cout << "\n\n";
           } catch (jif3D::FatalException &e)
           {
