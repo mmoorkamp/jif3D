@@ -8,6 +8,8 @@
 #ifndef HPXMTCALCULATOR_H_
 #define HPXMTCALCULATOR_H_
 
+#include <hpx/config.hpp>
+#include <hpx/include/util.hpp>
 #include <limits>
 #include <boost/filesystem.hpp>
 #include <boost/serialization/serialization.hpp>

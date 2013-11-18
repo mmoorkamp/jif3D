@@ -5,6 +5,7 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
+#include <hpx/config.hpp>
 #include <hpx/hpx_init.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include "../Global/NumUtil.h"
