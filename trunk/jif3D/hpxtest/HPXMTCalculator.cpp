@@ -5,6 +5,7 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
+#include <hpx/config.hpp>
 #include <cassert>
 #include <complex>
 #include <fstream>
