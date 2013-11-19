@@ -10,7 +10,7 @@
 #include <complex>
 #include <fstream>
 #include <iomanip>
-
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/multi_array.hpp>
 
 #include "../Global/FatalException.h"
@@ -124,28 +124,55 @@ namespace jif3D
             Model.GetBackgroundThicknesses().end(), BGDepths.begin());
         CompareDepths(BGDepths, Model.GetZCoordinates());
 
-        hpx::naming::id_type const locality_id = hpx::find_here();
+        std::vector<hpx::naming::id_type> localities =
+                hpx::find_all_localities();
+        std::cout << "Number of localities: " << localities.size() << std::endl;
+
+
+
+        // Get the number of worker OS-threads in use by this locality.
+        std::size_t const os_threads = hpx::get_os_thread_count();
+
+        // Populate a set with the OS-thread numbers of all OS-threads on this
+        // locality. When the hello world message has been printed on a particular
+        // OS-thread, we will remove it from the set.
+        std::set<std::size_t> attendance;
+        for (std::size_t os_thread = 0; os_thread < os_threads; ++os_thread)
+            attendance.insert(os_thread);
+
+        std::cout << "Number of threads: " << attendance.size() << std::endl;
+
         std::vector<future<jif3D::rvec>> FreqResult;
         FreqResult.reserve(nfreq);
         CalculateFrequency_action FreqCalc;
+    	boost::posix_time::ptime calcstarttime =
+    			boost::posix_time::microsec_clock::local_time();
         for (int i = minfreqindex; i < maxindex; ++i)
           {
-
+        	hpx::naming::id_type const locality_id = localities.at(i % localities.size());
             //rvec freqresult = CalculateFrequency(Model, i, TempDir);
             FreqResult.push_back(async(FreqCalc, locality_id, Model, i, TempDir.string()));
 
           }
         wait_all(FreqResult);
+    	boost::posix_time::ptime calcendtime =
+    			boost::posix_time::microsec_clock::local_time();
         std::cout << "Nfreq: " << FreqResult.size() << std::endl;
         for (int i = minfreqindex; i < maxindex; ++i)
           {
             size_t currindex = i - minfreqindex;
             size_t startindex = nmeas * currindex * 8;
             jif3D::rvec imp = FreqResult[currindex].get();
-            std::cout << imp.size() << std::endl;
             std::copy(imp.begin(), imp.end(), result.begin() + startindex);
           }
+    	boost::posix_time::ptime gatherendtime =
+    			boost::posix_time::microsec_clock::local_time();
 
+    	std::cout << " Times: " << std::endl;
+    	std::cout << "Calc: " << (calcendtime - calcstarttime).total_microseconds()
+    			<< std::endl;
+    	std::cout << "gather: " << (gatherendtime - calcendtime).total_microseconds()
+    			<< std::endl << std::endl;
         return result;
 
       }
