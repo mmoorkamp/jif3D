@@ -22,6 +22,13 @@ namespace jif3D
       double Inclination;
       double Declination;
       double FieldStrength;
+      virtual rvec CalcBackground(const size_t measindex, const double xwidth,
+          const double ywidth, const double zwidth, const ThreeDMagneticModel &Model,
+          rmat &Sensitivities)
+      {
+          rvec returnvector(ndatapermeas,0.0);
+          return returnvector;
+      }
       //! Calculate the response of the gridded part
       virtual rvec CalcGridded(const size_t measindex, const ThreeDMagneticModel &Model,
           rmat &Sensitivities);

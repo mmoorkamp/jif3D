@@ -61,7 +61,7 @@ rvec OMPMagneticImp::CalcGridded(const size_t measindex,
 					+ currvalue(0, 1) * ByComp + currvalue(0, 2) * BzComp)
 					* FieldStrength;
 			const double BySens = (currvalue(1, 0) * BxComp
-					+ currvalue(1, 1) * ByComp + currvalue(2, 2) * BzComp)
+					+ currvalue(1, 1) * ByComp + currvalue(1, 2) * BzComp)
 					* FieldStrength;
 			const double BzSens = (currvalue(2, 0) * BxComp
 					+ currvalue(2, 1) * ByComp + currvalue(2, 2) * BzComp)
