@@ -1,10 +1,13 @@
 import feature ;
  
-feature.feature gpu : off on : composite ;
+feature.feature gpu : off on : composite incidental ;
 feature.compose <gpu>on : <define>HAVEGPU ; 
 
-feature.feature lapack : off on : composite ;
+feature.feature lapack : off on : composite incidental ;
 feature.compose <lapack>on : <define>HAVELAPACK ; 
+
+feature.feature optpp : off on : composite incidental ;
+feature.compose <optpp>on : <define>HAVEOPTPP ; 
 
 project 
     : requirements <include>/usr/local/include <include>/usr/local/R-2.6.2/include 
@@ -50,7 +53,7 @@ use-project /ModelBase : ModelBase ;
 use-project /Profiling : Profiling ;
 use-project /Inversion : Inversion ;
 use-project /Joint : Joint ;
-#use-project /hpxtest : hpxtest ;
+use-project /hpxtest : hpxtest ;
 use-project /ModelTransforms : ModelTransforms ;
 
 local BOOST_TEST_LOG_LEVEL = all ;
@@ -85,4 +88,4 @@ build-project Profiling ;
 build-project Hacks ;
 build-project Joint ;
 build-project ModelTransforms ;
-#build-project hpxtest ;
+build-project hpxtest ;
