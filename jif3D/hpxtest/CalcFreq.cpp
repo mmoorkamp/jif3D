@@ -5,6 +5,8 @@
 // Copyright   : 2013, mm489
 //============================================================================
 
+#include <hpx/config.hpp>
+#include <hpx/include/util.hpp>
 #include "CalcFreq.h"
 #include <boost/filesystem/operations.hpp>
 #include <boost/algorithm/string.hpp>
@@ -134,7 +136,7 @@ void RunX3D(const std::string &NameRoot)
 jif3D::rvec HPXCalculateFrequency(const jif3D::X3DModel &Model, size_t freqindex,
     std::string TempDirName)
   {
-
+	std::cout << "Frequency: " <<  freqindex << " Running on: " << hpx::find_here() << " thread: " << hpx::get_worker_thread_num() << std::endl;
 	const size_t nmeas = Model.GetMeasPosX().size();
 	        const size_t nmodx = Model.GetXCoordinates().size();
 	        const size_t nmody = Model.GetYCoordinates().size();
