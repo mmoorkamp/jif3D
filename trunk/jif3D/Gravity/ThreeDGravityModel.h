@@ -83,11 +83,20 @@ namespace jif3D
           ar & bg_densities;
         }
     public:
+      jif3D::rvec GetModelParameters() const
+        {
+          jif3D::rvec parms(GetData().num_elements() + bg_densities.size());
+          std::copy(GetData().origin(), GetData().origin() + GetData().num_elements(),
+              parms.begin());
+          std::copy(bg_densities.begin(), bg_densities.end(),
+              parms.begin() + GetData().num_elements());
+          return parms;
+        }
       //! The implementation class for magnetic and gravity data needs to know the number of model parameters
       size_t GetNModelParm() const
-      {
-    	  return GetData().num_elements() + bg_densities.size();
-      }
+        {
+          return GetData().num_elements() + bg_densities.size();
+        }
       //! Set the sizes of the grid cells in x-direction in m
       t3DModelDim &SetXCellSizes()
         {

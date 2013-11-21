@@ -119,15 +119,10 @@ namespace jif3D
 
         const size_t nmeas = Model.GetMeasPosX().size()
             * ThreeDGravMagCalculator<ThreeDModelType>::Imp.get()->RawDataPerMeasurement();
-        const size_t ngrid = Model.GetDensities().num_elements();
-        const size_t nmod = ngrid + Model.GetBackgroundThicknesses().size();
+        const size_t nmod = Model.GetNModelParm();
 
-        rvec DensVector(nmod);
-        //copy the 3D model structure and the background into a vector of densities
-        std::copy(Model.GetDensities().origin(), Model.GetDensities().origin() + ngrid,
-            DensVector.begin());
-        std::copy(Model.GetBackgroundDensities().begin(),
-            Model.GetBackgroundDensities().end(), DensVector.begin() + ngrid);
+        rvec Vector = Model.GetModelParameters();
+
         rvec result(nmeas);
         rvec CurrSens(nmod);
         //for each measurement read the current row from the binary file
@@ -138,7 +133,7 @@ namespace jif3D
                 nmod * sizeof(double));
             if (infile.good())
               {
-                result(i) = boost::numeric::ublas::inner_prod(CurrSens, DensVector);
+                result(i) = boost::numeric::ublas::inner_prod(CurrSens, Vector);
               }
             else
               {
@@ -161,8 +156,7 @@ namespace jif3D
 
         const size_t nmeas = Model.GetMeasPosX().size()
             * ThreeDGravMagCalculator<ThreeDModelType>::Imp.get()->RawDataPerMeasurement();
-        const size_t ngrid = Model.GetDensities().num_elements();
-        const size_t nmod = ngrid + Model.GetBackgroundThicknesses().size();
+        const size_t nmod = Model.GetNModelParm();
         //we read the sensitivities row by row and multiply
         //by the corresponding misfit to calculate the gradient
         rvec Gradient(nmod, 0.0);

@@ -116,8 +116,7 @@ namespace jif3D
       {
         //allocate enough memory for the sensitivities
         const size_t nmeas = Model.GetMeasPosX().size();
-        const size_t ngrid = Model.GetDensities().num_elements();
-        const size_t nmod = ngrid + Model.GetBackgroundThicknesses().size();
+        const size_t nmod = Model.GetNModelParm();
         Sensitivities.resize(
             nmeas
                 * ThreeDGravMagCalculator<ThreeDModelType>::Imp.get()->RawDataPerMeasurement(),
@@ -138,29 +137,22 @@ namespace jif3D
         const size_t nmeas =
             Model.GetMeasPosX().size()
                 * ThreeDGravMagCalculator<ThreeDModelType>::Imp.get()->RawDataPerMeasurement();
-        const size_t ngrid = Model.GetDensities().num_elements();
-        const size_t nmod = ngrid + Model.GetBackgroundThicknesses().size();
-
+        const size_t nmod = Model.GetNModelParm();
         if (Sensitivities.size1() != nmeas || Sensitivities.size2() != nmod)
           {
             throw jif3D::FatalException(
                 "Size of sensitivity matrix does not match model configguration !");
           }
-        rvec DensVector(nmod);
-        //copy the 3D model structure and the background into a vector of densities
-        std::copy(Model.GetDensities().origin(), Model.GetDensities().origin() + ngrid,
-            DensVector.begin());
-        std::copy(Model.GetBackgroundDensities().begin(),
-            Model.GetBackgroundDensities().end(), DensVector.begin() + ngrid);
+        rvec Vector = Model.GetModelParameters();
         //perform the vector matrix product to get the raw data
         //depending on whether atlas is available on the system
         //we use the fast atlas version or the slower native ublas code
 #ifdef HAVEATLAS
         rvec result(nmeas);
-        atlas::gemv(1.0, Sensitivities, DensVector, 0.0, result);
+        atlas::gemv(1.0, Sensitivities, Vector, 0.0, result);
         return result;
 #else
-        return boost::numeric::ublas::prod(Sensitivities, DensVector);
+        return boost::numeric::ublas::prod(Sensitivities, Vector);
 #endif
 
       }
