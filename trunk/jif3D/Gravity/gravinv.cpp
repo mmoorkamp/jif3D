@@ -74,7 +74,7 @@ double CalcMisfit(const jif3D::rvec &ObservedData, const jif3D::rvec &SyntheticD
 int main()
   {
     //these objects hold information about the measurements and their geometry
-    jif3D::rvec Data;
+    jif3D::rvec Data, Error;
     jif3D::ThreeDGravityModel::tMeasPosVec PosX, PosY, PosZ;
 
     //first we read in the starting model and the measured data
@@ -105,13 +105,13 @@ int main()
     switch (DataType)
       {
     case jif3D::scalar:
-      jif3D::ReadScalarGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
+      jif3D::ReadScalarGravityMeasurements(datafilename, Data, PosX, PosY, PosZ, Error);
       //assign a scalar forward calculation object to the pointer
       GravityCalculator = boost::shared_ptr<CalculatorType>(
           jif3D::CreateGravityCalculator<CalculatorType>::MakeScalar(true));
       break;
     case jif3D::ftg:
-      jif3D::ReadTensorGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
+      jif3D::ReadTensorGravityMeasurements(datafilename, Data, PosX, PosY, PosZ, Error);
       //assign a ftg forward calculation object to the pointer
       GravityCalculator = boost::shared_ptr<CalculatorType>(
           jif3D::CreateGravityCalculator<CalculatorType>::MakeTensor(true));
@@ -248,13 +248,13 @@ int main()
       jif3D::Write3DDataToVTK(modelfilename + ".inv_sgd.vtk", "grav_accel", InvData,
           Model.GetMeasPosX(), Model.GetMeasPosY(), Model.GetMeasPosZ());
       jif3D::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc", InvData,
-          Model.GetMeasPosX(), Model.GetMeasPosY(), Model.GetMeasPosZ());
+          Model.GetMeasPosX(), Model.GetMeasPosY(), Model.GetMeasPosZ(), DataError);
       break;
     case jif3D::ftg:
       jif3D::Write3DTensorDataToVTK(modelfilename + ".inv_ftg.vtk", "grav_accel", InvData,
           Model.GetMeasPosX(), Model.GetMeasPosY(), Model.GetMeasPosZ());
       jif3D::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc", InvData,
-          Model.GetMeasPosX(), Model.GetMeasPosY(), Model.GetMeasPosZ());
+          Model.GetMeasPosX(), Model.GetMeasPosY(), Model.GetMeasPosZ(), DataError);
       break;
     default:
       std::cerr << " We should never reach this part. Fatal Error !" << std::endl;

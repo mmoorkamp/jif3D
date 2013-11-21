@@ -129,11 +129,11 @@ bool  Between(const double limit1, const double limit2, const double value)
 
       jif3D::OneDMTCalculator Calculator;
       jif3D::rvec Observed = Calculator.Calculate(TrueModel);
-
+      jif3D::rvec Error(Observed.size(),0.0);
       jif3D::OneDMTObjective Objective;
       Objective.SetObservedData(Observed);
       Objective.SetModelGeometry(Model);
-      Objective.SetDataError(jif3D::ConstructError(Observed, 0.02, 0.0));
+      Objective.SetDataError(jif3D::ConstructError(Observed, Error, 0.02, 0.0));
       jif3D::rvec ModelVec(nbglayers);
       std::copy(Model.GetBackgroundConductivities().begin(),Model.GetBackgroundConductivities().end(),ModelVec.begin());
       double misfit = Objective.CalcMisfit(ModelVec);

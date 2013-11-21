@@ -163,13 +163,15 @@ int main(int argc, char *argv[])
         CalculatorType>(jif3D::CreateGravityCalculator<CalculatorType>::MakeScalar());
     jif3D::rvec GravInvData(ScalGravityCalculator->Calculate(GravModel));
     jif3D::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc", GravInvData,
-        GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ());
+        GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ(),
+        GravitySetup.GetScalGravObjective().GetDataError());
 
     boost::shared_ptr<CalculatorType> FTGGravityCalculator = boost::shared_ptr<
         CalculatorType>(jif3D::CreateGravityCalculator<CalculatorType>::MakeTensor());
     jif3D::rvec FTGInvData(FTGGravityCalculator->Calculate(GravModel));
     jif3D::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc", FTGInvData,
-        GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ());
+        GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ(),
+        GravitySetup.GetFTGObjective().GetDataError());
 
     jif3D::Write3DDataToVTK(modelfilename + ".inv_sgd.vtk", "grav_accel", GravInvData,
         GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ());

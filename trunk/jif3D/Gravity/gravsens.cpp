@@ -40,10 +40,10 @@ int main()
     Model.ReadNetCDF(modelfilename);
 
     //we also read in data, but we only use the information about the measurements
-    jif3D::rvec Data;
+    jif3D::rvec Data, Error;
     jif3D::ThreeDGravityModel::tMeasPosVec PosX, PosY, PosZ;
     std::string datafilename = jif3D::AskFilename("Data Filename: ");
-    jif3D::ReadScalarGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
+    jif3D::ReadScalarGravityMeasurements(datafilename, Data, PosX, PosY, PosZ, Error);
     const size_t nmeas = PosX.size();
     //set the measurement points in the model to those of the data
     Model.ClearMeasurementPoints();

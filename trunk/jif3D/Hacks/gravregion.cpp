@@ -12,7 +12,7 @@
 int main()
   {
 
-    jif3D::rvec Data;
+    jif3D::rvec Data, Error;
     jif3D::ThreeDGravityModel::tMeasPosVec PosX, PosY, PosZ;
 
     std::string datafilename = jif3D::AskFilename("Data Filename: ");
@@ -25,11 +25,11 @@ int main()
     switch (DataType)
       {
     case jif3D::scalar:
-      jif3D::ReadScalarGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
+      jif3D::ReadScalarGravityMeasurements(datafilename, Data, PosX, PosY, PosZ, Error);
       break;
     case jif3D::ftg:
       nmeasdata = 9;
-      jif3D::ReadTensorGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
+      jif3D::ReadTensorGravityMeasurements(datafilename, Data, PosX, PosY, PosZ, Error);
       break;
     default:
       //in case we couldn't identify the data in the netcdf file
@@ -79,11 +79,11 @@ int main()
       {
     case jif3D::scalar:
       jif3D::SaveScalarGravityMeasurements(outfilename, FinData, NewPosX,
-          NewPosY, NewPosZ);
+          NewPosY, NewPosZ, Error);
       break;
     case jif3D::ftg:
       jif3D::SaveTensorGravityMeasurements(outfilename, FinData, NewPosX,
-          NewPosY, NewPosZ);
+          NewPosY, NewPosZ, Error);
       break;
     default:
       //in case we couldn't identify the data in the netcdf file

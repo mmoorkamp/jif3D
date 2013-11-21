@@ -56,8 +56,9 @@ namespace jif3D
 
       }
 
-    //! This function provides a simple, convenient way to assign an error to synthetic data for inversion
-    /*! When inverting synthetic data for which we do not have any noise information, we still have
+    //! This function provides a simple, convenient way to assign an error to data for inversion based on actual errors and error floor
+    /*! When inverting data we often have to use a minimum error based on some noise floor estimate.
+     * Also when inverting noise free synthetic data, we still have
      * to assign some data covariance for inversion, usually we use a relative error.
      * This function provides such functionality and
      * takes care of issues with zero or very small data.
@@ -66,20 +67,27 @@ namespace jif3D
      * @param absmin The absolute minimum data value considered for error calculation, this reduced the influence of very small data
      * @return The vector of error estimates
      */
-    inline jif3D::rvec ConstructError(const jif3D::rvec &Data,
+    inline jif3D::rvec ConstructError(const jif3D::rvec &Data, const jif3D::rvec &DataError,
         const double relerror, const double absmin = 0.0)
       {
         assert(relerror >= 0.0);
         assert(absmin >= 0.0);
         const size_t ndata = Data.size();
+        jif3D::rvec LocalError(DataError);
+        if (LocalError.empty())
+          {
+            LocalError.resize(ndata,false);
+            LocalError.clear();
+          }
         //create objects for the misfit and a very basic error estimate
-        jif3D::rvec DataError(ndata);
+        jif3D::rvec Error(ndata);
         for (size_t i = 0; i < ndata; ++i)
           {
-            DataError(i) = std::max(std::abs(Data(i)) * relerror, absmin);
-            assert(DataError(i) > 0.0);
+            Error(i) = std::max(std::abs(Data(i)) * relerror, absmin);
+            Error(i) = std::max(Error(i),LocalError(i));
+            assert(Error(i) > 0.0);
           }
-        return DataError;
+        return Error;
       }
     //! Assign errors to noise free synthetic MT data for inversion purposes
     /*! When inverting synthetic data for which we do not have any noise information, we still have

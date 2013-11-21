@@ -424,11 +424,11 @@ int main(int argc, char *argv[])
                 GravitySetup.GetScalGravObjective().GetSyntheticData());
             jif3D::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc",
                 ScalGravInvData, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
-                GravModel.GetMeasPosZ());
+                GravModel.GetMeasPosZ(), GravitySetup.GetScalGravObjective().GetDataError());
             jif3D::rvec ScalDiff(GravitySetup.GetScalGravObjective().GetIndividualMisfit());
             jif3D::SaveScalarGravityMeasurements(modelfilename + ".diff_sgd.nc", ScalDiff,
                 GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
-                GravModel.GetMeasPosZ());
+                GravModel.GetMeasPosZ(),GravitySetup.GetScalGravObjective().GetDataError());
             jif3D::Write3DDataToVTK(modelfilename + ".inv_sgd.vtk", "grav_accel",
                 ScalGravInvData, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
                 GravModel.GetMeasPosZ());
@@ -439,11 +439,11 @@ int main(int argc, char *argv[])
             jif3D::rvec FTGInvData(GravitySetup.GetFTGObjective().GetSyntheticData());
             jif3D::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc", FTGInvData,
                 GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
-                GravModel.GetMeasPosZ());
+                GravModel.GetMeasPosZ(), GravitySetup.GetFTGObjective().GetDataError());
             jif3D::rvec FTGDiff(GravitySetup.GetFTGObjective().GetIndividualMisfit());
             jif3D::SaveTensorGravityMeasurements(modelfilename + ".diff_ftg.nc", FTGDiff,
                 GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
-                GravModel.GetMeasPosZ());
+                GravModel.GetMeasPosZ(), GravitySetup.GetFTGObjective().GetDataError());
             jif3D::Write3DTensorDataToVTK(modelfilename + ".diff_ftg.vtk", "U", FTGInvData,
                 GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
                 GravModel.GetMeasPosZ());

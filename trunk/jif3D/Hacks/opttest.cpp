@@ -171,7 +171,7 @@ int main(int argc, char *argv[])
 
     jif3D::ThreeDSeismicModel StartModel;
     CouplingSetup.SetupTransforms(vm, StartModel, TomoTransform, GravityTransform,
-        MTTransform, RegTransform);
+        MTTransform);
 
     bool havetomo = TomoSetup.SetupObjective(vm, GetObjective(), TomoTransform);
     bool havegrav = GravitySetup.SetupObjective(vm, GetObjective(), GravityTransform);
@@ -278,9 +278,11 @@ int main(int argc, char *argv[])
             jif3D::MinMemGravMagCalculator<jif3D::ThreeDGravityModel> >::MakeTensor()->Calculate(
             GravModel));
     jif3D::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc", ScalGravInvData,
-        GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ());
+        GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ(),
+        GravitySetup.GetScalGravObjective().GetDataError());
     jif3D::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc", FTGInvData,
-        GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ());
+        GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ(),
+        GravitySetup.GetFTGObjective().GetDataError());
     //and write out the data and model
     //here we have to distinguish again between scalar and ftg data
     std::cout << "Writing out inversion results." << std::endl;

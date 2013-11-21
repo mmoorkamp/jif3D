@@ -117,7 +117,7 @@ namespace jif3D
                 jif3D::rvec MinErr(MTError.size());
                 if (vm.count("inderrors"))
                   {
-                    MinErr = jif3D::ConstructError(MTData, relerr);
+                    MinErr = jif3D::ConstructError(MTData, MTError, relerr);
                   }
                 else
                   {
@@ -131,7 +131,8 @@ namespace jif3D
               }
             //add the MT part to the JointObjective that will be used
             //for the inversion
-            Objective.AddObjective(MTObjective, Transform, mtlambda, "MT",JointObjective::datafit);
+            Objective.AddObjective(MTObjective, Transform, mtlambda, "MT",
+                JointObjective::datafit);
             //output some information to the screen
             //to signal that we added the MT data
             std::cout << "MT ndata: " << MTData.size() << std::endl;

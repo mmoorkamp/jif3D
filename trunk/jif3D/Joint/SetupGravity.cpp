@@ -59,7 +59,7 @@ namespace jif3D
             wantcuda = true;
           }
 
-        jif3D::rvec ScalGravData, FTGData;
+        jif3D::rvec ScalGravData, FTGData, ScalError, FTGError;
         double scalgravlambda = 1.0;
         double ftglambda = 1.0;
         //we first ask for the weights for scalar and tensor gravity
@@ -79,7 +79,7 @@ namespace jif3D
                 "Scalar Gravity Data Filename: ");
 
             jif3D::ReadScalarGravityMeasurements(scalgravdatafilename, ScalGravData,
-                ScalPosX, ScalPosY, ScalPosZ);
+                ScalPosX, ScalPosY, ScalPosZ, ScalError);
             HaveScal = true;
           }
 
@@ -89,7 +89,7 @@ namespace jif3D
           {
             std::string ftgdatafilename = jif3D::AskFilename("FTG Data Filename: ");
             jif3D::ReadTensorGravityMeasurements(ftgdatafilename, FTGData, FTGPosX,
-                FTGPosY, FTGPosZ);
+                FTGPosY, FTGPosZ, FTGError);
             HaveFTG = true;
           }
         //if the inversion includes any type of gravity data
@@ -166,7 +166,7 @@ namespace jif3D
             ScalGravObjective->SetObservedData(ScalGravData);
             ScalGravObjective->SetCoarseModelGeometry(ScalGravModel);
             ScalGravObjective->SetDataError(
-                jif3D::ConstructError(ScalGravData, scalrelerr, scalminerr));
+                jif3D::ConstructError(ScalGravData, ScalError, scalrelerr, scalminerr));
 
             Objective.AddObjective(ScalGravObjective, Transform, scalgravlambda,
                 "ScalGrav",JointObjective::datafit);
@@ -205,7 +205,7 @@ namespace jif3D
             FTGObjective->SetObservedData(FTGData);
             FTGObjective->SetCoarseModelGeometry(FTGGravModel);
             FTGObjective->SetDataError(
-                jif3D::ConstructError(FTGData, ftgrelerr, ftgminerr));
+                jif3D::ConstructError(FTGData, FTGError, ftgrelerr, ftgminerr));
 
             Objective.AddObjective(FTGObjective, Transform, ftglambda, "FTG",JointObjective::datafit);
             std::cout << "FTG ndata: " << FTGData.size() << std::endl;
