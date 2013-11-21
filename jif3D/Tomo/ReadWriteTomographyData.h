@@ -5,7 +5,6 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-
 #ifndef READWRITETOMOGRAPHYDATA_H_
 #define READWRITETOMOGRAPHYDATA_H_
 
@@ -23,19 +22,21 @@ namespace jif3D
      * @param filename The name of the file to store the data
      * @param Data The traveltimes in s, the length of this vector matches the number of
      *             source-receiver combinations in the Model object
+     * @param The error of the traveltimes
      * @param Model The model object containing information about the source and receiver setup
      */
     void SaveTraveltimes(const std::string &filename, const jif3D::rvec &Data,
-        const jif3D::ThreeDSeismicModel &Model);
+        const jif3D::rvec &Error, const jif3D::ThreeDSeismicModel &Model);
     //!Read a collection of travel times and associated positions from a netcdf file
     /*! Read traveltimes together with the source receiver configuration from a netcdf file.
      * @param filename The name of the file to store the data
      * @param Data The traveltimes in s, the length of this vector matches the number of
      *         source-receiver combinations in the Model object
+     * @param The error of the traveltimes
      * @param Model The model object containing information about the source and receiver setup
      */
     void ReadTraveltimes(const std::string &filename, jif3D::rvec &Data,
-        jif3D::ThreeDSeismicModel &Model);
+        jif3D::rvec &Error, jif3D::ThreeDSeismicModel &Model);
 
     //! Plot the travel time field, i.e. the travel time at each grid cell in a vtk file
     /*! Write the travel time field to a .vtk file. This is a template so that we can
@@ -49,8 +50,7 @@ namespace jif3D
      */
     template<typename floattype>
     void PlotTimeField(const std::string &filename, const floattype *Times,
-        const double gridspacing, const size_t nx, const size_t ny,
-        const size_t nz)
+        const double gridspacing, const size_t nx, const size_t ny, const size_t nz)
       {
         std::ofstream outfile(filename.c_str());
         outfile << "# vtk DataFile Version 2.0\n";
@@ -59,8 +59,8 @@ namespace jif3D
         outfile << "DATASET STRUCTURED_POINTS\n";
         outfile << "DIMENSIONS " << nx << " " << ny << " " << nz << std::endl;
         outfile << "ORIGIN 0 0 0\n";
-        outfile << "SPACING " << gridspacing << " " << gridspacing << " "
-            << gridspacing << std::endl;
+        outfile << "SPACING " << gridspacing << " " << gridspacing << " " << gridspacing
+            << std::endl;
         outfile << "POINT_DATA " << nx * ny * nz << std::endl;
         outfile << "SCALARS traveltimes float\n";
         outfile << "LOOKUP_TABLE default\n";

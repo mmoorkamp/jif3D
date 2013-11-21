@@ -33,7 +33,7 @@ namespace ublas = boost::numeric::ublas;
 int main()
   {
     //these objects hold information about the measurements and their geometry
-    jif3D::rvec Data;
+    jif3D::rvec Data, Errors;
 
     //first we read in the starting model and the measured data
     std::string modelfilename, datafilename;
@@ -47,7 +47,7 @@ int main()
     std::cin >> datafilename;
 
     //read in data
-    jif3D::ReadTraveltimes(datafilename, Data, Model);
+    jif3D::ReadTraveltimes(datafilename, Data, Errors, Model);
     //if we don't have data inversion doesn't make sense;
     if (Data.empty())
       {
@@ -58,9 +58,7 @@ int main()
     //we define a few constants that are used throughout the inversion
 
     const size_t ndata = Data.size();
-    //create objects for the misfit and a very basic error estimate
-    jif3D::rvec DataError(ndata);
-    std::fill_n(DataError.begin(), ndata, 5.0);
+
 
     jif3D::rvec InvModel(Model.GetSlownesses().num_elements());
     std::copy(Model.GetSlownesses().origin(), Model.GetSlownesses().origin()
@@ -77,7 +75,7 @@ int main()
     TomoObjective->SetObservedData(Data);
     TomoObjective->SetFineModelGeometry(Model);
     TomoObjective->SetCoarseModelGeometry(Model);
-    TomoObjective->SetDataError(DataError);
+    TomoObjective->SetDataError(Errors);
 
     boost::shared_ptr<jif3D::JointObjective> Objective(
         new jif3D::JointObjective());
@@ -138,7 +136,7 @@ int main()
     //calculate the predicted data
     std::cout << "Calculating response of inversion model." << std::endl;
     jif3D::rvec InvData(jif3D::TomographyCalculator().Calculate(Model));
-    jif3D::SaveTraveltimes(modelfilename + ".inv_tt.nc", InvData, Model);
+    jif3D::SaveTraveltimes(modelfilename + ".inv_tt.nc", InvData, Errors, Model);
     //and write out the data and model
     //here we have to distinguish again between scalar and ftg data
     std::cout << "Writing out inversion results." << std::endl;

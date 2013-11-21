@@ -62,7 +62,8 @@ namespace jif3D
                 "Tomography Data Filename: ");
 
             //read in data
-            jif3D::ReadTraveltimes(tomodatafilename, TomoData, TomoModel);
+            jif3D::rvec TomoError;
+            jif3D::ReadTraveltimes(tomodatafilename, TomoData, TomoError, TomoModel);
             TomoModel.SetOrigin(xorigin, yorigin, 0.0);
             bool writerays = false;
             if (vm.count("writerays"))
@@ -79,8 +80,7 @@ namespace jif3D
             //we assume the same error for all measurements
             //this is either the default value set in the constructor
             //or set by the user
-            jif3D::rvec TomoError(TomoData.size());
-            std::fill(TomoError.begin(), TomoError.end(), pickerr);
+            TomoError = ConstructError(TomoData, TomoError, 0.0, pickerr);
             TomoObjective->SetDataError(TomoError);
 
             if (vm.count("tomofine"))
@@ -91,7 +91,8 @@ namespace jif3D
                 TomoFineGeometry.CopyMeasurementConfigurations(TomoModel);
                 TomoObjective->SetFineModelGeometry(TomoFineGeometry);
               }
-            Objective.AddObjective(TomoObjective, Transform, tomolambda, "Tomo",JointObjective::datafit);
+            Objective.AddObjective(TomoObjective, Transform, tomolambda, "Tomo",
+                JointObjective::datafit);
             std::cout << "Tomo ndata: " << TomoData.size() << std::endl;
             std::cout << "Tomo lambda: " << tomolambda << std::endl;
           }
