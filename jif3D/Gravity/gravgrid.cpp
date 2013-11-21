@@ -98,6 +98,8 @@ int main(int argc, char *argv[])
     jif3D::rvec ScalarResults(ScalarCalculator->Calculate(GravModel));
     jif3D::rvec TensorResults(TensorCalculator->Calculate(GravModel));
 
+    jif3D::rvec ScalErr(ScalarResults.size());
+    jif3D::rvec TensErr(TensorResults.size());
     double scalrelnoise = 0.0;
     double ftgrelnoise = 0.0;
     double scalabsnoise = 0.0;
@@ -111,11 +113,15 @@ int main(int argc, char *argv[])
     cout << "Absolute noise level (ftg data): ";
     cin >> ftgabsnoise;
     jif3D::AddNoise(ScalarResults, scalrelnoise, scalabsnoise);
+    std::transform(ScalarResults.begin(),ScalarResults.end(),ScalErr.begin(),
+        [scalrelnoise, scalabsnoise] (const double data) {return std::max(scalabsnoise,data*scalrelnoise);});
     jif3D::AddNoise(TensorResults, ftgrelnoise, ftgabsnoise);
+    std::transform(TensorResults.begin(),TensorResults.end(),TensErr.begin(),
+            [ftgrelnoise, ftgabsnoise] (const double data) {return std::max(ftgabsnoise,data*ftgrelnoise);});
     jif3D::SaveScalarGravityMeasurements(ModelFilename + ".sgd.nc", ScalarResults,
-        GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ());
+        GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ(),ScalErr);
     jif3D::SaveTensorGravityMeasurements(ModelFilename + ".ftg.nc", TensorResults,
-        GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ());
+        GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ(),TensErr);
     //write the model in .vtk format, at the moment the best plotting option
     GravModel.WriteVTK(ModelFilename + ".vtk");
 

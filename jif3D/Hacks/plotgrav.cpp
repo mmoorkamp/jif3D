@@ -22,10 +22,10 @@ int main(int argc, char *argv[])
     std::string ScalarFilename = jif3D::AskFilename("Scalar data Filename: ");
     std::string FTGFilename = jif3D::AskFilename("FTG data Filename: ");
     std::vector<double> ScalX, ScalY, ScalZ, FTGX, FTGY, FTGZ;
-    jif3D::rvec ScalDat, FTGDat;
+    jif3D::rvec ScalDat, FTGDat, ScalErr, FTGErr;
     jif3D::ReadScalarGravityMeasurements(ScalarFilename, ScalDat, ScalX, ScalY,
-        ScalZ);
-    jif3D::ReadTensorGravityMeasurements(FTGFilename, FTGDat, FTGX, FTGY, FTGZ);
+        ScalZ,ScalErr);
+    jif3D::ReadTensorGravityMeasurements(FTGFilename, FTGDat, FTGX, FTGY, FTGZ, FTGErr);
 
     jif3D::Write3DDataToVTK(ScalarFilename + ".vtk", "grav_accel", ScalDat,
         ScalX, ScalY, ScalZ);

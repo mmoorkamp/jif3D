@@ -25,12 +25,12 @@ int main()
     boost::lagged_fibonacci607 generator(
         static_cast<unsigned int> (std::time(0)));
 
-    jif3D::rvec Data;
+    jif3D::rvec Data, Error;
     jif3D::ThreeDGravityModel::tMeasPosVec PosX, PosY, PosZ;
 
     //read in the netcdf file with the data
     std::string datafilename = jif3D::AskFilename( "Data Filename: ");
-    jif3D::ReadScalarGravityMeasurements(datafilename, Data, PosX, PosY, PosZ);
+    jif3D::ReadScalarGravityMeasurements(datafilename, Data, PosX, PosY, PosZ, Error);
 
     //get the relative noise level
     double noiselevel;
@@ -38,6 +38,7 @@ int main()
     std::cin >> noiselevel;
 
     const size_t nmeas = Data.size();
+    Error.resize(nmeas);
     //create a gaussian distribution for each datum and draw a sample from it
     for (size_t i = 0; i < nmeas; ++i)
       {
@@ -45,7 +46,8 @@ int main()
         boost::variate_generator<boost::lagged_fibonacci607&, boost::normal_distribution<> >
             Sample(generator, dist);
         Data(i) = Sample();
+        Error(i) = Data(i) * noiselevel;
       }
     //write noisy data to a file
-    jif3D::SaveScalarGravityMeasurements(datafilename+".noise.nc", Data, PosX, PosY, PosZ);
+    jif3D::SaveScalarGravityMeasurements(datafilename+".noise.nc", Data, PosX, PosY, PosZ, Error);
   }

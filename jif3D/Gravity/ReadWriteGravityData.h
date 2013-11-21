@@ -24,25 +24,29 @@ namespace jif3D
         jif3D::rvec &Data,
         ThreeDGravityModel::tMeasPosVec &PosX,
         ThreeDGravityModel::tMeasPosVec &PosY,
-        ThreeDGravityModel::tMeasPosVec &PosZ);
+        ThreeDGravityModel::tMeasPosVec &PosZ,
+        jif3D::rvec &Error );
     //!Save a collection of scalar gravity measurements and associated positions to a netcdf file
     void SaveScalarGravityMeasurements(const std::string &filename,
         const jif3D::rvec &Data,
         const ThreeDGravityModel::tMeasPosVec &PosX,
         const ThreeDGravityModel::tMeasPosVec &PosY,
-        const ThreeDGravityModel::tMeasPosVec &PosZ);
+        const ThreeDGravityModel::tMeasPosVec &PosZ,
+        const jif3D::rvec &Error );
     //!Read a collection of tensor gravity measurements and associated positions from a netcdf file
     void ReadTensorGravityMeasurements(const std::string &filename,
         jif3D::rvec &Data,
         ThreeDGravityModel::tMeasPosVec &PosX,
         ThreeDGravityModel::tMeasPosVec &PosY,
-        ThreeDGravityModel::tMeasPosVec &PosZ);
+        ThreeDGravityModel::tMeasPosVec &PosZ,
+        jif3D::rvec &Error);
     //!Save a collection of tensor gravity measurements and associated positions to a netcdf file
     void SaveTensorGravityMeasurements(const std::string &filename,
         const jif3D::rvec &Data,
         const ThreeDGravityModel::tMeasPosVec &PosX,
         const ThreeDGravityModel::tMeasPosVec &PosY,
-        const ThreeDGravityModel::tMeasPosVec &PosZ);
+        const ThreeDGravityModel::tMeasPosVec &PosZ,
+        const jif3D::rvec &Error );
   /* @} */
   }
 #endif /* READWRITEGRAVITYDATA_H_ */

@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
         AvgImp(2 * i) = (OneDImp(2 * i) + OneDImp(2 * i + 1)) / 2.0;
         AvgImp(2 * i + 1) = AvgImp(2 * i);
       }
-    jif3D::rvec DataError(jif3D::ConstructError(AvgImp, 0.05, 0.0));
+    jif3D::rvec DataError(jif3D::ConstructError(AvgImp, ImpError, 0.05, 0.0));
     if (vm.count("appres"))
       {
         MakeInvCovar(*MTObjective.get(), OneDImp, Frequencies);

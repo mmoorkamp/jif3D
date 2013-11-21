@@ -69,12 +69,13 @@ int main(int argc, char *argv[])
     //calculate both types of data
     jif3D::rvec ScalarResults(ScalarCalculator->Calculate(GravModel));
     jif3D::rvec TensorResults(TensorCalculator->Calculate(GravModel));
-
+    jif3D::rvec ScalErr(ScalarResults.size(),0.0);
+    jif3D::rvec TensErr(TensorResults.size(),0.0);
     //write the results to netcdf files
     jif3D::SaveScalarGravityMeasurements(ModelFilename + ".sgd.nc", ScalarResults, GravModel.GetMeasPosX(),
-        GravModel.GetMeasPosY(), GravModel.GetMeasPosZ());
+        GravModel.GetMeasPosY(), GravModel.GetMeasPosZ(), ScalErr);
     jif3D::SaveTensorGravityMeasurements(ModelFilename + ".ftg.nc", TensorResults, GravModel.GetMeasPosX(),
-        GravModel.GetMeasPosY(), GravModel.GetMeasPosZ());
+        GravModel.GetMeasPosY(), GravModel.GetMeasPosZ(),TensErr);
     //write the model in .vtk format, at the moment the best plotting option
     GravModel.WriteVTK(ModelFilename + ".vtk");
   }
