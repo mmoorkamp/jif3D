@@ -69,7 +69,7 @@ namespace jif3D
         MeasIndexVar->put(&MeasIndex[0], ndata);
         //Write the travel times and the error
         WriteVec(DataFile, TravelTimeName, Data, MeasIndexDim, "s");
-        WriteVec(DataFile, TravelTimeErrorName, Error, MeasIndexDim, "s");
+
         //write the index of the source for each measurement
         NcVar *SourceIndexVar = DataFile.add_var(SourceIndexName.c_str(), ncInt,
             MeasIndexDim);
@@ -78,6 +78,8 @@ namespace jif3D
         NcVar *RecIndexVar = DataFile.add_var(ReceiverIndexName.c_str(), ncInt,
             MeasIndexDim);
         RecIndexVar->put(&Model.GetReceiverIndices()[0], MeasIndexDim->size());
+
+        WriteVec(DataFile, TravelTimeErrorName, Error, MeasIndexDim, "s");
 
       }
 
@@ -123,7 +125,18 @@ namespace jif3D
           }
         //finally read in the traveltimes
         ReadVec(DataFile, TravelTimeName, Data);
-        ReadVec(DataFile, TravelTimeErrorName, Error);
+        // it is possible that there is no error information in the file
+        // so we don't want to crash the program if not but set it to zero
+        NcError NetCDFError(NcError::silent_nonfatal);
+        if (DataFile.get_var(TravelTimeErrorName.c_str()) != nullptr)
+          {
+            ReadVec(DataFile, TravelTimeErrorName, Error);
+          }
+        else
+          {
+            Error.resize(Data.size());
+            Error.clear();
+          }
       }
 
     void PlotRaypath(const std::string &filename, jif3D::RP_STRUCT *raypath,

@@ -136,7 +136,16 @@ namespace jif3D
         ReadVec(DataFile, MeasPosYName, PosY);
         ReadVec(DataFile, MeasPosZName, PosZ);
         ReadVec(DataFile, ScalarGravityName, Data);
-        ReadVec(DataFile, ScalarErrorName, Error);
+        NcError NetCDFError(NcError::silent_nonfatal);
+        if (DataFile.get_var(ScalarErrorName.c_str()) != nullptr)
+          {
+            ReadVec(DataFile, ScalarErrorName, Error);
+          }
+        else
+          {
+            Error.resize(Data.size());
+            Error.clear();
+          }
       }
 
     /*! Read FTG measurements and their position from a netcdf file. Data will have
@@ -160,13 +169,20 @@ namespace jif3D
         assert(PosX.size() == PosZ.size());
 
         Data.resize(PosX.size() * 9);
+        Error.resize(Data.size());
+        Error.clear();
         for (size_t i = 0; i < 9; ++i)
           {
             ReadMatComp(DataFile, TensorNames.at(i), Data, i);
           }
         for (size_t i = 0; i < 9; ++i)
           {
-            ReadMatComp(DataFile, "d" + TensorNames.at(i), Error, i);
+            NcError NetCDFError(NcError::silent_nonfatal);
+            std::string currname = "d" + TensorNames.at(i);
+            if (DataFile.get_var(currname.c_str()) != nullptr)
+              {
+                ReadMatComp(DataFile, currname, Error, i);
+              }
           }
 
       }
