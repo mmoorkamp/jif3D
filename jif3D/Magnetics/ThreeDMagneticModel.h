@@ -10,7 +10,9 @@
 
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/base_object.hpp>
+#include "../Global/VecMat.h"
 #include "../ModelBase/ThreeDModelBase.h"
+#include "../ModelBase/GridOnlyModelCache.h"
 
 namespace jif3D
   {
@@ -19,6 +21,8 @@ namespace jif3D
     static const std::string SusceptibilityUnit = " ";
     class ThreeDMagneticModel: public jif3D::ThreeDModelBase
       {
+    public:
+      typedef jif3D::GridOnlyModelCache<ThreeDMagneticModel> ModelCacheType;
     private:
       friend class boost::serialization::access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
@@ -28,11 +32,18 @@ namespace jif3D
           ar & boost::serialization::base_object<ThreeDModelBase>(*this);
         }
     public:
+      jif3D::rvec GetModelParameters() const
+        {
+          jif3D::rvec parms(GetData().num_elements());
+          std::copy(GetData().origin(), GetData().origin() + GetData().num_elements(),
+              parms.begin());
+          return parms;
+        }
       //! The implementation class for magnetic and gravity data needs to know the number of model parameters
       size_t GetNModelParm() const
-      {
-    	  return GetData().num_elements();
-      }
+        {
+          return GetData().num_elements();
+        }
       ThreeDMagneticModel();
       virtual ~ThreeDMagneticModel();
       //! Set the sizes of the grid cells in x-direction in m

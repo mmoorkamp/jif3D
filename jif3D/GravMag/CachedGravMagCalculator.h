@@ -35,7 +35,7 @@ namespace jif3D
       //calculation, so we can decide whether the geometries have changed
       typedef typename ThreeDModelType::t3DModelDim ModelDimType;
       typedef typename ThreeDModelType::tMeasPosVec MeasPosType;
-      typedef typename ThreeDModelType::tBackgroundVec BackgroundType;
+      //typedef typename ThreeDModelType::tBackgroundVec BackgroundType;
       typename ThreeDModelType::ModelCacheType ModelCache;
       friend class boost::serialization::access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
@@ -104,7 +104,7 @@ namespace jif3D
         //we have to make sure the calculation finishes properly before we can guarantee the cache and return the result
         ThreeDGravMagCalculator<ThreeDModelType>::SetCurrentSensitivities().resize(
             ThreeDGravMagCalculator<ThreeDModelType>::Imp.get()->RawDataPerMeasurement(),
-            Model.GetDensities().num_elements() + Model.GetBackgroundDensities().size());
+            Model.GetNModelParm());
         rvec result = CalculateNewModel(Model);
         HaveCache = true;
 
@@ -128,7 +128,7 @@ namespace jif3D
         //we have to make sure the calculation finishes properly before we can guarantee the cache and return the result
         ThreeDGravMagCalculator<ThreeDModelType>::SetCurrentSensitivities().resize(
             ThreeDGravMagCalculator<ThreeDModelType>::Imp.get()->GetDataPerMeasurement(),
-            Model.GetDensities().num_elements() + Model.GetBackgroundDensities().size());
+            Model.GetNModelParm());
         return ThreeDGravMagCalculator<ThreeDModelType>::LQDerivative(Model, Misfit);
 
       }

@@ -1,6 +1,6 @@
 import testing ; 
 lib magnetics : ThreeDMagneticModel.cpp 
-              OMPMagneticImp.cpp  
+              OMPMagneticImp.cpp  ReadWriteMagneticData.cpp
                  ../Global//global ../Gravity//gravity ..//boost_filesystem ..//boost_system ../ModelBase//modelbase
                ;
                

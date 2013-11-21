@@ -25,10 +25,10 @@ namespace jif3D
       virtual rvec CalcBackground(const size_t measindex, const double xwidth,
           const double ywidth, const double zwidth, const ThreeDMagneticModel &Model,
           rmat &Sensitivities)
-      {
-          rvec returnvector(ndatapermeas,0.0);
+        {
+          rvec returnvector(ndatapermeas, 0.0);
           return returnvector;
-      }
+        }
       //! Calculate the response of the gridded part
       virtual rvec CalcGridded(const size_t measindex, const ThreeDMagneticModel &Model,
           rmat &Sensitivities);
@@ -47,7 +47,7 @@ namespace jif3D
         {
           return ndatapermeas;
         }
-      OMPMagneticImp(double Inc = 0, double Dec =0, double Fs = 1.0);
+      OMPMagneticImp(double Inc = 0, double Dec = 0, double Fs = 1.0);
       virtual ~OMPMagneticImp();
       };
 

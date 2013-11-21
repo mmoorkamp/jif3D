@@ -18,6 +18,7 @@ project
         <define>HAVEOPENMP 
         <gpu>on
         <lapack>on
+        <optpp>on
     	<variant>release:<define>NDEBUG
     	<variant>profile:<define>NDEBUG  
     	<toolset>gcc<variant>debug:<cflags>" -ggdb3"
