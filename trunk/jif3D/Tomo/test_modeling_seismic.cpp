@@ -143,6 +143,8 @@ BOOST_AUTO_TEST_CASE  (interpolate_test)
       Model.AddMeasurementConfiguration(0, 0);
       Model.AddMeasurementConfiguration(1, 1);
       jif3D::rvec time(Calculator.Calculate(Model));
+      jif3D::rvec Error(time.size());
+      std::generate(Error.begin(),Error.end(),rand);
       //compare the C++ result to the C-result
       //the C++ class adds a low velocity layer at the bottom and the top
       //so the models are not identical, still the influence of these layers should be small
@@ -159,11 +161,12 @@ BOOST_AUTO_TEST_CASE  (interpolate_test)
       //is smaller than the time it takes to go through one grid cell
       BOOST_CHECK(std::abs(dist-totallength * grid.h) < slow * grid.h);
       //now check that saving and restoring works
-      jif3D::SaveTraveltimes("tt.nc",time,Model);
-      jif3D::rvec ReadTime;
+      jif3D::SaveTraveltimes("tt.nc",time, Error, Model);
+      jif3D::rvec ReadTime, ReadError;
       jif3D::ThreeDSeismicModel ReadModel;
-      jif3D::ReadTraveltimes("tt.nc",ReadTime,ReadModel);
+      jif3D::ReadTraveltimes("tt.nc",ReadTime, ReadError, ReadModel);
       BOOST_CHECK(std::equal(time.begin(),time.end(),ReadTime.begin()));
+      BOOST_CHECK(std::equal(Error.begin(),Error.end(),ReadError.begin()));
       BOOST_CHECK(std::equal(Model.GetSourcePosX().begin(),Model.GetSourcePosX().end(),ReadModel.GetSourcePosX().begin()));
       BOOST_CHECK(std::equal(Model.GetSourcePosY().begin(),Model.GetSourcePosY().end(),ReadModel.GetSourcePosY().begin()));
       BOOST_CHECK(std::equal(Model.GetSourcePosZ().begin(),Model.GetSourcePosZ().end(),ReadModel.GetSourcePosZ().begin()));

@@ -5,7 +5,6 @@
 // Copyright   : 2008, MM
 //============================================================================
 
-
 /*! \file tomogrid.cpp
  * A simple program to calculate evenly spaced refraction data from a model stored in a netcdf file.
  * The spacing and region for the measurements is specified interactively. The model is taken from
@@ -76,30 +75,25 @@ int main(int argc, char *argv[])
     SeisModel.ReadNetCDF(ModelFilename);
 
     //setup the measurements in the forward modelling code
-    const size_t recnmeasx = boost::numeric_cast<size_t>((recmaxx - recminx)
-        / recdeltax);
-    const size_t recnmeasy = boost::numeric_cast<size_t>((recmaxy - recminy)
-        / recdeltay);
+    const size_t recnmeasx = boost::numeric_cast<size_t>((recmaxx - recminx) / recdeltax);
+    const size_t recnmeasy = boost::numeric_cast<size_t>((recmaxy - recminy) / recdeltay);
     for (size_t i = 0; i <= recnmeasx; ++i)
       {
         for (size_t j = 0; j <= recnmeasy; ++j)
           {
-            SeisModel.AddMeasurementPoint(recminx + i * recdeltax, recminy + j
-                * recdeltay, recz);
+            SeisModel.AddMeasurementPoint(recminx + i * recdeltax,
+                recminy + j * recdeltay, recz);
 
           }
       }
 
-    const size_t sornmeasx = boost::numeric_cast<size_t>((sormaxx - sorminx)
-        / sordeltax);
-    const size_t sornmeasy = boost::numeric_cast<size_t>((sormaxy - sorminy)
-        / sordeltay);
+    const size_t sornmeasx = boost::numeric_cast<size_t>((sormaxx - sorminx) / sordeltax);
+    const size_t sornmeasy = boost::numeric_cast<size_t>((sormaxy - sorminy) / sordeltay);
     for (size_t i = 0; i <= sornmeasx; ++i)
       {
         for (size_t j = 0; j <= sornmeasy; ++j)
           {
-            SeisModel.AddSource(sorminx + i * sordeltax, sorminy + j
-                * sordeltay, sorz);
+            SeisModel.AddSource(sorminx + i * sordeltax, sorminy + j * sordeltay, sorz);
 
           }
       }
@@ -120,16 +114,19 @@ int main(int argc, char *argv[])
     std::cout << "Traveltime error (s): ";
     std::cin >> error;
     //if we want to add noise to the data
+    jif3D::rvec Errors(TravelTimes.size(), 0.0);
     if (error > 0.0)
       {
         jif3D::AddNoise(TravelTimes, 0.0, error);
+        std::fill(Errors.begin(), Errors.end(), error);
       }
-    jif3D::SaveTraveltimes(ModelFilename + ".tt.nc", TravelTimes, SeisModel);
+
+    jif3D::SaveTraveltimes(ModelFilename + ".tt.nc", TravelTimes, Errors, SeisModel);
     SeisModel.WriteVTK(ModelFilename + ".vtk");
-    jif3D::Write3DDataToVTK(ModelFilename + ".rec.vtk", "Receiver", jif3D::rvec(
-        SeisModel.GetMeasPosX().size()), SeisModel.GetMeasPosX(),
+    jif3D::Write3DDataToVTK(ModelFilename + ".rec.vtk", "Receiver",
+        jif3D::rvec(SeisModel.GetMeasPosX().size()), SeisModel.GetMeasPosX(),
         SeisModel.GetMeasPosY(), SeisModel.GetMeasPosZ());
-    jif3D::Write3DDataToVTK(ModelFilename + ".sor.vtk", "Source", jif3D::rvec(
-        SeisModel.GetSourcePosX().size()), SeisModel.GetSourcePosX(),
+    jif3D::Write3DDataToVTK(ModelFilename + ".sor.vtk", "Source",
+        jif3D::rvec(SeisModel.GetSourcePosX().size()), SeisModel.GetSourcePosX(),
         SeisModel.GetSourcePosY(), SeisModel.GetSourcePosZ());
   }

@@ -174,6 +174,7 @@ int main()
     std::string outfilename = jif3D::AskFilename("Output file: ", false);
     jif3D::rvec TT(TravelTime.size());
     std::copy(TravelTime.begin(), TravelTime.end(), TT.begin());
-    jif3D::SaveTraveltimes(outfilename, TT, Model);
+    jif3D::rvec Error(TT.size(),0.0);
+    jif3D::SaveTraveltimes(outfilename, TT, Error, Model);
   }
 

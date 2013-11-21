@@ -76,9 +76,10 @@ void StoreMisfit(std::ofstream &misfitfile, const size_t iteration, const double
   }
 
 //! Store the current RMS for all data objectives with appropriate formating in an output stream
-void StoreRMS(std::ofstream &rmsfile, const size_t iteration,  const jif3D::JointObjective &Objective)
+void StoreRMS(std::ofstream &rmsfile, const size_t iteration,
+    const jif3D::JointObjective &Objective)
   {
-	std::vector<double> RMS = Objective.GetRMS();
+    std::vector<double> RMS = Objective.GetRMS();
     rmsfile << std::setw(5) << iteration << " " << std::setw(15) << " ";
     for (size_t i = 0; i < RMS.size(); ++i)
       {
@@ -89,11 +90,11 @@ void StoreRMS(std::ofstream &rmsfile, const size_t iteration,  const jif3D::Join
     rmsfile << std::endl;
   }
 
-
 //! Store the Weights for all objectives with appropriate formating in an output stream
-void StoreWeights(std::ofstream &rmsfile, const size_t iteration,  const jif3D::JointObjective &Objective)
+void StoreWeights(std::ofstream &rmsfile, const size_t iteration,
+    const jif3D::JointObjective &Objective)
   {
-	std::vector<double> Weights = Objective.GetWeights();
+    std::vector<double> Weights = Objective.GetWeights();
     rmsfile << std::setw(5) << iteration << " " << std::setw(15) << " ";
     for (size_t i = 0; i < Weights.size(); ++i)
       {
@@ -103,7 +104,6 @@ void StoreWeights(std::ofstream &rmsfile, const size_t iteration,  const jif3D::
     rmsfile << " " << Objective.GetNEval();
     rmsfile << std::endl;
   }
-
 
 //! Check whether we have reached the target misfit for one of the objective functions in the JointObjective object
 bool CheckConvergence(const jif3D::JointObjective &Objective)
@@ -162,8 +162,9 @@ int main(int argc, char *argv[])
         po::value(&xorigin)->default_value(0.0),
         "The origin for the inversion grid in x-direction")("yorigin",
         po::value(&yorigin)->default_value(0.0),
-        "The origin for the inversion grid in y-direction")("coolingfactor",po::value(&coolingfactor)->default_value(1.0),
-        		"The factor to multiply the weight for the regularization at each iteration EXPERIMENTAL");
+        "The origin for the inversion grid in y-direction")("coolingfactor",
+        po::value(&coolingfactor)->default_value(1.0),
+        "The factor to multiply the weight for the regularization at each iteration EXPERIMENTAL");
     //we need to add the description for each part to the boost program options object
     //that way the user can get a help output and the parser object recongnizes these options
     desc.add(TomoSetup.SetupOptions());
@@ -280,8 +281,8 @@ int main(int argc, char *argv[])
             "MT model does not have the same geometry as starting model");
       }
     //now we setup the regularization
-    boost::shared_ptr<jif3D::RegularizationFunction> Regularization = RegSetup.SetupObjective(
-        vm, StartModel, CovModVec);
+    boost::shared_ptr<jif3D::RegularizationFunction> Regularization =
+        RegSetup.SetupObjective(vm, StartModel, CovModVec);
 
     //the vector InvModel will hold the current inversion model
     //depending on the chosen coupling mechanism it will have different size
@@ -333,8 +334,8 @@ int main(int argc, char *argv[])
     //calculate initial misfit
     double InitialMisfit = Objective->CalcMisfit(InvModel);
     StoreMisfit(misfitfile, 0, InitialMisfit, *Objective);
-    StoreRMS(rmsfile,0,*Objective);
-    StoreWeights(weightfile,0,*Objective);
+    StoreRMS(rmsfile, 0, *Objective);
+    StoreWeights(weightfile, 0, *Objective);
     jif3D::ThreeDGravityModel GravModel(GravitySetup.GetScalModel());
     jif3D::X3DModel MTModel(MTSetup.GetModel());
     jif3D::ThreeDSeismicModel TomoModel(TomoSetup.GetModel());
@@ -365,7 +366,8 @@ int main(int argc, char *argv[])
             //update the inversion model
             Optimizer->MakeStep(InvModel);
 
-            Objective->MultiplyWeights(jif3D::JointObjective::regularization,coolingfactor);
+            Objective->MultiplyWeights(jif3D::JointObjective::regularization,
+                coolingfactor);
             ++iteration;
             //we save all models at each iteration, so we can look at the development
             // and use intermediate models in case something goes wrong
@@ -380,8 +382,8 @@ int main(int argc, char *argv[])
             std::cout << "Currrent Gradient: " << Optimizer->GetGradNorm() << std::endl;
             //and write the current misfit for all objectives to a misfit file
             StoreMisfit(misfitfile, iteration, Optimizer->GetMisfit(), *Objective);
-            StoreRMS(rmsfile,iteration,*Objective);
-            StoreWeights(weightfile,iteration,*Objective);
+            StoreRMS(rmsfile, iteration, *Objective);
+            StoreWeights(weightfile, iteration, *Objective);
             std::cout << "\n\n";
           } catch (jif3D::FatalException &e)
           {
@@ -409,9 +411,12 @@ int main(int argc, char *argv[])
     if (havetomo)
       {
         jif3D::rvec TomoInvData(TomoSetup.GetTomoObjective().GetSyntheticData());
-        jif3D::SaveTraveltimes(modelfilename + ".inv_tt.nc", TomoInvData, TomoModel);
+        jif3D::rvec TomoError(TomoSetup.GetTomoObjective().GetDataError());
+        jif3D::SaveTraveltimes(modelfilename + ".inv_tt.nc", TomoInvData, TomoError,
+            TomoModel);
         jif3D::rvec TomoDiff(TomoSetup.GetTomoObjective().GetIndividualMisfit());
-        jif3D::SaveTraveltimes(modelfilename + ".diff_tt.nc", TomoDiff, TomoModel);
+        jif3D::SaveTraveltimes(modelfilename + ".diff_tt.nc", TomoDiff, TomoError,
+            TomoModel);
       }
     //if we are inverting gravity data and have specified site locations
     if (havegrav)
@@ -424,11 +429,13 @@ int main(int argc, char *argv[])
                 GravitySetup.GetScalGravObjective().GetSyntheticData());
             jif3D::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc",
                 ScalGravInvData, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
-                GravModel.GetMeasPosZ(), GravitySetup.GetScalGravObjective().GetDataError());
-            jif3D::rvec ScalDiff(GravitySetup.GetScalGravObjective().GetIndividualMisfit());
+                GravModel.GetMeasPosZ(),
+                GravitySetup.GetScalGravObjective().GetDataError());
+            jif3D::rvec ScalDiff(
+                GravitySetup.GetScalGravObjective().GetIndividualMisfit());
             jif3D::SaveScalarGravityMeasurements(modelfilename + ".diff_sgd.nc", ScalDiff,
-                GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
-                GravModel.GetMeasPosZ(),GravitySetup.GetScalGravObjective().GetDataError());
+                GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ(),
+                GravitySetup.GetScalGravObjective().GetDataError());
             jif3D::Write3DDataToVTK(modelfilename + ".inv_sgd.vtk", "grav_accel",
                 ScalGravInvData, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
                 GravModel.GetMeasPosZ());
@@ -437,15 +444,15 @@ int main(int argc, char *argv[])
         if (GravitySetup.GetHaveFTG())
           {
             jif3D::rvec FTGInvData(GravitySetup.GetFTGObjective().GetSyntheticData());
-            jif3D::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc", FTGInvData,
-                GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
+            jif3D::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc",
+                FTGInvData, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
                 GravModel.GetMeasPosZ(), GravitySetup.GetFTGObjective().GetDataError());
             jif3D::rvec FTGDiff(GravitySetup.GetFTGObjective().GetIndividualMisfit());
             jif3D::SaveTensorGravityMeasurements(modelfilename + ".diff_ftg.nc", FTGDiff,
-                GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
-                GravModel.GetMeasPosZ(), GravitySetup.GetFTGObjective().GetDataError());
-            jif3D::Write3DTensorDataToVTK(modelfilename + ".diff_ftg.vtk", "U", FTGInvData,
-                GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
+                GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ(),
+                GravitySetup.GetFTGObjective().GetDataError());
+            jif3D::Write3DTensorDataToVTK(modelfilename + ".diff_ftg.vtk", "U",
+                FTGInvData, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
                 GravModel.GetMeasPosZ());
           }
       }

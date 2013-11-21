@@ -5,7 +5,6 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-
 #include<fstream>
 #include "ReadWriteTomographyData.h"
 #include "../Global/NumUtil.h"
@@ -23,15 +22,16 @@ namespace jif3D
     static const std::string SourcePosZName = "SourcePosZ";
     static const std::string MeasIndexName = "MeasIndex";
     static const std::string TravelTimeName = "TravelTime";
+    static const std::string TravelTimeErrorName = "dT";
     static const std::string SourceIndexName = "SourceIndex";
     static const std::string ReceiverIndexName = "ReceiverIndex";
 
     void SaveTraveltimes(const std::string &filename, const jif3D::rvec &Data,
-        const jif3D::ThreeDSeismicModel &Model)
+        const jif3D::rvec &Error, const jif3D::ThreeDSeismicModel &Model)
       {
         //make sure all vectors have consistent sizes
         const size_t ndata = Data.size();
-        assert( ndata == Model.GetReceiverIndices().size());
+        assert(ndata == Model.GetReceiverIndices().size());
         assert(ndata == Model.GetSourceIndices().size());
 
         //create a netcdf file
@@ -39,31 +39,23 @@ namespace jif3D
         const size_t nrecpos = Model.GetMeasPosX().size();
         NcFile DataFile(filename.c_str(), NcFile::Replace);
         //we use the station number as a dimension
-        NcDim *SourceNumDim = DataFile.add_dim(SourceNumberName.c_str(),
-            nsourcepos);
-        NcDim *RecNumDim =
-            DataFile.add_dim(ReceiverNumberName.c_str(), nrecpos);
+        NcDim *SourceNumDim = DataFile.add_dim(SourceNumberName.c_str(), nsourcepos);
+        NcDim *RecNumDim = DataFile.add_dim(ReceiverNumberName.c_str(), nrecpos);
 
         //this is just an index over the measurement vector
         //and does not have any special meaning
         std::vector<int> SourcePosNumber, ReceiverPosNumber;
-        std::generate_n(std::back_inserter(SourcePosNumber), nsourcepos,
-            IntSequence(0));
-        std::generate_n(std::back_inserter(ReceiverPosNumber), nrecpos,
-            IntSequence(0));
+        std::generate_n(std::back_inserter(SourcePosNumber), nsourcepos, IntSequence(0));
+        std::generate_n(std::back_inserter(ReceiverPosNumber), nrecpos, IntSequence(0));
         NcVar *SourceNumVar = DataFile.add_var(SourceNumberName.c_str(), ncInt,
             SourceNumDim);
         SourceNumVar->put(&SourcePosNumber[0], nsourcepos);
         //write out the measurement coordinates
-        WriteVec(DataFile, SourcePosXName, Model.GetSourcePosX(), SourceNumDim,
-            "m");
-        WriteVec(DataFile, SourcePosYName, Model.GetSourcePosY(), SourceNumDim,
-            "m");
-        WriteVec(DataFile, SourcePosZName, Model.GetSourcePosZ(), SourceNumDim,
-            "m");
+        WriteVec(DataFile, SourcePosXName, Model.GetSourcePosX(), SourceNumDim, "m");
+        WriteVec(DataFile, SourcePosYName, Model.GetSourcePosY(), SourceNumDim, "m");
+        WriteVec(DataFile, SourcePosZName, Model.GetSourcePosZ(), SourceNumDim, "m");
         //write out the positions of the receivers, i.e. measurement positions
-        NcVar *RecNumVar = DataFile.add_var(ReceiverNumberName.c_str(), ncInt,
-            RecNumDim);
+        NcVar *RecNumVar = DataFile.add_var(ReceiverNumberName.c_str(), ncInt, RecNumDim);
         RecNumVar->put(&ReceiverPosNumber[0], nrecpos);
         WriteVec(DataFile, MeasPosXName, Model.GetMeasPosX(), RecNumDim, "m");
         WriteVec(DataFile, MeasPosYName, Model.GetMeasPosY(), RecNumDim, "m");
@@ -75,15 +67,12 @@ namespace jif3D
         NcVar *MeasIndexVar = DataFile.add_var(MeasIndexName.c_str(), ncInt,
             MeasIndexDim);
         MeasIndexVar->put(&MeasIndex[0], ndata);
-        //Write the travel times
-        NcVar *DataVar = DataFile.add_var(TravelTimeName.c_str(), ncDouble,
-            MeasIndexDim);
-        DataVar->add_att("units", "s");
-        DataVar->add_att("_FillValue", -1.0);
-        DataVar->put(&Data[0], MeasIndexDim->size());
+        //Write the travel times and the error
+        WriteVec(DataFile, TravelTimeName, Data, MeasIndexDim, "s");
+        WriteVec(DataFile, TravelTimeErrorName, Error, MeasIndexDim, "s");
         //write the index of the source for each measurement
-        NcVar *SourceIndexVar = DataFile.add_var(SourceIndexName.c_str(),
-            ncInt, MeasIndexDim);
+        NcVar *SourceIndexVar = DataFile.add_var(SourceIndexName.c_str(), ncInt,
+            MeasIndexDim);
         SourceIndexVar->put(&Model.GetSourceIndices()[0], MeasIndexDim->size());
         //write the index of the receiver for each measurement
         NcVar *RecIndexVar = DataFile.add_var(ReceiverIndexName.c_str(), ncInt,
@@ -93,7 +82,7 @@ namespace jif3D
       }
 
     void ReadTraveltimes(const std::string &filename, jif3D::rvec &Data,
-        jif3D::ThreeDSeismicModel &Model)
+        jif3D::rvec &Error, jif3D::ThreeDSeismicModel &Model)
       {
         NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
         jif3D::ThreeDSeismicModel::tMeasPosVec PosX, PosY, PosZ;
@@ -130,11 +119,11 @@ namespace jif3D
         //and configure the model object for these combinations
         for (size_t i = 0; i < nconf; ++i)
           {
-            Model.AddMeasurementConfiguration(SourceIndices[i],
-                ReceiverIndices[i]);
+            Model.AddMeasurementConfiguration(SourceIndices[i], ReceiverIndices[i]);
           }
         //finally read in the traveltimes
         ReadVec(DataFile, TravelTimeName, Data);
+        ReadVec(DataFile, TravelTimeErrorName, Error);
       }
 
     void PlotRaypath(const std::string &filename, jif3D::RP_STRUCT *raypath,
@@ -168,15 +157,13 @@ namespace jif3D
                   {
                     outfile << raypath[i].x[j] * gridspacing << " "
                         << raypath[i].y[j] * gridspacing << " "
-                        << (raypath[i].z[j] - nairlayers) * gridspacing
-                        << "\n ";
+                        << (raypath[i].z[j] - nairlayers) * gridspacing << "\n ";
                   }
               }
           }
         //now we connect the points by lines
         //by writing out the indices of the start and endpoint
-        outfile << "\nLINES " << act_rays << " " << npoints + act_rays
-            << std::endl;
+        outfile << "\nLINES " << act_rays << " " << npoints + act_rays << std::endl;
         size_t index = 0;
         for (size_t i = 0; i < nmeas; ++i)
           {

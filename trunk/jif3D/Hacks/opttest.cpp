@@ -267,7 +267,8 @@ int main(int argc, char *argv[])
     //calculate the predicted refraction data
     std::cout << "Calculating response of inversion model." << std::endl;
     jif3D::rvec TomoInvData(jif3D::TomographyCalculator().Calculate(StartModel));
-    jif3D::SaveTraveltimes(modelfilename + ".inv_tt.nc", TomoInvData, StartModel);
+    jif3D::SaveTraveltimes(modelfilename + ".inv_tt.nc", TomoInvData,
+        TomoSetup.GetTomoObjective().GetDataError(), StartModel);
 
     jif3D::rvec ScalGravInvData(
         jif3D::CreateGravityCalculator<
