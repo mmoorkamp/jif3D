@@ -14,8 +14,8 @@ namespace jif3D
   {
 
     LimitedMemoryQuasiNewton::LimitedMemoryQuasiNewton(boost::shared_ptr<
-        jif3D::ObjectiveFunction> ObjFunction, const size_t n) :
-      GradientBasedOptimization(ObjFunction), mu(1.0), LineIter(20),
+        jif3D::ObjectiveFunction> ObjFunction, const size_t n, bool gradscale) :
+      GradientBasedOptimization(ObjFunction), scale(gradscale), mu(1.0), LineIter(20),
           MaxPairs(n), SHistory(), YHistory()
       {
 
@@ -58,7 +58,10 @@ namespace jif3D
           {
             //if we don't have the previous history, we use the length of the
             //gradient as a scale
-            gamma = 1.0 / sqrt(NormProd(SearchDir,RawGrad,GetModelCovDiag()));
+        	if (scale)
+        	{
+               gamma = 1.0 / sqrt(NormProd(SearchDir,RawGrad,GetModelCovDiag()));
+        	}
           }
         SearchDir *= gamma;
         for (size_t i = 0; i < npairs; ++i)

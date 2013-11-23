@@ -31,7 +31,8 @@ namespace jif3D
         desc.add_options()("corrpairs",
             po::value(&corrpairs)->default_value(5),
             "The number correction pairs for L-BFGS")("nlcg",
-            "Use NLCG optimization, otherwise use L-BFGS");
+            "Use NLCG optimization, otherwise use L-BFGS")
+            ("scalegrad",po::value(&scalegrad)->default_value(true),"Scale the gradient for the first iteration of the L-BFGS algorithm");
         return desc;
       }
 
@@ -56,7 +57,7 @@ namespace jif3D
             Optimizer
                 = boost::shared_ptr<jif3D::GradientBasedOptimization>(
                     new jif3D::LimitedMemoryQuasiNewton(ObjFunction,
-                        corrpairs));
+                        corrpairs, scalegrad));
           }
         //if the model covariance is empty we let the optimizer object
         //take care of setting the values to 1

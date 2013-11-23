@@ -28,6 +28,8 @@ namespace jif3D
     class SetupInversion
       {
     private:
+    	//! Scale the initial gradient for the L-BFGS optimization algorithm in the hope to improve convergence
+    	bool scalegrad;
 	//! The number of correction pairs for the L-BFGS optimization algorithm
       int corrpairs;
     public:
