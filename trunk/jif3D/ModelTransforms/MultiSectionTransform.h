@@ -13,7 +13,9 @@
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/base_object.hpp>
 #include <boost/shared_ptr.hpp>
+#include "../Global/FatalException.h"
 #include "GeneralModelTransform.h"
+
 
 namespace jif3D
   {
@@ -167,6 +169,26 @@ namespace jif3D
           endindices.push_back(endindex);
           Transforms.push_back(Trans);
         }
+      //! In some cases we need to change the section startindex and endindex after the initial setup
+      /*! When initially setting the indices for the transformation in the joint inversion, we only
+       * have information on the core grid size. For regularization and cross-gradient this works well.
+       * However, for MT and Gravity we might want additional inversion parameters such as background densities
+       * or distortion parameters. In order to keep the separation between setting up the coupling
+       * and setting up the different methods intact, we need this function to readjust the indices
+       * when setting the individual functions.
+       * @param section The index of the section we want to change
+       * @param startindex The index of the first element of the model vector we want to use for this section
+       * @param endindex The index of the last element of the model vector we want to use for this section
+       */
+      void ChangeSectionIndices(size_t section, size_t startindex, size_t endindex)
+      {
+    	  if (section >= startindices.size())
+    	  {
+    		  throw jif3D::FatalException("Trying to change section that does not exist !");
+    	  }
+    	  startindices.at(section) = startindex;
+    	  endindices.at(section) = endindex;
+      }
       //! The constructor needs the length of the full model vector as an argument
       /*! As the transformed model vector is potentially shorter than the input
        * vector, we need to specify the length of the original model vector in
