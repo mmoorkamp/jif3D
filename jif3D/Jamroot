@@ -9,6 +9,9 @@ feature.compose <lapack>on : <define>HAVELAPACK ;
 feature.feature optpp : off on : composite incidental ;
 feature.compose <optpp>on : <define>HAVEOPTPP ; 
 
+feature.feature hpx : off on : composite incidental ;
+feature.compose <hpx>on : <define>HAVEHPX ; 
+
 project 
     : requirements <include>/usr/local/include <include>/usr/local/R-2.6.2/include 
         <include>/usr/local/cuda/include
@@ -19,6 +22,7 @@ project
         <gpu>on
         <lapack>on
         <optpp>on
+        <hpx>on
     	<variant>release:<define>NDEBUG
     	<variant>profile:<define>NDEBUG  
     	<toolset>gcc<variant>debug:<cflags>" -ggdb3"
@@ -27,9 +31,10 @@ project
     	<toolset>gcc:<cflags>" -fopenmp -std=c++0x "
     	#<toolset>gcc:<linkflags>"  `pkg-config --libs hpx_application` "
     	<toolset>gcc:<linkflags>" -fopenmp  "
-    	<toolset>intel:<cxxflags>" -openmp  -std=c++11 "
+    	<toolset>intel:<cxxflags>" -openmp  -std=c++0x   "
     	<toolset>intel:<define>TESTR
-    	<toolset>intel:<linkflags>" -openmp   "
+    	#<toolset>intel:<define>BOOST_NO_CXX11_SCOPED_ENUMS
+    	<toolset>intel:<linkflags>" -openmp  -std=c++0x "
     	<toolset>sun:<define>BOOST_UBLAS_UNSUPPORTED_COMPILER=0
     	<toolset>sun:<cflags>" -library=stlport4" 
     	<toolset>sun:<linkflags>" -library=stlport4" 
