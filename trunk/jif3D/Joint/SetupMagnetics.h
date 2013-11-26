@@ -44,7 +44,18 @@ namespace jif3D
       boost::shared_ptr<jif3D::ThreeDModelObjective<CalculatorType> > MagObjective;
 
     public:
-
+      double GetInclination() const
+        {
+          return inclination;
+        }
+      double GetDeclination() const
+        {
+          return declination;
+        }
+      double GetFielStrength() const
+        {
+          return fieldstrength;
+        }
       //! read-only access to the objective function for scalar Magnetics data
       const jif3D::ThreeDModelObjective<CalculatorType> &GetObjective()
         {

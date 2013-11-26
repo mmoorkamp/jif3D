@@ -9,6 +9,7 @@
 #include "../Inversion/ModelTransforms.h"
 #include "../Magnetics/ReadWriteMagneticData.h"
 #include "../Magnetics/OMPMagneticImp.h"
+#include "../Magnetics/MagneticTransforms.h"
 #include "../Global/FileUtil.h"
 #include "../Global/Noise.h"
 
@@ -30,9 +31,9 @@ namespace jif3D
       {
         po::options_description desc("Magnetics options");
 
-        desc.add_options()("gpu", "Perform Magnetics calculation on GPU")("relerr",
+        desc.add_options()("gpu", "Perform Magnetics calculation on GPU")("magrelerr",
             po::value(&relerr)->default_value(0.02),
-            "The relative error for the Magnetics data")("minerr",
+            "The relative error for the Magnetics data")("magminerr",
             po::value(&minerr)->default_value(0.0),
             "The minimum absolute error for the Magnetics data")("inclination",
             po::value(&inclination)->default_value(0.0),
@@ -76,8 +77,8 @@ namespace jif3D
           {
             std::string magdatafilename = jif3D::AskFilename(
                 "Total field magnetic Data Filename: ");
-            jif3D::ReadTotalFieldMagneticMeasurements(magdatafilename, MagData, PosX, PosY,
-                PosZ, MagError);
+            jif3D::ReadTotalFieldMagneticMeasurements(magdatafilename, MagData, PosX,
+                PosY, PosZ, MagError);
             std::string magmodelfilename = jif3D::AskFilename(
                 "Magnetics Model Filename: ");
             Model.ReadNetCDF(magmodelfilename);
@@ -92,8 +93,7 @@ namespace jif3D
 
             if (Transform.get() == NULL)
               {
-                jif3D::rvec RefVec(Model.GetSusceptibilities().num_elements());
-                std::fill(RefVec.begin(), RefVec.end(), 1.0);
+                jif3D::rvec RefVec(Model.GetSusceptibilities().num_elements(), 1.0);
                 Transform = boost::shared_ptr<jif3D::GeneralModelTransform>(
                     new jif3D::NormalizeTransform(RefVec));
               }
@@ -116,13 +116,17 @@ namespace jif3D
             boost::shared_ptr<CalculatorType> Calculator(
                 new CalculatorType(Implementation, TempDir));
 
+            Calculator->SetDataTransform(
+                boost::shared_ptr<jif3D::TotalField>(new jif3D::TotalField));
             MagObjective =
                 boost::shared_ptr<jif3D::ThreeDModelObjective<CalculatorType> >(
                     new jif3D::ThreeDModelObjective<CalculatorType>(*Calculator));
             MagObjective->SetObservedData(MagData);
             MagObjective->SetCoarseModelGeometry(Model);
-            MagObjective->SetDataError(
-                jif3D::ConstructError(MagData, MagError, relerr, minerr));
+            jif3D::rvec Error(jif3D::ConstructError(MagData, MagError, relerr, minerr));
+            std::cout << " MagData: " << MagData << std::endl;
+            std::cout << " MagError: " << Error << std::endl;
+            MagObjective->SetDataError(Error);
 
             Objective.AddObjective(MagObjective, Transform, maglambda, "Magnetics",
                 JointObjective::datafit);

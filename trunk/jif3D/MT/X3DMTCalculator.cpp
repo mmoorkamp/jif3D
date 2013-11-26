@@ -321,7 +321,7 @@ namespace jif3D
         //but we can use up to 20 processors for typical MT problems
         // as we do not have the source for x3d, this is our only possibility anyway
         //the const qualified variables above are predetermined to be shared by the openmp standard
-#pragma omp parallel for shared(result)
+#pragma omp parallel for shared(result) schedule(dynamic,1)
         for (int i = minfreqindex; i < maxfreqindex; ++i)
           {
             //the openmp standard specifies that we cannot leave a parallel construct
@@ -664,7 +664,7 @@ namespace jif3D
         //see also the comments for the forward calculation
         //here the explicitly shared variable is Gradient
         //all others are predetermined to be shared
-#pragma omp parallel for shared(Gradient)
+#pragma omp parallel for shared(Gradient) schedule(dynamic,1)
         for (int i = minfreqindex; i < maxfreqindex; ++i)
           {
             try
