@@ -3,3 +3,4 @@ import testing ;
 
                
                     
+exe grav_jointinv : grav_jointinv.cpp  ../Inversion//inversion ../Gravity//gravity ../Magnetics//magnetics ../Joint  : <include>. ;
