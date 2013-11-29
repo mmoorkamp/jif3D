@@ -24,6 +24,8 @@ int main()
         StatZ, Impedances, Errors);
     jif3D::WriteImpedancesToMtt(ncfilename, Frequencies, Impedances, Errors);
 
+    jif3D::WriteAppResToAscii(ncfilename+".asc", Frequencies, StatX, StatY,
+        StatZ, Impedances, Errors);
     std::ofstream Zxx_rho("Zxx_rho.xyz");
     std::ofstream Zxy_rho("Zxy_rho.xyz");
     std::ofstream Zyx_rho("Zyx_rho.xyz");
