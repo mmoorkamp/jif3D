@@ -411,4 +411,54 @@ void ReadAppResFromAscii(const std::string &filename,
 	std::cout << "Impendances: " << Imp.size() << std::endl;
 }
 
+void WriteAppResToAscii(const std::string &filename,
+		const std::vector<double> &Frequencies,
+		const std::vector<double> &StatXCoord,
+		const std::vector<double> &StatYCoord,
+		const std::vector<double> &StatZCoord, const jif3D::rvec &Imp,
+		const jif3D::rvec &Err)
+{
+	std::ofstream outfile(filename.c_str());
+	outfile.precision(3);
+	outfile
+			<< " Major    Link    Site           x            y          elevation       Fre         rxy         ryx";
+	outfile
+			<< "          pxy          pyx            erxy         eryx         epxy         epyx\n";
+	const size_t nfreq = Frequencies.size();
+	const size_t nstat = StatXCoord.size();
+
+	for (size_t j = 0; j < nstat; ++j)
+	{
+		for (size_t i = 0; i < nfreq; ++i)
+		{
+			const size_t currindex = 8 * (i * nstat + j);
+			const double CurrFreq = Frequencies.at(i);
+			double rhoxy = jif3D::AppRes(
+					std::complex<double>(Imp(currindex + 2),
+							Imp(currindex + 3)), CurrFreq);
+			double pxy = jif3D::ImpedancePhase(
+					std::complex<double>(Imp(currindex + 2),
+							Imp(currindex + 3)));
+			double rhoyx = jif3D::AppRes(
+					std::complex<double>(Imp(currindex + 4),
+							Imp(currindex + 5)), CurrFreq);
+			double pyx = jif3D::ImpedancePhase(
+					std::complex<double>(Imp(currindex + 4),
+							Imp(currindex + 5)));
+			outfile << std::fixed;
+			outfile << std::setw(10) << j << std::setw(10) << j << std::setw(10) << j;
+			outfile << std::setw(15) << StatXCoord[j];
+			outfile << std::setw(15) << StatYCoord[j];
+			outfile << std::setw(15) << StatZCoord[j];
+			outfile << std::setw(15) << log10(CurrFreq);
+			outfile << std::setw(15) << rhoxy;
+			outfile << std::setw(15) << rhoyx;
+			outfile << std::setw(15) << pxy;
+			outfile << std::setw(15) << pyx;
+			outfile << " 0      0     0     0\n";
+		}
+
+	}
+
+}
 }
