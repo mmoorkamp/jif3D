@@ -11,6 +11,7 @@
 #include <cassert>
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/base_object.hpp>
+#include "../Global/FatalException.h"
 #include "../ModelBase/ThreeDModelBase.h"
 
 namespace jif3D
@@ -27,7 +28,7 @@ namespace jif3D
      * of the sources in the model class.
      * */
     /* @{ */
-
+    class TomoExtraParameterSetter;
     //! The seismic model class stores all the information necessary to calculate arrival times, i.e. slownesses as well as source and receiver positions
     /*! As this class is derived from ThreeDModelBase the overall handling is similar to the other model classes. There are a few notable exceptions.
      * The model has to have equal cell sizes in all three directions, therefore there is only a single function to set the size and
@@ -43,6 +44,7 @@ namespace jif3D
     class ThreeDSeismicModel: public jif3D::ThreeDModelBase
       {
     public:
+    	typedef TomoExtraParameterSetter ExtraParameterSetter;
       //! We need vectors of indices to associate a source with a receiver for a given shot
       typedef std::vector<int> tIndexVec;
     private:
@@ -199,6 +201,14 @@ namespace jif3D
       ThreeDSeismicModel& operator=(const ThreeDSeismicModel& source);
       virtual ~ThreeDSeismicModel();
       };
+
+    class TomoExtraParameterSetter {
+    public:
+    void operator()(ThreeDSeismicModel &Model, const std::vector<double> &Dens)
+    {
+    	throw jif3D::FatalException("Tomography class does not support extra parameters !");
+    }
+    };
   /* @} */
   }
 
