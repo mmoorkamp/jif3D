@@ -127,7 +127,7 @@ namespace jif3D
             //we start with tomography
             boost::shared_ptr<jif3D::ChainedTransform> SlownessTransform(
                 new jif3D::ChainedTransform);
-
+            boost::shared_ptr<jif3D::GeneralModelTransform> Copier(new jif3D::ModelCopyTransform);
             SlownessTransform->AppendTransform(
                 boost::shared_ptr<jif3D::GeneralModelTransform>(
                     new jif3D::TanhTransform(minslow, maxslow)));
@@ -135,9 +135,11 @@ namespace jif3D
                 SlownessTransform->clone());
             TomoTransform = boost::shared_ptr<jif3D::GeneralModelTransform>(
                 new jif3D::MultiSectionTransform(3 * ngrid, 0, ngrid, SlownessTransform));
+            //we regularize on the raw model parameters as these are more evenly spaced than slowness values
             SlowRegTrans = boost::shared_ptr<jif3D::ChainedTransform>(
                 new jif3D::ChainedTransform);
-            SlowRegTrans->AppendTransform(TomoTransform);
+            SlowRegTrans->AppendTransform(boost::shared_ptr<jif3D::GeneralModelTransform>(
+                    new jif3D::MultiSectionTransform(3 * ngrid, 0, ngrid, Copier)));
 
             //then we do density
             boost::shared_ptr<jif3D::ChainedTransform> DensityTransform(
@@ -152,7 +154,9 @@ namespace jif3D
                     DensityTransform));
             DensRegTrans = boost::shared_ptr<jif3D::ChainedTransform>(
                 new jif3D::ChainedTransform);
-            DensRegTrans->AppendTransform(GravityTransform);
+            DensRegTrans->AppendTransform(boost::shared_ptr<jif3D::GeneralModelTransform>(
+                    new jif3D::MultiSectionTransform(3 * ngrid, ngrid, 2 * ngrid,
+                        Copier)));
 
             //and then conductivity, conductivity has a LogTransform in addition
             //to reduce the range of inversion parameters
@@ -171,9 +175,12 @@ namespace jif3D
             MTTransform = boost::shared_ptr<jif3D::GeneralModelTransform>(
                 new jif3D::MultiSectionTransform(3 * ngrid, 2 * ngrid, 3 * ngrid,
                     ConductivityTransform));
+            //we regularize on the raw model parameters as these are more evenly spaced than conductivities
             CondRegTrans = boost::shared_ptr<jif3D::ChainedTransform>(
                 new jif3D::ChainedTransform);
-            CondRegTrans->AppendTransform(MTTransform);
+            CondRegTrans->AppendTransform(boost::shared_ptr<jif3D::GeneralModelTransform>(
+                    new jif3D::MultiSectionTransform(3 * ngrid, 2 * ngrid, 3 * ngrid,
+                        Copier)));
             //if we want to regularize in the wavelet  domain
             //we need to add a wavelet transform to the regularization
             if (Wavelet)
@@ -327,12 +334,13 @@ namespace jif3D
         //we ask for a weight and construct a regularization object
         //for each type of physical parameter separately
         //first we set up seismic tomography
+        jif3D::rvec Ones(GravModel.size(), 1.0);
         double seisreglambda = 1.0;
         std::cout << " Weight for seismic regularization: ";
         std::cin >> seisreglambda;
         boost::shared_ptr<jif3D::RegularizationFunction> SeisReg(Regularization->clone());
         jif3D::rvec TomoCovar(3 * ngrid);
-        SetupModelCovar(TomoCovar, SeisModel, SeisReg->GetDataError(), ngrid);
+        SetupModelCovar(TomoCovar, Ones, SeisReg->GetDataError(), ngrid);
         SeisReg->SetDataError(TomoCovar);
 
         //then the regularization of densities
@@ -341,7 +349,7 @@ namespace jif3D
         std::cin >> gravreglambda;
         boost::shared_ptr<jif3D::RegularizationFunction> GravReg(Regularization->clone());
         jif3D::rvec GravCovar(3 * ngrid);
-        jif3D::rvec Ones(GravModel.size(), 1.0);
+
         SetupModelCovar(GravCovar, Ones, GravReg->GetDataError(), ngrid);
         GravReg->SetDataError(GravCovar);
 
@@ -351,7 +359,7 @@ namespace jif3D
         std::cin >> mtreglambda;
         boost::shared_ptr<jif3D::RegularizationFunction> MTReg(Regularization->clone());
         jif3D::rvec MTCovar(3 * ngrid);
-        SetupModelCovar(MTCovar, MTModel, MTReg->GetDataError(), ngrid);
+        SetupModelCovar(MTCovar, Ones, MTReg->GetDataError(), ngrid);
         MTReg->SetDataError(MTCovar);
         //if we specify on the command line that we want to subtract the
         //starting model, we set the corresponding reference model
