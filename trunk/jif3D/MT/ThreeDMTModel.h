@@ -17,6 +17,9 @@ namespace jif3D
   {
     /** \addtogroup mtmodelling Forward modelling of magnetotelluric data */
     /* @{ */
+
+     //! A helper class for the template ThreeDModelObjective that lets us set distortion values as extra inversion parameters
+     class MTDistortionSetter;
     //! This class stores all information associated with 3D magnetotelluric models
     /*! This class extends ThreeDModelBase to store the calculation frequencies
      * which are required for any MT forward calculation. It also provides named
@@ -27,6 +30,8 @@ namespace jif3D
     class ThreeDMTModel: public jif3D::ThreeDModelBase
       {
     private:
+    	//! The four real elements of the distortion matrix C for each Station
+    	std::vector<double> DistortionParameters;
       //! The calculation frequencies in Hz
       std::vector<double> Frequencies;
       friend class boost::serialization::access;
@@ -38,6 +43,15 @@ namespace jif3D
           ar & Frequencies;
         }
     public:
+      typedef MTDistortionSetter ExtraParameterSetter;
+      const std::vector<double> &GetDisortionParameters() const
+      {
+    	  return DistortionParameters;
+      }
+      void SetDisortionParameters(const std::vector<double> &Dist)
+      {
+         DistortionParameters = Dist;
+      }
       //! Get the vector of calculation frequencies in Hz, read only
       const std::vector<double> &GetFrequencies() const
         {
@@ -72,6 +86,15 @@ namespace jif3D
       ThreeDMTModel(const ThreeDMTModel &source);
       virtual ~ThreeDMTModel();
       };
+
+    //! A helper class for the template ThreeDModelObjective that lets us set distortion values as extra inversion parameters
+    class MTDistortionSetter {
+    public:
+    void operator()(ThreeDMTModel &Model, const std::vector<double> &Dist)
+    {
+    	Model.SetDisortionParameters(Dist);
+    }
+    };
   /* @} */
   }
 

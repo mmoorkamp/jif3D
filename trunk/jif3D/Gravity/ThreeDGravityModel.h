@@ -55,6 +55,9 @@ namespace jif3D
     //! We store the 3x3 matrix for gravimetric measurements in a ublas matrix with real entries
     typedef rmat GravimetryMatrix;
 
+    //! A helper class for the template ThreeDModelObjective that lets us set background densities as extra inversion parameters
+    class BackgroundDensitySetter;
+
     //! The class used to store the gravity model and the location of the measurement points
     /*! This class stores all information needed for the forward calculation of gravimetric data.
      * This includes the geometry of the rectangular grid and the 1D layered background, the densities
@@ -83,6 +86,7 @@ namespace jif3D
           ar & bg_densities;
         }
     public:
+      typedef BackgroundDensitySetter ExtraParameterSetter;
       jif3D::rvec GetModelParameters() const
         {
           jif3D::rvec parms(GetData().num_elements() + bg_densities.size());
@@ -164,6 +168,14 @@ namespace jif3D
       //! All other models will be copied by the copy operator for the base class
       ThreeDGravityModel& operator=(const ThreeDModelBase& source);
       };
+    //! A helper class for the template ThreeDModelObjective that lets us set background densities as extra inversion parameters
+    class BackgroundDensitySetter {
+    public:
+    void operator()(ThreeDGravityModel &Model, const std::vector<double> &Dens)
+    {
+    	Model.SetBackgroundDensities(Dens);
+    }
+    };
   /* @} */
   }
 

@@ -11,11 +11,15 @@
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/base_object.hpp>
 #include "../Global/VecMat.h"
+#include "../Global/FatalException.h"
 #include "../ModelBase/ThreeDModelBase.h"
 #include "../ModelBase/GridOnlyModelCache.h"
 
 namespace jif3D
   {
+
+    class MagneticsExtraParameterSetter;
+
 
     static const std::string SusceptibilityName = "Susceptibility";
     static const std::string SusceptibilityUnit = " ";
@@ -32,6 +36,7 @@ namespace jif3D
           ar & boost::serialization::base_object<ThreeDModelBase>(*this);
         }
     public:
+      typedef MagneticsExtraParameterSetter ExtraParameterSetter;
       jif3D::rvec GetModelParameters() const
         {
           jif3D::rvec parms(GetData().num_elements());
@@ -93,5 +98,12 @@ namespace jif3D
         }
       };
 
+    class MagneticsExtraParameterSetter {
+     public:
+     void operator()(ThreeDMagneticModel &Model, const std::vector<double> &Dens)
+     {
+     	throw jif3D::FatalException("Magnetics class does not support extra parameters !");
+     }
+     };
   } /* namespace jif3D */
 #endif /* THREEDMAGNETICMODEL_H_ */

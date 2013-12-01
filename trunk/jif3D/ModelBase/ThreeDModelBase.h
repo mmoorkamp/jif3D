@@ -40,6 +40,7 @@ namespace jif3D
     class ThreeDModelBase
       {
     public:
+    	friend class MatOpRegularization;
       //! A shorthand for the type of the stored model data for 3D models
       typedef boost::multi_array<double, 3> t3DModelData;
       //! A shorthand for the dimensions, i.e. cell-sizes for the 3D models
