@@ -49,8 +49,6 @@ namespace po = boost::program_options;
 /** \addtogroup joint Joint inversion routines */
 /* @{ */
 
-
-
 //! Check whether we have reached the target misfit for one of the objective functions in the JointObjective object
 bool CheckConvergence(const jif3D::JointObjective &Objective)
   {
@@ -352,8 +350,10 @@ int main(int argc, char *argv[])
     //during the last iteration we might have performed steps in the line search
     //so we update the forward calculation for the last proper inversion model
     //we use the results from this calculation to save the final inversion synthetic data
-    Objective->CalcMisfit(InvModel);
-
+    if (iteration > 0)
+      {
+        Objective->CalcMisfit(InvModel);
+      }
     if (havetomo)
       {
         jif3D::rvec TomoInvData(TomoSetup.GetTomoObjective().GetSyntheticData());
