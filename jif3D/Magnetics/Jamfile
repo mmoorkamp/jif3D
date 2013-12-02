@@ -10,3 +10,4 @@ alias core :  ../ModelBase//modelbase ../Global//global ..//netcdf_c++ ..//netcd
 unit-test Calc_test : test_MagneticCalculation.cpp magnetics core : : <include>. ;
 unit-test Objective_test : test_MagneticObjective.cpp magnetics core ../Inversion//inversion : : <include>. ;
 exe maggrid : maggrid.cpp magnetics  core  ;
+exe makemagmesh : makemagmesh.cpp magnetics  core  ;
