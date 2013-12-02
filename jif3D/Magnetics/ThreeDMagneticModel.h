@@ -20,7 +20,6 @@ namespace jif3D
 
     class MagneticsExtraParameterSetter;
 
-
     static const std::string SusceptibilityName = "Susceptibility";
     static const std::string SusceptibilityUnit = " ";
     class ThreeDMagneticModel: public jif3D::ThreeDModelBase
@@ -98,12 +97,14 @@ namespace jif3D
         }
       };
 
-    class MagneticsExtraParameterSetter {
-     public:
-     void operator()(ThreeDMagneticModel &Model, const std::vector<double> &Dens)
-     {
-     	throw jif3D::FatalException("Magnetics class does not support extra parameters !");
-     }
-     };
+    class MagneticsExtraParameterSetter
+      {
+    public:
+      void operator()(ThreeDMagneticModel &Model, const std::vector<double> &Dens)
+        {
+          throw jif3D::FatalException(
+              "Magnetics class does not support extra parameters !");
+        }
+      };
   } /* namespace jif3D */
 #endif /* THREEDMAGNETICMODEL_H_ */

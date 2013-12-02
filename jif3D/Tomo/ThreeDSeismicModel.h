@@ -44,7 +44,7 @@ namespace jif3D
     class ThreeDSeismicModel: public jif3D::ThreeDModelBase
       {
     public:
-    	typedef TomoExtraParameterSetter ExtraParameterSetter;
+      typedef TomoExtraParameterSetter ExtraParameterSetter;
       //! We need vectors of indices to associate a source with a receiver for a given shot
       typedef std::vector<int> tIndexVec;
     private:
@@ -202,13 +202,15 @@ namespace jif3D
       virtual ~ThreeDSeismicModel();
       };
 
-    class TomoExtraParameterSetter {
+    class TomoExtraParameterSetter
+      {
     public:
-    void operator()(ThreeDSeismicModel &Model, const std::vector<double> &Dens)
-    {
-    	throw jif3D::FatalException("Tomography class does not support extra parameters !");
-    }
-    };
+      void operator()(ThreeDSeismicModel &Model, const std::vector<double> &Dens)
+        {
+          throw jif3D::FatalException(
+              "Tomography class does not support extra parameters !");
+        }
+      };
   /* @} */
   }
 
