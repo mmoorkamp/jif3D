@@ -169,13 +169,14 @@ namespace jif3D
       ThreeDGravityModel& operator=(const ThreeDModelBase& source);
       };
     //! A helper class for the template ThreeDModelObjective that lets us set background densities as extra inversion parameters
-    class BackgroundDensitySetter {
+    class BackgroundDensitySetter
+      {
     public:
-    void operator()(ThreeDGravityModel &Model, const std::vector<double> &Dens)
-    {
-    	Model.SetBackgroundDensities(Dens);
-    }
-    };
+      void operator()(ThreeDGravityModel &Model, const std::vector<double> &Dens)
+        {
+          Model.SetBackgroundDensities(Dens);
+        }
+      };
   /* @} */
   }
 

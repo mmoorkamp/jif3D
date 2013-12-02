@@ -5,7 +5,6 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-
 #ifndef THREEDMTMODEL_H_
 #define THREEDMTMODEL_H_
 
@@ -18,8 +17,8 @@ namespace jif3D
     /** \addtogroup mtmodelling Forward modelling of magnetotelluric data */
     /* @{ */
 
-     //! A helper class for the template ThreeDModelObjective that lets us set distortion values as extra inversion parameters
-     class MTDistortionSetter;
+    //! A helper class for the template ThreeDModelObjective that lets us set distortion values as extra inversion parameters
+    class MTDistortionSetter;
     //! This class stores all information associated with 3D magnetotelluric models
     /*! This class extends ThreeDModelBase to store the calculation frequencies
      * which are required for any MT forward calculation. It also provides named
@@ -30,8 +29,8 @@ namespace jif3D
     class ThreeDMTModel: public jif3D::ThreeDModelBase
       {
     private:
-    	//! The four real elements of the distortion matrix C for each Station
-    	std::vector<double> DistortionParameters;
+      //! The four real elements of the distortion matrix C for each Station
+      std::vector<double> DistortionParameters;
       //! The calculation frequencies in Hz
       std::vector<double> Frequencies;
       friend class boost::serialization::access;
@@ -45,13 +44,13 @@ namespace jif3D
     public:
       typedef MTDistortionSetter ExtraParameterSetter;
       const std::vector<double> &GetDisortionParameters() const
-      {
-    	  return DistortionParameters;
-      }
+        {
+          return DistortionParameters;
+        }
       void SetDisortionParameters(const std::vector<double> &Dist)
-      {
-         DistortionParameters = Dist;
-      }
+        {
+          DistortionParameters = Dist;
+        }
       //! Get the vector of calculation frequencies in Hz, read only
       const std::vector<double> &GetFrequencies() const
         {
@@ -78,9 +77,9 @@ namespace jif3D
           ThreeDModelBase::WriteVTK(filename, "Conductivity");
         }
       //! We have a copy operator for other MT models
-      ThreeDMTModel& operator= (const ThreeDMTModel& source);
+      ThreeDMTModel& operator=(const ThreeDMTModel& source);
       //! Other models will be copied by the copy operator for the base class
-      ThreeDMTModel& operator= (const ThreeDModelBase& source);
+      ThreeDMTModel& operator=(const ThreeDModelBase& source);
       ThreeDMTModel();
       //! As we defined a copy operator, we also need a copy constructor
       ThreeDMTModel(const ThreeDMTModel &source);
@@ -88,13 +87,14 @@ namespace jif3D
       };
 
     //! A helper class for the template ThreeDModelObjective that lets us set distortion values as extra inversion parameters
-    class MTDistortionSetter {
+    class MTDistortionSetter
+      {
     public:
-    void operator()(ThreeDMTModel &Model, const std::vector<double> &Dist)
-    {
-    	Model.SetDisortionParameters(Dist);
-    }
-    };
+      void operator()(ThreeDMTModel &Model, const std::vector<double> &Dist)
+        {
+          Model.SetDisortionParameters(Dist);
+        }
+      };
   /* @} */
   }
 
