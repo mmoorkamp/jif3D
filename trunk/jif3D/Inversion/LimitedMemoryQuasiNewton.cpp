@@ -15,7 +15,7 @@ namespace jif3D
 
     LimitedMemoryQuasiNewton::LimitedMemoryQuasiNewton(boost::shared_ptr<
         jif3D::ObjectiveFunction> ObjFunction, const size_t n, bool gradscale) :
-      GradientBasedOptimization(ObjFunction), scale(gradscale), mu(1.0), LineIter(20),
+      GradientBasedOptimization(ObjFunction), scale(gradscale), mu(1.0), LineIter(10),
           MaxPairs(n), SHistory(), YHistory()
       {
 
