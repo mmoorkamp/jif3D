@@ -108,7 +108,6 @@ int main(int argc, char *argv[])
     bool HaveMag = MagneticsSetup.SetupObjective(vm, *Objective.get(),
         MagneticsTransform);
 
-    const size_t ngravgrid = GravitySetup.GetScalModel().GetDensities().num_elements();
     if (HaveMag)
       {
         if (ngrid != MagneticsSetup.GetModel().GetSusceptibilities().num_elements())
@@ -119,8 +118,7 @@ int main(int argc, char *argv[])
           }
       }
 
-    boost::shared_ptr<jif3D::CrossGradient> GravMagCross(
-        new jif3D::CrossGradient(GravitySetup.GetScalModel()));
+    boost::shared_ptr<jif3D::CrossGradient> GravMagCross(new jif3D::CrossGradient(Mesh));
     boost::shared_ptr<jif3D::MultiSectionTransform> GravMagTrans(
         new jif3D::MultiSectionTransform(2 * ngrid));
     GravMagTrans->AddSection(0, ngrid, Trans);
@@ -149,7 +147,7 @@ int main(int argc, char *argv[])
       }
 
     boost::shared_ptr<jif3D::ObjectiveFunction> Regularization = RegSetup.SetupObjective(
-        vm, GravitySetup.GetScalModel(), CovModVec);
+        vm, Mesh, CovModVec);
 
     double gravreglambda = 1.0;
     std::cout << "Gravity Regularization Lambda: ";
@@ -173,7 +171,7 @@ int main(int argc, char *argv[])
     std::cin >> crosslambda;
     if (crosslambda > 0.0)
       {
-        Objective->AddObjective(GravMagCross, GravMagTrans, magreglambda, "Cross",
+        Objective->AddObjective(GravMagCross, GravMagTrans, crosslambda, "Cross",
             jif3D::JointObjective::coupling);
       }
     std::cout << "Performing inversion." << std::endl;
@@ -202,14 +200,28 @@ int main(int argc, char *argv[])
             std::cout << "Iteration: " << iteration << std::endl;
             Optimizer->MakeStep(InvModel);
 
-            jif3D::rvec DensInvModel = GravityTransform->GeneralizedToPhysical(InvModel);
-            std::copy(DensInvModel.begin(), DensInvModel.end(),
-                GravModel.SetDensities().origin());
-            GravModel.WriteVTK(
-                modelfilename + jif3D::stringify(iteration) + ".grav.inv.vtk");
-            GravModel.WriteNetCDF(
-                modelfilename + jif3D::stringify(iteration) + ".grav.inv.nc");
-
+            if (HaveGrav)
+              {
+                jif3D::rvec DensInvModel = GravityTransform->GeneralizedToPhysical(
+                    InvModel);
+                std::copy(DensInvModel.begin(), DensInvModel.end(),
+                    GravModel.SetDensities().origin());
+                GravModel.WriteVTK(
+                    modelfilename + jif3D::stringify(iteration) + ".grav.inv.vtk");
+                GravModel.WriteNetCDF(
+                    modelfilename + jif3D::stringify(iteration) + ".grav.inv.nc");
+              }
+            if (HaveMag)
+              {
+                jif3D::rvec MagInvModel = MagneticsTransform->GeneralizedToPhysical(
+                    InvModel);
+                std::copy(MagInvModel.begin(), MagInvModel.end(),
+                    MagModel.SetSusceptibilities().origin());
+                MagModel.WriteVTK(
+                    modelfilename + jif3D::stringify(iteration) + ".mag.inv.vtk");
+                MagModel.WriteNetCDF(
+                    modelfilename + jif3D::stringify(iteration) + ".mag.inv.nc");
+              }
             ++iteration;
             std::cout << "Gradient Norm: " << Optimizer->GetGradNorm() << std::endl;
             std::cout << "Currrent Misfit: " << Optimizer->GetMisfit() << std::endl;
@@ -235,17 +247,14 @@ int main(int argc, char *argv[])
     jif3D::rvec DensInvModel(GravityTransform->GeneralizedToPhysical(InvModel));
     jif3D::rvec MagInvModel(MagneticsTransform->GeneralizedToPhysical(InvModel));
 
-    std::copy(DensInvModel.begin(), DensInvModel.begin() + ngrid,
-        GravModel.SetDensities().origin());
-
-    std::copy(MagInvModel.begin(), MagInvModel.begin() + ngrid,
-        MagModel.SetSusceptibilities().origin());
     //calculate the predicted data
     std::cout << "Calculating response of inversion model." << std::endl;
     typedef typename jif3D::MinMemGravMagCalculator<jif3D::ThreeDGravityModel> GravCalculatorType;
     typedef typename jif3D::MinMemGravMagCalculator<jif3D::ThreeDMagneticModel> MagCalculatorType;
     if (GravitySetup.GetHaveScal())
       {
+        std::copy(DensInvModel.begin(), DensInvModel.begin() + ngrid,
+            GravModel.SetDensities().origin());
         boost::shared_ptr<GravCalculatorType> ScalGravityCalculator = boost::shared_ptr<
             GravCalculatorType>(
             jif3D::CreateGravityCalculator<GravCalculatorType>::MakeScalar());
@@ -258,6 +267,8 @@ int main(int argc, char *argv[])
       }
     if (GravitySetup.GetHaveFTG())
       {
+        std::copy(DensInvModel.begin(), DensInvModel.begin() + ngrid,
+            GravModel.SetDensities().origin());
         boost::shared_ptr<GravCalculatorType> FTGGravityCalculator = boost::shared_ptr<
             GravCalculatorType>(
             jif3D::CreateGravityCalculator<GravCalculatorType>::MakeTensor());
@@ -271,6 +282,8 @@ int main(int argc, char *argv[])
 
     if (HaveMag)
       {
+        std::copy(MagInvModel.begin(), MagInvModel.begin() + ngrid,
+            MagModel.SetSusceptibilities().origin());
         typedef typename jif3D::MinMemGravMagCalculator<jif3D::ThreeDMagneticModel> MagCalculatorType;
         boost::shared_ptr<jif3D::OMPMagneticImp> MagImp(
             new jif3D::OMPMagneticImp(MagneticsSetup.GetInclination(),
@@ -290,7 +303,15 @@ int main(int argc, char *argv[])
     //and write out the data and model
     //here we have to distinguish again between scalar and ftg data
     std::cout << "Writing out inversion results." << std::endl;
-    GravModel.WriteVTK(modelfilename + ".grav.inv.vtk");
-    GravModel.WriteNetCDF(modelfilename + ".grav.inv.nc");
+    if (HaveGrav)
+      {
+        GravModel.WriteVTK(modelfilename + ".grav.inv.vtk");
+        GravModel.WriteNetCDF(modelfilename + ".grav.inv.nc");
+      }
+    if (HaveMag)
+      {
+        MagModel.WriteVTK(modelfilename + ".mag.inv.vtk");
+        MagModel.WriteNetCDF(modelfilename + ".mag.inv.nc");
+      }
     std::cout << std::endl;
   }
