@@ -113,11 +113,13 @@ namespace jif3D
                     jif3D::ThreeDGravMagImplementation<jif3D::ThreeDMagneticModel> >(
                     new jif3D::OMPMagneticImp(inclination, declination, fieldstrength));
               }
-            boost::shared_ptr<CalculatorType> Calculator(
+            Calculator = boost::shared_ptr<CalculatorType>(
                 new CalculatorType(Implementation, TempDir));
 
             Calculator->SetDataTransform(
-                boost::shared_ptr<jif3D::TotalField>(new jif3D::TotalField));
+                boost::shared_ptr<jif3D::TotalFieldAnomaly>(
+                    new jif3D::TotalFieldAnomaly(inclination, declination,
+                        fieldstrength)));
             MagObjective =
                 boost::shared_ptr<jif3D::ThreeDModelObjective<CalculatorType> >(
                     new jif3D::ThreeDModelObjective<CalculatorType>(*Calculator));

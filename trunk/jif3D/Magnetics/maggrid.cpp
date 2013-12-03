@@ -94,7 +94,8 @@ int main(int argc, char *argv[])
     boost::shared_ptr<CalculatorType> Calculator(new CalculatorType(Implementation));
 
     Calculator->SetDataTransform(
-        boost::shared_ptr<jif3D::TotalField>(new jif3D::TotalField));
+        boost::shared_ptr<jif3D::TotalFieldAnomaly>(
+            new jif3D::TotalFieldAnomaly(inclination, declination, fieldstrength)));
 
     jif3D::rvec Results(Calculator->Calculate(MagModel));
     jif3D::rvec Err(Results.size());
