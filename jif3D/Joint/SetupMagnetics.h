@@ -34,6 +34,7 @@ namespace jif3D
       double inclination;
       double declination;
       double fieldstrength;
+      boost::shared_ptr<CalculatorType> Calculator;
       //! The relative error for the scalar data to assume for construction of the data variance
       double relerr;
       //! The minimum error for the scalar data to assume for construction of the data variance
@@ -44,6 +45,10 @@ namespace jif3D
       boost::shared_ptr<jif3D::ThreeDModelObjective<CalculatorType> > MagObjective;
 
     public:
+      boost::shared_ptr<CalculatorType> GetCalculator()
+        {
+          return Calculator;
+        }
       double GetInclination() const
         {
           return inclination;

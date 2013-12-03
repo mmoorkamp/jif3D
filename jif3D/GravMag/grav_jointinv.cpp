@@ -284,14 +284,8 @@ int main(int argc, char *argv[])
       {
         std::copy(MagInvModel.begin(), MagInvModel.begin() + ngrid,
             MagModel.SetSusceptibilities().origin());
-        typedef typename jif3D::MinMemGravMagCalculator<jif3D::ThreeDMagneticModel> MagCalculatorType;
-        boost::shared_ptr<jif3D::OMPMagneticImp> MagImp(
-            new jif3D::OMPMagneticImp(MagneticsSetup.GetInclination(),
-                MagneticsSetup.GetDeclination(), MagneticsSetup.GetFielStrength()));
-        boost::shared_ptr<MagCalculatorType> MagCalculator(new MagCalculatorType(MagImp));
-        MagCalculator->SetDataTransform(
-            boost::shared_ptr<jif3D::TotalField>(new jif3D::TotalField));
-        jif3D::rvec MagInvData(MagCalculator->Calculate(MagModel));
+
+        jif3D::rvec MagInvData(MagneticsSetup.GetCalculator()->Calculate(MagModel));
         jif3D::SaveTotalFieldMagneticMeasurements(modelfilename + ".inv_mag.nc",
             MagInvData, MagModel.GetMeasPosX(), MagModel.GetMeasPosY(),
             MagModel.GetMeasPosZ(), MagneticsSetup.GetObjective().GetDataError());
