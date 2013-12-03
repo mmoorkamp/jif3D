@@ -16,14 +16,14 @@ namespace jif3D
     class TotalField: public VectorTransform
       {
     private:
-      //! we expect 9 tensor elements at each call
+      //! we expect 3 magnetic field elements at each call
       static const size_t ninput = 3;
       //! we return one invariant as output at each call
       static const size_t noutput = 1;
       //! calculate the invariant from 3 observations
       double CalcTotalField(const jif3D::rvec &Data)
         {
-          return sqrt(Data(0) * Data(0) * +Data(1) * Data(1) + Data(2) * Data(2));
+          return sqrt(Data(0) * Data(0) + Data(1) * Data(1) + Data(2) * Data(2));
         }
     public:
       //! Return the size of the input vector this class expects

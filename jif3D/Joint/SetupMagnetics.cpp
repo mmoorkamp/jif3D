@@ -124,8 +124,6 @@ namespace jif3D
             MagObjective->SetObservedData(MagData);
             MagObjective->SetCoarseModelGeometry(Model);
             jif3D::rvec Error(jif3D::ConstructError(MagData, MagError, relerr, minerr));
-            std::cout << " MagData: " << MagData << std::endl;
-            std::cout << " MagError: " << Error << std::endl;
             MagObjective->SetDataError(Error);
 
             Objective.AddObjective(MagObjective, Transform, maglambda, "Magnetics",
