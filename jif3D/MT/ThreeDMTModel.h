@@ -47,7 +47,7 @@ namespace jif3D
         {
           return DistortionParameters;
         }
-      void SetDisortionParameters(const std::vector<double> &Dist)
+      void SetDistortionParameters(const std::vector<double> &Dist)
         {
           DistortionParameters = Dist;
         }
@@ -92,7 +92,7 @@ namespace jif3D
     public:
       void operator()(ThreeDMTModel &Model, const std::vector<double> &Dist)
         {
-          Model.SetDisortionParameters(Dist);
+          Model.SetDistortionParameters(Dist);
         }
       };
   /* @} */
