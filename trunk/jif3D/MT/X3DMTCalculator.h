@@ -56,9 +56,9 @@ namespace jif3D
       //! The directory to store all temporary files
       boost::filesystem::path TempDir;
       //! Calculate synthetic MT data for a single frequency
-      rvec CalculateFrequency(const X3DModel &Model, size_t freqindex);
+      rvec CalculateFrequency(const X3DModel &Model, const std::vector<double> &C,size_t freqindex);
       //! Calculate a least squares derivative for a single frequency
-      rvec LQDerivativeFreq(const X3DModel &Model, const rvec &Misfit, size_t freqindex);
+      rvec LQDerivativeFreq(const X3DModel &Model, const rvec &Misfit, const std::vector<double> &C, size_t freqindex);
       friend class boost::serialization::access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>

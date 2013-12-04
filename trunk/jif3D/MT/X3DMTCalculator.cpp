@@ -178,11 +178,12 @@ namespace jif3D
           throw FatalException("Cannot execute run script: " + runname);
       }
 
-    rvec X3DMTCalculator::CalculateFrequency(const X3DModel &Model, size_t freqindex)
+    rvec X3DMTCalculator::CalculateFrequency(const X3DModel &Model, const std::vector<double> &C, size_t freqindex)
       {
         const size_t nmeas = Model.GetMeasPosX().size();
         const size_t nmodx = Model.GetXCoordinates().size();
         const size_t nmody = Model.GetYCoordinates().size();
+
         jif3D::rvec result(nmeas * 8);
         fs::path RootName = TempDir / MakeUniqueName(X3DModel::MT, freqindex);
         fs::path DirName = RootName.string() + dirext;
@@ -257,14 +258,15 @@ namespace jif3D
             //result is a local array for this frequency
             //so we can directly use it even in a threaded environment
             const size_t meas_index = j * 8;
-            result(meas_index) = Zxx.real();
-            result(meas_index + 1) = Zxx.imag();
-            result(meas_index + 2) = Zxy.real();
-            result(meas_index + 3) = Zxy.imag();
-            result(meas_index + 4) = Zyx.real();
-            result(meas_index + 5) = Zyx.imag();
-            result(meas_index + 6) = Zyy.real();
-            result(meas_index + 7) = Zyy.imag();
+            const size_t site_index = j * 4;
+            result(meas_index) = C[site_index] * Zxx.real() + C[site_index + 1] * Zyx.real();
+            result(meas_index + 1) = C[site_index] * Zxx.imag() + C[site_index + 1] * Zyx.imag();
+            result(meas_index + 2) = C[site_index] * Zxy.real() + C[site_index + 1] * Zyy.real();
+            result(meas_index + 3) = C[site_index] * Zxy.imag() + C[site_index + 1] * Zyy.imag();
+            result(meas_index + 4) = C[site_index + 3] * Zyx.real() + C[site_index + 2] * Zxx.real();
+            result(meas_index + 5) = C[site_index + 3] *Zyx.imag() + C[site_index + 2] * Zxx.imag();
+            result(meas_index + 6) = C[site_index + 3] *Zyy.real() + C[site_index + 2] * Zxy.real();
+            result(meas_index + 7) = C[site_index + 3] *Zyy.imag() + C[site_index + 2] * Zxy.real();
           }
         return result;
       }
@@ -309,6 +311,18 @@ namespace jif3D
         Model.GetXCoordinates();
         Model.GetYCoordinates();
         Model.GetZCoordinates();
+        std::vector<double> C(Model.GetDisortionParameters());
+        if (C.size() != nmeas * 4)
+        {
+        	C.resize(nmeas * 4);
+        	for (size_t i = 0; i < nmeas; ++i)
+        	{
+        		C[i*4] = 1.0;
+        		C[i*4+1] = 0.0;
+        		C[i*4+2] = 0.0;
+        		C[i*4+3] = 1.0;
+        	}
+        }
         std::vector<double> BGDepths(Model.GetBackgroundThicknesses().size(), 0.0);
         std::partial_sum(Model.GetBackgroundThicknesses().begin(),
             Model.GetBackgroundThicknesses().end(), BGDepths.begin());
@@ -329,7 +343,7 @@ namespace jif3D
             //generate an error message
             try
               {
-                rvec freqresult = CalculateFrequency(Model, i);
+                rvec freqresult = CalculateFrequency(Model, C, i);
                 size_t startindex = nmeas * i * 8;
 #ifdef HAVEOPENMP
                 omp_set_lock(&lck);
@@ -356,6 +370,29 @@ namespace jif3D
         return result;
 
       }
+
+    cmat CalcEExt(const rvec &Misfit,const std::vector<double> &C, const size_t startindex, const size_t freq_start_index,
+    		const std::complex<double> &Hx1, const std::complex<double> &Hx2,
+        const std::complex<double> &Hy1, const std::complex<double> &Hy2 )
+    {
+    	 const size_t siteindex = freq_start_index + startindex * 8;
+    	cmat AH(2, 2);
+    	cmat CtAH(2, 2);
+    	const std::complex<double> magdet = 1. / (Hx1 * Hy2 - Hx2 * Hy1);
+    	const std::complex<double> A00(Misfit(siteindex), Misfit(siteindex + 1));
+    	const std::complex<double> A01(Misfit(siteindex+2), Misfit(siteindex + 3));
+    	const std::complex<double> A10(Misfit(siteindex+4), Misfit(siteindex + 5));
+    	const std::complex<double> A11(Misfit(siteindex+6), Misfit(siteindex + 7));
+        AH(0, 0) = magdet * (conj(A00) * Hy2 - conj(A01) * Hx2);
+        AH(0, 1) = magdet * (-conj(A00) * Hy1 + conj(A01) * Hx1);
+        AH(1, 0) = magdet * (conj(A10) * Hy2 - conj(A11) * Hx2);
+        AH(1, 1) = magdet * (-conj(A10) * Hy1 + conj(A11) * Hx1);
+        CtAH(0, 0) = AH(0, 0) * C[startindex * 4] + AH(1,0) * C[startindex* 4+2];
+        CtAH(0, 1) = AH(0, 1) * C[startindex* 4] + AH(1,1) * C[startindex* 4+2];
+        CtAH(1, 0) = AH(0, 0) * C[startindex* 4+1] + AH(1,0) * C[startindex* 4+3];
+        CtAH(1, 1) = AH(0, 1) * C[startindex* 4+1] + AH(1,1) * C[startindex* 4+3];
+    	return CtAH;
+    }
 
     cmat CalcATimesH(const cmat &A, const cmat &H)
       {
@@ -437,7 +474,7 @@ namespace jif3D
         //boost::filesystem::remove_all(emaname);
       }
 
-    rvec X3DMTCalculator::LQDerivativeFreq(const X3DModel &Model, const rvec &Misfit,
+    rvec X3DMTCalculator::LQDerivativeFreq(const X3DModel &Model, const rvec &Misfit,const std::vector<double> &C,
         size_t freqindex)
       {
         //a few commonly used quantities for shorter notation
@@ -452,7 +489,6 @@ namespace jif3D
         std::vector<double> ShiftDepth;
         std::vector<size_t> MeasDepthIndices;
         size_t nlevels = ConstructDepthIndices(MeasDepthIndices, ShiftDepth, Model);
-
         jif3D::rvec Gradient(nmod, 0.0);
 
         fs::path ForwardDirName = TempDir
@@ -514,12 +550,13 @@ namespace jif3D
                 + StationIndex[0] * nmody + StationIndex[1];
             SourceXIndex.at(j) = StationIndex[0];
             SourceYIndex.at(j) = StationIndex[1];
-            const size_t siteindex = freq_start_index + j * 8;
+
 
             //this is an implementation of eq. 12 in Avdeev and Avdeeva
             //we do not have any beta, as this is part of the misfit
-            cmat j_ext = CalcATimesH(MisfitToA(Misfit, siteindex),
-                MakeH(Hx1_obs[offset], Hx2_obs[offset], Hy1_obs[offset], Hy2_obs[offset]));
+//            cmat j_ext = CalcATimesH(MisfitToA(Misfit, siteindex),
+//                MakeH(Hx1_obs[offset], Hx2_obs[offset], Hy1_obs[offset], Hy2_obs[offset]));
+            cmat j_ext = CalcEExt(Misfit,C,j, freq_start_index, Hx1_obs[offset], Hx2_obs[offset], Hy1_obs[offset], Hy2_obs[offset]);
             XPolMoments1.at(j) = conj(j_ext(0, 0));
             YPolMoments1.at(j) = conj(j_ext(1, 0));
             XPolMoments2.at(j) = conj(j_ext(0, 1));
@@ -656,6 +693,20 @@ namespace jif3D
         Model.GetXCoordinates();
         Model.GetYCoordinates();
         Model.GetZCoordinates();
+
+        std::vector<double> C(Model.GetDisortionParameters());
+        if (C.size() != nmeas * 4)
+        {
+        	C.resize(nmeas * 4);
+        	for (size_t i = 0; i < nmeas; ++i)
+        	{
+        		C[i*4] = 1.0;
+        		C[i*4+1] = 0.0;
+        		C[i*4+2] = 0.0;
+        		C[i*4+3] = 1.0;
+        	}
+        }
+
 #ifdef HAVEOPENMP
         omp_lock_t lck;
         omp_init_lock(&lck);
@@ -669,7 +720,7 @@ namespace jif3D
           {
             try
               {
-                rvec tmp = LQDerivativeFreq(Model, Misfit, i);
+                rvec tmp = LQDerivativeFreq(Model, Misfit, C, i);
 #ifdef HAVEOPENMP
                 omp_set_lock(&lck);
 #endif
