@@ -49,6 +49,7 @@ namespace jif3D
      * @param Data The conductivities in Siemens
      * @param bg_conductivities The conductivities in Siemens of the background layers
      * @param bg_thicknesses The thicknesses in m of the background layers
+     * @param Dipole Do we write a model for a dipole gradient calculation
      */
     void Write3DModelForX3D(const std::string &filename,
         const ThreeDModelBase::t3DModelDim &XCellSizes,
@@ -57,7 +58,8 @@ namespace jif3D
         const std::vector<double> &ObservationDepths,
         const ThreeDModelBase::t3DModelData &Data,
         const std::vector<double> &bg_conductivities,
-        const std::vector<double> &bg_thicknesses);
+        const std::vector<double> &bg_thicknesses,
+        bool Dipole = false);
 
     //! Write the file a.project that controls the forward calculation parameters for x3D
     /*! The project file is always called a.project and controls what x3d calculates.

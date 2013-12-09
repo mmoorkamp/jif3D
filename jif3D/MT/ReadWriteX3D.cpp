@@ -141,7 +141,7 @@ namespace jif3D
         const std::vector<double> &ObservationDepths,
         const ThreeDModelBase::t3DModelData &Data,
         const std::vector<double> &bg_conductivities,
-        const std::vector<double> &bg_thicknesses)
+        const std::vector<double> &bg_thicknesses, bool Dipole)
       {
         assert(bg_conductivities.size() == bg_thicknesses.size());
         std::ofstream outfile(filename.c_str());
@@ -226,10 +226,20 @@ namespace jif3D
               }
             outfile << "\n\n";
           } //end of loop through all layers
-        outfile << " First and last cells in X-direction (nxOf, nxOl)   \n";
-        outfile << " 1 " << XCellSizes.size() << "\n\n";
-        outfile << "   First and last cells in Y-direction (nyOf, nyOl)    \n";
-        outfile << " 1 " << YCellSizes.size() << "\n\n";
+        if (Dipole)
+          {
+            outfile << " First and last cells in X-direction (nxOf, nxOl)   \n";
+            outfile << " 1 1 \n\n";
+            outfile << "   First and last cells in Y-direction (nyOf, nyOl)    \n";
+            outfile << " 1 1 \n\n";
+          }
+        else
+          {
+            outfile << " First and last cells in X-direction (nxOf, nxOl)   \n";
+            outfile << " 1 " << XCellSizes.size() << "\n\n";
+            outfile << "   First and last cells in Y-direction (nyOf, nyOl)    \n";
+            outfile << " 1 " << YCellSizes.size() << "\n\n";
+          }
         //write out the depths at which the sites are located
         //we give a depth for each site, even if they have the same depth
         //that way we do not need to worry about how to read the output of x3d
@@ -391,10 +401,10 @@ namespace jif3D
         //make sure all fields have the same size
         if (Ex.size() != ncellsx * ncellsy * ncellsz)
           {
-            throw
-        jif3D::FatalException(
-            "In ReadEma, number of electric field values: "+
-            jif3D::stringify(Ex.size()) +" does not match grid size: " + jif3D::stringify(ncellsx * ncellsy * ncellsz));
+            throw jif3D::FatalException(
+                "In ReadEma, number of electric field values: "
+                    + jif3D::stringify(Ex.size()) + " does not match grid size: "
+                    + jif3D::stringify(ncellsx * ncellsy * ncellsz));
           }
         if (Ex.size() != Ey.size())
           {

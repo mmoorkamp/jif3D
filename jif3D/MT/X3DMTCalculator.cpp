@@ -487,6 +487,10 @@ namespace jif3D
         const size_t nmeas = Model.GetMeasPosX().size();
         const size_t nmod = nmodx * nmody * nmodz;
         std::vector<double> ShiftDepth;
+        //for the controlled source calculations we do not actually
+        //need any observe layers as we are only interested in the
+        //anomalous fields
+        std::vector<double> SourceObserve(1,0.0);
         std::vector<size_t> MeasDepthIndices;
         size_t nlevels = ConstructDepthIndices(MeasDepthIndices, ShiftDepth, Model);
         jif3D::rvec Gradient(nmod, 0.0);
@@ -578,8 +582,8 @@ namespace jif3D
                 resultfilename, modelfilename);
             Write3DModelForX3D((EdipDirName / modelfilename).string(),
                 Model.GetXCellSizes(), Model.GetYCellSizes(), Model.GetZCellSizes(),
-                ShiftDepth, Model.GetConductivities(),
-                Model.GetBackgroundConductivities(), Model.GetBackgroundThicknesses());
+                SourceObserve, Model.GetConductivities(),
+                Model.GetBackgroundConductivities(), Model.GetBackgroundThicknesses(),true);
             //write an empty source file for the second source polarization
             WriteSourceFile((EdipDirName / sourcebfilename).string(), SourceXIndex,
                 SourceYIndex, Model.GetMeasPosZ(), Zeros, Zeros, Model.GetZCoordinates(),
@@ -610,8 +614,8 @@ namespace jif3D
                 resultfilename, modelfilename);
             Write3DModelForX3D((MdipDirName / modelfilename).string(),
                 Model.GetXCellSizes(), Model.GetYCellSizes(), Model.GetZCellSizes(),
-                ShiftDepth, Model.GetConductivities(),
-                Model.GetBackgroundConductivities(), Model.GetBackgroundThicknesses());
+                SourceObserve, Model.GetConductivities(),
+                Model.GetBackgroundConductivities(), Model.GetBackgroundThicknesses(),true);
             //write an empty source file for the second source polarization
             WriteSourceFile((MdipDirName / sourcebfilename).string(), SourceXIndex,
                 SourceYIndex, Model.GetMeasPosZ(), Zeros, Zeros, Model.GetZCoordinates(),
