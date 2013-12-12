@@ -83,12 +83,13 @@ namespace jif3D
           {
             if (boost::algorithm::starts_with(itr->path().filename().string(), NameRoot))
               {
-                fs::remove_all(itr->path().filename(),ec);
+                fs::remove_all(itr->path().filename(), ec);
               }
           }
       }
 
-    X3DMTCalculator::X3DMTCalculator(boost::filesystem::path TDir)
+    X3DMTCalculator::X3DMTCalculator(boost::filesystem::path TDir, bool DC) :
+        WantDistCorr(DC)
       {
         NameRoot = ObjectID();
         if (!fs::is_directory(TDir))
@@ -178,7 +179,8 @@ namespace jif3D
           throw FatalException("Cannot execute run script: " + runname);
       }
 
-    rvec X3DMTCalculator::CalculateFrequency(const X3DModel &Model, const std::vector<double> &C, size_t freqindex)
+    rvec X3DMTCalculator::CalculateFrequency(const X3DModel &Model,
+        const std::vector<double> &C, size_t freqindex)
       {
         const size_t nmeas = Model.GetMeasPosX().size();
         const size_t nmodx = Model.GetXCoordinates().size();
@@ -230,9 +232,9 @@ namespace jif3D
                 Model.FindAssociatedIndices(Model.GetMeasPosX()[j],
                     Model.GetMeasPosY()[j], Model.GetMeasPosZ()[j]);
 // with the current equations we cannot use interpolation as the position
-        	// of the source in the adjoint calculation is always smeared
-        	//across the whole cell, this works best for a cell in the centre
-        	//of the cell and any other position deteriorates convergence
+            // of the source in the adjoint calculation is always smeared
+            //across the whole cell, this works best for a cell in the centre
+            //of the cell and any other position deteriorates convergence
 //            std::complex<double> Ex1Inter = InterpolateField(Ex1, Model, j,
 //                MeasDepthIndices);
 //            std::complex<double> Ex2Inter = InterpolateField(Ex2, Model, j,
@@ -251,22 +253,40 @@ namespace jif3D
 //                MeasDepthIndices);
 //            FieldsToImpedance(Ex1Inter, Ex2Inter, Ey1Inter, Ey2Inter, Hx1Inter, Hx2Inter,
 //                Hy1Inter, Hy2Inter, Zxx, Zxy, Zyx, Zyy);
-            const size_t offset = (nmodx * nmody) * MeasDepthIndices[j] + StationIndex[0] * nmody
-                + StationIndex[1];
+            const size_t offset = (nmodx * nmody) * MeasDepthIndices[j]
+                + StationIndex[0] * nmody + StationIndex[1];
             FieldsToImpedance(Ex1[offset], Ex2[offset], Ey1[offset], Ey2[offset],
                 Hx1[offset], Hx2[offset], Hy1[offset], Hy2[offset], Zxx, Zxy, Zyx, Zyy);
             //result is a local array for this frequency
             //so we can directly use it even in a threaded environment
             const size_t meas_index = j * 8;
             const size_t site_index = j * 4;
-            result(meas_index) = C[site_index] * Zxx.real() + C[site_index + 1] * Zyx.real();
-            result(meas_index + 1) = C[site_index] * Zxx.imag() + C[site_index + 1] * Zyx.imag();
-            result(meas_index + 2) = C[site_index] * Zxy.real() + C[site_index + 1] * Zyy.real();
-            result(meas_index + 3) = C[site_index] * Zxy.imag() + C[site_index + 1] * Zyy.imag();
-            result(meas_index + 4) = C[site_index + 3] * Zyx.real() + C[site_index + 2] * Zxx.real();
-            result(meas_index + 5) = C[site_index + 3] *Zyx.imag() + C[site_index + 2] * Zxx.imag();
-            result(meas_index + 6) = C[site_index + 3] *Zyy.real() + C[site_index + 2] * Zxy.real();
-            result(meas_index + 7) = C[site_index + 3] *Zyy.imag() + C[site_index + 2] * Zxy.real();
+            const size_t imp_index = freqindex * nmeas * 8;
+            result(meas_index) = C[site_index] * Zxx.real()
+                + C[site_index + 1] * Zyx.real();
+            result(meas_index + 1) = C[site_index] * Zxx.imag()
+                + C[site_index + 1] * Zyx.imag();
+            result(meas_index + 2) = C[site_index] * Zxy.real()
+                + C[site_index + 1] * Zyy.real();
+            result(meas_index + 3) = C[site_index] * Zxy.imag()
+                + C[site_index + 1] * Zyy.imag();
+            result(meas_index + 4) = C[site_index + 3] * Zyx.real()
+                + C[site_index + 2] * Zxx.real();
+            result(meas_index + 5) = C[site_index + 3] * Zyx.imag()
+                + C[site_index + 2] * Zxx.imag();
+            result(meas_index + 6) = C[site_index + 3] * Zyy.real()
+                + C[site_index + 2] * Zxy.real();
+            result(meas_index + 7) = C[site_index + 3] * Zyy.imag()
+                + C[site_index + 2] * Zxy.real();
+            RawImpedance(imp_index + meas_index) = Zxx.real();
+            RawImpedance(imp_index + meas_index + 1) = Zxx.imag();
+            RawImpedance(imp_index + meas_index + 2) = Zxy.real();
+            RawImpedance(imp_index + meas_index + 3) = Zxy.imag();
+            RawImpedance(imp_index + meas_index + 4) = Zyx.real();
+            RawImpedance(imp_index + meas_index + 5) = Zyx.imag();
+            RawImpedance(imp_index + meas_index + 6) = Zyy.real();
+            RawImpedance(imp_index + meas_index + 7) = Zyy.imag();
+
           }
         return result;
       }
@@ -302,9 +322,16 @@ namespace jif3D
         const size_t nmodx = Model.GetXCoordinates().size();
         const size_t nmody = Model.GetYCoordinates().size();
 
+        //result will hold the final impedance values with
+        //applied distortion correction
         jif3D::rvec result(nmeas * nfreq * 8);
         bool FatalError = false;
         result.clear();
+        //we store the undistorted impedance with the calculator object
+        //as we need it later for the gradient calculation
+        //and the distortion correction
+        RawImpedance.resize(nmeas * nfreq * 8);
+        RawImpedance.clear();
         //we make a call to the coordinate functions to make sure
         //that we have updated the coordinate information and cached it
         //only then the subsequent calls are thread safe
@@ -313,16 +340,17 @@ namespace jif3D
         Model.GetZCoordinates();
         std::vector<double> C(Model.GetDisortionParameters());
         if (C.size() != nmeas * 4)
-        {
-        	C.resize(nmeas * 4);
-        	for (size_t i = 0; i < nmeas; ++i)
-        	{
-        		C[i*4] = 1.0;
-        		C[i*4+1] = 0.0;
-        		C[i*4+2] = 0.0;
-        		C[i*4+3] = 1.0;
-        	}
-        }
+          {
+            C.resize(nmeas * 4);
+            for (size_t i = 0; i < nmeas; ++i)
+              {
+                C[i * 4] = 1.0;
+                C[i * 4 + 1] = 0.0;
+                C[i * 4 + 2] = 0.0;
+                C[i * 4 + 3] = 1.0;
+              }
+          }
+
         std::vector<double> BGDepths(Model.GetBackgroundThicknesses().size(), 0.0);
         std::partial_sum(Model.GetBackgroundThicknesses().begin(),
             Model.GetBackgroundThicknesses().end(), BGDepths.begin());
@@ -371,63 +399,28 @@ namespace jif3D
 
       }
 
-    cmat CalcEExt(const rvec &Misfit,const std::vector<double> &C, const size_t startindex, const size_t freq_start_index,
-    		const std::complex<double> &Hx1, const std::complex<double> &Hx2,
-        const std::complex<double> &Hy1, const std::complex<double> &Hy2 )
-    {
-    	 const size_t siteindex = freq_start_index + startindex * 8;
-    	cmat AH(2, 2);
-    	cmat CtAH(2, 2);
-    	const std::complex<double> magdet = 1. / (Hx1 * Hy2 - Hx2 * Hy1);
-    	const std::complex<double> A00(Misfit(siteindex), Misfit(siteindex + 1));
-    	const std::complex<double> A01(Misfit(siteindex+2), Misfit(siteindex + 3));
-    	const std::complex<double> A10(Misfit(siteindex+4), Misfit(siteindex + 5));
-    	const std::complex<double> A11(Misfit(siteindex+6), Misfit(siteindex + 7));
+    cmat CalcEExt(const rvec &Misfit, const std::vector<double> &C,
+        const size_t startindex, const size_t freq_start_index,
+        const std::complex<double> &Hx1, const std::complex<double> &Hx2,
+        const std::complex<double> &Hy1, const std::complex<double> &Hy2)
+      {
+        const size_t siteindex = freq_start_index + startindex * 8;
+        cmat AH(2, 2);
+        cmat CtAH(2, 2);
+        const std::complex<double> magdet = 1. / (Hx1 * Hy2 - Hx2 * Hy1);
+        const std::complex<double> A00(Misfit(siteindex), Misfit(siteindex + 1));
+        const std::complex<double> A01(Misfit(siteindex + 2), Misfit(siteindex + 3));
+        const std::complex<double> A10(Misfit(siteindex + 4), Misfit(siteindex + 5));
+        const std::complex<double> A11(Misfit(siteindex + 6), Misfit(siteindex + 7));
         AH(0, 0) = magdet * (conj(A00) * Hy2 - conj(A01) * Hx2);
         AH(0, 1) = magdet * (-conj(A00) * Hy1 + conj(A01) * Hx1);
         AH(1, 0) = magdet * (conj(A10) * Hy2 - conj(A11) * Hx2);
         AH(1, 1) = magdet * (-conj(A10) * Hy1 + conj(A11) * Hx1);
-        CtAH(0, 0) = AH(0, 0) * C[startindex * 4] + AH(1,0) * C[startindex* 4+2];
-        CtAH(0, 1) = AH(0, 1) * C[startindex* 4] + AH(1,1) * C[startindex* 4+2];
-        CtAH(1, 0) = AH(0, 0) * C[startindex* 4+1] + AH(1,0) * C[startindex* 4+3];
-        CtAH(1, 1) = AH(0, 1) * C[startindex* 4+1] + AH(1,1) * C[startindex* 4+3];
-    	return CtAH;
-    }
-
-    cmat CalcATimesH(const cmat &A, const cmat &H)
-      {
-        cmat result(2, 2);
-        const std::complex<double> magdet = 1. / (H(0, 0) * H(1, 1) - H(0, 1) * H(1, 0));
-        result(0, 0) = magdet * (conj(A(0, 0)) * H(1, 1) - conj(A(0, 1)) * H(0, 1));
-        result(0, 1) = magdet * (-conj(A(0, 0)) * H(1, 0) + conj(A(0, 1)) * H(0, 0));
-        result(1, 0) = magdet * (conj(A(1, 0)) * H(1, 1) - conj(A(1, 1)) * H(0, 1));
-        result(1, 1) = magdet * (-conj(A(1, 0)) * H(1, 0) + conj(A(1, 1)) * H(0, 0));
-        return result;
-      }
-
-    cmat MisfitToA(const rvec &Misfit, const size_t startindex)
-      {
-        assert(startindex <= Misfit.size() - 8);
-        cmat result(2, 2);
-        result(0, 0) = std::complex<double>(Misfit(startindex), Misfit(startindex + 1));
-        result(0, 1) = std::complex<double>(Misfit(startindex + 2),
-            Misfit(startindex + 3));
-        result(1, 0) = std::complex<double>(Misfit(startindex + 4),
-            Misfit(startindex + 5));
-        result(1, 1) = std::complex<double>(Misfit(startindex + 6),
-            Misfit(startindex + 7));
-        return result;
-      }
-
-    cmat MakeH(const std::complex<double> &Hx1, const std::complex<double> &Hx2,
-        const std::complex<double> &Hy1, const std::complex<double> &Hy2)
-      {
-        cmat result(2, 2);
-        result(0, 0) = Hx1;
-        result(0, 1) = Hx2;
-        result(1, 0) = Hy1;
-        result(1, 1) = Hy2;
-        return result;
+        CtAH(0, 0) = AH(0, 0) * C[startindex * 4] + AH(1, 0) * C[startindex * 4 + 2];
+        CtAH(0, 1) = AH(0, 1) * C[startindex * 4] + AH(1, 1) * C[startindex * 4 + 2];
+        CtAH(1, 0) = AH(0, 0) * C[startindex * 4 + 1] + AH(1, 0) * C[startindex * 4 + 3];
+        CtAH(1, 1) = AH(0, 1) * C[startindex * 4 + 1] + AH(1, 1) * C[startindex * 4 + 3];
+        return CtAH;
       }
 
     void CalcHext(const std::complex<double> &omega_mu, std::complex<double> &Xp1,
@@ -474,8 +467,8 @@ namespace jif3D
         //boost::filesystem::remove_all(emaname);
       }
 
-    rvec X3DMTCalculator::LQDerivativeFreq(const X3DModel &Model, const rvec &Misfit,const std::vector<double> &C,
-        size_t freqindex)
+    rvec X3DMTCalculator::LQDerivativeFreq(const X3DModel &Model, const rvec &Misfit,
+        const std::vector<double> &C, size_t freqindex)
       {
         //a few commonly used quantities for shorter notation
         const size_t nmodx = Model.GetConductivities().shape()[0];
@@ -490,7 +483,7 @@ namespace jif3D
         //for the controlled source calculations we do not actually
         //need any observe layers as we are only interested in the
         //anomalous fields
-        std::vector<double> SourceObserve(1,0.0);
+        std::vector<double> SourceObserve(1, 0.0);
         std::vector<size_t> MeasDepthIndices;
         size_t nlevels = ConstructDepthIndices(MeasDepthIndices, ShiftDepth, Model);
         jif3D::rvec Gradient(nmod, 0.0);
@@ -555,12 +548,12 @@ namespace jif3D
             SourceXIndex.at(j) = StationIndex[0];
             SourceYIndex.at(j) = StationIndex[1];
 
-
             //this is an implementation of eq. 12 in Avdeev and Avdeeva
             //we do not have any beta, as this is part of the misfit
 //            cmat j_ext = CalcATimesH(MisfitToA(Misfit, siteindex),
 //                MakeH(Hx1_obs[offset], Hx2_obs[offset], Hy1_obs[offset], Hy2_obs[offset]));
-            cmat j_ext = CalcEExt(Misfit,C,j, freq_start_index, Hx1_obs[offset], Hx2_obs[offset], Hy1_obs[offset], Hy2_obs[offset]);
+            cmat j_ext = CalcEExt(Misfit, C, j, freq_start_index, Hx1_obs[offset],
+                Hx2_obs[offset], Hy1_obs[offset], Hy2_obs[offset]);
             XPolMoments1.at(j) = conj(j_ext(0, 0));
             YPolMoments1.at(j) = conj(j_ext(1, 0));
             XPolMoments2.at(j) = conj(j_ext(0, 1));
@@ -583,7 +576,8 @@ namespace jif3D
             Write3DModelForX3D((EdipDirName / modelfilename).string(),
                 Model.GetXCellSizes(), Model.GetYCellSizes(), Model.GetZCellSizes(),
                 SourceObserve, Model.GetConductivities(),
-                Model.GetBackgroundConductivities(), Model.GetBackgroundThicknesses(),true);
+                Model.GetBackgroundConductivities(), Model.GetBackgroundThicknesses(),
+                true);
             //write an empty source file for the second source polarization
             WriteSourceFile((EdipDirName / sourcebfilename).string(), SourceXIndex,
                 SourceYIndex, Model.GetMeasPosZ(), Zeros, Zeros, Model.GetZCoordinates(),
@@ -600,9 +594,11 @@ namespace jif3D
             Model.GetZCellSizes(), nmodx, nmody, nmodz);
 
         //now we calculate the response to magnetic dipole sources
-        const std::complex<double> omega_mu = -1.0
-            / (std::complex<double>(0.0, jif3D::mag_mu) * 2.0 * boost::math::constants::pi<double>()
-                * Model.GetFrequencies()[freqindex]);
+        const std::complex<double> omega_mu =
+            -1.0
+                / (std::complex<double>(0.0, jif3D::mag_mu) * 2.0
+                    * boost::math::constants::pi<double>()
+                    * Model.GetFrequencies()[freqindex]);
 
         fs::path MdipName = TempDir / MakeUniqueName(X3DModel::MDIP, freqindex);
         fs::path MdipDirName = MdipName.string() + dirext;
@@ -615,7 +611,8 @@ namespace jif3D
             Write3DModelForX3D((MdipDirName / modelfilename).string(),
                 Model.GetXCellSizes(), Model.GetYCellSizes(), Model.GetZCellSizes(),
                 SourceObserve, Model.GetConductivities(),
-                Model.GetBackgroundConductivities(), Model.GetBackgroundThicknesses(),true);
+                Model.GetBackgroundConductivities(), Model.GetBackgroundThicknesses(),
+                true);
             //write an empty source file for the second source polarization
             WriteSourceFile((MdipDirName / sourcebfilename).string(), SourceXIndex,
                 SourceYIndex, Model.GetMeasPosZ(), Zeros, Zeros, Model.GetZCoordinates(),
@@ -624,17 +621,12 @@ namespace jif3D
         //make the sources for the magnetic dipoles
         for (size_t j = 0; j < nmeas; ++j)
           {
-            boost::array<ThreeDModelBase::t3DModelData::index, 3> StationIndex =
-                Model.FindAssociatedIndices(Model.GetMeasPosX()[j],
-                    Model.GetMeasPosY()[j], Model.GetMeasPosZ()[j]);
-            std::complex<double> Zxx, Zxy, Zyx, Zyy;
-            const size_t offset = (nmodx * nmody) * MeasDepthIndices[j] + StationIndex[0] * nmody
-                + StationIndex[1];
-            FieldsToImpedance(Ex1_obs[offset], Ex2_obs[offset], Ey1_obs[offset], Ey2_obs[offset],
-                Hx1_obs[offset], Hx2_obs[offset], Hy1_obs[offset], Hy2_obs[offset], Zxx, Zxy, Zyx, Zyy);
 
-            CalcHext(omega_mu, XPolMoments1.at(j), XPolMoments2.at(j), YPolMoments1.at(j),
-                YPolMoments2.at(j), Zxx, Zxy, Zyx, Zyy);
+            size_t offset = freq_start_index + j * 8;
+            std::complex<double> Zxx(RawImpedance(offset), RawImpedance(offset + 1)), Zxy(
+                RawImpedance(offset + 2), RawImpedance(offset + 3)), Zyx(
+                RawImpedance(offset + 4), RawImpedance(offset + 5)), Zyy(
+                RawImpedance(offset + 5), RawImpedance(offset + 6));
           }
 
         std::vector<std::complex<double> > Ux1_mag, Ux2_mag, Uy1_mag, Uy2_mag, Uz1_mag,
@@ -672,6 +664,38 @@ namespace jif3D
         return Gradient;
       }
 
+    std::vector<double> AdaptDist(const std::vector<double> &C,
+        const jif3D::rvec &RawImpedance, const jif3D::rvec &Misfit)
+      {
+        std::vector<double> result(C.size(), 0.0);
+        const size_t nstat = C.size() / 4;
+        const size_t nfreq = RawImpedance.size() / (nstat * 8);
+        for (size_t i = 0; i < nfreq; ++i)
+          {
+            for (size_t j = 0; j < nstat; ++j)
+              {
+                const size_t offset = (i * nstat + j) * 8;
+                result[j * 4] += Misfit(offset) * RawImpedance(offset)
+                    + Misfit(offset + 1) * RawImpedance(offset + 1)
+                    + Misfit(offset + 4) * RawImpedance(offset + 2)
+                    + Misfit(offset + 5) * RawImpedance(offset + 3);
+                result[j * 4 + 1] += Misfit(offset) * RawImpedance(offset + 4)
+                    + Misfit(offset + 1) * RawImpedance(offset + 5)
+                    + Misfit(offset + 4) * RawImpedance(offset + 6)
+                    + Misfit(offset + 5) * RawImpedance(offset + 7);
+                result[j * 4 + 2] += Misfit(offset + 2) * RawImpedance(offset)
+                    + Misfit(offset + 3) * RawImpedance(offset + 1)
+                    + Misfit(offset + 6) * RawImpedance(offset + 2)
+                    + Misfit(offset + 7) * RawImpedance(offset + 3);
+                result[j * 4 + 3] += Misfit(offset + 2) * RawImpedance(offset + 4)
+                    + Misfit(offset + 3) * RawImpedance(offset + 5)
+                    + Misfit(offset + 6) * RawImpedance(offset + 6)
+                    + Misfit(offset + 7) * RawImpedance(offset + 7);
+              }
+          }
+        return result;
+      }
+
     rvec X3DMTCalculator::LQDerivative(const X3DModel &Model, const rvec &Misfit,
         size_t minfreqindex, size_t maxfreqindex)
       {
@@ -689,6 +713,12 @@ namespace jif3D
         const size_t nmod = nmodx * nmody * nmodz;
         assert(Misfit.size() == nmeas * nfreq * 8);
         jif3D::rvec Gradient(nmod, 0.0);
+        if (WantDistCorr)
+          {
+            //if we want to adapt the distortion parameters, we put
+            //the gradient with respect to the distortion parameters at the end
+            Gradient.resize(nmod + 4 * nmeas, 0.0);
+          }
         bool FatalError = false;
 
         //we make a call to the coordinate functions to make sure
@@ -697,19 +727,21 @@ namespace jif3D
         Model.GetXCoordinates();
         Model.GetYCoordinates();
         Model.GetZCoordinates();
-
+        //we read the distortion parameters from the model
         std::vector<double> C(Model.GetDisortionParameters());
+        //if they have not been set, we use the identity matrix
+        //for each station
         if (C.size() != nmeas * 4)
-        {
-        	C.resize(nmeas * 4);
-        	for (size_t i = 0; i < nmeas; ++i)
-        	{
-        		C[i*4] = 1.0;
-        		C[i*4+1] = 0.0;
-        		C[i*4+2] = 0.0;
-        		C[i*4+3] = 1.0;
-        	}
-        }
+          {
+            C.resize(nmeas * 4);
+            for (size_t i = 0; i < nmeas; ++i)
+              {
+                C[i * 4] = 1.0;
+                C[i * 4 + 1] = 0.0;
+                C[i * 4 + 2] = 0.0;
+                C[i * 4 + 3] = 1.0;
+              }
+          }
 
 #ifdef HAVEOPENMP
         omp_lock_t lck;
@@ -724,11 +756,13 @@ namespace jif3D
           {
             try
               {
+                //calculate the gradient for each frequency
                 rvec tmp = LQDerivativeFreq(Model, Misfit, C, i);
 #ifdef HAVEOPENMP
                 omp_set_lock(&lck);
 #endif
-                Gradient += tmp;
+                //the total gradient is the sum over the gradients for each frequency
+                boost::numeric::ublas::subrange(Gradient, 0, nmod) += tmp;
 #ifdef HAVEOPENMP
                 omp_unset_lock(&lck);
 #endif
@@ -744,6 +778,16 @@ namespace jif3D
 #ifdef HAVEOPENMP
         omp_destroy_lock(&lck);
 #endif
+        if (WantDistCorr)
+          {
+            //if we want distortion correct, we calculate the gradient with respect
+            //to the distortion parameters and copy the values to the end
+            //of the gradient
+            std::vector<double> CGrad = AdaptDist(C, RawImpedance, Misfit);
+            std::copy(CGrad.begin(), CGrad.end(), Gradient.begin() + nmod);
+          }
+        //if we had some exception inside the openmp region, we throw
+        // a generic error message
         if (FatalError)
           throw jif3D::FatalException("Problem in MT gradient calculation.");
 

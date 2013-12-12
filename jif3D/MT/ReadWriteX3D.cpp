@@ -402,7 +402,7 @@ namespace jif3D
         if (Ex.size() != ncellsx * ncellsy * ncellsz)
           {
             throw jif3D::FatalException(
-                "In ReadEma, number of electric field values: "
+                "In ReadEma: "+ filename +" number of electric field values: "
                     + jif3D::stringify(Ex.size()) + " does not match grid size: "
                     + jif3D::stringify(ncellsx * ncellsy * ncellsz));
           }

@@ -55,6 +55,10 @@ namespace jif3D
       std::string MakeUniqueName(X3DModel::ProblemType Type, const size_t FreqIndex);
       //! The directory to store all temporary files
       boost::filesystem::path TempDir;
+      //! Do we want to perform distortion correction and calculate derivatives with respect to the distortion parameters
+      bool WantDistCorr;
+      //! The impedances from the last forward calculation without any distortion correction
+      rvec RawImpedance;
       //! Calculate synthetic MT data for a single frequency
       rvec CalculateFrequency(const X3DModel &Model, const std::vector<double> &C,size_t freqindex);
       //! Calculate a least squares derivative for a single frequency
@@ -64,16 +68,21 @@ namespace jif3D
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
         {
+          // we do not need to serialize NameRoot, this is generated individually for each object
           if (Archive::is_saving::value)
             {
               std::string DirName(TempDir.string());
               ar & DirName;
+              ar & WantDistCorr;
+              ar & RawImpedance;
             }
           if (Archive::is_loading::value)
             {
               std::string DirName;
               ar & DirName;
               TempDir = DirName;
+              ar & WantDistCorr;
+              ar & RawImpedance;
             }
 
         }
@@ -102,8 +111,14 @@ namespace jif3D
        */
       rvec LQDerivative(const ModelType &Model, const rvec &Misfit, size_t minfreqindex =
           0, size_t maxfreqindex = std::numeric_limits<size_t>::max());
-      //! The constructor takes an optional argument to change the directory were temporary files are stored
-      X3DMTCalculator(boost::filesystem::path TDir = boost::filesystem::current_path());
+      //! The constructor takes optional arguments to change the directory were temporary files are stored and if we want to correct for distortion
+      /*! When running calculations on a cluster in particular, it makes sense to store the files for x3D in a local
+       * directory instead of the central filesystem. We can achieve this through setting TDir to an appropriate path.
+       * If we set DC to true we calculate the derivative with respect to the distortion parameters.
+       * @param TDir Directory to store the temporary files for x3D
+       * @param DC Perform distortion correction and calculate the derivative with respect to the distortion parameters
+       */
+      X3DMTCalculator(boost::filesystem::path TDir = boost::filesystem::current_path(), bool DC = false);
       virtual ~X3DMTCalculator();
       };
   /* @} */
