@@ -63,7 +63,7 @@ namespace jif3D
           {
             double mag = bm::pow<2>(RegDiff(i)) + bm::pow<2>(RegDiff(nmod + i))
                 + bm::pow<2>(RegDiff(2 * nmod + i));
-            Grad(i) = Geometry.GetData().data()[i] * 2 * b * (RegDiff(i) + RegDiff(nmod + i) + RegDiff(2 * nmod + i))
+            Grad(i) =  2 * b * (RegDiff(i) + RegDiff(nmod + i) + RegDiff(2 * nmod + i))
                 / bm::pow<2>(b + mag);
           }
         jif3D::comp_mat Mat(
@@ -76,6 +76,7 @@ namespace jif3D
          ModelNumber(0), beta(b), RegFunc(RF), Geometry(RF->ModelGeo)
       {
 
+/*
         std::fill_n(Geometry.SetData().origin(), Geometry.SetData().num_elements(), 1.0);
         const size_t nx = RegFunc->ModelGeo.GetXCellSizes().size();
         const size_t ny = RegFunc->ModelGeo.GetYCellSizes().size();
@@ -90,6 +91,7 @@ namespace jif3D
                   }
               }
           }
+*/
 
       }
 

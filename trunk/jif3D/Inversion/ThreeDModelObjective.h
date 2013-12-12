@@ -22,8 +22,10 @@ namespace jif3D
      * are all encapsulated in a Calculator object with identical interfaces. We therefore define this
      * template that calculates the misfit between observed and calculated data and provides other
      * common functionality with the type of the calculator object as a template parameter.
-     * This template has 3 requirements on the calculator object.
+     * This template has 4 requirements on the calculator object.
      *   - A public typedef ModelType that specifies the model object type required for the forward calculation
+     *   - A public typedef ExtraParameterSetter That can be used to set additional model parameters that are
+     *      not part of the grid. e.g. gravity can have background densities or MT distortion parameters for each site
      *   - A function  with signature void Calculate(const ModelType &); to calculate synthetic data for a given model
      *   - A function with signature jif3D::rvec LQDerivative(const ModelType &,const jif3D::rvec &); to calculate
      *      the derivative of a least squares objective function for a given model and misfit.
@@ -39,6 +41,8 @@ namespace jif3D
       typedef ThreeDCalculatorType CalculatorType;
       //! The forward calculation class must contain a type definition that sets the type of the model object
       typedef typename CalculatorType::ModelType ModelType;
+      //! Some forward calculators have extra parameters in addition to the grid values, e.g. gravity can have background densities or MT distortion parameters
+      typedef typename CalculatorType::ModelType::ExtraParameterSetter ExtraParameterSetter;
     protected:
       //! The object that calculates the synthetic data its type is set by the template parameter
       CalculatorType Calculator;
@@ -201,10 +205,21 @@ namespace jif3D
     void ThreeDModelObjective<ThreeDCalculatorType>::ImplDataDifference(
         const jif3D::rvec &Model, jif3D::rvec &Diff)
       {
-        //make sure the sizes match
-        assert(Model.size() == CoarseModel.GetData().num_elements());
+        const size_t ngrid = CoarseModel.GetData().num_elements();
+        if (Model.size() < ngrid)
+          {
+            throw jif3D::FatalException(
+                "Not enough inversion parameters to fill the grid !");
+          }
         //Copy the model vector into the object with the geometry information
-        std::copy(Model.begin(), Model.end(), CoarseModel.SetData().origin());
+        std::copy(Model.begin(), Model.begin() + ngrid, CoarseModel.SetData().origin());
+        //if we have some extra model parameters
+        if (Model.size() > ngrid)
+          {
+            std::vector<double> Extra(Model.begin() + ngrid, Model.end());
+            ExtraParameterSetter()(CoarseModel, Extra);
+            ExtraParameterSetter()(FineModel, Extra);
+          }
 
         //depending on whether we want to refine the inversion model
         //for the forward calculation or not we call the forward
@@ -235,10 +250,18 @@ namespace jif3D
     jif3D::rvec ThreeDModelObjective<ThreeDCalculatorType>::ImplGradient(
         const jif3D::rvec &Model, const jif3D::rvec &Diff)
       {
-        assert(Model.size() == CoarseModel.GetData().num_elements());
+        namespace ub = boost::numeric::ublas;
+        const size_t ngrid = CoarseModel.GetNModelElements();
+        if (Model.size() < ngrid)
+          {
+            throw jif3D::FatalException(
+                "Not enough inversion parameters to fill the grid !");
+          }
+
         //as we have stored the model vector from the misfit calculation
         //in the model object, we can check if the call is correct
-        if (!std::equal(Model.begin(), Model.end(), CoarseModel.GetData().origin()))
+        if (!std::equal(Model.begin(), Model.begin() + ngrid,
+            CoarseModel.GetData().origin()))
           throw jif3D::FatalException(
               "Gradient calculation needs identical model to forward !");
         //calculate the gradient
@@ -247,8 +270,13 @@ namespace jif3D
             Refiner.RefineModel(CoarseModel, FineModel);
             //calculate the gradient for the fine model
             jif3D::rvec FineGradient(Calculator.LQDerivative(FineModel, Diff));
+            const size_t nfine = FineModel.GetNModelElements();
+            jif3D::rvec CoarseGrad(Model.size());
             //and return the projection of the fine gradient onto the coarse model
-            return Refiner.CombineGradient(FineGradient, CoarseModel, FineModel);
+            ub::subrange(CoarseGrad, 0, ngrid) = Refiner.CombineGradient(
+                ub::subrange(FineGradient, 0, nfine), CoarseModel, FineModel);
+            ub::subrange(CoarseGrad, ngrid, CoarseGrad.size()) = ub::subrange(FineGradient,
+                nfine, FineGradient.size());
           }
         //we only get here if we do not do any refinement
         //omitting the else saves us a compiler warning
