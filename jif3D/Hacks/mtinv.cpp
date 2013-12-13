@@ -9,18 +9,14 @@
 #include <fstream>
 #include <string>
 #include <cmath>
+#include <cstdlib>
 #ifdef HAVEOPENMP
 #include <omp.h>
 #endif
-#include <boost/mpi.hpp>
-#include <boost/bind.hpp>
+
 #include <boost/program_options.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-#include <boost/mpi/packed_oarchive.hpp>
-#include <boost/mpi/packed_iarchive.hpp>
-#include <boost/serialization/shared_ptr.hpp>
-#include <boost/serialization/serialization.hpp>
 #include "../Global/convert.h"
 #include "../Global/FatalException.h"
 #include "../Global/NumUtil.h"
@@ -33,64 +29,43 @@
 #include "../Inversion/LimitedMemoryQuasiNewton.h"
 #include "../Inversion/JointObjective.h"
 #include "../Inversion/ModelTransforms.h"
-#include "../Inversion/MPIThreeDModelObjective.h"
+#include "../Inversion/ThreeDModelObjective.h"
 #include "../MT/X3DModel.h"
 #include "../MT/X3DMTCalculator.h"
 #include "../MT/ReadWriteImpedances.h"
 #include "../Joint/SetupRegularization.h"
 #include "../Joint/SetupInversion.h"
+#include "../Joint/SetupMT.h"
+#include "../Joint/InversionOutput.h"
 
 namespace ublas = boost::numeric::ublas;
 namespace po = boost::program_options;
 
-
-//BOOST_CLASS_EXPORT( jif3D::VectorTransform )
-BOOST_CLASS_EXPORT( jif3D::CopyTransform )
-
-BOOST_CLASS_EXPORT( jif3D::GeneralModelTransform )
-BOOST_CLASS_EXPORT( jif3D::ModelCopyTransform )
-BOOST_CLASS_EXPORT( jif3D::TanhTransform )
-BOOST_CLASS_EXPORT( jif3D::DensityTransform )
-//BOOST_CLASS_EXPORT( jif3D::ChainedTransform )
-//BOOST_CLASS_EXPORT( jif3D::SectionTransform )
-//BOOST_CLASS_EXPORT( jif3D::MultiSectionTransform )
-BOOST_CLASS_EXPORT( jif3D::ObjectiveFunction )
-BOOST_CLASS_EXPORT( jif3D::X3DMTCalculator )
-BOOST_CLASS_EXPORT( jif3D::X3DModel )
-BOOST_CLASS_EXPORT( jif3D::ModelRefiner )
-//BOOST_CLASS_EXPORT( jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator> )
-//BOOST_CLASS_EXPORT( jif3D::MPIThreeDModelObjective<jif3D::X3DMTCalculator> )
-//BOOST_CLASS_EXPORT( jif3D::JointObjective )
 int main(int argc, char *argv[])
   {
-
 
     double mincond = 1e-6;
     double maxcond = 10;
 
-    boost::mpi::environment env(argc, argv);
-    boost::mpi::communicator world;
-    bool is_generator = world.rank() > 0;
-    boost::mpi::communicator local = world.split(is_generator ? 0 : 1);
-    std::vector<int> mpiindices(local.size());
-    for (int i = 0; i < world.size(); ++i)
-      {
-        if (i > 0)
-          mpiindices.push_back(i);
-      }
     boost::shared_ptr<jif3D::JointObjective> Objective(new jif3D::JointObjective(true));
 
+    bool WantDistCorr;
     po::options_description desc("General options");
     desc.add_options()("help", "produce help message")("threads", po::value<int>(),
         "The number of openmp threads")("covmod", po::value<std::string>(),
         "A file containing the model covariance")("mincond",
-        po::value(&mincond)->default_value(1e-6),
+        po::value(&mincond)->default_value(1e-4),
         "The minimum value for conductivity in S/m")("maxcond",
-        po::value(&maxcond)->default_value(10),
-        "The maximum value for conductivity in S/m");
+        po::value(&maxcond)->default_value(5),
+        "The maximum value for conductivity in S/m")("tempdir", po::value<std::string>(),
+        "The name of the directory to store temporary files in")("distcorr",
+        po::value(&WantDistCorr)->default_value(false),
+        "Correct for distortion within inversion");
 
     jif3D::SetupRegularization RegSetup;
     jif3D::SetupInversion InversionSetup;
+    jif3D::SetupMT MTSetup;
+    desc.add(MTSetup.SetupOptions());
     desc.add(RegSetup.SetupOptions());
     desc.add(InversionSetup.SetupOptions());
     po::variables_map vm;
@@ -117,6 +92,17 @@ int main(int argc, char *argv[])
         CovModVec.resize(ncovmod);
         std::copy(CovModel.GetConductivities().origin(),
             CovModel.GetConductivities().origin() + ncovmod, CovModVec.begin());
+      }
+
+    boost::filesystem::path TempDir = boost::filesystem::current_path();
+    if (vm.count("tempdir"))
+      {
+        TempDir = vm["tempdir"].as<std::string>();
+        if (!boost::filesystem::is_directory(TempDir))
+          {
+            std::cerr << TempDir.string() << " is not a directory or does not exist ! \n";
+            return 500;
+          }
       }
 
     //first we read in the starting model and the measured data
@@ -149,7 +135,8 @@ int main(int argc, char *argv[])
 
     jif3D::rvec FirstFreq(XCoord.size());
     std::copy(Data.begin(), Data.begin() + XCoord.size(), FirstFreq.begin());
-    jif3D::Write3DDataToVTK(datafilename + ".vtk", "Z", FirstFreq, XCoord, YCoord, ZCoord);
+    jif3D::Write3DDataToVTK(datafilename + ".vtk", "Z", FirstFreq, XCoord, YCoord,
+        ZCoord);
 
     //we define a few constants that are used throughout the inversion
     const size_t ndata = Data.size();
@@ -158,7 +145,8 @@ int main(int argc, char *argv[])
     //create objects for the misfit and a very basic error estimate
     jif3D::rvec MTDataError = jif3D::ConstructMTError(Data, errorlevel);
     std::transform(ZError.begin(), ZError.end(), MTDataError.begin(), ZError.begin(),
-        std::max<double>);
+        [] (double a, double b)
+          { return std::max(a,b);});
 
     for (size_t i = 0; i < Model.GetConductivities().shape()[2]; ++i)
       {
@@ -170,66 +158,71 @@ int main(int argc, char *argv[])
         InvModel.begin());
     Model.WriteVTK("start.vtk");
 
+    const size_t ngrid = InvModel.size();
+    if (WantDistCorr)
+      {
+        std::vector<double> C(Model.GetDisortionParameters());
+        jif3D::rvec Grid(InvModel);
+        InvModel.resize(ngrid + C.size());
+        std::copy(Grid.begin(), Grid.end(), InvModel.begin());
+        std::copy(C.begin(), C.end(), InvModel.begin() + ngrid);
+      }
+
     boost::shared_ptr<jif3D::ChainedTransform> ConductivityTransform(
         new jif3D::ChainedTransform);
-
     jif3D::rvec RefModel(InvModel);
     std::fill(RefModel.begin(), RefModel.end(), 1.0);
     //because the tanh transform is used inside a logarithmic transform
     //we need to take the natural logarithm of the actual minimum and maximum
-    ConductivityTransform->AddTransform(
+    ConductivityTransform->AppendTransform(
         boost::shared_ptr<jif3D::GeneralModelTransform>(
             new jif3D::TanhTransform(std::log(mincond), std::log(maxcond))));
-    ConductivityTransform->AddTransform(
-        boost::shared_ptr<jif3D::GeneralModelTransform>(new jif3D::LogTransform(RefModel)));
+    ConductivityTransform->AppendTransform(
+        boost::shared_ptr<jif3D::GeneralModelTransform>(
+            new jif3D::LogTransform(RefModel)));
 
-    InvModel = ConductivityTransform->PhysicalToGeneralized(InvModel);
+    boost::shared_ptr<jif3D::GeneralModelTransform> Copier(new jif3D::ModelCopyTransform);
+    boost::shared_ptr<jif3D::MultiSectionTransform> MTTransform(new jif3D::MultiSectionTransform(InvModel.size(), 0, ngrid,
+        ConductivityTransform));
+    if (WantDistCorr)
+      {
+        MTTransform->AddSection(ngrid, InvModel.size(), Copier);
+      }
 
-    std::ofstream startmodfile("start.mod");
-    std::copy(InvModel.begin(), InvModel.end(),
-        std::ostream_iterator<double>(startmodfile, "\n"));
+    InvModel = MTTransform->PhysicalToGeneralized(InvModel);
 
-    jif3D::X3DMTCalculator Calculator;
-    boost::shared_ptr<jif3D::MPIThreeDModelObjective<jif3D::X3DMTCalculator> > X3DObjective(
-        new jif3D::MPIThreeDModelObjective<jif3D::X3DMTCalculator>(Calculator, local, world,
-            0, mpiindices));
+    jif3D::X3DMTCalculator Calculator(TempDir, WantDistCorr);
+    boost::shared_ptr<jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator> > X3DObjective(
+        new jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator>(Calculator));
 
     X3DObjective->SetObservedData(Data);
     X3DObjective->SetCoarseModelGeometry(Model);
     X3DObjective->SetDataError(ZError);
 
-    boost::shared_ptr<jif3D::MatOpRegularization> Regularization = RegSetup.SetupObjective(
-        vm, Model, ConductivityTransform, CovModVec);
+    boost::shared_ptr<jif3D::RegularizationFunction> Regularization =
+        RegSetup.SetupObjective(vm, Model, CovModVec);
 
     double lambda = 1.0;
     std::cout << "Lambda: ";
     std::cin >> lambda;
     Objective->AddObjective(X3DObjective, ConductivityTransform, 1.0, "MT");
-    Objective->AddObjective(Regularization, ConductivityTransform, lambda,
-        "Regularization");
+    Objective->AddObjective(Regularization, Copier, lambda, "Regularization");
 
     size_t maxiter = 30;
     std::cout << "Maximum number of iterations: ";
     std::cin >> maxiter;
     std::cout << "Performing inversion." << std::endl;
 
-    boost::mpi::broadcast(world, Calculator, 0);
-
     boost::shared_ptr<jif3D::GradientBasedOptimization> Optimizer =
         InversionSetup.ConfigureInversion(vm, Objective, InvModel, CovModVec);
 
     std::ofstream misfitfile("misfit.out");
-    misfitfile << "0 " << Objective->CalcMisfit(InvModel) << " ";
-    std::ofstream difffile("diff.out");
-    std::copy(X3DObjective->GetDataDifference().begin(),
-        X3DObjective->GetDataDifference().end(),
-        std::ostream_iterator<double>(difffile, "\n"));
-    std::flush(difffile);
+    std::ofstream rmsfile("rms.out");
+    double InitialMisfit = Objective->CalcMisfit(InvModel);
 
-    std::copy(Objective->GetIndividualFits().begin(),
-        Objective->GetIndividualFits().end(),
-        std::ostream_iterator<double>(misfitfile, " "));
-    misfitfile << std::endl;
+    StoreMisfit(misfitfile, 0, InitialMisfit, *Objective);
+    StoreRMS(rmsfile, 0, *Objective);
+
 
     size_t iteration = 0;
     boost::posix_time::ptime starttime = boost::posix_time::microsec_clock::local_time();
@@ -239,28 +232,24 @@ int main(int argc, char *argv[])
       {
         try
           {
-            std::cout << "Iteration: " << iteration + 1 << std::endl;
+
+            std::cout << "\n\n Iteration: " << iteration << std::endl;
+
+            //update the inversion model
             Optimizer->MakeStep(InvModel);
-            std::copy(InvModel.begin(), InvModel.end(),
-                Model.SetConductivities().origin());
-            Model.WriteVTK(modelfilename + jif3D::stringify(iteration) + ".mt.raw.vtk");
 
-            jif3D::rvec CondInvModel = ConductivityTransform->GeneralizedToPhysical(
-                InvModel);
-            std::copy(CondInvModel.begin(), CondInvModel.end(),
-                Model.SetConductivities().origin());
-            Model.WriteVTK(modelfilename + jif3D::stringify(iteration) + ".mt.inv.vtk");
-            std::cout << "Current Misfit: " << Optimizer->GetMisfit() << std::endl;
-            std::cout << "Current Gradient: " << Optimizer->GetGradNorm() << std::endl;
-            std::cout << std::endl;
+            ++iteration;
 
-            misfitfile << iteration + 1 << " " << Optimizer->GetMisfit() << " ";
-            std::copy(Objective->GetIndividualFits().begin(),
-                Objective->GetIndividualFits().end(),
-                std::ostream_iterator<double>(misfitfile, " "));
-            misfitfile << " " << Objective->GetNEval();
-            misfitfile << std::endl;
-            iteration++;
+            SaveModel(InvModel, *ConductivityTransform.get(), Model,
+                modelfilename + jif3D::stringify(iteration) + ".mt.inv");
+            //write out some information about misfit to the screen
+            std::cout << "Currrent Misfit: " << Optimizer->GetMisfit() << std::endl;
+            std::cout << "Currrent Gradient: " << Optimizer->GetGradNorm() << std::endl;
+            //and write the current misfit for all objectives to a misfit file
+            StoreMisfit(misfitfile, iteration, Optimizer->GetMisfit(), *Objective);
+            StoreRMS(rmsfile, iteration, *Objective);
+            std::cout << "\n\n";
+
             terminate = jif3D::WantAbort();
           } catch (jif3D::FatalException &e)
           {
