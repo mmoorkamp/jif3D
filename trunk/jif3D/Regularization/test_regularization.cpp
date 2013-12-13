@@ -31,14 +31,14 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
         jif3D::rvec Gradient = Objective.CalcGradient(Model);
         for (size_t i = 0; i < Gradient.size(); ++i)
           {
-            double delta = Model(i) * 0.00001;
+            double delta = Model(i) * 0.001;
             jif3D::rvec Forward(Model);
             jif3D::rvec Backward(Model);
             Forward(i) += delta;
             Backward(i) -= delta;
             double FDGrad = (Objective.CalcMisfit(Forward)
                 - Objective.CalcMisfit(Backward)) / (2 * delta);
-            BOOST_CHECK_CLOSE(FDGrad, Gradient(i), 0.001);
+            BOOST_CHECK_CLOSE(FDGrad, Gradient(i), 0.01);
           }
       }
 
@@ -49,10 +49,8 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
         const size_t nx = 5;
         const size_t ny = 4;
         const size_t nz = 3;
-        GravModel.SetDensities().resize(boost::extents[nx][ny][nz]);
-        GravModel.SetXCellSizes().resize(boost::extents[nx]);
-        GravModel.SetYCellSizes().resize(boost::extents[ny]);
-        GravModel.SetZCellSizes().resize(boost::extents[nz]);
+        GravModel.SetMeshSize(nx,ny,nz);
+
 
         const size_t msize = nx * ny * nz;
         jif3D::rvec StartModel(msize), PertModel(msize);
@@ -73,10 +71,7 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
         const size_t nx = 5;
         const size_t ny = 4;
         const size_t nz = 3;
-        GravModel.SetDensities().resize(boost::extents[nx][ny][nz]);
-        GravModel.SetXCellSizes().resize(boost::extents[nx]);
-        GravModel.SetYCellSizes().resize(boost::extents[ny]);
-        GravModel.SetZCellSizes().resize(boost::extents[nz]);
+        GravModel.SetMeshSize(nx,ny,nz);
 
         const size_t msize = GravModel.GetDensities().num_elements();
         jif3D::rvec StartModel(msize), PertModel(msize);
@@ -104,10 +99,8 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
         const size_t nx = 5;
         const size_t ny = 4;
         const size_t nz = 3;
-        GravModel.SetDensities().resize(boost::extents[nx][ny][nz]);
-        GravModel.SetXCellSizes().resize(boost::extents[nx]);
-        GravModel.SetYCellSizes().resize(boost::extents[ny]);
-        GravModel.SetZCellSizes().resize(boost::extents[nz]);
+        GravModel.SetMeshSize(nx,ny,nz);
+
 
         const size_t msize = nx * ny * nz;
         jif3D::rvec StartModel(msize), PertModel(msize);
@@ -133,10 +126,8 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
         const size_t nx = 5;
         const size_t ny = 4;
         const size_t nz = 3;
-        GravModel.SetDensities().resize(boost::extents[nx][ny][nz]);
-        GravModel.SetXCellSizes().resize(boost::extents[nx]);
-        GravModel.SetYCellSizes().resize(boost::extents[ny]);
-        GravModel.SetZCellSizes().resize(boost::extents[nz]);
+        GravModel.SetMeshSize(nx,ny,nz);
+
 
         const size_t msize = nx * ny * nz;
         jif3D::rvec StartModel(msize), PertModel(msize);
@@ -164,10 +155,7 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
         const size_t ny = 6;
         const size_t nz = 7;
         const double cellsize = 100;
-        GravModel.SetDensities().resize(boost::extents[nx][ny][nz]);
-        GravModel.SetXCellSizes().resize(boost::extents[nx]);
-        GravModel.SetYCellSizes().resize(boost::extents[ny]);
-        GravModel.SetZCellSizes().resize(boost::extents[nz]);
+        GravModel.SetMeshSize(nx,ny,nz);
         GradModel.SetCellSize(cellsize, nx, ny, nz);
 
         const size_t msize = GravModel.GetDensities().num_elements();
@@ -216,10 +204,7 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
         const size_t ny = 6;
         const size_t nz = 7;
         const double cellsize = 100;
-        GravModel.SetDensities().resize(boost::extents[nx][ny][nz]);
-        GravModel.SetXCellSizes().resize(boost::extents[nx]);
-        GravModel.SetYCellSizes().resize(boost::extents[ny]);
-        GravModel.SetZCellSizes().resize(boost::extents[nz]);
+        GravModel.SetMeshSize(nx,ny,nz);
         GradModel.SetCellSize(cellsize, nx, ny, nz);
 
         MakeTearModel(GravModel, TearX);
