@@ -70,8 +70,10 @@ namespace jif3D
             "beta", po::value(&beta)->default_value(0.0),
             "The weight for the model parameter minimization in the regularization")(
             "substart", po::value(&substart)->default_value(false),
-            "Substract the starting model when calculating the roughness")("minsupp", po::value(&minsuppb),
-            "Use minimum support regularization (EXPERIMENTAL)");
+            "Substract the starting model when calculating the roughness")("minsupp",
+            po::value(&minsuppb), "Use minimum support regularization (EXPERIMENTAL)")(
+            "mingradsupp", po::value(&minsuppb),
+            "Use minimum gradient support regularization (EXPERIMENTAL)");
 
         return desc;
       }
@@ -95,11 +97,21 @@ namespace jif3D
                     boost::shared_ptr<jif3D::MinDiffRegularization>(
                         new jif3D::MinDiffRegularization(StartModel)), minsuppb));
           }
+
         //setup possible tearing for the regularization for the three directions
         jif3D::ThreeDSeismicModel TearModX, TearModY, TearModZ;
         SetTearModel(vm, "tearmodx", StartModel, TearModX);
         SetTearModel(vm, "tearmody", StartModel, TearModY);
         SetTearModel(vm, "tearmodz", StartModel, TearModZ);
+
+        if (vm.count("mingradsupp"))
+          {
+            return boost::shared_ptr<jif3D::MinimumSupport>(
+                new jif3D::MinimumSupport(
+                    boost::shared_ptr<jif3D::GradientRegularization>(
+                        new jif3D::GradientRegularization(StartModel, TearModX, TearModY,
+                            TearModZ, beta)), minsuppb));
+          }
 
         assert(StartModel.GetNModelElements() == TearModX.GetNModelElements());
         assert(StartModel.GetNModelElements() == TearModY.GetNModelElements());
@@ -119,8 +131,8 @@ namespace jif3D
           {
 
             Regularization = boost::shared_ptr<jif3D::MatOpRegularization>(
-                new jif3D::GradientRegularization(StartModel, TearModX, TearModY, TearModZ,
-                    beta));
+                new jif3D::GradientRegularization(StartModel, TearModX, TearModY,
+                    TearModZ, beta));
           }
         //We either pass an empty covariance vector then the regularization class
         //takes care of setting the covariance to 1

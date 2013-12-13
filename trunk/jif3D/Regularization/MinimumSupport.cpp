@@ -28,12 +28,26 @@ namespace jif3D
         const size_t ny = RegFunc->ModelGeo.GetYCellSizes().size();
         const size_t nz = RegFunc->ModelGeo.GetZCellSizes().size();
 
-        /*        Write3DModelToVTK("wave" + stringify(ModelNumber) + ".vtk", "WaveCoeff",
-         RegFunc->ModelGeo.GetXCellSizes(), RegFunc->ModelGeo.GetYCellSizes(),
-         RegFunc->ModelGeo.GetZCellSizes(),
-         boost::const_multi_array_ref<double, 3>(&X(0), boost::extents[nx][ny][nz]));*/
-
         RegDiff = RegFunc->GetDataDifference();
+/*        Write3DModelToVTK("regdiffx" + stringify(ModelNumber) + ".vtk", "WaveCoeff",
+            RegFunc->ModelGeo.GetXCellSizes(), RegFunc->ModelGeo.GetYCellSizes(),
+            RegFunc->ModelGeo.GetZCellSizes(),
+            boost::const_multi_array_ref<double, 3>(&RegDiff(0),
+                boost::extents[nx][ny][nz]));
+        Write3DModelToVTK("regdiffy" + stringify(ModelNumber) + ".vtk", "WaveCoeff",
+            RegFunc->ModelGeo.GetXCellSizes(), RegFunc->ModelGeo.GetYCellSizes(),
+            RegFunc->ModelGeo.GetZCellSizes(),
+            boost::const_multi_array_ref<double, 3>(&RegDiff(nmod),
+                boost::extents[nx][ny][nz]));
+        Write3DModelToVTK("regdiffz" + stringify(ModelNumber) + ".vtk", "WaveCoeff",
+            RegFunc->ModelGeo.GetXCellSizes(), RegFunc->ModelGeo.GetYCellSizes(),
+            RegFunc->ModelGeo.GetZCellSizes(),
+            boost::const_multi_array_ref<double, 3>(&RegDiff(2*nmod),
+                boost::extents[nx][ny][nz]));
+        Write3DModelToVTK("x" + stringify(ModelNumber) + ".vtk", "WaveCoeff",
+            RegFunc->ModelGeo.GetXCellSizes(), RegFunc->ModelGeo.GetYCellSizes(),
+            RegFunc->ModelGeo.GetZCellSizes(),
+            boost::const_multi_array_ref<double, 3>(&X(0), boost::extents[nx][ny][nz]));*/
         Diff.resize(3 * nmod, false);
         const double b = beta * beta;
 
@@ -42,14 +56,14 @@ namespace jif3D
             //double mag = bm::pow<2>(RegDiff(i)) + bm::pow<2>(RegDiff(nmod + i))
             //    + bm::pow<2>(RegDiff(2 * nmod + i));
             //Diff(i) = sqrt(Geometry.GetData().data()[i] * mag / (b + mag));
-            Diff (i) = RegDiff(i) / sqrt(bm::pow<2>(RegDiff(i)) + b);
+            Diff(i) = RegDiff(i) / sqrt(bm::pow<2>(RegDiff(i)) + b);
           }
 
-        /*        Write3DModelToVTK("supp" + stringify(ModelNumber) + ".vtk", "Support",
-         RegFunc->ModelGeo.GetXCellSizes(), RegFunc->ModelGeo.GetYCellSizes(),
-         RegFunc->ModelGeo.GetZCellSizes(),
-         boost::const_multi_array_ref<double, 3>(&Diff(0),
-         boost::extents[nx][ny][nz]));*/
+/*        Write3DModelToVTK("supp" + stringify(ModelNumber) + ".vtk", "Support",
+            RegFunc->ModelGeo.GetXCellSizes(), RegFunc->ModelGeo.GetYCellSizes(),
+            RegFunc->ModelGeo.GetZCellSizes(),
+            boost::const_multi_array_ref<double, 3>(&Diff(0),
+                boost::extents[nx][ny][nz]));*/
         ++ModelNumber;
       }
 
@@ -77,7 +91,7 @@ namespace jif3D
         ublas::axpy_prod(ublas::trans(RegFunc->GetZOperator()), ZGrad, Grad, false);
         jif3D::comp_mat Mat(
             RegFunc->GetXOperator() + RegFunc->GetYOperator() + RegFunc->GetZOperator());
-        return     Grad;
+        return Grad;
       }
 
     MinimumSupport::MinimumSupport(boost::shared_ptr<jif3D::MatOpRegularization> RF,

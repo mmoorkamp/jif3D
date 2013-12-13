@@ -12,6 +12,7 @@ exe plotsaltrel : plotsaltrel.cpp joint ../Joint : <include>. ;
 # exe sparsetest : sparsetest.cpp ../Inversion ..//vecopt : <include>. ;
 # exe wcompress : wcompress.cpp  ../Gravity ../Global : <include>. ;
 # exe gravconsist : gravconsist.cpp  ../Gravity ../Global ../Inversion : <include>. ;
+exe mtinv : mtinv.cpp  joint ../MT ../Joint : <include>. ;
 exe tomoinv : tomoinv.cpp  joint : <include>. ;
 exe plotgrav : plotgrav.cpp  joint : <include>. ;
 exe cleanmt : cleanmt.cpp  ../MT joint : <include>. ;
