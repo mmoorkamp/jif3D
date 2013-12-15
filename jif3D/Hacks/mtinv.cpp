@@ -30,6 +30,7 @@
 #include "../Inversion/JointObjective.h"
 #include "../Inversion/ModelTransforms.h"
 #include "../Inversion/ThreeDModelObjective.h"
+#include "../Regularization/MinDiffRegularization.h"
 #include "../MT/X3DModel.h"
 #include "../MT/X3DMTCalculator.h"
 #include "../MT/ReadWriteImpedances.h"
@@ -153,16 +154,28 @@ int main(int argc, char *argv[])
       {
         Model.SetConductivities()[0][0][i] *= (1 + 0.0001 * (i + 1));
       }
-    jif3D::rvec InvModel(Model.GetConductivities().num_elements());
+
+    const size_t ngrid = Model.GetConductivities().num_elements();
+    jif3D::rvec InvModel(ngrid);
     std::copy(Model.GetConductivities().origin(),
-        Model.GetConductivities().origin() + Model.GetConductivities().num_elements(),
+        Model.GetConductivities().origin() + ngrid,
         InvModel.begin());
     Model.WriteVTK("start.vtk");
 
-    const size_t ngrid = InvModel.size();
+
     if (WantDistCorr)
       {
-        std::vector<double> C(Model.GetDisortionParameters());
+        if (C.empty())
+        {
+        	C.resize(XCoord.size() * 4);
+            for (size_t i = 0; i < XCoord.size(); ++i)
+              {
+                C[i * 4] = 1.0;
+                C[i * 4 + 1] = 0.0;
+                C[i * 4 + 2] = 0.0;
+                C[i * 4 + 3] = 1.0;
+              }
+        }
         jif3D::rvec Grid(InvModel);
         InvModel.resize(ngrid + C.size());
         std::copy(Grid.begin(), Grid.end(), InvModel.begin());
@@ -209,6 +222,28 @@ int main(int argc, char *argv[])
     Objective->AddObjective(X3DObjective, ConductivityTransform, 1.0, "MT");
     Objective->AddObjective(Regularization, Copier, lambda, "Regularization");
 
+    if (WantDistCorr)
+      {
+    	jif3D::rvec CRef(XCoord.size() * 4);
+
+                for (size_t i = 0; i < XCoord.size(); ++i)
+                  {
+                    CRef(i * 4) = 1.0;
+                    CRef(i * 4 + 1) = 0.0;
+                    CRef(i * 4 + 2) = 0.0;
+                    CRef(i * 4 + 3) = 1.0;
+                  }
+    	jif3D::X3DModel DistModel;
+    	    	DistModel.SetMeshSize(XCoord.size() * 4, 1, 1);
+    	boost::shared_ptr<jif3D::RegularizationFunction> DistReg(new jif3D::MinDiffRegularization(DistModel));
+    	DistReg->SetReferenceModel(CRef);
+    	boost::shared_ptr<jif3D::MultiSectionTransform> DistRegTrans(new jif3D::MultiSectionTransform(InvModel.size(),ngrid, InvModel.size(), Copier));
+    	double distreglambda = 0;
+
+    	std::cout << "Regularization for distortion: ";
+    	std::cin >> distreglambda;
+    	Objective->AddObjective(DistReg,DistRegTrans,distreglambda,"DistReg");
+       }
     size_t maxiter = 30;
     std::cout << "Maximum number of iterations: ";
     std::cin >> maxiter;
@@ -229,7 +264,8 @@ int main(int argc, char *argv[])
     boost::posix_time::ptime starttime = boost::posix_time::microsec_clock::local_time();
 
     bool terminate = false;
-    do
+    while (iteration < maxiter && !terminate
+            && Objective->GetIndividualFits()[0] > ndata)
       {
         try
           {
@@ -257,8 +293,7 @@ int main(int argc, char *argv[])
             std::cerr << e.what() << std::endl;
             terminate = true;
           }
-      } while (iteration < maxiter && !terminate
-        && Objective->GetIndividualFits()[0] > ndata);
+      }
 
     boost::posix_time::ptime endtime = boost::posix_time::microsec_clock::local_time();
     double cachedruntime = (endtime - starttime).total_seconds();
@@ -269,12 +304,13 @@ int main(int argc, char *argv[])
     std::copy(InvModel.begin(),
         InvModel.begin() + Model.GetConductivities().num_elements(),
         Model.SetConductivities().origin());
-
+    std::copy(InvModel.begin() + Model.GetNModelElements(), InvModel.end(),C.begin());
+    Model.SetDistortionParameters(C);
     //calculate the predicted data
     std::cout << "Calculating response of inversion model." << std::endl;
     jif3D::rvec InvData(jif3D::X3DMTCalculator().Calculate(Model));
     jif3D::WriteImpedancesToNetCDF(modelfilename + ".inv_imp.nc", Frequencies, XCoord,
-        YCoord, ZCoord, InvData);
+        YCoord, ZCoord, InvData,X3DObjective->GetDataError(),C);
     jif3D::WriteImpedancesToNetCDF(modelfilename + ".diff_imp.nc", Frequencies, XCoord,
         YCoord, ZCoord, X3DObjective->GetDataDifference());
 
