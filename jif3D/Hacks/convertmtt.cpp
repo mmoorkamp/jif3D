@@ -31,6 +31,22 @@ int main()
           }
       }
     StationFile.close();
+    std::string WantDist, DistFilename;
+    std::cout << "Read in Distortion File: ";
+    std::cin >> WantDist;
+    std::vector<double> C;
+    if (WantDist != "n")
+    {
+    	DistFilename = jif3D::AskFilename("Distortion File: ");
+    	std::ifstream distfile(DistFilename.c_str());
+    	std::copy(std::istream_iterator<double>(distfile),std::istream_iterator<double>(),std::back_inserter(C));
+    	if (C.size() != nstats *4)
+    	{
+    		std::cerr << "Number of elements in Distortion file " << C.size() << " does not match 4* number of stations " << nstats << std::endl;
+    		return 100;
+    	}
+    }
+
     std::cout << "Number of stations: " << nstats << std::endl;
     if (nstats > 0)
       {
@@ -88,6 +104,6 @@ int main()
           }
         std::string outfilename = jif3D::AskFilename("Output file: ", false);
         jif3D::WriteImpedancesToNetCDF(outfilename, Frequencies, StatXCoord,
-            StatYCoord, StatZCoord, Impedances, Errors);
+            StatYCoord, StatZCoord, Impedances, Errors, C);
       }
   }

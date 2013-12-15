@@ -406,11 +406,14 @@ int main(int argc, char *argv[])
     //if we are inverting MT data and have specified site locations
     if (havemt)
       {
+    	std::cout << "C: ";
+    	            std::copy(MTModel.GetDistortionParameters().begin(),MTModel.GetDistortionParameters().end(),std::ostream_iterator<double>(std::cout,"\n"));
         //calculate MT inversion result
         jif3D::rvec MTInvData(MTSetup.GetMTObjective().GetSyntheticData());
         jif3D::WriteImpedancesToNetCDF(modelfilename + ".inv_mt.nc",
             MTModel.GetFrequencies(), MTModel.GetMeasPosX(), MTModel.GetMeasPosY(),
-            MTModel.GetMeasPosZ(), MTInvData, MTSetup.GetMTObjective().GetDataError());
+            MTModel.GetMeasPosZ(), MTInvData, MTSetup.GetMTObjective().GetDataError()
+            ,MTModel.GetDistortionParameters());
         jif3D::rvec MTDiff(MTSetup.GetMTObjective().GetIndividualMisfit());
         jif3D::WriteImpedancesToNetCDF(modelfilename + ".diff_mt.nc",
             MTModel.GetFrequencies(), MTModel.GetMeasPosX(), MTModel.GetMeasPosY(),

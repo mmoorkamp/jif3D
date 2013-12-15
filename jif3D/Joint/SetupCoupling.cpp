@@ -366,9 +366,9 @@ namespace jif3D
         //in the regularization object
         if (substart)
           {
-            SeisReg->SetReferenceModel(SeisModel);
-            GravReg->SetReferenceModel(GravModel);
-            MTReg->SetReferenceModel(MTModel);
+            SeisReg->SetReferenceModel(SlowRegTrans->GeneralizedToPhysical(InvModel));
+            GravReg->SetReferenceModel(DensRegTrans->GeneralizedToPhysical(InvModel));
+            MTReg->SetReferenceModel(CondRegTrans->GeneralizedToPhysical(InvModel));
           }
         if (seisreglambda > 0.0)
           {

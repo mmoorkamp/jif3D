@@ -25,9 +25,9 @@ int main()
     std::string ncfilename = jif3D::AskFilename("Name of netcdf file: ");
 
     jif3D::rvec Impedances, Errors;
-    std::vector<double> Frequencies, StatX, StatY, StatZ;
+    std::vector<double> Frequencies, StatX, StatY, StatZ, C;
     jif3D::ReadImpedancesFromNetCDF(ncfilename, Frequencies, StatX, StatY, StatZ,
-        Impedances, Errors);
+        Impedances, Errors, C);
 
     std::cout << "Rotation angle [degree]: ";
     double dangle = 0.0;

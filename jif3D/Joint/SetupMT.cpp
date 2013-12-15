@@ -73,10 +73,13 @@ namespace jif3D
               }
 
             //read in MT data, the position of the measurement sites, frequencies and impedances
-            std::vector<double> MTXPos, MTYPos, MTZPos, Frequencies;
+            // we also try to read in the parameters of the distortion Matrix C
+            //if these are not present they will be set to identity matrix for each site
+            //in the forward calculation, otherwise the synthetic responses will be multiplied
+            std::vector<double> MTXPos, MTYPos, MTZPos, Frequencies, C;
             jif3D::rvec MTData, MTError;
             jif3D::ReadImpedancesFromNetCDF(mtdatafilename, Frequencies, MTXPos, MTYPos,
-                MTZPos, MTData, MTError);
+                MTZPos, MTData, MTError, C);
 
             //set the model object so that we can use it to calculate synthetic data
             // for each observation
@@ -88,6 +91,7 @@ namespace jif3D
                 MTModel.AddMeasurementPoint(MTXPos[i], MTYPos[i], MTZPos[i]);
               }
             MTModel.SetOrigin(xorigin, yorigin, 0.0);
+            MTModel.SetDistortionParameters(C);
             //setup the objective function for the MT data
             jif3D::X3DMTCalculator Calculator(TempDir);
 
