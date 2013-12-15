@@ -39,11 +39,12 @@ namespace jif3D
       void serialize(Archive & ar, const unsigned int version)
         {
           ar & boost::serialization::base_object<ThreeDModelBase>(*this);
+          ar & DistortionParameters;
           ar & Frequencies;
         }
     public:
       typedef MTDistortionSetter ExtraParameterSetter;
-      const std::vector<double> &GetDisortionParameters() const
+      const std::vector<double> &GetDistortionParameters() const
         {
           return DistortionParameters;
         }

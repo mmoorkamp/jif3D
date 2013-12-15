@@ -103,6 +103,7 @@ namespace jif3D
                   Source.GetMeasPosY()[i], Source.GetMeasPosZ()[i]);
             }
           SetFrequencies() = Source.GetFrequencies();
+          SetDistortionParameters(Source.GetDistortionParameters());
         }
       //! Given three coordinates in m, find the indices of the model cell that correponds to these coordinates, this is a more efficient implementation than the one in the base class
       virtual boost::array<ThreeDModelBase::t3DModelData::index, 3>

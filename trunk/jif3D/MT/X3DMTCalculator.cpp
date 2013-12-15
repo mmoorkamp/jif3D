@@ -338,7 +338,7 @@ namespace jif3D
         Model.GetXCoordinates();
         Model.GetYCoordinates();
         Model.GetZCoordinates();
-        std::vector<double> C(Model.GetDisortionParameters());
+        std::vector<double> C(Model.GetDistortionParameters());
         if (C.size() != nmeas * 4)
           {
             C.resize(nmeas * 4);
@@ -728,7 +728,7 @@ namespace jif3D
         Model.GetYCoordinates();
         Model.GetZCoordinates();
         //we read the distortion parameters from the model
-        std::vector<double> C(Model.GetDisortionParameters());
+        std::vector<double> C(Model.GetDistortionParameters());
         //if they have not been set, we use the identity matrix
         //for each station
         if (C.size() != nmeas * 4)
