@@ -21,7 +21,8 @@
 namespace jif3D
   {
     using namespace std;
-    const std::string FreqDimName = "Frequency";
+    static const std::string FreqDimName = "Frequency";
+    static const std::string DistortionName = "C";
 
 //write one compoment of the impedance tensor to a netcdf file
 //this is an internal helper function
@@ -68,7 +69,8 @@ namespace jif3D
     void WriteImpedancesToNetCDF(const std::string &filename,
         const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
-        const jif3D::rvec &Impedances, const jif3D::rvec &Errors)
+        const jif3D::rvec &Impedances, const jif3D::rvec &Errors,
+        const std::vector<double> &Distortion)
       {
         const size_t nstats = StatXCoord.size();
         const size_t nfreqs = Frequencies.size();
@@ -118,12 +120,18 @@ namespace jif3D
         WriteImpedanceComp(DataFile, StatNumDim, FreqDim, ZErr, "dZxy", 2);
         WriteImpedanceComp(DataFile, StatNumDim, FreqDim, ZErr, "dZyx", 4);
         WriteImpedanceComp(DataFile, StatNumDim, FreqDim, ZErr, "dZyy", 6);
+        if (!Distortion.empty())
+        {
+        	NcDim *CDim = DataFile.add_dim("Celem", 4);
+        	NcVar *CVar = DataFile.add_var(DistortionName.c_str(),ncDouble,StatNumDim,CDim);
+        	CVar->put(&Distortion[0],nstats, 4);
+        }
       }
 
     void ReadImpedancesFromNetCDF(const std::string &filename,
         std::vector<double> &Frequencies, std::vector<double> &StatXCoord,
         std::vector<double> &StatYCoord, std::vector<double> &StatZCoord,
-        jif3D::rvec &Impedances, jif3D::rvec &ImpError)
+        jif3D::rvec &Impedances, jif3D::rvec &ImpError, std::vector<double> &Distortion)
       {
         //open the netcdf file readonly
         NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
@@ -158,6 +166,28 @@ namespace jif3D
         for (size_t i = 0; i < nimp - 1; i += 2)
           {
             ImpError(i + 1) = ImpError(i);
+          }
+        NcError NetCDFError(NcError::silent_nonfatal);
+        NcVar *DistVar = DataFile.get_var(DistortionName.c_str());
+        const size_t nvalues = StatXCoord.size() * 4;
+        Distortion.resize(nvalues);
+        if ( DistVar != nullptr)
+          {
+            if (nvalues != DistVar->edges()[0] * DistVar->edges()[1])
+            {
+            	throw jif3D::FatalException("Number of distortion parameters does not match number of stations !");
+            }
+            DistVar->get(&Distortion[0], DistVar->edges()[0], DistVar->edges()[1]);
+          }
+        else
+          {
+        	for (size_t i = 0; i < StatXCoord.size(); ++i)
+        	{
+        		Distortion[i*4] = 1.0;
+        		Distortion[i*4+1] = 0.0;
+        		Distortion[i*4+2] = 0.0;
+        		Distortion[i*4+3] = 1.0;
+        	}
           }
       }
 

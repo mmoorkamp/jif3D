@@ -35,7 +35,7 @@ namespace jif3D
 	    const std::vector<double> &StatYCoord,
 	    const std::vector<double> &StatZCoord,
 	    const jif3D::rvec &Impedances, const jif3D::rvec &Errors =
-		    jif3D::rvec());
+		    jif3D::rvec(), const std::vector<double> &Distortion = std::vector<double>());
 
     //! Read magnetotelluric impedances from a netcdf file
     /*! Read MT impedances for several stations from a netcdf file.
@@ -54,7 +54,7 @@ namespace jif3D
     void ReadImpedancesFromNetCDF(const std::string &filename, std::vector<
 	    double> &Frequencies, std::vector<double> &StatXCoord, std::vector<
 	    double> &StatYCoord, std::vector<double> &StatZCoord,
-	    jif3D::rvec &Impedances, jif3D::rvec &ImpError);
+	    jif3D::rvec &Impedances, jif3D::rvec &ImpError, std::vector<double> &Distortion);
 
     //! A very basic routine to read impedances at a single site from a .mtt file in the format used by University of Goettingen
     /*! A very basic routine to read impedances at a single site from a .mtt file in the

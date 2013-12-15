@@ -43,4 +43,5 @@ int main()
     //ask for the name of the output file and write a new netcdf file
     std::string outname = jif3D::AskFilename("Outputfile: ", false);
     FineMesh.WriteNetCDF(outname);
+    FineMesh.WriteVTK(outname+".vtk");
   }
