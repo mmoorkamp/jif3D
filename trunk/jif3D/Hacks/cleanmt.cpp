@@ -7,9 +7,9 @@
 int main()
   {
     std::string filename = jif3D::AskFilename("MT data:");
-    std::vector<double> Freq, StatX, StatY, StatZ;
+    std::vector<double> Freq, StatX, StatY, StatZ, C;
     jif3D::rvec Imp, Err;
-    jif3D::ReadImpedancesFromNetCDF(filename, Freq, StatX, StatY, StatZ, Imp, Err);
+    jif3D::ReadImpedancesFromNetCDF(filename, Freq, StatX, StatY, StatZ, Imp, Err, C);
     const size_t nstat = StatX.size();
     const size_t nfreq = Freq.size();
     double lowquant, highquant;
@@ -85,5 +85,5 @@ int main()
         std::cout << std::endl;
       }
     jif3D::WriteImpedancesToNetCDF(filename + ".clean.nc", Freq, StatX, StatY, StatZ, Imp,
-        Err);
+        Err, C);
   }

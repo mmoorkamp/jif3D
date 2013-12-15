@@ -6,6 +6,7 @@
 //============================================================================
 
 #include <iostream>
+#include <iomanip>
 #include <algorithm>
 #include "../MT/X3DModel.h"
 #include "../Global/FileUtil.h"
@@ -34,5 +35,30 @@ int main()
 	Model.SetBackgroundConductivities(bg_cond);
 	Model.SetBackgroundThicknesses(bg_thick);
 	Model.WriteNetCDF(Infilename + ".nc");
+
+	std::ofstream ascfile((Infilename+".asc").c_str());
+	std::vector<double> XPos, YPos, ZPos;
+	std::partial_sum(XCellSizes.begin(),XCellSizes.end(),std::back_inserter(XPos));
+	std::partial_sum(YCellSizes.begin(),YCellSizes.end(),std::back_inserter(YPos));
+	std::partial_sum(Model.GetZCellSizes().begin(),Model.GetZCellSizes().end(),std::back_inserter(ZPos));
+	const size_t nx = XPos.size();
+	const size_t ny = YPos.size();
+
+	for (size_t i = 0; i < nx; ++i)
+	{
+		for (size_t j = 0; j < ny; ++j)
+		{
+			for (size_t k =0; k < nz; ++k)
+			{
+				ascfile <<   std::fixed;
+				ascfile << std::setw(15) << XPos[i] - XCellSizes[i]/2.0;
+				ascfile << std::setw(15) << YPos[j] - YCellSizes[j]/2.0;
+				ascfile << std::setw(15) << ZPos[k] - Model.GetZCellSizes()[k]/2.0;
+				ascfile << std::setw(15) << 1.0/Model.GetConductivities()[i][j][k] << "\n";
+			}
+
+		}
+	}
+
 }
 

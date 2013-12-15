@@ -117,9 +117,9 @@ int main(int argc, char *argv[])
 
     //read in data
     jif3D::rvec Data, ZError;
-    std::vector<double> XCoord, YCoord, ZCoord, Frequencies;
+    std::vector<double> XCoord, YCoord, ZCoord, Frequencies, C;
     jif3D::ReadImpedancesFromNetCDF(datafilename, Frequencies, XCoord, YCoord, ZCoord,
-        Data, ZError);
+        Data, ZError, C);
     std::copy(Frequencies.begin(), Frequencies.end(),
         std::back_inserter(Model.SetFrequencies()));
     //if we don't have data inversion doesn't make sense;
@@ -138,6 +138,7 @@ int main(int argc, char *argv[])
     jif3D::Write3DDataToVTK(datafilename + ".vtk", "Z", FirstFreq, XCoord, YCoord,
         ZCoord);
 
+    Model.SetDistortionParameters(C);
     //we define a few constants that are used throughout the inversion
     const size_t ndata = Data.size();
     const double errorlevel = 0.02;

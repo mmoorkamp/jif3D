@@ -30,10 +30,10 @@ int main()
 {
 	std::string filename = jif3D::AskFilename("Impedance file: ");
 
-	std::vector<double> Frequencies, XCoord, YCoord, ZCoord;
+	std::vector<double> Frequencies, XCoord, YCoord, ZCoord,C;
 	jif3D::rvec Imp, Err;
 	jif3D::ReadImpedancesFromNetCDF(filename, Frequencies, XCoord, YCoord,
-			ZCoord, Imp, Err);
+			ZCoord, Imp, Err, C);
 
 	size_t nstat = XCoord.size();
 	size_t nfreq = Frequencies.size();

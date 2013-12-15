@@ -11,6 +11,7 @@
 #include <boost/program_options.hpp>
 #include "../Global/FileUtil.h"
 #include "../Global/FatalException.h"
+#include "../ModelBase/VTKTools.h"
 #include "../MT/ReadWriteImpedances.h"
 #include "../MT/MTEquations.h"
 
@@ -19,13 +20,15 @@ int main()
     std::string ncfilename = jif3D::AskFilename("Name of netcdf file: ");
 
     jif3D::rvec Impedances, Errors;
-    std::vector<double> Frequencies, StatX, StatY, StatZ;
+    std::vector<double> Frequencies, StatX, StatY, StatZ, C;
     jif3D::ReadImpedancesFromNetCDF(ncfilename, Frequencies, StatX, StatY,
-        StatZ, Impedances, Errors);
+        StatZ, Impedances, Errors, C);
     jif3D::WriteImpedancesToMtt(ncfilename, Frequencies, Impedances, Errors);
 
     jif3D::WriteAppResToAscii(ncfilename+".asc", Frequencies, StatX, StatY,
         StatZ, Impedances, Errors);
+    jif3D::rvec Fill(StatX.size(),1.0);
+    jif3D::Write3DDataToVTK(ncfilename+".vtk","StatPos",Fill,StatX,StatY,StatZ);
     std::ofstream Zxx_rho("Zxx_rho.xyz");
     std::ofstream Zxy_rho("Zxy_rho.xyz");
     std::ofstream Zyx_rho("Zyx_rho.xyz");
