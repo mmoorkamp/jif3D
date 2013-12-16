@@ -205,6 +205,7 @@ int main(int argc, char *argv[])
 
     InvModel = MTTransform->PhysicalToGeneralized(InvModel);
 
+
     jif3D::X3DMTCalculator Calculator(TempDir, WantDistCorr);
     boost::shared_ptr<jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator> > X3DObjective(
         new jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator>(Calculator));
@@ -219,7 +220,7 @@ int main(int argc, char *argv[])
     double lambda = 1.0;
     std::cout << "Lambda: ";
     std::cin >> lambda;
-    Objective->AddObjective(X3DObjective, ConductivityTransform, 1.0, "MT");
+    Objective->AddObjective(X3DObjective, MTTransform, 1.0, "MT");
     Objective->AddObjective(Regularization, Copier, lambda, "Regularization");
 
     if (WantDistCorr)

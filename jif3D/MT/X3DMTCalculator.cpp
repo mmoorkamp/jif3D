@@ -79,7 +79,7 @@ namespace jif3D
         boost::system::error_code ec;
         fs::directory_iterator end_itr; // default construction yields past-the-end
         //go through the directory and delete any file that starts with NameRoot
-        for (fs::directory_iterator itr(fs::current_path()); itr != end_itr; ++itr)
+        for (fs::directory_iterator itr(TempDir); itr != end_itr; ++itr)
           {
             if (boost::algorithm::starts_with(itr->path().filename().string(), NameRoot))
               {
@@ -185,7 +185,6 @@ namespace jif3D
         const size_t nmeas = Model.GetMeasPosX().size();
         const size_t nmodx = Model.GetXCoordinates().size();
         const size_t nmody = Model.GetYCoordinates().size();
-
         jif3D::rvec result(nmeas * 8);
         fs::path RootName = TempDir / MakeUniqueName(X3DModel::MT, freqindex);
         fs::path DirName = RootName.string() + dirext;
@@ -338,6 +337,7 @@ namespace jif3D
         Model.GetXCoordinates();
         Model.GetYCoordinates();
         Model.GetZCoordinates();
+
         std::vector<double> C(Model.GetDistortionParameters());
         if (C.size() != nmeas * 4)
           {
@@ -664,10 +664,10 @@ namespace jif3D
         return Gradient;
       }
 
-    std::vector<double> AdaptDist(const std::vector<double> &C,
+    jif3D::rvec AdaptDist(const std::vector<double> &C,
         const jif3D::rvec &RawImpedance, const jif3D::rvec &Misfit)
       {
-        std::vector<double> result(C.size(), 0.0);
+        jif3D::rvec result(C.size(), 0.0);
         const size_t nstat = C.size() / 4;
         const size_t nfreq = RawImpedance.size() / (nstat * 8);
         for (size_t i = 0; i < nfreq; ++i)
@@ -675,20 +675,20 @@ namespace jif3D
             for (size_t j = 0; j < nstat; ++j)
               {
                 const size_t offset = (i * nstat + j) * 8;
-                result[j * 4] += Misfit(offset) * RawImpedance(offset)
+                result(j * 4) += Misfit(offset) * RawImpedance(offset)
                     + Misfit(offset + 1) * RawImpedance(offset + 1)
-                    + Misfit(offset + 4) * RawImpedance(offset + 2)
-                    + Misfit(offset + 5) * RawImpedance(offset + 3);
-                result[j * 4 + 1] += Misfit(offset) * RawImpedance(offset + 4)
+                    + Misfit(offset + 2) * RawImpedance(offset + 2)
+                    + Misfit(offset + 3) * RawImpedance(offset + 3);
+                result(j * 4 + 1) += Misfit(offset) * RawImpedance(offset + 4)
                     + Misfit(offset + 1) * RawImpedance(offset + 5)
                     + Misfit(offset + 4) * RawImpedance(offset + 6)
                     + Misfit(offset + 5) * RawImpedance(offset + 7);
-                result[j * 4 + 2] += Misfit(offset + 2) * RawImpedance(offset)
+                result(j * 4 + 2) += Misfit(offset + 2) * RawImpedance(offset)
                     + Misfit(offset + 3) * RawImpedance(offset + 1)
                     + Misfit(offset + 6) * RawImpedance(offset + 2)
                     + Misfit(offset + 7) * RawImpedance(offset + 3);
-                result[j * 4 + 3] += Misfit(offset + 2) * RawImpedance(offset + 4)
-                    + Misfit(offset + 3) * RawImpedance(offset + 5)
+                result(j * 4 + 3) += Misfit(offset + 4) * RawImpedance(offset + 4)
+                    + Misfit(offset + 5) * RawImpedance(offset + 5)
                     + Misfit(offset + 6) * RawImpedance(offset + 6)
                     + Misfit(offset + 7) * RawImpedance(offset + 7);
               }
@@ -783,7 +783,7 @@ namespace jif3D
             //if we want distortion correct, we calculate the gradient with respect
             //to the distortion parameters and copy the values to the end
             //of the gradient
-            std::vector<double> CGrad = AdaptDist(C, RawImpedance, Misfit);
+            jif3D::rvec CGrad = AdaptDist(C, RawImpedance, Misfit);
             std::copy(CGrad.begin(), CGrad.end(), Gradient.begin() + nmod);
           }
         //if we had some exception inside the openmp region, we throw
