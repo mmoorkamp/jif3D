@@ -1,5 +1,5 @@
 import testing ; 
-#using gfortran ;
+using gfortran ;
 
 lib mt : ReadWriteX3D.cpp ReadWriteImpedances.cpp
          ThreeDMTModel.cpp X3DModel.cpp MTEquations.cpp 
