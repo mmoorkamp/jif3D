@@ -60,7 +60,7 @@ namespace jif3D
       {
         if (!fs::is_directory(TDir))
           throw FatalException("TDir is not a directory: " + TDir.string());
-        TempDir = TDir;
+        TempDirName = TDir.string();
         //we make sure that the .hnk files are there
         //this is a common problem and when we check for use later
         //we are inside an openmp thread and swallow all sensible error messages.
@@ -151,7 +151,7 @@ namespace jif3D
           {
         	hpx::naming::id_type const locality_id = localities.at(i % localities.size());
             //rvec freqresult = CalculateFrequency(Model, i, TempDir);
-            FreqResult.push_back(async(FreqCalc, locality_id, Model, i, TempDir.string()));
+            FreqResult.push_back(async(FreqCalc, locality_id, Model, i, TempDirName));
 
           }
         wait_all(FreqResult);

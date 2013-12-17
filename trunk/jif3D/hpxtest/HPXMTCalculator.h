@@ -9,7 +9,7 @@
 #define HPXMTCALCULATOR_H_
 
 #include <hpx/config.hpp>
-#include <hpx/include/util.hpp>
+//#include <hpx/include/util.hpp>
 #include <limits>
 #include <boost/filesystem.hpp>
 #include <boost/serialization/serialization.hpp>
@@ -52,26 +52,9 @@ namespace jif3D
       //! Remove all files created for running x3d
       void CleanUp();
       //! The directory to store all temporary files
-      boost::filesystem::path TempDir;
+      std::string TempDirName;
       rvec LQDerivativeFreq(const X3DModel &Model, const rvec &Misfit, size_t freqindex);
-      friend class boost::serialization::access;
-      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
-      template<class Archive>
-      void serialize(Archive & ar, const unsigned int version)
-        {
-          if (Archive::is_saving::value)
-            {
-              std::string DirName(TempDir.string());
-              ar & DirName;
-            }
-          if (Archive::is_loading::value)
-            {
-              std::string DirName;
-              ar & DirName;
-              TempDir = DirName;
-            }
 
-        }
     public:
       //! Given a conductivity model, calculate a vector of impedances
       /*! For a conductivity model given by the input parameter Model, we calculate the synthetic magnetotelluric data. When compiled with
