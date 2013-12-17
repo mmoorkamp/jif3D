@@ -20,15 +20,14 @@
 
 namespace po = boost::program_options;
 
-int hpx_main(int argc, char* argv[])
+using boost::program_options::variables_map;
+using boost::program_options::options_description;
+using boost::program_options::value;
+
+
+int hpx_main(variables_map & vm)
   {
 
-    po::options_description desc("General options");
-    desc.add_options()("help", "produce help message")("tempdir",
-        po::value<std::string>(),
-        "The name of the directory to store temporary files in");
-    po::variables_map vm;
-    po::store(po::parse_command_line(argc, argv, desc), vm);
     boost::filesystem::path TempDir = boost::filesystem::current_path();
     if (vm.count("tempdir"))
       {
@@ -135,7 +134,12 @@ int main(int argc, char* argv[])
     // Initialize HPX, run hpx_main as the first HPX thread, and
     // wait for hpx::finalize being called.
 
-    return hpx::init(argc, argv);
+    po::options_description desc("General options");
+    desc.add_options()("help", "produce help message")("tempdir",
+        po::value<std::string>(),
+        "The name of the directory to store temporary files in");
+
+    return hpx::init(desc, argc, argv);
 
   }
 
