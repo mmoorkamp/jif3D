@@ -315,7 +315,7 @@ int main(int argc, char *argv[])
     jif3D::WriteImpedancesToNetCDF(modelfilename + ".inv_imp.nc", Frequencies, XCoord,
         YCoord, ZCoord, InvData, X3DObjective->GetDataError(), C);
     jif3D::WriteImpedancesToNetCDF(modelfilename + ".diff_imp.nc", Frequencies, XCoord,
-        YCoord, ZCoord, X3DObjective->GetDataDifference());
+        YCoord, ZCoord, X3DObjective->GetIndividualMisfit());
 
     //and write out the data and model
     //here we have to distinguish again between scalar and ftg data
