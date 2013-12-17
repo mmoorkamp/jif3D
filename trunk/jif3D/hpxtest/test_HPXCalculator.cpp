@@ -56,7 +56,7 @@ int hpx_main(int argc, char* argv[])
     const double deltay = 100.0;
     const double deltaz = 100.0;
     const double freq = 1.0;
-    const size_t nfreq = 8;
+    const size_t nfreq = 32;
     const double cond = 0.01;
     Model.SetHorizontalCellSize(deltax, deltay, xsize, ysize);
 
