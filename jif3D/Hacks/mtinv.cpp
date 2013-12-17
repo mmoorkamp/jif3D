@@ -158,16 +158,14 @@ int main(int argc, char *argv[])
     const size_t ngrid = Model.GetConductivities().num_elements();
     jif3D::rvec InvModel(ngrid);
     std::copy(Model.GetConductivities().origin(),
-        Model.GetConductivities().origin() + ngrid,
-        InvModel.begin());
+        Model.GetConductivities().origin() + ngrid, InvModel.begin());
     Model.WriteVTK("start.vtk");
-
 
     if (WantDistCorr)
       {
         if (C.empty())
-        {
-        	C.resize(XCoord.size() * 4);
+          {
+            C.resize(XCoord.size() * 4);
             for (size_t i = 0; i < XCoord.size(); ++i)
               {
                 C[i * 4] = 1.0;
@@ -175,7 +173,7 @@ int main(int argc, char *argv[])
                 C[i * 4 + 2] = 0.0;
                 C[i * 4 + 3] = 1.0;
               }
-        }
+          }
         jif3D::rvec Grid(InvModel);
         InvModel.resize(ngrid + C.size());
         std::copy(Grid.begin(), Grid.end(), InvModel.begin());
@@ -196,15 +194,15 @@ int main(int argc, char *argv[])
             new jif3D::LogTransform(RefModel)));
 
     boost::shared_ptr<jif3D::GeneralModelTransform> Copier(new jif3D::ModelCopyTransform);
-    boost::shared_ptr<jif3D::MultiSectionTransform> MTTransform(new jif3D::MultiSectionTransform(InvModel.size(), 0, ngrid,
-        ConductivityTransform));
+    boost::shared_ptr<jif3D::MultiSectionTransform> MTTransform(
+        new jif3D::MultiSectionTransform(InvModel.size(), 0, ngrid,
+            ConductivityTransform));
     if (WantDistCorr)
       {
         MTTransform->AddSection(ngrid, InvModel.size(), Copier);
       }
 
     InvModel = MTTransform->PhysicalToGeneralized(InvModel);
-
 
     jif3D::X3DMTCalculator Calculator(TempDir, WantDistCorr);
     boost::shared_ptr<jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator> > X3DObjective(
@@ -220,31 +218,37 @@ int main(int argc, char *argv[])
     double lambda = 1.0;
     std::cout << "Lambda: ";
     std::cin >> lambda;
-    Objective->AddObjective(X3DObjective, MTTransform, 1.0, "MT");
-    Objective->AddObjective(Regularization, Copier, lambda, "Regularization");
+    Objective->AddObjective(X3DObjective, MTTransform, 1.0, "MT",
+        jif3D::JointObjective::datafit);
+    Objective->AddObjective(Regularization, Copier, lambda, "Regularization",
+        jif3D::JointObjective::regularization);
 
     if (WantDistCorr)
       {
-    	jif3D::rvec CRef(XCoord.size() * 4);
+        jif3D::rvec CRef(XCoord.size() * 4);
 
-                for (size_t i = 0; i < XCoord.size(); ++i)
-                  {
-                    CRef(i * 4) = 1.0;
-                    CRef(i * 4 + 1) = 0.0;
-                    CRef(i * 4 + 2) = 0.0;
-                    CRef(i * 4 + 3) = 1.0;
-                  }
-    	jif3D::X3DModel DistModel;
-    	    	DistModel.SetMeshSize(XCoord.size() * 4, 1, 1);
-    	boost::shared_ptr<jif3D::RegularizationFunction> DistReg(new jif3D::MinDiffRegularization(DistModel));
-    	DistReg->SetReferenceModel(CRef);
-    	boost::shared_ptr<jif3D::MultiSectionTransform> DistRegTrans(new jif3D::MultiSectionTransform(InvModel.size(),ngrid, InvModel.size(), Copier));
-    	double distreglambda = 0;
+        for (size_t i = 0; i < XCoord.size(); ++i)
+          {
+            CRef(i * 4) = 1.0;
+            CRef(i * 4 + 1) = 0.0;
+            CRef(i * 4 + 2) = 0.0;
+            CRef(i * 4 + 3) = 1.0;
+          }
+        jif3D::X3DModel DistModel;
+        DistModel.SetMeshSize(XCoord.size() * 4, 1, 1);
+        boost::shared_ptr<jif3D::RegularizationFunction> DistReg(
+            new jif3D::MinDiffRegularization(DistModel));
+        DistReg->SetReferenceModel(CRef);
+        boost::shared_ptr<jif3D::MultiSectionTransform> DistRegTrans(
+            new jif3D::MultiSectionTransform(InvModel.size(), ngrid, InvModel.size(),
+                Copier));
+        double distreglambda = 0;
 
-    	std::cout << "Regularization for distortion: ";
-    	std::cin >> distreglambda;
-    	Objective->AddObjective(DistReg,DistRegTrans,distreglambda,"DistReg");
-       }
+        std::cout << "Regularization for distortion: ";
+        std::cin >> distreglambda;
+        Objective->AddObjective(DistReg, DistRegTrans, distreglambda, "DistReg",
+            jif3D::JointObjective::regularization);
+      }
     size_t maxiter = 30;
     std::cout << "Maximum number of iterations: ";
     std::cin >> maxiter;
@@ -260,13 +264,11 @@ int main(int argc, char *argv[])
     StoreMisfit(misfitfile, 0, InitialMisfit, *Objective);
     StoreRMS(rmsfile, 0, *Objective);
 
-
     size_t iteration = 0;
     boost::posix_time::ptime starttime = boost::posix_time::microsec_clock::local_time();
 
     bool terminate = false;
-    while (iteration < maxiter && !terminate
-            && Objective->GetIndividualFits()[0] > ndata)
+    while (iteration < maxiter && !terminate && Objective->GetIndividualFits()[0] > ndata)
       {
         try
           {
@@ -305,13 +307,13 @@ int main(int argc, char *argv[])
     std::copy(InvModel.begin(),
         InvModel.begin() + Model.GetConductivities().num_elements(),
         Model.SetConductivities().origin());
-    std::copy(InvModel.begin() + Model.GetNModelElements(), InvModel.end(),C.begin());
+    std::copy(InvModel.begin() + Model.GetNModelElements(), InvModel.end(), C.begin());
     Model.SetDistortionParameters(C);
     //calculate the predicted data
     std::cout << "Calculating response of inversion model." << std::endl;
     jif3D::rvec InvData(jif3D::X3DMTCalculator().Calculate(Model));
     jif3D::WriteImpedancesToNetCDF(modelfilename + ".inv_imp.nc", Frequencies, XCoord,
-        YCoord, ZCoord, InvData,X3DObjective->GetDataError(),C);
+        YCoord, ZCoord, InvData, X3DObjective->GetDataError(), C);
     jif3D::WriteImpedancesToNetCDF(modelfilename + ".diff_imp.nc", Frequencies, XCoord,
         YCoord, ZCoord, X3DObjective->GetDataDifference());
 
