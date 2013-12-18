@@ -9,5 +9,5 @@ import testing ;
      
 exe HPXcalc_test : test_HPXCalculator.cpp HPXMTCalculator.cpp CalcFreq.cpp ..//MT  ..//ModelBase  ..//boost_system ..//boost_filesystem /mpi//mpi
    : <include>. <linkflags>"`pkg-config --cflags --libs hpx_application ` -liostreams "
-     <cflags>"`pkg-config --cflags hpx_application `" : <hpx>on 
+     <cflags>"`pkg-config --cflags hpx_application `" : <hpx>off:<build>no ;
      ;
