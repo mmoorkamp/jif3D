@@ -202,7 +202,7 @@ int main(int argc, char *argv[])
       }
 
     InvModel = MTTransform->PhysicalToGeneralized(InvModel);
-    std::cout << InvModel << std::endl;
+
     jif3D::X3DMTCalculator Calculator(TempDir, WantDistCorr);
     boost::shared_ptr<jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator> > X3DObjective(
         new jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator>(Calculator));
