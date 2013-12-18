@@ -220,7 +220,9 @@ int main(int argc, char *argv[])
     std::cin >> lambda;
     Objective->AddObjective(X3DObjective, MTTransform, 1.0, "MT",
         jif3D::JointObjective::datafit);
-    Objective->AddObjective(Regularization, Copier, lambda, "Regularization",
+    boost::shared_ptr<jif3D::MultiSectionTransform> ModRegTrans(new jif3D::MultiSectionTransform(InvModel.size(), 0, ngrid,
+                Copier));
+    Objective->AddObjective(Regularization, ModRegTrans, lambda, "Regularization",
         jif3D::JointObjective::regularization);
 
     if (WantDistCorr)
@@ -315,7 +317,7 @@ int main(int argc, char *argv[])
     Model.SetDistortionParameters(C);
     //calculate the predicted data
     std::cout << "Calculating response of inversion model." << std::endl;
-    jif3D::rvec InvData(jif3D::X3DMTCalculator().Calculate(Model));
+    jif3D::rvec InvData(X3DObjective->GetSyntheticData());
     jif3D::WriteImpedancesToNetCDF(modelfilename + ".inv_imp.nc", Frequencies, XCoord,
         YCoord, ZCoord, InvData, X3DObjective->GetDataError(), C);
     jif3D::WriteImpedancesToNetCDF(modelfilename + ".dist_imp.nc", Frequencies, XCoord,
