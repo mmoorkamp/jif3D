@@ -182,8 +182,7 @@ int main(int argc, char *argv[])
 
     boost::shared_ptr<jif3D::ChainedTransform> ConductivityTransform(
         new jif3D::ChainedTransform);
-    jif3D::rvec RefModel(InvModel);
-    std::fill(RefModel.begin(), RefModel.end(), 1.0);
+    jif3D::rvec RefModel(ngrid,1.0);
     //because the tanh transform is used inside a logarithmic transform
     //we need to take the natural logarithm of the actual minimum and maximum
     ConductivityTransform->AppendTransform(
@@ -203,7 +202,7 @@ int main(int argc, char *argv[])
       }
 
     InvModel = MTTransform->PhysicalToGeneralized(InvModel);
-
+    std::cout << InvModel << std::endl;
     jif3D::X3DMTCalculator Calculator(TempDir, WantDistCorr);
     boost::shared_ptr<jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator> > X3DObjective(
         new jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator>(Calculator));
