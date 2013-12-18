@@ -1,5 +1,5 @@
 import feature ;
- 
+
 feature.feature gpu : off on : composite incidental ;
 feature.compose <gpu>on : <define>HAVEGPU ; 
 
@@ -11,6 +11,10 @@ feature.compose <optpp>on : <define>HAVEOPTPP ;
 
 feature.feature hpx : off on : composite incidental ;
 feature.compose <hpx>on : <define>HAVEHPX ; 
+
+constant BOOST_LIB_PATH : /usr/local/lib ;
+constant CUDA_LIB_PATH : /usr/local/cuda/lib64 ;
+
 
 project 
     : requirements <include>/usr/local/include <include>/usr/local/R-2.6.2/include 
@@ -46,9 +50,6 @@ path-constant TOP : . ;
 
 import cuda ;
 
-#using gcc :  :  : <variant>debug:<cflags>" -ansi " <variant>release:<cflags>"-fopenmp " <variant>release:<linkflags>"-fopenmp" ;
-#using intel-linux : 11.0 : icpc : <cxxflags>-mssse3 ; 
-
 
 
 use-project /Global : Global ;
@@ -63,12 +64,12 @@ use-project /hpxtest : hpxtest ;
 use-project /ModelTransforms : ModelTransforms ;
 
 local BOOST_TEST_LOG_LEVEL = all ;
-lib boost_filesystem : : <name>boost_filesystem <search>/usr/local/lib  ;
-lib boost_system : : <name>boost_system <search>/usr/local/lib ;
-lib boost_program_options : : <name>boost_program_options  <search>/usr/local/lib ;
-lib boost_mpi : : <name>boost_mpi  <search>/usr/local/lib ;
-lib boost_serialization : : <name>boost_serialization  <search>/usr/local/lib ;
-lib boost_thread : : <name>boost_thread  <search>/usr/local/lib ;
+lib boost_filesystem : : <name>boost_filesystem <search>BOOST_LIB_PATH  ;
+lib boost_system : : <name>boost_system <search>BOOST_LIB_PATH ;
+lib boost_program_options : : <name>boost_program_options  <search>BOOST_LIB_PATH ;
+lib boost_mpi : : <name>boost_mpi  <search>BOOST_LIB_PATH ;
+lib boost_serialization : : <name>boost_serialization  <search>BOOST_LIB_PATH ;
+lib boost_thread : : <name>boost_thread  <search>BOOST_LIB_PATH ;
 lib lapack : : <name>lapack ;
 lib f77blas : : <name>f77blas ;
 lib cblas : : <name>cblas ;
@@ -78,8 +79,8 @@ lib newmat : : <name>newmat ;
 lib netcdf : : <name>netcdf ;
 lib netcdf_c++ : : <name>netcdf_c++ ;
 lib gfortran : :  <name>gfortran ;
-lib cudart : : <name>cudart <search>/usr/local/cuda/lib64 ;
-lib cublas : : <name>cublas <search>/usr/local/cuda/lib64 ;
+lib cudart : : <name>cudart <search>CUDA_LIB_PATH ;
+lib cublas : : <name>cublas <search>CUDA_LIB_PATH ;
 alias vecopt : lapack cblas atlas f77blas gfortran ;
 
 build-project Global ;

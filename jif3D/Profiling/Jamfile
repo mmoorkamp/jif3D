@@ -1,16 +1,13 @@
 import testing ; 
 
-project
-    : usage-requirements <include>../Gravity
-    ;
 
 alias core :  ../ModelBase//modelbase ../Global ../Regularization ../Inversion ../GravMag ../Gravity ..//netcdf_c++ ..//netcdf ..//cudart ;
     
 exe time_gravity_size : time_gravity_size.cpp core ..//boost_program_options ;
-exe time_gravity_blocksize : time_gravity_blocksize.cpp core : <gpu>on ;
+exe time_gravity_blocksize : time_gravity_blocksize.cpp core : <gpu>off:<build>no ;
 exe time_grav_term : time_grav_term.cpp core ;
 exe comp_grav_moment : comp_grav_moment.cpp core ;
 exe reg_prof : reg_prof.cpp core ;
 exe sparse_prof : sparse_prof.cpp ;
 exe time_vector : time_vector.cpp ;
-exe inner_product : inner_product.cpp ..//cudart ..//cublas : <gpu>on ;
+exe inner_product : inner_product.cpp ..//cudart ..//cublas : <gpu>off:<build>no ;

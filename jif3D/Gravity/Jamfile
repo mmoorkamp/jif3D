@@ -26,7 +26,7 @@ exe gravgrid : gravgrid.cpp gravity  core : <include>. ;
 exe gravinv : gravinv.cpp DepthWeighting.cpp ../Inversion/LinearInversion.cpp ../Inversion/MatrixTools.cpp gravity  core ../Inversion//inversion
               ..//vecopt : <lapack>on : <include>. ;
 exe gravsens : gravsens.cpp gravity  core ../Inversion//inversion ../Inversion//lininv
-              ..//vecopt : <include>. ;              
+              ..//vecopt : <include>. <lapack>off:<build>no ;              
 exe gravnoise : gravnoise.cpp gravity   core : <include>. ;
 
 exe makegravmesh : makegravmesh.cpp gravity  core : <include>. ;
