@@ -314,6 +314,8 @@ int main(int argc, char *argv[])
     jif3D::rvec InvData(jif3D::X3DMTCalculator().Calculate(Model));
     jif3D::WriteImpedancesToNetCDF(modelfilename + ".inv_imp.nc", Frequencies, XCoord,
         YCoord, ZCoord, InvData, X3DObjective->GetDataError(), C);
+    jif3D::WriteImpedancesToNetCDF(modelfilename + ".dist_imp.nc", Frequencies, XCoord,
+        YCoord, ZCoord, Data, ZError, C);
     jif3D::WriteImpedancesToNetCDF(modelfilename + ".diff_imp.nc", Frequencies, XCoord,
         YCoord, ZCoord, X3DObjective->GetIndividualMisfit());
 
