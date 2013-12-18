@@ -283,6 +283,10 @@ int main(int argc, char *argv[])
             SaveModel(InvModel, *ConductivityTransform.get(), Model,
                 modelfilename + jif3D::stringify(iteration) + ".mt.inv");
             //write out some information about misfit to the screen
+            jif3D::rvec DistModel = MTTransform->GeneralizedToPhysical(InvModel);
+            std::copy(InvModel.begin() + Model.GetNModelElements(), InvModel.end(), C.begin());
+            jif3D::WriteImpedancesToNetCDF(modelfilename + ".dist_imp.nc", Frequencies, XCoord,
+                YCoord, ZCoord, Data, ZError, C);
             std::cout << "Currrent Misfit: " << Optimizer->GetMisfit() << std::endl;
             std::cout << "Currrent Gradient: " << Optimizer->GetGradNorm() << std::endl;
             //and write the current misfit for all objectives to a misfit file
