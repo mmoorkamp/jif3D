@@ -307,12 +307,14 @@ int main(int argc, char *argv[])
     double cachedruntime = (endtime - starttime).total_seconds();
     std::cout << "Runtime: " << cachedruntime << " s" << std::endl;
     std::cout << std::endl;
-    InvModel = ConductivityTransform->GeneralizedToPhysical(InvModel);
+
+    InvModel = MTTransform->GeneralizedToPhysical(InvModel);
 
     std::copy(InvModel.begin(),
         InvModel.begin() + Model.GetConductivities().num_elements(),
         Model.SetConductivities().origin());
     std::copy(InvModel.begin() + Model.GetNModelElements(), InvModel.end(), C.begin());
+
     Model.SetDistortionParameters(C);
     //calculate the predicted data
     std::cout << "Calculating response of inversion model." << std::endl;
