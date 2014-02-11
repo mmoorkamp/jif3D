@@ -176,6 +176,9 @@ namespace jif3D
       JointObjective(bool Verbose = false);
       virtual ~JointObjective();
       };
+
+    //! Check whether we have reached the target misfit for one of the objective functions in the JointObjective object
+    bool CheckConvergence(const jif3D::JointObjective &Objective);
   /* @} */
   }
 

@@ -49,31 +49,7 @@ namespace po = boost::program_options;
 /** \addtogroup joint Joint inversion routines */
 /* @{ */
 
-//! Check whether we have reached the target misfit for one of the objective functions in the JointObjective object
-bool CheckConvergence(const jif3D::JointObjective &Objective)
-  {
-    bool terminate = true;
-    for (size_t i = 0; i < Objective.GetIndividualFits().size() - 1; ++i)
-      {
-        if (Objective.GetIndividualFits().at(i) > Objective.GetObjective(i).GetNData())
-          {
-            terminate = false;
-          }
-        else
-          {
-            if (Objective.GetObjective(i).ConvergenceLimit() > 0.0)
-              {
-                std::cout << "Reached target misfit." << std::endl;
-                std::cout << "Objective number: " << i << std::endl;
-                std::cout << "Misfit: " << Objective.GetIndividualFits().at(i)
-                    << std::endl;
-                std::cout << "Target: " << Objective.GetObjective(i).GetNData()
-                    << std::endl;
-              }
-          }
-      }
-    return terminate;
-  }
+
 
 /*! \file jointinv.cpp
  * The main joint inversion program. The main task of the program is to read in the appropriate files
