@@ -193,6 +193,7 @@ int main(int argc, char *argv[])
 
     jif3D::ThreeDGravityModel GravModel(GravitySetup.GetScalModel());
     jif3D::ThreeDMagneticModel MagModel(MagneticsSetup.GetModel());
+    bool terminate = false;
     do
       {
         try
@@ -241,8 +242,11 @@ int main(int argc, char *argv[])
             std::cerr << e.what() << std::endl;
             iteration = maxiter;
           }
-      } while (iteration < maxiter && Optimizer->GetMisfit() > 1
-        && Optimizer->GetGradNorm() > 1e-6);
+        //we stop when either we do not make any improvement any more
+        terminate = CheckConvergence(*Objective);
+        //or the file abort exists in the current directory
+        terminate = terminate || jif3D::WantAbort();
+      } while (iteration < maxiter && !terminate);
 
     jif3D::rvec DensInvModel(GravityTransform->GeneralizedToPhysical(InvModel));
     jif3D::rvec MagInvModel(MagneticsTransform->GeneralizedToPhysical(InvModel));

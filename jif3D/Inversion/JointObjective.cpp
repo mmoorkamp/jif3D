@@ -17,6 +17,40 @@ using boost::io::group;
 
 namespace jif3D
   {
+
+    /*! We want to stop the inversion when all of the data misfits are below
+     * the expected chi-squared value. If the convergence limit for each individual
+     * objective function. If it is positive, this objective function is checked
+     * for convergence.
+     * @param Objective A joint objective containing one or more individual objective functions
+     * @return True when converged, fals otherwise.
+     */
+    bool CheckConvergence(const jif3D::JointObjective &Objective)
+      {
+        bool terminate = true;
+        for (size_t i = 0; i < Objective.GetIndividualFits().size() - 1; ++i)
+          {
+            if (Objective.GetIndividualFits().at(i)
+                > Objective.GetObjective(i).GetNData())
+              {
+                terminate = false;
+              }
+            else
+              {
+                if (Objective.GetObjective(i).ConvergenceLimit() > 0.0)
+                  {
+                    std::cout << "Reached target misfit." << std::endl;
+                    std::cout << "Objective number: " << i << std::endl;
+                    std::cout << "Misfit: " << Objective.GetIndividualFits().at(i)
+                        << std::endl;
+                    std::cout << "Target: " << Objective.GetObjective(i).GetNData()
+                        << std::endl;
+                  }
+              }
+          }
+        return terminate;
+      }
+
     static const std::string MisfitFormat = " %15s ";
 
     JointObjective::JointObjective(bool Verbose) :
