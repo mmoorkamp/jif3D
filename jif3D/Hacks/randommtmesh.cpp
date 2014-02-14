@@ -12,6 +12,8 @@
 #include <iostream>
 #include <string>
 #include <cstdlib>
+#include <omp.h>
+#include <boost/program_options.hpp>
 #include "../Global/FileUtil.h"
 #include "../Global/convert.h"
 #include "../MT/X3DModel.h"
@@ -19,7 +21,7 @@
 #include "../MT/ReadWriteImpedances.h"
 
 using namespace std;
-
+namespace po = boost::program_options;
 /*! \file makemtmesh.cpp
  * Make a forward modeling mesh for X3D. The program asks for the size in the three coordinate directions and
  * the cell size for each direction. All cells will have the same size for one direction even though x3d supports
@@ -28,8 +30,26 @@ using namespace std;
  * the same conductivity value as the mesh.
  */
 
-int main()
+int main(int argc, char *argv[])
   {
+
+    po::options_description desc("General options");
+    desc.add_options()("help", "produce help message")("threads", po::value<int>(),
+        "The number of openmp threads")("topthick",
+        "Thickness of the top layer in m");
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::notify(vm);
+
+    if (vm.count("help"))
+      {
+        std::cout << desc << "\n";
+        return 1;
+      }
+    if (vm.count("threads"))
+      {
+        omp_set_num_threads(vm["threads"].as<int>());
+      }
 
     jif3D::X3DModel Model;
     size_t nx, ny, nz;
@@ -53,6 +73,10 @@ int main()
     Model.SetHorizontalCellSize(deltax, deltay, nx, ny);
     Model.SetZCellSizes().resize(boost::extents[nz]);
     fill_n(Model.SetZCellSizes().begin(), nz, deltaz);
+    if (vm.count("topthick"))
+      {
+        Model.SetZCellSizes()[0] = vm["topthick"].as<double>();
+      }
     Model.SetConductivities().resize(boost::extents[nx][ny][nz]);
     //ask for a conductivity to fill the mesh with
     double bg_conductivity = 1.0;

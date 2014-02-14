@@ -20,7 +20,7 @@ exe qqfit : qqfit.cpp  ../MT joint : <include>. ;
 exe avgmt : avgmt.cpp  ../MT joint : <include>. ;
 exe parrun : parrun.cpp ..//boost_filesystem ..//boost_system ;
 exe picksort : picksort.cpp  ../Global  ../Tomo ..//boost_filesystem ..//boost_system : <include>. ;
-exe randommtmesh : randommtmesh.cpp  ../Global  ../MT ../ModelBase ..//boost_filesystem ..//boost_system : <include>. ;
+exe randommtmesh : randommtmesh.cpp  ../Global  ../MT ../ModelBase ..//boost_filesystem ..//boost_program_options ..//boost_system : <include>. ;
 exe joinpicks : joinpicks.cpp  ../Global  ../Tomo ..//boost_filesystem ..//boost_system : <include>. ;
 exe srcrecdist : srcrecdist.cpp  ../Global  ../Tomo ..//boost_filesystem ..//boost_system : <include>. ;
 exe calccross : calccross.cpp  ../Global  ../Tomo ../Regularization ../Inversion ..//boost_filesystem ..//boost_system : <include>. ;
