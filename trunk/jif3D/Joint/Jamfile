@@ -5,8 +5,8 @@ alias joint : ../Tomo ../Gravity ../Magnetics ../MT ../Inversion//inversion ../G
 	
 lib setup : SaltRelConstraint.cpp SetupGravity.cpp SetupMagnetics.cpp 
             SetupInversion.cpp SetupMT.cpp SetupRegularization.cpp 
-            SetupTomo.cpp SetupCoupling.cpp joint : <include>boost : : <include>. ;
+            SetupTomo.cpp SetupCoupling.cpp joint  ;
 
 
-unit-test saltrel_test :  test_saltrel_objective.cpp joint setup : <include>. ;
-exe jointinv : jointinv.cpp  joint setup  ..//boost_program_options ..//boost_system : <include>. ;
+unit-test saltrel_test :  test_saltrel_objective.cpp joint setup  ;
+exe jointinv : jointinv.cpp  joint setup  ..//boost_program_options ..//boost_system  ;

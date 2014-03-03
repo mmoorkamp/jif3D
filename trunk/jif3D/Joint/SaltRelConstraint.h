@@ -8,7 +8,7 @@
 #ifndef SALTRELCONSTRAINT_H_
 #define SALTRELCONSTRAINT_H_
 
-#include "ObjectiveFunction.h"
+#include "../Inversion/ObjectiveFunction.h"
 #include "../Inversion/ModelTransforms.h"
 #include "../Tomo/ThreeDSeismicModel.h"
 #include <boost/shared_ptr.hpp>

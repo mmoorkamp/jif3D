@@ -6,19 +6,19 @@ lib mt : ReadWriteX3D.cpp ReadWriteImpedances.cpp
          MT3DCalculator.cpp X3DMTCalculator.cpp
          OneDMTCalculator.cpp InterpolateField.cpp
          MTCovar.cpp
-         ..//ModelBase  ..//boost_filesystem ..//boost_system ;
+         ../ModelBase//modelbase  ..//boost_filesystem ..//boost_system ;
 
+alias linkcommon : mt ../ModelBase//modelbase  ..//boost_filesystem ..//boost_system ; 
 
+# switched off unit-test 2DMT_test : test_Tarits2DMT.cpp   linkcommon ../Inversion//inversion   ;
+unit-test RWX3D_test : test_ReadWriteX3D.cpp   linkcommon ../Inversion//inversion  ;
+unit-test X3Dcalc_test : test_X3DCalculator.cpp   linkcommon ../Inversion//inversion  ;
+unit-test InterpolateFields_test : test_InterpolateFields.cpp   linkcommon ../Inversion//inversion  ;
+unit-test X3DObjective_test : test_X3DObjective.cpp linkcommon ../Inversion//inversion  ;
+unit-test OneDMTCalculator_test : test_OneDMTCalculator.cpp linkcommon ../Inversion//inversion  ;
+unit-test ReadWriteImpedances_test : test_ReadWriteImpedances.cpp linkcommon ../Inversion//inversion  ;
+unit-test MTCovar_test : test_MTCovar.cpp mt  ..//ModelBase   ;
 
-# switched off unit-test 2DMT_test : test_Tarits2DMT.cpp mt ..//ModelBase ..//Inversion ..//gfortran ..//boost_filesystem : <include>. ;
-unit-test RWX3D_test : test_ReadWriteX3D.cpp mt  ..//ModelBase ..//Inversion ..//boost_filesystem ..//boost_system : <include>. ;
-unit-test X3Dcalc_test : test_X3DCalculator.cpp   mt  ..//ModelBase ..//Inversion ..//boost_filesystem ..//boost_system : <include>. ;
-unit-test InterpolateFields_test : test_InterpolateFields.cpp   mt  ..//ModelBase ..//Inversion ..//boost_filesystem ..//boost_system : <include>. ;
-unit-test X3DObjective_test : test_X3DObjective.cpp mt  ..//ModelBase ..//Inversion ..//boost_filesystem ..//boost_system : <include>. ;
-unit-test OneDMTCalculator_test : test_OneDMTCalculator.cpp mt  ..//ModelBase ..//Inversion ..//boost_filesystem ..//boost_system : <include>. ;
-unit-test ReadWriteImpedances_test : test_ReadWriteImpedances.cpp mt  ..//ModelBase ..//Inversion ..//boost_filesystem ..//boost_system : <include>. ;
-unit-test MTCovar_test : test_MTCovar.cpp mt  ..//ModelBase  : <include>. ;
-
-exe mtforward : mtforward.cpp mt  ..//ModelBase  ..//boost_filesystem ..//boost_system : <include>. ;
-exe makemtmesh : makemtmesh.cpp mt  ..//ModelBase  ..//boost_filesystem ..//boost_system : <include>. ;
-exe refinemt : refinemt.cpp mt  ..//ModelBase  ..//boost_filesystem ..//boost_system : <include>. ;
+exe mtforward : mtforward.cpp linkcommon   ;
+exe makemtmesh : makemtmesh.cpp linkcommon  ;
+exe refinemt : refinemt.cpp linkcommon  ;
