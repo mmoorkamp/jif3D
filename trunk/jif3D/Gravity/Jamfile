@@ -10,7 +10,7 @@ lib gravity : ThreeDGravityModel.cpp DepthWeighting.cpp
                 <gpu>on:<source>gravcuda.cu ;
                
                     
-alias core :  ../ModelBase//modelbase ../Global ..//netcdf_c++ ..//netcdf  ..//boost_filesystem  ..//boost_program_options ..//boost_system ;
+alias core :  ../ModelBase//modelbase ../Global//global ..//netcdf_c++ ..//netcdf  ..//boost_filesystem  ..//boost_program_options ..//boost_system ;
 
 unit-test Model_test : test_ThreeDGravityModel.cpp gravity core  ;
 unit-test scalar_test : test_ScalarCalculation.cpp gravity core  ;
