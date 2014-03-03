@@ -7,7 +7,7 @@ lib magnetics : ThreeDMagneticModel.cpp
                     
 alias core :  ../ModelBase//modelbase ../Global//global ..//netcdf_c++ ..//netcdf  ..//boost_filesystem  ..//boost_program_options ..//boost_system ;
 
-unit-test Calc_test : test_MagneticCalculation.cpp magnetics core : : <include>. ;
-unit-test Objective_test : test_MagneticObjective.cpp magnetics core ../Inversion//inversion : : <include>. ;
+unit-test Calc_test : test_MagneticCalculation.cpp magnetics core  ;
+unit-test Objective_test : test_MagneticObjective.cpp magnetics core ../Inversion//inversion  ;
 exe maggrid : maggrid.cpp magnetics  core  ;
 exe makemagmesh : makemagmesh.cpp magnetics  core  ;

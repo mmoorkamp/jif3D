@@ -1,9 +1,9 @@
 import testing ; 
-lib gravity : ThreeDGravityModel.cpp 
+lib gravity : ThreeDGravityModel.cpp DepthWeighting.cpp
               GravityBackground.cpp BasicGravElements.cpp
               ScalarOMPGravityImp.cpp  TensorOMPGravityImp.cpp
               GravityInterface.cpp   ReadWriteGravityData.cpp
-                 ../Global//global ..//boost_filesystem ..//boost_system ../ModelBase//modelbase
+                 ../Global//global ..//boost_filesystem ..//boost_system ../ModelBase//modelbase ../Inversion//lininv
               : <gpu>on:<source>TensorCudaGravityImp.cpp 
                 <gpu>on:<source>ScalarCudaGravityImp.cpp
                 <gpu>on:<source>..//cudart
@@ -12,21 +12,21 @@ lib gravity : ThreeDGravityModel.cpp
                     
 alias core :  ../ModelBase//modelbase ../Global ..//netcdf_c++ ..//netcdf  ..//boost_filesystem  ..//boost_program_options ..//boost_system ;
 
-unit-test Model_test : test_ThreeDGravityModel.cpp gravity core : : <include>. ;
-unit-test scalar_test : test_ScalarCalculation.cpp gravity core : : <include>. ;
-unit-test tensor_test : test_TensorCalculation.cpp gravity core : : <include>. ;
-unit-test gravity_objective_test : test_GravityObjective.cpp gravity core ../Inversion//inversion : : <include>. ;
-unit-test transform_test : test_transforms.cpp  gravity core ..//vecopt : : <include>. ;
-unit-test R_test : test_Rinterface.cpp gravity core ..//vecopt : : <include>. ;
-# unit-test weighting_test : test_weighting.cpp DepthWeighting.cpp  gravity  ../Inversion//inversion core  : : <include>. ;
-unit-test readwrite_test : test_readwritedata.cpp gravity  ../Inversion//inversion core  : : <include>. ;
+unit-test Model_test : test_ThreeDGravityModel.cpp gravity core  ;
+unit-test scalar_test : test_ScalarCalculation.cpp gravity core  ;
+unit-test tensor_test : test_TensorCalculation.cpp gravity core  ;
+unit-test gravity_objective_test : test_GravityObjective.cpp gravity core ../Inversion//inversion  ;
+unit-test transform_test : test_transforms.cpp  gravity core ..//vecopt  ;
+unit-test R_test : test_Rinterface.cpp gravity core ..//vecopt  ;
+# unit-test weighting_test : test_weighting.cpp DepthWeighting.cpp  gravity  ../Inversion//inversion core   ;
+unit-test readwrite_test : test_readwritedata.cpp gravity  ../Inversion//inversion core   ;
 
-exe gravforward : gravforward.cpp gravity  core : <include>. ;
-exe gravgrid : gravgrid.cpp gravity  core : <include>. ;
-exe gravinv : gravinv.cpp DepthWeighting.cpp ../Inversion/LinearInversion.cpp ../Inversion/MatrixTools.cpp gravity  core ../Inversion//inversion
-              ..//vecopt : <lapack>on : <include>. ;
+exe gravforward : gravforward.cpp gravity  core ;
+exe gravgrid : gravgrid.cpp gravity  core  ;
+exe gravinv : gravinv.cpp  ../Inversion/LinearInversion.cpp ../Inversion/MatrixTools.cpp gravity  core ../Inversion//inversion
+              ..//vecopt : <lapack>on  ;
 exe gravsens : gravsens.cpp gravity  core ../Inversion//inversion ../Inversion//lininv
-              ..//vecopt : <include>. <lapack>off:<build>no ;              
-exe gravnoise : gravnoise.cpp gravity   core : <include>. ;
+              ..//vecopt :  <lapack>off:<build>no ;              
+exe gravnoise : gravnoise.cpp gravity   core ;
 
-exe makegravmesh : makegravmesh.cpp gravity  core : <include>. ;
+exe makegravmesh : makegravmesh.cpp gravity  core  ;

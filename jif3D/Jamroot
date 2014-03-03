@@ -24,7 +24,7 @@ project
         <define>BIND_FORTRAN_LOWERCASE_UNDERSCORE
         <define>HAVEOPENMP 
         <gpu>on
-        <lapack>on
+        <lapack>off
         <optpp>on
         <hpx>on
     	<variant>release:<define>NDEBUG
@@ -96,3 +96,4 @@ build-project Hacks ;
 build-project Joint ;
 build-project ModelTransforms ;
 build-project hpxtest ;
+build-project hpx_simer ;

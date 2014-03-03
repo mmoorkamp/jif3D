@@ -1,5 +1,5 @@
 
-unit-test transform_test : test_transform.cpp  ../Global//global ../Gravity//gravity ../ModelBase//modelbase : : <include>. ;
+unit-test transform_test : test_transform.cpp  ../Global//global ../Gravity//gravity ../ModelBase//modelbase  ;
 
 
 
