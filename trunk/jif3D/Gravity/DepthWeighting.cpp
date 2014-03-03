@@ -159,50 +159,5 @@ namespace jif3D
                 *std::max_element(WeightVector.begin(), WeightVector.end())));
 
       }
-    /*! For depth weighting we need the sensitivities below a site to match with our weighting function.
-     * We somewhat arbitrarily chose the site closest to the middle, as here the effects of the finite modeling domain
-     * should be smallest. The function extracts the row from the matrix that corresponds to this location
-     * @param Model The model object, needed for the grid information
-     * @param Sensitivities The sensitivity matrix that we want to extract the profile from
-     * @param MeasPerPos How many measurements per site,e.g. 1 for only scalar and 9 for only FTG
-     * @param SensProfile The depth profile of the sensitivity below the site
-     */
-    void ExtractMiddleSens(const jif3D::ThreeDGravityModel &Model,
-        const jif3D::rmat &Sensitivities, const size_t MeasPerPos,
-        jif3D::rvec &SensProfile)
-      {
-    	const size_t nmeas = Model.GetMeasPosX().size();
-        const double midx =
-            Model.GetXCoordinates()[Model.GetXCoordinates().size() - 1] / 2.0;
-        const double midy =
-            Model.GetYCoordinates()[Model.GetYCoordinates().size() - 1] / 2.0;
 
-
-        jif3D::rvec distances(nmeas);
-        for (size_t i = 0; i < nmeas; ++i)
-          {
-            distances( i) = sqrt(pow(Model.GetMeasPosX()[i] - midx, 2) + pow(
-                Model.GetMeasPosY()[i] - midy, 2));
-          }
-        const size_t midindex = distance(distances.begin(), std::min_element(
-            distances.begin(), distances.end()));
-        boost::array<jif3D::ThreeDModelBase::t3DModelData::index, 3> modelindex(
-            Model.FindAssociatedIndices(Model.GetMeasPosX()[midindex],
-                Model.GetMeasPosY()[midindex], 0.0));
-        //we store the sensitivities for the background at the end of the matrix
-        //so we can ignore it here
-        boost::numeric::ublas::matrix_row<const jif3D::rmat> MiddleSens(Sensitivities, midindex * MeasPerPos);
-
-        const size_t ysize = Model.GetDensities().shape()[1];
-        const size_t zsize = Model.GetDensities().shape()[2];
-
-        SensProfile.resize(zsize);
-        //the same here, if we operate on the first ngrid elements
-        //the background does not matter
-        const size_t startindex = (zsize * ysize) * modelindex[0] + zsize
-            * modelindex[1];
-        std::copy(MiddleSens.begin() + startindex, MiddleSens.begin()
-            + startindex + zsize, SensProfile.begin());
-
-      }
   }
