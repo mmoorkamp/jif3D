@@ -5,6 +5,7 @@
 // Copyright   : 2008, MM
 //============================================================================
 
+#ifdef HAVELAPACK
 #include <boost/numeric/bindings/lapack/lapack.hpp>
 #include <boost/numeric/bindings/lapack/geev.hpp>
 #include <boost/numeric/bindings/traits/ublas_matrix.hpp>
@@ -12,14 +13,17 @@
 #include <boost/numeric/bindings/traits/vector_traits.hpp>
 #include <boost/numeric/bindings/atlas/cblas2.hpp>
 #include <boost/numeric/bindings/atlas/cblas3.hpp>
+#endif
 #include "LinearInversion.h"
 #include "../Inversion/MatrixTools.h"
 #include "../Inversion/GeneralizedInverse.h"
 
 namespace jif3D
   {
+#ifdef HAVELAPACK
     namespace lapack = boost::numeric::bindings::lapack;
     namespace atlas = boost::numeric::bindings::atlas;
+#endif
     namespace ublas = boost::numeric::ublas;
 
     /*! Given the sensitivities, data, weights and data error, perform a linear dataspace inversion.
@@ -31,8 +35,9 @@ namespace jif3D
      * @param lambda The lagrangian multiplier to adjust the level of regularization
      * @param InvModel On input: The a priori model, On output The m component vector with the inversion result
      */
-    void DataSpaceInversion::operator()(rmat &Sensitivities, rvec &Data, const rvec &WeightVector,
-        const rvec &DataError, const double lambda, rvec &InvModel)
+    void DataSpaceInversion::operator()(rmat &Sensitivities, rvec &Data,
+        const rvec &WeightVector, const rvec &DataError, const double lambda,
+        rvec &InvModel)
       {
         //check that all lengths are consistent
         assert(Data.size() == Sensitivities.size1());
@@ -42,18 +47,26 @@ namespace jif3D
         const size_t nparm = Sensitivities.size2();
 
         //calculate d^ (equation 6)
+#ifdef HAVELAPACK
         atlas::gemv(1.0, Sensitivities, InvModel, 1.0, Data);
+#else
+        Data += ublas::prod(Sensitivities, InvModel);
+#endif
         //apply the model covariance to the sensitivity matrix
         for (size_t i = 0; i < nparm; ++i)
           {
-            boost::numeric::ublas::matrix_column<jif3D::rmat> CurrentColumn(
-                Sensitivities, i);
+            boost::numeric::ublas::matrix_column<jif3D::rmat> CurrentColumn(Sensitivities,
+                i);
             CurrentColumn *= sqrt(WeightVector(i));
           }
         //calculate the data space matrix gamma
         jif3D::rmat Gamma(nmeas, nmeas);
+#ifdef HAVELAPACK
         atlas::gemm(CblasNoTrans, CblasTrans, 1.0, Sensitivities,
             Sensitivities, 0.0, Gamma);
+#else
+        Gamma = ublas::prod(Sensitivities, ublas::trans(Sensitivities));
+#endif
         //apply damping
         for (size_t i = 0; i < nmeas; ++i)
           {
@@ -61,17 +74,27 @@ namespace jif3D
           }
         //invert the data space matrix by solving
         //a linear system, the result is in Data
+#ifdef HAVELAPACK
         lapack::gesv(Gamma, Data);
+#else
+        rmat InvMat(Gamma.size1(),Gamma.size2());
+        InvertMatrix(Gamma, InvMat);
+        Data = ublas::prod(InvMat, Data);
+#endif
         //project the inverted matrix back into model space
         //equation 9 in Siripurnvaraporn and Egbert
         for (size_t i = 0; i < nparm; ++i)
           {
-            boost::numeric::ublas::matrix_column<jif3D::rmat> CurrentColumn(
-                Sensitivities, i);
+            boost::numeric::ublas::matrix_column<jif3D::rmat> CurrentColumn(Sensitivities,
+                i);
             CurrentColumn *= sqrt(WeightVector(i));
           }
         //calculate the inversion model
+#ifdef HAVELAPACK
         atlas::gemv(CblasTrans, 1.0, Sensitivities, Data, 0.0, InvModel);
+#else
+        InvModel = ublas::prod(trans(Sensitivities), Data);
+#endif
       }
 
     /*! Given the sensitivities, data, weights and data error, perform a linear classic model space inversion.
@@ -83,29 +106,44 @@ namespace jif3D
      * @param lambda The lagrangian multiplier to adjust the level of regularivation
      * @param InvModel The m component vector with the inversion result
      */
-    void ModelSpaceInversion::operator()(rmat &Sensitivities, rvec &Data, const rvec &WeightVector,
-        const rvec &DataError,  const double lambda,
+    void ModelSpaceInversion::operator()(rmat &Sensitivities, rvec &Data,
+        const rvec &WeightVector, const rvec &DataError, const double lambda,
         rvec &InvModel)
       {
         const size_t nmeas = Data.size();
         const size_t nparm = Sensitivities.size2();
+#ifdef HAVELAPACK
         atlas::gemv(1.0, Sensitivities, InvModel, 1.0, Data);
+#else
+        Data += ublas::prod(Sensitivities, InvModel);
+#endif
         for (size_t i = 0; i < nmeas; ++i)
           {
-            boost::numeric::ublas::matrix_row<jif3D::rmat>(Sensitivities, i)
-                /= sqrt(DataError(i));
+            boost::numeric::ublas::matrix_row<jif3D::rmat>(Sensitivities, i) /= sqrt(
+                DataError(i));
             Data(i) /= sqrt(DataError(i));
           }
 
         jif3D::rmat Gamma(nparm, nparm);
-        atlas::gemm(CblasTrans, CblasNoTrans, 1.0, Sensitivities,
-            Sensitivities, 0.0, Gamma);
+#ifdef HAVELAPACK
+        atlas::gemm(CblasTrans, CblasNoTrans, 1.0, Sensitivities, Sensitivities, 0.0,
+            Gamma);
+#else
+        Gamma = ublas::prod(trans(Sensitivities), Sensitivities);
+#endif
         for (size_t i = 0; i < nparm; ++i)
           {
             Gamma(i, i) += lambda * 1. / WeightVector(i);
           }
+#ifdef HAVELAPACK
         atlas::gemv(CblasTrans, 1.0, Sensitivities, Data, 0.0, InvModel);
         lapack::gesv(Gamma, InvModel);
+#else
+        InvModel = ublas::prod(ublas::trans(Sensitivities), Data);
+        rmat InvMat(Gamma.size1(),Gamma.size2());
+        InvertMatrix(Gamma, InvMat);
+        InvModel = ublas::prod(InvMat, InvModel);
+#endif
       }
 
     /*! Given the sensitivities, data, weights and data error, perform a Quasi-Newton Model update.
@@ -118,31 +156,48 @@ namespace jif3D
      * @param lambda The lagrangian multiplier to adjust the level of regularivation
      * @param InvModel The m component vector with the inversion result
      */
-    void QuasiNewtonInversion::operator()(rmat &Sensitivities, rvec &Data, const rvec &WeightVector,
-        const rvec &DataError, const double lambda, rvec &InvModel)
+    void QuasiNewtonInversion::operator()(rmat &Sensitivities, rvec &Data,
+        const rvec &WeightVector, const rvec &DataError, const double lambda,
+        rvec &InvModel)
       {
         const size_t nmeas = Data.size();
         const size_t nparm = Sensitivities.size2();
         for (size_t i = 0; i < nmeas; ++i)
           {
-            boost::numeric::ublas::matrix_row<jif3D::rmat>(Sensitivities, i)
-                /= sqrt(DataError(i));
+            boost::numeric::ublas::matrix_row<jif3D::rmat>(Sensitivities, i) /= sqrt(
+                DataError(i));
             Data(i) /= sqrt(DataError(i));
           }
         jif3D::rmat Gamma(nparm, nparm);
-        atlas::gemm(CblasTrans, CblasNoTrans, 1.0, Sensitivities,
-            Sensitivities, 0.0, Gamma);
+#ifdef HAVELAPACK
+        atlas::gemm(CblasTrans, CblasNoTrans, 1.0, Sensitivities, Sensitivities, 0.0,
+            Gamma);
+#else
+        Gamma = ublas::prod(ublas::trans(Sensitivities), Sensitivities);
+#endif
         for (size_t i = 0; i < nparm; ++i)
           {
             Gamma(i, i) += lambda * 1. / WeightVector(i);
           }
         jif3D::rvec y(nparm);
+#ifdef HAVELAPACK
         atlas::gemv(CblasTrans, 1.0, Sensitivities, Data, 0.0, y);
+#else
+        y = ublas::prod(ublas::trans(Sensitivities), Data);
+#endif
         for (size_t i = 0; i < nparm; ++i)
           {
             y(i) += lambda * 1. / WeightVector(i) * InvModel(i);
           }
+#ifdef HAVELAPACK
         lapack::gesv(Gamma, y);
         InvModel = y;
+#else
+        InvModel = ublas::prod(ublas::trans(Sensitivities), Data);
+        rmat InvMat(Gamma.size1(),Gamma.size2());
+        InvertMatrix(Gamma, InvMat);
+        InvModel = ublas::prod(InvMat, y);
+#endif
+
       }
-}
+  }
