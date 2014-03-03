@@ -49,8 +49,9 @@ int main(int argc, char *argv[])
 
     po::options_description desc("General options");
     desc.add_options()("help", "produce help message")("threads", po::value<int>(),
-        "The number of openmp threads")("covmod", po::value<std::string>(),
-        "A file containing the model covariance");
+        "The number of openmp threads")("dens_covmod", po::value<std::string>(),
+        "A file containing the model covariance")("magdepth",
+        "Counteract the decay in sensitivities with depth");
 
     jif3D::SetupRegularization RegSetup;
     jif3D::SetupInversion InversionSetup;
@@ -75,21 +76,21 @@ int main(int argc, char *argv[])
         omp_set_num_threads(vm["threads"].as<int>());
       }
 #endif
-    jif3D::rvec CovModVec;
-    if (vm.count("covmod"))
-      {
-        jif3D::ThreeDGravityModel CovModel;
-        CovModel.ReadNetCDF(vm["covmod"].as<std::string>());
-        const size_t ncovmod = CovModel.GetDensities().num_elements();
-        CovModVec.resize(ncovmod);
-        std::copy(CovModel.GetDensities().origin(),
-            CovModel.GetDensities().origin() + ncovmod, CovModVec.begin());
-      }
 
     std::string meshfilename = jif3D::AskFilename("Mesh filename: ");
     jif3D::ThreeDGravityModel Mesh;
     Mesh.ReadNetCDF(meshfilename);
     const size_t ngrid = Mesh.GetNModelElements();
+
+    jif3D::rvec CovModVec;
+    if (vm.count("dens_covmod"))
+      {
+        jif3D::ThreeDGravityModel CovModel;
+        CovModel.ReadNetCDF(vm["dens_covmod"].as<std::string>());
+        const size_t ncovmod = CovModel.GetDensities().num_elements();
+        std::copy(CovModel.GetDensities().origin(),
+            CovModel.GetDensities().origin() + ncovmod, CovModVec.begin());
+      }
 
     jif3D::rvec RefVec(ngrid);
     std::fill(RefVec.begin(), RefVec.end(), 1.0);
@@ -148,6 +149,53 @@ int main(int argc, char *argv[])
 
     boost::shared_ptr<jif3D::ObjectiveFunction> Regularization = RegSetup.SetupObjective(
         vm, Mesh, CovModVec);
+
+    if (vm.count("magdepth"))
+      {
+        CovModVec.resize(2 * ngrid, true);
+        std::fill(CovModVec.begin(), CovModVec.end(), 1.0);
+        boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::ThreeDMagneticModel> > Implementation;
+        Implementation = boost::shared_ptr<
+            jif3D::ThreeDGravMagImplementation<jif3D::ThreeDMagneticModel> >(
+            new jif3D::OMPMagneticImp(MagneticsSetup.GetInclination(),
+                MagneticsSetup.GetDeclination(), MagneticsSetup.GetFielStrength()));
+        jif3D::FullSensitivityGravMagCalculator<jif3D::ThreeDMagneticModel> FullCalc(
+            Implementation);
+        FullCalc.SetDataTransform(
+            boost::shared_ptr<jif3D::TotalFieldAnomaly>(
+                new jif3D::TotalFieldAnomaly(MagneticsSetup.GetInclination(),
+                    MagneticsSetup.GetDeclination(), MagneticsSetup.GetFielStrength())));
+        std::cout << "Calculating depth weighting." << std::endl;
+        //now we perform the depth weighting for the sensitivities
+        jif3D::rvec SensProfile, WeightVector;
+        //we find a measurement site close to the centre of the model and extract the
+        //sensitivity variation with depth
+        jif3D::rmat Sens;
+        jif3D::CalculateMiddleSens(MagneticsSetup.GetModel(), FullCalc, SensProfile);
+
+        double DepthExponent = -3.0;
+        //we fit a curve of the form 1/(z+z0)^n to the extracted sensitivities
+        double z0 = FitZ0(SensProfile, MagneticsSetup.GetModel().GetZCellSizes(),
+            jif3D::WeightingTerm(DepthExponent));
+        std::cout << "Estimated z0: " << z0 << std::endl;
+        const size_t zsize = MagneticsSetup.GetModel().GetModelShape()[2];
+        //calculate the depth scaling
+        jif3D::ConstructDepthWeighting(MagneticsSetup.GetModel().GetZCellSizes(), z0,
+            WeightVector, jif3D::WeightingTerm(DepthExponent));
+        for (size_t i = 0; i < ngrid; ++i)
+          {
+            CovModVec(ngrid + i) = WeightVector(i % zsize);
+          }
+        std::ofstream proffile("profile.out");
+        std::copy(SensProfile.begin(), SensProfile.end(),
+            std::ostream_iterator<double>(proffile, "\n"));
+        std::ofstream covfile("cov.out");
+        std::copy(CovModVec.begin(), CovModVec.end(),
+            std::ostream_iterator<double>(covfile, "\n"));
+        std::ofstream weightfile("weights.out");
+        std::copy(WeightVector.begin(), WeightVector.end(),
+            std::ostream_iterator<double>(weightfile, "\n"));
+      }
 
     double gravreglambda = 1.0;
     std::cout << "Gravity Regularization Lambda: ";

@@ -10,6 +10,7 @@
 #include "../Magnetics/ReadWriteMagneticData.h"
 #include "../Magnetics/OMPMagneticImp.h"
 #include "../Magnetics/MagneticTransforms.h"
+#include "../Gravity/DepthWeighting.h"
 #include "../Global/FileUtil.h"
 #include "../Global/Noise.h"
 
@@ -120,6 +121,7 @@ namespace jif3D
                 boost::shared_ptr<jif3D::TotalFieldAnomaly>(
                     new jif3D::TotalFieldAnomaly(inclination, declination,
                         fieldstrength)));
+
             MagObjective =
                 boost::shared_ptr<jif3D::ThreeDModelObjective<CalculatorType> >(
                     new jif3D::ThreeDModelObjective<CalculatorType>(*Calculator));
