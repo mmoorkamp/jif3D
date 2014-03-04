@@ -12,7 +12,9 @@
 #include <iostream>
 #include <string>
 #include <cstdlib>
+#ifdef HAVEOPENMP
 #include <omp.h>
+#endif
 #include <boost/program_options.hpp>
 #include "../Global/FileUtil.h"
 #include "../Global/convert.h"
@@ -46,11 +48,12 @@ int main(int argc, char *argv[])
         std::cout << desc << "\n";
         return 1;
       }
+#ifdef HAVEOPENMP
     if (vm.count("threads"))
       {
         omp_set_num_threads(vm["threads"].as<int>());
       }
-
+#endif
     jif3D::X3DModel Model;
     size_t nx, ny, nz;
     double deltax, deltay, deltaz;

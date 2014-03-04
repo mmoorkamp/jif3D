@@ -8,6 +8,9 @@
 #include <numeric>
 #include "ModelRefiner.h"
 #include "../Global/FatalException.h"
+
+ #pragma GCC diagnostic ignored "-Wuninitialized"
+
 namespace jif3D
   {
 
