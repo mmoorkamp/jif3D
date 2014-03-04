@@ -8,6 +8,6 @@ import testing ;
 
      
 exe hpx_2phase : hpx_2phase.cpp ..//MT  ..//ModelBase  ..//boost_system ..//boost_filesystem /mpi//mpi
-   : <include>. <linkflags>"`pkg-config --cflags --libs hpx_application ` -liostreams "
+   : <linkflags>"`pkg-config  --libs hpx_application ` -liostreams "
      <cflags>"`pkg-config --cflags hpx_application `"  <hpx>off:<build>no 
      ;
