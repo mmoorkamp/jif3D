@@ -98,7 +98,7 @@ std::string MakeUniqueName(jif3D::X3DModel::ProblemType Type, const size_t FreqI
   }
 //create a script that changes to the correct directory
 //and executes x3d in that directory
-void MakeRunFile(const std::string &NameRoot, const std::string DirName)
+void MakeRunFile(const std::string &NameRoot, const std::string DirName, std::string X3DName)
   {
     std::string RunFileName = NameRoot + runext;
     fs::create_directory(DirName);
@@ -106,7 +106,7 @@ void MakeRunFile(const std::string &NameRoot, const std::string DirName)
     runfile.open(RunFileName.c_str());
     runfile << "#!/bin/bash\n";
     runfile << "cd " << DirName << "\n";
-    runfile << "x3d > /dev/null\n";
+    runfile << X3DName << " > /dev/null\n";
     runfile << "cd ..\n";
     runfile.close();
     //we also copy the necessary *.hnk files
@@ -131,7 +131,7 @@ void RunX3D(const std::string &NameRoot)
   }
 
 jif3D::rvec HPXCalculateFrequency(const jif3D::X3DModel &Model, size_t freqindex,
-    std::string TempDirName)
+    std::string TempDirName, std::string X3DName)
   {
     std::cout << "Frequency: " << freqindex << " Running on: " << hpx::find_here()
         << " thread: " << hpx::get_worker_thread_num() << std::endl;
@@ -150,7 +150,7 @@ jif3D::rvec HPXCalculateFrequency(const jif3D::X3DModel &Model, size_t freqindex
     //writing out files causes problems in parallel
     // so we make sure it is done one at a time
 
-    MakeRunFile(RootName.string(), DirName.string());
+    MakeRunFile(RootName.string(), DirName.string(), X3DName);
     jif3D::WriteProjectFile(DirName.string(), CurrFreq, jif3D::X3DModel::MT,
         resultfilename, modelfilename);
     jif3D::Write3DModelForX3D((DirName / modelfilename).string(), Model.GetXCellSizes(),

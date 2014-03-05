@@ -53,8 +53,8 @@ namespace jif3D
       void CleanUp();
       //! The directory to store all temporary files
       std::string TempDirName;
+      std::string X3DName;
       rvec LQDerivativeFreq(const X3DModel &Model, const rvec &Misfit, size_t freqindex);
-
     public:
       //! Given a conductivity model, calculate a vector of impedances
       /*! For a conductivity model given by the input parameter Model, we calculate the synthetic magnetotelluric data. When compiled with
@@ -67,7 +67,7 @@ namespace jif3D
       rvec Calculate(const ModelType &Model, size_t minfreqindex = 0,
           size_t maxfreqindex = std::numeric_limits<size_t>::max());
       //! The constructor takes an optional argument to change the directory were temporary files are stored
-      HPXMTCalculator(boost::filesystem::path TDir = boost::filesystem::current_path());
+      HPXMTCalculator(boost::filesystem::path TDir = boost::filesystem::current_path(), std::string x3d = "x3d");
       virtual ~HPXMTCalculator();
       };
   /* @} */

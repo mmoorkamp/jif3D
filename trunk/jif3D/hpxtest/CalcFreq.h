@@ -18,7 +18,7 @@
 
 
 jif3D::rvec HPXCalculateFrequency(const jif3D::X3DModel &Model, size_t freqindex,
-    std::string TempDirName);
+    std::string TempDirName, std::string X3DName);
 
 HPX_DEFINE_PLAIN_ACTION(HPXCalculateFrequency, CalculateFrequency_action);
 //HPX_ACTION_USES_SNAPPY_COMPRESSION(CalculateFrequency_action);

@@ -56,7 +56,8 @@ namespace jif3D
          }*/
       }
 
-    HPXMTCalculator::HPXMTCalculator(boost::filesystem::path TDir)
+    HPXMTCalculator::HPXMTCalculator(boost::filesystem::path TDir, std::string x3d):
+        X3DName(x3d)
       {
         if (!fs::is_directory(TDir))
           throw FatalException("TDir is not a directory: " + TDir.string());
@@ -151,7 +152,7 @@ namespace jif3D
           {
         	hpx::naming::id_type const locality_id = localities.at(i % localities.size());
             //rvec freqresult = CalculateFrequency(Model, i, TempDir);
-            FreqResult.push_back(async(FreqCalc, locality_id, Model, i, TempDirName));
+            FreqResult.push_back(async(FreqCalc, locality_id, Model, i, TempDirName, X3DName));
 
           }
         wait_all(FreqResult);
