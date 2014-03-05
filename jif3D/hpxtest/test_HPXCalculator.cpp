@@ -29,6 +29,7 @@ int hpx_main(variables_map & vm)
   {
 
     boost::filesystem::path TempDir = boost::filesystem::current_path();
+    std::string X3DName = "x3d";
     if (vm.count("tempdir"))
       {
         TempDir = vm["tempdir"].as<std::string>();
@@ -37,6 +38,11 @@ int hpx_main(variables_map & vm)
             std::cerr << TempDir.string() << " is not a directory or does not exist ! \n";
             return 500;
           }
+      }
+
+    if (vm.count("x3dname"))
+      {
+        X3DName = vm["x3dname"].as<std::string>();
       }
 
     //create a 3D version of a 1D model
@@ -76,7 +82,7 @@ int hpx_main(variables_map & vm)
         Model.SetFrequencies().push_back(freq * i + 1);
       }
     jif3D::X3DMTCalculator X3DCalculator(TempDir);
-    jif3D::HPXMTCalculator HPXCalculator(TempDir);
+    jif3D::HPXMTCalculator HPXCalculator(TempDir, X3DName);
 
     for (size_t i = 1; i < xsize / 2; ++i)
       for (size_t j = 1; j < ysize / 2; ++j)
@@ -137,7 +143,8 @@ int main(int argc, char* argv[])
     po::options_description desc("General options");
     desc.add_options()("help", "produce help message")("tempdir",
         po::value<std::string>(),
-        "The name of the directory to store temporary files in");
+        "The name of the directory to store temporary files in")("x3dname",
+        po::value<std::string>(),"The name of the x3d executable");
 
     return hpx::init(desc, argc, argv);
 
