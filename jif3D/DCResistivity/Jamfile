@@ -2,7 +2,7 @@ import testing ;
 
 alias core :  ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ..//boost_filesystem ..//boost_system ;
 
-lib dcresistivity :   ThreeDDCResistivityModel.cpp DCResistivityCalculator.cpp   core  ;
+lib dcresistivity :   ThreeDDCResistivityModel.cpp DCResistivityCalculator.cpp  ResForwardbase.cpp core  ;
              
 
 #unit-test seismic_test :  test_modeling_seismic.cpp tomo ../ModelBase//modelbase  ;
