@@ -583,6 +583,7 @@ INPUT                  = "Global" \
                          "Tomo" \
                          "Joint" \
                          "ModelTransforms" \
+                         "DCResistivity" \
                          "docu.h"
 
 # This tag can be used to specify the character encoding of the source files
