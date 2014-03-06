@@ -1,0 +1,11 @@
+import testing ; 
+
+alias core :  ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ..//boost_filesystem ..//boost_system ;
+
+lib dcresistivity :   ThreeDDCResistivityModel.cpp DCResistivityCalculator.cpp   core  ;
+             
+
+#unit-test seismic_test :  test_modeling_seismic.cpp tomo ../ModelBase//modelbase  ;
+#unit-test tomo_objective_test :  test_tomo_objective.cpp tomo ../ModelBase//modelbase  ../Inversion  ;
+
+#exe makeseismesh : makeseismesh.cpp tomo  core :  ;
