@@ -12,6 +12,9 @@ feature.compose <optpp>on : <define>HAVEOPTPP ;
 feature.feature hpx : off on : composite incidental ;
 feature.compose <hpx>on : <define>HAVEHPX ; 
 
+feature.feature eigen : off on : composite incidental ;
+feature.compose <eigen>on : <define>HAVEEIGEN ; 
+
 constant BOOST_LIB_PATH : /usr/local/lib ;
 constant CUDA_LIB_PATH : /usr/local/cuda/lib64 ;
 
@@ -27,6 +30,7 @@ project
         <lapack>off
         <optpp>on
         <hpx>off
+        <eigen>on
     	<variant>release:<define>NDEBUG
     	<variant>profile:<define>NDEBUG  
     	<toolset>gcc<variant>debug:<cflags>" -ggdb3"
