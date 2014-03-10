@@ -88,8 +88,9 @@ namespace jif3D
           }
       }
 
-    X3DMTCalculator::X3DMTCalculator(boost::filesystem::path TDir, bool DC) :
-        WantDistCorr(DC)
+    X3DMTCalculator::X3DMTCalculator(boost::filesystem::path TDir, std::string x3d,
+        bool DC) :
+        X3DName(x3d), WantDistCorr(DC)
       {
         NameRoot = ObjectID();
         if (!fs::is_directory(TDir))
@@ -149,7 +150,8 @@ namespace jif3D
       }
     //create a script that changes to the correct directory
     //and executes x3d in that directory
-    void MakeRunFile(const std::string &NameRoot, const std::string DirName)
+    void MakeRunFile(const std::string &NameRoot, const std::string &DirName,
+        const std::string &X3DName)
       {
         std::string RunFileName = NameRoot + runext;
         fs::create_directory(DirName);
@@ -157,7 +159,7 @@ namespace jif3D
         runfile.open(RunFileName.c_str());
         runfile << "#!/bin/bash\n";
         runfile << "cd " << DirName << "\n";
-        runfile << "x3d > /dev/null\n";
+        runfile << X3DName << " > /dev/null\n";
         runfile << "cd ..\n";
         runfile.close();
         //we also copy the necessary *.hnk files
@@ -197,7 +199,7 @@ namespace jif3D
         // so we make sure it is done one at a time
 #pragma omp critical(forward_write_files)
           {
-            MakeRunFile(RootName.string(), DirName.string());
+            MakeRunFile(RootName.string(), DirName.string(), X3DName);
             WriteProjectFile(DirName.string(), CurrFreq, X3DModel::MT, resultfilename,
                 modelfilename);
             Write3DModelForX3D((DirName / modelfilename).string(), Model.GetXCellSizes(),
@@ -318,8 +320,6 @@ namespace jif3D
         maxfreqindex = std::min(maxfreqindex, Model.GetFrequencies().size());
         const size_t nfreq = maxfreqindex - minfreqindex;
         const size_t nmeas = Model.GetMeasPosX().size();
-        const size_t nmodx = Model.GetXCoordinates().size();
-        const size_t nmody = Model.GetYCoordinates().size();
 
         //result will hold the final impedance values with
         //applied distortion correction
@@ -570,7 +570,7 @@ namespace jif3D
         //in parallel
 #pragma omp critical(gradient_writemodel_edip)
           {
-            MakeRunFile(EdipName.string(), EdipDirName.string());
+            MakeRunFile(EdipName.string(), EdipDirName.string(), X3DName);
             WriteProjectFile(EdipDirName.string(), CurrFreq, X3DModel::EDIP,
                 resultfilename, modelfilename);
             Write3DModelForX3D((EdipDirName / modelfilename).string(),
@@ -594,18 +594,12 @@ namespace jif3D
             Model.GetZCellSizes(), nmodx, nmody, nmodz);
 
         //now we calculate the response to magnetic dipole sources
-        const std::complex<double> omega_mu =
-            -1.0
-                / (std::complex<double>(0.0, jif3D::mag_mu) * 2.0
-                    * boost::math::constants::pi<double>()
-                    * Model.GetFrequencies()[freqindex]);
-
         fs::path MdipName = TempDir / MakeUniqueName(X3DModel::MDIP, freqindex);
         fs::path MdipDirName = MdipName.string() + dirext;
         //write the files for the magnetic dipole calculation
 #pragma omp critical(gradient_writemodel_mdip)
           {
-            MakeRunFile(MdipName.string(), MdipDirName.string());
+            MakeRunFile(MdipName.string(), MdipDirName.string(), X3DName);
             WriteProjectFile(MdipDirName.string(), CurrFreq, X3DModel::MDIP,
                 resultfilename, modelfilename);
             Write3DModelForX3D((MdipDirName / modelfilename).string(),
@@ -664,8 +658,8 @@ namespace jif3D
         return Gradient;
       }
 
-    jif3D::rvec AdaptDist(const std::vector<double> &C,
-        const jif3D::rvec &RawImpedance, const jif3D::rvec &Misfit)
+    jif3D::rvec AdaptDist(const std::vector<double> &C, const jif3D::rvec &RawImpedance,
+        const jif3D::rvec &Misfit)
       {
         jif3D::rvec result(C.size(), 0.0);
         const size_t nstat = C.size() / 4;
@@ -706,8 +700,6 @@ namespace jif3D
         const size_t nmodx = Model.GetConductivities().shape()[0];
         const size_t nmody = Model.GetConductivities().shape()[1];
         const size_t nmodz = Model.GetConductivities().shape()[2];
-        //the number of observations in the model file, one for each cell in the layer
-        const size_t nobs = nmodx * nmody;
         //the number of measurement sites
         const size_t nmeas = Model.GetMeasPosX().size();
         const size_t nmod = nmodx * nmody * nmodz;
