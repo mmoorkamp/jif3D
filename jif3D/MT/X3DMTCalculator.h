@@ -45,6 +45,8 @@ namespace jif3D
       //! This type definition is necessary so that ThreeDModelObjective can correctly deduce the native type for a model object for this class
       typedef X3DModel ModelType;
     private:
+      //! The name of the executable for the x3d code
+      std::string X3DName;
       //! The start of the names for files and directories created by this object
       std::string NameRoot;
       //! Remove all files created for running x3d
@@ -116,9 +118,10 @@ namespace jif3D
        * directory instead of the central filesystem. We can achieve this through setting TDir to an appropriate path.
        * If we set DC to true we calculate the derivative with respect to the distortion parameters.
        * @param TDir Directory to store the temporary files for x3D
+       * @param x3d The name of the executable for the x3d code
        * @param DC Perform distortion correction and calculate the derivative with respect to the distortion parameters
        */
-      X3DMTCalculator(boost::filesystem::path TDir = boost::filesystem::current_path(), bool DC = false);
+      X3DMTCalculator(boost::filesystem::path TDir = boost::filesystem::current_path(), std::string x3d = "x3d", bool DC = false);
       virtual ~X3DMTCalculator();
       };
   /* @} */

@@ -82,7 +82,7 @@ int hpx_main(variables_map & vm)
       {
         Model.SetFrequencies().push_back(freq * i + 1);
       }
-    jif3D::X3DMTCalculator X3DCalculator(TempDir);
+    jif3D::X3DMTCalculator X3DCalculator(TempDir, X3DName);
     jif3D::HPXMTCalculator HPXCalculator(TempDir, X3DName);
 
     for (size_t i = 1; i < xsize / 2; ++i)

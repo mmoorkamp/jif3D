@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
 
     double mincond = 1e-6;
     double maxcond = 10;
-
+    std::string X3DName = "x3d";
     boost::shared_ptr<jif3D::JointObjective> Objective(new jif3D::JointObjective(true));
 
     bool WantDistCorr;
@@ -61,7 +61,8 @@ int main(int argc, char *argv[])
         "The maximum value for conductivity in S/m")("tempdir", po::value<std::string>(),
         "The name of the directory to store temporary files in")("distcorr",
         po::value(&WantDistCorr)->default_value(false),
-        "Correct for distortion within inversion");
+        "Correct for distortion within inversion")("x3dname",
+        po::value(&X3DName)->default_value("x3d"), "The name of the executable for x3d");
 
     jif3D::SetupRegularization RegSetup;
     jif3D::SetupInversion InversionSetup;
@@ -182,7 +183,7 @@ int main(int argc, char *argv[])
 
     boost::shared_ptr<jif3D::ChainedTransform> ConductivityTransform(
         new jif3D::ChainedTransform);
-    jif3D::rvec RefModel(ngrid,1.0);
+    jif3D::rvec RefModel(ngrid, 1.0);
     //because the tanh transform is used inside a logarithmic transform
     //we need to take the natural logarithm of the actual minimum and maximum
     ConductivityTransform->AppendTransform(
@@ -203,7 +204,7 @@ int main(int argc, char *argv[])
 
     InvModel = MTTransform->PhysicalToGeneralized(InvModel);
 
-    jif3D::X3DMTCalculator Calculator(TempDir, WantDistCorr);
+    jif3D::X3DMTCalculator Calculator(TempDir, X3DName, WantDistCorr);
     boost::shared_ptr<jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator> > X3DObjective(
         new jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator>(Calculator));
 
@@ -219,8 +220,8 @@ int main(int argc, char *argv[])
     std::cin >> lambda;
     Objective->AddObjective(X3DObjective, MTTransform, 1.0, "MT",
         jif3D::JointObjective::datafit);
-    boost::shared_ptr<jif3D::MultiSectionTransform> ModRegTrans(new jif3D::MultiSectionTransform(InvModel.size(), 0, ngrid,
-                Copier));
+    boost::shared_ptr<jif3D::MultiSectionTransform> ModRegTrans(
+        new jif3D::MultiSectionTransform(InvModel.size(), 0, ngrid, Copier));
     Objective->AddObjective(Regularization, ModRegTrans, lambda, "Regularization",
         jif3D::JointObjective::regularization);
 
@@ -285,9 +286,10 @@ int main(int argc, char *argv[])
                 modelfilename + jif3D::stringify(iteration) + ".mt.inv");
             //write out some information about misfit to the screen
             jif3D::rvec DistModel = MTTransform->GeneralizedToPhysical(InvModel);
-            std::copy(InvModel.begin() + Model.GetNModelElements(), InvModel.end(), C.begin());
-            jif3D::WriteImpedancesToNetCDF(modelfilename + ".dist_imp.nc", Frequencies, XCoord,
-                YCoord, ZCoord, Data, ZError, C);
+            std::copy(InvModel.begin() + Model.GetNModelElements(), InvModel.end(),
+                C.begin());
+            jif3D::WriteImpedancesToNetCDF(modelfilename + ".dist_imp.nc", Frequencies,
+                XCoord, YCoord, ZCoord, Data, ZError, C);
             std::cout << "Currrent Misfit: " << Optimizer->GetMisfit() << std::endl;
             std::cout << "Currrent Gradient: " << Optimizer->GetGradNorm() << std::endl;
             //and write the current misfit for all objectives to a misfit file

@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_SUITE( X3DObjective_Suite )
 
         //we want to test the distortion correction as well
         boost::filesystem::path TDir = boost::filesystem::current_path();
-        jif3D::X3DMTCalculator Calculator(TDir, true);
+        jif3D::X3DMTCalculator Calculator(TDir, "x3d", true);
         jif3D::rvec Observed = Calculator.Calculate(TrueModel);
         std::ofstream impfile("impedance.out");
         std::copy(Observed.begin(), Observed.end(),
