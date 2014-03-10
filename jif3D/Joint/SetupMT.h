@@ -40,6 +40,8 @@ namespace jif3D
       jif3D::X3DModel MTModel;
       //! The name of the netcdf file containing information about the inverse covariance matrix
       std::string MTInvCovarName;
+      //! The name of the executable for x3d
+      std::string X3DName;
     public:
       //! Get read-only access to the objective function object, for example to output misfit information
       const jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator> &GetMTObjective()

@@ -34,7 +34,9 @@ namespace jif3D
             "The name for the model with the MT forward geometry")("mtinvcovar",
             po::value<std::string>(&MTInvCovarName),
             "Inverse covariance matrix to use in MT misfit calculation.")("inderrors",
-            "Use the individual errors for each element instead of the same for all elements");
+            "Use the individual errors for each element instead of the same for all elements")(
+            "x3dname", po::value<std::string>(&X3DName)->default_value("x3d"),
+            "The name of the executable for x3d");
         return desc;
       }
 
@@ -93,7 +95,7 @@ namespace jif3D
             MTModel.SetOrigin(xorigin, yorigin, 0.0);
             MTModel.SetDistortionParameters(C);
             //setup the objective function for the MT data
-            jif3D::X3DMTCalculator Calculator(TempDir);
+            jif3D::X3DMTCalculator Calculator(TempDir, X3DName);
 
             MTObjective = boost::shared_ptr<
                 jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator> >(
