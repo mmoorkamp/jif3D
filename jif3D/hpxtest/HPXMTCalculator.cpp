@@ -15,9 +15,10 @@
 
 #include "../Global/FatalException.h"
 #include "../Global/convert.h"
-
+#include "../MT/MTUtils.h"
 #include "HPXMTCalculator.h"
 #include "CalcFreq.h"
+
 
 
 namespace fs = boost::filesystem;
@@ -27,14 +28,6 @@ namespace fs = boost::filesystem;
 namespace jif3D
   {
 
-  //check that the .hnk file for x3d are in a certain directory
-  bool CheckHNK(const fs::path &TargetDir)
-    {
-      return fs::exists(TargetDir / "ndec15.hnk")
-          && fs::exists(TargetDir / "ndec20.hnk")
-          && fs::exists(TargetDir / "ndec30.hnk")
-          && fs::exists(TargetDir / "ndec40.hnk");
-    }
 
 
 
@@ -78,25 +71,6 @@ namespace jif3D
 
 
 
-    void CompareDepths(const std::vector<double> &BGDepths,
-        const jif3D::ThreeDModelBase::t3DModelDim &ModelDepths)
-      {
-        size_t mindex = 0;
-        for (size_t i = 0; i < BGDepths.size(); ++i)
-          {
-            while (mindex < ModelDepths.size() && ModelDepths[mindex] < BGDepths[i])
-              {
-                ++mindex;
-              }
-            if (mindex < ModelDepths.size() && ModelDepths[mindex] != BGDepths[i])
-              {
-                throw jif3D::FatalException(
-                    "Depth to background layer: " + jif3D::stringify(BGDepths[i])
-                        + " does not match grid cell depth: "
-                        + jif3D::stringify(ModelDepths[mindex]));
-              }
-          }
-      }
 
     rvec HPXMTCalculator::Calculate(const X3DModel &Model, size_t minfreqindex,
         size_t maxfreqindex)
