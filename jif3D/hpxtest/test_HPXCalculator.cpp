@@ -43,6 +43,7 @@ int hpx_main(variables_map & vm)
     if (vm.count("x3dname"))
       {
         X3DName = vm["x3dname"].as<std::string>();
+        std::cout << " Using x3d executable: " << X3DName << std::endl;
       }
 
     //create a 3D version of a 1D model
