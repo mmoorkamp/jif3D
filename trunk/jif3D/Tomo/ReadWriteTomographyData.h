@@ -82,9 +82,11 @@ namespace jif3D
      * @param nmeas The number of measurements
      * @param gridspacing The spacing of the grid cells
      * @param nairlayers The number of airlayers
+     * @param minxindex The shift in number of grid cells between the actual model and the forward grid in x-direction
+     * @param minyindex The shift in number of grid cells between the actual model and the forward grid in y-direction
      */
     void PlotRaypath(const std::string &filename, jif3D::RP_STRUCT *raypath,
-        const size_t nmeas, const double gridspacing, const size_t nairlayers);
+        const size_t nmeas, const double gridspacing, const size_t nairlayers, int minxindex, int minyindex);
   /* @} */
   }
 #endif /* READWRITETOMOGRAPHYDATA_H_ */

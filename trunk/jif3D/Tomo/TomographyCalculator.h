@@ -5,7 +5,6 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-
 #ifndef TOMOGRAPHYCALCULATOR_H_
 #define TOMOGRAPHYCALCULATOR_H_
 
@@ -33,6 +32,10 @@ namespace jif3D
     private:
       //! Do we want to write out the file showing the ray distribution
       bool writerays;
+      //! Internally we only calculate traveltime in the area where we have sources and receivers, this is the shift between the model and the internal grid in x-direction
+      int minxindex;
+      //! Internally we only calculate traveltime in the area where we have sources and receivers, this is the shift between the model and the internal grid in y-direction
+      int minyindex;
       //! The number of air layers on top of the model
       size_t nairlayers;
       //! Information about the source receiver geometry in the format of Bjoern's code
@@ -51,6 +54,8 @@ namespace jif3D
       void serialize(Archive & ar, const unsigned int version)
         {
           ar & writerays;
+          ar & minxindex;
+          ar & minyindex;
           ar & nairlayers;
           ar & geo;
           ar & grid;

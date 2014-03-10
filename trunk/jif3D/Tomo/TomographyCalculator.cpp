@@ -6,10 +6,13 @@
 //============================================================================
 
 #include <boost/bind.hpp>
+#include <boost/numeric/conversion/cast.hpp>
 #include "TomographyCalculator.h"
 #include "ReadWriteTomographyData.h"
 namespace jif3D
   {
+
+    using boost::numeric_cast;
 
     TomographyCalculator::TomographyCalculator(bool saverays) :
         writerays(saverays), nairlayers(3), geo(), grid(), data(), raypath()
@@ -52,25 +55,61 @@ namespace jif3D
 
     rvec TomographyCalculator::Calculate(const ThreeDSeismicModel &Model)
       {
-
-        //first we calculate the size of the actual forward modeling grid
-        //this needs to be one larger in each direction than our model
-        const size_t ngrid = (Model.GetXCellSizes().size() + 1)
-            * (Model.GetYCellSizes().size() + 1)
-            * (Model.GetZCellSizes().size() + 1 + 2 * nairlayers);
         const size_t ndata = Model.GetSourceIndices().size();
         const size_t nmeas = Model.GetMeasPosX().size();
         const size_t nshot = Model.GetSourcePosX().size();
         const size_t npos = nmeas + nshot;
+        //all grid cells have the same size in all directions, so we just
+        //read one of the values
+        const double gridspacing = Model.GetXCellSizes()[0];
+        const int padding = 5;
+        auto xmeasrange = std::minmax_element(Model.GetMeasPosX().begin(),
+            Model.GetMeasPosX().end());
+        auto ymeasrange = std::minmax_element(Model.GetMeasPosY().begin(),
+            Model.GetMeasPosY().end());
+        auto xsourcerange = std::minmax_element(Model.GetSourcePosX().begin(),
+            Model.GetSourcePosX().end());
+        auto ysourcerange = std::minmax_element(Model.GetSourcePosY().begin(),
+            Model.GetSourcePosY().end());
+
+        double minx = std::min(*xmeasrange.first, *xsourcerange.first);
+        double maxx = std::max(*xmeasrange.second, *xsourcerange.second);
+        double miny = std::min(*ymeasrange.first, *ysourcerange.first);
+        double maxy = std::max(*ymeasrange.second, *ysourcerange.second);
+
+        minxindex = std::max(
+            numeric_cast<int>(std::floor(minx / gridspacing)) - padding, 0);
+        int maxxindex = std::min(
+            numeric_cast<int>(std::ceil(maxx / gridspacing)) + padding,
+            numeric_cast<int>(Model.GetModelShape()[0]));
+        minyindex = std::max(
+            numeric_cast<int>(std::floor(miny / gridspacing)) - padding, 0);
+        int maxyindex = std::min(
+            numeric_cast<int>(std::ceil(maxy / gridspacing)) + padding,
+            numeric_cast<int>(Model.GetModelShape()[1]));
+
+        const double xshift = minxindex * gridspacing;
+        const double yshift = minyindex * gridspacing;
+
+
+        typedef boost::multi_array_types::index_range range;
+        // OR typedef array_type::index_range range;
+        ThreeDModelBase::t3DModelData::const_array_view<3>::type SubGrid =
+            Model.GetSlownesses()[boost::indices[range(minxindex, maxxindex)][range(
+                minyindex, maxyindex)][range(0, Model.GetModelShape()[2])]];
+
+        grid.nx = SubGrid.shape()[0];
+        grid.ny = SubGrid.shape()[1];
+        grid.nz = SubGrid.shape()[2] + 2 * nairlayers;
+        grid.h = gridspacing;
+
+        //we calculate the size of the actual forward modeling grid
+        //this needs to be one larger in each direction than our model
+        const size_t ngrid = (grid.nx + 1) * (grid.ny + 1) * (grid.nz + 1);
         //allocate the arrays
         Allocate(ngrid, ndata, npos);
         //now we can start to fill the different structures for the forward code
         //first we do the slowness grid
-        grid.nx = Model.GetXCellSizes().size();
-        grid.ny = Model.GetYCellSizes().size();
-        grid.nz = Model.GetZCellSizes().size() + 2 * nairlayers;
-        grid.h = Model.GetXCellSizes()[0];
-
         //the extra cells have to be zero, it is easier to initialize everything
         std::fill_n(grid.slow.begin(), ngrid, 0.0);
         //fill the real model with slowness values
@@ -82,14 +121,13 @@ namespace jif3D
             {
               const size_t layerindex = i * (grid.nz + 1) * (grid.ny + 1)
                   + j * (grid.nz + 1);
-              //fill the airlayers
+              //fill the side padding areas
               std::fill_n(grid.slow.begin() + layerindex, nairlayers, grid.h);
               std::fill_n(grid.slow.begin() + layerindex + grid.nz - nairlayers,
                   nairlayers, grid.h);
               //then copy the actual model
               for (size_t k = nairlayers; k < grid.nz - nairlayers; ++k)
-                grid.slow[layerindex + k] = Model.GetSlownesses()[i][j][k - nairlayers]
-                    * grid.h;
+                grid.slow[layerindex + k] = SubGrid[i][j][k - nairlayers] * grid.h;
             }
 
         //fill the data structure
@@ -97,32 +135,39 @@ namespace jif3D
         data.ndata_seis_act = ndata;
         //our indices are 0 based, the forward uses a base of 1
         std::transform(Model.GetSourceIndices().begin(), Model.GetSourceIndices().end(),
-            data.sno.begin(), boost::bind(std::plus<int>(), _1, 1));
+            data.sno.begin(), [](int i)
+              { return i+1;});
 
         //also we have different storage for source and receivers
         //but the forward stores the positions in a single array
         //our indices are 0 based, the forward uses a base of 1
         //and we have to add the number of shots that we already stored
         std::transform(Model.GetReceiverIndices().begin(),
-            Model.GetReceiverIndices().end(), data.rno.begin(),
-            boost::bind(std::plus<int>(), _1, nshot + 1));
+            Model.GetReceiverIndices().end(), data.rno.begin(), [nshot](int i)
+              { return i+nshot+1;});
 
         geo.nrec = nmeas;
         geo.nshot = nshot;
 
         //we use the convention that first we store all shot positions
-        std::copy(Model.GetSourcePosX().begin(), Model.GetSourcePosX().end(),
-            geo.x.begin());
-        std::copy(Model.GetSourcePosY().begin(), Model.GetSourcePosY().end(),
-            geo.y.begin());
+        //we have to adjust for the fact that we are only calculating on
+        //a subgrid
+        std::transform(Model.GetSourcePosX().begin(), Model.GetSourcePosX().end(),
+            geo.x.begin(), [xshift](double pos)
+              { return pos-xshift;});
+        std::transform(Model.GetSourcePosY().begin(), Model.GetSourcePosY().end(),
+            geo.y.begin(), [yshift](double pos)
+              { return pos-yshift;});
         //we also have to adjust for the offset by the airlayers
         std::transform(Model.GetSourcePosZ().begin(), Model.GetSourcePosZ().end(),
             geo.z.begin(), boost::bind(std::plus<double>(), _1, grid.h * nairlayers));
         //and then all measurement position
-        std::copy(Model.GetMeasPosX().begin(), Model.GetMeasPosX().end(),
-            geo.x.begin() + nshot);
-        std::copy(Model.GetMeasPosY().begin(), Model.GetMeasPosY().end(),
-            geo.y.begin() + nshot);
+        std::transform(Model.GetMeasPosX().begin(), Model.GetMeasPosX().end(),
+            geo.x.begin() + nshot, [xshift](double pos)
+              { return pos-xshift;});
+        std::transform(Model.GetMeasPosY().begin(), Model.GetMeasPosY().end(),
+            geo.y.begin() + nshot, [yshift](double pos)
+              { return pos-yshift;});
         std::transform(Model.GetMeasPosZ().begin(), Model.GetMeasPosZ().end(),
             geo.z.begin() + nshot,
             boost::bind(std::plus<double>(), _1, grid.h * nairlayers));
@@ -133,7 +178,7 @@ namespace jif3D
         //option is set to true
         if (writerays)
           {
-            PlotRaypath("ray.vtk", &raypath[0], ndata, grid.h, nairlayers);
+            PlotRaypath("ray.vtk", &raypath[0], ndata, grid.h, nairlayers, minxindex, minyindex);
           }
         //and return the result as a vector
         jif3D::rvec result(ndata, 0.0);
@@ -168,14 +213,17 @@ namespace jif3D
         std::fill(DerivMod.begin(), DerivMod.end(), 0.0);
         //the gradient is simply the length of the raypath
         //through each cell weighted by the data misfit
+        const size_t xextent = Model.GetModelShape()[0];
+        const size_t yextent = Model.GetModelShape()[1];
+        const size_t zextent = Model.GetModelShape()[2];
         for (size_t i = 0; i < ndata; ++i)
           {
             const size_t nray = raypath[i].nray;
             for (size_t j = 0; j < nray; ++j)
               {
-                const size_t offset = (grid.nz - 2 * nairlayers) * grid.ny
-                    * floor(raypath[i].x[j])
-                    + (grid.nz - 2 * nairlayers) * floor(raypath[i].y[j])
+                const size_t offset = (zextent) * yextent
+                    * floor(raypath[i].x[j] + minxindex)
+                    + zextent * floor(raypath[i].y[j] + minyindex)
                     + floor(raypath[i].z[j]) - nairlayers;
 
                 DerivMod(offset) += 2.0 * raypath[i].len[j] * grid.h * Misfit(i);

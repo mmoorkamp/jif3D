@@ -303,7 +303,9 @@ namespace jif3D
         if (!ok)
           {
             std::string error = "Interpolation point is out of the grid! x: "
-                + stringify(x) + " y: " + stringify(y) + " z: " + stringify(z) + "\n";
+                + stringify(x) + " y: " + stringify(y) + " z: " + stringify(z) + " nx2: "
+                + stringify(nx2) + " ny2: " + stringify(ny2) + " nz2: " + stringify(nz2)
+                + "\n";
             throw jif3D::FatalException(error);
           }
 
@@ -313,14 +315,15 @@ namespace jif3D
         w = z - (float) floor(z);
 
         /* And now interpolate */
-        ival = (1 - u) * (1 - v) * (1 - w) * dd(lo(x), lo(y), lo(z))+ (u) * (1
-            - v) * (1 - w) * dd(hi(x), lo(y), lo(z)) + (u) * (v) * (1 - w)
-        * dd(hi(x), hi(y), lo(z)) + (1 - u) * (v) * (1 - w) * dd(lo(x), hi(
-                y), lo(z)) +
+        ival = (1 - u) * (1 - v) * (1 - w) * dd(lo(x), lo(y), lo(z))
+            + (u) * (1 - v) * (1 - w) * dd(hi(x), lo(y), lo(z))
+            + (u) * (v) * (1 - w) * dd(hi(x), hi(y), lo(z))
+            + (1 - u) * (v) * (1 - w) * dd(lo(x), hi(y), lo(z)) +
 
-        (1 - u) * (1 - v) * (w) * dd(lo(x), lo(y), hi(z)) + (u) * (1 - v) * (w)
-        * dd(hi(x), lo(y), hi(z)) + (u) * (v) * (w) * dd(hi(x), hi(y),
-            hi(z)) + (1 - u) * (v) * (w) * dd(lo(x), hi(y), hi(z));
+            (1 - u) * (1 - v) * (w) * dd(lo(x), lo(y), hi(z))
+            + (u) * (1 - v) * (w) * dd(hi(x), lo(y), hi(z))
+            + (u) * (v) * (w) * dd(hi(x), hi(y), hi(z))
+            + (1 - u) * (v) * (w) * dd(lo(x), hi(y), hi(z));
 
         return (ival);
       }
@@ -556,20 +559,20 @@ namespace jif3D
 
         nyz = ny * nz;
 
-        grad[0] = (-Traveltimes(x+1,y,z)- Traveltimes(x+1,y,z+1)
-        - Traveltimes(x+1,y+1,z) - Traveltimes(x+1,y+1,z+1)
-        + Traveltimes(x,y,z) + Traveltimes(x,y,z+1) + Traveltimes(x,y+1,z)
-        + Traveltimes(x,y+1,z+1)) / 4; /*x-component*/
+        grad[0] = (-Traveltimes(x + 1, y, z) - Traveltimes(x + 1, y, z + 1)
+            - Traveltimes(x + 1, y + 1, z) - Traveltimes(x + 1, y + 1, z + 1)
+            + Traveltimes(x, y, z) + Traveltimes(x, y, z + 1) + Traveltimes(x, y + 1, z)
+            + Traveltimes(x, y + 1, z + 1)) / 4; /*x-component*/
 
-        grad[1] = (-Traveltimes(x,y+1,z)- Traveltimes(x,y+1,z+1)
-        - Traveltimes(x+1,y+1,z) - Traveltimes(x+1,y+1,z+1)
-        + Traveltimes(x,y,z) + Traveltimes(x,y,z+1) + Traveltimes(x+1,y,z)
-        + Traveltimes(x+1,y,z+1)) / 4; /*y-component*/
+        grad[1] = (-Traveltimes(x, y + 1, z) - Traveltimes(x, y + 1, z + 1)
+            - Traveltimes(x + 1, y + 1, z) - Traveltimes(x + 1, y + 1, z + 1)
+            + Traveltimes(x, y, z) + Traveltimes(x, y, z + 1) + Traveltimes(x + 1, y, z)
+            + Traveltimes(x + 1, y, z + 1)) / 4; /*y-component*/
 
-        grad[2] = (-Traveltimes(x,y,z+1)- Traveltimes(x,y+1,z+1)
-        - Traveltimes(x+1,y,z+1) - Traveltimes(x+1,y+1,z+1)
-        + Traveltimes(x,y,z) + Traveltimes(x,y+1,z) + Traveltimes(x+1,y,z)
-        + Traveltimes(x+1,y+1,z)) / 4; /*z-component*/
+        grad[2] = (-Traveltimes(x, y, z + 1) - Traveltimes(x, y + 1, z + 1)
+            - Traveltimes(x + 1, y, z + 1) - Traveltimes(x + 1, y + 1, z + 1)
+            + Traveltimes(x, y, z) + Traveltimes(x, y + 1, z) + Traveltimes(x + 1, y, z)
+            + Traveltimes(x + 1, y + 1, z)) / 4; /*z-component*/
 
         return (grad);
       }
