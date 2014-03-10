@@ -140,7 +140,8 @@ namespace jif3D
       }
 
     void PlotRaypath(const std::string &filename, jif3D::RP_STRUCT *raypath,
-        const size_t nmeas, const double gridspacing, const size_t nairlayers)
+        const size_t nmeas, const double gridspacing, const size_t nairlayers,
+        int minxindex, int minyindex)
       {
         std::ofstream outfile(filename.c_str());
         //write out the old style vtk header
@@ -168,8 +169,8 @@ namespace jif3D
               {
                 for (size_t j = 0; j < raypath[i].nray + 1; ++j)
                   {
-                    outfile << raypath[i].x[j] * gridspacing << " "
-                        << raypath[i].y[j] * gridspacing << " "
+                    outfile << (raypath[i].x[j] + minxindex) * gridspacing << " "
+                        << (raypath[i].y[j] + minyindex) * gridspacing << " "
                         << (raypath[i].z[j] - nairlayers) * gridspacing << "\n ";
                   }
               }
