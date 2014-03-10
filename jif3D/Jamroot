@@ -15,6 +15,10 @@ feature.compose <hpx>on : <define>HAVEHPX ;
 feature.feature eigen : off on : composite incidental ;
 feature.compose <eigen>on : <define>HAVEEIGEN ; 
 
+feature.feature parallelization : hpx openmp : composite propagated ;
+feature.compose <parallelization>hpx : <define>HAVEHPX <hpx>on <cflags>"`pkg-config --cflags hpx_application`" <linkflags>"  `pkg-config --libs hpx_application` " ;
+feature.compose <parallelization>openmp : <define>HAVEOPENMP <cflags>" -fopenmp -std=c++0x " <linkflags>" -fopenmp  " ;
+
 constant BOOST_LIB_PATH : /usr/local/lib ;
 constant CUDA_LIB_PATH : /usr/local/cuda/lib64 ;
 
@@ -25,20 +29,14 @@ project
         <include>/usr/local/CUDA_SDK/C/common/inc
         <threading>multi 
         <define>BIND_FORTRAN_LOWERCASE_UNDERSCORE
-        #<define>HAVEOPENMP 
         <gpu>on
         <lapack>off
         <optpp>on
-        <hpx>on
         <eigen>on
     	<variant>release:<define>NDEBUG
     	<variant>profile:<define>NDEBUG  
     	<toolset>gcc<variant>debug:<cflags>" -ggdb3"
     	#<toolset>gcc:<cflags>" -ansi  -Wall -Wextra  -Wno-long-long -Wno-unused-parameter  -pedantic"
-    	<toolset>gcc:<cflags>"`pkg-config --cflags hpx_application`"
-    	#<toolset>gcc:<cflags>" -fopenmp -std=c++0x "
-    	<toolset>gcc:<linkflags>"  `pkg-config --libs hpx_application` "
-    	#<toolset>gcc:<linkflags>" -fopenmp  "
     	<toolset>intel:<cxxflags>" -openmp  -std=c++0x   "
     	<toolset>intel:<define>TESTR
     	#<toolset>intel:<define>BOOST_NO_CXX11_SCOPED_ENUMS
