@@ -277,6 +277,7 @@ namespace jif3D
                 ub::subrange(FineGradient, 0, nfine), CoarseModel, FineModel);
             ub::subrange(CoarseGrad, ngrid, CoarseGrad.size()) = ub::subrange(FineGradient,
                 nfine, FineGradient.size());
+            return CoarseGrad;
           }
         //we only get here if we do not do any refinement
         //omitting the else saves us a compiler warning
