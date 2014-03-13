@@ -152,6 +152,8 @@ namespace jif3D
     //! The basic forward modeling function, uses the Podvin-Lecomte algorithm to calculate traveltimes and then constructs rays from these times
     int ForwardModRay(const GEOMETRY &geo, const GRID_STRUCT &grid, DATA_STRUCT *data,
         RP_STRUCT *raypath);
+    int ForwardModShot(int i, const std::vector<size_t> &uniqueshots, const GEOMETRY &geo, const GRID_STRUCT &grid, DATA_STRUCT *data,
+        RP_STRUCT *raypath);
     /*in podvin-lecomte-3D.c*/
     float interpolate(float x, float y, float z, const GRID_STRUCT &grid, float *data);
   /* @} */
