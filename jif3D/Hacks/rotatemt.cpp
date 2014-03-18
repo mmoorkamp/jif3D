@@ -29,6 +29,7 @@ int main()
     jif3D::ReadImpedancesFromNetCDF(ncfilename, Frequencies, StatX, StatY, StatZ,
         Impedances, Errors, C);
 
+
     std::cout << "Rotation angle [degree]: ";
     double dangle = 0.0;
     std::cin >> dangle;
@@ -71,10 +72,8 @@ int main()
     double MeanY = std::accumulate(StatY.begin(), StatY.end(), 0.0) / StatY.size();
     for (size_t i = 0; i < StatX.size(); ++i)
       {
-        double newx = MeanX + (StatX.at(i) - MeanX) * cos(rangle)
-            - (StatY.at(i) - MeanY) * sin(rangle);
-        double newy = MeanY + (StatX.at(i) - MeanX) * sin(rangle)
-            + (StatY.at(i) - MeanY) * cos(rangle);
+        double newx = StatX.at(i)  * cos(rangle) - StatY.at(i)  * sin(rangle);
+        double newy = StatX.at(i)  * sin(rangle) + StatY.at(i)  * cos(rangle);
         StatX.at(i) = newx;
         StatY.at(i) = newy;
       }
