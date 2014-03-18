@@ -167,7 +167,7 @@ int ForwardModShot(int i, const std::vector<size_t> &uniqueshots,
 		raypath[nact_datapos[j]].z[raypath_tmp[j].nray] =
 				raypath_tmp[j].z[raypath_tmp[j].nray];
 	}
-
+   return 0;
 }
 
 /*-------------------------------------------------------------*/
