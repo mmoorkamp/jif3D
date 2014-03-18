@@ -6,16 +6,52 @@
 //============================================================================
 
 #include <fstream>
+#include <boost/assign/list_of.hpp> // for 'map_list_of()'
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
 #include "../Global/convert.h"
 #include "../Global/FatalException.h"
 #include "MTUtils.h"
+#include "ReadWriteX3D.h"
 
 
 
 namespace jif3D
   {
     const std::string runext = "_run";
+
+    //associate a type of calculation with a name string
+    const std::map<X3DModel::ProblemType, std::string> Extension =
+        boost::assign::map_list_of(X3DModel::MT, "MT")(X3DModel::EDIP, "EDIP")(
+            X3DModel::MDIP, "MDIP");
+
     namespace fs = boost::filesystem;
+
+    //create a unique ID that we can use to name things and still
+    //perform parallel calculations
+    std::string ObjectID()
+      {
+        //a unique ID created on construction
+        boost::uuids::uuid tag = boost::uuids::random_generator()();
+        //make a unique filename for the sensitivity file created by this object
+        //we use boost uuid to generate a unique identifier tag
+        //and translate it to a string to generate the filename
+        return "mt" + jif3D::stringify(getpid()) + jif3D::stringify(tag);
+      }
+
+    std::string MakeUniqueName(const std::string &NameRoot, X3DModel::ProblemType Type,
+        const size_t FreqIndex)
+      {
+        //we assemble the name from the id of the process
+        //and the address of the current object
+        std::string result(NameRoot);
+        //the type of calculation
+        result += Extension.find(Type)->second;
+        //and the frequency index
+        result += jif3D::stringify(FreqIndex);
+        return result;
+      }
 //create a script that changes to the correct directory
 //and executes x3d in that directory
     void MakeRunFile(const std::string &NameRoot, const std::string &DirName,
@@ -173,4 +209,31 @@ namespace jif3D
         Xp2 = temp1 * omega_mu;
         Yp2 = temp2 * omega_mu;
       }
+
+    void CalcU(const std::string &RootName,
+        const std::vector<std::complex<double> > &XPolMoments,
+        const std::vector<std::complex<double> > &YPolMoments,
+        std::vector<std::complex<double> > &Ux, std::vector<std::complex<double> > &Uy,
+        std::vector<std::complex<double> > &Uz, const std::vector<size_t> &SourceXIndex,
+        const std::vector<size_t> &SourceYIndex,
+        const std::vector<double> &ObservationDepths,
+        const jif3D::ThreeDModelBase::t3DModelDim &ZCellBoundaries,
+        const jif3D::ThreeDModelBase::t3DModelDim &ZCellSizes, const size_t ncellsx,
+        const size_t ncellsy, const size_t ncellsz)
+      {
+        std::string DirName = RootName + dirext + "/";
+#pragma omp critical(calcU_writesource)
+          {
+            WriteSourceFile(DirName + sourceafilename, SourceXIndex, SourceYIndex,
+                ObservationDepths, XPolMoments, YPolMoments, ZCellBoundaries, ZCellSizes,
+                ncellsx, ncellsy);
+          }
+        RunX3D(RootName);
+#pragma omp critical(calcU_readema)
+          {
+            ReadEMA(DirName + emaname, Ux, Uy, Uz, ncellsx, ncellsy, ncellsz);
+          }
+        //boost::filesystem::remove_all(emaname);
+      }
+
   }
