@@ -13,3 +13,4 @@ lib setup : SaltRelConstraint.cpp SetupGravity.cpp SetupMagnetics.cpp
 
 unit-test saltrel_test :  test_saltrel_objective.cpp joint setup  ;
 exe jointinv : jointinv.cpp  joint setup    ;
+exe jointinv_hpx : jointinv_hpx.cpp  joint setup  :  <hpx>off:<build>no   ;

@@ -51,20 +51,12 @@ namespace jif3D
       std::string NameRoot;
       //! Remove all files created for running x3d
       void CleanUp();
-      //! Make a unique string identifier for this object, basis for MakeUniqueName
-      std::string ObjectID();
-      //! Create a unique name for each object, calculation type and frequency so that we can write to different directories and execute in parallel
-      std::string MakeUniqueName(X3DModel::ProblemType Type, const size_t FreqIndex);
       //! The directory to store all temporary files
       boost::filesystem::path TempDir;
       //! Do we want to perform distortion correction and calculate derivatives with respect to the distortion parameters
       bool WantDistCorr;
       //! The impedances from the last forward calculation without any distortion correction
       rvec RawImpedance;
-      //! Calculate synthetic MT data for a single frequency
-      rvec CalculateFrequency(const X3DModel &Model, const std::vector<double> &C,size_t freqindex);
-      //! Calculate a least squares derivative for a single frequency
-      rvec LQDerivativeFreq(const X3DModel &Model, const rvec &Misfit, const std::vector<double> &C, size_t freqindex);
       friend class boost::serialization::access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>

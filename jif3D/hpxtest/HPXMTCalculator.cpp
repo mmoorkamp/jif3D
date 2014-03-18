@@ -6,6 +6,7 @@
 //============================================================================
 
 #include <hpx/config.hpp>
+#include <hpx/include/lcos.hpp>
 #include <cassert>
 #include <complex>
 #include <fstream>

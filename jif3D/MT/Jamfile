@@ -5,7 +5,7 @@ lib mt : ReadWriteX3D.cpp ReadWriteImpedances.cpp
          ThreeDMTModel.cpp X3DModel.cpp MTEquations.cpp 
          MT3DCalculator.cpp X3DMTCalculator.cpp
          OneDMTCalculator.cpp InterpolateField.cpp
-         MTCovar.cpp MTUtils.cpp
+         MTCovar.cpp MTUtils.cpp X3DFreqFunctions.cpp
          ../ModelBase//modelbase  ..//boost_filesystem ..//boost_system ;
 
 alias linkcommon : mt ../ModelBase//modelbase  ..//boost_filesystem ..//boost_system ; 

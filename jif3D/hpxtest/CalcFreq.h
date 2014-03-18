@@ -9,10 +9,8 @@
 #ifndef CALCFREQ_H_
 #define CALCFREQ_H_
 
-#include <hpx/include/lcos.hpp>
-#include <hpx/include/iostreams.hpp>
+#include <hpx/config.hpp>
 #include <hpx/include/actions.hpp>
-#include <hpx/include/util.hpp>
 #include "../MT/X3DModel.h"
 #include "../Global/VecMat.h"
 
