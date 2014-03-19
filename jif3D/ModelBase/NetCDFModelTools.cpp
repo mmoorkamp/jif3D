@@ -132,14 +132,18 @@ namespace jif3D
         ThreeDModelBase::t3DModelDim &ZCellSizes, ThreeDModelBase::t3DModelData &Data)
       {
 
+
+
+        //create netcdf variable for data
+        NcVar *DataVar = NetCDFFile.get_var(DataName.c_str());
+        if (DataVar != NULL)
+        {
         //Read the sizes of the blocks in x,y and z-direction from the file
         const size_t nxvalues = ReadSizesFromNetCDF(NetCDFFile, "Northing", XCellSizes);
         const size_t nyvalues = ReadSizesFromNetCDF(NetCDFFile, "Easting", YCellSizes);
         const size_t nzvalues = ReadSizesFromNetCDF(NetCDFFile, "Depth", ZCellSizes);
         //allocate memory for the data
         Data.resize(boost::extents[nxvalues][nyvalues][nzvalues]);
-        //create netcdf variable for data
-        NcVar *DataVar = NetCDFFile.get_var(DataName.c_str());
         //make sure we have the right units
         NcAtt *Unit_Att = DataVar->get_att("units");
         std::string UnitInFile = Unit_Att->as_string(0);
@@ -157,6 +161,10 @@ namespace jif3D
             for (size_t k = 0; k < nxvalues; ++k)
               Data[k][j][i] = databuffer[k + j * nxvalues + i * (nxvalues * nyvalues)];
         delete[] databuffer;
+        }
+        else {
+        	throw jif3D::FatalException("Cannot read variable: "+DataName);
+        }
       }
     /*! Write the information about a rectangular mesh 3D model to a netcdf file
      * @param NetCDFFile An open NcFile object that allows writing
