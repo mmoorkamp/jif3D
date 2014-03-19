@@ -19,34 +19,33 @@
 #include <boost/mpl/at.hpp>
 #include <boost/mpl/range_c.hpp>
 #include <boost/mpl/for_each.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/bind.hpp>
+
 #include <netcdfcpp.h>
+#include <typeinfo>
 typedef boost::mpl::vector<jif3D::ThreeDMagneticModel, jif3D::X3DModel,
 		jif3D::ThreeDSeismicModel, jif3D::ThreeDGravityModel> vecModelType;
 //boost::mpl::at_c<vecType, 3>::type hi = 3;
+typedef boost::make_variant_over<vecModelType>::type data_type;
+data_type Model;
 
 struct model_test
 {
 	std::string filename;
-	typedef boost::make_variant_over<vecModelType>::type data_type;
-	data_type Model;
+
 	template<typename U>
 	void operator()(U x)
 	{
-		try
-		{
 			NcError Error(NcError::silent_nonfatal);
 			U test;
-			test.ReadNetCDF(filename);
-			if (test.GetNModelElements() > 0)
+			try
 			{
-				Model = test;
+			test.ReadNetCDF(filename);
+			Model = test;
 			}
-		} catch (...)
-		{
+			catch (jif3D::FatalException &e)
+			{
 
-		}
+			}
 
 	}
 	model_test(std::string f) :
@@ -61,9 +60,11 @@ public:
 	template<typename T>
 	void operator()(T & Model) const
 	{
+		NcError Error(NcError::silent_nonfatal);
 		std::string finemeshname = jif3D::AskFilename("Refinement mesh: ");
+
 		//read the file with the mesh for refinement
-		T FineMesh;
+		auto FineMesh(Model);
 		FineMesh.ReadNetCDF(finemeshname);
 		//create a ModelRefiner object and pass the information about
 		//the coordinates of the fine model
@@ -80,8 +81,8 @@ public:
 		 FineMesh.SetBackgroundThicknesses(CoarseMod.GetBackgroundThicknesses());*/
 		//ask for the name of the output file and write a new netcdf file
 		std::string outname = jif3D::AskFilename("Outputfile: ", false);
-		Model.WriteNetCDF(outname);
-		Model.WriteVTK(outname);
+		FineMesh.WriteNetCDF(outname);
+		FineMesh.WriteVTK(outname+".vtk");
 	}
 
 };
@@ -105,5 +106,5 @@ int main()
 	model_test CoarseMod(coarsemodname);
 	for_each<vecModelType>(CoarseMod);
 
-	boost::apply_visitor(write_model(), CoarseMod.Model);
+	boost::apply_visitor(write_model(), Model);
 }
