@@ -89,6 +89,7 @@ alias vecopt : lapack cblas atlas f77blas gfortran ;
 
 build-project Global ;
 build-project Gravity ;
+build-project GravMag ;
 build-project Magnetics ;
 build-project MT ;
 build-project Tomo ;

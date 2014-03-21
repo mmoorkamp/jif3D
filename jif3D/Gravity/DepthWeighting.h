@@ -122,9 +122,6 @@ namespace jif3D
         std::copy(Deriv.begin(),Deriv.end(),Sens.data().begin());
         ExtractMiddleSens(LocalModel,Sens,1,SensProfile);
 
-        std::copy(Sens.data().begin(), Sens.data().end(), LocalModel.SetData().origin());
-        LocalModel.WriteVTK("sens.vtk");
-
       }
   /* @} */
   }

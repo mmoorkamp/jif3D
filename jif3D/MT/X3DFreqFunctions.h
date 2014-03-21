@@ -21,44 +21,43 @@
 #include "X3DModel.h"
 
 struct ForwardResult
-{
-	jif3D::rvec DistImpedance;
-	jif3D::rvec RawImpedance;
-	//! Provide serialization to be able to store objects
-	template<class Archive>
-	void serialize(Archive & ar, const unsigned int version)
-	{
-		ar & DistImpedance;
-		ar & RawImpedance;
-	}
+  {
+  jif3D::rvec DistImpedance;
+  jif3D::rvec RawImpedance;
+  //! Provide serialization to be able to store objects
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int version)
+    {
+      ar & DistImpedance;
+      ar & RawImpedance;
+    }
 
-};
+  };
 
 struct ForwardInfo
-{
-	jif3D::X3DModel Model;
-	std::vector<double> C;
-	size_t freqindex;
-	std::string TempDirName;
-	std::string X3DName;
-	std::string NameRoot;
-	template<class Archive>
-	void serialize(Archive & ar, const unsigned int version)
-	{
-		ar & Model;
-		ar & C;
-		ar & freqindex;
-		ar & TempDirName;
-		ar & X3DName;
-		ar & NameRoot;
-	}
-};
-
+  {
+  jif3D::X3DModel Model;
+  std::vector<double> C;
+  size_t freqindex;
+  std::string TempDirName;
+  std::string X3DName;
+  std::string NameRoot;
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int version)
+    {
+      ar & Model;
+      ar & C;
+      ar & freqindex;
+      ar & TempDirName;
+      ar & X3DName;
+      ar & NameRoot;
+    }
+  };
 
 ForwardResult CalculateFrequency(const ForwardInfo &Info);
 
 jif3D::rvec LQDerivativeFreq(const ForwardInfo &Info, const jif3D::rvec &Misfit,
-		const jif3D::rvec RawImpedance);
+    const jif3D::rvec RawImpedance);
 
 #ifdef HAVEHPX
 HPX_DEFINE_PLAIN_ACTION(CalculateFrequency, CalculateFrequency_action);
