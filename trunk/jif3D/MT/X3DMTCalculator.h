@@ -65,7 +65,7 @@ namespace jif3D
           // we do not need to serialize NameRoot, this is generated individually for each object
           if (Archive::is_saving::value)
             {
-              ar &X3DName;
+              ar & X3DName;
               std::string DirName(TempDir.string());
               ar & DirName;
               ar & WantDistCorr;
@@ -73,7 +73,7 @@ namespace jif3D
             }
           if (Archive::is_loading::value)
             {
-              ar &X3DName;
+              ar & X3DName;
               std::string DirName;
               ar & DirName;
               TempDir = DirName;
@@ -115,7 +115,8 @@ namespace jif3D
        * @param x3d The name of the executable for the x3d code
        * @param DC Perform distortion correction and calculate the derivative with respect to the distortion parameters
        */
-      X3DMTCalculator(boost::filesystem::path TDir = boost::filesystem::current_path(), std::string x3d = "x3d", bool DC = false);
+      X3DMTCalculator(boost::filesystem::path TDir = boost::filesystem::current_path(),
+          std::string x3d = "x3d", bool DC = false);
       virtual ~X3DMTCalculator();
       };
   /* @} */

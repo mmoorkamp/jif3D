@@ -31,15 +31,10 @@
 #include "InterpolateField.h"
 #include "MTUtils.h"
 
-
-
 namespace fs = boost::filesystem;
-
 
 namespace jif3D
   {
-
-
 
     void X3DMTCalculator::CleanUp()
       {
@@ -80,9 +75,6 @@ namespace jif3D
       {
         CleanUp();
       }
-
-
-
 
     rvec X3DMTCalculator::Calculate(const X3DModel &Model, size_t minfreqindex,
         size_t maxfreqindex)
@@ -143,14 +135,14 @@ namespace jif3D
             //generate an error message
             try
               {
-            	ForwardInfo Info;
-            	Info.Model = Model;
-            	Info.C = C;
-            	Info.freqindex = i;
-            	Info.TempDirName = TempDir.string();
-            	Info.NameRoot = NameRoot;
-            	Info.X3DName = X3DName;
-            	 ForwardResult freqresult = CalculateFrequency(Info);
+                ForwardInfo Info;
+                Info.Model = Model;
+                Info.C = C;
+                Info.freqindex = i;
+                Info.TempDirName = TempDir.string();
+                Info.NameRoot = NameRoot;
+                Info.X3DName = X3DName;
+                ForwardResult freqresult = CalculateFrequency(Info);
                 size_t startindex = nmeas * i * 8;
 
                 omp_set_lock(&lck);
@@ -159,9 +151,9 @@ namespace jif3D
                     result.begin() + startindex);
                 std::copy(freqresult.RawImpedance.begin(),freqresult.RawImpedance.end(),RawImpedance.begin()+startindex);
 
-
                 omp_unset_lock(&lck);
-              } catch (...)
+              }
+            catch (...)
               {
                 FatalError = true;
                 std::cerr << "Problem in MT forward calculation.";
@@ -177,22 +169,21 @@ namespace jif3D
         using hpx::async;
         using hpx::wait_all;
         std::vector<hpx::naming::id_type> localities =
-                hpx::find_all_localities();
+        hpx::find_all_localities();
         std::vector<hpx::lcos::future<ForwardResult>> FreqResult;
         FreqResult.reserve(nfreq);
         CalculateFrequency_action FreqCalc;
         for (int i = minfreqindex; i < maxfreqindex; ++i)
           {
-        	ForwardInfo Info;
-        	Info.Model = Model;
-        	Info.C = C;
-        	Info.freqindex = i;
-        	Info.TempDirName = TempDir.string();
-        	Info.NameRoot = NameRoot;
-        	Info.X3DName = X3DName;
+            ForwardInfo Info;
+            Info.Model = Model;
+            Info.C = C;
+            Info.freqindex = i;
+            Info.TempDirName = TempDir.string();
+            Info.NameRoot = NameRoot;
+            Info.X3DName = X3DName;
 
-
-        	hpx::naming::id_type const locality_id = localities.at(i % localities.size());
+            hpx::naming::id_type const locality_id = localities.at(i % localities.size());
             //rvec freqresult = CalculateFrequency(Model, i, TempDir);
             FreqResult.push_back(async(FreqCalc, locality_id, Info));
 
@@ -218,14 +209,6 @@ namespace jif3D
         return result;
 
       }
-
-
-
-
-
-
-
-
 
     rvec X3DMTCalculator::LQDerivative(const X3DModel &Model, const rvec &Misfit,
         size_t minfreqindex, size_t maxfreqindex)
@@ -285,13 +268,13 @@ namespace jif3D
           {
             try
               {
-            	ForwardInfo Info;
-            	Info.Model = Model;
-            	Info.C = C;
-            	Info.freqindex = i;
-            	Info.TempDirName = TempDir.string();
-            	Info.NameRoot = NameRoot;
-            	Info.X3DName = X3DName;
+                ForwardInfo Info;
+                Info.Model = Model;
+                Info.C = C;
+                Info.freqindex = i;
+                Info.TempDirName = TempDir.string();
+                Info.NameRoot = NameRoot;
+                Info.X3DName = X3DName;
                 //calculate the gradient for each frequency
                 rvec tmp = LQDerivativeFreq(Info, Misfit, RawImpedance);
 #ifdef HAVEOPENMP
