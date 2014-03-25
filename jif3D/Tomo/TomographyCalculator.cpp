@@ -173,12 +173,12 @@ namespace jif3D
             boost::bind(std::plus<double>(), _1, grid.h * nairlayers));
 
         //now we can do the forward modeling
-        ForwardModRay(geo, grid, &data, &raypath[0]);
+        ForwardModRay(geo, grid, data, raypath);
         //we only write out the file with the rays, if the corresponding
         //option is set to true
         if (writerays)
           {
-            PlotRaypath("ray.vtk", &raypath[0], ndata, grid.h, nairlayers, minxindex, minyindex);
+            PlotRaypath("ray.vtk", raypath, ndata, grid.h, nairlayers, minxindex, minyindex);
           }
         //and return the result as a vector
         jif3D::rvec result(ndata, 0.0);

@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE  (interpolate_test)
       jif3D::GEOMETRY geo;
       jif3D::GRID_STRUCT grid;
       jif3D::DATA_STRUCT data;
-      jif3D::RP_STRUCT *raypath;
+      std::vector<jif3D::RP_STRUCT> raypath;
 
       const size_t ncells = 5;
       grid.nx = ncells;
@@ -120,9 +120,9 @@ BOOST_AUTO_TEST_CASE  (interpolate_test)
       double dist = sqrt(pow(geo.x[0] - geo.x[1], 2) + pow(geo.y[0] - geo.y[1],
               2) + pow(geo.z[0] - geo.z[1], 2));
 
-      raypath = new jif3D::RP_STRUCT[2];
+      raypath.resize(2);
 
-      ForwardModRay(geo, grid, &data, raypath);
+      ForwardModRay(geo, grid, data, raypath);
       double relerror = (data.tcalc[0] - dist *slow) / (dist*slow);
       BOOST_CHECK(std::abs(relerror) < 0.05 );
 
