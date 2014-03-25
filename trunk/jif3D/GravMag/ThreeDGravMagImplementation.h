@@ -20,7 +20,7 @@ namespace jif3D
     /** \addtogroup gravity Gravity forward modeling, display and inversion */
     /* @{ */
     //this is just a forward declaration to avoid circular inclusions
-    //class ThreeDGravMagCalculator;
+    template<class ThreeDModelType> class ThreeDGravMagCalculator;
     //! The base class that provides the interface for the numerical implementation of the gravity forward calculations.
     /*! The calculation of the forward response is split into two class hierarchies that
      * have to be used in conjunction. The classes derived from ThreeDGravityImplementation
@@ -34,7 +34,7 @@ namespace jif3D
      * This type of design resembles the bridge pattern and allows to freely combine optimized implementations
      * for different platforms with different sensitivity handlings.
      */
-    template<class ThreeDModelType> class ThreeDGravMagCalculator;
+
 
     template<class ThreeDModelType>
     class ThreeDGravMagImplementation
