@@ -369,7 +369,9 @@ int hpx_main(boost::program_options::variables_map& vm)
     double cachedruntime = (endtime - starttime).total_seconds();
     std::cout << "Runtime: " << cachedruntime << " s" << std::endl;
     std::cout << std::endl;
-    return 0;
+    return hpx::finalize();
+    return 1;
+
   }
 
 int main(int argc, char* argv[])
