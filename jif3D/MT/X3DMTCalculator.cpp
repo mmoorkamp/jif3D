@@ -170,7 +170,7 @@ namespace jif3D
         using hpx::wait_all;
         std::vector<hpx::naming::id_type> localities =
         hpx::find_all_localities();
-        std::vector<hpx::lcos::future<ForwardResult>> FreqResult;
+        std::vector<hpx::lcos::shared_future<ForwardResult>> FreqResult;
         FreqResult.reserve(nfreq);
         CalculateFrequency_action FreqCalc;
         for (int i = minfreqindex; i < maxfreqindex; ++i)
@@ -258,7 +258,6 @@ namespace jif3D
 #ifdef HAVEOPENMP
         omp_lock_t lck;
         omp_init_lock(&lck);
-#endif
         //we parallelize the gradient calculation by frequency
         //see also the comments for the forward calculation
         //here the explicitly shared variable is Gradient
@@ -277,14 +276,10 @@ namespace jif3D
                 Info.X3DName = X3DName;
                 //calculate the gradient for each frequency
                 rvec tmp = LQDerivativeFreq(Info, Misfit, RawImpedance);
-#ifdef HAVEOPENMP
                 omp_set_lock(&lck);
-#endif
                 //the total gradient is the sum over the gradients for each frequency
                 boost::numeric::ublas::subrange(Gradient, 0, nmod) += tmp;
-#ifdef HAVEOPENMP
                 omp_unset_lock(&lck);
-#endif
               } catch (...)
               {
                 //we cannot throw exceptions that leave the parallel region
@@ -294,8 +289,43 @@ namespace jif3D
               }
             //finished with one frequency
           }
-#ifdef HAVEOPENMP
         omp_destroy_lock(&lck);
+#endif
+
+#ifdef HAVEHPX
+        using hpx::lcos::future;
+        using hpx::async;
+        using hpx::wait_all;
+        std::vector<hpx::naming::id_type> localities =
+                hpx::find_all_localities();
+        std::vector<hpx::lcos::shared_future<jif3D::rvec>> FreqResult;
+        FreqResult.reserve(nfreq);
+        LQDerivativeFreq_action LQDerivativeFreq;
+        for (int i = minfreqindex; i < maxfreqindex; ++i)
+          {
+        	ForwardInfo Info;
+        	Info.Model = Model;
+        	Info.C = C;
+        	Info.freqindex = i;
+        	Info.TempDirName = TempDir.string();
+        	Info.NameRoot = NameRoot;
+        	Info.X3DName = X3DName;
+
+
+        	hpx::naming::id_type const locality_id = localities.at(i % localities.size());
+            //rvec freqresult = CalculateFrequency(Model, i, TempDir);
+            FreqResult.push_back(async(LQDerivativeFreq, locality_id, Info, Misfit, RawImpedance));
+
+          }
+        wait_all(FreqResult);
+
+        for (int i = minfreqindex; i < maxfreqindex; ++i)
+          {
+        	size_t currindex = i - minfreqindex;
+            boost::numeric::ublas::subrange(Gradient, 0, nmod) += FreqResult[currindex].get();
+
+          }
+
 #endif
         if (WantDistCorr)
           {
