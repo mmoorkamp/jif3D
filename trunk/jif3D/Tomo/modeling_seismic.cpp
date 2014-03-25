@@ -34,16 +34,16 @@ typedef struct _CELL_STRUCT_
 
 // Calculate rays from the observed travel time field
 int RayCalc(float *tt, int nx, int ny, int nz, float Xs, float Ys, float Zs,
-		float *Xr, float *Yr, float *Zr, int nrec, RP_STRUCT *rp);
+		float *Xr, float *Yr, float *Zr, int nrec, std::vector<RP_STRUCT> &rp);
 jif3D::rvec TimeGrad(int x, int y, int z, float *tt, int ny, int nz);
 CELL_STRUCT RayBackTrace(double gradx, double grady, double gradz,
 		CELL_STRUCT cell, float *tt, int ny, int nz);
-int ResortRays(RP_STRUCT *raypath, const DATA_STRUCT &data,
+int ResortRays(std::vector<RP_STRUCT> &raypath, const DATA_STRUCT &data,
 		const GRID_STRUCT &grid);
 
 int ForwardModShot(int i, const std::vector<size_t> &uniqueshots,
-		const GEOMETRY &geo, const GRID_STRUCT &grid, DATA_STRUCT *data,
-		RP_STRUCT *raypath)
+		const GEOMETRY &geo, const GRID_STRUCT &grid, DATA_STRUCT &data,
+		std::vector<RP_STRUCT> &raypath)
 {
 	const float delta_num = (float) 0.001;
 	const size_t nx3 = (grid.nx + 1);
@@ -79,18 +79,18 @@ int ForwardModShot(int i, const std::vector<size_t> &uniqueshots,
 	/*Determine the receivers that are activate for the corresponding shot:*/
 	count = 0;
 
-	for (size_t j = 0; j < data->ndata_seis; j++)
+	for (size_t j = 0; j < data.ndata_seis; j++)
 	{
-		if (uniqueshots[i] == data->sno[j])
+		if (uniqueshots[i] == data.sno[j])
 		{
 
-			nact_rec.push_back(data->rno[j]);
+			nact_rec.push_back(data.rno[j]);
 			nact_datapos.push_back(j);
 
 			count++;
 		}
 	}
-	data->lshots[i] = count;
+	data.lshots[i] = count;
 
 	Xr.resize(count + 1);
 	Yr.resize(count + 1);
@@ -103,15 +103,15 @@ int ForwardModShot(int i, const std::vector<size_t> &uniqueshots,
 		Yr[j] = ((geo.y[nact_rec[j] - 1]) / grid.h); /*normalized y-coordinate of the receiver locations according to grid cell EDGES*/
 		Zr[j] = ((geo.z[nact_rec[j] - 1]) / grid.h); /*normalized z-coordinate of the receiver locations according to grid cell EDGES*/
 
-		data->tcalc[nact_datapos[j]] = interpolate(Xr[j], Yr[j], Zr[j], grid,
+		data.tcalc[nact_datapos[j]] = interpolate(Xr[j], Yr[j], Zr[j], grid,
 				&tt[0]);
 
-		if (nact_datapos[j] >= data->ndata_seis)
+		if (nact_datapos[j] >= data.ndata_seis)
 		{
 			throw jif3D::FatalException(
 					"NOT enough memory is allocated: used "
 							+ jif3D::stringify(nact_datapos[j] + 1)
-							+ "allocated " + jif3D::stringify(data->ndata_seis)
+							+ "allocated " + jif3D::stringify(data.ndata_seis)
 							+ "\n");
 		}
 
@@ -123,14 +123,14 @@ int ForwardModShot(int i, const std::vector<size_t> &uniqueshots,
 	/*Ray calculations (3-D version of the Aldridge&Oldenburg raypath-generation, 1993, Journal of seismic exploration,Vol.2,pages 257-274)*/
 
 	/*Allocate temporary ray-structures for the specific shot*/
-	raypath_tmp.resize(data->lshots[i]);
+	raypath_tmp.resize(data.lshots[i]);
 
 	for (size_t j = 0; j < count; j++)
 		raypath_tmp[j].n = nact_datapos[j];
 
 	/*Calculate the rays*/
 	RayCalc(&tt[0], nx3, ny3, nz3, Xs, Ys, Zs, &Xr[0], &Yr[0], &Zr[0], count,
-			&raypath_tmp[0]);
+			raypath_tmp);
 
 	/*Copy the temporary raypath structures in structures that fit with the data structure*/
 	for (size_t j = 0; j < count; j++)
@@ -183,7 +183,7 @@ int ForwardModShot(int i, const std::vector<size_t> &uniqueshots,
 /*		Therefore the grid have to be readjusted*/
 
 int ForwardModRay(const GEOMETRY &geo, const GRID_STRUCT &grid,
-		DATA_STRUCT *data, RP_STRUCT *raypath)
+		DATA_STRUCT &data, std::vector<RP_STRUCT> &raypath)
 {
 
 	const float delta_num = (float) 0.001;
@@ -195,11 +195,11 @@ int ForwardModRay(const GEOMETRY &geo, const GRID_STRUCT &grid,
 	/*******************************************************************************************/
 	/*--Conventional-rays--*/
 
-	std::fill(data->tcalc.begin(), data->tcalc.end(), -1.0);
+	std::fill(data.tcalc.begin(), data.tcalc.end(), -1.0);
 
-	if (data->ndata_seis == 0)
+	if (data.ndata_seis == 0)
 	{
-		data->ndata_seis_act = 0;
+		data.ndata_seis_act = 0;
 
 		printf(
 				"!!WARNING!! NO seismic traveltime data exists although the seismic forward modelling is activated\n\n");
@@ -208,10 +208,10 @@ int ForwardModRay(const GEOMETRY &geo, const GRID_STRUCT &grid,
 		return (1);
 	}
 
-	data->lshots.resize(geo.nshot);
+	data.lshots.resize(geo.nshot);
 	/*Start the loop over all shots*/
-	std::vector<size_t> uniqueshots(data->ndata_seis);
-	std::copy(data->sno.begin(), data->sno.end(), uniqueshots.begin());
+	std::vector<size_t> uniqueshots(data.ndata_seis);
+	std::copy(data.sno.begin(), data.sno.end(), uniqueshots.begin());
 	std::sort(uniqueshots.begin(), uniqueshots.end());
 	uniqueshots.erase(std::unique(uniqueshots.begin(), uniqueshots.end()),
 			uniqueshots.end());
@@ -233,9 +233,9 @@ int ForwardModRay(const GEOMETRY &geo, const GRID_STRUCT &grid,
 	/*******************************************************************************************/
 	/*******************************************************************************************/
 	/*Check the modified structures*/
-	for (size_t i = 0; i < data->ndata_seis; i++)
+	for (size_t i = 0; i < data.ndata_seis; i++)
 	{
-		if (data->tcalc[i] == -1.0)
+		if (data.tcalc[i] == -1.0)
 		{
 
 			throw jif3D::FatalException(
@@ -255,17 +255,17 @@ int ForwardModRay(const GEOMETRY &geo, const GRID_STRUCT &grid,
 
 	/****************************************************************************/
 	/*Resort rays (If the ray runs along the boundary between to cells, the cell with the higher velocity will be considered)*/
-	ResortRays(raypath, *data, grid);
+	ResortRays(raypath, data, grid);
 
 	/*Determine the number of ACTIVE rays and the RMS-value*/
-	data->ndata_seis_act = 0;
-	for (size_t i = 0; i < data->ndata_seis; i++)
+	data.ndata_seis_act = 0;
+	for (size_t i = 0; i < data.ndata_seis; i++)
 	{
 
 		//printf("Number of rays: %d\n", raypath[i].nray);
 		if (raypath[i].nray != 0)
 		{
-			data->ndata_seis_act++;
+			data.ndata_seis_act++;
 		}
 	}
 
@@ -355,7 +355,7 @@ float interpolate(float x, float y, float z, const GRID_STRUCT &grid,
 #define cell_index(x,y,z) ray_cell_index[nyz1*(x) + (nz1)*(y) + (z)]
 
 int RayCalc(float *tt, int nx, int ny, int nz, float Xs, float Ys, float Zs,
-		float *Xr, float *Yr, float *Zr, int nrec, RP_STRUCT *rp)
+		float *Xr, float *Yr, float *Zr, int nrec, std::vector<RP_STRUCT> &rp)
 {
 	int a, b, c;
 	int i, count;
@@ -1284,7 +1284,7 @@ CELL_STRUCT RayBackTrace(double gradx, double grady, double gradz,
 /*				data				:= Data structure*/
 /*				grid				:= Grid structure */
 
-int ResortRays(RP_STRUCT *raypath, const DATA_STRUCT &data,
+int ResortRays(std::vector<RP_STRUCT> &raypath, const DATA_STRUCT &data,
 		const GRID_STRUCT &grid)
 {
 	long c, d, e;

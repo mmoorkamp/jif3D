@@ -139,7 +139,7 @@ namespace jif3D
           }
       }
 
-    void PlotRaypath(const std::string &filename, jif3D::RP_STRUCT *raypath,
+    void PlotRaypath(const std::string &filename, std::vector<RP_STRUCT> &raypath,
         const size_t nmeas, const double gridspacing, const size_t nairlayers,
         int minxindex, int minyindex)
       {
