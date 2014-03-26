@@ -122,10 +122,10 @@ int hpx_main(int argc, char* argv[])
     std::ofstream zxx((OutFilename + "_zxx.out").c_str());
     std::ofstream zyy((OutFilename + "_zyy.out").c_str());
 
-    using hpx::lcos::future;
+    using hpx::lcos::shared_future;
     using hpx::async;
     using hpx::wait_all;
-    std::vector<future<jif3D::rvec> > ImplResult;
+    std::vector<shared_future<jif3D::rvec> > ImplResult;
     ImplResult.reserve(nrealmax);
     Calc_action CalcImpl;
     std::vector<hpx::naming::id_type> localities = hpx::find_all_localities();
