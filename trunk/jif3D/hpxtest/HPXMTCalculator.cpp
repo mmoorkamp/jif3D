@@ -76,7 +76,7 @@ namespace jif3D
     rvec HPXMTCalculator::Calculate(const X3DModel &Model, size_t minfreqindex,
         size_t maxfreqindex)
       {
-        using hpx::lcos::future;
+        using hpx::lcos::shared_future;
         using hpx::async;
         using hpx::wait_all;
 
@@ -118,7 +118,7 @@ namespace jif3D
 
         std::cout << "Number of threads: " << attendance.size() << std::endl;
 
-        std::vector<future<jif3D::rvec>> FreqResult;
+        std::vector<shared_future<jif3D::rvec>> FreqResult;
         FreqResult.reserve(nfreq);
         CalculateFrequency_action FreqCalc;
     	boost::posix_time::ptime calcstarttime =
