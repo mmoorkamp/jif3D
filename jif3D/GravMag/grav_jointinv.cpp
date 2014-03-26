@@ -214,7 +214,7 @@ int main(int argc, char *argv[])
         jif3D::CalculateMiddleSens(GravitySetup.GetScalModel(), FullCalc,
             SensProfile);
 
-        double DepthExponent = -3.0;
+        double DepthExponent = -2.0;
         //we fit a curve of the form 1/(z+z0)^n to the extracted sensitivities
         double z0 = FitZ0(SensProfile, GravitySetup.GetScalModel().GetZCellSizes(),
             jif3D::WeightingTerm(DepthExponent));
