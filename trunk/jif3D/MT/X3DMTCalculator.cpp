@@ -280,7 +280,8 @@ namespace jif3D
                 //the total gradient is the sum over the gradients for each frequency
                 boost::numeric::ublas::subrange(Gradient, 0, nmod) += tmp;
                 omp_unset_lock(&lck);
-              } catch (...)
+              }
+            catch (...)
               {
                 //we cannot throw exceptions that leave the parallel region
                 //so we catch everything and set FatalError to true
@@ -297,22 +298,21 @@ namespace jif3D
         using hpx::async;
         using hpx::wait_all;
         std::vector<hpx::naming::id_type> localities =
-                hpx::find_all_localities();
+        hpx::find_all_localities();
         std::vector<hpx::lcos::shared_future<jif3D::rvec>> FreqResult;
         FreqResult.reserve(nfreq);
         LQDerivativeFreq_action LQDerivativeFreq;
         for (int i = minfreqindex; i < maxfreqindex; ++i)
           {
-        	ForwardInfo Info;
-        	Info.Model = Model;
-        	Info.C = C;
-        	Info.freqindex = i;
-        	Info.TempDirName = TempDir.string();
-        	Info.NameRoot = NameRoot;
-        	Info.X3DName = X3DName;
+            ForwardInfo Info;
+            Info.Model = Model;
+            Info.C = C;
+            Info.freqindex = i;
+            Info.TempDirName = TempDir.string();
+            Info.NameRoot = NameRoot;
+            Info.X3DName = X3DName;
 
-
-        	hpx::naming::id_type const locality_id = localities.at(i % localities.size());
+            hpx::naming::id_type const locality_id = localities.at(i % localities.size());
             //rvec freqresult = CalculateFrequency(Model, i, TempDir);
             FreqResult.push_back(async(LQDerivativeFreq, locality_id, Info, Misfit, RawImpedance));
 
@@ -321,7 +321,7 @@ namespace jif3D
 
         for (int i = minfreqindex; i < maxfreqindex; ++i)
           {
-        	size_t currindex = i - minfreqindex;
+            size_t currindex = i - minfreqindex;
             boost::numeric::ublas::subrange(Gradient, 0, nmod) += FreqResult[currindex].get();
 
           }

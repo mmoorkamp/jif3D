@@ -16,7 +16,7 @@ namespace jif3D
     static const std::string ConductivityUnit = "S/m";
 
     X3DModel::X3DModel() :
-      bg_thicknesses(), bg_conductivities()
+        bg_thicknesses(), bg_conductivities()
       {
 
       }
@@ -27,8 +27,8 @@ namespace jif3D
       }
 
     X3DModel::X3DModel(const X3DModel &source) :
-      ThreeDMTModel(source), bg_thicknesses(source.bg_thicknesses),
-          bg_conductivities(source.bg_conductivities)
+        ThreeDMTModel(source), bg_thicknesses(source.bg_thicknesses), bg_conductivities(
+            source.bg_conductivities)
       {
 
       }
@@ -43,10 +43,10 @@ namespace jif3D
             //that is not contained in the base class
             bg_thicknesses.resize(source.bg_thicknesses.size());
             bg_conductivities.resize(source.bg_conductivities.size());
-            std::copy(source.bg_thicknesses.begin(),
-                source.bg_thicknesses.end(), bg_thicknesses.begin());
-            std::copy(source.bg_conductivities.begin(),
-                source.bg_conductivities.end(), bg_conductivities.begin());
+            std::copy(source.bg_thicknesses.begin(), source.bg_thicknesses.end(),
+                bg_thicknesses.begin());
+            std::copy(source.bg_conductivities.begin(), source.bg_conductivities.end(),
+                bg_conductivities.begin());
           }
         return *this;
       }
@@ -60,21 +60,21 @@ namespace jif3D
         return *this;
       }
 
-    boost::array<ThreeDModelBase::t3DModelData::index, 3>
-     X3DModel::FindAssociatedIndices(const double xcoord, const double ycoord,
-        const double zcoord) const
-   {
-    	const int xindex = boost::numeric_cast<int>(floor((xcoord - XOrigin)/GetXCellSizes()[0]));
-    	const int yindex = boost::numeric_cast<int>(floor((ycoord - YOrigin)/GetYCellSizes()[0]));
+    boost::array<ThreeDModelBase::t3DModelData::index, 3> X3DModel::FindAssociatedIndices(
+        const double xcoord, const double ycoord, const double zcoord) const
+      {
+        const int xindex = boost::numeric_cast<int>(
+            floor((xcoord - XOrigin) / GetXCellSizes()[0]));
+        const int yindex = boost::numeric_cast<int>(
+            floor((ycoord - YOrigin) / GetYCellSizes()[0]));
         const int zindex = std::distance(GetZCoordinates().begin(),
             std::lower_bound(GetZCoordinates().begin(), GetZCoordinates().end(), zcoord));
         //when we return the value we make sure that we cannot go out of bounds
         boost::array<t3DModelData::index, 3> idx =
-              {
-                { std::max(xindex , 0), std::max(yindex , 0), std::max(zindex - 1,
-                    0) } };
+          {
+            { std::max(xindex, 0), std::max(yindex, 0), std::max(zindex - 1, 0) } };
         return idx;
-   }
+      }
 
     void X3DModel::WriteNetCDF(const std::string filename) const
       {
@@ -86,10 +86,8 @@ namespace jif3D
           {
             assert(bg_conductivities.size() == bg_thicknesses.size());
             //we just number layers from 0 to n-1
-            NcDim *BackgroundDim = DataFile.add_dim("bg_layers",
-                bg_thicknesses.size());
-            NcVar *BackgroundVar = DataFile.add_var("bg_layers", ncDouble,
-                BackgroundDim);
+            NcDim *BackgroundDim = DataFile.add_dim("bg_layers", bg_thicknesses.size());
+            NcVar *BackgroundVar = DataFile.add_var("bg_layers", ncDouble, BackgroundDim);
             //here we generate the indices for the layers
             std::vector<double> layerindex;
             std::generate_n(back_inserter(layerindex), bg_thicknesses.size(),
