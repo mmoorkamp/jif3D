@@ -23,21 +23,20 @@ namespace jif3D
 //either because x3d uses this convention
 //or because we use them in their own directory
 //and want to keep them simple to make sure x3d can handle them
-const std::string modelfilename("x3d.model");
-const std::string resultfilename("x3d.result");
-const std::string emaname = resultfilename + "0.ema";
-const std::string sourceafilename = modelfilename + "0a.source";
-const std::string sourcebfilename = modelfilename + "0b.source";
-const std::string emoAname = resultfilename + "0a.emo";
-const std::string emoBname = resultfilename + "0b.emo";
-const std::string emaAname = resultfilename + "0a.ema";
-const std::string emaBname = resultfilename + "0b.ema";
-const std::string dirext = "_dir";
+    const std::string modelfilename("x3d.model");
+    const std::string resultfilename("x3d.result");
+    const std::string emaname = resultfilename + "0.ema";
+    const std::string sourceafilename = modelfilename + "0a.source";
+    const std::string sourcebfilename = modelfilename + "0b.source";
+    const std::string emoAname = resultfilename + "0a.emo";
+    const std::string emoBname = resultfilename + "0b.emo";
+    const std::string emaAname = resultfilename + "0a.ema";
+    const std::string emaBname = resultfilename + "0b.ema";
+    const std::string dirext = "_dir";
 
-
-std::string ObjectID();
-std::string MakeUniqueName(const std::string &NameRoot, X3DModel::ProblemType Type,
-    const size_t FreqIndex);
+    std::string ObjectID();
+    std::string MakeUniqueName(const std::string &NameRoot, X3DModel::ProblemType Type,
+        const size_t FreqIndex);
     void MakeRunFile(const std::string &NameRoot, const std::string &DirName,
         const std::string &X3DName);
     void RunX3D(const std::string &NameRoot);

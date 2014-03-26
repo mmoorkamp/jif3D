@@ -5,7 +5,6 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-
 #ifndef X3DMODEL_H_
 #define X3DMODEL_H_
 
@@ -79,8 +78,8 @@ namespace jif3D
        * @param nx The number of cells in x-direction (North)
        * @param ny The number of cells in y-direction (East)
        */
-      void SetHorizontalCellSize(const double XSize, const double YSize,
-          const size_t nx, const size_t ny)
+      void SetHorizontalCellSize(const double XSize, const double YSize, const size_t nx,
+          const size_t ny)
         {
           ThreeDModelBase::SetXCellSizes().resize(boost::extents[nx]);
           std::fill_n(ThreeDModelBase::SetXCellSizes().begin(), nx, XSize);
@@ -99,8 +98,8 @@ namespace jif3D
           const size_t nmeas = Source.GetMeasPosX().size();
           for (size_t i = 0; i < nmeas; ++i)
             {
-              AddMeasurementPoint(Source.GetMeasPosX()[i],
-                  Source.GetMeasPosY()[i], Source.GetMeasPosZ()[i]);
+              AddMeasurementPoint(Source.GetMeasPosX()[i], Source.GetMeasPosY()[i],
+                  Source.GetMeasPosZ()[i]);
             }
           SetFrequencies() = Source.GetFrequencies();
           SetDistortionParameters(Source.GetDistortionParameters());

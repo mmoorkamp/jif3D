@@ -15,8 +15,6 @@
 #include "MTUtils.h"
 #include "ReadWriteX3D.h"
 
-
-
 namespace jif3D
   {
     const std::string runext = "_run";
