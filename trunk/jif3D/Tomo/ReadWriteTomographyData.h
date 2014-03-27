@@ -11,7 +11,7 @@
 #include <fstream>
 #include "../Global/VecMat.h"
 #include "ThreeDSeismicModel.h"
-#include "modeling_seismic.h"
+#include "tomo_types.h"
 
 namespace jif3D
   {
