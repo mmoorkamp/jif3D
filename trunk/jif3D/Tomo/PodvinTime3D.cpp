@@ -1018,8 +1018,10 @@ T[0][0][0]=%g\n",*HS,*T);
       {
         int signal, nx_, ny_, nz_, xs_, ys_, zs_, X0_, X1_, Y0_, Y1_, Z0_, Z1_,
             n, d, i, ii, ihs, i0, j, jj, jhs, j0, k, kk, khs, k0;
-        float *hs_buf_, *t_buf_, fxs_, fys_, fzs_, HS[N_INIT], T[N_INIT];
+        float *hs_buf_, *t_buf_, fxs_, fys_, fzs_, *HS, *T;
 
+        HS = (float *) malloc((unsigned) N_INIT * sizeof(float));
+        T = (float *) malloc((unsigned) N_INIT * sizeof(float));
         /* increment count of recursivity level */
         init_stage++;
         if (SMALLTALK)

@@ -1397,9 +1397,10 @@ jif3D::RayResult ForwardModShot(int i, jif3D::GEOMETRY geo, jif3D::GRID_STRUCT g
     /***************************************************************************************/
     /*Podvin&Lecomte forward algorithm*/
     /*tt is the calculated traveltime for each grid cell node*/
-    std::cout << grid.slow.size() << std::endl;
+
     std::vector<float> SlowBuffer(grid.slow);
-    jif3D::PodvinTime3D().time_3d(&SlowBuffer[0], &tt[0], nx3, ny3, nz3, Xs, Ys, Zs,
+    jif3D::PodvinTime3D T;
+    T.time_3d(&SlowBuffer[0], &tt[0], nx3, ny3, nz3, Xs, Ys, Zs,
         delta_num, 0);
 
     /***************************************************************************************/
