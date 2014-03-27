@@ -5,10 +5,15 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
+#ifdef HAVEHPX
+#include <hpx/config.hpp>
+#endif
+
 #include <boost/bind.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include "TomographyCalculator.h"
 #include "ReadWriteTomographyData.h"
+#include "modeling_seismic.h"
 namespace jif3D
   {
 
