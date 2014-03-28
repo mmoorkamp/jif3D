@@ -67,14 +67,10 @@ namespace jif3D
   {
 
     PodvinTime3D::PodvinTime3D() :
-      nmesh_x(), nmesh_y(), nmesh_z(), hs(NULL), hs_buf(NULL), hs_keep(NULL),
-          nx(), ny(), nz(), t(NULL), t_buf(NULL), timeshift(), fxs(), fys(),
-          fzs(), xs(), ys(), zs(), messages(), source_at_node(0),
-          init_stage(0), current_side_limit(), X0(), X1(), Y0(), Y1(), Z0(),
-          Z1(), reverse_order(0), longflags(NULL), flag_fb(), x_start_fb(),
-          y_start_fb(), z_start_fb(), flag_bf(), x_start_bf(), y_start_bf(),
-          z_start_bf(), flag_ff(), x_start_ff(), y_start_ff(), z_start_ff(),
-          flag_bb(), x_start_bb(), y_start_bb(), z_start_bb(), hs_eps_init()
+        nmesh_x(), nmesh_y(), nmesh_z(), hs(NULL), hs_buf(NULL), hs_keep(NULL), nx(), ny(), nz(), t(
+        NULL), t_buf(NULL), timeshift(), fxs(), fys(), fzs(), xs(), ys(), zs(), messages(), source_at_node(
+            0), init_stage(0), current_side_limit(), X0(), X1(), Y0(), Y1(), Z0(), Z1(), reverse_order(
+            0), longflags(NULL), flag_fb(), x_start_fb(), y_start_fb(), z_start_fb(), flag_bf(), x_start_bf(), y_start_bf(), z_start_bf(), flag_ff(), x_start_ff(), y_start_ff(), z_start_ff(), flag_bb(), x_start_bb(), y_start_bb(), z_start_bb(), hs_eps_init()
       {
 
       }
@@ -119,8 +115,8 @@ namespace jif3D
 
     /*-------------------------------------------------Time_3d()----------------*/
 
-    int PodvinTime3D::time_3d(float *HS, float *T, int NX, int NY, int NZ,
-        float XS, float YS, float ZS, float HS_EPS_INIT, int MSG)
+    int PodvinTime3D::time_3d(float *HS, float *T, int NX, int NY, int NZ, float XS,
+        float YS, float ZS, float HS_EPS_INIT, int MSG)
 
       {
         int signal;
@@ -197,10 +193,10 @@ T[0][0][0]=%g\n",*HS,*T);
         nmesh_z = nz - 1;
         np = ny * nz;
         nt = nx * np;
-        n1 = max(nx,ny);
-        n0 = max(nx,nz);
+        n1 = max(nx, ny);
+        n0 = max(nx, nz);
         if (n1 == n0)
-          n0 = max(ny,nz);
+          n0 = max(ny, nz);
         n1 *= n0;
 
         /* allocate pointers */
@@ -218,8 +214,8 @@ T[0][0][0]=%g\n",*HS,*T);
             return ERR_MALLOC;
           }/* size of the largest side of the model */
         for (x = 0; x < nx; x++)
-          if (!(hs[x] = (float **) malloc((unsigned) ny * sizeof(float *)))
-              || !(t[x] = (float **) malloc((unsigned) ny * sizeof(float *))))
+          if (!(hs[x] = (float **) malloc((unsigned) ny * sizeof(float *))) || !(t[x] =
+              (float **) malloc((unsigned) ny * sizeof(float *))))
             {
               timeshift = 0.0; /* possibly uninitialized */
               free_ptrs(x);
@@ -237,8 +233,8 @@ T[0][0][0]=%g\n",*HS,*T);
           return NO_ERROR;
 
         /* initialize all times as PODINFINITY if licit point source */
-        if (fxs >= 0.0 && fxs <= nx - 1 && fys >= 0 && fys <= ny - 1 && fzs
-            >= 0 && fzs <= nz - 1)
+        if (fxs >= 0.0 && fxs <= nx - 1 && fys >= 0 && fys <= ny - 1 && fzs >= 0
+            && fzs <= nz - 1)
           for (x = 0, pf = t_buf; x < nt; x++)
             *pf++ = PODINFINITY;
 
@@ -341,9 +337,8 @@ T[0][0][0]=%g\n",*HS,*T);
                   timeshift = 0.0;
               }
             if (SMALLTALK)
-              printf(
-                  "\nMultiple source starting at node [%d,%d,%d] at time %g.",
-                  xs, ys, zs, min_t);
+              printf("\nMultiple source starting at node [%d,%d,%d] at time %g.", xs, ys,
+                  zs, min_t);
             X0 = X1 = xs;
             Y0 = Y1 = ys;
             Z0 = Z1 = zs;
@@ -386,8 +381,8 @@ T[0][0][0]=%g\n",*HS,*T);
               zsc = (fzs < zs) ? zs - 1 : zs;
             /* end 261205[1] */
             if (SMALLTALK)
-              printf("\nPoint source at [%g,%g,%g]; Nearest node [%d,%d,%d].",
-                  fxs, fys, fzs, xs, ys, zs);
+              printf("\nPoint source at [%g,%g,%g]; Nearest node [%d,%d,%d].", fxs, fys,
+                  fzs, xs, ys, zs);
           }
         hs0 = hs[xsc][ysc][zsc];
         timeshift = 0.0; /* all times will be positive by construction */
@@ -528,8 +523,7 @@ T[0][0][0]=%g\n",*HS,*T);
          *                   will be performed (via init_nearest()).
          * The following 8 lines were added :
          */
-        if (X0 > fxs || X1 < fxs || Y0 > fys || Y1 < fys || Z0 > fzs || Z1
-            < fzs)
+        if (X0 > fxs || X1 < fxs || Y0 > fys || Y1 < fys || Z0 > fzs || Z1 < fzs)
           {
             X0 = xsc;
             Y0 = ysc;
@@ -539,11 +533,12 @@ T[0][0][0]=%g\n",*HS,*T);
             Z1 = zsc + 1;
           }
         /* end 261205[5] */
-        if (init_stage >= INIT_RECURS_LIMIT || ((X0 == 0 || (xs - X0)
-            >= INIT_MIN) && (Y0 == 0 || (ys - Y0) >= INIT_MIN) && (Z0 == 0
-            || (zs - Z0) >= INIT_MIN) && (X1 == nmesh_x || (X1 - xs)
-            >= INIT_MIN) && (Y1 == nmesh_y || (Y1 - ys) >= INIT_MIN) && (Z1
-            == nmesh_z || (Z1 - zs) >= INIT_MIN)))
+        if (init_stage >= INIT_RECURS_LIMIT
+            || ((X0 == 0 || (xs - X0) >= INIT_MIN) && (Y0 == 0 || (ys - Y0) >= INIT_MIN)
+                && (Z0 == 0 || (zs - Z0) >= INIT_MIN)
+                && (X1 == nmesh_x || (X1 - xs) >= INIT_MIN)
+                && (Y1 == nmesh_y || (Y1 - ys) >= INIT_MIN)
+                && (Z1 == nmesh_z || (Z1 - zs) >= INIT_MIN)))
           {
             /* patch 261205[6] : this was simply wrong !
              *      if((X1-X0+1)*(Y1-Y0+1)*(Z1-Z0+1)==1)
@@ -556,13 +551,13 @@ T[0][0][0]=%g\n",*HS,*T);
                 for (y = Y0; y <= Y1; y++)
                   for (z = Z0; z <= Z1; z++)
                     {
-                      dist = (x - fxs) * (x - fxs) + (y - fys) * (y - fys) + (z
-                          - fzs) * (z - fzs);
+                      dist = (x - fxs) * (x - fxs) + (y - fys) * (y - fys)
+                          + (z - fzs) * (z - fzs);
                       t[x][y][z] = hs0 * sqrt(dist);
                     }
             if (SMALLTALK)
-              printf("\nHomogeneous region: x[%d->%d] y[%d->%d] z[%d->%d]\n",
-                  X0, X1, Y0, Y1, Z0, Z1);
+              printf("\nHomogeneous region: x[%d->%d] y[%d->%d] z[%d->%d]\n", X0, X1, Y0,
+                  Y1, Z0, Z1);
           } /* if smallest distance from source to boundaries of the homogeneous */
         /* box exceeds conventional limit INIT_MIN, OR if no further recursi-*/
         /* vity is allowed, then exact arrivals are computed in this region. */
@@ -571,12 +566,12 @@ T[0][0][0]=%g\n",*HS,*T);
           {
             if ((signal = recursive_init()) != NO_ERROR)
               return signal;
-            X0 = max(xs-INIT_MIN,0);
-            Y0 = max(ys-INIT_MIN,0);
-            Z0 = max(zs-INIT_MIN,0);
-            X1 = min(xs+INIT_MIN,nmesh_x);
-            Y1 = min(ys+INIT_MIN,nmesh_y);
-            Z1 = min(zs+INIT_MIN,nmesh_z);
+            X0 = max(xs-INIT_MIN, 0);
+            Y0 = max(ys-INIT_MIN, 0);
+            Z0 = max(zs-INIT_MIN, 0);
+            X1 = min(xs+INIT_MIN, nmesh_x);
+            Y1 = min(ys+INIT_MIN, nmesh_y);
+            Z1 = min(zs+INIT_MIN, nmesh_z);
           } /* otherwise, time_3d() is used recursively   */
         /* on a re-discretized (2*INIT_MIN+1)^3 cube. */
 
@@ -694,8 +689,7 @@ T[0][0][0]=%g\n",*HS,*T);
       }
     /*------------------------------------------------Init_cell()---------------*/
 
-    void PodvinTime3D::init_cell(float vx, float vy, float vz, int xl, int yl,
-        int zl)
+    void PodvinTime3D::init_cell(float vx, float vy, float vz, int xl, int yl, int zl)
 
     /* compute delays between floating source and nodes of current cell     */
     /* xl,yl,zl are current cell coordinates,                               */
@@ -751,16 +745,13 @@ T[0][0][0]=%g\n",*HS,*T);
             if ((est = init_cellh(vh, 1.0 - vx, hsc, hsn)) < t[xl + 1][yl][zl])
               t[xl + 1][yl][zl] = est;
             vh = sqrt((1.0 - vy) * (1.0 - vy) + vz * vz);
-            if ((est = init_cellh(vh, 1.0 - vx, hsc, hsn))
-                < t[xl + 1][yl + 1][zl])
+            if ((est = init_cellh(vh, 1.0 - vx, hsc, hsn)) < t[xl + 1][yl + 1][zl])
               t[xl + 1][yl + 1][zl] = est;
             vh = sqrt(vy * vy + (1.0 - vz) * (1.0 - vz));
-            if ((est = init_cellh(vh, 1.0 - vx, hsc, hsn)) < t[xl + 1][yl][zl
-                + 1])
+            if ((est = init_cellh(vh, 1.0 - vx, hsc, hsn)) < t[xl + 1][yl][zl + 1])
               t[xl + 1][yl][zl + 1] = est;
             vh = sqrt((1.0 - vy) * (1.0 - vy) + (1.0 - vz) * (1.0 - vz));
-            if ((est = init_cellh(vh, 1.0 - vx, hsc, hsn))
-                < t[xl + 1][yl + 1][zl + 1])
+            if ((est = init_cellh(vh, 1.0 - vx, hsc, hsn)) < t[xl + 1][yl + 1][zl + 1])
               t[xl + 1][yl + 1][zl + 1] = est;
           }
         if (yl && (hsn = hs[xl][yl - 1][zl]) < hsc)
@@ -784,16 +775,13 @@ T[0][0][0]=%g\n",*HS,*T);
             if ((est = init_cellh(vh, 1.0 - vy, hsc, hsn)) < t[xl][yl + 1][zl])
               t[xl][yl + 1][zl] = est;
             vh = sqrt((1.0 - vx) * (1.0 - vx) + vz * vz);
-            if ((est = init_cellh(vh, 1.0 - vy, hsc, hsn))
-                < t[xl + 1][yl + 1][zl])
+            if ((est = init_cellh(vh, 1.0 - vy, hsc, hsn)) < t[xl + 1][yl + 1][zl])
               t[xl + 1][yl + 1][zl] = est;
             vh = sqrt(vx * vx + (1.0 - vz) * (1.0 - vz));
-            if ((est = init_cellh(vh, 1.0 - vy, hsc, hsn)) < t[xl][yl + 1][zl
-                + 1])
+            if ((est = init_cellh(vh, 1.0 - vy, hsc, hsn)) < t[xl][yl + 1][zl + 1])
               t[xl][yl + 1][zl + 1] = est;
             vh = sqrt((1.0 - vx) * (1.0 - vx) + (1.0 - vz) * (1.0 - vz));
-            if ((est = init_cellh(vh, 1.0 - vy, hsc, hsn))
-                < t[xl + 1][yl + 1][zl + 1])
+            if ((est = init_cellh(vh, 1.0 - vy, hsc, hsn)) < t[xl + 1][yl + 1][zl + 1])
               t[xl + 1][yl + 1][zl + 1] = est;
           }
         if (zl && (hsn = hs[xl][yl][zl - 1]) < hsc)
@@ -817,174 +805,159 @@ T[0][0][0]=%g\n",*HS,*T);
             if ((est = init_cellh(vh, 1.0 - vz, hsc, hsn)) < t[xl][yl][zl + 1])
               t[xl][yl][zl + 1] = est;
             vh = sqrt((1.0 - vx) * (1.0 - vx) + vy * vy);
-            if ((est = init_cellh(vh, 1.0 - vz, hsc, hsn)) < t[xl + 1][yl][zl
-                + 1])
+            if ((est = init_cellh(vh, 1.0 - vz, hsc, hsn)) < t[xl + 1][yl][zl + 1])
               t[xl + 1][yl][zl + 1] = est;
             vh = sqrt(vx * vx + (1.0 - vy) * (1.0 - vy));
-            if ((est = init_cellh(vh, 1.0 - vz, hsc, hsn)) < t[xl][yl + 1][zl
-                + 1])
+            if ((est = init_cellh(vh, 1.0 - vz, hsc, hsn)) < t[xl][yl + 1][zl + 1])
               t[xl][yl + 1][zl + 1] = est;
             vh = sqrt((1.0 - vx) * (1.0 - vx) + (1.0 - vy) * (1.0 - vy));
-            if ((est = init_cellh(vh, 1.0 - vz, hsc, hsn))
-                < t[xl + 1][yl + 1][zl + 1])
+            if ((est = init_cellh(vh, 1.0 - vz, hsc, hsn)) < t[xl + 1][yl + 1][zl + 1])
               t[xl + 1][yl + 1][zl + 1] = est;
           }
         if (xl && yl)
           {
-            hs3 = min3(hs[xl-1][yl][zl],hs[xl][yl-1][zl],hs[xl-1][yl-1][zl]);
+            hs3 = min3(hs[xl - 1][yl][zl], hs[xl][yl - 1][zl], hs[xl - 1][yl - 1][zl]);
             if (hs3 < hsc)
               {
                 vv = sqrt(vx * vx + vy * vy);
                 if ((est = init_cellh(vz, vv, hsc, hs3)) < t[xl][yl][zl])
                   t[xl][yl][zl] = est;
-                if ((est = init_cellh(1.0 - vz, vv, hsc, hs3)) < t[xl][yl][zl
-                    + 1])
+                if ((est = init_cellh(1.0 - vz, vv, hsc, hs3)) < t[xl][yl][zl + 1])
                   t[xl][yl][zl + 1] = est;
               }
           }
         if (yl && zl)
           {
-            hs3 = min3(hs[xl][yl-1][zl],hs[xl][yl][zl-1],hs[xl][yl-1][zl-1]);
+            hs3 = min3(hs[xl][yl - 1][zl], hs[xl][yl][zl - 1], hs[xl][yl - 1][zl - 1]);
             if (hs3 < hsc)
               {
                 vv = sqrt(vy * vy + vz * vz);
                 if ((est = init_cellh(vx, vv, hsc, hs3)) < t[xl][yl][zl])
                   t[xl][yl][zl] = est;
-                if ((est = init_cellh(1.0 - vx, vv, hsc, hs3))
-                    < t[xl + 1][yl][zl])
+                if ((est = init_cellh(1.0 - vx, vv, hsc, hs3)) < t[xl + 1][yl][zl])
                   t[xl + 1][yl][zl] = est;
               }
           }
         if (zl && xl)
           {
-            hs3 = min3(hs[xl][yl][zl-1],hs[xl-1][yl][zl],hs[xl-1][yl][zl-1]);
+            hs3 = min3(hs[xl][yl][zl - 1], hs[xl - 1][yl][zl], hs[xl - 1][yl][zl - 1]);
             if (hs3 < hsc)
               {
                 vv = sqrt(vz * vz + vx * vx);
                 if ((est = init_cellh(vy, vv, hsc, hs3)) < t[xl][yl][zl])
                   t[xl][yl][zl] = est;
-                if ((est = init_cellh(1.0 - vy, vv, hsc, hs3))
-                    < t[xl][yl + 1][zl])
+                if ((est = init_cellh(1.0 - vy, vv, hsc, hs3)) < t[xl][yl + 1][zl])
                   t[xl][yl + 1][zl] = est;
               }
           }
         if (xl < nmesh_x - 1 && yl < nmesh_y - 1)
           {
-            hs3 = min3(hs[xl+1][yl][zl],hs[xl][yl+1][zl],hs[xl+1][yl+1][zl]);
+            hs3 = min3(hs[xl + 1][yl][zl], hs[xl][yl + 1][zl], hs[xl + 1][yl + 1][zl]);
             if (hs3 < hsc)
               {
                 vv = sqrt((1.0 - vx) * (1.0 - vx) + (1.0 - vy) * (1.0 - vy));
-                if ((est = init_cellh(vz, vv, hsc, hs3))
-                    < t[xl + 1][yl + 1][zl])
+                if ((est = init_cellh(vz, vv, hsc, hs3)) < t[xl + 1][yl + 1][zl])
                   t[xl + 1][yl + 1][zl] = est;
-                if ((est = init_cellh(1.0 - vz, vv, hsc, hs3)) < t[xl + 1][yl
-                    + 1][zl + 1])
+                if ((est = init_cellh(1.0 - vz, vv, hsc, hs3))
+                    < t[xl + 1][yl + 1][zl + 1])
                   t[xl + 1][yl + 1][zl + 1] = est;
               }
           }
         if (yl < nmesh_y - 1 && zl < nmesh_z - 1)
           {
-            hs3 = min3(hs[xl][yl+1][zl],hs[xl][yl][zl+1],hs[xl][yl+1][zl+1]);
+            hs3 = min3(hs[xl][yl + 1][zl], hs[xl][yl][zl + 1], hs[xl][yl + 1][zl + 1]);
             if (hs3 < hsc)
               {
                 vv = sqrt((1.0 - vy) * (1.0 - vy) + (1.0 - vz) * (1.0 - vz));
-                if ((est = init_cellh(vx, vv, hsc, hs3))
-                    < t[xl][yl + 1][zl + 1])
+                if ((est = init_cellh(vx, vv, hsc, hs3)) < t[xl][yl + 1][zl + 1])
                   t[xl][yl + 1][zl + 1] = est;
-                if ((est = init_cellh(1.0 - vx, vv, hsc, hs3)) < t[xl + 1][yl
-                    + 1][zl + 1])
+                if ((est = init_cellh(1.0 - vx, vv, hsc, hs3))
+                    < t[xl + 1][yl + 1][zl + 1])
                   t[xl + 1][yl + 1][zl + 1] = est;
               }
           }
         if (zl < nmesh_z - 1 && xl < nmesh_x - 1)
           {
-            hs3 = min3(hs[xl][yl][zl+1],hs[xl+1][yl][zl],hs[xl+1][yl][zl+1]);
+            hs3 = min3(hs[xl][yl][zl + 1], hs[xl + 1][yl][zl], hs[xl + 1][yl][zl + 1]);
             if (hs3 < hsc)
               {
                 vv = sqrt((1.0 - vz) * (1.0 - vz) + (1.0 - vx) * (1.0 - vx));
-                if ((est = init_cellh(vy, vv, hsc, hs3))
-                    < t[xl + 1][yl][zl + 1])
+                if ((est = init_cellh(vy, vv, hsc, hs3)) < t[xl + 1][yl][zl + 1])
                   t[xl + 1][yl][zl + 1] = est;
-                if ((est = init_cellh(1.0 - vy, vv, hsc, hs3)) < t[xl + 1][yl
-                    + 1][zl + 1])
+                if ((est = init_cellh(1.0 - vy, vv, hsc, hs3))
+                    < t[xl + 1][yl + 1][zl + 1])
                   t[xl + 1][yl + 1][zl + 1] = est;
               }
           }
         if (xl && yl < nmesh_y - 1)
           {
-            hs3 = min3(hs[xl-1][yl][zl],hs[xl][yl+1][zl],hs[xl-1][yl+1][zl]);
+            hs3 = min3(hs[xl - 1][yl][zl], hs[xl][yl + 1][zl], hs[xl - 1][yl + 1][zl]);
             if (hs3 < hsc)
               {
                 vv = sqrt(vx * vx + (1.0 - vy) * (1.0 - vy));
                 if ((est = init_cellh(vz, vv, hsc, hs3)) < t[xl][yl + 1][zl])
                   t[xl][yl + 1][zl] = est;
-                if ((est = init_cellh(1.0 - vz, vv, hsc, hs3))
-                    < t[xl][yl + 1][zl + 1])
+                if ((est = init_cellh(1.0 - vz, vv, hsc, hs3)) < t[xl][yl + 1][zl + 1])
                   t[xl][yl + 1][zl + 1] = est;
               }
           }
         if (yl && zl < nmesh_z - 1)
           {
-            hs3 = min3(hs[xl][yl-1][zl],hs[xl][yl][zl+1],hs[xl][yl-1][zl+1]);
+            hs3 = min3(hs[xl][yl - 1][zl], hs[xl][yl][zl + 1], hs[xl][yl - 1][zl + 1]);
             if (hs3 < hsc)
               {
                 vv = sqrt(vy * vy + (1.0 - vz) * (1.0 - vz));
                 if ((est = init_cellh(vx, vv, hsc, hs3)) < t[xl][yl][zl + 1])
                   t[xl][yl][zl + 1] = est;
-                if ((est = init_cellh(1.0 - vx, vv, hsc, hs3))
-                    < t[xl + 1][yl][zl + 1])
+                if ((est = init_cellh(1.0 - vx, vv, hsc, hs3)) < t[xl + 1][yl][zl + 1])
                   t[xl + 1][yl][zl + 1] = est;
               }
           }
         if (zl && xl < nmesh_x - 1)
           {
-            hs3 = min3(hs[xl][yl][zl-1],hs[xl+1][yl][zl],hs[xl+1][yl][zl-1]);
+            hs3 = min3(hs[xl][yl][zl - 1], hs[xl + 1][yl][zl], hs[xl + 1][yl][zl - 1]);
             if (hs3 < hsc)
               {
                 vv = sqrt(vz * vz + (1.0 - vx) * (1.0 - vx));
                 if ((est = init_cellh(vy, vv, hsc, hs3)) < t[xl + 1][yl][zl])
                   t[xl + 1][yl][zl] = est;
-                if ((est = init_cellh(1.0 - vy, vv, hsc, hs3)) < t[xl + 1][yl
-                    + 1][zl])
+                if ((est = init_cellh(1.0 - vy, vv, hsc, hs3)) < t[xl + 1][yl + 1][zl])
                   t[xl + 1][yl + 1][zl] = est;
               }
           }
         if (xl < nmesh_x - 1 && yl)
           {
-            hs3 = min3(hs[xl+1][yl][zl],hs[xl][yl-1][zl],hs[xl+1][yl-1][zl]);
+            hs3 = min3(hs[xl + 1][yl][zl], hs[xl][yl - 1][zl], hs[xl + 1][yl - 1][zl]);
             if (hs3 < hsc)
               {
                 vv = sqrt((1.0 - vx) * (1.0 - vx) + vy * vy);
                 if ((est = init_cellh(vz, vv, hsc, hs3)) < t[xl + 1][yl][zl])
                   t[xl + 1][yl][zl] = est;
-                if ((est = init_cellh(1.0 - vz, vv, hsc, hs3))
-                    < t[xl + 1][yl][zl + 1])
+                if ((est = init_cellh(1.0 - vz, vv, hsc, hs3)) < t[xl + 1][yl][zl + 1])
                   t[xl + 1][yl][zl + 1] = est;
               }
           }
         if (yl < nmesh_y - 1 && zl)
           {
-            hs3 = min3(hs[xl][yl+1][zl],hs[xl][yl][zl-1],hs[xl][yl+1][zl-1]);
+            hs3 = min3(hs[xl][yl + 1][zl], hs[xl][yl][zl - 1], hs[xl][yl + 1][zl - 1]);
             if (hs3 < hsc)
               {
                 vv = sqrt((1.0 - vy) * (1.0 - vy) + vz * vz);
                 if ((est = init_cellh(vx, vv, hsc, hs3)) < t[xl][yl + 1][zl])
                   t[xl][yl + 1][zl] = est;
-                if ((est = init_cellh(1.0 - vx, vv, hsc, hs3)) < t[xl + 1][yl
-                    + 1][zl])
+                if ((est = init_cellh(1.0 - vx, vv, hsc, hs3)) < t[xl + 1][yl + 1][zl])
                   t[xl + 1][yl + 1][zl] = est;
               }
           }
         if (zl < nmesh_z - 1 && xl)
           {
-            hs3 = min3(hs[xl][yl][zl+1],hs[xl-1][yl][zl],hs[xl-1][yl][zl+1]);
+            hs3 = min3(hs[xl][yl][zl + 1], hs[xl - 1][yl][zl], hs[xl - 1][yl][zl + 1]);
             if (hs3 < hsc)
               {
                 vv = sqrt((1.0 - vz) * (1.0 - vz) + vx * vx);
                 if ((est = init_cellh(vy, vv, hsc, hs3)) < t[xl][yl][zl + 1])
                   t[xl][yl][zl + 1] = est;
-                if ((est = init_cellh(1.0 - vy, vv, hsc, hs3))
-                    < t[xl][yl + 1][zl + 1])
+                if ((est = init_cellh(1.0 - vy, vv, hsc, hs3)) < t[xl][yl + 1][zl + 1])
                   t[xl][yl + 1][zl + 1] = est;
               }
           }
@@ -1016,8 +989,8 @@ T[0][0][0]=%g\n",*HS,*T);
     int PodvinTime3D::recursive_init(void)
 
       {
-        int signal, nx_, ny_, nz_, xs_, ys_, zs_, X0_, X1_, Y0_, Y1_, Z0_, Z1_,
-            n, d, i, ii, ihs, i0, j, jj, jhs, j0, k, kk, khs, k0;
+        int signal, nx_, ny_, nz_, xs_, ys_, zs_, X0_, X1_, Y0_, Y1_, Z0_, Z1_, n, d, i,
+            ii, ihs, i0, j, jj, jhs, j0, k, kk, khs, k0;
         float *hs_buf_, *t_buf_, fxs_, fys_, fzs_, *HS, *T;
 
         HS = (float *) malloc((unsigned) N_INIT * sizeof(float));
@@ -1112,8 +1085,7 @@ T[0][0][0]=%g\n",*HS,*T);
           printf("\nRediscretized timefield dimensions: %d %d %d", nx, ny, nz);
 
         /* recursively compute times on this rediscretized model */
-        signal = time_3d(HS, T, nx, ny, nz, fxs, fys, fzs, hs_eps_init,
-            messages);
+        signal = time_3d(HS, T, nx, ny, nz, fxs, fys, fzs, hs_eps_init, messages);
 
         /* assign relevant times to parent timefield */
         if (signal == NO_ERROR)
@@ -1121,8 +1093,7 @@ T[0][0][0]=%g\n",*HS,*T);
             for (i = ihs + i0, ii = i0; ii < nx; ii += 2, i++)
               for (j = jhs + j0, jj = j0; jj < ny; jj += 2, j++)
                 for (k = khs + k0, kk = k0; kk < nz; kk += 2, k++)
-                  t_buf_[i * ny_ * nz_ + j * nz_ + k] = T[ii * ny * nz + jj
-                      * nz + kk];
+                  t_buf_[i * ny_ * nz_ + j * nz_ + k] = T[ii * ny * nz + jj * nz + kk];
           }
         else
           {
@@ -1158,7 +1129,8 @@ T[0][0][0]=%g\n",*HS,*T);
 
         /* decrement count of recursivity level */
         init_stage--;
-
+        free(HS);
+        free(T);
         return signal;
 
       }
@@ -1313,29 +1285,26 @@ T[0][0][0]=%g\n",*HS,*T);
 
     /*----------------------------------------- exact_delay() ------------------- */
 
-    float PodvinTime3D::exact_delay(float vx, float vy, float vz, int xm,
-        int ym, int zm)
+    float PodvinTime3D::exact_delay(float vx, float vy, float vz, int xm, int ym, int zm)
 
       {
         float estimate;
 
-        if (xm < 0 || xm >= nmesh_x || ym < 0 || ym >= nmesh_y || zm < 0 || zm
-            >= nmesh_z)
+        if (xm < 0 || xm >= nmesh_x || ym < 0 || ym >= nmesh_y || zm < 0 || zm >= nmesh_z)
           return PODINFINITY;
-        estimate = (vx * vx + vy * vy + vz * vz) * hs[xm][ym][zm]
-            * hs[xm][ym][zm];
+        estimate = (vx * vx + vy * vy + vz * vz) * hs[xm][ym][zm] * hs[xm][ym][zm];
         return sqrt(estimate);
       }
 
     /*----------------------------------------- 1-D transmission : 6 stencils [3] */
     /*------------------------------------- (Direct arrival from first neighbour) */
 
-    int PodvinTime3D::t_1d(int x, int y, int z, float t0, float hs0, float hs1,
-        float hs2, float hs3)
+    int PodvinTime3D::t_1d(int x, int y, int z, float t0, float hs0, float hs1, float hs2,
+        float hs3)
 
       {
         float estimate, dt;
-        estimate = t0 + min4(hs0,hs1,hs2,hs3);
+        estimate = t0 + min4(hs0, hs1, hs2, hs3);
         /* 12 July 2003: FUZZIFIED COMPARISON */
         dt = t[x][y][z] - estimate;
         if (dt > EPS_FUZZY * t[x][y][z])
@@ -1349,12 +1318,11 @@ T[0][0][0]=%g\n",*HS,*T);
     /*----------------------------------------- 2-D diffraction : 12 stencils [3] */
     /*------------------------------------ (Direct arrival from second neighbour) */
 
-    int PodvinTime3D::diff_2d(int x, int y, int z, float t0, float hs0,
-        float hs1)
+    int PodvinTime3D::diff_2d(int x, int y, int z, float t0, float hs0, float hs1)
 
       {
         float estimate, dt;
-        estimate = t0 + M_SQRT2 * min(hs0,hs1);
+        estimate = t0 + M_SQRT2 * min(hs0, hs1);
         /* 12 July 2003: FUZZIFIED COMPARISON */
         dt = t[x][y][z] - estimate;
         if (dt > EPS_FUZZY * t[x][y][z])
@@ -1385,8 +1353,7 @@ T[0][0][0]=%g\n",*HS,*T);
     /*---------------------------------------- 2-D transmission : 24 stencils [6] */
     /*----------------------------------------- (Arrival from coplanar mesh edge) */
 
-    int PodvinTime3D::t_2d(int x, int y, int z, float t0, float t1, float hs0,
-        float hs1)
+    int PodvinTime3D::t_2d(int x, int y, int z, float t0, float t1, float hs0, float hs1)
 
       {
         float estimate, dt, hsm, test2, u2;
@@ -1395,7 +1362,7 @@ T[0][0][0]=%g\n",*HS,*T);
         if (dt < 0.0 || test2 < 0.0)
           return 0;
         test2 *= test2;
-        hsm = min(hs0,hs1);
+        hsm = min(hs0, hs1);
         u2 = hsm * hsm - dt * dt;
         if (dt <= hsm / M_SQRT2 && u2 <= test2)
           {
@@ -1414,8 +1381,7 @@ T[0][0][0]=%g\n",*HS,*T);
     /*------------------------------------ 3-D edge diffraction : 24 stencils [3] */
     /*------------------------------------- (Arrival from non-coplanar mesh edge) */
 
-    int PodvinTime3D::edge_diff(int x, int y, int z, float t0, float t1,
-        float hs0)
+    int PodvinTime3D::edge_diff(int x, int y, int z, float t0, float t1, float hs0)
 
       {
         float estimate, u2, test2, dt;
@@ -1445,8 +1411,8 @@ T[0][0][0]=%g\n",*HS,*T);
 #define t_3d(x,y,z,a,b,c,d,e)        t_3d_(x,y,z,a,b,c,d,e,0)
 #define t_3d_part2(x,y,z,a,b,c,d,e)  t_3d_(x,y,z,a,b,c,d,e,1)
 
-    int PodvinTime3D::t_3d_(int x, int y, int z, float t0, float tl, float tr,
-        float td, float hs0, int redundant)
+    int PodvinTime3D::t_3d_(int x, int y, int z, float t0, float tl, float tr, float td,
+        float hs0, int redundant)
 
     /* The current point is in diagonal position with respect to t0     */
     /* and it is a first neighbour of td. tl,tr are second neighbours.  */
@@ -1500,8 +1466,8 @@ T[0][0][0]=%g\n",*HS,*T);
 
         dta = td - tr;
         dta2 = dta * dta;
-        if (!redundant && dta >= 0.0 && dtb >= 0.0 && dta2 + dtb2 + dta * dtb
-            <= 0.5 * hs0)
+        if (!redundant && dta >= 0.0 && dtb >= 0.0
+            && dta2 + dtb2 + dta * dtb <= 0.5 * hs0)
           t2 = hs0 - dta2 - dtb2;
 
         dtb = tr - t0;
@@ -1509,7 +1475,7 @@ T[0][0][0]=%g\n",*HS,*T);
         if (dtb >= 0.0 && dta >= dtb && 2.0 * dta2 + dtb2 <= hs0)
           u2 = hs0 - dta2 - dtb2;
 
-        u2 = min3(s2,t2,u2);
+        u2 = min3(s2, t2, u2);
         if (u2 < test2)
           {
             estimate = td + sqrt(u2);
@@ -1525,8 +1491,8 @@ T[0][0][0]=%g\n",*HS,*T);
     /* 3-D transmission: partial stencil, introduced because initial scheme */
     /* failed to fullfill the exhaustivity condition requested by Fermat's  */
     /* principle. (See "a-causal" step in *_side() functions; 18/07/91)     */
-    int PodvinTime3D::t_3d_part1(int x, int y, int z, float t0, float tl,
-        float tr, float hs0)
+    int PodvinTime3D::t_3d_part1(int x, int y, int z, float t0, float tl, float tr,
+        float hs0)
 
     /* The current point is a first neighbour of t0; tl,tr are two other */
     /* first neighbours of t0. Transmission through 0-l-r is tested.     */
@@ -1558,8 +1524,8 @@ T[0][0][0]=%g\n",*HS,*T);
 
     /*----------------------------------------------X_SIDE()--------------------*/
 
-    int PodvinTime3D::x_side(int y_begin, int y_end, int z_begin, int z_end,
-        int x, int future)
+    int PodvinTime3D::x_side(int y_begin, int y_end, int z_begin, int z_end, int x,
+        int future)
 
     /* Propagates computations from side x-future to current side x */
     /* between *_begin and *_end coordinates. Returns a nonzero     */
@@ -1626,8 +1592,7 @@ T[0][0][0]=%g\n",*HS,*T);
 
                 /* illuminate first neighbours */
                 /* 1 1D transmission and 4 partial 3D transmission */
-                updated += t_1d(x, y, z, t[x0][y][z], hs_ff, hs_bf, hs_bb,
-                    hs_fb);
+                updated += t_1d(x, y, z, t[x0][y][z], hs_ff, hs_bf, hs_bb, hs_fb);
                 if (y < y_end && z < z_end)
                   updated += t_3d_part1(x, y, z, t[x0][y][z], t[x0][y + 1][z],
                       t[x0][y][z + 1], hs_ff);
@@ -1652,8 +1617,8 @@ T[0][0][0]=%g\n",*HS,*T);
                     if (y < y_start_fb)
                       y_start_fb = y;
                     updated += diff_2d(x, y + 1, z, t[x0][y][z], hs_ff, hs_fb);
-                    updated += t_2d(x, y + 1, z, t[x0][y][z], t[x0][y + 1][z],
-                        hs_ff, hs_fb);
+                    updated += t_2d(x, y + 1, z, t[x0][y][z], t[x0][y + 1][z], hs_ff,
+                        hs_fb);
                   }
                 if (y > y_begin && t[x0][y][z] <= t[x0][y - 1][z])
                   {
@@ -1664,8 +1629,8 @@ T[0][0][0]=%g\n",*HS,*T);
                     if (y > y_start_bb)
                       y_start_bb = y;
                     updated += diff_2d(x, y - 1, z, t[x0][y][z], hs_bf, hs_bb);
-                    updated += t_2d(x, y - 1, z, t[x0][y][z], t[x0][y - 1][z],
-                        hs_bf, hs_bb);
+                    updated += t_2d(x, y - 1, z, t[x0][y][z], t[x0][y - 1][z], hs_bf,
+                        hs_bb);
                   }
                 if (z < z_end && t[x0][y][z] <= t[x0][y][z + 1])
                   {
@@ -1676,8 +1641,8 @@ T[0][0][0]=%g\n",*HS,*T);
                     if (z < z_start_bf)
                       z_start_bf = z;
                     updated += diff_2d(x, y, z + 1, t[x0][y][z], hs_ff, hs_bf);
-                    updated += t_2d(x, y, z + 1, t[x0][y][z], t[x0][y][z + 1],
-                        hs_ff, hs_bf);
+                    updated += t_2d(x, y, z + 1, t[x0][y][z], t[x0][y][z + 1], hs_ff,
+                        hs_bf);
                   }
                 if (z > z_begin && t[x0][y][z] <= t[x0][y][z - 1])
                   {
@@ -1688,8 +1653,8 @@ T[0][0][0]=%g\n",*HS,*T);
                     if (z > z_start_bb)
                       z_start_bb = z;
                     updated += diff_2d(x, y, z - 1, t[x0][y][z], hs_bb, hs_fb);
-                    updated += t_2d(x, y, z - 1, t[x0][y][z], t[x0][y][z - 1],
-                        hs_bb, hs_fb);
+                    updated += t_2d(x, y, z - 1, t[x0][y][z], t[x0][y][z - 1], hs_bb,
+                        hs_fb);
                   }
 
                 /* illuminate third neighbours (if necessary) */
@@ -1698,45 +1663,45 @@ T[0][0][0]=%g\n",*HS,*T);
                   {
                     flag_ff = 1;
                     updated += point_diff(x, y + 1, z + 1, t[x0][y][z], hs_ff);
-                    updated += edge_diff(x, y + 1, z + 1, t[x0][y][z], t[x0][y
-                        + 1][z], hs_ff);
-                    updated += edge_diff(x, y + 1, z + 1, t[x0][y][z],
-                        t[x0][y][z + 1], hs_ff);
-                    updated += t_3d_part2(x,y+1,z+1,t[x0][y][z],
-                        t[x0][y+1][z],t[x0][y][z+1],t[x0][y+1][z+1],hs_ff);
+                    updated += edge_diff(x, y + 1, z + 1, t[x0][y][z], t[x0][y + 1][z],
+                        hs_ff);
+                    updated += edge_diff(x, y + 1, z + 1, t[x0][y][z], t[x0][y][z + 1],
+                        hs_ff);
+                    updated += t_3d_part2(x, y + 1, z + 1, t[x0][y][z], t[x0][y + 1][z],
+                        t[x0][y][z + 1], t[x0][y + 1][z + 1], hs_ff);
                   }
                 if (sign_bf == 2)
                   {
                     flag_bf = 1;
                     updated += point_diff(x, y - 1, z + 1, t[x0][y][z], hs_bf);
-                    updated += edge_diff(x, y - 1, z + 1, t[x0][y][z], t[x0][y
-                        - 1][z], hs_bf);
-                    updated += edge_diff(x, y - 1, z + 1, t[x0][y][z],
-                        t[x0][y][z + 1], hs_bf);
-                    updated += t_3d_part2(x,y-1,z+1,t[x0][y][z],
-                        t[x0][y-1][z],t[x0][y][z+1],t[x0][y-1][z+1],hs_bf);
+                    updated += edge_diff(x, y - 1, z + 1, t[x0][y][z], t[x0][y - 1][z],
+                        hs_bf);
+                    updated += edge_diff(x, y - 1, z + 1, t[x0][y][z], t[x0][y][z + 1],
+                        hs_bf);
+                    updated += t_3d_part2(x, y - 1, z + 1, t[x0][y][z], t[x0][y - 1][z],
+                        t[x0][y][z + 1], t[x0][y - 1][z + 1], hs_bf);
                   }
                 if (sign_bb == 2)
                   {
                     flag_bb = 1;
                     updated += point_diff(x, y - 1, z - 1, t[x0][y][z], hs_bb);
-                    updated += edge_diff(x, y - 1, z - 1, t[x0][y][z], t[x0][y
-                        - 1][z], hs_bb);
-                    updated += edge_diff(x, y - 1, z - 1, t[x0][y][z],
-                        t[x0][y][z - 1], hs_bb);
-                    updated += t_3d_part2(x,y-1,z-1,t[x0][y][z],
-                        t[x0][y-1][z],t[x0][y][z-1],t[x0][y-1][z-1],hs_bb);
+                    updated += edge_diff(x, y - 1, z - 1, t[x0][y][z], t[x0][y - 1][z],
+                        hs_bb);
+                    updated += edge_diff(x, y - 1, z - 1, t[x0][y][z], t[x0][y][z - 1],
+                        hs_bb);
+                    updated += t_3d_part2(x, y - 1, z - 1, t[x0][y][z], t[x0][y - 1][z],
+                        t[x0][y][z - 1], t[x0][y - 1][z - 1], hs_bb);
                   }
                 if (sign_fb == 2)
                   {
                     flag_fb = 1;
                     updated += point_diff(x, y + 1, z - 1, t[x0][y][z], hs_fb);
-                    updated += edge_diff(x, y + 1, z - 1, t[x0][y][z], t[x0][y
-                        + 1][z], hs_fb);
-                    updated += edge_diff(x, y + 1, z - 1, t[x0][y][z],
-                        t[x0][y][z - 1], hs_fb);
-                    updated += t_3d_part2(x,y+1,z-1,t[x0][y][z],
-                        t[x0][y+1][z],t[x0][y][z-1],t[x0][y+1][z-1],hs_fb);
+                    updated += edge_diff(x, y + 1, z - 1, t[x0][y][z], t[x0][y + 1][z],
+                        hs_fb);
+                    updated += edge_diff(x, y + 1, z - 1, t[x0][y][z], t[x0][y][z - 1],
+                        hs_fb);
+                    updated += t_3d_part2(x, y + 1, z - 1, t[x0][y][z], t[x0][y + 1][z],
+                        t[x0][y][z - 1], t[x0][y + 1][z - 1], hs_fb);
                   }
               }
           }
@@ -1777,32 +1742,29 @@ T[0][0][0]=%g\n",*HS,*T);
                 test++;
                 if (VERBOSE)
                   printf("ff ");
-                updated += scan_x_ff(y_start_ff, y_end, z_start_ff, z_end, x0,
-                    x, x_s);
+                updated += scan_x_ff(y_start_ff, y_end, z_start_ff, z_end, x0, x, x_s);
               }
             if (flag_fb)
               {
                 test++;
                 if (VERBOSE)
                   printf("fb ");
-                updated += scan_x_fb(y_start_fb, y_end, z_begin, z_start_fb,
-                    x0, x, x_s);
+                updated += scan_x_fb(y_start_fb, y_end, z_begin, z_start_fb, x0, x, x_s);
               }
             if (flag_bb)
               {
                 test++;
                 if (VERBOSE)
                   printf("bb ");
-                updated += scan_x_bb(y_begin, y_start_bb, z_begin, z_start_bb,
-                    x0, x, x_s);
+                updated += scan_x_bb(y_begin, y_start_bb, z_begin, z_start_bb, x0, x,
+                    x_s);
               }
             if (flag_bf)
               {
                 test++;
                 if (VERBOSE)
                   printf("bf ");
-                updated += scan_x_bf(y_begin, y_start_bf, z_start_bf, z_end,
-                    x0, x, x_s);
+                updated += scan_x_bf(y_begin, y_start_bf, z_start_bf, z_end, x0, x, x_s);
               }
           } while (test);
 
@@ -1846,8 +1808,8 @@ T[0][0][0]=%g\n",*HS,*T);
 
     /*--------------------------------------X_SIDE() : SCAN_X_EE()--------------*/
 
-    int PodvinTime3D::scan_x_ff(int y_start, int y_end, int z_start, int z_end,
-        int x0, int x, int x_s)
+    int PodvinTime3D::scan_x_ff(int y_start, int y_end, int z_start, int z_end, int x0,
+        int x, int x_s)
 
     /* scan x_side by increasing y and z ("ff"=forwards, forwards)      */
     /* propagating causal stencils with provisional a-priori that some  */
@@ -1881,8 +1843,7 @@ T[0][0][0]=%g\n",*HS,*T);
                 if (z)
                   hs_ubb = hs[x_sf][y][z - 1];
               }
-            alert1
-                = t_1d(x, y + 1, z, t[x][y][z], hs_bb, hs_bf, hs_ubb, hs_ube);
+            alert1 = t_1d(x, y + 1, z, t[x][y][z], hs_bb, hs_bf, hs_ubb, hs_ube);
             alert0 = t_2d(x, y + 1, z, t[x0][y][z], t[x][y][z], hs_bb, hs_bf);
             updated += alert0 + alert1;
             if (alert1)
@@ -1904,8 +1865,7 @@ T[0][0][0]=%g\n",*HS,*T);
                 if (y)
                   hs_ubb = hs[x_sf][y - 1][z];
               }
-            alert1
-                = t_1d(x, y, z + 1, t[x][y][z], hs_bb, hs_fb, hs_ubb, hs_ueb);
+            alert1 = t_1d(x, y, z + 1, t[x][y][z], hs_bb, hs_fb, hs_ubb, hs_ueb);
             alert0 = t_2d(x, y, z + 1, t[x0][y][z], t[x][y][z], hs_bb, hs_fb);
             updated += alert0 + alert1;
             if (alert1)
@@ -1936,7 +1896,7 @@ T[0][0][0]=%g\n",*HS,*T);
                 /* bulk waves: 1 3D edge diffraction and 2 (*4) 3D transmission */
                 alert0 = edge_diff(x, y + 1, z + 1, t[x0][y][z], t[x][y][z],
                     hs_bb) + t_3d(x,y+1,z+1,t[x0][y][z],
-                    t[x0][y+1][z],t[x][y][z],t[x][y+1][z],hs_bb)
+                        t[x0][y+1][z],t[x][y][z],t[x][y+1][z],hs_bb)
                     +t_3d(x,y+1,z+1,t[x0][y][z],
                         t[x0][y][z+1],t[x][y][z],t[x][y][z+1],hs_bb);
                 if (alert0)
@@ -1946,10 +1906,10 @@ T[0][0][0]=%g\n",*HS,*T);
                   }
 
                 /* interface waves along y_side: 1 1D transmission and 1 2D transmission */
-                alert1 = t_1d(x, y + 1, z + 1, t[x][y][z + 1], hs_bb, hs_bf,
-                    hs_ubb, hs_ube);
-                alert0 = t_2d(x, y + 1, z + 1, t[x0][y][z + 1], t[x][y][z + 1],
-                    hs_bb, hs_bf);
+                alert1 = t_1d(x, y + 1, z + 1, t[x][y][z + 1], hs_bb, hs_bf, hs_ubb,
+                    hs_ube);
+                alert0 = t_2d(x, y + 1, z + 1, t[x0][y][z + 1], t[x][y][z + 1], hs_bb,
+                    hs_bf);
                 if (alert0 + alert1)
                   {
                     updated += alert0 + alert1;
@@ -1965,10 +1925,10 @@ T[0][0][0]=%g\n",*HS,*T);
                   }
 
                 /* interface waves along z_side: 1 1D transmission and 1 2D transmission */
-                alert1 = t_1d(x, y + 1, z + 1, t[x][y + 1][z], hs_bb, hs_fb,
-                    hs_ubb, hs_ueb);
-                alert0 = t_2d(x, y + 1, z + 1, t[x0][y + 1][z], t[x][y + 1][z],
-                    hs_bb, hs_fb);
+                alert1 = t_1d(x, y + 1, z + 1, t[x][y + 1][z], hs_bb, hs_fb, hs_ubb,
+                    hs_ueb);
+                alert0 = t_2d(x, y + 1, z + 1, t[x0][y + 1][z], t[x][y + 1][z], hs_bb,
+                    hs_fb);
                 if (alert0 + alert1)
                   {
                     updated += alert0 + alert1;
@@ -1985,9 +1945,8 @@ T[0][0][0]=%g\n",*HS,*T);
 
                 /* interface waves along x_side : 2 2D transmission and 1 2D diffraction */
                 alert1 = diff_2d(x, y + 1, z + 1, t[x][y][z], hs_bb, hs_ubb)
-                    + t_2d(x, y + 1, z + 1, t[x][y][z], t[x][y + 1][z], hs_bb,
-                        hs_ubb) + t_2d(x, y + 1, z + 1, t[x][y][z], t[x][y][z
-                    + 1], hs_bb, hs_ubb);
+                    + t_2d(x, y + 1, z + 1, t[x][y][z], t[x][y + 1][z], hs_bb, hs_ubb)
+                    + t_2d(x, y + 1, z + 1, t[x][y][z], t[x][y][z + 1], hs_bb, hs_ubb);
                 if (alert1)
                   {
                     updated += alert1;
@@ -2006,8 +1965,8 @@ T[0][0][0]=%g\n",*HS,*T);
 
     /*--------------------------------------X_SIDE() : SCAN_X_BE()--------------*/
 
-    int PodvinTime3D::scan_x_bf(int y_begin, int y_start, int z_start,
-        int z_end, int x0, int x, int x_s)
+    int PodvinTime3D::scan_x_bf(int y_begin, int y_start, int z_start, int z_end, int x0,
+        int x, int x_s)
 
       {
         int updated = 0, alert0, alert1, y, z, x_sf;
@@ -2027,8 +1986,7 @@ T[0][0][0]=%g\n",*HS,*T);
                 if (z)
                   hs_ueb = hs[x_sf][y - 1][z - 1];
               }
-            alert1
-                = t_1d(x, y - 1, z, t[x][y][z], hs_fb, hs_ff, hs_ueb, hs_uee);
+            alert1 = t_1d(x, y - 1, z, t[x][y][z], hs_fb, hs_ff, hs_ueb, hs_uee);
             alert0 = t_2d(x, y - 1, z, t[x0][y][z], t[x][y][z], hs_fb, hs_ff);
             updated += alert0 + alert1;
             if (alert1)
@@ -2049,8 +2007,7 @@ T[0][0][0]=%g\n",*HS,*T);
                   hs_ubb = hs[x_sf][y - 1][z];
                 hs_ueb = hs[x_sf][y][z];
               }
-            alert1
-                = t_1d(x, y, z + 1, t[x][y][z], hs_bb, hs_fb, hs_ubb, hs_ueb);
+            alert1 = t_1d(x, y, z + 1, t[x][y][z], hs_bb, hs_fb, hs_ubb, hs_ueb);
             alert0 = t_2d(x, y, z + 1, t[x0][y][z], t[x][y][z], hs_bb, hs_fb);
             updated += alert0 + alert1;
             if (alert1)
@@ -2085,7 +2042,7 @@ T[0][0][0]=%g\n",*HS,*T);
                 /* bulk waves: 1 3D edge diffraction and 2 (*4) 3D transmission */
                 alert0 = edge_diff(x, y - 1, z + 1, t[x0][y][z], t[x][y][z],
                     hs_fb) + t_3d(x,y-1,z+1,t[x0][y][z],
-                    t[x0][y-1][z],t[x][y][z],t[x][y-1][z],hs_fb)
+                        t[x0][y-1][z],t[x][y][z],t[x][y-1][z],hs_fb)
                     +t_3d(x,y-1,z+1,t[x0][y][z],
                         t[x0][y][z+1],t[x][y][z],t[x][y][z+1],hs_fb);
                 if (alert0)
@@ -2095,10 +2052,10 @@ T[0][0][0]=%g\n",*HS,*T);
                   }
 
                 /* interface waves along y_side: 1 1D transmission and 1 2D transmission */
-                alert1 = t_1d(x, y - 1, z + 1, t[x][y][z + 1], hs_ff, hs_fb,
-                    hs_uee, hs_ueb);
-                alert0 = t_2d(x, y - 1, z + 1, t[x0][y][z + 1], t[x][y][z + 1],
-                    hs_ff, hs_fb);
+                alert1 = t_1d(x, y - 1, z + 1, t[x][y][z + 1], hs_ff, hs_fb, hs_uee,
+                    hs_ueb);
+                alert0 = t_2d(x, y - 1, z + 1, t[x0][y][z + 1], t[x][y][z + 1], hs_ff,
+                    hs_fb);
                 if (alert0 + alert1)
                   {
                     updated += alert0 + alert1;
@@ -2114,10 +2071,10 @@ T[0][0][0]=%g\n",*HS,*T);
                   }
 
                 /* interface waves along z_side: 1 1D transmission and 1 2D transmission */
-                alert1 = t_1d(x, y - 1, z + 1, t[x][y - 1][z], hs_bb, hs_fb,
-                    hs_ubb, hs_ueb);
-                alert0 = t_2d(x, y - 1, z + 1, t[x0][y - 1][z], t[x][y - 1][z],
-                    hs_bb, hs_fb);
+                alert1 = t_1d(x, y - 1, z + 1, t[x][y - 1][z], hs_bb, hs_fb, hs_ubb,
+                    hs_ueb);
+                alert0 = t_2d(x, y - 1, z + 1, t[x0][y - 1][z], t[x][y - 1][z], hs_bb,
+                    hs_fb);
                 if (alert0 + alert1)
                   {
                     updated += alert0 + alert1;
@@ -2134,9 +2091,8 @@ T[0][0][0]=%g\n",*HS,*T);
 
                 /* interface waves along x_side : 2 2D transmission and 1 2D diffraction */
                 alert1 = diff_2d(x, y - 1, z + 1, t[x][y][z], hs_fb, hs_ueb)
-                    + t_2d(x, y - 1, z + 1, t[x][y][z], t[x][y - 1][z], hs_fb,
-                        hs_ueb) + t_2d(x, y - 1, z + 1, t[x][y][z], t[x][y][z
-                    + 1], hs_fb, hs_ueb);
+                    + t_2d(x, y - 1, z + 1, t[x][y][z], t[x][y - 1][z], hs_fb, hs_ueb)
+                    + t_2d(x, y - 1, z + 1, t[x][y][z], t[x][y][z + 1], hs_fb, hs_ueb);
                 if (alert1)
                   {
                     updated += alert1;
@@ -2155,8 +2111,8 @@ T[0][0][0]=%g\n",*HS,*T);
 
     /*--------------------------------------X_SIDE() : SCAN_X_BB()--------------*/
 
-    int PodvinTime3D::scan_x_bb(int y_begin, int y_start, int z_begin,
-        int z_start, int x0, int x, int x_s)
+    int PodvinTime3D::scan_x_bb(int y_begin, int y_start, int z_begin, int z_start,
+        int x0, int x, int x_s)
 
       {
         int updated = 0, alert0, alert1, y, z, x_sf;
@@ -2176,8 +2132,7 @@ T[0][0][0]=%g\n",*HS,*T);
                   hs_uee = hs[x_sf][y - 1][z - 1];
                 hs_ueb = hs[x_sf][y - 1][z];
               }
-            alert1
-                = t_1d(x, y - 1, z, t[x][y][z], hs_fb, hs_ff, hs_ueb, hs_uee);
+            alert1 = t_1d(x, y - 1, z, t[x][y][z], hs_fb, hs_ff, hs_ueb, hs_uee);
             alert0 = t_2d(x, y - 1, z, t[x0][y][z], t[x][y][z], hs_fb, hs_ff);
             updated += alert0 + alert1;
             if (alert1)
@@ -2198,8 +2153,7 @@ T[0][0][0]=%g\n",*HS,*T);
                   hs_uee = hs[x_sf][y - 1][z - 1];
                 hs_ube = hs[x_sf][y][z - 1];
               }
-            alert1
-                = t_1d(x, y, z - 1, t[x][y][z], hs_bf, hs_ff, hs_ube, hs_uee);
+            alert1 = t_1d(x, y, z - 1, t[x][y][z], hs_bf, hs_ff, hs_ube, hs_uee);
             alert0 = t_2d(x, y, z - 1, t[x0][y][z], t[x][y][z], hs_bf, hs_ff);
             updated += alert0 + alert1;
             if (alert1)
@@ -2240,7 +2194,7 @@ T[0][0][0]=%g\n",*HS,*T);
                 /* bulk waves: 1 3D edge diffraction and 2 (*4) 3D transmission */
                 alert0 = edge_diff(x, y - 1, z - 1, t[x0][y][z], t[x][y][z],
                     hs_ff) + t_3d(x,y-1,z-1,t[x0][y][z],
-                    t[x0][y-1][z],t[x][y][z],t[x][y-1][z],hs_ff)
+                        t[x0][y-1][z],t[x][y][z],t[x][y-1][z],hs_ff)
                     +t_3d(x,y-1,z-1,t[x0][y][z],
                         t[x0][y][z-1],t[x][y][z],t[x][y][z-1],hs_ff);
                 if (alert0)
@@ -2250,10 +2204,10 @@ T[0][0][0]=%g\n",*HS,*T);
                   }
 
                 /* interface waves along y_side: 1 1D transmission and 1 2D transmission */
-                alert1 = t_1d(x, y - 1, z - 1, t[x][y][z - 1], hs_ff, hs_fb,
-                    hs_uee, hs_ueb);
-                alert0 = t_2d(x, y - 1, z - 1, t[x0][y][z - 1], t[x][y][z - 1],
-                    hs_ff, hs_fb);
+                alert1 = t_1d(x, y - 1, z - 1, t[x][y][z - 1], hs_ff, hs_fb, hs_uee,
+                    hs_ueb);
+                alert0 = t_2d(x, y - 1, z - 1, t[x0][y][z - 1], t[x][y][z - 1], hs_ff,
+                    hs_fb);
                 if (alert0 + alert1)
                   {
                     updated += alert0 + alert1;
@@ -2269,10 +2223,10 @@ T[0][0][0]=%g\n",*HS,*T);
                   }
 
                 /* interface waves along z_side: 1 1D transmission and 1 2D transmission */
-                alert1 = t_1d(x, y - 1, z - 1, t[x][y - 1][z], hs_ff, hs_bf,
-                    hs_uee, hs_ube);
-                alert0 = t_2d(x, y - 1, z - 1, t[x0][y - 1][z], t[x][y - 1][z],
-                    hs_ff, hs_bf);
+                alert1 = t_1d(x, y - 1, z - 1, t[x][y - 1][z], hs_ff, hs_bf, hs_uee,
+                    hs_ube);
+                alert0 = t_2d(x, y - 1, z - 1, t[x0][y - 1][z], t[x][y - 1][z], hs_ff,
+                    hs_bf);
                 if (alert0 + alert1)
                   {
                     updated += alert0 + alert1;
@@ -2289,9 +2243,8 @@ T[0][0][0]=%g\n",*HS,*T);
 
                 /* interface waves along x_side : 2 2D transmission and 1 2D diffraction */
                 alert1 = diff_2d(x, y - 1, z - 1, t[x][y][z], hs_ff, hs_uee)
-                    + t_2d(x, y - 1, z - 1, t[x][y][z], t[x][y - 1][z], hs_ff,
-                        hs_uee) + t_2d(x, y - 1, z - 1, t[x][y][z], t[x][y][z
-                    - 1], hs_ff, hs_uee);
+                    + t_2d(x, y - 1, z - 1, t[x][y][z], t[x][y - 1][z], hs_ff, hs_uee)
+                    + t_2d(x, y - 1, z - 1, t[x][y][z], t[x][y][z - 1], hs_ff, hs_uee);
                 if (alert1)
                   {
                     updated += alert1;
@@ -2310,8 +2263,8 @@ T[0][0][0]=%g\n",*HS,*T);
 
     /*--------------------------------------X_SIDE() : SCAN_X_EB()--------------*/
 
-    int PodvinTime3D::scan_x_fb(int y_start, int y_end, int z_begin,
-        int z_start, int x0, int x, int x_s)
+    int PodvinTime3D::scan_x_fb(int y_start, int y_end, int z_begin, int z_start, int x0,
+        int x, int x_s)
 
       {
         int updated = 0, alert0, alert1, y, z, x_sf;
@@ -2331,8 +2284,7 @@ T[0][0][0]=%g\n",*HS,*T);
                   hs_ube = hs[x_sf][y][z - 1];
                 hs_ubb = hs[x_sf][y][z];
               }
-            alert1
-                = t_1d(x, y + 1, z, t[x][y][z], hs_bf, hs_bb, hs_ube, hs_ubb);
+            alert1 = t_1d(x, y + 1, z, t[x][y][z], hs_bf, hs_bb, hs_ube, hs_ubb);
             alert0 = t_2d(x, y + 1, z, t[x0][y][z], t[x][y][z], hs_bf, hs_bb);
             updated += alert0 + alert1;
             if (alert1)
@@ -2353,8 +2305,7 @@ T[0][0][0]=%g\n",*HS,*T);
                   hs_uee = hs[x_sf][y - 1][z - 1];
                 hs_ube = hs[x_sf][y][z - 1];
               }
-            alert1
-                = t_1d(x, y, z - 1, t[x][y][z], hs_bf, hs_ff, hs_ube, hs_uee);
+            alert1 = t_1d(x, y, z - 1, t[x][y][z], hs_bf, hs_ff, hs_ube, hs_uee);
             alert0 = t_2d(x, y, z - 1, t[x0][y][z], t[x][y][z], hs_bf, hs_ff);
             updated += alert0 + alert1;
             if (alert1)
@@ -2389,7 +2340,7 @@ T[0][0][0]=%g\n",*HS,*T);
                 /* bulk waves: 1 3D edge diffraction and 2 (*4) 3D transmission */
                 alert0 = edge_diff(x, y + 1, z - 1, t[x0][y][z], t[x][y][z],
                     hs_bf) + t_3d(x,y+1,z-1,t[x0][y][z],
-                    t[x0][y+1][z],t[x][y][z],t[x][y+1][z],hs_bf)
+                        t[x0][y+1][z],t[x][y][z],t[x][y+1][z],hs_bf)
                     +t_3d(x,y+1,z-1,t[x0][y][z],
                         t[x0][y][z-1],t[x][y][z],t[x][y][z-1],hs_bf);
                 if (alert0)
@@ -2399,10 +2350,10 @@ T[0][0][0]=%g\n",*HS,*T);
                   }
 
                 /* interface waves along y_side: 1 1D transmission and 1 2D transmission */
-                alert1 = t_1d(x, y + 1, z - 1, t[x][y][z - 1], hs_bb, hs_bf,
-                    hs_ubb, hs_ube);
-                alert0 = t_2d(x, y + 1, z - 1, t[x0][y][z - 1], t[x][y][z - 1],
-                    hs_bb, hs_bf);
+                alert1 = t_1d(x, y + 1, z - 1, t[x][y][z - 1], hs_bb, hs_bf, hs_ubb,
+                    hs_ube);
+                alert0 = t_2d(x, y + 1, z - 1, t[x0][y][z - 1], t[x][y][z - 1], hs_bb,
+                    hs_bf);
                 if (alert0 + alert1)
                   {
                     updated += alert0 + alert1;
@@ -2418,10 +2369,10 @@ T[0][0][0]=%g\n",*HS,*T);
                   }
 
                 /* interface waves along z_side: 1 1D transmission and 1 2D transmission */
-                alert1 = t_1d(x, y + 1, z - 1, t[x][y + 1][z], hs_ff, hs_bf,
-                    hs_uee, hs_ube);
-                alert0 = t_2d(x, y + 1, z - 1, t[x0][y + 1][z], t[x][y + 1][z],
-                    hs_ff, hs_bf);
+                alert1 = t_1d(x, y + 1, z - 1, t[x][y + 1][z], hs_ff, hs_bf, hs_uee,
+                    hs_ube);
+                alert0 = t_2d(x, y + 1, z - 1, t[x0][y + 1][z], t[x][y + 1][z], hs_ff,
+                    hs_bf);
                 if (alert0 + alert1)
                   {
                     updated += alert0 + alert1;
@@ -2438,9 +2389,8 @@ T[0][0][0]=%g\n",*HS,*T);
 
                 /* interface waves along x_side : 2 2D transmission and 1 2D diffraction */
                 alert1 = diff_2d(x, y + 1, z - 1, t[x][y][z], hs_bf, hs_ube)
-                    + t_2d(x, y + 1, z - 1, t[x][y][z], t[x][y + 1][z], hs_bf,
-                        hs_ube) + t_2d(x, y + 1, z - 1, t[x][y][z], t[x][y][z
-                    - 1], hs_bf, hs_ube);
+                    + t_2d(x, y + 1, z - 1, t[x][y][z], t[x][y + 1][z], hs_bf, hs_ube)
+                    + t_2d(x, y + 1, z - 1, t[x][y][z], t[x][y][z - 1], hs_bf, hs_ube);
                 if (alert1)
                   {
                     updated++;
@@ -2460,8 +2410,8 @@ T[0][0][0]=%g\n",*HS,*T);
     /****end mail2/3***-------------------------END_X_SIDE()--------------------*/
     /*----------------------------------------------Y_SIDE()--------------------*/
 
-    int PodvinTime3D::y_side(int x_begin, int x_end, int z_begin, int z_end,
-        int y, int future)
+    int PodvinTime3D::y_side(int x_begin, int x_end, int z_begin, int z_end, int y,
+        int future)
 
     /* Propagates computations from side y-future to side y        */
     /* between *_begin and *_end coordinates. Returns a nonzero    */
@@ -2471,8 +2421,8 @@ T[0][0][0]=%g\n",*HS,*T);
     /* See complete comments in function x_side().                 */
 
       {
-        int updated, longhead, y0, y_s, x, z, sign_ff, sign_bf, sign_bb,
-            sign_fb, test, past;
+        int updated, longhead, y0, y_s, x, z, sign_ff, sign_bf, sign_bb, sign_fb, test,
+            past;
         float hs_ff, hs_bf, hs_bb, hs_fb;
 
         if (reverse_order == 0)
@@ -2514,8 +2464,7 @@ T[0][0][0]=%g\n",*HS,*T);
 
                 /* illuminate first neighbours */
                 /* 1 1D transmission and 4 partial 3D transmission */
-                updated += t_1d(x, y, z, t[x][y0][z], hs_ff, hs_bf, hs_bb,
-                    hs_fb);
+                updated += t_1d(x, y, z, t[x][y0][z], hs_ff, hs_bf, hs_bb, hs_fb);
                 if (x < x_end && z < z_end)
                   updated += t_3d_part1(x, y, z, t[x][y0][z], t[x + 1][y0][z],
                       t[x][y0][z + 1], hs_ff);
@@ -2540,8 +2489,8 @@ T[0][0][0]=%g\n",*HS,*T);
                     if (x < x_start_fb)
                       x_start_fb = x;
                     updated += diff_2d(x + 1, y, z, t[x][y0][z], hs_ff, hs_fb);
-                    updated += t_2d(x + 1, y, z, t[x][y0][z], t[x + 1][y0][z],
-                        hs_ff, hs_fb);
+                    updated += t_2d(x + 1, y, z, t[x][y0][z], t[x + 1][y0][z], hs_ff,
+                        hs_fb);
                   }
                 if (x > x_begin && t[x][y0][z] <= t[x - 1][y0][z])
                   {
@@ -2552,8 +2501,8 @@ T[0][0][0]=%g\n",*HS,*T);
                     if (x > x_start_bb)
                       x_start_bb = x;
                     updated += diff_2d(x - 1, y, z, t[x][y0][z], hs_bf, hs_bb);
-                    updated += t_2d(x - 1, y, z, t[x][y0][z], t[x - 1][y0][z],
-                        hs_bf, hs_bb);
+                    updated += t_2d(x - 1, y, z, t[x][y0][z], t[x - 1][y0][z], hs_bf,
+                        hs_bb);
                   }
                 if (z < z_end && t[x][y0][z] <= t[x][y0][z + 1])
                   {
@@ -2564,8 +2513,8 @@ T[0][0][0]=%g\n",*HS,*T);
                     if (z < z_start_bf)
                       z_start_bf = z;
                     updated += diff_2d(x, y, z + 1, t[x][y0][z], hs_ff, hs_bf);
-                    updated += t_2d(x, y, z + 1, t[x][y0][z], t[x][y0][z + 1],
-                        hs_ff, hs_bf);
+                    updated += t_2d(x, y, z + 1, t[x][y0][z], t[x][y0][z + 1], hs_ff,
+                        hs_bf);
                   }
                 if (z > z_begin && t[x][y0][z] <= t[x][y0][z - 1])
                   {
@@ -2576,8 +2525,8 @@ T[0][0][0]=%g\n",*HS,*T);
                     if (z > z_start_bb)
                       z_start_bb = z;
                     updated += diff_2d(x, y, z - 1, t[x][y0][z], hs_bb, hs_fb);
-                    updated += t_2d(x, y, z - 1, t[x][y0][z], t[x][y0][z - 1],
-                        hs_bb, hs_fb);
+                    updated += t_2d(x, y, z - 1, t[x][y0][z], t[x][y0][z - 1], hs_bb,
+                        hs_fb);
                   }
 
                 /* illuminate third neighbours */
@@ -2585,40 +2534,40 @@ T[0][0][0]=%g\n",*HS,*T);
                 if (sign_ff == 2)
                   {
                     flag_ff = 1;
-                    updated += point_diff(x + 1, y, z + 1, t[x][y0][z], hs_ff)
-                        + edge_diff(x + 1, y, z + 1, t[x][y0][z],
+                    updated += point_diff(x + 1, y, z + 1, t[x][y0][z],
+                        hs_ff) + edge_diff(x + 1, y, z + 1, t[x][y0][z],
                             t[x + 1][y0][z], hs_ff) + edge_diff(x + 1, y,
-                        z + 1, t[x][y0][z], t[x][y0][z + 1], hs_ff)
+                            z + 1, t[x][y0][z], t[x][y0][z + 1], hs_ff)
                         +t_3d_part2(x+1,y,z+1,t[x][y0][z],t[x+1][y0][z],
                             t[x][y0][z+1],t[x+1][y0][z+1],hs_ff);
                   }
                 if (sign_bf == 2)
                   {
                     flag_bf = 1;
-                    updated += point_diff(x - 1, y, z + 1, t[x][y0][z], hs_bf)
-                        + edge_diff(x - 1, y, z + 1, t[x][y0][z],
+                    updated += point_diff(x - 1, y, z + 1, t[x][y0][z],
+                        hs_bf) + edge_diff(x - 1, y, z + 1, t[x][y0][z],
                             t[x - 1][y0][z], hs_bf) + edge_diff(x - 1, y,
-                        z + 1, t[x][y0][z], t[x][y0][z + 1], hs_bf)
+                            z + 1, t[x][y0][z], t[x][y0][z + 1], hs_bf)
                         +t_3d_part2(x-1,y,z+1,t[x][y0][z],t[x-1][y0][z],
                             t[x][y0][z+1],t[x-1][y0][z+1],hs_bf);
                   }
                 if (sign_bb == 2)
                   {
                     flag_bb = 1;
-                    updated += point_diff(x - 1, y, z - 1, t[x][y0][z], hs_bb)
-                        + edge_diff(x - 1, y, z - 1, t[x][y0][z],
+                    updated += point_diff(x - 1, y, z - 1, t[x][y0][z],
+                        hs_bb) + edge_diff(x - 1, y, z - 1, t[x][y0][z],
                             t[x - 1][y0][z], hs_bb) + edge_diff(x - 1, y,
-                        z - 1, t[x][y0][z], t[x][y0][z - 1], hs_bb)
+                            z - 1, t[x][y0][z], t[x][y0][z - 1], hs_bb)
                         +t_3d_part2(x-1,y,z-1,t[x][y0][z],t[x-1][y0][z],
                             t[x][y0][z-1],t[x-1][y0][z-1],hs_bb);
                   }
                 if (sign_fb == 2)
                   {
                     flag_fb = 1;
-                    updated += point_diff(x + 1, y, z - 1, t[x][y0][z], hs_fb)
-                        + edge_diff(x + 1, y, z - 1, t[x][y0][z],
+                    updated += point_diff(x + 1, y, z - 1, t[x][y0][z],
+                        hs_fb) + edge_diff(x + 1, y, z - 1, t[x][y0][z],
                             t[x + 1][y0][z], hs_fb) + edge_diff(x + 1, y,
-                        z - 1, t[x][y0][z], t[x][y0][z - 1], hs_fb)
+                            z - 1, t[x][y0][z], t[x][y0][z - 1], hs_fb)
                         +t_3d_part2(x+1,y,z-1,t[x][y0][z],t[x+1][y0][z],
                             t[x][y0][z-1],t[x+1][y0][z-1],hs_fb);
                   }
@@ -2647,32 +2596,29 @@ T[0][0][0]=%g\n",*HS,*T);
                 test++;
                 if (VERBOSE)
                   printf("ff ");
-                updated += scan_y_ff(x_start_ff, x_end, z_start_ff, z_end, y0,
-                    y, y_s);
+                updated += scan_y_ff(x_start_ff, x_end, z_start_ff, z_end, y0, y, y_s);
               }
             if (flag_fb)
               {
                 test++;
                 if (VERBOSE)
                   printf("fb ");
-                updated += scan_y_fb(x_start_fb, x_end, z_begin, z_start_fb,
-                    y0, y, y_s);
+                updated += scan_y_fb(x_start_fb, x_end, z_begin, z_start_fb, y0, y, y_s);
               }
             if (flag_bb)
               {
                 test++;
                 if (VERBOSE)
                   printf("bb ");
-                updated += scan_y_bb(x_begin, x_start_bb, z_begin, z_start_bb,
-                    y0, y, y_s);
+                updated += scan_y_bb(x_begin, x_start_bb, z_begin, z_start_bb, y0, y,
+                    y_s);
               }
             if (flag_bf)
               {
                 test++;
                 if (VERBOSE)
                   printf("bf ");
-                updated += scan_y_bf(x_begin, x_start_bf, z_start_bf, z_end,
-                    y0, y, y_s);
+                updated += scan_y_bf(x_begin, x_start_bf, z_start_bf, z_end, y0, y, y_s);
               }
           } while (test);
 
@@ -2713,8 +2659,8 @@ T[0][0][0]=%g\n",*HS,*T);
 
     /*--------------------------------------Y_SIDE() : SCAN_Y_EE()--------------*/
 
-    int PodvinTime3D::scan_y_ff(int x_start, int x_end, int z_start, int z_end,
-        int y0, int y, int y_s)
+    int PodvinTime3D::scan_y_ff(int x_start, int x_end, int z_start, int z_end, int y0,
+        int y, int y_s)
 
       {
         int updated = 0, alert0, alert1, x, z, y_sf;
@@ -2734,8 +2680,7 @@ T[0][0][0]=%g\n",*HS,*T);
                 if (z)
                   hs_ubb = hs[x][y_sf][z - 1];
               }
-            alert1
-                = t_1d(x + 1, y, z, t[x][y][z], hs_bb, hs_bf, hs_ubb, hs_ube);
+            alert1 = t_1d(x + 1, y, z, t[x][y][z], hs_bb, hs_bf, hs_ubb, hs_ube);
             alert0 = t_2d(x + 1, y, z, t[x][y0][z], t[x][y][z], hs_bb, hs_bf);
             updated += alert0 + alert1;
             if (alert1)
@@ -2756,8 +2701,7 @@ T[0][0][0]=%g\n",*HS,*T);
                 if (x)
                   hs_ubb = hs[x - 1][y_sf][z];
               }
-            alert1
-                = t_1d(x, y, z + 1, t[x][y][z], hs_bb, hs_fb, hs_ubb, hs_ueb);
+            alert1 = t_1d(x, y, z + 1, t[x][y][z], hs_bb, hs_fb, hs_ubb, hs_ueb);
             alert0 = t_2d(x, y, z + 1, t[x][y0][z], t[x][y][z], hs_bb, hs_fb);
             updated += alert0 + alert1;
             if (alert1)
@@ -2785,7 +2729,7 @@ T[0][0][0]=%g\n",*HS,*T);
                 /* bulk waves: 1 3D edge diffraction and 2 (*4) 3D transmission */
                 alert0 = edge_diff(x + 1, y, z + 1, t[x][y0][z], t[x][y][z],
                     hs_bb) + t_3d(x+1,y,z+1,t[x][y0][z],
-                    t[x+1][y0][z],t[x][y][z],t[x+1][y][z],hs_bb)
+                        t[x+1][y0][z],t[x][y][z],t[x+1][y][z],hs_bb)
                     +t_3d(x+1,y,z+1,t[x][y0][z],
                         t[x][y0][z+1],t[x][y][z],t[x][y][z+1],hs_bb);
                 if (alert0)
@@ -2795,10 +2739,10 @@ T[0][0][0]=%g\n",*HS,*T);
                   }
 
                 /* interface waves along x_side: 1 1D transmission and 1 2D transmission */
-                alert1 = t_1d(x + 1, y, z + 1, t[x][y][z + 1], hs_bb, hs_bf,
-                    hs_ubb, hs_ube);
-                alert0 = t_2d(x + 1, y, z + 1, t[x][y0][z + 1], t[x][y][z + 1],
-                    hs_bb, hs_bf);
+                alert1 = t_1d(x + 1, y, z + 1, t[x][y][z + 1], hs_bb, hs_bf, hs_ubb,
+                    hs_ube);
+                alert0 = t_2d(x + 1, y, z + 1, t[x][y0][z + 1], t[x][y][z + 1], hs_bb,
+                    hs_bf);
                 if (alert0 + alert1)
                   {
                     updated += alert0 + alert1;
@@ -2814,10 +2758,10 @@ T[0][0][0]=%g\n",*HS,*T);
                   }
 
                 /* interface waves along z_side: 1 1D transmission and 1 2D transmission */
-                alert1 = t_1d(x + 1, y, z + 1, t[x + 1][y][z], hs_bb, hs_fb,
-                    hs_ubb, hs_ueb);
-                alert0 = t_2d(x + 1, y, z + 1, t[x + 1][y0][z], t[x + 1][y][z],
-                    hs_bb, hs_fb);
+                alert1 = t_1d(x + 1, y, z + 1, t[x + 1][y][z], hs_bb, hs_fb, hs_ubb,
+                    hs_ueb);
+                alert0 = t_2d(x + 1, y, z + 1, t[x + 1][y0][z], t[x + 1][y][z], hs_bb,
+                    hs_fb);
                 if (alert0 + alert1)
                   {
                     updated += alert0 + alert1;
@@ -2834,9 +2778,8 @@ T[0][0][0]=%g\n",*HS,*T);
 
                 /* interface waves along y_side : 2 2D transmission and 1 2D diffraction */
                 alert1 = diff_2d(x + 1, y, z + 1, t[x][y][z], hs_bb, hs_ubb)
-                    + t_2d(x + 1, y, z + 1, t[x][y][z], t[x + 1][y][z], hs_bb,
-                        hs_ubb) + t_2d(x + 1, y, z + 1, t[x][y][z], t[x][y][z
-                    + 1], hs_bb, hs_ubb);
+                    + t_2d(x + 1, y, z + 1, t[x][y][z], t[x + 1][y][z], hs_bb, hs_ubb)
+                    + t_2d(x + 1, y, z + 1, t[x][y][z], t[x][y][z + 1], hs_bb, hs_ubb);
                 if (alert1)
                   {
                     updated += alert1;
@@ -2854,8 +2797,8 @@ T[0][0][0]=%g\n",*HS,*T);
 
     /*--------------------------------------Y_SIDE() : SCAN_Y_BE()--------------*/
 
-    int PodvinTime3D::scan_y_bf(int x_begin, int x_start, int z_start,
-        int z_end, int y0, int y, int y_s)
+    int PodvinTime3D::scan_y_bf(int x_begin, int x_start, int z_start, int z_end, int y0,
+        int y, int y_s)
 
       {
         int updated = 0, alert0, alert1, x, z, y_sf;
@@ -2875,8 +2818,7 @@ T[0][0][0]=%g\n",*HS,*T);
                 if (z)
                   hs_ueb = hs[x - 1][y_sf][z - 1];
               }
-            alert1
-                = t_1d(x - 1, y, z, t[x][y][z], hs_fb, hs_ff, hs_ueb, hs_uee);
+            alert1 = t_1d(x - 1, y, z, t[x][y][z], hs_fb, hs_ff, hs_ueb, hs_uee);
             alert0 = t_2d(x - 1, y, z, t[x][y0][z], t[x][y][z], hs_fb, hs_ff);
             updated += alert0 + alert1;
             if (alert1)
@@ -2897,8 +2839,7 @@ T[0][0][0]=%g\n",*HS,*T);
                   hs_ubb = hs[x - 1][y_sf][z];
                 hs_ueb = hs[x][y_sf][z];
               }
-            alert1
-                = t_1d(x, y, z + 1, t[x][y][z], hs_bb, hs_fb, hs_ubb, hs_ueb);
+            alert1 = t_1d(x, y, z + 1, t[x][y][z], hs_bb, hs_fb, hs_ubb, hs_ueb);
             alert0 = t_2d(x, y, z + 1, t[x][y0][z], t[x][y][z], hs_bb, hs_fb);
             updated += alert0 + alert1;
             if (alert1)
@@ -2933,7 +2874,7 @@ T[0][0][0]=%g\n",*HS,*T);
                 /* bulk waves: 1 3D edge diffraction and 2 (*4) 3D transmission */
                 alert0 = edge_diff(x - 1, y, z + 1, t[x][y0][z], t[x][y][z],
                     hs_fb) + t_3d(x-1,y,z+1,t[x][y0][z],
-                    t[x-1][y0][z],t[x][y][z],t[x-1][y][z],hs_fb)
+                        t[x-1][y0][z],t[x][y][z],t[x-1][y][z],hs_fb)
                     +t_3d(x-1,y,z+1,t[x][y0][z],
                         t[x][y0][z+1],t[x][y][z],t[x][y][z+1],hs_fb);
                 if (alert0)
@@ -2943,10 +2884,10 @@ T[0][0][0]=%g\n",*HS,*T);
                   }
 
                 /* interface waves along x_side: 1 1D transmission and 1 2D transmission */
-                alert1 = t_1d(x - 1, y, z + 1, t[x][y][z + 1], hs_ff, hs_fb,
-                    hs_uee, hs_ueb);
-                alert0 = t_2d(x - 1, y, z + 1, t[x][y0][z + 1], t[x][y][z + 1],
-                    hs_ff, hs_fb);
+                alert1 = t_1d(x - 1, y, z + 1, t[x][y][z + 1], hs_ff, hs_fb, hs_uee,
+                    hs_ueb);
+                alert0 = t_2d(x - 1, y, z + 1, t[x][y0][z + 1], t[x][y][z + 1], hs_ff,
+                    hs_fb);
                 if (alert0 + alert1)
                   {
                     updated += alert0 + alert1;
@@ -2962,10 +2903,10 @@ T[0][0][0]=%g\n",*HS,*T);
                   }
 
                 /* interface waves along z_side: 1 1D transmission and 1 2D transmission */
-                alert1 = t_1d(x - 1, y, z + 1, t[x - 1][y][z], hs_bb, hs_fb,
-                    hs_ubb, hs_ueb);
-                alert0 = t_2d(x - 1, y, z + 1, t[x - 1][y0][z], t[x - 1][y][z],
-                    hs_bb, hs_fb);
+                alert1 = t_1d(x - 1, y, z + 1, t[x - 1][y][z], hs_bb, hs_fb, hs_ubb,
+                    hs_ueb);
+                alert0 = t_2d(x - 1, y, z + 1, t[x - 1][y0][z], t[x - 1][y][z], hs_bb,
+                    hs_fb);
                 if (alert0 + alert1)
                   {
                     updated += alert0 + alert1;
@@ -2982,9 +2923,8 @@ T[0][0][0]=%g\n",*HS,*T);
 
                 /* interface waves along y_side : 2 2D transmission and 1 2D diffraction */
                 alert1 = diff_2d(x - 1, y, z + 1, t[x][y][z], hs_fb, hs_ueb)
-                    + t_2d(x - 1, y, z + 1, t[x][y][z], t[x - 1][y][z], hs_fb,
-                        hs_ueb) + t_2d(x - 1, y, z + 1, t[x][y][z], t[x][y][z
-                    + 1], hs_fb, hs_ueb);
+                    + t_2d(x - 1, y, z + 1, t[x][y][z], t[x - 1][y][z], hs_fb, hs_ueb)
+                    + t_2d(x - 1, y, z + 1, t[x][y][z], t[x][y][z + 1], hs_fb, hs_ueb);
                 if (alert1)
                   {
                     updated += alert1;
@@ -3002,8 +2942,8 @@ T[0][0][0]=%g\n",*HS,*T);
 
     /*--------------------------------------Y_SIDE() : SCAN_Y_BB()--------------*/
 
-    int PodvinTime3D::scan_y_bb(int x_begin, int x_start, int z_begin,
-        int z_start, int y0, int y, int y_s)
+    int PodvinTime3D::scan_y_bb(int x_begin, int x_start, int z_begin, int z_start,
+        int y0, int y, int y_s)
 
       {
         int updated = 0, alert0, alert1, x, z, y_sf;
@@ -3023,8 +2963,7 @@ T[0][0][0]=%g\n",*HS,*T);
                   hs_uee = hs[x - 1][y_sf][z - 1];
                 hs_ueb = hs[x - 1][y_sf][z];
               }
-            alert1
-                = t_1d(x - 1, y, z, t[x][y][z], hs_fb, hs_ff, hs_ueb, hs_uee);
+            alert1 = t_1d(x - 1, y, z, t[x][y][z], hs_fb, hs_ff, hs_ueb, hs_uee);
             alert0 = t_2d(x - 1, y, z, t[x][y0][z], t[x][y][z], hs_fb, hs_ff);
             updated += alert0 + alert1;
             if (alert1)
@@ -3045,8 +2984,7 @@ T[0][0][0]=%g\n",*HS,*T);
                   hs_uee = hs[x - 1][y_sf][z - 1];
                 hs_ube = hs[x][y_sf][z - 1];
               }
-            alert1
-                = t_1d(x, y, z - 1, t[x][y][z], hs_bf, hs_ff, hs_ube, hs_uee);
+            alert1 = t_1d(x, y, z - 1, t[x][y][z], hs_bf, hs_ff, hs_ube, hs_uee);
             alert0 = t_2d(x, y, z - 1, t[x][y0][z], t[x][y][z], hs_bf, hs_ff);
             updated += alert0 + alert1;
             if (alert1)
@@ -3087,7 +3025,7 @@ T[0][0][0]=%g\n",*HS,*T);
                 /* bulk waves: 1 3D edge diffraction and 2 (*4) 3D transmission */
                 alert0 = edge_diff(x - 1, y, z - 1, t[x][y0][z], t[x][y][z],
                     hs_ff) + t_3d(x-1,y,z-1,t[x][y0][z],
-                    t[x-1][y0][z],t[x][y][z],t[x-1][y][z],hs_ff)
+                        t[x-1][y0][z],t[x][y][z],t[x-1][y][z],hs_ff)
                     +t_3d(x-1,y,z-1,t[x][y0][z],
                         t[x][y0][z-1],t[x][y][z],t[x][y][z-1],hs_ff);
                 if (alert0)
@@ -3097,10 +3035,10 @@ T[0][0][0]=%g\n",*HS,*T);
                   }
 
                 /* interface waves along x_side: 1 1D transmission and 1 2D transmission */
-                alert1 = t_1d(x - 1, y, z - 1, t[x][y][z - 1], hs_ff, hs_fb,
-                    hs_uee, hs_ueb);
-                alert0 = t_2d(x - 1, y, z - 1, t[x][y0][z - 1], t[x][y][z - 1],
-                    hs_ff, hs_fb);
+                alert1 = t_1d(x - 1, y, z - 1, t[x][y][z - 1], hs_ff, hs_fb, hs_uee,
+                    hs_ueb);
+                alert0 = t_2d(x - 1, y, z - 1, t[x][y0][z - 1], t[x][y][z - 1], hs_ff,
+                    hs_fb);
                 if (alert0 + alert1)
                   {
                     updated += alert0 + alert1;
@@ -3116,10 +3054,10 @@ T[0][0][0]=%g\n",*HS,*T);
                   }
 
                 /* interface waves along z_side: 1 1D transmission and 1 2D transmission */
-                alert1 = t_1d(x - 1, y, z - 1, t[x - 1][y][z], hs_ff, hs_bf,
-                    hs_uee, hs_ube);
-                alert0 = t_2d(x - 1, y, z - 1, t[x - 1][y0][z], t[x - 1][y][z],
-                    hs_ff, hs_bf);
+                alert1 = t_1d(x - 1, y, z - 1, t[x - 1][y][z], hs_ff, hs_bf, hs_uee,
+                    hs_ube);
+                alert0 = t_2d(x - 1, y, z - 1, t[x - 1][y0][z], t[x - 1][y][z], hs_ff,
+                    hs_bf);
                 if (alert0 + alert1)
                   {
                     updated += alert0 + alert1;
@@ -3136,9 +3074,8 @@ T[0][0][0]=%g\n",*HS,*T);
 
                 /* interface waves along y_side : 2 2D transmission and 1 2D diffraction */
                 alert1 = diff_2d(x - 1, y, z - 1, t[x][y][z], hs_ff, hs_uee)
-                    + t_2d(x - 1, y, z - 1, t[x][y][z], t[x - 1][y][z], hs_ff,
-                        hs_uee) + t_2d(x - 1, y, z - 1, t[x][y][z], t[x][y][z
-                    - 1], hs_ff, hs_uee);
+                    + t_2d(x - 1, y, z - 1, t[x][y][z], t[x - 1][y][z], hs_ff, hs_uee)
+                    + t_2d(x - 1, y, z - 1, t[x][y][z], t[x][y][z - 1], hs_ff, hs_uee);
                 if (alert1)
                   {
                     updated += alert1;
@@ -3156,8 +3093,8 @@ T[0][0][0]=%g\n",*HS,*T);
 
     /*--------------------------------------Y_SIDE() : SCAN_Y_EB()--------------*/
 
-    int PodvinTime3D::scan_y_fb(int x_start, int x_end, int z_begin,
-        int z_start, int y0, int y, int y_s)
+    int PodvinTime3D::scan_y_fb(int x_start, int x_end, int z_begin, int z_start, int y0,
+        int y, int y_s)
 
       {
         int updated = 0, alert0, alert1, x, z, y_sf;
@@ -3177,8 +3114,7 @@ T[0][0][0]=%g\n",*HS,*T);
                   hs_ube = hs[x][y_sf][z - 1];
                 hs_ubb = hs[x][y_sf][z];
               }
-            alert1
-                = t_1d(x + 1, y, z, t[x][y][z], hs_bf, hs_bb, hs_ube, hs_ubb);
+            alert1 = t_1d(x + 1, y, z, t[x][y][z], hs_bf, hs_bb, hs_ube, hs_ubb);
             alert0 = t_2d(x + 1, y, z, t[x][y0][z], t[x][y][z], hs_bf, hs_bb);
             updated += alert0 + alert1;
             if (alert1)
@@ -3199,8 +3135,7 @@ T[0][0][0]=%g\n",*HS,*T);
                   hs_uee = hs[x - 1][y_sf][z - 1];
                 hs_ube = hs[x][y_sf][z - 1];
               }
-            alert1
-                = t_1d(x, y, z - 1, t[x][y][z], hs_bf, hs_ff, hs_ube, hs_uee);
+            alert1 = t_1d(x, y, z - 1, t[x][y][z], hs_bf, hs_ff, hs_ube, hs_uee);
             alert0 = t_2d(x, y, z - 1, t[x][y0][z], t[x][y][z], hs_bf, hs_ff);
             updated += alert0 + alert1;
             if (alert1)
@@ -3235,7 +3170,7 @@ T[0][0][0]=%g\n",*HS,*T);
                 /* bulk waves: 1 3D edge diffraction and 2 (*4) 3D transmission */
                 alert0 = edge_diff(x + 1, y, z - 1, t[x][y0][z], t[x][y][z],
                     hs_bf) + t_3d(x+1,y,z-1,t[x][y0][z],
-                    t[x+1][y0][z],t[x][y][z],t[x+1][y][z],hs_bf)
+                        t[x+1][y0][z],t[x][y][z],t[x+1][y][z],hs_bf)
                     +t_3d(x+1,y,z-1,t[x][y0][z],
                         t[x][y0][z-1],t[x][y][z],t[x][y][z-1],hs_bf);
                 if (alert0)
@@ -3245,10 +3180,10 @@ T[0][0][0]=%g\n",*HS,*T);
                   }
 
                 /* interface waves along x_side: 1 1D transmission and 1 2D transmission */
-                alert1 = t_1d(x + 1, y, z - 1, t[x][y][z - 1], hs_bb, hs_bf,
-                    hs_ubb, hs_ube);
-                alert0 = t_2d(x + 1, y, z - 1, t[x][y0][z - 1], t[x][y][z - 1],
-                    hs_bb, hs_bf);
+                alert1 = t_1d(x + 1, y, z - 1, t[x][y][z - 1], hs_bb, hs_bf, hs_ubb,
+                    hs_ube);
+                alert0 = t_2d(x + 1, y, z - 1, t[x][y0][z - 1], t[x][y][z - 1], hs_bb,
+                    hs_bf);
                 if (alert0 + alert1)
                   {
                     updated += alert0 + alert1;
@@ -3264,10 +3199,10 @@ T[0][0][0]=%g\n",*HS,*T);
                   }
 
                 /* interface waves along z_side: 1 1D transmission and 1 2D transmission */
-                alert1 = t_1d(x + 1, y, z - 1, t[x + 1][y][z], hs_ff, hs_bf,
-                    hs_uee, hs_ube);
-                alert0 = t_2d(x + 1, y, z - 1, t[x + 1][y0][z], t[x + 1][y][z],
-                    hs_ff, hs_bf);
+                alert1 = t_1d(x + 1, y, z - 1, t[x + 1][y][z], hs_ff, hs_bf, hs_uee,
+                    hs_ube);
+                alert0 = t_2d(x + 1, y, z - 1, t[x + 1][y0][z], t[x + 1][y][z], hs_ff,
+                    hs_bf);
                 if (alert0 + alert1)
                   {
                     updated += alert0 + alert1;
@@ -3284,9 +3219,8 @@ T[0][0][0]=%g\n",*HS,*T);
 
                 /* interface waves along y_side : 2 2D transmission and 1 2D diffraction */
                 alert1 = diff_2d(x + 1, y, z - 1, t[x][y][z], hs_bf, hs_ube)
-                    + t_2d(x + 1, y, z - 1, t[x][y][z], t[x + 1][y][z], hs_bf,
-                        hs_ube) + t_2d(x + 1, y, z - 1, t[x][y][z], t[x][y][z
-                    - 1], hs_bf, hs_ube);
+                    + t_2d(x + 1, y, z - 1, t[x][y][z], t[x + 1][y][z], hs_bf, hs_ube)
+                    + t_2d(x + 1, y, z - 1, t[x][y][z], t[x][y][z - 1], hs_bf, hs_ube);
                 if (alert1)
                   {
                     updated += alert1;
@@ -3306,8 +3240,8 @@ T[0][0][0]=%g\n",*HS,*T);
     /*--------------------------------------------END_Y_SIDE()--------------------*/
     /*----------------------------------------------Z_SIDE()--------------------*/
 
-    int PodvinTime3D::z_side(int x_begin, int x_end, int y_begin, int y_end,
-        int z, int future)
+    int PodvinTime3D::z_side(int x_begin, int x_end, int y_begin, int y_end, int z,
+        int future)
 
     /* Propagates computations from side z-future to side z.       */
     /* between *_begin and *_end coordinates. Returns a nonzero    */
@@ -3317,8 +3251,8 @@ T[0][0][0]=%g\n",*HS,*T);
     /* See complete comments in function x_side().                 */
 
       {
-        int updated, longhead, z0, z_s, x, y, sign_ff, sign_bf, sign_bb,
-            sign_fb, test, past;
+        int updated, longhead, z0, z_s, x, y, sign_ff, sign_bf, sign_bb, sign_fb, test,
+            past;
         float hs_ff, hs_bf, hs_bb, hs_fb;
 
         if (reverse_order == 0)
@@ -3360,8 +3294,7 @@ T[0][0][0]=%g\n",*HS,*T);
 
                 /* illuminate first neighbours */
                 /* 1 1D transmission and 4 partial 3D transmission */
-                updated += t_1d(x, y, z, t[x][y][z0], hs_ff, hs_bf, hs_bb,
-                    hs_fb);
+                updated += t_1d(x, y, z, t[x][y][z0], hs_ff, hs_bf, hs_bb, hs_fb);
                 if (x < x_end && y < y_end)
                   updated += t_3d_part1(x, y, z, t[x][y][z0], t[x + 1][y][z0],
                       t[x][y + 1][z0], hs_ff);
@@ -3386,8 +3319,8 @@ T[0][0][0]=%g\n",*HS,*T);
                     if (x < x_start_fb)
                       x_start_fb = x;
                     updated += diff_2d(x + 1, y, z, t[x][y][z0], hs_ff, hs_fb);
-                    updated += t_2d(x + 1, y, z, t[x][y][z0], t[x + 1][y][z0],
-                        hs_ff, hs_fb);
+                    updated += t_2d(x + 1, y, z, t[x][y][z0], t[x + 1][y][z0], hs_ff,
+                        hs_fb);
                   }
                 if (x > x_begin && t[x][y][z0] <= t[x - 1][y][z0])
                   {
@@ -3398,8 +3331,8 @@ T[0][0][0]=%g\n",*HS,*T);
                     if (x > x_start_bb)
                       x_start_bb = x;
                     updated += diff_2d(x - 1, y, z, t[x][y][z0], hs_bf, hs_bb);
-                    updated += t_2d(x - 1, y, z, t[x][y][z0], t[x - 1][y][z0],
-                        hs_bf, hs_bb);
+                    updated += t_2d(x - 1, y, z, t[x][y][z0], t[x - 1][y][z0], hs_bf,
+                        hs_bb);
                   }
                 if (y < y_end && t[x][y][z0] <= t[x][y + 1][z0])
                   {
@@ -3410,8 +3343,8 @@ T[0][0][0]=%g\n",*HS,*T);
                     if (y < y_start_bf)
                       y_start_bf = y;
                     updated += diff_2d(x, y + 1, z, t[x][y][z0], hs_ff, hs_bf);
-                    updated += t_2d(x, y + 1, z, t[x][y][z0], t[x][y + 1][z0],
-                        hs_ff, hs_bf);
+                    updated += t_2d(x, y + 1, z, t[x][y][z0], t[x][y + 1][z0], hs_ff,
+                        hs_bf);
                   }
                 if (y > y_begin && t[x][y][z0] <= t[x][y - 1][z0])
                   {
@@ -3422,8 +3355,8 @@ T[0][0][0]=%g\n",*HS,*T);
                     if (y > y_start_bb)
                       y_start_bb = y;
                     updated += diff_2d(x, y - 1, z, t[x][y][z0], hs_bb, hs_fb);
-                    updated += t_2d(x, y - 1, z, t[x][y][z0], t[x][y - 1][z0],
-                        hs_bb, hs_fb);
+                    updated += t_2d(x, y - 1, z, t[x][y][z0], t[x][y - 1][z0], hs_bb,
+                        hs_fb);
                   }
 
                 /* illuminate third neighbours */
@@ -3431,40 +3364,40 @@ T[0][0][0]=%g\n",*HS,*T);
                 if (sign_ff == 2)
                   {
                     flag_ff = 1;
-                    updated += point_diff(x + 1, y + 1, z, t[x][y][z0], hs_ff)
-                        + edge_diff(x + 1, y + 1, z, t[x][y][z0],
+                    updated += point_diff(x + 1, y + 1, z, t[x][y][z0],
+                        hs_ff) + edge_diff(x + 1, y + 1, z, t[x][y][z0],
                             t[x + 1][y][z0], hs_ff) + edge_diff(x + 1, y + 1,
-                        z, t[x][y][z0], t[x][y + 1][z0], hs_ff)
+                            z, t[x][y][z0], t[x][y + 1][z0], hs_ff)
                         +t_3d_part2(x+1,y+1,z,t[x][y][z0],t[x+1][y][z0],
                             t[x][y+1][z0],t[x+1][y+1][z0],hs_ff);
                   }
                 if (sign_bf == 2)
                   {
                     flag_bf = 1;
-                    updated += point_diff(x - 1, y + 1, z, t[x][y][z0], hs_bf)
-                        + edge_diff(x - 1, y + 1, z, t[x][y][z0],
+                    updated += point_diff(x - 1, y + 1, z, t[x][y][z0],
+                        hs_bf) + edge_diff(x - 1, y + 1, z, t[x][y][z0],
                             t[x - 1][y][z0], hs_bf) + edge_diff(x - 1, y + 1,
-                        z, t[x][y][z0], t[x][y + 1][z0], hs_bf)
+                            z, t[x][y][z0], t[x][y + 1][z0], hs_bf)
                         +t_3d_part2(x-1,y+1,z,t[x][y][z0],t[x-1][y][z0],
                             t[x][y+1][z0],t[x-1][y+1][z0],hs_bf);
                   }
                 if (sign_bb == 2)
                   {
                     flag_bb = 1;
-                    updated += point_diff(x - 1, y - 1, z, t[x][y][z0], hs_bb)
-                        + edge_diff(x - 1, y - 1, z, t[x][y][z0],
+                    updated += point_diff(x - 1, y - 1, z, t[x][y][z0],
+                        hs_bb) + edge_diff(x - 1, y - 1, z, t[x][y][z0],
                             t[x - 1][y][z0], hs_bb) + edge_diff(x - 1, y - 1,
-                        z, t[x][y][z0], t[x][y - 1][z0], hs_bb)
+                            z, t[x][y][z0], t[x][y - 1][z0], hs_bb)
                         +t_3d_part2(x-1,y-1,z,t[x][y][z0],t[x-1][y][z0],
                             t[x][y-1][z0],t[x-1][y-1][z0],hs_bb);
                   }
                 if (sign_fb == 2)
                   {
                     flag_fb = 1;
-                    updated += point_diff(x + 1, y - 1, z, t[x][y][z0], hs_fb)
-                        + edge_diff(x + 1, y - 1, z, t[x][y][z0],
+                    updated += point_diff(x + 1, y - 1, z, t[x][y][z0],
+                        hs_fb) + edge_diff(x + 1, y - 1, z, t[x][y][z0],
                             t[x + 1][y][z0], hs_fb) + edge_diff(x + 1, y - 1,
-                        z, t[x][y][z0], t[x][y - 1][z0], hs_fb)
+                            z, t[x][y][z0], t[x][y - 1][z0], hs_fb)
                         +t_3d_part2(x+1,y-1,z,t[x][y][z0],t[x+1][y][z0],
                             t[x][y-1][z0],t[x+1][y-1][z0],hs_fb);
                   }
@@ -3493,32 +3426,29 @@ T[0][0][0]=%g\n",*HS,*T);
                 test++;
                 if (VERBOSE)
                   printf("ff ");
-                updated += scan_z_ff(x_start_ff, x_end, y_start_ff, y_end, z0,
-                    z, z_s);
+                updated += scan_z_ff(x_start_ff, x_end, y_start_ff, y_end, z0, z, z_s);
               }
             if (flag_fb)
               {
                 test++;
                 if (VERBOSE)
                   printf("fb ");
-                updated += scan_z_fb(x_start_fb, x_end, y_begin, y_start_fb,
-                    z0, z, z_s);
+                updated += scan_z_fb(x_start_fb, x_end, y_begin, y_start_fb, z0, z, z_s);
               }
             if (flag_bb)
               {
                 test++;
                 if (VERBOSE)
                   printf("bb ");
-                updated += scan_z_bb(x_begin, x_start_bb, y_begin, y_start_bb,
-                    z0, z, z_s);
+                updated += scan_z_bb(x_begin, x_start_bb, y_begin, y_start_bb, z0, z,
+                    z_s);
               }
             if (flag_bf)
               {
                 test++;
                 if (VERBOSE)
                   printf("bf ");
-                updated += scan_z_bf(x_begin, x_start_bf, y_start_bf, y_end,
-                    z0, z, z_s);
+                updated += scan_z_bf(x_begin, x_start_bf, y_start_bf, y_end, z0, z, z_s);
               }
           } while (test);
 
@@ -3559,8 +3489,8 @@ T[0][0][0]=%g\n",*HS,*T);
 
     /*--------------------------------------Z_SIDE() : SCAN_Z_EE()--------------*/
 
-    int PodvinTime3D::scan_z_ff(int x_start, int x_end, int y_start, int y_end,
-        int z0, int z, int z_s)
+    int PodvinTime3D::scan_z_ff(int x_start, int x_end, int y_start, int y_end, int z0,
+        int z, int z_s)
 
       {
         int updated = 0, alert0, alert1, x, y, z_sf;
@@ -3580,8 +3510,7 @@ T[0][0][0]=%g\n",*HS,*T);
                 if (y)
                   hs_ubb = hs[x][y - 1][z_sf];
               }
-            alert1
-                = t_1d(x + 1, y, z, t[x][y][z], hs_bb, hs_bf, hs_ubb, hs_ube);
+            alert1 = t_1d(x + 1, y, z, t[x][y][z], hs_bb, hs_bf, hs_ubb, hs_ube);
             alert0 = t_2d(x + 1, y, z, t[x][y][z0], t[x][y][z], hs_bb, hs_bf);
             if (alert1)
               longflags[x * ny + ny + y] = 1;
@@ -3601,8 +3530,7 @@ T[0][0][0]=%g\n",*HS,*T);
                 if (x)
                   hs_ubb = hs[x - 1][y][z_sf];
               }
-            alert1
-                = t_1d(x, y + 1, z, t[x][y][z], hs_bb, hs_fb, hs_ubb, hs_ueb);
+            alert1 = t_1d(x, y + 1, z, t[x][y][z], hs_bb, hs_fb, hs_ubb, hs_ueb);
             alert0 = t_2d(x, y + 1, z, t[x][y][z0], t[x][y][z], hs_bb, hs_fb);
             if (alert1)
               longflags[x * ny + y + 1] = 1;
@@ -3630,7 +3558,7 @@ T[0][0][0]=%g\n",*HS,*T);
                 /* bulk waves: 1 3D edge diffraction and 2 (*4) 3D transmission */
                 alert0 = edge_diff(x + 1, y + 1, z, t[x][y][z0], t[x][y][z],
                     hs_bb) + t_3d(x+1,y+1,z,t[x][y][z0],
-                    t[x+1][y][z0],t[x][y][z],t[x+1][y][z],hs_bb)
+                        t[x+1][y][z0],t[x][y][z],t[x+1][y][z],hs_bb)
                     +t_3d(x+1,y+1,z,t[x][y][z0],
                         t[x][y+1][z0],t[x][y][z],t[x][y+1][z],hs_bb);
                 if (alert0)
@@ -3640,10 +3568,10 @@ T[0][0][0]=%g\n",*HS,*T);
                   }
 
                 /* interface waves along x_side: 1 1D transmission and 1 2D transmission */
-                alert1 = t_1d(x + 1, y + 1, z, t[x][y + 1][z], hs_bb, hs_bf,
-                    hs_ubb, hs_ube);
-                alert0 = t_2d(x + 1, y + 1, z, t[x][y + 1][z0], t[x][y + 1][z],
-                    hs_bb, hs_bf);
+                alert1 = t_1d(x + 1, y + 1, z, t[x][y + 1][z], hs_bb, hs_bf, hs_ubb,
+                    hs_ube);
+                alert0 = t_2d(x + 1, y + 1, z, t[x][y + 1][z0], t[x][y + 1][z], hs_bb,
+                    hs_bf);
                 if (alert0 + alert1)
                   {
                     updated += alert0 + alert1;
@@ -3659,10 +3587,10 @@ T[0][0][0]=%g\n",*HS,*T);
                   }
 
                 /* interface waves along y_side: 1 1D transmission and 1 2D transmission */
-                alert1 = t_1d(x + 1, y + 1, z, t[x + 1][y][z], hs_bb, hs_fb,
-                    hs_ubb, hs_ueb);
-                alert0 = t_2d(x + 1, y + 1, z, t[x + 1][y][z0], t[x + 1][y][z],
-                    hs_bb, hs_fb);
+                alert1 = t_1d(x + 1, y + 1, z, t[x + 1][y][z], hs_bb, hs_fb, hs_ubb,
+                    hs_ueb);
+                alert0 = t_2d(x + 1, y + 1, z, t[x + 1][y][z0], t[x + 1][y][z], hs_bb,
+                    hs_fb);
                 if (alert0 + alert1)
                   {
                     updated += alert0 + alert1;
@@ -3679,9 +3607,8 @@ T[0][0][0]=%g\n",*HS,*T);
 
                 /* interface waves along z_side : 2 2D transmission and 1 2D diffraction */
                 alert1 = diff_2d(x + 1, y + 1, z, t[x][y][z], hs_bb, hs_ubb)
-                    + t_2d(x + 1, y + 1, z, t[x][y][z], t[x + 1][y][z], hs_bb,
-                        hs_ubb) + t_2d(x + 1, y + 1, z, t[x][y][z],
-                    t[x][y + 1][z], hs_bb, hs_ubb);
+                    + t_2d(x + 1, y + 1, z, t[x][y][z], t[x + 1][y][z], hs_bb, hs_ubb)
+                    + t_2d(x + 1, y + 1, z, t[x][y][z], t[x][y + 1][z], hs_bb, hs_ubb);
                 if (alert1)
                   {
                     updated += alert1;
@@ -3699,8 +3626,8 @@ T[0][0][0]=%g\n",*HS,*T);
 
     /*--------------------------------------Z_SIDE() : SCAN_Z_BE()--------------*/
 
-    int PodvinTime3D::scan_z_bf(int x_begin, int x_start, int y_start,
-        int y_end, int z0, int z, int z_s)
+    int PodvinTime3D::scan_z_bf(int x_begin, int x_start, int y_start, int y_end, int z0,
+        int z, int z_s)
 
       {
         int updated = 0, alert0, alert1, x, y, z_sf;
@@ -3720,8 +3647,7 @@ T[0][0][0]=%g\n",*HS,*T);
                 if (y)
                   hs_ueb = hs[x - 1][y - 1][z_sf];
               }
-            alert1
-                = t_1d(x - 1, y, z, t[x][y][z], hs_fb, hs_ff, hs_ueb, hs_uee);
+            alert1 = t_1d(x - 1, y, z, t[x][y][z], hs_fb, hs_ff, hs_ueb, hs_uee);
             alert0 = t_2d(x - 1, y, z, t[x][y][z0], t[x][y][z], hs_fb, hs_ff);
             if (alert1)
               longflags[x * ny - ny + y] = 1;
@@ -3741,8 +3667,7 @@ T[0][0][0]=%g\n",*HS,*T);
                   hs_ubb = hs[x - 1][y][z_sf];
                 hs_ueb = hs[x][y][z_sf];
               }
-            alert1
-                = t_1d(x, y + 1, z, t[x][y][z], hs_bb, hs_fb, hs_ubb, hs_ueb);
+            alert1 = t_1d(x, y + 1, z, t[x][y][z], hs_bb, hs_fb, hs_ubb, hs_ueb);
             alert0 = t_2d(x, y + 1, z, t[x][y][z0], t[x][y][z], hs_bb, hs_fb);
             if (alert1)
               longflags[x * ny + y + 1] = 1;
@@ -3776,7 +3701,7 @@ T[0][0][0]=%g\n",*HS,*T);
                 /* bulk waves: 1 3D edge diffraction and 2 (*4) 3D transmission */
                 alert0 = edge_diff(x - 1, y + 1, z, t[x][y][z0], t[x][y][z],
                     hs_fb) + t_3d(x-1,y+1,z,t[x][y][z0],
-                    t[x-1][y][z0],t[x][y][z],t[x-1][y][z],hs_fb)
+                        t[x-1][y][z0],t[x][y][z],t[x-1][y][z],hs_fb)
                     +t_3d(x-1,y+1,z,t[x][y][z0],
                         t[x][y+1][z0],t[x][y][z],t[x][y+1][z],hs_fb);
                 if (alert0)
@@ -3786,10 +3711,10 @@ T[0][0][0]=%g\n",*HS,*T);
                   }
 
                 /* interface waves along x_side: 1 1D transmission and 1 2D transmission */
-                alert1 = t_1d(x - 1, y + 1, z, t[x][y + 1][z], hs_ff, hs_fb,
-                    hs_uee, hs_ueb);
-                alert0 = t_2d(x - 1, y + 1, z, t[x][y + 1][z0], t[x][y + 1][z],
-                    hs_ff, hs_fb);
+                alert1 = t_1d(x - 1, y + 1, z, t[x][y + 1][z], hs_ff, hs_fb, hs_uee,
+                    hs_ueb);
+                alert0 = t_2d(x - 1, y + 1, z, t[x][y + 1][z0], t[x][y + 1][z], hs_ff,
+                    hs_fb);
                 if (alert0 + alert1)
                   {
                     updated += alert0 + alert1;
@@ -3805,10 +3730,10 @@ T[0][0][0]=%g\n",*HS,*T);
                   }
 
                 /* interface waves along y_side: 1 1D transmission and 1 2D transmission */
-                alert1 = t_1d(x - 1, y + 1, z, t[x - 1][y][z], hs_bb, hs_fb,
-                    hs_ubb, hs_ueb);
-                alert0 = t_2d(x - 1, y + 1, z, t[x - 1][y][z0], t[x - 1][y][z],
-                    hs_bb, hs_fb);
+                alert1 = t_1d(x - 1, y + 1, z, t[x - 1][y][z], hs_bb, hs_fb, hs_ubb,
+                    hs_ueb);
+                alert0 = t_2d(x - 1, y + 1, z, t[x - 1][y][z0], t[x - 1][y][z], hs_bb,
+                    hs_fb);
                 if (alert0 + alert1)
                   {
                     updated += alert0 + alert1;
@@ -3825,9 +3750,8 @@ T[0][0][0]=%g\n",*HS,*T);
 
                 /* interface waves along z_side : 2 2D transmission and 1 2D diffraction */
                 alert1 = diff_2d(x - 1, y + 1, z, t[x][y][z], hs_fb, hs_ueb)
-                    + t_2d(x - 1, y + 1, z, t[x][y][z], t[x - 1][y][z], hs_fb,
-                        hs_ueb) + t_2d(x - 1, y + 1, z, t[x][y][z],
-                    t[x][y + 1][z], hs_fb, hs_ueb);
+                    + t_2d(x - 1, y + 1, z, t[x][y][z], t[x - 1][y][z], hs_fb, hs_ueb)
+                    + t_2d(x - 1, y + 1, z, t[x][y][z], t[x][y + 1][z], hs_fb, hs_ueb);
                 if (alert1)
                   {
                     updated += alert1;
@@ -3845,8 +3769,8 @@ T[0][0][0]=%g\n",*HS,*T);
 
     /*--------------------------------------Z_SIDE() : SCAN_Z_EB()--------------*/
 
-    int PodvinTime3D::scan_z_bb(int x_begin, int x_start, int y_begin,
-        int y_start, int z0, int z, int z_s)
+    int PodvinTime3D::scan_z_bb(int x_begin, int x_start, int y_begin, int y_start,
+        int z0, int z, int z_s)
 
       {
         int updated = 0, alert0, alert1, x, y, z_sf;
@@ -3866,8 +3790,7 @@ T[0][0][0]=%g\n",*HS,*T);
                   hs_uee = hs[x - 1][y - 1][z_sf];
                 hs_ueb = hs[x - 1][y][z_sf];
               }
-            alert1
-                = t_1d(x - 1, y, z, t[x][y][z], hs_fb, hs_ff, hs_ueb, hs_uee);
+            alert1 = t_1d(x - 1, y, z, t[x][y][z], hs_fb, hs_ff, hs_ueb, hs_uee);
             alert0 = t_2d(x - 1, y, z, t[x][y][z0], t[x][y][z], hs_fb, hs_ff);
             if (alert1)
               longflags[x * ny - ny + y] = 1;
@@ -3887,8 +3810,7 @@ T[0][0][0]=%g\n",*HS,*T);
                   hs_uee = hs[x - 1][y - 1][z_sf];
                 hs_ube = hs[x][y - 1][z_sf];
               }
-            alert1
-                = t_1d(x, y - 1, z, t[x][y][z], hs_bf, hs_ff, hs_ube, hs_uee);
+            alert1 = t_1d(x, y - 1, z, t[x][y][z], hs_bf, hs_ff, hs_ube, hs_uee);
             alert0 = t_2d(x, y - 1, z, t[x][y][z0], t[x][y][z], hs_bf, hs_ff);
             if (alert1)
               longflags[x * ny + y - 1] = 1;
@@ -3928,7 +3850,7 @@ T[0][0][0]=%g\n",*HS,*T);
                 /* bulk waves: 1 3D edge diffraction and 2 (*4) 3D transmission */
                 alert0 = edge_diff(x - 1, y - 1, z, t[x][y][z0], t[x][y][z],
                     hs_ff) + t_3d(x-1,y-1,z,t[x][y][z0],
-                    t[x-1][y][z0],t[x][y][z],t[x-1][y][z],hs_ff)
+                        t[x-1][y][z0],t[x][y][z],t[x-1][y][z],hs_ff)
                     +t_3d(x-1,y-1,z,t[x][y][z0],
                         t[x][y-1][z0],t[x][y][z],t[x][y-1][z],hs_ff);
                 if (alert0)
@@ -3938,10 +3860,10 @@ T[0][0][0]=%g\n",*HS,*T);
                   }
 
                 /* interface waves along x_side: 1 1D transmission and 1 2D transmission */
-                alert1 = t_1d(x - 1, y - 1, z, t[x][y - 1][z], hs_ff, hs_fb,
-                    hs_uee, hs_ueb);
-                alert0 = t_2d(x - 1, y - 1, z, t[x][y - 1][z0], t[x][y - 1][z],
-                    hs_ff, hs_fb);
+                alert1 = t_1d(x - 1, y - 1, z, t[x][y - 1][z], hs_ff, hs_fb, hs_uee,
+                    hs_ueb);
+                alert0 = t_2d(x - 1, y - 1, z, t[x][y - 1][z0], t[x][y - 1][z], hs_ff,
+                    hs_fb);
                 if (alert0 + alert1)
                   {
                     updated += alert0 + alert1;
@@ -3957,10 +3879,10 @@ T[0][0][0]=%g\n",*HS,*T);
                   }
 
                 /* interface waves along y_side: 1 1D transmission and 1 2D transmission */
-                alert1 = t_1d(x - 1, y - 1, z, t[x - 1][y][z], hs_ff, hs_bf,
-                    hs_uee, hs_ube);
-                alert0 = t_2d(x - 1, y - 1, z, t[x - 1][y][z0], t[x - 1][y][z],
-                    hs_ff, hs_bf);
+                alert1 = t_1d(x - 1, y - 1, z, t[x - 1][y][z], hs_ff, hs_bf, hs_uee,
+                    hs_ube);
+                alert0 = t_2d(x - 1, y - 1, z, t[x - 1][y][z0], t[x - 1][y][z], hs_ff,
+                    hs_bf);
                 if (alert0 + alert1)
                   {
                     updated += alert0 + alert1;
@@ -3977,9 +3899,8 @@ T[0][0][0]=%g\n",*HS,*T);
 
                 /* interface waves along z_side : 2 2D transmission and 1 2D diffraction */
                 alert1 = diff_2d(x - 1, y - 1, z, t[x][y][z], hs_ff, hs_uee)
-                    + t_2d(x - 1, y - 1, z, t[x][y][z], t[x - 1][y][z], hs_ff,
-                        hs_uee) + t_2d(x - 1, y - 1, z, t[x][y][z],
-                    t[x][y - 1][z], hs_ff, hs_uee);
+                    + t_2d(x - 1, y - 1, z, t[x][y][z], t[x - 1][y][z], hs_ff, hs_uee)
+                    + t_2d(x - 1, y - 1, z, t[x][y][z], t[x][y - 1][z], hs_ff, hs_uee);
                 if (alert1)
                   {
                     updated += alert1;
@@ -3997,8 +3918,8 @@ T[0][0][0]=%g\n",*HS,*T);
 
     /*--------------------------------------Z_SIDE() : SCAN_Z_EB()--------------*/
 
-    int PodvinTime3D::scan_z_fb(int x_start, int x_end, int y_begin,
-        int y_start, int z0, int z, int z_s)
+    int PodvinTime3D::scan_z_fb(int x_start, int x_end, int y_begin, int y_start, int z0,
+        int z, int z_s)
 
       {
         int updated = 0, alert0, alert1, x, y, z_sf;
@@ -4018,8 +3939,7 @@ T[0][0][0]=%g\n",*HS,*T);
                   hs_ube = hs[x][y - 1][z_sf];
                 hs_ubb = hs[x][y][z_sf];
               }
-            alert1
-                = t_1d(x + 1, y, z, t[x][y][z], hs_bf, hs_bb, hs_ube, hs_ubb);
+            alert1 = t_1d(x + 1, y, z, t[x][y][z], hs_bf, hs_bb, hs_ube, hs_ubb);
             alert0 = t_2d(x + 1, y, z, t[x][y][z0], t[x][y][z], hs_bf, hs_bb);
             if (alert1)
               longflags[x * ny + ny + y] = 1;
@@ -4039,8 +3959,7 @@ T[0][0][0]=%g\n",*HS,*T);
                   hs_uee = hs[x - 1][y - 1][z_sf];
                 hs_ube = hs[x][y - 1][z_sf];
               }
-            alert1
-                = t_1d(x, y - 1, z, t[x][y][z], hs_bf, hs_ff, hs_ube, hs_uee);
+            alert1 = t_1d(x, y - 1, z, t[x][y][z], hs_bf, hs_ff, hs_ube, hs_uee);
             alert0 = t_2d(x, y - 1, z, t[x][y][z0], t[x][y][z], hs_bf, hs_ff);
             if (alert1)
               longflags[x * ny + y - 1] = 1;
@@ -4074,7 +3993,7 @@ T[0][0][0]=%g\n",*HS,*T);
                 /* bulk waves: 1 3D edge diffraction and 2 (*4) 3D transmission */
                 alert0 = edge_diff(x + 1, y - 1, z, t[x][y][z0], t[x][y][z],
                     hs_bf) + t_3d(x+1,y-1,z,t[x][y][z0],
-                    t[x+1][y][z0],t[x][y][z],t[x+1][y][z],hs_bf)
+                        t[x+1][y][z0],t[x][y][z],t[x+1][y][z],hs_bf)
                     +t_3d(x+1,y-1,z,t[x][y][z0],
                         t[x][y-1][z0],t[x][y][z],t[x][y-1][z],hs_bf);
                 if (alert0)
@@ -4084,10 +4003,10 @@ T[0][0][0]=%g\n",*HS,*T);
                   }
 
                 /* interface waves along x_side: 1 1D transmission and 1 2D transmission */
-                alert1 = t_1d(x + 1, y - 1, z, t[x][y - 1][z], hs_bb, hs_bf,
-                    hs_ubb, hs_ube);
-                alert0 = t_2d(x + 1, y - 1, z, t[x][y - 1][z0], t[x][y - 1][z],
-                    hs_bb, hs_bf);
+                alert1 = t_1d(x + 1, y - 1, z, t[x][y - 1][z], hs_bb, hs_bf, hs_ubb,
+                    hs_ube);
+                alert0 = t_2d(x + 1, y - 1, z, t[x][y - 1][z0], t[x][y - 1][z], hs_bb,
+                    hs_bf);
                 if (alert0 + alert1)
                   {
                     updated += alert0 + alert1;
@@ -4103,10 +4022,10 @@ T[0][0][0]=%g\n",*HS,*T);
                   }
 
                 /* interface waves along y_side: 1 1D transmission and 1 2D transmission */
-                alert1 = t_1d(x + 1, y - 1, z, t[x + 1][y][z], hs_ff, hs_bf,
-                    hs_uee, hs_ube);
-                alert0 = t_2d(x + 1, y - 1, z, t[x + 1][y][z0], t[x + 1][y][z],
-                    hs_ff, hs_bf);
+                alert1 = t_1d(x + 1, y - 1, z, t[x + 1][y][z], hs_ff, hs_bf, hs_uee,
+                    hs_ube);
+                alert0 = t_2d(x + 1, y - 1, z, t[x + 1][y][z0], t[x + 1][y][z], hs_ff,
+                    hs_bf);
                 if (alert0 + alert1)
                   {
                     updated += alert0 + alert1;
@@ -4123,9 +4042,8 @@ T[0][0][0]=%g\n",*HS,*T);
 
                 /* interface waves along z_side : 2 2D transmission and 1 2D diffraction */
                 alert1 = diff_2d(x + 1, y - 1, z, t[x][y][z], hs_bf, hs_ube)
-                    + t_2d(x + 1, y - 1, z, t[x][y][z], t[x + 1][y][z], hs_bf,
-                        hs_ube) + t_2d(x + 1, y - 1, z, t[x][y][z],
-                    t[x][y - 1][z], hs_bf, hs_ube);
+                    + t_2d(x + 1, y - 1, z, t[x][y][z], t[x + 1][y][z], hs_bf, hs_ube)
+                    + t_2d(x + 1, y - 1, z, t[x][y][z], t[x][y - 1][z], hs_bf, hs_ube);
                 if (alert1)
                   {
                     updated += alert1;
