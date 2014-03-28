@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <vector>
 
 #ifndef M_SQRT2
 #define M_SQRT2     1.41421356237309504880
@@ -991,10 +992,12 @@ T[0][0][0]=%g\n",*HS,*T);
       {
         int signal, nx_, ny_, nz_, xs_, ys_, zs_, X0_, X1_, Y0_, Y1_, Z0_, Z1_, n, d, i,
             ii, ihs, i0, j, jj, jhs, j0, k, kk, khs, k0;
-        float *hs_buf_, *t_buf_, fxs_, fys_, fzs_, *HS, *T;
+        float *hs_buf_, *t_buf_, fxs_, fys_, fzs_;
 
-        HS = (float *) malloc((unsigned) N_INIT * sizeof(float));
-        T = (float *) malloc((unsigned) N_INIT * sizeof(float));
+        std::vector<float> HS(N_INIT), T(N_INIT);
+
+        //HS = (float *) malloc((unsigned) N_INIT * sizeof(float));
+        //T = (float *) malloc((unsigned) N_INIT * sizeof(float));
         /* increment count of recursivity level */
         init_stage++;
         if (SMALLTALK)
@@ -1085,7 +1088,7 @@ T[0][0][0]=%g\n",*HS,*T);
           printf("\nRediscretized timefield dimensions: %d %d %d", nx, ny, nz);
 
         /* recursively compute times on this rediscretized model */
-        signal = time_3d(HS, T, nx, ny, nz, fxs, fys, fzs, hs_eps_init, messages);
+        signal = time_3d(&HS[0], &T[0], nx, ny, nz, fxs, fys, fzs, hs_eps_init, messages);
 
         /* assign relevant times to parent timefield */
         if (signal == NO_ERROR)
@@ -1129,8 +1132,8 @@ T[0][0][0]=%g\n",*HS,*T);
 
         /* decrement count of recursivity level */
         init_stage--;
-        free(HS);
-        free(T);
+        //free(HS);
+        //free(T);
         return signal;
 
       }

@@ -31,11 +31,7 @@ namespace jif3D
   /* @} */
   }
 
-
-
-
-
-    jif3D::RayResult ForwardModShot(int i, jif3D::GEOMETRY geo, jif3D::GRID_STRUCT grid);
+jif3D::RayResult ForwardModShot(int i, jif3D::GEOMETRY geo, jif3D::GRID_STRUCT grid);
 
 #ifdef HAVEHPX
 HPX_DEFINE_PLAIN_ACTION(ForwardModShot, ForwardModShot_action);
