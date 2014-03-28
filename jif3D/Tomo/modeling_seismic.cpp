@@ -130,36 +130,12 @@ namespace jif3D
                     data.tcalc[nact_datapos[j]] = Rays.tcalc[j];
                     raypath[nact_datapos[j]].nray = Rays.raypath[j].nray;
 
-                    if (raypath[nact_datapos[j]].nray != 0)
-                      {
-                        raypath[nact_datapos[j]].len.resize(
-                            raypath[nact_datapos[j]].nray);
-                        raypath[nact_datapos[j]].ele.resize(
-                            raypath[nact_datapos[j]].nray);
-                      }
-                    else
-                      {
-                        raypath[nact_datapos[j]].len.resize(1);
-                        raypath[nact_datapos[j]].ele.resize(1);
-                      }
-                    raypath[nact_datapos[j]].x.resize(raypath[nact_datapos[j]].nray + 1);
-                    raypath[nact_datapos[j]].y.resize(raypath[nact_datapos[j]].nray + 1);
-                    raypath[nact_datapos[j]].z.resize(raypath[nact_datapos[j]].nray + 1);
+                    raypath[nact_datapos[j]].len = Rays.raypath[j].len;
+                    raypath[nact_datapos[j]].ele = Rays.raypath[j].ele;
+                    raypath[nact_datapos[j]].x = Rays.raypath[j].x;
+                    raypath[nact_datapos[j]].y = Rays.raypath[j].y;
+                    raypath[nact_datapos[j]].z = Rays.raypath[j].z;
 
-                    for (size_t k = 0; k < Rays.raypath[j].nray; k++)
-                      {
-                        raypath[nact_datapos[j]].len[k] = Rays.raypath[j].len[k];
-                        raypath[nact_datapos[j]].ele[k] = Rays.raypath[j].ele[k];
-                        raypath[nact_datapos[j]].x[k] = Rays.raypath[j].x[k];
-                        raypath[nact_datapos[j]].y[k] = Rays.raypath[j].y[k];
-                        raypath[nact_datapos[j]].z[k] = Rays.raypath[j].z[k];
-                      }
-                    raypath[nact_datapos[j]].x[Rays.raypath[j].nray] =
-                    Rays.raypath[j].x[Rays.raypath[j].nray];
-                    raypath[nact_datapos[j]].y[Rays.raypath[j].nray] =
-                    Rays.raypath[j].y[Rays.raypath[j].nray];
-                    raypath[nact_datapos[j]].z[Rays.raypath[j].nray] =
-                    Rays.raypath[j].z[Rays.raypath[j].nray];
                   }
               }
 
@@ -224,36 +200,12 @@ namespace jif3D
                 data.tcalc[nact_datapos[j]] = Rays.tcalc[j];
                 raypath[nact_datapos[j]].nray = Rays.raypath[j].nray;
 
-                if (raypath[nact_datapos[j]].nray != 0)
-                  {
-                    raypath[nact_datapos[j]].len.resize(
-                        raypath[nact_datapos[j]].nray);
-                    raypath[nact_datapos[j]].ele.resize(
-                        raypath[nact_datapos[j]].nray);
-                  }
-                else
-                  {
-                    raypath[nact_datapos[j]].len.resize(1);
-                    raypath[nact_datapos[j]].ele.resize(1);
-                  }
-                raypath[nact_datapos[j]].x.resize(raypath[nact_datapos[j]].nray + 1);
-                raypath[nact_datapos[j]].y.resize(raypath[nact_datapos[j]].nray + 1);
-                raypath[nact_datapos[j]].z.resize(raypath[nact_datapos[j]].nray + 1);
+                raypath[nact_datapos[j]].len = Rays.raypath[j].len;
+                raypath[nact_datapos[j]].ele = Rays.raypath[j].ele;
+                raypath[nact_datapos[j]].x = Rays.raypath[j].x;
+                raypath[nact_datapos[j]].y = Rays.raypath[j].y;
+                raypath[nact_datapos[j]].z = Rays.raypath[j].z;
 
-                for (size_t k = 0; k < Rays.raypath[j].nray; k++)
-                  {
-                    raypath[nact_datapos[j]].len[k] = Rays.raypath[j].len[k];
-                    raypath[nact_datapos[j]].ele[k] = Rays.raypath[j].ele[k];
-                    raypath[nact_datapos[j]].x[k] = Rays.raypath[j].x[k];
-                    raypath[nact_datapos[j]].y[k] = Rays.raypath[j].y[k];
-                    raypath[nact_datapos[j]].z[k] = Rays.raypath[j].z[k];
-                  }
-                raypath[nact_datapos[j]].x[Rays.raypath[j].nray] =
-                Rays.raypath[j].x[Rays.raypath[j].nray];
-                raypath[nact_datapos[j]].y[Rays.raypath[j].nray] =
-                Rays.raypath[j].y[Rays.raypath[j].nray];
-                raypath[nact_datapos[j]].z[Rays.raypath[j].nray] =
-                Rays.raypath[j].z[Rays.raypath[j].nray];
               }
           }
 
