@@ -1,21 +1,27 @@
 //============================================================================
-// Name        : ResForwardbase.cpp
+// Name        : DCResForwardBase.cpp
 // Author      : Zhanjie Shi and Richard.W Hobbs
-// Version     : Feb 2014
+// Version     : April 2014
 // Copyright   : 2014, Zhanjie Shi and Richard.W Hobbs
 //============================================================================
 
-#include "ResForwardbase.h"
-#include "../Global/VecMat.h"
+#include "DCResForwardBase.h"
 #include "../Global/FatalException.h"
 #include "../Global/convert.h"
 #include <cmath>
-#include <vector>
-#include <iostream>
 #include <Eigen/Eigen/Dense>
 #include <Eigen/Eigen/Sparse>
 #include <Eigen/Eigen/LU>
 #include <Eigen/Eigen/Core>
+#include <boost/config.hpp>
+#include <boost/numeric/ublas/matrix_sparse.hpp>
+#include <boost/numeric/ublas/storage.hpp>
+#include <boost/numeric/ublas/io.hpp>
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/cuthill_mckee_ordering.hpp>
+#include <boost/graph/properties.hpp>
+#include <boost/graph/bandwidth.hpp>
+#include <boost/numeric/ublas/operation_sparse.hpp>
 
 
 
@@ -24,17 +30,20 @@ using namespace Eigen;
 
 namespace jif3D
 {
-  std::vector<float> Interpolate_N(std::vector<float> x, std::vector<float> y, std::vector<float> z, float xr, float yr, float zr)
+  std::vector<double> Linint(std::vector<double> x, std::vector<double> y, std::vector<double> z, double xr, double yr, double zr)
   {
 
-	  float minx;
+	  double minx;
 	  size_t imx=0;
 	  std::vector<size_t> ind_x(2,0), dx(2,0);
-	  minx=fabs(x[0]-xr);
+	  minx=fabs(xr-x[0]);
 	  for (size_t i=1; i<x.size(); i++)
 	  {
-		  if (fabs(x[i]-xr)<minx)
+		  if (fabs(xr-x[i])<minx)
+		  {
+			  minx=fabs(xr-x[i]);
 			  imx=i;
+		  }
 	  }
 	  if ((xr-x[imx]) >= 0.0)
 		{
@@ -49,15 +58,17 @@ namespace jif3D
 	  dx[0]=xr-x[ind_x[0]];
 	  dx[1]=x[ind_x[1]]-xr;
 
-
-	  float miny;
+	  double miny;
 	  size_t imy=0;
 	  std::vector<size_t> ind_y(2,0), dy(2,0);
-	  miny=fabs(y[0]-yr);
+	  miny=fabs(yr-y[0]);
 	  for (size_t i=1; i<y.size(); i++)
 	  {
-		  if (fabs(y[i]-yr)<miny)
+		  if (fabs(yr-y[i])<miny)
+		  {
+			  miny=fabs(yr-y[i]);
 			  imy=i;
+		  }
 	  }
 	  if ((yr-y[imy]) >= 0.0)
 		{
@@ -72,14 +83,17 @@ namespace jif3D
 	  dy[0]=yr-y[ind_y[0]];
 	  dy[1]=y[ind_y[1]]-yr;
 
-	  float minz;
+	  double minz;
 	  size_t imz=0;
 	  std::vector<size_t> ind_z(2,0), dz(2,0);
-	  minz=fabs(z[0]-zr);
+	  minz=fabs(zr-z[0]);
 	  for (size_t i=1; i<z.size(); i++)
 	  {
-		  if (fabs(z[i]-zr)<minz)
+		  if (fabs(zr-z[i])<minz)
+		  {
+			  minz=fabs(zr-z[i]);
 			  imz=i;
+		  }
 	  }
 	  if ((zr-z[imz]) >= 0.0)
 		{
@@ -95,11 +109,11 @@ namespace jif3D
 	  dz[1]=z[ind_z[1]]-zr;
 
 
-	  float Dx=x[ind_x[1]]-x[ind_x[0]];
-	  float Dy=y[ind_y[1]]-y[ind_y[0]];
-	  float Dz=z[ind_z[1]]-z[ind_z[0]];
+	  double Dx=(x[ind_x[1]]-x[ind_x[0]]);
+	  double Dy=(y[ind_y[1]]-y[ind_y[0]]);
+	  double Dz=(z[ind_z[1]]-z[ind_z[0]]);
 
-	  std::vector<float> v(x.size()*y.size()*z.size(), 0);
+	  std::vector<double> v(x.size()*y.size()*z.size(), 0);
 
       v[ ind_x[0]+ind_y[0]*x.size()+ind_z[0]*x.size()*y.size() ] = (1-dx[0]/Dx)*(1-dy[0]/Dy)*(1-dz[0]/Dz);
       v[ ind_x[0]+ind_y[1]*x.size()+ind_z[0]*x.size()*y.size() ] = (1-dx[0]/Dx)*(1-dy[1]/Dy)*(1-dz[0]/Dz);
@@ -110,20 +124,20 @@ namespace jif3D
       v[ ind_x[1]+ind_y[0]*x.size()+ind_z[1]*x.size()*y.size() ] = (1-dx[1]/Dx)*(1-dy[0]/Dy)*(1-dz[1]/Dz);
       v[ ind_x[1]+ind_y[1]*x.size()+ind_z[1]*x.size()*y.size() ] = (1-dx[1]/Dx)*(1-dy[1]/Dy)*(1-dz[1]/Dz);
 
-      std::vector<float> Q(v);
+      std::vector<double> Q(v);
 
       return(Q);
   }
 
   int ResForward(const GEOMETRY_RES &geo, const GRID_STRUCT_RES &grid, DATA_STRUCT_RES *data)
   {
-	    std::vector<float> cellwidth_x(grid.nx, grid.dx);
-	    std::vector<float> cellwidth_y(grid.ny, grid.dy);
-	    std::vector<float> cellwidth_z(grid.nz, grid.dz);
+	    std::vector<double> cellwidth_x(grid.nx, grid.dx);
+	    std::vector<double> cellwidth_y(grid.ny, grid.dy);
+	    std::vector<double> cellwidth_z(grid.dz);
 
 	//*******Generate index and value of non-zero elements of the divergence matrix D which is a sparse matrix.
 	std::vector<int> lxd,lyd,lzd,jxd,jyd,jzd; //the index of non-zero elements in sparse matrix D.
-    std::vector<float> kxd,kyd,kzd;           //the value of non-zero elements in sparse matrix D.
+    std::vector<double> kxd,kyd,kzd;           //the value of non-zero elements in sparse matrix D.
 	 /*****Divergence matrix D[np][nax+nay+naz], np=grid.nx*grid.ny*grid.nz, nax=(grid.nx-1)*grid.ny*grid.nz,
 	 * nay=grid.nx*(grid.ny-1)*grid.nz, naz=grid.nx*grid.ny*(grid.nz-1).
 	 *for (size_t i=0; i<2*nax; i++), D[lxd[i]][jxd[i]]=kxd[i]
@@ -335,7 +349,7 @@ namespace jif3D
 
 	//*******Generate index and value of non-zero elements of the gradient matrix G which is a sparse matrix.
 	std::vector<int> lxg,lyg,lzg,jxg,jyg,jzg; //the index of non-zero elements in sparse matrix G.
-    std::vector<float> kxg,kyg,kzg;           //the value of non-zero elements in sparse matrix G.
+    std::vector<double> kxg,kyg,kzg;           //the value of non-zero elements in sparse matrix G.
 
 	 /*****Gradient matrix G[nax+nay+naz][np], nax=(grid.nx-1)*grid.ny*grid.nz,
 	 * nay=grid.nx*(grid.ny-1)*grid.nz, naz=grid.nx*grid.ny*(grid.nz-1),np=grid.nx*grid.ny*grid.nz.
@@ -450,9 +464,9 @@ namespace jif3D
     	kzg.push_back(-kzg[i]);
     }
 
-	//*******Generate index and value of non-zero elements of the gradient matrix S(c) which is a sparse matrix.
+	//*******Generate index and value of non-zero elements of the diagonal matrix S(rho) which is a sparse matrix.
 	std::vector<int> lxs,lys,lzs,jxs,jys,jzs; //the index of non-zero elements in sparse matrix S.
-    std::vector<float> kxs,kys,kzs;           //the value of non-zero elements in sparse matrix S.
+    std::vector<double> kxs,kys,kzs;           //the value of non-zero elements in sparse matrix S.
 
 	 /*****Diagonal matrix S[nax+nay+naz][nax+nay+naz], nax=(grid.nx-1)*grid.ny*grid.nz,
 	 * nay=grid.nx*(grid.ny-1)*grid.nz, naz=grid.nx*grid.ny*(grid.nz-1).
@@ -461,7 +475,7 @@ namespace jif3D
 	 *for (size_t i=0; i<naz; i++), S[lzs[i]+nax+nay][jzs[i]+nax+nay]=kzs[i]
 	 *****/
 
-    std::vector<float> rhof_x, rhof_y, rhof_z;
+    std::vector<double> rhof_x, rhof_y, rhof_z;
     //***generate x coefficients
     //*Average rho on x face
     for (size_t i=0; i<grid.nz; i++)
@@ -518,7 +532,7 @@ namespace jif3D
     size_t naz=grid.nx*grid.ny*(grid.nz-1);
 
     //generate sparse matrix D,
-    typedef Eigen::Triplet<float> DT;
+    typedef Eigen::Triplet<double> DT;
     std::vector<DT> DV;
     DV.reserve(2*(nax+nay+naz));
     for (size_t i=0; i<2*nax; i++)
@@ -533,11 +547,11 @@ namespace jif3D
     {
     	DV.push_back(DT(lzd[i],jzd[i]+nax+nay,kzd[i]));
     }
-    Eigen::SparseMatrix<float> D(np, nax+nay+naz);
+    Eigen::SparseMatrix<double> D(np, nax+nay+naz);
     D.setFromTriplets(DV.begin(), DV.end());
 
     //generate sparse matrix S,
-    typedef Eigen::Triplet<float> ST;
+    typedef Eigen::Triplet<double> ST;
     std::vector<ST> SV;
     SV.reserve(nax+nay+naz);
     for (size_t i=0; i<nax; i++)
@@ -552,11 +566,11 @@ namespace jif3D
     {
     	SV.push_back(ST(lzs[i]+nax+nay,jzs[i]+nax+nay,1.0/kzs[i]));
     }
-    Eigen::SparseMatrix<float> S(nax+nay+naz, nax+nay+naz);
+    Eigen::SparseMatrix<double> S(nax+nay+naz, nax+nay+naz);
     S.setFromTriplets(SV.begin(), SV.end());
 
     //generate sparse matrix G,
-    typedef Eigen::Triplet<float> GT;
+    typedef Eigen::Triplet<double> GT;
     std::vector<GT> GV;
     GV.reserve(2*(nax+nay+naz));
     for (size_t i=0; i<2*nax; i++)
@@ -571,26 +585,111 @@ namespace jif3D
     {
     	GV.push_back(GT(lzg[i]+nax+nay,jzg[i],kzg[i]));
     }
-    Eigen::SparseMatrix<float> G(nax+nay+naz, np);
+    Eigen::SparseMatrix<double> G(nax+nay+naz, np);
     G.setFromTriplets(GV.begin(), GV.end());
 
     //generate sparse matrix, forward operator A
-    Eigen::SparseMatrix<float> A1(np, nax+nay+naz),A(np, np);
+    Eigen::SparseMatrix<double> A1(np, nax+nay+naz),A(np, np);
     A1=D*S; A=A1*G;
     A.coeffRef(0,0)=1.0/(cellwidth_x[0]*cellwidth_y[0]*cellwidth_z[0]);
 
-    //*****Generate source terms q and receiver terms Q*********************************//
-    /* The coordinate of all independent source and receiver pairs for each independent source pair are needed.
-     * Solve A*u=q using BICGSTAB (build-in class in Eigen, bi conjugate gradient stabilized solver with preconditioning) to get potential
-     * everywhere in the volume for each source pair. Then loop for all source pairs to compute forward data. For each source pair,
-     * using Q multiply u (Q*u, Q is terms for all receiver pairs of this source pair) to get forward data.
-     * For BICGSTAB, incomplete LU decomposition of A is needed to calculate faster.(if not, is it ok????)
+    //*****Permutation of forward operator A using Cuthill-Mckee Ordering Method*********************************//
+    /* Because Eigen library has not Cuthill-Mckee Ordering function, but Boost library has, so we used Boost uBlas library to finish Cuthill-Mckee Ordering of forward operator A.
+     * When implementing Cuthill-Mckee Ordering using Boost, the forward operator A which is Eigen SparseMatrix need to be input into a Boost SparseMatrix firstly. We use a loop to
+     * input the non-zero element of A one by one, so this probably can cause program running slower. But it is difficult to generate forward operator A using Boost C++ library due
+     * to no proper multiplication function of sparse matrix can be used. So we use Eigen to generate forward operator A from D*S*G as above. In the future, if there is a new function
+     *  which can be used to implement sparse matrix product in Boost uBlas library, it is a probably better method to directly use Boost to generate forward operator A from D*S*G.
      */
-    //generate source term q,
-    std::vector<float> q;
-    std::vector<float> zpos(grid.nz+1, 0),xpos(grid.nx+1, 0),ypos(grid.ny+1, 0);
-    std::vector<float> centerzeroxpos(grid.nx+1, 0),centerzeroypos(grid.ny+1, 0);
-    std::vector<float> cellcenterzpos(grid.nz, 0),cellcenterxpos(grid.nx, 0),cellcenterypos(grid.ny, 0);
+    typedef boost::numeric::ublas::compressed_matrix<double> MatType;
+	typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS,
+	        boost::property<boost::vertex_color_t, boost::default_color_type,
+	        boost::property<boost::vertex_degree_t, size_t> > > GraphType;
+	typedef boost::graph_traits<GraphType>::vertex_descriptor VertexType;
+	typedef boost::graph_traits<GraphType>::vertices_size_type size_type;
+	GraphType GFOR;
+	//declare a Boost sparse matrix FOR, which is equal to forward operator A which is Eigen Sparse Matrix.
+	MatType FOR(np,np);
+    //order is corresponding to 'p' in Matlab and is used to rearrange sequence of FOR for permutation, inv_order is the same with 'up' in Matlab and is used to regain original sequence.
+	boost::numeric::ublas::vector<size_t> order (np), inv_order(order.size());
+	//declare row, col number and value of non-zero element of permutation of Sparse Matrix FOR.
+	std::vector<size_t> rowpFOR,colpFOR;
+	std::vector<double> valuepFOR;
+    //Input non-zero element of Eigen Sparse Matrix A into Boost sparse matrix FOR.
+	for (int k=0; k<A.outerSize(); ++k)
+	{
+		for (SparseMatrix<double>::InnerIterator it(A,k); it; ++it)
+		{
+			 FOR.push_back(it.row(), it.col(), it.value());
+		}
+	}
+    //Input FOR into GFOR, GFOR is a Graph Class. In Boost uBlas C++ library, it is using Graph theory to implement Cuthill-Mckee Ordering of Sparse Matrix.
+	 for (MatType::const_iterator1 row_it = FOR.begin1();
+	         row_it != FOR.end1();
+	         ++row_it)
+	 {
+	     for (MatType::const_iterator2 col_it = row_it.begin();
+	             col_it != row_it.end();
+	             ++col_it)
+	     {
+	         boost::add_edge( col_it.index1(), col_it.index2(), GFOR);
+	     }
+	 }
+	 // Get order
+	 boost::property_map<GraphType,boost::vertex_index_t>::type
+	     index_map = get(boost::vertex_index, GFOR);
+	 // Use the boost::graph cuthill mckee algorithm
+	 std::vector<VertexType> inv_perm(boost::num_vertices(GFOR));
+	 cuthill_mckee_ordering(GFOR, inv_perm.rbegin(), get(boost::vertex_color,GFOR), make_degree_map(GFOR));
+	 for ( size_t i = 0; i < inv_perm.size(); i++ )
+	 {
+		 order[i] = index_map[inv_perm[i]];
+	 }
+	 // Get inv_order
+	 for (size_t i = 0; i < order.size(); i++)
+	 {
+	     inv_order[order[i]] = i;
+	 }
+	 //Get row,col and value of non-zero of permutation Sparse Matrix of FOR.
+	 for (MatType::const_iterator1 row_it = FOR.begin1();
+	         row_it != FOR.end1();
+	         ++row_it)
+	 {
+	     for (MatType::const_iterator2 col_it = row_it.begin();
+	             col_it != row_it.end();
+	             ++col_it)
+	     {
+	         size_t row_ind = inv_order(col_it.index1());
+	         size_t col_ind = inv_order(col_it.index2());
+	         rowpFOR.push_back(row_ind);
+	         colpFOR.push_back(col_ind);
+	         valuepFOR.push_back(*col_it);
+	     }
+	 }
+	 // Then generate permutation sparse matrix of FOR, pFOR and implement Incomplete LU (ILU) of pFOR.
+	 //generate permutation sparse matrix of FOR, pFOR
+	 typedef Eigen::Triplet<double> pFORT;
+	 std::vector<pFORT> pFORV;
+     pFORV.reserve(valuepFOR.size());
+	 for (size_t i=0; i<valuepFOR.size(); i++)
+	 {
+		 pFORV.push_back(pFORT(rowpFOR[i],colpFOR[i],valuepFOR[i]));
+	 }
+	 Eigen::SparseMatrix<double> pFOR(np, np);
+	 pFOR.setFromTriplets(pFORV.begin(), pFORV.end());
+	 //ILU of pFOR
+	 Eigen::BiCGSTAB<SparseMatrix<double>, Eigen::IncompleteLUT<double> >  pFORBCGST;
+	 pFORBCGST.preconditioner().setDroptol(0.00001);
+	 pFORBCGST.compute(pFOR);
+
+    //*****Calculate forward response data*********************************//
+    /* Firstly, calculate centercell's coordinate used in interpolation operation to interpolate source/receiver's into cell's centre.
+     */
+    std::vector<double> q1(np,0),q2(np,0),q, Q1(np,0),Q2(np,0),Q;
+    Eigen::VectorXd permutationeq,permutationeu,eu,eforwarddata;
+    Eigen::MatrixXd eQ;
+    std::vector<double> zpos(grid.nz+1, 0),xpos(grid.nx+1, 0),ypos(grid.ny+1, 0);
+    std::vector<double> centerzeroxpos(grid.nx+1, 0),centerzeroypos(grid.ny+1, 0);
+    std::vector<double> cellcenterzpos(grid.nz, 0),cellcenterxpos(grid.nx, 0),cellcenterypos(grid.ny, 0);
     //build the 3d grid - numbered from 0 to maximum extent,
     for (size_t i=0; i<grid.nz; i++)
     {
@@ -604,12 +703,12 @@ namespace jif3D
     {
     	ypos[i+1]=ypos[i]+cellwidth_y[i];
     }
-    //center the grid about zero. x and y's zero is in the center of 3d volume, z zero at surface.
+    //center the grid about zero. x and y's zero point is at the centre of 3d volume, z' zero at surface.
     for (size_t i=0; i<grid.nx+1; i++)
     {
     	centerzeroxpos[i]=xpos[i]-xpos[grid.nx]/2.0;
     }
-    for (size_t i=0; i<grid.ny; i++)
+    for (size_t i=0; i<grid.ny+1; i++)
     {
     	centerzeroypos[i]=ypos[i]-ypos[grid.ny]/2.0;
     }
@@ -626,70 +725,70 @@ namespace jif3D
     {
     	cellcenterzpos[i]=zpos[i]+cellwidth_z[i]/2.0;
     }
-    //creat q,
+     /* The follows are the main loop for calculating forward response for a model and corresponding geometry of sources/receivers.
+     */
     for (size_t i=0; i<geo.nsource; i++)
     {
-    	float sz1_n=geo.sz1[i];
-    	float sz2_n=geo.sz2[i];
-    	std::vector<float> q1(Interpolate_N(cellcenterxpos,cellcenterypos,cellcenterzpos, geo.sx1[i], geo.sy1[i],sz1_n));
-    	std::vector<float> q2(Interpolate_N(cellcenterxpos,cellcenterypos,cellcenterzpos, geo.sx2[i], geo.sy2[i],sz2_n));
+    	//generate source term q,
+    	q1=Linint(cellcenterxpos,cellcenterypos,cellcenterzpos, geo.PosSx[i], geo.PosSy[i],geo.PosSz[i]);
+    	q2=Linint(cellcenterxpos,cellcenterypos,cellcenterzpos, geo.NegSx[i], geo.NegSy[i],geo.NegSz[i]);
     	for (size_t j=0; j<grid.nz; j++)
     		for (size_t k=0; k<grid.ny; k++)
-    			for (size_t l=0; l<grid.nz; l++)
+    			for (size_t l=0; l<grid.nx; l++)
     			{
     				q.push_back((q2[l+k*grid.nx+j*grid.nx*grid.ny]-q1[l+k*grid.nx+j*grid.nx*grid.ny])/(cellwidth_x[l]*cellwidth_y[k]*cellwidth_z[j]));
     			}
-    	q1.clear();
-    	q2.clear();
-    }
-    //generate receiver term Q, only consider dipole configuration. If not dipole, how to write code??
-    std::vector<float> Q;
-    for (size_t i=0; i<geo.nsource*geo.nreceiver; i++)
-    {
-    	std::vector<float> Q1(Interpolate_N(cellcenterxpos,cellcenterypos,cellcenterzpos, geo.rx1[i], geo.ry1[i],geo.rz1[i]));
-    	std::vector<float> Q2(Interpolate_N(cellcenterxpos,cellcenterypos,cellcenterzpos, geo.rx2[i], geo.ry2[i],geo.rz2[i]));
-    	for (size_t j=0; j<grid.nz; j++)
-    		for (size_t k=0; k<grid.ny; k++)
-    			for (size_t l=0; l<grid.nz; l++)
-    			{
-    				Q.push_back(Q2[l+k*grid.nx+j*grid.nx*grid.ny]-Q1[l+k*grid.nx+j*grid.nx*grid.ny]);
-    			}
-    	Q1.clear();
-    	Q2.clear();
-    }
-    //calculate forward data for every source pair,
-    Eigen::VectorXf eu,b,matdata;
-    Eigen::MatrixXf eQ;
-    std::vector<float> dt(geo.nreceiver, 0.0);
-    for (size_t i=0; i<geo.nsource; i++)
-    {
-        Eigen::BiCGSTAB<SparseMatrix<float>, Eigen::IncompleteLUT<float> >  BCGST;
-        BCGST.preconditioner().setDroptol(0.00001);
-        BCGST.compute(A);
-    	for (size_t j=0; j<np; j++)
+    	//calculate potential volume corresponding to i source,
+        for (size_t m=0; m<np; m++)
+        {
+        	permutationeq(m)=q[order[m]];
+        }
+        permutationeu=pFORBCGST.solve(permutationeq);
+        for (size_t n=0; n<np; n++)
+        {
+        	eu(n)=permutationeu(inv_order[n]);
+        }
+    	//select related receivers of i source and calculate forward response,
+        size_t count=0;
+        for (size_t Qi = 0; Qi < data->ndata_res; Qi++)
+          {
+            if (i == geo.sno[Qi])
+              {
+                Q1=Linint(cellcenterxpos,cellcenterypos,cellcenterzpos, geo.rx1[Qi], geo.ry1[Qi],geo.rz1[Qi]);
+                Q2=Linint(cellcenterxpos,cellcenterypos,cellcenterzpos, geo.rx2[Qi], geo.ry2[Qi],geo.rz2[Qi]);
+        	    for (size_t j=0; j<grid.nz; j++)
+        		    for (size_t k=0; k<grid.ny; k++)
+        			    for (size_t l=0; l<grid.nx; l++)
+        			    {
+        				    Q.push_back(Q2[l+k*grid.nx+j*grid.nx*grid.ny]-Q1[l+k*grid.nx+j*grid.nx*grid.ny]);
+        			    }
+              }
+            count++;
+          }
+        for (size_t Qc=0; Qc<count; Qc++)
+        	for (size_t h=0; h<np; h++)
+        	{
+        		eQ(Qc,h)=Q[Qc*np+h];
+        	}
+        eforwarddata=eQ*eu;
+        std::vector<double> dt(count,0);
+    	for (size_t nd=0; nd<count; nd++)
     	{
-    		b(j)=q[j+i*np];
+    		dt[nd]=eforwarddata(nd);
     	}
-    	eu=BCGST.solve(b);
-    	for (size_t k=0; k<geo.nreceiver; k++)
+    	for (size_t nd=0; nd<count; nd++)
     	{
-    		for (size_t l=0; l<np; l++)
-    		{
-    			eQ(k,l)=Q[l+k*np+i*np*geo.nreceiver];
-    		}
+    		data->dcal.push_back(dt[nd]);
     	}
-    	matdata=eQ*eu;
-    	for (size_t m=0; m<geo.nreceiver; m++)
-    	{
-    		dt[m]=matdata(m);
-    		data->dcal.push_back(dt[m]);
-    	}
+    	q.clear();
+    	Q.clear();
     	dt.clear();
-    }
 
+    }
     return(1);
   }
 }
+
 
 
 
