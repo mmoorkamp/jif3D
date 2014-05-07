@@ -28,7 +28,7 @@ namespace jif3D
         const size_t nshot, const size_t nmeaspoint)
       {
         //the actual size of the forward grid
-        const size_t oldngrid = grid.nx * grid.ny * grid.nz;
+        const size_t oldngrid = grid.rho.size();
         //if the grid size changed we have to (re)allocate
         if (oldngrid != ngrid)
           {
@@ -72,6 +72,7 @@ namespace jif3D
         grid.nz = Model.GetModelShape()[2];
         grid.dx = Model.GetXCellSizes()[0];
         grid.dy = Model.GetYCellSizes()[0];
+        grid.dz.resize(Model.GetZCellSizes().num_elements());
         std::copy(Model.GetZCellSizes().begin(), Model.GetZCellSizes().end(),
             grid.dz.begin());
         //grid.dz = Model.GetZCellSizes()[0];
@@ -100,6 +101,7 @@ namespace jif3D
 
         //fill the geometry
         geo.nsource = nshot;
+        geo.sno.resize(Model.GetSourceIndices().size());
         std::transform(Model.GetSourceIndices().begin(), Model.GetSourceIndices().end(),
             geo.sno.begin(), [](int i)
               { return i;});

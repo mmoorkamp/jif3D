@@ -2,8 +2,11 @@ import testing ;
 
 alias core :  ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ..//boost_filesystem ..//boost_system ;
 
-lib dcresistivity :   ThreeDDCResistivityModel.cpp DCResistivityCalculator.cpp  DCResForwardBase.cpp core
+lib dcresistivity :   ThreeDDCResistivityModel.cpp DCResistivityCalculator.cpp  DCResForwardBase.cpp ReadWriteDCResistivityData.cpp core
                   : <eigen>off:<build>no   ;             
 
 
+unit-test readwrite_test :  test_ReadWriteDCResistivity.cpp dcresistivity  core  ;
+
 exe makedcresmesh : makedcresmesh.cpp dcresistivity  core :  ;
+exe DCResForward : DCResForward.cpp dcresistivity  core :  ;

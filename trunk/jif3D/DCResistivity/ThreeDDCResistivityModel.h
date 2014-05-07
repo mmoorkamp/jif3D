@@ -29,7 +29,7 @@ namespace jif3D
       {
     public:
       //! We need vectors of indices to associate a source with a receiver for a given shot
-      typedef std::vector<size_t> tIndexVec;
+      typedef std::vector<int> tIndexVec;
     private:
       //! The x-position of the positive-sources
       ThreeDModelBase::tMeasPosVec SourcePosPosX;
@@ -102,26 +102,26 @@ namespace jif3D
           return ThreeDModelBase::SetData();
         }
       //! Add a Positive source to the model
-      void AddPosSource(const double xcoord, const double ycoord, const double zcoord)
+      void AddSource(double xcoord, double ycoord, double zcoord, double negxcoord,
+          double negycoord, double negzcoord)
         {
           SourcePosPosX.push_back(xcoord - XOrigin);
           SourcePosPosY.push_back(ycoord - YOrigin);
           SourcePosPosZ.push_back(zcoord - ZOrigin);
+          SourceNegPosX.push_back(negxcoord - XOrigin);
+          SourceNegPosY.push_back(negycoord - YOrigin);
+          SourceNegPosZ.push_back(negzcoord - ZOrigin);
         }
-      //! Add a Negative source to the model
-      void AddNegSource(const double xcoord, const double ycoord, const double zcoord)
-        {
-          SourceNegPosX.push_back(xcoord - XOrigin);
-          SourceNegPosY.push_back(ycoord - YOrigin);
-          SourceNegPosZ.push_back(zcoord - ZOrigin);
-        }
+
       //! Add a the second receiver electrode to the model
-      void AddSecMeasurementPoint(const double xcoord, const double ycoord,
-          const double zcoord)
+      void AddMeasurementPoint(const double xcoord, const double ycoord,
+          const double zcoord, double negxcoord, double negycoord, double negzcoord, int sourceindex)
         {
-          MeasSecPosX.push_back(xcoord - XOrigin);
-          MeasSecPosY.push_back(ycoord - YOrigin);
-          MeasSecPosZ.push_back(zcoord - ZOrigin);
+          ThreeDModelBase::AddMeasurementPoint(xcoord, ycoord, zcoord);
+          MeasSecPosX.push_back(negxcoord - XOrigin);
+          MeasSecPosY.push_back(negycoord - YOrigin);
+          MeasSecPosZ.push_back(negzcoord - ZOrigin);
+          SourceIndices.push_back(sourceindex);
         }
       //! read only access to the x-positions of the Positive sources in m
       const ThreeDModelBase::tMeasPosVec &GetSourcePosPosX() const
@@ -192,6 +192,11 @@ namespace jif3D
           MeasSecPosX.clear();
           MeasSecPosY.clear();
           MeasSecPosZ.clear();
+        }
+      //! Clear the sourceindics
+      void ClearSourceIndices()
+        {
+          SourceIndices.clear();
         }
       //! Set the origin of the coordinate system, this is a reimplementation from the base class to also change the source positions
       virtual void SetOrigin(const double x, const double y, const double z);
