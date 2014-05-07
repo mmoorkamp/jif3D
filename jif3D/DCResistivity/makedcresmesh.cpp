@@ -43,6 +43,7 @@ int main()
     cout << "Cell size y [m]: ";
     cin >> deltay;
     cout << "Cell size z [m]: ";
+    deltaz.resize(nz);
     for (int i = 0; i < nz; i++)
       {
         cin >> deltaz[i];
