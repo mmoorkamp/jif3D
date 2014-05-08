@@ -794,8 +794,10 @@ namespace jif3D
                                 Q2[l + k * grid.nx + j * grid.nx * grid.ny]
                                     - Q1[l + k * grid.nx + j * grid.nx * grid.ny]);
                           }
+                    count++;
                   }
-                count++;
+
+
               }
 
             Eigen::MatrixXd eQ(count,np);
@@ -806,18 +808,14 @@ namespace jif3D
                   eQ(Qc, h) = Q[Qc * np + h];
                 }
             eforwarddata = eQ * eu;
-            std::vector<double> dt(count, 0);
+
             for (size_t nd = 0; nd < count; nd++)
               {
-                dt[nd] = eforwarddata(nd);
+                data->dcal[nd] = eforwarddata(nd);
               }
-            for (size_t nd = 0; nd < count; nd++)
-              {
-                data->dcal.push_back(dt[nd]);
-              }
+
             q.clear();
             Q.clear();
-            dt.clear();
 
           }
         return (1);
