@@ -7,6 +7,7 @@
 
 #include "../Global/convert.h"
 #include "../Regularization/GradientRegularization.h"
+#include "../Regularization/HOGradientRegularization.h"
 #include "../Regularization/CurvatureRegularization.h"
 #include "../Regularization/MinDiffRegularization.h"
 #include "../Regularization/MinimumSupport.h"
@@ -59,7 +60,8 @@ namespace jif3D
             "The weight for the regularization in y-direction")("zreg",
             po::value(&zweight)->default_value(1.0),
             "The weight for the regularization in z-direction")("curvreg",
-            "Use model curvature for regularization. If not set use gradient.")("mindiff",
+            "Use model curvature for regularization. If not set use gradient.")(
+            "hogradient", "Use 4th order approximation for gradient")("mindiff",
             "Minize the model vector (or difference to starting model if substart is set")(
             "tearmodx", po::value<std::string>(),
             "Filename for a model containing information about tear zones in x-direction.")(
@@ -129,10 +131,18 @@ namespace jif3D
           }
         else
           {
-
-            Regularization = boost::shared_ptr<jif3D::MatOpRegularization>(
-                new jif3D::GradientRegularization(StartModel, TearModX, TearModY,
-                    TearModZ, beta));
+            if (vm.count("hogradient"))
+              {
+                Regularization = boost::shared_ptr<jif3D::MatOpRegularization>(
+                    new jif3D::HOGradientRegularization(StartModel, TearModX, TearModY,
+                        TearModZ, beta));
+              }
+            else
+              {
+                Regularization = boost::shared_ptr<jif3D::MatOpRegularization>(
+                    new jif3D::GradientRegularization(StartModel, TearModX, TearModY,
+                        TearModZ, beta));
+              }
           }
         //We either pass an empty covariance vector then the regularization class
         //takes care of setting the covariance to 1
