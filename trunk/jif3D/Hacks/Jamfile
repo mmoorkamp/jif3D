@@ -1,7 +1,7 @@
 import testing ; 
 import mpi ;
 
-alias joint : ../Tomo ../Gravity ../Inversion//inversion ../Global ../Regularization ;
+alias joint : ../Tomo//tomo ../Gravity//gravity ../Inversion//inversion ../Global//global ../Regularization//regularization ;
 
 lib gsl : : <name>gsl ;
 lib cblas : : <name>cblas ;
@@ -12,7 +12,7 @@ exe plotsaltrel : plotsaltrel.cpp joint ../Joint : <include>. ;
 # exe sparsetest : sparsetest.cpp ../Inversion ..//vecopt : <include>. ;
 # exe wcompress : wcompress.cpp  ../Gravity ../Global : <include>. ;
 # exe gravconsist : gravconsist.cpp  ../Gravity ../Global ../Inversion : <include>. ;
-exe mtinv : mtinv.cpp  joint ../MT ../Joint : <include>. ;
+exe mtinv : mtinv.cpp  joint ../MT//mt ../Joint//joint ../Joint//setup : <include>. ;
 exe tomoinv : tomoinv.cpp  joint : <include>. ;
 exe plotgrav : plotgrav.cpp  joint : <include>. ;
 exe cleanmt : cleanmt.cpp  ../MT joint : <include>. ;
