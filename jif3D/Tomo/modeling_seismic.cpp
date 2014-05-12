@@ -145,11 +145,11 @@ namespace jif3D
 #endif
 
 #ifdef HAVEHPX
-        using hpx::lcos::future;
+        using hpx::lcos::unique_future;
         using hpx::async;
         using hpx::wait_all;
         std::vector<hpx::naming::id_type> localities = hpx::find_all_localities();
-        std::vector<hpx::lcos::shared_future<RayResult>> ShotResult;
+        std::vector<hpx::lcos::unique_future<RayResult>> ShotResult;
         ShotResult.reserve(nshot);
         ForwardModShot_action ForwardModShot;
         for (int i = 0; i < nshot; i++)
