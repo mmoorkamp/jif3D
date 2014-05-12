@@ -1,7 +1,7 @@
 import testing ; 
 
 lib regularization :
-                  GradientRegularization.cpp CurvatureRegularization.cpp 
+                  GradientRegularization.cpp HOGradientRegularization.cpp CurvatureRegularization.cpp 
                   CrossGradient.cpp OneDRegularization.cpp MinimumSupport.cpp
                   DotStructureConstraint.cpp 
                   ../ModelBase//modelbase ../Inversion//inversion
