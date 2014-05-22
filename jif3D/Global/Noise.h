@@ -5,10 +5,10 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-
 #ifndef NOISE_H_
 #define NOISE_H_
 
+#include "FatalException.h"
 #include "VecMat.h"
 #include "NumUtil.h"
 #include <ctime>
@@ -33,20 +33,49 @@ namespace jif3D
      * can be specified both as a relative or absolute value. If both are specified the maximum is taken.
      * @param Data The vector of data values, contains the noisy data afterwards
      * @param relerror The relative error for each datum, e.g. 0.02 corresponds to 2%
-     * @param abserror The minimum absolute error for each datum in the same units as the data vector
+     * @param abserror The minimum absolute error for all data in the same units as the data vector, this value is applied globally
      */
-    inline void AddNoise(jif3D::rvec &Data, const double relerror,
-        const double abserror = 0)
+    inline void AddNoise(jif3D::rvec &Data, const double relerror, const double abserror =
+        0)
       {
         //create a random number generator object without specifying the distribution
-        boost::lagged_fibonacci607 generator(
-            static_cast<unsigned int> (std::time(0)));
+        boost::lagged_fibonacci607 generator(static_cast<unsigned int>(std::time(0)));
         const size_t ndata = Data.size();
         //create an error estimate for each datum
         for (size_t i = 0; i < ndata; ++i)
           {
-            const double error = std::max(std::abs(Data(i)) * relerror,
-                abserror);
+            const double error = std::max(std::abs(Data(i)) * relerror, abserror);
+            //construct a Gaussian distribution based on mean and standard deviation
+            boost::normal_distribution<> noise_dist(Data(i), error);
+            boost::variate_generator<boost::lagged_fibonacci607&,
+                boost::normal_distribution<> > noise(generator, noise_dist);
+            Data(i) = noise();
+          }
+
+      }
+
+    //! Add random gaussian noise to a vector of data
+    /*! When inverting synthetic data, we usually want to add
+     * noise to it to simulate some of the properties of real data. This function
+     * takes a vector of real data values and adds noise to it. The variance
+     * can be specified both as a relative or absolute value. If both are specified the maximum is taken.
+     * @param Data The vector of data values, contains the noisy data afterwards
+     * @param relerror The relative error for each datum, e.g. 0.02 corresponds to 2%
+     * @param abserror A vector of minimum absolute errors for each datum in the same units as the data vector, has to have the same length as the data vector
+     */
+    inline void AddNoise(jif3D::rvec &Data, const double relerror, jif3D::rvec &abserror)
+      {
+        //create a random number generator object without specifying the distribution
+        boost::lagged_fibonacci607 generator(static_cast<unsigned int>(std::time(0)));
+        const size_t ndata = Data.size();
+        //check that we have an error for each datum
+        if (Data.size() != abserror.size())
+          throw jif3D::FatalException(
+              "Data and Error vectors do not have the same size !");
+        //create an error estimate for each datum
+        for (size_t i = 0; i < ndata; ++i)
+          {
+            const double error = std::max(std::abs(Data(i)) * relerror, abserror(i));
             //construct a Gaussian distribution based on mean and standard deviation
             boost::normal_distribution<> noise_dist(Data(i), error);
             boost::variate_generator<boost::lagged_fibonacci607&,
@@ -67,24 +96,18 @@ namespace jif3D
      * @param absmin The absolute minimum data value considered for error calculation, this reduced the influence of very small data
      * @return The vector of error estimates
      */
-    inline jif3D::rvec ConstructError(const jif3D::rvec &Data, const jif3D::rvec &DataError,
-        const double relerror, const double absmin = 0.0)
+    inline jif3D::rvec ConstructError(const jif3D::rvec &Data,
+        const jif3D::rvec &DataError, const double relerror, const double absmin = 0.0)
       {
         assert(relerror >= 0.0);
         assert(absmin >= 0.0);
         const size_t ndata = Data.size();
-        jif3D::rvec LocalError(DataError);
-        if (LocalError.empty())
-          {
-            LocalError.resize(ndata,false);
-            LocalError.clear();
-          }
         //create objects for the misfit and a very basic error estimate
         jif3D::rvec Error(ndata);
         for (size_t i = 0; i < ndata; ++i)
           {
-            Error(i) = std::max(std::abs(Data(i)) * relerror, absmin);
-            Error(i) = std::max(Error(i),LocalError(i));
+            double minerr = std::max(std::abs(Data(i)) * relerror, absmin);
+            Error(i) = std::max(Error(i), minerr);
             assert(Error(i) > 0.0);
           }
         return Error;
@@ -99,8 +122,7 @@ namespace jif3D
      * @param relerror The relative error of the maximum tensor element
      * @return The vector of error estimates
      */
-    inline jif3D::rvec ConstructMTError(const jif3D::rvec &Data,
-        const double relerror)
+    inline jif3D::rvec ConstructMTError(const jif3D::rvec &Data, const double relerror)
       {
         assert(relerror >= 0.0);
         const size_t ndata = Data.size();
@@ -111,9 +133,10 @@ namespace jif3D
         for (size_t i = 0; i < ntensor; ++i)
           {
             //find the maximum tensor element
-            const double maxdata = std::abs(*std::max_element(Data.begin() + i
-                * ntensorelem, Data.begin() + (i + 1) * ntensorelem,
-                jif3D::absLess<double, double>()));
+            const double maxdata = std::abs(
+                *std::max_element(Data.begin() + i * ntensorelem,
+                    Data.begin() + (i + 1) * ntensorelem,
+                    jif3D::absLess<double, double>()));
             assert(maxdata > 0);
             std::fill_n(DataError.begin() + i * ntensorelem, ntensorelem,
                 maxdata * relerror);

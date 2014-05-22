@@ -92,7 +92,7 @@ namespace jif3D
         uniqueshots.erase(std::unique(uniqueshots.begin(), uniqueshots.end()),
             uniqueshots.end());
         // assert(uniqueshots.size() == geo.nshot);
-        //we need and unsigned version for the openmp loop
+        //we need a signed version for the openmp loop
         const int nshot = uniqueshots.size();
 #ifdef HAVEOPENMP
 #pragma omp parallel default(shared)
@@ -155,8 +155,6 @@ namespace jif3D
         for (int i = 0; i < nshot; i++)
           {
             size_t count = 0;
-            std::vector<size_t> nact_rec; /*active receiver-numbers for the used shot*/
-            std::vector<size_t> nact_datapos; /*Position of the active receivers in the data structure*/
             GEOMETRY geo_tmp;
             geo_tmp.x.push_back(geo.x[uniqueshots[i] - 1]);
             geo_tmp.y.push_back(geo.y[uniqueshots[i] - 1]);
@@ -166,8 +164,6 @@ namespace jif3D
               {
                 if (uniqueshots[i] == data.sno[j])
                   {
-                    nact_rec.push_back(data.rno[j]);
-                    nact_datapos.push_back(j);
                     geo_tmp.x.push_back(geo.x[data.rno[j] -1 ]);
                     geo_tmp.y.push_back(geo.y[data.rno[j] -1]);
                     geo_tmp.z.push_back(geo.z[data.rno[j] -1]);
