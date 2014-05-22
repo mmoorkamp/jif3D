@@ -23,6 +23,7 @@
 #include "../Global/VectorTransform.h"
 #include "../Global/FileUtil.h"
 #include "../Global/Noise.h"
+#include "../Global/ReadWriteSparseMatrix.h"
 #include "../ModelBase/VTKTools.h"
 #include "../ModelBase/NetCDFModelTools.h"
 #include "../Regularization/GradientRegularization.h"
@@ -47,7 +48,9 @@ int main(int argc, char *argv[])
 
     double mincond = 1e-6;
     double maxcond = 10;
+    double relerr = 0.02;
     std::string X3DName = "x3d";
+    std::string MTInvCovarName;
     boost::shared_ptr<jif3D::JointObjective> Objective(new jif3D::JointObjective(true));
 
     bool WantDistCorr;
@@ -62,12 +65,16 @@ int main(int argc, char *argv[])
         "The name of the directory to store temporary files in")("distcorr",
         po::value(&WantDistCorr)->default_value(false),
         "Correct for distortion within inversion")("x3dname",
-        po::value(&X3DName)->default_value("x3d"), "The name of the executable for x3d");
+        po::value(&X3DName)->default_value("x3d"), "The name of the executable for x3d")(
+        "mtinvcovar", po::value<std::string>(&MTInvCovarName),
+        "Inverse covariance matrix to use in MT misfit calculation.")("inderrors",
+        "Use the individual errors for each element instead of the same for all elements")(
+        "mtrelerr", po::value(&relerr)->default_value(0.02),
+        "Error floor for impedance estimates.");
 
     jif3D::SetupRegularization RegSetup;
     jif3D::SetupInversion InversionSetup;
-    jif3D::SetupMT MTSetup;
-    desc.add(MTSetup.SetupOptions());
+
     desc.add(RegSetup.SetupOptions());
     desc.add(InversionSetup.SetupOptions());
     po::variables_map vm;
@@ -143,13 +150,6 @@ int main(int argc, char *argv[])
     Model.SetDistortionParameters(C);
     //we define a few constants that are used throughout the inversion
     const size_t ndata = Data.size();
-    const double errorlevel = 0.02;
-
-    //create objects for the misfit and a very basic error estimate
-    jif3D::rvec MTDataError = jif3D::ConstructMTError(Data, errorlevel);
-    std::transform(ZError.begin(), ZError.end(), MTDataError.begin(), ZError.begin(),
-        [] (double a, double b)
-          { return std::max(a,b);});
 
     for (size_t i = 0; i < Model.GetConductivities().shape()[2]; ++i)
       {
@@ -210,7 +210,31 @@ int main(int argc, char *argv[])
 
     X3DObjective->SetObservedData(Data);
     X3DObjective->SetCoarseModelGeometry(Model);
-    X3DObjective->SetDataError(ZError);
+
+    //create objects for the misfit and error estimates
+    if (vm.count("mtinvcovar"))
+      {
+        jif3D::comp_mat InvCov(Data.size(), Data.size());
+        jif3D::ReadSparseMatrixFromNetcdf(MTInvCovarName, InvCov, "InvCovariance");
+        X3DObjective->SetInvCovMat(InvCov);
+      }
+    else
+      {
+        jif3D::rvec MinErr(ZError.size());
+        if (vm.count("inderrors"))
+          {
+            MinErr = jif3D::ConstructError(Data, ZError, relerr);
+          }
+        else
+          {
+            MinErr = jif3D::ConstructMTError(Data, relerr);
+          }
+        for (size_t i = 0; i < ZError.size(); ++i)
+          {
+            ZError(i) = std::max(ZError(i), MinErr(i));
+          }
+        X3DObjective->SetDataError(ZError);
+      }
 
     boost::shared_ptr<jif3D::RegularizationFunction> Regularization =
         RegSetup.SetupObjective(vm, Model, CovModVec);
