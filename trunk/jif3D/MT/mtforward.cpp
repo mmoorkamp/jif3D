@@ -83,14 +83,29 @@ int main()
 
     double relnoise = 0.0;
     double absnoise = 0.0;
+    double range = 0.0;
     std::cout << "Relative noise level: ";
     std::cin >> relnoise;
     std::cout << "Absolute noise level: ";
     std::cin >> absnoise;
-    jif3D::AddNoise(Impedances, relnoise, absnoise);
-    jif3D::rvec Errors(Impedances.size(), 0.0);
-    std::transform(Impedances.begin(), Impedances.end(), Errors.begin(), [&]  (double d) -> double
-      { return std::max(std::abs(d * relnoise),absnoise);});
+    std::cout << "Dynamic range: ";
+    std::cin >> range;
+
+    const size_t nimp = Impedances.size();
+    jif3D::rvec Errors(nimp, 0.0);
+
+    for (size_t i = 0; i < nimp; i += 8)
+      {
+        double maximp = *std::max_element(Impedances.begin() + i,
+            Impedances.begin() + i + 8, [](double a, double b)
+              { return std::abs(a) < std::abs(b);});
+        double threshold = std::max(absnoise, std::abs(range * maximp));
+        std::transform(Impedances.begin() + i, Impedances.begin() + i + 8,
+            Errors.begin() + i, [&] (double d) -> double
+              { return std::max(std::abs(d * relnoise),threshold);});
+      }
+
+    jif3D::AddNoise(Impedances, relnoise, Errors);
     jif3D::WriteImpedancesToNetCDF(outfilename, MTModel.GetFrequencies(),
         MTModel.GetMeasPosX(), MTModel.GetMeasPosY(), MTModel.GetMeasPosZ(), Impedances,
         Errors);
