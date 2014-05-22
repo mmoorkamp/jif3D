@@ -129,7 +129,7 @@ namespace jif3D
           ar & MeasPosZ;
           //multi-array does not have serialization support
           //so we have to load the shape of the arrays
-          size_t nx, ny, nz;
+          size_t nx = 0, ny = 0, nz = 0;
           ar & nx;
           ar & ny;
           ar & nz;

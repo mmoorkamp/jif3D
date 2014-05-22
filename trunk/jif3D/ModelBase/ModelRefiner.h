@@ -69,7 +69,7 @@ namespace jif3D
         {
           //for loading we first need to get the number of elements
           // in each multi-array
-          size_t nx, ny, nz;
+          size_t nx = 0, ny = 0, nz = 0;
           ar & nx;
           ar & ny;
           ar & nz;
