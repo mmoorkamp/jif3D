@@ -1,44 +1,47 @@
 import testing ; 
 import mpi ;
 
-alias joint : ../Tomo//tomo ../Gravity//gravity ../Inversion//inversion ../Global//global ../Regularization//regularization ;
+alias joint : ../Tomo//tomo ../Gravity//gravity ../Inversion//inversion ../Global//global ../Regularization//regularization ../ModelBase//modelbase ..//boost_filesystem ..//boost_system ;
 
 lib gsl : : <name>gsl ;
 lib cblas : : <name>cblas ;
 
-exe gravregion : gravregion.cpp joint : <include>. ;
-exe plotsaltrel : plotsaltrel.cpp joint ../Joint : <include>. ;	
-# exe fittingtest : fittingtest.cpp ../Inversion ../Joint : <include>. ;
+# exe fittingtest : fittingtest.cpp ../Inversion ../Joint//joint : <include>. ;
 # exe sparsetest : sparsetest.cpp ../Inversion ..//vecopt : <include>. ;
 # exe wcompress : wcompress.cpp  ../Gravity ../Global : <include>. ;
 # exe gravconsist : gravconsist.cpp  ../Gravity ../Global ../Inversion : <include>. ;
-exe mtinv : mtinv.cpp  joint ../MT//mt ../Joint//joint ../Joint//setup : <include>. ;
-exe tomoinv : tomoinv.cpp  joint : <include>. ;
-exe plotgrav : plotgrav.cpp  joint : <include>. ;
-exe cleanmt : cleanmt.cpp  ../MT joint : <include>. ;
-exe qqfit : qqfit.cpp  ../MT joint : <include>. ;
-exe avgmt : avgmt.cpp  ../MT joint : <include>. ;
-exe parrun : parrun.cpp ..//boost_filesystem ..//boost_system ;
-exe picksort : picksort.cpp  ../Global  ../Tomo ..//boost_filesystem ..//boost_system : <include>. ;
-exe randommtmesh : randommtmesh.cpp  ../Global  ../MT ../ModelBase ..//boost_filesystem ..//boost_program_options ..//boost_system : <include>. ;
-exe joinpicks : joinpicks.cpp  ../Global  ../Tomo ..//boost_filesystem ..//boost_system : <include>. ;
-exe srcrecdist : srcrecdist.cpp  ../Global  ../Tomo ..//boost_filesystem ..//boost_system : <include>. ;
-exe calccross : calccross.cpp  ../Global  ../Tomo ../Regularization ../Inversion ..//boost_filesystem ..//boost_system : <include>. ;
-exe convertmtascii : convertmtascii.cpp   ../Global ../MT ..//boost_filesystem  ..//boost_system : <include>. ;
-exe convertmtt : convertmtt.cpp   ../Global ../MT ..//boost_filesystem  ..//boost_system : <include>. ;
-exe onedmtinv : onedmtinv.cpp   joint ../MT ..//boost_program_options ..//boost_filesystem ..//boost_system : <include>. ;
-exe writemtt : writemtt.cpp   ../Global ../ModelBase ../MT ..//boost_filesystem ..//boost_system : <include>. ;
-exe rotatemt : rotatemt.cpp   ../Global ../MT ../ModelBase ..//boost_filesystem ..//boost_system  ;
-exe rotatetomo : rotatetomo.cpp  joint ..//boost_filesystem ..//boost_system ;
-exe rotategrav : rotategrav.cpp  joint ..//boost_filesystem ..//boost_system ;
-exe mergetomo : mergetomo.cpp  ../Tomo  ../Global : <include>. ;
-exe vtk2netcdf : vtk2netcdf.cpp   ../Global ../ModelBase ../MT ..//boost_filesystem ..//boost_system : <include>. ;
-exe tomoregion : tomoregion.cpp  ../Tomo  ../Global : <include>. ;
-exe eikonal : eikonal.cpp  ../Tomo  ../Global : <include>. ;
-exe eikonal2D : eikonal2D.cpp  ../Tomo  ../Global : <include>. ;
-exe modelwave : modelwave.cpp  ../Tomo  ../Global : <include>. ;
 #exe testwave : testwave.cpp  ../Tomo  ../Global cblas gsl   : <include>. ;
-exe opttest : opttest.cpp  ../Joint ../MT ..//optpp ..//newmat joint ..//boost_program_options : 
-              <include>/usr/local/include/opt++ <define>use_namespace <define>HAVE_STD <optpp>off:<build>no  ;
 # exe invariantftginv : invariantftginv.cpp  ../Gravity//gravity ../Global ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ../Inversion//inversion
               #..//vecopt ..//cudart : <include>. ;
+
+exe gravregion : gravregion.cpp joint ..//boost_filesystem ..//boost_system ;
+exe plotsaltrel : plotsaltrel.cpp joint ../Joint//joint ../Joint//setup 	;	
+exe mtinv : mtinv.cpp  joint ../MT//mt ../Joint//joint ../Joint//setup ;
+exe tomoinv : tomoinv.cpp  joint ;
+exe plotgrav : plotgrav.cpp  joint ..//boost_filesystem ..//boost_system ;
+exe cleanmt : cleanmt.cpp  ../MT//mt joint ;
+exe qqfit : qqfit.cpp  ../MT//mt joint ;
+exe avgmt : avgmt.cpp  ../MT//mt joint ;
+exe parrun : parrun.cpp ..//boost_filesystem ..//boost_system ;
+exe picksort : picksort.cpp  ../Global//global  ../Tomo//tomo ..//boost_filesystem ..//boost_system ;
+exe randommtmesh : randommtmesh.cpp  ../Global//global  ../MT//mt ../ModelBase//modelbase ..//boost_filesystem ..//boost_program_options ..//boost_system ;
+exe joinpicks : joinpicks.cpp  ../Global//global  ../Tomo//tomo ..//boost_filesystem ..//boost_system ;
+exe srcrecdist : srcrecdist.cpp  ../Global//global ../Tomo//tomo ../ModelBase//modelbase ..//boost_filesystem ..//boost_system ;
+exe calccross : calccross.cpp  ../Global//global  ../Tomo//tomo ../Regularization ../Inversion ../ModelBase//modelbase ..//boost_filesystem ..//boost_system ;
+exe convertmtascii : convertmtascii.cpp   ../Global ../MT ..//boost_filesystem  ..//boost_system ;
+exe convertmtt : convertmtt.cpp   ../Global//global ../MT//mt ..//boost_filesystem  ..//boost_system  ;
+exe onedmtinv : onedmtinv.cpp   joint ../MT//mt ..//boost_program_options ..//boost_filesystem ..//boost_system ;
+exe writemtt : writemtt.cpp   ../Global//global ../ModelBase//modelbase ../MT//mt ..//boost_filesystem ..//boost_system ;
+exe rotatemt : rotatemt.cpp   ../Global//global ../MT//mt ../ModelBase//modelbase ..//boost_filesystem ..//boost_system  ;
+exe rotatetomo : rotatetomo.cpp  joint ..//boost_filesystem ..//boost_system ;
+exe rotategrav : rotategrav.cpp  joint ..//boost_filesystem ..//boost_system ;
+exe mergetomo : mergetomo.cpp  ../Tomo//tomo  ../Global//global ../ModelBase//modelbase ..//boost_filesystem ..//boost_system ;
+exe vtk2netcdf : vtk2netcdf.cpp   ../Global//global ../ModelBase//modelbase ../MT//mt ..//boost_filesystem ..//boost_system ;
+exe tomoregion : tomoregion.cpp  ../Tomo//tomo  ../Global//global ../ModelBase//modelbase ..//boost_filesystem ..//boost_system ;
+exe eikonal : eikonal.cpp  ../Tomo//tomo  ../Global//global ;
+exe eikonal2D : eikonal2D.cpp  ../Tomo//tomo  ../Global//global ;
+exe modelwave : modelwave.cpp  ../Tomo//tomo  ../Global//global ../ModelBase//modelbase ..//boost_filesystem ..//boost_system ;
+
+exe opttest : opttest.cpp  ../Joint//joint ../Joint//setup ../MT//mt ..//optpp ..//newmat joint ..//boost_program_options : 
+              <include>/usr/local/include/opt++ <define>use_namespace <define>HAVE_STD <optpp>off:<build>no  ;
+
