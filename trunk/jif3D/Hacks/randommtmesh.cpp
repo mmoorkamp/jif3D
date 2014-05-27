@@ -34,11 +34,11 @@ namespace po = boost::program_options;
 
 int main(int argc, char *argv[])
   {
-
+	double topthick = -1.0;
     po::options_description desc("General options");
     desc.add_options()("help", "produce help message")("threads", po::value<int>(),
-        "The number of openmp threads")("topthick",
-        "Thickness of the top layer in m");
+        "The number of openmp threads")("topthick", po::value<double>(&topthick)->default_value(-1.0),
+        "Thickness of the top layer in m, if <= 0.0 the thickness will be the same as the z dimension of the other grid cells.");
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
@@ -76,9 +76,9 @@ int main(int argc, char *argv[])
     Model.SetHorizontalCellSize(deltax, deltay, nx, ny);
     Model.SetZCellSizes().resize(boost::extents[nz]);
     fill_n(Model.SetZCellSizes().begin(), nz, deltaz);
-    if (vm.count("topthick"))
+    if (topthick > 0.0 )
       {
-        Model.SetZCellSizes()[0] = vm["topthick"].as<double>();
+        Model.SetZCellSizes()[0] = topthick;
       }
     Model.SetConductivities().resize(boost::extents[nx][ny][nz]);
     //ask for a conductivity to fill the mesh with
