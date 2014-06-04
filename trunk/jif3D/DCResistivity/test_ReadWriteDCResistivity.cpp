@@ -1,8 +1,8 @@
 //============================================================================
 // Name        : test_ReadWriteDCResistivity.cpp
-// Author      : Feb 17, 2009
+// Author      : May, 2014
 // Version     :
-// Copyright   : 2009, mmoorkamp
+// Copyright   : 2014, zhanjie shi
 //============================================================================
 
 #define BOOST_TEST_MODULE ReadWriteDCResistivity test

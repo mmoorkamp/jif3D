@@ -9,4 +9,8 @@ lib dcresistivity :   ThreeDDCResistivityModel.cpp DCResistivityCalculator.cpp  
 unit-test readwrite_test :  test_ReadWriteDCResistivity.cpp dcresistivity  core  ;
 
 exe makedcresmesh : makedcresmesh.cpp dcresistivity  core :  ;
+exe calculateresponseandgradient : calculateresponseandgradient.cpp dcresistivity  core :  ;
 exe DCResForward : DCResForward.cpp dcresistivity  core :  ;
+
+
+

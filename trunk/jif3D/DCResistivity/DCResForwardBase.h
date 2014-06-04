@@ -27,6 +27,9 @@ namespace jif3D
  * Note that A was converted to permutation using a symmetric reverse Cuthill-McKee permutation (Matlab built-in symcrm.m, Cuthill-McKee, 1969) before ILU. And then, with the
  * preconditioner, acquire potential volume by solving the linear system A(m)u=q using a preconditoned biconjugate, stabilized gradient algorithm(bicgstb.m)(Saad,1996). Finally,
  * collect forward response data from potential volume through the formulation Q*u.
+ * The basic function for gradient of objective function is also implemented here because it will need forward operator, Q term and bicgstb function during calculation of gradient.
+ * Then this function can be called for LQDerivative() in DCResistivityCalculator.cpp directly. In addition, we only calculate gradient related with data term though the model term
+ * was included in Matlab program.
  */
     /* @{ */
 
@@ -137,10 +140,37 @@ namespace jif3D
             {
             }
           };
+
+        class GRADIENT_STRUCT_RES
+          {
+        public:
+          /*!< Gradient parameters*/
+          std::vector<double> gradient; /*!< gradient of objective function (only calculate data term)*/
+          /*!< WdW weighted data difference parameters*/
+          std::vector<double> wdwmisfit; /*!< WdW weighted data difference between forward data and observed data*/
+          friend class boost::serialization::access;
+          //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+          template<class Archive>
+          void serialize(Archive & ar, const unsigned int version)
+            {
+        	  ar & gradient;
+        	  ar & wdwmisfit;
+            }
+          GRADIENT_STRUCT_RES() :
+        	  gradient(), wdwmisfit()
+            {
+            }
+          virtual ~GRADIENT_STRUCT_RES()
+            {
+            }
+          };
         //! The basic DC Resistivity forward function
         int ResForward(const GEOMETRY_RES &geo, const GRID_STRUCT_RES &grid, DATA_STRUCT_RES *data);
+        //! The basic DC Resistivity gradient calculation function for objective function
+        int ResGradient(const GEOMETRY_RES &geo, const GRID_STRUCT_RES &grid, GRADIENT_STRUCT_RES *grad);
         //! Interpolation function used to interpolate source/receiver's position to cell centre
         std::vector<double> Linint(std::vector<double> x, std::vector<double> y, std::vector<double> z, double xr, double yr, double zr);
+
 
       /* @} */
 

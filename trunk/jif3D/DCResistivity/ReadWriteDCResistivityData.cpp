@@ -83,8 +83,8 @@ namespace jif3D
         WriteVec(DataFile, DCReceiverSecZName, Model.GetMeasSecPosZ(), MeasIndexDim, "m");
 
         //Write the apparent resistivity data and the error
-        WriteVec(DataFile, DCAppResistivityName, Data, MeasIndexDim, "s");
-        WriteVec(DataFile, DCAppResistivityErrorName, Error, MeasIndexDim, "s");
+        WriteVec(DataFile, DCAppResistivityName, Data, MeasIndexDim, "ohm.m");
+        WriteVec(DataFile, DCAppResistivityErrorName, Error, MeasIndexDim, "ohm.m");
 
       }
 
