@@ -5,12 +5,12 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-
 #ifndef GRAVITYTRANSFORMS_H_
 #define GRAVITYTRANSFORMS_H_
 
 #include "../Global/VectorTransform.h"
-#include <cassert>
+#include "../Global/FatalException.h"
+
 namespace jif3D
   {
     /** \addtogroup gravity Gravity forward modeling, display and inversion */
@@ -34,7 +34,7 @@ namespace jif3D
               - Data(3) * Data(1) - Data(7) * Data(5) - Data(2) * Data(6);
         }
     public:
-	//! Return the size of the input vector this class expects
+      //! Return the size of the input vector this class expects
       virtual size_t GetInputSize()
         {
           return ninput;
@@ -65,7 +65,12 @@ namespace jif3D
       virtual jif3D::rmat Derivative(const jif3D::rvec &InputVector)
         {
           const size_t ndata = InputVector.size();
-          assert(ndata == ninput);
+          if (ndata != ninput)
+            {
+              throw jif3D::FatalException(
+                  "Number of data does not match expected input size !");
+            }
+
           jif3D::rmat InvarSens(noutput, ninput);
 
           InvarSens(0, 0) = InputVector(4) + InputVector(8);
