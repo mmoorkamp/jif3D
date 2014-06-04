@@ -22,6 +22,7 @@
 #include <string>
 #include <cstdlib>
 
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/serialization/serialization.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
@@ -199,6 +200,8 @@ int hpx_main(po::variables_map& vm)
     cout << "Realizations: ";
     cin >> nrealmax;
 
+    boost::posix_time::ptime starttime = boost::posix_time::microsec_clock::local_time();
+
     std::ofstream zxy((OutFilename + "_zxy.out").c_str());
     std::ofstream zyx((OutFilename + "_zyx.out").c_str());
     std::ofstream zxx((OutFilename + "_zxx.out").c_str());
@@ -232,6 +235,9 @@ int hpx_main(po::variables_map& vm)
         zyy << nreal << " " << Impedances(6) << " " << Impedances(7) << std::endl;
 
       }
+    boost::posix_time::ptime endtime = boost::posix_time::microsec_clock::local_time();
+    double runtime = (endtime - starttime).total_seconds();
+    cout << "Runtime: " << runtime << " s" << hpx::endl ;
     return hpx::finalize();
 #else
 #pragma omp parallel for shared(Model, zxy, zyx, zxx, zyy)
@@ -245,7 +251,6 @@ int hpx_main(po::variables_map& vm)
         std::string realstring(jif3D::stringify(nreal));
 #pragma omp critical(write_files)
           {
-            std::cout << "Realization: " << nreal << std::endl;
             //RealModel.WriteNetCDF(OutFilename + realstring + ".nc");
             //RealModel.WriteVTK(OutFilename + realstring + ".vtk");
             zxx << nreal << " " << Impedances(0) << " " << Impedances(1) << std::endl;
@@ -254,6 +259,10 @@ int hpx_main(po::variables_map& vm)
             zyy << nreal << " " << Impedances(6) << " " << Impedances(7) << std::endl;
           }
       }
+
+    boost::posix_time::ptime endtime = boost::posix_time::microsec_clock::local_time();
+    double runtime = (endtime - starttime).total_seconds();
+    cout << "Runtime: " << runtime << " s\n";
     return 0;
 #endif
   }
@@ -265,7 +274,8 @@ int main(int argc, char* argv[])
         "The number of openmp threads")("topthick", po::value<double>(),
         "Thickness of the top layer in m, if <= 0.0 the thickness will be the same as the z dimension of the other grid cells.")(
         "x3dname", po::value<std::string>(), "The name of the executable for x3d")(
-        "tempdir", po::value<std::string>(), "The name of the directory where we store files for forward calculation");
+        "tempdir", po::value<std::string>(),
+        "The name of the directory where we store files for forward calculation");
 #ifdef HAVEHPX
     return hpx::init(desc, argc, argv);
 #else
