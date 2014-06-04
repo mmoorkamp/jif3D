@@ -19,8 +19,7 @@ namespace jif3D
     static const std::string ResistivityUnit = "ohm.m";
 
     ThreeDDCResistivityModel::ThreeDDCResistivityModel() :
-      SourcePosPosX(), SourcePosPosY(), SourcePosPosZ(), SourceNegPosX(), SourceNegPosY(), SourceNegPosZ(),
-          SourceIndices(), MeasSecPosX(), MeasSecPosY(), MeasSecPosZ()
+        SourcePosPosX(), SourcePosPosY(), SourcePosPosZ(), SourceNegPosX(), SourceNegPosY(), SourceNegPosZ(), MeasSecPosX(), MeasSecPosY(), MeasSecPosZ(), SourceIndices()
       {
       }
 
@@ -28,10 +27,12 @@ namespace jif3D
       {
       }
 
-    ThreeDDCResistivityModel::ThreeDDCResistivityModel(const ThreeDDCResistivityModel &source) :
-      ThreeDModelBase(source), SourcePosPosX(source.SourcePosPosX), SourcePosPosY(source.SourcePosPosY),
-      SourcePosPosZ(source.SourcePosPosZ), SourceNegPosX(source.SourceNegPosX), SourceNegPosY(source.SourceNegPosY),
-      SourceNegPosZ(source.SourceNegPosZ), SourceIndices(source.SourceIndices)
+    ThreeDDCResistivityModel::ThreeDDCResistivityModel(
+        const ThreeDDCResistivityModel &source) :
+        ThreeDModelBase(source), SourcePosPosX(source.SourcePosPosX), SourcePosPosY(
+            source.SourcePosPosY), SourcePosPosZ(source.SourcePosPosZ), SourceNegPosX(
+            source.SourceNegPosX), SourceNegPosY(source.SourceNegPosY), SourceNegPosZ(
+            source.SourceNegPosZ), SourceIndices(source.SourceIndices)
       {
 
       }
@@ -58,33 +59,24 @@ namespace jif3D
         //transform the source coordinates from old model to real coordinates
         //the coordinates of the receivers are changed by the implementation
         //in the base class that we call below
-        std::transform(SourcePosPosX.begin(), SourcePosPosX.end(),
-            SourcePosPosX.begin(), boost::bind(std::plus<double>(), _1, XOrigin
-                - x));
-        std::transform(SourcePosPosY.begin(), SourcePosPosY.end(),
-            SourcePosPosY.begin(), boost::bind(std::plus<double>(), _1, YOrigin
-                - y));
-        std::transform(SourcePosPosZ.begin(), SourcePosPosZ.end(),
-            SourcePosPosZ.begin(), boost::bind(std::plus<double>(), _1, ZOrigin
-                - z));
-        std::transform(SourceNegPosX.begin(), SourceNegPosX.end(),
-            SourceNegPosX.begin(), boost::bind(std::plus<double>(), _1, XOrigin
-                - x));
-        std::transform(SourceNegPosY.begin(), SourceNegPosY.end(),
-            SourceNegPosY.begin(), boost::bind(std::plus<double>(), _1, YOrigin
-                - y));
-        std::transform(SourceNegPosZ.begin(), SourceNegPosZ.end(),
-            SourceNegPosZ.begin(), boost::bind(std::plus<double>(), _1, ZOrigin
-                - z));
-        std::transform(MeasSecPosX.begin(), MeasSecPosX.end(),
-        		MeasSecPosX.begin(), boost::bind(std::plus<double>(), _1, XOrigin
-                - x));
-        std::transform(MeasSecPosY.begin(), MeasSecPosY.end(),
-        		MeasSecPosY.begin(), boost::bind(std::plus<double>(), _1, YOrigin
-                - y));
-        std::transform(MeasSecPosZ.begin(), MeasSecPosZ.end(),
-        		MeasSecPosZ.begin(), boost::bind(std::plus<double>(), _1, ZOrigin
-                - z));
+        std::transform(SourcePosPosX.begin(), SourcePosPosX.end(), SourcePosPosX.begin(),
+            boost::bind(std::plus<double>(), _1, XOrigin - x));
+        std::transform(SourcePosPosY.begin(), SourcePosPosY.end(), SourcePosPosY.begin(),
+            boost::bind(std::plus<double>(), _1, YOrigin - y));
+        std::transform(SourcePosPosZ.begin(), SourcePosPosZ.end(), SourcePosPosZ.begin(),
+            boost::bind(std::plus<double>(), _1, ZOrigin - z));
+        std::transform(SourceNegPosX.begin(), SourceNegPosX.end(), SourceNegPosX.begin(),
+            boost::bind(std::plus<double>(), _1, XOrigin - x));
+        std::transform(SourceNegPosY.begin(), SourceNegPosY.end(), SourceNegPosY.begin(),
+            boost::bind(std::plus<double>(), _1, YOrigin - y));
+        std::transform(SourceNegPosZ.begin(), SourceNegPosZ.end(), SourceNegPosZ.begin(),
+            boost::bind(std::plus<double>(), _1, ZOrigin - z));
+        std::transform(MeasSecPosX.begin(), MeasSecPosX.end(), MeasSecPosX.begin(),
+            boost::bind(std::plus<double>(), _1, XOrigin - x));
+        std::transform(MeasSecPosY.begin(), MeasSecPosY.end(), MeasSecPosY.begin(),
+            boost::bind(std::plus<double>(), _1, YOrigin - y));
+        std::transform(MeasSecPosZ.begin(), MeasSecPosZ.end(), MeasSecPosZ.begin(),
+            boost::bind(std::plus<double>(), _1, ZOrigin - z));
         //we have to call the base implementation in the end because
         //it changes the first measurement positions and the Origin
         ThreeDModelBase::SetOrigin(x, y, z);

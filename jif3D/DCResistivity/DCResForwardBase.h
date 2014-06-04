@@ -109,7 +109,7 @@ namespace jif3D
         	  ar & sno;
             }
           GEOMETRY_RES() :
-        	  PosSx(), PosSy(), PosSz(), NegSx(), NegSy(), NegSz(), rx1(), ry1(), rz1(), rx2(), ry2(), rz2(), nsource(0), sno()
+        	  PosSx(), PosSy(), PosSz(), NegSx(), NegSy(), NegSz(), nsource(0), rx1(), ry1(), rz1(), rx2(), ry2(), rz2(),  sno()
             {
             }
           virtual ~GEOMETRY_RES()

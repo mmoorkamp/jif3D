@@ -68,9 +68,7 @@ namespace jif3D
         }
 
       //! Return the scalar Magnetics starting model and measurement positions  that were read in
-      /*! The model object also contains the measurement positions. As
-       * we might have different stations for scalar and FTG Magnetics
-       * data, we return two model objects. The densities will be identical for both of them.
+      /*! The model object also contains the measurement positions.
        * @return The model object containing the starting model and measurement positions.
        */
       const jif3D::ThreeDMagneticModel &GetModel() const
