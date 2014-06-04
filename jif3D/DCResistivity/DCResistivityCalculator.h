@@ -33,6 +33,8 @@ namespace jif3D
       jif3D::GRID_STRUCT_RES grid;
       //! Information about the data in the format of Bjoern's code
       jif3D::DATA_STRUCT_RES data;
+      //! Information about the gradient in the format of Bjoern's code
+      jif3D::GRADIENT_STRUCT_RES grad;
       //! Perform the dynamic allocation for the c-structures above
       void Allocate(const size_t ngrid, const size_t ndata, const size_t nshot, const size_t nmeaspoint);
       friend class boost::serialization::access;
@@ -43,6 +45,7 @@ namespace jif3D
           ar & geo;
           ar & grid;
           ar & data;
+          ar & grad;
         }
     public:
       DCResistivityCalculator();
