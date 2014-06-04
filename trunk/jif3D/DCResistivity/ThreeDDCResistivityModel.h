@@ -25,9 +25,12 @@ namespace jif3D
      * electrode need to be stored, too. We store the source position only once, but store all receiver positions and source index for each datum.
      */
     /* @{ */
+    class DCExtraParameterSetter;
+
     class ThreeDDCResistivityModel: public jif3D::ThreeDModelBase
       {
     public:
+      typedef DCExtraParameterSetter ExtraParameterSetter;
       //! We need vectors of indices to associate a source with a receiver for a given shot
       typedef std::vector<int> tIndexVec;
     private:
@@ -115,7 +118,8 @@ namespace jif3D
 
       //! Add a the second receiver electrode to the model
       void AddMeasurementPoint(const double xcoord, const double ycoord,
-          const double zcoord, double negxcoord, double negycoord, double negzcoord, int sourceindex)
+          const double zcoord, double negxcoord, double negycoord, double negzcoord,
+          int sourceindex)
         {
           ThreeDModelBase::AddMeasurementPoint(xcoord, ycoord, zcoord);
           MeasSecPosX.push_back(negxcoord - XOrigin);
@@ -217,6 +221,15 @@ namespace jif3D
       virtual ~ThreeDDCResistivityModel();
       };
 
+    class DCExtraParameterSetter
+      {
+    public:
+      void operator()(ThreeDDCResistivityModel &Model, const std::vector<double> &Dens)
+        {
+          throw jif3D::FatalException(
+              "Tomography class does not support extra parameters !");
+        }
+      };
   /* @} */
   }
 

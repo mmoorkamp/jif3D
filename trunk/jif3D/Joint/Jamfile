@@ -8,7 +8,8 @@ alias joint : ../Tomo//tomo ../Gravity//gravity ../Magnetics//magnetics ../MT//m
 	
 lib setup : SaltRelConstraint.cpp SetupGravity.cpp SetupMagnetics.cpp 
             SetupInversion.cpp SetupMT.cpp SetupRegularization.cpp 
-            SetupTomo.cpp SetupCoupling.cpp joint  ;
+            SetupTomo.cpp SetupCoupling.cpp joint :
+            <eigen>on:<source>SetupDCResistivity.cpp <eigen>on:<library>../DCResistivity//dcresistivity ;
 
 
 unit-test saltrel_test :  test_saltrel_objective.cpp joint setup  ;
