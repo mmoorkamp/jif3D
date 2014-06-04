@@ -5,28 +5,71 @@
 // Copyright   : 2008, MM
 //============================================================================
 
+#ifdef HAVEHPX
 #include <hpx/config.hpp>
 #include <hpx/hpx_init.hpp>
 #include <hpx/include/actions.hpp>
 #include <hpx/include/util.hpp>
 #include <hpx/include/lcos.hpp>
 #include <hpx/include/iostreams.hpp>
+#endif
+
+#ifdef HAVEOPENMP
+#include <omp.h>
+#endif
 
 #include <iostream>
 #include <string>
 #include <cstdlib>
 
+#include <boost/serialization/serialization.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/program_options.hpp>
 #include "../Global/FileUtil.h"
 #include "../Global/convert.h"
 #include "../MT/X3DModel.h"
 #include "../MT/X3DMTCalculator.h"
 
-jif3D::rvec CalcRealization(jif3D::X3DModel Model, double bg_conductivity,
-    double phase1cond, double phase2cond, double phase1frac);
-HPX_PLAIN_ACTION(CalcRealization, Calc_action);
+struct realinfo
+  {
+  double bg_conductivity;
+  double phase1cond;
+  double phase2cond;
+  double phase1frac;
+  std::string tempdir;
+  std::string x3dname;
 
-jif3D::rvec CalcRealization(jif3D::X3DModel Model, double bg_conductivity,
-    double phase1cond, double phase2cond, double phase1frac)
+  //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int version)
+    {
+      ar & bg_conductivity;
+      ar & phase1cond;
+      ar & phase2cond;
+      ar & tempdir;
+      ar & x3dname;
+    }
+  realinfo(double bgc, double p1c, double p2c, double p1f, std::string td,
+      std::string x3d) :
+      bg_conductivity(bgc), phase1cond(p1c), phase2cond(p2c), phase1frac(p1f), tempdir(
+          td), x3dname(x3d)
+    {
+
+    }
+  realinfo() :
+      bg_conductivity(-1.0), phase1cond(-1.0), phase2cond(-1.0), phase1frac(-1.0), tempdir(), x3dname()
+    {
+
+    }
+  };
+
+jif3D::rvec CalcRealization(jif3D::X3DModel Model, realinfo Info);
+
+#ifdef HAVEHPX
+HPX_PLAIN_ACTION(CalcRealization, Calc_action);
+#endif
+
+jif3D::rvec CalcRealization(jif3D::X3DModel Model, realinfo Info)
   {
     const size_t nx = Model.GetXCoordinates().num_elements();
     const size_t ny = Model.GetYCoordinates().num_elements();
@@ -36,32 +79,67 @@ jif3D::rvec CalcRealization(jif3D::X3DModel Model, double bg_conductivity,
       {
         for (size_t j = 0; j < ny; ++j)
           {
-            Model.SetConductivities()[i][j][0] = bg_conductivity;
+            Model.SetConductivities()[i][j][0] = Info.bg_conductivity;
             for (size_t k = 1; k < nz; ++k)
               {
-                if (drand48() < phase1frac)
+                if (drand48() < Info.phase1frac)
                   {
-                    Model.SetConductivities()[i][j][k] = phase1cond;
+                    Model.SetConductivities()[i][j][k] = Info.phase1cond;
                   }
                 else
                   {
-                    Model.SetConductivities()[i][j][k] = phase2cond;
+                    Model.SetConductivities()[i][j][k] = Info.phase2cond;
                   }
               }
           }
       }
 
-    jif3D::X3DMTCalculator Calculator;
+    jif3D::X3DMTCalculator Calculator(Info.tempdir, Info.x3dname);
     jif3D::rvec Impedances(Calculator.Calculate(Model));
     return Impedances;
   }
 
-int hpx_main(int argc, char* argv[])
-  {
+namespace po = boost::program_options;
 
+int hpx_main(po::variables_map& vm)
+  {
+#ifdef HAVEHPX
     using hpx::cout;
+#else
+    using std::cout;
+#endif
+
     using std::cin;
 
+#ifdef HAVEOPENMP
+    if (vm.count("threads"))
+      {
+        omp_set_num_threads(vm["threads"].as<int>());
+      }
+#endif
+
+    double topthick = -1.0;
+    std::string x3dname("x3d");
+    std::string tempdir;
+
+    if (vm.count("topthick"))
+      {
+        topthick = vm["topthick"].as<double>();
+      }
+
+    if (vm.count("tempdir"))
+      {
+        tempdir = vm["tempdir"].as<std::string>();
+      }
+    else
+      {
+        tempdir = boost::filesystem::current_path().native();
+      }
+
+    if (vm.count("x3dname"))
+      {
+        x3dname = vm["x3dname"].as<std::string>();
+      }
     jif3D::X3DModel Model;
     size_t nx, ny, nz;
     double deltax, deltay, deltaz;
@@ -84,6 +162,10 @@ int hpx_main(int argc, char* argv[])
     Model.SetMeshSize(nx, ny, nz);
     Model.SetHorizontalCellSize(deltax, deltay, nx, ny);
     std::fill_n(Model.SetZCellSizes().begin(), nz, deltaz);
+    if (topthick > 0.0)
+      {
+        Model.SetZCellSizes()[0] = topthick;
+      }
     //ask for a conductivity to fill the mesh with
     double bg_conductivity = 1.0;
     cout << "Background Conductivity [S/m] : ";
@@ -122,6 +204,7 @@ int hpx_main(int argc, char* argv[])
     std::ofstream zxx((OutFilename + "_zxx.out").c_str());
     std::ofstream zyy((OutFilename + "_zyy.out").c_str());
 
+#ifdef HAVEHPX
     using hpx::lcos::unique_future;
     using hpx::async;
     using hpx::wait_all;
@@ -134,8 +217,8 @@ int hpx_main(int argc, char* argv[])
       {
         hpx::naming::id_type const locality_id = localities.at(nreal % localities.size());
         ImplResult.push_back(
-            async(CalcImpl, locality_id, Model, bg_conductivity, phase1cond, phase2cond,
-                phase1frac));
+            async(CalcImpl, locality_id, Model, realinfo(bg_conductivity, phase1cond, phase2cond,
+                    phase1frac, tempdir, x3dname)));
       }
     wait_all(ImplResult);
 
@@ -150,9 +233,51 @@ int hpx_main(int argc, char* argv[])
 
       }
     return hpx::finalize();
+#else
+#pragma omp parallel for shared(Model, zxy, zyx, zxx, zyy)
+    for (size_t nreal = 0; nreal < nrealmax; ++nreal)
+      {
+
+        jif3D::rvec Impedances = CalcRealization(Model,
+            realinfo(bg_conductivity, phase1cond, phase2cond, phase1frac, tempdir,
+                x3dname));
+        jif3D::rvec Errors(Impedances.size(), 0.0);
+        std::string realstring(jif3D::stringify(nreal));
+#pragma omp critical(write_files)
+          {
+            std::cout << "Realization: " << nreal << std::endl;
+            //RealModel.WriteNetCDF(OutFilename + realstring + ".nc");
+            //RealModel.WriteVTK(OutFilename + realstring + ".vtk");
+            zxx << nreal << " " << Impedances(0) << " " << Impedances(1) << std::endl;
+            zxy << nreal << " " << Impedances(2) << " " << Impedances(3) << std::endl;
+            zyx << nreal << " " << Impedances(4) << " " << Impedances(5) << std::endl;
+            zyy << nreal << " " << Impedances(6) << " " << Impedances(7) << std::endl;
+          }
+      }
+    return 0;
+#endif
   }
 
 int main(int argc, char* argv[])
   {
-    return hpx::init(argc, argv);
+    po::options_description desc("General options");
+    desc.add_options()("help", "produce help message")("threads", po::value<int>(),
+        "The number of openmp threads")("topthick", po::value<double>(),
+        "Thickness of the top layer in m, if <= 0.0 the thickness will be the same as the z dimension of the other grid cells.")(
+        "x3dname", po::value<std::string>(), "The name of the executable for x3d")(
+        "tempdir", po::value<std::string>(), "The name of the directory where we store files for forward calculation");
+#ifdef HAVEHPX
+    return hpx::init(desc, argc, argv);
+#else
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::notify(vm);
+
+    if (vm.count("help"))
+      {
+        std::cout << desc << "\n";
+        return 1;
+      }
+    return hpx_main(vm);
+#endif
   }
