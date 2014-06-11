@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
 
     std::string startmodelname = jif3D::AskFilename("Starting Model: ");
     jif3D::ThreeDSeismicModel StartModel;
-    StartModel.ReadNetCDF(startmodelname);
+    StartModel.ReadNetCDF(startmodelname, false);
     const size_t ngrid = StartModel.GetNModelElements();
 
     //we need a number of transformation objects to translate the generalized model parameters
@@ -211,7 +211,7 @@ int main(int argc, char *argv[])
         std::copy(DCSetup.GetModel().GetResistivities().origin(),
             DCSetup.GetModel().GetResistivities().origin() + ngrid, ResModel.begin());
         std::cout << "Transforming slowness model. " << std::endl;
-        ublas::subrange(InvModel, 0, ngrid) = ublas::subrange(
+        ublas::subrange(InvModel, ngrid, 2 * ngrid) = ublas::subrange(
             ResistivityTransform->PhysicalToGeneralized(ResModel), 0, ngrid);
       }
 
@@ -228,6 +228,41 @@ int main(int argc, char *argv[])
       {
         Objective->AddObjective(SeisDCCross, SeisDCTrans, seisdclambda, "SeisDC",
             jif3D::JointObjective::coupling);
+      }
+
+    //finally we construct the regularization terms
+    //we ask for a weight and construct a regularization object
+    //for each type of physical parameter separately
+    //first we set up seismic tomography
+    jif3D::rvec Ones(InvModel.size(), 1.0);
+    double seisreglambda = 1.0;
+    std::cout << " Weight for seismic regularization: ";
+    std::cin >> seisreglambda;
+    boost::shared_ptr<jif3D::RegularizationFunction> SeisReg(Regularization->clone());
+
+    //then the regularization of densities
+    double dcreglambda = 1.0;
+    std::cout << " Weight for DC resistivity regularization: ";
+    std::cin >> dcreglambda;
+    boost::shared_ptr<jif3D::RegularizationFunction> DCReg(Regularization->clone());
+
+    //if we specify on the command line that we want to subtract the
+    //starting model, we set the corresponding reference model
+    //in the regularization object
+    if (RegSetup.GetSubStart())
+      {
+        SeisReg->SetReferenceModel(TomoTransform->GeneralizedToPhysical(InvModel));
+        DCReg->SetReferenceModel(DCTransform->GeneralizedToPhysical(InvModel));
+      }
+    if (seisreglambda > 0.0)
+      {
+        Objective->AddObjective(SeisReg, TomoTransform, seisreglambda, "SeisReg",
+            jif3D::JointObjective::regularization);
+      }
+    if (dcreglambda > 0.0)
+      {
+        Objective->AddObjective(DCReg, DCTransform, dcreglambda, "DCReg",
+            jif3D::JointObjective::regularization);
       }
 
     //finally ask for the maximum number of iterations
@@ -248,11 +283,11 @@ int main(int argc, char *argv[])
     //and general quality control
     if (havetomo)
       {
-        jif3D::Write3DDataToVTK(modelfilename + ".rec.vtk", "Receiver",
+        jif3D::Write3DDataToVTK(modelfilename + ".tomo_rec.vtk", "Receiver",
             jif3D::rvec(TomoSetup.GetModel().GetMeasPosX().size()),
             TomoSetup.GetModel().GetMeasPosX(), TomoSetup.GetModel().GetMeasPosY(),
             TomoSetup.GetModel().GetMeasPosZ());
-        jif3D::Write3DDataToVTK(modelfilename + ".sor.vtk", "Source",
+        jif3D::Write3DDataToVTK(modelfilename + ".tomo_sor.vtk", "Source",
             jif3D::rvec(TomoSetup.GetModel().GetSourcePosX().size()),
             TomoSetup.GetModel().GetSourcePosX(), TomoSetup.GetModel().GetSourcePosY(),
             TomoSetup.GetModel().GetSourcePosZ());
@@ -269,6 +304,7 @@ int main(int argc, char *argv[])
     StoreWeights(weightfile, 0, *Objective);
 
     jif3D::ThreeDSeismicModel TomoModel(TomoSetup.GetModel());
+    jif3D::ThreeDDCResistivityModel DCModel(DCSetup.GetModel());
 
     if (!havetomo)
       TomoModel = StartModel;
@@ -299,7 +335,8 @@ int main(int argc, char *argv[])
             // and use intermediate models in case something goes wrong
             SaveModel(InvModel, *TomoTransform.get(), TomoModel,
                 modelfilename + jif3D::stringify(iteration) + ".tomo.inv");
-
+            SaveModel(InvModel, *DCTransform.get(), DCModel,
+                modelfilename + jif3D::stringify(iteration) + ".dc.inv");
             //write out some information about misfit to the screen
             std::cout << "Currrent Misfit: " << Optimizer->GetMisfit() << std::endl;
             std::cout << "Currrent Gradient: " << Optimizer->GetGradNorm() << std::endl;

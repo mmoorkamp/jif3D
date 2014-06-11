@@ -7,6 +7,7 @@ lib dcresistivity :   ThreeDDCResistivityModel.cpp DCResistivityCalculator.cpp  
 
 
 unit-test readwrite_test :  test_ReadWriteDCResistivity.cpp dcresistivity  core  ;
+unit-test objective_test :  test_dc_objective.cpp dcresistivity  core ../Inversion//inversion ;
 
 exe makedcresmesh : makedcresmesh.cpp dcresistivity  core   ;
 exe calculateresponseandgradient : calculateresponseandgradient.cpp dcresistivity  core   ;

@@ -12,7 +12,7 @@ int main()
     jif3D::ThreeDDCResistivityModel Model;
     Model.ReadNetCDF(ModelFilename);
 
-    int nelecx, nelecy;
+    size_t nelecx, nelecy;
 
     std::cout << "N Electrodes in x-direction: ";
     std::cin >> nelecx;
@@ -30,7 +30,7 @@ int main()
     std::cout << "Spacing in y-direction: ";
     std::cin >> deltay;
 
-    int nsources;
+    size_t nsources;
     std::cout << "N Sources: ";
     std::cin >> nsources;
 
@@ -45,7 +45,7 @@ int main()
 
     for (size_t i = 0; i < nsources; ++i)
       {
-        int Index = SourceIndices[i];
+        size_t Index = SourceIndices[i];
         double xpos = minx + deltax * (Index % nelecx);
         double ypos = miny + deltay * (Index / nelecy);
         Model.AddSource(xpos, ypos, 0.0, xpos + deltax, ypos, 0.0);

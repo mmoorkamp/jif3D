@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_SUITE( ReadWriteDCResistivity_Suite )
                 precision);
             BOOST_CHECK_CLOSE(Model.GetMeasSecPosZ()[i], InModel.GetMeasSecPosZ()[i],
                 precision);
-
+            BOOST_CHECK_EQUAL(Model.GetSourceIndices()[i], InModel.GetSourceIndices()[i]);
           }
 
         for (size_t i = 0; i < nsources; ++i)

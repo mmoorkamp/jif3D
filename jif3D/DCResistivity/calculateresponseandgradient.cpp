@@ -70,9 +70,9 @@ int main()
     jif3D::rvec Error(SynthData.size(), 0.0);
     jif3D::SaveApparentResistivity(DataFilename, SynthData, Error, Model);
     std::ofstream outresponseASCIIfile(outresponseASCIIfilename.c_str());
-    for (int i = 0; i < SynthData.size(); i++)
+    for (double data : SynthData)
       {
-        outresponseASCIIfile << SynthData[i] << "\n";
+        outresponseASCIIfile << data << "\n";
       }
 
     std::ifstream inmisfitfile(MisfitFilename.c_str());
@@ -87,16 +87,14 @@ int main()
           }
       }
     jif3D::rvec Misfit(misfitdata.size(), 0.0);
-    for (int i = 0; i < misfitdata.size(); i++)
-      {
-        Misfit[i] = misfitdata[i];
-      }
+    std::copy(misfitdata.begin(), misfitdata.end(), Misfit.begin());
+
     jif3D::DCResistivityCalculator Gradientcalculator;
     jif3D::rvec GradientData = Gradientcalculator.LQDerivative(Model, Misfit);
     std::ofstream outgradientASCIIfile(GradientASCIIfilename.c_str());
-    for (int i = 0; i < GradientData.size(); i++)
+    for (double gradient : GradientData)
       {
-        outgradientASCIIfile << GradientData[i] << "\n";
+        outgradientASCIIfile << gradient << "\n";
       }
 
   }
