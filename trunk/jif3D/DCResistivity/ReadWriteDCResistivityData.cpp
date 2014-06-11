@@ -43,10 +43,9 @@ namespace jif3D
         //ndata == Model.GetSourceIndices().size();
 
 
-        //create a netcdf file
-        //create a netcdf file
+
         const size_t nsourcepos = Model.GetSourcePosPosX().size();
-        const size_t nmeaspos = Model.GetMeasPosX().size();
+        //create a netcdf file
         NcFile DataFile(filename.c_str(), NcFile::Replace);
 
         //we use the source sequence number as a dimension
@@ -123,8 +122,7 @@ namespace jif3D
         ReadVec(DataFile, DCReceiverSecZName, R2Z);
 
         std::vector<int> SourceIndices;
-//now read the indices for the measurement position
-        const size_t nconf = SourceIndices.size();
+
 //and configure the model object for these measurement point
         ReadVec(DataFile, DCSourceIndexName, SourceIndices);
 
@@ -136,7 +134,7 @@ namespace jif3D
                 SourceIndices[i]);
           }
 
-//finally read in the traveltimes
+//finally read in the apparent resistivities
         ReadVec(DataFile, DCAppResistivityName, Data);
 // it is possible that there is no error information in the file
 // so we don't want to crash the program if not but set it to zero

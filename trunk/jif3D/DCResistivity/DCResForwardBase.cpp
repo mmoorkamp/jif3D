@@ -28,8 +28,8 @@ using namespace Eigen;
 namespace jif3D
   {
     /****** Interpolation function used to interpolate source and receiver position to cell centre */
-    std::vector<double> Linint(std::vector<double> x, std::vector<double> y,
-        std::vector<double> z, double xr, double yr, double zr)
+    std::vector<double> Linint(const std::vector<double> &x, const std::vector<double> &y,
+        const std::vector<double> &z, double xr, double yr, double zr)
       {
 
         double minx;
@@ -133,13 +133,13 @@ namespace jif3D
         v[ind_x[1] + ind_y[1] * x.size() + ind_z[1] * x.size() * y.size()] = (1
             - dx[1] / Dx) * (1 - dy[1] / Dy) * (1 - dz[1] / Dz);
 
-        return (v);
+        return v;
 
       }
 
     /****** Basic forward modelling function */
-    int ResForward(const GEOMETRY_RES &geo, const GRID_STRUCT_RES &grid,
-        DATA_STRUCT_RES *data)
+    jif3D::rvec ResForward(const GEOMETRY_RES &geo, const GRID_STRUCT_RES &grid,
+        size_t ndata_res)
       {
         std::vector<double> cellwidth_x(grid.nx, grid.dx);
         std::vector<double> cellwidth_y(grid.ny, grid.dy);
@@ -751,15 +751,17 @@ namespace jif3D
           }
         /* The follows are the main loop for calculating forward response for a model and corresponding geometry of sources/receivers.
          */
-        std::vector<double> q1(np, 0), q2(np, 0), q, Q1(np, 0), Q2(np, 0), Q, datatemp;
-        Eigen::VectorXd permutationeq(np), permutationeu, eu(np), eforwarddata;
+        std::vector<double> datatemp;
         for (size_t i = 0; i < geo.nsource; i++)
           {
+            std::vector<double> q1(np, 0), q2(np, 0), q, Q1(np, 0), Q2(np, 0), Q;
+            Eigen::VectorXd permutationeq(np), permutationeu, eu(np), eforwarddata;
             //generate source term q,
             q1 = Linint(cellcenterxpos, cellcenterypos, cellcenterzpos, geo.PosSx[i],
                 geo.PosSy[i], geo.PosSz[i]);
             q2 = Linint(cellcenterxpos, cellcenterypos, cellcenterzpos, geo.NegSx[i],
                 geo.NegSy[i], geo.NegSz[i]);
+            q.reserve(np);
             for (size_t j = 0; j < grid.nz; j++)
               for (size_t k = 0; k < grid.ny; k++)
                 for (size_t l = 0; l < grid.nx; l++)
@@ -781,7 +783,7 @@ namespace jif3D
               }
             //select related receivers of i source and calculate forward response,
             size_t count = 0;
-            for (size_t Qi = 0; Qi < data->ndata_res; Qi++)
+            for (size_t Qi = 0; Qi < ndata_res; Qi++)
               {
                 if (i == geo.sno[Qi])
                   {
@@ -789,6 +791,7 @@ namespace jif3D
                         geo.rx1[Qi], geo.ry1[Qi], geo.rz1[Qi]);
                     Q2 = Linint(cellcenterxpos, cellcenterypos, cellcenterzpos,
                         geo.rx2[Qi], geo.ry2[Qi], geo.rz2[Qi]);
+                    Q.reserve(np);
                     for (size_t j = 0; j < grid.nz; j++)
                       for (size_t k = 0; k < grid.ny; k++)
                         for (size_t l = 0; l < grid.nx; l++)
@@ -814,23 +817,17 @@ namespace jif3D
               {
                 datatemp.push_back(eforwarddata(ndatatemp));
               }
-
-            q.clear();
-            Q.clear();
           }
 
-        for (size_t nd = 0; nd < data->ndata_res; nd++)
-          {
-            data->dcal[nd] = datatemp[nd];
-          }
-        datatemp.clear();
+        jif3D::rvec result(datatemp.size());
+        std::copy(datatemp.begin(), datatemp.end(), result.begin());
 
-        return (1);
+        return result;
       }
 
     /****** Basic gradient calculation function used to get gradient of object function */
-    int ResGradient(const GEOMETRY_RES &geo, const GRID_STRUCT_RES &grid,
-        GRADIENT_STRUCT_RES *grad)
+    jif3D::rvec ResGradient(const GEOMETRY_RES &geo, const GRID_STRUCT_RES &grid,
+        const jif3D::rvec &wdwmisfit)
       {
         std::vector<double> cellwidth_x(grid.nx, grid.dx);
         std::vector<double> cellwidth_y(grid.ny, grid.dy);
@@ -1672,7 +1669,7 @@ namespace jif3D
             //Generate a vector lm() related with data misfit and transpose of forward operator A
             //select related receivers of i source and calculate projection matrix from weighted data difference vector,
             size_t count = 0;
-            for (size_t Qi = 0; Qi < grad->wdwmisfit.size(); Qi++)
+            for (size_t Qi = 0; Qi < wdwmisfit.size(); Qi++)
               {
                 if (i == geo.sno[Qi])
                   {
@@ -1688,7 +1685,7 @@ namespace jif3D
                                 Q1[l + k * grid.nx + j * grid.nx * grid.ny]
                                     - Q2[l + k * grid.nx + j * grid.nx * grid.ny]);
                           }
-                    wdwmisfitforproj.push_back(grad->wdwmisfit[Qi]);
+                    wdwmisfitforproj.push_back(wdwmisfit(Qi));
                     count++;
                   }
               }
@@ -1737,7 +1734,7 @@ namespace jif3D
             Q.clear();
 
           }
-
+        jif3D::rvec gradient(np);
         for (size_t m = 0; m < np; m++)
           {
             double sumeGui = 0.0;
@@ -1745,10 +1742,10 @@ namespace jif3D
               {
                 sumeGui = sumeGui + eGuii(m, n);
               }
-            grad->gradient[m] = sumeGui;
+            gradient[m] = sumeGui;
           }
 
-        return (1);
+        return gradient;
       }
 
   }
