@@ -50,7 +50,7 @@ namespace jif3D
             Model.ReadNetCDF(dcmodelfilename);
 
             Model.SetOrigin(xorigin, yorigin, 0.0);
-
+            Calculator = boost::shared_ptr<DCResistivityCalculator>(new DCResistivityCalculator);
             DCObjective = boost::shared_ptr<
                 jif3D::ThreeDModelObjective<DCResistivityCalculator> >(
                 new jif3D::ThreeDModelObjective<DCResistivityCalculator>(*Calculator));
