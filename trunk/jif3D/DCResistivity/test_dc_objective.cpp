@@ -25,7 +25,7 @@ BOOST_AUTO_TEST_SUITE( DC_Objective_Test_Suite )
         double Misfit = Objective.CalcMisfit(Model);
         for (size_t i = 0; i < Gradient.size(); ++i)
           {
-            double delta = Model(i) * 0.0001;
+            double delta = Model(i) * 0.01;
             jif3D::rvec Forward(Model);
             jif3D::rvec Backward(Model);
             Forward(i) += delta;
@@ -43,8 +43,8 @@ BOOST_AUTO_TEST_SUITE( DC_Objective_Test_Suite )
     BOOST_AUTO_TEST_CASE (derivative_test)
       {
         jif3D::ThreeDDCResistivityModel Model;
-        const size_t xsize = 5;
-        const size_t ysize = 6;
+        const size_t xsize = 7;
+        const size_t ysize = 8;
         const size_t zsize = 7;
         Model.SetHorizontalCellSize(1, 1, xsize, ysize);
         Model.SetZCellSizes().resize(boost::extents[zsize]);
@@ -54,8 +54,8 @@ BOOST_AUTO_TEST_SUITE( DC_Objective_Test_Suite )
         const size_t ngrid = xsize * ysize * zsize;
         std::fill_n(Model.SetResistivities().origin(), ngrid, 100.0);
 
-        const double minx = 0.5;
-        const double miny = 0.5;
+        const double minx = 2.5;
+        const double miny = 2.5;
         const double maxx = 4.5;
         const double maxy = 5.5;
         const double deltax = 2.0;
