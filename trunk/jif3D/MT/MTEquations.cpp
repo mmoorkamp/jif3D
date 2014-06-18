@@ -63,17 +63,20 @@ namespace jif3D
     void RotateImpedance(const double angle, std::complex<double> & Zxx,
         std::complex<double> &Zxy, std::complex<double> &Zyx, std::complex<double> &Zyy)
       {
+        //we need the old impedance elements in all 4 equations
+        //so we create some temporary variable
         std::complex<double> newxx, newxy, newyx, newyy;
-        const double cangle = cos(angle);
-        const double sangle = sin(angle);
-        newxx = Zxx * cangle * cangle + (Zxy + Zyx) * sangle * cangle
-            + Zyy * sangle * sangle;
-        newxy = Zxy * cangle * cangle - (Zxx - Zyy) * sangle * cangle
-            - Zyx * sangle * sangle;
-        newyx = Zyx * cangle * cangle - (Zxx - Zyy) * sangle * cangle
-            - Zxy * sangle * sangle;
-        newyy = Zyy * cangle * cangle - (Zxy + Zyx) * sangle * cangle
-            + Zxx * sangle * sangle;
+
+        //precompute trigonometric expressions used several times below
+        const double ca2 = pow(cos(angle), 2);
+        const double sa2 = pow(sin(angle), 2);
+        const double casa = sin(angle) * cos(angle);
+        //do the rotation R Z R^T
+        newxx = Zxx * ca2 - (Zxy + Zyx) * casa + Zyy * sa2;
+        newxy = Zxy * ca2 + (Zxx - Zyy) * casa - Zyx * sa2;
+        newyx = Zyx * ca2 + (Zxx - Zyy) * casa - Zxy * sa2;
+        newyy = Zyy * ca2 + (Zxy + Zyx) * casa + Zxx * sa2;
+        //assign temporary values to impedance elements
         Zxx = newxx;
         Zxy = newxy;
         Zyx = newyx;

@@ -95,7 +95,7 @@ jif3D  ::rvec CheckGradient(jif3D::ObjectiveFunction &Objective, const jif3D::rv
           TomoModel.GetSlownesses().origin()
           + TomoModel.GetSlownesses().num_elements(), InvModel.begin());
 
-      jif3D::TomographyCalculator Calculator;
+      jif3D::TomographyCalculator Calculator(true);
       jif3D::rvec ObservedTimes(Calculator.Calculate(TomoModel));
 
       jif3D::ThreeDModelObjective<jif3D::TomographyCalculator> TomoObjective(
@@ -107,7 +107,7 @@ jif3D  ::rvec CheckGradient(jif3D::ObjectiveFunction &Objective, const jif3D::rv
       jif3D::rvec TomoCovar(ObservedTimes.size());
       //we assume a general error of 50 ms for the seismic data
       std::fill(TomoCovar.begin(), TomoCovar.end(), 0.05);
-      TomoObjective.SetDataCovar(TomoCovar);
+      TomoObjective.SetDataError(TomoCovar);
       //TomoObjective->SetPrecondDiag(PreCond);
       double ZeroMisfit = TomoObjective.CalcMisfit(InvModel);
       //we used the same model to calculate the observed data so the misfit should be 0
