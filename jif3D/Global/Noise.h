@@ -115,7 +115,7 @@ namespace jif3D
     //! Assign errors to noise free synthetic MT data for inversion purposes
     /*! When inverting synthetic data for which we do not have any noise information, we still have
      * to assign some data covariance for inversion, usually we use a relative error. This function, in contrast
-     * to ConstructError, is particularly geared towards MT data. We use a percentage of the maximum tensor element
+     * to ConstructError, is particularly geared towards MT data. We use a percentage of the Berdichevskyi invariant
      * for a given frequency and site as the error estimate for all other tensor elements at that
      * frequency and site. This avoids problems with small diagonal elements.
      * @param Data A vector containing the MT data, we assume that 8 consecutive real numbers form one complex impedance tensor
@@ -132,14 +132,16 @@ namespace jif3D
         const size_t ntensor = ndata / ntensorelem;
         for (size_t i = 0; i < ntensor; ++i)
           {
-            //find the maximum tensor element
-            const double maxdata = std::abs(
-                *std::max_element(Data.begin() + i * ntensorelem,
-                    Data.begin() + (i + 1) * ntensorelem,
-                    jif3D::absLess<double, double>()));
-            assert(maxdata > 0);
+            //compute the real and imaginary parts of the berdichevskyi invariant
+            double berdreal = 0.5
+                * (Data(i * ntensorelem + 2) - Data(i * ntensorelem + 4));
+            double berdimag = 0.5
+                * (Data(i * ntensorelem + 3) - Data(i * ntensorelem + 5));
+            // we assume the absolute value of the invariant as a reference threshold
+            //for the error calculation
+            double berdabs = sqrt(berdreal * berdreal + berdimag * berdimag);
             std::fill_n(DataError.begin() + i * ntensorelem, ntensorelem,
-                maxdata * relerror);
+                berdabs * relerror);
           }
         return DataError;
       }
