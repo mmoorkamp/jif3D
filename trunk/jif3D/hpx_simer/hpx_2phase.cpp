@@ -40,13 +40,14 @@ struct realinfo
   std::string tempdir;
   std::string x3dname;
 
-  //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+  //! Provide serialization to be able to store objects
   template<class Archive>
   void serialize(Archive & ar, const unsigned int version)
     {
       ar & bg_conductivity;
       ar & phase1cond;
       ar & phase2cond;
+      ar & phase1frac;
       ar & tempdir;
       ar & x3dname;
     }
@@ -216,6 +217,8 @@ int hpx_main(po::variables_map& vm)
     Calc_action CalcImpl;
     std::vector<hpx::naming::id_type> localities = hpx::find_all_localities();
 
+    cout << "Found " << localities.size() << " localities\n ";
+
     for (size_t nreal = 0; nreal < nrealmax; ++nreal)
       {
         hpx::naming::id_type const locality_id = localities.at(nreal % localities.size());
@@ -237,7 +240,7 @@ int hpx_main(po::variables_map& vm)
       }
     boost::posix_time::ptime endtime = boost::posix_time::microsec_clock::local_time();
     double runtime = (endtime - starttime).total_seconds();
-    cout << "Runtime: " << runtime << " s" << hpx::endl ;
+    cout << "Runtime: " << runtime << " s" << hpx::endl;
     return hpx::finalize();
 #else
 #pragma omp parallel for shared(Model, zxy, zyx, zxx, zyy)
