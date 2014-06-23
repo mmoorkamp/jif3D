@@ -22,6 +22,7 @@
 #include <boost/graph/properties.hpp>
 #include <boost/graph/bandwidth.hpp>
 #include <boost/numeric/ublas/operation_sparse.hpp>
+#include <boost/multi_array.hpp>
 
 using namespace Eigen;
 
@@ -823,6 +824,7 @@ namespace jif3D
         std::copy(datatemp.begin(), datatemp.end(), result.begin());
 
         return result;
+
       }
 
     /****** Basic gradient calculation function used to get gradient of object function */
@@ -1745,7 +1747,20 @@ namespace jif3D
             gradient[m] = sumeGui;
           }
 
-        return gradient;
+        //return gradient;
+
+        jif3D::rvec gradientfinal(np);
+        for (size_t i = 0; i < grid.nz; ++i)
+          for (size_t j = 0; j < grid.ny; ++j)
+            for (size_t k = 0; k < grid.nx; ++k)
+              {
+                const size_t index1 = i * grid.nx * grid.ny + j * grid.nx + k;
+                const size_t index2 = k * grid.nz * grid.ny + j * grid.nz + i;
+                gradientfinal[index2] = -gradient[index1];
+              }
+
+        return gradientfinal;
+
       }
 
   }

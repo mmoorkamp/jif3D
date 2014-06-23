@@ -52,7 +52,9 @@ BOOST_AUTO_TEST_SUITE( DC_Objective_Test_Suite )
         Model.SetMeshSize(xsize, ysize, zsize);
 
         const size_t ngrid = xsize * ysize * zsize;
-        std::fill_n(Model.SetResistivities().origin(), ngrid, 100.0);
+        //generate a random mesh resistivity between 1 and 3000 Ohmm
+        const double rho = exp((1.0 + drand48()) * 4);
+        std::fill_n(Model.SetResistivities().origin(), ngrid, rho);
 
         const double minx = 2.5;
         const double miny = 2.5;
