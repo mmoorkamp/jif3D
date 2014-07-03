@@ -28,8 +28,14 @@
 #include <boost/program_options.hpp>
 #include "../Global/FileUtil.h"
 #include "../Global/convert.h"
+#include "../Global/Noise.h"
 #include "../MT/X3DModel.h"
 #include "../MT/X3DMTCalculator.h"
+#include "../MT/MTEquations.h"
+#include "../Inversion/ModelTransforms.h"
+#include "../Inversion/ThreeDModelObjective.h"
+#include "../Inversion/LimitedMemoryQuasiNewton.h"
+#include "../Inversion/JointObjective.h"
 
 struct realinfo
   {
@@ -99,6 +105,70 @@ jif3D::rvec CalcRealization(jif3D::X3DModel Model, realinfo Info)
     jif3D::X3DMTCalculator Calculator(Info.tempdir, Info.x3dname);
     jif3D::rvec Impedances(Calculator.Calculate(Model));
     return Impedances;
+  }
+
+double InvertBlock(jif3D::X3DModel Model, jif3D::rvec Data, realinfo Info)
+  {
+    jif3D::X3DMTCalculator Calculator(Info.tempdir, Info.x3dname, false);
+    boost::shared_ptr<jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator> > X3DObjective(
+        new jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator>(Calculator));
+
+    X3DObjective->SetObservedData(Data);
+    jif3D::X3DModel CoarseModel;
+
+    const size_t nz = 2;
+    CoarseModel.SetMeshSize(1, 1, nz);
+    double maxx = Model.GetXCellSizes()[0] * Model.GetXCoordinates().num_elements();
+    double maxy = Model.GetYCellSizes()[0] * Model.GetYCoordinates().num_elements();
+    const size_t nzold = Model.GetZCoordinates().num_elements();
+    double maxz = Model.GetZCoordinates()[nzold - 1] + Model.GetZCellSizes()[nzold - 1];
+    std::cout << maxx << " " << maxy << " " << maxz << std::endl;
+    CoarseModel.SetHorizontalCellSize(maxx, maxy, 1, 1);
+    CoarseModel.SetZCellSizes()[0] = Model.GetZCellSizes()[0];
+    CoarseModel.SetZCellSizes()[1] = maxz - Model.GetZCellSizes()[0];
+    CoarseModel.SetBackgroundConductivities(Model.GetBackgroundConductivities());
+    CoarseModel.SetBackgroundThicknesses(Model.GetBackgroundConductivities());
+    CoarseModel.CopyMeasurementConfigurations(Model);
+
+    jif3D::rvec InvVec(2, CoarseModel.GetBackgroundConductivities()[0] * 1.01);
+
+    X3DObjective->SetCoarseModelGeometry(CoarseModel);
+    X3DObjective->SetFineModelGeometry(Model);
+    jif3D::rvec Error(jif3D::ConstructMTError(Data, 0.001));
+    X3DObjective->SetDataError(Error);
+
+    boost::shared_ptr<jif3D::JointObjective> Joint(new jif3D::JointObjective);
+    jif3D::rvec RefModel(Data.size(), 1.0);
+    boost::shared_ptr<jif3D::GeneralModelTransform> ConductivityTransform(
+        new jif3D::LogTransform(RefModel));
+    InvVec = ConductivityTransform->PhysicalToGeneralized(InvVec);
+    Joint->AddObjective(X3DObjective, ConductivityTransform);
+    boost::shared_ptr<jif3D::GradientBasedOptimization> Optimizer(
+        new jif3D::LimitedMemoryQuasiNewton(Joint, 5));
+    jif3D::rvec CovVec(nz);
+    CovVec(0) = 1e-15;
+    CovVec(1) = 1.0;
+    Optimizer->SetModelCovDiag(CovVec);
+    size_t iteration = 0;
+    const size_t maxiter = 10;
+    double reldiff = 1.0e20;
+
+    bool stuck = false;
+    while (iteration < maxiter && reldiff > 8 && !stuck)
+      {
+        try
+          {
+            Optimizer->MakeStep(InvVec);
+          } catch (jif3D::FatalException &e)
+          {
+            stuck = true;
+
+          }
+        reldiff = Optimizer->GetMisfit();
+        iteration++;
+      }
+    jif3D::rvec result(ConductivityTransform->GeneralizedToPhysical(InvVec));
+    return result(1);
   }
 
 namespace po = boost::program_options;
@@ -207,6 +277,7 @@ int hpx_main(po::variables_map& vm)
     std::ofstream zyx((OutFilename + "_zyx.out").c_str());
     std::ofstream zxx((OutFilename + "_zxx.out").c_str());
     std::ofstream zyy((OutFilename + "_zyy.out").c_str());
+    std::ofstream rhofile((OutFilename + "_rho.out").c_str());
 
 #ifdef HAVEHPX
     using hpx::lcos::unique_future;
@@ -217,7 +288,7 @@ int hpx_main(po::variables_map& vm)
     Calc_action CalcImpl;
     std::vector<hpx::naming::id_type> localities = hpx::find_all_localities();
 
-    cout << "Found " << localities.size() << " localities\n ";
+    cout << "Found " << localities.size() << " localities\ " << hpx::endl;
 
     for (size_t nreal = 0; nreal < nrealmax; ++nreal)
       {
@@ -247,11 +318,14 @@ int hpx_main(po::variables_map& vm)
     for (size_t nreal = 0; nreal < nrealmax; ++nreal)
       {
 
-        jif3D::rvec Impedances = CalcRealization(Model,
-            realinfo(bg_conductivity, phase1cond, phase2cond, phase1frac, tempdir,
-                x3dname));
+        realinfo info(bg_conductivity, phase1cond, phase2cond, phase1frac, tempdir,
+            x3dname);
+        jif3D::rvec Impedances = CalcRealization(Model, info);
         jif3D::rvec Errors(Impedances.size(), 0.0);
         std::string realstring(jif3D::stringify(nreal));
+
+        double rho = InvertBlock(Model, Impedances, info);
+
 #pragma omp critical(write_files)
           {
             //RealModel.WriteNetCDF(OutFilename + realstring + ".nc");
@@ -260,6 +334,15 @@ int hpx_main(po::variables_map& vm)
             zxy << nreal << " " << Impedances(2) << " " << Impedances(3) << std::endl;
             zyx << nreal << " " << Impedances(4) << " " << Impedances(5) << std::endl;
             zyy << nreal << " " << Impedances(6) << " " << Impedances(7) << std::endl;
+            typedef std::complex<double> cd;
+            cd Zdet = std::sqrt(
+                cd(Impedances(0), Impedances(1)) * cd(Impedances(6), Impedances(7))
+                    - cd(Impedances(2), Impedances(3))
+                        * cd(Impedances(4), Impedances(5)));
+            double AppRho = jif3D::AppRes(Zdet, frequency);
+
+            rhofile << nreal << " " << rho << " " << 1.0 / AppRho << std::endl;
+
           }
       }
 
