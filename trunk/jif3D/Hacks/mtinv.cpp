@@ -238,7 +238,10 @@ int main(int argc, char *argv[])
 
     boost::shared_ptr<jif3D::RegularizationFunction> Regularization =
         RegSetup.SetupObjective(vm, Model, CovModVec);
-
+    if (RegSetup.GetSubStart())
+    {
+    	Regularization->SetReferenceModel(InvModel);
+    }
     double lambda = 1.0;
     std::cout << "Lambda: ";
     std::cin >> lambda;
