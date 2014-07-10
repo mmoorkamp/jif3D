@@ -304,7 +304,7 @@ int hpx_main(po::variables_map& vm)
 	Calc_action CalcImpl;
 	std::vector<hpx::naming::id_type> localities = hpx::find_all_localities();
 
-	cout << "Found " << localities.size() << " localities\ " << hpx::endl;
+	cout << "Found " << localities.size() << " localities " << hpx::endl;
 
 	for (size_t nreal = 0; nreal < nrealmax; ++nreal)
 	{
