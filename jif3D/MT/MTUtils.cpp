@@ -7,9 +7,7 @@
 
 #include <fstream>
 #include <boost/assign/list_of.hpp> // for 'map_list_of()'
-#include <boost/uuid/uuid.hpp>
-#include <boost/uuid/uuid_generators.hpp>
-#include <boost/uuid/uuid_io.hpp>
+
 #include "../Global/convert.h"
 #include "../Global/FatalException.h"
 #include "MTUtils.h"
@@ -26,17 +24,7 @@ namespace jif3D
 
     namespace fs = boost::filesystem;
 
-    //create a unique ID that we can use to name things and still
-    //perform parallel calculations
-    std::string ObjectID()
-      {
-        //a unique ID created on construction
-        boost::uuids::uuid tag = boost::uuids::random_generator()();
-        //make a unique filename for the sensitivity file created by this object
-        //we use boost uuid to generate a unique identifier tag
-        //and translate it to a string to generate the filename
-        return "mt" + jif3D::stringify(getpid()) + jif3D::stringify(tag);
-      }
+
 
     std::string MakeUniqueName(const std::string &NameRoot, X3DModel::ProblemType Type,
         const size_t FreqIndex)
