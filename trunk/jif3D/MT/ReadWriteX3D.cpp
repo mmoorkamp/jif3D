@@ -261,6 +261,7 @@ namespace jif3D
         outfile
             << "Binding_cell_in_Y-direction     Y-coordinate of centre of Binding cell (m) \n";
         outfile << " 1                             " << YCellSizes[0] / 2.0 << " \n";
+        outfile.flush();
         //if something went wrong during writing we throw an exception
         if (outfile.bad())
           {
@@ -313,7 +314,7 @@ namespace jif3D
         outfile << "HST\n";
         outfile << "What_Green_function_at_step_4\n";
         outfile << "HST\n";
-
+        outfile.flush();
         if (outfile.bad())
           {
             throw jif3D::FatalException("Problem writing project file.");
@@ -554,6 +555,7 @@ namespace jif3D
             //write imaginary part of z-component, we assume it is 0
             WriteGeometryInfo(outfile, maxx, maxy);
             WriteEmptyArray(outfile, maxx, maxy);
+            outfile.flush();
           }
         if (outfile.bad())
           {

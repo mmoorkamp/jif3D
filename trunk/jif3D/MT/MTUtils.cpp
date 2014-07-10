@@ -51,7 +51,7 @@ namespace jif3D
         runfile << "cd " << DirName << "\n";
         runfile << X3DName << " > /dev/null\n";
         runfile << "cd ..\n";
-        runfile.close();
+        runfile.flush();
         //we also copy the necessary *.hnk files
         //from the current directory to the work directory
         CopyHNK(fs::current_path(), DirName);
