@@ -34,7 +34,7 @@ namespace jif3D
     const std::string emaBname = resultfilename + "0b.ema";
     const std::string dirext = "_dir";
 
-    std::string ObjectID();
+
     std::string MakeUniqueName(const std::string &NameRoot, X3DModel::ProblemType Type,
         const size_t FreqIndex);
     void MakeRunFile(const std::string &NameRoot, const std::string &DirName,
