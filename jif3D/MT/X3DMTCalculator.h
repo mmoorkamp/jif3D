@@ -14,6 +14,7 @@
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
+#include "../Global/convert.h"
 #include "MT3DCalculator.h"
 #include "X3DModel.h"
 
