@@ -38,38 +38,39 @@
 #include "../Inversion/JointObjective.h"
 
 struct realinfo
-  {
-  double bg_conductivity;
-  double phase1cond;
-  double phase2cond;
-  double phase1frac;
-  std::string tempdir;
-  std::string x3dname;
+{
+	double bg_conductivity;
+	double phase1cond;
+	double phase2cond;
+	double phase1frac;
+	std::string tempdir;
+	std::string x3dname;
 
-  //! Provide serialization to be able to store objects
-  template<class Archive>
-  void serialize(Archive & ar, const unsigned int version)
-    {
-      ar & bg_conductivity;
-      ar & phase1cond;
-      ar & phase2cond;
-      ar & phase1frac;
-      ar & tempdir;
-      ar & x3dname;
-    }
-  realinfo(double bgc, double p1c, double p2c, double p1f, std::string td,
-      std::string x3d) :
-      bg_conductivity(bgc), phase1cond(p1c), phase2cond(p2c), phase1frac(p1f), tempdir(
-          td), x3dname(x3d)
-    {
+	//! Provide serialization to be able to store objects
+	template<class Archive>
+	void serialize(Archive & ar, const unsigned int version)
+	{
+		ar & bg_conductivity;
+		ar & phase1cond;
+		ar & phase2cond;
+		ar & phase1frac;
+		ar & tempdir;
+		ar & x3dname;
+	}
+	realinfo(double bgc, double p1c, double p2c, double p1f, std::string td,
+			std::string x3d) :
+			bg_conductivity(bgc), phase1cond(p1c), phase2cond(p2c), phase1frac(
+					p1f), tempdir(td), x3dname(x3d)
+	{
 
-    }
-  realinfo() :
-      bg_conductivity(-1.0), phase1cond(-1.0), phase2cond(-1.0), phase1frac(-1.0), tempdir(), x3dname()
-    {
+	}
+	realinfo() :
+			bg_conductivity(-1.0), phase1cond(-1.0), phase2cond(-1.0), phase1frac(
+					-1.0), tempdir(), x3dname()
+	{
 
-    }
-  };
+	}
+};
 
 jif3D::rvec CalcRealization(jif3D::X3DModel Model, realinfo Info);
 
@@ -78,302 +79,327 @@ HPX_PLAIN_ACTION(CalcRealization, Calc_action);
 #endif
 
 jif3D::rvec CalcRealization(jif3D::X3DModel Model, realinfo Info)
-  {
-    const size_t nx = Model.GetXCoordinates().num_elements();
-    const size_t ny = Model.GetYCoordinates().num_elements();
-    const size_t nz = Model.GetZCoordinates().num_elements();
+{
+	const size_t nx = Model.GetXCoordinates().num_elements();
+	const size_t ny = Model.GetYCoordinates().num_elements();
+	const size_t nz = Model.GetZCoordinates().num_elements();
 
-    for (size_t i = 0; i < nx; ++i)
-      {
-        for (size_t j = 0; j < ny; ++j)
-          {
-            Model.SetConductivities()[i][j][0] = Info.bg_conductivity;
-            for (size_t k = 1; k < nz; ++k)
-              {
-                if (drand48() < Info.phase1frac)
-                  {
-                    Model.SetConductivities()[i][j][k] = Info.phase1cond;
-                  }
-                else
-                  {
-                    Model.SetConductivities()[i][j][k] = Info.phase2cond;
-                  }
-              }
-          }
-      }
+	for (size_t i = 0; i < nx; ++i)
+	{
+		for (size_t j = 0; j < ny; ++j)
+		{
+			Model.SetConductivities()[i][j][0] = Info.bg_conductivity;
+			for (size_t k = 1; k < nz; ++k)
+			{
+				if (drand48() < Info.phase1frac)
+				{
+					Model.SetConductivities()[i][j][k] = Info.phase1cond;
+				}
+				else
+				{
+					Model.SetConductivities()[i][j][k] = Info.phase2cond;
+				}
+			}
+		}
+	}
 
-    jif3D::X3DMTCalculator Calculator(Info.tempdir, Info.x3dname);
-    jif3D::rvec Impedances(Calculator.Calculate(Model));
-    return Impedances;
-  }
+	jif3D::X3DMTCalculator Calculator(Info.tempdir, Info.x3dname);
+	jif3D::rvec Impedances(Calculator.Calculate(Model));
+	return Impedances;
+}
 
 double InvertBlock(jif3D::X3DModel Model, jif3D::rvec Data, realinfo Info)
-  {
-    jif3D::X3DMTCalculator Calculator(Info.tempdir, Info.x3dname, false);
-    boost::shared_ptr<jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator> > X3DObjective(
-        new jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator>(Calculator));
+{
+	jif3D::X3DMTCalculator Calculator(Info.tempdir, Info.x3dname, false);
+	boost::shared_ptr<jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator> > X3DObjective(
+			new jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator>(
+					Calculator));
 
-    X3DObjective->SetObservedData(Data);
-    jif3D::X3DModel CoarseModel;
+	X3DObjective->SetObservedData(Data);
+	jif3D::X3DModel CoarseModel;
 
-    const size_t nz = 2;
-    CoarseModel.SetMeshSize(1, 1, nz);
-    double maxx = Model.GetXCellSizes()[0] * Model.GetXCoordinates().num_elements();
-    double maxy = Model.GetYCellSizes()[0] * Model.GetYCoordinates().num_elements();
-    const size_t nzold = Model.GetZCoordinates().num_elements();
-    double maxz = Model.GetZCoordinates()[nzold - 1] + Model.GetZCellSizes()[nzold - 1];
-    std::cout << maxx << " " << maxy << " " << maxz << std::endl;
-    CoarseModel.SetHorizontalCellSize(maxx, maxy, 1, 1);
-    CoarseModel.SetZCellSizes()[0] = Model.GetZCellSizes()[0];
-    CoarseModel.SetZCellSizes()[1] = maxz - Model.GetZCellSizes()[0];
-    CoarseModel.SetBackgroundConductivities(Model.GetBackgroundConductivities());
-    CoarseModel.SetBackgroundThicknesses(Model.GetBackgroundConductivities());
-    CoarseModel.CopyMeasurementConfigurations(Model);
+	const size_t nz = 2;
+	CoarseModel.SetMeshSize(1, 1, nz);
+	double maxx = Model.GetXCellSizes()[0]
+			* Model.GetXCoordinates().num_elements();
+	double maxy = Model.GetYCellSizes()[0]
+			* Model.GetYCoordinates().num_elements();
+	const size_t nzold = Model.GetZCoordinates().num_elements();
+	double maxz = Model.GetZCoordinates()[nzold - 1]
+			+ Model.GetZCellSizes()[nzold - 1];
+	CoarseModel.SetHorizontalCellSize(maxx, maxy, 1, 1);
+	CoarseModel.SetZCellSizes()[0] = Model.GetZCellSizes()[0];
+	CoarseModel.SetZCellSizes()[1] = maxz - Model.GetZCellSizes()[0];
+	CoarseModel.SetBackgroundConductivities(
+			Model.GetBackgroundConductivities());
+	CoarseModel.SetBackgroundThicknesses(Model.GetBackgroundConductivities());
+	CoarseModel.CopyMeasurementConfigurations(Model);
 
-    jif3D::rvec InvVec(2, CoarseModel.GetBackgroundConductivities()[0] * 1.01);
+	jif3D::rvec InvVec(2, CoarseModel.GetBackgroundConductivities()[0] * 1.01);
 
-    X3DObjective->SetCoarseModelGeometry(CoarseModel);
-    X3DObjective->SetFineModelGeometry(Model);
-    jif3D::rvec Error(jif3D::ConstructMTError(Data, 0.001));
-    X3DObjective->SetDataError(Error);
+	typedef std::complex<double> cd;
+	cd Zdet = std::sqrt(
+			cd(Data(0), Data(1)) * cd(Data(6), Data(7))
+					- cd(Data(2), Data(3)) * cd(Data(4), Data(5)));
+	double AppRho = jif3D::AppRes(Zdet, Model.GetFrequencies()[0]);
 
-    boost::shared_ptr<jif3D::JointObjective> Joint(new jif3D::JointObjective);
-    jif3D::rvec RefModel(Data.size(), 1.0);
-    boost::shared_ptr<jif3D::GeneralModelTransform> ConductivityTransform(
-        new jif3D::LogTransform(RefModel));
-    InvVec = ConductivityTransform->PhysicalToGeneralized(InvVec);
-    Joint->AddObjective(X3DObjective, ConductivityTransform);
-    boost::shared_ptr<jif3D::GradientBasedOptimization> Optimizer(
-        new jif3D::LimitedMemoryQuasiNewton(Joint, 5));
-    jif3D::rvec CovVec(nz);
-    CovVec(0) = 1e-15;
-    CovVec(1) = 1.0;
-    Optimizer->SetModelCovDiag(CovVec);
-    size_t iteration = 0;
-    const size_t maxiter = 10;
-    double reldiff = 1.0e20;
+	InvVec(1) = 1.0 / AppRho;
+	X3DObjective->SetCoarseModelGeometry(CoarseModel);
+	X3DObjective->SetFineModelGeometry(Model);
+	jif3D::rvec Error(jif3D::ConstructMTError(Data, 0.001));
+	X3DObjective->SetDataError(Error);
 
-    bool stuck = false;
-    while (iteration < maxiter && reldiff > 8 && !stuck)
-      {
-        try
-          {
-            Optimizer->MakeStep(InvVec);
-          } catch (jif3D::FatalException &e)
-          {
-            stuck = true;
+	boost::shared_ptr<jif3D::JointObjective> Joint(
+			new jif3D::JointObjective(false));
+	jif3D::rvec RefModel(Data.size(), 1.0);
+	boost::shared_ptr<jif3D::GeneralModelTransform> ConductivityTransform(
+			new jif3D::LogTransform(RefModel));
+	jif3D::rvec LogVec = ConductivityTransform->PhysicalToGeneralized(InvVec);
+	Joint->AddObjective(X3DObjective, ConductivityTransform);
 
-          }
-        reldiff = Optimizer->GetMisfit();
-        iteration++;
-      }
-    jif3D::rvec result(ConductivityTransform->GeneralizedToPhysical(InvVec));
-    return result(1);
-  }
+	double chi = 1e10;
+	double cond = 1.0;
+	size_t iteration = 0;
+	while (chi > 100 && iteration < 5)
+	{
+		chi = Joint->CalcMisfit(LogVec);
+		if (chi > 100)
+		{
+			jif3D::rvec Synth1(X3DObjective->GetDataDifference());
+
+			double delta = 0.01;
+			jif3D::rvec PertVec(LogVec);
+			PertVec(1) += delta;
+			Joint->CalcMisfit(PertVec);
+			jif3D::rvec Synth2(X3DObjective->GetDataDifference());
+			jif3D::rvec J = (Synth2 - Synth1) / delta;
+			double y = ublas::inner_prod(J, Synth1);
+
+			double JtJ = ublas::inner_prod(J, J);
+			cond = LogVec(1) - y / JtJ;
+			InvVec(1) = exp(cond);
+			LogVec(1) = cond;
+			iteration++;
+		}
+	}
+	return InvVec(1);
+}
 
 namespace po = boost::program_options;
 
 int hpx_main(po::variables_map& vm)
-  {
+{
 #ifdef HAVEHPX
-    using hpx::cout;
+	using hpx::cout;
 #else
-    using std::cout;
+	using std::cout;
 #endif
 
-    using std::cin;
+	using std::cin;
 
 #ifdef HAVEOPENMP
-    if (vm.count("threads"))
-      {
-        omp_set_num_threads(vm["threads"].as<int>());
-      }
+	if (vm.count("threads"))
+	{
+		omp_set_num_threads(vm["threads"].as<int>());
+	}
 #endif
 
-    double topthick = -1.0;
-    std::string x3dname("x3d");
-    std::string tempdir;
+	double topthick = -1.0;
+	std::string x3dname("x3d");
+	std::string tempdir;
 
-    if (vm.count("topthick"))
-      {
-        topthick = vm["topthick"].as<double>();
-      }
+	if (vm.count("topthick"))
+	{
+		topthick = vm["topthick"].as<double>();
+	}
 
-    if (vm.count("tempdir"))
-      {
-        tempdir = vm["tempdir"].as<std::string>();
-      }
-    else
-      {
-        tempdir = boost::filesystem::current_path().native();
-      }
+	if (vm.count("tempdir"))
+	{
+		tempdir = vm["tempdir"].as<std::string>();
+	}
+	else
+	{
+		tempdir = boost::filesystem::current_path().native();
+	}
 
-    if (vm.count("x3dname"))
-      {
-        x3dname = vm["x3dname"].as<std::string>();
-      }
-    jif3D::X3DModel Model;
-    size_t nx, ny, nz;
-    double deltax, deltay, deltaz;
-    //first find out the basic mesh parameters
-    //the number of cells in each coordinate direction
-    cout << "Number of cells Nx: ";
-    cin >> nx;
-    cout << "Number of cells Ny: ";
-    cin >> ny;
-    cout << "Number of cells Nz: ";
-    cin >> nz;
-    //and the size of the cells in each direction
-    cout << "Cell size x [m]: ";
-    cin >> deltax;
-    cout << "Cell size y [m]: ";
-    cin >> deltay;
-    cout << "Cell size z [m]: ";
-    cin >> deltaz;
-    //set the cell sizes and allocate memory for the mesh
-    Model.SetMeshSize(nx, ny, nz);
-    Model.SetHorizontalCellSize(deltax, deltay, nx, ny);
-    std::fill_n(Model.SetZCellSizes().begin(), nz, deltaz);
-    if (topthick > 0.0)
-      {
-        Model.SetZCellSizes()[0] = topthick;
-      }
-    //ask for a conductivity to fill the mesh with
-    double bg_conductivity = 1.0;
-    cout << "Background Conductivity [S/m] : ";
-    cin >> bg_conductivity;
-    double phase1cond, phase2cond, phase1frac;
-    cout << "Conductivity Phase 1 [S/m] : ";
-    cin >> phase1cond;
-    cout << "Conductivity Phase 2 [S/m] : ";
-    cin >> phase2cond;
-    cout << "Fraction Phase 1: ";
-    cin >> phase1frac;
-    srand48(time(0));
-    double frequency;
-    cout << "Frequency [Hz] : ";
-    cin >> frequency;
-    double posx, posy, posz = 0;
-    posx = (deltax * nx) / 2.0;
-    posy = (deltay * ny) / 2.0;
-    Model.SetFrequencies().assign(1, frequency);
-    Model.AddMeasurementPoint(posx, posy, posz);
+	if (vm.count("x3dname"))
+	{
+		x3dname = vm["x3dname"].as<std::string>();
+	}
+	jif3D::X3DModel Model;
+	size_t nx, ny, nz;
+	double deltax, deltay, deltaz;
+	//first find out the basic mesh parameters
+	//the number of cells in each coordinate direction
+	cout << "Number of cells Nx: ";
+	cin >> nx;
+	cout << "Number of cells Ny: ";
+	cin >> ny;
+	cout << "Number of cells Nz: ";
+	cin >> nz;
+	//and the size of the cells in each direction
+	cout << "Cell size x [m]: ";
+	cin >> deltax;
+	cout << "Cell size y [m]: ";
+	cin >> deltay;
+	cout << "Cell size z [m]: ";
+	cin >> deltaz;
+	//set the cell sizes and allocate memory for the mesh
+	Model.SetMeshSize(nx, ny, nz);
+	Model.SetHorizontalCellSize(deltax, deltay, nx, ny);
+	std::fill_n(Model.SetZCellSizes().begin(), nz, deltaz);
+	if (topthick > 0.0)
+	{
+		Model.SetZCellSizes()[0] = topthick;
+	}
+	//ask for a conductivity to fill the mesh with
+	double bg_conductivity = 1.0;
+	cout << "Background Conductivity [S/m] : ";
+	cin >> bg_conductivity;
+	double phase1cond, phase2cond, phase1frac;
+	cout << "Conductivity Phase 1 [S/m] : ";
+	cin >> phase1cond;
+	cout << "Conductivity Phase 2 [S/m] : ";
+	cin >> phase2cond;
+	cout << "Fraction Phase 1: ";
+	cin >> phase1frac;
+	srand48(time(0));
+	double frequency;
+	cout << "Frequency [Hz] : ";
+	cin >> frequency;
+	double posx, posy, posz = 0;
+	posx = (deltax * nx) / 2.0;
+	posy = (deltay * ny) / 2.0;
+	Model.SetFrequencies().assign(1, frequency);
+	Model.AddMeasurementPoint(posx, posy, posz);
 
-    //ask for a filename to write the mesh to
-    std::string OutFilename = jif3D::AskFilename("Outfile name: ", false);
+	//ask for a filename to write the mesh to
+	std::string OutFilename = jif3D::AskFilename("Outfile name: ", false);
 
-    //fill the background
-    std::vector<double> bg_thicknesses(Model.GetZCellSizes().size(), deltaz);
-    std::vector<double> bg_conductivities(Model.GetZCellSizes().size(), bg_conductivity);
-    Model.SetBackgroundThicknesses(bg_thicknesses);
-    Model.SetBackgroundConductivities(bg_conductivities);
-    size_t nrealmax;
-    cout << "Realizations: ";
-    cin >> nrealmax;
+	//fill the background
+	std::vector<double> bg_thicknesses(Model.GetZCellSizes().size(), deltaz);
+	std::vector<double> bg_conductivities(Model.GetZCellSizes().size(),
+			bg_conductivity);
+	Model.SetBackgroundThicknesses(bg_thicknesses);
+	Model.SetBackgroundConductivities(bg_conductivities);
+	size_t nrealmax;
+	cout << "Realizations: ";
+	cin >> nrealmax;
 
-    boost::posix_time::ptime starttime = boost::posix_time::microsec_clock::local_time();
+	boost::posix_time::ptime starttime =
+			boost::posix_time::microsec_clock::local_time();
 
-    std::ofstream zxy((OutFilename + "_zxy.out").c_str());
-    std::ofstream zyx((OutFilename + "_zyx.out").c_str());
-    std::ofstream zxx((OutFilename + "_zxx.out").c_str());
-    std::ofstream zyy((OutFilename + "_zyy.out").c_str());
-    std::ofstream rhofile((OutFilename + "_rho.out").c_str());
+	std::ofstream zxy((OutFilename + "_zxy.out").c_str());
+	std::ofstream zyx((OutFilename + "_zyx.out").c_str());
+	std::ofstream zxx((OutFilename + "_zxx.out").c_str());
+	std::ofstream zyy((OutFilename + "_zyy.out").c_str());
+	std::ofstream rhofile((OutFilename + "_rho.out").c_str());
 
 #ifdef HAVEHPX
-    using hpx::lcos::unique_future;
-    using hpx::async;
-    using hpx::wait_all;
-    std::vector<unique_future<jif3D::rvec> > ImplResult;
-    ImplResult.reserve(nrealmax);
-    Calc_action CalcImpl;
-    std::vector<hpx::naming::id_type> localities = hpx::find_all_localities();
+	using hpx::lcos::unique_future;
+	using hpx::async;
+	using hpx::wait_all;
+	std::vector<unique_future<jif3D::rvec> > ImplResult;
+	ImplResult.reserve(nrealmax);
+	Calc_action CalcImpl;
+	std::vector<hpx::naming::id_type> localities = hpx::find_all_localities();
 
-    cout << "Found " << localities.size() << " localities\ " << hpx::endl;
+	cout << "Found " << localities.size() << " localities\ " << hpx::endl;
 
-    for (size_t nreal = 0; nreal < nrealmax; ++nreal)
-      {
-        hpx::naming::id_type const locality_id = localities.at(nreal % localities.size());
-        ImplResult.push_back(
-            async(CalcImpl, locality_id, Model, realinfo(bg_conductivity, phase1cond, phase2cond,
-                    phase1frac, tempdir, x3dname)));
-      }
-    wait_all(ImplResult);
+	for (size_t nreal = 0; nreal < nrealmax; ++nreal)
+	{
+		hpx::naming::id_type const locality_id = localities.at(nreal % localities.size());
+		ImplResult.push_back(
+				async(CalcImpl, locality_id, Model, realinfo(bg_conductivity, phase1cond, phase2cond,
+								phase1frac, tempdir, x3dname)));
+	}
+	wait_all(ImplResult);
 
-    for (size_t nreal = 0; nreal < nrealmax; ++nreal)
-      {
-        jif3D::rvec Impedances = ImplResult[nreal].get();
-        std::string realstring(jif3D::stringify(nreal));
-        zxx << nreal << " " << Impedances(0) << " " << Impedances(1) << std::endl;
-        zxy << nreal << " " << Impedances(2) << " " << Impedances(3) << std::endl;
-        zyx << nreal << " " << Impedances(4) << " " << Impedances(5) << std::endl;
-        zyy << nreal << " " << Impedances(6) << " " << Impedances(7) << std::endl;
+	for (size_t nreal = 0; nreal < nrealmax; ++nreal)
+	{
+		jif3D::rvec Impedances = ImplResult[nreal].get();
+		std::string realstring(jif3D::stringify(nreal));
+		zxx << nreal << " " << Impedances(0) << " " << Impedances(1) << std::endl;
+		zxy << nreal << " " << Impedances(2) << " " << Impedances(3) << std::endl;
+		zyx << nreal << " " << Impedances(4) << " " << Impedances(5) << std::endl;
+		zyy << nreal << " " << Impedances(6) << " " << Impedances(7) << std::endl;
 
-      }
-    boost::posix_time::ptime endtime = boost::posix_time::microsec_clock::local_time();
-    double runtime = (endtime - starttime).total_seconds();
-    cout << "Runtime: " << runtime << " s" << hpx::endl;
-    return hpx::finalize();
+	}
+	boost::posix_time::ptime endtime = boost::posix_time::microsec_clock::local_time();
+	double runtime = (endtime - starttime).total_seconds();
+	cout << "Runtime: " << runtime << " s" << hpx::endl;
+	return hpx::finalize();
 #else
 #pragma omp parallel for shared(Model, zxy, zyx, zxx, zyy)
-    for (size_t nreal = 0; nreal < nrealmax; ++nreal)
-      {
+	for (size_t nreal = 0; nreal < nrealmax; ++nreal)
+	{
 
-        realinfo info(bg_conductivity, phase1cond, phase2cond, phase1frac, tempdir,
-            x3dname);
-        jif3D::rvec Impedances = CalcRealization(Model, info);
-        jif3D::rvec Errors(Impedances.size(), 0.0);
-        std::string realstring(jif3D::stringify(nreal));
+		realinfo info(bg_conductivity, phase1cond, phase2cond, phase1frac,
+				tempdir, x3dname);
+		jif3D::rvec Impedances = CalcRealization(Model, info);
+		jif3D::rvec Errors(Impedances.size(), 0.0);
+		std::string realstring(jif3D::stringify(nreal));
 
-        double rho = InvertBlock(Model, Impedances, info);
+		double rho = InvertBlock(Model, Impedances, info);
 
 #pragma omp critical(write_files)
-          {
-            //RealModel.WriteNetCDF(OutFilename + realstring + ".nc");
-            //RealModel.WriteVTK(OutFilename + realstring + ".vtk");
-            zxx << nreal << " " << Impedances(0) << " " << Impedances(1) << std::endl;
-            zxy << nreal << " " << Impedances(2) << " " << Impedances(3) << std::endl;
-            zyx << nreal << " " << Impedances(4) << " " << Impedances(5) << std::endl;
-            zyy << nreal << " " << Impedances(6) << " " << Impedances(7) << std::endl;
-            typedef std::complex<double> cd;
-            cd Zdet = std::sqrt(
-                cd(Impedances(0), Impedances(1)) * cd(Impedances(6), Impedances(7))
-                    - cd(Impedances(2), Impedances(3))
-                        * cd(Impedances(4), Impedances(5)));
-            double AppRho = jif3D::AppRes(Zdet, frequency);
+		{
+			//RealModel.WriteNetCDF(OutFilename + realstring + ".nc");
+			//RealModel.WriteVTK(OutFilename + realstring + ".vtk");
+			zxx << nreal << " " << Impedances(0) << " " << Impedances(1)
+					<< std::endl;
+			zxy << nreal << " " << Impedances(2) << " " << Impedances(3)
+					<< std::endl;
+			zyx << nreal << " " << Impedances(4) << " " << Impedances(5)
+					<< std::endl;
+			zyy << nreal << " " << Impedances(6) << " " << Impedances(7)
+					<< std::endl;
+			typedef std::complex<double> cd;
+			cd Zdet = std::sqrt(
+					cd(Impedances(0), Impedances(1))
+							* cd(Impedances(6), Impedances(7))
+							- cd(Impedances(2), Impedances(3))
+									* cd(Impedances(4), Impedances(5)));
+			double AppRho = jif3D::AppRes(Zdet, frequency);
 
-            rhofile << nreal << " " << rho << " " << 1.0 / AppRho << std::endl;
+			rhofile << nreal << " " << rho << " " << 1.0 / AppRho << std::endl;
 
-          }
-      }
+		}
+	}
 
-    boost::posix_time::ptime endtime = boost::posix_time::microsec_clock::local_time();
-    double runtime = (endtime - starttime).total_seconds();
-    cout << "Runtime: " << runtime << " s\n";
-    return 0;
+	boost::posix_time::ptime endtime =
+			boost::posix_time::microsec_clock::local_time();
+	double runtime = (endtime - starttime).total_seconds();
+	cout << "Runtime: " << runtime << " s\n";
+	return 0;
 #endif
-  }
+}
 
 int main(int argc, char* argv[])
-  {
-    po::options_description desc("General options");
-    desc.add_options()("help", "produce help message")("threads", po::value<int>(),
-        "The number of openmp threads")("topthick", po::value<double>(),
-        "Thickness of the top layer in m, if <= 0.0 the thickness will be the same as the z dimension of the other grid cells.")(
-        "x3dname", po::value<std::string>(), "The name of the executable for x3d")(
-        "tempdir", po::value<std::string>(),
-        "The name of the directory where we store files for forward calculation");
+{
+	po::options_description desc("General options");
+	desc.add_options()("help", "produce help message")("threads",
+			po::value<int>(), "The number of openmp threads")(
+			"topthick",
+			po::value<double>(),
+			"Thickness of the top layer in m, if <= 0.0 the thickness will be the same as the z dimension of the other grid cells.")(
+			"x3dname", po::value<std::string>(),
+			"The name of the executable for x3d")(
+			"tempdir",
+			po::value<std::string>(),
+			"The name of the directory where we store files for forward calculation");
 #ifdef HAVEHPX
-    return hpx::init(desc, argc, argv);
+	return hpx::init(desc, argc, argv);
 #else
-    po::variables_map vm;
-    po::store(po::parse_command_line(argc, argv, desc), vm);
-    po::notify(vm);
+	po::variables_map vm;
+	po::store(po::parse_command_line(argc, argv, desc), vm);
+	po::notify(vm);
 
-    if (vm.count("help"))
-      {
-        std::cout << desc << "\n";
-        return 1;
-      }
-    return hpx_main(vm);
+	if (vm.count("help"))
+	{
+		std::cout << desc << "\n";
+		return 1;
+	}
+	return hpx_main(vm);
 #endif
-  }
+}
