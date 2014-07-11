@@ -48,6 +48,7 @@ namespace jif3D
         std::ofstream runfile;
         runfile.open(RunFileName.c_str());
         runfile << "#!/bin/bash\n";
+        runfile << " echo ""Executing: $BASH_SOURCE""\n ";
         runfile << "cd " << DirName << "\n";
         runfile << X3DName << " > /dev/null\n";
         runfile << "cd ..\n";
