@@ -121,6 +121,10 @@ namespace jif3D
     	{
             throw FatalException("Cannot find run script: " + runname);
     	}
+    	else
+    	{
+    		std::cout << "Run script: " << runname << " exists " << std::endl;
+    	}
         //instead of making the script executable
         //we run a bash with the scriptname as an argument
         //this turns out to be more robust
