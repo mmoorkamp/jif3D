@@ -62,7 +62,7 @@ namespace jif3D
       //! The impedances from the last forward calculation without any distortion correction
       rvec RawImpedance;
       friend class boost::serialization::access;
-      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      //! Provide serialization to be able to store objects and, more importantly for hpx parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
         {
