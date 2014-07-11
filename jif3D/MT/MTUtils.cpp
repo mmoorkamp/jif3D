@@ -111,14 +111,24 @@ namespace jif3D
 //execute the script that runs x3d
     void RunX3D(const std::string &NameRoot)
       {
+    	const std::string runname =  NameRoot + runext;
+    	int tries = 0;
+    	while (!fs::exists(runname) && tries < 10)
+    	{
+    		++tries;
+    	}
+    	if (tries >= 10)
+    	{
+            throw FatalException("Cannot find run script: " + runname);
+    	}
         //instead of making the script executable
         //we run a bash with the scriptname as an argument
         //this turns out to be more robust
-        const std::string runname = "bash " + NameRoot + runext;
+        const std::string execname = "bash " + runname;
         //it is important to include the std:: namespace specification
         //for the system call, otherwise the GNU compiler picks up
         //a version from the c library that gives trouble in threaded environments
-        if (std::system(runname.c_str()))
+        if (std::system(execname.c_str()))
           throw FatalException("Cannot execute run script: " + runname);
       }
 
