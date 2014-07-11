@@ -28,7 +28,7 @@ namespace jif3D
       /*!< Seismic Velocity parameters*/
       std::vector<float> slow; /*!< Slowness model used for the forward model (normalized by the grid cell size)*/
       friend class boost::serialization::access;
-      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      //! Provide serialization to be able to store objects and, more importantly for hpx parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
         {
@@ -57,7 +57,7 @@ namespace jif3D
       std::size_t nshot; /*!< Number of shot positions*/
       std::size_t nrec; /*!< Number of receiver positions*/
       friend class boost::serialization::access;
-      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      //! Provide serialization to be able to store objects and, more importantly for hpx parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
         {

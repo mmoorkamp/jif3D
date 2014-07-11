@@ -172,7 +172,7 @@ namespace jif3D
               }
             geo_tmp.nshot = count;
 
-            hpx::naming::id_type const locality_id = hpx::find_here(); // localities.at(i % localities.size());
+            hpx::naming::id_type const locality_id = localities.at(i % localities.size());
             ShotResult.push_back(async(ForwardModShot, locality_id, i, geo_tmp, grid));
           }
         wait_all(ShotResult);

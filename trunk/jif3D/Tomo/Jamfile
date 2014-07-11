@@ -9,6 +9,7 @@ lib tomo :  modeling_seismic.cpp ThreeDSeismicModel.cpp TomographyCalculator.cpp
              
 
 unit-test seismic_test :  test_modeling_seismic.cpp tomo ../ModelBase//modelbase  ;
+unit-test tomo_types_test :  test_tomo_types.cpp ..//boost_serialization ..//boost_system ;
 #unit-test tomo_objective_test :  test_tomo_objective.cpp tomo ../ModelBase//modelbase  ../Inversion  ;
 
 exe makeseismesh : makeseismesh.cpp tomo  core :  ;
