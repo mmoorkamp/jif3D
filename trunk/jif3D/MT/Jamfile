@@ -6,9 +6,9 @@ lib mt : ReadWriteX3D.cpp ReadWriteImpedances.cpp
          MT3DCalculator.cpp X3DMTCalculator.cpp
          OneDMTCalculator.cpp InterpolateField.cpp
          MTCovar.cpp MTUtils.cpp X3DFreqFunctions.cpp
-         ../ModelBase//modelbase  ..//boost_filesystem ..//boost_system ;
+         ../ModelBase//modelbase  ..//boost_filesystem ..//boost_system ..//boost_log ..//boost_iostreams ;
 
-alias linkcommon : mt ../ModelBase//modelbase  ..//boost_filesystem ..//boost_system ; 
+alias linkcommon : mt ../ModelBase//modelbase  ..//boost_filesystem ..//boost_system ..//boost_log ; 
 
 # switched off unit-test 2DMT_test : test_Tarits2DMT.cpp   linkcommon ../Inversion//inversion   ;
 unit-test RWX3D_test : test_ReadWriteX3D.cpp   linkcommon ../Inversion//inversion  ;
