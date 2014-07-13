@@ -11,6 +11,8 @@
 #include <algorithm>
 #include <boost/filesystem.hpp>
 #include <boost/multi_array/index_range.hpp>
+#include <boost/iostreams/stream.hpp>
+#include <boost/iostreams/device/file_descriptor.hpp>
 #include "../Global/FileUtil.h"
 #include "../Global/FatalException.h"
 #include "../Global/convert.h"
@@ -144,7 +146,7 @@ namespace jif3D
         const std::vector<double> &bg_thicknesses, bool Dipole)
       {
         assert(bg_conductivities.size() == bg_thicknesses.size());
-        std::ofstream outfile(filename.c_str());
+        boost::iostreams::stream<boost::iostreams::file_descriptor_sink> outfile(filename.c_str());
         //write out some header information
         outfile << "Version_of_X3D code (yyyy-mm-dd)\n";
         outfile << "2006-06-06\n\n";
@@ -261,7 +263,11 @@ namespace jif3D
         outfile
             << "Binding_cell_in_Y-direction     Y-coordinate of centre of Binding cell (m) \n";
         outfile << " 1                             " << YCellSizes[0] / 2.0 << " \n";
-        outfile.flush();
+        if (outfile.rdbuf())
+        {
+        	outfile.rdbuf()->pubsync();
+        }
+        ::fdatasync(outfile->handle());
         //if something went wrong during writing we throw an exception
         if (outfile.bad())
           {
@@ -276,7 +282,7 @@ namespace jif3D
         const size_t nfreq = Frequencies.size();
         //the filename is always a.project
         std::string filename = (RootDir / "a.project").string();
-        std::ofstream outfile(filename.c_str());
+        boost::iostreams::stream<boost::iostreams::file_descriptor_sink> outfile(filename.c_str());
         //write out some information that x3d expects
         outfile << "  Version_of_X3D code (yyyy-mm-dd)\n";
         outfile << "  2006-06-06\n\n";
@@ -314,7 +320,11 @@ namespace jif3D
         outfile << "HST\n";
         outfile << "What_Green_function_at_step_4\n";
         outfile << "HST\n";
-        outfile.flush();
+        if (outfile.rdbuf())
+        {
+        	outfile.rdbuf()->pubsync();
+        }
+        ::fdatasync(outfile->handle());
         if (outfile.bad())
           {
             throw jif3D::FatalException("Problem writing project file.");
@@ -421,7 +431,7 @@ namespace jif3D
         Ez = ResortFields(Ez, ncellsx, ncellsy, ncellsz);
       }
 
-    void WriteSourceComp(std::ofstream &outfile,
+    void WriteSourceComp(boost::iostreams::stream<boost::iostreams::file_descriptor_sink> &outfile,
         const boost::multi_array<double, 2> &Moments)
       {
         const size_t nx = Moments.shape()[0];
@@ -448,7 +458,7 @@ namespace jif3D
         //finished writing out all moments
       }
 
-    void WriteGeometryInfo(std::ofstream &outfile, const size_t endx, const size_t endy)
+    void WriteGeometryInfo(boost::iostreams::stream<boost::iostreams::file_descriptor_sink>  &outfile, const size_t endx, const size_t endy)
       {
         outfile << " Scale  ( the ARRAY will be multiplied by this Scale ) \n 1.0 \n\n";
         outfile << "First and last cells in X-direction \n";
@@ -457,7 +467,7 @@ namespace jif3D
         outfile << " 1  " << endy << "\n\n";
       }
 
-    void WriteEmptyArray(std::ofstream &outfile, const size_t XSize, const size_t YSize)
+    void WriteEmptyArray(boost::iostreams::stream<boost::iostreams::file_descriptor_sink>  &outfile, const size_t XSize, const size_t YSize)
       {
         outfile << "ARRAY\n";
         outfile << YSize << "Lines: " << XSize << "*0.\n";
@@ -492,7 +502,7 @@ namespace jif3D
         size_t ndepths = ZIndices.size();
         //write out the required header for the source file
         //x3d is very picky about this
-        std::ofstream outfile(filename.c_str());
+        boost::iostreams::stream<boost::iostreams::file_descriptor_sink> outfile(filename.c_str());
         outfile << "  Version_of_X3D code (yyyy-mm-dd)\n";
         outfile << "  2006-06-06\n\n";
         outfile
@@ -555,8 +565,12 @@ namespace jif3D
             //write imaginary part of z-component, we assume it is 0
             WriteGeometryInfo(outfile, maxx, maxy);
             WriteEmptyArray(outfile, maxx, maxy);
-            outfile.flush();
           }
+        if (outfile.rdbuf())
+        {
+        	outfile.rdbuf()->pubsync();
+        }
+        ::fdatasync(outfile->handle());
         if (outfile.bad())
           {
             throw jif3D::FatalException("Problem writing source file.");

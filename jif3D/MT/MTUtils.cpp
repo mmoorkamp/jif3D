@@ -6,7 +6,10 @@
 //============================================================================
 
 #include <fstream>
+#include <boost/iostreams/stream.hpp>
+#include <boost/iostreams/device/file_descriptor.hpp>
 #include <boost/assign/list_of.hpp> // for 'map_list_of()'
+#include <boost/log/trivial.hpp>
 
 #include "../Global/convert.h"
 #include "../Global/FatalException.h"
@@ -45,14 +48,17 @@ namespace jif3D
       {
         std::string RunFileName = NameRoot + runext;
         fs::create_directory(DirName);
-        std::ofstream runfile;
-        runfile.open(RunFileName.c_str());
+        boost::iostreams::stream<boost::iostreams::file_descriptor_sink> runfile(RunFileName.c_str());
         runfile << "#!/bin/bash\n";
         runfile << " echo ""Executing: $BASH_SOURCE""\n ";
         runfile << "cd " << DirName << "\n";
         runfile << X3DName << " > /dev/null\n";
         runfile << "cd ..\n";
-        runfile.flush();
+        if (runfile.rdbuf())
+        {
+            runfile.rdbuf()->pubsync();
+        }
+        ::fdatasync(runfile->handle());
         //we also copy the necessary *.hnk files
         //from the current directory to the work directory
         CopyHNK(fs::current_path(), DirName);
@@ -124,7 +130,7 @@ namespace jif3D
     	}
     	else
     	{
-    		std::cout << "Run script: " << runname << " exists " << std::endl;
+    		BOOST_LOG_TRIVIAL(debug) << "Run script: " << runname << " exists " << std::endl;
     	}
         //instead of making the script executable
         //we run a bash with the scriptname as an argument
