@@ -10,6 +10,8 @@
 #include <boost/iostreams/device/file_descriptor.hpp>
 #include <boost/assign/list_of.hpp> // for 'map_list_of()'
 #include <boost/log/trivial.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/process.hpp>
 
 #include "../Global/convert.h"
 #include "../Global/FatalException.h"
@@ -26,8 +28,6 @@ namespace jif3D
             X3DModel::MDIP, "MDIP");
 
     namespace fs = boost::filesystem;
-
-
 
     std::string MakeUniqueName(const std::string &NameRoot, X3DModel::ProblemType Type,
         const size_t FreqIndex)
@@ -48,16 +48,17 @@ namespace jif3D
       {
         std::string RunFileName = NameRoot + runext;
         fs::create_directory(DirName);
-        boost::iostreams::stream<boost::iostreams::file_descriptor_sink> runfile(RunFileName.c_str());
+        boost::iostreams::stream<boost::iostreams::file_descriptor_sink> runfile(
+            RunFileName.c_str());
         runfile << "#!/bin/bash\n";
-        runfile << " echo ""Executing: $BASH_SOURCE""\n ";
+        runfile << " echo " "Executing: $BASH_SOURCE" "\n ";
         runfile << "cd " << DirName << "\n";
-        runfile << X3DName << " > /dev/null\n";
+        runfile << X3DName << " \n";
         runfile << "cd ..\n";
         if (runfile.rdbuf())
-        {
+          {
             runfile.rdbuf()->pubsync();
-        }
+          }
         ::fdatasync(runfile->handle());
         //we also copy the necessary *.hnk files
         //from the current directory to the work directory
@@ -118,30 +119,59 @@ namespace jif3D
 //execute the script that runs x3d
     void RunX3D(const std::string &NameRoot)
       {
-    	const std::string runname =  NameRoot + runext;
-    	int tries = 0;
-    	while (!fs::exists(runname) && tries < 10)
-    	{
-    		++tries;
-    	}
-    	if (tries >= 10)
-    	{
+        const std::string runname = NameRoot + runext;
+        int tries = 0;
+        while (!fs::exists(runname) && tries < 10)
+          {
+            ++tries;
+          }
+        if (tries >= 10)
+          {
             throw FatalException("Cannot find run script: " + runname);
-    	}
-    	else
-    	{
-    		BOOST_LOG_TRIVIAL(debug) << "Run script: " << runname << " exists " << std::endl;
-    	}
+          }
+        else
+          {
+            BOOST_LOG_TRIVIAL(debug)<< "Run script: " << runname << " exists " << std::endl;
+          }
         //instead of making the script executable
         //we run a bash with the scriptname as an argument
         //this turns out to be more robust
-        const std::string execname = "bash " + runname;
-        //it is important to include the std:: namespace specification
-        //for the system call, otherwise the GNU compiler picks up
-        //a version from the c library that gives trouble in threaded environments
-        if (std::system(execname.c_str()))
-          throw FatalException("Cannot execute run script: " + runname);
-      }
+        namespace bp = ::boost::process;
+        const std::string execname = bp::find_executable_in_path("bash");
+        std::vector<std::string> args;
+        args.push_back("bash");
+        args.push_back(runname);
+
+        bp::context ctx;
+        ctx.stdout_behavior = bp::capture_stream();
+        ctx.environment = bp::self::get_environment();
+
+        bp::child c = bp::launch(execname, args, ctx);
+        bp::pistream &is = c.get_stdout();
+        std::string line;
+        while (std::getline(is, line))
+          BOOST_LOG_TRIVIAL(debug)<< line << std::endl;
+
+        bp::posix_status s = c.wait();
+        if (s.exited())
+          BOOST_LOG_TRIVIAL(debug)<< "Program returned exit code " << s.exit_status() << std::endl;
+          else if (s.signaled())
+            {
+              BOOST_LOG_TRIVIAL(debug) << "Program received signal " << s.term_signal() << std::endl;
+              if (s.dumped_core())
+              BOOST_LOG_TRIVIAL(debug) << "Program also dumped core" << std::endl;
+            }
+          else if (s.stopped())
+          BOOST_LOG_TRIVIAL(debug) << "Program stopped by signal " << s.stop_signal() << std::endl;
+          else
+          BOOST_LOG_TRIVIAL(debug) << "Unknown termination reason" << std::endl;
+
+          //it is important to include the std:: namespace specification
+          //for the system call, otherwise the GNU compiler picks up
+          //a version from the c library that gives trouble in threaded environments
+          //if (std::system(execname.c_str()))
+          // throw FatalException("Cannot execute run script: " + runname);
+        }
 
     jif3D::rvec AdaptDist(const std::vector<double> &C, const jif3D::rvec &RawImpedance,
         const jif3D::rvec &Misfit)
