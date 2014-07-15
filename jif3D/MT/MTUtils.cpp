@@ -11,7 +11,6 @@
 #include <boost/assign/list_of.hpp> // for 'map_list_of()'
 #include <boost/log/trivial.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/process.hpp>
 
 #include "../Global/convert.h"
 #include "../Global/FatalException.h"
@@ -136,7 +135,8 @@ namespace jif3D
         //instead of making the script executable
         //we run a bash with the scriptname as an argument
         //this turns out to be more robust
-        namespace bp = ::boost::process;
+        const std::string execname = "bash " + runname;
+/*        namespace bp = ::boost::process;
         const std::string execname = bp::find_executable_in_path("bash");
         std::vector<std::string> args;
         args.push_back("bash");
@@ -164,13 +164,14 @@ namespace jif3D
           else if (s.stopped())
           BOOST_LOG_TRIVIAL(debug) << "Program stopped by signal " << s.stop_signal() << std::endl;
           else
-          BOOST_LOG_TRIVIAL(debug) << "Unknown termination reason" << std::endl;
+          BOOST_LOG_TRIVIAL(debug) << "Unknown termination reason" << std::endl;*/
 
           //it is important to include the std:: namespace specification
           //for the system call, otherwise the GNU compiler picks up
           //a version from the c library that gives trouble in threaded environments
-          //if (std::system(execname.c_str()))
-          // throw FatalException("Cannot execute run script: " + runname);
+        	int result = std::system(execname.c_str());
+          if (result)
+           throw FatalException("Cannot execute run script: " + runname + " Error code: " + jif3D::stringify(result));
         }
 
     jif3D::rvec AdaptDist(const std::vector<double> &C, const jif3D::rvec &RawImpedance,
