@@ -36,6 +36,15 @@ namespace jif3D
 
       }
 
+    ThreeDDCResistivityModel& ThreeDDCResistivityModel::operator=(const ThreeDModelBase& source)
+      {
+        if (&source != this)
+          {
+            ThreeDModelBase::operator=(source);
+          }
+        return *this;
+      }
+
     ThreeDDCResistivityModel& ThreeDDCResistivityModel::operator=(
         const ThreeDDCResistivityModel& source)
       {

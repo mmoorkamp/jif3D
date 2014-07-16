@@ -1756,7 +1756,7 @@ namespace jif3D
               {
                 const size_t index1 = i * grid.nx * grid.ny + j * grid.nx + k;
                 const size_t index2 = k * grid.nz * grid.ny + j * grid.nz + i;
-                gradientfinal[index2] = -gradient[index1];
+                gradientfinal[index2] = -(2*gradient[index1])/grid.rho[index1];
               }
 
         return gradientfinal;
