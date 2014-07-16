@@ -135,7 +135,7 @@ namespace jif3D
         //instead of making the script executable
         //we run a bash with the scriptname as an argument
         //this turns out to be more robust
-        const std::string execname = "bash " + runname;
+        const std::string execname = "bash " + runname + " > " + runname + "_log";
 /*        namespace bp = ::boost::process;
         const std::string execname = bp::find_executable_in_path("bash");
         std::vector<std::string> args;
@@ -169,7 +169,7 @@ namespace jif3D
           //it is important to include the std:: namespace specification
           //for the system call, otherwise the GNU compiler picks up
           //a version from the c library that gives trouble in threaded environments
-        	int result = std::system(execname.c_str());
+          int result = std::system(execname.c_str());
           if (result)
            throw FatalException("Cannot execute run script: " + runname + " Error code: " + jif3D::stringify(result));
         }

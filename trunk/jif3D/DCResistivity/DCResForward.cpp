@@ -1,72 +1,71 @@
 #include <iostream>
 #include <string>
 #include "../Global/FileUtil.h"
+#include "../Global/Noise.h"
 #include "ThreeDDCResistivityModel.h"
 #include "DCResistivityCalculator.h"
 #include "ReadWriteDCResistivityData.h"
 
 int main()
   {
-    std::string ModelFilename = jif3D::AskFilename("Model File: ", true);
+    std::string ModelFilename = jif3D::AskFilename("DCResistivity Model File: ", true);
 
     jif3D::ThreeDDCResistivityModel Model;
     Model.ReadNetCDF(ModelFilename);
 
-    size_t nelecx, nelecy;
-
-    std::cout << "N Electrodes in x-direction: ";
-    std::cin >> nelecx;
-    std::cout << "N Electrodes in y-direction: ";
-    std::cin >> nelecy;
-
-    double minx, miny, deltax, deltay;
-    std::cout << "First position in x-direction: ";
-    std::cin >> minx;
-    std::cout << "First position in y-direction: ";
-    std::cin >> miny;
-
-    std::cout << "Spacing in x-direction: ";
-    std::cin >> deltax;
-    std::cout << "Spacing in y-direction: ";
-    std::cin >> deltay;
-
-    size_t nsources;
-    std::cout << "N Sources: ";
-    std::cin >> nsources;
-
-    std::vector<int> SourceIndices;
-    for (size_t i = 0; i < nsources; ++i)
+    std::string insourcefilename = jif3D::AskFilename("Source ASCII file: ", false);
+    std::ifstream insourcefile(insourcefilename.c_str());
+    std::string inreceiverfilename = jif3D::AskFilename("Receiver ASCII file: ", false);
+    std::ifstream inreceiverfile(inreceiverfilename.c_str());
+    double sposposx, sposposy, sposposz, snegposx, snegposy, snegposz;
+    double receiverposx1, receiverposy1, receiverposz1, receiverposx2, receiverposy2,
+        receiverposz2;
+    int sourceindics;
+    while (insourcefile.good())
       {
-        double index;
-        std::cout << "Index " << i << " : ";
-        std::cin >> index;
-        SourceIndices.push_back(index);
-      }
-
-    for (size_t i = 0; i < nsources; ++i)
-      {
-        size_t Index = SourceIndices[i];
-        double xpos = minx + deltax * (Index % nelecx);
-        double ypos = miny + deltay * (Index / nelecy);
-        Model.AddSource(xpos, ypos, 0.0, xpos + deltax, ypos, 0.0);
-        for (size_t j = 0; j < nelecx * nelecy; ++j)
+        insourcefile >> sposposx >> sposposy >> sposposz >> snegposx >> snegposy
+            >> snegposz;
+        if (insourcefile.good())
           {
-            if (j != Index)
-              {
-                double measposx = minx + deltax * (j % nelecx);
-                double measposy = miny + deltay * (j / nelecy);
-                Model.AddMeasurementPoint(measposx, measposy, 0.0, measposx + deltax,
-                    measposy + deltay, 0.0, Index);
-              }
+            Model.AddSource(sposposx, sposposy, sposposz, snegposx, snegposy, snegposz);
           }
       }
+    assert(Model.GetSourcePosPosX().size() == Model.GetSourcePosPosY().size());
+    assert(Model.GetSourcePosPosX().size() == Model.GetSourcePosPosZ().size());
+    assert(Model.GetSourceNegPosX().size() == Model.GetSourceNegPosY().size());
+    assert(Model.GetSourceNegPosX().size() == Model.GetSourceNegPosZ().size());
+    assert(Model.GetSourcePosPosX().size() == Model.GetSourceNegPosX().size());
+    while (inreceiverfile.good())
+      {
+        inreceiverfile >> receiverposx1 >> receiverposy1 >> receiverposz1 >> receiverposx2
+            >> receiverposy2 >> receiverposz2 >> sourceindics;
+        if (inreceiverfile.good())
+          {
+            Model.AddMeasurementPoint(receiverposx1, receiverposy1, receiverposz1,
+                receiverposx2, receiverposy2, receiverposz2, sourceindics);
+          }
+      }
+    assert(Model.GetMeasPosX().size() == Model.GetMeasPosY().size());
+    assert(Model.GetMeasPosX().size() == Model.GetMeasPosZ().size());
+    assert(Model.GetMeasSecPosX().size() == Model.GetMeasSecPosY().size());
+    assert(Model.GetMeasSecPosX().size() == Model.GetMeasSecPosZ().size());
+    assert(Model.GetMeasPosX().size() == Model.GetMeasSecPosX().size());
+    assert(Model.GetMeasPosX().size() == Model.GetSourceIndices().size());
 
     jif3D::DCResistivityCalculator Calculator;
-
     jif3D::rvec SynthData = Calculator.Calculate(Model);
-    jif3D::rvec Error(SynthData.size(), 0.0);
-
-    std::string DataFilename = jif3D::AskFilename("Output file: ", false);
-    jif3D::SaveApparentResistivity(DataFilename, SynthData, Error, Model);
+    double error = 0.0;
+    std::cout << "DC Apparent Resistivity error (s): ";
+    std::cin >> error;
+    //if we want to add noise to the data
+    jif3D::rvec Errors(SynthData.size(), 0.0);
+    if (error > 0.0)
+      {
+        jif3D::AddNoise(SynthData, 0.0, error);
+        std::fill(Errors.begin(), Errors.end(), error);
+      }
+    //std::string DataFilename = jif3D::AskFilename("Output file: ", false);
+    jif3D::SaveApparentResistivity(ModelFilename +".dcdata.nc", SynthData, Errors, Model);
+    Model.WriteVTK(ModelFilename + ".vtk");
 
   }

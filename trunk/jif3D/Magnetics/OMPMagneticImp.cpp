@@ -50,22 +50,33 @@ namespace jif3D
                 Model.OffsetToIndex(offset, xindex, yindex, zindex);
                 // we reuse the calculation for the FTG matrix, as the equations are
                 //identical
-                //currvalue contains only the geometric term
+                //currvalue contains the geometric term times the gravitational constant
                 currvalue = CalcTensorBoxTerm(x_meas, y_meas, z_meas, XCoord[xindex],
                     YCoord[yindex], ZCoord[zindex], XSizes[xindex], YSizes[yindex],
                     ZSizes[zindex]);
-                //to we have to multiply each element by the density
+                //we have to multiply each element by the susceptibility
                 const double Susceptibility =
                     Model.GetSusceptibilities()[xindex][yindex][zindex];
+                // we have to convert the units of the FTG calculation to magnetics
+                //using poisson's relation ship mu_0/4 pi = 1e-7
+                const double factor = 1e-7 /jif3D::Grav_const;
+                //the sensitivity element for the current grid cell and the x-component
+                //of the magnetic field is the vector product of the FTG geometric terms
+                //with the direction of the inducing magnetic field and the field strength
                 const double BxSens = (currvalue(0, 0) * BxComp + currvalue(0, 1) * ByComp
-                    + currvalue(0, 2) * BzComp) * FieldStrength;
+                    + currvalue(0, 2) * BzComp) * FieldStrength * factor;
+                //and the same for By and Bz
                 const double BySens = (currvalue(1, 0) * BxComp + currvalue(1, 1) * ByComp
-                    + currvalue(1, 2) * BzComp) * FieldStrength;
+                    + currvalue(1, 2) * BzComp) * FieldStrength * factor;
                 const double BzSens = (currvalue(2, 0) * BxComp + currvalue(2, 1) * ByComp
-                    + currvalue(2, 2) * BzComp) * FieldStrength;
+                    + currvalue(2, 2) * BzComp) * FieldStrength * factor;
+                //the field strength due to a single cell is the Sensitivity for the cell
+                //times the Susceptibility
                 Bx += BxSens * Susceptibility;
                 By += BySens * Susceptibility;
                 Bz += BzSens * Susceptibility;
+                //if we need the sensitivity values for each cell in the inversion
+                //we store it in the appropriate component
                 if (storesens)
                   {
                     Sensitivities(0, offset) = BxSens;

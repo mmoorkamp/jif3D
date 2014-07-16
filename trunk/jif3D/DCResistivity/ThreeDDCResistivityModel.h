@@ -218,6 +218,8 @@ namespace jif3D
       ThreeDDCResistivityModel(const ThreeDDCResistivityModel &source);
       //! We define our own copy operator
       ThreeDDCResistivityModel& operator=(const ThreeDDCResistivityModel& source);
+      //! Other models will be copied by the copy operator for the base class
+      ThreeDDCResistivityModel& operator=(const ThreeDModelBase& source);
       virtual ~ThreeDDCResistivityModel();
       };
 
