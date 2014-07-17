@@ -15,6 +15,10 @@
 #include <boost/program_options.hpp>
 #include <boost/program_options/config.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/log/core.hpp>
+#include <boost/log/trivial.hpp>
+#include <boost/log/expressions.hpp>
+
 #include "../Global/convert.h"
 #include "../Global/FatalException.h"
 #include "../Global/NumUtil.h"
@@ -45,7 +49,7 @@
 
 namespace ublas = boost::numeric::ublas;
 namespace po = boost::program_options;
-
+namespace logging = boost::log;
 /** \addtogroup joint Joint inversion routines */
 /* @{ */
 
@@ -119,6 +123,19 @@ int main(int argc, char *argv[])
         std::cout << desc << "\n";
         return 1;
       }
+
+
+    if (vm.count("debug"))
+      {
+        logging::core::get()->set_filter(
+            logging::trivial::severity >= logging::trivial::debug);
+      }
+    else{
+        logging::core::get()->set_filter(
+            logging::trivial::severity >= logging::trivial::warning);
+    }
+
+
     if (vm.count("wavelet"))
       {
         WaveletParm = true;

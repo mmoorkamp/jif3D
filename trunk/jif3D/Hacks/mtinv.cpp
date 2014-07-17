@@ -16,6 +16,9 @@
 
 #include <boost/program_options.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/log/core.hpp>
+#include <boost/log/trivial.hpp>
+#include <boost/log/expressions.hpp>
 
 #include "../Global/convert.h"
 #include "../Global/FatalException.h"
@@ -42,6 +45,7 @@
 
 namespace ublas = boost::numeric::ublas;
 namespace po = boost::program_options;
+namespace logging = boost::log;
 
 int main(int argc, char *argv[])
   {
@@ -70,7 +74,7 @@ int main(int argc, char *argv[])
         "Inverse covariance matrix to use in MT misfit calculation.")("inderrors",
         "Use the individual errors for each element instead of the same for all elements")(
         "mtrelerr", po::value(&relerr)->default_value(0.02),
-        "Error floor for impedance estimates.");
+        "Error floor for impedance estimates.")("debug", "Show debugging output.");
 
     jif3D::SetupRegularization RegSetup;
     jif3D::SetupInversion InversionSetup;
@@ -81,6 +85,15 @@ int main(int argc, char *argv[])
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
 
+    if (vm.count("debug"))
+      {
+        logging::core::get()->set_filter(
+            logging::trivial::severity >= logging::trivial::debug);
+      }
+    else{
+        logging::core::get()->set_filter(
+            logging::trivial::severity >= logging::trivial::warning);
+    }
     if (vm.count("help"))
       {
         std::cout << desc << "\n";
@@ -114,24 +127,24 @@ int main(int argc, char *argv[])
           }
       }
 
-    //first we read in the starting model and the measured data
+//first we read in the starting model and the measured data
     std::string modelfilename = jif3D::AskFilename("Starting model Filename: ");
 
-    //we read in the starting modelfile
+//we read in the starting modelfile
     jif3D::X3DModel Model;
     Model.ReadNetCDF(modelfilename);
 
-    //get the name of the file containing the data and read it in
+//get the name of the file containing the data and read it in
     std::string datafilename = jif3D::AskFilename("Data Filename: ");
 
-    //read in data
+//read in data
     jif3D::rvec Data, ZError;
     std::vector<double> XCoord, YCoord, ZCoord, Frequencies, C;
     jif3D::ReadImpedancesFromNetCDF(datafilename, Frequencies, XCoord, YCoord, ZCoord,
         Data, ZError, C);
     std::copy(Frequencies.begin(), Frequencies.end(),
         std::back_inserter(Model.SetFrequencies()));
-    //if we don't have data inversion doesn't make sense;
+//if we don't have data inversion doesn't make sense;
     if (Data.empty())
       {
         std::cerr << "No measurements defined" << std::endl;
@@ -148,7 +161,7 @@ int main(int argc, char *argv[])
         ZCoord);
 
     Model.SetDistortionParameters(C);
-    //we define a few constants that are used throughout the inversion
+//we define a few constants that are used throughout the inversion
     const size_t ndata = Data.size();
 
     for (size_t i = 0; i < Model.GetConductivities().shape()[2]; ++i)
@@ -184,8 +197,8 @@ int main(int argc, char *argv[])
     boost::shared_ptr<jif3D::ChainedTransform> ConductivityTransform(
         new jif3D::ChainedTransform);
     jif3D::rvec RefModel(ngrid, 1.0);
-    //because the tanh transform is used inside a logarithmic transform
-    //we need to take the natural logarithm of the actual minimum and maximum
+//because the tanh transform is used inside a logarithmic transform
+//we need to take the natural logarithm of the actual minimum and maximum
     ConductivityTransform->AppendTransform(
         boost::shared_ptr<jif3D::GeneralModelTransform>(
             new jif3D::TanhTransform(std::log(mincond), std::log(maxcond))));
@@ -211,7 +224,7 @@ int main(int argc, char *argv[])
     X3DObjective->SetObservedData(Data);
     X3DObjective->SetCoarseModelGeometry(Model);
 
-    //create objects for the misfit and error estimates
+//create objects for the misfit and error estimates
     if (vm.count("mtinvcovar"))
       {
         jif3D::comp_mat InvCov(Data.size(), Data.size());
@@ -231,7 +244,9 @@ int main(int argc, char *argv[])
           }
         for (size_t i = 0; i < ZError.size(); ++i)
           {
+            std::cout << ZError(i) << " " << MinErr(i) << std::endl;
             ZError(i) = std::max(ZError(i), MinErr(i));
+
           }
         X3DObjective->SetDataError(ZError);
       }
@@ -239,9 +254,9 @@ int main(int argc, char *argv[])
     boost::shared_ptr<jif3D::RegularizationFunction> Regularization =
         RegSetup.SetupObjective(vm, Model, CovModVec);
     if (RegSetup.GetSubStart())
-    {
-    	Regularization->SetReferenceModel(InvModel);
-    }
+      {
+        Regularization->SetReferenceModel(InvModel);
+      }
     double lambda = 1.0;
     std::cout << "Lambda: ";
     std::cin >> lambda;
@@ -345,7 +360,7 @@ int main(int argc, char *argv[])
     std::copy(InvModel.begin() + Model.GetNModelElements(), InvModel.end(), C.begin());
 
     Model.SetDistortionParameters(C);
-    //calculate the predicted data
+//calculate the predicted data
     std::cout << "Calculating response of inversion model." << std::endl;
     jif3D::rvec InvData(X3DObjective->GetSyntheticData());
     jif3D::WriteImpedancesToNetCDF(modelfilename + ".inv_imp.nc", Frequencies, XCoord,
@@ -355,8 +370,8 @@ int main(int argc, char *argv[])
     jif3D::WriteImpedancesToNetCDF(modelfilename + ".diff_imp.nc", Frequencies, XCoord,
         YCoord, ZCoord, X3DObjective->GetIndividualMisfit());
 
-    //and write out the data and model
-    //here we have to distinguish again between scalar and ftg data
+//and write out the data and model
+//here we have to distinguish again between scalar and ftg data
     std::cout << "Writing out inversion results." << std::endl;
 
     Model.WriteVTK(modelfilename + ".inv.vtk");

@@ -14,6 +14,7 @@
 #include "../Global/FatalException.h"
 #include "../Global/VecMat.h"
 #include "../Global/ReadWriteSparseMatrix.h"
+#include "../Global/convert.h"
 #include "../MT/ReadWriteImpedances.h"
 #include "../MT/MTEquations.h"
 #include "../MT/MTCovar.h"
@@ -79,7 +80,7 @@ int main()
       }
 
     jif3D::WriteSparseMatrixToNetcdf(ncfilename + "_invcov.nc", InvCov, "InvCovariance");
-    jif3D::WriteImpedancesToNetCDF(ncfilename + "_rot.nc", Frequencies, StatX, StatY,
+    jif3D::WriteImpedancesToNetCDF(ncfilename + "_rot" + jif3D::stringify(dangle)+".nc", Frequencies, StatX, StatY,
         StatZ, RotImp, Errors);
 
     jif3D::Write3DDataToVTK(ncfilename + "_rot.statpos.vtk", "Station",

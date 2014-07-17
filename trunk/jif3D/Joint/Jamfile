@@ -4,7 +4,7 @@ import testing ;
 alias joint : ../Tomo//tomo ../Gravity//gravity ../Magnetics//magnetics ../MT//mt 
               ../Inversion//inversion ../Global//global ../Regularization//regularization 
               ../ModelBase//modelbase
-              ..//boost_filesystem ..//boost_program_options ..//boost_system ;
+              ..//boost_filesystem ..//boost_program_options ..//boost_system ..//boost_log ;
 	
 lib setup : SaltRelConstraint.cpp SetupGravity.cpp SetupMagnetics.cpp 
             SetupInversion.cpp SetupMT.cpp SetupRegularization.cpp 
