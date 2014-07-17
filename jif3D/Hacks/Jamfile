@@ -16,7 +16,7 @@ lib cblas : : <name>cblas ;
 
 exe gravregion : gravregion.cpp joint ..//boost_filesystem ..//boost_system ;
 exe plotsaltrel : plotsaltrel.cpp joint ../Joint//joint ../Joint//setup 	;	
-exe mtinv : mtinv.cpp  joint ../MT//mt ../Joint//joint ../Joint//setup ;
+exe mtinv : mtinv.cpp  joint ../MT//mt ../Joint//joint ../Joint//setup ..//boost_log ;
 exe tomoinv : tomoinv.cpp  joint ;
 exe plotgrav : plotgrav.cpp  joint ..//boost_filesystem ..//boost_system ;
 exe cleanmt : cleanmt.cpp  ../MT//mt joint ;
