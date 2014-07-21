@@ -244,7 +244,6 @@ int main(int argc, char *argv[])
           }
         for (size_t i = 0; i < ZError.size(); ++i)
           {
-            std::cout << ZError(i) << " " << MinErr(i) << std::endl;
             ZError(i) = std::max(ZError(i), MinErr(i));
 
           }
