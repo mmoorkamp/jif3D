@@ -54,11 +54,11 @@ namespace jif3D
         runfile << "cd " << DirName << "\n";
         runfile << X3DName << " \n";
         runfile << "cd ..\n";
-        if (runfile.rdbuf())
+/*        if (runfile.rdbuf())
           {
             runfile.rdbuf()->pubsync();
           }
-        ::fdatasync(runfile->handle());
+        ::fdatasync(runfile->handle());*/
         //we also copy the necessary *.hnk files
         //from the current directory to the work directory
         CopyHNK(fs::current_path(), DirName);

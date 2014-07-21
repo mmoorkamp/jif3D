@@ -263,11 +263,11 @@ namespace jif3D
         outfile
             << "Binding_cell_in_Y-direction     Y-coordinate of centre of Binding cell (m) \n";
         outfile << " 1                             " << YCellSizes[0] / 2.0 << " \n";
-        if (outfile.rdbuf())
+/*        if (outfile.rdbuf())
         {
         	outfile.rdbuf()->pubsync();
         }
-        ::fdatasync(outfile->handle());
+        ::fdatasync(outfile->handle());*/
         //if something went wrong during writing we throw an exception
         if (outfile.bad())
           {
@@ -320,11 +320,11 @@ namespace jif3D
         outfile << "HST\n";
         outfile << "What_Green_function_at_step_4\n";
         outfile << "HST\n";
-        if (outfile.rdbuf())
-        {
-        	outfile.rdbuf()->pubsync();
-        }
-        ::fdatasync(outfile->handle());
+        //if (outfile.rdbuf())
+        //{
+        	//outfile.rdbuf()->pubsync();
+        //}
+        //::fdatasync(outfile->handle());
         if (outfile.bad())
           {
             throw jif3D::FatalException("Problem writing project file.");
@@ -566,11 +566,11 @@ namespace jif3D
             WriteGeometryInfo(outfile, maxx, maxy);
             WriteEmptyArray(outfile, maxx, maxy);
           }
-        if (outfile.rdbuf())
-        {
-        	outfile.rdbuf()->pubsync();
-        }
-        ::fdatasync(outfile->handle());
+        //if (outfile.rdbuf())
+        //{
+        	//outfile.rdbuf()->pubsync();
+        //}
+        //::fdatasync(outfile->handle());
         if (outfile.bad())
           {
             throw jif3D::FatalException("Problem writing source file.");

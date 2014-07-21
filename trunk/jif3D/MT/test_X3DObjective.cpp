@@ -1,23 +1,28 @@
 //============================================================================
-// Name        : test_ReadWriteX3D.cpp
+// Name        : test_X3DObjective.cpp
 // Author      : Feb 17, 2009
 // Version     :
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-#define BOOST_TEST_MODULE X3DCalculator test
+#define BOOST_TEST_MODULE X3DObjective test
 #define BOOST_TEST_MAIN ...
 #include <boost/test/included/unit_test.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/test/test_tools.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/log/core.hpp>
+#include <boost/log/trivial.hpp>
+#include <boost/log/expressions.hpp>
+
 #include "../Inversion/ThreeDModelObjective.h"
 #include "X3DModel.h"
 #include "X3DMTCalculator.h"
 #include "ReadWriteX3D.h"
 #include "MTEquations.h"
 #include "ReadWriteImpedances.h"
-#define BOOST_UBLAS_TYPE_CHECK_MIN (real_type(1))
+
+
 BOOST_AUTO_TEST_SUITE( X3DObjective_Suite )
 
     void MakeMTModel(jif3D::X3DModel &Model)
@@ -75,23 +80,28 @@ BOOST_AUTO_TEST_SUITE( X3DObjective_Suite )
         jif3D::rvec Observed;
         jif3D::X3DMTCalculator Calculator;
         jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator> Objective(Calculator);
-        //BOOST_CHECK_THROW(Objective.SetObservedData(Observed),jif3D::FatalException);
-        //BOOST_CHECK_THROW(Objective.SetCoarseModelGeometry(Model),jif3D::FatalException);
+        BOOST_CHECK_THROW(Objective.SetObservedData(Observed),jif3D::FatalException);
+        BOOST_CHECK_THROW(Objective.SetCoarseModelGeometry(Model),jif3D::FatalException);
         Observed.resize(10);
         Observed.clear();
-        //BOOST_CHECK_NO_THROW(Objective.SetObservedData(Observed));
+        BOOST_CHECK_NO_THROW(Objective.SetObservedData(Observed));
         MakeMTModel(Model);
-        //BOOST_CHECK_NO_THROW(Objective.SetCoarseModelGeometry(Model));
+        BOOST_CHECK_NO_THROW(Objective.SetCoarseModelGeometry(Model));
         Model.ClearMeasurementPoints();
         Model.AddMeasurementPoint(10.0, 12.0, 0.0);
         Model.AddMeasurementPoint(13.0, 14.0, 30.0);
         Objective.SetCoarseModelGeometry(Model);
-        //BOOST_CHECK_THROW(Objective.CalcMisfit(jif3D::rvec(Model.GetConductivities().num_elements())),jif3D::FatalException);
+        namespace logging = boost::log;
+        logging::core::get()->set_filter(
+            logging::trivial::severity >= logging::trivial::warning);
+        BOOST_CHECK_THROW(Objective.CalcMisfit(jif3D::rvec(Model.GetConductivities().num_elements())),jif3D::FatalException);
       }
 
     BOOST_AUTO_TEST_CASE (X3D_basic_deriv_test)
       {
-
+        namespace logging = boost::log;
+        logging::core::get()->set_filter(
+            logging::trivial::severity >= logging::trivial::warning);
         jif3D::X3DModel Model;
         MakeMTModel(Model);
         const size_t xsize = Model.GetXCoordinates().size();
