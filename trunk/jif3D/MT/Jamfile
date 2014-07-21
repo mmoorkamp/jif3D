@@ -1,24 +1,25 @@
 import testing ; 
 using gfortran ;
 
+alias linkcommon : ../ModelBase//modelbase  ..//boost_filesystem ..//boost_system ..//boost_log ..//boost_iostreams ..//boost_thread ..//boost_chrono ..//boost_date_time ; 
+
 lib mt : ReadWriteX3D.cpp ReadWriteImpedances.cpp
          ThreeDMTModel.cpp X3DModel.cpp MTEquations.cpp 
          MT3DCalculator.cpp X3DMTCalculator.cpp
          OneDMTCalculator.cpp InterpolateField.cpp
          MTCovar.cpp MTUtils.cpp X3DFreqFunctions.cpp
-         ../ModelBase//modelbase  ..//boost_filesystem ..//boost_system ..//boost_log ..//boost_iostreams ;
+         linkcommon ;
 
-alias linkcommon : mt ../ModelBase//modelbase  ..//boost_filesystem ..//boost_system ..//boost_log ; 
 
-# switched off unit-test 2DMT_test : test_Tarits2DMT.cpp   linkcommon ../Inversion//inversion   ;
-unit-test RWX3D_test : test_ReadWriteX3D.cpp   linkcommon ../Inversion//inversion  ;
-unit-test X3Dcalc_test : test_X3DCalculator.cpp   linkcommon ../Inversion//inversion  ;
-unit-test InterpolateFields_test : test_InterpolateFields.cpp   linkcommon ../Inversion//inversion  ;
-unit-test X3DObjective_test : test_X3DObjective.cpp linkcommon ../Inversion//inversion  ;
-unit-test OneDMTCalculator_test : test_OneDMTCalculator.cpp linkcommon ../Inversion//inversion  ;
-unit-test ReadWriteImpedances_test : test_ReadWriteImpedances.cpp linkcommon ../Inversion//inversion  ;
+# switched off unit-test 2DMT_test : test_Tarits2DMT.cpp   mt linkcommon ../Inversion//inversion   ;
+unit-test RWX3D_test : test_ReadWriteX3D.cpp   mt linkcommon ../Inversion//inversion  ;
+unit-test X3Dcalc_test : test_X3DCalculator.cpp   mt linkcommon ../Inversion//inversion  ;
+unit-test InterpolateFields_test : test_InterpolateFields.cpp   mt linkcommon ../Inversion//inversion  ;
+unit-test X3DObjective_test : test_X3DObjective.cpp mt linkcommon ../Inversion//inversion  ;
+unit-test OneDMTCalculator_test : test_OneDMTCalculator.cpp mt linkcommon ../Inversion//inversion  ;
+unit-test ReadWriteImpedances_test : test_ReadWriteImpedances.cpp mt linkcommon ../Inversion//inversion  ;
 unit-test MTCovar_test : test_MTCovar.cpp mt  ..//ModelBase   ;
 
-exe mtforward : mtforward.cpp linkcommon   ;
-exe makemtmesh : makemtmesh.cpp linkcommon  ;
-exe refinemt : refinemt.cpp ../Gravity//gravity ../Magnetics//magnetics ../Tomo//tomo linkcommon ..//netcdf ..//netcdf_c++ ;
+exe mtforward : mtforward.cpp mt linkcommon   ;
+exe makemtmesh : makemtmesh.cpp mt linkcommon  ;
+exe refinemt : refinemt.cpp mt ../Gravity//gravity ../Magnetics//magnetics ../Tomo//tomo linkcommon ..//netcdf ..//netcdf_c++ ;
