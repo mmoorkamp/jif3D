@@ -5,6 +5,7 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
+#define BOOST_ALL_NO_LIB
 #include <boost/numeric/conversion/cast.hpp>
 #include "../Global/FileUtil.h"
 #include "../Global/convert.h"
