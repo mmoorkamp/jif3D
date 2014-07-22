@@ -34,7 +34,7 @@ project
         <gpu>on
         <lapack>off
         <optpp>off
-        <eigen>off
+        <eigen>on
     	<variant>release:<define>NDEBUG
     	<variant>profile:<define>NDEBUG  
     	<toolset>gcc<variant>debug:<cflags>" -ggdb3"
@@ -77,6 +77,8 @@ lib boost_serialization : : <name>boost_serialization  <search>$(BOOST_LIB_PATH)
 lib boost_thread : : <name>boost_thread  <search>$(BOOST_LIB_PATH) ;
 lib boost_log : : <name>boost_log  <search>$(BOOST_LIB_PATH) ;
 lib boost_iostreams : : <name>boost_iostreams  <search>$(BOOST_LIB_PATH) ;
+lib boost_date_time : : <name>boost_date_time  <search>$(BOOST_LIB_PATH) ;
+lib boost_chrono : : <name>boost_chrono  <search>$(BOOST_LIB_PATH) ;
 lib lapack : : <name>lapack ;
 lib f77blas : : <name>f77blas ;
 lib cblas : : <name>cblas ;
