@@ -20,6 +20,6 @@ unit-test OneDMTCalculator_test : test_OneDMTCalculator.cpp mt linkcommon ../Inv
 unit-test ReadWriteImpedances_test : test_ReadWriteImpedances.cpp mt linkcommon ../Inversion//inversion  ;
 unit-test MTCovar_test : test_MTCovar.cpp mt  ..//ModelBase   ;
 
-exe mtforward : mtforward.cpp mt linkcommon   ;
+exe mtforward : mtforward.cpp mt linkcommon  ..//boost_program_options ;
 exe makemtmesh : makemtmesh.cpp mt linkcommon  ;
 exe refinemt : refinemt.cpp mt ../Gravity//gravity ../Magnetics//magnetics ../Tomo//tomo linkcommon ..//netcdf ..//netcdf_c++ ;
