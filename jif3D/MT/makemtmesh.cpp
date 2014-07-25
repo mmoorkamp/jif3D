@@ -71,7 +71,8 @@ int main()
     //the forward modeling program asks for those anyway
     Model.SetFrequencies().assign(1, 10.0);
     //fill the background
-    std::vector<double> bg_thicknesses(Model.GetZCellSizes().size(), deltaz);
+    std::vector<double> bg_thicknesses(Model.GetZCellSizes().size());
+    std::copy(Model.GetZCellSizes().begin(),Model.GetZCellSizes().end(),bg_thicknesses.begin());
     std::vector<double> bg_conductivities(Model.GetZCellSizes().size(),
         defaultconductivity);
     Model.SetBackgroundThicknesses(bg_thicknesses);
