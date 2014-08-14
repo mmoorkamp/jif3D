@@ -16,6 +16,7 @@
 #include <boost/uuid/uuid_io.hpp>
 #include "../Global/convert.h"
 #include "MT3DCalculator.h"
+#include "ReadWriteX3D.h"
 #include "X3DModel.h"
 
 namespace jif3D
@@ -49,6 +50,10 @@ namespace jif3D
       //! This type definition is necessary so that ThreeDModelObjective can correctly deduce the native type for a model object for this class
       typedef X3DModel ModelType;
     private:
+      //! The type of green's function for forward calculation in x3d (stage 1)
+      jif3D::GreenCalcType GreenType1;
+      //! The type of green's function for forward calculation in x3d (stage 4)
+      jif3D::GreenCalcType GreenType4;
       //! The name of the executable for the x3d code
       std::string X3DName;
       //! The start of the names for files and directories created by this object
@@ -95,9 +100,20 @@ namespace jif3D
           //make a unique filename for the sensitivity file created by this object
           //we use boost uuid to generate a unique identifier tag
           //and translate it to a string to generate the filename
-          return "mt" + jif3D::stringify(getpid()) + "x" + jif3D::stringify(this) + "t" +  jif3D::stringify(tag);
+          return "mt" + jif3D::stringify(getpid()) + "x" + jif3D::stringify(this) + "t"
+              + jif3D::stringify(tag);
         }
     public:
+      //! Set type of green's function for forward calculation i X3D (stage 1)
+      void SetGreenType1(jif3D::GreenCalcType G)
+        {
+          GreenType1 = G;
+        }
+      //! Set type of green's function for forward calculation i X3D (stage 4)
+      void SetGreenType4(jif3D::GreenCalcType G)
+        {
+          GreenType4 = G;
+        }
       //! Given a conductivity model, calculate a vector of impedances
       /*! For a conductivity model given by the input parameter Model, we calculate the synthetic magnetotelluric data. When compiled with
        * an appropriate compiler the calculation is run in parallel for each frequency. We return the synthetic data as a real valued vector.

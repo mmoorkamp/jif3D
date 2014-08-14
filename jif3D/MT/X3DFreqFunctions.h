@@ -18,6 +18,7 @@
 #include <string>
 #include <vector>
 #include "../Global/VecMat.h"
+#include "ReadWriteX3D.h"
 #include "X3DModel.h"
 
 struct ForwardResult
@@ -42,6 +43,8 @@ struct ForwardInfo
   std::string TempDirName;
   std::string X3DName;
   std::string NameRoot;
+  jif3D::GreenCalcType GreenStage1;
+  jif3D::GreenCalcType GreenStage4;
   template<class Archive>
   void serialize(Archive & ar, const unsigned int version)
     {
@@ -51,6 +54,16 @@ struct ForwardInfo
       ar & TempDirName;
       ar & X3DName;
       ar & NameRoot;
+      ar & GreenStage1;
+      ar & GreenStage4;
+    }
+  ForwardInfo(jif3D::X3DModel M, std::vector<double> Dist, size_t f, std::string TD,
+      std::string XN, std::string NR, jif3D::GreenCalcType G1 = jif3D::GreenCalcType::hst,
+      jif3D::GreenCalcType G4 = jif3D::GreenCalcType::hst) :
+      Model(M), C(Dist), freqindex(f), TempDirName(TD), X3DName(XN), NameRoot(NR), GreenStage1(
+          G1), GreenStage4(G4)
+    {
+
     }
   };
 

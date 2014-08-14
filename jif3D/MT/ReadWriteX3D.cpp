@@ -277,7 +277,8 @@ namespace jif3D
 
     void WriteProjectFile(const boost::filesystem::path &RootDir,
         const std::vector<double> &Frequencies, X3DModel::ProblemType Type,
-        const std::string &ResultFilename, const std::string &ModelFilename)
+        const std::string &ResultFilename, const std::string &ModelFilename,
+        GreenCalcType Green1, GreenCalcType Green4)
       {
         const size_t nfreq = Frequencies.size();
         //the filename is always a.project
@@ -317,9 +318,23 @@ namespace jif3D
             << "  Format_of_Output (0 - mfo, 1 - ASCII, 2 - mfo+ASCII, 3 - mfo+ASCII+mfa; default value = 0)\n";
         outfile << "  3\n";
         outfile << "What_Green_function_at_step_1\n";
-        outfile << "HST\n";
+        if (Green1 == opt)
+          {
+            outfile << "OPT\n";
+          }
+        else
+          {
+            outfile << "HST\n";
+          }
         outfile << "What_Green_function_at_step_4\n";
-        outfile << "HST\n";
+        if (Green4 == opt)
+          {
+            outfile << "OPT\n";
+          }
+        else
+          {
+            outfile << "HST\n";
+          }
         //if (outfile.rdbuf())
         //{
         	//outfile.rdbuf()->pubsync();
