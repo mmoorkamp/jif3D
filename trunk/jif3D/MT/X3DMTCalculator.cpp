@@ -56,7 +56,7 @@ namespace jif3D
 
     X3DMTCalculator::X3DMTCalculator(boost::filesystem::path TDir, std::string x3d,
         bool DC) :
-        X3DName(x3d), WantDistCorr(DC)
+        X3DName(x3d), WantDistCorr(DC), GreenType1(hst), GreenType4(hst)
       {
         NameRoot = ObjectID();
         if (!fs::is_directory(TDir))
@@ -135,13 +135,7 @@ namespace jif3D
             //generate an error message
             try
               {
-                ForwardInfo Info;
-                Info.Model = Model;
-                Info.C = C;
-                Info.freqindex = i;
-                Info.TempDirName = TempDir.string();
-                Info.NameRoot = NameRoot;
-                Info.X3DName = X3DName;
+                ForwardInfo Info(Model,C,i,TempDir.string(),NameRoot,X3DName, GreenType1, GreenType4);
                 ForwardResult freqresult = CalculateFrequency(Info);
                 size_t startindex = nmeas * i * 8;
 
@@ -175,13 +169,7 @@ namespace jif3D
         CalculateFrequency_action FreqCalc;
         for (int i = minfreqindex; i < maxfreqindex; ++i)
           {
-            ForwardInfo Info;
-            Info.Model = Model;
-            Info.C = C;
-            Info.freqindex = i;
-            Info.TempDirName = TempDir.string();
-            Info.NameRoot = NameRoot;
-            Info.X3DName = X3DName;
+            ForwardInfo Info(Model,C,i,TempDir.string(),NameRoot,X3DName, GreenType1, GreenType4);
 
             hpx::naming::id_type const locality_id = localities.at(i % localities.size());
             //rvec freqresult = CalculateFrequency(Model, i, TempDir);
@@ -267,13 +255,7 @@ namespace jif3D
           {
             try
               {
-                ForwardInfo Info;
-                Info.Model = Model;
-                Info.C = C;
-                Info.freqindex = i;
-                Info.TempDirName = TempDir.string();
-                Info.NameRoot = NameRoot;
-                Info.X3DName = X3DName;
+                ForwardInfo Info(Model,C,i,TempDir.string(),NameRoot,X3DName, GreenType1, GreenType4);
                 //calculate the gradient for each frequency
                 rvec tmp = LQDerivativeFreq(Info, Misfit, RawImpedance);
                 omp_set_lock(&lck);
@@ -304,13 +286,7 @@ namespace jif3D
         LQDerivativeFreq_action LQDerivativeFreq;
         for (int i = minfreqindex; i < maxfreqindex; ++i)
           {
-            ForwardInfo Info;
-            Info.Model = Model;
-            Info.C = C;
-            Info.freqindex = i;
-            Info.TempDirName = TempDir.string();
-            Info.NameRoot = NameRoot;
-            Info.X3DName = X3DName;
+            ForwardInfo Info(Model,C,i,TempDir.string(),NameRoot,X3DName, GreenType1, GreenType4);
 
             hpx::naming::id_type const locality_id = localities.at(i % localities.size());
             //rvec freqresult = CalculateFrequency(Model, i, TempDir);

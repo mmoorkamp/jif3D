@@ -61,6 +61,13 @@ namespace jif3D
         const std::vector<double> &bg_thicknesses,
         bool Dipole = false);
 
+    //! We can use different ways of calculating Greens functions for the background in the forward calculations
+    /*! We can use different ways of calculating Greens functions for the background in the forward calculations.
+     * hst precisely uses the specified background and is more precise and should be used in most cases. opt
+     * replaces the background with some average value. This is faster, but has unpredictable consequences
+     * for cells near the boundary, especially in the inversion.
+     */
+    enum GreenCalcType { opt , hst};
     //! Write the file a.project that controls the forward calculation parameters for x3D
     /*! The project file is always called a.project and controls what x3d calculates.
      * @param RootDir The start of the directory name without the frequency index
@@ -68,10 +75,12 @@ namespace jif3D
      * @param Type The type of data we want to calculate, MT, electric dipole or magnetic dipole fields
      * @param ResultFilename The filename root for the results
      * @param ModelFilename The filename for the model in x3d format
+     * @param Green1 The type of Green's function to be used in stage 1 of the forward calculation
+     * @param Green4 The type of Green's function to be used in stage 4 of the forward calculation
      */
     void WriteProjectFile(const boost::filesystem::path &RootDir,
         const std::vector<double> &Frequencies, X3DModel::ProblemType Type,
-        const std::string &ResultFilename, const std::string &ModelFilename);
+        const std::string &ResultFilename, const std::string &ModelFilename, GreenCalcType Green1 = hst, GreenCalcType Green4 = hst);
 
     //!Write a file containing information about sources (electric or magnetic)
     /*! Write a file that contains the dipole moments of electric or magnetic dipoles
