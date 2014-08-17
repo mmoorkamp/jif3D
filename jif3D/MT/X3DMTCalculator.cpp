@@ -135,7 +135,7 @@ namespace jif3D
             //generate an error message
             try
               {
-                ForwardInfo Info(Model,C,i,TempDir.string(),NameRoot,X3DName, GreenType1, GreenType4);
+                ForwardInfo Info(Model,C,i,TempDir.string(),X3DName, NameRoot, GreenType1, GreenType4);
                 ForwardResult freqresult = CalculateFrequency(Info);
                 size_t startindex = nmeas * i * 8;
 
@@ -169,8 +169,7 @@ namespace jif3D
         CalculateFrequency_action FreqCalc;
         for (int i = minfreqindex; i < maxfreqindex; ++i)
           {
-            ForwardInfo Info(Model,C,i,TempDir.string(),NameRoot,X3DName, GreenType1, GreenType4);
-
+            ForwardInfo Info(Model,C,i,TempDir.string(),X3DName, NameRoot, GreenType1, GreenType4);
             hpx::naming::id_type const locality_id = localities.at(i % localities.size());
             //rvec freqresult = CalculateFrequency(Model, i, TempDir);
             FreqResult.push_back(async(FreqCalc, locality_id, Info));
@@ -255,7 +254,7 @@ namespace jif3D
           {
             try
               {
-                ForwardInfo Info(Model,C,i,TempDir.string(),NameRoot,X3DName, GreenType1, GreenType4);
+                ForwardInfo Info(Model,C,i,TempDir.string(),X3DName, NameRoot, GreenType1, GreenType4);
                 //calculate the gradient for each frequency
                 rvec tmp = LQDerivativeFreq(Info, Misfit, RawImpedance);
                 omp_set_lock(&lck);
@@ -286,7 +285,7 @@ namespace jif3D
         LQDerivativeFreq_action LQDerivativeFreq;
         for (int i = minfreqindex; i < maxfreqindex; ++i)
           {
-            ForwardInfo Info(Model,C,i,TempDir.string(),NameRoot,X3DName, GreenType1, GreenType4);
+            ForwardInfo Info(Model,C,i,TempDir.string(),X3DName, NameRoot, GreenType1, GreenType4);
 
             hpx::naming::id_type const locality_id = localities.at(i % localities.size());
             //rvec freqresult = CalculateFrequency(Model, i, TempDir);
