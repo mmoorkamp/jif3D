@@ -39,7 +39,7 @@ ForwardResult CalculateFrequency(const ForwardInfo &Info)
       {
         MakeRunFile(RootName.string(), DirName.string(), Info.X3DName);
         WriteProjectFile(DirName.string(), CurrFreq, X3DModel::MT, resultfilename,
-            modelfilename);
+            modelfilename,Info.GreenStage1,Info.GreenStage4);
         Write3DModelForX3D((DirName / modelfilename).string(), Info.Model.GetXCellSizes(),
             Info.Model.GetYCellSizes(), Info.Model.GetZCellSizes(), ShiftDepth,
             Info.Model.GetConductivities(), Info.Model.GetBackgroundConductivities(),
@@ -236,7 +236,7 @@ jif3D::rvec LQDerivativeFreq(const ForwardInfo &Info, const jif3D::rvec &Misfit,
       {
         MakeRunFile(EdipName.string(), EdipDirName.string(), Info.X3DName);
         WriteProjectFile(EdipDirName.string(), CurrFreq, X3DModel::EDIP, resultfilename,
-            modelfilename);
+            modelfilename,Info.GreenStage1,Info.GreenStage4);
         Write3DModelForX3D((EdipDirName / modelfilename).string(),
             Info.Model.GetXCellSizes(), Info.Model.GetYCellSizes(),
             Info.Model.GetZCellSizes(), SourceObserve, Info.Model.GetConductivities(),

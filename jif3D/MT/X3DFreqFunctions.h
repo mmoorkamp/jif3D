@@ -65,6 +65,12 @@ struct ForwardInfo
     {
 
     }
+  ForwardInfo() :
+      Model(), C(), freqindex(), TempDirName(), X3DName(), NameRoot(), GreenStage1(
+          jif3D::GreenCalcType::hst), GreenStage4(jif3D::GreenCalcType::hst)
+    {
+
+    }
   };
 
 ForwardResult CalculateFrequency(const ForwardInfo &Info);

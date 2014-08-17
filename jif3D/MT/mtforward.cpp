@@ -135,8 +135,8 @@ int main(int argc, char *argv[])
     jif3D::X3DMTCalculator Calculator(TempDir, X3DName);
     if ( vm.count("opt"))
       {
-        Calculator.SetGreenType1(jif3D::opt);
-        Calculator.SetGreenType4(jif3D::opt);
+        Calculator.SetGreenType1(jif3D::GreenCalcType::opt);
+        Calculator.SetGreenType4(jif3D::GreenCalcType::opt);
       }
     jif3D::rvec Impedances(Calculator.Calculate(MTModel));
 
