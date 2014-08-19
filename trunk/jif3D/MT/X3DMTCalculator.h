@@ -74,6 +74,8 @@ namespace jif3D
           // we do not need to serialize NameRoot, this is generated individually for each object
           if (Archive::is_saving::value)
             {
+              ar & GreenType1;
+              ar & GreenType4;
               ar & X3DName;
               std::string DirName(TempDir.string());
               ar & DirName;
