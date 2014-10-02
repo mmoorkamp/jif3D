@@ -73,6 +73,7 @@ int main()
     //fill the background
     std::vector<double> bg_thicknesses(Model.GetZCellSizes().size());
     std::copy(Model.GetZCellSizes().begin(),Model.GetZCellSizes().end(),bg_thicknesses.begin());
+    std::copy(Model.GetZCellSizes().begin(),Model.GetZCellSizes().end(),bg_thicknesses.begin());
     std::vector<double> bg_conductivities(Model.GetZCellSizes().size(),
         defaultconductivity);
     Model.SetBackgroundThicknesses(bg_thicknesses);
