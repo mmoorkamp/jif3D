@@ -103,11 +103,11 @@ namespace jif3D
         assert(absmin >= 0.0);
         const size_t ndata = Data.size();
         //create objects for the misfit and a very basic error estimate
-        jif3D::rvec Error(ndata);
+        jif3D::rvec Error(ndata, 0.0);
         for (size_t i = 0; i < ndata; ++i)
           {
             double minerr = std::max(std::abs(Data(i)) * relerror, absmin);
-            Error(i) = std::max(Error(i), minerr);
+            Error(i) = std::max(DataError(i), minerr);
             assert(Error(i) > 0.0);
           }
         return Error;
