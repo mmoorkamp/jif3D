@@ -20,6 +20,8 @@
 #include <boost/multi_array.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/log/trivial.hpp>
+#include <boost/numeric/conversion/cast.hpp>
 
 #include "../Global/FatalException.h"
 #include "../Global/convert.h"
@@ -49,6 +51,7 @@ namespace jif3D
           {
             if (boost::algorithm::starts_with(itr->path().filename().string(), NameRoot))
               {
+                BOOST_LOG_TRIVIAL(debug)<< "Trying to remove file: " << itr->path().filename().string() << std::endl;
                 fs::remove_all(itr->path().filename(), ec);
               }
           }
@@ -56,8 +59,10 @@ namespace jif3D
 
     X3DMTCalculator::X3DMTCalculator(boost::filesystem::path TDir, std::string x3d,
         bool DC) :
-        X3DName(x3d), WantDistCorr(DC), GreenType1(hst), GreenType4(hst)
+        GreenType1(hst), GreenType4(hst), X3DName(x3d), WantDistCorr(DC)
       {
+        //each object gets a unique ID, this way we avoid clashes
+        //between the temporary files generated for the calculations with x3d
         NameRoot = ObjectID();
         if (!fs::is_directory(TDir))
           throw FatalException("TDir is not a directory: " + TDir.string());
@@ -73,6 +78,7 @@ namespace jif3D
 
     X3DMTCalculator::~X3DMTCalculator()
       {
+        //remove all the temporary files and directories generated for calculations
         CleanUp();
       }
 
@@ -101,7 +107,8 @@ namespace jif3D
         Model.GetXCoordinates();
         Model.GetYCoordinates();
         Model.GetZCoordinates();
-
+        //if the current model does not contain any distortion information
+        //generate distortion parameters equivalent to an identity matrix
         std::vector<double> C(Model.GetDistortionParameters());
         if (C.size() != nmeas * 4)
           {
@@ -114,7 +121,8 @@ namespace jif3D
                 C[i * 4 + 3] = 1.0;
               }
           }
-
+        //check that the depths to the different background layers match
+        //with the depths to grid cell boundaries
         std::vector<double> BGDepths(Model.GetBackgroundThicknesses().size(), 0.0);
         std::partial_sum(Model.GetBackgroundThicknesses().begin(),
             Model.GetBackgroundThicknesses().end(), BGDepths.begin());
@@ -122,13 +130,15 @@ namespace jif3D
 #ifdef HAVEOPENMP
         omp_lock_t lck;
         omp_init_lock(&lck);
-
+        //openmp loop indices have to be int, so we cast out upper limit to int
+        //to make the compiler happy
+        int maxindex = boost::numeric_cast<int>(maxfreqindex);
         //we parallelize by frequency, this is relatively simple
         //but we can use up to 20 processors for typical MT problems
         // as we do not have the source for x3d, this is our only possibility anyway
         //the const qualified variables above are predetermined to be shared by the openmp standard
 #pragma omp parallel for shared(result) schedule(dynamic,1)
-        for (int i = minfreqindex; i < maxfreqindex; ++i)
+        for (int i = minfreqindex; i < maxindex; ++i)
           {
             //the openmp standard specifies that we cannot leave a parallel construct
             //by throwing an exception, so we catch all exceptions and just
@@ -245,12 +255,15 @@ namespace jif3D
 #ifdef HAVEOPENMP
         omp_lock_t lck;
         omp_init_lock(&lck);
+        //openmp loop indices have to be int, so we cast out upper limit to int
+        //to make the compiler happy
+        int maxindex = boost::numeric_cast<int>(maxfreqindex);
         //we parallelize the gradient calculation by frequency
         //see also the comments for the forward calculation
         //here the explicitly shared variable is Gradient
         //all others are predetermined to be shared
 #pragma omp parallel for shared(Gradient) schedule(dynamic,1)
-        for (int i = minfreqindex; i < maxfreqindex; ++i)
+        for (int i = minfreqindex; i < maxindex; ++i)
           {
             try
               {
