@@ -1,8 +1,8 @@
 //============================================================================
-// Name        : jointinv.cpp
-// Author      : May 12, 2009
+// Name        : TomoDcMagJoint.cpp
+// Author      : July 17, 2014
 // Version     :
-// Copyright   : 2009, mmoorkamp
+// Copyright   : 2014, zhanjie
 //============================================================================
 
 #include <iostream>
@@ -37,6 +37,7 @@
 #include "../Joint/SetupRegularization.h"
 #include "../Joint/InversionOutput.h"
 #include "../Joint/SetupDCResistivity.h"
+#include "../Joint/SetupMagneticGrad.h"
 
 namespace ublas = boost::numeric::ublas;
 namespace po = boost::program_options;
@@ -59,14 +60,17 @@ int main(int argc, char *argv[])
     jif3D::SetupInversion InversionSetup;
     jif3D::SetupRegularization RegSetup;
     jif3D::SetupDCResistivity DCSetup;
+    jif3D::SetupMagneticGrad MagGradSetup;
 
     bool WaveletParm = false;
     double xorigin, yorigin;
     double coolingfactor = 1.0;
-    double minslow = 1e-4;
-    double maxslow = 0.005;
+    double minslow = 5e-4;
+    double maxslow = 1e-2;
     double minres = 0.1;
-    double maxres = 5e3;
+    double maxres = 500;
+    double minsus = 0.1;
+    double maxsus = 1e3;
     //we also create a number of options that are specific to our joint inversion
     //or act globally so that they cannot be associated with one subsystem
     po::options_description desc("General options");
@@ -80,20 +84,25 @@ int main(int argc, char *argv[])
         "The origin for the inversion grid in y-direction")("coolingfactor",
         po::value(&coolingfactor)->default_value(1.0),
         "The factor to multiply the weight for the regularization at each iteration EXPERIMENTAL")(
-        "minslow", po::value(&minslow)->default_value(1e-4),
+        "minslow", po::value(&minslow)->default_value(5e-4),
         "The lower bound for slowness in the inversion")("maxslow",
-        po::value(&maxslow)->default_value(0.005),
+        po::value(&maxslow)->default_value(1e-2),
         "The upper bound for slowness in the inversion")("minres",
         po::value(&minres)->default_value(0.1),
         "The lower bound for resistivity in the inversion")("maxres",
-        po::value(&maxres)->default_value(5e3),
-        "The upper bound for resistivity in the inversion");
+        po::value(&maxres)->default_value(500),
+        "The upper bound for resistivity in the inversion")("minsus",
+        po::value(&minsus)->default_value(0.01),
+         "The lower bound for susceptibility in the inversion")("maxsus",
+        po::value(&maxsus)->default_value(1e3),
+         "The upper bound for susceptibility in the inversion");
     //we need to add the description for each part to the boost program options object
     //that way the user can get a help output and the parser object recongnizes these options
     desc.add(TomoSetup.SetupOptions());
     desc.add(DCSetup.SetupOptions());
-    desc.add(InversionSetup.SetupOptions());
     desc.add(RegSetup.SetupOptions());
+    desc.add(InversionSetup.SetupOptions());
+    desc.add(MagGradSetup.SetupOptions());
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -130,6 +139,19 @@ int main(int argc, char *argv[])
         omp_set_num_threads(vm["threads"].as<int>());
       }
 #endif
+    //some objects accept a directory name as a path to store temporary files
+    //we check that this directory actually exists to avoid double checking
+    //and early detection of problems
+    boost::filesystem::path TempDir = boost::filesystem::current_path();
+    if (vm.count("tempdir"))
+      {
+        TempDir = vm["tempdir"].as<std::string>();
+        if (!boost::filesystem::is_directory(TempDir))
+          {
+            std::cerr << TempDir.string() << " is not a directory or does not exist ! \n";
+            return 500;
+          }
+      }
 
     jif3D::rvec CovModVec;
     if (vm.count("covmod"))
@@ -158,9 +180,9 @@ int main(int argc, char *argv[])
     boost::shared_ptr<jif3D::GeneralModelTransform> SlownessTransform(
         new jif3D::TanhTransform(minslow, maxslow));
     boost::shared_ptr<jif3D::GeneralModelTransform> TomoTransform(
-        new jif3D::MultiSectionTransform(2 * ngrid, 0, ngrid, SlownessTransform));
+        new jif3D::MultiSectionTransform(3 * ngrid, 0, ngrid, SlownessTransform));
     boost::shared_ptr<jif3D::GeneralModelTransform> TomoRegTransform(
-        new jif3D::MultiSectionTransform(2 * ngrid, 0, ngrid, boost::shared_ptr<jif3D::ModelCopyTransform>(new jif3D::ModelCopyTransform)));
+        new jif3D::MultiSectionTransform(3 * ngrid, 0, ngrid, boost::shared_ptr<jif3D::ModelCopyTransform>(new jif3D::ModelCopyTransform)));
 
     boost::shared_ptr<jif3D::ChainedTransform> ResistivityTransform(
         new jif3D::ChainedTransform);
@@ -174,10 +196,27 @@ int main(int argc, char *argv[])
             new jif3D::LogTransform(RefModel)));
 
     boost::shared_ptr<jif3D::GeneralModelTransform> DCTransform(
-        new jif3D::MultiSectionTransform(2 * ngrid, ngrid, 2 * ngrid,
+        new jif3D::MultiSectionTransform(3 * ngrid, ngrid, 2 * ngrid,
             ResistivityTransform));
     boost::shared_ptr<jif3D::GeneralModelTransform> DCRegTransform(
-            new jif3D::MultiSectionTransform(2 * ngrid, ngrid, 2*ngrid, boost::shared_ptr<jif3D::ModelCopyTransform>(new jif3D::ModelCopyTransform)));
+            new jif3D::MultiSectionTransform(3 * ngrid, ngrid, 2*ngrid, boost::shared_ptr<jif3D::ModelCopyTransform>(new jif3D::ModelCopyTransform)));
+
+    boost::shared_ptr<jif3D::ChainedTransform> SusceptivilityTransform(
+        new jif3D::ChainedTransform);
+    jif3D::rvec MagRefModel(ngrid);
+    std::fill(MagRefModel.begin(), MagRefModel.end(), 1.0);
+    SusceptivilityTransform->AppendTransform(
+        boost::shared_ptr<jif3D::GeneralModelTransform>(
+            new jif3D::TanhTransform(std::log(minsus), std::log(maxsus))));
+    SusceptivilityTransform->AppendTransform(
+        boost::shared_ptr<jif3D::GeneralModelTransform>(
+            new jif3D::LogTransform(MagRefModel)));
+
+    boost::shared_ptr<jif3D::GeneralModelTransform> MagGradTransform(
+        new jif3D::MultiSectionTransform(3 * ngrid, 2*ngrid, 3 * ngrid,
+        		SusceptivilityTransform));
+    boost::shared_ptr<jif3D::GeneralModelTransform> MagGradRegTransform(
+            new jif3D::MultiSectionTransform(3 * ngrid, 2*ngrid, 3*ngrid, boost::shared_ptr<jif3D::ModelCopyTransform>(new jif3D::ModelCopyTransform)));
 
     //read in the tomography model and setup the options that are applicable
     //for the seismic tomography part of the inversion
@@ -190,6 +229,18 @@ int main(int argc, char *argv[])
       }
 
     bool havedc = DCSetup.SetupObjective(vm, *Objective.get(), DCTransform, xorigin, yorigin);
+    if (havedc && !EqualGridGeometry(DCSetup.GetModel(), StartModel))
+      {
+        throw jif3D::FatalException(
+            "DCResistivity model does not have the same geometry as starting model");
+      }
+
+    bool havemaggrad = MagGradSetup.SetupObjective(vm, *Objective.get(), MagGradTransform, xorigin, yorigin, TempDir);
+    if (havemaggrad && !EqualGridGeometry(MagGradSetup.GetModel(), StartModel))
+      {
+        throw jif3D::FatalException(
+            "Magnetic model does not have the same geometry as starting model");
+      }
 
     //now we setup the regularization
     boost::shared_ptr<jif3D::RegularizationFunction> Regularization =
@@ -198,7 +249,7 @@ int main(int argc, char *argv[])
     //the vector InvModel will hold the current inversion model
     //depending on the chosen coupling mechanism it will have different size
     //so we fill its content in the object Coupling setup
-    jif3D::rvec InvModel(2 * ngrid);
+    jif3D::rvec InvModel(3 * ngrid);
 
     jif3D::rvec SeisModel(ngrid, 0.0);
     if (TomoSetup.GetModel().GetNModelElements() == ngrid)
@@ -215,23 +266,63 @@ int main(int argc, char *argv[])
       {
         std::copy(DCSetup.GetModel().GetResistivities().origin(),
             DCSetup.GetModel().GetResistivities().origin() + ngrid, ResModel.begin());
-        std::cout << "Transforming slowness model. " << std::endl;
+        std::cout << "Transforming resistivity model. " << std::endl;
         ublas::subrange(InvModel, ngrid, 2 * ngrid) = ublas::subrange(
             ResistivityTransform->PhysicalToGeneralized(ResModel), 0, ngrid);
+      }
+
+    jif3D::rvec SusModel(ngrid, 0.0);
+    if (MagGradSetup.GetModel().GetNModelElements() == ngrid)
+      {
+        std::copy(MagGradSetup.GetModel().GetSusceptibilities().origin(),
+        		MagGradSetup.GetModel().GetSusceptibilities().origin() + ngrid, SusModel.begin());
+        std::cout << "Transforming susceptibility model. " << std::endl;
+        ublas::subrange(InvModel, 2 * ngrid, 3 * ngrid) = ublas::subrange(
+        		SusceptivilityTransform->PhysicalToGeneralized(SusModel), 0, ngrid);
       }
 
     boost::shared_ptr<jif3D::CrossGradient> SeisDCCross(
         new jif3D::CrossGradient(StartModel));
     boost::shared_ptr<jif3D::MultiSectionTransform> SeisDCTrans(
-        new jif3D::MultiSectionTransform(2 * ngrid));
+        new jif3D::MultiSectionTransform(3 * ngrid));
     SeisDCTrans->AddSection(0, ngrid, SlownessTransform);
     SeisDCTrans->AddSection(ngrid, 2 * ngrid, ResistivityTransform);
     double seisdclambda = 1.0;
-    std::cout << "Weight for  cross-gradient term: ";
+    std::cout << "Weight for  seismic - resistivity cross-gradient term: ";
     std::cin >> seisdclambda;
     if (seisdclambda > 0.0)
       {
         Objective->AddObjective(SeisDCCross, SeisDCTrans, seisdclambda, "SeisDC",
+            jif3D::JointObjective::coupling);
+      }
+
+    boost::shared_ptr<jif3D::CrossGradient> DCMagCross(
+        new jif3D::CrossGradient(StartModel));
+    boost::shared_ptr<jif3D::MultiSectionTransform> DCMagTrans(
+        new jif3D::MultiSectionTransform(3 * ngrid));
+    DCMagTrans->AddSection(ngrid, 2 * ngrid, ResistivityTransform);
+    DCMagTrans->AddSection(2 * ngrid, 3 * ngrid, SusceptivilityTransform);
+    double dcmaglambda = 1.0;
+    std::cout << "Weight for  resistivity - magnetic cross-gradient term: ";
+    std::cin >> dcmaglambda;
+    if (dcmaglambda > 0.0)
+      {
+        Objective->AddObjective(DCMagCross, DCMagTrans, dcmaglambda, "DCMag",
+            jif3D::JointObjective::coupling);
+      }
+
+    boost::shared_ptr<jif3D::CrossGradient> SeisMagCross(
+        new jif3D::CrossGradient(StartModel));
+    boost::shared_ptr<jif3D::MultiSectionTransform> SeisMagTrans(
+        new jif3D::MultiSectionTransform(3 * ngrid));
+    SeisMagTrans->AddSection(0, ngrid, SlownessTransform);
+    SeisMagTrans->AddSection(2 * ngrid, 3 * ngrid, SusceptivilityTransform);
+    double seismaglambda = 1.0;
+    std::cout << "Weight for  seismic - magnetic cross-gradient term: ";
+    std::cin >> seismaglambda;
+    if (seismaglambda > 0.0)
+      {
+        Objective->AddObjective(SeisMagCross, SeisMagTrans, seismaglambda, "SeisMag",
             jif3D::JointObjective::coupling);
       }
 
@@ -241,15 +332,21 @@ int main(int argc, char *argv[])
     //first we set up seismic tomography
     jif3D::rvec Ones(InvModel.size(), 1.0);
     double seisreglambda = 1.0;
-    std::cout << " Weight for seismic regularization: ";
+    std::cout << " Weight for Seismic regularization: ";
     std::cin >> seisreglambda;
     boost::shared_ptr<jif3D::RegularizationFunction> SeisReg(Regularization->clone());
 
-    //then the regularization of densities
+    //then the regularization of resistivity
     double dcreglambda = 1.0;
     std::cout << " Weight for DC resistivity regularization: ";
     std::cin >> dcreglambda;
     boost::shared_ptr<jif3D::RegularizationFunction> DCReg(Regularization->clone());
+
+    //then the regularization of susceptivility
+    double magreglambda = 1.0;
+    std::cout << " Weight for Magnetic gradient regularization: ";
+    std::cin >> magreglambda;
+    boost::shared_ptr<jif3D::RegularizationFunction> MagReg(Regularization->clone());
 
     //if we specify on the command line that we want to subtract the
     //starting model, we set the corresponding reference model
@@ -258,6 +355,7 @@ int main(int argc, char *argv[])
       {
         SeisReg->SetReferenceModel(TomoTransform->GeneralizedToPhysical(InvModel));
         DCReg->SetReferenceModel(DCTransform->GeneralizedToPhysical(InvModel));
+        MagReg->SetReferenceModel(MagGradTransform->GeneralizedToPhysical(InvModel));
       }
     if (seisreglambda > 0.0)
       {
@@ -267,6 +365,11 @@ int main(int argc, char *argv[])
     if (dcreglambda > 0.0)
       {
         Objective->AddObjective(DCReg, DCRegTransform, dcreglambda, "DCReg",
+            jif3D::JointObjective::regularization);
+      }
+    if (magreglambda > 0.0)
+      {
+        Objective->AddObjective(MagReg, MagGradTransform, magreglambda, "MagReg",
             jif3D::JointObjective::regularization);
       }
 
@@ -286,6 +389,7 @@ int main(int argc, char *argv[])
     std::string modelfilename = "result";
     jif3D::ThreeDSeismicModel TomoModel(TomoSetup.GetModel());
     jif3D::ThreeDDCResistivityModel DCModel(DCSetup.GetModel());
+    jif3D::ThreeDMagneticModel MagModel(MagGradSetup.GetModel());
     //write out the seismic source and receiver positions for plotting
     //and general quality control
     if (havetomo)
@@ -306,6 +410,8 @@ int main(int argc, char *argv[])
 
     if (!havedc)
     	DCModel = StartModel;
+    if (!havemaggrad)
+    	MagModel = StartModel;
 
     size_t iteration = 0;
     std::ofstream misfitfile("misfit.out");
@@ -316,11 +422,6 @@ int main(int argc, char *argv[])
     StoreMisfit(misfitfile, 0, InitialMisfit, *Objective);
     StoreRMS(rmsfile, 0, *Objective);
     StoreWeights(weightfile, 0, *Objective);
-
-
-
-
-
 
     bool terminate = false;
     jif3D::rvec OldModel(InvModel);
@@ -350,6 +451,8 @@ int main(int argc, char *argv[])
                 modelfilename + jif3D::stringify(iteration) + ".tomo.inv");
             SaveModel(InvModel, *DCTransform.get(), DCModel,
                 modelfilename + jif3D::stringify(iteration) + ".dc.inv");
+            SaveModel(InvModel, *MagGradTransform.get(), MagModel,
+                modelfilename + jif3D::stringify(iteration) + ".mag.inv");
             //write out some information about misfit to the screen
             std::cout << "Currrent Misfit: " << Optimizer->GetMisfit() << std::endl;
             std::cout << "Currrent Gradient: " << Optimizer->GetGradNorm() << std::endl;
@@ -373,6 +476,8 @@ int main(int argc, char *argv[])
     SaveModel(InvModel, *TomoTransform.get(), TomoModel, modelfilename + ".tomo.inv");
     SaveModel(InvModel, *DCTransform.get(), DCModel,
         modelfilename + ".dc.inv");
+    SaveModel(InvModel, *MagGradTransform.get(), MagModel,
+        modelfilename + ".mag.inv");
     //calculate the predicted refraction data
     std::cout << "Calculating response of inversion model." << std::endl;
     //during the last iteration we might have performed steps in the line search

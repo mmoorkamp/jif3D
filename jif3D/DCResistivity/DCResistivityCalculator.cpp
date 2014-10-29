@@ -45,6 +45,7 @@ namespace jif3D
                 const size_t layerindex = i * grid.nx * grid.ny + j * grid.nx + k;
                 grid.rho[layerindex] = Model.GetResistivities()[k][j][i];
               }
+        grid.avg_cond = 1/grid.rho[0];
         //fill the geometry
         //In DCResForwardBase code, the coordinate system is base on zero-centred in x and y direction, but actual data's coordinate is not so,
         //we have to adjust source and receiver's coordinate to accord with coordinate system in DCResForwardBase.
