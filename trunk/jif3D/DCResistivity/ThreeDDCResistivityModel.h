@@ -202,6 +202,32 @@ namespace jif3D
         {
           SourceIndices.clear();
         }
+
+      //! Copy the source and receiver positions and the indices for the source-receiver combinations from the source model
+      void CopyMeasurementConfigurations(const ThreeDDCResistivityModel &Source)
+        {
+    	  SourcePosPosX = Source.SourcePosPosX;
+    	  SourcePosPosY = Source.SourcePosPosY;
+    	  SourcePosPosZ = Source.SourcePosPosZ;
+    	  SourceNegPosX = Source.SourceNegPosX;
+    	  SourceNegPosY = Source.SourceNegPosY;
+    	  SourceNegPosZ = Source.SourceNegPosZ;
+
+    	  MeasSecPosX = Source.MeasSecPosX;
+    	  MeasSecPosY = Source.MeasSecPosY;
+    	  MeasSecPosZ = Source.MeasSecPosZ;
+    	  SourceIndices = Source.SourceIndices;
+
+    	  jif3D::ThreeDModelBase::ClearMeasurementPoints();
+          const size_t nmeas = Source.GetMeasPosX().size();
+          for (size_t i = 0; i < nmeas; ++i)
+            {
+              jif3D::ThreeDModelBase::AddMeasurementPoint(Source.GetMeasPosX()[i], Source.GetMeasPosY()[i],
+                  Source.GetMeasPosZ()[i]);
+            }
+        }
+
+
       //! Set the origin of the coordinate system, this is a reimplementation from the base class to also change the source positions
       virtual void SetOrigin(const double x, const double y, const double z);
       //! Write the resistivity model in VTK format, at the moment the best format for plotting, this only writes the resistivity and not the source and receiver positions

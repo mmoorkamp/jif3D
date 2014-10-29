@@ -58,11 +58,36 @@ int main()
       }
     Model.SetResistivities().resize(boost::extents[nx][ny][nz]);
     //ask for a resistivity to fill the mesh with
-    double defaultresistivity = 1.0;
-    std::cout << "Resistivity: ";
-    std::cin >> defaultresistivity;
-    fill_n(Model.SetResistivities().origin(), Model.GetResistivities().num_elements(),
-        defaultresistivity);
+
+    //velocity background model has a velocity gradient from surface to bottom
+    //so accordingly we generate a resistivity background model with resistivity gradient from surface to bottom
+    //so we ask for the resistivity at the top of the model
+    //and at the bottom of the model and fill each layer with a linear interpolation
+    //between the two values.
+    double topres = 0.0;
+    std::cout << "Resistivity at top in ohm.m: ";
+    std::cin >> topres;
+    double bottomres = 0.0;
+    std::cout << "Resistivity at bottom  in ohm.m: ";
+    std::cin >> bottomres;
+    const double firstdepth = Model.GetZCoordinates()[0];
+    const double bottomdepth = Model.GetZCoordinates()[nz - 1];
+    //calculate the depth for each cell and the corresponding resistivity
+    //then assign the resulting resistivity to the cell
+    for (size_t i = 0; i < Model.GetResistivities().num_elements(); ++i)
+      {
+        double Depth = Model.GetZCoordinates()[i % nz];
+        double Resistivity = topres + (Depth - firstdepth) * (bottomres - topres)
+            / (bottomdepth - firstdepth);
+        Model.SetResistivities().origin()[i] = Resistivity;
+      }
+
+    //double defaultresistivity = 1.0;
+    //std::cout << "Resistivity: ";
+    //std::cin >> defaultresistivity;
+    //fill_n(Model.SetResistivities().origin(), Model.GetResistivities().num_elements(),
+        //defaultresistivity);
+
     //ask for a filename to write the mesh to
     std::string MeshFilename = jif3D::AskFilename("Meshfile name: ", false);
     Model.WriteNetCDF(MeshFilename);
