@@ -53,24 +53,23 @@ namespace jif3D
       virtual jif3D::rvec GeneralizedToPhysical(const jif3D::rvec &FullModel) const
         {
           jif3D::rvec Output(FullModel.size());
-          for (size_t i = 0; i < FullModel.size(); ++i)
-            Output(i) = min + (1.0 + std::tanh(FullModel(i))) / 2.0 * (max - min);
+          std::transform(FullModel.begin(), FullModel.end(), Output.begin(),
+              [this] (double fm)
+                {
+                  return min + (1.0 + std::tanh(fm)) / 2.0 * (max - min);
+                });
           return Output;
         }
       //! Transform the physical model parameters to generalized model parameters
       virtual jif3D::rvec PhysicalToGeneralized(const jif3D::rvec &FullModel) const
         {
           jif3D::rvec Output(FullModel.size());
-          for (size_t i = 0; i < FullModel.size(); ++i)
-            {
-              if (FullModel(i) >= max || FullModel(i) <= min)
+          std::transform(FullModel.begin(), FullModel.end(), Output.begin(),
+              [this](double fm)
                 {
-                  std::cerr << i << " " << FullModel(i) << " " << max << " " << min
-                      << std::endl;
-                }
-              const double argument = 2.0 * (FullModel(i) - min) / (max - min) - 1;
-              Output(i) = boost::math::atanh(argument);
-            }
+                  return boost::math::atanh(2.0 * (fm - min) / (max - min) - 1);
+                });
+
           return Output;
         }
       //! Transform the derivative with respect to the physical parameters to normalized parameters
@@ -79,11 +78,10 @@ namespace jif3D
         {
 
           jif3D::rvec Output(FullModel.size());
-          for (size_t i = 0; i < FullModel.size(); ++i)
-            {
-              Output(i) = (max - min) / (2.0 * std::pow(std::cosh(FullModel(i)), 2))
-                  * Derivative(i);
-            }
+          std::transform(FullModel.begin(), FullModel.end(), Derivative.begin(),
+              Output.begin(), [this](double fm, double der)
+                { return (max - min) / (2.0 * std::pow(std::cosh(fm), 2))
+                  * der;});
           return Output;
         }
       //! The constructor need the minimum and maximum physical model parameter
