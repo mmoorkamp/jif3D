@@ -223,10 +223,10 @@ int hpx_main(po::variables_map& vm)
     std::ofstream rhofile((OutFilename + "_rho.out").c_str());
 
 #ifdef HAVEHPX
-    using hpx::lcos::unique_future;
+    using hpx::lcos::future;
     using hpx::async;
     using hpx::wait_all;
-    std::vector<unique_future<jif3D::rvec> > ImplResult;
+    std::vector<future<jif3D::rvec> > ImplResult;
     ImplResult.reserve(nrealmax);
     Calc_action CalcImpl;
     std::vector<hpx::naming::id_type> localities = hpx::find_all_localities();
