@@ -166,7 +166,7 @@ int main(int argc, char *argv[])
 
     for (size_t i = 0; i < Model.GetConductivities().shape()[2]; ++i)
       {
-        Model.SetConductivities()[0][0][i] *= (1 + 0.0001 * (i + 1));
+        Model.SetConductivities()[0][0][i] *= (1 + 0.001 * (i + 1));
       }
 
     const size_t ngrid = Model.GetConductivities().num_elements();

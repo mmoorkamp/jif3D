@@ -169,12 +169,12 @@ namespace jif3D
 #endif
 
 #ifdef HAVEHPX
-        using hpx::lcos::unique_future;
+        using hpx::lcos::future;
         using hpx::async;
         using hpx::wait_all;
         std::vector<hpx::naming::id_type> localities =
         hpx::find_all_localities();
-        std::vector<hpx::lcos::unique_future<ForwardResult>> FreqResult;
+        std::vector<hpx::lcos::future<ForwardResult>> FreqResult;
         FreqResult.reserve(nfreq);
         CalculateFrequency_action FreqCalc;
         for (int i = minfreqindex; i < maxfreqindex; ++i)
@@ -288,12 +288,12 @@ namespace jif3D
 #endif
 
 #ifdef HAVEHPX
-        using hpx::lcos::unique_future;
+        using hpx::lcos::future;
         using hpx::async;
         using hpx::wait_all;
         std::vector<hpx::naming::id_type> localities =
         hpx::find_all_localities();
-        std::vector<hpx::lcos::unique_future<jif3D::rvec>> FreqResult;
+        std::vector<hpx::lcos::future<jif3D::rvec>> FreqResult;
         FreqResult.reserve(nfreq);
         LQDerivativeFreq_action LQDerivativeFreq;
         for (int i = minfreqindex; i < maxfreqindex; ++i)
