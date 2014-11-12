@@ -24,9 +24,7 @@ namespace jif3D
           }
         jif3D::rvec X(Model - GetReferenceModel());
         RegFunc->CalcMisfit(X);
-        const size_t nx = RegFunc->ModelGeo.GetXCellSizes().size();
-        const size_t ny = RegFunc->ModelGeo.GetYCellSizes().size();
-        const size_t nz = RegFunc->ModelGeo.GetZCellSizes().size();
+
 
         RegDiff = RegFunc->GetDataDifference();
 /*        Write3DModelToVTK("regdiffx" + stringify(ModelNumber) + ".vtk", "WaveCoeff",

@@ -497,9 +497,7 @@ namespace jif3D
         const jif3D::ThreeDModelBase::t3DModelDim &ZCellSizes, const size_t maxx,
         const size_t maxy)
       {
-        typedef boost::multi_array_types::index_range range;
-        //const size_t nx = XPolMoments.shape()[0];
-        //const size_t ny = XPolMoments.shape()[1];
+
         const size_t nmeas = XPolMoments.size();
         assert(nmeas == YPolMoments.size());
 

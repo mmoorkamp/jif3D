@@ -36,21 +36,21 @@ int main()
     jif3D::ReadVec(DataFile, SourcePosXName, SourcePosX);
     jif3D::ReadVec(DataFile, SourcePosYName, SourcePosY);
     jif3D::ReadVec(DataFile, SourcePosZName, SourcePosZ);
-    const size_t nsource = SourcePosX.size();
+
 
     //read the positions of the receivers
     std::vector<double> RecPosX, RecPosY, RecPosZ;
     jif3D::ReadVec(DataFile, MeasPosXName, RecPosX);
     jif3D::ReadVec(DataFile, MeasPosYName, RecPosY);
     jif3D::ReadVec(DataFile, MeasPosZName, RecPosZ);
-    const size_t nmeas = RecPosX.size();
+
 
     std::vector<int> SourceIndices, ReceiverIndices;
     //now read the indices for the source receiver combinations
     //for each measurement
     jif3D::ReadVec(DataFile, SourceIndexName, SourceIndices);
     jif3D::ReadVec(DataFile, ReceiverIndexName, ReceiverIndices);
-    const size_t nconf = SourceIndices.size();
+
     jif3D::rvec Data;
     jif3D::ReadVec(DataFile, TravelTimeName, Data);
     const size_t ntimes = Data.size();

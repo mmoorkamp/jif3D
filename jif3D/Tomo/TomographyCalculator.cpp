@@ -218,7 +218,6 @@ namespace jif3D
         std::fill(DerivMod.begin(), DerivMod.end(), 0.0);
         //the gradient is simply the length of the raypath
         //through each cell weighted by the data misfit
-        const size_t xextent = Model.GetModelShape()[0];
         const size_t yextent = Model.GetModelShape()[1];
         const size_t zextent = Model.GetModelShape()[2];
         for (size_t i = 0; i < ndata; ++i)
