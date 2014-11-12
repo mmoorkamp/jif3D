@@ -43,7 +43,6 @@ namespace jif3D
     jif3D::rvec OneDRegularization::ImplGradient(const jif3D::rvec &Model,
         const jif3D::rvec &Diff)
       {
-        const size_t nlayers = Model.size();
         jif3D::rvec Result(ublas::prec_prod(ublas::trans(OperatorMatrix), Diff));
         return 2.0 * Result;
 

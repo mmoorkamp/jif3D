@@ -1225,11 +1225,10 @@ namespace jif3D
         const GRID_STRUCT &grid)
       {
         long c, d, e;
-        long nx, ny, nz, nyz, ny1, nz1, nyz1;
+        long ny, nz, nyz, ny1, nz1, nyz1;
 
         double eps = 0.01;
 
-        nx = grid.nx;
         ny = grid.ny;
         nz = grid.nz;
         nyz = ny * nz;

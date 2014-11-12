@@ -100,7 +100,6 @@ int main()
       }
 
     jif3D::ThreeDSeismicModel Model;
-    size_t nrec = SourceRecMap.size();
     const double depth = 10.0;
 
     for (MyMap::iterator sourceiter = SourceMap.begin(); sourceiter

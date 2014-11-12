@@ -37,8 +37,8 @@ project
         <eigen>on
     	<variant>release:<define>NDEBUG
     	<variant>profile:<define>NDEBUG  
-    	<toolset>gcc<variant>debug:<cflags>" -ggdb3"
-    	#<toolset>gcc:<cflags>" -ansi  -Wall -Wextra  -Wno-long-long -Wno-unused-parameter  -pedantic"
+    	<toolset>gcc<variant>debug:<cflags>" -ggdb3 "
+    	<toolset>gcc:<cflags>" -ansi  -Wall  -Wno-long-long   -pedantic"
     	<toolset>intel:<cxxflags>" -openmp  -std=c++0x   "
     	<toolset>intel:<define>TESTR
     	#<toolset>intel:<define>BOOST_NO_CXX11_SCOPED_ENUMS
