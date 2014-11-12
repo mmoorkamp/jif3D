@@ -99,11 +99,6 @@ namespace jif3D
       ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff);
       //! The implementation of the gradient calculation
       virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model, const jif3D::rvec &Diff);
-      //! So far transformations have no effect
-      virtual void SetDataTransformAction()
-        {
-          //TODO Implement transformation if necessary
-        }
     public:
       //! The clone function provides a virtual constructor
       virtual ThreeDModelObjective<ThreeDCalculatorType> *clone() const
