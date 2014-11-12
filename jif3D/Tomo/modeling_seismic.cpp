@@ -62,11 +62,6 @@ namespace jif3D
         std::vector<RP_STRUCT> &raypath)
       {
 
-        const float delta_num = (float) 0.001;
-        const size_t nx3 = (grid.nx + 1);
-        const size_t ny3 = (grid.ny + 1);
-        const size_t nz3 = (grid.nz + 1);
-
         /*******************************************************************************************/
         /*******************************************************************************************/
         /*--Conventional-rays--*/
