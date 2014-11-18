@@ -1,8 +1,8 @@
 //============================================================================
-// Name        : jointinv.cpp
-// Author      : May 12, 2009
+// Name        : jointinvtomodcmag.cpp
+// Author      : August 3, 2014
 // Version     :
-// Copyright   : 2009, mmoorkamp
+// Copyright   : 2014, zhanjie
 //============================================================================
 
 #include <iostream>
@@ -31,18 +31,29 @@
 #include "../Tomo/ThreeDSeismicModel.h"
 #include "../Tomo/ReadWriteTomographyData.h"
 #include "../Tomo/TomographyCalculator.h"
+#include "../DCResistivity/ThreeDDCResistivityModel.h"
 #include "../DCResistivity/ReadWriteDCResistivityData.h"
-#include "../Joint/SetupTomo.h"
-#include "../Joint/SetupInversion.h"
-#include "../Joint/SetupRegularization.h"
-#include "../Joint/InversionOutput.h"
-#include "../Joint/SetupDCResistivity.h"
+#include "../DCResistivity/DCResistivityCalculator.h"
+#include "../Magnetics/ThreeDMagneticModel.h"
+#include "../Magnetics/ReadWriteMagneticData.h"
+#include "../Magnetics/OMPMagneticImp.h"
+#include "../GravMag/ThreeDGravMagImplementation.h"
+#include "../GravMag/ThreeDGravMagCalculator.h"
+#include "SetupTomo.h"
+#include "SetupDCResistivity.h"
+#include "SetupMagnetics.h"
+#include "SetupInversion.h"
+#include "SetupRegularization.h"
+#include "SetupTomoDCMagCoupling.h"
+#include "InversionOutput.h"
 
 namespace ublas = boost::numeric::ublas;
 namespace po = boost::program_options;
 
 /** \addtogroup joint Joint inversion routines */
 /* @{ */
+
+
 
 /*! \file jointinv.cpp
  * The main joint inversion program. The main task of the program is to read in the appropriate files
@@ -56,44 +67,36 @@ int main(int argc, char *argv[])
     //that way we can reuse these objects so that other programs use
     //exactly the same options
     jif3D::SetupTomo TomoSetup;
+    jif3D::SetupDCResistivity DCResistivitySetup;
+    jif3D::SetupMagnetics MagneticSetup;
     jif3D::SetupInversion InversionSetup;
     jif3D::SetupRegularization RegSetup;
-    jif3D::SetupDCResistivity DCSetup;
-
+    jif3D::SetupTomoDCMagCoupling CouplingSetup;
     bool WaveletParm = false;
     double xorigin, yorigin;
     double coolingfactor = 1.0;
-    double minslow = 1e-4;
-    double maxslow = 0.005;
-    double minres = 0.1;
-    double maxres = 5e3;
     //we also create a number of options that are specific to our joint inversion
     //or act globally so that they cannot be associated with one subsystem
     po::options_description desc("General options");
     desc.add_options()("help", "produce help message")("threads", po::value<int>(),
         "The number of openmp threads")("covmod", po::value<std::string>(),
-        "A file containing the model covariance")("wavelet",
+        "A file containing the model covariance")("tempdir", po::value<std::string>(),
+        "The name of the directory to store temporary files in")("wavelet",
         "Parametrize inversion by wavelet coefficients")("xorigin",
         po::value(&xorigin)->default_value(0.0),
         "The origin for the inversion grid in x-direction")("yorigin",
         po::value(&yorigin)->default_value(0.0),
         "The origin for the inversion grid in y-direction")("coolingfactor",
         po::value(&coolingfactor)->default_value(1.0),
-        "The factor to multiply the weight for the regularization at each iteration EXPERIMENTAL")(
-        "minslow", po::value(&minslow)->default_value(1e-4),
-        "The lower bound for slowness in the inversion")("maxslow",
-        po::value(&maxslow)->default_value(0.005),
-        "The upper bound for slowness in the inversion")("minres",
-        po::value(&minres)->default_value(0.1),
-        "The lower bound for resistivity in the inversion")("maxres",
-        po::value(&maxres)->default_value(5e3),
-        "The upper bound for resistivity in the inversion");
+        "The factor to multiply the weight for the regularization at each iteration EXPERIMENTAL");
     //we need to add the description for each part to the boost program options object
     //that way the user can get a help output and the parser object recongnizes these options
     desc.add(TomoSetup.SetupOptions());
-    desc.add(DCSetup.SetupOptions());
+    desc.add(DCResistivitySetup.SetupOptions());
+    desc.add(MagneticSetup.SetupOptions());
     desc.add(InversionSetup.SetupOptions());
     desc.add(RegSetup.SetupOptions());
+    desc.add(CouplingSetup.SetupOptions());
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -130,6 +133,19 @@ int main(int argc, char *argv[])
         omp_set_num_threads(vm["threads"].as<int>());
       }
 #endif
+    //some objects accept a directory name as a path to store temporary files
+    //we check that this directory actually exists to avoid double checking
+    //and early detection of problems
+    boost::filesystem::path TempDir = boost::filesystem::current_path();
+    if (vm.count("tempdir"))
+      {
+        TempDir = vm["tempdir"].as<std::string>();
+        if (!boost::filesystem::is_directory(TempDir))
+          {
+            std::cerr << TempDir.string() << " is not a directory or does not exist ! \n";
+            return 500;
+          }
+      }
 
     jif3D::rvec CovModVec;
     if (vm.count("covmod"))
@@ -147,39 +163,17 @@ int main(int argc, char *argv[])
     boost::shared_ptr<jif3D::JointObjective> Objective;
     Objective = boost::shared_ptr<jif3D::JointObjective>(new jif3D::JointObjective(true));
 
-    std::string startmodelname = jif3D::AskFilename("Starting Model: ");
-    jif3D::ThreeDSeismicModel StartModel;
-    StartModel.ReadNetCDF(startmodelname, false);
-    const size_t ngrid = StartModel.GetNModelElements();
-
     //we need a number of transformation objects to translate the generalized model parameters
     //used by the inversion algorithm to physically meaningful parameters for the forward
-    //calculation.
-    boost::shared_ptr<jif3D::GeneralModelTransform> SlownessTransform(
-        new jif3D::TanhTransform(minslow, maxslow));
-    boost::shared_ptr<jif3D::GeneralModelTransform> TomoTransform(
-        new jif3D::MultiSectionTransform(2 * ngrid, 0, ngrid, SlownessTransform));
-    boost::shared_ptr<jif3D::GeneralModelTransform> TomoRegTransform(
-        new jif3D::MultiSectionTransform(2 * ngrid, 0, ngrid,
-            boost::shared_ptr<jif3D::ModelCopyTransform>(new jif3D::ModelCopyTransform)));
-
-    boost::shared_ptr<jif3D::ChainedTransform> ResistivityTransform(
-        new jif3D::ChainedTransform);
-    jif3D::rvec RefModel(ngrid);
-    std::fill(RefModel.begin(), RefModel.end(), 1.0);
-    ResistivityTransform->AppendTransform(
-        boost::shared_ptr<jif3D::GeneralModelTransform>(
-            new jif3D::TanhTransform(std::log(minres), std::log(maxres))));
-    ResistivityTransform->AppendTransform(
-        boost::shared_ptr<jif3D::GeneralModelTransform>(
-            new jif3D::LogTransform(RefModel)));
-
-    boost::shared_ptr<jif3D::GeneralModelTransform> DCTransform(
-        new jif3D::MultiSectionTransform(2 * ngrid, ngrid, 2 * ngrid,
-            ResistivityTransform));
-    boost::shared_ptr<jif3D::GeneralModelTransform> DCRegTransform(
-        new jif3D::MultiSectionTransform(2 * ngrid, ngrid, 2 * ngrid,
-            boost::shared_ptr<jif3D::ModelCopyTransform>(new jif3D::ModelCopyTransform)));
+    //calculation. The exact type of transformation depends on the chosen coupling
+    //and is assigned below
+    boost::shared_ptr<jif3D::GeneralModelTransform> TomoTransform, DCTransform,
+        MagTransform;
+    //coupling setup is responsible to set the appropriate transformation
+    //as we have to use different ones depending on the chose coupling mechanism
+    jif3D::ThreeDSeismicModel StartModel;
+    CouplingSetup.SetupTransforms(vm, StartModel, TomoTransform, DCTransform,
+    		MagTransform, WaveletParm);
 
     //read in the tomography model and setup the options that are applicable
     //for the seismic tomography part of the inversion
@@ -190,10 +184,26 @@ int main(int argc, char *argv[])
         throw jif3D::FatalException(
             "Tomography model does not have the same geometry as starting model");
       }
-
-    bool havedc = DCSetup.SetupObjective(vm, *Objective.get(), DCTransform, xorigin,
-        yorigin);
-
+    //setup the dcresistivity part of the joint inversion
+    bool havedc = DCResistivitySetup.SetupObjective(vm, *Objective.get(), DCTransform,
+        xorigin, yorigin);
+    //if we have a seismic and a gravity objective function, we have
+    //to make sure that the starting models have the same geometry (not considering refinement)
+    if (havedc && !EqualGridGeometry(StartModel, DCResistivitySetup.GetModel()))
+      {
+        throw jif3D::FatalException(
+            "DCResistivity model does not have the same geometry as starting model");
+      }
+    //setup the MT part of the joint inversion
+    bool havemag = MagneticSetup.SetupObjective(vm, *Objective.get(), MagTransform, xorigin,
+        yorigin, TempDir);
+    //if we have a seismic and a MT objective function, we have
+    //to make sure that the starting models have the same geometry (not considering refinement)
+    if (havemag && !EqualGridGeometry(MagneticSetup.GetModel(), StartModel))
+      {
+        throw jif3D::FatalException(
+            "Magnetic model does not have the same geometry as starting model");
+      }
     //now we setup the regularization
     boost::shared_ptr<jif3D::RegularizationFunction> Regularization =
         RegSetup.SetupObjective(vm, StartModel, CovModVec);
@@ -201,78 +211,10 @@ int main(int argc, char *argv[])
     //the vector InvModel will hold the current inversion model
     //depending on the chosen coupling mechanism it will have different size
     //so we fill its content in the object Coupling setup
-    jif3D::rvec InvModel(2 * ngrid);
-
-    jif3D::rvec SeisModel(ngrid, 0.0);
-    if (TomoSetup.GetModel().GetNModelElements() == ngrid)
-      {
-        std::copy(TomoSetup.GetModel().GetSlownesses().origin(),
-            TomoSetup.GetModel().GetSlownesses().origin() + ngrid, SeisModel.begin());
-        std::cout << "Transforming slowness model. " << std::endl;
-        ublas::subrange(InvModel, 0, ngrid) = ublas::subrange(
-            SlownessTransform->PhysicalToGeneralized(SeisModel), 0, ngrid);
-      }
-
-    jif3D::rvec ResModel(ngrid, 0.0);
-    if (DCSetup.GetModel().GetNModelElements() == ngrid)
-      {
-        std::copy(DCSetup.GetModel().GetResistivities().origin(),
-            DCSetup.GetModel().GetResistivities().origin() + ngrid, ResModel.begin());
-        std::cout << "Transforming slowness model. " << std::endl;
-        ublas::subrange(InvModel, ngrid, 2 * ngrid) = ublas::subrange(
-            ResistivityTransform->PhysicalToGeneralized(ResModel), 0, ngrid);
-      }
-
-    boost::shared_ptr<jif3D::CrossGradient> SeisDCCross(
-        new jif3D::CrossGradient(StartModel));
-    boost::shared_ptr<jif3D::MultiSectionTransform> SeisDCTrans(
-        new jif3D::MultiSectionTransform(2 * ngrid));
-    SeisDCTrans->AddSection(0, ngrid, SlownessTransform);
-    SeisDCTrans->AddSection(ngrid, 2 * ngrid, ResistivityTransform);
-    double seisdclambda = 1.0;
-    std::cout << "Weight for  cross-gradient term: ";
-    std::cin >> seisdclambda;
-    if (seisdclambda > 0.0)
-      {
-        Objective->AddObjective(SeisDCCross, SeisDCTrans, seisdclambda, "SeisDC",
-            jif3D::JointObjective::coupling);
-      }
-
-    //finally we construct the regularization terms
-    //we ask for a weight and construct a regularization object
-    //for each type of physical parameter separately
-    //first we set up seismic tomography
-    jif3D::rvec Ones(InvModel.size(), 1.0);
-    double seisreglambda = 1.0;
-    std::cout << " Weight for seismic regularization: ";
-    std::cin >> seisreglambda;
-    boost::shared_ptr<jif3D::RegularizationFunction> SeisReg(Regularization->clone());
-
-    //then the regularization of densities
-    double dcreglambda = 1.0;
-    std::cout << " Weight for DC resistivity regularization: ";
-    std::cin >> dcreglambda;
-    boost::shared_ptr<jif3D::RegularizationFunction> DCReg(Regularization->clone());
-
-    //if we specify on the command line that we want to subtract the
-    //starting model, we set the corresponding reference model
-    //in the regularization object
-    if (RegSetup.GetSubStart())
-      {
-        SeisReg->SetReferenceModel(TomoTransform->GeneralizedToPhysical(InvModel));
-        DCReg->SetReferenceModel(DCTransform->GeneralizedToPhysical(InvModel));
-      }
-    if (seisreglambda > 0.0)
-      {
-        Objective->AddObjective(SeisReg, TomoRegTransform, seisreglambda, "SeisReg",
-            jif3D::JointObjective::regularization);
-      }
-    if (dcreglambda > 0.0)
-      {
-        Objective->AddObjective(DCReg, DCRegTransform, dcreglambda, "DCReg",
-            jif3D::JointObjective::regularization);
-      }
-
+    jif3D::rvec InvModel;
+    CouplingSetup.SetupModelVector(vm, InvModel, StartModel, TomoSetup.GetModel(),
+    		DCResistivitySetup.GetModel(), MagneticSetup.GetModel(), *Objective.get(), Regularization,
+        RegSetup.GetSubStart());
     //finally ask for the maximum number of iterations
     size_t maxiter = 1;
     std::cout << "Maximum iterations: ";
@@ -287,49 +229,20 @@ int main(int argc, char *argv[])
         InversionSetup.ConfigureInversion(vm, Objective, InvModel, CovModVec);
 
     std::string modelfilename = "result";
-    jif3D::ThreeDSeismicModel TomoModel(TomoSetup.GetModel());
-    jif3D::ThreeDDCResistivityModel DCModel(DCSetup.GetModel());
     //write out the seismic source and receiver positions for plotting
     //and general quality control
     if (havetomo)
       {
-        jif3D::Write3DDataToVTK(modelfilename + ".tomo_rec.vtk", "Receiver",
+        jif3D::Write3DDataToVTK(modelfilename + ".rec.vtk", "Receiver",
             jif3D::rvec(TomoSetup.GetModel().GetMeasPosX().size()),
             TomoSetup.GetModel().GetMeasPosX(), TomoSetup.GetModel().GetMeasPosY(),
             TomoSetup.GetModel().GetMeasPosZ());
-        jif3D::Write3DDataToVTK(modelfilename + ".tomo_sor.vtk", "Source",
+        jif3D::Write3DDataToVTK(modelfilename + ".sor.vtk", "Source",
             jif3D::rvec(TomoSetup.GetModel().GetSourcePosX().size()),
             TomoSetup.GetModel().GetSourcePosX(), TomoSetup.GetModel().GetSourcePosY(),
             TomoSetup.GetModel().GetSourcePosZ());
       }
-    else
-      {
-        TomoModel = StartModel;
-      }
 
-    if (havedc)
-      {
-        jif3D::Write3DDataToVTK(modelfilename + ".dc_rec1.vtk", "Receiver1",
-            jif3D::rvec(DCSetup.GetModel().GetMeasPosX().size()),
-            DCSetup.GetModel().GetMeasPosX(), DCSetup.GetModel().GetMeasPosY(),
-            DCSetup.GetModel().GetMeasPosZ());
-        jif3D::Write3DDataToVTK(modelfilename + ".dc_rec2.vtk", "Receiver2",
-            jif3D::rvec(DCSetup.GetModel().GetMeasSecPosX().size()),
-            DCSetup.GetModel().GetMeasSecPosX(), DCSetup.GetModel().GetMeasSecPosY(),
-            DCSetup.GetModel().GetMeasSecPosZ());
-        jif3D::Write3DDataToVTK(modelfilename + ".dc_sor1.vtk", "Source1",
-            jif3D::rvec(DCSetup.GetModel().GetSourcePosPosX().size()),
-            DCSetup.GetModel().GetSourcePosPosX(), DCSetup.GetModel().GetSourcePosPosY(),
-            DCSetup.GetModel().GetSourcePosPosZ());
-        jif3D::Write3DDataToVTK(modelfilename + ".dc_sor2.vtk", "Source2",
-            jif3D::rvec(DCSetup.GetModel().GetSourceNegPosX().size()),
-            DCSetup.GetModel().GetSourceNegPosX(), DCSetup.GetModel().GetSourceNegPosY(),
-            DCSetup.GetModel().GetSourceNegPosZ());
-      }
-    else
-      {
-        DCModel = StartModel;
-      }
 
     size_t iteration = 0;
     std::ofstream misfitfile("misfit.out");
@@ -340,6 +253,16 @@ int main(int argc, char *argv[])
     StoreMisfit(misfitfile, 0, InitialMisfit, *Objective);
     StoreRMS(rmsfile, 0, *Objective);
     StoreWeights(weightfile, 0, *Objective);
+    jif3D::ThreeDDCResistivityModel DCModel(DCResistivitySetup.GetModel());
+    jif3D::ThreeDMagneticModel MagModel(MagneticSetup.GetModel());
+    jif3D::ThreeDSeismicModel TomoModel(TomoSetup.GetModel());
+
+    if (!havetomo)
+      TomoModel = StartModel;
+    if (!havedc)
+      DCModel = StartModel;
+    if (!havemag)
+      MagModel = StartModel;
 
     bool terminate = false;
     jif3D::rvec OldModel(InvModel);
@@ -369,6 +292,8 @@ int main(int argc, char *argv[])
                 modelfilename + jif3D::stringify(iteration) + ".tomo.inv");
             SaveModel(InvModel, *DCTransform.get(), DCModel,
                 modelfilename + jif3D::stringify(iteration) + ".dc.inv");
+            SaveModel(InvModel, *MagTransform.get(), MagModel,
+                modelfilename + jif3D::stringify(iteration) + ".mag.inv");
             //write out some information about misfit to the screen
             std::cout << "Currrent Misfit: " << Optimizer->GetMisfit() << std::endl;
             std::cout << "Currrent Gradient: " << Optimizer->GetGradNorm() << std::endl;
@@ -391,6 +316,8 @@ int main(int argc, char *argv[])
 
     SaveModel(InvModel, *TomoTransform.get(), TomoModel, modelfilename + ".tomo.inv");
     SaveModel(InvModel, *DCTransform.get(), DCModel, modelfilename + ".dc.inv");
+    SaveModel(InvModel, *MagTransform.get(), MagModel, modelfilename + ".mag.inv");
+
     //calculate the predicted refraction data
     std::cout << "Calculating response of inversion model." << std::endl;
     //during the last iteration we might have performed steps in the line search
@@ -409,14 +336,6 @@ int main(int argc, char *argv[])
         jif3D::rvec TomoDiff(TomoSetup.GetTomoObjective().GetIndividualMisfit());
         jif3D::SaveTraveltimes(modelfilename + ".diff_tt.nc", TomoDiff, TomoError,
             TomoModel);
-      }
-
-    if (havedc)
-      {
-        jif3D::rvec DCInvData(DCSetup.GetObjective().GetSyntheticData());
-        jif3D::rvec DCError(DCSetup.GetObjective().GetDataError());
-        jif3D::SaveApparentResistivity(modelfilename + ".inv_dc.nc", DCInvData, DCError,
-            DCModel);
       }
 
     std::ofstream datadiffile("data.diff");

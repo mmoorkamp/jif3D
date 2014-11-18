@@ -49,6 +49,8 @@ namespace jif3D
           return GetData().num_elements();
         }
       ThreeDMagneticModel();
+      //! Other models will be copied by the copy operator for the base class
+      ThreeDMagneticModel& operator=(const ThreeDModelBase& source);
       virtual ~ThreeDMagneticModel();
       //! Set the sizes of the grid cells in x-direction in m
       t3DModelDim &SetXCellSizes()
@@ -79,7 +81,7 @@ namespace jif3D
       void WriteNetCDF(const std::string filename) const
         {
           NcFile DataFile(filename.c_str(), NcFile::Replace);
-          //write the 3D discretized part
+          //first write the 3D discretized part
           WriteDataToNetCDF(DataFile, SusceptibilityName, SusceptibilityUnit);
         }
       //! Write the density model in VTK format, at the moment the best format for plotting
