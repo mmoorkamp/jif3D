@@ -19,7 +19,9 @@ namespace jif3D
 
         desc.add_options()("dcrelerr", po::value(&relerr)->default_value(0.02),
             "The relative error for the DC resistivity data")("dcminerr",
-            po::value(&minerr)->default_value(1e-3));
+            po::value(&minerr)->default_value(1e-3))("dcfine",
+                    po::value(&DCFineModelName),
+                    "The name for the model with the DC forward geometry");
 
         return desc;
       }
@@ -59,6 +61,14 @@ namespace jif3D
             jif3D::rvec Error(jif3D::ConstructError(DCData, DCError, relerr, minerr));
             DCObjective->SetDataError(Error);
 
+            if (vm.count("dcfine"))
+              {
+                jif3D::ThreeDDCResistivityModel DCFineGeometry;
+                DCFineGeometry.ReadNetCDF(DCFineModelName);
+                //copy measurement configuration to refined model
+                DCFineGeometry.CopyMeasurementConfigurations(Model);
+                DCObjective->SetFineModelGeometry(DCFineGeometry);
+              }
             Objective.AddObjective(DCObjective, Transform, dclambda, "DC Resistivity",
                 JointObjective::datafit);
             std::cout << " Resistivity ndata: " << DCData.size() << std::endl;

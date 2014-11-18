@@ -61,11 +61,12 @@ int main()
     jif3D::rvec Errors(SynthData.size(), 0.0);
     if (error > 0.0)
       {
-        jif3D::AddNoise(SynthData, 0.0, error);
+        jif3D::AddNoise(SynthData, 0.02, error);
         std::fill(Errors.begin(), Errors.end(), error);
       }
     //std::string DataFilename = jif3D::AskFilename("Output file: ", false);
-    jif3D::SaveApparentResistivity(ModelFilename +".dcdata.nc", SynthData, Errors, Model);
+    jif3D::SaveApparentResistivity(ModelFilename + ".dcdata.nc", SynthData, Errors,
+        Model);
     Model.WriteVTK(ModelFilename + ".vtk");
 
   }

@@ -48,6 +48,7 @@ namespace jif3D
           ar & ny;
           ar & nz;
           ar & rho;
+          ar & avg_cond;
         }
     public:
       double dx; /*!< Cell width vector in m in x-direction*/
@@ -58,6 +59,7 @@ namespace jif3D
       size_t nz; /*!< The number of cells in z-direction*/
       /*!< Resistivity parameters*/
       std::vector<double> rho; /*!< resistivity model used for the forward model*/
+      double avg_cond; /*!< conductivity from reference model for boundary correction*/
       GRID_STRUCT_RES() :
           dx(0), dy(0), dz(), nx(0), ny(0), nz(0), rho()
         {

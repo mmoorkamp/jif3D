@@ -27,6 +27,8 @@ namespace jif3D
       boost::shared_ptr<DCResistivityCalculator> Calculator;
       //! Stores the grid for the DC resistivity model and the starting model
       jif3D::ThreeDDCResistivityModel Model;
+      //! Storage for the name of the refinement model, can optionally be set on the command line
+      std::string DCFineModelName;
       //! Possible pointer to the scalar Magnetics objective function, gets assigned below depending on user input
       boost::shared_ptr<jif3D::ThreeDModelObjective<DCResistivityCalculator> > DCObjective;
     public:

@@ -160,8 +160,7 @@ int main(int argc, char *argv[])
     boost::shared_ptr<jif3D::GeneralModelTransform> TomoTransform(
         new jif3D::MultiSectionTransform(2 * ngrid, 0, ngrid, SlownessTransform));
     boost::shared_ptr<jif3D::GeneralModelTransform> TomoRegTransform(
-        new jif3D::MultiSectionTransform(2 * ngrid, 0, ngrid,
-            boost::shared_ptr<jif3D::ModelCopyTransform>(new jif3D::ModelCopyTransform)));
+        new jif3D::MultiSectionTransform(2 * ngrid, 0, ngrid, boost::shared_ptr<jif3D::ModelCopyTransform>(new jif3D::ModelCopyTransform)));
 
     boost::shared_ptr<jif3D::ChainedTransform> ResistivityTransform(
         new jif3D::ChainedTransform);
@@ -178,8 +177,7 @@ int main(int argc, char *argv[])
         new jif3D::MultiSectionTransform(2 * ngrid, ngrid, 2 * ngrid,
             ResistivityTransform));
     boost::shared_ptr<jif3D::GeneralModelTransform> DCRegTransform(
-        new jif3D::MultiSectionTransform(2 * ngrid, ngrid, 2 * ngrid,
-            boost::shared_ptr<jif3D::ModelCopyTransform>(new jif3D::ModelCopyTransform)));
+            new jif3D::MultiSectionTransform(2 * ngrid, ngrid, 2*ngrid, boost::shared_ptr<jif3D::ModelCopyTransform>(new jif3D::ModelCopyTransform)));
 
     //read in the tomography model and setup the options that are applicable
     //for the seismic tomography part of the inversion
@@ -191,8 +189,7 @@ int main(int argc, char *argv[])
             "Tomography model does not have the same geometry as starting model");
       }
 
-    bool havedc = DCSetup.SetupObjective(vm, *Objective.get(), DCTransform, xorigin,
-        yorigin);
+    bool havedc = DCSetup.SetupObjective(vm, *Objective.get(), DCTransform, xorigin, yorigin);
 
     //now we setup the regularization
     boost::shared_ptr<jif3D::RegularizationFunction> Regularization =
@@ -303,33 +300,12 @@ int main(int argc, char *argv[])
             TomoSetup.GetModel().GetSourcePosZ());
       }
     else
-      {
+    {
         TomoModel = StartModel;
-      }
+    }
 
-    if (havedc)
-      {
-        jif3D::Write3DDataToVTK(modelfilename + ".dc_rec1.vtk", "Receiver1",
-            jif3D::rvec(DCSetup.GetModel().GetMeasPosX().size()),
-            DCSetup.GetModel().GetMeasPosX(), DCSetup.GetModel().GetMeasPosY(),
-            DCSetup.GetModel().GetMeasPosZ());
-        jif3D::Write3DDataToVTK(modelfilename + ".dc_rec2.vtk", "Receiver2",
-            jif3D::rvec(DCSetup.GetModel().GetMeasSecPosX().size()),
-            DCSetup.GetModel().GetMeasSecPosX(), DCSetup.GetModel().GetMeasSecPosY(),
-            DCSetup.GetModel().GetMeasSecPosZ());
-        jif3D::Write3DDataToVTK(modelfilename + ".dc_sor1.vtk", "Source1",
-            jif3D::rvec(DCSetup.GetModel().GetSourcePosPosX().size()),
-            DCSetup.GetModel().GetSourcePosPosX(), DCSetup.GetModel().GetSourcePosPosY(),
-            DCSetup.GetModel().GetSourcePosPosZ());
-        jif3D::Write3DDataToVTK(modelfilename + ".dc_sor2.vtk", "Source2",
-            jif3D::rvec(DCSetup.GetModel().GetSourceNegPosX().size()),
-            DCSetup.GetModel().GetSourceNegPosX(), DCSetup.GetModel().GetSourceNegPosY(),
-            DCSetup.GetModel().GetSourceNegPosZ());
-      }
-    else
-      {
-        DCModel = StartModel;
-      }
+    if (!havedc)
+    	DCModel = StartModel;
 
     size_t iteration = 0;
     std::ofstream misfitfile("misfit.out");
@@ -340,6 +316,11 @@ int main(int argc, char *argv[])
     StoreMisfit(misfitfile, 0, InitialMisfit, *Objective);
     StoreRMS(rmsfile, 0, *Objective);
     StoreWeights(weightfile, 0, *Objective);
+
+
+
+
+
 
     bool terminate = false;
     jif3D::rvec OldModel(InvModel);
@@ -390,7 +371,8 @@ int main(int argc, char *argv[])
       }
 
     SaveModel(InvModel, *TomoTransform.get(), TomoModel, modelfilename + ".tomo.inv");
-    SaveModel(InvModel, *DCTransform.get(), DCModel, modelfilename + ".dc.inv");
+    SaveModel(InvModel, *DCTransform.get(), DCModel,
+        modelfilename + ".dc.inv");
     //calculate the predicted refraction data
     std::cout << "Calculating response of inversion model." << std::endl;
     //during the last iteration we might have performed steps in the line search
@@ -412,12 +394,11 @@ int main(int argc, char *argv[])
       }
 
     if (havedc)
-      {
-        jif3D::rvec DCInvData(DCSetup.GetObjective().GetSyntheticData());
-        jif3D::rvec DCError(DCSetup.GetObjective().GetDataError());
-        jif3D::SaveApparentResistivity(modelfilename + ".inv_dc.nc", DCInvData, DCError,
-            DCModel);
-      }
+    {
+    	jif3D::rvec DCInvData(DCSetup.GetObjective().GetSyntheticData());
+    	jif3D::rvec DCError(DCSetup.GetObjective().GetDataError());
+    	jif3D::SaveApparentResistivity(modelfilename + ".inv_dc.nc",DCInvData,DCError,DCModel);
+    }
 
     std::ofstream datadiffile("data.diff");
     std::copy(Objective->GetDataDifference().begin(),
