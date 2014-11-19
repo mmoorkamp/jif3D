@@ -28,6 +28,9 @@
 #include <boost/serialization/serialization.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
+#include <boost/log/core.hpp>
+#include <boost/log/trivial.hpp>
+#include <boost/log/expressions.hpp>
 #include "../Global/FileUtil.h"
 #include "../Global/convert.h"
 #include "../Global/Noise.h"
@@ -115,6 +118,7 @@ double InvertBlock(jif3D::X3DModel Model, jif3D::rvec Data, realinfo Info)
   }
 
 namespace po = boost::program_options;
+namespace logging = boost::log;
 
 int hpx_main(po::variables_map& vm)
   {
@@ -307,7 +311,7 @@ int main(int argc, char* argv[])
         "Thickness of the top layer in m, if <= 0.0 the thickness will be the same as the z dimension of the other grid cells.")(
         "x3dname", po::value<std::string>(), "The name of the executable for x3d")(
         "tempdir", po::value<std::string>(),
-        "The name of the directory where we store files for forward calculation");
+        "The name of the directory where we store files for forward calculation")("debug","Output extra information for debugging");
 #ifdef HAVEHPX
     return hpx::init(desc, argc, argv);
 #else
@@ -320,6 +324,15 @@ int main(int argc, char* argv[])
         std::cout << desc << "\n";
         return 1;
       }
+    if (vm.count("debug"))
+      {
+        logging::core::get()->set_filter(
+            logging::trivial::severity >= logging::trivial::debug);
+      }
+    else{
+        logging::core::get()->set_filter(
+            logging::trivial::severity >= logging::trivial::warning);
+    }
     return hpx_main(vm);
 #endif
   }
