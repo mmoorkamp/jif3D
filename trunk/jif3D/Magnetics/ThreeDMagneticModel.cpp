@@ -29,10 +29,6 @@ namespace jif3D
         // TODO Auto-generated destructor stub
       }
 
-    void ThreeDMagneticModel::WriteNetCDF(const std::string filename) const
-      {
-
-      }
 
     ThreeDMagneticModel& ThreeDMagneticModel::operator=(const ThreeDModelBase& source)
       {

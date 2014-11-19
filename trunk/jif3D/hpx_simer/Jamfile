@@ -7,7 +7,8 @@ import testing ;
 #           ;
 
      
-exe hpx_2phase : hpx_2phase.cpp CalcRealization.cpp ../MT//mt  ../ModelBase//modelbase ../Inversion//inversion  ..//boost_system ..//boost_filesystem  
+exe hpx_2phase : hpx_2phase.cpp CalcRealization.cpp ../MT//mt  ../ModelBase//modelbase ../Inversion//inversion  
+                 ..//boost_system ..//boost_filesystem ..//boost_log  
    : <hpx>on:<linkflags>"`pkg-config  --libs hpx_application ` -liostreams "
      <hpx>on:<cflags>"`pkg-config --cflags hpx_application `"   
      <hpx>off:<library>..//boost_program_options <hpx>off:<library>..//boost_system
