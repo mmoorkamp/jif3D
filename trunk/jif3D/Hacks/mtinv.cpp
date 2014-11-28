@@ -252,10 +252,7 @@ int main(int argc, char *argv[])
 
     boost::shared_ptr<jif3D::RegularizationFunction> Regularization =
         RegSetup.SetupObjective(vm, Model, CovModVec);
-    if (RegSetup.GetSubStart())
-      {
-        Regularization->SetReferenceModel(InvModel);
-      }
+
     double lambda = 1.0;
     std::cout << "Lambda: ";
     std::cin >> lambda;
@@ -265,6 +262,10 @@ int main(int argc, char *argv[])
         new jif3D::MultiSectionTransform(InvModel.size(), 0, ngrid, Copier));
     Objective->AddObjective(Regularization, ModRegTrans, lambda, "Regularization",
         jif3D::JointObjective::regularization);
+    if (RegSetup.GetSubStart())
+      {
+        Regularization->SetReferenceModel(ModRegTrans->GeneralizedToPhysical(InvModel));
+      }
 
     if (WantDistCorr)
       {
