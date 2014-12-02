@@ -1,10 +1,11 @@
 import testing ; 
 
 
-alias joint : ../Tomo//tomo ../Gravity//gravity ../Magnetics//magnetics ../MT//mt ../DCResistivity//dcresistivity
+alias joint : ../Tomo//tomo ../Gravity//gravity ../Magnetics//magnetics ../MT//mt 
               ../Inversion//inversion ../Global//global ../Regularization//regularization 
               ../ModelBase//modelbase
-              ..//boost_filesystem ..//boost_program_options ..//boost_log ..//boost_system ;
+              ..//boost_filesystem ..//boost_program_options ..//boost_log ..//boost_system :
+              <eigen>on:<library>../DCResistivity//dcresistivity ;
 	
 lib setup : SaltRelConstraint.cpp SetupGravity.cpp SetupMagnetics.cpp SetupMagneticGrad.cpp
             SetupInversion.cpp SetupMT.cpp SetupRegularization.cpp 
