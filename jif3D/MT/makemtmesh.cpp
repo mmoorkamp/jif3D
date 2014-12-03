@@ -9,6 +9,7 @@
  * Make a netcdf conductivity model file with a specified mesh. The conductivities in this file are all identical to the specified value.
  */
 
+#include <boost/program_options.hpp>
 #include <iostream>
 #include <string>
 #include "../Global/FileUtil.h"
@@ -18,14 +19,27 @@ using namespace std;
 
 /*! \file makemtmesh.cpp
  * Make a forward modeling mesh for X3D. The program asks for the size in the three coordinate directions and
- * the cell size for each direction. All cells will have the same size for one direction even though x3d supports
- * varying cell sizes in z-direction. The program also asks for a conductivity value that the mesh will be filled with.
+ * the cell size for each direction. All cells will have the same size for the two horizontal directions.
+ * For the vertical direction we can specify the thickness of the top layer and a factor by which each cell
+ * increases in thickness compared to the previous layer.
+ * The program also asks for a conductivity value that the mesh will be filled with.
  * It will also create a layered background with the same number of layers as cells in x-direction and filled with
  * the same conductivity value as the mesh.
  */
+namespace po = boost::program_options;
 
-int main()
+int main(int argc, char *argv[])
   {
+
+    double rounding = 1.0;
+    po::options_description desc("General options");
+    desc.add_options()("help", "produce help message")("rounding", po::value<double>(&rounding),
+        "Round layer thicknesses to multiple of this number in meters.");
+
+
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::notify(vm);
 
     jif3D::X3DModel Model;
     int nx, ny, nz;
@@ -50,14 +64,18 @@ int main()
     cout << "Increase factor for z: ";
     cin >> factor;
     //set the cell sizes and allocate memory for the mesh
-    Model.SetHorizontalCellSize(deltax, deltay, nx, ny);
-    Model.SetZCellSizes().resize(boost::extents[nz]);
-    for (size_t i = 0; i < nz; ++i)
-      {
-        Model.SetZCellSizes()[i] = floor(deltaz * pow(factor, i));
-
-      }
     Model.SetMeshSize(nx, ny, nz);
+    Model.SetHorizontalCellSize(deltax, deltay, nx, ny);
+    //the size of each cell in z-direction increases by the specified factor for each layer
+    for (int i = 0; i < nz; ++i)
+      {
+        double thickness = floor(deltaz * pow(factor, i));
+        //x3d has some problems handling thicknesses over 10km with full meter precision
+        //so if the thickness is > 10km we round to 100m
+        thickness = floor(thickness/rounding) * rounding;
+        Model.SetZCellSizes()[i] = thickness;
+      }
+
 
     //ask for a conductivity to fill the mesh with
     double defaultconductivity = 1.0;
@@ -72,8 +90,8 @@ int main()
     Model.SetFrequencies().assign(1, 10.0);
     //fill the background
     std::vector<double> bg_thicknesses(Model.GetZCellSizes().size());
-    std::copy(Model.GetZCellSizes().begin(),Model.GetZCellSizes().end(),bg_thicknesses.begin());
-    std::copy(Model.GetZCellSizes().begin(),Model.GetZCellSizes().end(),bg_thicknesses.begin());
+    std::copy(Model.GetZCellSizes().begin(), Model.GetZCellSizes().end(),
+        bg_thicknesses.begin());
     std::vector<double> bg_conductivities(Model.GetZCellSizes().size(),
         defaultconductivity);
     Model.SetBackgroundThicknesses(bg_thicknesses);
