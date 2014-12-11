@@ -9,6 +9,9 @@
 #include "CalcRealization.h"
 #include "../MT/X3DMTCalculator.h"
 #include "../Global/VecMat.h"
+
+
+
 jif3D::rvec CalcRealization(realinfo Info)
   {
     const size_t nx = Info.Model.GetXCoordinates().num_elements();
@@ -38,6 +41,10 @@ jif3D::rvec CalcRealization(realinfo Info)
     jif3D::rvec Impedances(Calculator.Calculate(Info.Model));
     return Impedances;
   }
+
+
+
+
 
 
 #ifdef HAVEHPX

@@ -56,7 +56,7 @@ namespace jif3D
       //! We can specify for each objective function what general purpose it has in the optimization
       std::vector<ObjectiveType> FunctionType;
       friend class boost::serialization::access;
-      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      //! Provide serialization to be able to store objects and, more importantly for simpler parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
         {
@@ -68,6 +68,7 @@ namespace jif3D
           ar & Names;
           ar & Distributor;
           ar & PrintMisfit;
+          ar & FunctionType;
         }
       //the implementation of the misfit calculation
       virtual void

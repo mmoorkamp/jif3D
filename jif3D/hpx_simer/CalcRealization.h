@@ -15,14 +15,10 @@
 #include "../Global/VecMat.h"
 #include "realinfo.h"
 
-
 jif3D::rvec CalcRealization(realinfo Info);
 
 #ifdef HAVEHPX
 HPX_DEFINE_PLAIN_ACTION(CalcRealization, Calc_action);
 #endif
-
-
-
 
 #endif /* CALCREALIZATION_H_ */

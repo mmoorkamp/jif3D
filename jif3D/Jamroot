@@ -28,6 +28,7 @@ project
     : requirements <include>/usr/local/include <include>/usr/local/R-2.6.2/include 
         <include>/usr/local/cuda/include
         <include>/usr/local/CUDA_SDK/C/common/inc
+        <include>/usr/include/python2.7/
         <threading>multi 
         <define>BIND_FORTRAN_LOWERCASE_UNDERSCORE
         <define>BOOST_LOG_DYN_LINK
@@ -63,6 +64,7 @@ use-project /Magnetics : Magnetics ;
 use-project /ModelBase : ModelBase ;
 use-project /Profiling : Profiling ;
 use-project /Inversion : Inversion ;
+use-project /MT : MT ;
 use-project /Joint : Joint ;
 use-project /hpxtest : hpxtest ;
 use-project /ModelTransforms : ModelTransforms ;
@@ -79,6 +81,7 @@ lib boost_log : : <name>boost_log  <search>$(BOOST_LIB_PATH) ;
 lib boost_iostreams : : <name>boost_iostreams  <search>$(BOOST_LIB_PATH) ;
 lib boost_date_time : : <name>boost_date_time  <search>$(BOOST_LIB_PATH) ;
 lib boost_chrono : : <name>boost_chrono  <search>$(BOOST_LIB_PATH) ;
+lib boost_python : : <name>boost_python  <search>$(BOOST_LIB_PATH) ;
 lib lapack : : <name>lapack ;
 lib f77blas : : <name>f77blas ;
 lib cblas : : <name>cblas ;
@@ -91,6 +94,7 @@ lib gfortran : :  <name>gfortran ;
 lib cudart : : <name>cudart <search>$(CUDA_LIB_PATH) ;
 lib cublas : : <name>cublas <search>$(CUDA_LIB_PATH) ;
 alias vecopt : lapack cblas atlas f77blas gfortran ;
+alias boost_core : boost_program_options boost_filesystem boost_log  boost_system ;
 
 build-project Global ;
 build-project Gravity ;

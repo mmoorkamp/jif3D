@@ -75,7 +75,8 @@ namespace jif3D
             "DensReplace", po::value(&DensReplace)->default_value(0.0),
             "Value to use for Density where relationship is not valid")("CondReplace",
             po::value(&CondReplace)->default_value(3.3),
-            "Value to use for Conductivity where relationship is not valid");
+            "Value to use for Conductivity where relationship is not valid")(
+            "usetransformed", "Use transformed values for calculating cross-gradient");
 
         return desc;
       }
@@ -106,7 +107,8 @@ namespace jif3D
           {
             WaveletTrans = boost::shared_ptr<jif3D::GeneralModelTransform>(
                 new jif3D::WaveletModelTransform(GeometryModel.GetData().shape()[0],
-                    GeometryModel.GetData().shape()[1], GeometryModel.GetData().shape()[2]));
+                    GeometryModel.GetData().shape()[1],
+                    GeometryModel.GetData().shape()[2]));
           }
         //if we want to do a cross-gradient type joint inversion
         //we need to set transformations for each data type
@@ -127,7 +129,8 @@ namespace jif3D
             //we start with tomography
             boost::shared_ptr<jif3D::ChainedTransform> SlownessTransform(
                 new jif3D::ChainedTransform);
-            boost::shared_ptr<jif3D::GeneralModelTransform> Copier(new jif3D::ModelCopyTransform);
+            boost::shared_ptr<jif3D::GeneralModelTransform> Copier(
+                new jif3D::ModelCopyTransform);
             SlownessTransform->AppendTransform(
                 boost::shared_ptr<jif3D::GeneralModelTransform>(
                     new jif3D::TanhTransform(minslow, maxslow)));
@@ -138,7 +141,8 @@ namespace jif3D
             //we regularize on the raw model parameters as these are more evenly spaced than slowness values
             SlowRegTrans = boost::shared_ptr<jif3D::ChainedTransform>(
                 new jif3D::ChainedTransform);
-            SlowRegTrans->AppendTransform(boost::shared_ptr<jif3D::GeneralModelTransform>(
+            SlowRegTrans->AppendTransform(
+                boost::shared_ptr<jif3D::GeneralModelTransform>(
                     new jif3D::MultiSectionTransform(3 * ngrid, 0, ngrid, Copier)));
 
             //then we do density
@@ -154,7 +158,8 @@ namespace jif3D
                     DensityTransform));
             DensRegTrans = boost::shared_ptr<jif3D::ChainedTransform>(
                 new jif3D::ChainedTransform);
-            DensRegTrans->AppendTransform(boost::shared_ptr<jif3D::GeneralModelTransform>(
+            DensRegTrans->AppendTransform(
+                boost::shared_ptr<jif3D::GeneralModelTransform>(
                     new jif3D::MultiSectionTransform(3 * ngrid, ngrid, 2 * ngrid,
                         Copier)));
 
@@ -178,7 +183,8 @@ namespace jif3D
             //we regularize on the raw model parameters as these are more evenly spaced than conductivities
             CondRegTrans = boost::shared_ptr<jif3D::ChainedTransform>(
                 new jif3D::ChainedTransform);
-            CondRegTrans->AppendTransform(boost::shared_ptr<jif3D::GeneralModelTransform>(
+            CondRegTrans->AppendTransform(
+                boost::shared_ptr<jif3D::GeneralModelTransform>(
                     new jif3D::MultiSectionTransform(3 * ngrid, 2 * ngrid, 3 * ngrid,
                         Copier)));
             //if we want to regularize in the wavelet  domain
@@ -188,6 +194,12 @@ namespace jif3D
                 SlowRegTrans->AppendTransform(WaveletTrans);
                 DensRegTrans->AppendTransform(WaveletTrans);
                 CondRegTrans->AppendTransform(WaveletTrans);
+              }
+            if (vm.count("usetransformed"))
+              {
+                CondCrossTrans = Copier;
+                DensCrossTrans = Copier;
+                SlowCrossTrans = Copier;
               }
             //finished setting up cross-gradient coupling
 
@@ -239,8 +251,9 @@ namespace jif3D
 
     void SetupCoupling::SetupCrossGradModel(jif3D::rvec &InvModel,
         const jif3D::ThreeDModelBase &ModelGeometry,
-        const jif3D::ThreeDSeismicModel &SeisMod, const jif3D::ThreeDGravityModel &GravMod,
-        const jif3D::ThreeDMTModel &MTMod, jif3D::JointObjective &Objective,
+        const jif3D::ThreeDSeismicModel &SeisMod,
+        const jif3D::ThreeDGravityModel &GravMod, const jif3D::ThreeDMTModel &MTMod,
+        jif3D::JointObjective &Objective,
         boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart)
       {
         const size_t ngrid = ModelGeometry.GetNModelElements();
@@ -300,7 +313,7 @@ namespace jif3D
         if (seisgravlambda > 0.0)
           {
             Objective.AddObjective(SeisGravCross, SeisGravTrans, seisgravlambda,
-                "SeisGrav",JointObjective::coupling);
+                "SeisGrav", JointObjective::coupling);
           }
         boost::shared_ptr<jif3D::CrossGradient> SeisMTCross(
             new jif3D::CrossGradient(ModelGeometry));
@@ -314,7 +327,8 @@ namespace jif3D
         std::cin >> seismtlambda;
         if (seismtlambda > 0.0)
           {
-            Objective.AddObjective(SeisMTCross, SeisMTTrans, seismtlambda, "SeisMT",JointObjective::coupling);
+            Objective.AddObjective(SeisMTCross, SeisMTTrans, seismtlambda, "SeisMT",
+                JointObjective::coupling);
           }
         boost::shared_ptr<jif3D::CrossGradient> GravMTCross(
             new jif3D::CrossGradient(ModelGeometry));
@@ -328,7 +342,8 @@ namespace jif3D
         std::cin >> gravmtlambda;
         if (gravmtlambda > 0.0)
           {
-            Objective.AddObjective(GravMTCross, GravMTTrans, seismtlambda, "GravMT",JointObjective::coupling);
+            Objective.AddObjective(GravMTCross, GravMTTrans, seismtlambda, "GravMT",
+                JointObjective::coupling);
           }
         //finally we construct the regularization terms
         //we ask for a weight and construct a regularization object
@@ -372,22 +387,26 @@ namespace jif3D
           }
         if (seisreglambda > 0.0)
           {
-            Objective.AddObjective(SeisReg, SlowRegTrans, seisreglambda, "SeisReg",JointObjective::regularization);
+            Objective.AddObjective(SeisReg, SlowRegTrans, seisreglambda, "SeisReg",
+                JointObjective::regularization);
           }
         if (gravreglambda > 0.0)
           {
-            Objective.AddObjective(GravReg, DensRegTrans, gravreglambda, "GravReg",JointObjective::regularization);
+            Objective.AddObjective(GravReg, DensRegTrans, gravreglambda, "GravReg",
+                JointObjective::regularization);
           }
         if (mtreglambda > 0.0)
           {
-            Objective.AddObjective(MTReg, CondRegTrans, mtreglambda, "MTReg",JointObjective::regularization);
+            Objective.AddObjective(MTReg, CondRegTrans, mtreglambda, "MTReg",
+                JointObjective::regularization);
           }
       }
 
     void SetupCoupling::SetupSaltModel(const po::variables_map &vm, jif3D::rvec &InvModel,
         const jif3D::ThreeDModelBase &ModelGeometry,
-        const jif3D::ThreeDSeismicModel &SeisMod, const jif3D::ThreeDGravityModel &GravMod,
-        const jif3D::ThreeDMTModel &MTMod, jif3D::JointObjective &Objective,
+        const jif3D::ThreeDSeismicModel &SeisMod,
+        const jif3D::ThreeDGravityModel &GravMod, const jif3D::ThreeDMTModel &MTMod,
+        jif3D::JointObjective &Objective,
         boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart)
       {
         const size_t ngrid = ModelGeometry.GetNModelElements();
@@ -480,7 +499,8 @@ namespace jif3D
         std::cin >> saltrellambda;
         if (saltrellambda > 0.0)
           {
-            Objective.AddObjective(SaltRel, SaltRelTrans, saltrellambda, "SaltRel",JointObjective::coupling);
+            Objective.AddObjective(SaltRel, SaltRelTrans, saltrellambda, "SaltRel",
+                JointObjective::coupling);
           }
         //finally we construct the regularization terms
         //we ask for a weight and construct a regularization object
@@ -524,24 +544,28 @@ namespace jif3D
           }
         if (seisreglambda > 0.0)
           {
-            Objective.AddObjective(SeisReg, SlowRegTrans, seisreglambda, "SeisReg",JointObjective::regularization);
+            Objective.AddObjective(SeisReg, SlowRegTrans, seisreglambda, "SeisReg",
+                JointObjective::regularization);
 
           }
         if (gravreglambda > 0.0)
           {
-            Objective.AddObjective(GravReg, DensRegTrans, gravreglambda, "GravReg",JointObjective::regularization);
+            Objective.AddObjective(GravReg, DensRegTrans, gravreglambda, "GravReg",
+                JointObjective::regularization);
 
           }
         if (mtreglambda > 0.0)
           {
-            Objective.AddObjective(MTReg, CondRegTrans, mtreglambda, "MTReg",JointObjective::regularization);
+            Objective.AddObjective(MTReg, CondRegTrans, mtreglambda, "MTReg",
+                JointObjective::regularization);
           }
       }
 
     void SetupCoupling::SetupFixedCouplingModel(jif3D::rvec &InvModel,
         const jif3D::ThreeDModelBase &ModelGeometry,
-        const jif3D::ThreeDSeismicModel &SeisMod, const jif3D::ThreeDGravityModel &GravMod,
-        const jif3D::ThreeDMTModel &MTMod, jif3D::JointObjective &Objective,
+        const jif3D::ThreeDSeismicModel &SeisMod,
+        const jif3D::ThreeDGravityModel &GravMod, const jif3D::ThreeDMTModel &MTMod,
+        jif3D::JointObjective &Objective,
         boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart)
       {
         const size_t ngrid = ModelGeometry.GetNModelElements();
@@ -573,17 +597,19 @@ namespace jif3D
             RefModel = SlowRegTrans->GeneralizedToPhysical(RefModel);
             Regularization->SetReferenceModel(RefModel);
           }
-        Objective.AddObjective(Regularization, SlowRegTrans, reglambda, "Reg",JointObjective::regularization);
+        Objective.AddObjective(Regularization, SlowRegTrans, reglambda, "Reg",
+            JointObjective::regularization);
         InvModel = SlowTrans->PhysicalToGeneralized(InvModel);
       }
 
     void SetupCoupling::SetupModelVector(const po::variables_map &vm,
         jif3D::rvec &InvModel, const jif3D::ThreeDModelBase &ModelGeometry,
-        const jif3D::ThreeDSeismicModel &SeisMod, const jif3D::ThreeDGravityModel &GravMod,
-        const jif3D::ThreeDMTModel &MTMod, jif3D::JointObjective &Objective,
+        const jif3D::ThreeDSeismicModel &SeisMod,
+        const jif3D::ThreeDGravityModel &GravMod, const jif3D::ThreeDMTModel &MTMod,
+        jif3D::JointObjective &Objective,
         boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart)
       {
-         //depending on the type of coupling the model vector looks quite different
+        //depending on the type of coupling the model vector looks quite different
         //and we have to setup a number of different things
         //so we separate it into different functions even though it means
         //passing around many parameters

@@ -1,8 +1,8 @@
 import testing ; 
 lib modelbase : CellBoundaries.cpp ThreeDModelBase.cpp NetCDFModelTools.cpp VTKTools.cpp ModelRefiner.cpp
-                ..//netcdf_c++ ..//netcdf  ;
+                ..//netcdf_c++ ..//netcdf ..//boost_core ;
 
-unit-test base_test : test_ThreeDModelBase.cpp modelbase ../Gravity//gravity ..//netcdf_c++ ..//netcdf  ;
+unit-test base_test : test_ThreeDModelBase.cpp modelbase ../Gravity//gravity ..//netcdf_c++ ..//netcdf ..//boost_core ;
 unit-test refiner_test : test_ModelRefiner.cpp modelbase ../Gravity//gravity ..//netcdf_c++ ..//netcdf  ;
 unit-test CellBoundaries_test : test_CellBoundaries.cpp ../Gravity//gravity modelbase  ;
 unit-test vtktools_test : test_VTKTools.cpp modelbase ../Gravity//gravity ..//netcdf_c++ ..//netcdf ;

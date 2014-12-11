@@ -1,7 +1,9 @@
 import testing ; 
 import mpi ;
 
-alias joint : ../Tomo//tomo ../Gravity//gravity ../Inversion//inversion ../Global//global ../Regularization//regularization ../ModelBase//modelbase ..//boost_filesystem ..//boost_system ;
+alias joint : ../Tomo//tomo ../Gravity//gravity ../Inversion//inversion 
+              ../Global//global ../Regularization//regularization ../ModelBase//modelbase 
+              ..//boost_core ;
 
 lib gsl : : <name>gsl ;
 lib cblas : : <name>cblas ;
@@ -14,11 +16,11 @@ lib cblas : : <name>cblas ;
 # exe invariantftginv : invariantftginv.cpp  ../Gravity//gravity ../Global ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ../Inversion//inversion
               #..//vecopt ..//cudart : <include>. ;
 
-exe gravregion : gravregion.cpp joint ..//boost_filesystem ..//boost_system ;
-exe plotsaltrel : plotsaltrel.cpp joint ../Joint//joint ../Joint//setup 	;	
-exe mtinv : mtinv.cpp  joint ../MT//mt ../Joint//joint ../Joint//setup ..//boost_log ;
+exe gravregion : gravregion.cpp joint  ;
+exe plotsaltrel : plotsaltrel.cpp joint ../Joint//joint ../Joint//setup ;	
+exe mtinv : mtinv.cpp  joint ../MT//mt ../Joint//joint ../Joint//setup  ;
 exe tomoinv : tomoinv.cpp  joint ;
-exe plotgrav : plotgrav.cpp  joint ..//boost_filesystem ..//boost_system ;
+exe plotgrav : plotgrav.cpp  joint ;
 exe cleanmt : cleanmt.cpp  ../MT//mt joint ;
 exe qqfit : qqfit.cpp  ../MT//mt joint ;
 exe avgmt : avgmt.cpp  ../MT//mt joint ;
@@ -28,7 +30,7 @@ exe picksort : picksort.cpp  ../Global//global  ../Tomo//tomo ..//boost_filesyst
 exe randommtmesh : randommtmesh.cpp  ../Global//global  ../MT//mt ../ModelBase//modelbase ..//boost_filesystem ..//boost_program_options ..//boost_system ;
 exe joinpicks : joinpicks.cpp  ../Global//global  ../Tomo//tomo ..//boost_filesystem ..//boost_system ;
 exe srcrecdist : srcrecdist.cpp  ../Global//global ../Tomo//tomo ../ModelBase//modelbase ..//boost_filesystem ..//boost_system ..//netcdf_c++ ..//netcdf ;
-exe calccross : calccross.cpp  ../Global//global  ../Tomo//tomo ../Regularization ../Inversion ../ModelBase//modelbase ..//boost_filesystem ..//boost_system ;
+exe calccross : calccross.cpp  joint ;
 exe convertmtascii : convertmtascii.cpp   ../Global ../MT ..//boost_filesystem  ..//boost_system ;
 exe convertmtt : convertmtt.cpp   ../Global//global ../MT//mt ..//boost_filesystem  ..//boost_system  ;
 exe onedmtinv : onedmtinv.cpp   joint ../MT//mt ..//boost_program_options ..//boost_filesystem ..//boost_system ;
