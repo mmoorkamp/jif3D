@@ -3,14 +3,15 @@ lib gravity : ThreeDGravityModel.cpp DepthWeighting.cpp
               GravityBackground.cpp BasicGravElements.cpp
               ScalarOMPGravityImp.cpp  TensorOMPGravityImp.cpp
               GravityInterface.cpp   ReadWriteGravityData.cpp
-                 ../Global//global ..//boost_filesystem ..//boost_system ../ModelBase//modelbase ../Inversion//lininv
+                 ../Global//global  ../ModelBase//modelbase ../Inversion//lininv
+                 ..//boost_core
               : <gpu>on:<source>TensorCudaGravityImp.cpp 
                 <gpu>on:<source>ScalarCudaGravityImp.cpp
                 <gpu>on:<source>..//cudart
                 <gpu>on:<source>gravcuda.cu ;
                
                     
-alias core :  ../ModelBase//modelbase ../Global//global ..//netcdf_c++ ..//netcdf  ..//boost_filesystem  ..//boost_program_options ..//boost_system ;
+alias core :  ../ModelBase//modelbase ../Global//global ..//netcdf_c++ ..//netcdf  ..//boost_core ;
 
 unit-test Model_test : test_ThreeDGravityModel.cpp gravity core  ;
 unit-test scalar_test : test_ScalarCalculation.cpp gravity core  ;

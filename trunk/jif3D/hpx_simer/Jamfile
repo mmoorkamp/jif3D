@@ -1,12 +1,15 @@
 import testing ; 
-
+import python ;
 
 #lib hpx_mt : HPXMTCalculator.cpp ..//MT
 #         ..//ModelBase  ..//boost_filesystem ..//boost_system 
 #          : <cflags>"`pkg-config --cflags hpx_component_debug `"       
 #           ;
+using python ;
 
-     
+python-extension simerreal_ext : CalcRawRealization.cpp ../MT//mt  ../ModelBase//modelbase ../Inversion//inversion  
+       ..//boost_python ..//boost_system ..//boost_filesystem ..//boost_log : <hardcode-dll-paths>true ;
+
 exe hpx_2phase : hpx_2phase.cpp CalcRealization.cpp ../MT//mt  ../ModelBase//modelbase ../Inversion//inversion  
                  ..//boost_system ..//boost_filesystem ..//boost_log  
    : <hpx>on:<linkflags>"`pkg-config  --libs hpx_application ` -liostreams "
