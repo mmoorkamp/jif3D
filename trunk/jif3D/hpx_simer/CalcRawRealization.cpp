@@ -9,14 +9,17 @@
 #define HPX_SIMER_CALCRAWREALIZATION_CPP_
 
 
-#include "CalcRawRealization.h"
 #include <boost/python.hpp>
+#include "../Global/FatalException.h"
 #include "../MT/X3DMTCalculator.h"
+#include "CalcRawRealization.h"
+#include "InvertBlock.h"
 
 
 
-jif3D::rvec CalcRawRealization(int nx, int ny, int nz, double delta, double topthick,
-    double freq, double bgcond, std::vector<double> Conductivities, std::string tempdir,
+
+double CalcRawRealization(int nx, int ny, int nz, double delta, double topthick,
+    double freq, double bgcond, boost::python::list& Conductivities, std::string tempdir,
     std::string x3dname)
   {
     jif3D::X3DModel Model;
@@ -38,21 +41,27 @@ jif3D::rvec CalcRawRealization(int nx, int ny, int nz, double delta, double topt
     std::vector<double> bg_conductivities(Model.GetZCellSizes().size(), bgcond);
     Model.SetBackgroundThicknesses(bg_thicknesses);
     Model.SetBackgroundConductivities(bg_conductivities);
+    const size_t nc = len(Conductivities);
+    if (nx * ny * nz != nc)
+      throw jif3D::FatalException(
+          "Number of conducitvity values does not match mesh size !");
+    for (size_t i = 0; i < nc; ++i)
+      {
+        *(Model.SetConductivities().origin() + i) = boost::python::extract<double>(Conductivities[i]);
+      }
 
-    std::copy(Conductivities.begin(), Conductivities.end(),
-        Model.SetConductivities().origin());
     jif3D::X3DMTCalculator Calculator(tempdir, x3dname);
     jif3D::rvec Impedances(Calculator.Calculate(Model));
-    return Impedances;
+    double res = InvertBlock(Model,Impedances, tempdir, x3dname);
+
+    return res;
 
   }
 
-
 BOOST_PYTHON_MODULE(simerreal_ext)
-{
+  {
     using namespace boost::python;
     def("CalcRawRealization", CalcRawRealization);
-}
-
+  }
 
 #endif /* HPX_SIMER_CALCRAWREALIZATION_CPP_ */
