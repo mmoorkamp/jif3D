@@ -35,7 +35,7 @@ double InvertBlock(jif3D::X3DModel Model, jif3D::rvec Data, std::string tempdir,
     CoarseModel.SetZCellSizes()[0] = Model.GetZCellSizes()[0];
     CoarseModel.SetZCellSizes()[1] = maxz - Model.GetZCellSizes()[0];
     CoarseModel.SetBackgroundConductivities(Model.GetBackgroundConductivities());
-    CoarseModel.SetBackgroundThicknesses(Model.GetBackgroundConductivities());
+    CoarseModel.SetBackgroundThicknesses(Model.GetBackgroundThicknesses());
     CoarseModel.CopyMeasurementConfigurations(Model);
 
     jif3D::rvec InvVec(2, CoarseModel.GetBackgroundConductivities()[0] * 1.01);
@@ -47,6 +47,7 @@ double InvertBlock(jif3D::X3DModel Model, jif3D::rvec Data, std::string tempdir,
     double AppRho = jif3D::AppRes(Zdet, Model.GetFrequencies()[0]);
 
     InvVec(1) = 1.0 / AppRho;
+    std::cout << "Initial guess: " << InvVec(1) << std::endl;
     X3DObjective->SetCoarseModelGeometry(CoarseModel);
     X3DObjective->SetFineModelGeometry(Model);
     jif3D::rvec Error(jif3D::ConstructMTError(Data, 0.001));
@@ -65,6 +66,7 @@ double InvertBlock(jif3D::X3DModel Model, jif3D::rvec Data, std::string tempdir,
     while (chi > 100 && iteration < 5)
       {
         chi = Joint->CalcMisfit(LogVec);
+        std::cout << "Chi: " << chi << " " << InvVec(1) << std::endl;
         if (chi > 100)
           {
             jif3D::rvec Synth1(X3DObjective->GetDataDifference());

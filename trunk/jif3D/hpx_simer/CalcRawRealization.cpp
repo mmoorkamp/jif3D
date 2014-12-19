@@ -37,8 +37,9 @@ double CalcRawRealization(int nx, int ny, int nz, double delta, double topthick,
     Model.SetFrequencies().assign(1, freq);
     Model.AddMeasurementPoint(posx, posy, posz);
 
-    std::vector<double> bg_thicknesses(Model.GetZCellSizes().size(), delta);
-    std::vector<double> bg_conductivities(Model.GetZCellSizes().size(), bgcond);
+    double cubethick = topthick + (nz-1) * delta;
+    std::vector<double> bg_thicknesses(2, cubethick);
+    std::vector<double> bg_conductivities(2, bgcond);
     Model.SetBackgroundThicknesses(bg_thicknesses);
     Model.SetBackgroundConductivities(bg_conductivities);
     const size_t nc = len(Conductivities);
