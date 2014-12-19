@@ -7,12 +7,22 @@ import python ;
 #           ;
 using python ;
 
-python-extension simerreal_ext : CalcRawRealization.cpp ../MT//mt  ../ModelBase//modelbase ../Inversion//inversion  
-       ..//boost_python ..//boost_system ..//boost_filesystem ..//boost_log : <hardcode-dll-paths>true ;
+python-extension simerreal_ext : CalcRawRealization.cpp InvertBlock.cpp ../MT//mt  ../ModelBase//modelbase ../Inversion//inversion  
+       ..//boost_python ..//boost_core : <hardcode-dll-paths>true ;
 
-exe hpx_2phase : hpx_2phase.cpp CalcRealization.cpp ../MT//mt  ../ModelBase//modelbase ../Inversion//inversion  
-                 ..//boost_system ..//boost_filesystem ..//boost_log  
-   : <hpx>on:<linkflags>"`pkg-config  --libs hpx_application ` -liostreams "
-     <hpx>on:<cflags>"`pkg-config --cflags hpx_application `"   
-     <hpx>off:<library>..//boost_program_options <hpx>off:<library>..//boost_system
-     ;
+#exe hpx_2phase : hpx_2phase.cpp CalcRealization.cpp ../MT//mt  ../ModelBase//modelbase ../Inversion//inversion  
+#                 ..//boost_system ..//boost_filesystem ..//boost_log  
+#   : <hpx>on:<linkflags>"`pkg-config  --libs hpx_application ` -liostreams "
+#     <hpx>on:<cflags>"`pkg-config --cflags hpx_application `"   
+#     <hpx>off:<library>..//boost_program_options <hpx>off:<library>..//boost_system
+#     ;
+
+install dist 
+    : # sources
+      simerreal_ext
+    : # requirements
+      <install-dependencies>on
+      <install-type>EXE
+      <install-type>SHARED_LIB
+      <location>.
+    ;
