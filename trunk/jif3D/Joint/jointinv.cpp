@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
     //we also create a number of options that are specific to our joint inversion
     //or act globally so that they cannot be associated with one subsystem
     po::options_description desc("General options");
-    desc.add_options()("help", "produce help message")("threads", po::value<int>(),
+    desc.add_options()("help", "produce help message")("debug","Write debugging information")("threads", po::value<int>(),
         "The number of openmp threads")("covmod", po::value<std::string>(),
         "A file containing the model covariance")("tempdir", po::value<std::string>(),
         "The name of the directory to store temporary files in")("wavelet",
