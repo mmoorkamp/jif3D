@@ -506,12 +506,13 @@ namespace jif3D
         //we ask for a weight and construct a regularization object
         //for each type of physical parameter separately
         //first we set up seismic tomography
+
         double seisreglambda = 1.0;
         std::cout << " Weight for seismic regularization: ";
         std::cin >> seisreglambda;
         boost::shared_ptr<jif3D::RegularizationFunction> SeisReg(Regularization->clone());
         jif3D::rvec TomoCovar(3 * ngrid);
-        SetupModelCovar(TomoCovar, SeisModel, SeisReg->GetDataError(), ngrid);
+        SetupModelCovar(TomoCovar, Ones, SeisReg->GetDataError(), ngrid);
         SeisReg->SetDataError(TomoCovar);
 
         //then the regularization of densities
@@ -530,7 +531,7 @@ namespace jif3D
         std::cin >> mtreglambda;
         boost::shared_ptr<jif3D::RegularizationFunction> MTReg(Regularization->clone());
         jif3D::rvec MTCovar(3 * ngrid);
-        SetupModelCovar(MTCovar, MTModel, MTReg->GetDataError(), ngrid);
+        SetupModelCovar(MTCovar, Ones, MTReg->GetDataError(), ngrid);
         MTReg->SetDataError(MTCovar);
 
         //if we specify on the command line that we want to subtract the
