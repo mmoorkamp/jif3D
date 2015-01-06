@@ -506,7 +506,7 @@ namespace jif3D
         //we ask for a weight and construct a regularization object
         //for each type of physical parameter separately
         //first we set up seismic tomography
-
+        jif3D::rvec Ones(ngrid, 1.0);
         double seisreglambda = 1.0;
         std::cout << " Weight for seismic regularization: ";
         std::cin >> seisreglambda;
@@ -521,7 +521,6 @@ namespace jif3D
         std::cin >> gravreglambda;
         boost::shared_ptr<jif3D::RegularizationFunction> GravReg(Regularization->clone());
         jif3D::rvec GravCovar(3 * ngrid);
-        jif3D::rvec Ones(GravModel.size(), 1.0);
         SetupModelCovar(GravCovar, Ones, GravReg->GetDataError(), ngrid);
         GravReg->SetDataError(GravCovar);
 
