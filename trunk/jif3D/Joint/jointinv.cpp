@@ -288,11 +288,14 @@ int main(int argc, char *argv[])
     std::cout << "Performing inversion." << std::endl;
     if (WantSequential)
       {
-
+        const size_t ngrid = StartModel.GetSlownesses().num_elements();
         boost::shared_ptr<jif3D::JointObjective> TomoObjective(Objective->clone());
         boost::shared_ptr<jif3D::JointObjective> MTObjective(Objective->clone());
         boost::shared_ptr<jif3D::JointObjective> GravObjective(Objective->clone());
 
+        std::ofstream tomomisfitfile("tomo_misfit.out");
+        std::ofstream mtmisfitfile("mt_misfit.out");
+        std::ofstream gravmisfitfile("grav_misfit.out");
         std::vector<double> Weights = Objective->GetWeights();
         std::vector<double> TomoWeights(Weights);
         std::vector<double> MTWeights(Weights);
@@ -300,18 +303,26 @@ int main(int argc, char *argv[])
         TomoWeights.at(1) = 0.0;
         TomoWeights.at(2) = 0.0;
         TomoWeights.at(3) = 0.0;
+        TomoWeights.at(6) = 0.0;
+        TomoWeights.at(8) = 0.0;
+        TomoWeights.at(9) = 0.0;
         MTWeights.at(0) = 0.0;
         MTWeights.at(1) = 0.0;
         MTWeights.at(2) = 0.0;
+        MTWeights.at(4) = 0.0;
+        MTWeights.at(7) = 0.0;
+        MTWeights.at(8) = 0.0;
         GravWeights.at(0) = 0.0;
         GravWeights.at(3) = 0.0;
+        GravWeights.at(5) = 0.0;
+        GravWeights.at(7) = 0.0;
+        GravWeights.at(9) = 0.0;
 
         TomoObjective->SetWeights(TomoWeights);
         MTObjective->SetWeights(MTWeights);
         GravObjective->SetWeights(GravWeights);
 
         jif3D::rvec TomoInvModel = InvModel;
-
         jif3D::rvec MTInvModel = InvModel;
         jif3D::rvec GravInvModel = InvModel;
 
@@ -322,7 +333,6 @@ int main(int argc, char *argv[])
         boost::shared_ptr<jif3D::GradientBasedOptimization> GravOptimizer =
             InversionSetup.ConfigureInversion(vm, GravObjective, GravInvModel, CovModVec);
 
-
         bool terminate = false;
         jif3D::rvec OldModel(InvModel);
         //this is the core inversion loop, we make optimization steps
@@ -331,48 +341,88 @@ int main(int argc, char *argv[])
         while (iteration < maxiter && !terminate)
           {
             terminate = true;
+            jif3D::rvec OldTomo = TomoInvModel;
+            jif3D::rvec OldGrav = GravInvModel;
+            jif3D::rvec OldMT = MTInvModel;
+
             //we catch all jif3D internal exceptions so that we can graciously
             //exit and write out some final information before stopping the program
+
+            std::cout << "\n\n Iteration: " << iteration << std::endl;
+
+            //update the inversion model
             try
               {
-                std::cout << "\n\n Iteration: " << iteration << std::endl;
-                //we save the current model so we can go back to it
-                //in case the optimization step fails
-                OldModel = InvModel;
-                //update the inversion model
                 TomoOptimizer->MakeStep(TomoInvModel);
-                MTOptimizer->MakeStep(MTInvModel);
-                GravOptimizer->MakeStep(GravInvModel);
-
-                //Objective->MultiplyWeights(jif3D::JointObjective::regularization,
-                //    coolingfactor);
-                ++iteration;
-                //we save all models at each iteration, so we can look at the development
-                // and use intermediate models in case something goes wrong
-                SaveModel(TomoInvModel, *TomoTransform.get(), TomoModel,
-                    modelfilename + jif3D::stringify(iteration) + ".tomo.inv");
-                SaveModel(MTInvModel, *MTTransform.get(), MTModel,
-                    modelfilename + jif3D::stringify(iteration) + ".mt.inv");
-                SaveModel(GravInvModel, *GravityTransform.get(), GravModel,
-                    modelfilename + jif3D::stringify(iteration) + ".grav.inv");
-
-                //and write the current misfit for all objectives to a misfit file
-                //StoreMisfit(misfitfile, iteration, Optimizer->GetMisfit(), *Objective);
-                //StoreRMS(rmsfile, iteration, *Objective);
-                //StoreWeights(weightfile, iteration, *Objective);
-                std::cout << "\n\n";
               } catch (jif3D::FatalException &e)
               {
-                std::cerr << e.what() << std::endl;
-                InvModel = OldModel;
-                iteration = maxiter;
+                TomoInvModel = OldTomo;
+                std::cerr << "In tomography: " << e.what() << std::endl;
               }
+            try
+              {
+                MTOptimizer->MakeStep(MTInvModel);
+              } catch (jif3D::FatalException &e)
+              {
+                MTInvModel = OldMT;
+                std::cerr << "In MT: " << e.what() << std::endl;
+              }
+            try
+              {
+                GravOptimizer->MakeStep(GravInvModel);
+              } catch (jif3D::FatalException &e)
+              {
+                GravInvModel = OldGrav;
+                std::cerr << "In gravity: " << e.what() << std::endl;
+              }
+
+            ublas::subrange(MTInvModel, 0, ngrid) = ublas::subrange(TomoInvModel, 0,
+                ngrid);
+            ublas::subrange(GravInvModel, 0, ngrid) = ublas::subrange(TomoInvModel, 0,
+                ngrid);
+
+            ublas::subrange(TomoInvModel, ngrid, 2 * ngrid) = ublas::subrange(
+                GravInvModel, ngrid, 2 * ngrid);
+            ublas::subrange(MTInvModel, ngrid, 2 * ngrid) = ublas::subrange(GravInvModel,
+                ngrid, 2 * ngrid);
+
+            ublas::subrange(TomoInvModel, 2 * ngrid, 3 * ngrid) = ublas::subrange(
+                MTInvModel, 2 * ngrid, 3 * ngrid);
+            ublas::subrange(GravInvModel, 2 * ngrid, 3 * ngrid) = ublas::subrange(
+                MTInvModel, 2 * ngrid, 3 * ngrid);
+            //Objective->MultiplyWeights(jif3D::JointObjective::regularization,
+            //    coolingfactor);
+            ++iteration;
+            //we save all models at each iteration, so we can look at the development
+            // and use intermediate models in case something goes wrong
+            SaveModel(TomoInvModel, *TomoTransform.get(), TomoModel,
+                modelfilename + jif3D::stringify(iteration) + ".tomo.inv");
+            SaveModel(MTInvModel, *MTTransform.get(), MTModel,
+                modelfilename + jif3D::stringify(iteration) + ".mt.inv");
+            SaveModel(GravInvModel, *GravityTransform.get(), GravModel,
+                modelfilename + jif3D::stringify(iteration) + ".grav.inv");
+
+            //and write the current misfit for all objectives to a misfit file
+            StoreMisfit(tomomisfitfile, iteration, TomoOptimizer->GetMisfit(),
+                *TomoObjective);
+            StoreMisfit(mtmisfitfile, iteration, MTOptimizer->GetMisfit(), *MTObjective);
+            StoreMisfit(gravmisfitfile, iteration, GravOptimizer->GetMisfit(),
+                *GravObjective);
+
+            //StoreRMS(rmsfile, iteration, *Objective);
+            //StoreWeights(weightfile, iteration, *Objective);
+            std::cout << "\n\n";
             //we stop when either we do not make any improvement any more
             terminate = CheckConvergence(*Objective);
             //or the file abort exists in the current directory
             terminate = terminate || jif3D::WantAbort();
           }
 
+        ublas::subrange(InvModel, 0, ngrid) = ublas::subrange(TomoInvModel, 0, ngrid);
+        ublas::subrange(InvModel, ngrid, 2 * ngrid) = ublas::subrange(GravInvModel, ngrid,
+            2 * ngrid);
+        ublas::subrange(InvModel, 2 * ngrid, 3 * ngrid) = ublas::subrange(MTInvModel,
+            2 * ngrid, 3 * ngrid);
       }
     else
       {
