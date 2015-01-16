@@ -53,8 +53,6 @@ namespace logging = boost::log;
 /** \addtogroup joint Joint inversion routines */
 /* @{ */
 
-
-
 /*! \file jointinv.cpp
  * The main joint inversion program. The main task of the program is to read in the appropriate files
  * and options and from these settings assemble the objects that perform the actual work. Also,
@@ -73,12 +71,14 @@ int main(int argc, char *argv[])
     jif3D::SetupRegularization RegSetup;
     jif3D::SetupCoupling CouplingSetup;
     bool WaveletParm = false;
+    bool WantSequential = false;
     double xorigin, yorigin;
     double coolingfactor = 1.0;
     //we also create a number of options that are specific to our joint inversion
     //or act globally so that they cannot be associated with one subsystem
     po::options_description desc("General options");
-    desc.add_options()("help", "produce help message")("debug","Write debugging information")("threads", po::value<int>(),
+    desc.add_options()("help", "produce help message")("debug",
+        "Write debugging information")("threads", po::value<int>(),
         "The number of openmp threads")("covmod", po::value<std::string>(),
         "A file containing the model covariance")("tempdir", po::value<std::string>(),
         "The name of the directory to store temporary files in")("wavelet",
@@ -88,7 +88,9 @@ int main(int argc, char *argv[])
         po::value(&yorigin)->default_value(0.0),
         "The origin for the inversion grid in y-direction")("coolingfactor",
         po::value(&coolingfactor)->default_value(1.0),
-        "The factor to multiply the weight for the regularization at each iteration EXPERIMENTAL");
+        "The factor to multiply the weight for the regularization at each iteration EXPERIMENTAL")(
+        "sequential",
+        "Do not create a single objective function, but split into on OF per method");
     //we need to add the description for each part to the boost program options object
     //that way the user can get a help output and the parser object recongnizes these options
     desc.add(TomoSetup.SetupOptions());
@@ -124,18 +126,21 @@ int main(int argc, char *argv[])
         return 1;
       }
 
-
     if (vm.count("debug"))
       {
         logging::core::get()->set_filter(
             logging::trivial::severity >= logging::trivial::debug);
       }
-    else{
+    else
+      {
         logging::core::get()->set_filter(
             logging::trivial::severity >= logging::trivial::warning);
-    }
+      }
 
-
+    if (vm.count("sequential"))
+      {
+        WantSequential = true;
+      }
     if (vm.count("wavelet"))
       {
         WaveletParm = true;
@@ -236,11 +241,6 @@ int main(int argc, char *argv[])
     //and output some status information
     boost::posix_time::ptime starttime = boost::posix_time::microsec_clock::local_time();
 
-    std::cout << "Performing inversion." << std::endl;
-
-    boost::shared_ptr<jif3D::GradientBasedOptimization> Optimizer =
-        InversionSetup.ConfigureInversion(vm, Objective, InvModel, CovModVec);
-
     std::string modelfilename = "result";
     //write out the seismic source and receiver positions for plotting
     //and general quality control
@@ -264,6 +264,7 @@ int main(int argc, char *argv[])
             MTSetup.GetModel().GetMeasPosZ());
       }
 
+    std::cout << "Calculating initial misfit." << std::endl;
     size_t iteration = 0;
     std::ofstream misfitfile("misfit.out");
     std::ofstream rmsfile("rms.out");
@@ -284,56 +285,152 @@ int main(int argc, char *argv[])
     if (!havegrav)
       GravModel = StartModel;
 
-    bool terminate = false;
-    jif3D::rvec OldModel(InvModel);
-    //this is the core inversion loop, we make optimization steps
-    //until either we reach the maximum number of iterations
-    //or fulfill a termination criterion
-    while (iteration < maxiter && !terminate)
+    std::cout << "Performing inversion." << std::endl;
+    if (WantSequential)
       {
-        terminate = true;
-        //we catch all jif3D internal exceptions so that we can graciously
-        //exit and write out some final information before stopping the program
-        try
-          {
-            std::cout << "\n\n Iteration: " << iteration << std::endl;
-            //we save the current model so we can go back to it
-            //in case the optimization step fails
-            OldModel = InvModel;
-            //update the inversion model
-            Optimizer->MakeStep(InvModel);
 
-            Objective->MultiplyWeights(jif3D::JointObjective::regularization,
-                coolingfactor);
-            ++iteration;
-            //we save all models at each iteration, so we can look at the development
-            // and use intermediate models in case something goes wrong
-            SaveModel(InvModel, *TomoTransform.get(), TomoModel,
-                modelfilename + jif3D::stringify(iteration) + ".tomo.inv");
-            SaveModel(InvModel, *MTTransform.get(), MTModel,
-                modelfilename + jif3D::stringify(iteration) + ".mt.inv");
-            SaveModel(InvModel, *GravityTransform.get(), GravModel,
-                modelfilename + jif3D::stringify(iteration) + ".grav.inv");
-            //write out some information about misfit to the screen
-            std::cout << "Currrent Misfit: " << Optimizer->GetMisfit() << std::endl;
-            std::cout << "Currrent Gradient: " << Optimizer->GetGradNorm() << std::endl;
-            //and write the current misfit for all objectives to a misfit file
-            StoreMisfit(misfitfile, iteration, Optimizer->GetMisfit(), *Objective);
-            StoreRMS(rmsfile, iteration, *Objective);
-            StoreWeights(weightfile, iteration, *Objective);
-            std::cout << "\n\n";
-          } catch (jif3D::FatalException &e)
+        boost::shared_ptr<jif3D::JointObjective> TomoObjective(Objective->clone());
+        boost::shared_ptr<jif3D::JointObjective> MTObjective(Objective->clone());
+        boost::shared_ptr<jif3D::JointObjective> GravObjective(Objective->clone());
+
+        std::vector<double> Weights = Objective->GetWeights();
+        std::vector<double> TomoWeights(Weights);
+        std::vector<double> MTWeights(Weights);
+        std::vector<double> GravWeights(Weights);
+        TomoWeights.at(1) = 0.0;
+        TomoWeights.at(2) = 0.0;
+        TomoWeights.at(3) = 0.0;
+        MTWeights.at(0) = 0.0;
+        MTWeights.at(1) = 0.0;
+        MTWeights.at(2) = 0.0;
+        GravWeights.at(0) = 0.0;
+        GravWeights.at(3) = 0.0;
+
+        TomoObjective->SetWeights(TomoWeights);
+        MTObjective->SetWeights(MTWeights);
+        GravObjective->SetWeights(GravWeights);
+
+        jif3D::rvec TomoInvModel = InvModel;
+
+        jif3D::rvec MTInvModel = InvModel;
+        jif3D::rvec GravInvModel = InvModel;
+
+        boost::shared_ptr<jif3D::GradientBasedOptimization> TomoOptimizer =
+            InversionSetup.ConfigureInversion(vm, TomoObjective, TomoInvModel, CovModVec);
+        boost::shared_ptr<jif3D::GradientBasedOptimization> MTOptimizer =
+            InversionSetup.ConfigureInversion(vm, MTObjective, MTInvModel, CovModVec);
+        boost::shared_ptr<jif3D::GradientBasedOptimization> GravOptimizer =
+            InversionSetup.ConfigureInversion(vm, GravObjective, GravInvModel, CovModVec);
+
+
+        bool terminate = false;
+        jif3D::rvec OldModel(InvModel);
+        //this is the core inversion loop, we make optimization steps
+        //until either we reach the maximum number of iterations
+        //or fulfill a termination criterion
+        while (iteration < maxiter && !terminate)
           {
-            std::cerr << e.what() << std::endl;
-            InvModel = OldModel;
-            iteration = maxiter;
+            terminate = true;
+            //we catch all jif3D internal exceptions so that we can graciously
+            //exit and write out some final information before stopping the program
+            try
+              {
+                std::cout << "\n\n Iteration: " << iteration << std::endl;
+                //we save the current model so we can go back to it
+                //in case the optimization step fails
+                OldModel = InvModel;
+                //update the inversion model
+                TomoOptimizer->MakeStep(TomoInvModel);
+                MTOptimizer->MakeStep(MTInvModel);
+                GravOptimizer->MakeStep(GravInvModel);
+
+                //Objective->MultiplyWeights(jif3D::JointObjective::regularization,
+                //    coolingfactor);
+                ++iteration;
+                //we save all models at each iteration, so we can look at the development
+                // and use intermediate models in case something goes wrong
+                SaveModel(TomoInvModel, *TomoTransform.get(), TomoModel,
+                    modelfilename + jif3D::stringify(iteration) + ".tomo.inv");
+                SaveModel(MTInvModel, *MTTransform.get(), MTModel,
+                    modelfilename + jif3D::stringify(iteration) + ".mt.inv");
+                SaveModel(GravInvModel, *GravityTransform.get(), GravModel,
+                    modelfilename + jif3D::stringify(iteration) + ".grav.inv");
+
+                //and write the current misfit for all objectives to a misfit file
+                //StoreMisfit(misfitfile, iteration, Optimizer->GetMisfit(), *Objective);
+                //StoreRMS(rmsfile, iteration, *Objective);
+                //StoreWeights(weightfile, iteration, *Objective);
+                std::cout << "\n\n";
+              } catch (jif3D::FatalException &e)
+              {
+                std::cerr << e.what() << std::endl;
+                InvModel = OldModel;
+                iteration = maxiter;
+              }
+            //we stop when either we do not make any improvement any more
+            terminate = CheckConvergence(*Objective);
+            //or the file abort exists in the current directory
+            terminate = terminate || jif3D::WantAbort();
           }
-        //we stop when either we do not make any improvement any more
-        terminate = CheckConvergence(*Objective);
-        //or the file abort exists in the current directory
-        terminate = terminate || jif3D::WantAbort();
-      }
 
+      }
+    else
+      {
+
+        boost::shared_ptr<jif3D::GradientBasedOptimization> Optimizer =
+            InversionSetup.ConfigureInversion(vm, Objective, InvModel, CovModVec);
+
+        bool terminate = false;
+        jif3D::rvec OldModel(InvModel);
+        //this is the core inversion loop, we make optimization steps
+        //until either we reach the maximum number of iterations
+        //or fulfill a termination criterion
+        while (iteration < maxiter && !terminate)
+          {
+            terminate = true;
+            //we catch all jif3D internal exceptions so that we can graciously
+            //exit and write out some final information before stopping the program
+            try
+              {
+                std::cout << "\n\n Iteration: " << iteration << std::endl;
+                //we save the current model so we can go back to it
+                //in case the optimization step fails
+                OldModel = InvModel;
+                //update the inversion model
+                Optimizer->MakeStep(InvModel);
+
+                Objective->MultiplyWeights(jif3D::JointObjective::regularization,
+                    coolingfactor);
+                ++iteration;
+                //we save all models at each iteration, so we can look at the development
+                // and use intermediate models in case something goes wrong
+                SaveModel(InvModel, *TomoTransform.get(), TomoModel,
+                    modelfilename + jif3D::stringify(iteration) + ".tomo.inv");
+                SaveModel(InvModel, *MTTransform.get(), MTModel,
+                    modelfilename + jif3D::stringify(iteration) + ".mt.inv");
+                SaveModel(InvModel, *GravityTransform.get(), GravModel,
+                    modelfilename + jif3D::stringify(iteration) + ".grav.inv");
+                //write out some information about misfit to the screen
+                std::cout << "Currrent Misfit: " << Optimizer->GetMisfit() << std::endl;
+                std::cout << "Currrent Gradient: " << Optimizer->GetGradNorm()
+                    << std::endl;
+                //and write the current misfit for all objectives to a misfit file
+                StoreMisfit(misfitfile, iteration, Optimizer->GetMisfit(), *Objective);
+                StoreRMS(rmsfile, iteration, *Objective);
+                StoreWeights(weightfile, iteration, *Objective);
+                std::cout << "\n\n";
+              } catch (jif3D::FatalException &e)
+              {
+                std::cerr << e.what() << std::endl;
+                InvModel = OldModel;
+                iteration = maxiter;
+              }
+            //we stop when either we do not make any improvement any more
+            terminate = CheckConvergence(*Objective);
+            //or the file abort exists in the current directory
+            terminate = terminate || jif3D::WantAbort();
+          }
+      }
     SaveModel(InvModel, *TomoTransform.get(), TomoModel, modelfilename + ".tomo.inv");
     SaveModel(InvModel, *MTTransform.get(), MTModel, modelfilename + ".mt.inv");
     SaveModel(InvModel, *GravityTransform.get(), GravModel, modelfilename + ".grav.inv");
@@ -399,14 +496,16 @@ int main(int argc, char *argv[])
     //if we are inverting MT data and have specified site locations
     if (havemt)
       {
-    	std::cout << "C: ";
-    	            std::copy(MTModel.GetDistortionParameters().begin(),MTModel.GetDistortionParameters().end(),std::ostream_iterator<double>(std::cout,"\n"));
+        std::cout << "C: ";
+        std::copy(MTModel.GetDistortionParameters().begin(),
+            MTModel.GetDistortionParameters().end(),
+            std::ostream_iterator<double>(std::cout, "\n"));
         //calculate MT inversion result
         jif3D::rvec MTInvData(MTSetup.GetMTObjective().GetSyntheticData());
         jif3D::WriteImpedancesToNetCDF(modelfilename + ".inv_mt.nc",
             MTModel.GetFrequencies(), MTModel.GetMeasPosX(), MTModel.GetMeasPosY(),
-            MTModel.GetMeasPosZ(), MTInvData, MTSetup.GetMTObjective().GetDataError()
-            ,MTModel.GetDistortionParameters());
+            MTModel.GetMeasPosZ(), MTInvData, MTSetup.GetMTObjective().GetDataError(),
+            MTModel.GetDistortionParameters());
         jif3D::rvec MTDiff(MTSetup.GetMTObjective().GetIndividualMisfit());
         jif3D::WriteImpedancesToNetCDF(modelfilename + ".diff_mt.nc",
             MTModel.GetFrequencies(), MTModel.GetMeasPosX(), MTModel.GetMeasPosY(),

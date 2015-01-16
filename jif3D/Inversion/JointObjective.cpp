@@ -75,7 +75,10 @@ namespace jif3D
           {
             for (size_t i = 0; i < nobjective; ++i)
               {
-                std::cout << format(MisfitFormat) % Names.at(i);
+                if (Weights.at(i) > 0)
+                  {
+                    std::cout << format(MisfitFormat) % Names.at(i);
+                  }
               }
             std::cout << std::endl;
           }
@@ -83,21 +86,30 @@ namespace jif3D
         Diff.resize(nobjective);
         for (size_t i = 0; i < nobjective; ++i)
           {
-
-            boost::posix_time::ptime starttime =
-                boost::posix_time::microsec_clock::local_time();
-            //the call to the Distributor object makes sure that each
-            //individual objective functions gets the right type of parameters
-            //converted from the inversion parameter vector
-            IndividualFits.at(i) = Objectives.at(i)->CalcMisfit(Distributor(Model, i));
-            boost::posix_time::ptime endtime =
-                boost::posix_time::microsec_clock::local_time();
-            times.at(i) = (endtime - starttime).total_seconds();
-            if (PrintMisfit)
+            if (Weights.at(i) > 0)
               {
-                std::cout << format(MisfitFormat) % IndividualFits.at(i);
+                boost::posix_time::ptime starttime =
+                    boost::posix_time::microsec_clock::local_time();
+                //the call to the Distributor object makes sure that each
+                //individual objective functions gets the right type of parameters
+                //converted from the inversion parameter vector
+                IndividualFits.at(i) = Objectives.at(i)->CalcMisfit(
+                    Distributor(Model, i));
+                boost::posix_time::ptime endtime =
+                    boost::posix_time::microsec_clock::local_time();
+                times.at(i) = (endtime - starttime).total_seconds();
+                if (PrintMisfit)
+                  {
+                    std::cout << format(MisfitFormat) % IndividualFits.at(i);
+                  }
+                Diff(i) = sqrt(Weights.at(i) * IndividualFits.at(i));
               }
-            Diff(i) = sqrt(Weights.at(i) * IndividualFits.at(i));
+            else
+              {
+                Diff(i) = 0;
+                IndividualFits.at(i) = 0;
+                times.at(i) = 0;
+              }
           }
 
         if (PrintMisfit)
@@ -106,7 +118,10 @@ namespace jif3D
             std::cout << "Runtimes: \n";
             for (size_t i = 0; i < nobjective; ++i)
               {
-                std::cout << format(MisfitFormat) % times.at(i);
+                if (Weights.at(i) > 0)
+                  {
+                    std::cout << format(MisfitFormat) % times.at(i);
+                  }
               }
             std::cout << "\n" << std::endl;
           }
@@ -131,32 +146,38 @@ namespace jif3D
           }
         for (size_t i = 0; i < nobjective; ++i)
           {
-            //we calculate the "natural" gradient for each method
-            // and then pass it to the corresponding parameter transformation
-            //class in the model distributor to account for the effect of those
-            //transformations.
-            boost::posix_time::ptime starttime =
-                boost::posix_time::microsec_clock::local_time();
-            CurrGrad = Distributor.TransformGradient(Model,
-                Objectives.at(i)->CalcGradient(Distributor(Model, i)), i);
-            boost::posix_time::ptime endtime =
-                boost::posix_time::microsec_clock::local_time();
-            times.at(i) = (endtime - starttime).total_seconds();
-            //We store the norm of each gradient for information during the inversion
-            IndividualGradNorms.at(i) = ublas::norm_2(CurrGrad);
-            if (PrintMisfit)
+            if (Weights.at(i) > 0)
               {
-                std::cout << format(MisfitFormat) % IndividualGradNorms.at(i);
+                //we calculate the "natural" gradient for each method
+                // and then pass it to the corresponding parameter transformation
+                //class in the model distributor to account for the effect of those
+                //transformations.
+                boost::posix_time::ptime starttime =
+                    boost::posix_time::microsec_clock::local_time();
+                CurrGrad = Distributor.TransformGradient(Model,
+                    Objectives.at(i)->CalcGradient(Distributor(Model, i)), i);
+                boost::posix_time::ptime endtime =
+                    boost::posix_time::microsec_clock::local_time();
+                times.at(i) = (endtime - starttime).total_seconds();
+                //We store the norm of each gradient for information during the inversion
+                IndividualGradNorms.at(i) = ublas::norm_2(CurrGrad);
+                if (PrintMisfit)
+                  {
+                    std::cout << format(MisfitFormat) % IndividualGradNorms.at(i);
+                  }
+                //the total gradient is just the weighted sum of the individual gradients
+                Gradient += Weights.at(i) * CurrGrad;
               }
-            //the total gradient is just the weighted sum of the individual gradients
-            Gradient += Weights.at(i) * CurrGrad;
           }
         if (PrintMisfit)
           {
             std::cout << "\nRuntimes: \n";
             for (size_t i = 0; i < nobjective; ++i)
               {
-                std::cout << format(MisfitFormat) % times.at(i);
+                if (Weights.at(i) > 0)
+                  {
+                    std::cout << format(MisfitFormat) % times.at(i);
+                  }
               }
             std::cout << "\n" << std::endl;
           }
