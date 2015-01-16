@@ -326,12 +326,23 @@ int main(int argc, char *argv[])
         jif3D::rvec MTInvModel = InvModel;
         jif3D::rvec GravInvModel = InvModel;
 
+        jif3D::rvec TomoCovMod(3 * ngrid, 1e-15);
+        std::fill_n(TomoCovMod.begin(), ngrid, 1.0);
+
+        jif3D::rvec MTCovMod(3 * ngrid, 1e-15);
+        std::fill_n(MTCovMod.begin() + 2 * ngrid, ngrid, 1.0);
+
+        jif3D::rvec GravCovMod(3 * ngrid, 1e-15);
+        std::fill_n(GravCovMod.begin() + ngrid, ngrid, 1.0);
+
         boost::shared_ptr<jif3D::GradientBasedOptimization> TomoOptimizer =
-            InversionSetup.ConfigureInversion(vm, TomoObjective, TomoInvModel, CovModVec);
+            InversionSetup.ConfigureInversion(vm, TomoObjective, TomoInvModel,
+                TomoCovMod);
         boost::shared_ptr<jif3D::GradientBasedOptimization> MTOptimizer =
-            InversionSetup.ConfigureInversion(vm, MTObjective, MTInvModel, CovModVec);
+            InversionSetup.ConfigureInversion(vm, MTObjective, MTInvModel, MTCovMod);
         boost::shared_ptr<jif3D::GradientBasedOptimization> GravOptimizer =
-            InversionSetup.ConfigureInversion(vm, GravObjective, GravInvModel, CovModVec);
+            InversionSetup.ConfigureInversion(vm, GravObjective, GravInvModel,
+                GravCovMod);
 
         bool terminate = false;
         jif3D::rvec OldModel(InvModel);
