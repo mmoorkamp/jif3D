@@ -54,7 +54,7 @@ double InvertBlock(jif3D::X3DModel Model, jif3D::rvec Data, std::string tempdir,
     X3DObjective->SetDataError(Error);
 
     boost::shared_ptr<jif3D::JointObjective> Joint(new jif3D::JointObjective(false));
-    jif3D::rvec RefModel(Data.size(), 1.0);
+    jif3D::rvec RefModel(InvVec.size(), 1.0);
     boost::shared_ptr<jif3D::GeneralModelTransform> ConductivityTransform(
         new jif3D::LogTransform(RefModel));
     jif3D::rvec LogVec = ConductivityTransform->PhysicalToGeneralized(InvVec);
