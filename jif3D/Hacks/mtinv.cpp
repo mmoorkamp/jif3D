@@ -90,10 +90,11 @@ int main(int argc, char *argv[])
         logging::core::get()->set_filter(
             logging::trivial::severity >= logging::trivial::debug);
       }
-    else{
+    else
+      {
         logging::core::get()->set_filter(
             logging::trivial::severity >= logging::trivial::warning);
-    }
+      }
     if (vm.count("help"))
       {
         std::cout << desc << "\n";
@@ -175,8 +176,12 @@ int main(int argc, char *argv[])
         Model.GetConductivities().origin() + ngrid, InvModel.begin());
     Model.WriteVTK("start.vtk");
 
+    //if we want to correct for distortion within the inversion
     if (WantDistCorr)
       {
+        //if we did not read distortion values together with the
+        //observed data, we set the distortion matrix C at each site
+        // to identity matrix
         if (C.empty())
           {
             C.resize(XCoord.size() * 4);
@@ -188,10 +193,18 @@ int main(int argc, char *argv[])
                 C[i * 4 + 3] = 1.0;
               }
           }
+        //we need to expand the model vector to hold the
+        //elements of the distortion matrix
         jif3D::rvec Grid(InvModel);
         InvModel.resize(ngrid + C.size());
         std::copy(Grid.begin(), Grid.end(), InvModel.begin());
         std::copy(C.begin(), C.end(), InvModel.begin() + ngrid);
+        //also the diagonal of the model covariance needs to
+        //accommodate the new parameters
+        jif3D::rvec OldCov(CovModVec);
+        CovModVec.resize(InvModel.size());
+        std::fill(CovModVec.begin(), CovModVec.end(), 1.0);
+        std::copy(OldCov.begin(), OldCov.end(), CovModVec.begin());
       }
 
     boost::shared_ptr<jif3D::ChainedTransform> ConductivityTransform(
@@ -250,8 +263,10 @@ int main(int argc, char *argv[])
         X3DObjective->SetDataError(ZError);
       }
 
+    jif3D::rvec GridCov(ngrid, 1.0);
+    //std::copy(CovModVec.begin(), CovModVec.begin() + ngrid, GridCov.begin());
     boost::shared_ptr<jif3D::RegularizationFunction> Regularization =
-        RegSetup.SetupObjective(vm, Model, CovModVec);
+        RegSetup.SetupObjective(vm, Model, GridCov);
 
     double lambda = 1.0;
     std::cout << "Lambda: ";
