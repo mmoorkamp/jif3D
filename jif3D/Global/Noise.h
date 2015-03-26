@@ -88,16 +88,12 @@ namespace jif3D
     inline jif3D::rvec ConstructError(const jif3D::rvec &Data,
         const jif3D::rvec &DataError, const double relerror, const double absmin = 0.0)
       {
-        //check for reasonable relative error value
-        if (relerror <= 0.0)
+        //check for reasonable relative and absolute error value
+        if (relerror <= 0.0 && absmin <= 0.0)
           {
-            throw jif3D::FatalException("Specifiying relative error <= 0 is not valid!");
+            throw jif3D::FatalException("Specifiying relative and absolute error <= 0 simultaneously is not valid!");
           }
-        //check for reasonable absolute error value
-        if (absmin <= 0.0)
-          {
-            throw jif3D::FatalException("Specifiying absolute error <= 0 is not valid!");
-          }
+
         const size_t ndata = Data.size();
         //create objects for the misfit and a very basic error estimate
         jif3D::rvec Error(ndata, 0.0);
