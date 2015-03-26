@@ -45,7 +45,7 @@ double CalcRawRealization(int nx, int ny, int nz, double delta, double topthick,
     const size_t nc = len(Conductivities);
     if (nx * ny * nz != nc)
       throw jif3D::FatalException(
-          "Number of conducitvity values does not match mesh size !");
+          "Number of conductivity values does not match mesh size !");
     for (size_t i = 0; i < nc; ++i)
       {
         *(Model.SetConductivities().origin() + i) = boost::python::extract<double>(Conductivities[i]);
