@@ -16,6 +16,10 @@
 #include <boost/program_options.hpp>
 #include <boost/program_options/config.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/log/core.hpp>
+#include <boost/log/trivial.hpp>
+#include <boost/log/expressions.hpp>
+
 #include "../Global/convert.h"
 #include "../Global/FatalException.h"
 #include "../Global/NumUtil.h"
@@ -46,7 +50,7 @@
 
 namespace ublas = boost::numeric::ublas;
 namespace po = boost::program_options;
-
+namespace logging = boost::log;
 /** \addtogroup joint Joint inversion routines */
 /* @{ */
 
@@ -84,6 +88,18 @@ int hpx_main(boost::program_options::variables_map& vm)
         std::cout << version << std::endl;
         return 1;
       }
+
+    if (vm.count("debug"))
+      {
+        logging::core::get()->set_filter(
+            logging::trivial::severity >= logging::trivial::debug);
+      }
+    else
+      {
+        logging::core::get()->set_filter(
+            logging::trivial::severity >= logging::trivial::warning);
+      }
+
     if (vm.count("wavelet"))
       {
         WaveletParm = true;
@@ -380,7 +396,8 @@ int main(int argc, char* argv[])
     //we also create a number of options that are specific to our joint inversion
     //or act globally so that they cannot be associated with one subsystem
     po::options_description desc("General options");
-    desc.add_options()("help", "produce help message")("threads", po::value<int>(),
+    desc.add_options()("help", "produce help message")("debug",
+        "Write debugging information")("threads", po::value<int>(),
         "The number of openmp threads")("covmod", po::value<std::string>(),
         "A file containing the model covariance")("tempdir", po::value<std::string>(),
         "The name of the directory to store temporary files in")("wavelet",
