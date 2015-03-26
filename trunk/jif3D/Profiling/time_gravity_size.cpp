@@ -1,3 +1,7 @@
+#ifdef HAVEHPX
+#include <hpx/config.hpp>
+#include <hpx/hpx_init.hpp>
+#endif
 #ifdef HAVEOPENMP
 #include <omp.h>
 #endif
@@ -56,27 +60,13 @@ void MakeTestModel(jif3D::ThreeDGravityModel &Model, const size_t size)
   }
 
 namespace po = boost::program_options;
-int main(int ac, char* av[])
+int caching = 0;
+
+
+int hpx_main(boost::program_options::variables_map& vm)
   {
-    //set up the command line options
-    int caching = 0;
-    po::options_description desc("Allowed options");
-    desc.add_options()("help", "produce help message")("scalar",
-        "Perform scalar calculation [default]")("ftg", "Perform FTG calculation ")("cpu",
-        "Perform calculation on CPU [default]")("gpu", "Perform calculation on GPU")(
-        "cachetype", po::value<int>(&caching)->default_value(0),
-        "0 = no caching, 1 = disk, 2 = memory")("threads", po::value<int>(),
-        "The number of openmp threads");
 
-    po::variables_map vm;
-    po::store(po::parse_command_line(ac, av, desc), vm);
-    po::notify(vm);
 
-    if (vm.count("help"))
-      {
-        std::cout << desc << "\n";
-        return 1;
-      }
 
     const size_t nruns = 50;
     const size_t nrunspersize = 5;
@@ -199,5 +189,28 @@ int main(int ac, char* av[])
         outfile << modelsize * modelsize * modelsize << " " << rawruntime << " "
             << cachedruntime << std::endl;
       }
+#ifdef HAVEHPX
+    return hpx::finalize();
+#endif
+    return 0;
+  }
 
+int main(int argc, char* argv[])
+  {
+    po::options_description desc("Allowed options");
+    desc.add_options()("help", "produce help message")("scalar",
+        "Perform scalar calculation [default]")("ftg", "Perform FTG calculation ")("cpu",
+        "Perform calculation on CPU [default]")("gpu", "Perform calculation on GPU")(
+        "cachetype", po::value<int>(&caching)->default_value(0),
+        "0 = no caching, 1 = disk, 2 = memory")("threads", po::value<int>(),
+        "The number of openmp threads");
+#ifdef HAVEHPX
+    return hpx::init(desc, argc, argv);
+#else
+//set up the command line options
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::notify(vm);
+    return hpx_main(vm);
+#endif
   }
