@@ -120,19 +120,23 @@ namespace jif3D
               }
             else
               {
+                //construct an error floor for each impedance element
                 jif3D::rvec MinErr(MTError.size());
                 if (vm.count("inderrors"))
                   {
+                    //use a relative value for each impedance element separately
                     MinErr = jif3D::ConstructError(MTData, MTError, relerr);
                   }
                 else
                   {
+                    //use a relative value for the Berdichevskyi invariant at each period/site
                     MinErr = jif3D::ConstructMTError(MTData, relerr);
                   }
-                for (size_t i = 0; i < MTError.size(); ++i)
-                  {
-                    MTError(i) = std::max(MTError(i), MinErr(i));
-                  }
+                //the error used in the inversion is the maximum of the error floor
+                //and the actual data error.
+                std::transform(MTError.begin(), MTError.end(), MinErr.begin(),
+                    MTError.begin(), [](double a, double b)
+                      { return std::max(a,b);});
                 MTObjective->SetDataError(MTError);
               }
             //add the MT part to the JointObjective that will be used
