@@ -26,33 +26,6 @@ namespace jif3D
   {
     /** \addtogroup util General utility routines */
     /* @{ */
-    //! Add random gaussian noise to a vector of data
-    /*! When inverting synthetic data, we usually want to add
-     * noise to it to simulate some of the properties of real data. This function
-     * takes a vector of real data values and adds noise to it. The variance
-     * can be specified both as a relative or absolute value. If both are specified the maximum is taken.
-     * @param Data The vector of data values, contains the noisy data afterwards
-     * @param relerror The relative error for each datum, e.g. 0.02 corresponds to 2%
-     * @param abserror The minimum absolute error for all data in the same units as the data vector, this value is applied globally
-     */
-    inline void AddNoise(jif3D::rvec &Data, const double relerror, const double abserror =
-        0)
-      {
-        //create a random number generator object without specifying the distribution
-        boost::lagged_fibonacci607 generator(static_cast<unsigned int>(std::time(0)));
-        const size_t ndata = Data.size();
-        //create an error estimate for each datum
-        for (size_t i = 0; i < ndata; ++i)
-          {
-            const double error = std::max(std::abs(Data(i)) * relerror, abserror);
-            //construct a Gaussian distribution based on mean and standard deviation
-            boost::normal_distribution<> noise_dist(Data(i), error);
-            boost::variate_generator<boost::lagged_fibonacci607&,
-                boost::normal_distribution<> > noise(generator, noise_dist);
-            Data(i) = noise();
-          }
-
-      }
 
     //! Add random gaussian noise to a vector of data
     /*! When inverting synthetic data, we usually want to add
@@ -85,6 +58,22 @@ namespace jif3D
 
       }
 
+    //! Add random gaussian noise to a vector of data
+    /*! When inverting synthetic data, we usually want to add
+     * noise to it to simulate some of the properties of real data. This function
+     * takes a vector of real data values and adds noise to it. The variance
+     * can be specified both as a relative or absolute value. If both are specified the maximum is taken.
+     * @param Data The vector of data values, contains the noisy data afterwards
+     * @param relerror The relative error for each datum, e.g. 0.02 corresponds to 2%
+     * @param abserror The minimum absolute error for all data in the same units as the data vector, this value is applied globally
+     */
+    inline void AddNoise(jif3D::rvec &Data, const double relerror, const double abserror =
+        0)
+      {
+        jif3D::rvec AbsErrorVec(Data.size(), abserror);
+        AddNoise(Data, relerror, AbsErrorVec);
+      }
+
     //! This function provides a simple, convenient way to assign an error to data for inversion based on actual errors and error floor
     /*! When inverting data we often have to use a minimum error based on some noise floor estimate.
      * Also when inverting noise free synthetic data, we still have
@@ -99,8 +88,16 @@ namespace jif3D
     inline jif3D::rvec ConstructError(const jif3D::rvec &Data,
         const jif3D::rvec &DataError, const double relerror, const double absmin = 0.0)
       {
-        assert(relerror >= 0.0);
-        assert(absmin >= 0.0);
+        //check for reasonable relative error value
+        if (relerror <= 0.0)
+          {
+            throw jif3D::FatalException("Specifiying relative error <= 0 is not valid!");
+          }
+        //check for reasonable absolute error value
+        if (absmin <= 0.0)
+          {
+            throw jif3D::FatalException("Specifiying absolute error <= 0 is not valid!");
+          }
         const size_t ndata = Data.size();
         //create objects for the misfit and a very basic error estimate
         jif3D::rvec Error(ndata, 0.0);
@@ -124,15 +121,23 @@ namespace jif3D
      */
     inline jif3D::rvec ConstructMTError(const jif3D::rvec &Data, const double relerror)
       {
-        assert(relerror >= 0.0);
+        if (relerror <= 0.0)
+          {
+            throw jif3D::FatalException("Specifiying relative error <= 0 is not valid!");
+          }
         const size_t ndata = Data.size();
-        jif3D::rvec DataError(ndata);
+        jif3D::rvec DataError(ndata, 0.0);
         const size_t ntensorelem = 8;
-        assert((Data.size() % ntensorelem) == 0);
+        if ((Data.size() % ntensorelem) != 0)
+          {
+            throw jif3D::FatalException(
+                "MT Data vector size is not an integer multiple of 8!");
+          }
         const size_t ntensor = ndata / ntensorelem;
         for (size_t i = 0; i < ntensor; ++i)
           {
             //compute the real and imaginary parts of the berdichevskyi invariant
+            //Berd = 0.5 * (Zxy - Zyx)
             double berdreal = 0.5
                 * (Data(i * ntensorelem + 2) - Data(i * ntensorelem + 4));
             double berdimag = 0.5
