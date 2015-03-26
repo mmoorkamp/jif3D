@@ -5,10 +5,16 @@
 // Copyright   : 2008, mmoorkamp
 //============================================================================
 
-
+#include <numeric>
+#include <functional>
+#ifdef HAVEHPX
+#include <hpx/parallel/algorithms/transform_reduce.hpp>
+#include <hpx/parallel/execution_policy.hpp>
+#endif
 #include "ScalarOMPGravityImp.h"
 #include "BasicGravElements.h"
 #include "GravityBackground.h"
+
 namespace jif3D
   {
 
@@ -31,9 +37,9 @@ namespace jif3D
      * @param Sensitivities If the matrix hold enough elements the sensitivities for the background are stored for a single measurement
      * @return The gravitational acceleration in m/s^2 due to the background
      */
-    rvec ScalarOMPGravityImp::CalcBackground(const size_t measindex,
-        const double xwidth, const double ywidth, const double zwidth,
-        const ThreeDGravityModel &Model, rmat &Sensitivities)
+    rvec ScalarOMPGravityImp::CalcBackground(const size_t measindex, const double xwidth,
+        const double ywidth, const double zwidth, const ThreeDGravityModel &Model,
+        rmat &Sensitivities)
       {
         return CalcScalarBackground(measindex, xwidth, ywidth, zwidth, Model,
             Sensitivities);
@@ -60,7 +66,7 @@ namespace jif3D
             && (Sensitivities.size2() >= size_t(nmod));
         double returnvalue = 0.0;
         double currvalue = 0.0;
-
+#ifdef HAVEOPENMP
         //sum up the contributions of all prisms in an openmp parallel loop
 #pragma omp parallel default(shared) private(currvalue) reduction(+:returnvalue)
           {
@@ -79,14 +85,37 @@ namespace jif3D
                     XCoord[xindex], YCoord[yindex], ZCoord[zindex],
                     XSizes[xindex], YSizes[yindex], ZSizes[zindex]);
                 returnvalue += currvalue
-                    * Model.GetDensities()[xindex][yindex][zindex];
+                * Model.GetDensities()[xindex][yindex][zindex];
                 if (storesens)
                   {
                     Sensitivities(0, offset) = currvalue;
                   }
               }
 
-          }//end of parallel section
+          } //end of parallel section
+#endif
+#ifdef HAVEHPX
+        std::vector<int> Offsets(nmod);
+        std::iota(Offsets.begin(),Offsets.end(),0);
+        auto result = hpx::parallel::transform_reduce(hpx::parallel::parallel_task_execution_policy(),Offsets.begin(),Offsets.end(),
+            [&] (const int& offset) -> double
+              {
+                int xindex, yindex, zindex;
+                Model.OffsetToIndex(offset, xindex, yindex, zindex);
+                double c = CalcGravBoxTerm(x_meas, y_meas, z_meas,
+                    XCoord[xindex], YCoord[yindex], ZCoord[zindex],
+                    XSizes[xindex], YSizes[yindex], ZSizes[zindex]);
+                double g = c * Model.GetDensities()[xindex][yindex][zindex];
+                if (storesens)
+                  {
+                    Sensitivities(0, offset) = c;
+                  }
+                return g;
+              }
+            ,0.0,std::plus<double>()
+        );
+        returnvalue = result.get();
+#endif
         rvec returnvector(1);
         returnvector(0) = returnvalue;
         return returnvector;
