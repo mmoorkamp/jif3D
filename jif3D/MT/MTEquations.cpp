@@ -91,7 +91,7 @@ namespace jif3D
           {
             throw jif3D::FatalException(
                 "Size of impedance vector: " + stringify(Impedance.size())
-                    + " is not a multiple of 8!");
+                    + " is not a multiple of 8!", __FILE__, __LINE__);
           }
         const size_t ntensors = Impedance.size() / nelem;
         for (size_t i = 0; i < ntensors; ++i)

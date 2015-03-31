@@ -49,7 +49,7 @@ inline void CheckField(const std::vector<std::complex<double> > &Field, size_t n
     if (Field.size() != nelem)
       throw jif3D::FatalException(
           "Number of read in elements in Field: " + jif3D::stringify(Field.size())
-              + " does not match expected: " + jif3D::stringify(nelem));
+              + " does not match expected: " + jif3D::stringify(nelem), __FILE__, __LINE__);
   }
 
 //check that the .hnk file for x3d are in a certain directory
@@ -127,7 +127,7 @@ void RunX3D(const std::string &NameRoot)
     //for the system call, otherwise the GNU compiler picks up
     //a version from the c library that gives trouble in threaded environments
     if (std::system(runname.c_str()))
-      throw jif3D::FatalException("Cannot execute run script: " + runname);
+      throw jif3D::FatalException("Cannot execute run script: " + runname, __FILE__, __LINE__);
   }
 
 jif3D::rvec HPXCalculateFrequency(const jif3D::X3DModel &Model, size_t freqindex,

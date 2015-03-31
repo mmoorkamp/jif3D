@@ -53,7 +53,7 @@ namespace jif3D
             //for L-BFGS we check whether the number of correction pairs is positive
             if (corrpairs < 0)
               throw jif3D::FatalException(
-                  "Negative number of correction pairs specified !");
+                  "Negative number of correction pairs specified !", __FILE__, __LINE__);
             Optimizer
                 = boost::shared_ptr<jif3D::GradientBasedOptimization>(
                     new jif3D::LimitedMemoryQuasiNewton(ObjFunction,
@@ -71,7 +71,7 @@ namespace jif3D
               throw FatalException("Size of inversion model vector: "
                   + jif3D::stringify(nparm)
                   + " is not a multiple of covariance model size: "
-                  + jif3D::stringify(ncovmod) + "!");
+                  + jif3D::stringify(ncovmod) + "!", __FILE__, __LINE__);
             rvec CovVec(nparm);
             const size_t nsections = nparm / ncovmod;
             for (size_t i = 0; i < nsections; ++i)

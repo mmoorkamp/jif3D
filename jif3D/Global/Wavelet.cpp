@@ -191,7 +191,7 @@ namespace jif3D
           {
             if (!IsPowerOfTwo(DimSizes[i]))
               throw jif3D::FatalException(
-                  "Array dimension is not a power of two.");
+                  "Array dimension is not a power of two. ", __FILE__, __LINE__);
           }
         WaveletTransformImp(InArray, DimSizes, ndim, ForwardWaveletDriver());
       }
@@ -204,7 +204,7 @@ namespace jif3D
           {
             if (!IsPowerOfTwo(DimSizes[i]))
               throw jif3D::FatalException(
-                  "Array dimension is not a power of two.");
+                  "Array dimension is not a power of two. ", __FILE__, __LINE__);
           }
         WaveletTransformImp(InArray, DimSizes, ndim, InverseWaveletDriver());
       }

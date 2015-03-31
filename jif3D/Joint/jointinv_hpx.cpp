@@ -159,7 +159,7 @@ int hpx_main(boost::program_options::variables_map& vm)
     if (havetomo && !EqualGridGeometry(TomoSetup.GetModel(), StartModel))
       {
         throw jif3D::FatalException(
-            "Tomography model does not have the same geometry as starting model");
+            "Tomography model does not have the same geometry as starting model" , __FILE__, __LINE__);
       }
     //setup the gravity part of the joint inversion
     bool havegrav = GravitySetup.SetupObjective(vm, *Objective.get(), GravityTransform,
@@ -169,7 +169,7 @@ int hpx_main(boost::program_options::variables_map& vm)
     if (havegrav && !EqualGridGeometry(StartModel, GravitySetup.GetScalModel()))
       {
         throw jif3D::FatalException(
-            "Gravity model does not have the same geometry as starting model");
+            "Gravity model does not have the same geometry as starting model", __FILE__, __LINE__);
       }
     //setup the MT part of the joint inversion
     bool havemt = MTSetup.SetupObjective(vm, *Objective.get(), MTTransform, xorigin,
@@ -179,7 +179,7 @@ int hpx_main(boost::program_options::variables_map& vm)
     if (havemt && !EqualGridGeometry(MTSetup.GetModel(), StartModel))
       {
         throw jif3D::FatalException(
-            "MT model does not have the same geometry as starting model");
+            "MT model does not have the same geometry as starting model", __FILE__, __LINE__);
       }
     //now we setup the regularization
     boost::shared_ptr<jif3D::RegularizationFunction> Regularization =

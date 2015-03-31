@@ -28,7 +28,8 @@ namespace jif3D
           throw jif3D::FatalException(
               "Specified depth: " + jif3D::stringify(Coordinate)
                   + " is outside domain limit: "
-                  + jif3D::stringify(CellBoundaries[ncells - 1] + CellSizes[ncells - 1]));
+                  + jif3D::stringify(CellBoundaries[ncells - 1] + CellSizes[ncells - 1]),
+              __FILE__, __LINE__);
         //we implictly assume the coordinates to start at zero
         //so the boundary values are the upper limits of the cells
         //and we search for the index of the next higher cell boundary
@@ -46,7 +47,8 @@ namespace jif3D
         else
           return std::min(result + 1, ncells - 1);
         //if we get here something is seriously wrong
-        throw jif3D::FatalException("Unexpected error in FindNearestCellBoundary !");
+        throw jif3D::FatalException("Unexpected error in FindNearestCellBoundary !",
+            __FILE__, __LINE__);
       }
 
     size_t ConstructDepthIndices(std::vector<size_t> &MeasDepthIndices,
@@ -62,7 +64,8 @@ namespace jif3D
           {
             size_t zindex = FindNearestCellBoundary(Model.GetMeasPosZ()[i],
                 Model.GetZCoordinates(), Model.GetZCellSizes());
-            std::vector<size_t>::iterator CurrIndex = std::find(ZIndices.begin(), ZIndices.end(), zindex);
+            std::vector<size_t>::iterator CurrIndex = std::find(ZIndices.begin(),
+                ZIndices.end(), zindex);
             if (CurrIndex == ZIndices.end())
               {
                 ZIndices.push_back(zindex);

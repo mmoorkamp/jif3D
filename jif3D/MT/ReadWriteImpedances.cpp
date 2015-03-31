@@ -121,11 +121,12 @@ namespace jif3D
         WriteImpedanceComp(DataFile, StatNumDim, FreqDim, ZErr, "dZyx", 4);
         WriteImpedanceComp(DataFile, StatNumDim, FreqDim, ZErr, "dZyy", 6);
         if (!Distortion.empty())
-        {
-        	NcDim *CDim = DataFile.add_dim("Celem", 4);
-        	NcVar *CVar = DataFile.add_var(DistortionName.c_str(),ncDouble,StatNumDim,CDim);
-        	CVar->put(&Distortion[0],nstats, 4);
-        }
+          {
+            NcDim *CDim = DataFile.add_dim("Celem", 4);
+            NcVar *CVar = DataFile.add_var(DistortionName.c_str(), ncDouble, StatNumDim,
+                CDim);
+            CVar->put(&Distortion[0], nstats, 4);
+          }
       }
 
     void ReadImpedancesFromNetCDF(const std::string &filename,
@@ -171,23 +172,25 @@ namespace jif3D
         NcVar *DistVar = DataFile.get_var(DistortionName.c_str());
         const size_t nvalues = StatXCoord.size() * 4;
         Distortion.resize(nvalues);
-        if ( DistVar != nullptr)
+        if (DistVar != nullptr)
           {
             if (nvalues != DistVar->edges()[0] * DistVar->edges()[1])
-            {
-            	throw jif3D::FatalException("Number of distortion parameters does not match number of stations !");
-            }
+              {
+                throw jif3D::FatalException(
+                    "Number of distortion parameters does not match number of stations !",
+                    __FILE__, __LINE__);
+              }
             DistVar->get(&Distortion[0], DistVar->edges()[0], DistVar->edges()[1]);
           }
         else
           {
-        	for (size_t i = 0; i < StatXCoord.size(); ++i)
-        	{
-        		Distortion[i*4] = 1.0;
-        		Distortion[i*4+1] = 0.0;
-        		Distortion[i*4+2] = 0.0;
-        		Distortion[i*4+3] = 1.0;
-        	}
+            for (size_t i = 0; i < StatXCoord.size(); ++i)
+              {
+                Distortion[i * 4] = 1.0;
+                Distortion[i * 4 + 1] = 0.0;
+                Distortion[i * 4 + 2] = 0.0;
+                Distortion[i * 4 + 3] = 1.0;
+              }
           }
       }
 
@@ -205,7 +208,8 @@ namespace jif3D
           }
         infile.close();
         if (((nentries - 1) % 23) != 0)
-          throw FatalException("Number of records does not match expected: " + filename);
+          throw FatalException("Number of records does not match expected: " + filename,
+          __FILE__, __LINE__);
         const int nrecords = (nentries - 1) / 23;
         Impedances.resize(nrecords * 8);
         Errors.resize(nrecords * 8);
@@ -263,7 +267,8 @@ namespace jif3D
           }
         else
           {
-            throw jif3D::FatalException("File not found: " + filename);
+            throw jif3D::FatalException("File not found: " + filename, __FILE__,
+                __LINE__);
           }
       }
 

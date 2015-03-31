@@ -158,7 +158,7 @@ jif3D::rvec LQDerivativeFreq(const ForwardInfo &Info, const jif3D::rvec &Misfit,
     if (!fs::is_directory(ForwardDirName))
       throw FatalException(
           "In X3D gradient calculation, directory does not exist: "
-              + ForwardDirName.string());
+              + ForwardDirName.string(), __FILE__, __LINE__);
 
     //read the fields from the forward calculation
     std::vector<std::complex<double> > Ex1_obs, Ex2_obs, Ey1_obs, Ey2_obs, Hx1_obs,

@@ -54,14 +54,14 @@ namespace jif3D
         X3DName(x3d)
       {
         if (!fs::is_directory(TDir))
-          throw FatalException("TDir is not a directory: " + TDir.string());
+          throw FatalException("TDir is not a directory: " + TDir.string(), __FILE__, __LINE__);
         TempDirName = TDir.string();
         //we make sure that the .hnk files are there
         //this is a common problem and when we check for use later
         //we are inside an openmp thread and swallow all sensible error messages.
         if (!CheckHNK(fs::path()))
           {
-            throw jif3D::FatalException("Cannot find .hnk files in current directory! ");
+            throw jif3D::FatalException("Cannot find .hnk files in current directory! ", __FILE__, __LINE__);
           }
       }
 

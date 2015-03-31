@@ -105,7 +105,7 @@ namespace jif3D
       void operator()(ThreeDMagneticModel &Model, const std::vector<double> &Dens)
         {
           throw jif3D::FatalException(
-              "Magnetics class does not support extra parameters !");
+              "Magnetics class does not support extra parameters !", __FILE__, __LINE__);
         }
       };
   } /* namespace jif3D */

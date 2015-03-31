@@ -56,8 +56,7 @@ namespace jif3D
        */
       virtual jif3D::rmat Derivative(const jif3D::rvec &InputVector)
         {
-          const size_t ndata = InputVector.size();
-          assert(ndata == ninput);
+          assert(InputVector.size() == ninput);
           jif3D::rmat InvarSens(noutput, ninput);
           double Total = CalcTotalField(InputVector);
 
@@ -119,8 +118,7 @@ namespace jif3D
        */
       virtual jif3D::rmat Derivative(const jif3D::rvec &InputVector)
         {
-          const size_t ndata = InputVector.size();
-          assert(ndata == ninput);
+          assert(InputVector.size() == ninput);
           jif3D::rmat InvarSens(noutput, ninput);
 
           InvarSens(0, 0) = BxComp;

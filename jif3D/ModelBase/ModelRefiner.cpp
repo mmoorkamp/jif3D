@@ -72,7 +72,7 @@ namespace jif3D
         else
           {
             throw jif3D::FatalException(
-                "Negative cell size in model refinement !");
+                "Negative cell size in model refinement !", __FILE__, __LINE__);
           }
       }
 

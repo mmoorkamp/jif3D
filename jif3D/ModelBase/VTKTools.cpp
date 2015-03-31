@@ -104,7 +104,7 @@ namespace jif3D
               }
           }
         if (outfile.fail())
-          throw FatalException("Problem writing vtk  file: " + filename);
+          throw FatalException("Problem writing vtk  file: " + filename, __FILE__, __LINE__);
       }
 
     /*! Read a .vtk file containing a 3D model
@@ -156,7 +156,7 @@ namespace jif3D
                   {
                     infile >> Data[k][j][i];
                     if (infile.fail())
-                      throw FatalException("Problem reading vtk  file: " + filename);
+                      throw FatalException("Problem reading vtk  file: " + filename, __FILE__, __LINE__);
                   }
               }
           }
@@ -211,7 +211,7 @@ namespace jif3D
         std::copy(Data.begin(), Data.end(), std::ostream_iterator<double>(outfile, " "));
         outfile << std::endl;
         if (outfile.fail())
-          throw FatalException("Problem writing vtk  file: " + filename);
+          throw FatalException("Problem writing vtk  file: " + filename, __FILE__, __LINE__);
       }
 
     /*! Write a collection of tensor measurements to a .vtk file for plotting
@@ -253,6 +253,6 @@ namespace jif3D
           }
         outfile << std::endl;
         if (outfile.fail())
-          throw FatalException("Problem writing vtk  file: " + filename);
+          throw FatalException("Problem writing vtk  file: " + filename, __FILE__, __LINE__);
       }
   }

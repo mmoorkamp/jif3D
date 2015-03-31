@@ -50,7 +50,7 @@ namespace jif3D
         //this means that the sites have to be at least gridspacing/2
         //away from the boundaries
         if (NextX < 0 || NextY < 0 || NextX >= nmodx || NextY >= nmody)
-          throw FatalException("Station outside interpolation range. ");
+          throw FatalException("Station outside interpolation range. ", __FILE__, __LINE__);
         //get the coordinates of the centers of the adjacent cells
         //as our grid is regular we only need 2 additional coordinates
         //we can construct the coordinates of the 4 cells from these
@@ -79,7 +79,7 @@ namespace jif3D
                 << " Offset22:" << Offset22
                 << " Field values: " << Field.size()
                 << " Measurement Index: " << MeasIndex << std::endl;
-            throw FatalException("Invalid offset in interpolation.");
+            throw FatalException("Invalid offset in interpolation.", __FILE__, __LINE__);
           }
         std::complex<double> InterField = Field[Offset11] * (NextCellCenterX - MeasPosX)
             * (NextCellCenterY - MeasPosY);
@@ -92,7 +92,7 @@ namespace jif3D
         InterField /= (NextCellCenterX - CellCenterX) * (NextCellCenterY - CellCenterY);
         if (std::isnan(InterField.real()) || std::isnan(InterField.imag()))
           {
-            throw FatalException("Nan in interpolated fields");
+            throw FatalException("Nan in interpolated fields", __FILE__, __LINE__);
           }
         return InterField;
       }

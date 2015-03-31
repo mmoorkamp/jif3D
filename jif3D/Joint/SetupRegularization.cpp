@@ -157,7 +157,7 @@ namespace jif3D
               {
                 throw jif3D::FatalException(
                     "Size of model covariance: " + jif3D::stringify(CovModVec.size())
-                        + " does not match model size: " + jif3D::stringify(ngrid));
+                        + " does not match model size: " + jif3D::stringify(ngrid), __FILE__, __LINE__);
               }
             jif3D::rvec Cov(ngrid * 3);
             ublas::subrange(Cov, 0, ngrid) = CovModVec;

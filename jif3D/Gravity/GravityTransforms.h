@@ -68,7 +68,7 @@ namespace jif3D
           if (ndata != ninput)
             {
               throw jif3D::FatalException(
-                  "Number of data does not match expected input size !");
+                  "Number of data does not match expected input size ! ", __FILE__, __LINE__);
             }
 
           jif3D::rmat InvarSens(noutput, ninput);

@@ -35,7 +35,7 @@ namespace jif3D
       {
         if (!boost::filesystem::exists(filename))
           {
-            throw jif3D::FatalException("File does not exist: " + filename);
+            throw jif3D::FatalException("File does not exist: " + filename, __FILE__, __LINE__);
           }
         std::ifstream infile(filename.c_str());
         //find the line in the file that describes the cell size in the horizontal directions
@@ -271,7 +271,7 @@ namespace jif3D
         //if something went wrong during writing we throw an exception
         if (outfile.bad())
           {
-            throw jif3D::FatalException("Problem writing model file.");
+            throw jif3D::FatalException("Problem writing model file.", __FILE__, __LINE__);
           }
       }
 
@@ -342,7 +342,7 @@ namespace jif3D
         //::fdatasync(outfile->handle());
         if (outfile.bad())
           {
-            throw jif3D::FatalException("Problem writing project file.");
+            throw jif3D::FatalException("Problem writing project file.", __FILE__, __LINE__);
           }
       }
 
@@ -403,7 +403,7 @@ namespace jif3D
       {
         if (!boost::filesystem::exists(filename))
           {
-            throw jif3D::FatalException("File does not exist: " + filename);
+            throw jif3D::FatalException("File does not exist: " + filename, __FILE__, __LINE__);
           }
         std::ifstream infile(filename.c_str());
         //find the description line for the electric fields
@@ -430,15 +430,15 @@ namespace jif3D
             throw jif3D::FatalException(
                 "In ReadEma: "+ filename +" number of electric field values: "
                     + jif3D::stringify(Ex.size()) + " does not match grid size: "
-                    + jif3D::stringify(ncellsx * ncellsy * ncellsz));
+                    + jif3D::stringify(ncellsx * ncellsy * ncellsz), __FILE__, __LINE__);
           }
         if (Ex.size() != Ey.size())
           {
-            throw jif3D::FatalException("In ReadEma, size of Ex != Ey");
+            throw jif3D::FatalException("In ReadEma, size of Ex != Ey", __FILE__, __LINE__);
           }
         if (Ex.size() != Ez.size())
           {
-            throw jif3D::FatalException("In ReadEma, size of Ex != Ez");
+            throw jif3D::FatalException("In ReadEma, size of Ex != Ez", __FILE__, __LINE__);
           }
         //we use a different storage ordering then in the .ema files
         Ex = ResortFields(Ex, ncellsx, ncellsy, ncellsz);
@@ -586,7 +586,7 @@ namespace jif3D
         //::fdatasync(outfile->handle());
         if (outfile.bad())
           {
-            throw jif3D::FatalException("Problem writing source file.");
+            throw jif3D::FatalException("Problem writing source file.", __FILE__, __LINE__);
           }
       }
 

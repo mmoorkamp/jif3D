@@ -125,17 +125,17 @@ namespace jif3D
         if (Model.GetData().shape()[0] != Model.GetXCellSizes().shape()[0])
           {
             throw jif3D::FatalException(
-                "Model x-dimension does not match size for specification of cell sizes.");
+                "Model x-dimension does not match size for specification of cell sizes. ", __FILE__, __LINE__);
           }
         if (Model.GetData().shape()[1] != Model.GetYCellSizes().shape()[0])
           {
             throw jif3D::FatalException(
-                "Model y-dimension does not match size for specification of cell sizes.");
+                "Model y-dimension does not match size for specification of cell sizes. ", __FILE__, __LINE__);
           }
         if (Model.GetData().shape()[2] != Model.GetZCellSizes().shape()[0])
           {
             throw jif3D::FatalException(
-                "Model x-dimension does not match size for specification of cell sizes.");
+                "Model x-dimension does not match size for specification of cell sizes. ", __FILE__, __LINE__);
           }
 
         // make sure we have coordinates for all sites
@@ -144,7 +144,7 @@ namespace jif3D
         const size_t nmeas = Model.GetMeasPosX().size();
         if (nmeas != Model.GetMeasPosY().size() || nmeas != Model.GetMeasPosZ().size())
           {
-            throw jif3D::FatalException("Inconsistent measurement configuration !");
+            throw jif3D::FatalException("Inconsistent measurement configuration !", __FILE__, __LINE__);
           }
       }
 

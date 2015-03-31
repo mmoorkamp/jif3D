@@ -167,7 +167,7 @@ namespace jif3D
         if (SeisMod.GetNModelElements() != ngrid)
           {
             throw jif3D::FatalException(
-                "Size of seismic model does not match model geometry !");
+                "Size of seismic model does not match model geometry !", __FILE__, __LINE__);
           }
         InvModel.resize(ngrid);
         std::copy(SeisMod.GetSlownesses().origin(),

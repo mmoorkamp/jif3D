@@ -184,7 +184,7 @@ namespace jif3D
       {
     	  if (section >= startindices.size())
     	  {
-    		  throw jif3D::FatalException("Trying to change section that does not exist !");
+    		  throw jif3D::FatalException("Trying to change section that does not exist !", __FILE__, __LINE__);
     	  }
     	  startindices.at(section) = startindex;
     	  endindices.at(section) = endindex;
