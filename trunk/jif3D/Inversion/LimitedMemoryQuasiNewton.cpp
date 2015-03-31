@@ -83,7 +83,7 @@ namespace jif3D
         if (status < 0)
           {
             throw jif3D::FatalException("Cannot find suitable step. Status: "
-                + jif3D::stringify(status));
+                + jif3D::stringify(status), __FILE__, __LINE__);
           }
         //if we have found a good stepsize, update the model
         CurrentModel += mu * SearchDir;

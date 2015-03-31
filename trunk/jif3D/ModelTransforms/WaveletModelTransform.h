@@ -40,7 +40,7 @@ namespace jif3D
         {
           if (Vector.size() > Grid.num_elements())
             throw FatalException(
-                "In WaveletModelTransform: Model does not fit into grid");
+                "In WaveletModelTransform: Model does not fit into grid", __FILE__, __LINE__);
 
           //FullModel and Grid have different sizes because we are padding
           // Grid to the nearest power of two, but we have to
@@ -97,13 +97,13 @@ namespace jif3D
         {
           if (!IsPowerOfTwo(nx))
             throw jif3D::FatalException(
-                "X-dimension of grid is not a power of two: " + jif3D::stringify(nx));
+                "X-dimension of grid is not a power of two: " + jif3D::stringify(nx), __FILE__, __LINE__);
           if (!IsPowerOfTwo(ny))
             throw jif3D::FatalException(
-                "Y-dimension of grid is not a power of two: " + jif3D::stringify(ny));
+                "Y-dimension of grid is not a power of two: " + jif3D::stringify(ny), __FILE__, __LINE__);
           if (!IsPowerOfTwo(nz))
             throw jif3D::FatalException(
-                "Z-dimension of grid is not a power of two: " + jif3D::stringify(nz));
+                "Z-dimension of grid is not a power of two: " + jif3D::stringify(nz), __FILE__, __LINE__);
           Grid.resize(boost::extents[nx][ny][nz]);
         }
       };

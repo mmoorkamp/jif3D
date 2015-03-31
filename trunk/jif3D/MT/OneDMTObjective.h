@@ -51,7 +51,8 @@ namespace jif3D
           SynthData = Calculator.Calculate(MTModel);
           if (SynthData.size() != ObservedData.size())
             throw jif3D::FatalException(
-                " ThreeDModelObjective: Forward calculation does not give same amount of data !");
+                " ThreeDModelObjective: Forward calculation does not give same amount of data !",
+                __FILE__, __LINE__);
           Diff.resize(ObservedData.size());
           //calculate the difference between observed and synthetic
           std::transform(SynthData.begin(), SynthData.end(), ObservedData.begin(),
@@ -83,7 +84,8 @@ namespace jif3D
           if (!std::equal(Model.begin(), Model.end(),
               MTModel.GetBackgroundConductivities().begin()))
             throw jif3D::FatalException(
-                "Gradient calculation needs identical model to forward !");
+                "Gradient calculation needs identical model to forward !", __FILE__,
+                __LINE__);
           //calculate the gradient
           jif3D::rvec Deriv = Calculator.LQDerivative(MTModel, Diff);
           //std::cout << Calculator.GetGamma() << std::endl;
@@ -113,7 +115,8 @@ namespace jif3D
         {
           if (Data.empty())
             throw jif3D::FatalException(
-                "Cannot have empty observations in objective function.");
+                "Cannot have empty observations in objective function.", __FILE__,
+                __LINE__);
           ObservedData = Data;
         }
       //! Return a read only version of the observed data
@@ -144,7 +147,8 @@ namespace jif3D
       void SetModelGeometry(const jif3D::X3DModel &TheModel)
         {
           if (TheModel.GetBackgroundConductivities().size() == 0)
-            throw jif3D::FatalException("Cannot have empty model in objective function.");
+            throw jif3D::FatalException("Cannot have empty model in objective function.",
+                __FILE__, __LINE__);
           MTModel = TheModel;
         }
     public:

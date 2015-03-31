@@ -116,7 +116,7 @@ namespace jif3D
         {
           if (Data.empty())
             throw jif3D::FatalException(
-                "Cannot have empty observations in objective function.");
+                "Cannot have empty observations in objective function. ", __FILE__, __LINE__);
           ObservedData = Data;
         }
       //! Return a read only version of the observed data
@@ -145,7 +145,7 @@ namespace jif3D
       void SetCoarseModelGeometry(const ModelType &Model)
         {
           if (Model.GetData().num_elements() == 0)
-            throw jif3D::FatalException("Cannot have empty model in objective function.");
+            throw jif3D::FatalException("Cannot have empty model in objective function. ", __FILE__, __LINE__);
           CoarseModel = Model;
         }
       //! Set the geometry of a finely discretized model to ensure numerical precision
@@ -161,7 +161,7 @@ namespace jif3D
       void SetFineModelGeometry(const ModelType &Model)
         {
           if (Model.GetData().num_elements() == 0)
-            throw jif3D::FatalException("Cannot have empty model in objective function.");
+            throw jif3D::FatalException("Cannot have empty model in objective function. ", __FILE__, __LINE__);
           FineModel = Model;
           //set the coordinates of the refiner object according to the fine model
           //we want to use for the forward calculation
@@ -204,7 +204,7 @@ namespace jif3D
         if (Model.size() < ngrid)
           {
             throw jif3D::FatalException(
-                "Not enough inversion parameters to fill the grid !");
+                "Not enough inversion parameters to fill the grid !", __FILE__, __LINE__);
           }
         //Copy the model vector into the object with the geometry information
         std::copy(Model.begin(), Model.begin() + ngrid, CoarseModel.SetData().origin());
@@ -233,7 +233,7 @@ namespace jif3D
 
         if (SynthData.size() != ObservedData.size())
           throw jif3D::FatalException(
-              " ThreeDModelObjective: Forward calculation does not give same amount of data !");
+              " ThreeDModelObjective: Forward calculation does not give same amount of data !", __FILE__, __LINE__);
         Diff.resize(ObservedData.size());
         //calculate the difference between observed and synthetic
         std::transform(SynthData.begin(), SynthData.end(), ObservedData.begin(),
@@ -250,7 +250,7 @@ namespace jif3D
         if (Model.size() < ngrid)
           {
             throw jif3D::FatalException(
-                "Not enough inversion parameters to fill the grid !");
+                "Not enough inversion parameters to fill the grid !", __FILE__, __LINE__);
           }
 
         //as we have stored the model vector from the misfit calculation
@@ -258,7 +258,7 @@ namespace jif3D
         if (!std::equal(Model.begin(), Model.begin() + ngrid,
             CoarseModel.GetData().origin()))
           throw jif3D::FatalException(
-              "Gradient calculation needs identical model to forward !");
+              "Gradient calculation needs identical model to forward !", __FILE__, __LINE__);
         //calculate the gradient
         if (wantrefinement)
           {

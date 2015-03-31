@@ -42,10 +42,10 @@ double CalcRawRealization(int nx, int ny, int nz, double delta, double topthick,
     std::vector<double> bg_conductivities(2, bgcond);
     Model.SetBackgroundThicknesses(bg_thicknesses);
     Model.SetBackgroundConductivities(bg_conductivities);
-    const size_t nc = len(Conductivities);
+    const int nc = len(Conductivities);
     if (nx * ny * nz != nc)
       throw jif3D::FatalException(
-          "Number of conductivity values does not match mesh size !");
+          "Number of conductivity values does not match mesh size ! ", __FILE__, __LINE__);
     for (size_t i = 0; i < nc; ++i)
       {
         *(Model.SetConductivities().origin() + i) = boost::python::extract<double>(Conductivities[i]);

@@ -83,7 +83,7 @@ namespace jif3D
         if (Field.size() != nelem)
           throw jif3D::FatalException(
               "Number of read in elements in Field: " + jif3D::stringify(Field.size())
-                  + " does not match expected: " + jif3D::stringify(nelem));
+                  + " does not match expected: " + jif3D::stringify(nelem), __FILE__, __LINE__);
       }
 
     void CompareDepths(const std::vector<double> &BGDepths,
@@ -101,7 +101,7 @@ namespace jif3D
                 throw jif3D::FatalException(
                     "Depth to background layer: " + jif3D::stringify(BGDepths[i])
                         + " does not match grid cell depth: "
-                        + jif3D::stringify(ModelDepths[mindex]));
+                        + jif3D::stringify(ModelDepths[mindex]), __FILE__, __LINE__);
               }
           }
       }
@@ -126,7 +126,7 @@ namespace jif3D
           }
         if (tries >= 10)
           {
-            throw FatalException("Cannot find run script: " + runname);
+            throw FatalException("Cannot find run script: " + runname, __FILE__, __LINE__);
           }
         else
           {
@@ -171,7 +171,7 @@ namespace jif3D
           //a version from the c library that gives trouble in threaded environments
           int result = std::system(execname.c_str());
           if (result)
-           throw FatalException("Cannot execute run script: " + runname + " Error code: " + jif3D::stringify(result));
+           throw FatalException("Cannot execute run script: " + runname + " Error code: " + jif3D::stringify(result), __FILE__, __LINE__);
         }
 
     jif3D::rvec AdaptDist(const std::vector<double> &C, const jif3D::rvec &RawImpedance,

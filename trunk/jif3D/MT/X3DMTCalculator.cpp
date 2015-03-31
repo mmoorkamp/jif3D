@@ -65,14 +65,16 @@ namespace jif3D
         //between the temporary files generated for the calculations with x3d
         NameRoot = ObjectID();
         if (!fs::is_directory(TDir))
-          throw FatalException("TDir is not a directory: " + TDir.string());
+          throw FatalException("TDir is not a directory: " + TDir.string(), __FILE__,
+              __LINE__);
         TempDir = TDir;
         //we make sure that the .hnk files are there
         //this is a common problem and when we check for use later
         //we are inside an openmp thread and swallow all sensible error messages.
         if (!CheckHNK(fs::path()))
           {
-            throw jif3D::FatalException("Cannot find .hnk files in current directory! ");
+            throw jif3D::FatalException("Cannot find .hnk files in current directory! ",
+                __FILE__, __LINE__);
           }
       }
 
@@ -202,7 +204,8 @@ namespace jif3D
         //we cannot throw from within the openmp section so if there was an exception
         //inside the parallel region we set FatalErrror to true and throw a new exception here
         if (FatalError)
-          throw jif3D::FatalException("Problem in MT forward calculation.");
+          throw jif3D::FatalException("Problem in MT forward calculation.", __FILE__,
+              __LINE__);
         return result;
 
       }
@@ -326,7 +329,8 @@ namespace jif3D
         //if we had some exception inside the openmp region, we throw
         // a generic error message
         if (FatalError)
-          throw jif3D::FatalException("Problem in MT gradient calculation.");
+          throw jif3D::FatalException("Problem in MT gradient calculation.", __FILE__,
+              __LINE__);
 
         return 2.0 * Gradient;
       }

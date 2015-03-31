@@ -60,7 +60,7 @@ namespace jif3D
             Imp = boost::shared_ptr<ThreeDGravMagImplementation<ThreeDGravityModel> >(
                 new ScalarCudaGravityImp);
 #else
-            throw jif3D::FatalException("Code has been compiled without GPU support !");
+            throw jif3D::FatalException("Code has been compiled without GPU support ! ", __FILE__, __LINE__);
 #endif
           }
         else
@@ -86,7 +86,7 @@ namespace jif3D
             Imp = boost::shared_ptr<ThreeDGravMagImplementation<ThreeDGravityModel> >(
                 new TensorCudaGravityImp);
 #else
-            throw jif3D::FatalException("Code has been compiled without GPU support !");
+            throw jif3D::FatalException("Code has been compiled without GPU support ! ", __FILE__, __LINE__);
 #endif
           }
         else

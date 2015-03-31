@@ -166,7 +166,7 @@ namespace jif3D
         {
           if (W.size() != Weights.size())
             throw jif3D::FatalException(
-                "Number of weights has to match the number of objective functions !");
+                "Number of weights has to match the number of objective functions ! ", __FILE__, __LINE__);
           std::copy(W.begin(), W.end(), Weights.begin());
         }
       /*! When constructing a JointObjective object we can specify whether we want to print

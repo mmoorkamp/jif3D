@@ -208,7 +208,7 @@ namespace jif3D
       void operator()(ThreeDSeismicModel &Model, const std::vector<double> &Dens)
         {
           throw jif3D::FatalException(
-              "Tomography class does not support extra parameters !");
+              "Tomography class does not support extra parameters !", __FILE__, __LINE__);
         }
       };
   /* @} */

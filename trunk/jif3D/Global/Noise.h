@@ -44,7 +44,7 @@ namespace jif3D
         //check that we have an error for each datum
         if (Data.size() != abserror.size())
           throw jif3D::FatalException(
-              "Data and Error vectors do not have the same size !");
+              "Data and Error vectors do not have the same size ! ", __FILE__, __LINE__);
         //create an error estimate for each datum
         for (size_t i = 0; i < ndata; ++i)
           {
@@ -91,7 +91,7 @@ namespace jif3D
         //check for reasonable relative and absolute error value
         if (relerror <= 0.0 && absmin <= 0.0)
           {
-            throw jif3D::FatalException("Specifiying relative and absolute error <= 0 simultaneously is not valid!");
+            throw jif3D::FatalException("Specifiying relative and absolute error <= 0 simultaneously is not valid! ", __FILE__, __LINE__);
           }
 
         const size_t ndata = Data.size();
@@ -119,7 +119,7 @@ namespace jif3D
       {
         if (relerror <= 0.0)
           {
-            throw jif3D::FatalException("Specifiying relative error <= 0 is not valid!");
+            throw jif3D::FatalException("Specifiying relative error <= 0 is not valid! ", __FILE__, __LINE__);
           }
         const size_t ndata = Data.size();
         jif3D::rvec DataError(ndata, 0.0);
@@ -127,7 +127,7 @@ namespace jif3D
         if ((Data.size() % ntensorelem) != 0)
           {
             throw jif3D::FatalException(
-                "MT Data vector size is not an integer multiple of 8!");
+                "MT Data vector size is not an integer multiple of 8! ", __FILE__, __LINE__);
           }
         const size_t ntensor = ndata / ntensorelem;
         for (size_t i = 0; i < ntensor; ++i)

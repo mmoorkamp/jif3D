@@ -18,7 +18,7 @@ namespace jif3D
         if (InvCov.size1() != nelem || InvCov.size2() != nelem)
           {
             throw FatalException(
-                "Covariance matrix does not have correct size for rotation");
+                "Covariance matrix does not have correct size for rotation", __FILE__, __LINE__);
           }
         rmat Result(InvCov.size1(), InvCov.size2());
         //precompute the trigonometric values needed for the rotation

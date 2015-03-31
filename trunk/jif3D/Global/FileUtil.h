@@ -71,7 +71,7 @@ namespace jif3D
           }
         else
           {
-            throw FatalException("Token " + token + " not found !");
+            throw FatalException("Token " + token + " not found ! ", __FILE__, __LINE__);
           }
       }
 
@@ -90,7 +90,7 @@ namespace jif3D
         std::cin >> filename;
         if (checkexists && !boost::filesystem::exists(filename))
           {
-            throw jif3D::FatalException("File " + filename + " does not exist");
+            throw jif3D::FatalException("File " + filename + " does not exist ", __FILE__, __LINE__);
           }
         return filename;
       }

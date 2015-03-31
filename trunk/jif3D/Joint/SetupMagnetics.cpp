@@ -106,7 +106,7 @@ namespace jif3D
                 jif3D::ThreeDGravMagImplementation<jif3D::ThreeDMagneticModel> > Implementation;
             if (wantcuda)
               {
-                throw jif3D::FatalException("No GPU support, yet !");
+                throw jif3D::FatalException("No GPU support, yet !", __FILE__, __LINE__);
               }
             else
               {

@@ -170,7 +170,7 @@ namespace OPTPP
         if (dginit >= zero)
           {
             throw jif3D::FatalException(
-                "\nmcsrch: Initial search direction not a descent direction");
+                "\nmcsrch: Initial search direction not a descent direction", __FILE__, __LINE__);
           }
 
         /* initialize local variables. */

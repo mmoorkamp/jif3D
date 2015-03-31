@@ -213,14 +213,14 @@ namespace jif3D
 
                 throw jif3D::FatalException(
                     "For the shot-receiver combination" + jif3D::stringify(i + 1)
-                        + "no traveltime was calculated\n->Check the program\n");
+                        + "no traveltime was calculated\n->Check the program\n", __FILE__, __LINE__);
               }
 
             if (raypath[i].nray % 1 != 0)
               {
                 throw jif3D::FatalException(
                     "For the shot-receiver combination" + jif3D::stringify(i + 1)
-                        + "no raypath was calculated\n->Check the program\n");
+                        + "no raypath was calculated\n->Check the program\n", __FILE__, __LINE__);
               }
           }
 

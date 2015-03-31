@@ -39,7 +39,7 @@ namespace jif3D
         //so we throw an exception
         if (nvalues == 0)
           {
-            throw jif3D::FatalException("Cell coordinate is empty: " + SizeName);
+            throw jif3D::FatalException("Cell coordinate is empty: " + SizeName, __FILE__, __LINE__);
           }
         //allocate memory in the class variable
         CellSize.resize(boost::extents[nvalues]);
@@ -57,7 +57,7 @@ namespace jif3D
         if (pos != CellCoordinates.end())
           {
             throw jif3D::FatalException(
-                "Cell coordinates in netcdf file are not in increasing order.");
+                "Cell coordinates in netcdf file are not in increasing order.", __FILE__, __LINE__);
           }
 
         // transform coordinates to cell sizes, assuming the start is at 0
@@ -163,7 +163,7 @@ namespace jif3D
         delete[] databuffer;
         }
         else {
-        	throw jif3D::FatalException("Cannot read variable: "+DataName);
+        	throw jif3D::FatalException("Cannot read variable: "+DataName, __FILE__, __LINE__);
         }
       }
     /*! Write the information about a rectangular mesh 3D model to a netcdf file

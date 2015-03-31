@@ -8,6 +8,7 @@
 #ifndef FATALEXCEPTION_H_
 #define FATALEXCEPTION_H_
 #include <stdexcept>
+#include <string>
 
 /*! \file FatalException.h
  * The general include file for exceptions within jif3D++.
@@ -26,8 +27,9 @@ namespace jif3D
       {
     public:
       //! The constructor takes the error description and simply passes it on to std::runtime_error.
-      FatalException(const std::string whatString) :
-        std::runtime_error(whatString)
+      FatalException(const std::string whatString, std::string File = std::string(),
+          int line = -1) :
+          std::runtime_error(whatString + " " + File + std::to_string(line))
         {
         }
       ;

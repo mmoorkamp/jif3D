@@ -141,7 +141,7 @@ namespace jif3D
         if (Sensitivities.size1() != nmeas || Sensitivities.size2() != nmod)
           {
             throw jif3D::FatalException(
-                "Size of sensitivity matrix does not match model configguration !");
+                "Size of sensitivity matrix does not match model configuration ! ", __FILE__, __LINE__);
           }
         rvec Vector = Model.GetModelParameters();
         //perform the vector matrix product to get the raw data

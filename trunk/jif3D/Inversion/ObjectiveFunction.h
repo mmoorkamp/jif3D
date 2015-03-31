@@ -146,7 +146,7 @@ namespace jif3D
         {
           if (Mat.size1() != Mat.size2())
             {
-              throw jif3D::FatalException("Covariance matrix needs to be square !");
+              throw jif3D::FatalException("Covariance matrix needs to be square ! ", __FILE__, __LINE__);
             }
           InvCovMat = Mat;
         }

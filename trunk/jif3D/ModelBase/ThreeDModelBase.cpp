@@ -177,7 +177,7 @@ namespace jif3D
         if (XCellSizes.size() != Data.shape()[0] || YCellSizes.size() != Data.shape()[1]
             || ZCellSizes.size() != Data.shape()[2])
           {
-            throw jif3D::FatalException("Cell size specification does not match data !");
+            throw jif3D::FatalException("Cell size specification does not match data !", __FILE__, __LINE__);
           }
       }
 

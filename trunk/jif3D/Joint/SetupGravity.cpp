@@ -148,7 +148,7 @@ namespace jif3D
                     new jif3D::ScalarCudaGravityImp);
 #else
                 throw jif3D::FatalException(
-                    "Code has been compiled without GPU support !");
+                    "Code has been compiled without GPU support !", __FILE__, __LINE__);
 #endif
               }
             else
@@ -187,7 +187,7 @@ namespace jif3D
                     new jif3D::TensorCudaGravityImp);
 #else
                 throw jif3D::FatalException(
-                    "Code has been compiled without GPU support !");
+                    "Code has been compiled without GPU support !", __FILE__, __LINE__);
 #endif
               }
             else
