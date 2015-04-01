@@ -14,8 +14,6 @@
 #include <iterator>
 #include "../Global/NumUtil.h"
 #include "ThreeDGravityModel.h"
-#include "TensorOMPGravityImp.h"
-#include "ScalarOMPGravityImp.h"
 #include "ReadWriteGravityData.h"
 
 namespace jif3D

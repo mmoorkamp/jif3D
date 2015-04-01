@@ -2,10 +2,11 @@ import testing ;
 lib gravity : ThreeDGravityModel.cpp DepthWeighting.cpp
               GravityBackground.cpp BasicGravElements.cpp
               ScalarOMPGravityImp.cpp  TensorOMPGravityImp.cpp
-              GravityInterface.cpp   ReadWriteGravityData.cpp
+                 ReadWriteGravityData.cpp
                  ../Global//global  ../ModelBase//modelbase ../Inversion//lininv
                  ..//boost_core
-              : <gpu>on:<source>TensorCudaGravityImp.cpp 
+              : <hpx>off:<source>GravityInterface.cpp
+                <gpu>on:<source>TensorCudaGravityImp.cpp 
                 <gpu>on:<source>ScalarCudaGravityImp.cpp
                 <gpu>on:<source>..//cudart
                 <gpu>on:<source>gravcuda.cu ;
