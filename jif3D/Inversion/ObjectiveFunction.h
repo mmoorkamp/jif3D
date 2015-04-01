@@ -13,7 +13,6 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/serialization/serialization.hpp>
-#include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/export.hpp>
 #include <boost/log/trivial.hpp>
 #include "../Global/VecMat.h"

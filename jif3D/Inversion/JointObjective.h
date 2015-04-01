@@ -11,7 +11,6 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/base_object.hpp>
-#include <boost/serialization/shared_ptr.hpp>
 #include "../Global/FatalException.h"
 #include "ObjectiveFunction.h"
 #include "ModelDistributor.h"
