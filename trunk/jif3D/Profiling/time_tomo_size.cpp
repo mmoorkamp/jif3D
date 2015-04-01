@@ -36,7 +36,7 @@ void MakeTestModel(jif3D::ThreeDSeismicModel &Model, const size_t size)
     const double minx = cellsize * 1.5;
     const double miny = minx;
     const double maxx = cellsize * size * 0.9;
-    const double maxy = maxy;
+    const double maxy = maxx;
     const double deltax = 100;
     const double deltay = 100;
     const double measz = 50.0;
@@ -80,8 +80,12 @@ int hpx_main(boost::program_options::variables_map& vm)
     bool wantcuda = false;
     jif3D::TomographyCalculator Calculator;
 
-    filename = "cpu_";
+#ifdef HAVEHPX
+    filename = "tomo_hpx_";
+#endif
+
 #ifdef HAVEOPENMP
+    filename = "tomo_openmp_";
     if (vm.count("threads"))
       {
         omp_set_num_threads(vm["threads"].as<int>());
