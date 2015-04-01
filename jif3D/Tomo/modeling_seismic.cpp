@@ -8,6 +8,7 @@
 #ifdef HAVEHPX
 #include <hpx/config.hpp>
 #include <hpx/include/lcos.hpp>
+//#include <hpx/include/iostreams.hpp>
 #endif
 
 #include "modeling_seismic.h"
@@ -171,6 +172,7 @@ namespace jif3D
             ShotResult.push_back(async(ForwardModShot, locality_id, i, geo_tmp, grid));
           }
         wait_all(ShotResult);
+
         for (int i = 0; i < nshot; i++)
           {
             RayResult Rays = ShotResult[i].get();
@@ -1325,7 +1327,9 @@ jif3D::RayResult ForwardModShot(int i, jif3D::GEOMETRY geo, jif3D::GRID_STRUCT g
     /*Allocate memory for the travel-times that will be calculated by the forward algorithm*/
     std::vector<float> tt(nx3 * ny3 * nz3, 0.0);
     size_t count; /*Number of active receivers for a shot*/
-
+#ifdef HAVEHPX
+//    std::cout << "Calculating shot " << i << " on node " << hpx::find_here() << " Thread: " << hpx::get_worker_thread_num() << "\n";
+#endif
     float Xs, Ys, Zs;
     std::vector<float> Xr;
     std::vector<float> Yr;

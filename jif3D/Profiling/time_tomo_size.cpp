@@ -1,6 +1,7 @@
 #ifdef HAVEHPX
 #include <hpx/config.hpp>
 #include <hpx/hpx_init.hpp>
+//#include <hpx/include/iostreams.hpp>
 #endif
 #ifdef HAVEOPENMP
 #include <omp.h>
@@ -37,12 +38,12 @@ void MakeTestModel(jif3D::ThreeDSeismicModel &Model, const size_t size)
     const double miny = minx;
     const double maxx = cellsize * size * 0.9;
     const double maxy = maxx;
-    const double deltax = 100;
-    const double deltay = 100;
     const double measz = 50.0;
     const double sourcez = 650;
-    const size_t nmeasx = boost::numeric_cast<size_t>((maxx - minx) / deltax);
-    const size_t nmeasy = boost::numeric_cast<size_t>((maxy - miny) / deltay);
+    const size_t nmeasx = 10;
+    const size_t nmeasy = 10;
+    const double deltax = (maxx - minx) / nmeasx;
+    const double deltay = (maxy - miny) / nmeasy;
     for (size_t i = 0; i <= nmeasx; ++i)
       {
         for (size_t j = 0; j <= nmeasy; ++j)
