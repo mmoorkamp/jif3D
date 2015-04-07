@@ -29,6 +29,7 @@
 #include "../Global/ReadWriteSparseMatrix.h"
 #include "../ModelBase/VTKTools.h"
 #include "../ModelBase/NetCDFModelTools.h"
+#include "../ModelBase/ReadAnyModel.h"
 #include "../Regularization/GradientRegularization.h"
 #include "../Inversion/LimitedMemoryQuasiNewton.h"
 #include "../Inversion/JointObjective.h"
@@ -109,12 +110,18 @@ int main(int argc, char *argv[])
     jif3D::rvec CovModVec;
     if (vm.count("covmod"))
       {
-        jif3D::X3DModel CovModel;
-        CovModel.ReadNetCDF(vm["covmod"].as<std::string>());
-        const size_t ncovmod = CovModel.GetConductivities().num_elements();
+        jif3D::ThreeDModelBase CovModel;
+        //we store the covariances in a seismic model file
+        //but we do not have to have an equidistant grid
+        std::string Filename(vm["covmod"].as<std::string>());
+        CovModel = *jif3D::ReadAnyModel(Filename).get();
+        const size_t ncovmod = CovModel.GetData().num_elements();
         CovModVec.resize(ncovmod);
-        std::copy(CovModel.GetConductivities().origin(),
-            CovModel.GetConductivities().origin() + ncovmod, CovModVec.begin());
+        std::copy(CovModel.GetData().origin(), CovModel.GetData().origin() + ncovmod,
+            CovModVec.begin());
+        BOOST_LOG_TRIVIAL(debug)<< "Reading in covariance file: " << Filename << std::endl;
+        BOOST_LOG_TRIVIAL(debug)<< "Covariance file has: " << CovModel.GetNModelElements() << " elements" << std::endl;
+        BOOST_LOG_TRIVIAL(debug)<< "Covariance file has: " << std::count(CovModel.GetData().origin(),CovModel.GetData().origin() + ncovmod,1) << " elements = 1" << std::endl;
       }
 
     boost::filesystem::path TempDir = boost::filesystem::current_path();

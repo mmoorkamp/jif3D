@@ -5,6 +5,8 @@
 // Copyright   : 2010, mmoorkamp
 //============================================================================
 
+#include <algorithm>
+#include <boost/log/trivial.hpp>
 #include "../Global/convert.h"
 #include "../Regularization/GradientRegularization.h"
 #include "../Regularization/HOGradientRegularization.h"
@@ -12,27 +14,32 @@
 #include "../Regularization/MinDiffRegularization.h"
 #include "../Regularization/MinimumSupport.h"
 #include "../Tomo/ThreeDSeismicModel.h"
+#include "../ModelBase/ReadAnyModel.h"
 #include "SetupRegularization.h"
 
 namespace jif3D
   {
 
     void SetTearModel(const po::variables_map &vm, const std::string &OptionName,
-        const ThreeDModelBase &StartModel, jif3D::ThreeDSeismicModel &TearModel)
+        const ThreeDModelBase &StartModel, jif3D::ThreeDModelBase &TearModel)
       {
         if (vm.count(OptionName))
           {
             //we use a seismic model file as a container for the tear information
             //but this model does not have to obey the gridding rules
-            TearModel.ReadNetCDF(vm[OptionName].as<std::string>(), false);
+            std::string Filename(vm[OptionName].as<std::string>());
+            TearModel = *ReadAnyModel(Filename).get();
+            BOOST_LOG_TRIVIAL(debug)<< "Reading in Tear file: " << Filename << std::endl;
+            BOOST_LOG_TRIVIAL(debug)<< "Tear file has: " << TearModel.GetNModelElements() << " elements" << std::endl;
+            BOOST_LOG_TRIVIAL(debug)<< "Tear file has: " << std::count(TearModel.GetData().origin(),TearModel.GetData().origin() + TearModel.GetData().num_elements(),0) << " zero elements" << std::endl;
+            //.ReadNetCDF(vm[OptionName].as<std::string>());
           }
         else
           {
-            TearModel.SetCellSize(StartModel.GetXCellSizes()[0],
-                StartModel.GetXCellSizes().size(), StartModel.GetYCellSizes().size(),
-                StartModel.GetZCellSizes().size());
-            std::fill_n(TearModel.SetSlownesses().origin(),
-                TearModel.GetSlownesses().num_elements(), 1.0);
+            TearModel.SetMeshSize(StartModel.GetXCellSizes().size(),
+                StartModel.GetYCellSizes().size(), StartModel.GetZCellSizes().size());
+            std::fill_n(TearModel.SetData().origin(), TearModel.GetData().num_elements(),
+                1.0);
           }
 
       }
@@ -157,7 +164,8 @@ namespace jif3D
               {
                 throw jif3D::FatalException(
                     "Size of model covariance: " + jif3D::stringify(CovModVec.size())
-                        + " does not match model size: " + jif3D::stringify(ngrid), __FILE__, __LINE__);
+                        + " does not match model size: " + jif3D::stringify(ngrid),
+                    __FILE__, __LINE__);
               }
             jif3D::rvec Cov(ngrid * 3);
             ublas::subrange(Cov, 0, ngrid) = CovModVec;

@@ -78,7 +78,7 @@ namespace jif3D
           return ThreeDModelBase::SetData();
         }
       //! Write the density model and all associated information in a netcdf file
-      void WriteNetCDF(const std::string filename) const
+      virtual void WriteNetCDF(const std::string filename) const
         {
           NcFile DataFile(filename.c_str(), NcFile::Replace);
           //first write the 3D discretized part
@@ -90,7 +90,7 @@ namespace jif3D
           ThreeDModelBase::WriteVTK(filename, SusceptibilityName);
         }
       //! Read the density model and all associated information from a netcdf file
-      void ReadNetCDF(const std::string filename)
+      virtual void ReadNetCDF(const std::string filename)
         {
           //create the netcdf file object
           NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
