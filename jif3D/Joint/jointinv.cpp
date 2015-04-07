@@ -9,6 +9,7 @@
 #include <fstream>
 #include <string>
 #include <cmath>
+#include <algorithm>
 #ifdef HAVEOPENMP
 #include <omp.h>
 #endif
@@ -27,6 +28,7 @@
 #include "../ModelBase/VTKTools.h"
 #include "../ModelBase/NetCDFModelTools.h"
 #include "../ModelBase/EqualGeometry.h"
+#include "../ModelBase/ReadAnyModel.h"
 #include "../Inversion/JointObjective.h"
 #include "../Inversion/ThreeDModelObjective.h"
 #include "../Regularization/MinDiffRegularization.h"
@@ -168,14 +170,18 @@ int main(int argc, char *argv[])
     jif3D::rvec CovModVec;
     if (vm.count("covmod"))
       {
-        jif3D::ThreeDSeismicModel CovModel;
+        jif3D::ThreeDModelBase CovModel;
         //we store the covariances in a seismic model file
         //but we do not have to have an equidistant grid
-        CovModel.ReadNetCDF(vm["covmod"].as<std::string>(), false);
-        const size_t ncovmod = CovModel.GetSlownesses().num_elements();
+        std::string Filename(vm["covmod"].as<std::string>());
+        CovModel = *jif3D::ReadAnyModel(Filename).get();
+        const size_t ncovmod = CovModel.GetData().num_elements();
         CovModVec.resize(ncovmod);
-        std::copy(CovModel.GetSlownesses().origin(),
-            CovModel.GetSlownesses().origin() + ncovmod, CovModVec.begin());
+        std::copy(CovModel.GetData().origin(), CovModel.GetData().origin() + ncovmod,
+            CovModVec.begin());
+        BOOST_LOG_TRIVIAL(debug)<< "Reading in covariance file: " << Filename << std::endl;
+        BOOST_LOG_TRIVIAL(debug)<< "Covariance file has: " << CovModel.GetNModelElements() << " elements" << std::endl;
+        BOOST_LOG_TRIVIAL(debug)<< "Covariance file has: " << std::count(CovModel.GetData().origin(),CovModel.GetData().origin() + ncovmod,1) << " elements = 1" << std::endl;
       }
     //we want some output so we set Verbose in the constructor to true
     boost::shared_ptr<jif3D::JointObjective> Objective;

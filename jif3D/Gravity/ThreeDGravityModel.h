@@ -149,14 +149,14 @@ namespace jif3D
           return bg_thicknesses;
         }
       //! Write the density model and all associated information in a netcdf file
-      void WriteNetCDF(const std::string filename) const;
+      virtual void WriteNetCDF(const std::string filename) const;
       //! Write the density model in VTK format, at the moment the best format for plotting
       void WriteVTK(const std::string filename) const
         {
           ThreeDModelBase::WriteVTK(filename, "Density");
         }
       //! Read the density model and all associated information from a netcdf file
-      void ReadNetCDF(const std::string filename);
+      virtual void ReadNetCDF(const std::string filename);
       //! Read an igmas xyz model file
       void ReadIgmas(const std::string filename);
       ThreeDGravityModel();

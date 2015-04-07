@@ -10,7 +10,6 @@
 
 #include <boost/shared_ptr.hpp>
 #include <boost/serialization/serialization.hpp>
-#include <boost/serialization/shared_ptr.hpp>
 #include "../Global/FatalException.h"
 #include "ThreeDGravMagImplementation.h"
 

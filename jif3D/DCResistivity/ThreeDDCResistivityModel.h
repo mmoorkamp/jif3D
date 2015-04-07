@@ -236,9 +236,9 @@ namespace jif3D
           ThreeDModelBase::WriteVTK(filename, "Resistivity");
         }
       //! Write the resistivity model and all associated information in a netcdf file
-      void WriteNetCDF(const std::string filename) const;
+      virtual void WriteNetCDF(const std::string filename) const;
       //! Read the resistivity model and all associated information from a netcdf file
-      void ReadNetCDF(const std::string filename);
+      virtual void ReadNetCDF(const std::string filename);
       ThreeDDCResistivityModel();
       //! We define our own copy constructor
       ThreeDDCResistivityModel(const ThreeDDCResistivityModel &source);
