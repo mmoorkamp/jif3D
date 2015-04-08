@@ -41,7 +41,6 @@ namespace OPTPP
         /* Local variables */
         double disc;
         double a, b;
-        int i;
         double fplus, t1, t2, t3, tlmbda, minlambda;
         double scl, sln, initslope;
 
