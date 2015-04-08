@@ -202,10 +202,9 @@ namespace jif3D
         const ThreeDGravityModel::tMeasPosVec &PosZ, const jif3D::rvec &Error)
       {
         const size_t nmeas = PosX.size();
-        const size_t ndata = Data.size();
         assert(nmeas == PosY.size());
         assert(nmeas == PosZ.size());
-        assert(nmeas * 9 == ndata);
+        assert(nmeas * 9 == Data.size());
 
         NcFile DataFile(filename.c_str(), NcFile::Replace);
 

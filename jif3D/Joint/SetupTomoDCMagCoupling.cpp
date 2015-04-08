@@ -39,7 +39,7 @@ namespace jif3D
       }
 
     SetupTomoDCMagCoupling::SetupTomoDCMagCoupling() :
-        minres(0.0), maxres(0.0), minslow(0.0), maxslow(0.0), minsuscep(0.0), maxsuscep(
+        minslow(0.0), maxslow(0.0), minres(0.0), maxres(0.0), minsuscep(0.0), maxsuscep(
             0.0)
       {
       }
@@ -51,8 +51,7 @@ namespace jif3D
     po::options_description SetupTomoDCMagCoupling::SetupOptions()
       {
         po::options_description desc("Coupling options");
-        desc.add_options()("minslow",
-                po::value(&minslow)->default_value(1e-4))("maxslow",
+        desc.add_options()("minslow", po::value(&minslow)->default_value(1e-4))("maxslow",
             po::value(&maxslow)->default_value(0.005))("minres",
             po::value(&minres)->default_value(0.01))("maxres",
             po::value(&maxres)->default_value(1e6))("minsuscep",
@@ -62,10 +61,11 @@ namespace jif3D
         return desc;
       }
 
-    void SetupTomoDCMagCoupling::SetupTransforms(const po::variables_map &vm, ThreeDSeismicModel &GeometryModel,
-            boost::shared_ptr<jif3D::GeneralModelTransform> &TomoTransform,
-            boost::shared_ptr<jif3D::GeneralModelTransform> &DCTransform,
-            boost::shared_ptr<jif3D::GeneralModelTransform> &MagTransform, bool Wavelet)
+    void SetupTomoDCMagCoupling::SetupTransforms(const po::variables_map &vm,
+        ThreeDSeismicModel &GeometryModel,
+        boost::shared_ptr<jif3D::GeneralModelTransform> &TomoTransform,
+        boost::shared_ptr<jif3D::GeneralModelTransform> &DCTransform,
+        boost::shared_ptr<jif3D::GeneralModelTransform> &MagTransform, bool Wavelet)
       {
 
         //we need the geometry of the starting model to setup
@@ -87,13 +87,13 @@ namespace jif3D
           {
             WaveletTrans = boost::shared_ptr<jif3D::GeneralModelTransform>(
                 new jif3D::WaveletModelTransform(GeometryModel.GetData().shape()[0],
-                    GeometryModel.GetData().shape()[1], GeometryModel.GetData().shape()[2]));
+                    GeometryModel.GetData().shape()[1],
+                    GeometryModel.GetData().shape()[2]));
           }
         //if we want to do a cross-gradient type joint inversion
         //we need to set transformations for each data type
         //that extract the right part of the model vector
         //and then transform from generalized to physical parameters
-
 
         //each set of transformations is chained together in a similar way
         //the section transform takes the right part of the model vector
@@ -108,19 +108,21 @@ namespace jif3D
         //we start with tomography
         boost::shared_ptr<jif3D::ChainedTransform> SlownessTransform(
             new jif3D::ChainedTransform);
-        boost::shared_ptr<jif3D::GeneralModelTransform> Copier(new jif3D::ModelCopyTransform);
+        boost::shared_ptr<jif3D::GeneralModelTransform> Copier(
+            new jif3D::ModelCopyTransform);
         SlownessTransform->AppendTransform(
             boost::shared_ptr<jif3D::GeneralModelTransform>(
                 new jif3D::TanhTransform(minslow, maxslow)));
         SlowCrossTrans = boost::shared_ptr<jif3D::GeneralModelTransform>(
-                SlownessTransform->clone());
+            SlownessTransform->clone());
         TomoTransform = boost::shared_ptr<jif3D::GeneralModelTransform>(
             new jif3D::MultiSectionTransform(3 * ngrid, 0, ngrid, SlownessTransform));
         //we regularize on the raw model parameters as these are more evenly spaced than slowness values
         SlowRegTrans = boost::shared_ptr<jif3D::ChainedTransform>(
             new jif3D::ChainedTransform);
-        SlowRegTrans->AppendTransform(boost::shared_ptr<jif3D::GeneralModelTransform>(
-            new jif3D::MultiSectionTransform(3 * ngrid, 0, ngrid, Copier)));
+        SlowRegTrans->AppendTransform(
+            boost::shared_ptr<jif3D::GeneralModelTransform>(
+                new jif3D::MultiSectionTransform(3 * ngrid, 0, ngrid, Copier)));
 
         //then we do resistivity, resistivity has a LogTransform in addition
         //to reduce the range of inversion parameters
@@ -135,16 +137,16 @@ namespace jif3D
             boost::shared_ptr<jif3D::GeneralModelTransform>(
                 new jif3D::LogTransform(ResRefModel)));
         ResCrossTrans = boost::shared_ptr<jif3D::GeneralModelTransform>(
-        		ResistivityTransform->clone());
+            ResistivityTransform->clone());
         DCTransform = boost::shared_ptr<jif3D::GeneralModelTransform>(
             new jif3D::MultiSectionTransform(3 * ngrid, ngrid, 2 * ngrid,
-            		ResistivityTransform));
+                ResistivityTransform));
         //we regularize on the raw model parameters as these are more evenly spaced than resistivity
         ResRegTrans = boost::shared_ptr<jif3D::ChainedTransform>(
             new jif3D::ChainedTransform);
-        ResRegTrans->AppendTransform(boost::shared_ptr<jif3D::GeneralModelTransform>(
-                new jif3D::MultiSectionTransform(3 * ngrid, ngrid, 2 * ngrid,
-                    Copier)));
+        ResRegTrans->AppendTransform(
+            boost::shared_ptr<jif3D::GeneralModelTransform>(
+                new jif3D::MultiSectionTransform(3 * ngrid, ngrid, 2 * ngrid, Copier)));
 
         //and then susceptibility, susceptibility also has a LogTransform in addition
         //to reduce the range of inversion parameters
@@ -159,14 +161,15 @@ namespace jif3D
             boost::shared_ptr<jif3D::GeneralModelTransform>(
                 new jif3D::LogTransform(SusRefModel)));
         SuscepCrossTrans = boost::shared_ptr<jif3D::GeneralModelTransform>(
-        		SusceptibilityTransform->clone());
+            SusceptibilityTransform->clone());
         MagTransform = boost::shared_ptr<jif3D::GeneralModelTransform>(
             new jif3D::MultiSectionTransform(3 * ngrid, 2 * ngrid, 3 * ngrid,
-            		SusceptibilityTransform));
+                SusceptibilityTransform));
         //we regularize on the raw model parameters as these are more evenly spaced than conductivities
         SuscepRegTrans = boost::shared_ptr<jif3D::ChainedTransform>(
             new jif3D::ChainedTransform);
-        SuscepRegTrans->AppendTransform(boost::shared_ptr<jif3D::GeneralModelTransform>(
+        SuscepRegTrans->AppendTransform(
+            boost::shared_ptr<jif3D::GeneralModelTransform>(
                 new jif3D::MultiSectionTransform(3 * ngrid, 2 * ngrid, 3 * ngrid,
                     Copier)));
 
@@ -186,11 +189,11 @@ namespace jif3D
       }
 
     void SetupTomoDCMagCoupling::SetupCrossGradModel(jif3D::rvec &InvModel,
-            const jif3D::ThreeDModelBase &ModelGeometry,
-            const jif3D::ThreeDSeismicModel &SeisMod,
-            const jif3D::ThreeDDCResistivityModel &DCMod, const jif3D::ThreeDMagneticModel &MagMod,
-            jif3D::JointObjective &Objective,
-            boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart)
+        const jif3D::ThreeDModelBase &ModelGeometry,
+        const jif3D::ThreeDSeismicModel &SeisMod,
+        const jif3D::ThreeDDCResistivityModel &DCMod,
+        const jif3D::ThreeDMagneticModel &MagMod, jif3D::JointObjective &Objective,
+        boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart)
       {
         const size_t ngrid = ModelGeometry.GetNModelElements();
         InvModel.resize(3 * ngrid, 0.0);
@@ -209,10 +212,10 @@ namespace jif3D
         if (DCMod.GetNModelElements() == ngrid)
           {
             std::copy(DCMod.GetResistivities().origin(),
-            		DCMod.GetResistivities().origin() + ngrid, DCModel.begin());
+                DCMod.GetResistivities().origin() + ngrid, DCModel.begin());
             std::cout << "Transforming resistivity model. " << std::endl;
             ublas::subrange(InvModel, ngrid, 2 * ngrid) = ublas::subrange(
-            		ResTrans->PhysicalToGeneralized(DCModel), ngrid, 2 * ngrid);
+                ResTrans->PhysicalToGeneralized(DCModel), ngrid, 2 * ngrid);
           }
 
         jif3D::rvec MagModel(ngrid, 1.0);
@@ -220,10 +223,10 @@ namespace jif3D
           {
 
             std::copy(MagMod.GetSusceptibilities().origin(),
-            		MagMod.GetSusceptibilities().origin() + ngrid, MagModel.begin());
+                MagMod.GetSusceptibilities().origin() + ngrid, MagModel.begin());
             std::cout << "Transforming susceptibility model. " << std::endl;
             ublas::subrange(InvModel, 2 * ngrid, 3 * ngrid) = ublas::subrange(
-            		SuscepTrans->PhysicalToGeneralized(MagModel), 2 * ngrid, 3 * ngrid);
+                SuscepTrans->PhysicalToGeneralized(MagModel), 2 * ngrid, 3 * ngrid);
           }
         //then we construct the three cross gradient terms
         //the double section transform takes two sections of the model
@@ -241,8 +244,8 @@ namespace jif3D
         std::cin >> seisdclambda;
         if (seisdclambda > 0.0)
           {
-            Objective.AddObjective(SeisDCCross, SeisDCTrans, seisdclambda,
-                "SeisDC",JointObjective::coupling);
+            Objective.AddObjective(SeisDCCross, SeisDCTrans, seisdclambda, "SeisDC",
+                JointObjective::coupling);
           }
 
         boost::shared_ptr<jif3D::CrossGradient> SeisMagCross(
@@ -257,7 +260,8 @@ namespace jif3D
         std::cin >> seismaglambda;
         if (seismaglambda > 0.0)
           {
-            Objective.AddObjective(SeisMagCross, SeisMagTrans, seismaglambda, "SeisMag",JointObjective::coupling);
+            Objective.AddObjective(SeisMagCross, SeisMagTrans, seismaglambda, "SeisMag",
+                JointObjective::coupling);
           }
 
         boost::shared_ptr<jif3D::CrossGradient> DCMagCross(
@@ -272,7 +276,8 @@ namespace jif3D
         std::cin >> dcmaglambda;
         if (dcmaglambda > 0.0)
           {
-            Objective.AddObjective(DCMagCross, DCMagTrans, dcmaglambda, "DCMag",JointObjective::coupling);
+            Objective.AddObjective(DCMagCross, DCMagTrans, dcmaglambda, "DCMag",
+                JointObjective::coupling);
           }
         //finally we construct the regularization terms
         //we ask for a weight and construct a regularization object
@@ -315,27 +320,30 @@ namespace jif3D
           }
         if (seisreglambda > 0.0)
           {
-            Objective.AddObjective(SeisReg, SlowRegTrans, seisreglambda, "SeisReg",JointObjective::regularization);
+            Objective.AddObjective(SeisReg, SlowRegTrans, seisreglambda, "SeisReg",
+                JointObjective::regularization);
           }
         if (dcreglambda > 0.0)
           {
-            Objective.AddObjective(DCReg, ResRegTrans, dcreglambda, "DCReg",JointObjective::regularization);
+            Objective.AddObjective(DCReg, ResRegTrans, dcreglambda, "DCReg",
+                JointObjective::regularization);
           }
         if (magreglambda > 0.0)
           {
-            Objective.AddObjective(MagReg, SuscepRegTrans, magreglambda, "MagReg",JointObjective::regularization);
+            Objective.AddObjective(MagReg, SuscepRegTrans, magreglambda, "MagReg",
+                JointObjective::regularization);
           }
       }
 
-    void SetupTomoDCMagCoupling::SetupModelVector(const po::variables_map &vm, jif3D::rvec &InvModel,
-            const jif3D::ThreeDModelBase &ModelGeometry,
-            const jif3D::ThreeDSeismicModel &SeisMod,
-            const jif3D::ThreeDDCResistivityModel &DCMod, const jif3D::ThreeDMagneticModel &MagMod,
-            jif3D::JointObjective &Objective,
-            boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart)
+    void SetupTomoDCMagCoupling::SetupModelVector(const po::variables_map &vm,
+        jif3D::rvec &InvModel, const jif3D::ThreeDModelBase &ModelGeometry,
+        const jif3D::ThreeDSeismicModel &SeisMod,
+        const jif3D::ThreeDDCResistivityModel &DCMod,
+        const jif3D::ThreeDMagneticModel &MagMod, jif3D::JointObjective &Objective,
+        boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart)
       {
 
-    	SetupCrossGradModel(InvModel, ModelGeometry, SeisMod, DCMod, MagMod,
-            Objective, Regularization, substart);
+        SetupCrossGradModel(InvModel, ModelGeometry, SeisMod, DCMod, MagMod, Objective,
+            Regularization, substart);
       }
   }

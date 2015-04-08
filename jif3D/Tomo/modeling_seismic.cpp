@@ -1318,7 +1318,7 @@ namespace jif3D
       }
   }
 
-jif3D::RayResult ForwardModShot(int i, jif3D::GEOMETRY geo, jif3D::GRID_STRUCT grid)
+jif3D::RayResult ForwardModShot(int i, const jif3D::GEOMETRY &geo, const jif3D::GRID_STRUCT &grid)
   {
     const float delta_num = (float) 0.001;
     const size_t nx3 = (grid.nx + 1);

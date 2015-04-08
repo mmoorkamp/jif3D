@@ -386,8 +386,6 @@ int hpx_main(boost::program_options::variables_map& vm)
     std::cout << "Runtime: " << cachedruntime << " s" << std::endl;
     std::cout << std::endl;
     return hpx::finalize();
-    return 1;
-
   }
 
 int main(int argc, char* argv[])
