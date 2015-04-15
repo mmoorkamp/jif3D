@@ -130,7 +130,9 @@ int hpx_main(boost::program_options::variables_map& vm)
         jif3D::ThreeDSeismicModel CovModel;
         //we store the covariances in a seismic model file
         //but we do not have to have an equidistant grid
-        CovModel.ReadNetCDF(vm["covmod"].as<std::string>(), false);
+        std::string CovModName(vm["covmod"].as<std::string>());
+        BOOST_LOG_TRIVIAL(debug)<< "Reading in Covariance File: " << CovModName << std::endl;
+        CovModel.ReadNetCDF(CovModName, false);
         const size_t ncovmod = CovModel.GetSlownesses().num_elements();
         CovModVec.resize(ncovmod);
         std::copy(CovModel.GetSlownesses().origin(),

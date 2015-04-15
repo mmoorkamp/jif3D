@@ -10,6 +10,7 @@
 #include "../Global/Noise.h"
 #include "SetupTomo.h"
 #include <iostream>
+#include <boost/log/trivial.hpp>
 
 namespace jif3D
   {
@@ -50,6 +51,7 @@ namespace jif3D
             //first we read in the starting model and the measured data
             std::string modelfilename = jif3D::AskFilename(
                 "Tomography inversion model Filename: ");
+            BOOST_LOG_TRIVIAL(debug)<< "Reading tomography model: " << modelfilename << std::endl;
             //we read in the starting modelfile
             //the starting model does not necessarily obey the gridding rules for seismic data
             //we can fix this with a grid refinement model
@@ -60,7 +62,7 @@ namespace jif3D
             //get the name of the file containing the data and read it in
             std::string tomodatafilename = jif3D::AskFilename(
                 "Tomography Data Filename: ");
-
+            BOOST_LOG_TRIVIAL(debug)<< "Reading tomography data: " << tomodatafilename << std::endl;
             //read in data
             jif3D::rvec TomoError;
             jif3D::ReadTraveltimes(tomodatafilename, TomoData, TomoError, TomoModel);
@@ -86,6 +88,7 @@ namespace jif3D
             if (vm.count("tomofine"))
               {
                 jif3D::ThreeDSeismicModel TomoFineGeometry;
+                BOOST_LOG_TRIVIAL(debug)<< "Reading refined tomography model: " << FineModelName << std::endl;
                 TomoFineGeometry.ReadNetCDF(FineModelName);
                 //copy measurement configuration to refined model
                 TomoFineGeometry.CopyMeasurementConfigurations(TomoModel);
