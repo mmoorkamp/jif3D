@@ -6,7 +6,6 @@
 #include <hpx/include/actions.hpp>
 #endif
 #include <vector>
-#include <boost/serialization/serialization.hpp>
 #include "tomo_types.h"
 
 /*! \file
