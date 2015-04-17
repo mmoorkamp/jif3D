@@ -19,6 +19,7 @@
 #include <cmath>
 #include <vector>
 #include <iostream>
+#include <boost/log/trivial.hpp>
 
 namespace jif3D
   {
@@ -104,7 +105,7 @@ namespace jif3D
                 geo_tmp.x.push_back(geo.x[uniqueshots[i] - 1]);
                 geo_tmp.y.push_back(geo.y[uniqueshots[i] - 1]);
                 geo_tmp.z.push_back(geo.z[uniqueshots[i] - 1]);
-                geo_tmp.nrec = 1;
+                geo_tmp.nshot = 1;
                 for (size_t j = 0; j < data.ndata_seis; j++)
                   {
                     if (uniqueshots[i] == data.sno[j])
@@ -117,9 +118,9 @@ namespace jif3D
                         count++;
                       }
                   }
-                geo_tmp.nshot = count;
+                geo_tmp.nrec = count;
 
-                RayResult Rays = ForwardModShot(i, geo_tmp, grid);
+                RayResult Rays = ForwardModShot(geo_tmp, grid);
 
                 for (size_t j = 0; j < count; j++)
                   {
@@ -145,63 +146,88 @@ namespace jif3D
         using hpx::async;
         using hpx::wait_all;
         std::vector<hpx::naming::id_type> localities = hpx::find_all_localities();
+        const size_t nthreads = hpx::get_num_worker_threads();
+        const size_t nlocs = localities.size();
+        BOOST_LOG_TRIVIAL(debug)<< "Running on: " << nlocs << " localities. With " << nthreads << " worker threads " << std::endl;
+        size_t nchunks = nthreads * nlocs;
         std::vector<hpx::lcos::future<RayResult>> ShotResult;
-        ShotResult.reserve(nshot);
-        ForwardModShot_action ForwardModShot;
-        for (int i = 0; i < nshot; i++)
+        ShotResult.reserve(nchunks);
+        ForwardModShotArray_action ForwardModShotArray;
+        const size_t shotsperchunk = nshot / nchunks +1;
+        BOOST_LOG_TRIVIAL(debug)<< "Dividing data into: " << nchunks << " chunks. With " << shotsperchunk << " each " << std::endl;
+        BOOST_LOG_TRIVIAL(debug)<< "Total number of shots is: " << nshot << std::endl;
+        for (size_t c = 0; c < nchunks; ++c)
           {
             size_t count = 0;
-            GEOMETRY geo_tmp;
-            geo_tmp.x.push_back(geo.x[uniqueshots[i] - 1]);
-            geo_tmp.y.push_back(geo.y[uniqueshots[i] - 1]);
-            geo_tmp.z.push_back(geo.z[uniqueshots[i] - 1]);
-            geo_tmp.nrec = 1;
-            for (size_t j = 0; j < data.ndata_seis; j++)
-              {
-                if (uniqueshots[i] == data.sno[j])
-                  {
-                    geo_tmp.x.push_back(geo.x[data.rno[j] -1 ]);
-                    geo_tmp.y.push_back(geo.y[data.rno[j] -1]);
-                    geo_tmp.z.push_back(geo.z[data.rno[j] -1]);
-                    count++;
-                  }
-              }
-            geo_tmp.nshot = count;
 
-            hpx::naming::id_type const locality_id = localities.at(i % localities.size());
-            ShotResult.push_back(async(ForwardModShot, locality_id, i, geo_tmp, grid));
+            size_t startindex = c * shotsperchunk;
+            size_t endindex = std::min(size_t(nshot), (c+1) * shotsperchunk);
+            std::vector<GEOMETRY> geo_tmp(endindex - startindex);
+            BOOST_LOG_TRIVIAL(debug)<< "Working on shots: " << startindex << " to " << endindex << std::endl;
+
+            for (size_t i = startindex; i < endindex; i++)
+              {
+                size_t index = i - startindex;
+                geo_tmp[index].nshot = 1;
+                geo_tmp[index].x.push_back(geo.x[uniqueshots[i] - 1]);
+                geo_tmp[index].y.push_back(geo.y[uniqueshots[i] - 1]);
+                geo_tmp[index].z.push_back(geo.z[uniqueshots[i] - 1]);
+
+                for (size_t j = 0; j < data.ndata_seis; j++)
+                  {
+                    if (uniqueshots[i] == data.sno[j])
+                      {
+                        geo_tmp[index].x.push_back(geo.x[data.rno[j] -1 ]);
+                        geo_tmp[index].y.push_back(geo.y[data.rno[j] -1]);
+                        geo_tmp[index].z.push_back(geo.z[data.rno[j] -1]);
+                        count++;
+                      }
+                  }
+                geo_tmp[index].nrec = count;
+              }
+
+            hpx::naming::id_type const locality_id = localities.at(c % localities.size());
+            ShotResult.push_back(async(ForwardModShotArray, locality_id, geo_tmp, grid));
           }
         wait_all(ShotResult);
 
-        for (int i = 0; i < nshot; i++)
+        for (size_t c = 0; c < nchunks; ++c)
           {
-            RayResult Rays = ShotResult[i].get();
-            size_t count = 0;
-            std::vector<size_t> nact_rec; /*active receiver-numbers for the used shot*/
-            std::vector<size_t> nact_datapos; /*Position of the active receivers in the data structure*/
-            for (size_t j = 0; j < data.ndata_seis; j++)
+            BOOST_LOG_TRIVIAL(debug)<< "Transferring chunk " << c << std::endl;
+            size_t startindex = c * shotsperchunk;
+            size_t endindex = std::min(size_t(nshot), (c+1) * shotsperchunk);
+            RayResult Rays = ShotResult[c].get();
+            size_t dataindex = 0;
+            for (size_t i = startindex; i < endindex; i++)
               {
-                if (uniqueshots[i] == data.sno[j])
+                size_t count = 0;
+                std::vector<size_t> nact_rec; /*active receiver-numbers for the used shot*/
+                std::vector<size_t> nact_datapos; /*Position of the active receivers in the data structure*/
+                for (size_t j = 0; j < data.ndata_seis; j++)
                   {
-                    nact_rec.push_back(data.rno[j]);
-                    nact_datapos.push_back(j);
-                    count++;
+                    if (uniqueshots[i] == data.sno[j])
+                      {
+                        nact_rec.push_back(data.rno[j]);
+                        nact_datapos.push_back(j);
+                        count++;
+                      }
                   }
-              }
-            for (size_t j = 0; j < count; j++)
-              {
-                data.tcalc[nact_datapos[j]] = Rays.tcalc[j];
-                raypath[nact_datapos[j]].nray = Rays.raypath[j].nray;
+                BOOST_LOG_TRIVIAL(debug)<< "Should have: " << count << " data. Actually have " << Rays.tcalc.size() << " calculated " << std::endl;
+                for (size_t j = 0; j < count; j++)
+                  {
+                    data.tcalc[nact_datapos[j]] = Rays.tcalc[dataindex + j];
+                    raypath[nact_datapos[j]].nray = Rays.raypath[dataindex + j].nray;
 
-                raypath[nact_datapos[j]].len = Rays.raypath[j].len;
-                raypath[nact_datapos[j]].ele = Rays.raypath[j].ele;
-                raypath[nact_datapos[j]].x = Rays.raypath[j].x;
-                raypath[nact_datapos[j]].y = Rays.raypath[j].y;
-                raypath[nact_datapos[j]].z = Rays.raypath[j].z;
+                    raypath[nact_datapos[j]].len = Rays.raypath[dataindex + j].len;
+                    raypath[nact_datapos[j]].ele = Rays.raypath[dataindex + j].ele;
+                    raypath[nact_datapos[j]].x = Rays.raypath[dataindex + j].x;
+                    raypath[nact_datapos[j]].y = Rays.raypath[dataindex + j].y;
+                    raypath[nact_datapos[j]].z = Rays.raypath[dataindex + j].z;
 
+                  }
+                dataindex += count;
               }
           }
-
         /*End of the loop over all shots*/
 
 #endif
@@ -215,14 +241,16 @@ namespace jif3D
 
                 throw jif3D::FatalException(
                     "For the shot-receiver combination" + jif3D::stringify(i + 1)
-                        + "no traveltime was calculated\n->Check the program\n", __FILE__, __LINE__);
+                        + "no traveltime was calculated\n->Check the program\n", __FILE__,
+                    __LINE__);
               }
 
             if (raypath[i].nray % 1 != 0)
               {
                 throw jif3D::FatalException(
                     "For the shot-receiver combination" + jif3D::stringify(i + 1)
-                        + "no raypath was calculated\n->Check the program\n", __FILE__, __LINE__);
+                        + "no raypath was calculated\n->Check the program\n", __FILE__,
+                    __LINE__);
               }
           }
 
@@ -1318,7 +1346,8 @@ namespace jif3D
       }
   }
 
-jif3D::RayResult ForwardModShot(int i, const jif3D::GEOMETRY &geo, const jif3D::GRID_STRUCT &grid)
+jif3D::RayResult ForwardModShot(const jif3D::GEOMETRY &geo,
+    const jif3D::GRID_STRUCT &grid)
   {
     const float delta_num = (float) 0.001;
     const size_t nx3 = (grid.nx + 1);
@@ -1389,5 +1418,5 @@ jif3D::RayResult ForwardModShot(int i, const jif3D::GEOMETRY &geo, const jif3D::
 
 #ifdef HAVEHPX
 
-HPX_REGISTER_PLAIN_ACTION(ForwardModShot_action)
+HPX_REGISTER_PLAIN_ACTION(ForwardModShotArray_action)
 #endif
