@@ -30,10 +30,27 @@ namespace jif3D
   /* @} */
   }
 
-jif3D::RayResult ForwardModShot(int i, const jif3D::GEOMETRY &geo, const jif3D::GRID_STRUCT &grid);
+
+
+jif3D::RayResult ForwardModShot(const jif3D::GEOMETRY &geo,
+    const jif3D::GRID_STRUCT &grid);
+
+
+inline jif3D::RayResult ForwardModShotArray(const std::vector<jif3D::GEOMETRY> &geo,
+    const jif3D::GRID_STRUCT &grid)
+  {
+    jif3D::RayResult Result;
+    for (size_t i = 0; i < geo.size(); ++i)
+      {
+        jif3D::RayResult CurrResult = ForwardModShot(geo[i], grid);
+        std::copy(CurrResult.raypath.begin(),CurrResult.raypath.end(),back_inserter(Result.raypath));
+        std::copy(CurrResult.tcalc.begin(),CurrResult.tcalc.end(),back_inserter(Result.tcalc));
+      }
+    return Result;
+  }
 
 #ifdef HAVEHPX
-HPX_DEFINE_PLAIN_ACTION(ForwardModShot, ForwardModShot_action);
+HPX_DEFINE_PLAIN_ACTION(ForwardModShotArray, ForwardModShotArray_action);
 #endif
 
 #endif
