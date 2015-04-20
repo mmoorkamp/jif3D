@@ -4,7 +4,10 @@
 // Version     :
 // Copyright   : 2009, mmoorkamp
 //============================================================================
-
+#ifdef HAVEHPX
+#include <hpx/config.hpp>
+#include <hpx/hpx_init.hpp>
+#endif
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -61,63 +64,26 @@ namespace logging = boost::log;
  * the main program manages the output of inversion results and data among other statistics.
  */
 
-int main(int argc, char *argv[])
+//first we create objects that manage the setup of individual parts
+//that way we can reuse these objects so that other programs use
+//exactly the same options
+jif3D::SetupTomo TomoSetup;
+jif3D::SetupGravity GravitySetup;
+jif3D::SetupMT MTSetup;
+jif3D::SetupInversion InversionSetup;
+jif3D::SetupRegularization RegSetup;
+jif3D::SetupCoupling CouplingSetup;
+bool WaveletParm = false;
+bool WantSequential = false;
+double xorigin, yorigin;
+double coolingfactor = 1.0;
+po::variables_map vm;
+//we also create a number of options that are specific to our joint inversion
+//or act globally so that they cannot be associated with one subsystem
+po::options_description desc("General options");
+
+int hpx_main(boost::program_options::variables_map& vm)
   {
-    //first we create objects that manage the setup of individual parts
-    //that way we can reuse these objects so that other programs use
-    //exactly the same options
-    jif3D::SetupTomo TomoSetup;
-    jif3D::SetupGravity GravitySetup;
-    jif3D::SetupMT MTSetup;
-    jif3D::SetupInversion InversionSetup;
-    jif3D::SetupRegularization RegSetup;
-    jif3D::SetupCoupling CouplingSetup;
-    bool WaveletParm = false;
-    bool WantSequential = false;
-    double xorigin, yorigin;
-    double coolingfactor = 1.0;
-    //we also create a number of options that are specific to our joint inversion
-    //or act globally so that they cannot be associated with one subsystem
-    po::options_description desc("General options");
-    desc.add_options()("help", "produce help message")("debug",
-        "Write debugging information")("threads", po::value<int>(),
-        "The number of openmp threads")("covmod", po::value<std::string>(),
-        "A file containing the model covariance")("tempdir", po::value<std::string>(),
-        "The name of the directory to store temporary files in")("wavelet",
-        "Parametrize inversion by wavelet coefficients")("xorigin",
-        po::value(&xorigin)->default_value(0.0),
-        "The origin for the inversion grid in x-direction")("yorigin",
-        po::value(&yorigin)->default_value(0.0),
-        "The origin for the inversion grid in y-direction")("coolingfactor",
-        po::value(&coolingfactor)->default_value(1.0),
-        "The factor to multiply the weight for the regularization at each iteration EXPERIMENTAL")(
-        "sequential",
-        "Do not create a single objective function, but split into on OF per method");
-    //we need to add the description for each part to the boost program options object
-    //that way the user can get a help output and the parser object recongnizes these options
-    desc.add(TomoSetup.SetupOptions());
-    desc.add(GravitySetup.SetupOptions());
-    desc.add(MTSetup.SetupOptions());
-    desc.add(InversionSetup.SetupOptions());
-    desc.add(RegSetup.SetupOptions());
-    desc.add(CouplingSetup.SetupOptions());
-
-    po::variables_map vm;
-    po::store(po::parse_command_line(argc, argv, desc), vm);
-    //we can also read options from a configuration file
-    //that way we do not have to specify a large number of options
-    //on the command line, the order we use now, reading the configuration
-    //file after parsing the command line options means that
-    //the command line options override configuration file options
-    //as one would expect (see also program_options documentation)
-    const std::string ConfFileName("jointinv.conf");
-    if (boost::filesystem::exists(ConfFileName))
-      {
-        std::ifstream ConfFile(ConfFileName.c_str());
-        po::store(po::parse_config_file(ConfFile, desc), vm);
-      }
-    po::notify(vm);
-
     //if the option was "help" we output the program version
     //and a description of all options, but we do not perform any inversion
     if (vm.count("help"))
@@ -125,9 +91,12 @@ int main(int argc, char *argv[])
         std::string version = "$Id$";
         std::cout << version << std::endl;
         std::cout << desc << "\n";
+#ifdef HAVEHPX
+    return hpx::finalize();
+#endif
         return 1;
       }
-
+    //if requested set output level to debug for log library
     if (vm.count("debug"))
       {
         logging::core::get()->set_filter(
@@ -587,5 +556,61 @@ int main(int argc, char *argv[])
     double cachedruntime = (endtime - starttime).total_seconds();
     std::cout << "Runtime: " << cachedruntime << " s" << std::endl;
     std::cout << std::endl;
+
+#ifdef HAVEHPX
+    return hpx::finalize();
+#endif
+    return 0;
+  }
+
+int main(int argc, char* argv[])
+  {
+
+    desc.add_options()("help", "produce help message")("debug",
+        "Write debugging information")("threads", po::value<int>(),
+        "The number of openmp threads")("covmod", po::value<std::string>(),
+        "A file containing the model covariance")("tempdir", po::value<std::string>(),
+        "The name of the directory to store temporary files in")("wavelet",
+        "Parametrize inversion by wavelet coefficients")("xorigin",
+        po::value(&xorigin)->default_value(0.0),
+        "The origin for the inversion grid in x-direction")("yorigin",
+        po::value(&yorigin)->default_value(0.0),
+        "The origin for the inversion grid in y-direction")("coolingfactor",
+        po::value(&coolingfactor)->default_value(1.0),
+        "The factor to multiply the weight for the regularization at each iteration EXPERIMENTAL")(
+        "sequential",
+        "Do not create a single objective function, but split into on OF per method");
+    //we need to add the description for each part to the boost program options object
+    //that way the user can get a help output and the parser object recongnizes these options
+    desc.add(TomoSetup.SetupOptions());
+    desc.add(GravitySetup.SetupOptions());
+    desc.add(MTSetup.SetupOptions());
+    desc.add(InversionSetup.SetupOptions());
+    desc.add(RegSetup.SetupOptions());
+    desc.add(CouplingSetup.SetupOptions());
+
+    //we can also read options from a configuration file
+    //that way we do not have to specify a large number of options
+    //on the command line, the order we use now, reading the configuration
+    //file after parsing the command line options means that
+    //the command line options override configuration file options
+    //as one would expect (see also program_options documentation)
+    const std::string ConfFileName("jointinv.conf");
+    if (boost::filesystem::exists(ConfFileName))
+      {
+        std::ifstream ConfFile(ConfFileName.c_str());
+        po::store(po::parse_config_file(ConfFile, desc), vm);
+      }
+    po::notify(vm);
+#ifdef HAVEHPX
+    return hpx::init(desc, argc, argv);
+#else
+//set up the command line options
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::notify(vm);
+    return hpx_main(vm);
+#endif
+
   }
 /* @} */
