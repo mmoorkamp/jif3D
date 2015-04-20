@@ -16,4 +16,4 @@ lib setup : SaltRelConstraint.cpp SetupGravity.cpp SetupMagnetics.cpp SetupMagne
 unit-test saltrel_test :  test_saltrel_objective.cpp joint setup  ;
 exe jointinv : jointinv.cpp  joint setup    ;
 exe jointinvtomodcmag : jointinvtomodcmag.cpp ../DCResistivity//dcresistivity joint setup ..//netcdf_c++ : <eigen>off:<build>no  ;
-exe jointinv_hpx : jointinv_hpx.cpp  joint setup  :  <hpx>off:<build>no   ;
+
