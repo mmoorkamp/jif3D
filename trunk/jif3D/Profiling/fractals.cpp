@@ -45,9 +45,11 @@ struct my_complex
 
 int fractals(double x0, double y0, int max_iteration);
 int fractals_complex(my_complex P, int max_iteration);
+std::vector<int> fractals_chunk(int i, int max_iteration);
+
 // This is to generate the required boilerplate we need for the remote
 // invocation to work.
-HPX_PLAIN_ACTION(fractals_complex, fractals_action)
+HPX_PLAIN_ACTION(fractals_chunk, fractals_action)
 
 ///////////////////////////////////////////////////////////////////////////////
 int fractals(double x0, double y0, int max_iteration)
@@ -70,6 +72,20 @@ int fractals_complex(my_complex P, int max_iteration)
     return fractals(P.real, P.imag, max_iteration);
   }
 
+std::vector<int> fractals_chunk(int i, int max_iteration)
+  {
+    std::vector<int> Result;
+    Result.reserve(sizeY);
+    for (int j = 0; j < sizeY; j++)
+      {
+        double x0 = (double) i * 3.5f / (double) sizeX - 2.5f;
+        double y0 = (double) j * 2.0f / (double) sizeY - 1.0f;
+        my_complex P(x0, y0);
+        Result.push_back(fractals_complex(P, max_iteration));
+      }
+    return Result;
+  }
+
 ///////////////////////////////////////////////////////////////////////////////
 int hpx_main()
   {
@@ -85,8 +101,8 @@ int hpx_main()
 
         int const max_iteration = 255;
 
-        vector<future<int> > iteration;
-        iteration.reserve(sizeX * sizeY);
+        vector<future<vector<int> > > iteration;
+        iteration.reserve(sizeX);
 
         std::cout << "Initial setup completed in " << t.elapsed()
             << "s. Initializing and running futures...\n";
@@ -94,31 +110,24 @@ int hpx_main()
 
         hpx::id_type const here = hpx::find_here();
         fractals_action fractal_pixel;
+        std::vector<hpx::naming::id_type> localities = hpx::find_all_localities();
 
         for (int i = 0; i < sizeX; i++)
           {
-            for (int j = 0; j < sizeY; j++)
-              {
-                double x0 = (double) i * 3.5f / (double) sizeX - 2.5f;
-                double y0 = (double) j * 2.0f / (double) sizeY - 1.0f;
-                my_complex P(x0, y0);
-                iteration.push_back(async(fractal_pixel, here, P, max_iteration));
-              }
+            hpx::naming::id_type const locality_id = localities.at(i % localities.size());
+            iteration.push_back(async(fractal_pixel, locality_id, i, max_iteration));
           }
         wait_all(iteration);
 
         std::cout << sizeX * sizeY << " calculations run in " << t.elapsed()
-            << "s. Transferring from futures to general memory...\n";
+            << "s.\n Transferring from futures to general memory...\n";
         t.restart();
 
         vector<int> ClassicResult;
         for (int i = 0; i < sizeX; ++i)
           {
-            for (int j = 0; j < sizeY; ++j)
-              {
-                int it = iteration[i * sizeX + j].get();
-                ClassicResult.push_back(it);
-              }
+            vector<int> it = iteration[i].get();
+            std::copy(it.begin(),it.end(),back_inserter(ClassicResult));
           }
 
         std::cout << "Transfer process completed in " << t.elapsed() << "s. \n";
