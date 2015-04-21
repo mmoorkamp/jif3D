@@ -37,6 +37,12 @@ namespace jif3D
       double pickerr;
       //! Storage for the name of the refinement model, can optionally be set on the command line
       std::string FineModelName;
+      //! The name of the starting model
+      std::string modelfilename;
+      //! The name of the file with the travel time picks
+      std::string datafilename;
+      //! The weight for the tomography data in the joint inversion
+      double tomolambda;
       //! The tomography starting model
       jif3D::ThreeDSeismicModel TomoModel;
     public:
