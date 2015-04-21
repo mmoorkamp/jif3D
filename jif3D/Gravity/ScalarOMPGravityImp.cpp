@@ -5,15 +5,58 @@
 // Copyright   : 2008, mmoorkamp
 //============================================================================
 
-#include <numeric>
-#include <functional>
 #ifdef HAVEHPX
+#include <hpx/hpx_init.hpp>
+#include <hpx/include/actions.hpp>
+#include <hpx/include/util.hpp>
+#include <hpx/include/lcos.hpp>
 #include <hpx/parallel/algorithms/transform_reduce.hpp>
 #include <hpx/parallel/execution_policy.hpp>
 #endif
+
+#include <numeric>
+#include <functional>
+
 #include "ScalarOMPGravityImp.h"
 #include "BasicGravElements.h"
 #include "GravityBackground.h"
+
+#ifdef HAVEHPX
+std::vector<double> GravityChunk(size_t start, size_t end, double x_meas, double y_meas,
+    double z_meas, const std::vector<double> &XCoord, const std::vector<double> &YCoord,
+    const std::vector<double> &ZCoord, const std::vector<double> &XSizes,
+    const std::vector<double> &YSizes, const std::vector<double> &ZSizes, size_t ysize,
+    size_t zsize);
+
+HPX_PLAIN_ACTION(GravityChunk, Gravity_Action)
+
+std::vector<double> GravityChunk(size_t start, size_t end, double x_meas, double y_meas,
+    double z_meas, const std::vector<double> &XCoord,
+    const std::vector<double> &YCoord,
+    const std::vector<double> &ZCoord,
+    const std::vector<double> &XSizes,
+    const std::vector<double> &YSizes,
+    const std::vector<double> &ZSizes, size_t ysize, size_t zsize)
+  {
+    if (end > start)
+      {
+        std::vector<double> Result;
+        Result.reserve(end - start);
+        for (size_t i = start; i < end; ++i)
+          {
+            size_t zi = i % zsize;
+            size_t xi = (i - zi) / zsize;
+            size_t yi = xi % ysize;
+            xi = (xi - yi) / ysize;
+            double c = jif3D::CalcGravBoxTerm(x_meas, y_meas, z_meas, XCoord[xi], YCoord[yi],
+                ZCoord[zi], XSizes[xi], YSizes[yi], ZSizes[zi]);
+            Result.push_back(c);
+          }
+        return Result;
+      }
+    return std::vector<double>();
+  }
+#endif
 
 namespace jif3D
   {
@@ -95,26 +138,56 @@ namespace jif3D
           } //end of parallel section
 #endif
 #ifdef HAVEHPX
-        std::vector<int> Offsets(nmod);
-        std::iota(Offsets.begin(),Offsets.end(),0);
-        auto result = hpx::parallel::transform_reduce(hpx::parallel::parallel_task_execution_policy(),Offsets.begin(),Offsets.end(),
-            [&] (const int& offset) -> double
+
+        using hpx::lcos::future;
+        using hpx::async;
+        using hpx::wait_all;
+        std::vector<hpx::naming::id_type> localities = hpx::find_all_localities();
+        const size_t nthreads = hpx::get_num_worker_threads();
+        const size_t nlocs = localities.size();
+        //BOOST_LOG_TRIVIAL(debug)<< "Running on: " << nlocs << " localities. With " << nthreads << " worker threads " << std::endl;
+        size_t nchunks = nthreads * nlocs;
+        std::vector<hpx::lcos::future<std::vector<double>>> ChunkResult;
+        Gravity_Action GravityChunks;
+        const size_t cellsperchunk = nmod / nchunks +1;
+        std::vector<double> XC(XCoord.data(),XCoord.data() + XCoord.num_elements());
+        std::vector<double> YC(YCoord.data(),YCoord.data() + YCoord.num_elements());
+        std::vector<double> ZC(ZCoord.data(),ZCoord.data() + ZCoord.num_elements());
+        std::vector<double> XS(XSizes.data(),XSizes.data() + XSizes.num_elements());
+        std::vector<double> YS(YSizes.data(),YSizes.data() + YSizes.num_elements());
+        std::vector<double> ZS(ZSizes.data(),ZSizes.data() + ZSizes.num_elements());
+        for (size_t c = 0; c < nchunks; ++c)
+          {
+            size_t count = 0;
+
+            size_t startindex = c * cellsperchunk;
+            size_t endindex = std::min(size_t(nmod), (c+1) * cellsperchunk);
+
+            hpx::naming::id_type const locality_id = localities.at(c % localities.size());
+            ChunkResult.push_back(async(GravityChunks, locality_id, startindex,endindex,x_meas,y_meas,z_meas,
+                    XC, YC, ZC,
+                    XS, YS, ZS, ysize, zsize));
+          }
+        wait_all(ChunkResult);
+        std::vector<double> Sens;
+        Sens.reserve(nmod);
+        for (size_t c = 0; c < nchunks; ++c)
+          {
+            std::vector<double> CurrSens = ChunkResult.at(c).get();
+            std::copy(CurrSens.begin(),CurrSens.end(),back_inserter(Sens));
+          }
+        for (int offset = 0; offset < nmod; ++offset)
+          {
+            //we store the current value for possible sensitivity calculations
+            //currvalue contains the geometric term, i.e. the sensitivity
+
+            returnvalue += Sens[offset] * Model.GetDensities().data()[offset];
+            if (storesens)
               {
-                int xindex, yindex, zindex;
-                Model.OffsetToIndex(offset, xindex, yindex, zindex);
-                double c = CalcGravBoxTerm(x_meas, y_meas, z_meas,
-                    XCoord[xindex], YCoord[yindex], ZCoord[zindex],
-                    XSizes[xindex], YSizes[yindex], ZSizes[zindex]);
-                double g = c * Model.GetDensities()[xindex][yindex][zindex];
-                if (storesens)
-                  {
-                    Sensitivities(0, offset) = c;
-                  }
-                return g;
+                Sensitivities(0, offset) = currvalue;
               }
-            ,0.0,std::plus<double>()
-        );
-        returnvalue = result.get();
+          }
+
 #endif
         rvec returnvector(1);
         returnvector(0) = returnvalue;
