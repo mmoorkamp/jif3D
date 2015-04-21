@@ -27,7 +27,12 @@ namespace jif3D
     po::options_description SetupTomo::SetupOptions()
       {
         po::options_description desc("Tomography options");
-        desc.add_options()("pickerr", po::value(&pickerr)->default_value(5e-3),
+        desc.add_options()("tomomodel", po::value(&modelfilename),
+            "The name of the starting model for the seismic tomography")("tomodata",
+            po::value(&datafilename), "The name of the data for the seismic tomography")(
+            "tomolambda", po::value(&tomolambda),
+            "The weight for the seismic tomography data")("pickerr",
+            po::value(&pickerr)->default_value(5e-3),
             "The picking error for the travel time data")("tomofine",
             po::value(&FineModelName),
             "The name for the model with the MT forward geometry")("writerays",
@@ -42,15 +47,20 @@ namespace jif3D
       {
         jif3D::rvec TomoData;
 
-        double tomolambda = 1.0;
-        std::cout << "Tomography Lambda: ";
-        std::cin >> tomolambda;
-
+        tomolambda = 1.0;
+        if (!vm.count("tomolamda"))
+          {
+            std::cout << "Tomography Lambda: ";
+            std::cin >> tomolambda;
+          }
         if (tomolambda > 0.0)
           {
-            //first we read in the starting model and the measured data
-            std::string modelfilename = jif3D::AskFilename(
-                "Tomography inversion model Filename: ");
+            if (!vm.count("modelfilename"))
+              {
+                //first we read in the starting model and the measured data
+                modelfilename = jif3D::AskFilename(
+                    "Tomography inversion model Filename: ");
+              }
             BOOST_LOG_TRIVIAL(debug)<< "Reading tomography model: " << modelfilename << std::endl;
             //we read in the starting modelfile
             //the starting model does not necessarily obey the gridding rules for seismic data
@@ -59,13 +69,16 @@ namespace jif3D
             //write out the starting model as a .vtk file for plotting
             TomoModel.WriteVTK(modelfilename + ".vtk");
 
-            //get the name of the file containing the data and read it in
-            std::string tomodatafilename = jif3D::AskFilename(
-                "Tomography Data Filename: ");
-            BOOST_LOG_TRIVIAL(debug)<< "Reading tomography data: " << tomodatafilename << std::endl;
+            if (!vm.count("tomodata"))
+              {
+                //get the name of the file containing the data and read it in
+                datafilename = jif3D::AskFilename(
+                    "Tomography Data Filename: ");
+              }
+            BOOST_LOG_TRIVIAL(debug)<< "Reading tomography data: " << datafilename << std::endl;
             //read in data
             jif3D::rvec TomoError;
-            jif3D::ReadTraveltimes(tomodatafilename, TomoData, TomoError, TomoModel);
+            jif3D::ReadTraveltimes(datafilename, TomoData, TomoError, TomoModel);
             TomoModel.SetOrigin(xorigin, yorigin, 0.0);
             bool writerays = false;
             if (vm.count("writerays"))

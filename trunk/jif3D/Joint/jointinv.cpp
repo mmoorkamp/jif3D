@@ -92,7 +92,7 @@ int hpx_main(boost::program_options::variables_map& vm)
         std::cout << version << std::endl;
         std::cout << desc << "\n";
 #ifdef HAVEHPX
-    return hpx::finalize();
+        return hpx::finalize();
 #endif
         return 1;
       }
@@ -165,6 +165,21 @@ int hpx_main(boost::program_options::variables_map& vm)
     //coupling setup is responsible to set the appropriate transformation
     //as we have to use different ones depending on the chose coupling mechanism
     jif3D::ThreeDSeismicModel StartModel;
+    //we need the geometry of the starting model to setup
+    //the transformations
+    std::string geometryfilename;
+    if (vm.count("geometrygrid"))
+      {
+        geometryfilename = vm["geometrygrid"].as<std::string>();
+      }
+    else
+      {
+        geometryfilename = jif3D::AskFilename("Inversion Model Geometry: ");
+      }
+    //although we specify the starting model as a seismic model
+    //it does not need to have the same grid specifications
+    StartModel.ReadNetCDF(geometryfilename, false);
+
     CouplingSetup.SetupTransforms(vm, StartModel, TomoTransform, GravityTransform,
         MTTransform, WaveletParm);
 
@@ -210,8 +225,14 @@ int hpx_main(boost::program_options::variables_map& vm)
         RegSetup.GetSubStart());
     //finally ask for the maximum number of iterations
     size_t maxiter = 1;
+    if (!vm.count("iterations"))
+      {
     std::cout << "Maximum iterations: ";
     std::cin >> maxiter;
+      }
+    else{
+        maxiter = vm["iterations"].as<int>();
+    }
     //note the start time of the core calculations for statistics
     //and output some status information
     boost::posix_time::ptime starttime = boost::posix_time::microsec_clock::local_time();
@@ -567,11 +588,14 @@ int main(int argc, char* argv[])
   {
 
     desc.add_options()("help", "produce help message")("debug",
-        "Write debugging information")("threads", po::value<int>(),
+        "Write debugging information")("iterations", po::value<int>(),
+        "The maximum number of iterations")("threads", po::value<int>(),
         "The number of openmp threads")("covmod", po::value<std::string>(),
-        "A file containing the model covariance")("tempdir", po::value<std::string>(),
-        "The name of the directory to store temporary files in")("wavelet",
-        "Parametrize inversion by wavelet coefficients")("xorigin",
+        "A file containing the model covariance")("geometrygrid",
+        po::value<std::string>(),
+        "A file containing the model geometry of the inversion grid")("tempdir",
+        po::value<std::string>(), "The name of the directory to store temporary files in")(
+        "wavelet", "Parametrize inversion by wavelet coefficients")("xorigin",
         po::value(&xorigin)->default_value(0.0),
         "The origin for the inversion grid in x-direction")("yorigin",
         po::value(&yorigin)->default_value(0.0),

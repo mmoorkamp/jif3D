@@ -88,12 +88,7 @@ namespace jif3D
         boost::shared_ptr<jif3D::GeneralModelTransform> &MTTransform, bool Wavelet)
       {
 
-        //we need the geometry of the starting model to setup
-        //the transformations
-        std::string modelfilename = jif3D::AskFilename("Inversion Model Geometry: ");
-        //although we specify the starting model as a seismic model
-        //it does not need to have the same grid specifications
-        GeometryModel.ReadNetCDF(modelfilename, false);
+
 
         const std::size_t ngrid = GeometryModel.GetNModelElements();
 
