@@ -1,6 +1,7 @@
 #ifdef HAVEHPX
 #include <hpx/config.hpp>
 #include <hpx/hpx_init.hpp>
+#include <hpx/hpx_fwd.hpp>
 #endif
 #ifdef HAVEOPENMP
 #include <omp.h>
@@ -93,6 +94,12 @@ int hpx_main(boost::program_options::variables_map& vm)
           {
             filename += jif3D::stringify(omp_get_max_threads());
           }
+#endif
+#ifdef HAVEHPX
+        std::vector<hpx::naming::id_type> localities = hpx::find_all_localities();
+        const size_t nthreads = hpx::get_num_worker_threads();
+        const size_t nlocs = localities.size();
+        filename += "l" + jif3D::stringify(nlocs) + "t" +  jif3D::stringify(nthreads);
 #endif
       }
 
