@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //  Copyright (c) 2012 Andrew Kemp
-//
+//  with additions from Max Moorkamp
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 ////////////////////////////////////////////////////////////////////////////////
@@ -9,6 +9,7 @@
 #include <hpx/include/actions.hpp>
 #include <hpx/include/util.hpp>
 #include <hpx/include/lcos.hpp>
+#include <hpx/hpx_fwd.hpp>
 #include <hpx/parallel/numeric.hpp>
 #include <hpx/parallel/algorithms/transform.hpp>
 #include <hpx/parallel/execution_policy.hpp>
@@ -104,13 +105,16 @@ int hpx_main()
         vector<future<vector<int> > > iteration;
         iteration.reserve(sizeX);
 
-        std::cout << "Initial setup completed in " << t.elapsed()
-            << "s. Initializing and running futures...\n";
-        t.restart();
-
         hpx::id_type const here = hpx::find_here();
         fractals_action fractal_line;
         std::vector<hpx::naming::id_type> localities = hpx::find_all_localities();
+
+        std::cout << "Running on " << localities.size() << " locations \n";
+        std::cout << "Using " << hpx::get_num_worker_threads() << " threads \n";
+
+        std::cout << "Initial setup completed in " << t.elapsed()
+            << "s. Initializing and running futures...\n";
+        t.restart();
 
         for (int i = 0; i < sizeX; i++)
           {
@@ -128,7 +132,7 @@ int hpx_main()
         for (int i = 0; i < sizeX; ++i)
           {
             vector<int> it = iteration[i].get();
-            std::copy(it.begin(),it.end(),back_inserter(HPXActionResult));
+            std::copy(it.begin(), it.end(), back_inserter(HPXActionResult));
           }
         double hpxtransfertime = t.elapsed();
         std::cout << "Transfer process completed in " << hpxtransfertime << "s. \n";
@@ -182,8 +186,7 @@ int hpx_main()
             << " \n";
         std::cout << "HPX action and gcc::parallel results are equal " << IsEqualOpenMP
             << " \n";
-        std::cout << "HPX action and serial results are equal " << IsEqualSerial
-                    << " \n";
+        std::cout << "HPX action and serial results are equal " << IsEqualSerial << " \n";
 
         std::cout << "\n \n Times: \n";
         std::cout << "Hpx actions: " << hpxcalctime + hpxtransfertime << "\n";
