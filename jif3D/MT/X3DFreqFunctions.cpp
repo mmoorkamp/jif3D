@@ -278,14 +278,20 @@ jif3D::rvec LQDerivativeFreq(const ForwardInfo &Info, const jif3D::rvec &Misfit,
             Info.Model.GetZCoordinates(), Info.Model.GetZCellSizes(), nmodx, nmody);
       }
     //make the sources for the magnetic dipoles
+      //now we calculate the response to magnetic dipole sources
+      const std::complex<double> omega_mu = -1.0
+          / (std::complex<double>(0.0, jif3D::mag_mu) * 2.0 * boost::math::constants::pi<double>()
+              * Info.Model.GetFrequencies()[Info.freqindex]);
     for (size_t j = 0; j < nmeas; ++j)
       {
-
         size_t offset = freq_start_index + j * 8;
         std::complex<double> Zxx(RawImpedance(offset), RawImpedance(offset + 1)), Zxy(
             RawImpedance(offset + 2), RawImpedance(offset + 3)), Zyx(
             RawImpedance(offset + 4), RawImpedance(offset + 5)), Zyy(
             RawImpedance(offset + 5), RawImpedance(offset + 6));
+        //project the electric dipole to magnetic dipole moments using the undistorted impedance
+        CalcHext(omega_mu, XPolMoments1.at(j), XPolMoments2.at(j), YPolMoments1.at(j),
+            YPolMoments2.at(j), Zxx, Zxy, Zyx, Zyy);
       }
 
     std::vector<std::complex<double> > Ux1_mag, Ux2_mag, Uy1_mag, Uy2_mag, Uz1_mag,
