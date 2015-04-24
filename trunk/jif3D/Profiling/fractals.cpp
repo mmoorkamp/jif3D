@@ -109,28 +109,29 @@ int hpx_main()
         t.restart();
 
         hpx::id_type const here = hpx::find_here();
-        fractals_action fractal_pixel;
+        fractals_action fractal_line;
         std::vector<hpx::naming::id_type> localities = hpx::find_all_localities();
 
         for (int i = 0; i < sizeX; i++)
           {
             hpx::naming::id_type const locality_id = localities.at(i % localities.size());
-            iteration.push_back(async(fractal_pixel, locality_id, i, max_iteration));
+            iteration.push_back(async(fractal_line, locality_id, i, max_iteration));
           }
         wait_all(iteration);
 
-        std::cout << sizeX * sizeY << " calculations run in " << t.elapsed()
+        double hpxcalctime = t.elapsed();
+        std::cout << sizeX * sizeY << " calculations run in " << hpxcalctime
             << "s.\n Transferring from futures to general memory...\n";
         t.restart();
 
-        vector<int> ClassicResult;
+        vector<int> HPXActionResult;
         for (int i = 0; i < sizeX; ++i)
           {
             vector<int> it = iteration[i].get();
-            std::copy(it.begin(),it.end(),back_inserter(ClassicResult));
+            std::copy(it.begin(),it.end(),back_inserter(HPXActionResult));
           }
-
-        std::cout << "Transfer process completed in " << t.elapsed() << "s. \n";
+        double hpxtransfertime = t.elapsed();
+        std::cout << "Transfer process completed in " << hpxtransfertime << "s. \n";
 
         std::cout << "Setting up new input \n" << std::endl;
         t.restart();
@@ -154,28 +155,41 @@ int hpx_main()
             InValues.begin(), InValues.end(), OutValues.begin(),
             [max_iteration](my_complex P) -> int
               { return fractals_complex(P,max_iteration);});
-        std::cout << "HPX parallel calculation finished in " << t.elapsed() << "s. \n";
-        bool IsEqualHPX = std::equal(ClassicResult.begin(), ClassicResult.end(),
+        double hpxalgotime = t.elapsed();
+        std::cout << "HPX parallel calculation finished in " << hpxalgotime << "s. \n";
+        bool IsEqualHPX = std::equal(HPXActionResult.begin(), HPXActionResult.end(),
             OutValues.begin());
 
         t.restart();
         __gnu_parallel::transform(InValues.begin(), InValues.end(), OutValues.begin(),
             [max_iteration](my_complex P) -> int
               { return fractals_complex(P,max_iteration);});
-        std::cout << "OpenMP parallel calculation finished in " << t.elapsed() << "s. \n";
-        bool IsEqualOpenMP = std::equal(ClassicResult.begin(), ClassicResult.end(),
+        double gnualgotime = t.elapsed();
+        std::cout << "OpenMP parallel calculation finished in " << gnualgotime << "s. \n";
+        bool IsEqualOpenMP = std::equal(HPXActionResult.begin(), HPXActionResult.end(),
             OutValues.begin());
 
         t.restart();
         std::transform(InValues.begin(), InValues.end(), OutValues.begin(),
             [max_iteration](my_complex P) -> int
               { return fractals_complex(P,max_iteration);});
-        std::cout << "Serial calculation finished in " << t.elapsed() << "s. \n";
+        double serialalgotime = t.elapsed();
+        bool IsEqualSerial = std::equal(HPXActionResult.begin(), HPXActionResult.end(),
+            OutValues.begin());
+        std::cout << "Serial calculation finished in " << serialalgotime << "s. \n";
 
-        std::cout << "Classic and hpx::parallel results are equal " << IsEqualHPX
+        std::cout << "HPX action and hpx::parallel results are equal " << IsEqualHPX
             << " \n";
-        std::cout << "Classic and gcc::parallel results are equal " << IsEqualOpenMP
+        std::cout << "HPX action and gcc::parallel results are equal " << IsEqualOpenMP
             << " \n";
+        std::cout << "HPX action and serial results are equal " << IsEqualSerial
+                    << " \n";
+
+        std::cout << "\n \n Times: \n";
+        std::cout << "Hpx actions: " << hpxcalctime + hpxtransfertime << "\n";
+        std::cout << "Hpx algorithm: " << hpxalgotime << "\n";
+        std::cout << "GNP algorithm: " << gnualgotime << "\n";
+        std::cout << "Serial algorithm: " << serialalgotime << "\n";
       }
 
     return hpx::finalize(); // Handles HPX shutdown
