@@ -66,7 +66,7 @@ namespace jif3D
         NameRoot = ObjectID();
         if (!fs::is_directory(TDir))
           throw FatalException("TDir is not a directory: " + TDir.string(), __FILE__,
-              __LINE__);
+          __LINE__);
         TempDir = TDir;
         //we make sure that the .hnk files are there
         //this is a common problem and when we check for use later
@@ -74,7 +74,7 @@ namespace jif3D
         if (!CheckHNK(fs::path()))
           {
             throw jif3D::FatalException("Cannot find .hnk files in current directory! ",
-                __FILE__, __LINE__);
+            __FILE__, __LINE__);
           }
       }
 
@@ -205,7 +205,7 @@ namespace jif3D
         //inside the parallel region we set FatalErrror to true and throw a new exception here
         if (FatalError)
           throw jif3D::FatalException("Problem in MT forward calculation.", __FILE__,
-              __LINE__);
+          __LINE__);
         return result;
 
       }
@@ -224,15 +224,17 @@ namespace jif3D
         const size_t nmeas = Model.GetMeasPosX().size();
         const size_t nmod = nmodx * nmody * nmodz;
         assert(Misfit.size() == nmeas * nfreq * 8);
-        jif3D::rvec Gradient(nmod, 0.0);
+        jif3D::rvec Gradient(nmod);
         if (WantDistCorr)
           {
             //if we want to adapt the distortion parameters, we put
             //the gradient with respect to the distortion parameters at the end
-            Gradient.resize(nmod + 4 * nmeas, 0.0);
+            Gradient.resize(nmod + 4 * nmeas);
           }
         bool FatalError = false;
-
+        //we need to initialize all values to zero as we are adding
+        //the individual gradients per frequency
+        std::fill(Gradient.begin(), Gradient.end(), 0.0);
         //we make a call to the coordinate functions to make sure
         //that we have updated the coordinate information and cached it
         //only then the subsequent calls are thread safe
@@ -245,6 +247,14 @@ namespace jif3D
         //for each station
         if (C.size() != nmeas * 4)
           {
+            BOOST_LOG_TRIVIAL(warning)<< "No distortion specified, reseting values to identity matrix" << std::endl;
+            BOOST_LOG_TRIVIAL(warning)<< "C: ";
+            for (double elem : C)
+              {
+                BOOST_LOG_TRIVIAL(warning)<< elem << " ";
+              }
+
+            BOOST_LOG_TRIVIAL(warning)<< std::endl;
             C.resize(nmeas * 4);
             for (size_t i = 0; i < nmeas; ++i)
               {
@@ -330,8 +340,71 @@ namespace jif3D
         // a generic error message
         if (FatalError)
           throw jif3D::FatalException("Problem in MT gradient calculation.", __FILE__,
-              __LINE__);
+          __LINE__);
 
         return 2.0 * Gradient;
+      }
+
+    rmat X3DMTCalculator::SensitivityMatrix(const ModelType &Model, const rvec &Misfit,
+        size_t minfreqindex, size_t maxfreqindex)
+      {
+        const size_t ndata = Misfit.size();
+        const size_t nmodel = Model.GetConductivities().num_elements();
+        const size_t nsites = Model.GetMeasPosX().size();
+        rmat Result;
+        if (WantDistCorr)
+          {
+            //if we want to adapt the distortion parameters, we put
+            //the gradient with respect to the distortion parameters at the end
+            Result.resize(ndata, nmodel + 4 * nsites);
+          }
+        else
+          {
+            Result.resize(ndata, nmodel);
+          }
+        //set all sensitivities initially to zero
+        Result.clear();
+        //we read the distortion parameters from the model
+        std::vector<double> C(Model.GetDistortionParameters());
+        //if they have not been set, we use the identity matrix
+        //for each station
+        if (C.size() != nsites * 4)
+          {
+            BOOST_LOG_TRIVIAL(warning)<< "No distortion specified, reseting values to identity matrix" << std::endl;
+            BOOST_LOG_TRIVIAL(warning)<< "C: ";
+            for (double elem : C)
+              {
+                BOOST_LOG_TRIVIAL(warning)<< elem << " ";
+              }
+
+            BOOST_LOG_TRIVIAL(warning)<< std::endl;
+            C.resize(nsites * 4);
+            for (size_t i = 0; i < nsites; ++i)
+              {
+                C[i * 4] = 1.0;
+                C[i * 4 + 1] = 0.0;
+                C[i * 4 + 2] = 0.0;
+                C[i * 4 + 3] = 1.0;
+              }
+          }
+
+        for (size_t i = 0; i < ndata; ++i)
+          {
+            size_t freqindex = i / (nsites * 8);
+            rvec CurrMisfit(Misfit.size(), 0.0);
+            CurrMisfit(i) = 1.0;
+            ForwardInfo Info(Model, C, freqindex, TempDir.string(), X3DName, NameRoot,
+                GreenType1, GreenType4);
+            rvec CurrGrad = LQDerivativeFreq(Info, CurrMisfit, RawImpedance);
+
+            boost::numeric::ublas::matrix_row<rmat> CurrRow(Result, i);
+            boost::numeric::ublas::subrange(CurrRow, 0, nmodel) = CurrGrad;
+            if (WantDistCorr)
+              {
+                jif3D::rvec CGrad = AdaptDist(C, RawImpedance, CurrMisfit);
+                boost::numeric::ublas::subrange(CurrRow, nmodel, CurrRow.size()) = CGrad;
+              }
+          }
+        return Result;
       }
   }

@@ -47,10 +47,12 @@ namespace jif3D
 
     jif3D::rvec AdaptDist(const std::vector<double> &C, const jif3D::rvec &RawImpedance,
         const jif3D::rvec &Misfit);
+    //! Calculate the strength of the electric dipole necessary for MT adjoint calculations
     cmat CalcEExt(const rvec &Misfit, const std::vector<double> &C,
         const size_t startindex, const size_t freq_start_index,
         const std::complex<double> &Hx1, const std::complex<double> &Hx2,
         const std::complex<double> &Hy1, const std::complex<double> &Hy2);
+    //! Calculate the strength of the magnetic dipole necessary for MT adjoint calculations
     void CalcHext(const std::complex<double> &omega_mu, std::complex<double> &Xp1,
         std::complex<double> &Xp2, std::complex<double> &Yp1, std::complex<double> &Yp2,
         const std::complex<double> &Zxx, const std::complex<double> &Zxy,

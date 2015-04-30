@@ -54,11 +54,11 @@ namespace jif3D
         runfile << "cd " << DirName << "\n";
         runfile << X3DName << " \n";
         runfile << "cd ..\n";
-/*        if (runfile.rdbuf())
-          {
-            runfile.rdbuf()->pubsync();
-          }
-        ::fdatasync(runfile->handle());*/
+        /*        if (runfile.rdbuf())
+         {
+         runfile.rdbuf()->pubsync();
+         }
+         ::fdatasync(runfile->handle());*/
         //we also copy the necessary *.hnk files
         //from the current directory to the work directory
         CopyHNK(fs::current_path(), DirName);
@@ -83,7 +83,8 @@ namespace jif3D
         if (Field.size() != nelem)
           throw jif3D::FatalException(
               "Number of read in elements in Field: " + jif3D::stringify(Field.size())
-                  + " does not match expected: " + jif3D::stringify(nelem), __FILE__, __LINE__);
+                  + " does not match expected: " + jif3D::stringify(nelem), __FILE__,
+              __LINE__);
       }
 
     void CompareDepths(const std::vector<double> &BGDepths,
@@ -126,7 +127,8 @@ namespace jif3D
           }
         if (tries >= 10)
           {
-            throw FatalException("Cannot find run script: " + runname, __FILE__, __LINE__);
+            throw FatalException("Cannot find run script: " + runname, __FILE__,
+            __LINE__);
           }
         else
           {
@@ -136,43 +138,45 @@ namespace jif3D
         //we run a bash with the scriptname as an argument
         //this turns out to be more robust
         const std::string execname = "bash " + runname + " > " + runname + "_log";
-/*        namespace bp = ::boost::process;
-        const std::string execname = bp::find_executable_in_path("bash");
-        std::vector<std::string> args;
-        args.push_back("bash");
-        args.push_back(runname);
+        /*        namespace bp = ::boost::process;
+         const std::string execname = bp::find_executable_in_path("bash");
+         std::vector<std::string> args;
+         args.push_back("bash");
+         args.push_back(runname);
 
-        bp::context ctx;
-        ctx.stdout_behavior = bp::capture_stream();
-        ctx.environment = bp::self::get_environment();
+         bp::context ctx;
+         ctx.stdout_behavior = bp::capture_stream();
+         ctx.environment = bp::self::get_environment();
 
-        bp::child c = bp::launch(execname, args, ctx);
-        bp::pistream &is = c.get_stdout();
-        std::string line;
-        while (std::getline(is, line))
-          BOOST_LOG_TRIVIAL(debug)<< line << std::endl;
+         bp::child c = bp::launch(execname, args, ctx);
+         bp::pistream &is = c.get_stdout();
+         std::string line;
+         while (std::getline(is, line))
+         BOOST_LOG_TRIVIAL(debug)<< line << std::endl;
 
-        bp::posix_status s = c.wait();
-        if (s.exited())
-          BOOST_LOG_TRIVIAL(debug)<< "Program returned exit code " << s.exit_status() << std::endl;
-          else if (s.signaled())
-            {
-              BOOST_LOG_TRIVIAL(debug) << "Program received signal " << s.term_signal() << std::endl;
-              if (s.dumped_core())
-              BOOST_LOG_TRIVIAL(debug) << "Program also dumped core" << std::endl;
-            }
-          else if (s.stopped())
-          BOOST_LOG_TRIVIAL(debug) << "Program stopped by signal " << s.stop_signal() << std::endl;
-          else
-          BOOST_LOG_TRIVIAL(debug) << "Unknown termination reason" << std::endl;*/
+         bp::posix_status s = c.wait();
+         if (s.exited())
+         BOOST_LOG_TRIVIAL(debug)<< "Program returned exit code " << s.exit_status() << std::endl;
+         else if (s.signaled())
+         {
+         BOOST_LOG_TRIVIAL(debug) << "Program received signal " << s.term_signal() << std::endl;
+         if (s.dumped_core())
+         BOOST_LOG_TRIVIAL(debug) << "Program also dumped core" << std::endl;
+         }
+         else if (s.stopped())
+         BOOST_LOG_TRIVIAL(debug) << "Program stopped by signal " << s.stop_signal() << std::endl;
+         else
+         BOOST_LOG_TRIVIAL(debug) << "Unknown termination reason" << std::endl;*/
 
-          //it is important to include the std:: namespace specification
-          //for the system call, otherwise the GNU compiler picks up
-          //a version from the c library that gives trouble in threaded environments
-          int result = std::system(execname.c_str());
-          if (result)
-           throw FatalException("Cannot execute run script: " + runname + " Error code: " + jif3D::stringify(result), __FILE__, __LINE__);
-        }
+        //it is important to include the std:: namespace specification
+        //for the system call, otherwise the GNU compiler picks up
+        //a version from the c library that gives trouble in threaded environments
+        int result = std::system(execname.c_str());
+        if (result)
+          throw FatalException(
+              "Cannot execute run script: " + runname + " Error code: "
+                  + jif3D::stringify(result), __FILE__, __LINE__);
+      }
 
     jif3D::rvec AdaptDist(const std::vector<double> &C, const jif3D::rvec &RawImpedance,
         const jif3D::rvec &Misfit)
@@ -180,6 +184,10 @@ namespace jif3D
         jif3D::rvec result(C.size(), 0.0);
         const size_t nstat = C.size() / 4;
         const size_t nfreq = RawImpedance.size() / (nstat * 8);
+        //This is an implementation of equation 10 in Avdeeva et al. 2015
+        //we calculate the partial derivative of the objective function
+        //with respect to the distortion parameters
+        //this version has been checked with Maxima
         for (size_t i = 0; i < nfreq; ++i)
           {
             for (size_t j = 0; j < nstat; ++j)
@@ -191,10 +199,10 @@ namespace jif3D
                     + Misfit(offset + 3) * RawImpedance(offset + 3);
                 result(j * 4 + 1) += Misfit(offset) * RawImpedance(offset + 4)
                     + Misfit(offset + 1) * RawImpedance(offset + 5)
-                    + Misfit(offset + 4) * RawImpedance(offset + 6)
-                    + Misfit(offset + 5) * RawImpedance(offset + 7);
-                result(j * 4 + 2) += Misfit(offset + 2) * RawImpedance(offset)
-                    + Misfit(offset + 3) * RawImpedance(offset + 1)
+                    + Misfit(offset + 2) * RawImpedance(offset + 6)
+                    + Misfit(offset + 3) * RawImpedance(offset + 7);
+                result(j * 4 + 2) += Misfit(offset + 4) * RawImpedance(offset)
+                    + Misfit(offset + 5) * RawImpedance(offset + 1)
                     + Misfit(offset + 6) * RawImpedance(offset + 2)
                     + Misfit(offset + 7) * RawImpedance(offset + 3);
                 result(j * 4 + 3) += Misfit(offset + 4) * RawImpedance(offset + 4)
@@ -237,13 +245,13 @@ namespace jif3D
       {
         //we need temporary variables as we calculate a new  value for Xp1 in the first line
         //but need the old value for Xp1 in the second line
-        std::complex<double> temp1 = conj(Zxx) * Xp1 + conj(Zyx) * Yp1;
-        std::complex<double> temp2 = conj(Zxy) * Xp1 + conj(Zyy) * Yp1;
+        std::complex<double> temp1 = Zxx * Xp1 + Zyx * Yp1;
+        std::complex<double> temp2 = Zxy * Xp1 + Zyy * Yp1;
         Xp1 = temp1 * omega_mu;
         Yp1 = temp2 * omega_mu;
         //the same remark applies to Xp2
-        temp1 = conj(Zxx) * Xp2 + conj(Zyx) * Yp2;
-        temp2 = conj(Zxy) * Xp2 + conj(Zyy) * Yp2;
+        temp1 = Zxx * Xp2 + Zyx * Yp2;
+        temp2 = Zxy * Xp2 + Zyy * Yp2;
         Xp2 = temp1 * omega_mu;
         Yp2 = temp2 * omega_mu;
       }
@@ -259,19 +267,36 @@ namespace jif3D
         const jif3D::ThreeDModelBase::t3DModelDim &ZCellSizes, const size_t ncellsx,
         const size_t ncellsy, const size_t ncellsz)
       {
-        std::string DirName = RootName + dirext + "/";
+        auto CompFunc = [](std::complex<double> a,std::complex<double> b ) -> bool
+          { return std::norm(a) < std::norm(b);};
+        auto XPolMax = std::max_element(XPolMoments.begin(), XPolMoments.end(), CompFunc);
+        auto YPolMax = std::max_element(YPolMoments.begin(), YPolMoments.end(), CompFunc);
+        bool HaveXPol = std::norm(*XPolMax) > 1e-30;
+        bool HaveYPol = std::norm(*YPolMax) > 1e-30;
+        BOOST_LOG_TRIVIAL(debug)<< "Maximum dipole moments: X: " << *XPolMax << " Y: " << *YPolMax << std::endl;
+        if (HaveXPol || HaveYPol)
+          {
+            std::string DirName = RootName + dirext + "/";
 #pragma omp critical(calcU_writesource)
-          {
-            WriteSourceFile(DirName + sourceafilename, SourceXIndex, SourceYIndex,
-                ObservationDepths, XPolMoments, YPolMoments, ZCellBoundaries, ZCellSizes,
-                ncellsx, ncellsy);
-          }
-        RunX3D(RootName);
+              {
+                WriteSourceFile(DirName + sourceafilename, SourceXIndex, SourceYIndex,
+                    ObservationDepths, XPolMoments, YPolMoments, ZCellBoundaries,
+                    ZCellSizes, ncellsx, ncellsy);
+              }
+            RunX3D(RootName);
 #pragma omp critical(calcU_readema)
-          {
-            ReadEMA(DirName + emaname, Ux, Uy, Uz, ncellsx, ncellsy, ncellsz);
+              {
+                ReadEMA(DirName + emaname, Ux, Uy, Uz, ncellsx, ncellsy, ncellsz);
+              }
           }
-        //boost::filesystem::remove_all(emaname);
+        else
+          {
+            BOOST_LOG_TRIVIAL(debug)<<"No significant source moments, setting fields to zero !" << std::endl;
+        Ux.resize(ncellsx * ncellsy * ncellsz, 0.0);
+        Uy.resize(ncellsx * ncellsy * ncellsz, 0.0);
+        Uz.resize(ncellsx * ncellsy * ncellsz, 0.0);
       }
-
+    //boost::filesystem::remove_all(emaname);
   }
+
+}

@@ -1,5 +1,5 @@
 import testing ; 
-using gfortran ;
+#using gfortran ;
 
 alias linkcommon : ../ModelBase//modelbase  ..//boost_core ..//boost_iostreams ..//boost_thread ..//boost_chrono ..//boost_date_time ; 
 
@@ -13,7 +13,7 @@ lib mt : ReadWriteX3D.cpp ReadWriteImpedances.cpp
 
 # switched off unit-test 2DMT_test : test_Tarits2DMT.cpp   mt linkcommon ../Inversion//inversion   ;
 unit-test RWX3D_test : test_ReadWriteX3D.cpp   mt linkcommon ../Inversion//inversion  ;
-unit-test X3Dcalc_test : test_X3DCalculator.cpp   mt linkcommon ../Inversion//inversion  ;
+unit-test X3Dcalc_test : test_X3DCalculator.cpp  B_epol1.for B_hpol.for MT2DForward.cpp ..//gfortran mt linkcommon ../Inversion//inversion  ;
 unit-test InterpolateFields_test : test_InterpolateFields.cpp   mt linkcommon ../Inversion//inversion  ;
 unit-test X3DObjective_test : test_X3DObjective.cpp mt linkcommon ../Inversion//inversion  ;
 unit-test OneDMTCalculator_test : test_OneDMTCalculator.cpp mt linkcommon ../Inversion//inversion  ;
