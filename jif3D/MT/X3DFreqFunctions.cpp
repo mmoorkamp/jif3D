@@ -213,8 +213,6 @@ jif3D::rvec LQDerivativeFreq(const ForwardInfo &Info, const jif3D::rvec &Misfit,
 
         //this is an implementation of eq. 12 in Avdeev and Avdeeva
         //we do not have any beta, as this is part of the misfit
-//            cmat j_ext = CalcATimesH(MisfitToA(Misfit, siteindex),
-//                MakeH(Hx1_obs[offset], Hx2_obs[offset], Hy1_obs[offset], Hy2_obs[offset]));
         cmat j_ext = CalcEExt(Misfit, Info.C, j, freq_start_index, Hx1_obs[offset],
             Hx2_obs[offset], Hy1_obs[offset], Hy2_obs[offset]);
         //x3d uses a different convention for the complex exponentials
@@ -281,7 +279,7 @@ jif3D::rvec LQDerivativeFreq(const ForwardInfo &Info, const jif3D::rvec &Misfit,
       }
     //make the sources for the magnetic dipoles
     //now we calculate the response to magnetic dipole sources
-    const std::complex<double> omega_mu = -1.0
+    const std::complex<double> omega_mu = 1.0
         / (std::complex<double>(0.0, jif3D::mag_mu) * 2.0
             * boost::math::constants::pi<double>()
             * Info.Model.GetFrequencies()[Info.freqindex]);
