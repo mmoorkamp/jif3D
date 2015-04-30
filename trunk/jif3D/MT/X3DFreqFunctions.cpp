@@ -138,7 +138,7 @@ jif3D::rvec LQDerivativeFreq(const ForwardInfo &Info, const jif3D::rvec &Misfit,
     const size_t nmodx = Info.Model.GetConductivities().shape()[0];
     const size_t nmody = Info.Model.GetConductivities().shape()[1];
     const size_t nmodz = Info.Model.GetConductivities().shape()[2];
-    //the number of observations in the model file, one for each cell in the layer
+    //the number of observations in the fields files, one for each cell in the layer
     const size_t nobs = nmodx * nmody;
     //the number of measurement sites
     const size_t nmeas = Info.Model.GetMeasPosX().size();
@@ -217,10 +217,12 @@ jif3D::rvec LQDerivativeFreq(const ForwardInfo &Info, const jif3D::rvec &Misfit,
 //                MakeH(Hx1_obs[offset], Hx2_obs[offset], Hy1_obs[offset], Hy2_obs[offset]));
         cmat j_ext = CalcEExt(Misfit, Info.C, j, freq_start_index, Hx1_obs[offset],
             Hx2_obs[offset], Hy1_obs[offset], Hy2_obs[offset]);
-        XPolMoments1.at(j) = conj(j_ext(0, 0));
-        YPolMoments1.at(j) = conj(j_ext(1, 0));
-        XPolMoments2.at(j) = conj(j_ext(0, 1));
-        YPolMoments2.at(j) = conj(j_ext(1, 1));
+        //x3d uses a different convention for the complex exponentials
+        //so we have to use the complex conjugate for the source
+        XPolMoments1.at(j) = j_ext(0, 0);
+        YPolMoments1.at(j) = j_ext(1, 0);
+        XPolMoments2.at(j) = j_ext(0, 1);
+        YPolMoments2.at(j) = j_ext(1, 1);
       }
     //we only want to calculate for one frequency
     //so our vector has just 1 element
@@ -278,10 +280,11 @@ jif3D::rvec LQDerivativeFreq(const ForwardInfo &Info, const jif3D::rvec &Misfit,
             Info.Model.GetZCoordinates(), Info.Model.GetZCellSizes(), nmodx, nmody);
       }
     //make the sources for the magnetic dipoles
-      //now we calculate the response to magnetic dipole sources
-      const std::complex<double> omega_mu = -1.0
-          / (std::complex<double>(0.0, jif3D::mag_mu) * 2.0 * boost::math::constants::pi<double>()
-              * Info.Model.GetFrequencies()[Info.freqindex]);
+    //now we calculate the response to magnetic dipole sources
+    const std::complex<double> omega_mu = -1.0
+        / (std::complex<double>(0.0, jif3D::mag_mu) * 2.0
+            * boost::math::constants::pi<double>()
+            * Info.Model.GetFrequencies()[Info.freqindex]);
     for (size_t j = 0; j < nmeas; ++j)
       {
         size_t offset = freq_start_index + j * 8;

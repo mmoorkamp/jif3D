@@ -544,11 +544,11 @@ namespace jif3D
                     RealXMoments[SourceXIndex[j]][SourceYIndex[j]] = std::real(
                         XPolMoments[j]);
                     ImagXMoments[SourceXIndex[j]][SourceYIndex[j]] = std::imag(
-                        XPolMoments[j]);
+                        -XPolMoments[j]);
                     RealYMoments[SourceXIndex[j]][SourceYIndex[j]] = std::real(
                         YPolMoments[j]);
                     ImagYMoments[SourceXIndex[j]][SourceYIndex[j]] = std::imag(
-                        YPolMoments[j]);
+                        -YPolMoments[j]);
                   }
               }
 
