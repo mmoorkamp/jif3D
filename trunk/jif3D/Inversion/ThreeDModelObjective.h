@@ -116,7 +116,8 @@ namespace jif3D
         {
           if (Data.empty())
             throw jif3D::FatalException(
-                "Cannot have empty observations in objective function. ", __FILE__, __LINE__);
+                "Cannot have empty observations in objective function. ", __FILE__,
+                __LINE__);
           ObservedData = Data;
         }
       //! Return a read only version of the observed data
@@ -145,7 +146,8 @@ namespace jif3D
       void SetCoarseModelGeometry(const ModelType &Model)
         {
           if (Model.GetData().num_elements() == 0)
-            throw jif3D::FatalException("Cannot have empty model in objective function. ", __FILE__, __LINE__);
+            throw jif3D::FatalException("Cannot have empty model in objective function. ",
+            __FILE__, __LINE__);
           CoarseModel = Model;
         }
       //! Set the geometry of a finely discretized model to ensure numerical precision
@@ -161,7 +163,8 @@ namespace jif3D
       void SetFineModelGeometry(const ModelType &Model)
         {
           if (Model.GetData().num_elements() == 0)
-            throw jif3D::FatalException("Cannot have empty model in objective function. ", __FILE__, __LINE__);
+            throw jif3D::FatalException("Cannot have empty model in objective function. ",
+            __FILE__, __LINE__);
           FineModel = Model;
           //set the coordinates of the refiner object according to the fine model
           //we want to use for the forward calculation
@@ -233,7 +236,8 @@ namespace jif3D
 
         if (SynthData.size() != ObservedData.size())
           throw jif3D::FatalException(
-              " ThreeDModelObjective: Forward calculation does not give same amount of data !", __FILE__, __LINE__);
+              " ThreeDModelObjective: Forward calculation does not give same amount of data !",
+              __FILE__, __LINE__);
         Diff.resize(ObservedData.size());
         //calculate the difference between observed and synthetic
         std::transform(SynthData.begin(), SynthData.end(), ObservedData.begin(),
@@ -257,8 +261,11 @@ namespace jif3D
         //in the model object, we can check if the call is correct
         if (!std::equal(Model.begin(), Model.begin() + ngrid,
             CoarseModel.GetData().origin()))
-          throw jif3D::FatalException(
-              "Gradient calculation needs identical model to forward !", __FILE__, __LINE__);
+          {
+            throw jif3D::FatalException(
+                "Gradient calculation needs identical model to forward !", __FILE__,
+                __LINE__);
+          }
         //calculate the gradient
         if (wantrefinement)
           {
@@ -270,8 +277,8 @@ namespace jif3D
             //and return the projection of the fine gradient onto the coarse model
             ub::subrange(CoarseGrad, 0, ngrid) = Refiner.CombineGradient(
                 ub::subrange(FineGradient, 0, nfine), CoarseModel, FineModel);
-            ub::subrange(CoarseGrad, ngrid, CoarseGrad.size()) = ub::subrange(FineGradient,
-                nfine, FineGradient.size());
+            ub::subrange(CoarseGrad, ngrid, CoarseGrad.size()) = ub::subrange(
+                FineGradient, nfine, FineGradient.size());
             return CoarseGrad;
           }
         //we only get here if we do not do any refinement
