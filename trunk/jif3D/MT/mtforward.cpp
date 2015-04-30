@@ -5,6 +5,9 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
+#include <boost/random/lagged_fibonacci.hpp>
+#include <boost/random/normal_distribution.hpp>
+#include <boost/random/variate_generator.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/program_options.hpp>
 #include <boost/log/core.hpp>
@@ -25,13 +28,16 @@ int main(int argc, char *argv[])
   {
 
     std::string X3DName = "x3d";
+    double DistDeviation = 0;
     po::options_description desc("General options");
     desc.add_options()("help", "produce help message")("threads", po::value<int>(),
         "The number of openmp threads")("x3dname",
         po::value(&X3DName)->default_value("x3d"), "The name of the executable for x3d")(
         "debug", "Show debugging output.")("tempdir", po::value<std::string>(),
         "The name of the directory to store temporary files in")("opt",
-        "Use opt for Green's function calculation in x3d.");
+        "Use opt for Green's function calculation in x3d.")("dist",
+        po::value(&DistDeviation)->default_value(0.0),
+        "Standard deviation for random distortion, 0 means no distortion");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -133,9 +139,9 @@ int main(int argc, char *argv[])
         MTModel.GetMeasPosX(), MTModel.GetMeasPosY(), MTModel.GetMeasPosZ());
     std::cout << "Calculating forward response " << std::endl;
     jif3D::X3DMTCalculator Calculator(TempDir, X3DName);
-    if ( vm.count("opt"))
+    if (vm.count("opt"))
       {
-        BOOST_LOG_TRIVIAL(info) << "Using Opt type Green's functions ";
+        BOOST_LOG_TRIVIAL(info)<< "Using Opt type Green's functions ";
         Calculator.SetGreenType1(jif3D::GreenCalcType::opt);
         Calculator.SetGreenType4(jif3D::GreenCalcType::opt);
       }
@@ -166,9 +172,61 @@ int main(int argc, char *argv[])
       }
 
     jif3D::AddNoise(Impedances, relnoise, Errors);
-    jif3D::WriteImpedancesToNetCDF(outfilename, MTModel.GetFrequencies(),
+    std::vector<double> C;
+    if (DistDeviation > 0.0)
+      {
+        boost::lagged_fibonacci607 generator(static_cast<unsigned int>(std::time(0)));
+
+        boost::normal_distribution<> diag_dist(1.0, DistDeviation);
+        boost::normal_distribution<> offdiag_dist(0.0, DistDeviation);
+        boost::variate_generator<boost::lagged_fibonacci607&, boost::normal_distribution<> > diag_noise(
+            generator, diag_dist);
+        boost::variate_generator<boost::lagged_fibonacci607&, boost::normal_distribution<> > offdiag_noise(
+            generator, offdiag_dist);
+        const size_t nstats = StatNum.size();
+        const size_t nfreq = frequencies.size();
+
+        for (size_t i = 0; i < nstats; ++i)
+          {
+            double Cxx = diag_noise();
+            double Cxy = offdiag_noise();
+            double Cyx = offdiag_noise();
+            double Cyy = diag_noise();
+            for (size_t j = 0; j < nfreq; ++j)
+              {
+                size_t offset = (j * nstats + i) * 8;
+
+                std::vector<double> NewZ;
+                NewZ.push_back(Cxx * Impedances(offset) + Cxy * Impedances(offset + 4));
+                NewZ.push_back(
+                    Cxx * Impedances(offset + 1) + Cxy * Impedances(offset + 5));
+                NewZ.push_back(
+                    Cxx * Impedances(offset + 2) + Cxy * Impedances(offset + 6));
+                NewZ.push_back(
+                    Cxx * Impedances(offset + 3) + Cxy * Impedances(offset + 7));
+                NewZ.push_back(Cyx * Impedances(offset) + Cyy * Impedances(offset + 4));
+                NewZ.push_back(
+                    Cyx * Impedances(offset + 1) + Cyy * Impedances(offset + 5));
+                NewZ.push_back(
+                    Cyx * Impedances(offset + 2) + Cyy * Impedances(offset + 6));
+                NewZ.push_back(
+                    Cyx * Impedances(offset + 3) + Cyy * Impedances(offset + 7));
+                std::copy(NewZ.begin(), NewZ.end(), Impedances.begin() + offset);
+              }
+            C.push_back(Cxx);
+            C.push_back(Cxy);
+            C.push_back(Cyx);
+            C.push_back(Cyy);
+          }
+         jif3D::WriteImpedancesToNetCDF(outfilename + "dist.nc", MTModel.GetFrequencies(),
+            MTModel.GetMeasPosX(), MTModel.GetMeasPosY(), MTModel.GetMeasPosZ(), Impedances,
+            Errors);
+      }
+
+
+    std: jif3D::WriteImpedancesToNetCDF(outfilename, MTModel.GetFrequencies(),
         MTModel.GetMeasPosX(), MTModel.GetMeasPosY(), MTModel.GetMeasPosZ(), Impedances,
-        Errors);
+        Errors, C);
     MTModel.WriteVTK(modelfilename + ".vtk");
   }
 
