@@ -135,11 +135,12 @@ namespace jif3D
         //openmp loop indices have to be int, so we cast out upper limit to int
         //to make the compiler happy
         int maxindex = boost::numeric_cast<int>(maxfreqindex);
+        rvec RawImp(RawImpedance.size(),0.0);
         //we parallelize by frequency, this is relatively simple
         //but we can use up to 20 processors for typical MT problems
         // as we do not have the source for x3d, this is our only possibility anyway
         //the const qualified variables above are predetermined to be shared by the openmp standard
-#pragma omp parallel for shared(result) schedule(dynamic,1)
+#pragma omp parallel for shared(result,RawImp) schedule(dynamic,1)
         for (int i = minfreqindex; i < maxindex; ++i)
           {
             //the openmp standard specifies that we cannot leave a parallel construct
@@ -155,7 +156,7 @@ namespace jif3D
 
                 std::copy(freqresult.DistImpedance.begin(), freqresult.DistImpedance.end(),
                     result.begin() + startindex);
-                std::copy(freqresult.RawImpedance.begin(),freqresult.RawImpedance.end(),RawImpedance.begin()+startindex);
+                std::copy(freqresult.RawImpedance.begin(),freqresult.RawImpedance.end(),RawImp.begin()+startindex);
 
                 omp_unset_lock(&lck);
               }
@@ -166,7 +167,7 @@ namespace jif3D
               }
             //finished with one frequency
           }
-
+        RawImpedance = RawImp;
         omp_destroy_lock(&lck);
 #endif
 
@@ -201,6 +202,7 @@ namespace jif3D
           }
 
 #endif
+
         //we cannot throw from within the openmp section so if there was an exception
         //inside the parallel region we set FatalErrror to true and throw a new exception here
         if (FatalError)
@@ -283,7 +285,7 @@ namespace jif3D
                 ForwardInfo Info(Model,C,i,TempDir.string(),X3DName, NameRoot, GreenType1, GreenType4);
                 //calculate the gradient for each frequency
                 rvec tmp = LQDerivativeFreq(Info, Misfit, RawImpedance);
-                omp_set_lock(&lck);
+               omp_set_lock(&lck);
                 //the total gradient is the sum over the gradients for each frequency
                 boost::numeric::ublas::subrange(Gradient, 0, nmod) += tmp;
                 omp_unset_lock(&lck);
@@ -297,7 +299,7 @@ namespace jif3D
               }
             //finished with one frequency
           }
-        omp_destroy_lock(&lck);
+       omp_destroy_lock(&lck);
 #endif
 
 #ifdef HAVEHPX
@@ -334,7 +336,8 @@ namespace jif3D
             //to the distortion parameters and copy the values to the end
             //of the gradient
             jif3D::rvec CGrad = AdaptDist(C, RawImpedance, Misfit);
-            std::copy(CGrad.begin(), CGrad.end(), Gradient.begin() + nmod);
+            boost::numeric::ublas::subrange(Gradient, nmod, Gradient.size()) = CGrad;
+            //std::copy(CGrad.begin(), CGrad.end(), Gradient.begin() + nmod);
           }
         //if we had some exception inside the openmp region, we throw
         // a generic error message

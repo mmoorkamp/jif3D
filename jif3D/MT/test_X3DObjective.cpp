@@ -46,6 +46,9 @@ BOOST_AUTO_TEST_SUITE( X3DObjective_Suite )
 
         std::fill_n(Model.SetZCellSizes().origin(), zsize, deltaz);
         std::fill_n(Model.SetConductivities().origin(), nmod, 0.02);
+        typedef boost::multi_array_types::index_range range;
+        boost::multi_array<double, 3>::array_view<3>::type myview = Model.SetConductivities()[ boost::indices[range(0,3)][range(0,2)][range(0,0)] ];
+        //std::fill_n(myview.origin(),xsize*ysize,1.0);
         Model.SetConductivities()[0][0][0] = 1.0;
         std::fill_n(bg_conductivities.begin(), nbglayers, 0.02);
         for (size_t i = 0; i < nbglayers; ++i)
@@ -64,9 +67,9 @@ BOOST_AUTO_TEST_SUITE( X3DObjective_Suite )
           {
             for (size_t j = 1; j < ysize - 1; ++j)
               {
-                double currx = Model.GetXCoordinates()[i] + deltax / 2.0;
-                double curry = Model.GetYCoordinates()[j] + deltay / 2.0;
-                double currz = 0.0; //(j - 1) * deltaz;
+                double currx = Model.GetXCoordinates()[i] + deltax / 3.0;
+                double curry = Model.GetYCoordinates()[j] + deltay / 4.0;
+                double currz = (j - 1) * deltaz;
                 Model.AddMeasurementPoint(currx, curry, currz);
               }
           }
@@ -196,8 +199,13 @@ BOOST_AUTO_TEST_SUITE( X3DObjective_Suite )
         BOOST_CHECK(misfit > 0.0);
         jif3D::rvec ObjDat = Objective.GetObservedData();
         jif3D::rvec Gradient2 = Objective.CalcGradient(ModelVec);
+        Calculator.Calculate(Model);
         jif3D::rmat Sens = Calculator.SensitivityMatrix(Model, Diff);
         jif3D::rvec SensGrad = 2.0 * ublas::prec_prod(ublas::trans(Sens), Diff);
+        std::ofstream diffile("diff.out");
+        std::copy(Diff.begin(), Diff.end(),
+            std::ostream_iterator<double>(diffile, "\n"));
+
         jif3D::rvec SensDat = ublas::prec_prod(Sens, ModelVec);
         std::ofstream outfile2("sens.comp");
         std::ofstream sensfile("sens.out");
