@@ -116,7 +116,7 @@ ForwardResult CalculateFrequency(const ForwardInfo &Info)
         result.DistImpedance(meas_index + 6) = Info.C[site_index + 3] * Zyy.real()
             + Info.C[site_index + 2] * Zxy.real();
         result.DistImpedance(meas_index + 7) = Info.C[site_index + 3] * Zyy.imag()
-            + Info.C[site_index + 2] * Zxy.real();
+            + Info.C[site_index + 2] * Zxy.imag();
         result.RawImpedance(meas_index) = Zxx.real();
         result.RawImpedance(meas_index + 1) = Zxx.imag();
         result.RawImpedance(meas_index + 2) = Zxy.real();
