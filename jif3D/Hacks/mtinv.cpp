@@ -54,6 +54,7 @@ int main(int argc, char *argv[])
     double mincond = 1e-6;
     double maxcond = 10;
     double relerr = 0.02;
+    double coolingfactor = 1.0;
     std::string X3DName = "x3d";
     std::string MTInvCovarName;
     boost::shared_ptr<jif3D::JointObjective> Objective(new jif3D::JointObjective(true));
@@ -75,7 +76,9 @@ int main(int argc, char *argv[])
         "Inverse covariance matrix to use in MT misfit calculation.")("inderrors",
         "Use the individual errors for each element instead of the same for all elements")(
         "mtrelerr", po::value(&relerr)->default_value(0.02),
-        "Error floor for impedance estimates.")("debug", "Show debugging output.");
+        "Error floor for impedance estimates.")("coolingfactor",
+                po::value(&coolingfactor)->default_value(1.0),
+                "The factor to multiply the weight for the regularization at each iteration EXPERIMENTAL")("debug", "Show debugging output.");
 
     jif3D::SetupRegularization RegSetup;
     jif3D::SetupInversion InversionSetup;
@@ -325,6 +328,7 @@ int main(int argc, char *argv[])
 
     std::ofstream misfitfile("misfit.out");
     std::ofstream rmsfile("rms.out");
+    std::ofstream weightfile("weights.out");
     double InitialMisfit = Objective->CalcMisfit(InvModel);
 
     StoreMisfit(misfitfile, 0, InitialMisfit, *Objective);
@@ -343,7 +347,8 @@ int main(int argc, char *argv[])
 
             //update the inversion model
             Optimizer->MakeStep(InvModel);
-
+            Objective->MultiplyWeights(jif3D::JointObjective::regularization,
+                coolingfactor);
             ++iteration;
 
             SaveModel(InvModel, *ConductivityTransform.get(), Model,
@@ -352,13 +357,14 @@ int main(int argc, char *argv[])
             jif3D::rvec DistModel = MTTransform->GeneralizedToPhysical(InvModel);
             std::copy(InvModel.begin() + Model.GetNModelElements(), InvModel.end(),
                 C.begin());
-            jif3D::WriteImpedancesToNetCDF(modelfilename + ".dist_imp.nc", Frequencies,
+            jif3D::WriteImpedancesToNetCDF(modelfilename+ jif3D::stringify(iteration) + ".dist_imp.nc", Frequencies,
                 XCoord, YCoord, ZCoord, Data, ZError, C);
             std::cout << "Currrent Misfit: " << Optimizer->GetMisfit() << std::endl;
             std::cout << "Currrent Gradient: " << Optimizer->GetGradNorm() << std::endl;
             //and write the current misfit for all objectives to a misfit file
             StoreMisfit(misfitfile, iteration, Optimizer->GetMisfit(), *Objective);
             StoreRMS(rmsfile, iteration, *Objective);
+            StoreWeights(weightfile, iteration, *Objective);
             std::cout << "\n\n";
 
             terminate = jif3D::WantAbort();
