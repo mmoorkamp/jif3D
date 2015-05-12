@@ -88,11 +88,6 @@ namespace jif3D
     inline jif3D::rvec ConstructError(const jif3D::rvec &Data,
         const jif3D::rvec &DataError, const double relerror, const double absmin = 0.0)
       {
-        //check for reasonable relative and absolute error value
-        if (relerror <= 0.0 && absmin <= 0.0)
-          {
-            throw jif3D::FatalException("Specifiying relative and absolute error <= 0 simultaneously is not valid! ", __FILE__, __LINE__);
-          }
 
         const size_t ndata = Data.size();
         //create objects for the misfit and a very basic error estimate
@@ -102,6 +97,13 @@ namespace jif3D
             double minerr = std::max(std::abs(Data(i)) * relerror, absmin);
             Error(i) = std::max(DataError(i), minerr);
             assert(Error(i) > 0.0);
+            //check for reasonable relative and absolute error value
+            if (Error(i) <= 0.0)
+              {
+                throw jif3D::FatalException(
+                    "Non-positive error will lead to problems in inversion",
+                    __FILE__, __LINE__);
+              }
           }
         return Error;
       }
@@ -119,7 +121,8 @@ namespace jif3D
       {
         if (relerror <= 0.0)
           {
-            throw jif3D::FatalException("Specifiying relative error <= 0 is not valid! ", __FILE__, __LINE__);
+            throw jif3D::FatalException("Specifiying relative error <= 0 is not valid! ",
+            __FILE__, __LINE__);
           }
         const size_t ndata = Data.size();
         jif3D::rvec DataError(ndata, 0.0);
@@ -127,7 +130,8 @@ namespace jif3D
         if ((Data.size() % ntensorelem) != 0)
           {
             throw jif3D::FatalException(
-                "MT Data vector size is not an integer multiple of 8! ", __FILE__, __LINE__);
+                "MT Data vector size is not an integer multiple of 8! ", __FILE__,
+                __LINE__);
           }
         const size_t ntensor = ndata / ntensorelem;
         for (size_t i = 0; i < ntensor; ++i)
