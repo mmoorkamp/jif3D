@@ -27,9 +27,7 @@
 
 void MakeTestModel(jif3D::ThreeDGravityModel &Model, const size_t size)
   {
-    Model.SetXCellSizes().resize(boost::extents[size]);
-    Model.SetYCellSizes().resize(boost::extents[size]);
-    Model.SetZCellSizes().resize(boost::extents[size]);
+    Model.SetMeshSize(size, size, size);
 
     for (size_t i = 0; i < size; ++i) // set the values of the inner cells
       {
@@ -37,25 +35,19 @@ void MakeTestModel(jif3D::ThreeDGravityModel &Model, const size_t size)
         Model.SetYCellSizes()[i] = rand() % 10000 + 1000;
         Model.SetZCellSizes()[i] = 500;
       }
-    Model.SetDensities().resize(boost::extents[size][size][size]);
-    for (size_t i = 0; i < size; ++i)
-      for (size_t j = 0; j < size; ++j)
-        for (size_t k = 0; k < size; ++k)
-          {
-            Model.SetDensities()[i][j][k] = 0.1 + double(rand() % 1000) / 300.0;
-          }
+    //fill the grid with some random values that are in a similar range
+    // as densities
+    std::generate_n(Model.SetDensities().origin(), Model.SetDensities().num_elements(),
+        []() -> double
+          { return 0.1 + double(rand() % 1000) / 300.0;});
+
     const size_t nmeas = 30;
     for (size_t i = 0; i < nmeas; ++i)
       Model.AddMeasurementPoint(rand() % 50000 + 2e4, rand() % 50000 + 2e4, 0.0);
-    std::vector<double> bg_dens, bg_thick;
-    bg_dens.push_back(1.0);
-    bg_dens.push_back(1.0);
-    bg_dens.push_back(5.0);
-    bg_dens.push_back(5.0);
-    bg_thick.push_back(200.0);
-    bg_thick.push_back(300.0);
-    bg_thick.push_back(3500.0);
-    bg_thick.push_back(1000.0);
+    std::vector<double> bg_dens =
+      { 1.0, 1.0, 5.0, 5.0 };
+    std::vector<double> bg_thick =
+      { 200.0, 300.0, 3500.0, 1000.0 };
     Model.SetBackgroundDensities(bg_dens);
     Model.SetBackgroundThicknesses(bg_thick);
   }
@@ -63,11 +55,8 @@ void MakeTestModel(jif3D::ThreeDGravityModel &Model, const size_t size)
 namespace po = boost::program_options;
 int caching = 0;
 
-
 int hpx_main(boost::program_options::variables_map& vm)
   {
-
-
 
     const size_t nruns = 50;
     const size_t nrunspersize = 5;
@@ -99,7 +88,7 @@ int hpx_main(boost::program_options::variables_map& vm)
         std::vector<hpx::naming::id_type> localities = hpx::find_all_localities();
         const size_t nthreads = hpx::get_num_worker_threads();
         const size_t nlocs = localities.size();
-        filename += "l" + jif3D::stringify(nlocs) + "t" +  jif3D::stringify(nthreads);
+        filename += "l" + jif3D::stringify(nlocs) + "t" + jif3D::stringify(nthreads);
 #endif
       }
 
