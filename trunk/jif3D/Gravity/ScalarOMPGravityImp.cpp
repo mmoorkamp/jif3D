@@ -22,12 +22,26 @@
 #include "GravityBackground.h"
 
 #ifdef HAVEHPX
+    /*!  Calculate the contribution of several prisms to the gravitational acceleration
+     * at a single site.
+     * @param start The index of the first cell in the grid to be used for the calculation
+     * @param end The index of the last cell in the grid to be used for the calculation
+     * @param x_meas The x-coordinate of the measurement site in m
+     * @param y_meas The y-coordinate of the measurement site in m
+     * @param z_meas The z-coordinate of the measurement site in m
+     * @param XCoord The X-Coordinates of the grid cell boundaries in m
+     * @param YCoord The Y-Coordinates of the grid cell boundaries in m
+     * @param ZCoord The Z-Coordinates of the grid cell boundaries in m
+     * @param XSizes The size of the grid cell in x-direction in m
+     * @param YSizes The size of the grid cell in y-direction in m
+     * @param ZSizes The size of the grid cell in z-direction in m
+     * @return The vector of geometric factors for each of the grid cells.
+     */
 std::vector<double> GravityChunk(size_t start, size_t end, double x_meas, double y_meas,
     double z_meas, const std::vector<double> &XCoord, const std::vector<double> &YCoord,
     const std::vector<double> &ZCoord, const std::vector<double> &XSizes,
-    const std::vector<double> &YSizes, const std::vector<double> &ZSizes, size_t ysize,
-    size_t zsize);
-
+    const std::vector<double> &YSizes, const std::vector<double> &ZSizes);
+// Define the corresponding hpx action so that we can use GravityChunk in parallel with hpx
 HPX_PLAIN_ACTION(GravityChunk, Gravity_Action)
 
 std::vector<double> GravityChunk(size_t start, size_t end, double x_meas, double y_meas,
@@ -36,20 +50,40 @@ std::vector<double> GravityChunk(size_t start, size_t end, double x_meas, double
     const std::vector<double> &ZCoord,
     const std::vector<double> &XSizes,
     const std::vector<double> &YSizes,
-    const std::vector<double> &ZSizes, size_t ysize, size_t zsize)
+    const std::vector<double> &ZSizes)
   {
+    //The basis for the calculation is a rectilinear grid of cells
+    //For these calculations we do not need the density for each of the grid cells
+    //but only the geometry of the cells and the distance of the cell corners from
+    //the measurement site
+    // There is no interaction between the calculations for each prism, so we can divide
+    // it up arbitrarily, the easiest way, seems to be to linearly address all cells
+    // with a storage order z,y,x. This is compatible with the storage order for densities
+    //that we need for calculation elsewhere
+    //The number of prisms in y-direction
+    const size_t ysize = YCoord.size();
+    //The number of prisms in z-direction
+    const size_t zsize = ZCoord.size();
+    //check that the specified range of elements makes sense
     if (end > start)
       {
+        //we will generate end- start geometric factors that we will return
         std::vector<double> Result;
         Result.reserve(end - start);
+        //go through all the elements included in this chunk
         for (size_t i = start; i < end; ++i)
           {
+            //calculate the indices the current element would correspond to
+            //in a grid with storage order z,y,x
             size_t zi = i % zsize;
             size_t xi = (i - zi) / zsize;
             size_t yi = xi % ysize;
             xi = (xi - yi) / ysize;
+            //calculate the geometric factor based on the position of the measurement
+            //sites and the parameters of the currrent grid cells
             double c = jif3D::CalcGravBoxTerm(x_meas, y_meas, z_meas, XCoord[xi], YCoord[yi],
                 ZCoord[zi], XSizes[xi], YSizes[yi], ZSizes[zi]);
+            //store result in vector
             Result.push_back(c);
           }
         return Result;
@@ -146,45 +180,64 @@ namespace jif3D
         const size_t nthreads = hpx::get_num_worker_threads();
         const size_t nlocs = localities.size();
         //BOOST_LOG_TRIVIAL(debug)<< "Running on: " << nlocs << " localities. With " << nthreads << " worker threads " << std::endl;
+
+        //calculate how many chunks we have to divide the work into
+        //assuming 1 chunk per thread and node, this might need adjustment
         size_t nchunks = nthreads * nlocs;
         std::vector<hpx::lcos::future<std::vector<double>>> ChunkResult;
         Gravity_Action GravityChunks;
         const size_t cellsperchunk = nmod / nchunks +1;
+
+        //this is a bit awkward, but we have coordinates and sizes in 1D boost::multi_arrays
+        //these are not easily serializable, so as a fix we copy to std::vector
+        //might consider changing types of structures or finding a better way to pass them around
         std::vector<double> XC(XCoord.data(),XCoord.data() + XCoord.num_elements());
         std::vector<double> YC(YCoord.data(),YCoord.data() + YCoord.num_elements());
         std::vector<double> ZC(ZCoord.data(),ZCoord.data() + ZCoord.num_elements());
         std::vector<double> XS(XSizes.data(),XSizes.data() + XSizes.num_elements());
         std::vector<double> YS(YSizes.data(),YSizes.data() + YSizes.num_elements());
         std::vector<double> ZS(ZSizes.data(),ZSizes.data() + ZSizes.num_elements());
+        //create the individual chunks of work
         for (size_t c = 0; c < nchunks; ++c)
           {
-            size_t count = 0;
-
+            //find the address of the first element of the current chunk
             size_t startindex = c * cellsperchunk;
+            //the last element of the chunk, considering that we the last chunk might be a bit too big
             size_t endindex = std::min(size_t(nmod), (c+1) * cellsperchunk);
-
+            // simple round robin allocation to different localities, not sure this makes much sense
             hpx::naming::id_type const locality_id = localities.at(c % localities.size());
+            //create a hpx future
             ChunkResult.push_back(async(GravityChunks, locality_id, startindex,endindex,x_meas,y_meas,z_meas,
                     XC, YC, ZC,
-                    XS, YS, ZS, ysize, zsize));
+                    XS, YS, ZS));
           }
+
+        //all futures have been created, now we just wait for all of them to finish
+        //a fancy version might use when_any and variants to interlace work
         wait_all(ChunkResult);
+        //we assemble the vector of sensitivies (aka geometric factors) for the whole model
+        //from the calculations made for the indivdual chunks
         std::vector<double> Sens;
         Sens.reserve(nmod);
         for (size_t c = 0; c < nchunks; ++c)
           {
+            //collect result from each chunk
             std::vector<double> CurrSens = ChunkResult.at(c).get();
+            //as we do them in the same storage order as our grid, we
+            //can just add each value to the back
             std::copy(CurrSens.begin(),CurrSens.end(),back_inserter(Sens));
           }
+
         for (int offset = 0; offset < nmod; ++offset)
           {
             //we store the current value for possible sensitivity calculations
             //currvalue contains the geometric term, i.e. the sensitivity
-
             returnvalue += Sens[offset] * Model.GetDensities().data()[offset];
+            //if we want to keep the sensitivity for further analysis
+            //we copy the values into the right structure
             if (storesens)
               {
-                Sensitivities(0, offset) = currvalue;
+                Sensitivities(0, offset) = Sens[offset];
               }
           }
 
