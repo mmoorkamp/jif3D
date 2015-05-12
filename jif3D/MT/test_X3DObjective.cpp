@@ -179,6 +179,8 @@ BOOST_AUTO_TEST_SUITE( X3DObjective_Suite )
             double BackFDGrad = (misfit - Objective.CalcMisfit(Backward)) / delta;
             double CentFDGrad = (ForFDGrad + BackFDGrad) / 2.0;
             bool OK = Between(ForFDGrad, BackFDGrad, Gradient(index))
+                || fabs((BackFDGrad - Gradient(index)) / BackFDGrad) < 0.01
+                || fabs((ForFDGrad - Gradient(index)) / ForFDGrad) < 0.01
                 || fabs((CentFDGrad - Gradient(index)) / CentFDGrad) < 0.03;
             BOOST_CHECK(OK);
             if (!OK)
