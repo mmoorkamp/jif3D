@@ -285,40 +285,40 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
         Regularization.CalcMisfit(PertModel);
         CheckGradient(Regularization, PertModel);
       }
-
-    BOOST_AUTO_TEST_CASE (dotgrad_test)
-      {
-        jif3D::ThreeDGravityModel GravModel;
-        GravModel.SetDensities().resize(boost::extents[3][3][3]);
-        srand48(time(NULL));
-        const int msize = GravModel.GetDensities().num_elements();
-        jif3D::rvec PertModel(msize * 2);
-        for (int i = 0; i < msize; ++i)
-          {
-            PertModel(i) = drand48();
-            PertModel(i + msize) = drand48();
-          }
-
-        jif3D::CrossGradient CrossReg(GravModel);
-        jif3D::DotStructureConstraint DotReg(GravModel);
-        //if the two models are scaled versions of each other
-        //the cross-gradient should be zero
-        jif3D::rvec ZeroModel(msize * 2);
-        for (int i = 0; i < msize; ++i)
-          {
-            ZeroModel(i) = drand48();
-            ZeroModel(i + msize) = 3.2 * ZeroModel(i);
-          }
-        double zero = DotReg.CalcMisfit(ZeroModel);
-        //practically it is very small
-        BOOST_CHECK(zero < 1e-10);
-
-        double cross = CrossReg.CalcMisfit(PertModel);
-        double dot = DotReg.CalcMisfit(PertModel);
-        BOOST_CHECK_CLOSE(cross, dot, 0.0001);
-        DotReg.CalcMisfit(PertModel);
-        CheckGradient(DotReg, PertModel);
-      }
+//
+//    BOOST_AUTO_TEST_CASE (dotgrad_test)
+//      {
+//        jif3D::ThreeDGravityModel GravModel;
+//        GravModel.SetDensities().resize(boost::extents[3][3][3]);
+//        srand48(time(NULL));
+//        const int msize = GravModel.GetDensities().num_elements();
+//        jif3D::rvec PertModel(msize * 2);
+//        for (int i = 0; i < msize; ++i)
+//          {
+//            PertModel(i) = drand48();
+//            PertModel(i + msize) = drand48();
+//          }
+//
+//        jif3D::CrossGradient CrossReg(GravModel);
+//        jif3D::DotStructureConstraint DotReg(GravModel);
+//        //if the two models are scaled versions of each other
+//        //the cross-gradient should be zero
+//        jif3D::rvec ZeroModel(msize * 2);
+//        for (int i = 0; i < msize; ++i)
+//          {
+//            ZeroModel(i) = drand48();
+//            ZeroModel(i + msize) = 3.2 * ZeroModel(i);
+//          }
+//        double zero = DotReg.CalcMisfit(ZeroModel);
+//        //practically it is very small
+//        BOOST_CHECK(zero < 1e-10);
+//
+//        double cross = CrossReg.CalcMisfit(PertModel);
+//        double dot = DotReg.CalcMisfit(PertModel);
+//        BOOST_CHECK_CLOSE(cross, dot, 0.0001);
+//        DotReg.CalcMisfit(PertModel);
+//        CheckGradient(DotReg, PertModel);
+//      }
 
     BOOST_AUTO_TEST_CASE (gradjoint_test)
       {
