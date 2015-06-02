@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
     std::string MTInvCovarName;
     boost::shared_ptr<jif3D::JointObjective> Objective(new jif3D::JointObjective(true));
 
-    bool WantDistCorr;
+    double DistCorr = 0;
     po::options_description desc("General options");
     desc.add_options()("help", "produce help message")("threads", po::value<int>(),
         "The number of openmp threads")("covmod", po::value<std::string>(),
@@ -69,16 +69,17 @@ int main(int argc, char *argv[])
         po::value(&maxcond)->default_value(5),
         "The maximum value for conductivity in S/m")("tempdir", po::value<std::string>(),
         "The name of the directory to store temporary files in")("distcorr",
-        po::value(&WantDistCorr)->default_value(false),
-        "Correct for distortion within inversion")("x3dname",
-        po::value(&X3DName)->default_value("x3d"), "The name of the executable for x3d")(
-        "mtinvcovar", po::value<std::string>(&MTInvCovarName),
+        po::value(&DistCorr)->default_value(0), "Correct for distortion within inversion")(
+        "x3dname", po::value(&X3DName)->default_value("x3d"),
+        "The name of the executable for x3d")("mtinvcovar",
+        po::value<std::string>(&MTInvCovarName),
         "Inverse covariance matrix to use in MT misfit calculation.")("inderrors",
         "Use the individual errors for each element instead of the same for all elements")(
         "mtrelerr", po::value(&relerr)->default_value(0.02),
         "Error floor for impedance estimates.")("coolingfactor",
-                po::value(&coolingfactor)->default_value(1.0),
-                "The factor to multiply the weight for the regularization at each iteration EXPERIMENTAL")("debug", "Show debugging output.");
+        po::value(&coolingfactor)->default_value(1.0),
+        "The factor to multiply the weight for the regularization at each iteration EXPERIMENTAL")(
+        "debug", "Show debugging output.");
 
     jif3D::SetupRegularization RegSetup;
     jif3D::SetupInversion InversionSetup;
@@ -167,8 +168,9 @@ int main(int argc, char *argv[])
       }
 
     jif3D::rvec FirstFreq(XCoord.size());
-    std::copy(Data.begin(), Data.begin() + XCoord.size(), FirstFreq.begin());
-    jif3D::Write3DDataToVTK(datafilename + ".vtk", "Z", FirstFreq, XCoord, YCoord,
+    std::iota(FirstFreq.begin(), FirstFreq.end(), 1);
+    //std::copy(Data.begin(), Data.begin() + XCoord.size(), FirstFreq.begin());
+    jif3D::Write3DDataToVTK(datafilename + ".vtk", "MTSites", FirstFreq, XCoord, YCoord,
         ZCoord);
 
     Model.SetDistortionParameters(C);
@@ -187,7 +189,7 @@ int main(int argc, char *argv[])
     Model.WriteVTK("start.vtk");
 
     //if we want to correct for distortion within the inversion
-    if (WantDistCorr)
+    if (DistCorr > 0)
       {
         //if we did not read distortion values together with the
         //observed data, we set the distortion matrix C at each site
@@ -233,13 +235,13 @@ int main(int argc, char *argv[])
     boost::shared_ptr<jif3D::MultiSectionTransform> MTTransform(
         new jif3D::MultiSectionTransform(InvModel.size(), 0, ngrid,
             ConductivityTransform));
-    if (WantDistCorr)
+    if (DistCorr > 0)
       {
         MTTransform->AddSection(ngrid, InvModel.size(), Copier);
       }
 
     InvModel = MTTransform->PhysicalToGeneralized(InvModel);
-
+    bool WantDistCorr = (DistCorr > 0);
     jif3D::X3DMTCalculator Calculator(TempDir, X3DName, WantDistCorr);
     boost::shared_ptr<jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator> > X3DObjective(
         new jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator>(Calculator));
@@ -292,7 +294,7 @@ int main(int argc, char *argv[])
         Regularization->SetReferenceModel(ModRegTrans->GeneralizedToPhysical(InvModel));
       }
 
-    if (WantDistCorr)
+    if (DistCorr > 0)
       {
         jif3D::rvec CRef(XCoord.size() * 4);
 
@@ -311,11 +313,8 @@ int main(int argc, char *argv[])
         boost::shared_ptr<jif3D::MultiSectionTransform> DistRegTrans(
             new jif3D::MultiSectionTransform(InvModel.size(), ngrid, InvModel.size(),
                 Copier));
-        double distreglambda = 0;
 
-        std::cout << "Regularization for distortion: ";
-        std::cin >> distreglambda;
-        Objective->AddObjective(DistReg, DistRegTrans, distreglambda, "DistReg",
+        Objective->AddObjective(DistReg, DistRegTrans, DistCorr, "DistReg",
             jif3D::JointObjective::regularization);
       }
     size_t maxiter = 30;
@@ -357,7 +356,8 @@ int main(int argc, char *argv[])
             jif3D::rvec DistModel = MTTransform->GeneralizedToPhysical(InvModel);
             std::copy(InvModel.begin() + Model.GetNModelElements(), InvModel.end(),
                 C.begin());
-            jif3D::WriteImpedancesToNetCDF(modelfilename+ jif3D::stringify(iteration) + ".dist_imp.nc", Frequencies,
+            jif3D::WriteImpedancesToNetCDF(
+                modelfilename + jif3D::stringify(iteration) + ".dist_imp.nc", Frequencies,
                 XCoord, YCoord, ZCoord, Data, ZError, C);
             std::cout << "Currrent Misfit: " << Optimizer->GetMisfit() << std::endl;
             std::cout << "Currrent Gradient: " << Optimizer->GetGradNorm() << std::endl;
