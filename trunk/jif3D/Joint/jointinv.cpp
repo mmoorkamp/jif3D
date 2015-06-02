@@ -227,12 +227,13 @@ int hpx_main(boost::program_options::variables_map& vm)
     size_t maxiter = 1;
     if (!vm.count("iterations"))
       {
-    std::cout << "Maximum iterations: ";
-    std::cin >> maxiter;
+        std::cout << "Maximum iterations: ";
+        std::cin >> maxiter;
       }
-    else{
+    else
+      {
         maxiter = vm["iterations"].as<int>();
-    }
+      }
     //note the start time of the core calculations for statistics
     //and output some status information
     boost::posix_time::ptime starttime = boost::posix_time::microsec_clock::local_time();
@@ -242,20 +243,24 @@ int hpx_main(boost::program_options::variables_map& vm)
     //and general quality control
     if (havetomo)
       {
-        jif3D::Write3DDataToVTK(modelfilename + ".rec.vtk", "Receiver",
-            jif3D::rvec(TomoSetup.GetModel().GetMeasPosX().size()),
+        jif3D::rvec RecNum(TomoSetup.GetModel().GetMeasPosX().size());
+        std::iota(RecNum.begin(), RecNum.end(), 1);
+        jif3D::Write3DDataToVTK(modelfilename + ".rec.vtk", "Receiver", RecNum,
             TomoSetup.GetModel().GetMeasPosX(), TomoSetup.GetModel().GetMeasPosY(),
             TomoSetup.GetModel().GetMeasPosZ());
-        jif3D::Write3DDataToVTK(modelfilename + ".sor.vtk", "Source",
-            jif3D::rvec(TomoSetup.GetModel().GetSourcePosX().size()),
+
+        jif3D::rvec SourceNum(TomoSetup.GetModel().GetSourcePosX().size());
+        std::iota(SourceNum.begin(), SourceNum.end(), 1);
+        jif3D::Write3DDataToVTK(modelfilename + ".sor.vtk", "Source", SourceNum,
             TomoSetup.GetModel().GetSourcePosX(), TomoSetup.GetModel().GetSourcePosY(),
             TomoSetup.GetModel().GetSourcePosZ());
       }
 
     if (havemt)
       {
-        jif3D::Write3DDataToVTK(modelfilename + ".mt_sites.vtk", "MT Sites",
-            jif3D::rvec(MTSetup.GetModel().GetMeasPosX().size()),
+        jif3D::rvec SiteNum(MTSetup.GetModel().GetMeasPosX().size());
+        std::iota(SiteNum.begin(), SiteNum.end(), 1);
+        jif3D::Write3DDataToVTK(modelfilename + ".mt_sites.vtk", "MTSites", SiteNum,
             MTSetup.GetModel().GetMeasPosX(), MTSetup.GetModel().GetMeasPosY(),
             MTSetup.GetModel().GetMeasPosZ());
       }
@@ -603,7 +608,7 @@ int main(int argc, char* argv[])
         po::value(&coolingfactor)->default_value(1.0),
         "The factor to multiply the weight for the regularization at each iteration EXPERIMENTAL")(
         "sequential",
-        "Do not create a single objective function, but split into on OF per method");
+        "Do not create a single objective function, but split into on OF per method EXPERIMENTAL");
     //we need to add the description for each part to the boost program options object
     //that way the user can get a help output and the parser object recongnizes these options
     desc.add(TomoSetup.SetupOptions());

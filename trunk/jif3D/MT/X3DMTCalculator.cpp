@@ -51,7 +51,6 @@ namespace jif3D
           {
             if (boost::algorithm::starts_with(itr->path().filename().string(), NameRoot))
               {
-                BOOST_LOG_TRIVIAL(debug)<< "Trying to remove file: " << itr->path().filename().string() << std::endl;
                 fs::remove_all(itr->path().filename(), ec);
               }
           }
