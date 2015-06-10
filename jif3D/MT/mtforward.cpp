@@ -218,13 +218,12 @@ int main(int argc, char *argv[])
             C.push_back(Cyx);
             C.push_back(Cyy);
           }
-         jif3D::WriteImpedancesToNetCDF(outfilename + "dist.nc", MTModel.GetFrequencies(),
-            MTModel.GetMeasPosX(), MTModel.GetMeasPosY(), MTModel.GetMeasPosZ(), Impedances,
-            Errors);
+        jif3D::WriteImpedancesToNetCDF(outfilename + "dist.nc", MTModel.GetFrequencies(),
+            MTModel.GetMeasPosX(), MTModel.GetMeasPosY(), MTModel.GetMeasPosZ(),
+            Impedances, Errors);
       }
 
-
-    std: jif3D::WriteImpedancesToNetCDF(outfilename, MTModel.GetFrequencies(),
+    jif3D::WriteImpedancesToNetCDF(outfilename, MTModel.GetFrequencies(),
         MTModel.GetMeasPosX(), MTModel.GetMeasPosY(), MTModel.GetMeasPosZ(), Impedances,
         Errors, C);
     MTModel.WriteVTK(modelfilename + ".vtk");
