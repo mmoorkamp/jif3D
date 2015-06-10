@@ -29,6 +29,16 @@ namespace jif3D
         const ThreeDModelBase::t3DModelDim &ZCellSizes,
         const ThreeDModelBase::t3DModelData &Data);
 
+    //! Write a 3D model with vector valued cells and its geometry into a .vtk file for plotting
+    void Write3DVectorModelToVTK(const std::string &filename,
+        const std::string &DataName,
+        const ThreeDModelBase::t3DModelDim &XCellSizes,
+        const ThreeDModelBase::t3DModelDim &YCellSizes,
+        const ThreeDModelBase::t3DModelDim &ZCellSizes,
+        const ThreeDModelBase::t3DModelData &CompX,
+        const ThreeDModelBase::t3DModelData &CompY,
+        const ThreeDModelBase::t3DModelData &CompZ);
+
     //! Read a 3D model and its geometry from a .vtk file
     void Read3DModelFromVTK(const std::string &filename,
         ThreeDModelBase::t3DModelDim &XCellSizes,
@@ -38,6 +48,14 @@ namespace jif3D
 
     //! Write scalar data with 3D coordinate information into a .vtk file for plotting
     void Write3DDataToVTK(const std::string &filename,
+        const std::string &DataName,
+        const jif3D::rvec &Data,
+        const ThreeDModelBase::tMeasPosVec &PosX,
+        const ThreeDModelBase::tMeasPosVec &PosY,
+        const ThreeDModelBase::tMeasPosVec &PosZ);
+
+    //! Write three-component vector data with 3D coordinate information into a .vtk file for plotting
+    void Write3DVectorDataToVTK(const std::string &filename,
         const std::string &DataName,
         const jif3D::rvec &Data,
         const ThreeDModelBase::tMeasPosVec &PosX,
