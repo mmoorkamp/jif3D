@@ -573,7 +573,35 @@ int hpx_main(boost::program_options::variables_map& vm)
             MTModel.GetFrequencies(), MTModel.GetMeasPosX(), MTModel.GetMeasPosY(),
             MTModel.GetMeasPosZ(), MTDiff, MTSetup.GetMTObjective().GetDataError());
       }
+    //if we are using cross gradient coupling, we want to output the final
+    //values of the cross-gradient
+    if (vm.count("crossgrad"))
+      {
+        auto ObjectiveTypes = Objective->GetObjectiveTypes();
+        std::vector<std::string> Names = Objective->GetObjectiveNames();
+        for (size_t i = 0; i < ObjectiveTypes.size(); ++i)
+          {
+            if (ObjectiveTypes.at(i) == jif3D::JointObjective::coupling)
+              {
+                jif3D::rvec CG(Objective->GetObjective(i).GetIndividualMisfit());
+                const size_t nx = StartModel.GetXCoordinates().size();
+                const size_t ny = StartModel.GetYCoordinates().size();
+                const size_t nz = StartModel.GetZCoordinates().size();
+                const size_t nmod = nx * ny * nz;
+                jif3D::ThreeDModelBase::t3DModelData XGrad(boost::extents[nx][ny][nz]);
+                jif3D::ThreeDModelBase::t3DModelData YGrad(boost::extents[nx][ny][nz]);
+                jif3D::ThreeDModelBase::t3DModelData ZGrad(boost::extents[nx][ny][nz]);
+                std::copy(CG.begin(), CG.begin() + nmod, XGrad.origin());
+                std::copy(CG.begin() + nmod, CG.begin() + 2 * nmod, YGrad.origin());
+                std::copy(CG.begin() + 2 * nmod, CG.begin() + 3 * nmod, ZGrad.origin());
+                std::string Name = Names.at(i);
+                jif3D::Write3DVectorModelToVTK(Name + ".vtk", Name,
+                    StartModel.GetXCellSizes(), StartModel.GetYCellSizes(),
+                    StartModel.GetZCellSizes(), XGrad, YGrad, ZGrad);
+              }
+          }
 
+      }
     std::ofstream datadiffile("data.diff");
     std::copy(Objective->GetDataDifference().begin(),
         Objective->GetDataDifference().end(),
@@ -609,8 +637,8 @@ int main(int argc, char* argv[])
         "The factor to multiply the weight for the regularization at each iteration EXPERIMENTAL")(
         "sequential",
         "Do not create a single objective function, but split into on OF per method EXPERIMENTAL");
-    //we need to add the description for each part to the boost program options object
-    //that way the user can get a help output and the parser object recongnizes these options
+//we need to add the description for each part to the boost program options object
+//that way the user can get a help output and the parser object recongnizes these options
     desc.add(TomoSetup.SetupOptions());
     desc.add(GravitySetup.SetupOptions());
     desc.add(MTSetup.SetupOptions());
@@ -618,12 +646,12 @@ int main(int argc, char* argv[])
     desc.add(RegSetup.SetupOptions());
     desc.add(CouplingSetup.SetupOptions());
 
-    //we can also read options from a configuration file
-    //that way we do not have to specify a large number of options
-    //on the command line, the order we use now, reading the configuration
-    //file after parsing the command line options means that
-    //the command line options override configuration file options
-    //as one would expect (see also program_options documentation)
+//we can also read options from a configuration file
+//that way we do not have to specify a large number of options
+//on the command line, the order we use now, reading the configuration
+//file after parsing the command line options means that
+//the command line options override configuration file options
+//as one would expect (see also program_options documentation)
     const std::string ConfFileName("jointinv.conf");
     if (boost::filesystem::exists(ConfFileName))
       {
