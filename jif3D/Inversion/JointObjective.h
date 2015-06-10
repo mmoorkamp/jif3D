@@ -34,9 +34,12 @@ namespace jif3D
      */
     class JointObjective: public ObjectiveFunction
       {
-      public:
-    	//! For each objective function we keep track of its general purpose
-    	enum ObjectiveType { unspecified, datafit, coupling, regularization };
+    public:
+      //! For each objective function we keep track of its general purpose
+      enum ObjectiveType
+        {
+        unspecified, datafit, coupling, regularization
+        };
     private:
       //! This vector holds pointers to the individual objective functions
       std::vector<boost::shared_ptr<ObjectiveFunction> > Objectives;
@@ -92,22 +95,31 @@ namespace jif3D
         }
       //! Get the RMS values for each data objective
       std::vector<double> GetRMS() const
-		{
-    	  std::vector<double> RMS;
-    	  for (size_t i = 0; i < Weights.size(); ++i)
-    	  {
-    		  if (FunctionType.at(i) == datafit)
-    		  {
-    			  double r  = sqrt(IndividualFits.at(i) / Objectives.at(i)->GetNData());
-    			  RMS.push_back(r);
-    		  }
-    	  }
-    	  return RMS;
-		}
+        {
+          std::vector<double> RMS;
+          for (size_t i = 0; i < Weights.size(); ++i)
+            {
+              if (FunctionType.at(i) == datafit)
+                {
+                  double r = sqrt(IndividualFits.at(i) / Objectives.at(i)->GetNData());
+                  RMS.push_back(r);
+                }
+            }
+          return RMS;
+        }
       //! Get the vector of l2-norms of the gradient for each individual objective at the current iteration
       const std::vector<double> &GetIndividualGradNorms() const
         {
           return IndividualGradNorms;
+        }
+      //! Return which type of objective function (datafit, coupling regularization) we are dealing with
+      std::vector<ObjectiveType> GetObjectiveTypes() const
+        {
+          return FunctionType;
+        }
+      std::vector<std::string> GetObjectiveNames() const
+        {
+          return Names;
         }
       //! Add an individual objective function
       /*! The joint objective delegates the misfit calculation to a collection of individual objective
@@ -137,20 +149,20 @@ namespace jif3D
        * @param factor The factor by which we multiply the current value
        */
       void MultiplyWeights(ObjectiveType Which, double factor = 1.0)
-      {
-    	  for (size_t i = 0; i < Weights.size(); ++i)
-    	  {
-    		  if (FunctionType.at(i) == Which)
-		      {
-    			Weights.at(i) *= factor;
-		       }
-    	  }
-      }
+        {
+          for (size_t i = 0; i < Weights.size(); ++i)
+            {
+              if (FunctionType.at(i) == Which)
+                {
+                  Weights.at(i) *= factor;
+                }
+            }
+        }
       //! Read only access to the weights of the objective functions
       const std::vector<double> &GetWeights() const
-		{
-    	  return Weights;
-		}
+        {
+          return Weights;
+        }
       //! Change the weighting of the different methods
       /*! This function can be used to change the weight for
        * each method in the joint inversion after all objectives
@@ -165,7 +177,8 @@ namespace jif3D
         {
           if (W.size() != Weights.size())
             throw jif3D::FatalException(
-                "Number of weights has to match the number of objective functions ! ", __FILE__, __LINE__);
+                "Number of weights has to match the number of objective functions ! ",
+                __FILE__, __LINE__);
           std::copy(W.begin(), W.end(), Weights.begin());
         }
       /*! When constructing a JointObjective object we can specify whether we want to print
