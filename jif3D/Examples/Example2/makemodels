@@ -62,7 +62,7 @@ ncatted -O -a units,Density,m,c,"g/cm3" start_dens.nc
 ncap2 -A -S makedens dens_ano.nc
 ncap2 -A -S makedens start_dens.nc
 
-
+ncap2 -A -s "Density(0:3,5:15,10:15) = 3.0" dens_ano.nc
 #calculate synthetic scalar and tensor gravity data
 #the measurements are located between 1400m and 8400m
 #in x-direction and y-direction with a spacing of 500m
