@@ -39,9 +39,9 @@ namespace jif3D
         const double Misfit, const jif3D::JointObjective &Objective)
       {
         misfitfile << std::setw(5) << iteration << " " << std::setw(15) << Misfit << " ";
-        for (size_t i = 0; i < Objective.GetIndividualFits().size(); ++i)
+        for (double val : Objective.GetIndividualFits())
           {
-            misfitfile << std::setw(15) << Objective.GetIndividualFits().at(i) << " ";
+            misfitfile << std::setw(15) << val << " ";
           }
 
         misfitfile << " " << Objective.GetNEval();
@@ -54,9 +54,9 @@ namespace jif3D
       {
         std::vector<double> RMS = Objective.GetRMS();
         rmsfile << std::setw(5) << iteration << " " << std::setw(15) << " ";
-        for (size_t i = 0; i < RMS.size(); ++i)
+        for (double val : RMS)
           {
-            rmsfile << std::setw(15) << RMS.at(i) << " ";
+            rmsfile << std::setw(15) << val << " ";
           }
 
         rmsfile << " " << Objective.GetNEval();
@@ -69,9 +69,9 @@ namespace jif3D
       {
         std::vector<double> Weights = Objective.GetWeights();
         rmsfile << std::setw(5) << iteration << " " << std::setw(15) << " ";
-        for (size_t i = 0; i < Weights.size(); ++i)
+        for (double val : Weights)
           {
-            rmsfile << std::setw(15) << Weights.at(i) << " ";
+            rmsfile << std::setw(15) << val << " ";
           }
 
         rmsfile << " " << Objective.GetNEval();
