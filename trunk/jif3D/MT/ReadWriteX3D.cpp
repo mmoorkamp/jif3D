@@ -168,7 +168,7 @@ namespace jif3D
         //and then we write the background layers we specified in the model
         for (size_t i = 0; i < bg_thicknesses.size(); ++i)
           {
-            outfile << std::setw(15) << std::setprecision(10) << bg_thicknesses[i]
+            outfile << std::setw(17) << std::setprecision(10) << bg_thicknesses[i]
                 << std::setw(15) << std::setprecision(5) << bg_conductivities[i]
                 << std::setw(15) << std::setprecision(5) << sigma_imag << std::setw(15)
                 << std::setprecision(5) << rel_eps << std::setw(15)
@@ -189,7 +189,7 @@ namespace jif3D
         //so we format the entries for high precision and adjust the number of values per line
         const size_t valuesperline = std::min(static_cast<size_t>(35),
             static_cast<size_t>(XCellSizes.size() + 1));
-        const size_t valuewidth = 15;
+        const size_t valuewidth = 18;
         const size_t valueprec = 10;
         //write out the model grid layer by layer in z-direction
         for (size_t i = 0; i < nzlayers; ++i)
