@@ -168,7 +168,7 @@ namespace jif3D
         //and then we write the background layers we specified in the model
         for (size_t i = 0; i < bg_thicknesses.size(); ++i)
           {
-            outfile << std::setw(10) << std::setprecision(5) << bg_thicknesses[i]
+            outfile << std::setw(15) << std::setprecision(10) << bg_thicknesses[i]
                 << std::setw(15) << std::setprecision(5) << bg_conductivities[i]
                 << std::setw(15) << std::setprecision(5) << sigma_imag << std::setw(15)
                 << std::setprecision(5) << rel_eps << std::setw(15)
@@ -189,19 +189,19 @@ namespace jif3D
         //so we format the entries for high precision and adjust the number of values per line
         const size_t valuesperline = std::min(static_cast<size_t>(35),
             static_cast<size_t>(XCellSizes.size() + 1));
-        const size_t valuewidth = 27;
-        const size_t valueprec = 18;
+        const size_t valuewidth = 15;
+        const size_t valueprec = 10;
         //write out the model grid layer by layer in z-direction
         for (size_t i = 0; i < nzlayers; ++i)
           {
             outfile << "zA(m)  ( 'Depth_to_the_anomaly_layer' ) \n "
-                << std::resetiosflags(std::ios::scientific) << std::setprecision(5)
+                << std::resetiosflags(std::ios::scientific) << std::setprecision(10)
                 << currdepth << " \n\n";
             outfile << "dzA(m) ( 'Thickness_of_the_anomaly_layer' ) \n";
-            outfile << std::resetiosflags(std::ios::scientific) << std::setprecision(5)
+            outfile << std::resetiosflags(std::ios::scientific) << std::setprecision(10)
                 << ZCellSizes[i] << "\n\n";
             outfile << "Thicknesses of sublayers (m) \n";
-            outfile << std::resetiosflags(std::ios::scientific) << std::setprecision(5)
+            outfile << std::resetiosflags(std::ios::scientific) << std::setprecision(10)
                 << ZCellSizes[i] << "\n\n";
             currdepth += ZCellSizes[i];
             //we do not apply any scaling to the conductivity values, but write them out as is
