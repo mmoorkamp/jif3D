@@ -82,7 +82,7 @@ namespace jif3D
       }
 
     void SetupCoupling::SetupTransforms(const po::variables_map &vm,
-        ThreeDSeismicModel &GeometryModel,
+        ThreeDModelBase &GeometryModel,
         boost::shared_ptr<jif3D::GeneralModelTransform> &TomoTransform,
         boost::shared_ptr<jif3D::GeneralModelTransform> &GravityTransform,
         boost::shared_ptr<jif3D::GeneralModelTransform> &MTTransform, bool Wavelet)
@@ -210,9 +210,9 @@ namespace jif3D
               }
             else
               {
-                const size_t nx = GeometryModel.GetSlownesses().shape()[0];
-                const size_t ny = GeometryModel.GetSlownesses().shape()[1];
-                const size_t nz = GeometryModel.GetSlownesses().shape()[2];
+                const size_t nx = GeometryModel.GetData().shape()[0];
+                const size_t ny = GeometryModel.GetData().shape()[1];
+                const size_t nz = GeometryModel.GetData().shape()[2];
                 RelModel.SetSlownesses().resize(boost::extents[nx][ny][nz]);
                 std::fill_n(RelModel.SetSlownesses().origin(), nx * ny * nz, 1.0);
 

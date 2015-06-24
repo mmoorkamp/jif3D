@@ -164,7 +164,7 @@ int hpx_main(boost::program_options::variables_map& vm)
         GravityTransform;
     //coupling setup is responsible to set the appropriate transformation
     //as we have to use different ones depending on the chose coupling mechanism
-    jif3D::ThreeDSeismicModel StartModel;
+
     //we need the geometry of the starting model to setup
     //the transformations
     std::string geometryfilename;
@@ -176,18 +176,17 @@ int hpx_main(boost::program_options::variables_map& vm)
       {
         geometryfilename = jif3D::AskFilename("Inversion Model Geometry: ");
       }
-    //although we specify the starting model as a seismic model
-    //it does not need to have the same grid specifications
-    StartModel.ReadNetCDF(geometryfilename, false);
+    boost::shared_ptr<jif3D::ThreeDModelBase> StartModel = jif3D::ReadAnyModel(geometryfilename);
 
-    CouplingSetup.SetupTransforms(vm, StartModel, TomoTransform, GravityTransform,
+
+    CouplingSetup.SetupTransforms(vm, *StartModel, TomoTransform, GravityTransform,
         MTTransform, WaveletParm);
 
     //read in the tomography model and setup the options that are applicable
     //for the seismic tomography part of the inversion
     bool havetomo = TomoSetup.SetupObjective(vm, *Objective.get(), TomoTransform, xorigin,
         yorigin);
-    if (havetomo && !EqualGridGeometry(TomoSetup.GetModel(), StartModel))
+    if (havetomo && !EqualGridGeometry(TomoSetup.GetModel(), *StartModel))
       {
         throw jif3D::FatalException(
             "Tomography model does not have the same geometry as starting model");
@@ -197,7 +196,7 @@ int hpx_main(boost::program_options::variables_map& vm)
         xorigin, yorigin, TempDir);
     //if we have a seismic and a gravity objective function, we have
     //to make sure that the starting models have the same geometry (not considering refinement)
-    if (havegrav && !EqualGridGeometry(StartModel, GravitySetup.GetScalModel()))
+    if (havegrav && !EqualGridGeometry(*StartModel, GravitySetup.GetScalModel()))
       {
         throw jif3D::FatalException(
             "Gravity model does not have the same geometry as starting model");
@@ -207,20 +206,20 @@ int hpx_main(boost::program_options::variables_map& vm)
         yorigin, TempDir);
     //if we have a seismic and a MT objective function, we have
     //to make sure that the starting models have the same geometry (not considering refinement)
-    if (havemt && !EqualGridGeometry(MTSetup.GetModel(), StartModel))
+    if (havemt && !EqualGridGeometry(MTSetup.GetModel(), *StartModel))
       {
         throw jif3D::FatalException(
             "MT model does not have the same geometry as starting model");
       }
     //now we setup the regularization
     boost::shared_ptr<jif3D::RegularizationFunction> Regularization =
-        RegSetup.SetupObjective(vm, StartModel, CovModVec);
+        RegSetup.SetupObjective(vm, *StartModel, CovModVec);
 
     //the vector InvModel will hold the current inversion model
     //depending on the chosen coupling mechanism it will have different size
     //so we fill its content in the object Coupling setup
     jif3D::rvec InvModel;
-    CouplingSetup.SetupModelVector(vm, InvModel, StartModel, TomoSetup.GetModel(),
+    CouplingSetup.SetupModelVector(vm, InvModel, *StartModel, TomoSetup.GetModel(),
         GravitySetup.GetScalModel(), MTSetup.GetModel(), *Objective.get(), Regularization,
         RegSetup.GetSubStart());
     //finally ask for the maximum number of iterations
@@ -280,16 +279,16 @@ int hpx_main(boost::program_options::variables_map& vm)
     jif3D::ThreeDSeismicModel TomoModel(TomoSetup.GetModel());
 
     if (!havetomo)
-      TomoModel = StartModel;
+      TomoModel = *StartModel;
     if (!havemt)
-      MTModel = StartModel;
+      MTModel = *StartModel;
     if (!havegrav)
-      GravModel = StartModel;
+      GravModel = *StartModel;
 
     std::cout << "Performing inversion." << std::endl;
     if (WantSequential)
       {
-        const size_t ngrid = StartModel.GetSlownesses().num_elements();
+        const size_t ngrid = StartModel->GetData().num_elements();
         boost::shared_ptr<jif3D::JointObjective> TomoObjective(Objective->clone());
         boost::shared_ptr<jif3D::JointObjective> MTObjective(Objective->clone());
         boost::shared_ptr<jif3D::JointObjective> GravObjective(Objective->clone());
@@ -584,9 +583,9 @@ int hpx_main(boost::program_options::variables_map& vm)
             if (ObjectiveTypes.at(i) == jif3D::JointObjective::coupling)
               {
                 jif3D::rvec CG(Objective->GetObjective(i).GetIndividualMisfit());
-                const size_t nx = StartModel.GetXCoordinates().size();
-                const size_t ny = StartModel.GetYCoordinates().size();
-                const size_t nz = StartModel.GetZCoordinates().size();
+                const size_t nx = StartModel->GetXCoordinates().size();
+                const size_t ny = StartModel->GetYCoordinates().size();
+                const size_t nz = StartModel->GetZCoordinates().size();
                 const size_t nmod = nx * ny * nz;
                 jif3D::ThreeDModelBase::t3DModelData XGrad(boost::extents[nx][ny][nz]);
                 jif3D::ThreeDModelBase::t3DModelData YGrad(boost::extents[nx][ny][nz]);
@@ -596,8 +595,8 @@ int hpx_main(boost::program_options::variables_map& vm)
                 std::copy(CG.begin() + 2 * nmod, CG.begin() + 3 * nmod, ZGrad.origin());
                 std::string Name = Names.at(i);
                 jif3D::Write3DVectorModelToVTK(Name + ".vtk", Name,
-                    StartModel.GetXCellSizes(), StartModel.GetYCellSizes(),
-                    StartModel.GetZCellSizes(), XGrad, YGrad, ZGrad);
+                    StartModel->GetXCellSizes(), StartModel->GetYCellSizes(),
+                    StartModel->GetZCellSizes(), XGrad, YGrad, ZGrad);
               }
           }
 

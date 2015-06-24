@@ -84,6 +84,8 @@ namespace jif3D
             }
           if (Archive::is_loading::value)
             {
+              ar & GreenType1;
+              ar & GreenType4;
               ar & X3DName;
               std::string DirName;
               ar & DirName;
@@ -140,8 +142,9 @@ namespace jif3D
        */
       rvec LQDerivative(const ModelType &Model, const rvec &Misfit, size_t minfreqindex =
           0, size_t maxfreqindex = std::numeric_limits<size_t>::max());
-      rmat SensitivityMatrix(const ModelType &Model, const rvec &Misfit, size_t minfreqindex =
-          0, size_t maxfreqindex = std::numeric_limits<size_t>::max());
+      rmat SensitivityMatrix(const ModelType &Model, const rvec &Misfit,
+          size_t minfreqindex = 0, size_t maxfreqindex =
+              std::numeric_limits<size_t>::max());
       //! The constructor takes optional arguments to change the directory were temporary files are stored and if we want to correct for distortion
       /*! When running calculations on a cluster in particular, it makes sense to store the files for x3D in a local
        * directory instead of the central filesystem. We can achieve this through setting TDir to an appropriate path.

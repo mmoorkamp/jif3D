@@ -79,7 +79,8 @@ int main(int argc, char *argv[])
         "Error floor for impedance estimates.")("coolingfactor",
         po::value(&coolingfactor)->default_value(1.0),
         "The factor to multiply the weight for the regularization at each iteration EXPERIMENTAL")(
-        "debug", "Show debugging output.");
+        "debug", "Show debugging output.")("opt",
+        "Use opt for Green's function calculation in x3d.");
 
     jif3D::SetupRegularization RegSetup;
     jif3D::SetupInversion InversionSetup;
@@ -243,6 +244,12 @@ int main(int argc, char *argv[])
     InvModel = MTTransform->PhysicalToGeneralized(InvModel);
     bool WantDistCorr = (DistCorr > 0);
     jif3D::X3DMTCalculator Calculator(TempDir, X3DName, WantDistCorr);
+    if (vm.count("opt"))
+      {
+        BOOST_LOG_TRIVIAL(info)<< "Using Opt type Green's functions ";
+        Calculator.SetGreenType1(jif3D::GreenCalcType::opt);
+        Calculator.SetGreenType4(jif3D::GreenCalcType::opt);
+      }
     boost::shared_ptr<jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator> > X3DObjective(
         new jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator>(Calculator));
 
