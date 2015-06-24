@@ -36,7 +36,8 @@ namespace jif3D
             "Inverse covariance matrix to use in MT misfit calculation.")("inderrors",
             "Use the individual errors for each element instead of the same for all elements")(
             "x3dname", po::value<std::string>(&X3DName)->default_value("x3d"),
-            "The name of the executable for x3d");
+            "The name of the executable for x3d")("opt",
+            "Use opt for Green's function calculation in x3d.");
         return desc;
       }
 
@@ -96,6 +97,13 @@ namespace jif3D
             MTModel.SetDistortionParameters(C);
             //setup the objective function for the MT data
             jif3D::X3DMTCalculator Calculator(TempDir, X3DName);
+
+            if (vm.count("opt"))
+              {
+                BOOST_LOG_TRIVIAL(info)<< "Using Opt type Green's functions ";
+                Calculator.SetGreenType1(jif3D::GreenCalcType::opt);
+                Calculator.SetGreenType4(jif3D::GreenCalcType::opt);
+              }
 
             MTObjective = boost::shared_ptr<
                 jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator> >(

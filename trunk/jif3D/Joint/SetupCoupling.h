@@ -117,7 +117,7 @@ namespace jif3D
        * @param MTTransform The parameter transform for the MT objective function
        * @param Wavelet Parametrize the inversion by a wavelet transform of the model parameters
        */
-      void SetupTransforms(const po::variables_map &vm, ThreeDSeismicModel &GeometryModel,
+      void SetupTransforms(const po::variables_map &vm, ThreeDModelBase &GeometryModel,
           boost::shared_ptr<jif3D::GeneralModelTransform> &TomoTransform,
           boost::shared_ptr<jif3D::GeneralModelTransform> &GravityTransform,
           boost::shared_ptr<jif3D::GeneralModelTransform> &MTTransform, bool Wavelet =
