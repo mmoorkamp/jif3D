@@ -5,7 +5,6 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-
 #include "ThreeDSeismicModel.h"
 #include "../Global/FatalException.h"
 #include <boost/bind.hpp>
@@ -20,8 +19,7 @@ namespace jif3D
     static const std::string SlownessUnit = "s/m";
 
     ThreeDSeismicModel::ThreeDSeismicModel() :
-      SourcePosX(), SourcePosY(), SourcePosZ(), SourceIndices(),
-          ReceiverIndices()
+        SourcePosX(), SourcePosY(), SourcePosZ(), SourceIndices(), ReceiverIndices()
       {
       }
 
@@ -30,15 +28,23 @@ namespace jif3D
       }
 
     ThreeDSeismicModel::ThreeDSeismicModel(const ThreeDSeismicModel &source) :
-      ThreeDModelBase(source), SourcePosX(source.SourcePosX), SourcePosY(
-          source.SourcePosY), SourcePosZ(source.SourcePosZ), SourceIndices(
-          source.SourceIndices), ReceiverIndices(source.ReceiverIndices)
+        ThreeDModelBase(source), SourcePosX(source.SourcePosX), SourcePosY(
+            source.SourcePosY), SourcePosZ(source.SourcePosZ), SourceIndices(
+            source.SourceIndices), ReceiverIndices(source.ReceiverIndices)
       {
 
       }
 
-    ThreeDSeismicModel& ThreeDSeismicModel::operator=(
-        const ThreeDSeismicModel& source)
+    ThreeDSeismicModel& ThreeDSeismicModel::operator=(const ThreeDModelBase& source)
+      {
+        if (this == &source)
+          return *this;
+        ThreeDModelBase::operator =(source);
+
+        return *this;
+      }
+
+    ThreeDSeismicModel& ThreeDSeismicModel::operator=(const ThreeDSeismicModel& source)
       {
         if (this == &source)
           return *this;
@@ -51,41 +57,37 @@ namespace jif3D
         return *this;
       }
 
-    void ThreeDSeismicModel::SetOrigin(const double x, const double y,
-        const double z)
+    void ThreeDSeismicModel::SetOrigin(const double x, const double y, const double z)
       {
         //transform the source coordinates from old model to real coordinates
         //the coordinates of the receivers are changed by the implementation
         //in the base class that we call below
-        std::transform(SourcePosX.begin(), SourcePosX.end(),
-            SourcePosX.begin(), boost::bind(std::plus<double>(), _1, XOrigin
-                - x));
-        std::transform(SourcePosY.begin(), SourcePosY.end(),
-            SourcePosY.begin(), boost::bind(std::plus<double>(), _1, YOrigin
-                - y));
-        std::transform(SourcePosZ.begin(), SourcePosZ.end(),
-            SourcePosZ.begin(), boost::bind(std::plus<double>(), _1, ZOrigin
-                - z));
+        std::transform(SourcePosX.begin(), SourcePosX.end(), SourcePosX.begin(),
+            boost::bind(std::plus<double>(), _1, XOrigin - x));
+        std::transform(SourcePosY.begin(), SourcePosY.end(), SourcePosY.begin(),
+            boost::bind(std::plus<double>(), _1, YOrigin - y));
+        std::transform(SourcePosZ.begin(), SourcePosZ.end(), SourcePosZ.begin(),
+            boost::bind(std::plus<double>(), _1, ZOrigin - z));
         //we have to call the base implementation in the end because
         //it changes the measurement positions and the Origin
         ThreeDModelBase::SetOrigin(x, y, z);
       }
 
-
-    boost::array<ThreeDModelBase::t3DModelData::index, 3>
-    ThreeDSeismicModel::FindAssociatedIndices(const double xcoord, const double ycoord,
-        const double zcoord) const
-   {
-    	const int xindex = boost::numeric_cast<int>(floor((xcoord - XOrigin)/GetXCellSizes()[0]));
-    	const int yindex = boost::numeric_cast<int>(floor((ycoord - YOrigin)/GetYCellSizes()[0]));
-    	const int zindex = boost::numeric_cast<int>(floor((zcoord - ZOrigin)/GetZCellSizes()[0]));
+    boost::array<ThreeDModelBase::t3DModelData::index, 3> ThreeDSeismicModel::FindAssociatedIndices(
+        const double xcoord, const double ycoord, const double zcoord) const
+      {
+        const int xindex = boost::numeric_cast<int>(
+            floor((xcoord - XOrigin) / GetXCellSizes()[0]));
+        const int yindex = boost::numeric_cast<int>(
+            floor((ycoord - YOrigin) / GetYCellSizes()[0]));
+        const int zindex = boost::numeric_cast<int>(
+            floor((zcoord - ZOrigin) / GetZCellSizes()[0]));
         //when we return the value we make sure that we cannot go out of bounds
         boost::array<t3DModelData::index, 3> idx =
-              {
-                { std::max(xindex , 0), std::max(yindex , 0), std::max(zindex - 1,
-                    0) } };
+          {
+            { std::max(xindex, 0), std::max(yindex, 0), std::max(zindex - 1, 0) } };
         return idx;
-   }
+      }
 
     void ThreeDSeismicModel::WriteNetCDF(const std::string filename) const
       {
@@ -94,8 +96,7 @@ namespace jif3D
         WriteDataToNetCDF(DataFile, SlownessName, SlownessUnit);
       }
 
-    void ThreeDSeismicModel::ReadNetCDF(const std::string filename,
-        bool checkgrid)
+    void ThreeDSeismicModel::ReadNetCDF(const std::string filename, bool checkgrid)
       {
         //create the netcdf file object
         NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
@@ -116,27 +117,24 @@ namespace jif3D
             //we do this for all three spatial directions
             //first for x
             if (std::search_n(GetXCellSizes().begin(), GetXCellSizes().end(),
-                GetXCellSizes().num_elements(), CellSize)
-                == GetXCellSizes().end())
+                GetXCellSizes().num_elements(), CellSize) == GetXCellSizes().end())
               {
-                throw jif3D::FatalException(
-                    "Non-equal grid spacing in x-direction !", __FILE__, __LINE__);
+                throw jif3D::FatalException("Non-equal grid spacing in x-direction !",
+                    __FILE__, __LINE__);
               }
             //then for y
             if (std::search_n(GetYCellSizes().begin(), GetYCellSizes().end(),
-                GetYCellSizes().num_elements(), CellSize)
-                == GetYCellSizes().end())
+                GetYCellSizes().num_elements(), CellSize) == GetYCellSizes().end())
               {
-                throw jif3D::FatalException(
-                    "Non-equal grid spacing in y-direction !", __FILE__, __LINE__);
+                throw jif3D::FatalException("Non-equal grid spacing in y-direction !",
+                    __FILE__, __LINE__);
               }
             //finally for z, in each cases the cell size we search for is the same
             if (std::search_n(GetZCellSizes().begin(), GetZCellSizes().end(),
-                GetZCellSizes().num_elements(), CellSize)
-                == GetZCellSizes().end())
+                GetZCellSizes().num_elements(), CellSize) == GetZCellSizes().end())
               {
-                throw jif3D::FatalException(
-                    "Non-equal grid spacing in z-direction !", __FILE__, __LINE__);
+                throw jif3D::FatalException("Non-equal grid spacing in z-direction !",
+                    __FILE__, __LINE__);
               }
           }
       }

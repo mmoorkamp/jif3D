@@ -199,6 +199,7 @@ namespace jif3D
       ThreeDSeismicModel(const ThreeDSeismicModel &source);
       //! We define our own copy operator
       ThreeDSeismicModel& operator=(const ThreeDSeismicModel& source);
+      ThreeDSeismicModel& operator=(const ThreeDModelBase& source);
       virtual ~ThreeDSeismicModel();
       };
 
