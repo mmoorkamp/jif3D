@@ -7,7 +7,6 @@
 
 #include <iostream>
 #include <string>
-#include <boost/bind.hpp>
 #include "ThreeDSeismicModel.h"
 #include "../Global/FileUtil.h"
 
@@ -32,15 +31,13 @@ int main()
         return 100;
       }
     std::transform(FirstModel.GetSlownesses().origin(),
-        FirstModel.GetSlownesses().origin() + ngrid,
-        SecondModel.GetSlownesses().origin(),
-        SecondModel.SetSlownesses().origin(), boost::bind(
-            std::divides<double>(), boost::bind(std::minus<double>(), _1, _2),
-            _1));
+        FirstModel.GetSlownesses().origin() + ngrid, SecondModel.GetSlownesses().origin(),
+        SecondModel.SetSlownesses().origin(), [] (double a, double b)
+          { return (a-b)/a;});
     SecondModel.WriteNetCDF("diff.nc");
     SecondModel.WriteVTK("diff.vtk");
     std::ofstream outfile("diff.hist");
     std::copy(SecondModel.GetSlownesses().origin(),
-        SecondModel.GetSlownesses().origin() + ngrid, std::ostream_iterator<
-            double>(outfile, "\n"));
+        SecondModel.GetSlownesses().origin() + ngrid,
+        std::ostream_iterator<double>(outfile, "\n"));
   }

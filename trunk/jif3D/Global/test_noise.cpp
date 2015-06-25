@@ -17,7 +17,6 @@
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/mean.hpp>
 #include <boost/accumulators/statistics/variance.hpp>
-#include <boost/bind.hpp>
 
 using namespace boost::accumulators;
 
@@ -77,7 +76,7 @@ BOOST_AUTO_TEST_SUITE( Noise_Test_Suite )
         jif3D::rvec Diff(Data - Noisy);
 
         accumulator_set<double, stats<tag::mean, tag::variance> > acc;
-        std::for_each(Diff.begin(), Diff.end(), boost::bind<void>(boost::ref(acc), _1));
+        std::for_each(Diff.begin(), Diff.end(), [&acc] (double d) {acc(d);});
         BOOST_CHECK(mean(acc) < 0.001);
         BOOST_CHECK_CLOSE(variance(acc), relerror * relerror, 0.2);
 
@@ -87,7 +86,7 @@ BOOST_AUTO_TEST_SUITE( Noise_Test_Suite )
         jif3D::AddNoise(Noisy, 0.0, abserror);
         Diff = Data - Noisy;
         accumulator_set<double, stats<tag::mean, tag::variance> > acc2;
-        std::for_each(Diff.begin(), Diff.end(), boost::bind<void>(boost::ref(acc2), _1));
+        std::for_each(Diff.begin(), Diff.end(), [&acc2] (double d) {acc2(d);});
         BOOST_CHECK(mean(acc2) < 0.001);
         BOOST_CHECK_CLOSE(variance(acc2), abserror * abserror, 0.2);
       }

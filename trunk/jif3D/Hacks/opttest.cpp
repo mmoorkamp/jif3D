@@ -23,7 +23,6 @@
 #endif
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/program_options.hpp>
-#include <boost/bind.hpp>
 #include "OptppDecl.h"
 #include "../Global/convert.h"
 #include "../Global/FatalException.h"

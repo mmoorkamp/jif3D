@@ -7,7 +7,6 @@
 
 #include "ThreeDSeismicModel.h"
 #include "../Global/FatalException.h"
-#include <boost/bind.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <cassert>
 #include <algorithm>
@@ -63,11 +62,14 @@ namespace jif3D
         //the coordinates of the receivers are changed by the implementation
         //in the base class that we call below
         std::transform(SourcePosX.begin(), SourcePosX.end(), SourcePosX.begin(),
-            boost::bind(std::plus<double>(), _1, XOrigin - x));
+            [this,x] (double val)
+              { return val + this->XOrigin -x;});
         std::transform(SourcePosY.begin(), SourcePosY.end(), SourcePosY.begin(),
-            boost::bind(std::plus<double>(), _1, YOrigin - y));
+            [this,y] (double val)
+              { return val + this->YOrigin -y;});
         std::transform(SourcePosZ.begin(), SourcePosZ.end(), SourcePosZ.begin(),
-            boost::bind(std::plus<double>(), _1, ZOrigin - z));
+            [this,z] (double val)
+              { return val + this->ZOrigin -z;});
         //we have to call the base implementation in the end because
         //it changes the measurement positions and the Origin
         ThreeDModelBase::SetOrigin(x, y, z);
@@ -120,21 +122,21 @@ namespace jif3D
                 GetXCellSizes().num_elements(), CellSize) == GetXCellSizes().end())
               {
                 throw jif3D::FatalException("Non-equal grid spacing in x-direction !",
-                    __FILE__, __LINE__);
+                __FILE__, __LINE__);
               }
             //then for y
             if (std::search_n(GetYCellSizes().begin(), GetYCellSizes().end(),
                 GetYCellSizes().num_elements(), CellSize) == GetYCellSizes().end())
               {
                 throw jif3D::FatalException("Non-equal grid spacing in y-direction !",
-                    __FILE__, __LINE__);
+                __FILE__, __LINE__);
               }
             //finally for z, in each cases the cell size we search for is the same
             if (std::search_n(GetZCellSizes().begin(), GetZCellSizes().end(),
                 GetZCellSizes().num_elements(), CellSize) == GetZCellSizes().end())
               {
                 throw jif3D::FatalException("Non-equal grid spacing in z-direction !",
-                    __FILE__, __LINE__);
+                __FILE__, __LINE__);
               }
           }
       }

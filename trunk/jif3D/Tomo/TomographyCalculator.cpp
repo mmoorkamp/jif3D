@@ -9,7 +9,6 @@
 #include <hpx/config.hpp>
 #endif
 
-#include <boost/bind.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include "TomographyCalculator.h"
 #include "ReadWriteTomographyData.h"
@@ -82,20 +81,19 @@ namespace jif3D
         double miny = std::min(*ymeasrange.first, *ysourcerange.first);
         double maxy = std::max(*ymeasrange.second, *ysourcerange.second);
 
-        minxindex = std::max(
-            numeric_cast<int>(std::floor(minx / gridspacing)) - padding, 0);
+        minxindex = std::max(numeric_cast<int>(std::floor(minx / gridspacing)) - padding,
+            0);
         int maxxindex = std::min(
             numeric_cast<int>(std::ceil(maxx / gridspacing)) + padding,
             numeric_cast<int>(Model.GetModelShape()[0]));
-        minyindex = std::max(
-            numeric_cast<int>(std::floor(miny / gridspacing)) - padding, 0);
+        minyindex = std::max(numeric_cast<int>(std::floor(miny / gridspacing)) - padding,
+            0);
         int maxyindex = std::min(
             numeric_cast<int>(std::ceil(maxy / gridspacing)) + padding,
             numeric_cast<int>(Model.GetModelShape()[1]));
 
         const double xshift = minxindex * gridspacing;
         const double yshift = minyindex * gridspacing;
-
 
         typedef boost::multi_array_types::index_range range;
         // OR typedef array_type::index_range range;
@@ -164,8 +162,10 @@ namespace jif3D
             geo.y.begin(), [yshift](double pos)
               { return pos-yshift;});
         //we also have to adjust for the offset by the airlayers
+        const double zoffset = grid.h * nairlayers;
         std::transform(Model.GetSourcePosZ().begin(), Model.GetSourcePosZ().end(),
-            geo.z.begin(), boost::bind(std::plus<double>(), _1, grid.h * nairlayers));
+            geo.z.begin(), [zoffset] (double pos)
+              { return pos + zoffset;});
         //and then all measurement position
         std::transform(Model.GetMeasPosX().begin(), Model.GetMeasPosX().end(),
             geo.x.begin() + nshot, [xshift](double pos)
@@ -174,8 +174,8 @@ namespace jif3D
             geo.y.begin() + nshot, [yshift](double pos)
               { return pos-yshift;});
         std::transform(Model.GetMeasPosZ().begin(), Model.GetMeasPosZ().end(),
-            geo.z.begin() + nshot,
-            boost::bind(std::plus<double>(), _1, grid.h * nairlayers));
+            geo.z.begin() + nshot, [zoffset] (double pos)
+              { return pos + zoffset;});
 
         //now we can do the forward modeling
         ForwardModRay(geo, grid, data, raypath);
@@ -183,7 +183,8 @@ namespace jif3D
         //option is set to true
         if (writerays)
           {
-            PlotRaypath("ray.vtk", raypath, ndata, grid.h, nairlayers, minxindex, minyindex);
+            PlotRaypath("ray.vtk", raypath, ndata, grid.h, nairlayers, minxindex,
+                minyindex);
           }
         //and return the result as a vector
         jif3D::rvec result(ndata, 0.0);
