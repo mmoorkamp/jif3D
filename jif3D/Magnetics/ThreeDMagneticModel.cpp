@@ -6,7 +6,6 @@
 //============================================================================
 
 #include "ThreeDMagneticModel.h"
-#include <boost/bind.hpp>
 #include <cassert>
 #include <netcdfcpp.h>
 #include <fstream>

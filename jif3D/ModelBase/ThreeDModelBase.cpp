@@ -8,7 +8,6 @@
 #include "ThreeDModelBase.h"
 #include <cassert>
 #include <fstream>
-#include <boost/bind.hpp>
 #include "../Global/FatalException.h"
 #include "NetCDFModelTools.h"
 #include "VTKTools.h"
@@ -155,11 +154,14 @@ namespace jif3D
       {
         //transform the measurement coordinates from old model to new coordinates
         std::transform(MeasPosX.begin(), MeasPosX.end(), MeasPosX.begin(),
-            boost::bind(std::plus<double>(), _1, XOrigin - x));
+            [this,x] (double val)
+              { return val + this->XOrigin -x;});
         std::transform(MeasPosY.begin(), MeasPosY.end(), MeasPosY.begin(),
-            boost::bind(std::plus<double>(), _1, YOrigin - y));
+            [this,y] (double val)
+              { return val + this->YOrigin -y;});
         std::transform(MeasPosZ.begin(), MeasPosZ.end(), MeasPosZ.begin(),
-            boost::bind(std::plus<double>(), _1, ZOrigin - z));
+            [this,z] (double val)
+              { return val + this->ZOrigin -z;});
         //copy the information about the new origin
         XOrigin = x;
         YOrigin = y;
@@ -177,7 +179,8 @@ namespace jif3D
         if (XCellSizes.size() != Data.shape()[0] || YCellSizes.size() != Data.shape()[1]
             || ZCellSizes.size() != Data.shape()[2])
           {
-            throw jif3D::FatalException("Cell size specification does not match data !", __FILE__, __LINE__);
+            throw jif3D::FatalException("Cell size specification does not match data !",
+            __FILE__, __LINE__);
           }
       }
 

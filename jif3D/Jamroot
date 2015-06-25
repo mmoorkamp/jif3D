@@ -20,17 +20,12 @@ feature.compose <parallelization>openmp : <define>HAVEOPENMP <cflags>" -fopenmp 
 feature.compose <parallelization>hpx : <define>HAVEHPX <hpx>on <cflags>"`pkg-config --cflags hpx_application`" <linkflags>"  `pkg-config --libs hpx_application` " ;
 
 
-
-constant BOOST_LIB_PATH : /home/m/mm489/boost_1_57_0/stage/lib ;
-constant CUDA_LIB_PATH : /cm/shared/apps/cuda55/toolkit/5.5.22/lib64 ;
-
+constant BOOST_LIB_PATH : /usr/local/lib ;
+constant CUDA_LIB_PATH : /usr/local/cuda/lib64 ;
 
 
 project 
-    : requirements <include>/home/m/mm489/include <include>/usr/local/R-2.6.2/include 
-        <include>/home/m/mm489/include
-        <include>/cm/shared/apps/cuda55/toolkit/5.5.22/include
-        <include>/home/m/mm489/boost_1_57_0
+    : requirements <include>/usr/local/include <include>/usr/local/R-2.6.2/include 
         <include>/usr/local/cuda/include
         <include>/usr/local/CUDA_SDK/C/common/inc
         <include>/usr/include/python2.7/
@@ -41,11 +36,10 @@ project
         <lapack>off
         <optpp>off
         <eigen>off
-        <linkflags>" -L/cm/shared/apps/openmpi/deps/blcr/lib -L/cm/shared/apps/openmpi/gcc/1.6.5/lib -L/cm/local/apps/torque/4.1.6/lib "
     	<variant>release:<define>NDEBUG
     	<variant>profile:<define>NDEBUG  
     	<toolset>gcc<variant>debug:<cflags>" -ggdb3 "
-    	#<toolset>gcc:<cflags>" -ansi  -Wall  -Wno-long-long   -pedantic"
+    	<toolset>gcc:<cflags>" -ansi  -Wall  -Wno-long-long   -pedantic"
     	<toolset>intel:<cxxflags>" -openmp  -std=c++0x   "
     	<toolset>intel:<define>TESTR
     	#<toolset>intel:<define>BOOST_NO_CXX11_SCOPED_ENUMS
@@ -94,7 +88,7 @@ lib atlas : : <name>atlas ;
 lib optpp : : <name>opt ;
 lib newmat : : <name>newmat ;
 lib netcdf : : <name>netcdf ;
-lib netcdf_c++ : : <name>netcdf_c++ <search>/home/m/mm489/lib ;
+lib netcdf_c++ : : <name>netcdf_c++ ;
 lib gfortran : :  <name>gfortran ;
 lib cudart : : <name>cudart <search>$(CUDA_LIB_PATH) ;
 lib cublas : : <name>cublas <search>$(CUDA_LIB_PATH) ;

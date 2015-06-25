@@ -17,7 +17,6 @@
 #include "../Global/Wavelet.h"
 #include "../ModelBase/VTKTools.h"
 #include "../Global/convert.h"
-#include <boost/bind.hpp>
 #include "../Gravity/WaveletCompressedGravityCalculator.h"
 
 void PromptForFiles(std::string &ModelFilename, std::string &MeasPosFilename)

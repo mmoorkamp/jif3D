@@ -13,7 +13,6 @@
 #include <fstream>
 #include <string>
 #include <algorithm>
-#include <boost/bind.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <boost/numeric/bindings/atlas/cblas2.hpp>
 #include "../Global/convert.h"
@@ -88,9 +87,10 @@ int main()
     for (size_t currindex = startindex; currindex < endindex; ++currindex)
       {
         const double maxvalue = *std::max_element(row(vt, currindex).begin(),
-            row(vt, currindex).end(), boost::bind(fabs, _1) < boost::bind(fabs, _2));
+            row(vt, currindex).end(), jif3D::absLess());
         std::transform(row(vt, currindex).begin(), row(vt, currindex).end(), sens.data(),
-            boost::bind(std::multiplies<double>(), _1, 1. / maxvalue));
+            [maxvalue] (double val)
+              { return val/maxvalue;});
         jif3D::Write3DModelToVTK(
             modelfilename + ".sens." + jif3D::stringify(currindex) + ".vtk",
             "scalar_sens", Model.GetXCellSizes(), Model.GetYCellSizes(),

@@ -10,7 +10,6 @@
 #include <fstream>
 #include <string>
 #include <cmath>
-#include <boost/bind.hpp>
 #include "../Global/convert.h"
 #include "../Global/FatalException.h"
 #include "../Global/NumUtil.h"

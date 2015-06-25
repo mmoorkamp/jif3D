@@ -6,7 +6,6 @@
 //============================================================================
 
 #include <algorithm>
-#include <boost/bind.hpp>
 #include "SetupInversion.h"
 #include "../Global/FatalException.h"
 #include "../Global/convert.h"
