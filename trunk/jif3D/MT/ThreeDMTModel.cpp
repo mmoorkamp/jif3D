@@ -5,14 +5,14 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-
+#include <fstream>
 #include "ThreeDMTModel.h"
 
 namespace jif3D
   {
 
     ThreeDMTModel::ThreeDMTModel() :
-      Frequencies()
+        Frequencies()
       {
 
       }
@@ -23,7 +23,7 @@ namespace jif3D
       }
 
     ThreeDMTModel::ThreeDMTModel(const ThreeDMTModel &source) :
-      ThreeDModelBase(source), Frequencies(source.Frequencies)
+        ThreeDModelBase(source), Frequencies(source.Frequencies)
       {
 
       }
@@ -49,5 +49,30 @@ namespace jif3D
             ThreeDModelBase::operator=(source);
           }
         return *this;
+      }
+
+    void ThreeDMTModel::ReadModEM(const std::string filename)
+      {
+        std::ifstream infile(filename.c_str());
+        //swallow the first description line
+        char dummy[1024];
+        infile.getline(dummy,1024);
+        int nx, ny, nz;
+        infile >> nx >> ny >> nz;
+        infile.getline(dummy,1024);
+        this->SetXCellSizes().resize(boost::extents[nx]);
+        this->SetYCellSizes().resize(boost::extents[ny]);
+        this->SetZCellSizes().resize(boost::extents[nz]);
+        this->SetData().resize(boost::extents[nx][ny][nz]);
+        for (int i = 0; i < nx; ++i)
+          infile >> this->SetXCellSizes()[i];
+        for (int i = 0; i < ny; ++i)
+          infile >> this->SetYCellSizes()[i];
+        for (int i = 0; i < nz; ++i)
+          infile >> this->SetZCellSizes()[i];
+        for (int i = 0; i < nx; ++i)
+          for (int j = 0; j < ny; ++j)
+            for (int k = 0; k < nz; ++k)
+              infile >> this->SetData()[i][j][k];
       }
   }
