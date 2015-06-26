@@ -56,23 +56,27 @@ namespace jif3D
         std::ifstream infile(filename.c_str());
         //swallow the first description line
         char dummy[1024];
-        infile.getline(dummy,1024);
+        infile.getline(dummy, 1024);
         int nx, ny, nz;
         infile >> nx >> ny >> nz;
-        infile.getline(dummy,1024);
-        this->SetXCellSizes().resize(nx);
-        this->SetYCellSizes().resize(ny);
-        this->SetZCellSizes().resize(nz);
-        this->SetData().resize(boost::extents[nx][ny][nz]);
+        infile.getline(dummy, 1024);
+        SetXCellSizes().resize(nx);
+        SetYCellSizes().resize(ny);
+        SetZCellSizes().resize(nz);
+        SetData().resize(boost::extents[nx][ny][nz]);
         for (int i = 0; i < nx; ++i)
-          infile >> this->SetXCellSizes()[i];
+          infile >> SetXCellSizes()[i];
         for (int i = 0; i < ny; ++i)
-          infile >> this->SetYCellSizes()[i];
+          infile >> SetYCellSizes()[i];
         for (int i = 0; i < nz; ++i)
-          infile >> this->SetZCellSizes()[i];
-        for (int i = 0; i < nx; ++i)
+          infile >> SetZCellSizes()[i];
+        double value;
+        for (int i = 0; i < nz; ++i)
           for (int j = 0; j < ny; ++j)
-            for (int k = 0; k < nz; ++k)
-              infile >> this->SetData()[i][j][k];
+            for (int k = nx -1; k >= 0; --k)
+              {
+                infile >> value;
+                SetData()[k][j][i] = 1.0/value;
+              }
       }
   }
