@@ -14,7 +14,7 @@ namespace jif3D
         const ThreeDMagneticModel &Model, rmat &Sensitivities)
       {
         //we want to return vertical gradient of z component of magnetic field.
-        //firstly, calculate the z magnetic component of the two sensor with vertical distance of 1m.
+    	//firstly, calculate the z magnetic component of the two sensor with vertical distance of 1m.
         //then get the difference of the two sensor by subtracting z component of Top Sensor using that from Bottom Sensor.
         //And the objective function gradient is calculated using the difference of the two Sensitivity matrix of the two sensor.
         const double BxComp = cos(Inclination) * cos(Declination);
@@ -31,8 +31,8 @@ namespace jif3D
         const bool storesens = (Sensitivities.size1() >= ndatapermeas)
             && (Sensitivities.size2() >= size_t(nmod));
 
-        rmat currvalueBot(3, 3); //currvalue matrix used to calculate z component of Bottom Sensor
-        rmat currvalueTop(3, 3); //currvalue matrix used to calculate z component of Top Sensor
+        rmat currvalueBot(3, 3);//currvalue matrix used to calculate z component of Bottom Sensor
+        rmat currvalueTop(3, 3);//currvalue matrix used to calculate z component of Top Sensor
 
         //we cannot add up a user defined quantity in parallel
         //so break up the tensor into its component with different variables
@@ -56,37 +56,33 @@ namespace jif3D
                 // we reuse the calculation for the FTG matrix, as the equations are
                 //identical
                 //currvalue contains the geometric term times the gravitational constant
-                currvalueBot = CalcTensorBoxTerm(x_meas, y_meas, z_meas,
-                    Model.GetXCoordinates()[xindex], Model.GetYCoordinates()[yindex],
-                    Model.GetZCoordinates()[zindex], Model.GetXCellSizes()[xindex],
-                    Model.GetYCellSizes()[yindex], Model.GetZCellSizes()[zindex]);
+                currvalueBot = CalcTensorBoxTerm(x_meas, y_meas, z_meas, XCoord[xindex],
+                    YCoord[yindex], ZCoord[zindex], XSizes[xindex], YSizes[yindex],
+                    ZSizes[zindex]);
                 //we have to multiply each element by the susceptibility
                 const double Susceptibility =
                     Model.GetSusceptibilities()[xindex][yindex][zindex];
                 // we have to convert the units of the FTG calculation to magnetics
                 //using poisson's relation ship mu_0/4 pi = 1e-7
-                const double factor = 1e-7 / jif3D::Grav_const;
+                const double factor = 1e-7 /jif3D::Grav_const;
                 //the sensitivity element for the current grid cell and the z-component
                 //of the magnetic field is the vector product of the FTG geometric terms
                 //with the direction of the inducing magnetic field and the field strength
-                const double BzSensBot = (currvalueBot(2, 0) * BxComp
-                    + currvalueBot(2, 1) * ByComp + currvalueBot(2, 2) * BzComp)
-                    * FieldStrength * factor;
+                const double BzSensBot = (currvalueBot(2, 0) * BxComp + currvalueBot(2, 1) * ByComp
+                    + currvalueBot(2, 2) * BzComp) * FieldStrength * factor;
                 //the field strength due to a single cell is the Sensitivity for the cell
                 //times the Susceptibility
                 BzBot += BzSensBot * Susceptibility;
 
                 //currvalue of Top Sensor contains the geometric term times the gravitational constant
-                currvalueTop = CalcTensorBoxTerm(x_meas, y_meas, z_meas + 1,
-                    Model.GetXCoordinates()[xindex], Model.GetYCoordinates()[yindex],
-                    Model.GetZCoordinates()[zindex], Model.GetXCellSizes()[xindex],
-                    Model.GetYCellSizes()[yindex], Model.GetZCellSizes()[zindex]);
+                currvalueTop = CalcTensorBoxTerm(x_meas, y_meas, z_meas+1, XCoord[xindex],
+                    YCoord[yindex], ZCoord[zindex], XSizes[xindex], YSizes[yindex],
+                    ZSizes[zindex]);
                 //the sensitivity element for the current grid cell and the z-component
                 //of the magnetic field is the vector product of the FTG geometric terms
                 //with the direction of the inducing magnetic field and the field strength
-                const double BzSensTop = (currvalueTop(2, 0) * BxComp
-                    + currvalueTop(2, 1) * ByComp + currvalueTop(2, 2) * BzComp)
-                    * FieldStrength * factor;
+                const double BzSensTop = (currvalueTop(2, 0) * BxComp + currvalueTop(2, 1) * ByComp
+                    + currvalueTop(2, 2) * BzComp) * FieldStrength * factor;
                 //the field strength due to a single cell is the Sensitivity for the cell
                 //times the Susceptibility
                 BzTop += BzSensTop * Susceptibility;
