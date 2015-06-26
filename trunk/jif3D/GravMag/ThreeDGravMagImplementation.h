@@ -56,32 +56,7 @@ namespace jif3D
       void serialize(Archive & ar, const unsigned int version)
         {
           ar & Transform;
-          ar & XCoord;
-          ar & YCoord;
-          ar & ZCoord;
-          ar & XSizes;
-          ar & YSizes;
-          ar & ZSizes;
         }
-    protected:
-      /*! The access functions for the coordinates are not thread safe
-       * so we cache the values once in the default implementation of calculate.
-       * Because CalcBackground and CalcGridded can only be called from within
-       * there we are guaranteed correct values in the implementation of those functions
-       */
-      typedef typename ThreeDModelType::t3DModelDim ModelDimType;
-      //! The cached values of the x-coordinates in m for each cell
-      ModelDimType XCoord;
-      //! The cached values of the y-coordinates in m for each cell
-      ModelDimType YCoord;
-      //! The cached values of the z-coordinates in m for each cell
-      ModelDimType ZCoord;
-      //! The cached values for the size of each cell in x-direction
-      ModelDimType XSizes;
-      //! The cached values for the size of each cell in y-direction
-      ModelDimType YSizes;
-      //! The cached values for the size of each cell in z-direction
-      ModelDimType ZSizes;
     public:
       //! Returns the number of data before any transformation is applied
       virtual size_t RawDataPerMeasurement() = 0;
@@ -106,7 +81,7 @@ namespace jif3D
 
     template<class ThreeDModelType>
     ThreeDGravMagImplementation<ThreeDModelType>::ThreeDGravMagImplementation() :
-        Transform(), XCoord(), YCoord(), ZCoord(), XSizes(), YSizes(), ZSizes()
+        Transform()
       {
 
       }
@@ -121,24 +96,7 @@ namespace jif3D
         const ThreeDModelType &Model)
       {
 
-        XCoord.resize(Model.GetXCoordinates().size());
-        YCoord.resize(Model.GetYCoordinates().size());
-        ZCoord.resize(Model.GetZCoordinates().size());
-        XSizes.resize(Model.GetXCellSizes().size());
-        YSizes.resize(Model.GetYCellSizes().size());
-        ZSizes.resize(Model.GetZCellSizes().size());
-        std::copy(Model.GetXCoordinates().begin(), Model.GetXCoordinates().end(),
-            XCoord.begin());
-        std::copy(Model.GetYCoordinates().begin(), Model.GetYCoordinates().end(),
-            YCoord.begin());
-        std::copy(Model.GetZCoordinates().begin(), Model.GetZCoordinates().end(),
-            ZCoord.begin());
-        std::copy(Model.GetXCellSizes().begin(), Model.GetXCellSizes().end(),
-            XSizes.begin());
-        std::copy(Model.GetYCellSizes().begin(), Model.GetYCellSizes().end(),
-            YSizes.begin());
-        std::copy(Model.GetZCellSizes().begin(), Model.GetZCellSizes().end(),
-            ZSizes.begin());
+
 
       }
 

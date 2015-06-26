@@ -22,21 +22,21 @@
 #include "GravityBackground.h"
 
 #ifdef HAVEHPX
-    /*!  Calculate the contribution of several prisms to the gravitational acceleration
-     * at a single site.
-     * @param start The index of the first cell in the grid to be used for the calculation
-     * @param end The index of the last cell in the grid to be used for the calculation
-     * @param x_meas The x-coordinate of the measurement site in m
-     * @param y_meas The y-coordinate of the measurement site in m
-     * @param z_meas The z-coordinate of the measurement site in m
-     * @param XCoord The X-Coordinates of the grid cell boundaries in m
-     * @param YCoord The Y-Coordinates of the grid cell boundaries in m
-     * @param ZCoord The Z-Coordinates of the grid cell boundaries in m
-     * @param XSizes The size of the grid cell in x-direction in m
-     * @param YSizes The size of the grid cell in y-direction in m
-     * @param ZSizes The size of the grid cell in z-direction in m
-     * @return The vector of geometric factors for each of the grid cells.
-     */
+/*!  Calculate the contribution of several prisms to the gravitational acceleration
+ * at a single site.
+ * @param start The index of the first cell in the grid to be used for the calculation
+ * @param end The index of the last cell in the grid to be used for the calculation
+ * @param x_meas The x-coordinate of the measurement site in m
+ * @param y_meas The y-coordinate of the measurement site in m
+ * @param z_meas The z-coordinate of the measurement site in m
+ * @param XCoord The X-Coordinates of the grid cell boundaries in m
+ * @param YCoord The Y-Coordinates of the grid cell boundaries in m
+ * @param ZCoord The Z-Coordinates of the grid cell boundaries in m
+ * @param XSizes The size of the grid cell in x-direction in m
+ * @param YSizes The size of the grid cell in y-direction in m
+ * @param ZSizes The size of the grid cell in z-direction in m
+ * @return The vector of geometric factors for each of the grid cells.
+ */
 std::vector<double> GravityChunk(size_t start, size_t end, double x_meas, double y_meas,
     double z_meas, const std::vector<double> &XCoord, const std::vector<double> &YCoord,
     const std::vector<double> &ZCoord, const std::vector<double> &XSizes,
@@ -159,8 +159,8 @@ namespace jif3D
                 int xindex, yindex, zindex;
                 Model.OffsetToIndex(offset, xindex, yindex, zindex);
                 currvalue = CalcGravBoxTerm(x_meas, y_meas, z_meas,
-                    XCoord[xindex], YCoord[yindex], ZCoord[zindex],
-                    XSizes[xindex], YSizes[yindex], ZSizes[zindex]);
+                    Model.GetXCoordinates()[xindex], Model.GetYCoordinates()[yindex], Model.GetZCoordinates()[zindex],
+                    Model.GetXCellSizes()[xindex], Model.GetYCellSizes()[yindex], Model.GetZCellSizes()[zindex]);
                 returnvalue += currvalue
                 * Model.GetDensities()[xindex][yindex][zindex];
                 if (storesens)

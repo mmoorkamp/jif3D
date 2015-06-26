@@ -51,15 +51,16 @@ namespace jif3D
                 // we reuse the calculation for the FTG matrix, as the equations are
                 //identical
                 //currvalue contains the geometric term times the gravitational constant
-                currvalue = CalcTensorBoxTerm(x_meas, y_meas, z_meas, XCoord[xindex],
-                    YCoord[yindex], ZCoord[zindex], XSizes[xindex], YSizes[yindex],
-                    ZSizes[zindex]);
+                currvalue = CalcTensorBoxTerm(x_meas, y_meas, z_meas,
+                    Model.GetXCoordinates()[xindex], Model.GetYCoordinates()[yindex],
+                    Model.GetZCoordinates()[zindex], Model.GetXCellSizes()[xindex],
+                    Model.GetYCellSizes()[yindex], Model.GetZCellSizes()[zindex]);
                 //we have to multiply each element by the susceptibility
                 const double Susceptibility =
                     Model.GetSusceptibilities()[xindex][yindex][zindex];
                 // we have to convert the units of the FTG calculation to magnetics
                 //using poisson's relation ship mu_0/4 pi = 1e-7
-                const double factor = 1e-7 /jif3D::Grav_const;
+                const double factor = 1e-7 / jif3D::Grav_const;
                 //the sensitivity element for the current grid cell and the x-component
                 //of the magnetic field is the vector product of the FTG geometric terms
                 //with the direction of the inducing magnetic field and the field strength
