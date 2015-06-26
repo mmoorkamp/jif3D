@@ -27,9 +27,9 @@ BOOST_AUTO_TEST_CASE(read_write_test)
     size_t nx = rand() % 30;
     size_t ny = rand() % 30;
     size_t nz = rand() % 30;
-    Model.SetXCellSizes().resize(boost::extents[nx]);
-    Model.SetYCellSizes().resize(boost::extents[ny]);
-    Model.SetZCellSizes().resize(boost::extents[nz]);
+    Model.SetXCellSizes().resize(nx);
+    Model.SetYCellSizes().resize(ny);
+    Model.SetZCellSizes().resize(nz);
     Model.SetDensities().resize(boost::extents[nx][ny][nz]);
     std::generate_n(Model.SetXCellSizes().begin(), nx, drand48);
     std::generate_n(Model.SetYCellSizes().begin(), ny, drand48);
@@ -40,12 +40,9 @@ BOOST_AUTO_TEST_CASE(read_write_test)
         Model.GetYCellSizes(), Model.GetZCellSizes(), Model.GetDensities());
     jif3D::Read3DModelFromVTK(filename, Compare.SetXCellSizes(), Compare.SetYCellSizes(),
         Compare.SetZCellSizes(), Compare.SetDensities());
-    BOOST_CHECK_EQUAL(Model.GetXCellSizes().num_elements(),
-        Compare.GetXCellSizes().num_elements());
-    BOOST_CHECK_EQUAL(Model.GetYCellSizes().num_elements(),
-        Compare.GetYCellSizes().num_elements());
-    BOOST_CHECK_EQUAL(Model.GetZCellSizes().num_elements(),
-        Compare.GetZCellSizes().num_elements());
+    BOOST_CHECK_EQUAL(Model.GetXCellSizes().size(), Compare.GetXCellSizes().size());
+    BOOST_CHECK_EQUAL(Model.GetYCellSizes().size(), Compare.GetYCellSizes().size());
+    BOOST_CHECK_EQUAL(Model.GetZCellSizes().size(), Compare.GetZCellSizes().size());
     BOOST_CHECK_EQUAL(Model.GetDensities().num_elements(),
         Compare.GetDensities().num_elements());
     BOOST_CHECK(

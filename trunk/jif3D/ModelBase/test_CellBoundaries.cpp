@@ -23,11 +23,11 @@ BOOST_AUTO_TEST_CASE(find_fail_test)
   {
     double Coordinate = 100;
     const size_t ncells = 5;
-    jif3D::ThreeDModelBase::t3DModelDim CellBoundaries(boost::extents[ncells]);
-    jif3D::ThreeDModelBase::t3DModelDim CellSizes(boost::extents[ncells]);
-    std::fill_n(CellSizes.origin(), ncells, 1);
-    std::partial_sum(CellSizes.origin(),
-        CellSizes.origin() + CellSizes.num_elements() - 1, CellBoundaries.origin() + 1);
+    jif3D::ThreeDModelBase::t3DModelDim CellBoundaries(ncells);
+    jif3D::ThreeDModelBase::t3DModelDim CellSizes(ncells);
+    std::fill_n(CellSizes.begin(), ncells, 1);
+    std::partial_sum(CellSizes.begin(),
+        CellSizes.end() - 1, CellBoundaries.begin() + 1);
     CellBoundaries[0] = 0.0;
 
     BOOST_CHECK_THROW(jif3D::FindNearestCellBoundary(-1, CellBoundaries, CellSizes),
@@ -41,11 +41,11 @@ BOOST_AUTO_TEST_CASE(find_index_test)
   {
 
     const size_t ncells = 5;
-    jif3D::ThreeDModelBase::t3DModelDim CellBoundaries(boost::extents[ncells]);
-    jif3D::ThreeDModelBase::t3DModelDim CellSizes(boost::extents[ncells]);
-    std::fill_n(CellSizes.origin(), ncells, 1.0);
-    std::partial_sum(CellSizes.origin(),
-        CellSizes.origin() + CellSizes.num_elements() - 1, CellBoundaries.origin() + 1);
+    jif3D::ThreeDModelBase::t3DModelDim CellBoundaries(ncells);
+    jif3D::ThreeDModelBase::t3DModelDim CellSizes(ncells);
+    std::fill_n(CellSizes.begin(), ncells, 1.0);
+    std::partial_sum(CellSizes.begin(),
+        CellSizes.end() - 1, CellBoundaries.begin() + 1);
     CellBoundaries[0] = 0.0;
     size_t index = jif3D::FindNearestCellBoundary(0.1, CellBoundaries, CellSizes);
 
@@ -69,9 +69,9 @@ BOOST_AUTO_TEST_CASE(index_test)
     jif3D::ThreeDGravityModel Model;
     const size_t nx = 2, ny = 2, nz = 7;
     Model.SetMeshSize(nx, ny, nz);
-    std::fill_n(Model.SetXCellSizes().origin(), nx, 1.0);
-    std::fill_n(Model.SetYCellSizes().origin(), ny, 1.0);
-    std::fill_n(Model.SetZCellSizes().origin(), nz, 1.0);
+    std::fill_n(Model.SetXCellSizes().begin(), nx, 1.0);
+    std::fill_n(Model.SetYCellSizes().begin(), ny, 1.0);
+    std::fill_n(Model.SetZCellSizes().begin(), nz, 1.0);
     size_t nmeas = 70;
     double delta = 0.1;
     for (size_t i = 0; i < nmeas; ++i)

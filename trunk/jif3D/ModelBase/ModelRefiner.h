@@ -42,53 +42,6 @@ namespace jif3D
           const ThreeDModelBase::t3DModelDim &RefCoordinates,
           const ThreeDModelBase::t3DModelDim &OldSizes,
           ThreeDModelBase::t3DModelDim &NewSizes);
-      friend class boost::serialization::access;
-      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
-      template<class Archive>
-      void save(Archive & ar, const unsigned int version) const
-        {
-          //we have to split saving and loading because we cannot
-          //directly serialize a multi_array
-          //so we store the number of elements in each array
-          ar & RefiningXCoordinates.shape()[0];
-          ar & RefiningYCoordinates.shape()[0];
-          ar & RefiningZCoordinates.shape()[0];
-          //and then save the contents as an ordinary continuous array
-          ar
-              & boost::serialization::make_array(RefiningXCoordinates.origin(),
-                  RefiningXCoordinates.num_elements());
-          ar
-              & boost::serialization::make_array(RefiningYCoordinates.origin(),
-                  RefiningYCoordinates.num_elements());
-          ar
-              & boost::serialization::make_array(RefiningZCoordinates.origin(),
-                  RefiningZCoordinates.num_elements());
-        }
-      template<class Archive>
-      void load(Archive & ar, const unsigned int version)
-        {
-          //for loading we first need to get the number of elements
-          // in each multi-array
-          size_t nx = 0, ny = 0, nz = 0;
-          ar & nx;
-          ar & ny;
-          ar & nz;
-          //allocate memory
-          RefiningXCoordinates.resize(boost::extents[nx]);
-          RefiningYCoordinates.resize(boost::extents[ny]);
-          RefiningZCoordinates.resize(boost::extents[nz]);
-          //and then do a raw read into the preallocated multi-arrays
-          ar
-              & boost::serialization::make_array(RefiningXCoordinates.origin(),
-                  RefiningXCoordinates.num_elements());
-          ar
-              & boost::serialization::make_array(RefiningYCoordinates.origin(),
-                  RefiningYCoordinates.num_elements());
-          ar
-              & boost::serialization::make_array(RefiningZCoordinates.origin(),
-                  RefiningZCoordinates.num_elements());
-        }
-      BOOST_SERIALIZATION_SPLIT_MEMBER()
     public:
       //! Set the refinement coordinates for the x-Axis
       /*! This function takes a vector with the coordinates along the x-Axis
@@ -97,7 +50,6 @@ namespace jif3D
        */
       void SetXCoordinates(const ThreeDModelBase::t3DModelDim &XCoordinates)
         {
-          RefiningXCoordinates.resize(boost::extents[XCoordinates.size()]);
           RefiningXCoordinates = XCoordinates;
         }
       //! Set the refinement coordinates for the y-Axis
@@ -107,7 +59,6 @@ namespace jif3D
        */
       void SetYCoordinates(const ThreeDModelBase::t3DModelDim &YCoordinates)
         {
-          RefiningYCoordinates.resize(boost::extents[YCoordinates.size()]);
           RefiningYCoordinates = YCoordinates;
         }
       //! Set the refinement coordinates for the Z-Axis
@@ -117,7 +68,6 @@ namespace jif3D
        */
       void SetZCoordinates(const ThreeDModelBase::t3DModelDim &ZCoordinates)
         {
-          RefiningZCoordinates.resize(boost::extents[ZCoordinates.size()]);
           RefiningZCoordinates = ZCoordinates;
         }
       //! Refine the axes of the InputModel and store the result in RefinedModel

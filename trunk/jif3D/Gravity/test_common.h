@@ -20,7 +20,7 @@ jif3D::ThreeDModelBase::t3DModelDim GenerateDimension(const size_t maxcells)
     //we want between 1 and maxcells+1 cells
     const size_t DimLength = rand() % maxcells + 1;
     //allocate memory
-    jif3D::ThreeDModelBase::t3DModelDim TestDim(boost::extents[DimLength]);
+    jif3D::ThreeDModelBase::t3DModelDim TestDim(DimLength);
     //and assign random sizes between 10 and 35
     for (size_t i = 0; i < DimLength; ++i)
       {
@@ -43,11 +43,11 @@ void MakeRandomModel(ModelType &Model, const size_t maxcells,
     const size_t ysize = YDim.size();
     const size_t zsize = ZDim.size();
     //copy the generated sizes to the model object
-    Model.SetXCellSizes().resize(boost::extents[xsize]);
+    Model.SetXCellSizes().resize(xsize);
     Model.SetXCellSizes() = XDim;
-    Model.SetYCellSizes().resize(boost::extents[ysize]);
+    Model.SetYCellSizes().resize(ysize);
     Model.SetYCellSizes() = YDim;
-    Model.SetZCellSizes().resize(boost::extents[zsize]);
+    Model.SetZCellSizes().resize(zsize);
     Model.SetZCellSizes() = ZDim;
     //get the horizontal dimensions of the model
     int xlength = boost::numeric_cast<int>(floor(std::accumulate(XDim.begin(),

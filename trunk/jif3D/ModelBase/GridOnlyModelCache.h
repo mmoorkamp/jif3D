@@ -72,9 +72,9 @@ namespace jif3D
         const ModelDimType &NewYSizes, const ModelDimType &NewZSizes)
       {
         //make sure we have enough memory
-        OldXSizes.resize(boost::extents[NewXSizes.size()]);
-        OldYSizes.resize(boost::extents[NewYSizes.size()]);
-        OldZSizes.resize(boost::extents[NewZSizes.size()]);
+        OldXSizes.resize(NewXSizes.size());
+        OldYSizes.resize(NewYSizes.size());
+        OldZSizes.resize(NewZSizes.size());
         //copy old sizes into member variables for next comparison
         std::copy(NewXSizes.begin(), NewXSizes.end(), OldXSizes.begin());
         std::copy(NewYSizes.begin(), NewYSizes.end(), OldYSizes.begin());

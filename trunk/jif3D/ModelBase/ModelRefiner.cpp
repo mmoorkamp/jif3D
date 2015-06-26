@@ -53,9 +53,9 @@ namespace jif3D
           }
         //we work with sizes so we transform the coordinates
         //to cell sizes
-        NewSizes.resize(boost::extents[TempCoord.size()]);
+        NewSizes.resize(TempCoord.size());
         std::adjacent_difference(TempCoord.begin(), TempCoord.end(),
-            NewSizes.origin());
+            NewSizes.begin());
         std::rotate(NewSizes.begin(), NewSizes.begin() + 1, NewSizes.end());
         //finally adjust the size of the last cell so that the modeling domain
         //is the same as before

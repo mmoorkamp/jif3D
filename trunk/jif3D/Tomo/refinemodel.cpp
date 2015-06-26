@@ -63,9 +63,9 @@ int main()
         return 100;
       }
     //setup the coordinates for the refined axes
-    jif3D::ThreeDModelBase::t3DModelDim XRefiner(boost::extents[newnx]);
-    jif3D::ThreeDModelBase::t3DModelDim YRefiner(boost::extents[newny]);
-    jif3D::ThreeDModelBase::t3DModelDim ZRefiner(boost::extents[newnz]);
+    jif3D::ThreeDModelBase::t3DModelDim XRefiner(newnx);
+    jif3D::ThreeDModelBase::t3DModelDim YRefiner(newny);
+    jif3D::ThreeDModelBase::t3DModelDim ZRefiner(newnz);
     for (size_t i = 0; i < newnx; ++i)
       {
         XRefiner[i] = NewDelta * i;

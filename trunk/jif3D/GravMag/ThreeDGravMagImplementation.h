@@ -121,12 +121,12 @@ namespace jif3D
         const ThreeDModelType &Model)
       {
 
-        XCoord.resize(boost::extents[Model.GetXCoordinates().size()]);
-        YCoord.resize(boost::extents[Model.GetYCoordinates().size()]);
-        ZCoord.resize(boost::extents[Model.GetZCoordinates().size()]);
-        XSizes.resize(boost::extents[Model.GetXCellSizes().size()]);
-        YSizes.resize(boost::extents[Model.GetYCellSizes().size()]);
-        ZSizes.resize(boost::extents[Model.GetZCellSizes().size()]);
+        XCoord.resize(Model.GetXCoordinates().size());
+        YCoord.resize(Model.GetYCoordinates().size());
+        ZCoord.resize(Model.GetZCoordinates().size());
+        XSizes.resize(Model.GetXCellSizes().size());
+        YSizes.resize(Model.GetYCellSizes().size());
+        ZSizes.resize(Model.GetZCellSizes().size());
         std::copy(Model.GetXCoordinates().begin(), Model.GetXCoordinates().end(),
             XCoord.begin());
         std::copy(Model.GetYCoordinates().begin(), Model.GetYCoordinates().end(),

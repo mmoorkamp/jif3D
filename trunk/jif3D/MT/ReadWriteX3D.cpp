@@ -120,9 +120,9 @@ namespace jif3D
         const size_t ny = (endy - starty + 1);
         const size_t nz = Zthick.size();
         assert(nx * ny * nz == Values.size());
-        XCellSizes.resize(boost::extents[nx]);
-        YCellSizes.resize(boost::extents[ny]);
-        ZCellSizes.resize(boost::extents[nz]);
+        XCellSizes.resize(nx);
+        YCellSizes.resize(ny);
+        ZCellSizes.resize(nz);
         std::copy(Zthick.begin(), Zthick.end(), ZCellSizes.begin());
         std::fill(XCellSizes.begin(), XCellSizes.end(), dx);
         std::fill(YCellSizes.begin(), YCellSizes.end(), dy);

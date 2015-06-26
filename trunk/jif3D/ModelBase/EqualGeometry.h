@@ -37,28 +37,28 @@ namespace jif3D
           }
         // as soon as one fails we return false
         //we check the sizes of the cells in all three directions
-        const std::size_t nx = Model1.GetXCellSizes().num_elements();
-        const std::size_t ny = Model1.GetYCellSizes().num_elements();
-        const std::size_t nz = Model1.GetZCellSizes().num_elements();
+        const std::size_t nx = Model1.GetXCellSizes().size();
+        const std::size_t ny = Model1.GetYCellSizes().size();
+        const std::size_t nz = Model1.GetZCellSizes().size();
 
-        if (nx != Model2.GetXCellSizes().num_elements())
+        if (nx != Model2.GetXCellSizes().size())
           {
             BOOST_LOG_TRIVIAL(debug) << "Different number of cells in x-direction " << nx << " "
-                << Model2.GetXCellSizes().num_elements() << std::endl;
+                << Model2.GetXCellSizes().size() << std::endl;
             return false;
           }
 
-        if (ny != Model2.GetYCellSizes().num_elements())
+        if (ny != Model2.GetYCellSizes().size())
           {
             BOOST_LOG_TRIVIAL(debug) << "Different number of cells in y-direction " << ny << " "
-                << Model2.GetYCellSizes().num_elements() << std::endl;
+                << Model2.GetYCellSizes().size() << std::endl;
             return false;
           }
 
-        if (nz != Model2.GetZCellSizes().num_elements())
+        if (nz != Model2.GetZCellSizes().size())
           {
             BOOST_LOG_TRIVIAL(debug) << "Different number of cells in z-direction " << nz << " "
-                << Model2.GetZCellSizes().num_elements() << std::endl;
+                << Model2.GetZCellSizes().size() << std::endl;
             return false;
           }
 

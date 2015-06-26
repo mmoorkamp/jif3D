@@ -5,7 +5,6 @@
 // Copyright   : 2008, MM
 //============================================================================
 
-
 #include "../Global/FatalException.h"
 #include "../Global/NetCDFTools.h"
 #include "NetCDFModelTools.h"
@@ -29,8 +28,7 @@ namespace jif3D
         //and store the right back lower coordinate for each cell
         //internally however we work with the upper left front corner and use the size
         //of the last cell to complete the geometry of the model
-        //Make sure we are reading into a one-dimensional entry
-        assert(CellSize.num_dimensions() == 1);
+
         //create a netcdf dimension with the chosen name
         NcDim *SizeDim = NetCDFFile.get_dim(SizeName.c_str());
         //determine the size of that dimension
@@ -39,15 +37,16 @@ namespace jif3D
         //so we throw an exception
         if (nvalues == 0)
           {
-            throw jif3D::FatalException("Cell coordinate is empty: " + SizeName, __FILE__, __LINE__);
+            throw jif3D::FatalException("Cell coordinate is empty: " + SizeName, __FILE__,
+                __LINE__);
           }
         //allocate memory in the class variable
-        CellSize.resize(boost::extents[nvalues]);
-        ThreeDModelBase::t3DModelDim CellCoordinates(boost::extents[nvalues]);
+        CellSize.resize(nvalues);
+        ThreeDModelBase::t3DModelDim CellCoordinates(nvalues);
         // create netcdf variable with the same name as the dimension
         NcVar *SizeVar = NetCDFFile.get_var(SizeName.c_str());
         //read coordinate values from netcdf file
-        SizeVar->get(CellCoordinates.origin(), nvalues);
+        SizeVar->get(&CellCoordinates[0], nvalues);
         //check whether the cell coordinates are sorted
         //otherwise we will have a problem
         ThreeDModelBase::t3DModelDim::iterator pos = std::adjacent_find(
@@ -57,7 +56,8 @@ namespace jif3D
         if (pos != CellCoordinates.end())
           {
             throw jif3D::FatalException(
-                "Cell coordinates in netcdf file are not in increasing order.", __FILE__, __LINE__);
+                "Cell coordinates in netcdf file are not in increasing order.", __FILE__,
+                __LINE__);
           }
 
         // transform coordinates to cell sizes, assuming the start is at 0
@@ -79,8 +79,7 @@ namespace jif3D
     NcDim *WriteSizesToNetCDF(NcFile &NetCDFFile, const std::string &SizeName,
         const ThreeDModelBase::t3DModelDim &CellSize, NcDim *BoundaryDim)
       {
-        //Make sure we are writing a one-dimensional entry
-        assert(CellSize.num_dimensions() == 1);
+
         const size_t nvalues = CellSize.size();
         // Add a dimension and a variable with the same name to the netcdf file
         NcDim *SizeDim = NetCDFFile.add_dim(SizeName.c_str(), nvalues);
@@ -93,10 +92,10 @@ namespace jif3D
         const std::string boundary_name = SizeName + "_bnds";
         SizeVar->add_att("bounds", boundary_name.c_str());
         // we store the coordinates of the cells in the netcdf file
-        ThreeDModelBase::t3DModelDim CellCoordinates(boost::extents[nvalues]);
+        ThreeDModelBase::t3DModelDim CellCoordinates(nvalues);
         std::partial_sum(CellSize.begin(), CellSize.end(), CellCoordinates.begin());
         //Write the values
-        SizeVar->put(CellCoordinates.origin(), nvalues);
+        SizeVar->put(&CellCoordinates[0], nvalues);
         //create the boundary variable
         NcVar *BoundaryVar = NetCDFFile.add_var(boundary_name.c_str(), ncDouble, SizeDim,
             BoundaryDim);
@@ -132,39 +131,42 @@ namespace jif3D
         ThreeDModelBase::t3DModelDim &ZCellSizes, ThreeDModelBase::t3DModelData &Data)
       {
 
-
-
         //create netcdf variable for data
         NcVar *DataVar = NetCDFFile.get_var(DataName.c_str());
         if (DataVar != NULL)
-        {
-        //Read the sizes of the blocks in x,y and z-direction from the file
-        const size_t nxvalues = ReadSizesFromNetCDF(NetCDFFile, "Northing", XCellSizes);
-        const size_t nyvalues = ReadSizesFromNetCDF(NetCDFFile, "Easting", YCellSizes);
-        const size_t nzvalues = ReadSizesFromNetCDF(NetCDFFile, "Depth", ZCellSizes);
-        //allocate memory for the data
-        Data.resize(boost::extents[nxvalues][nyvalues][nzvalues]);
-        //make sure we have the right units
-        NcAtt *Unit_Att = DataVar->get_att("units");
-        std::string UnitInFile = Unit_Att->as_string(0);
-        // if the units in the file are different from what we expect|
-        if (UnitInFile.compare(UnitsName) != 0)
-          throw std::runtime_error("Units in file do not match expected units !");
-        //read netcdf data from file
-        //we store the data in the order Depth, Easting, Northing
-        //but internally we work with x,y,z storage ordering
-        double *databuffer = new double[nxvalues * nyvalues * nzvalues];
+          {
+            //Read the sizes of the blocks in x,y and z-direction from the file
+            const size_t nxvalues = ReadSizesFromNetCDF(NetCDFFile, "Northing",
+                XCellSizes);
+            const size_t nyvalues = ReadSizesFromNetCDF(NetCDFFile, "Easting",
+                YCellSizes);
+            const size_t nzvalues = ReadSizesFromNetCDF(NetCDFFile, "Depth", ZCellSizes);
+            //allocate memory for the data
+            Data.resize(boost::extents[nxvalues][nyvalues][nzvalues]);
+            //make sure we have the right units
+            NcAtt *Unit_Att = DataVar->get_att("units");
+            std::string UnitInFile = Unit_Att->as_string(0);
+            // if the units in the file are different from what we expect|
+            if (UnitInFile.compare(UnitsName) != 0)
+              throw std::runtime_error("Units in file do not match expected units !");
+            //read netcdf data from file
+            //we store the data in the order Depth, Easting, Northing
+            //but internally we work with x,y,z storage ordering
+            double *databuffer = new double[nxvalues * nyvalues * nzvalues];
 
-        DataVar->get(databuffer, nzvalues, nyvalues, nxvalues);
-        for (size_t i = 0; i < nzvalues; ++i)
-          for (size_t j = 0; j < nyvalues; ++j)
-            for (size_t k = 0; k < nxvalues; ++k)
-              Data[k][j][i] = databuffer[k + j * nxvalues + i * (nxvalues * nyvalues)];
-        delete[] databuffer;
-        }
-        else {
-        	throw jif3D::FatalException("Cannot read variable: "+DataName, __FILE__, __LINE__);
-        }
+            DataVar->get(databuffer, nzvalues, nyvalues, nxvalues);
+            for (size_t i = 0; i < nzvalues; ++i)
+              for (size_t j = 0; j < nyvalues; ++j)
+                for (size_t k = 0; k < nxvalues; ++k)
+                  Data[k][j][i] =
+                      databuffer[k + j * nxvalues + i * (nxvalues * nyvalues)];
+            delete[] databuffer;
+          }
+        else
+          {
+            throw jif3D::FatalException("Cannot read variable: " + DataName, __FILE__,
+                __LINE__);
+          }
       }
     /*! Write the information about a rectangular mesh 3D model to a netcdf file
      * @param NetCDFFile An open NcFile object that allows writing

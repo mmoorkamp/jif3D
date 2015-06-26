@@ -60,9 +60,9 @@ namespace jif3D
         int nx, ny, nz;
         infile >> nx >> ny >> nz;
         infile.getline(dummy,1024);
-        this->SetXCellSizes().resize(boost::extents[nx]);
-        this->SetYCellSizes().resize(boost::extents[ny]);
-        this->SetZCellSizes().resize(boost::extents[nz]);
+        this->SetXCellSizes().resize(nx);
+        this->SetYCellSizes().resize(ny);
+        this->SetZCellSizes().resize(nz);
         this->SetData().resize(boost::extents[nx][ny][nz]);
         for (int i = 0; i < nx; ++i)
           infile >> this->SetXCellSizes()[i];

@@ -121,17 +121,17 @@ namespace jif3D
         //do some sanity checks
         // we can assign cell sizes and model grid independently
         // so we have to check every time
-        if (Model.GetData().shape()[0] != Model.GetXCellSizes().shape()[0])
+        if (Model.GetData().shape()[0] != Model.GetXCellSizes().size())
           {
             throw jif3D::FatalException(
                 "Model x-dimension does not match size for specification of cell sizes. ", __FILE__, __LINE__);
           }
-        if (Model.GetData().shape()[1] != Model.GetYCellSizes().shape()[0])
+        if (Model.GetData().shape()[1] != Model.GetYCellSizes().size())
           {
             throw jif3D::FatalException(
                 "Model y-dimension does not match size for specification of cell sizes. ", __FILE__, __LINE__);
           }
-        if (Model.GetData().shape()[2] != Model.GetZCellSizes().shape()[0])
+        if (Model.GetData().shape()[2] != Model.GetZCellSizes().size())
           {
             throw jif3D::FatalException(
                 "Model x-dimension does not match size for specification of cell sizes. ", __FILE__, __LINE__);

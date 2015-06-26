@@ -75,7 +75,7 @@ void CheckGridCoordinate(const double *Sizes, const unsigned int *n,
     //if something has been changed reallocate and copy
     if (!samesize)
       {
-        ChangeFunc().resize(boost::extents[*n]);
+        ChangeFunc().resize(*n);
         std::copy(Sizes, Sizes + *n, ChangeFunc().begin());
       }
   }

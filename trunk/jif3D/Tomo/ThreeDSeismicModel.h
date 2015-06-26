@@ -86,11 +86,11 @@ namespace jif3D
       void SetCellSize(const double Size, const size_t nx, const size_t ny,
           const size_t nz)
         {
-          ThreeDModelBase::SetXCellSizes().resize(boost::extents[nx]);
+          ThreeDModelBase::SetXCellSizes().resize(nx);
           std::fill_n(ThreeDModelBase::SetXCellSizes().begin(), nx, Size);
-          ThreeDModelBase::SetYCellSizes().resize(boost::extents[ny]);
+          ThreeDModelBase::SetYCellSizes().resize(ny);
           std::fill_n(ThreeDModelBase::SetYCellSizes().begin(), ny, Size);
-          ThreeDModelBase::SetZCellSizes().resize(boost::extents[nz]);
+          ThreeDModelBase::SetZCellSizes().resize(nz);
           std::fill_n(ThreeDModelBase::SetZCellSizes().begin(), nz, Size);
           ThreeDModelBase::SetData().resize(boost::extents[nx][ny][nz]);
         }

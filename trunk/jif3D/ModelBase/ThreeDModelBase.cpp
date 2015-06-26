@@ -68,11 +68,11 @@ namespace jif3D
             boost::extents[source.Data.shape()[0]][source.Data.shape()[1]][source.Data.shape()[2]]);
         Data = source.Data;
         //now we copy the cell sizes for all three directions
-        XCellSizes.resize(boost::extents[source.XCellSizes.shape()[0]]);
+        XCellSizes.resize(source.XCellSizes.size());
         std::copy(source.XCellSizes.begin(), source.XCellSizes.end(), XCellSizes.begin());
-        YCellSizes.resize(boost::extents[source.YCellSizes.shape()[0]]);
+        YCellSizes.resize(source.YCellSizes.size());
         std::copy(source.YCellSizes.begin(), source.YCellSizes.end(), YCellSizes.begin());
-        ZCellSizes.resize(boost::extents[source.ZCellSizes.shape()[0]]);
+        ZCellSizes.resize(source.ZCellSizes.size());
         std::copy(source.ZCellSizes.begin(), source.ZCellSizes.end(), ZCellSizes.begin());
         //we copy origin of the coordinate system
         XOrigin = source.XOrigin;
@@ -107,7 +107,7 @@ namespace jif3D
             omp_set_lock(&lck_model_coord);
 #endif
             //make sure we have enough space for the coordinates
-            Coordinates.resize(boost::extents[nelements]);
+            Coordinates.resize(nelements);
             //sum up the sizes to get the coordinates
             //in the current setup the first coordinate is always zero
             //this is not ideal and should be changed in the future

@@ -48,12 +48,12 @@ int main()
     boost::shared_ptr<jif3D::GeneralModelTransform> DensTrans(
         new jif3D::DensityTransform(
             boost::shared_ptr<jif3D::GeneralModelTransform>(
-                new jif3D::ModelCopyTransform()),RModel));
+                new jif3D::ModelCopyTransform()), RModel));
 
     boost::shared_ptr<jif3D::GeneralModelTransform> CondTrans(
         new jif3D::ConductivityTransform(
             boost::shared_ptr<jif3D::GeneralModelTransform>(
-                new jif3D::ModelCopyTransform()),RModel));
+                new jif3D::ModelCopyTransform()), RModel));
     jif3D::SaltRelConstraint SaltRel(DensTrans, CondTrans);
 
     double minvel = 2000;
@@ -70,13 +70,12 @@ int main()
     const size_t nlogcond = (logmaxcond - logmincond) / logcondstep + 1;
     const size_t ndens = (maxdens - mindens) / densstep + 1;
 
-    boost::multi_array<double, 1> VelAxis(boost::extents[nvel]), LogCondAxis(
-        boost::extents[nlogcond]), DensAxis(boost::extents[ndens]);
+    std::vector<double> VelAxis(nvel), LogCondAxis(nlogcond), DensAxis(ndens);
     boost::multi_array<double, 3> Misfit(boost::extents[nvel][nlogcond][ndens]);
 
-    std::fill_n(VelAxis.origin(), nvel, velstep);
-    std::fill_n(LogCondAxis.origin(), nlogcond, logcondstep);
-    std::fill_n(DensAxis.origin(), ndens, densstep);
+    std::fill_n(VelAxis.begin(), nvel, velstep);
+    std::fill_n(LogCondAxis.begin(), nlogcond, logcondstep);
+    std::fill_n(DensAxis.begin(), ndens, densstep);
     size_t currvelindex = 0, currcondindex = 0, currdensindex = 0;
     for (double vel = minvel; vel < maxvel; vel += velstep)
       {
@@ -106,7 +105,8 @@ int main()
         Misfit);
 
     jif3D::ConductivityTransform SlowCond(
-        boost::shared_ptr<jif3D::GeneralModelTransform>(new jif3D::ModelCopyTransform()),RModel);
+        boost::shared_ptr<jif3D::GeneralModelTransform>(new jif3D::ModelCopyTransform()),
+        RModel);
     jif3D::rvec Model(nvel);
     size_t i = 0;
     for (double vel = minvel; vel < maxvel; vel += velstep)

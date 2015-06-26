@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_SUITE( X3DObjective_Suite )
         const size_t nmod = xsize * ysize * zsize;
 
         Model.SetMeshSize(xsize, ysize, zsize);
-        Model.SetZCellSizes().resize(boost::extents[zsize]);
+        Model.SetZCellSizes().resize(zsize);
 
         std::vector<double> bg_thicknesses(nbglayers), bg_conductivities(nbglayers);
 
@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_SUITE( X3DObjective_Suite )
         const double deltaz = 100.0;
         Model.SetHorizontalCellSize(deltax, deltay, xsize, ysize);
 
-        std::fill_n(Model.SetZCellSizes().origin(), zsize, deltaz);
+        std::fill_n(Model.SetZCellSizes().begin(), zsize, deltaz);
         std::fill_n(Model.SetConductivities().origin(), nmod, 0.02);
         typedef boost::multi_array_types::index_range range;
         boost::multi_array<double, 3>::array_view<3>::type myview = Model.SetConductivities()[ boost::indices[range(0,3)][range(0,2)][range(0,0)] ];
