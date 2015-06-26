@@ -20,8 +20,8 @@ int main()
 	jif3D::Read3DModelFromVTK(Infilename, XCellSizes, YCellSizes,
 			Model.SetZCellSizes(), Model.SetConductivities());
 	Model.SetHorizontalCellSize(XCellSizes[1], YCellSizes[1],
-			XCellSizes.num_elements(), YCellSizes.num_elements());
-	const size_t nz = Model.GetZCellSizes().num_elements();
+			XCellSizes.size(), YCellSizes.size());
+	const size_t nz = Model.GetZCellSizes().size();
 	std::vector<double> bg_cond(nz), bg_thick(nz);
 	//std::copy(Model.GetZCellSizes().begin(), Model.GetZCellSizes().end(),
 	//		bg_thick.end());

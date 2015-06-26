@@ -21,10 +21,7 @@ int main()
         const size_t nx = nelem;
         const size_t ny = nelem;
         const size_t nz = nelem;
-        GravModel.SetDensities().resize(boost::extents[nx][ny][nz]);
-        GravModel.SetXCellSizes().resize(boost::extents[nx]);
-        GravModel.SetYCellSizes().resize(boost::extents[ny]);
-        GravModel.SetZCellSizes().resize(boost::extents[nz]);
+        GravModel.SetMeshSize(nx, ny, nz);
 
         const size_t msize = GravModel.GetDensities().num_elements();
         jif3D::rvec StartModel(msize), PertModel(msize);

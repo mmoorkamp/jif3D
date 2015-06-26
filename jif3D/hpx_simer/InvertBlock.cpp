@@ -27,9 +27,9 @@ double InvertBlock(jif3D::X3DModel Model, jif3D::rvec Data, std::string tempdir,
 
     const size_t nz = 2;
     CoarseModel.SetMeshSize(1, 1, nz);
-    double maxx = Model.GetXCellSizes()[0] * Model.GetXCoordinates().num_elements();
-    double maxy = Model.GetYCellSizes()[0] * Model.GetYCoordinates().num_elements();
-    const size_t nzold = Model.GetZCoordinates().num_elements();
+    double maxx = Model.GetXCellSizes()[0] * Model.GetXCoordinates().size();
+    double maxy = Model.GetYCellSizes()[0] * Model.GetYCoordinates().size();
+    const size_t nzold = Model.GetZCoordinates().size();
     double maxz = Model.GetZCoordinates()[nzold - 1] + Model.GetZCellSizes()[nzold - 1];
     CoarseModel.SetHorizontalCellSize(maxx, maxy, 1, 1);
     CoarseModel.SetZCellSizes()[0] = Model.GetZCellSizes()[0];

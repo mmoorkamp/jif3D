@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
     cin >> deltaz;
     //set the cell sizes and allocate memory for the mesh
     Model.SetHorizontalCellSize(deltax, deltay, nx, ny);
-    Model.SetZCellSizes().resize(boost::extents[nz]);
+    Model.SetZCellSizes().resize(nz);
     fill_n(Model.SetZCellSizes().begin(), nz, deltaz);
     if (topthick > 0.0 )
       {

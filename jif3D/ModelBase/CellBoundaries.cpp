@@ -19,8 +19,8 @@ namespace jif3D
         const jif3D::ThreeDModelBase::t3DModelDim &CellSizes)
       {
         size_t result = 0;
-        const size_t ncells = CellBoundaries.num_elements();
-        assert(CellBoundaries.size() == CellSizes.size());
+        const size_t ncells = CellBoundaries.size();
+        assert(ncells == CellSizes.size());
         //we check whether the coordinate value is larger than the largest cell boundary
         //and throw an exception is true
         if (Coordinate > CellBoundaries[ncells - 1] + CellSizes[ncells - 1]

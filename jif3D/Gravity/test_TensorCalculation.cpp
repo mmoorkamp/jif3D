@@ -179,18 +179,11 @@ BOOST_AUTO_TEST_CASE  (random_tensor_test)
       jif3D::ThreeDGravityModel GravityTest;
       const size_t nhorcells = 10;
       const size_t nzcells = 10;
-      GravityTest.SetXCellSizes().resize(boost::extents[nhorcells]);
-      GravityTest.SetYCellSizes().resize(boost::extents[nhorcells]);
-      GravityTest.SetZCellSizes().resize(boost::extents[nzcells]);
-      for (size_t i = 0; i < nhorcells; ++i) // set the values of the inner cells
+      GravityTest.SetMeshSize(nhorcells,nhorcells,nzcells);
+      std::fill(GravityTest.SetXCellSizes().begin(),GravityTest.SetXCellSizes().end(),10);
+      std::fill(GravityTest.SetYCellSizes().begin(),GravityTest.SetYCellSizes().end(),10);
+      std::fill(GravityTest.SetZCellSizes().begin(),GravityTest.SetZCellSizes().end(),10.0);
 
-        {
-          GravityTest.SetXCellSizes()[i] = 10;
-          GravityTest.SetYCellSizes()[i] = 10;
-        }
-      std::fill_n(GravityTest.SetZCellSizes().origin(),nzcells,10.0);
-      GravityTest.SetDensities().resize(
-          boost::extents[nhorcells][nhorcells][nzcells]);
       const double density = 2.1;
       std::fill_n(GravityTest.SetDensities().origin(),GravityTest.SetDensities().num_elements(),density);
 

@@ -44,7 +44,7 @@ namespace jif3D
           {
             file >> val;
           }
-        CellSizes.resize(boost::extents[nvalues - 1]);
+        CellSizes.resize(nvalues - 1);
         //translate coordinates to cell sizes
         std::adjacent_difference(coordinates.begin() + 1, coordinates.end(),
             CellSizes.begin());

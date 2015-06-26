@@ -46,7 +46,7 @@ namespace jif3D
       //! A shorthand for the type of the stored model data for 3D models
       typedef boost::multi_array<double, 3> t3DModelData;
       //! A shorthand for the dimensions, i.e. cell-sizes for the 3D models
-      typedef boost::multi_array<double, 1> t3DModelDim;
+      typedef std::vector<double> t3DModelDim;
       //! The type of the measurement position vector, this is a std::vector because we want to easily append elements
       typedef std::vector<double> tMeasPosVec;
     private:
@@ -107,15 +107,9 @@ namespace jif3D
           ar & Data.shape()[2];
           //then serialize the raw data
           ar & boost::serialization::make_array(Data.origin(), Data.num_elements());
-          ar
-              & boost::serialization::make_array(XCellSizes.origin(),
-                  XCellSizes.num_elements());
-          ar
-              & boost::serialization::make_array(YCellSizes.origin(),
-                  YCellSizes.num_elements());
-          ar
-              & boost::serialization::make_array(ZCellSizes.origin(),
-                  ZCellSizes.num_elements());
+          ar & XCellSizes;
+          ar & YCellSizes;
+          ar & ZCellSizes;
           //finally we need the origin of the model
           ar & XOrigin;
           ar & YOrigin;
@@ -136,19 +130,10 @@ namespace jif3D
           ar & ny;
           ar & nz;
           Data.resize(boost::extents[nx][ny][nz]);
-          XCellSizes.resize(boost::extents[nx]);
-          YCellSizes.resize(boost::extents[ny]);
-          ZCellSizes.resize(boost::extents[nz]);
           ar & boost::serialization::make_array(Data.origin(), Data.num_elements());
-          ar
-              & boost::serialization::make_array(XCellSizes.origin(),
-                  XCellSizes.num_elements());
-          ar
-              & boost::serialization::make_array(YCellSizes.origin(),
-                  YCellSizes.num_elements());
-          ar
-              & boost::serialization::make_array(ZCellSizes.origin(),
-                  ZCellSizes.num_elements());
+          ar & XCellSizes;
+          ar & YCellSizes;
+          ar & ZCellSizes;
           ar & XOrigin;
           ar & YOrigin;
           ar & ZOrigin;
@@ -239,9 +224,9 @@ public:
   //! Set the size of the mesh and the coordinate axes
   void SetMeshSize(const size_t nx, const size_t ny, const size_t nz)
     {
-      XCellSizes.resize(boost::extents[nx]);
-      YCellSizes.resize(boost::extents[ny]);
-      ZCellSizes.resize(boost::extents[nz]);
+      XCellSizes.resize(nx);
+      YCellSizes.resize(ny);
+      ZCellSizes.resize(nz);
       Data.resize(boost::extents[nx][ny][nz]);
     }
   //! From the three spatial indices, calculate the offset in memory

@@ -75,24 +75,16 @@ BOOST_AUTO_TEST_SUITE( ScalarGravity_Test_Suite )
         //create a model of 10x10x10 cells with 2m length in each dimension
         const size_t ncells = 10;
         const double cellsize = 2.0;
-        GravityTest.SetXCellSizes().resize(boost::extents[ncells]);
-        GravityTest.SetYCellSizes().resize(boost::extents[ncells]);
-        GravityTest.SetZCellSizes().resize(boost::extents[ncells]);
+        GravityTest.SetMeshSize(ncells,ncells,ncells);
         for (size_t i = 0; i < ncells; ++i)
           {
             GravityTest.SetXCellSizes()[i] = cellsize;
             GravityTest.SetYCellSizes()[i] = cellsize;
             GravityTest.SetZCellSizes()[i] = cellsize;
           }
-        GravityTest.SetDensities().resize(boost::extents[ncells][ncells][ncells]);
-        jif3D::rvec DensityVector(ncells * ncells * ncells);
-        for (size_t i = 0; i < ncells; ++i)
-          for (size_t j = 0; j < ncells; ++j)
-            for (size_t k = 0; k < ncells; ++k)
-              {
-                GravityTest.SetDensities()[i][j][k] = 1.0;
-                DensityVector(i * (ncells * ncells) + j * ncells + k) = 1.0;
-              }
+        jif3D::rvec DensityVector(ncells * ncells * ncells, 1.0);
+        std::fill_n(GravityTest.SetDensities().origin(), ncells * ncells * ncells, 1.0);
+
         GravityTest.AddMeasurementPoint(measx, measy, measz);
         typedef typename jif3D::FullSensitivityGravMagCalculator<jif3D::ThreeDGravityModel> CalculatorType;
         boost::shared_ptr<CalculatorType> TensorCalculator(
@@ -155,9 +147,7 @@ BOOST_AUTO_TEST_SUITE( ScalarGravity_Test_Suite )
         //create a model with a random number of cells in each direction
         const size_t nhorcells = rand() % 50 + 10;
         const size_t nzcells = 10;
-        GravityTest.SetXCellSizes().resize(boost::extents[nhorcells]);
-        GravityTest.SetYCellSizes().resize(boost::extents[nhorcells]);
-        GravityTest.SetZCellSizes().resize(boost::extents[nzcells]);
+        GravityTest.SetMeshSize(nhorcells, nhorcells, nzcells);
         jif3D::rvec DensityVector(nhorcells * nhorcells * nzcells + 4); // 4 background layers
         for (size_t i = 0; i < nhorcells; ++i) // set the values of the inner cells
 
@@ -170,7 +160,7 @@ BOOST_AUTO_TEST_SUITE( ScalarGravity_Test_Suite )
             GravityTest.SetZCellSizes()[i] = 500;
           }
 
-        GravityTest.SetDensities().resize(boost::extents[nhorcells][nhorcells][nzcells]);
+
         for (size_t i = 0; i < nhorcells; ++i)
           for (size_t j = 0; j < nhorcells; ++j)
             {

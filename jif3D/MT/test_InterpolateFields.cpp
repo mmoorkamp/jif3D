@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_SUITE( InterpolateFields_Suite )
         Model.SetMeshSize(nx, ny, nz);
         const double deltax = 100, deltay = 70, deltaz = 80;
         Model.SetHorizontalCellSize(deltax, deltay, nx, ny);
-        std::fill_n(Model.SetZCellSizes().origin(), nz, deltaz);
+        std::fill_n(Model.SetZCellSizes().begin(), nz, deltaz);
         const size_t nmeas = 2;
         for (size_t i = 0; i < nmeas; ++i)
           {
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_SUITE( InterpolateFields_Suite )
         Model.SetMeshSize(nx, ny, nz);
         const double deltax = 100, deltay = 70, deltaz = 80;
         Model.SetHorizontalCellSize(deltax, deltay, nx, ny);
-        std::fill_n(Model.SetZCellSizes().origin(), nz, deltaz);
+        std::fill_n(Model.SetZCellSizes().begin(), nz, deltaz);
         const double xcoeff = drand48();
         const double ycoeff = drand48();
 

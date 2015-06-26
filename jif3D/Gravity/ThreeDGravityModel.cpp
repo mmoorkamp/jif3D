@@ -171,9 +171,9 @@ namespace jif3D
         if (nx * ny * nz != density.size())
           throw std::runtime_error("Mesh and density values are not consistent !");
         //reserve space and copy
-        SetXCellSizes().resize(boost::extents[nx]);
-        SetYCellSizes().resize(boost::extents[ny]);
-        SetZCellSizes().resize(boost::extents[nz]);
+        SetXCellSizes().resize(nx);
+        SetYCellSizes().resize(ny);
+        SetZCellSizes().resize(nz);
         SetDensities().resize(boost::extents[nx][ny][nz]);
         //we skip the first one, because it is always zero
         std::adjacent_difference(xcoord.begin() + 1, xcoord.end(),

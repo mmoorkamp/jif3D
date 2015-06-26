@@ -119,21 +119,21 @@ namespace jif3D
             //we do this for all three spatial directions
             //first for x
             if (std::search_n(GetXCellSizes().begin(), GetXCellSizes().end(),
-                GetXCellSizes().num_elements(), CellSize) == GetXCellSizes().end())
+                GetXCellSizes().size(), CellSize) == GetXCellSizes().end())
               {
                 throw jif3D::FatalException("Non-equal grid spacing in x-direction !",
                 __FILE__, __LINE__);
               }
             //then for y
             if (std::search_n(GetYCellSizes().begin(), GetYCellSizes().end(),
-                GetYCellSizes().num_elements(), CellSize) == GetYCellSizes().end())
+                GetYCellSizes().size(), CellSize) == GetYCellSizes().end())
               {
                 throw jif3D::FatalException("Non-equal grid spacing in y-direction !",
                 __FILE__, __LINE__);
               }
             //finally for z, in each cases the cell size we search for is the same
             if (std::search_n(GetZCellSizes().begin(), GetZCellSizes().end(),
-                GetZCellSizes().num_elements(), CellSize) == GetZCellSizes().end())
+                GetZCellSizes().size(), CellSize) == GetZCellSizes().end())
               {
                 throw jif3D::FatalException("Non-equal grid spacing in z-direction !",
                 __FILE__, __LINE__);

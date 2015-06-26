@@ -81,9 +81,9 @@ namespace jif3D
       void SetHorizontalCellSize(const double XSize, const double YSize, const size_t nx,
           const size_t ny)
         {
-          ThreeDModelBase::SetXCellSizes().resize(boost::extents[nx]);
+          ThreeDModelBase::SetXCellSizes().resize(nx);
           std::fill_n(ThreeDModelBase::SetXCellSizes().begin(), nx, XSize);
-          ThreeDModelBase::SetYCellSizes().resize(boost::extents[ny]);
+          ThreeDModelBase::SetYCellSizes().resize(ny);
           std::fill_n(ThreeDModelBase::SetYCellSizes().begin(), ny, YSize);
         }
       //! The vertical cells can all have different sizes so we allow direct access to the CellSize structure
