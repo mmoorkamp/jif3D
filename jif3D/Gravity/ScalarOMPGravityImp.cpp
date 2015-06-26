@@ -22,21 +22,21 @@
 #include "GravityBackground.h"
 
 #ifdef HAVEHPX
-    /*!  Calculate the contribution of several prisms to the gravitational acceleration
-     * at a single site.
-     * @param start The index of the first cell in the grid to be used for the calculation
-     * @param end The index of the last cell in the grid to be used for the calculation
-     * @param x_meas The x-coordinate of the measurement site in m
-     * @param y_meas The y-coordinate of the measurement site in m
-     * @param z_meas The z-coordinate of the measurement site in m
-     * @param XCoord The X-Coordinates of the grid cell boundaries in m
-     * @param YCoord The Y-Coordinates of the grid cell boundaries in m
-     * @param ZCoord The Z-Coordinates of the grid cell boundaries in m
-     * @param XSizes The size of the grid cell in x-direction in m
-     * @param YSizes The size of the grid cell in y-direction in m
-     * @param ZSizes The size of the grid cell in z-direction in m
-     * @return The vector of geometric factors for each of the grid cells.
-     */
+/*!  Calculate the contribution of several prisms to the gravitational acceleration
+ * at a single site.
+ * @param start The index of the first cell in the grid to be used for the calculation
+ * @param end The index of the last cell in the grid to be used for the calculation
+ * @param x_meas The x-coordinate of the measurement site in m
+ * @param y_meas The y-coordinate of the measurement site in m
+ * @param z_meas The z-coordinate of the measurement site in m
+ * @param XCoord The X-Coordinates of the grid cell boundaries in m
+ * @param YCoord The Y-Coordinates of the grid cell boundaries in m
+ * @param ZCoord The Z-Coordinates of the grid cell boundaries in m
+ * @param XSizes The size of the grid cell in x-direction in m
+ * @param YSizes The size of the grid cell in y-direction in m
+ * @param ZSizes The size of the grid cell in z-direction in m
+ * @return The vector of geometric factors for each of the grid cells.
+ */
 std::vector<double> GravityChunk(size_t start, size_t end, double x_meas, double y_meas,
     double z_meas, const std::vector<double> &XCoord, const std::vector<double> &YCoord,
     const std::vector<double> &ZCoord, const std::vector<double> &XSizes,
@@ -188,15 +188,6 @@ namespace jif3D
         Gravity_Action GravityChunks;
         const size_t cellsperchunk = nmod / nchunks +1;
 
-        //this is a bit awkward, but we have coordinates and sizes in 1D boost::multi_arrays
-        //these are not easily serializable, so as a fix we copy to std::vector
-        //might consider changing types of structures or finding a better way to pass them around
-        std::vector<double> XC(XCoord.data(),XCoord.data() + XCoord.num_elements());
-        std::vector<double> YC(YCoord.data(),YCoord.data() + YCoord.num_elements());
-        std::vector<double> ZC(ZCoord.data(),ZCoord.data() + ZCoord.num_elements());
-        std::vector<double> XS(XSizes.data(),XSizes.data() + XSizes.num_elements());
-        std::vector<double> YS(YSizes.data(),YSizes.data() + YSizes.num_elements());
-        std::vector<double> ZS(ZSizes.data(),ZSizes.data() + ZSizes.num_elements());
         //create the individual chunks of work
         for (size_t c = 0; c < nchunks; ++c)
           {
@@ -208,8 +199,8 @@ namespace jif3D
             hpx::naming::id_type const locality_id = localities.at(c % localities.size());
             //create a hpx future
             ChunkResult.push_back(async(GravityChunks, locality_id, startindex,endindex,x_meas,y_meas,z_meas,
-                    XC, YC, ZC,
-                    XS, YS, ZS));
+                    XCoord, YCoord, ZCoord,
+                    XSizes, YSizes, ZSizes));
           }
 
         //all futures have been created, now we just wait for all of them to finish
