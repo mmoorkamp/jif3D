@@ -77,6 +77,8 @@ namespace jif3D
         {
           ThreeDModelBase::WriteVTK(filename, "Conductivity");
         }
+      //! Read an ascii file as written by ModEM
+      void ReadModEM(const std::string filename);
       //! We have a copy operator for other MT models
       ThreeDMTModel& operator=(const ThreeDMTModel& source);
       //! Other models will be copied by the copy operator for the base class

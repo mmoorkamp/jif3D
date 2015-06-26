@@ -142,11 +142,18 @@ int main(int argc, char *argv[])
 
 //first we read in the starting model and the measured data
     std::string modelfilename = jif3D::AskFilename("Starting model Filename: ");
-
+    std::string extension = jif3D::GetFileExtension(modelfilename);
+    std::cout << "Extension: " << extension << std::endl;
 //we read in the starting modelfile
     jif3D::X3DModel Model;
-    Model.ReadNetCDF(modelfilename);
-
+    if (extension.compare(".mod") == 0)
+      {
+        Model.ReadModEM(modelfilename);
+      }
+    else
+      {
+        Model.ReadNetCDF(modelfilename);
+      }
 //get the name of the file containing the data and read it in
     std::string datafilename = jif3D::AskFilename("Data Filename: ");
 
