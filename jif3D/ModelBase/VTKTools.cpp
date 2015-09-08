@@ -16,15 +16,19 @@ namespace jif3D
 
     //! A helper function to write the Coordinates for the 3 axes into a .vtk file
     void WriteCoordinatesToVTK(std::ofstream &file, const std::string &name,
-        const ThreeDModelBase::t3DModelDim &CellSizes)
+        const ThreeDModelBase::t3DModelDim &CellSizes, double origin = 0)
       {
         //write the coordinate name, the number of cell boundary values and its type
         file << name << " " << CellSizes.size() + 1 << " double" << std::endl;
-        //our setup implies a (0,0,0) coordinate origin
-        file << 0.0 << " ";
+        //write out the origin of the coordinate system
+        file << origin << " ";
         //calculate the coordinates from the cell sizes and write to file
-        std::partial_sum(CellSizes.begin(), CellSizes.end(),
-            std::ostream_iterator<double>(file, " "));
+        double CurrCoord = origin;
+        for (double CurrSize: CellSizes)
+          {
+            CurrCoord += CurrSize;
+            file << CurrCoord << " ";
+          }
         file << "\n";
       }
 
@@ -57,12 +61,16 @@ namespace jif3D
      * @param YCellSizes The sizes of the cells in y-direction in m
      * @param ZCellSizes The sizes of the cells in z-direction in m
      * @param Data The model values within each cell, shape has to match the  cell sizes
+     * @param XOrigin The x-origin of the coordinate system in m
+     * @param YOrigin The y-origin of the coordinate system in m
+     * @param ZOrigin The z-origin of the coordinate system in m
      */
     void Write3DModelToVTK(const std::string &filename, const std::string &DataName,
         const ThreeDModelBase::t3DModelDim &XCellSizes,
         const ThreeDModelBase::t3DModelDim &YCellSizes,
         const ThreeDModelBase::t3DModelDim &ZCellSizes,
-        const ThreeDModelBase::t3DModelData &Data)
+        const ThreeDModelBase::t3DModelData &Data,
+        double xorigin, double yorigin, double zorigin)
       {
         //do some consistency checks
         assert(Data.num_dimensions() == 3);
@@ -86,9 +94,9 @@ namespace jif3D
         outfile << "DIMENSIONS " << nxvalues + 1 << " " << nyvalues + 1 << " "
             << nzvalues + 1 << std::endl;
         //write information about the coordinate axes
-        WriteCoordinatesToVTK(outfile, "X_COORDINATES", XCellSizes);
-        WriteCoordinatesToVTK(outfile, "Y_COORDINATES", YCellSizes);
-        WriteCoordinatesToVTK(outfile, "Z_COORDINATES", ZCellSizes);
+        WriteCoordinatesToVTK(outfile, "X_COORDINATES", XCellSizes, xorigin);
+        WriteCoordinatesToVTK(outfile, "Y_COORDINATES", YCellSizes, yorigin);
+        WriteCoordinatesToVTK(outfile, "Z_COORDINATES", ZCellSizes, zorigin);
         //write some information about the data itself
         outfile << "CELL_DATA " << nxvalues * nyvalues * nzvalues << std::endl;
         outfile << "SCALARS " << DataName << " double" << std::endl;

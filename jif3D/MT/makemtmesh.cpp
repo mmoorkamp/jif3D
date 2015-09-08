@@ -98,5 +98,6 @@ int main(int argc, char *argv[])
     Model.SetBackgroundConductivities(bg_conductivities);
     Model.WriteNetCDF(MeshFilename);
     Model.WriteVTK(MeshFilename + ".vtk");
+    Model.WriteModEM(MeshFilename + ".dat");
 
   }

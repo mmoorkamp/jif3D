@@ -27,7 +27,8 @@ namespace jif3D
         const ThreeDModelBase::t3DModelDim &XCellSizes,
         const ThreeDModelBase::t3DModelDim &YCellSizes,
         const ThreeDModelBase::t3DModelDim &ZCellSizes,
-        const ThreeDModelBase::t3DModelData &Data);
+        const ThreeDModelBase::t3DModelData &Data,
+        double xorigin = 0, double yorigin = 0, double zorigin = 0);
 
     //! Write a 3D model with vector valued cells and its geometry into a .vtk file for plotting
     void Write3DVectorModelToVTK(const std::string &filename,

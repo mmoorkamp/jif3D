@@ -30,6 +30,8 @@ namespace jif3D
       std::vector<double> bg_conductivities;
       friend class boost::serialization::access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+
+    public:
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
         {
@@ -37,7 +39,6 @@ namespace jif3D
           ar & bg_thicknesses;
           ar & bg_conductivities;
         }
-    public:
       //! The problem type we want to perform the calculation for
       /*! We can use this enum to specify which type of forward calculation
        * we want to perform, magnetotelluric (MT), controlled source EM (CSEM),

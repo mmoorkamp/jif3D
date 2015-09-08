@@ -11,6 +11,8 @@
 #ifdef HAVEHPX
 #include <hpx/config.hpp>
 #include <hpx/include/actions.hpp>
+#include <hpx/include/serialization.hpp>
+#else
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/vector.hpp>
 #endif
@@ -79,8 +81,8 @@ jif3D::rvec LQDerivativeFreq(const ForwardInfo &Info, const jif3D::rvec &Misfit,
     const jif3D::rvec &RawImpedance);
 
 #ifdef HAVEHPX
-HPX_DEFINE_PLAIN_ACTION(CalculateFrequency, CalculateFrequency_action);
-HPX_DEFINE_PLAIN_ACTION(LQDerivativeFreq, LQDerivativeFreq_action);
+HPX_PLAIN_ACTION(CalculateFrequency, CalculateFrequency_action)
+HPX_PLAIN_ACTION(LQDerivativeFreq, LQDerivativeFreq_action)
 #endif
 
 #endif /* X3DFREQFUNCTIONS_H_ */

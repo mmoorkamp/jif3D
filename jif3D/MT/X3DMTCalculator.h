@@ -7,10 +7,18 @@
 
 #ifndef X3DMTCALCULATOR_H_
 #define X3DMTCALCULATOR_H_
-
+#ifdef HAVEHPX
+#include <hpx/config.hpp>
+#include <hpx/include/serialization.hpp>
+#include <hpx/runtime/serialization/serialization_fwd.hpp>
+#include <hpx/runtime/serialization/vector.hpp>
+#else
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/split_member.hpp>
+#endif
 #include <limits>
 #include <boost/filesystem.hpp>
-#include <boost/serialization/serialization.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
@@ -67,34 +75,7 @@ namespace jif3D
       //! The impedances from the last forward calculation without any distortion correction
       rvec RawImpedance;
       friend class boost::serialization::access;
-      //! Provide serialization to be able to store objects and, more importantly for hpx parallelization
-      template<class Archive>
-      void serialize(Archive & ar, const unsigned int version)
-        {
-          // we do not need to serialize NameRoot, this is generated individually for each object
-          if (Archive::is_saving::value)
-            {
-              ar & GreenType1;
-              ar & GreenType4;
-              ar & X3DName;
-              std::string DirName(TempDir.string());
-              ar & DirName;
-              ar & WantDistCorr;
-              ar & RawImpedance;
-            }
-          if (Archive::is_loading::value)
-            {
-              ar & GreenType1;
-              ar & GreenType4;
-              ar & X3DName;
-              std::string DirName;
-              ar & DirName;
-              TempDir = DirName;
-              ar & WantDistCorr;
-              ar & RawImpedance;
-            }
 
-        }
       //create a unique ID that we can use to name things and still
       //perform parallel calculations
       std::string ObjectID()
@@ -108,6 +89,38 @@ namespace jif3D
               + jif3D::stringify(tag);
         }
     public:
+      //! Provide serialization to be able to store objects and, more importantly for hpx parallelization
+      template<class Archive>
+      void save(Archive & ar, const unsigned int version) const
+        {
+          ar & GreenType1;
+          ar & GreenType4;
+          ar & X3DName;
+          std::string DirName(TempDir.string());
+          ar & DirName;
+          ar & WantDistCorr;
+          std::vector<double> v(RawImpedance.begin(),RawImpedance.end());
+          ar & v;
+        }
+      template<class Archive>
+      void load(Archive & ar, const unsigned int version)
+        {
+          ar & GreenType1;
+          ar & GreenType4;
+          ar & X3DName;
+          std::string DirName;
+          ar & DirName;
+          TempDir = DirName;
+          ar & WantDistCorr;
+          std::vector<double> v;
+          ar & v;
+          std::copy(v.begin(),v.end(),RawImpedance.begin());
+        }
+#ifdef HAVEHPX
+      HPX_SERIALIZATION_SPLIT_MEMBER()
+#else
+      BOOST_SERIALIZATION_SPLIT_MEMBER()
+#endif
       //! Set type of green's function for forward calculation i X3D (stage 1)
       void SetGreenType1(jif3D::GreenCalcType G)
         {

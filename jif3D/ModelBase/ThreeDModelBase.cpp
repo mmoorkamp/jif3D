@@ -195,7 +195,7 @@ namespace jif3D
         const std::string &DataName) const
       {
         Write3DModelToVTK(filename, DataName, GetXCellSizes(), GetYCellSizes(),
-            GetZCellSizes(), GetData());
+            GetZCellSizes(), GetData(), XOrigin, YOrigin, ZOrigin);
       }
 
     void ThreeDModelBase::ReadMeasPosNetCDF(const std::string filename)
