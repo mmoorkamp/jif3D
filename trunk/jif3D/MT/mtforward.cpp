@@ -226,6 +226,10 @@ int main(int argc, char *argv[])
     jif3D::WriteImpedancesToNetCDF(outfilename, MTModel.GetFrequencies(),
         MTModel.GetMeasPosX(), MTModel.GetMeasPosY(), MTModel.GetMeasPosZ(), Impedances,
         Errors, C);
+    jif3D::WriteImpedancesToModEM(outfilename + ".dat", MTModel.GetFrequencies(),
+        MTModel.GetMeasPosX(), MTModel.GetMeasPosY(), MTModel.GetMeasPosZ(), Impedances,
+        Errors);
     MTModel.WriteVTK(modelfilename + ".vtk");
+    MTModel.WriteModEM(modelfilename + ".dat");
   }
 

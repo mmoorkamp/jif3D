@@ -51,6 +51,45 @@ namespace jif3D
         return *this;
       }
 
+    void ThreeDMTModel::WriteModEM(const std::string filename)
+      {
+        std::ofstream outfile(filename.c_str());
+        outfile << "# 3D MT model written by jif3D in WS format\n";
+        const size_t nx = GetXCellSizes().size();
+        const size_t ny = GetYCellSizes().size();
+        const size_t nz = GetZCellSizes().size();
+        outfile << nx << " " << ny << " " << nz << " 0 LOGE\n";
+        for (double cellx : GetXCellSizes())
+          {
+            outfile << cellx << " ";
+          }
+        outfile << "\n";
+        for (double celly : GetYCellSizes())
+          {
+            outfile << celly << " ";
+          }
+        outfile << "\n";
+        for (double cellz : GetZCellSizes())
+          {
+            outfile << cellz << " ";
+          }
+        outfile << "\n";
+        for (size_t i = 0; i < nz; ++i)
+          {
+            for (size_t j = 0; j < ny; ++j)
+              {
+                for (int k = nx - 1; k >= 0; --k)
+                  {
+
+                    outfile << std::log(1.0 / GetData()[k][j][i]) << " ";
+                  }
+                outfile << "\n";
+              }
+            outfile << "\n\n";
+          }
+        outfile << "\n  0.0 0.0 0.0\n 0.0 \n";
+      }
+
     void ThreeDMTModel::ReadModEM(const std::string filename)
       {
         std::ifstream infile(filename.c_str());
@@ -73,10 +112,10 @@ namespace jif3D
         double value;
         for (int i = 0; i < nz; ++i)
           for (int j = 0; j < ny; ++j)
-            for (int k = nx -1; k >= 0; --k)
+            for (int k = nx - 1; k >= 0; --k)
               {
                 infile >> value;
-                SetData()[k][j][i] = 1.0/value;
+                SetData()[k][j][i] = std::exp(-value);
               }
       }
   }

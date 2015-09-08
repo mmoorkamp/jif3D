@@ -34,6 +34,8 @@ namespace jif3D
       //! The calculation frequencies in Hz
       std::vector<double> Frequencies;
       friend class boost::serialization::access;
+
+    public:
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
@@ -42,7 +44,6 @@ namespace jif3D
           ar & DistortionParameters;
           ar & Frequencies;
         }
-    public:
       typedef MTDistortionSetter ExtraParameterSetter;
       const std::vector<double> &GetDistortionParameters() const
         {
@@ -79,6 +80,8 @@ namespace jif3D
         }
       //! Read an ascii file as written by ModEM
       void ReadModEM(const std::string filename);
+      //! Write an ascii file as read by ModEM
+      void WriteModEM(const std::string filename);
       //! We have a copy operator for other MT models
       ThreeDMTModel& operator=(const ThreeDMTModel& source);
       //! Other models will be copied by the copy operator for the base class

@@ -55,6 +55,8 @@ int main(int argc, char *argv[])
     double maxcond = 10;
     double relerr = 0.02;
     double coolingfactor = 1.0;
+    double xorigin = 0.0;
+    double yorigin = 0.0;
     std::string X3DName = "x3d";
     std::string MTInvCovarName;
     boost::shared_ptr<jif3D::JointObjective> Objective(new jif3D::JointObjective(true));
@@ -62,8 +64,12 @@ int main(int argc, char *argv[])
     double DistCorr = 0;
     po::options_description desc("General options");
     desc.add_options()("help", "produce help message")("threads", po::value<int>(),
-        "The number of openmp threads")("covmod", po::value<std::string>(),
-        "A file containing the model covariance")("mincond",
+        "The number of openmp threads")("xorigin",
+        po::value(&xorigin)->default_value(0.0),
+        "The origin for the inversion grid in x-direction")("yorigin",
+        po::value(&yorigin)->default_value(0.0),
+        "The origin for the inversion grid in y-direction")("covmod",
+        po::value<std::string>(), "A file containing the model covariance")("mincond",
         po::value(&mincond)->default_value(1e-4),
         "The minimum value for conductivity in S/m")("maxcond",
         po::value(&maxcond)->default_value(5),
@@ -146,22 +152,52 @@ int main(int argc, char *argv[])
     std::cout << "Extension: " << extension << std::endl;
 //we read in the starting modelfile
     jif3D::X3DModel Model;
+    Model.SetOrigin(xorigin, yorigin, 0.0);
     if (extension.compare(".mod") == 0)
       {
         Model.ReadModEM(modelfilename);
+        Model.WriteNetCDF(modelfilename + ".nc");
       }
     else
       {
         Model.ReadNetCDF(modelfilename);
+        Model.WriteModEM(modelfilename + ".dat");
       }
 //get the name of the file containing the data and read it in
     std::string datafilename = jif3D::AskFilename("Data Filename: ");
-
+    extension = jif3D::GetFileExtension(datafilename);
 //read in data
     jif3D::rvec Data, ZError;
     std::vector<double> XCoord, YCoord, ZCoord, Frequencies, C;
-    jif3D::ReadImpedancesFromNetCDF(datafilename, Frequencies, XCoord, YCoord, ZCoord,
-        Data, ZError, C);
+    if (extension.compare(".dat") == 0)
+      {
+        jif3D::ReadImpedancesFromModEM(datafilename, Frequencies, XCoord, YCoord, ZCoord,
+            Data, ZError);
+        jif3D::WriteImpedancesToNetCDF("start_data.nc", Frequencies, XCoord, YCoord,
+            ZCoord, Data, ZError);
+      }
+    else
+      {
+        jif3D::ReadImpedancesFromNetCDF(datafilename, Frequencies, XCoord, YCoord, ZCoord,
+            Data, ZError, C);
+        jif3D::WriteImpedancesToModEM("start_data.dat", Frequencies, XCoord, YCoord,
+            ZCoord, Data, ZError);
+      }
+    //if we have not specified a background in the model file
+    if (Model.GetBackgroundConductivities().empty())
+      {
+        jif3D::rvec Cond(Model.GetConductivities().num_elements());
+        std::copy(Model.GetConductivities().origin(),
+            Model.GetConductivities().origin()
+                + Model.GetConductivities().num_elements(),Cond.begin());
+        std::nth_element(Cond.begin(), Cond.begin() + Cond.size() / 2, Cond.end());
+        double MedCond = Cond(Cond.size() / 2);
+        std::vector<double> bg_thick(2), bg_cond(2, MedCond);
+        bg_thick.at(0) = Model.GetZCoordinates().at(Model.GetZCoordinates().size() - 1);
+        bg_thick.at(1) = bg_thick.at(0);
+        Model.SetBackgroundConductivities(bg_cond);
+        Model.SetBackgroundThicknesses(bg_thick);
+      }
     std::copy(Frequencies.begin(), Frequencies.end(),
         std::back_inserter(Model.SetFrequencies()));
 //if we don't have data inversion doesn't make sense;
@@ -187,7 +223,7 @@ int main(int argc, char *argv[])
 
     for (size_t i = 0; i < Model.GetConductivities().shape()[2]; ++i)
       {
-        Model.SetConductivities()[0][0][i] *= (1 + 0.001 * (i + 1));
+        Model.SetConductivities()[0][0][i] *= (1 + 0.01 * (i + 1));
       }
 
     const size_t ngrid = Model.GetConductivities().num_elements();

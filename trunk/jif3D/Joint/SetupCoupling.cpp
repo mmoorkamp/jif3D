@@ -337,7 +337,7 @@ namespace jif3D
         std::cin >> gravmtlambda;
         if (gravmtlambda > 0.0)
           {
-            Objective.AddObjective(GravMTCross, GravMTTrans, seismtlambda, "GravMT",
+            Objective.AddObjective(GravMTCross, GravMTTrans, gravmtlambda, "GravMT",
                 JointObjective::coupling);
           }
         //finally we construct the regularization terms
