@@ -221,7 +221,7 @@ namespace jif3D
                   {
                     outfile << std::scientific << std::setw(valuewidth)
                         << std::setprecision(valueprec) << Data[k][j][i];
-                    if (k > 0 && ((k + 1) % valuesperline) == 0)
+                    if (k > 0 && ((k + 1) % valuesperline) == 0 && (k+1) != XCellSizes.size())
                       outfile << "\n";
                   }
                 outfile << "\n";
