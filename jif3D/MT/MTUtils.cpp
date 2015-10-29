@@ -5,6 +5,11 @@
 // Copyright   : 2014, mm489
 //============================================================================
 
+#include "MTUtils.h"
+#include "../Global/convert.h"
+#include "../Global/FatalException.h"
+#include "ReadWriteX3D.h"
+
 #include <fstream>
 #include <boost/iostreams/stream.hpp>
 #include <boost/iostreams/device/file_descriptor.hpp>
@@ -12,10 +17,7 @@
 #include <boost/log/trivial.hpp>
 #include <boost/filesystem.hpp>
 
-#include "../Global/convert.h"
-#include "../Global/FatalException.h"
-#include "MTUtils.h"
-#include "ReadWriteX3D.h"
+
 
 namespace jif3D
   {

@@ -8,8 +8,7 @@
 #ifndef CONDUCTIVITYTRANSFORM_H_
 #define CONDUCTIVITYTRANSFORM_H_
 
-#include <boost/serialization/serialization.hpp>
-#include <boost/serialization/base_object.hpp>
+#include "../Global/Serialization.h"
 #include <boost/shared_ptr.hpp>
 #include "../ModelBase/ThreeDModelBase.h"
 #include "GeneralModelTransform.h"
@@ -44,12 +43,12 @@ namespace jif3D
       jif3D::ThreeDModelBase RelModel;
       //! The value to use for density where the relationship is not valid
       double replacevalue;
-      friend class boost::serialization::access;
+      friend class access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
         {
-          ar & boost::serialization::base_object<GeneralModelTransform>(*this);
+          ar & base_object<GeneralModelTransform>(*this);
           ar & a;
           ar & b;
           ar & c;

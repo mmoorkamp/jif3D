@@ -5,6 +5,12 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
+#include "ReadWriteX3D.h"
+#include "../Global/FileUtil.h"
+#include "../Global/FatalException.h"
+#include "../Global/convert.h"
+#include "../ModelBase/CellBoundaries.h"
+
 #include <cassert>
 #include <fstream>
 #include <iomanip>
@@ -13,11 +19,6 @@
 #include <boost/multi_array/index_range.hpp>
 #include <boost/iostreams/stream.hpp>
 #include <boost/iostreams/device/file_descriptor.hpp>
-#include "../Global/FileUtil.h"
-#include "../Global/FatalException.h"
-#include "../Global/convert.h"
-#include "../ModelBase/CellBoundaries.h"
-#include "ReadWriteX3D.h"
 
 namespace jif3D
   {

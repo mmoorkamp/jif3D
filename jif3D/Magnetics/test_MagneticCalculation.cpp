@@ -5,6 +5,9 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
+#include "../GravMag/MinMemGravMagCalculator.h"
+#include "OMPMagneticImp.h"
+
 #define BOOST_TEST_MODULE ThreeDGravityModel test
 #define BOOST_TEST_MAIN ...
 #include <boost/test/included/unit_test.hpp>
@@ -14,8 +17,7 @@
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/math/constants/constants.hpp>
 
-#include "../GravMag/MinMemGravMagCalculator.h"
-#include "OMPMagneticImp.h"
+
 
 
 using namespace boost::assign;

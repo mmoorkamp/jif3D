@@ -5,10 +5,12 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-#include <cassert>
-#include <boost/numeric/conversion/cast.hpp>
 #include "X3DModel.h"
 #include "../Global/NumUtil.h"
+#include <cassert>
+#include <boost/numeric/conversion/cast.hpp>
+
+
 namespace jif3D
   {
     //we use these names for storing the model in NetCDF and vtk files

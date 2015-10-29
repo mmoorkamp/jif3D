@@ -9,8 +9,9 @@
 #ifndef MT3DCALCULATOR_H_
 #define MT3DCALCULATOR_H_
 
-#include "../Global/VecMat.h"
 #include "ThreeDMTModel.h"
+#include "../Global/VecMat.h"
+
 
 namespace jif3D
   {

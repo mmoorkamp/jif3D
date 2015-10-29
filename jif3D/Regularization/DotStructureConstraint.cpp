@@ -4,10 +4,10 @@
  *  Created on: Feb 5, 2013
  *      Author: mmoorkamp
  */
-#include <boost/math/special_functions/pow.hpp>
+
 #include "DotStructureConstraint.h"
 #include "../Global/NumUtil.h"
-
+#include <boost/math/special_functions/pow.hpp>
 namespace jif3D
   {
     namespace bm = boost::math;

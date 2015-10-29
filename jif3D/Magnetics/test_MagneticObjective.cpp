@@ -4,6 +4,13 @@
 // Version     :
 // Copyright   : 2009, mmoorkamp
 //============================================================================
+#include "../Gravity/test_common.h"
+#include "../Inversion/ThreeDModelObjective.h"
+#include "ThreeDMagneticModel.h"
+#include "OMPMagneticImp.h"
+#include "MagneticTransforms.h"
+#include "../GravMag/FullSensitivityGravMagCalculator.h"
+#include "../GravMag/MinMemGravMagCalculator.h"
 
 #define BOOST_TEST_MODULE ThreeDGravityModel test
 #define BOOST_TEST_MAIN ...
@@ -13,13 +20,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 
-#include "../Gravity/test_common.h"
-#include "../Inversion/ThreeDModelObjective.h"
-#include "ThreeDMagneticModel.h"
-#include "OMPMagneticImp.h"
-#include "MagneticTransforms.h"
-#include "../GravMag/FullSensitivityGravMagCalculator.h"
-#include "../GravMag/MinMemGravMagCalculator.h"
+
 
 BOOST_AUTO_TEST_SUITE( MagneticObjective_Test_Suite )
 

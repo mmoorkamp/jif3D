@@ -8,7 +8,7 @@
 #ifndef GENERALMODELTRANSFORM_H_
 #define GENERALMODELTRANSFORM_H_
 
-#include <boost/serialization/serialization.hpp>
+#include "../Global/Serialization.h"
 #include "../Global/VecMat.h"
 
 namespace jif3D
@@ -24,7 +24,7 @@ namespace jif3D
     class GeneralModelTransform
       {
     private:
-      friend class boost::serialization::access;
+      friend class access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)

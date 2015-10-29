@@ -8,10 +8,11 @@
 #ifndef THREEDGRAVITYCALCULATOR_H_
 #define THREEDGRAVITYCALCULATOR_H_
 
-#include <boost/shared_ptr.hpp>
-#include <boost/serialization/serialization.hpp>
+#include "../Global/Serialization.h"
 #include "../Global/FatalException.h"
 #include "ThreeDGravMagImplementation.h"
+#include <boost/shared_ptr.hpp>
+
 
 namespace jif3D
   {
@@ -56,7 +57,7 @@ namespace jif3D
        * decide how to handle this information
        */
       rmat CurrentSensitivities;
-      friend class boost::serialization::access;
+      friend class access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)

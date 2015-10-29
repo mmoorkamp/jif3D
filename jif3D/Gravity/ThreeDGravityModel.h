@@ -9,8 +9,7 @@
 #define THREEDGRAVITYMODEL_H_
 
 #include <string>
-#include <boost/serialization/serialization.hpp>
-#include <boost/serialization/base_object.hpp>
+#include "../Global/Serialization.h"
 #include "../ModelBase/ThreeDModelBase.h"
 #include "../ModelBase/GridBackgroundModelCache.h"
 #include "../Global/VecMat.h"
@@ -76,12 +75,12 @@ namespace jif3D
       tBackgroundVec bg_densities;
       //! The thicknesses of the background layers
       tBackgroundVec bg_thicknesses;
-      friend class boost::serialization::access;
+      friend class access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
         {
-          ar & boost::serialization::base_object<ThreeDModelBase>(*this);
+          ar & base_object<ThreeDModelBase>(*this);
           ar & bg_thicknesses;
           ar & bg_densities;
         }

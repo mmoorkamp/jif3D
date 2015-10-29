@@ -10,10 +10,12 @@
  * The densities in this file are all identical to the specified value.
  */
 
+#include "ThreeDGravityModel.h"
+#include "../Global/FileUtil.h"
 #include <iostream>
 #include <string>
-#include "../Global/FileUtil.h"
-#include "ThreeDGravityModel.h"
+
+
 
 using namespace std;
 

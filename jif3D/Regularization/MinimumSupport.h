@@ -8,9 +8,10 @@
 #ifndef MINIMUMSUPPORT_H_
 #define MINIMUMSUPPORT_H_
 
-#include <boost/shared_ptr.hpp>
+#include "../Global/Serialization.h"
 #include "RegularizationFunction.h"
 #include "MatOpRegularization.h"
+#include <boost/shared_ptr.hpp>
 
 namespace jif3D
   {
@@ -21,9 +22,20 @@ namespace jif3D
       size_t ModelNumber;
       jif3D::rvec RegDiff;
       double beta;
-
       boost::shared_ptr<jif3D::MatOpRegularization> RegFunc;
       jif3D::ThreeDModelBase Geometry;
+      friend class access;
+      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version)
+        {
+          ar & base_object<RegularizationFunction>(*this);
+          ar & ModelNumber;
+          ar & RegDiff;
+          ar & beta;
+          ar & RegFunc;
+          ar & Geometry;
+        }
     public:
       //! The clone function provides a virtual constructor
       virtual MinimumSupport *clone() const

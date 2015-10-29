@@ -5,8 +5,7 @@
 // Copyright   : 2010, mmoorkamp
 //============================================================================
 
-#include <algorithm>
-#include <boost/log/trivial.hpp>
+#include "SetupRegularization.h"
 #include "../Global/convert.h"
 #include "../Regularization/GradientRegularization.h"
 #include "../Regularization/HOGradientRegularization.h"
@@ -15,7 +14,9 @@
 #include "../Regularization/MinimumSupport.h"
 #include "../Tomo/ThreeDSeismicModel.h"
 #include "../ModelBase/ReadAnyModel.h"
-#include "SetupRegularization.h"
+
+#include <algorithm>
+#include <boost/log/trivial.hpp>
 
 namespace jif3D
   {

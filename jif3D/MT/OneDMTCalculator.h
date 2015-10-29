@@ -8,8 +8,9 @@
 #ifndef ONEDMTCALCULATOR_H_
 #define ONEDMTCALCULATOR_H_
 
-#include "../Global/VecMat.h"
 #include "X3DModel.h"
+#include "../Global/VecMat.h"
+
 
 namespace jif3D
   {

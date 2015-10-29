@@ -54,10 +54,20 @@ void MakeTestModel(jif3D::ThreeDGravityModel &Model, const size_t size)
 
 namespace po = boost::program_options;
 int caching = 0;
+po::options_description desc("Allowed options");
 
 int hpx_main(boost::program_options::variables_map& vm)
   {
 
+    if (vm.count("help"))
+      {
+
+        std::cout << desc << "\n";
+#ifdef HAVEHPX
+        return hpx::finalize();
+#endif
+        return 1;
+      }
     const size_t nruns = 50;
     const size_t nrunspersize = 5;
     std::string filename;
@@ -193,7 +203,7 @@ int hpx_main(boost::program_options::variables_map& vm)
 
 int main(int argc, char* argv[])
   {
-    po::options_description desc("Allowed options");
+
     desc.add_options()("help", "produce help message")("scalar",
         "Perform scalar calculation [default]")("ftg", "Perform FTG calculation ")("cpu",
         "Perform calculation on CPU [default]")("gpu", "Perform calculation on GPU")(

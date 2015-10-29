@@ -8,8 +8,7 @@
 #ifndef CROSSGRADIENT_H_
 #define CROSSGRADIENT_H_
 
-#include <boost/serialization/serialization.hpp>
-#include <boost/serialization/base_object.hpp>
+#include "../Global/Serialization.h"
 #include "../Inversion/ObjectiveFunction.h"
 #include "GradientRegularization.h"
 #include "../ModelBase/ThreeDModelBase.h"
@@ -40,12 +39,12 @@ namespace jif3D
       GradientRegularization SecondGradient;
       //! The model geometry for the two models, this is always identical to the geometry in GradientRegularization objects
       ThreeDModelBase ModelGeometry;
-      friend class boost::serialization::access;
+      friend class access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
         {
-          ar & boost::serialization::base_object<ObjectiveFunction>(*this);
+          ar & base_object<ObjectiveFunction>(*this);
           ar & FirstGradient;
           ar & SecondGradient;
           ar & ModelGeometry;

@@ -7,15 +7,8 @@
 
 #ifndef THREEDMODELBASE_H_
 #define THREEDMODELBASE_H_
-#ifdef HAVEHPX
-#include <hpx/runtime/serialization/serialization_fwd.hpp>
-#include <hpx/runtime/serialization/multi_array.hpp>
-#include <hpx/runtime/serialization/vector.hpp>
-#else
-#include <boost/serialization/serialization.hpp>
-#include <boost/serialization/vector.hpp>
-#include <boost/serialization/split_member.hpp>
-#endif
+
+#include "../Global/Serialization.h"
 #include <netcdfcpp.h>
 #ifdef HAVEOPENMP
 #include <omp.h>
@@ -291,7 +284,7 @@ namespace jif3D
           ar & Data.shape()[1];
           ar & Data.shape()[2];
 #ifdef HAVEHPX
-          ar & Data;
+          ar & hpx::serialization::make_array(Data.origin(), Data.num_elements());
 #else
           //then serialize the raw data
           ar & boost::serialization::make_array(Data.origin(), Data.num_elements());
@@ -319,7 +312,8 @@ namespace jif3D
           ar & ny;
           ar & nz;
 #ifdef HAVEHPX
-          ar & Data;
+          Data.resize(boost::extents[nx][ny][nz]);
+          ar & hpx::serialization::make_array(Data.origin(), Data.num_elements());
 #else
           Data.resize(boost::extents[nx][ny][nz]);
           ar & boost::serialization::make_array(Data.origin(), Data.num_elements());

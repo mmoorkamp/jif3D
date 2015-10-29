@@ -8,7 +8,9 @@
 
 #ifndef NONLINEAROPTIMIZATION_H_
 #define NONLINEAROPTIMIZATION_H_
-
+#ifdef HAVEHPX
+#include <hpx/config.hpp>
+#endif
 #include <boost/shared_ptr.hpp>
 #include "ObjectiveFunction.h"
 #include "../Global/VecMat.h"

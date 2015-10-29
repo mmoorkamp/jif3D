@@ -19,7 +19,7 @@ namespace jif3D
     using boost::numeric_cast;
 
     TomographyCalculator::TomographyCalculator(bool saverays) :
-        writerays(saverays), nairlayers(3), geo(), grid(), data(), raypath()
+        writerays(saverays), minxindex(), minyindex(), nairlayers(3), geo(), grid(), data(), raypath()
       {
       }
 
@@ -238,4 +238,4 @@ namespace jif3D
       }
   }
 
-BOOST_CLASS_EXPORT_IMPLEMENT(jif3D::TomographyCalculator)
+
