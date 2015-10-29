@@ -131,8 +131,7 @@ ForwardResult CalculateFrequency(const ForwardInfo &Info)
     return result;
   }
 
-jif3D::rvec LQDerivativeFreq(const ForwardInfo &Info, const jif3D::rvec &Misfit,
-    const jif3D::rvec &RawImpedance)
+GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI)
   {
     //a few commonly used quantities for shorter notation
     const size_t nmodx = Info.Model.GetConductivities().shape()[0];
@@ -213,7 +212,7 @@ jif3D::rvec LQDerivativeFreq(const ForwardInfo &Info, const jif3D::rvec &Misfit,
 
         //this is an implementation of eq. 12 in Avdeev and Avdeeva
         //we do not have any beta, as this is part of the misfit
-        cmat j_ext = CalcEExt(Misfit, Info.C, j, freq_start_index, Hx1_obs[offset],
+        cmat j_ext = CalcEExt(GI.Misfit, Info.C, j, freq_start_index, Hx1_obs[offset],
             Hx2_obs[offset], Hy1_obs[offset], Hy2_obs[offset]);
         //x3d uses a different convention for the complex exponentials
         //so we have to use the complex conjugate for the source
@@ -286,10 +285,10 @@ jif3D::rvec LQDerivativeFreq(const ForwardInfo &Info, const jif3D::rvec &Misfit,
     for (size_t j = 0; j < nmeas; ++j)
       {
         size_t offset = freq_start_index + j * 8;
-        std::complex<double> Zxx(RawImpedance(offset), RawImpedance(offset + 1)), Zxy(
-            RawImpedance(offset + 2), RawImpedance(offset + 3)), Zyx(
-            RawImpedance(offset + 4), RawImpedance(offset + 5)), Zyy(
-            RawImpedance(offset + 5), RawImpedance(offset + 6));
+        std::complex<double> Zxx(GI.RawImpedance(offset), GI.RawImpedance(offset + 1)), Zxy(
+            GI.RawImpedance(offset + 2), GI.RawImpedance(offset + 3)), Zyx(
+                GI.RawImpedance(offset + 4), GI.RawImpedance(offset + 5)), Zyy(
+                    GI.RawImpedance(offset + 5), GI.RawImpedance(offset + 6));
         //project the electric dipole to magnetic dipole moments using the undistorted impedance
         CalcHext(omega_mu, XPolMoments1.at(j), XPolMoments2.at(j), YPolMoments1.at(j),
             YPolMoments2.at(j), Zxx, Zxy, Zyx, Zyy);
@@ -326,11 +325,10 @@ jif3D::rvec LQDerivativeFreq(const ForwardInfo &Info, const jif3D::rvec &Misfit,
 
         Gradient(j) += gradinc;
       }
-    return Gradient;
+    return GradResult(Gradient);
   }
 
 #ifdef HAVEHPX
-
-HPX_REGISTER_PLAIN_ACTION(CalculateFrequency_action)
-HPX_REGISTER_PLAIN_ACTION( LQDerivativeFreq_action)
+HPX_REGISTER_ACTION(CalculateFrequency_action)
+HPX_REGISTER_ACTION(LQDerivativeFreq_action)
 #endif

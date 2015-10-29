@@ -8,8 +8,7 @@
 #ifndef THREEDMTMODEL_H_
 #define THREEDMTMODEL_H_
 
-#include <boost/serialization/serialization.hpp>
-#include <boost/serialization/base_object.hpp>
+#include "../Global/Serialization.h"
 #include "../ModelBase/ThreeDModelBase.h"
 
 namespace jif3D
@@ -33,14 +32,12 @@ namespace jif3D
       std::vector<double> DistortionParameters;
       //! The calculation frequencies in Hz
       std::vector<double> Frequencies;
-      friend class boost::serialization::access;
-
     public:
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
         {
-          ar & boost::serialization::base_object<ThreeDModelBase>(*this);
+          ar & base_object<ThreeDModelBase>(*this);
           ar & DistortionParameters;
           ar & Frequencies;
         }

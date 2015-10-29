@@ -8,6 +8,7 @@
 #ifndef ONEDREGULARIZATION_H_
 #define ONEDREGULARIZATION_H_
 
+#include "../Global/Serialization.h"
 #include "../Global/VecMat.h"
 #include "../Inversion/ObjectiveFunction.h"
 
@@ -26,6 +27,15 @@ namespace jif3D
       comp_mat OperatorMatrix;
       //! The reference model substracted before calculating the regularization
       jif3D::rvec RefMod;
+      friend class access;
+      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version)
+        {
+          ar & base_object<ObjectiveFunction>(*this);
+          ar & OperatorMatrix;
+          ar & RefMod;
+        }
     public:
       //! The clone function provides a virtual constructor
       virtual OneDRegularization *clone() const

@@ -5,8 +5,8 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-#include "BasicGravElements.h"
 #include "ThreeDGravityModel.h"
+#include "BasicGravElements.h"
 #include "../Global/VecMat.h"
 namespace jif3D
   {

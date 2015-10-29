@@ -9,8 +9,7 @@
 #ifndef GRADIENTREGULARIZATION_H_
 #define GRADIENTREGULARIZATION_H_
 
-#include <boost/serialization/serialization.hpp>
-#include <boost/serialization/base_object.hpp>
+#include "../Global/Serialization.h"
 #include "MatOpRegularization.h"
 #include "MakeTearModel.h"
 
@@ -50,12 +49,12 @@ namespace jif3D
           const jif3D::ThreeDModelBase &TearModelX,
           const jif3D::ThreeDModelBase &TearModelY,
           const jif3D::ThreeDModelBase &TearModelZ);
-      friend class boost::serialization::access;
+      friend class access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
         {
-          ar & boost::serialization::base_object<MatOpRegularization>(*this);
+          ar & base_object<MatOpRegularization>(*this);
           ar & Eps;
 
         }

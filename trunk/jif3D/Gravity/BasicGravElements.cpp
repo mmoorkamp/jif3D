@@ -5,12 +5,13 @@
 // Copyright   : 2008, mmoorkamp
 //============================================================================
 
+#include "BasicGravElements.h"
 #include <cmath>
 #include <algorithm>
 #include <numeric>
 #include <limits>
 #include <boost/math/constants/constants.hpp>
-#include "BasicGravElements.h"
+
 
 namespace jif3D
   {

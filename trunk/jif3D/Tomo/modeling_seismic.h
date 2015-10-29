@@ -36,8 +36,7 @@ jif3D::RayResult ForwardModShot(const jif3D::GEOMETRY &geo,
     const jif3D::GRID_STRUCT &grid);
 
 
-jif3D::RayResult ForwardModShotArray(const std::vector<jif3D::GEOMETRY> &geo,
-    const jif3D::GRID_STRUCT &grid);
+
 
 
 #endif

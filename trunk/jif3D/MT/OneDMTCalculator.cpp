@@ -5,9 +5,10 @@
 // Copyright   : 2012, mm489
 //============================================================================
 
-#include <boost/math/special_functions/fpclassify.hpp>
+
 #include "OneDMTCalculator.h"
 #include "MTEquations.h"
+#include <boost/math/special_functions/fpclassify.hpp>
 
 namespace jif3D
   {

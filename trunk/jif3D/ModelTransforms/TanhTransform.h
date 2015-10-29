@@ -8,8 +8,7 @@
 #ifndef TANHTRANSFORM_H_
 #define TANHTRANSFORM_H_
 
-#include <boost/serialization/serialization.hpp>
-#include <boost/serialization/base_object.hpp>
+#include "../Global/Serialization.h"
 #include <boost/math/special_functions/atanh.hpp>
 #include "GeneralModelTransform.h"
 
@@ -34,12 +33,12 @@ namespace jif3D
       double min;
       //! The maximum value for the physical model parameters
       double max;
-      friend class boost::serialization::access;
+      friend class access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
         {
-          ar & boost::serialization::base_object<GeneralModelTransform>(*this);
+          ar & base_object<GeneralModelTransform>(*this);
           ar & min;
           ar & max;
         }

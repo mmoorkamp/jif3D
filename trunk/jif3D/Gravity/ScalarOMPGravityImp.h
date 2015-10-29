@@ -9,8 +9,7 @@
 #ifndef SCALAROMPGRAVITYIMP_H_
 #define SCALAROMPGRAVITYIMP_H_
 
-#include <boost/serialization/serialization.hpp>
-#include <boost/serialization/base_object.hpp>
+#include "../Global/Serialization.h"
 #include "../Gravity/ThreeDGravityModel.h"
 #include "../GravMag/ThreeDGravMagImplementation.h"
 
@@ -35,12 +34,12 @@ namespace jif3D
       //! Calculate the response of the gridded part
       virtual rvec CalcGridded(const size_t measindex, const ThreeDGravityModel &Model,
           rmat &Sensitivities);
-      friend class boost::serialization::access;
+      friend class access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
         {
-          ar & boost::serialization::base_object<ThreeDGravMagImplementation>(*this);
+          ar & base_object<ThreeDGravMagImplementation>(*this);
         }
     public:
       //! How many data do we return before any transformation

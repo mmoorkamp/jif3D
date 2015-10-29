@@ -8,8 +8,7 @@
 #ifndef DCRESISTIVITYCALCULATOR_H_
 #define DCRESISTIVITYCALCULATOR_H_
 
-#include <boost/serialization/serialization.hpp>
-#include <boost/serialization/export.hpp>
+#include "../Global/Serialization.h"
 #include "../Global/VecMat.h"
 #include "ThreeDDCResistivityModel.h"
 #include "DCResForwardBase.h"
@@ -36,7 +35,7 @@ namespace jif3D
       //! Translate a 3D model object to structures used for forward calculation
       void ModelToStruct(const ThreeDDCResistivityModel &Model, jif3D::GEOMETRY_RES &geo,
                 jif3D::GRID_STRUCT_RES &grid);
-      friend class boost::serialization::access;
+      friend class access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)

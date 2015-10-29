@@ -9,8 +9,7 @@
 #define THREEDSEISMICMODEL_H_
 
 #include <cassert>
-#include <boost/serialization/serialization.hpp>
-#include <boost/serialization/base_object.hpp>
+#include "../Global/Serialization.h"
 #include "../Global/FatalException.h"
 #include "../ModelBase/ThreeDModelBase.h"
 
@@ -59,19 +58,18 @@ namespace jif3D
       tIndexVec SourceIndices;
       //! The index in the position vectors for the receivers
       tIndexVec ReceiverIndices;
-      friend class boost::serialization::access;
+    public:
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
         {
-          ar & boost::serialization::base_object<ThreeDModelBase>(*this);
+          ar & base_object<ThreeDModelBase>(*this);
           ar & SourcePosX;
           ar & SourcePosY;
           ar & SourcePosZ;
           ar & SourceIndices;
           ar & ReceiverIndices;
         }
-    public:
       //! Given three coordinates in m, find the indices of the model cell that correponds to these coordinates, this is a more efficient implementation than the one in the base class
       virtual boost::array<ThreeDModelBase::t3DModelData::index, 3>
       FindAssociatedIndices(const double xcoord, const double ycoord,

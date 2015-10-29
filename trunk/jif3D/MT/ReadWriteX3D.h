@@ -8,13 +8,14 @@
 #ifndef READWRITEX3D_H_
 #define READWRITEX3D_H_
 
+
+#include "../ModelBase/ThreeDModelBase.h"
+#include "X3DModel.h"
 #include <string>
 #include <vector>
 #include <complex>
 #include <boost/multi_array.hpp>
 #include <boost/filesystem.hpp>
-#include "../ModelBase/ThreeDModelBase.h"
-#include "X3DModel.h"
 
 namespace jif3D
   {

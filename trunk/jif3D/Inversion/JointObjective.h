@@ -8,12 +8,11 @@
 #ifndef JOINTOBJECTIVE_H_
 #define JOINTOBJECTIVE_H_
 
-#include <boost/shared_ptr.hpp>
-#include <boost/serialization/serialization.hpp>
-#include <boost/serialization/base_object.hpp>
+#include "../Global/Serialization.h"
 #include "../Global/FatalException.h"
 #include "ObjectiveFunction.h"
 #include "ModelDistributor.h"
+#include <boost/shared_ptr.hpp>
 
 namespace jif3D
   {
@@ -57,12 +56,12 @@ namespace jif3D
       bool PrintMisfit;
       //! We can specify for each objective function what general purpose it has in the optimization
       std::vector<ObjectiveType> FunctionType;
-      friend class boost::serialization::access;
+      friend class access;
       //! Provide serialization to be able to store objects and, more importantly for simpler parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
         {
-          ar & boost::serialization::base_object<ObjectiveFunction>(*this);
+          ar & base_object<ObjectiveFunction>(*this);
           ar & Objectives;
           ar & Weights;
           ar & IndividualFits;

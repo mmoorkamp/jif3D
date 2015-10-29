@@ -5,10 +5,11 @@
 // Copyright   : 2010, mmoorkamp
 //============================================================================
 
-#include <boost/math/special_functions/pow.hpp>
+
 #include "MinimumSupport.h"
 #include "../ModelBase/VTKTools.h"
 #include "../Global/convert.h"
+#include <boost/math/special_functions/pow.hpp>
 
 namespace jif3D
   {

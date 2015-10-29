@@ -8,8 +8,7 @@
 #ifndef VECTORTRANSFORM_H_
 #define VECTORTRANSFORM_H_
 
-#include <boost/serialization/serialization.hpp>
-#include <boost/serialization/base_object.hpp>
+#include "../Global/Serialization.h"
 #include <cassert>
 #include "../Global/VecMat.h"
 
@@ -40,7 +39,7 @@ namespace jif3D
     class VectorTransform
       {
     private:
-      friend class boost::serialization::access;
+      friend class access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
@@ -72,12 +71,12 @@ namespace jif3D
     private:
       //! The number of elements we expect to transform, this is purely used for potential error checking between creating the object and using it
       size_t ntrans;
-      friend class boost::serialization::access;
+      friend class access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
         {
-          ar & boost::serialization::base_object<VectorTransform>(*this);
+          ar & base_object<VectorTransform>(*this);
           ar & ntrans;
         }
     public:

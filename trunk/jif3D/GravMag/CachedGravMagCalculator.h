@@ -8,8 +8,7 @@
 #ifndef CACHEDGRAVITYCALCULATOR_H_
 #define CACHEDGRAVITYCALCULATOR_H_
 
-#include <boost/serialization/serialization.hpp>
-#include <boost/serialization/base_object.hpp>
+#include "../Global/Serialization.h"
 #include "ThreeDGravMagCalculator.h"
 
 namespace jif3D
@@ -37,12 +36,12 @@ namespace jif3D
       typedef typename ThreeDModelType::tMeasPosVec MeasPosType;
       //typedef typename ThreeDModelType::tBackgroundVec BackgroundType;
       typename ThreeDModelType::ModelCacheType ModelCache;
-      friend class boost::serialization::access;
+      friend class access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
         {
-          ar & boost::serialization::base_object<ThreeDGravMagCalculator>(*this);
+          ar & base_object<ThreeDGravMagCalculator>(*this);
         }
       //! The function declaration for the calculation of a new sensitivity matrix and rebuilding of caching information
       virtual rvec CalculateNewModel(const ThreeDModelType &Model) = 0;

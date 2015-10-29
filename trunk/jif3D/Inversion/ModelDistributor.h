@@ -8,13 +8,13 @@
 #ifndef MODELDISTRIBUTOR_H_
 #define MODELDISTRIBUTOR_H_
 
+#include "../Global/Serialization.h"
+#include "../Global/VecMat.h"
+#include "../ModelTransforms/GeneralModelTransform.h"
 #include <cassert>
 #include <vector>
 #include <boost/shared_ptr.hpp>
-#include <boost/serialization/serialization.hpp>
-#include <boost/serialization/shared_ptr.hpp>
-#include "../Global/VecMat.h"
-#include "../ModelTransforms/GeneralModelTransform.h"
+
 
 namespace jif3D
   {
@@ -44,7 +44,7 @@ namespace jif3D
     private:
       //! This vector stores a shared pointer to a Transformer object for each objective function
       std::vector<boost::shared_ptr<GeneralModelTransform> > Transformers;
-      friend class boost::serialization::access;
+      friend class access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)

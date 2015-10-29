@@ -8,6 +8,7 @@
 #ifndef READWRITEIMPEDANCES_H_
 #define READWRITEIMPEDANCES_H_
 
+#include "../Global/Serialization.h"
 #include "../Global/VecMat.h"
 
 namespace jif3D

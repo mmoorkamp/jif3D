@@ -9,7 +9,7 @@
 #define REALINFO_H_
 
 #include <string>
-#include <boost/serialization/serialization.hpp>
+#include "../Global/Serialization.h"
 #include "../MT/X3DModel.h"
 
 struct realinfo

@@ -8,8 +8,7 @@
 #ifndef FULLSENSITIVITYGRAVITYCALCULATOR_H_
 #define FULLSENSITIVITYGRAVITYCALCULATOR_H_
 
-#include <boost/serialization/serialization.hpp>
-#include <boost/serialization/base_object.hpp>
+#include "../Global/Serialization.h"
 #include "../Global/FatalException.h"
 #include "CachedGravMagCalculator.h"
 
@@ -47,12 +46,12 @@ namespace jif3D
       virtual rvec CalculateCachedResult(const ThreeDModelType &Model);
       //! calculate derivative of least squares objective function with applied transformation when cached sensitivities are still valid
       virtual rvec CachedLQDerivative(const ThreeDModelType &Model, const rvec &Misfit);
-      friend class boost::serialization::access;
+      friend class access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
         {
-          ar & boost::serialization::base_object<ThreeDGravMagCalculator>(*this);
+          ar & base_object<ThreeDGravMagCalculator>(*this);
           ar & Sensitivities;
         }
     public:

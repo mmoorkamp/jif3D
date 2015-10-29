@@ -8,9 +8,8 @@
 #ifndef MINMEMGRAVITYCALCULATOR_H_
 #define MINMEMGRAVITYCALCULATOR_H_
 
+#include "../Global/Serialization.h"
 #include <boost/shared_ptr.hpp>
-#include <boost/serialization/serialization.hpp>
-#include <boost/serialization/base_object.hpp>
 #include "ThreeDGravMagCalculator.h"
 
 namespace jif3D
@@ -26,13 +25,13 @@ namespace jif3D
     class MinMemGravMagCalculator: public jif3D::ThreeDGravMagCalculator<ThreeDModelType>
       {
     private:
-      friend class boost::serialization::access;
+      friend class access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
         {
           ar
-              & boost::serialization::base_object<ThreeDGravMagCalculator<ThreeDModelType> >(
+              & base_object<ThreeDGravMagCalculator<ThreeDModelType> >(
                   *this);
         }
     public:

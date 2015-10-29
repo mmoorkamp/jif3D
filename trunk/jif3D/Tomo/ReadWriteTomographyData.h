@@ -9,8 +9,8 @@
 #define READWRITETOMOGRAPHYDATA_H_
 
 #include <fstream>
-#include "../Global/VecMat.h"
 #include "ThreeDSeismicModel.h"
+#include "../Global/VecMat.h"
 #include "tomo_types.h"
 
 namespace jif3D

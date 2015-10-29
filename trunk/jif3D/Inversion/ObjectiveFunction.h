@@ -8,16 +8,16 @@
 #ifndef OBJECTIVEFUNCTION_H_
 #define OBJECTIVEFUNCTION_H_
 
+#include "../Global/Serialization.h"
+#include "../Global/VecMat.h"
+#include "../Global/NumUtil.h"
+#include "../Global/FatalException.h"
+
 #include <cassert>
 #include <cmath>
 #include <boost/shared_ptr.hpp>
 #include <boost/numeric/conversion/cast.hpp>
-#include <boost/serialization/serialization.hpp>
-#include <boost/serialization/export.hpp>
 #include <boost/log/trivial.hpp>
-#include "../Global/VecMat.h"
-#include "../Global/NumUtil.h"
-#include "../Global/FatalException.h"
 
 namespace jif3D
   {
@@ -46,7 +46,7 @@ namespace jif3D
       jif3D::rvec IndividualMisfits;
       //! The inverse of the covariance matrix
       jif3D::comp_mat InvCovMat;
-      friend class boost::serialization::access;
+      friend class access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)

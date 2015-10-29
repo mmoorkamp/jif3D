@@ -8,7 +8,6 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
-#include <boost/foreach.hpp>
 #include "DepthWeighting.h"
 #include "../Inversion/LinearInversion.h"
 
@@ -58,7 +57,7 @@ namespace jif3D
         //we need the depth to the interfaces
         partial_sum(ZSizes.begin(), ZSizes.end(), zvalues.begin());
         //the sensitivities can be negative, so we examine the absolute value
-        BOOST_FOREACH( double & value, profile )
+        for ( double & value : profile )
           {
             value = std::abs(value);
           }

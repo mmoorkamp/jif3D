@@ -9,8 +9,7 @@
 #define TOMO_TYPES_H_
 
 #include <vector>
-#include <boost/serialization/serialization.hpp>
-#include <boost/serialization/vector.hpp>
+#include "../Global/Serialization.h"
 
 namespace jif3D
   {
@@ -27,7 +26,6 @@ namespace jif3D
       float h; /*!< Size of the grid cells in m (!The same in all three directions!)*/
       /*!< Seismic Velocity parameters*/
       std::vector<float> slow; /*!< Slowness model used for the forward model (normalized by the grid cell size)*/
-      friend class boost::serialization::access;
       //! Provide serialization to be able to store objects and, more importantly for hpx parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
@@ -56,7 +54,6 @@ namespace jif3D
       std::vector<float> z; /*!< z-coordinates of the shot/receiver locations in m*/
       std::size_t nshot; /*!< Number of shot positions*/
       std::size_t nrec; /*!< Number of receiver positions*/
-      friend class boost::serialization::access;
       //! Provide serialization to be able to store objects and, more importantly for hpx parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
@@ -90,7 +87,6 @@ namespace jif3D
       std::vector<double> tcalc; /*!< Calculated travel times for the different shot-receiver combinations in ms*/
 
       std::vector<int> lshots; /*!< Number of active receivers for the corresponding shot position number (related to shots)*/
-      friend class boost::serialization::access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
@@ -115,7 +111,6 @@ namespace jif3D
     class RP_STRUCT
       {
     public:
-      friend class boost::serialization::access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)

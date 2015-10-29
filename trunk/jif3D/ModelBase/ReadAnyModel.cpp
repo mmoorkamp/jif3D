@@ -14,7 +14,6 @@
 #include "../Gravity/ThreeDGravityModel.h"
 #include "../Magnetics/ThreeDMagneticModel.h"
 
-#define BOOST_MPL_LIMIT_VECTOR_SIZE  10
 #include <boost/variant.hpp>
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/at.hpp>

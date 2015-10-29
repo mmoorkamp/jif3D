@@ -17,7 +17,7 @@ feature.compose <eigen>on : <define>HAVEEIGEN ;
 
 feature.feature parallelization : openmp hpx  : composite propagated symmetric ;
 feature.compose <parallelization>openmp : <define>HAVEOPENMP <cflags>" -fopenmp -std=c++0x " <linkflags>" -fopenmp  " ;
-feature.compose <parallelization>hpx : <define>HAVEHPX <hpx>on <cflags>"`pkg-config --cflags hpx_application`" <linkflags>"  `pkg-config --libs hpx_application` " ;
+feature.compose <parallelization>hpx : <define>HAVEHPX <hpx>on <cflags>"-fopenmp `pkg-config --cflags hpx_application`" <linkflags>"-fopenmp  `pkg-config --libs hpx_application` " ;
 
 
 constant BOOST_LIB_PATH : /usr/local/lib ;

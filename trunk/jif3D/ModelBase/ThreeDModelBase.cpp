@@ -6,11 +6,12 @@
 //============================================================================
 
 #include "ThreeDModelBase.h"
-#include <cassert>
-#include <fstream>
 #include "../Global/FatalException.h"
 #include "NetCDFModelTools.h"
 #include "VTKTools.h"
+#include <cassert>
+#include <fstream>
+
 namespace jif3D
   {
 

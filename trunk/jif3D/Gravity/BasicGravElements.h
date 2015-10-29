@@ -9,9 +9,11 @@
 #ifndef BASICGRAVELEMENTS_H_
 #define BASICGRAVELEMENTS_H_
 
-#include <boost/math/constants/constants.hpp>
+
 #include "../Global/VecMat.h"
 #include "../Global/NumUtil.h"
+#include <boost/math/constants/constants.hpp>
+
 namespace jif3D
   {
     /** \addtogroup gravity Gravity forward modeling, display and inversion */

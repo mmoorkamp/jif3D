@@ -9,9 +9,8 @@
 #define DISKGRAVITYCALCULATOR_H_
 
 #include <fstream>
+#include "../Global/Serialization.h"
 #include <boost/filesystem.hpp>
-#include <boost/serialization/serialization.hpp>
-#include <boost/serialization/base_object.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
@@ -44,13 +43,13 @@ namespace jif3D
       //calculate the raw derivative without any transformation from the sensitivities stored in the file
       virtual rvec CalculateRawLQDerivative(const ThreeDModelType &Model,
           const rvec &Misfit);
-      friend class boost::serialization::access;
+      friend class access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
         {
           ar
-              & boost::serialization::base_object<
+              & base_object<
                   FullSensitivityGravMagCalculator<ThreeDModelType> >(*this);
           ar & FullPath;
         }

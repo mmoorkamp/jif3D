@@ -17,7 +17,7 @@
 #include <omp.h>
 #endif
 
-#include <boost/multi_array.hpp>
+//#include <boost/multi_array.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/log/trivial.hpp>
@@ -283,10 +283,10 @@ namespace jif3D
               {
                 ForwardInfo Info(Model,C,i,TempDir.string(),X3DName, NameRoot, GreenType1, GreenType4);
                 //calculate the gradient for each frequency
-                rvec tmp = LQDerivativeFreq(Info, Misfit, RawImpedance);
+                GradResult tmp = LQDerivativeFreq(Info, GradInfo(Misfit, RawImpedance));
                omp_set_lock(&lck);
                 //the total gradient is the sum over the gradients for each frequency
-                boost::numeric::ublas::subrange(Gradient, 0, nmod) += tmp;
+                boost::numeric::ublas::subrange(Gradient, 0, nmod) += tmp.Gradient;
                 omp_unset_lock(&lck);
               }
             catch (...)
@@ -307,7 +307,7 @@ namespace jif3D
         using hpx::wait_all;
         std::vector<hpx::naming::id_type> localities =
         hpx::find_all_localities();
-        std::vector<hpx::lcos::future<jif3D::rvec>> FreqResult;
+        std::vector<hpx::lcos::future<GradResult>> FreqResult;
         FreqResult.reserve(nfreq);
         LQDerivativeFreq_action LQDerivativeFreq;
         for (int i = minfreqindex; i < maxfreqindex; ++i)
@@ -316,7 +316,7 @@ namespace jif3D
 
             hpx::naming::id_type const locality_id = localities.at(i % localities.size());
             //rvec freqresult = CalculateFrequency(Model, i, TempDir);
-            FreqResult.push_back(async(LQDerivativeFreq, locality_id, Info, Misfit, RawImpedance));
+            FreqResult.push_back(async(LQDerivativeFreq, locality_id, Info, GradInfo(Misfit, RawImpedance)));
 
           }
         wait_all(FreqResult);
@@ -324,7 +324,7 @@ namespace jif3D
         for (int i = minfreqindex; i < maxfreqindex; ++i)
           {
             size_t currindex = i - minfreqindex;
-            boost::numeric::ublas::subrange(Gradient, 0, nmod) += FreqResult[currindex].get();
+            boost::numeric::ublas::subrange(Gradient, 0, nmod) += FreqResult[currindex].get().Gradient;
 
           }
 
@@ -397,10 +397,10 @@ namespace jif3D
             CurrMisfit(i) = 1.0;
             ForwardInfo Info(Model, C, freqindex, TempDir.string(), X3DName, NameRoot,
                 GreenType1, GreenType4);
-            rvec CurrGrad = LQDerivativeFreq(Info, CurrMisfit, RawImpedance);
+            GradResult CurrGrad = LQDerivativeFreq(Info, GradInfo(CurrMisfit, RawImpedance));
 
             boost::numeric::ublas::matrix_row<rmat> CurrRow(Result, i);
-            boost::numeric::ublas::subrange(CurrRow, 0, nmodel) = CurrGrad;
+            boost::numeric::ublas::subrange(CurrRow, 0, nmodel) = CurrGrad.Gradient;
             if (WantDistCorr)
               {
                 jif3D::rvec CGrad = AdaptDist(C, RawImpedance, CurrMisfit);

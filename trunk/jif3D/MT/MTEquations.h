@@ -5,9 +5,10 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
+#include "../Global/VecMat.h"
 #include <complex>
 #include <boost/math/constants/constants.hpp>
-#include "../Global/VecMat.h"
+
 
 namespace jif3D
   {

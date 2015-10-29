@@ -8,8 +8,9 @@
 #ifndef MTCOVAR_H_
 #define MTCOVAR_H_
 
-#include <boost/numeric/ublas/symmetric.hpp>
+
 #include "../Global/VecMat.h"
+#include <boost/numeric/ublas/symmetric.hpp>
 
 namespace jif3D
   {

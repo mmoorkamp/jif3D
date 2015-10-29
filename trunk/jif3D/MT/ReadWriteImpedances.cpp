@@ -4,6 +4,14 @@
 // Version     : 
 // Copyright   : 2009, mmoorkamp
 //============================================================================
+#include "ReadWriteImpedances.h"
+#include "MTEquations.h"
+#include "../Global/FatalException.h"
+#include "../Global/NumUtil.h"
+#include "../Global/convert.h"
+#include "../ModelBase/NetCDFModelTools.h"
+#include "../Global/NetCDFTools.h"
+
 
 #include <fstream>
 #include <iomanip>
@@ -13,13 +21,6 @@
 #include <boost/cast.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
-#include "../Global/FatalException.h"
-#include "../Global/NumUtil.h"
-#include "../Global/convert.h"
-#include "../ModelBase/NetCDFModelTools.h"
-#include "../Global/NetCDFTools.h"
-#include "ReadWriteImpedances.h"
-#include "MTEquations.h"
 
 namespace jif3D
   {

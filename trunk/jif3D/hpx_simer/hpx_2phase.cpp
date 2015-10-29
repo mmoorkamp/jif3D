@@ -23,9 +23,8 @@
 #include <iostream>
 #include <string>
 #include <cstdlib>
-
+#include "../Global/Serialization.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/serialization/serialization.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 #include <boost/log/core.hpp>

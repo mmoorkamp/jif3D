@@ -8,7 +8,7 @@
 #ifndef MODELREFINER_H_
 #define MODELREFINER_H_
 
-#include <boost/serialization/serialization.hpp>
+#include "../Global/Serialization.h"
 #include "ThreeDModelBase.h"
 #include "../Global/VecMat.h"
 

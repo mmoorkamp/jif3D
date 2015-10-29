@@ -8,8 +8,7 @@
 #ifndef TENSORCUDAGRAVITYIMP_H_
 #define TENSORCUDAGRAVITYIMP_H_
 
-#include <boost/serialization/serialization.hpp>
-#include <boost/serialization/base_object.hpp>
+#include "../Global/Serialization.h"
 #include "../Gravity/ThreeDGravityModel.h"
 #include "../GravMag/ThreeDGravMagImplementation.h"
 
@@ -51,7 +50,7 @@ namespace jif3D
       size_t currsenssize;
       //! The size of a CUDA execution block
       size_t blocksize;
-      friend class boost::serialization::access;
+      friend class access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)

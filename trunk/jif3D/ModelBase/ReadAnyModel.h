@@ -8,9 +8,10 @@
 #ifndef READANYMODEL_H_
 #define READANYMODEL_H_
 
+#include "../ModelBase/ThreeDModelBase.h"
 #include <string>
 #include <boost/shared_ptr.hpp>
-#include "../ModelBase/ThreeDModelBase.h"
+
 
 namespace jif3D
   {

@@ -9,15 +9,14 @@
  * Add random gaussian noise to a netcdf file with scalar gravity measurements.
  */
 
+#include "ThreeDGravityModel.h"
+#include "ReadWriteGravityData.h"
+#include "../Global/FileUtil.h"
 #include <iostream>
 #include <ctime>
 #include <boost/random/lagged_fibonacci.hpp>
 #include <boost/random/normal_distribution.hpp>
 #include <boost/random/variate_generator.hpp>
-#include "../Global/FileUtil.h"
-#include "ThreeDGravityModel.h"
-#include "ReadWriteGravityData.h"
-
 
 int main()
   {

@@ -5,8 +5,9 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-#include <fstream>
 #include "ThreeDMTModel.h"
+#include <fstream>
+
 
 namespace jif3D
   {

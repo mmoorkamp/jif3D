@@ -8,8 +8,8 @@
 #ifndef READWRITEMAGNETICDATA_H_
 #define READWRITEMAGNETICDATA_H_
 
-#include "../Global/VecMat.h"
 #include "ThreeDMagneticModel.h"
+#include "../Global/VecMat.h"
 #include <string>
 
 namespace jif3D

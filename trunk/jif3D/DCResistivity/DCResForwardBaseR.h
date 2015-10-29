@@ -11,8 +11,9 @@
 #include <vector>
 #include <cstdlib>
 #include <iostream>
+#include "../Global/Serialization.h"
 #include "../Global/VecMat.h"
-#include <boost/serialization/serialization.hpp>
+
 
 namespace jif3D
   {
@@ -36,7 +37,7 @@ namespace jif3D
     class GRID_STRUCT_RES
       {
     private:
-      friend class boost::serialization::access;
+      friend class access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
@@ -89,7 +90,7 @@ namespace jif3D
       std::vector<double> ry2; /*!< y-coordinates of the locations of the second receiver electrode for each data in m*/
       std::vector<double> rz2; /*!< z-coordinates of the locations of the second receiver electrode for each data in m*/
       std::vector<size_t> sno; /*!< Source index corresponding to each receiver electrodes*/
-      friend class boost::serialization::access;
+      friend class access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)

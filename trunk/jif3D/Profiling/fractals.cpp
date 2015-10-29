@@ -19,7 +19,7 @@
 
 #include <boost/cstdint.hpp>
 #include <boost/format.hpp>
-#include <boost/serialization/serialization.hpp>
+#include "../Global/Serialization.h"
 
 int const sizeY = 512;
 int const sizeX = sizeY;

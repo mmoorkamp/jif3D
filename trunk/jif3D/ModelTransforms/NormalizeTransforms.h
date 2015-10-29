@@ -8,8 +8,7 @@
 #ifndef NORMALIZETRANSFORMS_H_
 #define NORMALIZETRANSFORMS_H_
 
-#include <boost/serialization/serialization.hpp>
-#include <boost/serialization/base_object.hpp>
+#include "../Global/Serialization.h"
 #include "GeneralModelTransform.h"
 
 namespace jif3D
@@ -28,12 +27,12 @@ namespace jif3D
     private:
       //! The Reference model we devide the model parameters by
       const jif3D::rvec Reference;
-      friend class boost::serialization::access;
+      friend class access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
         {
-          ar & boost::serialization::base_object<GeneralModelTransform>(*this);
+          ar & base_object<GeneralModelTransform>(*this);
           ar & Reference;
         }
     public:
