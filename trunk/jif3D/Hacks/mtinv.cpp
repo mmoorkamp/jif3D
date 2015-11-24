@@ -59,6 +59,7 @@ int main(int argc, char *argv[])
     double yorigin = 0.0;
     std::string X3DName = "x3d";
     std::string MTInvCovarName;
+    std::string RefModelName;
     boost::shared_ptr<jif3D::JointObjective> Objective(new jif3D::JointObjective(true));
 
     double DistCorr = 0;
@@ -86,7 +87,9 @@ int main(int argc, char *argv[])
         po::value(&coolingfactor)->default_value(1.0),
         "The factor to multiply the weight for the regularization at each iteration EXPERIMENTAL")(
         "debug", "Show debugging output.")("opt",
-        "Use opt for Green's function calculation in x3d.");
+        "Use opt for Green's function calculation in x3d.")("refmodel",
+        po::value(&RefModelName),
+        "The name of the reference model to substract before calculating smoothness");
 
     jif3D::SetupRegularization RegSetup;
     jif3D::SetupInversion InversionSetup;
@@ -188,8 +191,8 @@ int main(int argc, char *argv[])
       {
         jif3D::rvec Cond(Model.GetConductivities().num_elements());
         std::copy(Model.GetConductivities().origin(),
-            Model.GetConductivities().origin()
-                + Model.GetConductivities().num_elements(),Cond.begin());
+            Model.GetConductivities().origin() + Model.GetConductivities().num_elements(),
+            Cond.begin());
         std::nth_element(Cond.begin(), Cond.begin() + Cond.size() / 2, Cond.end());
         double MedCond = Cond(Cond.size() / 2);
         std::vector<double> bg_thick(2), bg_cond(2, MedCond);
@@ -339,9 +342,16 @@ int main(int argc, char *argv[])
         new jif3D::MultiSectionTransform(InvModel.size(), 0, ngrid, Copier));
     Objective->AddObjective(Regularization, ModRegTrans, lambda, "Regularization",
         jif3D::JointObjective::regularization);
-    if (RegSetup.GetSubStart())
+    if (vm.count("refmodel"))
       {
-        Regularization->SetReferenceModel(ModRegTrans->GeneralizedToPhysical(InvModel));
+        jif3D::X3DModel RefModel;
+        RefModel.ReadNetCDF(RefModelName);
+        jif3D::rvec RefVec(RefModel.GetNModelElements());
+        std::copy(RefModel.GetConductivities().origin(),
+            RefModel.GetConductivities().origin() + RefModel.GetNModelElements(),
+            RefVec.begin());
+        Regularization->SetReferenceModel(
+            ConductivityTransform->PhysicalToGeneralized(RefVec));
       }
 
     if (DistCorr > 0)
