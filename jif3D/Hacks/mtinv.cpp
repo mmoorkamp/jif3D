@@ -31,6 +31,7 @@
 #include "../ModelBase/NetCDFModelTools.h"
 #include "../ModelBase/ReadAnyModel.h"
 #include "../Regularization/GradientRegularization.h"
+#include "../Regularization/CrossGradient.h"
 #include "../Inversion/LimitedMemoryQuasiNewton.h"
 #include "../Inversion/JointObjective.h"
 #include "../Inversion/ModelTransforms.h"
@@ -60,6 +61,7 @@ int main(int argc, char *argv[])
     std::string X3DName = "x3d";
     std::string MTInvCovarName;
     std::string RefModelName;
+    std::string CrossModelName;
     boost::shared_ptr<jif3D::JointObjective> Objective(new jif3D::JointObjective(true));
 
     double DistCorr = 0;
@@ -89,7 +91,9 @@ int main(int argc, char *argv[])
         "debug", "Show debugging output.")("opt",
         "Use opt for Green's function calculation in x3d.")("refmodel",
         po::value(&RefModelName),
-        "The name of the reference model to substract before calculating smoothness");
+        "The name of the reference model to substract before calculating smoothness")(
+        "crossmodel", po::value(&CrossModelName),
+        "The name of a model to use as a cross-gradient constraint");
 
     jif3D::SetupRegularization RegSetup;
     jif3D::SetupInversion InversionSetup;
@@ -266,6 +270,42 @@ int main(int argc, char *argv[])
         std::copy(OldCov.begin(), OldCov.end(), CovModVec.begin());
       }
 
+    boost::shared_ptr<jif3D::GeneralModelTransform> Copier(new jif3D::ModelCopyTransform);
+    if (vm.count("crossmodel"))
+      {
+        boost::shared_ptr<jif3D::ThreeDModelBase> CrossModel(
+            jif3D::ReadAnyModel(CrossModelName));
+        if (CrossModel->GetNModelElements() != ngrid)
+          {
+            std::cerr
+                << "Cross gradient model does not have the same size as inversion grid"
+                << std::endl;
+            return 100;
+          }
+        double cgweight = 1.0;
+        std::cout << "Cross-gradient weight: ";
+        std::cin >> cgweight;
+
+        jif3D::rvec OldInv(InvModel);
+        InvModel.resize(OldInv.size() + ngrid, true);
+        CovModVec.resize(InvModel.size(), true);
+        std::copy(CrossModel->GetData().origin(), CrossModel->GetData().origin() + ngrid,
+            InvModel.begin() + OldInv.size());
+        std::fill_n(CovModVec.begin(), OldInv.size(), 1.0);
+        std::fill_n(CovModVec.begin() + OldInv.size(), ngrid, 1e-32);
+
+        std::cout << "Inversion vector length: " << InvModel.size() << " " << ngrid << " "
+            << OldInv.size() << std::endl;
+        boost::shared_ptr<jif3D::MultiSectionTransform> CrossTrans(
+            new jif3D::MultiSectionTransform(InvModel.size(), 0, ngrid, Copier));
+        CrossTrans->AddSection(OldInv.size(), InvModel.size(), Copier);
+
+        boost::shared_ptr<jif3D::CrossGradient> CrossConstr(
+            new jif3D::CrossGradient(Model));
+        Objective->AddObjective(CrossConstr, CrossTrans, cgweight, "Cross",
+            jif3D::JointObjective::coupling);
+      }
+
     boost::shared_ptr<jif3D::ChainedTransform> ConductivityTransform(
         new jif3D::ChainedTransform);
     jif3D::rvec RefModel(ngrid, 1.0);
@@ -278,16 +318,17 @@ int main(int argc, char *argv[])
         boost::shared_ptr<jif3D::GeneralModelTransform>(
             new jif3D::LogTransform(RefModel)));
 
-    boost::shared_ptr<jif3D::GeneralModelTransform> Copier(new jif3D::ModelCopyTransform);
     boost::shared_ptr<jif3D::MultiSectionTransform> MTTransform(
         new jif3D::MultiSectionTransform(InvModel.size(), 0, ngrid,
             ConductivityTransform));
     if (DistCorr > 0)
       {
-        MTTransform->AddSection(ngrid, InvModel.size(), Copier);
+        MTTransform->AddSection(ngrid, ngrid + C.size(), Copier);
       }
 
-    InvModel = MTTransform->PhysicalToGeneralized(InvModel);
+    subrange(InvModel, 0, ngrid) = subrange(MTTransform->PhysicalToGeneralized(InvModel),
+        0, ngrid);
+
     bool WantDistCorr = (DistCorr > 0);
     jif3D::X3DMTCalculator Calculator(TempDir, X3DName, WantDistCorr);
     if (vm.count("opt"))
@@ -371,12 +412,13 @@ int main(int argc, char *argv[])
             new jif3D::MinDiffRegularization(DistModel));
         DistReg->SetReferenceModel(CRef);
         boost::shared_ptr<jif3D::MultiSectionTransform> DistRegTrans(
-            new jif3D::MultiSectionTransform(InvModel.size(), ngrid, InvModel.size(),
+            new jif3D::MultiSectionTransform(InvModel.size(), ngrid, ngrid + CRef.size(),
                 Copier));
 
         Objective->AddObjective(DistReg, DistRegTrans, DistCorr, "DistReg",
             jif3D::JointObjective::regularization);
       }
+
     size_t maxiter = 30;
     std::cout << "Maximum number of iterations: ";
     std::cin >> maxiter;
@@ -397,7 +439,7 @@ int main(int argc, char *argv[])
     boost::posix_time::ptime starttime = boost::posix_time::microsec_clock::local_time();
 
     bool terminate = false;
-    while (iteration < maxiter && !terminate && Objective->GetIndividualFits()[0] > ndata)
+    while (iteration < maxiter && !terminate)
       {
         try
           {
@@ -410,15 +452,20 @@ int main(int argc, char *argv[])
                 coolingfactor);
             ++iteration;
 
-            SaveModel(InvModel, *ConductivityTransform.get(), Model,
-                modelfilename + jif3D::stringify(iteration) + ".mt.inv");
             //write out some information about misfit to the screen
             jif3D::rvec DistModel = MTTransform->GeneralizedToPhysical(InvModel);
-            std::copy(InvModel.begin() + Model.GetNModelElements(), InvModel.end(),
-                C.begin());
-            jif3D::WriteImpedancesToNetCDF(
-                modelfilename + jif3D::stringify(iteration) + ".dist_imp.nc", Frequencies,
-                XCoord, YCoord, ZCoord, Data, ZError, C);
+            std::copy(DistModel.begin(), DistModel.begin() + Model.GetNModelElements(),
+                Model.SetData().origin());
+            Model.WriteVTK(modelfilename + jif3D::stringify(iteration) + ".mt.inv.vtk");
+            Model.WriteNetCDF(modelfilename + jif3D::stringify(iteration) + ".mt.inv.nc");
+            if (DistCorr > 0)
+              {
+                std::copy(DistModel.begin() + Model.GetNModelElements(),
+                    DistModel.begin() + Model.GetNModelElements() + C.size(), C.begin());
+                jif3D::WriteImpedancesToNetCDF(
+                    modelfilename + jif3D::stringify(iteration) + ".dist_imp.nc",
+                    Frequencies, XCoord, YCoord, ZCoord, Data, ZError, C);
+              }
             std::cout << "Currrent Misfit: " << Optimizer->GetMisfit() << std::endl;
             std::cout << "Currrent Gradient: " << Optimizer->GetGradNorm() << std::endl;
             //and write the current misfit for all objectives to a misfit file
@@ -439,6 +486,13 @@ int main(int argc, char *argv[])
     double cachedruntime = (endtime - starttime).total_seconds();
     std::cout << "Runtime: " << cachedruntime << " s" << std::endl;
     std::cout << std::endl;
+
+    if (vm.count("crossmodel"))
+      {
+        std::copy(InvModel.end() - Model.GetNModelElements(), InvModel.end(),
+            Model.SetConductivities().origin());
+        Model.WriteVTK("crossref.final.vtk");
+      }
 
     InvModel = MTTransform->GeneralizedToPhysical(InvModel);
 
@@ -464,5 +518,8 @@ int main(int argc, char *argv[])
 
     Model.WriteVTK(modelfilename + ".inv.vtk");
     Model.WriteNetCDF(modelfilename + ".inv.nc");
+
+
+
     std::cout << std::endl;
   }
