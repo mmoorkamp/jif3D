@@ -84,14 +84,9 @@ namespace jif3D
         assert(Impedances.size() == nimp);
         //create a netcdf file
         NcFile DataFile(filename.c_str(), NcFile::Replace);
-        //each station gets an index number that we use as a dimension
-        //in the netcdf file
+        //Create the dimensions for the stations
         NcDim *StatNumDim = DataFile.add_dim(StationNumberName.c_str(), nstats);
-        std::vector<int> StationNumber;
-        std::generate_n(back_inserter(StationNumber), nstats, IntSequence(0));
-        NcVar *StatNumVar = DataFile.add_var(StationNumberName.c_str(), ncInt,
-            StatNumDim);
-        StatNumVar->put(&StationNumber[0], nstats);
+
         //write out the measurement coordinates
         WriteVec(DataFile, MeasPosXName, StatXCoord, StatNumDim, "m");
         WriteVec(DataFile, MeasPosYName, StatYCoord, StatNumDim, "m");

@@ -76,13 +76,7 @@ namespace jif3D
         NcFile DataFile(filename.c_str(), NcFile::Replace);
         //we use the station number as a dimension
         NcDim *StatNumDim = DataFile.add_dim(StationNumberName.c_str(), Data.size());
-        //this is just an index over the measurement vector
-        //and does not have any special meaning
-        std::vector<int> StationNumber;
-        std::generate_n(back_inserter(StationNumber), Data.size(), IntSequence(0));
-        NcVar *StatNumVar = DataFile.add_var(StationNumberName.c_str(), ncInt,
-            StatNumDim);
-        StatNumVar->put(&StationNumber[0], Data.size());
+
         //write out the measurement coordinates
         WriteVec(DataFile, MeasPosXName, PosX, StatNumDim, "m");
         WriteVec(DataFile, MeasPosYName, PosY, StatNumDim, "m");
@@ -182,14 +176,9 @@ namespace jif3D
         assert(nmeas * 3 == Data.size());
 
         NcFile DataFile(filename.c_str(), NcFile::Replace);
-
+        //create a dimension for the stations
         NcDim *StatNumDim = DataFile.add_dim(StationNumberName.c_str(), nmeas);
-        std::vector<int> StationNumber;
-        std::generate_n(back_inserter(StationNumber), nmeas, IntSequence(0));
-        NcVar *StatNumVar = DataFile.add_var(StationNumberName.c_str(), ncInt,
-            StatNumDim);
-        StatNumVar->put(&StationNumber[0], nmeas);
-
+       //write out the measurement positions
         WriteVec(DataFile, MeasPosXName, PosX, StatNumDim, "m");
         WriteVec(DataFile, MeasPosYName, PosY, StatNumDim, "m");
         WriteVec(DataFile, MeasPosZName, PosZ, StatNumDim, "m");

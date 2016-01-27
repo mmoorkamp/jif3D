@@ -16,6 +16,10 @@ namespace jif3D
     /** \addtogroup mtmodelling Forward modelling of magnetotelluric data */
     /* @{ */
 
+    //we use these names for storing the model in NetCDF and vtk files
+    static const std::string ConductivityName = "Conductivity";
+    static const std::string ConductivityUnit = "S/m";
+
     //! A helper class for the template ThreeDModelObjective that lets us set distortion values as extra inversion parameters
     class MTDistortionSetter;
     //! This class stores all information associated with 3D magnetotelluric models
@@ -69,6 +73,19 @@ namespace jif3D
       t3DModelData &SetConductivities()
         {
           return ThreeDModelBase::SetData();
+        }
+      //! Copy the source and receiver positions and the indices for the source-receiver combinations from the source model, also copies frequencies for calculation
+      void CopyMeasurementConfigurations(const ThreeDMTModel &Source)
+        {
+          ClearMeasurementPoints();
+          const size_t nmeas = Source.GetMeasPosX().size();
+          for (size_t i = 0; i < nmeas; ++i)
+            {
+              AddMeasurementPoint(Source.GetMeasPosX()[i], Source.GetMeasPosY()[i],
+                  Source.GetMeasPosZ()[i]);
+            }
+          SetFrequencies() = Source.GetFrequencies();
+          SetDistortionParameters(Source.GetDistortionParameters());
         }
       //! Write the MT model in VTK format, at the moment the best format for plotting, this only writes the conductivities
       void WriteVTK(const std::string filename) const
