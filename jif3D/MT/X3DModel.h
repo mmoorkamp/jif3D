@@ -90,19 +90,6 @@ namespace jif3D
         {
           return ThreeDModelBase::SetZCellSizes();
         }
-      //! Copy the source and receiver positions and the indices for the source-receiver combinations from the source model, also copies frequencies for calculation
-      void CopyMeasurementConfigurations(const X3DModel &Source)
-        {
-          ClearMeasurementPoints();
-          const size_t nmeas = Source.GetMeasPosX().size();
-          for (size_t i = 0; i < nmeas; ++i)
-            {
-              AddMeasurementPoint(Source.GetMeasPosX()[i], Source.GetMeasPosY()[i],
-                  Source.GetMeasPosZ()[i]);
-            }
-          SetFrequencies() = Source.GetFrequencies();
-          SetDistortionParameters(Source.GetDistortionParameters());
-        }
       //! Given three coordinates in m, find the indices of the model cell that correponds to these coordinates, this is a more efficient implementation than the one in the base class
       virtual boost::array<ThreeDModelBase::t3DModelData::index, 3>
       FindAssociatedIndices(const double xcoord, const double ycoord,

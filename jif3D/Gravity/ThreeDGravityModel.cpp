@@ -72,14 +72,8 @@ namespace jif3D
         if (!bg_densities.empty())
           {
             assert(bg_densities.size() == bg_thicknesses.size());
-            //we just number layers from 0 to n-1
+            //Create the matching dimension for the background layers
             NcDim *BackgroundDim = DataFile.add_dim("bg_layers", bg_thicknesses.size());
-            NcVar *BackgroundVar = DataFile.add_var("bg_layers", ncDouble, BackgroundDim);
-            std::vector<double> layerindex;
-            std::generate_n(back_inserter(layerindex), bg_thicknesses.size(),
-                IntSequence(0));
-            BackgroundVar->put(&layerindex[0], layerindex.size());
-            BackgroundVar->add_att("long_name", "Layer Index");
             //now we can write the actual parameters for the layers
             NcVar *bgDensVar = DataFile.add_var("bg_densities", ncDouble, BackgroundDim);
             bgDensVar->add_att("long_name", "Background Densities");

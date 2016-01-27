@@ -42,21 +42,12 @@ namespace jif3D
         NcDim *SourceNumDim = DataFile.add_dim(SourceNumberName.c_str(), nsourcepos);
         NcDim *RecNumDim = DataFile.add_dim(ReceiverNumberName.c_str(), nrecpos);
 
-        //this is just an index over the measurement vector
-        //and does not have any special meaning
-        std::vector<int> SourcePosNumber, ReceiverPosNumber;
-        std::generate_n(std::back_inserter(SourcePosNumber), nsourcepos, IntSequence(0));
-        std::generate_n(std::back_inserter(ReceiverPosNumber), nrecpos, IntSequence(0));
-        NcVar *SourceNumVar = DataFile.add_var(SourceNumberName.c_str(), ncInt,
-            SourceNumDim);
-        SourceNumVar->put(&SourcePosNumber[0], nsourcepos);
+
         //write out the measurement coordinates
         WriteVec(DataFile, SourcePosXName, Model.GetSourcePosX(), SourceNumDim, "m");
         WriteVec(DataFile, SourcePosYName, Model.GetSourcePosY(), SourceNumDim, "m");
         WriteVec(DataFile, SourcePosZName, Model.GetSourcePosZ(), SourceNumDim, "m");
         //write out the positions of the receivers, i.e. measurement positions
-        NcVar *RecNumVar = DataFile.add_var(ReceiverNumberName.c_str(), ncInt, RecNumDim);
-        RecNumVar->put(&ReceiverPosNumber[0], nrecpos);
         WriteVec(DataFile, MeasPosXName, Model.GetMeasPosX(), RecNumDim, "m");
         WriteVec(DataFile, MeasPosYName, Model.GetMeasPosY(), RecNumDim, "m");
         WriteVec(DataFile, MeasPosZName, Model.GetMeasPosZ(), RecNumDim, "m");

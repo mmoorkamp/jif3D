@@ -13,9 +13,6 @@
 
 namespace jif3D
   {
-    //we use these names for storing the model in NetCDF and vtk files
-    static const std::string ConductivityName = "Conductivity";
-    static const std::string ConductivityUnit = "S/m";
 
     X3DModel::X3DModel() :
         bg_thicknesses(), bg_conductivities()
