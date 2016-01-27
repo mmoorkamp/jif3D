@@ -4,8 +4,10 @@ import testing ;
 alias linkcommon : ../ModelBase//modelbase  ..//boost_core ..//boost_iostreams ..//boost_thread ..//boost_chrono ..//boost_date_time ; 
 
 lib mt : ReadWriteX3D.cpp ReadWriteImpedances.cpp
-         ThreeDMTModel.cpp X3DModel.cpp MTEquations.cpp 
+         ThreeDMTModel.cpp X3DModel.cpp ModEMModel.cpp 
+         MTEquations.cpp 
          MT3DCalculator.cpp X3DMTCalculator.cpp
+         ModEMCalculator.cpp
          OneDMTCalculator.cpp InterpolateField.cpp
          MTCovar.cpp MTUtils.cpp X3DFreqFunctions.cpp
          linkcommon ;

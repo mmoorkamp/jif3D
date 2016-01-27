@@ -11,8 +11,8 @@
 #include "ReadWriteX3D.h"
 
 #include <fstream>
-#include <boost/iostreams/stream.hpp>
-#include <boost/iostreams/device/file_descriptor.hpp>
+//#include <boost/iostreams/stream.hpp>
+//#include <boost/iostreams/device/file_descriptor.hpp>
 #include <boost/assign/list_of.hpp> // for 'map_list_of()'
 #include <boost/log/trivial.hpp>
 #include <boost/filesystem.hpp>
@@ -49,8 +49,9 @@ namespace jif3D
       {
         std::string RunFileName = NameRoot + runext;
         fs::create_directory(DirName);
-        boost::iostreams::stream<boost::iostreams::file_descriptor_sink> runfile(
-            RunFileName.c_str());
+        //boost::iostreams::stream<boost::iostreams::file_descriptor_sink> runfile(
+        //    RunFileName.c_str());
+        std::ofstream runfile(RunFileName.c_str());
         runfile << "#!/bin/bash\n";
         runfile << " echo " "Executing: $BASH_SOURCE" "\n ";
         runfile << "cd " << DirName << "\n";
