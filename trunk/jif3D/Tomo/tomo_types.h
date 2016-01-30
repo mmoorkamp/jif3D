@@ -8,8 +8,9 @@
 #ifndef TOMO_TYPES_H_
 #define TOMO_TYPES_H_
 
-#include <vector>
 #include "../Global/Serialization.h"
+#include <vector>
+
 
 namespace jif3D
   {
