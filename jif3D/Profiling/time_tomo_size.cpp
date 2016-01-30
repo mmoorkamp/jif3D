@@ -8,10 +8,14 @@
 #endif
 #include <iostream>
 #include <fstream>
+#include <boost/log/core.hpp>
+#include <boost/log/trivial.hpp>
+#include <boost/log/expressions.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/program_options.hpp>
 #include "../Global/convert.h"
 #include "../Tomo/TomographyCalculator.h"
+#include "../Tomo/ReadWriteTomographyData.h"
 
 void MakeTestModel(jif3D::ThreeDSeismicModel &Model, const size_t size)
   {
@@ -70,7 +74,7 @@ void MakeTestModel(jif3D::ThreeDSeismicModel &Model, const size_t size)
   }
 
 namespace po = boost::program_options;
-int caching = 0;
+namespace logging = boost::log;
 
 int hpx_main(boost::program_options::variables_map& vm)
   {
@@ -80,7 +84,16 @@ int hpx_main(boost::program_options::variables_map& vm)
     std::string filename;
     bool wantcuda = false;
     jif3D::TomographyCalculator Calculator;
-
+    if (vm.count("debug"))
+      {
+        logging::core::get()->set_filter(
+            logging::trivial::severity >= logging::trivial::debug);
+      }
+    else
+      {
+        logging::core::get()->set_filter(
+            logging::trivial::severity >= logging::trivial::warning);
+      }
 #ifdef HAVEHPX
     filename = "tomo_hpx_";
 #endif
@@ -98,6 +111,14 @@ int hpx_main(boost::program_options::variables_map& vm)
       }
 #endif
 
+#ifdef HAVEHPX
+    std::vector<hpx::naming::id_type> localities = hpx::find_all_localities();
+    const size_t nthreads = hpx::get_num_worker_threads();
+    const size_t nlocs = localities.size();
+    filename += "l" + jif3D::stringify(nlocs) + "t" + jif3D::stringify(nthreads);
+    std::cout << "Running hpx using " << nlocs << " localities, " << nthreads << " threads " << std::endl;
+#endif
+
     std::ofstream outfile(filename.c_str());
     std::cout << " Starting calculations. " << std::endl;
     // we calculate gravity data for a number of different grid sizes
@@ -108,7 +129,7 @@ int hpx_main(boost::program_options::variables_map& vm)
         jif3D::ThreeDSeismicModel SeisTest;
 
         double rawruntime = 0.0;
-
+        jif3D::rvec seismeas;
         //for each grid size we perform several runs and average the run time
         //to reduce the influence from other processes running on the system
         for (size_t j = 0; j < nrunspersize; ++j)
@@ -118,7 +139,7 @@ int hpx_main(boost::program_options::variables_map& vm)
 
             boost::posix_time::ptime firststarttime =
                 boost::posix_time::microsec_clock::local_time();
-            jif3D::rvec gravmeas(Calculator.Calculate(SeisTest));
+            seismeas = Calculator.Calculate(SeisTest);
 
             boost::posix_time::ptime firstendtime =
                 boost::posix_time::microsec_clock::local_time();
@@ -128,6 +149,8 @@ int hpx_main(boost::program_options::variables_map& vm)
         rawruntime /= nrunspersize;
 
         outfile << modelsize * modelsize * modelsize << " " << rawruntime << std::endl;
+        std::string ttfilename(filename + std::to_string(modelsize) + ".nc");
+        jif3D::SaveTraveltimes(ttfilename, seismeas, seismeas, SeisTest);
       }
 #ifdef HAVEHPX
     return hpx::finalize();
@@ -138,12 +161,8 @@ int hpx_main(boost::program_options::variables_map& vm)
 int main(int argc, char* argv[])
   {
     po::options_description desc("Allowed options");
-    desc.add_options()("help", "produce help message")("scalar",
-        "Perform scalar calculation [default]")("ftg", "Perform FTG calculation ")("cpu",
-        "Perform calculation on CPU [default]")("gpu", "Perform calculation on GPU")(
-        "cachetype", po::value<int>(&caching)->default_value(0),
-        "0 = no caching, 1 = disk, 2 = memory")("threads", po::value<int>(),
-        "The number of openmp threads");
+    desc.add_options()("help", "produce help message")("threads", po::value<int>(),
+        "The number of openmp threads")("debug", "Produce debugging output.");
 #ifdef HAVEHPX
     return hpx::init(desc, argc, argv);
 #else

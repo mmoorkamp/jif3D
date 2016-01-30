@@ -5,14 +5,7 @@
 // Copyright   : 2008, MM
 //============================================================================
 
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <cmath>
-#ifdef HAVEOPENMP
-#include <omp.h>
-#endif
-#include <boost/program_options.hpp>
+#include "../Global/Serialization.h"
 #include "../Global/convert.h"
 #include "../Global/FatalException.h"
 #include "../Global/NumUtil.h"
@@ -40,7 +33,14 @@
 #include "../Joint/SetupGravity.h"
 #include "../Joint/SetupMagnetics.h"
 #include "../Joint/InversionOutput.h"
-
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <cmath>
+#ifdef HAVEOPENMP
+#include <omp.h>
+#endif
+#include <boost/program_options.hpp>
 namespace ublas = boost::numeric::ublas;
 namespace po = boost::program_options;
 
