@@ -14,9 +14,9 @@
 
 jif3D::rvec CalcRealization(realinfo Info)
   {
-    const size_t nx = Info.Model.GetXCoordinates().num_elements();
-    const size_t ny = Info.Model.GetYCoordinates().num_elements();
-    const size_t nz = Info.Model.GetZCoordinates().num_elements();
+    const size_t nx = Info.Model.GetXCoordinates().size();
+    const size_t ny = Info.Model.GetYCoordinates().size();
+    const size_t nz = Info.Model.GetZCoordinates().size();
 
     for (size_t i = 0; i < nx; ++i)
       {

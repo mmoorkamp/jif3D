@@ -8,6 +8,10 @@
 #ifndef CALCRAWREALIZATION_H_
 #define CALCRAWREALIZATION_H_
 
+#ifdef HAVEHPX
+#include <hpx/config.hpp>
+#include <hpx/include/actions.hpp>
+#endif
 #include <vector>
 #include <string>
 #include "../Global/VecMat.h"
