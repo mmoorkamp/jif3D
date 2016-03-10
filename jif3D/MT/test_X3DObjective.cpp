@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_SUITE( X3DObjective_Suite )
             GradientModel.SetConductivities().origin());
         GradientModel.WriteNetCDF("gradmod.nc");
 
-        std::ofstream outfile("grad.comp");
+        std::ofstream outfile("grad3d.comp");
 
         for (size_t index = 0; index < ModelVec.size(); ++index)
           {
