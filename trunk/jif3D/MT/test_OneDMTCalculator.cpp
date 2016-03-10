@@ -140,7 +140,7 @@ bool  Between(const double limit1, const double limit2, const double value)
       BOOST_CHECK(misfit > 0.0);
       jif3D::rvec Gradient = Objective.CalcGradient(ModelVec);
 
-      std::ofstream outfile("grad.comp");
+      std::ofstream outfile("grad1d.comp");
 
       for (size_t index = 0; index < nbglayers; ++index)
         {
@@ -153,7 +153,7 @@ bool  Between(const double limit1, const double limit2, const double value)
           double BackFDGrad = (misfit - Objective.CalcMisfit(Backward))/delta;
           double CentFDGrad = (ForFDGrad + BackFDGrad)/2.0;
           BOOST_CHECK(Between(ForFDGrad,BackFDGrad,Gradient(index)) || (CentFDGrad - Gradient(index))/CentFDGrad < 0.01);
-          outfile << index << " " << bg_conductivities.at(index) << " " << ModelVec(index) << " " << ForFDGrad << " "<< BackFDGrad << " " << (ForFDGrad + BackFDGrad)/2.0 << " " << Gradient(index) << std::endl;
+          outfile << index  << ForFDGrad << " "<< BackFDGrad << " " << (ForFDGrad + BackFDGrad)/2.0 << " " << Gradient(index) << std::endl;
         }
     }
   BOOST_AUTO_TEST_SUITE_END()

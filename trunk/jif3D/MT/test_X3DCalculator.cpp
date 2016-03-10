@@ -13,6 +13,7 @@
 #include "../Global/NumUtil.h"
 #include "X3DMTCalculator.h"
 #include "X3DModel.h"
+#include "OneDMTCalculator.h"
 #include "MTEquations.h"
 #include "MT2DForward.h"
 #include "ReadWriteImpedances.h"
@@ -67,6 +68,78 @@ BOOST_AUTO_TEST_SUITE( X3DCalculator_Suite )
             BOOST_CHECK_CLOSE(Impedance(i * 8 + 3), HsImp.imag(), prec);
             BOOST_CHECK_CLOSE(Impedance(i * 8 + 4), -HsImp.real(), prec);
             BOOST_CHECK_CLOSE(Impedance(i * 8 + 5), -HsImp.imag(), prec);
+          }
+
+      }
+
+    BOOST_AUTO_TEST_CASE (X3D_layered_hs_test)
+      {
+        //create a 3D version of a 1D model
+        const size_t xsize = 20;
+        const size_t ysize = 20;
+        const size_t zsize = 10;
+        const size_t nbglayers = 5;
+        jif3D::X3DModel Model;
+
+        Model.SetZCellSizes().resize(zsize);
+
+        Model.SetConductivities().resize(boost::extents[xsize][ysize][zsize]);
+        std::vector<double> bg_thicknesses(nbglayers), bg_conductivities(nbglayers);
+
+        const double deltax = 100.0;
+        const double deltay = 100.0;
+        const double deltaz = 100.0;
+
+        const double cond = 0.01;
+        Model.SetHorizontalCellSize(deltax, deltay, xsize, ysize);
+
+        std::fill_n(Model.SetZCellSizes().begin(), zsize, deltaz);
+        std::fill_n(Model.SetConductivities().origin(), xsize * ysize * zsize, cond);
+        std::fill_n(bg_conductivities.begin(), nbglayers, cond);
+        std::fill_n(bg_thicknesses.begin(), nbglayers, 200.0);
+
+        bg_conductivities.at(2) = 1.0;
+        for (size_t i = 0; i < xsize; ++i)
+          for (size_t j = 0; j < ysize; ++j)
+            {
+              Model.SetConductivities()[i][j][4] = 1.0;
+              Model.SetConductivities()[i][j][5] = 1.0;
+            }
+        Model.SetConductivities()[0][0][9] = 1.01;
+        Model.SetBackgroundConductivities(bg_conductivities);
+        Model.SetBackgroundThicknesses(bg_thicknesses);
+        Model.SetFrequencies() =
+          { 1000.0, 100.0, 10.0, 1.0, 0.1, 0.01};
+
+        jif3D::X3DMTCalculator Calculator;
+        for (size_t i = 1; i < xsize / 2; ++i)
+          for (size_t j = 1; j < ysize / 2; ++j)
+            {
+              Model.AddMeasurementPoint(Model.GetXCoordinates()[i] + deltax / 2.0,
+                  Model.GetYCoordinates()[j] + deltay / 2.0, 0.0);
+            }
+
+        jif3D::rvec Impedance3D = Calculator.Calculate(Model);
+        jif3D::rvec Impedance1D = jif3D::OneDMTCalculator().Calculate(Model);
+
+        jif3D::WriteImpedancesToNetCDF("imp1Dlayered.nc", Model.GetFrequencies(),
+            Model.GetMeasPosX(), Model.GetMeasPosY(), Model.GetMeasPosZ(), Impedance3D);
+        const size_t nsites = Model.GetMeasPosX().size();
+        const size_t nfreq = Model.GetFrequencies().size();
+        const double prec = 0.05;
+        for (size_t i = 0; i < nsites; ++i)
+          {
+            for (size_t j = 0; j < nfreq; ++j)
+              {
+                BOOST_CHECK_CLOSE(Impedance3D((j * nsites + i) * 8 + 2),
+                    Impedance1D(2 * j), prec);
+                BOOST_CHECK_CLOSE(Impedance3D((j * nsites + i) * 8 + 3),
+                    Impedance1D(2 * j + 1), prec);
+                BOOST_CHECK_CLOSE(Impedance3D((j * nsites + i) * 8 + 4),
+                    -Impedance1D(2 * j), prec);
+                BOOST_CHECK_CLOSE(Impedance3D((j * nsites + i) * 8 + 5),
+                    -Impedance1D(2 * j + 1), prec);
+              }
           }
 
       }
@@ -206,8 +279,8 @@ BOOST_AUTO_TEST_SUITE( X3DCalculator_Suite )
         BOOST_CHECK(sqrt(zyxrchi / nx2D) < 0.02);
         BOOST_CHECK(sqrt(zyxichi / nx2D) < 0.02);
 
-        std::cout << sqrt(zxyrchi / nx2D) << " " << sqrt(zxyichi / nx2D) << " " << sqrt(zyxrchi / nx2D)
-            << " " << sqrt(zyxichi / nx2D) << "\n";
+        std::cout << sqrt(zxyrchi / nx2D) << " " << sqrt(zxyichi / nx2D) << " "
+            << sqrt(zyxrchi / nx2D) << " " << sqrt(zyxichi / nx2D) << "\n";
         jif3D::WriteImpedancesToNetCDF("imp2Dprof.nc", Model.GetFrequencies(),
             Model.GetMeasPosX(), Model.GetMeasPosY(), Model.GetMeasPosZ(), Imp3DProfile);
       }
