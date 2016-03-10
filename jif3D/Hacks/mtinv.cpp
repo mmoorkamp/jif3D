@@ -4,7 +4,25 @@
 // Version     :
 // Copyright   : 2008, MM
 //============================================================================
-#include "../Global/Serialization.h"
+#ifdef HAVEHPX
+#include <hpx/config.hpp>
+#include <hpx/hpx_init.hpp>
+#endif
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <cmath>
+#include <cstdlib>
+#ifdef HAVEOPENMP
+#include <omp.h>
+#endif
+
+#include <boost/program_options.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/log/core.hpp>
+#include <boost/log/trivial.hpp>
+#include <boost/log/expressions.hpp>
+
 #include "../Global/convert.h"
 #include "../Global/FatalException.h"
 #include "../Global/NumUtil.h"
@@ -30,80 +48,31 @@
 #include "../Joint/SetupMT.h"
 #include "../Joint/InversionOutput.h"
 
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <cmath>
-#include <cstdlib>
-#ifdef HAVEOPENMP
-#include <omp.h>
-#endif
-
-#include <boost/program_options.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/log/core.hpp>
-#include <boost/log/trivial.hpp>
-#include <boost/log/expressions.hpp>
-
-
 namespace ublas = boost::numeric::ublas;
 namespace po = boost::program_options;
 namespace logging = boost::log;
+po::options_description desc("General options");
+po::variables_map vm;
+jif3D::SetupRegularization RegSetup;
+jif3D::SetupInversion InversionSetup;
+double mincond = 1e-6;
+double maxcond = 10;
+double relerr = 0.02;
+double coolingfactor = 1.0;
+double xorigin = 0.0;
+double yorigin = 0.0;
+std::string X3DName = "x3d";
+std::string MTInvCovarName;
+std::string RefModelName;
+std::string CrossModelName;
+double DistCorr = 0;
 
-int main(int argc, char *argv[])
+
+int hpx_main(boost::program_options::variables_map& vm)
   {
 
-    double mincond = 1e-6;
-    double maxcond = 10;
-    double relerr = 0.02;
-    double coolingfactor = 1.0;
-    double xorigin = 0.0;
-    double yorigin = 0.0;
-    std::string X3DName = "x3d";
-    std::string MTInvCovarName;
-    std::string RefModelName;
-    std::string CrossModelName;
     boost::shared_ptr<jif3D::JointObjective> Objective(new jif3D::JointObjective(true));
 
-    double DistCorr = 0;
-    po::options_description desc("General options");
-    desc.add_options()("help", "produce help message")("threads", po::value<int>(),
-        "The number of openmp threads")("xorigin",
-        po::value(&xorigin)->default_value(0.0),
-        "The origin for the inversion grid in x-direction")("yorigin",
-        po::value(&yorigin)->default_value(0.0),
-        "The origin for the inversion grid in y-direction")("covmod",
-        po::value<std::string>(), "A file containing the model covariance")("mincond",
-        po::value(&mincond)->default_value(1e-4),
-        "The minimum value for conductivity in S/m")("maxcond",
-        po::value(&maxcond)->default_value(5),
-        "The maximum value for conductivity in S/m")("tempdir", po::value<std::string>(),
-        "The name of the directory to store temporary files in")("distcorr",
-        po::value(&DistCorr)->default_value(0), "Correct for distortion within inversion")(
-        "x3dname", po::value(&X3DName)->default_value("x3d"),
-        "The name of the executable for x3d")("mtinvcovar",
-        po::value<std::string>(&MTInvCovarName),
-        "Inverse covariance matrix to use in MT misfit calculation.")("inderrors",
-        "Use the individual errors for each element instead of the same for all elements")(
-        "mtrelerr", po::value(&relerr)->default_value(0.02),
-        "Error floor for impedance estimates.")("coolingfactor",
-        po::value(&coolingfactor)->default_value(1.0),
-        "The factor to multiply the weight for the regularization at each iteration EXPERIMENTAL")(
-        "debug", "Show debugging output.")("opt",
-        "Use opt for Green's function calculation in x3d.")("refmodel",
-        po::value(&RefModelName),
-        "The name of the reference model to substract before calculating smoothness")(
-        "crossmodel", po::value(&CrossModelName),
-        "The name of a model to use as a cross-gradient constraint");
-
-    jif3D::SetupRegularization RegSetup;
-    jif3D::SetupInversion InversionSetup;
-
-    desc.add(RegSetup.SetupOptions());
-    desc.add(InversionSetup.SetupOptions());
-    po::variables_map vm;
-    po::store(po::parse_command_line(argc, argv, desc), vm);
-    po::notify(vm);
 
     if (vm.count("debug"))
       {
@@ -181,13 +150,44 @@ int main(int argc, char *argv[])
       {
         jif3D::ReadImpedancesFromModEM(datafilename, Frequencies, XCoord, YCoord, ZCoord,
             Data, ZError);
-        jif3D::WriteImpedancesToNetCDF("start_data.nc", Frequencies, XCoord, YCoord,
-            ZCoord, Data, ZError);
       }
     else
       {
         jif3D::ReadImpedancesFromNetCDF(datafilename, Frequencies, XCoord, YCoord, ZCoord,
             Data, ZError, C);
+      }
+
+    jif3D::rvec MinErr(ZError.size());
+    if (vm.count("inderrors"))
+      {
+        MinErr = jif3D::ConstructError(Data, ZError, relerr);
+      }
+    else
+      {
+        MinErr = jif3D::ConstructMTError(Data, relerr);
+      }
+    for (size_t i = 0; i < ZError.size(); ++i)
+      {
+        ZError(i) = std::max(ZError(i), MinErr(i));
+
+      }
+
+    auto negerr = std::find_if(ZError.begin(), ZError.end(), [](double val)
+      { return val <= 0.0;});
+    if (negerr != ZError.end())
+      {
+        std::cerr << "Negative data error in element "
+            << std::distance(ZError.begin(), negerr) << " value " << *negerr
+            << " will cause problem in inversion, exiting " << std::endl;
+        return 100;
+      }
+    if (extension.compare(".dat") == 0)
+      {
+        jif3D::WriteImpedancesToNetCDF("start_data.nc", Frequencies, XCoord, YCoord,
+            ZCoord, Data, ZError);
+      }
+    else
+      {
         jif3D::WriteImpedancesToModEM("start_data.dat", Frequencies, XCoord, YCoord,
             ZCoord, Data, ZError);
       }
@@ -353,20 +353,6 @@ int main(int argc, char *argv[])
       }
     else
       {
-        jif3D::rvec MinErr(ZError.size());
-        if (vm.count("inderrors"))
-          {
-            MinErr = jif3D::ConstructError(Data, ZError, relerr);
-          }
-        else
-          {
-            MinErr = jif3D::ConstructMTError(Data, relerr);
-          }
-        for (size_t i = 0; i < ZError.size(); ++i)
-          {
-            ZError(i) = std::max(ZError(i), MinErr(i));
-
-          }
         X3DObjective->SetDataError(ZError);
       }
 
@@ -431,13 +417,12 @@ int main(int argc, char *argv[])
     std::ofstream misfitfile("misfit.out");
     std::ofstream rmsfile("rms.out");
     std::ofstream weightfile("weights.out");
-    double InitialMisfit = Objective->CalcMisfit(InvModel);
-
-    StoreMisfit(misfitfile, 0, InitialMisfit, *Objective);
-    StoreRMS(rmsfile, 0, *Objective);
 
     size_t iteration = 0;
     boost::posix_time::ptime starttime = boost::posix_time::microsec_clock::local_time();
+    double InitialMisfit = Objective->CalcMisfit(InvModel);
+    StoreMisfit(misfitfile, 0, InitialMisfit, *Objective);
+    StoreRMS(rmsfile, 0, *Objective);
 
     bool terminate = false;
     while (iteration < maxiter && !terminate)
@@ -520,7 +505,69 @@ int main(int argc, char *argv[])
     Model.WriteVTK(modelfilename + ".inv.vtk");
     Model.WriteNetCDF(modelfilename + ".inv.nc");
 
-
-
     std::cout << std::endl;
+#ifdef HAVEHPX
+    return hpx::finalize();
+#endif
+    return 0;
+  }
+
+int main(int argc, char* argv[])
+  {
+
+    desc.add_options()("help", "produce help message")("threads", po::value<int>(),
+        "The number of openmp threads")("xorigin",
+        po::value(&xorigin)->default_value(0.0),
+        "The origin for the inversion grid in x-direction")("yorigin",
+        po::value(&yorigin)->default_value(0.0),
+        "The origin for the inversion grid in y-direction")("covmod",
+        po::value<std::string>(), "A file containing the model covariance")("mincond",
+        po::value(&mincond)->default_value(1e-4),
+        "The minimum value for conductivity in S/m")("maxcond",
+        po::value(&maxcond)->default_value(5),
+        "The maximum value for conductivity in S/m")("tempdir", po::value<std::string>(),
+        "The name of the directory to store temporary files in")("distcorr",
+        po::value(&DistCorr)->default_value(0), "Correct for distortion within inversion")(
+        "x3dname", po::value(&X3DName)->default_value("x3d"),
+        "The name of the executable for x3d")("mtinvcovar",
+        po::value<std::string>(&MTInvCovarName),
+        "Inverse covariance matrix to use in MT misfit calculation.")("inderrors",
+        "Use the individual errors for each element instead of the same for all elements")(
+        "mtrelerr", po::value(&relerr)->default_value(0.02),
+        "Error floor for impedance estimates.")("coolingfactor",
+        po::value(&coolingfactor)->default_value(1.0),
+        "The factor to multiply the weight for the regularization at each iteration EXPERIMENTAL")(
+        "debug", "Show debugging output.")("opt",
+        "Use opt for Green's function calculation in x3d.")("refmodel",
+        po::value(&RefModelName),
+        "The name of the reference model to substract before calculating smoothness")(
+        "crossmodel", po::value(&CrossModelName),
+        "The name of a model to use as a cross-gradient constraint");
+
+    desc.add(RegSetup.SetupOptions());
+    desc.add(InversionSetup.SetupOptions());
+
+//we can also read options from a configuration file
+//that way we do not have to specify a large number of options
+//on the command line, the order we use now, reading the configuration
+//file after parsing the command line options means that
+//the command line options override configuration file options
+//as one would expect (see also program_options documentation)
+    const std::string ConfFileName("mtinv.conf");
+    if (boost::filesystem::exists(ConfFileName))
+      {
+        std::ifstream ConfFile(ConfFileName.c_str());
+        po::store(po::parse_config_file(ConfFile, desc), vm);
+      }
+    po::notify(vm);
+#ifdef HAVEHPX
+    return hpx::init(desc, argc, argv);
+#else
+//set up the command line options
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::notify(vm);
+    return hpx_main(vm);
+#endif
+
   }
