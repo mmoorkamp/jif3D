@@ -125,7 +125,10 @@ namespace jif3D
             __FILE__, __LINE__);
           }
         const size_t ndata = Data.size();
-        jif3D::rvec DataError(ndata, 0.0);
+        //set the default value negative, everything should be overwritten
+        //with a positive number below
+        //so we can spot mistakes by looking for negative numbers
+        jif3D::rvec DataError(ndata, -1.0);
         const size_t ntensorelem = 8;
         if ((Data.size() % ntensorelem) != 0)
           {
