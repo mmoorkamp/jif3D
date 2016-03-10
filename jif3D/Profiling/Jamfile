@@ -8,7 +8,7 @@ alias core :  ../ModelBase//modelbase ../Global//global ../Regularization//regul
 exe time_gravity_size : time_gravity_size.cpp core  ;
 exe time_tomo_size : time_tomo_size.cpp core ../Tomo//tomo ;
 exe time_gravity_blocksize : time_gravity_blocksize.cpp core : <gpu>off:<build>no ;
-exe fractals : fractals.cpp ..//boost_core : <hpx>off:<build>no ;
+exe fractals : fractals.cpp ..//boost_core : <hpx>off:<build>no <hpx>on:<library>//mpi ;
 exe time_grav_term : time_grav_term.cpp core ;
 exe comp_grav_moment : comp_grav_moment.cpp core ;
 exe reg_prof : reg_prof.cpp core ;
