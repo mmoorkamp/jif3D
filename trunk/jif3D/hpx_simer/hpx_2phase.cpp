@@ -11,7 +11,6 @@
 #include <hpx/include/actions.hpp>
 #include <hpx/include/util.hpp>
 #include <hpx/include/future.hpp>
-#include <hpx/components/remote_object/object.hpp>
 #include <hpx/include/lcos.hpp>
 #include <hpx/include/iostreams.hpp>
 #endif
@@ -42,6 +41,7 @@
 #include "../Inversion/JointObjective.h"
 #include "realinfo.h"
 #include "CalcRealization.h"
+#include "InvertBlock.h"
 
 
 
