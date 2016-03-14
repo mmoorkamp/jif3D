@@ -67,12 +67,10 @@ std::string RefModelName;
 std::string CrossModelName;
 double DistCorr = 0;
 
-
 int hpx_main(boost::program_options::variables_map& vm)
   {
 
     boost::shared_ptr<jif3D::JointObjective> Objective(new jif3D::JointObjective(true));
-
 
     if (vm.count("debug"))
       {
@@ -360,16 +358,6 @@ int hpx_main(boost::program_options::variables_map& vm)
     //std::copy(CovModVec.begin(), CovModVec.begin() + ngrid, GridCov.begin());
     boost::shared_ptr<jif3D::RegularizationFunction> Regularization =
         RegSetup.SetupObjective(vm, Model, GridCov);
-
-    double lambda = 1.0;
-    std::cout << "Lambda: ";
-    std::cin >> lambda;
-    Objective->AddObjective(X3DObjective, MTTransform, 1.0, "MT",
-        jif3D::JointObjective::datafit);
-    boost::shared_ptr<jif3D::MultiSectionTransform> ModRegTrans(
-        new jif3D::MultiSectionTransform(InvModel.size(), 0, ngrid, Copier));
-    Objective->AddObjective(Regularization, ModRegTrans, lambda, "Regularization",
-        jif3D::JointObjective::regularization);
     if (vm.count("refmodel"))
       {
         jif3D::X3DModel RefModel;
@@ -381,6 +369,38 @@ int hpx_main(boost::program_options::variables_map& vm)
         Regularization->SetReferenceModel(
             ConductivityTransform->PhysicalToGeneralized(RefVec));
       }
+
+    if (vm.count("regcheck"))
+      {
+        std::cout << " Regularization: " << Regularization->CalcMisfit(InvModel) << std::endl;
+        jif3D::rvec RegVals(Regularization->GetDataDifference());
+        const size_t nmod = InvModel.size();
+        if (RegVals.size() != nmod * 3)
+          {
+            std::cerr << "Number of model parameters " << nmod << " is not 3* "
+                << RegVals.size() << std::endl;
+            return 100;
+          }
+        std::copy(RegVals.begin(), RegVals.begin() + nmod, Model.SetData().origin());
+        Model.WriteVTK(modelfilename + ".regx.vtk");
+        std::copy(RegVals.begin() + nmod, RegVals.begin() + 2 * nmod,
+            Model.SetData().origin());
+        Model.WriteVTK(modelfilename + ".regy.vtk");
+        std::copy(RegVals.begin() + 2 * nmod, RegVals.begin() + 3 * nmod,
+            Model.SetData().origin());
+        Model.WriteVTK(modelfilename + ".regz.vtk");
+        return 0;
+      }
+
+    double lambda = 1.0;
+    std::cout << "Lambda: ";
+    std::cin >> lambda;
+    Objective->AddObjective(X3DObjective, MTTransform, 1.0, "MT",
+        jif3D::JointObjective::datafit);
+    boost::shared_ptr<jif3D::MultiSectionTransform> ModRegTrans(
+        new jif3D::MultiSectionTransform(InvModel.size(), 0, ngrid, Copier));
+    Objective->AddObjective(Regularization, ModRegTrans, lambda, "Regularization",
+        jif3D::JointObjective::regularization);
 
     if (DistCorr > 0)
       {
@@ -542,7 +562,8 @@ int main(int argc, char* argv[])
         po::value(&RefModelName),
         "The name of the reference model to substract before calculating smoothness")(
         "crossmodel", po::value(&CrossModelName),
-        "The name of a model to use as a cross-gradient constraint");
+        "The name of a model to use as a cross-gradient constraint")("regcheck",
+        "Only perform a regularization calculation");
 
     desc.add(RegSetup.SetupOptions());
     desc.add(InversionSetup.SetupOptions());
