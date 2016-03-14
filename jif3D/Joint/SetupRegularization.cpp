@@ -30,6 +30,24 @@ namespace jif3D
             //but this model does not have to obey the gridding rules
             std::string Filename(vm[OptionName].as<std::string>());
             TearModel = *ReadAnyModel(Filename).get();
+            if (TearModel.GetModelShape()[0] != StartModel.GetModelShape()[0])
+              {
+                throw jif3D::FatalException(
+                    "X-dimensions of TearModel do not match x-dimensions of starting model ",
+                    __FILE__, __LINE__);
+              }
+            if (TearModel.GetModelShape()[1] != StartModel.GetModelShape()[1])
+              {
+                throw jif3D::FatalException(
+                    "Y-dimensions of TearModel do not match x-dimensions of starting model ",
+                    __FILE__, __LINE__);
+              }
+            if (TearModel.GetModelShape()[2] != StartModel.GetModelShape()[2])
+              {
+                throw jif3D::FatalException(
+                    "Z-dimensions of TearModel do not match x-dimensions of starting model ",
+                    __FILE__, __LINE__);
+              }
             BOOST_LOG_TRIVIAL(debug)<< "Reading in Tear file: " << Filename << std::endl;
             BOOST_LOG_TRIVIAL(debug)<< "Tear file has: " << TearModel.GetNModelElements() << " elements" << std::endl;
             BOOST_LOG_TRIVIAL(debug)<< "Tear file has: " << std::count(TearModel.GetData().origin(),TearModel.GetData().origin() + TearModel.GetData().num_elements(),0) << " zero elements" << std::endl;
@@ -122,10 +140,6 @@ namespace jif3D
                         new jif3D::GradientRegularization(StartModel, TearModX, TearModY,
                             TearModZ, beta)), minsuppb));
           }
-
-        assert(StartModel.GetNModelElements() == TearModX.GetNModelElements());
-        assert(StartModel.GetNModelElements() == TearModY.GetNModelElements());
-        assert(StartModel.GetNModelElements() == TearModZ.GetNModelElements());
 
         //decide whether we want to use gradient base regularization
         //or curvature based regularization, the default is gradient
