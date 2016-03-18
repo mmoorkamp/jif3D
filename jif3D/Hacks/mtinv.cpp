@@ -61,6 +61,7 @@ double relerr = 0.02;
 double coolingfactor = 1.0;
 double xorigin = 0.0;
 double yorigin = 0.0;
+double conddelta = 0.001;
 std::string X3DName = "x3d";
 std::string MTInvCovarName;
 std::string RefModelName;
@@ -229,7 +230,7 @@ int hpx_main(boost::program_options::variables_map& vm)
 
     for (size_t i = 0; i < Model.GetConductivities().shape()[2]; ++i)
       {
-        Model.SetConductivities()[0][0][i] *= (1 + 0.01 * (i + 1));
+        Model.SetConductivities()[0][0][i] *= (1 + conddelta * (i + 1));
       }
 
     const size_t ngrid = Model.GetConductivities().num_elements();
@@ -372,7 +373,8 @@ int hpx_main(boost::program_options::variables_map& vm)
 
     if (vm.count("regcheck"))
       {
-        std::cout << " Regularization: " << Regularization->CalcMisfit(InvModel) << std::endl;
+        std::cout << " Regularization: " << Regularization->CalcMisfit(InvModel)
+            << std::endl;
         jif3D::rvec RegVals(Regularization->GetDataDifference());
         const size_t nmod = InvModel.size();
         if (RegVals.size() != nmod * 3)
@@ -563,7 +565,9 @@ int main(int argc, char* argv[])
         "The name of the reference model to substract before calculating smoothness")(
         "crossmodel", po::value(&CrossModelName),
         "The name of a model to use as a cross-gradient constraint")("regcheck",
-        "Only perform a regularization calculation");
+        "Only perform a regularization calculation")("conddelta",
+        po::value(&conddelta)->default_value(0.001),
+        "The relative amount by which the conductivities in the first row of cells is disturbed to ensure proper gradient calculation");
 
     desc.add(RegSetup.SetupOptions());
     desc.add(InversionSetup.SetupOptions());
