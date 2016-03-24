@@ -112,6 +112,7 @@ namespace jif3D
         bool abort = boost::filesystem::exists("abort");
         if (removefile && abort)
           {
+            std::cerr << " Found abort file, aborting Program ! " << std::endl;
             RemoveAbort();
           }
         return abort;
