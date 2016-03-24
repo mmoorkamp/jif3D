@@ -10,13 +10,16 @@
 #include "../Global/NormProd.h"
 #include "LimitedMemoryQuasiNewton.h"
 #include "mcsrch.h"
+#include <iostream>
+
 namespace jif3D
   {
 
-    LimitedMemoryQuasiNewton::LimitedMemoryQuasiNewton(boost::shared_ptr<
-        jif3D::ObjectiveFunction> ObjFunction, const size_t n, bool gradscale) :
-      GradientBasedOptimization(ObjFunction), scale(gradscale), mu(1.0), LineIter(10),
-          MaxPairs(n), SHistory(), YHistory()
+    LimitedMemoryQuasiNewton::LimitedMemoryQuasiNewton(
+        boost::shared_ptr<jif3D::ObjectiveFunction> ObjFunction, const size_t n,
+        bool gradscale) :
+        GradientBasedOptimization(ObjFunction), scale(gradscale), mu(1.0), LineIter(10), MaxPairs(
+            n), SHistory(), YHistory()
       {
 
       }
@@ -39,10 +42,8 @@ namespace jif3D
         //and apply algorithm 9.1 from Nocedal and Wright
         for (int i = npairs - 1; i >= 0; --i)
           {
-            Rho(i) = 1. / NormProd(*YHistory.at(i), *SHistory.at(i),
-                GetModelCovDiag());
-            Alpha(i) = Rho(i) * NormProd(*SHistory.at(i), SearchDir,
-                GetModelCovDiag());
+            Rho(i) = 1. / NormProd(*YHistory.at(i), *SHistory.at(i), GetModelCovDiag());
+            Alpha(i) = Rho(i) * NormProd(*SHistory.at(i), SearchDir, GetModelCovDiag());
             SearchDir -= Alpha(i) * *YHistory.at(i);
           }
         //gamma is a scaling factor that we apply to the search direction
@@ -51,23 +52,23 @@ namespace jif3D
         double gamma = 1.0;
         if (YHistory.size() > 0)
           {
-            gamma = 1.0 / Rho(npairs - 1) / NormProd(*YHistory.back(),
-                *YHistory.back(), GetModelCovDiag());
+            gamma = 1.0 / Rho(npairs - 1)
+                / NormProd(*YHistory.back(), *YHistory.back(), GetModelCovDiag());
           }
         else
           {
             //if we don't have the previous history, we use the length of the
             //gradient as a scale
-        	if (scale)
-        	{
-               gamma = 1.0 / sqrt(NormProd(SearchDir,RawGrad,GetModelCovDiag()));
-        	}
+            if (scale)
+              {
+                gamma = 1.0 / sqrt(NormProd(SearchDir, RawGrad, GetModelCovDiag()));
+              }
           }
         SearchDir *= gamma;
         for (size_t i = 0; i < npairs; ++i)
           {
-            double beta = Rho(i) * NormProd(*YHistory.at(i), SearchDir,
-                GetModelCovDiag());
+            double beta = Rho(i)
+                * NormProd(*YHistory.at(i), SearchDir, GetModelCovDiag());
             SearchDir += *SHistory.at(i) * (Alpha(i) - beta);
           }
         //at each iteration we reset the stepsize
@@ -76,14 +77,16 @@ namespace jif3D
         //now we do a line search to find the optimum step size mu
         //after this call, both Misfit and RawGrad are already
         //updated for the new model
-        int status =
-            OPTPP::mcsrch(&GetObjective(), SearchDir, RawGrad, CurrentModel,
-                Misfit, &mu, LineIter, 1e-4, 2.2e-16, 0.9, 1e9, 1e-12);
+        int status = OPTPP::mcsrch(&GetObjective(), SearchDir, RawGrad, CurrentModel,
+            Misfit, &mu, LineIter, 1e-4, 2.2e-16, 0.9, 1e9, 1e-12);
 
         if (status < 0)
           {
-            throw jif3D::FatalException("Cannot find suitable step. Status: "
-                + jif3D::stringify(status), __FILE__, __LINE__);
+            std::cerr << "Cannot find suitable step. Status: " + jif3D::stringify(status)
+                << std::endl;
+            throw jif3D::FatalException(
+                "Cannot find suitable step. Status: " + jif3D::stringify(status),
+                __FILE__, __LINE__);
           }
         //if we have found a good stepsize, update the model
         CurrentModel += mu * SearchDir;
@@ -105,8 +108,7 @@ namespace jif3D
           }
         //and overwrite the last (oldest) correction pair
         *SHistory.back() = mu * SearchDir;
-        *YHistory.back() = ublas::element_prod(RawGrad, GetModelCovDiag())
-            - CovGrad;
+        *YHistory.back() = ublas::element_prod(RawGrad, GetModelCovDiag()) - CovGrad;
         //the line search has updated the gradient and misfit
         HaveEvaluated();
       }
