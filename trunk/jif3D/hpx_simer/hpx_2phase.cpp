@@ -6,8 +6,7 @@
 //============================================================================
 
 #ifdef HAVEHPX
-#include <hpx/config.hpp>
-#include <hpx/hpx_init.hpp>
+#include <hpx/hpx.hpp>
 #include <hpx/include/actions.hpp>
 #include <hpx/include/util.hpp>
 #include <hpx/include/future.hpp>
@@ -21,7 +20,6 @@
 
 #include <iostream>
 #include <string>
-#include <cstdlib>
 #include "../Global/Serialization.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/filesystem.hpp>
@@ -31,14 +29,6 @@
 #include <boost/log/expressions.hpp>
 #include "../Global/FileUtil.h"
 #include "../Global/convert.h"
-#include "../Global/Noise.h"
-#include "../MT/X3DModel.h"
-#include "../MT/X3DMTCalculator.h"
-#include "../MT/MTEquations.h"
-#include "../Inversion/ModelTransforms.h"
-#include "../Inversion/ThreeDModelObjective.h"
-#include "../Inversion/LimitedMemoryQuasiNewton.h"
-#include "../Inversion/JointObjective.h"
 #include "realinfo.h"
 #include "CalcRealization.h"
 #include "InvertBlock.h"
@@ -52,11 +42,8 @@ namespace logging = boost::log;
 
 int hpx_main(po::variables_map& vm)
   {
-#ifdef HAVEHPX
-    using hpx::cout;
-#else
     using std::cout;
-#endif
+
 
     using std::cin;
 
@@ -160,7 +147,7 @@ int hpx_main(po::variables_map& vm)
     using hpx::lcos::future;
     using hpx::async;
     using hpx::wait_all;
-    std::vector<future<jif3D::rvec> > ImplResult;
+    std::vector<future<std::vector<double>> > ImplResult;
     ImplResult.reserve(nrealmax);
     Calc_action CalcImpl;
     std::vector<hpx::naming::id_type> localities = hpx::find_all_localities();
@@ -181,12 +168,12 @@ int hpx_main(po::variables_map& vm)
 
     for (size_t nreal = 0; nreal < nrealmax; ++nreal)
       {
-        jif3D::rvec Impedances = ImplResult[nreal].get();
+        std::vector<double> Impedances = ImplResult[nreal].get();
         std::string realstring(jif3D::stringify(nreal));
-        zxx << nreal << " " << Impedances(0) << " " << Impedances(1) << std::endl;
-        zxy << nreal << " " << Impedances(2) << " " << Impedances(3) << std::endl;
-        zyx << nreal << " " << Impedances(4) << " " << Impedances(5) << std::endl;
-        zyy << nreal << " " << Impedances(6) << " " << Impedances(7) << std::endl;
+        zxx << nreal << " " << Impedances[0] << " " << Impedances[1] << std::endl;
+        zxy << nreal << " " << Impedances[2] << " " << Impedances[3] << std::endl;
+        zyx << nreal << " " << Impedances[4] << " " << Impedances[5] << std::endl;
+        zyy << nreal << " " << Impedances[6] << " " << Impedances[7] << std::endl;
 
       }
     boost::posix_time::ptime endtime = boost::posix_time::microsec_clock::local_time();
@@ -200,11 +187,11 @@ int hpx_main(po::variables_map& vm)
 
         realinfo info(Model, bg_conductivity, phase1cond, phase2cond, phase1frac, tempdir,
             x3dname);
-        jif3D::rvec Impedances = CalcRealization(info);
+        std::vector<double> Impedances = CalcRealization(info);
         jif3D::rvec Errors(Impedances.size(), 0.0);
         std::string realstring(jif3D::stringify(nreal));
 
-        double rho = InvertBlock(Model, Impedances, tempdir, x3dname);
+        double rho = InvertBlock(Model, jif3D::rvec(Impedances.begin(),Impedances.end()), tempdir, x3dname);
 
 #pragma omp critical(write_files)
           {

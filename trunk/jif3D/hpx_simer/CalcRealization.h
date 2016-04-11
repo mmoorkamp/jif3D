@@ -9,13 +9,14 @@
 #define CALCREALIZATION_H_
 
 #ifdef HAVEHPX
-#include <hpx/config.hpp>
+#include <hpx/hpx.hpp>
 #include <hpx/include/actions.hpp>
 #endif
+#include "../Global/Serialization.h"
 #include "../Global/VecMat.h"
 #include "realinfo.h"
 
-jif3D::rvec CalcRealization(realinfo Info);
+std::vector<double> CalcRealization(realinfo Info);
 
 #ifdef HAVEHPX
 HPX_DEFINE_PLAIN_ACTION(CalcRealization, Calc_action);

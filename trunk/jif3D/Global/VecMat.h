@@ -12,7 +12,7 @@
  * enable interfacing with fortran codes for blas, lapack etc.
  */
 #ifdef HAVEHPX
-#include <hpx/config.hpp>
+#include "Serialization.h"
 #endif
 #include <boost/numeric/ublas/vector.hpp>
 #include <boost/numeric/ublas/vector_expression.hpp>

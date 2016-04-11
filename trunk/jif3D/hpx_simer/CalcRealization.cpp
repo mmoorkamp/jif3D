@@ -12,7 +12,7 @@
 
 
 
-jif3D::rvec CalcRealization(realinfo Info)
+std::vector<double>  CalcRealization(realinfo Info)
   {
     const size_t nx = Info.Model.GetXCoordinates().size();
     const size_t ny = Info.Model.GetYCoordinates().size();
@@ -39,7 +39,7 @@ jif3D::rvec CalcRealization(realinfo Info)
 
     jif3D::X3DMTCalculator Calculator(Info.tempdir, Info.x3dname);
     jif3D::rvec Impedances(Calculator.Calculate(Info.Model));
-    return Impedances;
+    return std::vector<double>(Impedances.begin(),Impedances.end());
   }
 
 
@@ -49,5 +49,5 @@ jif3D::rvec CalcRealization(realinfo Info)
 
 #ifdef HAVEHPX
 
-HPX_REGISTER_PLAIN_ACTION(Calc_action)
+HPX_REGISTER_ACTION(Calc_action)
 #endif

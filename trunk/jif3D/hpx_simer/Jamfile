@@ -10,7 +10,7 @@ python-extension simerreal_ext : CalcRawRealization.cpp hpx_mt ../MT//mt  ../Mod
        ..//boost_python ..//boost_core : <hardcode-dll-paths>true ;
 
 exe hpx_2phase : hpx_2phase.cpp hpx_mt ../MT//mt  ../ModelBase//modelbase ../Inversion//inversion  
-                ..//boost_core  
+                ..//boost_core  ..//hpx_iostreams
     ;
 
 install dist 

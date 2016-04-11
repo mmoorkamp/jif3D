@@ -10,8 +10,8 @@ lib mt : ReadWriteX3D.cpp ReadWriteImpedances.cpp
          ModEMCalculator.cpp
          OneDMTCalculator.cpp InterpolateField.cpp
          MTCovar.cpp MTUtils.cpp X3DFreqFunctions.cpp
-         linkcommon ;
-
+         linkcommon   ;
+#: <hpx>on:<linkflags>"`pkg-config --libs hpx_component`"
 
 # switched off unit-test 2DMT_test : test_Tarits2DMT.cpp   mt linkcommon ../Inversion//inversion   ;
 unit-test RWX3D_test : test_ReadWriteX3D.cpp   mt linkcommon ../Inversion//inversion  ;

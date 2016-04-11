@@ -8,8 +8,6 @@
 #ifndef HPX_SIMER_CALCRAWREALIZATION_CPP_
 #define HPX_SIMER_CALCRAWREALIZATION_CPP_
 
-
-#include <boost/python.hpp>
 #include "../Global/FatalException.h"
 #include "../MT/X3DMTCalculator.h"
 #include "CalcRawRealization.h"

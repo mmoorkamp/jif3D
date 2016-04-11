@@ -9,8 +9,7 @@
 #define X3DFREQFUNCTIONS_H_
 
 #ifdef HAVEHPX
-#include <hpx/config.hpp>
-#include <hpx/include/actions.hpp>
+#include <hpx/hpx.hpp>
 #include <hpx/include/serialization.hpp>
 #endif
 

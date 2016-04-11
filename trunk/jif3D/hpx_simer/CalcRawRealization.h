@@ -10,11 +10,10 @@
 
 #ifdef HAVEHPX
 #include <hpx/config.hpp>
-#include <hpx/include/actions.hpp>
 #endif
-#include <vector>
+#include <boost/python.hpp>
 #include <string>
-#include "../Global/VecMat.h"
+
 
 
 double CalcRawRealization(int nx, int ny, int nz, double delta, double topthick,
