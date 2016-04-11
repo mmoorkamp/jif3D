@@ -1,7 +1,5 @@
 #ifdef HAVEHPX
-#include <hpx/config.hpp>
-#include <hpx/hpx_init.hpp>
-#include <hpx/hpx_fwd.hpp>
+#include <hpx/hpx.hpp>
 #endif
 #ifdef HAVEOPENMP
 #include <omp.h>

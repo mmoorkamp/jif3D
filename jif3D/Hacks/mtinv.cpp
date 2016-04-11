@@ -1,58 +1,47 @@
 //============================================================================
-// Name        : gravinv.cpp
+// Name        : mtinv.cpp
 // Author      : Max Moorkamp
 // Version     :
 // Copyright   : 2008, MM
 //============================================================================
 #ifdef HAVEHPX
-#include <hpx/config.hpp>
-#include <hpx/hpx_init.hpp>
+#include <hpx/hpx.hpp>
 #endif
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <cmath>
-#include <cstdlib>
+
 #ifdef HAVEOPENMP
 #include <omp.h>
 #endif
 
 #include <boost/program_options.hpp>
+#include <boost/program_options/config.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/expressions.hpp>
 
-#include "../Global/convert.h"
-#include "../Global/FatalException.h"
-#include "../Global/NumUtil.h"
-#include "../Global/VectorTransform.h"
 #include "../Global/FileUtil.h"
 #include "../Global/Noise.h"
 #include "../Global/ReadWriteSparseMatrix.h"
-#include "../ModelBase/VTKTools.h"
-#include "../ModelBase/NetCDFModelTools.h"
 #include "../ModelBase/ReadAnyModel.h"
+#include "../ModelBase/VTKTools.h"
 #include "../Regularization/GradientRegularization.h"
 #include "../Regularization/CrossGradient.h"
+#include "../Regularization/MinDiffRegularization.h"
 #include "../Inversion/LimitedMemoryQuasiNewton.h"
 #include "../Inversion/JointObjective.h"
 #include "../Inversion/ModelTransforms.h"
 #include "../Inversion/ThreeDModelObjective.h"
-#include "../Regularization/MinDiffRegularization.h"
 #include "../MT/X3DModel.h"
 #include "../MT/X3DMTCalculator.h"
 #include "../MT/ReadWriteImpedances.h"
 #include "../Joint/SetupRegularization.h"
 #include "../Joint/SetupInversion.h"
-#include "../Joint/SetupMT.h"
 #include "../Joint/InversionOutput.h"
 
 namespace ublas = boost::numeric::ublas;
 namespace po = boost::program_options;
 namespace logging = boost::log;
-po::options_description desc("General options");
-po::variables_map vm;
+
 jif3D::SetupRegularization RegSetup;
 jif3D::SetupInversion InversionSetup;
 double mincond = 1e-6;
@@ -68,11 +57,10 @@ std::string RefModelName;
 std::string CrossModelName;
 double DistCorr = 0;
 
+
+
 int hpx_main(boost::program_options::variables_map& vm)
   {
-
-    boost::shared_ptr<jif3D::JointObjective> Objective(new jif3D::JointObjective(true));
-
     if (vm.count("debug"))
       {
         logging::core::get()->set_filter(
@@ -83,11 +71,10 @@ int hpx_main(boost::program_options::variables_map& vm)
         logging::core::get()->set_filter(
             logging::trivial::severity >= logging::trivial::warning);
       }
-    if (vm.count("help"))
-      {
-        std::cout << desc << "\n";
-        return 1;
-      }
+
+    boost::shared_ptr<jif3D::JointObjective> Objective(new jif3D::JointObjective(true));
+
+
 #ifdef HAVEOPENMP
     if (vm.count("threads"))
       {
@@ -106,9 +93,9 @@ int hpx_main(boost::program_options::variables_map& vm)
         CovModVec.resize(ncovmod);
         std::copy(CovModel.GetData().origin(), CovModel.GetData().origin() + ncovmod,
             CovModVec.begin());
-        BOOST_LOG_TRIVIAL(debug)<< "Reading in covariance file: " << Filename << std::endl;
-        BOOST_LOG_TRIVIAL(debug)<< "Covariance file has: " << CovModel.GetNModelElements() << " elements" << std::endl;
-        BOOST_LOG_TRIVIAL(debug)<< "Covariance file has: " << std::count(CovModel.GetData().origin(),CovModel.GetData().origin() + ncovmod,1) << " elements = 1" << std::endl;
+//        BOOST_LOG_TRIVIAL(debug)<< "Reading in covariance file: " << Filename << std::endl;
+ //       BOOST_LOG_TRIVIAL(debug)<< "Covariance file has: " << CovModel.GetNModelElements() << " elements" << std::endl;
+  //      BOOST_LOG_TRIVIAL(debug)<< "Covariance file has: " << std::count(CovModel.GetData().origin(),CovModel.GetData().origin() + ncovmod,1) << " elements = 1" << std::endl;
       }
 
     boost::filesystem::path TempDir = boost::filesystem::current_path();
@@ -537,6 +524,7 @@ int hpx_main(boost::program_options::variables_map& vm)
 int main(int argc, char* argv[])
   {
 
+    po::options_description desc("General options");
     desc.add_options()("help", "produce help message")("threads", po::value<int>(),
         "The number of openmp threads")("xorigin",
         po::value(&xorigin)->default_value(0.0),
@@ -572,26 +560,19 @@ int main(int argc, char* argv[])
     desc.add(RegSetup.SetupOptions());
     desc.add(InversionSetup.SetupOptions());
 
-//we can also read options from a configuration file
-//that way we do not have to specify a large number of options
-//on the command line, the order we use now, reading the configuration
-//file after parsing the command line options means that
-//the command line options override configuration file options
-//as one would expect (see also program_options documentation)
-    const std::string ConfFileName("mtinv.conf");
-    if (boost::filesystem::exists(ConfFileName))
-      {
-        std::ifstream ConfFile(ConfFileName.c_str());
-        po::store(po::parse_config_file(ConfFile, desc), vm);
-      }
-    po::notify(vm);
+
 #ifdef HAVEHPX
     return hpx::init(desc, argc, argv);
 #else
 //set up the command line options
-    po::variables_map vm;
-    po::store(po::parse_command_line(argc, argv, desc), vm);
-    po::notify(vm);
+     po::variables_map vm;
+     po::store(po::parse_command_line(argc, argv, desc), vm);
+     po::notify(vm);
+     if (vm.count("help"))
+       {
+         std::cout << desc << "\n";
+         return 1;
+       }
     return hpx_main(vm);
 #endif
 

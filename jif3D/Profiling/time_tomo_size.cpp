@@ -1,6 +1,5 @@
 #ifdef HAVEHPX
-#include <hpx/config.hpp>
-#include <hpx/hpx_init.hpp>
+#include <hpx/hpx.hpp>
 //#include <hpx/include/iostreams.hpp>
 #endif
 #ifdef HAVEOPENMP

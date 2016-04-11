@@ -5,17 +5,13 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 #ifdef HAVEHPX
-#include <hpx/config.hpp>
-#include <hpx/hpx_init.hpp>
+#include <hpx/hpx.hpp>
 #endif
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <cmath>
-#include <algorithm>
+
 #ifdef HAVEOPENMP
 #include <omp.h>
 #endif
+
 #include <boost/program_options.hpp>
 #include <boost/program_options/config.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -23,10 +19,6 @@
 #include <boost/log/trivial.hpp>
 #include <boost/log/expressions.hpp>
 
-#include "../Global/convert.h"
-#include "../Global/FatalException.h"
-#include "../Global/NumUtil.h"
-#include "../Global/VectorTransform.h"
 #include "../Global/FileUtil.h"
 #include "../ModelBase/VTKTools.h"
 #include "../ModelBase/NetCDFModelTools.h"
@@ -77,25 +69,11 @@ bool WaveletParm = false;
 bool WantSequential = false;
 double xorigin, yorigin;
 double coolingfactor = 1.0;
-po::variables_map vm;
-//we also create a number of options that are specific to our joint inversion
-//or act globally so that they cannot be associated with one subsystem
-po::options_description desc("General options");
+
 
 int hpx_main(boost::program_options::variables_map& vm)
   {
-    //if the option was "help" we output the program version
-    //and a description of all options, but we do not perform any inversion
-    if (vm.count("help"))
-      {
-        std::string version = "$Id$";
-        std::cout << version << std::endl;
-        std::cout << desc << "\n";
-#ifdef HAVEHPX
-        return hpx::finalize();
-#endif
-        return 1;
-      }
+
     //if requested set output level to debug for log library
     if (vm.count("debug"))
       {
@@ -618,6 +596,9 @@ int hpx_main(boost::program_options::variables_map& vm)
 
 int main(int argc, char* argv[])
   {
+    //we also create a number of options that are specific to our joint inversion
+    //or act globally so that they cannot be associated with one subsystem
+    po::options_description desc("General options");
 
     desc.add_options()("help", "produce help message")("debug",
         "Write debugging information")("iterations", po::value<int>(),
@@ -645,19 +626,7 @@ int main(int argc, char* argv[])
     desc.add(RegSetup.SetupOptions());
     desc.add(CouplingSetup.SetupOptions());
 
-//we can also read options from a configuration file
-//that way we do not have to specify a large number of options
-//on the command line, the order we use now, reading the configuration
-//file after parsing the command line options means that
-//the command line options override configuration file options
-//as one would expect (see also program_options documentation)
-    const std::string ConfFileName("jointinv.conf");
-    if (boost::filesystem::exists(ConfFileName))
-      {
-        std::ifstream ConfFile(ConfFileName.c_str());
-        po::store(po::parse_config_file(ConfFile, desc), vm);
-      }
-    po::notify(vm);
+
 #ifdef HAVEHPX
     return hpx::init(desc, argc, argv);
 #else
