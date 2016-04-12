@@ -9,6 +9,7 @@
 #define GLOBAL_SERIALIZATION_H_
 
 #ifdef HAVEHPX
+#include <hpx/config.hpp>
 #include <hpx/runtime/serialization/serialize.hpp>
 #include <hpx/runtime/serialization/base_object.hpp>
 #include <hpx/runtime/serialization/vector.hpp>
