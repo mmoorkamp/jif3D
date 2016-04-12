@@ -20,7 +20,6 @@
 //#include <boost/multi_array.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/log/trivial.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 
 #include "../Global/FatalException.h"
@@ -248,14 +247,6 @@ namespace jif3D
         //for each station
         if (C.size() != nmeas * 4)
           {
-            BOOST_LOG_TRIVIAL(warning)<< "No distortion specified, reseting values to identity matrix" << std::endl;
-            BOOST_LOG_TRIVIAL(warning)<< "C: ";
-            for (double elem : C)
-              {
-                BOOST_LOG_TRIVIAL(warning)<< elem << " ";
-              }
-
-            BOOST_LOG_TRIVIAL(warning)<< std::endl;
             C.resize(nmeas * 4);
             for (size_t i = 0; i < nmeas; ++i)
               {
@@ -372,14 +363,6 @@ namespace jif3D
         //for each station
         if (C.size() != nsites * 4)
           {
-            BOOST_LOG_TRIVIAL(warning)<< "No distortion specified, reseting values to identity matrix" << std::endl;
-            BOOST_LOG_TRIVIAL(warning)<< "C: ";
-            for (double elem : C)
-              {
-                BOOST_LOG_TRIVIAL(warning)<< elem << " ";
-              }
-
-            BOOST_LOG_TRIVIAL(warning)<< std::endl;
             C.resize(nsites * 4);
             for (size_t i = 0; i < nsites; ++i)
               {

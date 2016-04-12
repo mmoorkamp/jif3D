@@ -1,15 +1,11 @@
 #ifdef HAVEHPX
 #include <hpx/hpx.hpp>
-//#include <hpx/include/iostreams.hpp>
 #endif
 #ifdef HAVEOPENMP
 #include <omp.h>
 #endif
 #include <iostream>
 #include <fstream>
-#include <boost/log/core.hpp>
-#include <boost/log/trivial.hpp>
-#include <boost/log/expressions.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/program_options.hpp>
 #include "../Global/convert.h"
@@ -73,7 +69,6 @@ void MakeTestModel(jif3D::ThreeDSeismicModel &Model, const size_t size)
   }
 
 namespace po = boost::program_options;
-namespace logging = boost::log;
 
 int hpx_main(boost::program_options::variables_map& vm)
   {
@@ -83,17 +78,8 @@ int hpx_main(boost::program_options::variables_map& vm)
     std::string filename;
     bool wantcuda = false;
     jif3D::TomographyCalculator Calculator;
-    if (vm.count("debug"))
-      {
-        logging::core::get()->set_filter(
-            logging::trivial::severity >= logging::trivial::debug);
-      }
-    else
-      {
-        logging::core::get()->set_filter(
-            logging::trivial::severity >= logging::trivial::warning);
-      }
-#ifdef HAVEHPX
+
+    #ifdef HAVEHPX
     filename = "tomo_hpx_";
 #endif
 

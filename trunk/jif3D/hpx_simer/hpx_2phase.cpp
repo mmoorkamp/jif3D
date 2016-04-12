@@ -24,11 +24,9 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
-#include <boost/log/core.hpp>
-#include <boost/log/trivial.hpp>
-#include <boost/log/expressions.hpp>
 #include "../Global/FileUtil.h"
 #include "../Global/convert.h"
+#include "../MT/MTEquations.h"
 #include "realinfo.h"
 #include "CalcRealization.h"
 #include "InvertBlock.h"
@@ -38,7 +36,6 @@
 
 
 namespace po = boost::program_options;
-namespace logging = boost::log;
 
 int hpx_main(po::variables_map& vm)
   {
@@ -190,22 +187,23 @@ int hpx_main(po::variables_map& vm)
         std::vector<double> Impedances = CalcRealization(info);
         jif3D::rvec Errors(Impedances.size(), 0.0);
         std::string realstring(jif3D::stringify(nreal));
-
-        double rho = InvertBlock(Model, jif3D::rvec(Impedances.begin(),Impedances.end()), tempdir, x3dname);
+        jif3D::rvec IVec(Impedances.size());
+        std::copy(Impedances.begin(),Impedances.end(),IVec.begin());
+        double rho = InvertBlock(Model, IVec, tempdir, x3dname);
 
 #pragma omp critical(write_files)
           {
             //RealModel.WriteNetCDF(OutFilename + realstring + ".nc");
             //RealModel.WriteVTK(OutFilename + realstring + ".vtk");
-            zxx << nreal << " " << Impedances(0) << " " << Impedances(1) << std::endl;
-            zxy << nreal << " " << Impedances(2) << " " << Impedances(3) << std::endl;
-            zyx << nreal << " " << Impedances(4) << " " << Impedances(5) << std::endl;
-            zyy << nreal << " " << Impedances(6) << " " << Impedances(7) << std::endl;
+            zxx << nreal << " " << Impedances[0] << " " << Impedances[1] << std::endl;
+            zxy << nreal << " " << Impedances[2] << " " << Impedances[3] << std::endl;
+            zyx << nreal << " " << Impedances[4] << " " << Impedances[5] << std::endl;
+            zyy << nreal << " " << Impedances[6] << " " << Impedances[7] << std::endl;
             typedef std::complex<double> cd;
             cd Zdet = std::sqrt(
-                cd(Impedances(0), Impedances(1)) * cd(Impedances(6), Impedances(7))
-                    - cd(Impedances(2), Impedances(3))
-                        * cd(Impedances(4), Impedances(5)));
+                cd(Impedances[0], Impedances[1]) * cd(Impedances[6], Impedances[7])
+                    - cd(Impedances[2], Impedances[3])
+                        * cd(Impedances[4], Impedances[5]));
             double AppRho = jif3D::AppRes(Zdet, frequency);
 
             rhofile << nreal << " " << rho << " " << 1.0 / AppRho << std::endl;
@@ -241,15 +239,7 @@ int main(int argc, char* argv[])
         std::cout << desc << "\n";
         return 1;
       }
-    if (vm.count("debug"))
-      {
-        logging::core::get()->set_filter(
-            logging::trivial::severity >= logging::trivial::debug);
-      }
-    else{
-        logging::core::get()->set_filter(
-            logging::trivial::severity >= logging::trivial::warning);
-    }
+
     return hpx_main(vm);
 #endif
   }

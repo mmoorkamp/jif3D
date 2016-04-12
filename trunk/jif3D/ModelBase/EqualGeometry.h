@@ -9,7 +9,6 @@
 #define EQUALGEOMETRY_H_
 
 #include <iostream>
-#include <boost/log/trivial.hpp>
 #include "../Global/NumUtil.h"
 #include "../Global/FatalException.h"
 #include "ThreeDModelBase.h"
@@ -31,7 +30,7 @@ namespace jif3D
         //we first make a cheap test and then the more expensive ones
         if (Model1.GetNModelElements() != Model2.GetNModelElements())
           {
-            BOOST_LOG_TRIVIAL(debug) << "Models have different sizes: " << Model1.GetNModelElements()
+            std::cerr << "Models have different sizes: " << Model1.GetNModelElements()
                 << " " << Model2.GetNModelElements() << std::endl;
             return false;
           }
@@ -43,21 +42,21 @@ namespace jif3D
 
         if (nx != Model2.GetXCellSizes().size())
           {
-            BOOST_LOG_TRIVIAL(debug) << "Different number of cells in x-direction " << nx << " "
+            std::cerr << "Different number of cells in x-direction " << nx << " "
                 << Model2.GetXCellSizes().size() << std::endl;
             return false;
           }
 
         if (ny != Model2.GetYCellSizes().size())
           {
-            BOOST_LOG_TRIVIAL(debug) << "Different number of cells in y-direction " << ny << " "
+            std::cerr << "Different number of cells in y-direction " << ny << " "
                 << Model2.GetYCellSizes().size() << std::endl;
             return false;
           }
 
         if (nz != Model2.GetZCellSizes().size())
           {
-            BOOST_LOG_TRIVIAL(debug) << "Different number of cells in z-direction " << nz << " "
+            std::cerr << "Different number of cells in z-direction " << nz << " "
                 << Model2.GetZCellSizes().size() << std::endl;
             return false;
           }
@@ -67,7 +66,7 @@ namespace jif3D
             if (!roughlyEqual<double, double>()(Model1.GetXCellSizes()[i],
                 Model2.GetXCellSizes()[i]))
               {
-                BOOST_LOG_TRIVIAL(debug) << "Cell sizes in x-direction do not match "
+                std::cerr << "Cell sizes in x-direction do not match "
                     << Model1.GetXCellSizes()[i] << " " << Model2.GetXCellSizes()[i]
                     << std::endl;
                 return false;
@@ -78,7 +77,7 @@ namespace jif3D
             if (!roughlyEqual<double, double>()(Model1.GetYCellSizes()[i],
                 Model2.GetYCellSizes()[i]))
               {
-                BOOST_LOG_TRIVIAL(debug) << "Cell sizes in y-direction do not match "
+                std::cerr << "Cell sizes in y-direction do not match "
                     << Model1.GetYCellSizes()[i] << " " << Model2.GetYCellSizes()[i]
                     << std::endl;
                 return false;
@@ -89,7 +88,7 @@ namespace jif3D
             if (!roughlyEqual<double, double>()(Model1.GetZCellSizes()[i],
                 Model2.GetZCellSizes()[i]))
               {
-                BOOST_LOG_TRIVIAL(debug) << "Cell sizes in z-direction do not match "
+                std::cerr << "Cell sizes in z-direction do not match "
                     << Model1.GetZCellSizes()[i] << " " << Model2.GetZCellSizes()[i]
                     << std::endl;
                 return false;

@@ -179,7 +179,6 @@ namespace jif3D
         std::vector<hpx::naming::id_type> localities = hpx::find_all_localities();
         const size_t nthreads = hpx::get_num_worker_threads();
         const size_t nlocs = localities.size();
-        //BOOST_LOG_TRIVIAL(debug)<< "Running on: " << nlocs << " localities. With " << nthreads << " worker threads " << std::endl;
 
         //calculate how many chunks we have to divide the work into
         //assuming 1 chunk per thread and node, this might need adjustment

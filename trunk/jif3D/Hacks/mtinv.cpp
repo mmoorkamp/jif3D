@@ -15,9 +15,6 @@
 #include <boost/program_options.hpp>
 #include <boost/program_options/config.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/log/core.hpp>
-#include <boost/log/trivial.hpp>
-#include <boost/log/expressions.hpp>
 
 #include "../Global/FileUtil.h"
 #include "../Global/Noise.h"
@@ -40,7 +37,7 @@
 
 namespace ublas = boost::numeric::ublas;
 namespace po = boost::program_options;
-namespace logging = boost::log;
+
 
 jif3D::SetupRegularization RegSetup;
 jif3D::SetupInversion InversionSetup;
@@ -61,16 +58,6 @@ double DistCorr = 0;
 
 int hpx_main(boost::program_options::variables_map& vm)
   {
-    if (vm.count("debug"))
-      {
-        logging::core::get()->set_filter(
-            logging::trivial::severity >= logging::trivial::debug);
-      }
-    else
-      {
-        logging::core::get()->set_filter(
-            logging::trivial::severity >= logging::trivial::warning);
-      }
 
     boost::shared_ptr<jif3D::JointObjective> Objective(new jif3D::JointObjective(true));
 
@@ -93,9 +80,6 @@ int hpx_main(boost::program_options::variables_map& vm)
         CovModVec.resize(ncovmod);
         std::copy(CovModel.GetData().origin(), CovModel.GetData().origin() + ncovmod,
             CovModVec.begin());
-//        BOOST_LOG_TRIVIAL(debug)<< "Reading in covariance file: " << Filename << std::endl;
- //       BOOST_LOG_TRIVIAL(debug)<< "Covariance file has: " << CovModel.GetNModelElements() << " elements" << std::endl;
-  //      BOOST_LOG_TRIVIAL(debug)<< "Covariance file has: " << std::count(CovModel.GetData().origin(),CovModel.GetData().origin() + ncovmod,1) << " elements = 1" << std::endl;
       }
 
     boost::filesystem::path TempDir = boost::filesystem::current_path();
@@ -320,7 +304,6 @@ int hpx_main(boost::program_options::variables_map& vm)
     jif3D::X3DMTCalculator Calculator(TempDir, X3DName, WantDistCorr);
     if (vm.count("opt"))
       {
-        BOOST_LOG_TRIVIAL(info)<< "Using Opt type Green's functions ";
         Calculator.SetGreenType1(jif3D::GreenCalcType::opt);
         Calculator.SetGreenType4(jif3D::GreenCalcType::opt);
       }

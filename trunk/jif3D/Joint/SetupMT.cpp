@@ -100,7 +100,7 @@ namespace jif3D
 
             if (vm.count("opt"))
               {
-                BOOST_LOG_TRIVIAL(info)<< "Using Opt type Green's functions ";
+                std::cout << "Using Opt type Green's functions " << std::endl;
                 Calculator.SetGreenType1(jif3D::GreenCalcType::opt);
                 Calculator.SetGreenType4(jif3D::GreenCalcType::opt);
               }
