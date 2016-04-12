@@ -6,10 +6,12 @@
 //============================================================================
 
 
-#include <boost/numeric/conversion/cast.hpp>
+
 #include "TomographyCalculator.h"
 #include "ReadWriteTomographyData.h"
 #include "modeling_seismic.h"
+#include <boost/numeric/conversion/cast.hpp>
+
 namespace jif3D
   {
 
