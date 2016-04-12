@@ -11,9 +11,7 @@
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/test/test_tools.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/log/core.hpp>
-#include <boost/log/trivial.hpp>
-#include <boost/log/expressions.hpp>
+
 
 #include "../Inversion/ThreeDModelObjective.h"
 #include "X3DModel.h"
@@ -99,9 +97,7 @@ BOOST_AUTO_TEST_SUITE( X3DObjective_Suite )
         Model.AddMeasurementPoint(10.0, 12.0, 0.0);
         Model.AddMeasurementPoint(13.0, 14.0, 30.0);
         Objective.SetCoarseModelGeometry(Model);
-        namespace logging = boost::log;
-//        logging::core::get()->set_filter(
-//            logging::trivial::severity >= logging::trivial::warning);
+
         BOOST_CHECK_THROW(
             Objective.CalcMisfit(jif3D::rvec(Model.GetConductivities().num_elements())),
             jif3D::FatalException);
@@ -109,10 +105,6 @@ BOOST_AUTO_TEST_SUITE( X3DObjective_Suite )
 
     BOOST_AUTO_TEST_CASE (X3D_3D_deriv_test)
       {
-        namespace logging = boost::log;
-
-        logging::core::get()->set_filter(
-            logging::trivial::severity >= logging::trivial::warning);
 
         jif3D::X3DModel Model;
         MakeMTModel(Model);

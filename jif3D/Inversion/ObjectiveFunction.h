@@ -17,7 +17,6 @@
 #include <cmath>
 #include <boost/shared_ptr.hpp>
 #include <boost/numeric/conversion/cast.hpp>
-#include <boost/log/trivial.hpp>
 
 namespace jif3D
   {
@@ -169,9 +168,6 @@ namespace jif3D
           const size_t ndata = DataDifference.size();
           if (InvCovMat.size1() != ndata || InvCovMat.size2() != ndata)
             {
-              BOOST_LOG_TRIVIAL(debug) << "Setting covariance all to 1.0, original size: "
-              << InvCovMat.size1() << " " << InvCovMat.size2() << " should be: "
-              << ndata << std::endl;
               //the last parameter false is important here so that ublas
               //does not try to preserve which is broken in boost 1.49
               InvCovMat.resize(DataDifference.size(), DataDifference.size(), false);

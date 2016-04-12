@@ -16,7 +16,7 @@
 #include "../ModelBase/ReadAnyModel.h"
 
 #include <algorithm>
-#include <boost/log/trivial.hpp>
+
 
 namespace jif3D
   {
@@ -48,10 +48,6 @@ namespace jif3D
                     "Z-dimensions of TearModel do not match x-dimensions of starting model ",
                     __FILE__, __LINE__);
               }
-            BOOST_LOG_TRIVIAL(debug)<< "Reading in Tear file: " << Filename << std::endl;
-            BOOST_LOG_TRIVIAL(debug)<< "Tear file has: " << TearModel.GetNModelElements() << " elements" << std::endl;
-            BOOST_LOG_TRIVIAL(debug)<< "Tear file has: " << std::count(TearModel.GetData().origin(),TearModel.GetData().origin() + TearModel.GetData().num_elements(),0) << " zero elements" << std::endl;
-            //.ReadNetCDF(vm[OptionName].as<std::string>());
           }
         else
           {

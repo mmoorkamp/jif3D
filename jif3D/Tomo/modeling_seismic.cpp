@@ -19,7 +19,6 @@
 #include <cmath>
 #include <vector>
 #include <iostream>
-#include <boost/log/trivial.hpp>
 
 
 
@@ -171,14 +170,12 @@ namespace jif3D
         std::vector<hpx::naming::id_type> localities = hpx::find_all_localities();
         const size_t nthreads = hpx::get_num_worker_threads();
         const size_t nlocs = localities.size();
-        BOOST_LOG_TRIVIAL(debug)<< "Running on: " << nlocs << " localities. With " << nthreads << " worker threads " << std::endl;
         size_t nchunks = nthreads * nlocs;
         std::vector<hpx::lcos::future<RayResult>> ShotResult;
         ShotResult.reserve(nchunks);
         ForwardModShotArray_action ForwardModShotArray;
         const size_t shotsperchunk = nshot / nchunks +1;
-        BOOST_LOG_TRIVIAL(debug)<< "Dividing data into: " << nchunks << " chunks. With " << shotsperchunk << " each " << std::endl;
-        BOOST_LOG_TRIVIAL(debug)<< "Total number of shots is: " << nshot << std::endl;
+
         for (size_t c = 0; c < nchunks; ++c)
           {
             size_t count = 0;
@@ -186,7 +183,7 @@ namespace jif3D
             size_t startindex = c * shotsperchunk;
             size_t endindex = std::min(size_t(nshot), (c+1) * shotsperchunk);
             std::vector<GEOMETRY> geo_tmp(endindex - startindex);
-            BOOST_LOG_TRIVIAL(debug)<< "Working on shots: " << startindex << " to " << endindex << std::endl;
+
 
             for (size_t i = startindex; i < endindex; i++)
               {
@@ -216,7 +213,7 @@ namespace jif3D
 
         for (size_t c = 0; c < nchunks; ++c)
           {
-            BOOST_LOG_TRIVIAL(debug)<< "Transferring chunk " << c << std::endl;
+
             size_t startindex = c * shotsperchunk;
             size_t endindex = std::min(size_t(nshot), (c+1) * shotsperchunk);
             RayResult Rays = ShotResult[c].get();
@@ -235,7 +232,6 @@ namespace jif3D
                         count++;
                       }
                   }
-                BOOST_LOG_TRIVIAL(debug)<< "Should have: " << count << " data. Actually have " << Rays.tcalc.size() << " calculated " << std::endl;
                 for (size_t j = 0; j < count; j++)
                   {
                     data.tcalc[nact_datapos[j]] = Rays.tcalc[dataindex + j];

@@ -10,10 +10,6 @@
 #include <boost/random/variate_generator.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/program_options.hpp>
-#include <boost/log/core.hpp>
-#include <boost/log/trivial.hpp>
-#include <boost/log/expressions.hpp>
-#include <boost/log/trivial.hpp>
 #include "../Global/FileUtil.h"
 #include "../Global/convert.h"
 #include "../Global/Noise.h"
@@ -23,7 +19,7 @@
 #include "ReadWriteImpedances.h"
 
 namespace po = boost::program_options;
-namespace logging = boost::log;
+
 int main(int argc, char *argv[])
   {
 
@@ -43,16 +39,6 @@ int main(int argc, char *argv[])
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
 
-    if (vm.count("debug"))
-      {
-        logging::core::get()->set_filter(
-            logging::trivial::severity >= logging::trivial::debug);
-      }
-    else
-      {
-        logging::core::get()->set_filter(
-            logging::trivial::severity >= logging::trivial::info);
-      }
     if (vm.count("help"))
       {
         std::cout << desc << "\n";
@@ -141,7 +127,6 @@ int main(int argc, char *argv[])
     jif3D::X3DMTCalculator Calculator(TempDir, X3DName);
     if (vm.count("opt"))
       {
-        BOOST_LOG_TRIVIAL(info)<< "Using Opt type Green's functions ";
         Calculator.SetGreenType1(jif3D::GreenCalcType::opt);
         Calculator.SetGreenType4(jif3D::GreenCalcType::opt);
       }

@@ -14,7 +14,6 @@
 //#include <boost/iostreams/stream.hpp>
 //#include <boost/iostreams/device/file_descriptor.hpp>
 #include <boost/assign/list_of.hpp> // for 'map_list_of()'
-#include <boost/log/trivial.hpp>
 #include <boost/filesystem.hpp>
 
 
@@ -133,10 +132,7 @@ namespace jif3D
             throw FatalException("Cannot find run script: " + runname, __FILE__,
             __LINE__);
           }
-        else
-          {
-            BOOST_LOG_TRIVIAL(debug)<< "Run script: " << runname << " exists " << std::endl;
-          }
+
         //instead of making the script executable
         //we run a bash with the scriptname as an argument
         //this turns out to be more robust
@@ -276,7 +272,6 @@ namespace jif3D
         auto YPolMax = std::max_element(YPolMoments.begin(), YPolMoments.end(), CompFunc);
         bool HaveXPol = std::norm(*XPolMax) > 1e-30;
         bool HaveYPol = std::norm(*YPolMax) > 1e-30;
-        BOOST_LOG_TRIVIAL(debug)<< "Maximum dipole moments: X: " << *XPolMax << " Y: " << *YPolMax << std::endl;
         if (HaveXPol || HaveYPol)
           {
             std::string DirName = RootName + dirext + "/";
@@ -294,7 +289,7 @@ namespace jif3D
           }
         else
           {
-            BOOST_LOG_TRIVIAL(debug)<<"No significant source moments, setting fields to zero !" << std::endl;
+
         Ux.resize(ncellsx * ncellsy * ncellsz, 0.0);
         Uy.resize(ncellsx * ncellsy * ncellsz, 0.0);
         Uz.resize(ncellsx * ncellsy * ncellsz, 0.0);
