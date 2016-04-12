@@ -1,10 +1,7 @@
 #ifndef MODELING_SEISMIC_H
 #define MODELING_SEISMIC_H
 
-#ifdef HAVEHPX
-#include <hpx/config.hpp>
-#include <hpx/include/actions.hpp>
-#endif
+
 #include <vector>
 #include "tomo_types.h"
 
