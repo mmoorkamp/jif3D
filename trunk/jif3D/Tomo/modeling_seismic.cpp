@@ -6,9 +6,7 @@
 //============================================================================
 
 #ifdef HAVEHPX
-#include <hpx/config.hpp>
-#include <hpx/include/lcos.hpp>
-//#include <hpx/include/iostreams.hpp>
+#include <hpx/hpx.hpp>
 #endif
 
 #include "modeling_seismic.h"

@@ -5,9 +5,6 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-#ifdef HAVEHPX
-#include <hpx/config.hpp>
-#endif
 
 #include <boost/numeric/conversion/cast.hpp>
 #include "TomographyCalculator.h"
