@@ -30,12 +30,14 @@ namespace po = boost::program_options;
 
 int main(int argc, char *argv[])
   {
-
+    int incstart = 0;
     double rounding = 1.0;
     po::options_description desc("General options");
-    desc.add_options()("help", "produce help message")("rounding", po::value<double>(&rounding),
-        "Round layer thicknesses to multiple of this number in meters.");
-
+    desc.add_options()("help", "produce help message")("rounding",
+        po::value<double>(&rounding),
+        "Round layer thicknesses to multiple of this number in meters.")("incstart",
+        po::value<int>(&incstart),
+        "Index of the layer where to start increasing the cell size in z-direction");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -69,13 +71,14 @@ int main(int argc, char *argv[])
     //the size of each cell in z-direction increases by the specified factor for each layer
     for (int i = 0; i < nz; ++i)
       {
-        double thickness = floor(deltaz * pow(factor, i));
+        double thickness = deltaz;
+        if (i >= incstart)
+          thickness *= floor(pow(factor, i));
         //x3d has some problems handling thicknesses over 10km with full meter precision
         //so if the thickness is > 10km we round to 100m
-        thickness = floor(thickness/rounding) * rounding;
+        thickness = floor(thickness / rounding) * rounding;
         Model.SetZCellSizes()[i] = thickness;
       }
-
 
     //ask for a conductivity to fill the mesh with
     double defaultconductivity = 1.0;
