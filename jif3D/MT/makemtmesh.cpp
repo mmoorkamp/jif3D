@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
       {
         double thickness = deltaz;
         if (i >= incstart)
-          thickness *= floor(pow(factor, i));
+          thickness *= pow(factor, i-incstart);
         //x3d has some problems handling thicknesses over 10km with full meter precision
         //so if the thickness is > 10km we round to 100m
         thickness = floor(thickness / rounding) * rounding;
