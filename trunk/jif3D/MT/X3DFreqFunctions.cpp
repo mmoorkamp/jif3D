@@ -131,7 +131,8 @@ ForwardResult CalculateFrequency(const ForwardInfo &Info)
     return result;
   }
 
-GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI)
+GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI,
+    const jif3D::VectorTransform &DataTransform)
   {
     //a few commonly used quantities for shorter notation
     const size_t nmodx = Info.Model.GetConductivities().shape()[0];
@@ -216,10 +217,31 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI)
             Hx2_obs[offset], Hy1_obs[offset], Hy2_obs[offset]);
         //x3d uses a different convention for the complex exponentials
         //so we have to use the complex conjugate for the source
+        size_t imp_offset = freq_start_index + j * 8;
         XPolMoments1.at(j) = j_ext(0, 0);
         YPolMoments1.at(j) = j_ext(1, 0);
         XPolMoments2.at(j) = j_ext(0, 1);
         YPolMoments2.at(j) = j_ext(1, 1);
+       /* auto GradTrans = DataTransform.Derivative(
+            ublas::subrange(GI.RawImpedance, imp_offset, imp_offset + 2));
+        XPolMoments1.at(j) = std::complex<double>(
+            GradTrans(0, 0) * j_ext(0, 0).real() + GradTrans(0, 1) * j_ext(0, 0).imag(),
+            GradTrans(1, 0) * j_ext(0, 0).real() + GradTrans(1, 1) * j_ext(0, 0).imag());
+        GradTrans = DataTransform.Derivative(
+            ublas::subrange(GI.RawImpedance, imp_offset + 2, imp_offset + 4));
+        YPolMoments1.at(j) = std::complex<double>(
+            GradTrans(0, 0) * j_ext(1, 0).real() + GradTrans(0, 1) * j_ext(1, 0).imag(),
+            GradTrans(1, 0) * j_ext(1, 0).real() + GradTrans(1, 1) * j_ext(1, 0).imag());
+        GradTrans = DataTransform.Derivative(
+            ublas::subrange(GI.RawImpedance, imp_offset + 4, imp_offset + 6));
+        XPolMoments2.at(j) = std::complex<double>(
+            GradTrans(0, 0) * j_ext(0, 1).real() + GradTrans(0, 1) * j_ext(0, 1).imag(),
+            GradTrans(1, 0) * j_ext(0, 1).real() + GradTrans(1, 1) * j_ext(0, 1).imag());
+        GradTrans = DataTransform.Derivative(
+            ublas::subrange(GI.RawImpedance, imp_offset + 6, imp_offset + 8));
+        YPolMoments2.at(j) = std::complex<double>(
+            GradTrans(0, 0) * j_ext(1, 1).real() + GradTrans(0, 1) * j_ext(1, 1).imag(),
+            GradTrans(1, 0) * j_ext(1, 1).real() + GradTrans(1, 1) * j_ext(1, 1).imag());*/
       }
     //we only want to calculate for one frequency
     //so our vector has just 1 element
@@ -285,10 +307,10 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI)
     for (size_t j = 0; j < nmeas; ++j)
       {
         size_t offset = freq_start_index + j * 8;
-        std::complex<double> Zxx(GI.RawImpedance(offset), GI.RawImpedance(offset + 1)), Zxy(
-            GI.RawImpedance(offset + 2), GI.RawImpedance(offset + 3)), Zyx(
+        std::complex<double> Zxx(GI.RawImpedance(offset), GI.RawImpedance(offset + 1)),
+            Zxy(GI.RawImpedance(offset + 2), GI.RawImpedance(offset + 3)), Zyx(
                 GI.RawImpedance(offset + 4), GI.RawImpedance(offset + 5)), Zyy(
-                    GI.RawImpedance(offset + 5), GI.RawImpedance(offset + 6));
+                GI.RawImpedance(offset + 6), GI.RawImpedance(offset + 7));
         //project the electric dipole to magnetic dipole moments using the undistorted impedance
         CalcHext(omega_mu, XPolMoments1.at(j), XPolMoments2.at(j), YPolMoments1.at(j),
             YPolMoments2.at(j), Zxx, Zxy, Zyx, Zyy);

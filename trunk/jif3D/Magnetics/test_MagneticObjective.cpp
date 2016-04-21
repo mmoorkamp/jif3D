@@ -94,15 +94,16 @@ BOOST_AUTO_TEST_SUITE( MagneticObjective_Test_Suite )
             new jif3D::OMPMagneticImp(inclination, declination, fieldstrength));
 
         boost::shared_ptr<CalculatorType> Calculator(new CalculatorType(Implementation));
+        Calculator->SetDataTransform(boost::make_shared<jif3D::TotalField>());
 
-        Calculator->SetDataTransform(
-            boost::shared_ptr<jif3D::TotalField>(new jif3D::TotalField));
 
         jif3D::rvec Observed(Calculator->Calculate(MagTest));
 
         Observed *= 1.1;
 
         jif3D::ThreeDModelObjective<CalculatorType> Objective(*Calculator.get());
+        Objective.SetDataTransform(
+                    boost::make_shared<jif3D::TotalField>());
         Objective.SetObservedData(Observed);
         Objective.SetCoarseModelGeometry(MagTest);
         jif3D::rvec InvModel(MagTest.GetSusceptibilities().num_elements());
@@ -138,6 +139,8 @@ BOOST_AUTO_TEST_SUITE( MagneticObjective_Test_Suite )
         Observed *= 1.1;
 
         jif3D::ThreeDModelObjective<CalculatorType> Objective(*Calculator.get());
+        Objective.SetDataTransform(
+                            boost::make_shared<jif3D::TotalFieldAnomaly>(inclination, declination, fieldstrength));
         Objective.SetObservedData(Observed);
         Objective.SetCoarseModelGeometry(MagTest);
         jif3D::rvec InvModel(MagTest.GetSusceptibilities().num_elements());

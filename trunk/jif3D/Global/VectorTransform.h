@@ -9,8 +9,8 @@
 #define VECTORTRANSFORM_H_
 
 #include "../Global/Serialization.h"
-#include <cassert>
 #include "../Global/VecMat.h"
+#include "../Global/FatalException.h"
 
 /*! \file VectorTransform.h
  * Provide function objects that transform one vector to another. The main purpose is to
@@ -48,13 +48,13 @@ namespace jif3D
         }
     public:
       //! How many consecutive elements in the input vector form a logical block of data that this transform works on
-      virtual size_t GetInputSize() = 0;
+      virtual size_t GetInputSize() const = 0;
       //! How many elements will one logical input block be transformed to
-      virtual size_t GetOutputSize() = 0;
+      virtual size_t GetOutputSize() const = 0;
       //! Transform the input vector
-      virtual jif3D::rvec Transform(const jif3D::rvec &InputVector) = 0;
+      virtual jif3D::rvec Transform(const jif3D::rvec &InputVector) const = 0;
       //! Give the matrix of partial derivatives with respect to the input parameters for the transformation \f$ \partial f/\partial m_i \f$.
-      virtual jif3D::rmat Derivative(const jif3D::rvec &InputVector) = 0;
+      virtual jif3D::rmat Derivative(const jif3D::rvec &InputVector) const = 0;
       VectorTransform()
         {
         }
@@ -80,11 +80,11 @@ namespace jif3D
           ar & ntrans;
         }
     public:
-      virtual size_t GetInputSize()
+      virtual size_t GetInputSize() const
         {
           return ntrans;
         }
-      virtual size_t GetOutputSize()
+      virtual size_t GetOutputSize() const
         {
           return ntrans;
         }
@@ -97,12 +97,12 @@ namespace jif3D
         {
         }
       //! This "transformation" just passes the input parameter through
-      virtual jif3D::rvec Transform(const jif3D::rvec &InputVector)
+      virtual jif3D::rvec Transform(const jif3D::rvec &InputVector) const
         {
           return InputVector;
         }
       //! When generalized and physical parameters are the same the derivative is 1 for all parameters
-      virtual jif3D::rmat Derivative(const jif3D::rvec &InputVector)
+      virtual jif3D::rmat Derivative(const jif3D::rvec &InputVector) const
         {
           return ublas::identity_matrix<double>(InputVector.size());
         }
@@ -123,15 +123,15 @@ namespace jif3D
         const size_t insize = InputVector.size();
         const size_t step = Transform.GetInputSize();
         const size_t nout = Transform.GetOutputSize();
-        assert(insize % step == 0);
+        if (insize % step != 0)
+          throw jif3D::FatalException("Transformation size needs to be integer multiple of input data size",__FILE__, __LINE__);
         jif3D::rvec Output(insize / step * nout);
         for (size_t i = 0; i < insize; i += step)
           {
-            jif3D::rvec temp(
-                Transform.Transform(
-                    ublas::vector_range<const jif3D::rvec>(InputVector,
-                        ublas::range(i, i + step))));
-            copy(temp.begin(), temp.end(), Output.begin() + i / step * nout);
+            const size_t start = i / step * nout;
+            ublas::subrange(Output, start, start + nout) = Transform.Transform(
+                ublas::subrange(InputVector, i, i + step));
+
           }
         return Output;
       }

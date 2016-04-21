@@ -10,6 +10,7 @@
 
 #include "../Global/Serialization.h"
 #include "../Global/VecMat.h"
+#include "../Global/VectorTransform.h"
 #include "ThreeDSeismicModel.h"
 #include "tomo_types.h"
 
@@ -45,10 +46,17 @@ namespace jif3D
       jif3D::DATA_STRUCT data;
       //! The various segments of each raypath through the model cells
       std::vector<jif3D::RP_STRUCT> raypath;
+      //! Set a transform for the observed data
+            boost::shared_ptr<jif3D::VectorTransform> DataTransform;
       //! Perform the dynamic allocation for the c-structures above
       void Allocate(const size_t ngrid, const size_t ndata, const size_t npos);
 
     public:
+      void  SetDataTransform(boost::shared_ptr<jif3D::VectorTransform> DT)
+       {
+         DataTransform = DT;
+       }
+
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
@@ -61,6 +69,7 @@ namespace jif3D
           ar & grid;
           ar & data;
           ar & raypath;
+          ar & DataTransform;
         }
       //! We can tell the forward modelling object to write out the rays whenever it performs a calculation
       /*! Writing out rays is helpful to show coverage and identify problems, but the
