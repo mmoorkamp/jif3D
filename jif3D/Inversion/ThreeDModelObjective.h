@@ -9,8 +9,9 @@
 #define THREEDMODELOBJECTIVE_H_
 
 #include "../Global/Serialization.h"
-#include "../ModelBase/ModelRefiner.h"
 #include "../Global/FatalException.h"
+#include "../Global/VectorTransform.h"
+#include "../ModelBase/ModelRefiner.h"
 #include "../Inversion/ObjectiveFunction.h"
 
 namespace jif3D
@@ -41,7 +42,7 @@ namespace jif3D
       typedef typename CalculatorType::ModelType ModelType;
       //! Some forward calculators have extra parameters in addition to the grid values, e.g. gravity can have background densities or MT distortion parameters
       typedef typename CalculatorType::ModelType::ExtraParameterSetter ExtraParameterSetter;
-    protected:
+    private:
       //! The object that calculates the synthetic data its type is set by the template parameter
       CalculatorType Calculator;
       //! The skeleton for the physical property model used in the inversion that contains geometry information etc.
@@ -70,6 +71,8 @@ namespace jif3D
       jif3D::ModelRefiner Refiner;
       //! The vector of observed data for all stations. The exact ordering of the data depends on the calculator object.
       jif3D::rvec ObservedData;
+      //! A transformation for the observed data, for example to invert apparent resistivity and phase instead of impedance for MT data
+      boost::shared_ptr<jif3D::VectorTransform> DataTransform;
       //! Calculate the difference between observed and synthetic data for a given model
       friend class access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
@@ -83,6 +86,7 @@ namespace jif3D
           ar & wantrefinement;
           ar & Refiner;
           ar & ObservedData;
+          ar & DataTransform;
         }
     protected:
       ThreeDModelObjective()
@@ -103,6 +107,17 @@ namespace jif3D
         {
           return new ThreeDModelObjective<ThreeDCalculatorType>(*this);
         }
+      //! Set a transform for the observed data
+      /*! Under certain circumstances we do not want to invert the data directly,
+       * but instead want to invert a transformed quantity. For example, for MT
+       * data we might want to invert apparent resistivity and phase instead
+       * of complex impedance.
+       */
+      void SetDataTransform(boost::shared_ptr<jif3D::VectorTransform> DT)
+        {
+          DataTransform = DT;
+          Calculator.SetDataTransform(DT);
+        }
       //! Set the observed  data
       /*! We have to set the observed data in a format consistent with the calculator object.
        * As we provide an abstract interface here, the user has to make sure that the calculator
@@ -116,7 +131,12 @@ namespace jif3D
             throw jif3D::FatalException(
                 "Cannot have empty observations in objective function. ", __FILE__,
                 __LINE__);
-          ObservedData = Data;
+          if (!DataTransform)
+            {
+              DataTransform = boost::make_shared<jif3D::CopyTransform>(Data.size());
+              Calculator.SetDataTransform(DataTransform);
+            }
+          ObservedData = jif3D::ApplyTransform(Data, *DataTransform);
         }
       //! Return a read only version of the observed data
       const jif3D::rvec &GetObservedData() const
@@ -231,7 +251,7 @@ namespace jif3D
           {
             SynthData = Calculator.Calculate(CoarseModel);
           }
-
+        SynthData = jif3D::ApplyTransform(SynthData, *DataTransform);
         if (SynthData.size() != ObservedData.size())
           throw jif3D::FatalException(
               " ThreeDModelObjective: Forward calculation does not give same amount of data !",

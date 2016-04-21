@@ -9,6 +9,7 @@
 #define X3DMTCALCULATOR_H_
 #include "../Global/Serialization.h"
 #include "../Global/VecMat.h"
+#include "../Global/VectorTransform.h"
 #include <limits>
 #include <boost/filesystem.hpp>
 #include <boost/uuid/uuid.hpp>
@@ -65,6 +66,8 @@ namespace jif3D
       bool WantDistCorr;
       //! The impedances from the last forward calculation without any distortion correction
       rvec RawImpedance;
+      //! Set a transform for the observed data
+      boost::shared_ptr<jif3D::VectorTransform> DataTransform;
       friend class access;
 
       //create a unique ID that we can use to name things and still
@@ -93,6 +96,7 @@ namespace jif3D
           ar & WantDistCorr;
           std::vector<double> v(RawImpedance.begin(), RawImpedance.end());
           ar & v;
+          ar & DataTransform;
         }
       template<class Archive>
       void load(Archive & ar, const unsigned int version)
@@ -108,15 +112,26 @@ namespace jif3D
           ar & v;
           RawImpedance.resize(v.size());
           std::copy(v.begin(), v.end(), RawImpedance.begin());
+          ar & DataTransform;
         }
 #ifdef HAVEHPX
       HPX_SERIALIZATION_SPLIT_MEMBER()
 #else
       BOOST_SERIALIZATION_SPLIT_MEMBER()
 #endif
+      //! A transformation for the observed data, for example to invert apparent resistivity and phase instead of impedance for MT data
+      /*! Under certain circumstances we do not want to invert the data directly,
+       * but instead want to invert a transformed quantity. For example, for MT
+       * data we might want to invert apparent resistivity and phase instead
+       * of complex impedance.
+       */
+   void  SetDataTransform(boost::shared_ptr<jif3D::VectorTransform> DT)
+    {
+      DataTransform = DT;
+    }
 
-      //! Set type of green's function for forward calculation i X3D (stage 1)
-void  SetGreenType1(jif3D::GreenCalcType G)
+  //! Set type of green's function for forward calculation i X3D (stage 1)
+  void SetGreenType1(jif3D::GreenCalcType G)
     {
       GreenType1 = G;
     }

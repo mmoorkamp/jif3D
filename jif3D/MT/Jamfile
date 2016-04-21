@@ -21,6 +21,7 @@ unit-test X3DObjective_test : test_X3DObjective.cpp mt linkcommon ../Inversion//
 unit-test OneDMTCalculator_test : test_OneDMTCalculator.cpp mt linkcommon ../Inversion//inversion  ;
 unit-test ReadWriteImpedances_test : test_ReadWriteImpedances.cpp mt linkcommon ../Inversion//inversion  ;
 unit-test MTCovar_test : test_MTCovar.cpp mt  ..//ModelBase   ;
+unit-test MTtransform_test : test_transform.cpp mt  ..//ModelBase   ;
 
 exe mtforward : mtforward.cpp mt linkcommon  ..//boost_program_options ;
 exe makemtmesh : makemtmesh.cpp mt linkcommon ..//boost_program_options  ;

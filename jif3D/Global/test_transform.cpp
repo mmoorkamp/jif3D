@@ -27,16 +27,16 @@ class  TestTransform : public jif3D::VectorTransform
       size_t nout;
     public:
       //first access functions that need to be implemented
-      virtual size_t GetInputSize()
+      virtual size_t GetInputSize() const
         {
           return nin;
         }
-      virtual size_t GetOutputSize()
+      virtual size_t GetOutputSize() const
         {
           return nout;
         }
       //the transform that tests the functionality
-      virtual jif3D::rvec Transform(const jif3D::rvec &InputVector)
+      virtual jif3D::rvec Transform(const jif3D::rvec &InputVector) const
         {
           jif3D::rvec Out(nout);
           std::fill(Out.begin(),Out.end(),0.0);
@@ -48,7 +48,7 @@ class  TestTransform : public jif3D::VectorTransform
           return Out;
         }
       //we are not interested in the derivative here
-      virtual jif3D::rmat Derivative(const jif3D::rvec &InputVector)
+      virtual jif3D::rmat Derivative(const jif3D::rvec &InputVector) const
         {
           return jif3D::rmat();
 

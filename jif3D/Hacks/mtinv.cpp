@@ -31,6 +31,7 @@
 #include "../MT/X3DModel.h"
 #include "../MT/X3DMTCalculator.h"
 #include "../MT/ReadWriteImpedances.h"
+#include "../MT/MTTransforms.h"
 #include "../Joint/SetupRegularization.h"
 #include "../Joint/SetupInversion.h"
 #include "../Joint/InversionOutput.h"
@@ -309,7 +310,11 @@ int hpx_main(boost::program_options::variables_map& vm)
       }
     boost::shared_ptr<jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator> > X3DObjective(
         new jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator>(Calculator));
-
+    if (vm.count("rhophi"))
+      {
+        X3DObjective->SetDataTransform(boost::make_shared<jif3D::ComplexLogTransform>());
+        ZError = ublas::element_div(ZError,Data);
+      }
     X3DObjective->SetObservedData(Data);
     X3DObjective->SetCoarseModelGeometry(Model);
 
@@ -538,7 +543,7 @@ int main(int argc, char* argv[])
         "The name of a model to use as a cross-gradient constraint")("regcheck",
         "Only perform a regularization calculation")("conddelta",
         po::value(&conddelta)->default_value(0.001),
-        "The relative amount by which the conductivities in the first row of cells is disturbed to ensure proper gradient calculation");
+        "The relative amount by which the conductivities in the first row of cells is disturbed to ensure proper gradient calculation")("rhophi","Use apparent resistivity and phase instead of impedance");
 
     desc.add(RegSetup.SetupOptions());
     desc.add(InversionSetup.SetupOptions());

@@ -21,18 +21,18 @@ namespace jif3D
       //! we return one invariant as output at each call
       static const size_t noutput = 1;
       //! calculate the invariant from 3 observations
-      double CalcTotalField(const jif3D::rvec &Data)
+      double CalcTotalField(const jif3D::rvec &Data) const
         {
           return sqrt(Data(0) * Data(0) + Data(1) * Data(1) + Data(2) * Data(2));
         }
     public:
       //! Return the size of the input vector this class expects
-      virtual size_t GetInputSize()
+      virtual size_t GetInputSize() const
         {
           return ninput;
         }
       //! Return the size of the input vector this class will yield
-      virtual size_t GetOutputSize()
+      virtual size_t GetOutputSize() const
         {
           return noutput;
         }
@@ -41,7 +41,7 @@ namespace jif3D
        * @param InputVector The tensor elements as a vector in c-storage order, has to have 9 elements
        * @return A vector with a single element, the calculated invariant.
        */
-      virtual jif3D::rvec Transform(const jif3D::rvec &InputVector)
+      virtual jif3D::rvec Transform(const jif3D::rvec &InputVector) const
         {
           assert(InputVector.size() == ninput);
           jif3D::rvec result(1);
@@ -54,7 +54,7 @@ namespace jif3D
        * @param InputVector The magnetic field elements as a vector in c-storage order, has to have 3 elements
        * @return A 1x3 matrix of partial derivatives
        */
-      virtual jif3D::rmat Derivative(const jif3D::rvec &InputVector)
+      virtual jif3D::rmat Derivative(const jif3D::rvec &InputVector) const
         {
           assert(InputVector.size() == ninput);
           jif3D::rmat InvarSens(noutput, ninput);
@@ -88,12 +88,12 @@ namespace jif3D
       static const size_t noutput = 1;
     public:
       //! Return the size of the input vector this class expects
-      virtual size_t GetInputSize()
+      virtual size_t GetInputSize() const
         {
           return ninput;
         }
       //! Return the size of the input vector this class will yield
-      virtual size_t GetOutputSize()
+      virtual size_t GetOutputSize() const
         {
           return noutput;
         }
@@ -102,7 +102,7 @@ namespace jif3D
        * @param InputVector The tensor elements as a vector in c-storage order, has to have 9 elements
        * @return A vector with a single element, the calculated invariant.
        */
-      virtual jif3D::rvec Transform(const jif3D::rvec &InputVector)
+      virtual jif3D::rvec Transform(const jif3D::rvec &InputVector) const
         {
           assert(InputVector.size() == ninput);
           jif3D::rvec result(1);
@@ -116,7 +116,7 @@ namespace jif3D
        * @param InputVector The magnetic field elements as a vector in c-storage order, has to have 3 elements
        * @return A 1x3 matrix of partial derivatives
        */
-      virtual jif3D::rmat Derivative(const jif3D::rvec &InputVector)
+      virtual jif3D::rmat Derivative(const jif3D::rvec &InputVector) const
         {
           assert(InputVector.size() == ninput);
           jif3D::rmat InvarSens(noutput, ninput);

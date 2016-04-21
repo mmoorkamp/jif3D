@@ -213,9 +213,14 @@ namespace jif3D
     rvec X3DMTCalculator::LQDerivative(const X3DModel &Model, const rvec &Misfit,
         size_t minfreqindex, size_t maxfreqindex)
       {
+        if (!DataTransform)
+          {
+            DataTransform = boost::make_shared<jif3D::CopyTransform>(Misfit.size());
+          }
         //we define nfreq as int to make the compiler happy in the openmp loop
         maxfreqindex = std::min(maxfreqindex, Model.GetFrequencies().size());
         const int nfreq = maxfreqindex - minfreqindex;
+        std::string ErrorMsg;
         //a few commonly used quantities for shorter notation
         const size_t nmodx = Model.GetConductivities().shape()[0];
         const size_t nmody = Model.GetConductivities().shape()[1];
@@ -257,7 +262,16 @@ namespace jif3D
               }
           }
 
+        jif3D::rvec ProjMisfit(Misfit.size(), 0.0);
+        for (size_t i = 0; i < Misfit.size(); i += 2)
+          {
+            auto GradTrans = DataTransform->Derivative(
+                ublas::subrange(RawImpedance, i, i + 2));
+            ProjMisfit(i) = GradTrans(0,0) * Misfit(i) + GradTrans(1,0) * Misfit(i+1);
+            ProjMisfit(i+1) = GradTrans(0,1) * Misfit(i) + GradTrans(1,1) * Misfit(i+1);
+          }
 #ifdef HAVEOPENMP
+
         omp_lock_t lck;
         omp_init_lock(&lck);
         //openmp loop indices have to be int, so we cast out upper limit to int
@@ -274,11 +288,16 @@ namespace jif3D
               {
                 ForwardInfo Info(Model,C,i,TempDir.string(),X3DName, NameRoot, GreenType1, GreenType4);
                 //calculate the gradient for each frequency
-                GradResult tmp = LQDerivativeFreq(Info, GradInfo(Misfit, RawImpedance));
-               omp_set_lock(&lck);
+                GradResult tmp = LQDerivativeFreq(Info, GradInfo(ProjMisfit, RawImpedance), *DataTransform);
+                omp_set_lock(&lck);
                 //the total gradient is the sum over the gradients for each frequency
                 boost::numeric::ublas::subrange(Gradient, 0, nmod) += tmp.Gradient;
                 omp_unset_lock(&lck);
+              }
+            catch (jif3D::FatalException &e)
+              {
+                ErrorMsg = e.what();
+                FatalError = true;
               }
             catch (...)
               {
@@ -289,7 +308,7 @@ namespace jif3D
               }
             //finished with one frequency
           }
-       omp_destroy_lock(&lck);
+        omp_destroy_lock(&lck);
 #endif
 
 #ifdef HAVEHPX
@@ -307,7 +326,7 @@ namespace jif3D
 
             hpx::naming::id_type const locality_id = localities.at(i % localities.size());
             //rvec freqresult = CalculateFrequency(Model, i, TempDir);
-            FreqResult.push_back(async(LQDerivativeFreq, locality_id, Info, GradInfo(Misfit, RawImpedance)));
+            FreqResult.push_back(async(LQDerivativeFreq, locality_id, Info, GradInfo(ProjMisfit, RawImpedance)));
 
           }
         wait_all(FreqResult);
@@ -332,8 +351,9 @@ namespace jif3D
         //if we had some exception inside the openmp region, we throw
         // a generic error message
         if (FatalError)
-          throw jif3D::FatalException("Problem in MT gradient calculation.", __FILE__,
-          __LINE__);
+          throw jif3D::FatalException(
+              "Problem in MT gradient calculation. Error message: " + ErrorMsg, __FILE__,
+              __LINE__);
 
         return 2.0 * Gradient;
       }
@@ -341,6 +361,10 @@ namespace jif3D
     rmat X3DMTCalculator::SensitivityMatrix(const ModelType &Model, const rvec &Misfit,
         size_t minfreqindex, size_t maxfreqindex)
       {
+        if (!DataTransform)
+          {
+            DataTransform = boost::make_shared<jif3D::CopyTransform>(Misfit.size());
+          }
         const size_t ndata = Misfit.size();
         const size_t nmodel = Model.GetConductivities().num_elements();
         const size_t nsites = Model.GetMeasPosX().size();
@@ -380,7 +404,8 @@ namespace jif3D
             CurrMisfit(i) = 1.0;
             ForwardInfo Info(Model, C, freqindex, TempDir.string(), X3DName, NameRoot,
                 GreenType1, GreenType4);
-            GradResult CurrGrad = LQDerivativeFreq(Info, GradInfo(CurrMisfit, RawImpedance));
+            GradResult CurrGrad = LQDerivativeFreq(Info,
+                GradInfo(CurrMisfit, RawImpedance), *DataTransform);
 
             boost::numeric::ublas::matrix_row<rmat> CurrRow(Result, i);
             boost::numeric::ublas::subrange(CurrRow, 0, nmodel) = CurrGrad.Gradient;

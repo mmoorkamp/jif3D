@@ -1,9 +1,11 @@
 import testing ; 
 import mpi ;
 
-alias joint : ../Tomo//tomo ../Gravity//gravity ../Inversion//inversion 
+
+alias common : ../Inversion//inversion 
               ../Global//global ../Regularization//regularization ../ModelBase//modelbase 
               ..//boost_core ;
+alias joint : ../Tomo//tomo ../Gravity//gravity common ;
 
 lib gsl : : <name>gsl ;
 lib cblas : : <name>cblas ;
@@ -18,7 +20,7 @@ lib cblas : : <name>cblas ;
 
 exe gravregion : gravregion.cpp joint  ;
 exe plotsaltrel : plotsaltrel.cpp joint ../Joint//joint ../Joint//setup ;	
-exe mtinv : mtinv.cpp  joint ../MT//mt ../Joint//joint ../Joint//setup  ;
+exe mtinv : mtinv.cpp  common ../MT//mt ../Joint//joint ../Joint//setup  ;
 exe tomoinv : tomoinv.cpp  joint ;
 exe plotgrav : plotgrav.cpp  joint ;
 exe text2grav : text2grav.cpp  joint ;

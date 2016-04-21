@@ -12,8 +12,8 @@
 #include <boost/test/test_tools.hpp>
 #include <boost/filesystem.hpp>
 
-
 #include "../Inversion/ThreeDModelObjective.h"
+#include "../Global/Noise.h"
 #include "X3DModel.h"
 #include "OneDMTCalculator.h"
 #include "OneDMTObjective.h"
@@ -21,6 +21,7 @@
 #include "ReadWriteX3D.h"
 #include "MTEquations.h"
 #include "ReadWriteImpedances.h"
+#include "MTTransforms.h"
 
 BOOST_AUTO_TEST_SUITE( X3DObjective_Suite )
 
@@ -45,7 +46,8 @@ BOOST_AUTO_TEST_SUITE( X3DObjective_Suite )
         std::fill_n(Model.SetZCellSizes().begin(), zsize, deltaz);
         std::fill_n(Model.SetConductivities().origin(), nmod, 0.02);
         typedef boost::multi_array_types::index_range range;
-        boost::multi_array<double, 3>::array_view<3>::type myview = Model.SetConductivities()[ boost::indices[range(0,3)][range(0,2)][range(0,0)] ];
+        boost::multi_array<double, 3>::array_view<3>::type myview =
+            Model.SetConductivities()[boost::indices[range(0, 3)][range(0, 2)][range(0, 0)]];
         //std::fill_n(myview.origin(),xsize*ysize,1.0);
         Model.SetConductivities()[0][0][0] = 1.0;
         std::fill_n(bg_conductivities.begin(), nbglayers, 0.02);
@@ -103,7 +105,7 @@ BOOST_AUTO_TEST_SUITE( X3DObjective_Suite )
             jif3D::FatalException);
       }
 
-    BOOST_AUTO_TEST_CASE (X3D_3D_deriv_test)
+ /*   BOOST_AUTO_TEST_CASE (X3D_3D_deriv_test)
       {
 
         jif3D::X3DModel Model;
@@ -131,6 +133,9 @@ BOOST_AUTO_TEST_SUITE( X3DObjective_Suite )
         jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator> Objective(Calculator);
         Objective.SetObservedData(Observed);
         Objective.SetCoarseModelGeometry(Model);
+        jif3D::rvec Error(jif3D::ConstructMTError(Observed, 0.02));
+
+        Objective.SetDataError(Error);
         const size_t nstat = Model.GetMeasPosX().size();
         jif3D::rvec ModelVec(nmod + 4 * nstat);
         // jif3D::rvec ModelVec(nmod);
@@ -179,8 +184,8 @@ BOOST_AUTO_TEST_SUITE( X3DObjective_Suite )
               {
                 std::cout << "Comparison Gradient-FD ";
                 std::cout << "Component: " << index << " " << ForFDGrad << " "
-                    << BackFDGrad << " " << CentFDGrad << " " << Gradient(index)
-                    << "\n" << std::endl;
+                    << BackFDGrad << " " << CentFDGrad << " " << Gradient(index) << "\n"
+                    << std::endl;
               }
 
             outfile << index << " " << ForFDGrad << " " << BackFDGrad << " "
@@ -197,8 +202,7 @@ BOOST_AUTO_TEST_SUITE( X3DObjective_Suite )
         jif3D::rmat Sens = Calculator.SensitivityMatrix(Model, Diff);
         jif3D::rvec SensGrad = 2.0 * ublas::prec_prod(ublas::trans(Sens), Diff);
         std::ofstream diffile("diff.out");
-        std::copy(Diff.begin(), Diff.end(),
-            std::ostream_iterator<double>(diffile, "\n"));
+        std::copy(Diff.begin(), Diff.end(), std::ostream_iterator<double>(diffile, "\n"));
 
         jif3D::rvec SensDat = ublas::prec_prod(Sens, ModelVec);
         std::ofstream outfile2("sens.comp");
@@ -226,6 +230,91 @@ BOOST_AUTO_TEST_SUITE( X3DObjective_Suite )
             outfile2 << index << " " << Gradient(index) << " " << Gradient2(index) << " "
                 << SensGrad(index) << " " << diff << std::endl;
           }
+      }
+*/
+    BOOST_AUTO_TEST_CASE (X3D_3D_deriv_trans_test)
+      {
+
+        jif3D::X3DModel Model;
+        MakeMTModel(Model);
+        const size_t xsize = Model.GetXCoordinates().size();
+        const size_t ysize = Model.GetYCoordinates().size();
+        const size_t zsize = Model.GetZCoordinates().size();
+        const size_t nmod = xsize * ysize * zsize;
+
+        jif3D::X3DModel TrueModel(Model);
+        std::fill_n(TrueModel.SetConductivities().origin(), nmod, 0.01);
+
+        //we want to test the distortion correction as well
+        boost::filesystem::path TDir = boost::filesystem::current_path();
+        auto MTTrans = boost::make_shared<jif3D::ComplexLogTransform>();
+        jif3D::X3DMTCalculator Calculator(TDir, "x3d", true);
+        jif3D::rvec Observed = Calculator.Calculate(TrueModel);
+
+        std::vector<double> Freq(TrueModel.GetFrequencies());
+
+        jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator> Objective(Calculator);
+        Objective.SetDataTransform(MTTrans);
+        Objective.SetObservedData(Observed);
+        std::ofstream impfile("rho_phi.out");
+        std::copy(Objective.GetObservedData().begin(), Objective.GetObservedData().end(),
+            std::ostream_iterator<double>(impfile, "\n"));
+
+        jif3D::rvec Error(jif3D::ConstructMTError(Observed, 0.02));
+        std::copy(Error.begin(),Error.end(),std::ostream_iterator<double>(std::cout, " "));
+        std::cout << std::endl;
+        std::copy(Observed.begin(),Observed.end(),std::ostream_iterator<double>(std::cout, " "));
+        std::cout << std::endl;
+        Error = ublas::element_div(Error, Observed);
+        std::copy(Error.begin(),Error.end(),std::ostream_iterator<double>(std::cout, " "));
+        std::cout << std::endl;
+        Objective.SetDataError(Error);
+        Objective.SetCoarseModelGeometry(Model);
+        const size_t nstat = Model.GetMeasPosX().size();
+        jif3D::rvec ModelVec(nmod);
+        std::copy(Model.GetConductivities().origin(),
+            Model.GetConductivities().origin() + nmod, ModelVec.begin());
+        double misfit = Objective.CalcMisfit(ModelVec);
+        BOOST_CHECK(misfit > 0.0);
+        jif3D::rvec Gradient = Objective.CalcGradient(ModelVec);
+
+        jif3D::X3DModel GradientModel(Model);
+        std::copy(Gradient.begin(), Gradient.begin() + nmod,
+            GradientModel.SetConductivities().origin());
+        GradientModel.WriteNetCDF("gradmod.nc");
+
+        std::ofstream outfile("grad3d_rhophi.comp");
+
+        for (size_t index = 0; index < ModelVec.size(); ++index)
+          {
+            double delta = 0.001;
+            jif3D::rvec Forward(ModelVec);
+            jif3D::rvec Backward(ModelVec);
+            Forward(index) += delta;
+            Backward(index) -= delta;
+            double ForFDGrad = (Objective.CalcMisfit(Forward) - misfit) / (delta);
+            double BackFDGrad = (misfit - Objective.CalcMisfit(Backward)) / delta;
+            double CentFDGrad = (ForFDGrad + BackFDGrad) / 2.0;
+            bool OK = Between(ForFDGrad, BackFDGrad, Gradient(index))
+                || fabs((BackFDGrad - Gradient(index)) / BackFDGrad) < 0.01
+                || fabs((ForFDGrad - Gradient(index)) / ForFDGrad) < 0.01
+                || fabs((CentFDGrad - Gradient(index)) / CentFDGrad) < 0.03;
+            BOOST_CHECK(OK);
+            if (!OK)
+              {
+                std::cout << "Comparison Gradient-FD ";
+                std::cout << "Component: " << index << " " << ForFDGrad << " "
+                    << BackFDGrad << " " << CentFDGrad << " " << Gradient(index) << "\n"
+                    << std::endl;
+              }
+
+            outfile << index << " " << ForFDGrad << " " << BackFDGrad << " "
+                << (ForFDGrad + BackFDGrad) / 2.0 << " " << Gradient(index) << std::endl;
+          }
+        std::cout << "\n\n\n";
+        Objective.CalcMisfit(ModelVec);
+        jif3D::rvec Diff = Objective.GetDataDifference();
+
       }
 
 //    BOOST_AUTO_TEST_CASE (X3D_sens_test)

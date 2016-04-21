@@ -28,19 +28,19 @@ namespace jif3D
       //! we return one invariant as output at each call
       static const size_t noutput = 1;
       //! calculate the invariant from 9 observations
-      double CalcInvariant(const jif3D::rvec &Data)
+      double CalcInvariant(const jif3D::rvec &Data) const
         {
           return Data(0) * Data(4) + Data(4) * Data(8) + Data(0) * Data(8)
               - Data(3) * Data(1) - Data(7) * Data(5) - Data(2) * Data(6);
         }
     public:
       //! Return the size of the input vector this class expects
-      virtual size_t GetInputSize()
+      virtual size_t GetInputSize() const
         {
           return ninput;
         }
       //! Return the size of the input vector this class will yield
-      virtual size_t GetOutputSize()
+      virtual size_t GetOutputSize() const
         {
           return noutput;
         }
@@ -49,7 +49,7 @@ namespace jif3D
        * @param InputVector The tensor elements as a vector in c-storage order, has to have 9 elements
        * @return A vector with a single element, the calculated invariant.
        */
-      virtual jif3D::rvec Transform(const jif3D::rvec &InputVector)
+      virtual jif3D::rvec Transform(const jif3D::rvec &InputVector) const
         {
           assert(InputVector.size() == ninput);
           jif3D::rvec result(1);
@@ -62,7 +62,7 @@ namespace jif3D
        * @param InputVector The tensor elements as a vector in c-storage order, has to have 9 elements
        * @return A 1x9 matrix of partial derivatives
        */
-      virtual jif3D::rmat Derivative(const jif3D::rvec &InputVector)
+      virtual jif3D::rmat Derivative(const jif3D::rvec &InputVector) const
         {
           const size_t ndata = InputVector.size();
           if (ndata != ninput)
