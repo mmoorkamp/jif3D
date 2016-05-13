@@ -8,8 +8,8 @@
 #ifndef REALINFO_H_
 #define REALINFO_H_
 
-#include <string>
 #include "../Global/Serialization.h"
+#include <string>
 #include "../MT/X3DModel.h"
 
 struct realinfo
