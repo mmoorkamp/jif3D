@@ -8,9 +8,10 @@
 #include "../Global/Serialization.h"
 #include "../Global/VectorTransform.h"
 
-namespace jif3D {
+namespace jif3D
+  {
 
-  class ComplexLogTransform: public VectorTransform
+    class ComplexLogTransform: public VectorTransform
       {
     private:
       //! The number of elements we expect to transform, this is purely used for potential error checking between creating the object and using it
@@ -44,25 +45,28 @@ namespace jif3D {
       virtual jif3D::rvec Transform(const jif3D::rvec &InputVector) const
         {
           jif3D::rvec Result(2);
-          Result(0) = std::log(std::abs(std::complex<double>(InputVector(0),InputVector(1))));
-          Result(1) = std::atan2(InputVector(1),InputVector(0));
+          double absval = std::abs(std::complex<double>(InputVector(0), InputVector(1)));
+          Result(0) = 0.0;
+          if (absval != 0.0)
+            Result(0) = std::log(absval);
+          Result(1) = std::atan2(InputVector(1), InputVector(0));
           return Result;
         }
 
       virtual jif3D::rmat Derivative(const jif3D::rvec &InputVector) const
         {
-          double p = std::atan2(InputVector(1),InputVector(0));
-          double az = std::abs(std::complex<double>(InputVector(0),InputVector(1)));
-          jif3D::rmat Result(2,2,0.0);
-          Result(0,0) = cos(p)/az;
-          Result(0,1) = sin(p)/az;
-          Result(1,0) = -sin(p)/az;
-          Result(1,1) = cos(p)/az;
+          double p = std::atan2(InputVector(1), InputVector(0));
+          double az = std::abs(std::complex<double>(InputVector(0), InputVector(1)));
+          jif3D::rmat Result(2, 2, 0.0);
+          Result(0, 0) = cos(p) / az;
+          Result(0, 1) = sin(p) / az;
+          Result(1, 0) = -sin(p) / az;
+          Result(1, 1) = cos(p) / az;
           return Result;
         }
       };
 
-  class SwapTransform: public VectorTransform
+    class SwapTransform: public VectorTransform
       {
     private:
       //! The number of elements we expect to transform, this is purely used for potential error checking between creating the object and using it
@@ -103,14 +107,13 @@ namespace jif3D {
 
       virtual jif3D::rmat Derivative(const jif3D::rvec &InputVector) const
         {
-          jif3D::rmat Result(2,2,0.0);
-          Result(0,0) = 0.0;
-          Result(0,1) = 1.0;
-          Result(1,0) = -1.0;
-          Result(1,1) = 0.0;
+          jif3D::rmat Result(2, 2, 0.0);
+          Result(0, 0) = 0.0;
+          Result(0, 1) = 1.0;
+          Result(1, 0) = -1.0;
+          Result(1, 1) = 0.0;
           return Result;
         }
       };
-}
-
+  }
 
