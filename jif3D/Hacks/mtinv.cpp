@@ -309,9 +309,8 @@ int hpx_main(boost::program_options::variables_map& vm)
     if (vm.count("rhophi"))
       {
         X3DObjective->SetDataTransform(boost::make_shared<jif3D::ComplexLogTransform>());
-        std::transform(Data.begin(), Data.end(), Data.begin(), [](double val)
-          { return std::max(std::numeric_limits<double>::epsilon(),std::abs(val));});
-        ZError = ublas::element_div(ZError, Data);
+        std::transform(ZError.begin(), ZError.end(), Data.begin(), ZError.begin(), [](double err, double dat)
+          { return err/std::max(std::numeric_limits<double>::epsilon(),std::abs(dat));});
       }
     X3DObjective->SetObservedData(Data);
     X3DObjective->SetCoarseModelGeometry(Model);
@@ -489,7 +488,7 @@ int hpx_main(boost::program_options::variables_map& vm)
     jif3D::WriteImpedancesToNetCDF(modelfilename + ".inv_imp.nc", Frequencies, XCoord,
         YCoord, ZCoord, InvData, X3DObjective->GetDataError(), C);
     jif3D::WriteImpedancesToNetCDF(modelfilename + ".dist_imp.nc", Frequencies, XCoord,
-        YCoord, ZCoord, Data, ZError, C);
+        YCoord, ZCoord, X3DObjective->GetObservedData(), ZError, C);
     jif3D::WriteImpedancesToNetCDF(modelfilename + ".diff_imp.nc", Frequencies, XCoord,
         YCoord, ZCoord, X3DObjective->GetIndividualMisfit());
 
