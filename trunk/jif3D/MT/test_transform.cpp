@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_SUITE( MT_Transforms_Suite )
                 DeltaInput(i) *= 1.0 + delta;
                 double FD = (CLTrans.Transform(DeltaInput)(j) - CL(j))
                     / (delta * TestInput(i));
-                BOOST_CHECK_CLOSE(Deriv(i,j), FD, 0.01);
+                BOOST_CHECK_CLOSE(Deriv(j,i), FD, 0.1);
               }
           }
       }

@@ -267,8 +267,9 @@ namespace jif3D
           {
             auto GradTrans = DataTransform->Derivative(
                 ublas::subrange(RawImpedance, i, i + 2));
-            ProjMisfit(i) = GradTrans(0,0) * Misfit(i) + GradTrans(1,0) * Misfit(i+1);
-            ProjMisfit(i+1) = GradTrans(0,1) * Misfit(i) + GradTrans(1,1) * Misfit(i+1);
+            ProjMisfit(i) = GradTrans(0, 0) * Misfit(i) + GradTrans(1, 0) * Misfit(i + 1);
+            ProjMisfit(i + 1) = GradTrans(0, 1) * Misfit(i)
+                + GradTrans(1, 1) * Misfit(i + 1);
           }
 #ifdef HAVEOPENMP
 
@@ -288,7 +289,7 @@ namespace jif3D
               {
                 ForwardInfo Info(Model,C,i,TempDir.string(),X3DName, NameRoot, GreenType1, GreenType4);
                 //calculate the gradient for each frequency
-                GradResult tmp = LQDerivativeFreq(Info, GradInfo(ProjMisfit, RawImpedance), *DataTransform);
+                GradResult tmp = LQDerivativeFreq(Info, GradInfo(ProjMisfit, RawImpedance));
                 omp_set_lock(&lck);
                 //the total gradient is the sum over the gradients for each frequency
                 boost::numeric::ublas::subrange(Gradient, 0, nmod) += tmp.Gradient;
@@ -405,7 +406,7 @@ namespace jif3D
             ForwardInfo Info(Model, C, freqindex, TempDir.string(), X3DName, NameRoot,
                 GreenType1, GreenType4);
             GradResult CurrGrad = LQDerivativeFreq(Info,
-                GradInfo(CurrMisfit, RawImpedance), *DataTransform);
+                GradInfo(CurrMisfit, RawImpedance));
 
             boost::numeric::ublas::matrix_row<rmat> CurrRow(Result, i);
             boost::numeric::ublas::subrange(CurrRow, 0, nmodel) = CurrGrad.Gradient;

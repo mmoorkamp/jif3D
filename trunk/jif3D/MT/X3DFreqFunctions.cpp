@@ -131,8 +131,7 @@ ForwardResult CalculateFrequency(const ForwardInfo &Info)
     return result;
   }
 
-GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI,
-    const jif3D::VectorTransform &DataTransform)
+GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI)
   {
     //a few commonly used quantities for shorter notation
     const size_t nmodx = Info.Model.GetConductivities().shape()[0];
@@ -222,26 +221,6 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI,
         YPolMoments1.at(j) = j_ext(1, 0);
         XPolMoments2.at(j) = j_ext(0, 1);
         YPolMoments2.at(j) = j_ext(1, 1);
-       /* auto GradTrans = DataTransform.Derivative(
-            ublas::subrange(GI.RawImpedance, imp_offset, imp_offset + 2));
-        XPolMoments1.at(j) = std::complex<double>(
-            GradTrans(0, 0) * j_ext(0, 0).real() + GradTrans(0, 1) * j_ext(0, 0).imag(),
-            GradTrans(1, 0) * j_ext(0, 0).real() + GradTrans(1, 1) * j_ext(0, 0).imag());
-        GradTrans = DataTransform.Derivative(
-            ublas::subrange(GI.RawImpedance, imp_offset + 2, imp_offset + 4));
-        YPolMoments1.at(j) = std::complex<double>(
-            GradTrans(0, 0) * j_ext(1, 0).real() + GradTrans(0, 1) * j_ext(1, 0).imag(),
-            GradTrans(1, 0) * j_ext(1, 0).real() + GradTrans(1, 1) * j_ext(1, 0).imag());
-        GradTrans = DataTransform.Derivative(
-            ublas::subrange(GI.RawImpedance, imp_offset + 4, imp_offset + 6));
-        XPolMoments2.at(j) = std::complex<double>(
-            GradTrans(0, 0) * j_ext(0, 1).real() + GradTrans(0, 1) * j_ext(0, 1).imag(),
-            GradTrans(1, 0) * j_ext(0, 1).real() + GradTrans(1, 1) * j_ext(0, 1).imag());
-        GradTrans = DataTransform.Derivative(
-            ublas::subrange(GI.RawImpedance, imp_offset + 6, imp_offset + 8));
-        YPolMoments2.at(j) = std::complex<double>(
-            GradTrans(0, 0) * j_ext(1, 1).real() + GradTrans(0, 1) * j_ext(1, 1).imag(),
-            GradTrans(1, 0) * j_ext(1, 1).real() + GradTrans(1, 1) * j_ext(1, 1).imag());*/
       }
     //we only want to calculate for one frequency
     //so our vector has just 1 element

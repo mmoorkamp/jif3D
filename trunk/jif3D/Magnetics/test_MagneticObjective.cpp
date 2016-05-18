@@ -12,7 +12,7 @@
 #include "../GravMag/FullSensitivityGravMagCalculator.h"
 #include "../GravMag/MinMemGravMagCalculator.h"
 
-#define BOOST_TEST_MODULE ThreeDGravityModel test
+#define BOOST_TEST_MODULE MagneticObjective test
 #define BOOST_TEST_MAIN ...
 #include <boost/test/included/unit_test.hpp>
 #include <boost/test/floating_point_comparison.hpp>
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_SUITE( MagneticObjective_Test_Suite )
             new jif3D::OMPMagneticImp(inclination, declination, fieldstrength));
 
         boost::shared_ptr<CalculatorType> Calculator(new CalculatorType(Implementation));
-        Calculator->SetDataTransform(boost::make_shared<jif3D::TotalField>());
+        //Calculator->SetDataTransform(boost::make_shared<jif3D::TotalField>());
 
 
         jif3D::rvec Observed(Calculator->Calculate(MagTest));

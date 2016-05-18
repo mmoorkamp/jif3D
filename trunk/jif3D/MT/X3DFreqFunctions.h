@@ -159,7 +159,7 @@ struct ForwardInfo
 
 ForwardResult CalculateFrequency(const ForwardInfo &Info);
 
-GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI, const jif3D::VectorTransform &DataTransform);
+GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI);
 
 #ifdef HAVEHPX
 HPX_DEFINE_PLAIN_ACTION(CalculateFrequency, CalculateFrequency_action);

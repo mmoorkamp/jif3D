@@ -133,7 +133,7 @@ namespace jif3D
                 __LINE__);
           if (!DataTransform)
             {
-              DataTransform = boost::make_shared<jif3D::CopyTransform>(Data.size());
+              DataTransform = boost::make_shared<jif3D::CopyTransform>();
               Calculator.SetDataTransform(DataTransform);
             }
           ObservedData = jif3D::ApplyTransform(Data, *DataTransform);
