@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_SUITE( X3DObjective_Suite )
             jif3D::FatalException);
       }
 
- /*   BOOST_AUTO_TEST_CASE (X3D_3D_deriv_test)
+    BOOST_AUTO_TEST_CASE (X3D_3D_deriv_test)
       {
 
         jif3D::X3DModel Model;
@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_SUITE( X3DObjective_Suite )
                 << SensGrad(index) << " " << diff << std::endl;
           }
       }
-*/
+
     BOOST_AUTO_TEST_CASE (X3D_3D_deriv_trans_test)
       {
 
@@ -261,16 +261,10 @@ BOOST_AUTO_TEST_SUITE( X3DObjective_Suite )
             std::ostream_iterator<double>(impfile, "\n"));
 
         jif3D::rvec Error(jif3D::ConstructMTError(Observed, 0.02));
-        std::copy(Error.begin(),Error.end(),std::ostream_iterator<double>(std::cout, " "));
-        std::cout << std::endl;
-        std::copy(Observed.begin(),Observed.end(),std::ostream_iterator<double>(std::cout, " "));
-        std::cout << std::endl;
         Error = ublas::element_div(Error, Observed);
-        std::copy(Error.begin(),Error.end(),std::ostream_iterator<double>(std::cout, " "));
-        std::cout << std::endl;
+
         Objective.SetDataError(Error);
         Objective.SetCoarseModelGeometry(Model);
-        const size_t nstat = Model.GetMeasPosX().size();
         jif3D::rvec ModelVec(nmod);
         std::copy(Model.GetConductivities().origin(),
             Model.GetConductivities().origin() + nmod, ModelVec.begin());
