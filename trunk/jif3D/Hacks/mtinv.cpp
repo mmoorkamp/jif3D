@@ -90,6 +90,12 @@ int hpx_main(boost::program_options::variables_map& vm)
           }
       }
 
+    if (!boost::filesystem::exists(X3DName))
+      {
+        std::cerr << X3DName << "is not accessible or  does not exist ! \n";
+        return 500;
+      }
+
 //first we read in the starting model and the measured data
     std::string modelfilename = jif3D::AskFilename("Starting model Filename: ");
     std::string extension = jif3D::GetFileExtension(modelfilename);
@@ -309,8 +315,9 @@ int hpx_main(boost::program_options::variables_map& vm)
     if (vm.count("rhophi"))
       {
         X3DObjective->SetDataTransform(boost::make_shared<jif3D::ComplexLogTransform>());
-        std::transform(ZError.begin(), ZError.end(), Data.begin(), ZError.begin(), [](double err, double dat)
-          { return err/std::max(std::numeric_limits<double>::epsilon(),std::abs(dat));});
+        std::transform(ZError.begin(), ZError.end(), Data.begin(), ZError.begin(),
+            [](double err, double dat)
+              { return err/std::max(std::numeric_limits<double>::epsilon(),std::abs(dat));});
       }
     X3DObjective->SetObservedData(Data);
     X3DObjective->SetCoarseModelGeometry(Model);
