@@ -1,0 +1,115 @@
+import feature ;
+
+feature.feature gpu : off on : composite incidental ;
+feature.compose <gpu>on : <define>HAVEGPU ; 
+
+feature.feature lapack : off on : composite incidental ;
+feature.compose <lapack>on : <define>HAVELAPACK ; 
+
+feature.feature optpp : off on : composite incidental ;
+feature.compose <optpp>on : <define>HAVEOPTPP ; 
+
+feature.feature hpx : off on : composite incidental ;
+feature.compose <hpx>on : <define>HAVEHPX ; 
+
+feature.feature eigen : off on : composite incidental ;
+feature.compose <eigen>on : <define>HAVEEIGEN ; 
+
+feature.feature parallelization : openmp hpx  : composite propagated symmetric ;
+feature.compose <parallelization>openmp : <define>HAVEOPENMP <cflags>" -fopenmp -std=c++0x " <linkflags>" -fopenmp  " ;
+feature.compose <parallelization>hpx : <define>HAVEHPX <hpx>on <cflags>"-fopenmp `pkg-config --cflags hpx_application`" <linkflags>"-fopenmp  `pkg-config --libs hpx_application` " ;
+
+
+constant BOOST_LIB_PATH : /usr/local/lib ;
+constant CUDA_LIB_PATH : /usr/local/cuda/lib64 ;
+
+
+project 
+    : requirements <include>/usr/local/include <include>/usr/local/R-2.6.2/include 
+        <include>/usr/local/cuda/include
+        <include>/usr/local/CUDA_SDK/C/common/inc
+        <include>/usr/include/python2.7/
+        <threading>multi 
+        <define>BIND_FORTRAN_LOWERCASE_UNDERSCORE
+        <define>BOOST_LOG_DYN_LINK
+        <gpu>off
+        <lapack>off
+        <optpp>off
+        <eigen>off
+    	<variant>release:<define>NDEBUG
+    	<variant>profile:<define>NDEBUG  
+    	<toolset>gcc<variant>debug:<cflags>" -ggdb3 "
+    	<toolset>gcc:<cflags>" -ansi  -Wall  -Wno-long-long   -pedantic"
+    	<toolset>intel:<cxxflags>" -openmp  -std=c++0x   "
+    	<toolset>intel:<define>TESTR
+    	#<toolset>intel:<define>BOOST_NO_CXX11_SCOPED_ENUMS
+    	<toolset>intel:<linkflags>" -openmp  -std=c++0x "
+    	<toolset>sun:<define>BOOST_UBLAS_UNSUPPORTED_COMPILER=0
+    	<toolset>sun:<cflags>" -library=stlport4" 
+    	<toolset>sun:<linkflags>" -library=stlport4" 
+    	#<linkflags>"`pkg-config --cflags --libs hpx_application_debug ` -liostreamsd "
+        #<cflags>"`pkg-config --cflags hpx_application_debug `"
+    ;
+    
+path-constant TOP : . ;
+
+import cuda ;
+
+
+
+use-project /Global : Global ;
+use-project /Gravity : Gravity ;
+use-project /GravMag : GravMag ;
+use-project /Magnetics : Magnetics ;
+use-project /ModelBase : ModelBase ;
+use-project /Profiling : Profiling ;
+use-project /Inversion : Inversion ;
+use-project /MT : MT ;
+use-project /Joint : Joint ;
+use-project /ModelTransforms : ModelTransforms ;
+use-project /DCResistivity : DCResistivity ;
+
+local BOOST_TEST_LOG_LEVEL = all ;
+lib boost_filesystem : : <name>boost_filesystem <search>$(BOOST_LIB_PATH)  ;
+lib boost_system : : <name>boost_system <search>$(BOOST_LIB_PATH) ;
+lib boost_program_options : : <name>boost_program_options  <search>$(BOOST_LIB_PATH) ;
+lib boost_mpi : : <name>boost_mpi  <search>$(BOOST_LIB_PATH) ;
+lib boost_serialization : : <name>boost_serialization  <search>$(BOOST_LIB_PATH) ;
+lib boost_thread : : <name>boost_thread  <search>$(BOOST_LIB_PATH) ;
+lib boost_log : : <name>boost_log  <search>$(BOOST_LIB_PATH) ;
+lib boost_iostreams : : <name>boost_iostreams  <search>$(BOOST_LIB_PATH) ;
+lib boost_date_time : : <name>boost_date_time  <search>$(BOOST_LIB_PATH) ;
+lib boost_chrono : : <name>boost_chrono  <search>$(BOOST_LIB_PATH) ;
+lib boost_python : : <name>boost_python  <search>$(BOOST_LIB_PATH) ;
+lib hpx_iostreams : : <name>hpx_iostreams ;
+lib hpx : : <name>hpx ;
+lib hpx_ag : : <name>hpx_ag ;
+lib lapack : : <name>lapack ;
+lib f77blas : : <name>f77blas ;
+lib cblas : : <name>cblas ;
+lib atlas : : <name>atlas ;
+lib optpp : : <name>opt ;
+lib newmat : : <name>newmat ;
+lib netcdf : : <name>netcdf ;
+lib netcdf_c++ : : <name>netcdf_c++ ;
+lib gfortran : :  <name>gfortran ;
+lib cudart : : <name>cudart <search>$(CUDA_LIB_PATH) ;
+lib cublas : : <name>cublas <search>$(CUDA_LIB_PATH) ;
+alias vecopt : lapack cblas atlas f77blas gfortran ;
+alias boost_core : boost_program_options boost_filesystem boost_log  boost_system ;
+
+build-project Global ;
+build-project Gravity ;
+build-project GravMag ;
+build-project Magnetics ;
+build-project MT ;
+build-project Tomo ;
+build-project ModelBase ;
+build-project Inversion ;
+build-project Regularization ;
+build-project Profiling ;
+build-project Hacks ;
+build-project Joint ;
+build-project ModelTransforms ;
+build-project DCResistivity ;
+build-project hpx_simer ;

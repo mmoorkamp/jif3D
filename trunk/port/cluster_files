@@ -1,0 +1,26 @@
+#!/bin/bash
+#find necessary binaries to copy to a different system e.g. a cluster
+#find all dynamic libraries in the release subdirectories
+
+GCCV="gcc-4.4.6"
+NEWHOME="/home/m/mm489"
+
+
+find -wholename *$GCCV*release*.so -exec cp '{}' ~/jiba_dist \;
+#copy a few selected executables to the distribution directory
+
+
+
+cp ~/workspace/jiba++/Joint/bin/$GCCV/release/threading-multi/jointinv ~/jiba_dist
+cp ~/workspace/jiba++/Tomo/bin/$GCCV/release/threading-multi/tomogrid ~/jiba_dist
+cp ~/workspace/jiba++/Tomo/bin/$GCCV/release/threading-multi/makeseismesh ~/jiba_dist
+cp ~/workspace/jiba++/Hacks/bin/$GCCV/release/threading-multi/mtinv ~/jiba_dist
+cp ~/workspace/jiba++/MT/bin/$GCCV/release/threading-multi/makemtmesh ~/jiba_dist
+cp ~/workspace/jiba++/Gravity/bin/$GCCV/release/threading-multi/makegravmesh ~/jiba_dist
+#change the dynamic library path so that the executable find the .so files 
+chrpath -r $NEWHOME/jiba_dist ~/jiba_dist/jointinv
+chrpath -r $NEWHOME/jiba_dist ~/jiba_dist/tomogrid
+chrpath -r $NEWHOME/jiba_dist ~/jiba_dist/mtinv
+chrpath -r $NEWHOME/jiba_dist ~/jiba_dist/makeseismesh
+chrpath -r $NEWHOME/jiba_dist ~/jiba_dist/makemtmesh
+chrpath -r $NEWHOME/jiba_dist ~/jiba_dist/makegravmesh
