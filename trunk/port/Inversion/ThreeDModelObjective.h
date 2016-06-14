@@ -1,7 +1,7 @@
 //============================================================================
 // Name        : ThreeDModelObjective.h
 // Author      : Nov 29, 2010
-// Version     : 
+// Version     :
 // Copyright   : 2010, mmoorkamp
 //============================================================================
 
@@ -13,6 +13,7 @@
 #include "../Global/VectorTransform.h"
 #include "../ModelBase/ModelRefiner.h"
 #include "../Inversion/ObjectiveFunction.h"
+#include "../Global/Jif3DGlobal.h"
 
 namespace jif3D
   {
@@ -33,7 +34,7 @@ namespace jif3D
      *
      */
     template<class ThreeDCalculatorType>
-    class ThreeDModelObjective: public jif3D::ObjectiveFunction
+    class J3DEXPORT ThreeDModelObjective: public jif3D::ObjectiveFunction
       {
     public:
       //! We create a shorthand for the template parameter that determines the type of the forward calculation object

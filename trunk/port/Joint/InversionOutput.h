@@ -1,13 +1,14 @@
 //============================================================================
 // Name        : InversionOutput.h
 // Author      : 25 Nov 2013
-// Version     : 
+// Version     :
 // Copyright   : 2013, mm489
 //============================================================================
 
 #ifndef INVERSIONOUTPUT_H_
 #define INVERSIONOUTPUT_H_
 
+#include "../Global/Jif3DGlobal.h"
 #include "../Inversion/JointObjective.h"
 #include "../ModelTransforms/GeneralModelTransform.h"
 #include <iostream>
@@ -21,7 +22,7 @@ namespace jif3D
     /* @{ */
 //! Use a parameter transform to translate the model vector to a model object and write the model to files for plotting and saving
     template<class ModelType>
-    void SaveModel(const jif3D::rvec &InvModel,
+    J3DEXPORT void SaveModel(const jif3D::rvec &InvModel,
         const jif3D::GeneralModelTransform &Transform, ModelType &ModelObject,
         const std::string &filename)
       {
@@ -35,7 +36,7 @@ namespace jif3D
       }
 
 //! Store the current misfit for all individual objectives with appropriate formating in an output stream
-    void StoreMisfit(std::ofstream &misfitfile, const size_t iteration,
+    J3DEXPORT void StoreMisfit(std::ofstream &misfitfile, const size_t iteration,
         const double Misfit, const jif3D::JointObjective &Objective)
       {
         misfitfile << std::setw(5) << iteration << " " << std::setw(15) << Misfit << " ";
@@ -49,7 +50,7 @@ namespace jif3D
       }
 
 //! Store the current RMS for all data objectives with appropriate formating in an output stream
-    void StoreRMS(std::ofstream &rmsfile, const size_t iteration,
+    J3DEXPORT void StoreRMS(std::ofstream &rmsfile, const size_t iteration,
         const jif3D::JointObjective &Objective)
       {
         std::vector<double> RMS = Objective.GetRMS();
@@ -64,7 +65,7 @@ namespace jif3D
       }
 
 //! Store the Weights for all objectives with appropriate formating in an output stream
-    void StoreWeights(std::ofstream &rmsfile, const size_t iteration,
+    J3DEXPORT void StoreWeights(std::ofstream &rmsfile, const size_t iteration,
         const jif3D::JointObjective &Objective)
       {
         std::vector<double> Weights = Objective.GetWeights();

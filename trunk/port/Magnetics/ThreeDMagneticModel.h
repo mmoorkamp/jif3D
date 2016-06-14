@@ -1,13 +1,14 @@
 //============================================================================
 // Name        : ThreeDMagneticModel.h
 // Author      : 11 Oct 2013
-// Version     : 
+// Version     :
 // Copyright   : 2013, mm489
 //============================================================================
 
 #ifndef THREEDMAGNETICMODEL_H_
 #define THREEDMAGNETICMODEL_H_
 
+#include "../Global/Jif3DGlobal.h"
 #include "../Global/Serialization.h"
 #include "../Global/VecMat.h"
 #include "../Global/FatalException.h"
@@ -21,20 +22,12 @@ namespace jif3D
 
     static const std::string SusceptibilityName = "Susceptibility";
     static const std::string SusceptibilityUnit = " ";
-    class ThreeDMagneticModel: public jif3D::ThreeDModelBase
+    class J3DEXPORT ThreeDMagneticModel: public jif3D::ThreeDModelBase
       {
     public:
       typedef jif3D::GridOnlyModelCache<ThreeDMagneticModel> ModelCacheType;
-    private:
-      friend class access;
-      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
-      template<class Archive>
-      void serialize(Archive & ar, const unsigned int version)
-        {
-          ar & base_object<ThreeDModelBase>(*this);
-        }
-    public:
       typedef MagneticsExtraParameterSetter ExtraParameterSetter;
+
       jif3D::rvec GetModelParameters() const
         {
           jif3D::rvec parms(GetData().num_elements());
@@ -76,29 +69,41 @@ namespace jif3D
         {
           return ThreeDModelBase::SetData();
         }
+
       //! Write the density model and all associated information in a netcdf file
-      virtual void WriteNetCDF(const std::string filename) const
+      virtual void WriteNetCDF(const std::string &filename) const override
         {
-          NcFile DataFile(filename.c_str(), NcFile::Replace);
+          netCDF::NcFile DataFile(filename, netCDF::NcFile::replace);
           //first write the 3D discretized part
           WriteDataToNetCDF(DataFile, SusceptibilityName, SusceptibilityUnit);
         }
+
       //! Write the density model in VTK format, at the moment the best format for plotting
       void WriteVTK(const std::string filename) const
         {
           ThreeDModelBase::WriteVTK(filename, SusceptibilityName);
         }
+
       //! Read the density model and all associated information from a netcdf file
-      virtual void ReadNetCDF(const std::string filename)
+      virtual void ReadNetCDF(const std::string &filename) override
         {
           //create the netcdf file object
-          NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
+          netCDF::NcFile DataFile(filename, netCDF::NcFile::read);
           //read in the 3D gridded data
           ReadDataFromNetCDF(DataFile, SusceptibilityName, SusceptibilityUnit);
         }
+
+    private:
+      friend class access;
+      //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version)
+        {
+          ar & base_object<ThreeDModelBase>(*this);
+        }
       };
 
-    class MagneticsExtraParameterSetter
+    class J3DEXPORT MagneticsExtraParameterSetter
       {
     public:
       void operator()(ThreeDMagneticModel &Model, const std::vector<double> &Dens)

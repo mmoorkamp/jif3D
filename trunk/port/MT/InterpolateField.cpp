@@ -24,8 +24,8 @@ namespace jif3D
         const X3DModel &Model, size_t MeasIndex,
         const std::vector<size_t> &MeasDepthIndices)
       {
-        const size_t nmodx = Model.GetXCoordinates().size();
-        const size_t nmody = Model.GetYCoordinates().size();
+        const int nmodx = Model.GetXCoordinates().size();
+        const int nmody = Model.GetYCoordinates().size();
         //get the coordinates of the measurement site of interest
         double MeasPosX = Model.GetMeasPosX()[MeasIndex];
         double MeasPosY = Model.GetMeasPosY()[MeasIndex];

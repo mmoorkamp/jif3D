@@ -9,8 +9,9 @@
 #define REALCALC_H_
 
 #include "realinfo.h"
+#include "../Global/Jif3DGlobal.h"
 
-class RealCalc
+class J3DEXPORT RealCalc
   {
   realinfo Info;
 public:

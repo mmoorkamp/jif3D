@@ -9,10 +9,11 @@
 #define REALINFO_H_
 
 #include "../Global/Serialization.h"
+#include "../Global/Jif3DGlobal.h"
 #include <string>
 #include "../MT/X3DModel.h"
 
-struct realinfo
+struct J3DEXPORT realinfo
   {
   jif3D::X3DModel Model;
   double bg_conductivity;
@@ -48,8 +49,6 @@ struct realinfo
 
     }
   };
-
-
 
 
 #endif /* REALINFO_H_ */

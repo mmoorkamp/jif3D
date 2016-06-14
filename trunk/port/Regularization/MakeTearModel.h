@@ -1,7 +1,7 @@
 //============================================================================
 // Name        : MakeTearMode.h
 // Author      : Jul 12, 2010
-// Version     : 
+// Version     :
 // Copyright   : 2010, mmoorkamp
 //============================================================================
 
@@ -10,6 +10,7 @@
 #define MAKETEARMODE_H_
 
 #include <cassert>
+
 #include "../ModelBase/ThreeDModelBase.h"
 
 namespace jif3D

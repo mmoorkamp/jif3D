@@ -1,7 +1,7 @@
 //============================================================================
 // Name        : ThreeDModelObjective.h
 // Author      : Nov 29, 2010
-// Version     : 
+// Version     :
 // Copyright   : 2010, mmoorkamp
 //============================================================================
 
@@ -10,6 +10,7 @@
 
 #include <fstream>
 
+#include "../Global/Jif3DGlobal.h"
 #include "../Global/Serialization.h"
 #include "../Global/FatalException.h"
 #include "../Inversion/ObjectiveFunction.h"
@@ -18,7 +19,7 @@
 namespace jif3D
   {
     //! Calculate the data misfit for MT observations assuming a 1D layered half-space as Earth structure.
-    class OneDMTObjective: public jif3D::ObjectiveFunction
+    class J3DEXPORT OneDMTObjective: public jif3D::ObjectiveFunction
       {
 
     private:

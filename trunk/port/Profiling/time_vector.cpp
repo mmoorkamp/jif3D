@@ -8,15 +8,17 @@
 #include "../Global/VecMat.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <cstdlib>
+#include "../Global/Jif3DPlatformHelper.h"
+
 int main()
   {
     const size_t nelements = 1e6;
 
     jif3D::rvec ModelCov(nelements), CovGrad(nelements), OldGradient(nelements);
     double omega = 0.0, alpha = 0.0;
-    std::generate(ModelCov.begin(), ModelCov.end(), drand48);
-    std::generate(CovGrad.begin(), CovGrad.end(), drand48);
-    std::generate(OldGradient.begin(), OldGradient.end(), drand48);
+    std::generate(ModelCov.begin(), ModelCov.end(), jif3D::platform::drand48);
+    std::generate(CovGrad.begin(), CovGrad.end(), jif3D::platform::drand48);
+    std::generate(OldGradient.begin(), OldGradient.end(), jif3D::platform::drand48);
 
     boost::posix_time::ptime firststarttime =
         boost::posix_time::microsec_clock::local_time();

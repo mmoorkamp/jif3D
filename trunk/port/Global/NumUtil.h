@@ -7,10 +7,13 @@
 
 #ifndef NUMUTIL_H_
 #define NUMUTIL_H_
+
 #include <cmath>
 #include <cstddef>
 #include <functional>
 #include <limits>
+
+#include "Jif3DGlobal.h"
 
 /*! \file NumUtil.h
  * This file contains a collection of various simple numerical routines.
@@ -33,7 +36,7 @@ namespace jif3D
     /*! The constructor takes the starting value and each call to operator() returns the current value and increases
      * it by 1. This class is useful to generate values in a vector with std::generate.
      */
-    class IntSequence
+    class J3DEXPORT IntSequence
       {
     private:
       //! The current value of the sequence

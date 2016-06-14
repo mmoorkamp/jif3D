@@ -8,6 +8,7 @@
 #ifndef SETUPTOMO_H_
 #define SETUPTOMO_H_
 
+#include "../Global/Jif3DGlobal.h"
 #include "../Inversion/JointObjective.h"
 #include "../Inversion/ThreeDModelObjective.h"
 #include "../Tomo/TomographyCalculator.h"
@@ -28,7 +29,7 @@ namespace jif3D
      * Also for the joint inversion the tomography model is always considered the starting model in
      * terms of geometry.
      */
-    class SetupTomo
+    class J3DEXPORT SetupTomo
       {
     private:
       //! A shared pointer to the objective function object for seismic tomography data

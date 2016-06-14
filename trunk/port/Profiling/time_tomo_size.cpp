@@ -76,7 +76,7 @@ int hpx_main(boost::program_options::variables_map& vm)
     const size_t nruns = 50;
     const size_t nrunspersize = 5;
     std::string filename;
-    bool wantcuda = false;
+//    bool wantcuda = false;
     jif3D::TomographyCalculator Calculator;
 
     #ifdef HAVEHPX

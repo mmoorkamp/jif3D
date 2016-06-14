@@ -11,6 +11,7 @@
 #include <boost/test/included/unit_test.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 
+#include "../Global/Jif3DPlatformHelper.h"
 #include "ReadWriteImpedances.h"
 #include "X3DModel.h"
 BOOST_AUTO_TEST_SUITE( ReadWriteImpedances_Suite )
@@ -25,14 +26,14 @@ BOOST_AUTO_TEST_CASE  (read_write_netcdf_test)
       const size_t ndata = nfreq*nstat*8;
       jif3D::rvec Impedances(ndata), Error(ndata);
 
-      std::generate_n(Frequencies.begin(),nfreq,drand48);
+      std::generate_n(Frequencies.begin(),nfreq, jif3D::platform::drand48);
       std::sort(Frequencies.begin(),Frequencies.end());
-      std::generate_n(XCoord.begin(),nstat,drand48);
-      std::generate_n(YCoord.begin(),nstat,drand48);
-      std::generate_n(ZCoord.begin(),nstat,drand48);
-      std::generate_n(Impedances.begin(),ndata,drand48);
-      std::generate_n(Error.begin(),ndata,drand48);
-      std::generate_n(C.begin(),nstat*4,drand48);
+      std::generate_n(XCoord.begin(),nstat, jif3D::platform::drand48);
+      std::generate_n(YCoord.begin(),nstat, jif3D::platform::drand48);
+      std::generate_n(ZCoord.begin(),nstat, jif3D::platform::drand48);
+      std::generate_n(Impedances.begin(),ndata, jif3D::platform::drand48);
+      std::generate_n(Error.begin(),ndata, jif3D::platform::drand48);
+      std::generate_n(C.begin(),nstat*4, jif3D::platform::drand48);
       for (size_t i = 1; i < ndata; ++i)
         {
           Error(i) = Error(i - 1);

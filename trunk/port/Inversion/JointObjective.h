@@ -10,6 +10,7 @@
 
 #include "../Global/Serialization.h"
 #include "../Global/FatalException.h"
+#include "../Global/Jif3DGlobal.h"
 #include "ObjectiveFunction.h"
 #include "ModelDistributor.h"
 #include <boost/shared_ptr.hpp>
@@ -31,7 +32,7 @@ namespace jif3D
      * as long as we can supply a transformation object that produces the appropriate physical
      * parameters for each method.
      */
-    class JointObjective: public ObjectiveFunction
+    class J3DEXPORT JointObjective : public ObjectiveFunction
       {
     public:
       //! For each objective function we keep track of its general purpose
@@ -190,7 +191,7 @@ namespace jif3D
       };
 
     //! Check whether we have reached the target misfit for one of the objective functions in the JointObjective object
-    bool CheckConvergence(const jif3D::JointObjective &Objective);
+    J3DEXPORT bool CheckConvergence(const jif3D::JointObjective &Objective);
   /* @} */
   }
 

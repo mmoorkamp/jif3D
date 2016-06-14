@@ -1,7 +1,7 @@
 //============================================================================
 // Name        : CalcRawRealization.h
 // Author      : 5 Dec 2014
-// Version     : 
+// Version     :
 // Copyright   : 2014, mm489
 //============================================================================
 
@@ -13,10 +13,10 @@
 #endif
 #include <boost/python.hpp>
 #include <string>
+#include "../Global/VecMat.h"
+#include "../Global/Jif3DGlobal.h"
 
-
-
-double CalcRawRealization(int nx, int ny, int nz, double delta, double topthick,
+J3DEXPORT double CalcRawRealization(int nx, int ny, int nz, double delta, double topthick,
     double freq, double bgcond, boost::python::list& Conductivities, std::string tempdir,
     std::string x3dname);
 

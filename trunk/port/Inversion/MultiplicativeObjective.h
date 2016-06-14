@@ -1,7 +1,7 @@
 //============================================================================
 // Name        : MultiplicativeObjective.h
 // Author      : 21 Mar 2012
-// Version     : 
+// Version     :
 // Copyright   : 2012, mm489
 //============================================================================
 
@@ -12,11 +12,12 @@
 #include "ModelDistributor.h"
 #include "../Global/FatalException.h"
 #include <boost/shared_ptr.hpp>
+#include "../Global/Jif3DGlobal.h"
 
 namespace jif3D
   {
 
-    class MultiplicativeObjective : public JointObjective
+    class J3DEXPORT MultiplicativeObjective : public JointObjective
       {
       private:
       //the implementation of the misfit calculation

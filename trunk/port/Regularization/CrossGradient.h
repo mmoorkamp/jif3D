@@ -1,16 +1,17 @@
 //============================================================================
 // Name        : CrossGradient.h
 // Author      : Oct 22, 2009
-// Version     : 
+// Version     :
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
 #ifndef CROSSGRADIENT_H_
 #define CROSSGRADIENT_H_
 
+#include "GradientRegularization.h"
+#include "../Global/Jif3DGlobal.h"
 #include "../Global/Serialization.h"
 #include "../Inversion/ObjectiveFunction.h"
-#include "GradientRegularization.h"
 #include "../ModelBase/ThreeDModelBase.h"
 
 namespace jif3D
@@ -30,7 +31,7 @@ namespace jif3D
      * in  \f$ m_2\f$.
      *
      */
-    class CrossGradient: public jif3D::ObjectiveFunction
+    class J3DEXPORT CrossGradient : public jif3D::ObjectiveFunction
       {
     private:
       //! The object to calculate the spatial gradient for the first model

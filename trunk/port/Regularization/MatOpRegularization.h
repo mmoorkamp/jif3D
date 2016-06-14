@@ -1,15 +1,16 @@
 //============================================================================
 // Name        : MatOpRegularization.h
 // Author      : Jan 11, 2010
-// Version     : 
+// Version     :
 // Copyright   : 2010, mmoorkamp
 //============================================================================
 
 #ifndef MATOPREGULARIZATION_H_
 #define MATOPREGULARIZATION_H_
 
-#include "../Global/Serialization.h"
 #include "RegularizationFunction.h"
+#include "../Global/Jif3DGlobal.h"
+#include "../Global/Serialization.h"
 #include "../Global/VecMat.h"
 #include "../ModelBase/ThreeDModelBase.h"
 
@@ -26,7 +27,7 @@ namespace jif3D
      * and ZOperatorMatrix. These calculate the model roughness in x-direction, y-direction and z-direction, respectively.
      *
      */
-    class MatOpRegularization: public jif3D::RegularizationFunction
+    class J3DEXPORT MatOpRegularization: public jif3D::RegularizationFunction
       {
     private:
       /*! The implementation of the data difference is independent

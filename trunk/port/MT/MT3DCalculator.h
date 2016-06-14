@@ -1,7 +1,7 @@
 //============================================================================
 // Name        : MT3DCalculator.h
 // Author      : Jul 6, 2009
-// Version     : 
+// Version     :
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
@@ -11,7 +11,7 @@
 
 #include "ThreeDMTModel.h"
 #include "../Global/VecMat.h"
-
+#include "../Global/Jif3DGlobal.h"
 
 namespace jif3D
   {
@@ -25,7 +25,7 @@ namespace jif3D
      * LQDerivativeImpl any other implementation can be plugged into the joint inversion
      * with only minor changes to the code.
      */
-    class MT3DCalculator
+    class J3DEXPORT MT3DCalculator
       {
     private:
       //! Given a conductivity model, calculate a vector of impedances

@@ -9,4 +9,4 @@ lib regularization :
                  
 
 
-unit-test regularization_test : test_regularization.cpp  ../ModelBase//modelbase ../Inversion//inversion ../Tomo//tomo regularization ../Gravity//gravity  ..//boost_core ;
+unit-test regularization_test : test_regularization.cpp  ../Global//global ../ModelBase//modelbase ../Inversion//inversion ../Tomo//tomo regularization ../Gravity//gravity  ..//boost_core ;

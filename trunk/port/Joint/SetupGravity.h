@@ -8,6 +8,7 @@
 #ifndef SETUPGRAVITY_H_
 #define SETUPGRAVITY_H_
 
+#include "../Global/Jif3DGlobal.h"
 #include "../Inversion/ThreeDModelObjective.h"
 #include "../GravMag/DiskGravMagCalculator.h"
 #include "../Gravity/ThreeDGravityModel.h"
@@ -26,7 +27,7 @@ namespace jif3D
     /*! This class reads the information about grid sizes, measurement configuration etc.
      * from the command line and through interactive input.
      */
-    class SetupGravity
+    class J3DEXPORT SetupGravity
       {
     public:
       typedef typename jif3D::DiskGravMagCalculator<jif3D::ThreeDGravityModel> CalculatorType;

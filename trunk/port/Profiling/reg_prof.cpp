@@ -1,7 +1,7 @@
 //============================================================================
 // Name        : reg_prof.cpp
 // Author      : 16 Aug 2012
-// Version     : 
+// Version     :
 // Copyright   : 2012, mm489
 //============================================================================
 
@@ -42,7 +42,7 @@ int main()
         Regularization.SetZWeight(3.0);
         boost::posix_time::ptime secondstarttime =
             boost::posix_time::microsec_clock::local_time();
-        double zero = Regularization.CalcMisfit(StartModel + ConstMod);
+        /* double zero = */ Regularization.CalcMisfit(StartModel + ConstMod);
         boost::posix_time::ptime secondendtime =
             boost::posix_time::microsec_clock::local_time();
         std::cout << nelem << " " << (firstendtime - firststarttime).total_microseconds()

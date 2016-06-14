@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <algorithm>
 #include <numeric>
+#include "../Global/Jif3DPlatformHelper.h"
 #include "../Gravity/test_common.h"
 #include "../Tomo/ThreeDSeismicModel.h"
 #include "../Inversion/ModelTransforms.h"
@@ -44,7 +45,7 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
 
     BOOST_AUTO_TEST_CASE (mindiff_test)
       {
-        srand(time(NULL));
+        srand((unsigned int)time(nullptr));
         jif3D::ThreeDGravityModel GravModel;
         const size_t nx = 5;
         const size_t ny = 4;
@@ -94,7 +95,7 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
 
     BOOST_AUTO_TEST_CASE (minsupp_test)
       {
-        srand(time(NULL));
+        srand((unsigned int)time(nullptr));
         jif3D::ThreeDGravityModel GravModel;
         const size_t nx = 5;
         const size_t ny = 4;
@@ -114,14 +115,14 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
             / StartModel.size();
         jif3D::MinimumSupport MinSupp(Regularization, beta);
 
-        double Misfit = MinSupp.CalcMisfit(PertModel);
+        /*double Misfit = */ MinSupp.CalcMisfit(PertModel);
 
         CheckGradient(MinSupp, PertModel);
       }
 
     BOOST_AUTO_TEST_CASE (mingradsupp_test)
       {
-        srand(time(NULL));
+        srand((unsigned int)time(nullptr));
         jif3D::ThreeDGravityModel GravModel;
         const size_t nx = 5;
         const size_t ny = 4;
@@ -141,7 +142,7 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
             / StartModel.size();
         jif3D::MinimumSupport MinSupp(Regularization, beta);
 
-        double Misfit = MinSupp.CalcMisfit(PertModel);
+        /*double Misfit = */ MinSupp.CalcMisfit(PertModel);
 
         CheckGradient(MinSupp, PertModel);
       }
@@ -210,15 +211,15 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
         MakeTearModel(GravModel, TearX);
         MakeTearModel(GravModel, TearY);
         MakeTearModel(GravModel, TearZ);
-        srand48(time(NULL));
+        jif3D::platform::srand48((unsigned int)time(nullptr));
         const double fraction = 0.1;
         for (size_t i = 0; i < TearX.GetNModelElements(); ++i)
           {
-            if (drand48() > fraction)
+            if (jif3D::platform::drand48() > fraction)
               TearX.SetSlownesses().data()[i] = 0.0;
-            if (drand48() > fraction)
+            if (jif3D::platform::drand48() > fraction)
               TearY.SetSlownesses().data()[i] = 0.0;
-            if (drand48() > fraction)
+            if (jif3D::platform::drand48() > fraction)
               TearZ.SetSlownesses().data()[i] = 0.0;
           }
         const size_t msize = GravModel.GetDensities().num_elements();
@@ -261,7 +262,7 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
       {
         jif3D::ThreeDGravityModel GravModel;
         GravModel.SetDensities().resize(boost::extents[3][3][3]);
-        srand48(time(NULL));
+        jif3D::platform::srand48((unsigned int)time(nullptr));
         const int msize = GravModel.GetDensities().num_elements();
         jif3D::rvec PertModel(msize * 2);
         for (int i = 0; i < msize; ++i)
@@ -276,7 +277,7 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
         jif3D::rvec ZeroModel(msize * 2);
         for (int i = 0; i < msize; ++i)
           {
-            ZeroModel(i) = drand48();
+            ZeroModel(i) = jif3D::platform::drand48();
             ZeroModel(i + msize) = 3.2 * ZeroModel(i);
           }
         double zero = Regularization.CalcMisfit(ZeroModel);
@@ -322,7 +323,7 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
 
     BOOST_AUTO_TEST_CASE (gradjoint_test)
       {
-        srand(time(NULL));
+        srand((unsigned int)time(nullptr));
         jif3D::ThreeDGravityModel GravModel;
         GravModel.SetDensities().resize(boost::extents[5][4][3]);
 

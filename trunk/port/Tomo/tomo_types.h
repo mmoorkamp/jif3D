@@ -1,13 +1,14 @@
 //============================================================================
 // Name        : tomo_types.h
 // Author      : 27 Mar 2014
-// Version     : 
+// Version     :
 // Copyright   : 2014, mm489
 //============================================================================
 
 #ifndef TOMO_TYPES_H_
 #define TOMO_TYPES_H_
 
+#include "../Global/Jif3DGlobal.h"
 #include "../Global/Serialization.h"
 #include <vector>
 
@@ -18,7 +19,7 @@ namespace jif3D
     /* @{ */
 
     //! Parameters of the grid structure:
-    class GRID_STRUCT
+    class J3DEXPORT GRID_STRUCT
       {
     public:
       std::size_t nx; /*!< Number of grid cell center in x-direction*/
@@ -47,7 +48,7 @@ namespace jif3D
       };
 
     //! Geometry of the  the seismic shots and receivers
-    class GEOMETRY
+    class J3DEXPORT GEOMETRY
       {
     public:
       std::vector<float> x; /*!< x-coordinates of the shot/receiver locations  in m*/
@@ -75,7 +76,7 @@ namespace jif3D
       };
 
     //! Structure including informations about the seismic data
-    class DATA_STRUCT
+    class J3DEXPORT DATA_STRUCT
       {
     public:
       /*!< Seismic parameters*/
@@ -109,7 +110,7 @@ namespace jif3D
       };
 
     //! Structure for the ray paths
-    class RP_STRUCT
+    class J3DEXPORT RP_STRUCT
       {
     public:
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
@@ -141,7 +142,7 @@ namespace jif3D
         }
       };
 
-    struct RayResult
+    struct J3DEXPORT RayResult
       {
       std::vector<double> tcalc;
       std::vector<RP_STRUCT> raypath;

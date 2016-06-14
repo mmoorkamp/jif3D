@@ -10,6 +10,7 @@
 
 #include "../Global/Serialization.h"
 #include "../Global/VecMat.h"
+#include "../Global/Jif3DGlobal.h"
 #include "../Global/VectorTransform.h"
 #include "ThreeDSeismicModel.h"
 #include "tomo_types.h"
@@ -24,7 +25,7 @@ namespace jif3D
      * written by B. Heincke. Given a three-dimensional model of seismic slownesses in s/m it calculates
      * the time it takes the first arrival to travel for a set of specified source-receiver configurations.
      */
-    class TomographyCalculator
+    class J3DEXPORT TomographyCalculator
       {
     public:
       //! This type definition is necessary so that ThreeDModelObjective can correctly deduce the native type for a model object for this class

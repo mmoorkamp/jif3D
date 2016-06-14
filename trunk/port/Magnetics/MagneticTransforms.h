@@ -8,12 +8,14 @@
 #ifndef MAGNETICTRANSFORMS_H_
 #define MAGNETICTRANSFORMS_H_
 
-#include "../Global/VectorTransform.h"
 #include <cassert>
+
+#include "../Global/VectorTransform.h"
+#include "../Global/Jif3DGlobal.h"
 
 namespace jif3D
   {
-    class TotalField: public VectorTransform
+    class J3DEXPORT TotalField: public VectorTransform
       {
     private:
       //! we expect 3 magnetic field elements at each call

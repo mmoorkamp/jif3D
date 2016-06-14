@@ -1,17 +1,19 @@
 //============================================================================
 // Name        : GridOnlyModelCache.h
 // Author      : 25 Oct 2013
-// Version     : 
+// Version     :
 // Copyright   : 2013, mm489
 //============================================================================
 
 #ifndef GRIDONLYMODELCACHE_H_
 #define GRIDONLYMODELCACHE_H_
 
+#include "../Global/Jif3DGlobal.h"
+
 namespace jif3D
   {
     template<class ThreeDModelType>
-    class GridOnlyModelCache
+    class J3DEXPORT GridOnlyModelCache
       {
     public:
       typedef typename ThreeDModelType::t3DModelDim ModelDimType;

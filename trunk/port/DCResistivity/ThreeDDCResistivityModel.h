@@ -8,9 +8,10 @@
 #ifndef THREEDDCRESISTIVITYMODEL_H_
 #define THREEDDCRESISTIVITYMODEL_H_
 
+#include "../ModelBase/ThreeDModelBase.h"
 #include "../Global/Serialization.h"
 #include "../Global/FatalException.h"
-#include "../ModelBase/ThreeDModelBase.h"
+#include "../Global/Jif3DGlobal.h"
 
 namespace jif3D
   {
@@ -26,7 +27,7 @@ namespace jif3D
     /* @{ */
     class DCExtraParameterSetter;
 
-    class ThreeDDCResistivityModel: public jif3D::ThreeDModelBase
+    class J3DEXPORT ThreeDDCResistivityModel: public jif3D::ThreeDModelBase
       {
     public:
       typedef DCExtraParameterSetter ExtraParameterSetter;
@@ -248,7 +249,7 @@ namespace jif3D
       virtual ~ThreeDDCResistivityModel();
       };
 
-    class DCExtraParameterSetter
+    class J3DEXPORT DCExtraParameterSetter
       {
     public:
       void operator()(ThreeDDCResistivityModel &Model, const std::vector<double> &Dens)

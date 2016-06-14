@@ -9,6 +9,7 @@
 #define THREEDMTMODEL_H_
 
 #include "../Global/Serialization.h"
+#include "../Global/Jif3DGlobal.h"
 #include "../ModelBase/ThreeDModelBase.h"
 
 namespace jif3D
@@ -29,7 +30,7 @@ namespace jif3D
      * All other functionality and properties that are specific to a certain
      * forward code have to be implemented in a derived class.
      */
-    class ThreeDMTModel: public jif3D::ThreeDModelBase
+    class J3DEXPORT ThreeDMTModel : public jif3D::ThreeDModelBase
       {
     private:
       //! The four real elements of the distortion matrix C for each Station
@@ -107,7 +108,7 @@ namespace jif3D
       };
 
     //! A helper class for the template ThreeDModelObjective that lets us set distortion values as extra inversion parameters
-    class MTDistortionSetter
+    class J3DEXPORT MTDistortionSetter
       {
     public:
       void operator()(ThreeDMTModel &Model, const std::vector<double> &Dist)

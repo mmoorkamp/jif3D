@@ -8,12 +8,14 @@
 #ifndef DCRESFORWARDBASE_H_
 #define DCRESFORWARDBASE_H_
 
-#include <vector>
 #include <cstdlib>
+
+#include <vector>
 #include <iostream>
+
 #include "../Global/Serialization.h"
 #include "../Global/VecMat.h"
-
+#include "../Global/Jif3DGlobal.h"
 
 namespace jif3D
   {
@@ -34,7 +36,7 @@ namespace jif3D
     /* @{ */
 
     //! Parameters of the grid structure:
-    class GRID_STRUCT_RES
+    class J3DEXPORT GRID_STRUCT_RES
       {
     private:
       friend class access;
@@ -71,7 +73,7 @@ namespace jif3D
       };
 
     //! Geometry of the  the Sources.
-    class GEOMETRY_RES
+    class J3DEXPORT GEOMETRY_RES
       {
     public:
       //! Read and store independent source position only

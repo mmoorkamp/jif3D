@@ -12,6 +12,7 @@
 
 #include "MTCovar.h"
 #include "../Global/FatalException.h"
+#include "../Global/Jif3DPlatformHelper.h"
 
 BOOST_AUTO_TEST_SUITE( MTCovar_Suite )
 
@@ -28,10 +29,10 @@ BOOST_AUTO_TEST_SUITE( MTCovar_Suite )
     BOOST_AUTO_TEST_CASE (identity_test)
       {
         jif3D::covmat RandMat(4, 4);
-        srand48(time(0));
+        jif3D::platform::srand48((unsigned int) time(nullptr));
         for (size_t i = 0; i < 4; ++i)
           for (size_t j = i; j < 4; ++j)
-            RandMat(i, j) = drand48();
+            RandMat(i, j) = jif3D::platform::drand48();
 
         jif3D::covmat CompMat = jif3D::RotateMTCovar(0.0, RandMat);
         for (size_t i = 0; i < 4; ++i)

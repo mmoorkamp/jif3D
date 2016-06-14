@@ -10,19 +10,21 @@
 #include <boost/random/uniform_real.hpp>
 #include <boost/random/variate_generator.hpp>
 
+#include "../Global/Jif3DPlatformHelper.h"
+
 BOOST_AUTO_TEST_SUITE( Tomo_Types_Test_Suite )
 
 BOOST_AUTO_TEST_CASE (grid_struct_test)
 {
 	jif3D::GRID_STRUCT OutStruct;
 
-	OutStruct.h = drand48();
+	OutStruct.h = jif3D::platform::drand48();
 	OutStruct.nx = rand();
 	OutStruct.ny = rand();
 	OutStruct.nz = rand();
 	const size_t nslow = 10 + rand() % 100;
 	OutStruct.slow.assign(nslow,0.0);
-	std::generate(OutStruct.slow.begin(),OutStruct.slow.end(),drand48);
+	std::generate(OutStruct.slow.begin(),OutStruct.slow.end(), jif3D::platform::drand48);
 
 	std::ofstream ofs("grid_struct.out");
 	{
@@ -58,9 +60,9 @@ BOOST_AUTO_TEST_CASE (geometry_test)
 	OutStruct.nrec = rand();
 	OutStruct.nshot = rand();
 
-	std::generate(OutStruct.x.begin(),OutStruct.x.end(),drand48);
-	std::generate(OutStruct.y.begin(),OutStruct.y.end(),drand48);
-	std::generate(OutStruct.z.begin(),OutStruct.z.end(),drand48);
+	std::generate(OutStruct.x.begin(),OutStruct.x.end(), jif3D::platform::drand48);
+	std::generate(OutStruct.y.begin(),OutStruct.y.end(), jif3D::platform::drand48);
+	std::generate(OutStruct.z.begin(),OutStruct.z.end(), jif3D::platform::drand48);
 
 	std::ofstream ofs("geometry.out");
 	{
@@ -109,7 +111,7 @@ BOOST_AUTO_TEST_CASE (data_struct_test)
 
 	std::generate(OutStruct.sno.begin(),OutStruct.sno.end(),rand);
 	std::generate(OutStruct.rno.begin(),OutStruct.rno.end(),rand);
-	std::generate(OutStruct.tcalc.begin(),OutStruct.tcalc.end(),drand48);
+	std::generate(OutStruct.tcalc.begin(),OutStruct.tcalc.end(), jif3D::platform::drand48);
 	std::generate(OutStruct.lshots.begin(),OutStruct.lshots.end(),rand);
 
 	std::ofstream ofs("data_struct.out");
@@ -156,10 +158,10 @@ BOOST_AUTO_TEST_CASE (rp_struct_test)
 	const size_t nele = 10 + rand() % 100;
 
 	OutStruct.nray = rand();
-	std::generate_n(std::back_inserter(OutStruct.x),nx,drand48);
-	std::generate_n(std::back_inserter(OutStruct.y),ny,drand48);
-	std::generate_n(std::back_inserter(OutStruct.z),nz,drand48);
-	std::generate_n(std::back_inserter(OutStruct.len),nlen,drand48);
+	std::generate_n(std::back_inserter(OutStruct.x),nx, jif3D::platform::drand48);
+	std::generate_n(std::back_inserter(OutStruct.y),ny, jif3D::platform::drand48);
+	std::generate_n(std::back_inserter(OutStruct.z),nz, jif3D::platform::drand48);
+	std::generate_n(std::back_inserter(OutStruct.len),nlen, jif3D::platform::drand48);
 	std::generate_n(std::back_inserter(OutStruct.ele),nele,rand);
 
 	std::ofstream ofs("rp_struct.out");
@@ -204,7 +206,7 @@ BOOST_AUTO_TEST_CASE (ray_result_test)
 	const size_t ntcalc = 10 + rand() % 100;
 	const size_t nraypath = 10 + rand() % 100;
 
-	std::generate_n(std::back_inserter(OutStruct.tcalc),ntcalc,drand48);
+	std::generate_n(std::back_inserter(OutStruct.tcalc),ntcalc, jif3D::platform::drand48);
 	for (size_t i = 0; i < nraypath; ++i)
 	{
 		jif3D::RP_STRUCT ray;
@@ -215,10 +217,10 @@ BOOST_AUTO_TEST_CASE (ray_result_test)
 		const size_t nele = 10 + rand() % 100;
 
 		ray.nray = rand();
-		std::generate_n(std::back_inserter(ray.x),nx,drand48);
-		std::generate_n(std::back_inserter(ray.y),ny,drand48);
-		std::generate_n(std::back_inserter(ray.z),nz,drand48);
-		std::generate_n(std::back_inserter(ray.len),nlen,drand48);
+		std::generate_n(std::back_inserter(ray.x),nx, jif3D::platform::drand48);
+		std::generate_n(std::back_inserter(ray.y),ny, jif3D::platform::drand48);
+		std::generate_n(std::back_inserter(ray.z),nz, jif3D::platform::drand48);
+		std::generate_n(std::back_inserter(ray.len),nlen, jif3D::platform::drand48);
 		std::generate_n(std::back_inserter(ray.ele),nele,rand);
 
 		OutStruct.raypath.push_back(ray);

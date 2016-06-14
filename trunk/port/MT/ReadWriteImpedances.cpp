@@ -1,7 +1,7 @@
 //============================================================================
 // Name        : ReadWriteImpedance.cpp
 // Author      : Jul 13, 2009
-// Version     : 
+// Version     :
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 #include "ReadWriteImpedances.h"
@@ -11,7 +11,7 @@
 #include "../Global/convert.h"
 #include "../ModelBase/NetCDFModelTools.h"
 #include "../Global/NetCDFTools.h"
-
+#include "../Global/NetCDFPortHelper.h"
 
 #include <fstream>
 #include <iomanip>
@@ -22,6 +22,10 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 
+using netCDF::NcVar;
+using netCDF::NcFile;
+using netCDF::NcDim;
+
 namespace jif3D
   {
     using namespace std;
@@ -30,20 +34,27 @@ namespace jif3D
 
 //write one compoment of the impedance tensor to a netcdf file
 //this is an internal helper function
-    void WriteImpedanceComp(NcFile &NetCDFFile, NcDim *StatNumDim, NcDim *FreqDim,
+    void WriteImpedanceComp(NcFile &NetCDFFile, NcDim &StatNumDim, NcDim &FreqDim,
         const jif3D::rvec &Impedances, const std::string &CompName,
         const size_t compindex)
       {
-        NcVar *CompVar = NetCDFFile.add_var(CompName.c_str(), ncDouble, FreqDim,
-            StatNumDim);
-        jif3D::rvec Component(FreqDim->size() * StatNumDim->size());
+        std::vector<NcDim> dimVec;
+        dimVec.push_back(FreqDim);
+        dimVec.push_back(StatNumDim);
+
+        NcVar CompVar = NetCDFFile.addVar(CompName, netCDF::ncDouble, dimVec);
+
+        jif3D::rvec Component(FreqDim.getSize() * StatNumDim.getSize());
+
         for (size_t i = 0; i < Component.size(); ++i)
           {
             Component(i) = Impedances(i * 8 + compindex);
           }
-        CompVar->put(&Component[0], FreqDim->size(), StatNumDim->size());
+
+//        CompVar.put(&Component[0], FreqDim.getSize(), StatNumDim.getSize());
+        cxxport::put_legacy_ncvar(CompVar, &Component[0], FreqDim.getSize(), StatNumDim.getSize());
         //we write the impedance in units of Ohm
-        CompVar->add_att("units", "Ohm");
+        CompVar.putAtt("units", "Ohm");
       }
 
 //read one component of the impedance tensor from a netcdf file
@@ -51,23 +62,30 @@ namespace jif3D
     void ReadImpedanceComp(NcFile &NetCDFFile, jif3D::rvec &Impedances,
         const std::string &CompName, const size_t compindex, const bool MustExist = true)
       {
-        NcError MyError(MustExist ? NcError::verbose_fatal : NcError::silent_nonfatal);
-        NcVar *SizeVar;
-        if ((SizeVar = NetCDFFile.get_var(CompName.c_str())))
-          {
-            const size_t nvalues = Impedances.size() / 8;
-            assert(
-                nvalues
-                    == boost::numeric_cast<size_t>(
-                        SizeVar->edges()[0] * SizeVar->edges()[1]));
-            jif3D::rvec Temp(nvalues);
-            SizeVar->get(&Temp[0], SizeVar->edges()[0], SizeVar->edges()[1]);
+        try {
+          NcVar SizeVar = NetCDFFile.getVar(CompName);
+          if (!SizeVar.isNull())
+            {
+              const size_t nvalues = Impedances.size() / 8;
+              const std::vector<long> edges = cxxport::get_legacy_var_edges(SizeVar);
 
-            for (size_t i = 0; i < nvalues; ++i)
-              {
-                Impedances(i * 8 + compindex) = Temp(i);
-              }
+              assert(nvalues== boost::numeric_cast<size_t>(
+                          edges[0] * edges[1]));
+              jif3D::rvec Temp(nvalues);
+
+//              SizeVar.get(&Temp[0], SizeVar->edges()[0], SizeVar->edges()[1]);
+              cxxport::get_legacy_ncvar(SizeVar, &Temp[0], edges[0], edges[1]);
+
+              for (size_t i = 0; i < nvalues; ++i)
+                {
+                  Impedances(i * 8 + compindex) = Temp(i);
+                }
+            }
+        } catch (const netCDF::exceptions::NcException &ex) {
+          if(MustExist) {
+            throw std::runtime_error("Call to ReadImpedanceComp with MustExist failed.");
           }
+        }
       }
 
     void WriteImpedancesToNetCDF(const std::string &filename,
@@ -83,18 +101,20 @@ namespace jif3D
         assert(nstats == StatYCoord.size());
         assert(Impedances.size() == nimp);
         //create a netcdf file
-        NcFile DataFile(filename.c_str(), NcFile::Replace);
+        NcFile DataFile(filename, NcFile::replace);
         //Create the dimensions for the stations
-        NcDim *StatNumDim = DataFile.add_dim(StationNumberName.c_str(), nstats);
+        NcDim StatNumDim = DataFile.addDim(StationNumberName, nstats);
 
         //write out the measurement coordinates
         WriteVec(DataFile, MeasPosXName, StatXCoord, StatNumDim, "m");
         WriteVec(DataFile, MeasPosYName, StatYCoord, StatNumDim, "m");
         WriteVec(DataFile, MeasPosZName, StatZCoord, StatNumDim, "m");
         //write out the frequencies that we store
-        NcDim *FreqDim = DataFile.add_dim(FreqDimName.c_str(), Frequencies.size());
-        NcVar *FreqVar = DataFile.add_var(FreqDimName.c_str(), ncDouble, FreqDim);
-        FreqVar->put(&Frequencies[0], nfreqs);
+        NcDim FreqDim = DataFile.addDim(FreqDimName, Frequencies.size());
+        NcVar FreqVar = DataFile.addVar(FreqDimName, netCDF::ncDouble, FreqDim);
+
+//        FreqVar->put(&Frequencies[0], nfreqs);
+        cxxport::put_legacy_ncvar(FreqVar, Frequencies.data(), nfreqs);
         //and now we can write all the impedance components
         WriteImpedanceComp(DataFile, StatNumDim, FreqDim, Impedances, "Zxx_re", 0);
         WriteImpedanceComp(DataFile, StatNumDim, FreqDim, Impedances, "Zxx_im", 1);
@@ -121,10 +141,16 @@ namespace jif3D
         WriteImpedanceComp(DataFile, StatNumDim, FreqDim, ZErr, "dZyy", 6);
         if (!Distortion.empty())
           {
-            NcDim *CDim = DataFile.add_dim("Celem", 4);
-            NcVar *CVar = DataFile.add_var(DistortionName.c_str(), ncDouble, StatNumDim,
-                CDim);
-            CVar->put(&Distortion[0], nstats, 4);
+            NcDim CDim = DataFile.addDim("Celem", 4);
+
+            std::vector<NcDim> dimVec;
+            dimVec.push_back(StatNumDim);
+            dimVec.push_back(CDim);
+
+            NcVar CVar = DataFile.addVar(DistortionName, netCDF::ncDouble, dimVec);
+
+//            CVar.put(&Distortion[0], nstats, 4);
+            cxxport::put_legacy_ncvar(CVar, Distortion.data(), nstats, 4);
           }
       }
 
@@ -134,7 +160,7 @@ namespace jif3D
         jif3D::rvec &Impedances, jif3D::rvec &ImpError, std::vector<double> &Distortion)
       {
         //open the netcdf file readonly
-        NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
+        NcFile DataFile(filename, NcFile::read);
         //read in the station coordinates in the three directions
         ReadVec(DataFile, MeasPosXName, StatXCoord);
         ReadVec(DataFile, MeasPosYName, StatYCoord);
@@ -167,30 +193,38 @@ namespace jif3D
           {
             ImpError(i + 1) = ImpError(i);
           }
-        NcError NetCDFError(NcError::silent_nonfatal);
-        NcVar *DistVar = DataFile.get_var(DistortionName.c_str());
-        const int nvalues = StatXCoord.size() * 4;
-        Distortion.resize(nvalues);
-        if (DistVar != nullptr)
-          {
-            if (nvalues != DistVar->edges()[0] * DistVar->edges()[1])
-              {
-                throw jif3D::FatalException(
-                    "Number of distortion parameters does not match number of stations !",
-                    __FILE__, __LINE__);
-              }
-            DistVar->get(&Distortion[0], DistVar->edges()[0], DistVar->edges()[1]);
-          }
-        else
-          {
-            for (size_t i = 0; i < StatXCoord.size(); ++i)
-              {
-                Distortion[i * 4] = 1.0;
-                Distortion[i * 4 + 1] = 0.0;
-                Distortion[i * 4 + 2] = 0.0;
-                Distortion[i * 4 + 3] = 1.0;
-              }
-          }
+
+        try {
+          NcVar DistVar = DataFile.getVar(DistortionName);
+
+          const int nvalues = StatXCoord.size() * 4;
+          Distortion.resize(nvalues);
+          if (!DistVar.isNull())
+            {
+              const std::vector<long> edges = cxxport::get_legacy_var_edges(DistVar);
+              if (nvalues != edges[0] * edges[1])
+                {
+                  throw jif3D::FatalException(
+                      "Number of distortion parameters does not match number of stations !",
+                      __FILE__, __LINE__);
+                }
+
+//              DistVar.get(&Distortion[0], edges[0], edges[1]);
+              cxxport::get_legacy_ncvar(DistVar, Distortion.data(), edges[0], edges[1]);
+            }
+          else
+            {
+              for (size_t i = 0; i < StatXCoord.size(); ++i)
+                {
+                  Distortion[i * 4] = 1.0;
+                  Distortion[i * 4 + 1] = 0.0;
+                  Distortion[i * 4 + 2] = 0.0;
+                  Distortion[i * 4 + 3] = 1.0;
+                }
+            }
+        } catch(const netCDF::exceptions::NcException &ex) {
+          // ignore
+        }
       }
 
     void ReadImpedancesFromMTT(const std::string &filename,

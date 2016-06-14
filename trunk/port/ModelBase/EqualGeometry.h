@@ -1,7 +1,7 @@
 //============================================================================
 // Name        : EqualGeometry.h
 // Author      : Mar 3, 2010
-// Version     : 
+// Version     :
 // Copyright   : 2010, mmoorkamp
 //============================================================================
 
@@ -9,6 +9,8 @@
 #define EQUALGEOMETRY_H_
 
 #include <iostream>
+#include <boost/log/trivial.hpp>
+#include "../Global/Jif3DGlobal.h"
 #include "../Global/NumUtil.h"
 #include "../Global/FatalException.h"
 #include "ThreeDModelBase.h"

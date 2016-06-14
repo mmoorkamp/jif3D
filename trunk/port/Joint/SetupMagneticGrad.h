@@ -8,6 +8,7 @@
 #ifndef SETUPMAGNETICGRAD_H_
 #define SETUPMAGNETICGRAD_H_
 
+#include "../Global/Jif3DGlobal.h"
 #include "../Inversion/ThreeDModelObjective.h"
 #include "../GravMag/DiskGravMagCalculator.h"
 #include "../Magnetics/ThreeDMagneticModel.h"
@@ -26,7 +27,7 @@ namespace jif3D
     /*! This class reads the information about grid sizes, measurement configuration etc.
      * from the command line and through interactive input.
      */
-    class SetupMagneticGrad
+    class J3DEXPORT SetupMagneticGrad
       {
     public:
       typedef typename jif3D::DiskGravMagCalculator<jif3D::ThreeDMagneticModel> CalculatorType;

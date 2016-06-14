@@ -17,12 +17,13 @@
 #include <cstdlib>
 #include "../Gravity/ThreeDGravityModel.h"
 #include "../Global/NumUtil.h"
+#include "../Global/Jif3DPlatformHelper.h"
 #include "VTKTools.h"
 
 //Test the default state of the object
 BOOST_AUTO_TEST_CASE(read_write_test)
   {
-    srand(time(0));
+    srand((unsigned int)time(0));
     jif3D::ThreeDGravityModel Model, Compare;
     size_t nx = rand() % 30;
     size_t ny = rand() % 30;
@@ -31,10 +32,10 @@ BOOST_AUTO_TEST_CASE(read_write_test)
     Model.SetYCellSizes().resize(ny);
     Model.SetZCellSizes().resize(nz);
     Model.SetDensities().resize(boost::extents[nx][ny][nz]);
-    std::generate_n(Model.SetXCellSizes().begin(), nx, drand48);
-    std::generate_n(Model.SetYCellSizes().begin(), ny, drand48);
-    std::generate_n(Model.SetZCellSizes().begin(), nz, drand48);
-    std::generate_n(Model.SetDensities().origin(), nx * ny * nz, drand48);
+    std::generate_n(Model.SetXCellSizes().begin(), nx, jif3D::platform::drand48);
+    std::generate_n(Model.SetYCellSizes().begin(), ny, jif3D::platform::drand48);
+    std::generate_n(Model.SetZCellSizes().begin(), nz, jif3D::platform::drand48);
+    std::generate_n(Model.SetDensities().origin(), nx * ny * nz, jif3D::platform::drand48);
     std::string filename = "rwtest.vtk";
     jif3D::Write3DModelToVTK(filename, "Density", Model.GetXCellSizes(),
         Model.GetYCellSizes(), Model.GetZCellSizes(), Model.GetDensities());

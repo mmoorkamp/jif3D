@@ -1,13 +1,14 @@
 //============================================================================
 // Name        : SetupRegularization.h
 // Author      : Mar 2, 2010
-// Version     : 
+// Version     :
 // Copyright   : 2010, mmoorkamp
 //============================================================================
 
 #ifndef SETUPREGULARIZATION_H_
 #define SETUPREGULARIZATION_H_
 
+#include "../Global/Jif3DGlobal.h"
 #include "../Inversion/ModelTransforms.h"
 #include "../Regularization/RegularizationFunction.h"
 #include "../ModelBase/ThreeDModelBase.h"
@@ -25,7 +26,7 @@ namespace jif3D
     /*! Choose the type of regularization and the weighting
      * of the different directions depending on command line options.
      */
-    class SetupRegularization
+    class J3DEXPORT SetupRegularization
       {
     private:
       //here we declare some private variables that are set when

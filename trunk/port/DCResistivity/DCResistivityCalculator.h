@@ -8,10 +8,12 @@
 #ifndef DCRESISTIVITYCALCULATOR_H_
 #define DCRESISTIVITYCALCULATOR_H_
 
-#include "../Global/Serialization.h"
-#include "../Global/VecMat.h"
 #include "ThreeDDCResistivityModel.h"
 #include "DCResForwardBase.h"
+
+#include "../Global/Serialization.h"
+#include "../Global/VecMat.h"
+#include "../Global/Jif3DGlobal.h"
 
 namespace jif3D
   {
@@ -20,7 +22,7 @@ namespace jif3D
     //! This class provides a convenient interface to the DCResForwarBase code
     /*! This class calculates DC Resistivity Forward Response data and the associated gradients for inversion.
      */
-    class DCResistivityCalculator
+    class J3DEXPORT DCResistivityCalculator
       {
     public:
       //! This type definition is necessary so that ThreeDModelObjective can correctly deduce the native type for a model object for this class

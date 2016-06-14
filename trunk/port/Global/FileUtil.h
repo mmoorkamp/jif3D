@@ -8,13 +8,15 @@
 #ifndef FILEUTIL_H_
 #define FILEUTIL_H_
 
-#include "FatalException.h"
 #include <string>
 #include <fstream>
 #include <iostream>
+
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/convenience.hpp>
+
+#include "FatalException.h"
 
 /*! \file FileUtil.h
  * Utilities associated with the general handling of files and filenames.

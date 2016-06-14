@@ -8,6 +8,7 @@
 #ifndef LOGTRANSFORM_H_
 #define LOGTRANSFORM_H_
 
+#include "../Global/Jif3DGlobal.h"
 #include "../Global/Serialization.h"
 #include "GeneralModelTransform.h"
 
@@ -23,7 +24,7 @@ namespace jif3D
      * to be positive and that we can capture large variations in physical parameters
      * in a relatively small range of inversion parameters.
      */
-    class LogTransform: public jif3D::GeneralModelTransform
+    class J3DEXPORT LogTransform: public jif3D::GeneralModelTransform
       {
     private:
       //! Each model parameter is divided by the reference values before taking the logarithm

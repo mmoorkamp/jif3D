@@ -8,8 +8,10 @@
 #ifndef CONDUCTIVITYTRANSFORM_H_
 #define CONDUCTIVITYTRANSFORM_H_
 
-#include "../Global/Serialization.h"
 #include <boost/shared_ptr.hpp>
+
+#include "../Global/Serialization.h"
+#include "../Global/Jif3DGlobal.h"
 #include "../ModelBase/ThreeDModelBase.h"
 #include "GeneralModelTransform.h"
 
@@ -28,7 +30,7 @@ namespace jif3D
      * where s is slowness and the coefficient a,b,c can be specified
      * in the constructor.
      */
-    class ConductivityTransform: public jif3D::GeneralModelTransform
+    class J3DEXPORT ConductivityTransform: public jif3D::GeneralModelTransform
       {
     private:
       //! The coefficient for the quadratic term of the transform

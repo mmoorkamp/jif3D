@@ -14,9 +14,10 @@
 #endif
 #include "../Global/Serialization.h"
 #include "../Global/VecMat.h"
+#include "../Global/Jif3DGlobal.h"
 #include "realinfo.h"
 
-std::vector<double> CalcRealization(realinfo Info);
+J3DEXPORT std::vector<double> CalcRealization(realinfo Info);
 
 #ifdef HAVEHPX
 HPX_DEFINE_PLAIN_ACTION(CalcRealization, Calc_action);

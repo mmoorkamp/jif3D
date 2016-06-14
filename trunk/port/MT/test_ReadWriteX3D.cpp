@@ -12,6 +12,7 @@
 #include "ReadWriteX3D.h"
 #include "../ModelBase/VTKTools.h"
 #include "../ModelBase/NetCDFModelTools.h"
+#include "../Global/Jif3DPlatformHelper.h"
 
 BOOST_AUTO_TEST_SUITE( ReadWriteX3D_Suite )
 
@@ -33,10 +34,10 @@ BOOST_AUTO_TEST_SUITE( ReadWriteX3D_Suite )
         const double deltay = 17.4;
         std::fill_n(XCellSizes.begin(), xsize, deltax);
         std::fill_n(YCellSizes.begin(), ysize, deltay);
-        std::generate_n(ZCellSizes.begin(), zsize, drand48);
-        std::generate_n(Data.origin(), xsize * ysize * zsize, drand48);
-        std::generate_n(bg_thicknesses.begin(), nbglayers, drand48);
-        std::generate_n(bg_conductivities.begin(), nbglayers, drand48);
+        std::generate_n(ZCellSizes.begin(), zsize, jif3D::platform::drand48);
+        std::generate_n(Data.origin(), xsize * ysize * zsize, jif3D::platform::drand48);
+        std::generate_n(bg_thicknesses.begin(), nbglayers, jif3D::platform::drand48);
+        std::generate_n(bg_conductivities.begin(), nbglayers, jif3D::platform::drand48);
 
         const std::string filename("x3d.in");
         jif3D::Write3DModelForX3D(filename, XCellSizes, YCellSizes, ZCellSizes, Depths,

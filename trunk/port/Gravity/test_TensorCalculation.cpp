@@ -16,6 +16,7 @@
 #include <boost/math/constants/constants.hpp>
 
 #include "test_common.h"
+#include "../Global/Jif3DPlatformHelper.h"
 #include "BasicGravElements.h"
 #include "../GravMag/MinMemGravMagCalculator.h"
 #include "../GravMag/FullSensitivityGravMagCalculator.h"
@@ -278,7 +279,7 @@ BOOST_AUTO_TEST_CASE  (random_tensor_test)
       typedef typename jif3D::FullSensitivityGravMagCalculator<jif3D::ThreeDGravityModel> CalculatorType;
       boost::shared_ptr<CalculatorType> TensorCalculator(jif3D::CreateGravityCalculator<CalculatorType>::MakeTensor());
       jif3D::rvec Misfit(nmeas*TensorCalculator->GetDataPerMeasurement());
-      std::generate(Misfit.begin(),Misfit.end(),drand48);
+      std::generate(Misfit.begin(),Misfit.end(), jif3D::platform::drand48);
       jif3D::rvec Deriv(TensorCalculator->LQDerivative(GravityTest,Misfit));
       TensorCalculator->Calculate(GravityTest);
       jif3D::rvec Compare(2.0 * boost::numeric::ublas::prec_prod(ublas::trans(TensorCalculator->GetSensitivities()),Misfit));

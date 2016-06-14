@@ -1,14 +1,18 @@
 //============================================================================
 // Name        : NetCDFTools.h
 // Author      : 1 Jul 2013
-// Version     : 
+// Version     :
 // Copyright   : 2013, mm489
 //============================================================================
 
 #ifndef NETCDFTOOLS_H_
 #define NETCDFTOOLS_H_
 
-#include <netcdfcpp.h>
+#include <netcdf>
+#include <string>
+
+#include "NetCDFPortHelper.h"
+#include "Jif3DGlobal.h"
 
 namespace jif3D {
 
@@ -21,16 +25,17 @@ namespace jif3D {
    * @param Vec The vector object (std::vector, ublas vector) that will contain the data
    */
   template<class VectorType>
-  void ReadVec(NcFile &NetCDFFile, const std::string &DataName,
+  J3DEXPORT void ReadVec(netCDF::NcFile &NetCDFFile, const std::string &DataName,
       VectorType &Vec)
     {
     // create netcdf variable with the same name as the dimension
-      NcVar *Var = NetCDFFile.get_var(DataName.c_str());
-      const size_t nvalues = Var->num_vals();
+      netCDF::NcVar Var = NetCDFFile.getVar(DataName);
+      const size_t nvalues = jif3D::cxxport::num_vals(Var);
       //allocate memory in the class variable
       Vec.resize(nvalues);
       //read values from netcdf file
-      Var->get(&Vec[0], nvalues);
+
+      jif3D::cxxport::get_legacy_ncvar(Var, &Vec[0], nvalues);
     }
 
   //! Write a vectorial quantity to a netcdf file
@@ -43,14 +48,16 @@ namespace jif3D {
    * @param unit The units of the values
    */
   template<class VectorType>
-  void WriteVec(NcFile &NetCDFFile, const std::string &Name,
-      const VectorType &Vec, NcDim *Dimension, const std::string unit)
+  J3DEXPORT void WriteVec(netCDF::NcFile &NetCDFFile, const std::string &Name,
+      const VectorType &Vec, const netCDF::NcDim &Dimension, const std::string &unit)
     {
       const size_t nelem = Vec.size();
-      NcVar *PosVar = NetCDFFile.add_var(Name.c_str(), ncDouble,
+      netCDF::NcVar PosVar = NetCDFFile.addVar(Name, netCDF::ncDouble,
           Dimension);
-      PosVar->add_att("units", unit.c_str());
-      PosVar->put(&Vec[0], nelem);
+      PosVar.putAtt("units", unit.c_str());
+
+      jif3D::cxxport::put_legacy_ncvar(PosVar, &Vec[0], nelem);
+//      PosVar->put(&Vec[0], nelem);
     }
 
 }

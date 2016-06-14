@@ -1,7 +1,7 @@
 //============================================================================
 // Name        : ModEMModel.h
 // Author      : 14 Jan 2016
-// Version     : 
+// Version     :
 // Copyright   : 2016, mm489
 //============================================================================
 
@@ -9,27 +9,29 @@
 #define MT_MODEMMODEL_H_
 
 #include "../Global/Serialization.h"
+#include "../Global/Jif3DGlobal.h"
 #include "ThreeDMTModel.h"
 
 namespace jif3D
   {
 
-    class ModEMModel: public ThreeDMTModel
+    class J3DEXPORT ModEMModel : public ThreeDMTModel
       {
     public:
+      ModEMModel();
+      virtual ~ModEMModel();
+
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
         {
           ar & base_object<ThreeDMTModel>(*this);
         }
       //! Write all model information to a netcdf file
-      virtual void WriteNetCDF(const std::string filename) const;
+      virtual void WriteNetCDF(const std::string &filename) const;
       //! Read all model information from a netcdf file
-      virtual void ReadNetCDF(const std::string filename);
+      virtual void ReadNetCDF(const std::string &filename);
       //! Other models will be copied by the copy operator for the base class
       ModEMModel& operator=(const ThreeDModelBase& source);
-      ModEMModel();
-      virtual ~ModEMModel();
       };
 
   } /* namespace jif3D */
