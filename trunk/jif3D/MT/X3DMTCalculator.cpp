@@ -56,8 +56,9 @@ namespace jif3D
       }
 
     X3DMTCalculator::X3DMTCalculator(boost::filesystem::path TDir, std::string x3d,
-        bool DC) :
-        GreenType1(hst), GreenType4(hst), X3DName(x3d), WantDistCorr(DC)
+        bool DC, bool Clean) :
+        GreenType1(hst), GreenType4(hst), X3DName(x3d), WantDistCorr(DC), CleanFiles(
+            Clean)
       {
         //each object gets a unique ID, this way we avoid clashes
         //between the temporary files generated for the calculations with x3d
@@ -78,8 +79,12 @@ namespace jif3D
 
     X3DMTCalculator::~X3DMTCalculator()
       {
-        //remove all the temporary files and directories generated for calculations
-        CleanUp();
+        //if we want to clean all temporary files (default)
+        if (CleanFiles)
+         {
+            //remove all the temporary files and directories generated for calculations
+            CleanUp();
+          }
       }
 
     rvec X3DMTCalculator::Calculate(const X3DModel &Model, size_t minfreqindex,

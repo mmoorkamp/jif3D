@@ -53,6 +53,7 @@ std::string MTInvCovarName;
 std::string RefModelName;
 std::string CrossModelName;
 double DistCorr = 0;
+bool CleanFiles = true;
 
 int hpx_main(boost::program_options::variables_map& vm)
   {
@@ -304,7 +305,7 @@ int hpx_main(boost::program_options::variables_map& vm)
         0, ngrid);
 
     bool WantDistCorr = (DistCorr > 0);
-    jif3D::X3DMTCalculator Calculator(TempDir, X3DName, WantDistCorr);
+    jif3D::X3DMTCalculator Calculator(TempDir, X3DName, WantDistCorr, CleanFiles);
     if (vm.count("opt"))
       {
         Calculator.SetGreenType1(jif3D::GreenCalcType::opt);
@@ -548,7 +549,9 @@ int main(int argc, char* argv[])
         "Only perform a regularization calculation")("conddelta",
         po::value(&conddelta)->default_value(0.001),
         "The relative amount by which the conductivities in the first row of cells is disturbed to ensure proper gradient calculation")(
-        "rhophi", "Use apparent resistivity and phase instead of impedance");
+        "rhophi", "Use apparent resistivity and phase instead of impedance")("cleanfiles",
+        po::value(&CleanFiles)->default_value(true),
+        "Clean up all temporary files at the end of the program.");
 
     desc.add(RegSetup.SetupOptions());
     desc.add(InversionSetup.SetupOptions());

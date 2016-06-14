@@ -68,6 +68,8 @@ namespace jif3D
       rvec RawImpedance;
       //! Set a transform for the observed data
       boost::shared_ptr<jif3D::VectorTransform> DataTransform;
+      //! Do we want to delete the temporary files when object is destroyed
+      bool CleanFiles;
       friend class access;
 
       //create a unique ID that we can use to name things and still
@@ -174,9 +176,10 @@ namespace jif3D
    * @param TDir Directory to store the temporary files for x3D
    * @param x3d The name of the executable for the x3d code
    * @param DC Perform distortion correction and calculate the derivative with respect to the distortion parameters
+   * @param Clean Delete all temporary files when object is destroyed
    */
   X3DMTCalculator(boost::filesystem::path TDir = boost::filesystem::current_path(),
-      std::string x3d = "x3d", bool DC = false);
+      std::string x3d = "x3d", bool DC = false, bool Clean = true);
   virtual ~X3DMTCalculator();
 };
 /* @} */
