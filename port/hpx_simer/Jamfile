@@ -1,0 +1,24 @@
+import testing ; 
+import python ;
+
+lib hpx_mt :  InvertBlock.cpp CalcRealization.cpp ..//MT
+        ..//ModelBase  ..//boost_core 
+         ;
+using python ;
+
+python-extension simerreal_ext : CalcRawRealization.cpp hpx_mt ../MT//mt  ../ModelBase//modelbase ../Inversion//inversion  
+       ..//boost_python ..//boost_core : <hardcode-dll-paths>true ;
+
+exe hpx_2phase : hpx_2phase.cpp hpx_mt ../MT//mt  ../ModelBase//modelbase ../Inversion//inversion  
+                ..//boost_core  ..//hpx_iostreams
+    ;
+
+install dist 
+    : # sources
+      simerreal_ext
+    : # requirements
+      <install-dependencies>on
+      <install-type>EXE
+      <install-type>SHARED_LIB
+      <location>.
+    ;

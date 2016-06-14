@@ -1,0 +1,21 @@
+import testing ; 
+
+alias core :  ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ..//boost_core ;
+
+lib dcresistivity :   ThreeDDCResistivityModel.cpp DCResistivityCalculator.cpp  DCResForwardBase.cpp ReadWriteDCResistivityData.cpp core
+                  : <eigen>off:<build>no   ;             
+
+
+unit-test readwrite_test :  test_ReadWriteDCResistivity.cpp dcresistivity  core : <eigen>off:<build>no ;
+unit-test objective_test :  test_dc_objective.cpp dcresistivity  core ../Inversion//inversion : <eigen>off:<build>no ;
+
+exe makedcresmesh : makedcresmesh.cpp dcresistivity  core : <eigen>off:<build>no  ;
+exe calculateresponseandgradient : calculateresponseandgradient.cpp dcresistivity  core  : <eigen>off:<build>no ;
+exe DCResForward : DCResForward.cpp dcresistivity  core  : <eigen>off:<build>no ;
+exe dcjoint : dcjoint.cpp dcresistivity  ../Joint//setup ../Inversion//inversion ../Regularization//regularization ../Tomo//tomo core 
+       ..//boost_program_options : <eigen>off:<build>no ;
+exe TomoDcMagJoint : TomoDcMagJoint.cpp dcresistivity  ../Joint//setup ../Inversion//inversion ../Regularization//regularization ../Tomo//tomo ../Magnetics//magnetics core 
+       ..//boost_program_options : <eigen>off:<build>no ;
+
+
+

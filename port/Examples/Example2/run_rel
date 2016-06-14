@@ -1,0 +1,16 @@
+#!/bin/bash
+../../Joint/bin/gcc-4.8/release/parallelization-openmp/threading-multi/jointinv  --writerays --substart True --curvreg --scalrelerr 0 --scalminerr 5e-7 --ftgminerr 1e-9 --pickerr 0.02 << eof
+start_tomo.nc
+1
+start_tomo.nc
+tomo_ano.nc.tt.nc
+1
+1
+dens_ano.nc.sgd.nc
+dens_ano.nc.ftg.nc
+dens_ano.nc
+0
+100
+100
+eof
+

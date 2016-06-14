@@ -1,0 +1,2 @@
+#!/bin/bash
+ohcount -i | gawk '{print $4,$0}' | sort -n > commentratio

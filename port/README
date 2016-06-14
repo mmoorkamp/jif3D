@@ -1,0 +1,60 @@
+jif3D Joint inversion framework
+
+
+General information
+
+This file contains some general information about the joint inversion
+framework jif3D. For installation instructions please refer to the file INSTALL.
+Please be aware that this is still a beta version. At the moment, the intended
+audience is developers and experienced researchers with a good knowledge
+of joint inversion. If you are new to inversion and have not developed any code
+so far, it is likely that you will have a hard time getting the code to do what you
+want. We are actively working on improving the documentation and making the 
+interface more user friendly.
+
+Scope
+
+jif3D is a framework for joint inversion of seismic, gravity and magnetotelluric
+data in 3D. It is written in C++ and designed for modularity, so it can be used
+as a base for further developments and relatively easily extended to included
+new coupling mechanisms and new types of data. At the moment the core of the 
+framework is the program jointinv. It performs 3D joint inversion of first arrival
+travel time data, scalar and tensor (FTG) gravity measurements and magnetotelluric (MT)
+impedances. Please note while the seismic and gravity forward codes are part of this
+distribution, the MT forward code, x3d, is closed-source and not part of the framework.
+You can obtain x3d by purchasing an academic or commercial license from its author D. Avdeev.
+In the future, we will work on including an open-source MT forward solver. Given the
+existing facilities for handling MT data, this should be relatively easy.
+ 
+Documentation
+
+You can generate a documentation for the classes and programs using the doxygen program. 
+There are two files Doxyfile.manual and Doxyfile.web. 
+These are optimized for generating a printed documentation using latex 
+and online html documentation, respectively. Currently the documentation is
+largely limited to describing the different C++ classes that comprise the framework
+and the associated functions. An area for improvement is to create a coherent and
+structured description of file formats, requirements etc. in a tutorial style manual.
+
+
+Examples
+
+The Examples directory contains several scripts to build example models, calculate
+synthetic data and invert it. It is a good starting point, but you will need an
+understanding of bash scripts and netcdf files to make the most of it.
+
+Support
+
+If you have any questions, comments, suggestions or find a bug in the code, you can
+post in the discussion forum https://sourceforge.net/p/jif3d/discussion/ or submit a
+ticket https://sourceforge.net/p/jif3d/tickets/ In both cases you need to create a free
+sourceforge account to be able to post something. We will try to answer your questions
+and fix bugs as quickly as possible.  
+
+Acknowledgements
+
+The initial development of the framework was sponsored by Chevron, ExxonMobil, Nexen, RWE Dea,
+Shell, Statoil and Wintershall within the jiba consortium. P. Podvin kindly made his eikonal
+solver publicly available. A. Avdeeva supported us with implementing the gradient calculation
+for the MT part of the joint inversion.
+   

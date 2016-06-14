@@ -1,0 +1,17 @@
+import testing ; 
+
+lib inversion : NonLinearOptimization.cpp
+				GradientBasedOptimization.cpp
+				NonLinearConjugateGradient.cpp
+				LimitedMemoryQuasiNewton.cpp
+				mcsrch.cpp backtrack.cpp
+				MatrixTools.cpp
+				ObjectiveFunction.cpp JointObjective.cpp 
+                 ;
+
+lib lininv : LinearInversion.cpp  : <lapack>on:<library>../vecopt  <lapack>on:<source>GeneralizedInverse.cpp ;
+
+unit-test inversion_test : test_inversion.cpp inversion lininv : <lapack>off:<build>no ;
+unit-test optstep_test : test_optstep.cpp  inversion ..//boost_core ;
+
+
