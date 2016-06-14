@@ -13,6 +13,7 @@
 #include "../ModelBase/ThreeDModelBase.h"
 #include "../ModelBase/GridBackgroundModelCache.h"
 #include "../Global/VecMat.h"
+#include "../Global/Jif3DGlobal.h"
 
 /*! \file ThreeDGravityModel.h
  * This file contains the class ThreeDGravityModel and associated helper functions and constants
@@ -55,7 +56,7 @@ namespace jif3D
     typedef rmat GravimetryMatrix;
 
     //! A helper class for the template ThreeDModelObjective that lets us set background densities as extra inversion parameters
-    class BackgroundDensitySetter;
+    class J3DEXPORT BackgroundDensitySetter;
 
     //! The class used to store the gravity model and the location of the measurement points
     /*! This class stores all information needed for the forward calculation of gravimetric data.
@@ -64,7 +65,7 @@ namespace jif3D
      * of this information in files of different formats. The preferred format for storage is netcdf, while
      * the preferred format for visualization is VTK.
      */
-    class ThreeDGravityModel: public ThreeDModelBase
+    class J3DEXPORT ThreeDGravityModel: public ThreeDModelBase
       {
     public:
       //! The type of the background thickness and density vector, this is a std::vector because we want to easily append elements
@@ -148,16 +149,16 @@ namespace jif3D
           return bg_thicknesses;
         }
       //! Write the density model and all associated information in a netcdf file
-      virtual void WriteNetCDF(const std::string filename) const;
+      virtual void WriteNetCDF(const std::string &filename) const;
       //! Write the density model in VTK format, at the moment the best format for plotting
-      void WriteVTK(const std::string filename) const
+      void WriteVTK(const std::string &filename) const
         {
           ThreeDModelBase::WriteVTK(filename, "Density");
         }
       //! Read the density model and all associated information from a netcdf file
-      virtual void ReadNetCDF(const std::string filename);
+      virtual void ReadNetCDF(const std::string &filename);
       //! Read an igmas xyz model file
-      void ReadIgmas(const std::string filename);
+      void ReadIgmas(const std::string &filename);
       ThreeDGravityModel();
       //! We define our own copy constructor
       ThreeDGravityModel(const ThreeDGravityModel &source);
@@ -168,7 +169,7 @@ namespace jif3D
       ThreeDGravityModel& operator=(const ThreeDModelBase& source);
       };
     //! A helper class for the template ThreeDModelObjective that lets us set background densities as extra inversion parameters
-    class BackgroundDensitySetter
+    class J3DEXPORT BackgroundDensitySetter
       {
     public:
       void operator()(ThreeDGravityModel &Model, const std::vector<double> &Dens)

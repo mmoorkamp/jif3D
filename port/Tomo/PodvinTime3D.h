@@ -173,6 +173,8 @@
 #ifndef PODVINTIME3D_H_
 #define PODVINTIME3D_H_
 
+#include "../Global/Jif3DGlobal.h"
+
 namespace jif3D
   {
     /** \addtogroup tomo Seismic tomography classes and functions */

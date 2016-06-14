@@ -69,8 +69,9 @@ int main()
 
       }
 
-    double MeanX = std::accumulate(StatX.begin(), StatX.end(), 0.0) / StatX.size();
-    double MeanY = std::accumulate(StatY.begin(), StatY.end(), 0.0) / StatY.size();
+//    double MeanX = std::accumulate(StatX.begin(), StatX.end(), 0.0) / StatX.size();
+//    double MeanY = std::accumulate(StatY.begin(), StatY.end(), 0.0) / StatY.size();
+
     for (size_t i = 0; i < StatX.size(); ++i)
       {
         double newx = StatX.at(i)  * cos(rangle) - StatY.at(i)  * sin(rangle);

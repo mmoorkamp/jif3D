@@ -195,8 +195,8 @@ namespace jif3D
 
         for (int i = minfreqindex; i < maxfreqindex; ++i)
           {
-            size_t currindex = i - minfreqindex;
-            size_t startindex = nmeas * currindex * 8;
+            const size_t currindex = i - minfreqindex;
+            const size_t startindex = nmeas * currindex * 8;
             ForwardResult freqresult = FreqResult[currindex].get();
 
             std::copy(freqresult.DistImpedance.begin(), freqresult.DistImpedance.end(),
@@ -257,6 +257,15 @@ namespace jif3D
         //for each station
         if (C.size() != nmeas * 4)
           {
+            BOOST_LOG_TRIVIAL(warning)<< "No distortion specified, reseting values to identity matrix" << std::endl;
+            BOOST_LOG_TRIVIAL(warning)<< "C: ";
+            for (const double &elem : C)
+              {
+                BOOST_LOG_TRIVIAL(warning)<< elem << " ";
+              }
+
+            BOOST_LOG_TRIVIAL(warning)<< std::endl;
+
             C.resize(nmeas * 4);
             for (size_t i = 0; i < nmeas; ++i)
               {
@@ -393,6 +402,14 @@ namespace jif3D
         //for each station
         if (C.size() != nsites * 4)
           {
+            BOOST_LOG_TRIVIAL(warning)<< "No distortion specified, reseting values to identity matrix" << std::endl;
+            BOOST_LOG_TRIVIAL(warning)<< "C: ";
+            for (const double &elem : C)
+              {
+                BOOST_LOG_TRIVIAL(warning)<< elem << " ";
+              }
+
+            BOOST_LOG_TRIVIAL(warning)<< std::endl;
             C.resize(nsites * 4);
             for (size_t i = 0; i < nsites; ++i)
               {

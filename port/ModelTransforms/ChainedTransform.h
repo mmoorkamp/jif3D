@@ -9,9 +9,12 @@
 #define CHAINEDTRANSFORM_H_
 
 #include <vector>
-#include "../Global/Serialization.h"
+
 #include <boost/shared_ptr.hpp>
+
 #include "GeneralModelTransform.h"
+#include "../Global/Serialization.h"
+#include "../Global/Jif3DGlobal.h"
 
 namespace jif3D
   {
@@ -27,7 +30,7 @@ namespace jif3D
      * parameters the order is reversed and we use the chain rule to calculate
      * the derivatives.
      */
-    class ChainedTransform: public jif3D::GeneralModelTransform
+    class J3DEXPORT ChainedTransform: public jif3D::GeneralModelTransform
       {
     private:
       //! We store pointers to each transform in the chain in this vector

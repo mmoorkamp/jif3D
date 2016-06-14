@@ -5,12 +5,19 @@
 // Copyright   : 2008, MM
 //============================================================================
 
-#include "ThreeDModelBase.h"
+#include <cassert>
+
+#include <fstream>
+
 #include "../Global/FatalException.h"
 #include "NetCDFModelTools.h"
 #include "VTKTools.h"
-#include <cassert>
-#include <fstream>
+
+#include "ThreeDModelBase.h"
+
+using netCDF::NcFile;
+using netCDF::NcVar;
+using netCDF::NcDim;
 
 namespace jif3D
   {

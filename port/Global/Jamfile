@@ -1,12 +1,11 @@
 import testing ; 
 
-
-lib global : Wavelet.cpp ReadWriteSparseMatrix.cpp ..//netcdf_c++ ..//netcdf ;
+lib global : Wavelet.cpp ReadWriteSparseMatrix.cpp NetCDFPortHelper.cpp Jif3DPlatformHelper.cpp ..//netcdf_c++ ..//netcdf ..//boost_serialization ;
            
-unit-test interpolate_test : test_interpolate.cpp   ;
-unit-test wavelet_test : global test_wavelet.cpp   ;
-unit-test rwsmatrix_test : global test_rwsmatrix.cpp   ;
-unit-test numutil_test : test_numutil.cpp   ;
-unit-test transform_test : test_transform.cpp   ;
-unit-test noise_test : test_noise.cpp    ;
-unit-test fileutil_test : test_fileutil.cpp  ..//boost_filesystem ..//boost_system  ;
+unit-test interpolate_test : test_interpolate.cpp global  ;
+unit-test wavelet_test : test_wavelet.cpp global ;
+unit-test rwsmatrix_test : test_rwsmatrix.cpp global ;
+unit-test numutil_test : test_numutil.cpp  global ;
+unit-test transform_test : test_transform.cpp global  ;
+unit-test noise_test : test_noise.cpp  global  ;
+unit-test fileutil_test : test_fileutil.cpp  global ;

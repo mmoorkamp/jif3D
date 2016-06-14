@@ -227,8 +227,8 @@ namespace OPTPP
             /*    if an unusual termination is to occur then let */
             /*    stp be the lowest point obtained so far. */
 
-            if (brackt && (*stp <= stmin || *stp >= stmax) || infoc == 0
-                || brackt && stmax - stmin <= xtol * stmax)
+            if ((brackt && (*stp <= stmin || *stp >= stmax)) || infoc == 0
+                || (brackt && stmax - stmin <= xtol * stmax))
               {
                 *stp = stx;
               }
@@ -256,7 +256,7 @@ namespace OPTPP
 
             /*    test for convergence. */
 
-            if (brackt && (*stp <= stmin || *stp >= stmax) || infoc == 0)
+            if ((brackt && (*stp <= stmin || *stp >= stmax)) || infoc == 0)
               {
                 info = -6; // CPJW 12/10/2003 original stmt info = 6
               }
@@ -434,7 +434,7 @@ namespace OPTPP
 
         /* check the input parameters for errors. */
 
-        if (*brackt && (*stp <= min(*stx, *sty) || *stp >= max(*stx, *sty))
+        if ((*brackt && (*stp <= min(*stx, *sty) || *stp >= max(*stx, *sty)))
             || *dx * (*stp - *stx) >= 0. || stpmax < stpmin)
           {
             return 0;

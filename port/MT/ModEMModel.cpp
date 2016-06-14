@@ -1,27 +1,29 @@
 //============================================================================
 // Name        : ModEMModel.cpp
 // Author      : 14 Jan 2016
-// Version     : 
+// Version     :
 // Copyright   : 2016, mm489
 //============================================================================
 
 #include "ModEMModel.h"
 
+using netCDF::NcFile;
+
 namespace jif3D
   {
 
     //! Write all model information to a netcdf file
-    void ModEMModel::WriteNetCDF(const std::string filename) const
+    void ModEMModel::WriteNetCDF(const std::string &filename) const
       {
-        NcFile DataFile(filename.c_str(), NcFile::Replace);
+        NcFile DataFile(filename, NcFile::replace);
         //write the 3D discretized part
         WriteDataToNetCDF(DataFile, ConductivityName, ConductivityUnit);
       }
     //! Read all model information from a netcdf file
-    void ModEMModel::ReadNetCDF(const std::string filename)
+    void ModEMModel::ReadNetCDF(const std::string &filename)
       {
         //create the netcdf file object
-        NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
+        NcFile DataFile(filename, NcFile::read);
         //read in the 3D gridded data
         ReadDataFromNetCDF(DataFile, ConductivityName, ConductivityUnit);
       }
@@ -32,16 +34,16 @@ namespace jif3D
           {
             ThreeDMTModel::operator=(source);
           }
+
+        return *this;
       }
+
     ModEMModel::ModEMModel()
       {
-        // TODO Auto-generated constructor stub
-
       }
 
     ModEMModel::~ModEMModel()
       {
-        // TODO Auto-generated destructor stub
       }
 
   } /* namespace jif3D */

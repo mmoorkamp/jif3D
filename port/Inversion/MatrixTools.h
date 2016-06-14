@@ -9,6 +9,7 @@
 #define MATRIXTOOLS_H_
 
 #include "../Global/VecMat.h"
+#include "../Global/Jif3DGlobal.h"
 
 /*! \file MatrixTools.h
  * This file includes a few mathematical operations on matrices
@@ -28,7 +29,7 @@ namespace jif3D
      * @return True if success, false otherwise
      */
     template<class InMatrix, class OutMatrix>
-    bool InvertMatrix(InMatrix& input, OutMatrix& inverse)
+    J3DEXPORT bool InvertMatrix(InMatrix& input, OutMatrix& inverse)
       {
         using namespace boost::numeric::ublas;
         typedef permutation_matrix<std::size_t> pmatrix;
@@ -50,7 +51,7 @@ namespace jif3D
         return true;
       }
     //! Calculate the determinant of a real square matrix
-    double Determinant(const jif3D::rmat &Matrix);
+    J3DEXPORT double Determinant(const jif3D::rmat &Matrix);
 
   /* @} */
   }

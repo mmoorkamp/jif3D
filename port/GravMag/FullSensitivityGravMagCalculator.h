@@ -9,6 +9,7 @@
 #define FULLSENSITIVITYGRAVITYCALCULATOR_H_
 
 #include "../Global/Serialization.h"
+#include "../Global/Jif3DGlobal.h"
 #include "../Global/FatalException.h"
 #include "CachedGravMagCalculator.h"
 
@@ -29,7 +30,7 @@ namespace jif3D
      * transformation. This is necessary to calculate correct gradients for transformed data.
      */
     template<class ThreeDModelType>
-    class FullSensitivityGravMagCalculator: public jif3D::CachedGravMagCalculator<
+    class J3DEXPORT FullSensitivityGravMagCalculator: public jif3D::CachedGravMagCalculator<
         ThreeDModelType>
       {
     private:

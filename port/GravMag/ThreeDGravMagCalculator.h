@@ -8,11 +8,12 @@
 #ifndef THREEDGRAVITYCALCULATOR_H_
 #define THREEDGRAVITYCALCULATOR_H_
 
-#include "../Global/Serialization.h"
-#include "../Global/FatalException.h"
-#include "ThreeDGravMagImplementation.h"
 #include <boost/shared_ptr.hpp>
 
+#include "../Global/Serialization.h"
+#include "../Global/FatalException.h"
+#include "../Global/Jif3DGlobal.h"
+#include "ThreeDGravMagImplementation.h"
 
 namespace jif3D
   {
@@ -45,7 +46,7 @@ namespace jif3D
      * is forwarded to the implementation object and all returned data and gradients will be with respect to this transformation.
      */
     template<class ThreeDModelType>
-    class ThreeDGravMagCalculator
+    class J3DEXPORT ThreeDGravMagCalculator
       {
     public:
       //! We want to use this class with the ThreeDObjective function class template, so we need to define ModelType as the class that contains the forward model

@@ -14,6 +14,7 @@
 #include <boost/shared_ptr.hpp>
 #include "ObjectiveFunction.h"
 #include "../Global/VecMat.h"
+#include "../Global/Jif3DGlobal.h"
 
 namespace jif3D
   {
@@ -30,7 +31,7 @@ namespace jif3D
      * The main method MakeStep performs a single optimization step.
      *
      */
-    class NonLinearOptimization
+    class J3DEXPORT NonLinearOptimization
       {
     private:
       //! Evaluate all necessary information for the current model

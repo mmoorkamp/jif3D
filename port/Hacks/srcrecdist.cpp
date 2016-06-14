@@ -1,15 +1,18 @@
 //============================================================================
 // Name        : srcrecdist.cpp
 // Author      : Oct 11, 2010
-// Version     : 
+// Version     :
 // Copyright   : 2010, mmoorkamp
 //============================================================================
 
+#include <netcdf>
 #include "../Global/VecMat.h"
 #include "../Global/FileUtil.h"
 #include "../Global/NetCDFTools.h"
 #include "../ModelBase/NetCDFModelTools.h"
 #include "../ModelBase/VTKTools.h"
+
+using netCDF::NcFile;
 
 int main()
   {
@@ -27,9 +30,9 @@ int main()
     static const std::string MeasPosYName = "MeasPosY";
     static const std::string MeasPosZName = "MeasPosZ";
 
-    std::string filename = jif3D::AskFilename("Filename: ");
+    const std::string filename = jif3D::AskFilename("Filename: ");
 
-    NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
+    NcFile DataFile(filename, NcFile::read);
     std::vector<double> SourcePosX, SourcePosY, SourcePosZ;
 
     //read the positions of the sources
@@ -55,8 +58,8 @@ int main()
     jif3D::ReadVec(DataFile, TravelTimeName, Data);
     const size_t ntimes = Data.size();
 
-    std::ofstream outfile((filename + ".diff.out").c_str());
-    std::ofstream pseudofile((filename + ".xyz").c_str());
+    std::ofstream outfile(filename + ".diff.out");
+    std::ofstream pseudofile(filename + ".xyz");
 
     double refx = 0.0;
     double refy = 0.0;

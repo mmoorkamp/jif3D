@@ -10,6 +10,8 @@
 #define LINEARINVERSION_H_
 
 #include "../Global/VecMat.h"
+#include "../Global/Jif3DGlobal.h"
+
 
 /*! \file LinearInversion.h
  * Linear inversion routines for general use.
@@ -30,7 +32,7 @@ namespace jif3D
     /*! This class implements the data space inversion method as described in
      * Siripunvaraporn and Egbert, Geophysics 65, 2000.
      */
-    class DataSpaceInversion
+    class J3DEXPORT DataSpaceInversion
       {
     public:
       void operator()(rmat &Sensitivities, rvec &Data, const rvec &WeightVector,
@@ -41,7 +43,7 @@ namespace jif3D
     /*! This class implements the model space inversion method as described in
      * Siripunvaraporn and Egbert, Geophysics 65, 2000.
      */
-    class ModelSpaceInversion
+    class J3DEXPORT ModelSpaceInversion
       {
     public:
       void operator()(rmat &Sensitivities, rvec &Data, const rvec &WeightVector,
@@ -52,7 +54,7 @@ namespace jif3D
     /*! This is an implementation of the classical Quasi-Newton inversion algorithm.
      * It is based on  the description in Tarrantolla eq. 6.319, page 216.
      */
-    class QuasiNewtonInversion
+    class J3DEXPORT QuasiNewtonInversion
       {
     public:
       void operator()(rmat &Sensitivities, rvec &Data, const rvec &WeightVector,

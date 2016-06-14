@@ -1,13 +1,14 @@
 //============================================================================
 // Name        : SetupDCCoupling.h
 // Author      : July 3, 2014
-// Version     : 
+// Version     :
 // Copyright   : 2014, zhanjieshi
 //============================================================================
 
 #ifndef SETUPDCCOUPLING_H_
 #define SETUPDCCOUPLING_H_
 
+#include "../Global/Jif3DGlobal.h"
 #include "../Inversion/ModelTransforms.h"
 #include "../Inversion/JointObjective.h"
 #include "../Regularization/RegularizationFunction.h"
@@ -32,7 +33,7 @@ namespace jif3D
      * the number of objective functions and the length of the model vector, the member functions
      * need information about most parts of the joint inversion.
      */
-    class SetupDCCoupling
+    class J3DEXPORT SetupDCCoupling
       {
     private:
       //! The transformation between generalized model parameters and slowness including selecting the right range from the model vector

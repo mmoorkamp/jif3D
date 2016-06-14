@@ -1,13 +1,12 @@
 //============================================================================
 // Name        : ThreeDMagneticModel.cpp
 // Author      : 11 Oct 2013
-// Version     : 
+// Version     :
 // Copyright   : 2013, mm489
 //============================================================================
 
 #include "ThreeDMagneticModel.h"
 #include <cassert>
-#include <netcdfcpp.h>
 #include <fstream>
 #include <iomanip>
 #include <iterator>

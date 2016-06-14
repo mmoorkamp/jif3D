@@ -9,6 +9,7 @@
 #define TENSORCUDAGRAVITYIMP_H_
 
 #include "../Global/Serialization.h"
+#include "../Global/Jif3DGlobal.h"
 #include "../Gravity/ThreeDGravityModel.h"
 #include "../GravMag/ThreeDGravMagImplementation.h"
 
@@ -31,7 +32,7 @@ namespace jif3D
      * This class cannot be copied as this would make a mess with management
      * of cuda resources.
      */
-    class TensorCudaGravityImp: public jif3D::ThreeDGravMagImplementation<ThreeDGravityModel>
+    class J3DEXPORT TensorCudaGravityImp: public jif3D::ThreeDGravMagImplementation<ThreeDGravityModel>
       {
     private:
       /*! These pointers hold the memory on the graphics card as allocated

@@ -1,7 +1,7 @@
 //============================================================================
 // Name        : X3DModel.cpp
 // Author      : Jul 2, 2009
-// Version     : 
+// Version     :
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
@@ -9,7 +9,12 @@
 #include "../Global/NumUtil.h"
 #include <cassert>
 #include <boost/numeric/conversion/cast.hpp>
+#include <netcdf>
+#include "../Global/NetCDFPortHelper.h"
 
+using netCDF::NcFile;
+using netCDF::NcVar;
+using netCDF::NcDim;
 
 namespace jif3D
   {
@@ -75,9 +80,9 @@ namespace jif3D
         return idx;
       }
 
-    void X3DModel::WriteNetCDF(const std::string filename) const
+    void X3DModel::WriteNetCDF(const std::string &filename) const
       {
-        NcFile DataFile(filename.c_str(), NcFile::Replace);
+        NcFile DataFile(filename, NcFile::replace);
         //first write the 3D discretized part
         WriteDataToNetCDF(DataFile, ConductivityName, ConductivityUnit);
         //if we have some background layers, write them as well
@@ -85,55 +90,69 @@ namespace jif3D
           {
             assert(bg_conductivities.size() == bg_thicknesses.size());
             //we just number layers from 0 to n-1
-            NcDim *BackgroundDim = DataFile.add_dim("bg_layers", bg_thicknesses.size());
-            NcVar *BackgroundVar = DataFile.add_var("bg_layers", ncDouble, BackgroundDim);
+            NcDim BackgroundDim = DataFile.addDim("bg_layers", bg_thicknesses.size());
+            NcVar BackgroundVar = DataFile.addVar("bg_layers", netCDF::ncDouble, BackgroundDim);
             //here we generate the indices for the layers
             std::vector<double> layerindex;
             std::generate_n(back_inserter(layerindex), bg_thicknesses.size(),
                 IntSequence(0));
-            BackgroundVar->put(&layerindex[0], layerindex.size());
-            BackgroundVar->add_att("long_name", "Layer Index");
+
+//            BackgroundVar.put(&layerindex[0], layerindex.size());
+            cxxport::put_legacy_ncvar(BackgroundVar, layerindex.data(), layerindex.size());
+            BackgroundVar.putAtt("long_name", "Layer Index");
             //now we can write the actual parameters for the layers
             //first layer conductivities
-            NcVar *bgCondVar = DataFile.add_var("bg_conductivities", ncDouble,
+            NcVar bgCondVar = DataFile.addVar("bg_conductivities", netCDF::ncDouble,
                 BackgroundDim);
-            bgCondVar->add_att("long_name", "Background Conductivities");
-            bgCondVar->add_att("units", ConductivityUnit.c_str());
-            bgCondVar->put(&bg_conductivities[0], bg_conductivities.size());
+            bgCondVar.putAtt("long_name", "Background Conductivities");
+            bgCondVar.putAtt("units", ConductivityUnit);
+//            bgCondVar.put(&bg_conductivities[0], bg_conductivities.size());
+            cxxport::put_legacy_ncvar(bgCondVar, bg_conductivities.data(), bg_conductivities.size());
+
             //and then layer thicknesses
-            NcVar *bgThickVar = DataFile.add_var("bg_thicknesses", ncDouble,
+            NcVar bgThickVar = DataFile.addVar("bg_thicknesses", netCDF::ncDouble,
                 BackgroundDim);
-            bgThickVar->add_att("long_name", "Background Thicknesses");
-            bgThickVar->add_att("units", "m");
-            bgThickVar->put(&bg_thicknesses[0], bg_thicknesses.size());
+            bgThickVar.putAtt("long_name", "Background Thicknesses");
+            bgThickVar.putAtt("units", "m");
+
+//            bgThickVar.put(&bg_thicknesses[0], bg_thicknesses.size());
+            cxxport::put_legacy_ncvar(bgThickVar, bg_thicknesses.data(), bg_thicknesses.size());
           }
       }
 
-    void X3DModel::ReadNetCDF(const std::string filename)
+    void X3DModel::ReadNetCDF(const std::string &filename)
       {
         //create the netcdf file object
-        NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
+        NcFile DataFile(filename, NcFile::read);
         //read in the 3D gridded data
         ReadDataFromNetCDF(DataFile, ConductivityName, ConductivityUnit);
 
         //change the error behaviour of the netcdf api
-        NcError err(NcError::silent_nonfatal);
-        //try to read the background data
-        NcDim *BackgroundDim = DataFile.get_dim("bg_layers");
-        //if we succeed
-        if (BackgroundDim)
-          {
-            //find out how many layers the background has
-            const int nbglayers = BackgroundDim->size();
-            //allocate memory
-            bg_thicknesses.assign(nbglayers, 0.0);
-            bg_conductivities.assign(nbglayers, 0.0);
-            //and read in from the file
-            NcVar *bgDensVar = DataFile.get_var("bg_conductivities");
-            NcVar *bgThickVar = DataFile.get_var("bg_thicknesses");
-            bgDensVar->get(&bg_conductivities[0], nbglayers);
-            bgThickVar->get(&bg_thicknesses[0], nbglayers);
-          }
+        try {
+          //try to read the background data
+          NcDim BackgroundDim = DataFile.getDim("bg_layers");
+          //if we succeed
+          if (!BackgroundDim.isNull())
+            {
+              //find out how many layers the background has
+              const int nbglayers = BackgroundDim.getSize();
+              //allocate memory
+              bg_thicknesses.assign(nbglayers, 0.0);
+              bg_conductivities.assign(nbglayers, 0.0);
+
+              //and read in from the file
+              NcVar bgDensVar = DataFile.getVar("bg_conductivities");
+              NcVar bgThickVar = DataFile.getVar("bg_thicknesses");
+
+//              bgDensVar.get(&bg_conductivities[0], nbglayers);
+//              bgThickVar.get(&bg_thicknesses[0], nbglayers);
+
+              cxxport::get_legacy_ncvar(bgDensVar, bg_conductivities.data(), nbglayers);
+              cxxport::get_legacy_ncvar(bgThickVar, bg_thicknesses.data(), nbglayers);
+            }
+        } catch(const netCDF::exceptions::NcException &ex) {
+          // ignore
+        }
       }
 
   }

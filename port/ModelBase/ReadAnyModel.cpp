@@ -19,7 +19,7 @@
 #include <boost/mpl/at.hpp>
 #include <boost/mpl/range_c.hpp>
 #include <boost/mpl/for_each.hpp>
-#include <netcdfcpp.h>
+#include <netcdf>
 #include <typeinfo>
 
 namespace jif3D
@@ -38,15 +38,17 @@ namespace jif3D
       template<typename U>
       void operator()(U x)
         {
-          NcError Error(NcError::silent_nonfatal);
           U test;
+
           try
             {
               test.ReadNetCDF(filename);
               Model = test;
-            } catch (jif3D::FatalException &e)
+            } catch (const jif3D::FatalException &e)
             {
-
+              // ignore
+            } catch(const netCDF::exceptions::NcException &ex) {
+              // ignore
             }
 
         }

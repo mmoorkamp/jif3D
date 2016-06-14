@@ -8,6 +8,7 @@
 #ifndef GRAVITYTRANSFORMS_H_
 #define GRAVITYTRANSFORMS_H_
 
+#include "../Global/Jif3DGlobal.h"
 #include "../Global/VectorTransform.h"
 #include "../Global/FatalException.h"
 
@@ -20,7 +21,7 @@ namespace jif3D
     /*! This transformation class takes the 9 elements of the FTG tensor as input and gives
      * the invariant I2 and its partial derivatives with respect to the tensor elements as output.
      */
-    class FTGInvariant: public VectorTransform
+    class J3DEXPORT FTGInvariant: public VectorTransform
       {
     private:
       //! we expect 9 tensor elements at each call

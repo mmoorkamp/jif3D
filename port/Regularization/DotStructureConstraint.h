@@ -8,6 +8,7 @@
 #ifndef DOTSTRUCTURECONSTRAINT_H_
 #define DOTSTRUCTURECONSTRAINT_H_
 
+#include "../Global/Jif3DGlobal.h"
 #include "../Global/Serialization.h"
 #include "../Inversion/ObjectiveFunction.h"
 #include "GradientRegularization.h"
@@ -15,7 +16,7 @@
 namespace jif3D
 {
 
-	class DotStructureConstraint: public jif3D::ObjectiveFunction
+	class J3DEXPORT DotStructureConstraint: public jif3D::ObjectiveFunction
 	{
 	private:
 		//! The object to calculate the spatial gradient for the first model

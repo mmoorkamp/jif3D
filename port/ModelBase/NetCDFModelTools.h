@@ -9,7 +9,8 @@
 #define NetCDFModelTools_H_
 
 #include <string>
-#include <netcdfcpp.h>
+#include <netcdf>
+#include "../Global/Jif3DGlobal.h"
 #include "ThreeDModelBase.h"
 
 /*! \file NetCDFModelTools.h
@@ -31,14 +32,14 @@ namespace jif3D
     //! The name used for the index of the measurements in netcdf files
     static const std::string StationNumberName = "StationNumber";
     //! Read a 3D model from netcdf, this is the preferred storage format
-    void Read3DModelFromNetCDF(const NcFile &NetCDFFile,
+    J3DEXPORT void Read3DModelFromNetCDF(const netCDF::NcFile &NetCDFFile,
         const std::string &DataName, const std::string &UnitsName,
         ThreeDModelBase::t3DModelDim &XCellSizes,
         ThreeDModelBase::t3DModelDim &YCellSizes,
         ThreeDModelBase::t3DModelDim &ZCellSizes,
         ThreeDModelBase::t3DModelData &Data);
     //! Write a 3D model to a netcdf file using an opened NcFile, this is the preferred storage format
-    void Write3DModelToNetCDF(NcFile &NetCDFFile, const std::string &DataName,
+    J3DEXPORT void Write3DModelToNetCDF(netCDF::NcFile &NetCDFFile, const std::string &DataName,
         const std::string &UnitsName,
         const ThreeDModelBase::t3DModelDim &XCellSizes,
         const ThreeDModelBase::t3DModelDim &YCellSizes,
@@ -52,12 +53,12 @@ namespace jif3D
         const ThreeDModelBase::t3DModelDim &ZCellSizes,
         const ThreeDModelBase::t3DModelData &Data)
       {
-        NcFile DataFile(filename.c_str(), NcFile::Replace);
+      netCDF::NcFile DataFile(filename, netCDF::NcFile::replace);
         Write3DModelToNetCDF(DataFile, DataName, UnitsName, XCellSizes,
             YCellSizes, ZCellSizes, Data);
       }
     //! A helper function that reads only measurement positions from a netcdf file regardless of data type
-    void ReadMeasPosNetCDF(const std::string filename,
+    J3DEXPORT void ReadMeasPosNetCDF(const std::string &filename,
         ThreeDModelBase::tMeasPosVec &PosX, ThreeDModelBase::tMeasPosVec &PosY,
         ThreeDModelBase::tMeasPosVec &PosZ);
 

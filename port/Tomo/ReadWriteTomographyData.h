@@ -9,8 +9,10 @@
 #define READWRITETOMOGRAPHYDATA_H_
 
 #include <fstream>
-#include "ThreeDSeismicModel.h"
+
 #include "../Global/VecMat.h"
+#include "../Global/Jif3DGlobal.h"
+#include "ThreeDSeismicModel.h"
 #include "tomo_types.h"
 
 namespace jif3D
@@ -25,7 +27,7 @@ namespace jif3D
      * @param The error of the traveltimes
      * @param Model The model object containing information about the source and receiver setup
      */
-    void SaveTraveltimes(const std::string &filename, const jif3D::rvec &Data,
+    J3DEXPORT void SaveTraveltimes(const std::string &filename, const jif3D::rvec &Data,
         const jif3D::rvec &Error, const jif3D::ThreeDSeismicModel &Model);
     //!Read a collection of travel times and associated positions from a netcdf file
     /*! Read traveltimes together with the source receiver configuration from a netcdf file.
@@ -35,7 +37,7 @@ namespace jif3D
      * @param The error of the traveltimes
      * @param Model The model object containing information about the source and receiver setup
      */
-    void ReadTraveltimes(const std::string &filename, jif3D::rvec &Data,
+    J3DEXPORT void ReadTraveltimes(const std::string &filename, jif3D::rvec &Data,
         jif3D::rvec &Error, jif3D::ThreeDSeismicModel &Model);
 
     //! Plot the travel time field, i.e. the travel time at each grid cell in a vtk file
@@ -49,7 +51,7 @@ namespace jif3D
      * @param nz The number of cells in z-direction
      */
     template<typename floattype>
-    void PlotTimeField(const std::string &filename, const floattype *Times,
+    J3DEXPORT void PlotTimeField(const std::string &filename, const floattype *Times,
         const double gridspacing, const size_t nx, const size_t ny, const size_t nz)
       {
         std::ofstream outfile(filename.c_str());
@@ -85,7 +87,7 @@ namespace jif3D
      * @param minxindex The shift in number of grid cells between the actual model and the forward grid in x-direction
      * @param minyindex The shift in number of grid cells between the actual model and the forward grid in y-direction
      */
-    void PlotRaypath(const std::string &filename, std::vector<RP_STRUCT> &raypath,
+    J3DEXPORT void PlotRaypath(const std::string &filename, std::vector<RP_STRUCT> &raypath,
         const size_t nmeas, const double gridspacing, const size_t nairlayers, int minxindex, int minyindex);
   /* @} */
   }

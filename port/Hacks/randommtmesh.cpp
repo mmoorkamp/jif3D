@@ -18,6 +18,7 @@
 #include <boost/program_options.hpp>
 #include "../Global/FileUtil.h"
 #include "../Global/convert.h"
+#include "../Global/Jif3DPlatformHelper.h"
 #include "../MT/X3DModel.h"
 #include "../MT/X3DMTCalculator.h"
 #include "../MT/ReadWriteImpedances.h"
@@ -92,7 +93,7 @@ int main(int argc, char *argv[])
     std::cin >> phase2cond;
     std::cout << "Fraction Phase 1: ";
     std::cin >> phase1frac;
-    srand48(time(0));
+    jif3D::platform::srand48((unsigned int)time(NULL));
     double frequency;
     std::cout << "Frequency [Hz] : ";
     std::cin >> frequency;
@@ -122,7 +123,7 @@ int main(int argc, char *argv[])
     std::ofstream zyy((OutFilename + "_zyy.out").c_str());
 
 #pragma omp parallel for shared(Model, zxy, zyx, zxx, zyy)
-    for (size_t nreal = 0; nreal < nrealmax; ++nreal)
+    for (int nreal = 0; nreal < nrealmax; ++nreal)
       {
         jif3D::X3DModel RealModel(Model);
         for (size_t i = 0; i < nx; ++i)
@@ -132,7 +133,7 @@ int main(int argc, char *argv[])
                 RealModel.SetConductivities()[i][j][0] = bg_conductivity;
                 for (size_t k = 1; k < nz; ++k)
                   {
-                    if (drand48() < phase1frac)
+                    if (jif3D::platform::drand48() < phase1frac)
                       {
                         RealModel.SetConductivities()[i][j][k] = phase1cond;
                       }

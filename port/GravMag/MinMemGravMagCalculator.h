@@ -8,8 +8,9 @@
 #ifndef MINMEMGRAVITYCALCULATOR_H_
 #define MINMEMGRAVITYCALCULATOR_H_
 
-#include "../Global/Serialization.h"
 #include <boost/shared_ptr.hpp>
+#include "../Global/Jif3DGlobal.h"
+#include "../Global/Serialization.h"
 #include "ThreeDGravMagCalculator.h"
 
 namespace jif3D
@@ -22,7 +23,7 @@ namespace jif3D
      * or if the model is so big that the sensitivity matrix cannot be stored in memory or on disk any more.
      */
     template<class ThreeDModelType>
-    class MinMemGravMagCalculator: public jif3D::ThreeDGravMagCalculator<ThreeDModelType>
+    class J3DEXPORT MinMemGravMagCalculator: public jif3D::ThreeDGravMagCalculator<ThreeDModelType>
       {
     private:
       friend class access;

@@ -1,13 +1,14 @@
 //============================================================================
 // Name        : SaltRelConstraint.h
 // Author      : May 3, 2011
-// Version     : 
+// Version     :
 // Copyright   : 2011, mmoorkamp
 //============================================================================
 
 #ifndef SALTRELCONSTRAINT_H_
 #define SALTRELCONSTRAINT_H_
 
+#include "../Global/Jif3DGlobal.h"
 #include "../Inversion/ObjectiveFunction.h"
 #include "../Inversion/ModelTransforms.h"
 #include "../Tomo/ThreeDSeismicModel.h"
@@ -19,7 +20,7 @@ namespace jif3D
     static const double saltres = 500.0;
     static const double saltdens = 2.2;
 
-    class SaltRelConstraint: public jif3D::ObjectiveFunction
+    class J3DEXPORT SaltRelConstraint : public jif3D::ObjectiveFunction
       {
     private:
       jif3D::ThreeDSeismicModel Geometry;

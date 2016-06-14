@@ -5,11 +5,15 @@
 // Copyright   : 2008, MM
 //============================================================================
 
-#include <netcdfcpp.h>
+#include <netcdf>
 #include "ReadWriteMagneticData.h"
 #include "../Global/NumUtil.h"
 #include "../Global/NetCDFTools.h"
 #include "../ModelBase/NetCDFModelTools.h"
+
+using netCDF::NcFile;
+using netCDF::NcVar;
+using netCDF::NcDim;
 
 namespace jif3D
   {
@@ -28,11 +32,14 @@ namespace jif3D
 
     //! Write one component of the magnetic field for all measurement positions
     void WriteMagComp(NcFile &NetCDFFile, const std::string &CompName, const rvec &MatVec,
-        const size_t n, NcDim *Dimension)
+        const size_t n, NcDim &Dimension)
       {
         rvec tempdata(MatVec.size() / 3);
         for (size_t i = 0; i < tempdata.size(); ++i)
+        {
           tempdata(i) = MatVec(i * 3 + n);
+        }
+
         WriteVec(NetCDFFile, CompName, tempdata, Dimension, "1/s2");
       }
 
@@ -73,9 +80,9 @@ namespace jif3D
             std::fill(LocalError.begin(), LocalError.end(), 0.0);
           }
         //create a netcdf file
-        NcFile DataFile(filename.c_str(), NcFile::Replace);
+        NcFile DataFile(filename, NcFile::replace);
         //we use the station number as a dimension
-        NcDim *StatNumDim = DataFile.add_dim(StationNumberName.c_str(), Data.size());
+        NcDim StatNumDim = DataFile.addDim(StationNumberName, Data.size());
 
         //write out the measurement coordinates
         WriteVec(DataFile, MeasPosXName, PosX, StatNumDim, "m");
@@ -99,21 +106,26 @@ namespace jif3D
         ThreeDMagneticModel::tMeasPosVec &PosY, ThreeDMagneticModel::tMeasPosVec &PosZ,
         jif3D::rvec &Error)
       {
-        NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
+        NcFile DataFile(filename, NcFile::read);
+
         ReadVec(DataFile, MeasPosXName, PosX);
         ReadVec(DataFile, MeasPosYName, PosY);
         ReadVec(DataFile, MeasPosZName, PosZ);
         ReadVec(DataFile, TotalFieldName, Data);
-        NcError NetCDFError(NcError::silent_nonfatal);
-        if (DataFile.get_var(TotalFieldErrorName.c_str()) != nullptr)
-          {
-            ReadVec(DataFile, TotalFieldErrorName, Error);
-          }
-        else
-          {
-            Error.resize(Data.size());
-            Error.clear();
-          }
+
+        try {
+          if (!DataFile.getVar(TotalFieldErrorName).isNull())
+            {
+              ReadVec(DataFile, TotalFieldErrorName, Error);
+            }
+          else
+            {
+              Error.resize(Data.size());
+              Error.clear();
+            }
+        } catch(netCDF::exceptions::NcException &ex) {
+          // ignore
+        }
       }
 
     /*! Read each magnetic field component and their position to a netcdf file. Data will have
@@ -129,10 +141,12 @@ namespace jif3D
         ThreeDMagneticModel::tMeasPosVec &PosX, ThreeDMagneticModel::tMeasPosVec &PosY,
         ThreeDMagneticModel::tMeasPosVec &PosZ, jif3D::rvec &Error)
       {
-        NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
+        NcFile DataFile(filename, NcFile::read);
+
         ReadVec(DataFile, MeasPosXName, PosX);
         ReadVec(DataFile, MeasPosYName, PosY);
         ReadVec(DataFile, MeasPosZName, PosZ);
+
         assert(PosX.size() == PosY.size());
         assert(PosX.size() == PosZ.size());
 
@@ -143,16 +157,17 @@ namespace jif3D
           {
             ReadMagComp(DataFile, ComponentNames.at(i), Data, i);
           }
+        try {
         for (size_t i = 0; i < 3; ++i)
           {
-            NcError NetCDFError(NcError::silent_nonfatal);
-
-            if (DataFile.get_var(ComponentErrorNames.at(i).c_str()) != nullptr)
+            if (!DataFile.getVar(ComponentErrorNames.at(i)).isNull())
               {
                 ReadMagComp(DataFile, ComponentErrorNames.at(i), Error, i);
               }
           }
-
+        } catch(const netCDF::exceptions::NcException &ex) {
+          // ignore
+        }
       }
 
     /*! Write each magnetic field component and their position to a netcdf file. Data has to have
@@ -175,13 +190,14 @@ namespace jif3D
         assert(nmeas == PosZ.size());
         assert(nmeas * 3 == Data.size());
 
-        NcFile DataFile(filename.c_str(), NcFile::Replace);
+        NcFile DataFile(filename, NcFile::replace);
         //create a dimension for the stations
-        NcDim *StatNumDim = DataFile.add_dim(StationNumberName.c_str(), nmeas);
+        NcDim StatNumDim = DataFile.addDim(StationNumberName.c_str(), nmeas);
        //write out the measurement positions
         WriteVec(DataFile, MeasPosXName, PosX, StatNumDim, "m");
         WriteVec(DataFile, MeasPosYName, PosY, StatNumDim, "m");
         WriteVec(DataFile, MeasPosZName, PosZ, StatNumDim, "m");
+
         //write the three components of the Magnetic field
         for (size_t i = 0; i < 3; ++i)
           {

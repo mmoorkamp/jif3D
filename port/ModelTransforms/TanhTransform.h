@@ -8,8 +8,10 @@
 #ifndef TANHTRANSFORM_H_
 #define TANHTRANSFORM_H_
 
-#include "../Global/Serialization.h"
 #include <boost/math/special_functions/atanh.hpp>
+
+#include "../Global/Jif3DGlobal.h"
+#include "../Global/Serialization.h"
 #include "GeneralModelTransform.h"
 
 namespace jif3D
@@ -26,7 +28,7 @@ namespace jif3D
      * the two bounds. Note that with this transform the maximum and minimum values will be mapped to infinity
      * so in practice \f$ m_min < m < m_max \f$.
      */
-    class TanhTransform: public jif3D::GeneralModelTransform
+    class J3DEXPORT TanhTransform: public jif3D::GeneralModelTransform
       {
     private:
       //! The minimum value for the physical model parameters

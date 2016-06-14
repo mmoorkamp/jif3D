@@ -8,6 +8,7 @@
 #ifndef NORMALIZETRANSFORMS_H_
 #define NORMALIZETRANSFORMS_H_
 
+#include "../Global/Jif3DGlobal.h"
 #include "../Global/Serialization.h"
 #include "GeneralModelTransform.h"
 
@@ -22,7 +23,7 @@ namespace jif3D
      * This makes the model parameters dimensionless and, at least in the beginning, on the
      * order of unity therefore helping to avoid problems with greatly varying magnitudes.
      */
-    class NormalizeTransform: public jif3D::GeneralModelTransform
+    class J3DEXPORT NormalizeTransform: public jif3D::GeneralModelTransform
       {
     private:
       //! The Reference model we devide the model parameters by

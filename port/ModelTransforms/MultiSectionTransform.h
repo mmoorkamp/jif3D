@@ -10,8 +10,11 @@
 
 #include <numeric>
 #include <vector>
-#include "../Global/Serialization.h"
+
 #include <boost/shared_ptr.hpp>
+
+#include "../Global/Jif3DGlobal.h"
+#include "../Global/Serialization.h"
 #include "../Global/FatalException.h"
 #include "GeneralModelTransform.h"
 
@@ -31,7 +34,7 @@ namespace jif3D
      * of sections. In principle each section can have a different length n1, n2, ... and the resulting
      * transformed vector will have length n1+n2+...
      */
-    class MultiSectionTransform: public jif3D::GeneralModelTransform
+    class J3DEXPORT MultiSectionTransform: public jif3D::GeneralModelTransform
       {
     private:
       //! The length of the model vector containing the full model

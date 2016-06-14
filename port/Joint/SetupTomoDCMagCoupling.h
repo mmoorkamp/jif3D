@@ -1,13 +1,14 @@
 //============================================================================
 // Name        : SetupTomoDCMagCoupling.h
 // Author      : August 3, 2014
-// Version     : 
+// Version     :
 // Copyright   : 2014, zhanjie
 //============================================================================
 
 #ifndef SETUPTOMODCMAGCOUPLING_H_
 #define SETUPTOMODCMAGCOUPLING_H_
 
+#include "../Global/Jif3DGlobal.h"
 #include "../Inversion/ModelTransforms.h"
 #include "../Inversion/JointObjective.h"
 #include "../Regularization/RegularizationFunction.h"
@@ -29,7 +30,7 @@ namespace jif3D
     /*! This class sets up how the tomo, dcresistivity and magnetic methods are connected within the joint inversion.
      * Currently, only cross gradient coupling is used.
      */
-    class SetupTomoDCMagCoupling
+    class J3DEXPORT SetupTomoDCMagCoupling
       {
     private:
       //! The transformation between generalized model parameters and slowness including selecting the right range from the model vector

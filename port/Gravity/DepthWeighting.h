@@ -9,6 +9,7 @@
 #define DEPTHWEIGHTING_H_
 
 #include "ThreeDGravityModel.h"
+#include "../Global/Jif3DGlobal.h"
 
 namespace jif3D
   {
@@ -20,7 +21,7 @@ namespace jif3D
      * \f$ (z-z_0)^n \f$ and its derivatives. For scalar data we choose \f$n=-2\f$ and fit \f$ z_0\f$ so we match
      * the decay of the kernel with depth.
      */
-    class WeightingTerm
+    class J3DEXPORT WeightingTerm
       {
     private:
       //! The exponent in the depth weighting, should match the decay of the sensitivities
@@ -40,12 +41,12 @@ namespace jif3D
       };
 
     //! Given the values of the sensitivity kernel with depth, find z0 that matches the decay
-    double FitZ0(const jif3D::rvec &SensProfile,
+    J3DEXPORT double FitZ0(const jif3D::rvec &SensProfile,
         const ThreeDModelBase::t3DModelDim &ZSizes,
         const jif3D::WeightingTerm &WeightFunction);
 
     //! Given a z0 and the model geometry, construct a vector of weights
-    void ConstructDepthWeighting(const ThreeDModelBase::t3DModelDim &ZSizes,
+    J3DEXPORT void ConstructDepthWeighting(const ThreeDModelBase::t3DModelDim &ZSizes,
         const double z0, rvec &WeightVector, const jif3D::WeightingTerm &WeightFunction);
 
     //! Extract sensitivities for a site that is closest to the middle of the modeling domain
@@ -58,7 +59,7 @@ namespace jif3D
      * @param SensProfile The depth profile of the sensitivity below the site
      */
     template<class ModelType>
-    void ExtractMiddleSens(const ModelType &Model, const jif3D::rmat &Sensitivities,
+    J3DEXPORT void ExtractMiddleSens(const ModelType &Model, const jif3D::rmat &Sensitivities,
         const size_t MeasPerPos, jif3D::rvec &SensProfile)
       {
         const size_t nmeas = Model.GetMeasPosX().size();
@@ -97,7 +98,7 @@ namespace jif3D
       }
 
     template<class ModelType, class CalculatorType>
-    void CalculateMiddleSens(const ModelType &Model, CalculatorType Calculator,
+    J3DEXPORT void CalculateMiddleSens(const ModelType &Model, CalculatorType Calculator,
         jif3D::rvec &SensProfile)
       {
         ModelType LocalModel(Model);

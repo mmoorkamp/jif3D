@@ -9,15 +9,17 @@
 #define DISKGRAVITYCALCULATOR_H_
 
 #include <fstream>
-#include "../Global/Serialization.h"
 #include <boost/filesystem.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/filesystem.hpp>
+#include "../Global/Serialization.h"
+#include "../Global/Jif3DGlobal.h"
 #include "../Global/convert.h"
 #include "../Global/VecMat.h"
 #include "../Global/FatalException.h"
+#include "../Global/Jif3DPlatformHelper.h"
 #include "FullSensitivityGravMagCalculator.h"
 
 namespace jif3D
@@ -28,7 +30,7 @@ namespace jif3D
      * of the ID of the program and the memory location of the object and therefore should be unique.
      */
     template<class ThreeDModelType>
-    class DiskGravMagCalculator: public jif3D::FullSensitivityGravMagCalculator<
+    class J3DEXPORT DiskGravMagCalculator: public jif3D::FullSensitivityGravMagCalculator<
         ThreeDModelType>
       {
     private:
@@ -75,7 +77,9 @@ namespace jif3D
         //make a unique filename for the sensitivity file created by this object
         //we use boost uuid to generate a unique identifier tag
         //and translate it to a string to generate the filename
-        return "grav" + jif3D::stringify(getpid()) + jif3D::stringify(tag);
+        return "grav"
+			+ jif3D::stringify(jif3D::platform::get_process_id())
+			+ jif3D::stringify(tag);
       }
 
     template<class ThreeDModelType>

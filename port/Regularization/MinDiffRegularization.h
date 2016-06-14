@@ -8,6 +8,7 @@
 #ifndef MINDIFFREGULARIZATION_H_
 #define MINDIFFREGULARIZATION_H_
 
+#include "../Global/Jif3DGlobal.h"
 #include "../Global/Serialization.h"
 #include "MatOpRegularization.h"
 
@@ -21,7 +22,7 @@ namespace jif3D
      * model is specified it is assumed to be zero and therefore the smallest model
      * is sought.
      */
-    class MinDiffRegularization: public MatOpRegularization
+    class J3DEXPORT MinDiffRegularization: public MatOpRegularization
       {
     private:
       //! For simplicity in the class hierarchy we use a matrix to calculate the difference

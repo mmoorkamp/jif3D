@@ -9,6 +9,8 @@
 #define THREEDSEISMICMODEL_H_
 
 #include <cassert>
+
+#include "../Global/Jif3DGlobal.h"
 #include "../Global/Serialization.h"
 #include "../Global/FatalException.h"
 #include "../ModelBase/ThreeDModelBase.h"
@@ -40,7 +42,7 @@ namespace jif3D
      * We therefore have an additional function AddMeasurementConfiguration that takes the index of the source and receiver for an individual measurement.
      *
      */
-    class ThreeDSeismicModel: public jif3D::ThreeDModelBase
+    class J3DEXPORT ThreeDSeismicModel: public jif3D::ThreeDModelBase
       {
     public:
       typedef TomoExtraParameterSetter ExtraParameterSetter;
@@ -189,9 +191,9 @@ namespace jif3D
           ThreeDModelBase::WriteVTK(filename, "Slowness");
         }
       //! Write the seimic model and all associated information in a netcdf file
-      virtual void WriteNetCDF(const std::string filename) const;
+      virtual void WriteNetCDF(const std::string &filename) const;
       //! Read the seismic model and all associated information from a netcdf file
-      virtual void ReadNetCDF(const std::string filename, bool checkgrid = false);
+      virtual void ReadNetCDF(const std::string &filename, bool checkgrid = false);
       ThreeDSeismicModel();
       //! We define our own copy constructor
       ThreeDSeismicModel(const ThreeDSeismicModel &source);

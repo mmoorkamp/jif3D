@@ -8,10 +8,11 @@
 //check the quadratic interpolation routine
 #define BOOST_TEST_MODULE Interpolation test
 #define BOOST_TEST_MAIN ...
-#include <boost/test/included/unit_test.hpp>
+#include "Jif3DTesting.h"
 #include <stdlib.h>
 #include "Interpolate.h"
 #include <boost/test/floating_point_comparison.hpp>
+#include "Jif3DPlatformHelper.h"
 
 BOOST_AUTO_TEST_SUITE( Interpolation_Test_Suite )
 
@@ -23,9 +24,9 @@ BOOST_AUTO_TEST_CASE(basic_quad_inter)
         for (size_t i = 0; i < tries; ++i)
           {
             //generate some coefficients
-            double a = drand48();
-            double b = drand48();
-            double c = drand48();
+            double a = jif3D::platform::drand48();
+            double b = jif3D::platform::drand48();
+            double c = jif3D::platform::drand48();
             //calculate the true minimum
             double min = -b / (2.0 * a);
             //evaluate the function at a few points

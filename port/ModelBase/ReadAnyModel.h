@@ -8,14 +8,15 @@
 #ifndef READANYMODEL_H_
 #define READANYMODEL_H_
 
-#include "../ModelBase/ThreeDModelBase.h"
 #include <string>
+
 #include <boost/shared_ptr.hpp>
 
+#include "../Global/Jif3DGlobal.h"
+#include "../ModelBase/ThreeDModelBase.h"
 
 namespace jif3D
   {
-    boost::shared_ptr<jif3D::ThreeDModelBase> ReadAnyModel(const std::string &Filename);
-
+  J3DEXPORT boost::shared_ptr<jif3D::ThreeDModelBase> ReadAnyModel(const std::string &Filename);
   }
 #endif /* READANYMODEL_H_ */

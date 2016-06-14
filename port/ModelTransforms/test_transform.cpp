@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include "../Inversion/ModelTransforms.h"
 #include "../Gravity/ThreeDGravityModel.h"
+#include "../Global/Jif3DPlatformHelper.h"
 
 /*!
  * \file test_transform.cpp
@@ -27,7 +28,7 @@
 void TestTransform(const jif3D::GeneralModelTransform &Transform, const size_t nelements,
     const double min = 2.0, const double max = 3.0)
   {
-    srand48(time(NULL));
+    jif3D::platform::srand48((unsigned int)time(NULL));
     jif3D::rvec Physical(nelements), Generalized(nelements), Derivative(nelements), One(
         nelements);
     //some transforms assume the normal ranges for seismic velocities or densities
@@ -35,7 +36,7 @@ void TestTransform(const jif3D::GeneralModelTransform &Transform, const size_t n
     //otherwise everything is random
     for (size_t i = 0; i < nelements; ++i)
       {
-        Physical(i) = min + (max - min) * drand48();
+        Physical(i) = min + (max - min) * jif3D::platform::drand48();
         Derivative(i) = drand48() - 1.0;
       }
     //first we check whether backwards and forwards transformation produces
@@ -74,7 +75,7 @@ BOOST_AUTO_TEST_SUITE (Transform_Test_Suite)
         //generate a random input vector
         const size_t nelements = 5 + rand() % 100;
         jif3D::rvec Input(nelements);
-        std::generate(Input.begin(), Input.end(), drand48);
+        std::generate(Input.begin(), Input.end(), jif3D::platform::drand48);
         //for this particular transform each transformation
         //direction should always return the original result
         jif3D::rvec Output1(CTrans.GeneralizedToPhysical(Input));
@@ -97,7 +98,7 @@ BOOST_AUTO_TEST_SUITE (Transform_Test_Suite)
         //old loop
         for (size_t i = 0; i < nelements; ++i)
           {
-            Reference(i) = 2.0 + drand48();
+            Reference(i) = 2.0 + jif3D::platform::drand48();
           }
         TestTransform(jif3D::NormalizeTransform(Reference), nelements);
       }
@@ -109,7 +110,7 @@ BOOST_AUTO_TEST_SUITE (Transform_Test_Suite)
         jif3D::rvec Reference(nelements);
         for (size_t i = 0; i < nelements; ++i)
           {
-            Reference(i) = 2.0 + drand48();
+            Reference(i) = 2.0 + jif3D::platform::drand48();
           }
         TestTransform(jif3D::LogTransform(Reference), nelements);
       }
@@ -221,7 +222,7 @@ BOOST_AUTO_TEST_SUITE (Transform_Test_Suite)
         jif3D::rvec Reference(nelements);
         for (size_t i = 0; i < nelements; ++i)
           {
-            Reference(i) = 2.0 + drand48();
+            Reference(i) = 2.0 + jif3D::platform::drand48();
           }
         //test the chaining of several transformations
         //here we prepend consecutive transforms, i.e.

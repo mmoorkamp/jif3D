@@ -14,6 +14,7 @@
 #include <cassert>
 #include <vector>
 #include <boost/shared_ptr.hpp>
+#include "../Global/Jif3DGlobal.h"
 
 
 namespace jif3D
@@ -31,7 +32,7 @@ namespace jif3D
      * function in the inversion that perform the concrete transformation.
      *
      */
-    class ModelDistributor
+    class J3DEXPORT ModelDistributor
       {
     public:
       ModelDistributor() :

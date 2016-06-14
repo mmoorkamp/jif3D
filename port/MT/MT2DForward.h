@@ -8,7 +8,10 @@
 
 #ifndef MT2DFORWARD_H_
 #define MT2DFORWARD_H_
+
 #include <boost/multi_array.hpp>
+
+#include "../Global/Jif3DGlobal.h"
 
 namespace jif3D
   {
@@ -20,7 +23,7 @@ namespace jif3D
      * by P. Tarits. It only contains some very basic features
      * as it is not actively used at the moment.
      */
-    class MT2DForward
+    class J3DEXPORT MT2DForward
       {
     public:
       typedef boost::multi_array<double, 1> t2DModelDim;

@@ -9,6 +9,7 @@
 #define GENERALMODELTRANSFORM_H_
 
 #include "../Global/Serialization.h"
+#include "../Global/Jif3DGlobal.h"
 #include "../Global/VecMat.h"
 
 namespace jif3D
@@ -21,7 +22,7 @@ namespace jif3D
      * concrete physical parameters that each method works with. This base class provides the interface for all function objects
      * that implement such a transformation.
      */
-    class GeneralModelTransform
+    class J3DEXPORT GeneralModelTransform
       {
     private:
       friend class access;

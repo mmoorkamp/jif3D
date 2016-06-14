@@ -4,7 +4,7 @@ lib gravity : ThreeDGravityModel.cpp DepthWeighting.cpp
               ScalarOMPGravityImp.cpp  TensorOMPGravityImp.cpp
                  ReadWriteGravityData.cpp
                  ../Global//global  ../ModelBase//modelbase ../Inversion//lininv
-                 ..//boost_core
+                 ..//boost_core ..//netcdf ..//netcdf_c++ 
               : <hpx>off:<source>GravityInterface.cpp
                 <gpu>on:<source>TensorCudaGravityImp.cpp 
                 <gpu>on:<source>ScalarCudaGravityImp.cpp
@@ -12,14 +12,14 @@ lib gravity : ThreeDGravityModel.cpp DepthWeighting.cpp
                 <gpu>on:<source>gravcuda.cu ;
                
                     
-alias core :  ../ModelBase//modelbase ../Global//global ..//netcdf_c++ ..//netcdf  ..//boost_core ;
+alias core :  ../ModelBase//modelbase ../Global//global ;
 
 unit-test Model_test : test_ThreeDGravityModel.cpp gravity core  ;
 unit-test scalar_test : test_ScalarCalculation.cpp gravity core  ;
 unit-test tensor_test : test_TensorCalculation.cpp gravity core  ;
 unit-test gravity_objective_test : test_GravityObjective.cpp gravity core ../Inversion//inversion  ;
-unit-test transform_test : test_transforms.cpp  gravity core ..//vecopt  ;
-unit-test R_test : test_Rinterface.cpp gravity core ..//vecopt  ;
+#unit-test transform_test : test_transforms.cpp  gravity core ..//vecopt  ;
+#unit-test R_test : test_Rinterface.cpp gravity core ..//vecopt  ;
 # unit-test weighting_test : test_weighting.cpp DepthWeighting.cpp  gravity  ../Inversion//inversion core   ;
 unit-test readwrite_test : test_readwritedata.cpp gravity  ../Inversion//inversion core   ;
 

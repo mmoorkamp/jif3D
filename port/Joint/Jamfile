@@ -4,7 +4,7 @@ import testing ;
 alias joint : ../Tomo//tomo ../Gravity//gravity ../Magnetics//magnetics ../MT//mt 
               ../Inversion//inversion ../Global//global ../Regularization//regularization 
               ../ModelBase//modelbase
-              ..//boost_core ../ModelBase//anymodel :
+              ..//netcdf ..//netcdf_c++ ../ModelBase//anymodel :
               <eigen>on:<library>../DCResistivity//dcresistivity ;
 	
 lib setup : SaltRelConstraint.cpp SetupGravity.cpp SetupMagnetics.cpp SetupMagneticGrad.cpp
@@ -14,6 +14,6 @@ lib setup : SaltRelConstraint.cpp SetupGravity.cpp SetupMagnetics.cpp SetupMagne
 
 
 unit-test saltrel_test :  test_saltrel_objective.cpp joint setup  ;
-exe jointinv : jointinv.cpp  joint setup    ;
-exe jointinvtomodcmag : jointinvtomodcmag.cpp ../DCResistivity//dcresistivity joint setup ..//netcdf_c++ : <eigen>off:<build>no  ;
+exe jointinv : jointinv.cpp  joint setup  ;
+exe jointinvtomodcmag : jointinvtomodcmag.cpp ../DCResistivity//dcresistivity joint setup ..//netcdf ..//netcdf_c++ : <eigen>off:<build>no  ;
 

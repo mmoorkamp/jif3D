@@ -5,14 +5,14 @@
 // Copyright   : 2008, mmoorkamp
 //============================================================================
 
-
 #ifndef BASICGRAVELEMENTS_H_
 #define BASICGRAVELEMENTS_H_
 
+#include <boost/math/constants/constants.hpp>
 
 #include "../Global/VecMat.h"
 #include "../Global/NumUtil.h"
-#include <boost/math/constants/constants.hpp>
+#include "../Global/Jif3DGlobal.h"
 
 namespace jif3D
   {
@@ -22,29 +22,29 @@ namespace jif3D
     static const double Grav_const = 6.67428e-8; // in units cm^3/g s
 
     //! Calculate the geometric term for scalar gravity for a rectangular prism
-    double CalcGravBoxTerm(const double meas_x, const double meas_y,
+    J3DEXPORT double CalcGravBoxTerm(const double meas_x, const double meas_y,
         const double meas_z, const double ul_corner_x,
         const double ul_corner_y, const double ul_corner_z,
         const double x_size, const double y_size, const double z_size);
 
     //! Calculate the geometric part of the gravimetry matrix for a single rectangular prism
-    rmat CalcTensorBoxTerm(const double meas_x,
+    J3DEXPORT rmat CalcTensorBoxTerm(const double meas_x,
         const double meas_y, const double meas_z, const double ul_corner_x,
         const double ul_corner_y, const double ul_corner_z,
         const double x_size, const double y_size, const double z_size);
     //! Calculate the Uxx geometric term for a single rectangular prism, is also used for the other diagonal elements with permuted arguments
-    double CalcUxxTerm(const double meas_x, const double meas_y,
+    J3DEXPORT double CalcUxxTerm(const double meas_x, const double meas_y,
         const double meas_z, const double ul_corner_x,
         const double ul_corner_y, const double ul_corner_z,
         const double x_size, const double y_size, const double z_size);
     //! Calculate the Uxy geometric term for a single rectangular prism, is also used for the other off-diagonal elements with permuted arguments
-    double CalcUxyTerm(const double meas_x, const double meas_y,
+    J3DEXPORT double CalcUxyTerm(const double meas_x, const double meas_y,
         const double meas_z, const double ul_corner_x,
         const double ul_corner_y, const double ul_corner_z,
         const double x_size, const double y_size, const double z_size);
 
     //! Calculate the scalar geometric term for gravitational acceleration of an semi-infinite slab
-    double CalcGravSemiInfSheet(const double hor_dist, const double ver_dist,
+    J3DEXPORT double CalcGravSemiInfSheet(const double hor_dist, const double ver_dist,
         const double thick, const double density);
 
     //! Calculate the scalar geometric term for gravitational acceleration of an infinite slab

@@ -1,9 +1,6 @@
 import testing ; 
 
-
-               
-                    
 exe grav_jointinv : grav_jointinv.cpp  ../Inversion//inversion 
                     ../Gravity//gravity ../Magnetics//magnetics ../Joint//setup ../Joint//joint  
                     ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf
-                    ..//boost_filesystem ..//boost_program_options ..//boost_system ;
+                    ..//boost_filesystem ..//boost_system ;
