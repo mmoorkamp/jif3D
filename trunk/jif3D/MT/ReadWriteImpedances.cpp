@@ -12,7 +12,6 @@
 #include "../ModelBase/NetCDFModelTools.h"
 #include "../Global/NetCDFTools.h"
 
-
 #include <fstream>
 #include <iomanip>
 #include <algorithm>
@@ -359,8 +358,10 @@ namespace jif3D
                 const double absZxy = sqrt(twopimu * fre * rxy);
                 const double cpxy = cos(rad(pxy));
                 const double spxy = sin(rad(pxy));
-                const double cpyx = cos(rad(pyx));
-                const double spyx = sin(rad(pyx));
+                double cpyx = cos(rad(pyx));
+                double spyx = sin(rad(pyx));
+                cpyx = cpyx > 0.0 ? -cpyx : cpyx;
+                spyx = spyx > 0.0 ? -spyx : spyx ;
                 ImpTemp.push_back(absZxy * cpxy);
                 ImpTemp.push_back(absZxy * spxy);
                 //std::cout << "Fre: " << fre << " Rho: " << AppRes(std::complex<double>(absZxy * cpxy,absZxy * spxy),fre) << std::endl;
@@ -402,7 +403,19 @@ namespace jif3D
         Err.resize(ErrTemp.size());
         //std::copy(ImpTemp.begin(), ImpTemp.end(), Imp.begin());
         //std::copy(ErrTemp.begin(), ErrTemp.end(), Err.begin());
-        std::sort(Frequencies.begin(), Frequencies.end(), std::greater<double>());
+        bool Ascending = true;
+        if (Frequencies.at(0) > Frequencies.at(1))
+          {
+            Ascending = false;
+          }
+        if (Ascending)
+          {
+            std::sort(Frequencies.begin(), Frequencies.end(), std::less<double>());
+          }
+        else
+          {
+            std::sort(Frequencies.begin(), Frequencies.end(), std::greater<double>());
+          }
         Frequencies.erase(
             std::unique(Frequencies.begin(), Frequencies.end(), [](double a, double b)
               { return std::abs((a-b)/std::max(a,b)) < 0.001;}), Frequencies.end());
@@ -413,12 +426,12 @@ namespace jif3D
         //StatZCoord.erase(std::unique(StatZCoord.begin(), StatZCoord.end()),
         //    StatZCoord.end());
         const size_t nfreq = Frequencies.size();
-        const size_t nstat = tmpx.size()/nfreq;
+        const size_t nstat = tmpx.size() / nfreq;
         for (size_t i = 0; i < nstat; ++i)
           {
-            StatXCoord.push_back(tmpx.at(i*nfreq));
-            StatYCoord.push_back(tmpy.at(i*nfreq));
-            StatZCoord.push_back(tmpz.at(i*nfreq));
+            StatXCoord.push_back(tmpx.at(i * nfreq));
+            StatYCoord.push_back(tmpy.at(i * nfreq));
+            StatZCoord.push_back(tmpz.at(i * nfreq));
             for (size_t j = 0; j < nfreq; ++j)
               {
                 size_t Impindex = (j * nstat + i) * 8;
@@ -552,7 +565,7 @@ namespace jif3D
         Frequencies = AllFreq;
         auto FuzzComp = [](double a, double b)
           { return std::abs((a-b)/std::max(a,b)) < 0.001;};
-        std::sort(Frequencies.begin(), Frequencies.end(),std::greater<double>());
+        std::sort(Frequencies.begin(), Frequencies.end(), std::greater<double>());
         Frequencies.erase(std::unique(Frequencies.begin(), Frequencies.end(), FuzzComp),
             Frequencies.end());
         std::vector<std::string> Comps =
