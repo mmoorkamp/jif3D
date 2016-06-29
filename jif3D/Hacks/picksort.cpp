@@ -40,8 +40,8 @@ int main()
       {
         size_t CurrShotNo, CurrRecNo, CurrTracl;
         double CurrSourceX, CurrSourceY, CurrRecX, CurrRecY;
-        PosFile >> CurrShotNo >> CurrTracl >> CurrRecNo >> CurrSourceY
-            >> CurrSourceX >> CurrRecY >> CurrRecX;
+        PosFile >> CurrShotNo >> CurrTracl >> CurrRecNo >> CurrSourceY >> CurrSourceX
+            >> CurrRecY >> CurrRecX;
         if (PosFile.good())
           {
             ShotNo.push_back(CurrShotNo);
@@ -87,10 +87,12 @@ int main()
             jif3D::convert(Line, CurrTT);
             if (PickFile.good())
               {
-
-                ShotIndex.push_back(floor(CurrShotIndex));
-                RecIndex.push_back(floor(CurrRecIndex));
-                TravelTime.push_back(CurrTT);
+                if (CurrTT > 0.0)
+                  {
+                    ShotIndex.push_back(floor(CurrShotIndex));
+                    RecIndex.push_back(floor(CurrRecIndex));
+                    TravelTime.push_back(CurrTT);
+                  }
 
               }
           } catch (...)
@@ -102,8 +104,8 @@ int main()
     jif3D::ThreeDSeismicModel Model;
     const double depth = 10.0;
 
-    for (MyMap::iterator sourceiter = SourceMap.begin(); sourceiter
-        != SourceMap.end(); ++sourceiter)
+    for (MyMap::iterator sourceiter = SourceMap.begin(); sourceiter != SourceMap.end();
+        ++sourceiter)
       {
         Model.AddSource(sourceiter->second[0], sourceiter->second[1], depth);
       }
@@ -132,26 +134,23 @@ int main()
             size_t CurrShotIndex = std::distance(SourceMap.begin(), sourceiter);
             if (sourceiter->second[0] != sriter->second[2])
               {
-                std::cerr << "Mismatch in X-component of source: "
-                    << CurrShotIndex << " " << sourceiter->second[0] << " "
-                    << sriter->second[2] << std::endl;
+                std::cerr << "Mismatch in X-component of source: " << CurrShotIndex << " "
+                    << sourceiter->second[0] << " " << sriter->second[2] << std::endl;
                 return 100;
               }
             if (sourceiter->second[1] != sriter->second[3])
               {
-                std::cerr << "Mismatch in Y-component of source: "
-                    << CurrShotIndex << " " << sourceiter->second[1] << " "
-                    << sriter->second[3] << std::endl;
+                std::cerr << "Mismatch in Y-component of source: " << CurrShotIndex << " "
+                    << sourceiter->second[1] << " " << sriter->second[3] << std::endl;
                 return 100;
               }
-            double distance = std::sqrt(std::pow(sourceiter->second[0]
-                - sriter->second[0], 2) + std::pow(sourceiter->second[1]
-                - sriter->second[1], 2));
-            double currvel = distance/TravelTime.at(i);
-            if (distance > mindist &&  currvel > minvel && currvel < maxvel)
+            double distance = std::sqrt(
+                std::pow(sourceiter->second[0] - sriter->second[0], 2)
+                    + std::pow(sourceiter->second[1] - sriter->second[1], 2));
+            double currvel = distance / TravelTime.at(i);
+            if (distance > mindist && currvel > minvel && currvel < maxvel)
               {
-                Model.AddMeasurementPoint(sriter->second[0], sriter->second[1],
-                    depth);
+                Model.AddMeasurementPoint(sriter->second[0], sriter->second[1], depth);
                 Model.AddMeasurementConfiguration(CurrShotIndex, measindex);
                 ++measindex;
               }
@@ -173,7 +172,7 @@ int main()
     std::string outfilename = jif3D::AskFilename("Output file: ", false);
     jif3D::rvec TT(TravelTime.size());
     std::copy(TravelTime.begin(), TravelTime.end(), TT.begin());
-    jif3D::rvec Error(TT.size(),0.0);
+    jif3D::rvec Error(TT.size(), 0.0);
     jif3D::SaveTraveltimes(outfilename, TT, Error, Model);
   }
 

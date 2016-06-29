@@ -345,7 +345,7 @@ namespace jif3D
         std::string major, link, site;
         double x, y, elevation, fre, rxy, ryx, pxy, pyx, erxy, eryx, epxy, epyx;
 
-        std::vector<double> ImpTemp, ErrTemp;
+        std::vector<double> ImpTemp, ErrTemp, tmpx, tmpy, tmpz;
         while (infile.good())
           {
             infile >> major >> link >> site >> x >> y >> elevation >> fre >> rxy >> ryx
@@ -391,9 +391,9 @@ namespace jif3D
                 ErrTemp.push_back(0.0);
                 ErrTemp.push_back(0.0);
                 Frequencies.push_back(fre);
-                StatXCoord.push_back(x);
-                StatYCoord.push_back(y);
-                StatZCoord.push_back(elevation);
+                tmpx.push_back(x);
+                tmpy.push_back(y);
+                tmpz.push_back(elevation);
               }
 
           }
@@ -406,16 +406,19 @@ namespace jif3D
         Frequencies.erase(
             std::unique(Frequencies.begin(), Frequencies.end(), [](double a, double b)
               { return std::abs((a-b)/std::max(a,b)) < 0.001;}), Frequencies.end());
-        StatXCoord.erase(std::unique(StatXCoord.begin(), StatXCoord.end()),
-            StatXCoord.end());
-        StatYCoord.erase(std::unique(StatYCoord.begin(), StatYCoord.end()),
-            StatYCoord.end());
-        StatZCoord.erase(std::unique(StatZCoord.begin(), StatZCoord.end()),
-            StatZCoord.end());
+        //StatXCoord.erase(std::unique(StatXCoord.begin(), StatXCoord.end()),
+        //    StatXCoord.end());
+        //StatYCoord.erase(std::unique(StatYCoord.begin(), StatYCoord.end()),
+        //    StatYCoord.end());
+        //StatZCoord.erase(std::unique(StatZCoord.begin(), StatZCoord.end()),
+        //    StatZCoord.end());
         const size_t nfreq = Frequencies.size();
-        const size_t nstat = StatXCoord.size();
+        const size_t nstat = tmpx.size()/nfreq;
         for (size_t i = 0; i < nstat; ++i)
           {
+            StatXCoord.push_back(tmpx.at(i*nfreq));
+            StatYCoord.push_back(tmpy.at(i*nfreq));
+            StatZCoord.push_back(tmpz.at(i*nfreq));
             for (size_t j = 0; j < nfreq; ++j)
               {
                 size_t Impindex = (j * nstat + i) * 8;
