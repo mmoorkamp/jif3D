@@ -1,13 +1,14 @@
 //============================================================================
 // Name        : SetupDCResistivity.h
 // Author      : 4 Jun 2014
-// Version     : 
+// Version     :
 // Copyright   : 2014, mm489
 //============================================================================
 
 #ifndef SETUPDCRESISTIVITY_H_
 #define SETUPDCRESISTIVITY_H_
 
+#include "../Global/Jif3DGlobal.h"
 #include "../Inversion/ThreeDModelObjective.h"
 #include "../Inversion/JointObjective.h"
 #include "../DCResistivity/ThreeDDCResistivityModel.h"
@@ -19,7 +20,7 @@ namespace jif3D
 
     namespace po = boost::program_options;
 
-    class SetupDCResistivity
+    class J3DEXPORT SetupDCResistivity
       {
     private:
       double relerr;

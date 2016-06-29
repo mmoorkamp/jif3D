@@ -1,7 +1,7 @@
 //============================================================================
 // Name        : ThreeDGravityFactory.h
 // Author      : Jun 18, 2009
-// Version     : 
+// Version     :
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
@@ -11,6 +11,7 @@
 #include "ScalarOMPGravityImp.h"
 #include "TensorOMPGravityImp.h"
 #include "ThreeDGravityModel.h"
+#include "../Global/Jif3DGlobal.h"
 
 #ifdef HAVEGPU
 #include "ScalarCudaGravityImp.h"
@@ -35,7 +36,7 @@ namespace jif3D
      * automatically delete their argument when no more shared pointers reference it.
      */
     template<class CalculatorClass>
-    class CreateGravityCalculator
+    class J3DEXPORT CreateGravityCalculator
       {
     public:
       //! Make a new calculator object to calculate scalar gravity data

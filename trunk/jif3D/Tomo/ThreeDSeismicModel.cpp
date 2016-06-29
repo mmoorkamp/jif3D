@@ -5,11 +5,17 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
+
 #include "ThreeDSeismicModel.h"
 #include "../Global/FatalException.h"
 #include <boost/numeric/conversion/cast.hpp>
 #include <cassert>
 #include <algorithm>
+#include <netcdf>
+
+using netCDF::NcFile;
+using netCDF::NcVar;
+using netCDF::NcDim;
 
 namespace jif3D
   {
@@ -91,17 +97,17 @@ namespace jif3D
         return idx;
       }
 
-    void ThreeDSeismicModel::WriteNetCDF(const std::string filename) const
+    void ThreeDSeismicModel::WriteNetCDF(const std::string &filename) const
       {
-        NcFile DataFile(filename.c_str(), NcFile::Replace);
+        NcFile DataFile(filename, NcFile::replace);
         //write the 3D discretized part
         WriteDataToNetCDF(DataFile, SlownessName, SlownessUnit);
       }
 
-    void ThreeDSeismicModel::ReadNetCDF(const std::string filename, bool checkgrid)
+    void ThreeDSeismicModel::ReadNetCDF(const std::string &filename, bool checkgrid)
       {
         //create the netcdf file object
-        NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
+        NcFile DataFile(filename, NcFile::read);
         //read in the 3D gridded data
         ReadDataFromNetCDF(DataFile, SlownessName, SlownessUnit);
 

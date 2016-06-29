@@ -20,6 +20,7 @@
 #include "../GravMag/FullSensitivityGravMagCalculator.h"
 #include "ScalarOMPGravityImp.h"
 #include "ThreeDGravityFactory.h"
+#include "../Global/Jif3DPlatformHelper.h"
 
 using namespace boost::assign;
 
@@ -269,7 +270,7 @@ BOOST_AUTO_TEST_SUITE( ScalarGravity_Test_Suite )
         boost::shared_ptr<CalculatorType> ScalarCalculator(
             jif3D::CreateGravityCalculator<CalculatorType>::MakeScalar());
         jif3D::rvec Misfit(nmeas);
-        std::generate(Misfit.begin(), Misfit.end(), drand48);
+        std::generate(Misfit.begin(), Misfit.end(), jif3D::platform::drand48);
         jif3D::rvec Deriv(ScalarCalculator->LQDerivative(GravityTest, Misfit));
         ScalarCalculator->Calculate(GravityTest);
         jif3D::rvec Compare(

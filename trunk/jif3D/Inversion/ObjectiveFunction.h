@@ -12,6 +12,7 @@
 #include "../Global/VecMat.h"
 #include "../Global/NumUtil.h"
 #include "../Global/FatalException.h"
+#include "../Global/Jif3DGlobal.h"
 
 #include <cassert>
 #include <cmath>
@@ -34,7 +35,7 @@ namespace jif3D
      * has been called with the same model beforehand.
      *
      */
-    class ObjectiveFunction
+    class J3DEXPORT ObjectiveFunction
       {
     private:
       //! How many forward plus gradient evaluations did we perform

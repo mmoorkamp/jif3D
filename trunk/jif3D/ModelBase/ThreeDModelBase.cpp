@@ -12,6 +12,10 @@
 #include <cassert>
 #include <fstream>
 
+using netCDF::NcFile;
+using netCDF::NcVar;
+using netCDF::NcDim;
+
 namespace jif3D
   {
 

@@ -10,7 +10,9 @@
 
 #include <fstream>
 #include "../Global/VecMat.h"
+#include "../Global/Jif3DGlobal.h"
 #include "ThreeDDCResistivityModel.h"
+
 
 
 namespace jif3D
@@ -25,7 +27,7 @@ namespace jif3D
      * @param The error of the apparent resistivity
      * @param Model The model object containing information about the source and receiver setup
      */
-    void SaveApparentResistivity(const std::string &filename, const jif3D::rvec &Data,
+  J3DEXPORT void SaveApparentResistivity(const std::string &filename, const jif3D::rvec &Data,
         const jif3D::rvec &Error, const jif3D::ThreeDDCResistivityModel &Model);
     //!Read a collection of apparent resistivity and associated positions from a netcdf file
     /*! Read apparent resistivity together with the source receiver configuration from a netcdf file.
@@ -35,7 +37,7 @@ namespace jif3D
      * @param The error of the apparent resistivity
      * @param Model The model object containing information about the source and receiver setup
      */
-    void ReadApparentResistivity(const std::string &filename, jif3D::rvec &Data,
+  J3DEXPORT void ReadApparentResistivity(const std::string &filename, jif3D::rvec &Data,
         jif3D::rvec &Error, jif3D::ThreeDDCResistivityModel &Model);
 
   /* @} */

@@ -1,7 +1,7 @@
 //============================================================================
 // Name        : ModEMCalculator.h
 // Author      : 14 Jan 2016
-// Version     : 
+// Version     :
 // Copyright   : 2016, mm489
 //============================================================================
 
@@ -10,14 +10,14 @@
 
 #include "../Global/Serialization.h"
 #include "../Global/VecMat.h"
+#include "../Global/Jif3DGlobal.h"
 #include "ThreeDMTModel.h"
-
 #include <limits>
 
 namespace jif3D
   {
 
-    class ModEMCalculator
+    class J3DEXPORT ModEMCalculator
       {
     public:
       typedef ThreeDMTModel ModelType;

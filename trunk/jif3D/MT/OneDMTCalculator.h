@@ -1,15 +1,17 @@
 //============================================================================
 // Name        : OneDMTCalculator.h
 // Author      : 13 Jun 2012
-// Version     : 
+// Version     :
 // Copyright   : 2012, mm489
 //============================================================================
 
 #ifndef ONEDMTCALCULATOR_H_
 #define ONEDMTCALCULATOR_H_
 
-#include "X3DModel.h"
+#include "../Global/Serialization.h"
+#include "../Global/Jif3DGlobal.h"
 #include "../Global/VecMat.h"
+#include "X3DModel.h"
 
 
 namespace jif3D
@@ -22,7 +24,7 @@ namespace jif3D
      * implements the calculation of the derivative of a least-squares objective
      * function using an adjoint approach and the equations in Avdeeva, 2006.
      */
-    class OneDMTCalculator
+    class J3DEXPORT OneDMTCalculator
       {
     public:
       //! This type definition is necessary so that ThreeDModelObjective can correctly deduce the native type for a model object for this class
@@ -33,6 +35,14 @@ namespace jif3D
       jif3D::cmat gammaj;
       jif3D::cvec Z;
     public:
+          template<class Archive>
+      void serialize(Archive & ar, const unsigned int version)
+        {
+          ar & alpha;
+          ar & gammakj;
+          ar & gammaj;
+          ar & Z;
+        }
       //! Given a model of layer thicknesses and conductivities we calculate MT impedances
       rvec Calculate(const ModelType &Model);
       //! Given a model and a misfit vector, calculate the derivative of a least-squares objective function using an adjoint approach

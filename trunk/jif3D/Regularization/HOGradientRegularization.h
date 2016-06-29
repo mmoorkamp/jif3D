@@ -10,6 +10,7 @@
 #define HOGRADIENTREGULARIZATION_H_
 
 #include "../Global/Serialization.h"
+#include "../Global/Jif3DGlobal.h"
 #include "MatOpRegularization.h"
 #include "MakeTearModel.h"
 
@@ -28,7 +29,7 @@ namespace jif3D
      * with optimizations. Also at the moment we do not consider varying cell sizes
      * in the calculation of the model roughness.
      */
-    class HOGradientRegularization: public jif3D::MatOpRegularization
+    class J3DEXPORT HOGradientRegularization: public jif3D::MatOpRegularization
       {
     private:
       //! A usually small value that controls the amount of absolute model vector minimization performed, see also the description of the constructor

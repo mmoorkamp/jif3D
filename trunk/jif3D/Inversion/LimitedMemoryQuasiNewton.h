@@ -12,6 +12,7 @@
 #include "GradientBasedOptimization.h"
 #include <boost/shared_ptr.hpp>
 #include <vector>
+#include "../Global/Jif3DGlobal.h"
 
 namespace jif3D
   {
@@ -25,7 +26,7 @@ namespace jif3D
      * We have to specify a number of correction pairs when constructing an object. For each correction pair
      * we need 2*M additional storage, where M is the number of model parameters.
      */
-    class LimitedMemoryQuasiNewton: public jif3D::GradientBasedOptimization
+    class J3DEXPORT LimitedMemoryQuasiNewton: public jif3D::GradientBasedOptimization
       {
     private:
       //! Apply scaling to the gradient in the first iteration in order to improve convergence

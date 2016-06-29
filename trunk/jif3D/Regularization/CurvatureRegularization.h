@@ -1,7 +1,7 @@
 //============================================================================
 // Name        : CurvatureRegularization.h
 // Author      : Jan 11, 2010
-// Version     : 
+// Version     :
 // Copyright   : 2010, mmoorkamp
 //============================================================================
 
@@ -9,6 +9,7 @@
 #define CURVATUREREGULARIZATION_H_
 
 #include "../Global/Serialization.h"
+#include "../Global/Jif3DGlobal.h"
 #include "MatOpRegularization.h"
 #include "MakeTearModel.h"
 
@@ -23,7 +24,7 @@ namespace jif3D
      * we specify a reference model (see description for MatOpRegularization), this reference model
      * is substracted before the calculation of the laplacian.
      */
-    class CurvatureRegularization: public jif3D::MatOpRegularization
+    class J3DEXPORT CurvatureRegularization: public jif3D::MatOpRegularization
       {
     private:
       //! A small number to stabilize the matrix operator

@@ -20,9 +20,9 @@ using namespace boost::assign;
 
 void MakeTestModel(jif3D::ThreeDGravityModel &Model, const size_t size)
   {
-    Model.SetXCellSizes().resize(boost::extents[size]);
-    Model.SetYCellSizes().resize(boost::extents[size]);
-    Model.SetZCellSizes().resize(boost::extents[size]);
+    Model.SetXCellSizes().resize(size);
+    Model.SetYCellSizes().resize(size);
+    Model.SetZCellSizes().resize(size);
 
     for (size_t i = 0; i < size; ++i) // set the values of the inner cells
       {

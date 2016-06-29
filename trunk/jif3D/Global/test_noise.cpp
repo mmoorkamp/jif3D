@@ -11,8 +11,8 @@
 
 #include <stdlib.h>
 #include "Noise.h"
+#include "Jif3DTesting.h"
 #include <boost/test/floating_point_comparison.hpp>
-#include <boost/test/included/unit_test.hpp>
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/mean.hpp>

@@ -1,19 +1,20 @@
 //============================================================================
 // Name        : GridBackgroundModelCache.h
 // Author      : 25 Oct 2013
-// Version     : 
+// Version     :
 // Copyright   : 2013, mm489
 //============================================================================
 
 #ifndef GRIDBACKGROUNDMODELCACHE_H_
 #define GRIDBACKGROUNDMODELCACHE_H_
 
+#include "../Global/Jif3DGlobal.h"
 #include "GridOnlyModelCache.h"
 
 namespace jif3D
   {
     template<class ThreeDModelType>
-    class GridBackgroundModelCache
+    class J3DEXPORT GridBackgroundModelCache
       {
     public:
       typedef typename ThreeDModelType::tBackgroundVec BGType;

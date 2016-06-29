@@ -1,7 +1,7 @@
 //============================================================================
 // Name        : GeneralizedInverse.h
 // Author      : 17 May 2012
-// Version     : 
+// Version     :
 // Copyright   : 2012, mm489
 //============================================================================
 
@@ -9,6 +9,7 @@
 #define GENERALIZEDINVERSE_H_
 
 #include "../Global/VecMat.h"
+#include "../Global/Jif3DGlobal.h"
 
 /*! \file GeneralizedInverse.h
  * This file includes  operations on matrices that are associated
@@ -31,14 +32,14 @@ namespace jif3D
      * @param u The n*n transformation matrix
      * @param vt The m*m transformation matrix
      */
-    void SVD(rmat &SensitivityMatrix, rvec &s, rmat &u, rmat &vt);
+    J3DEXPORT void SVD(rmat &SensitivityMatrix, rvec &s, rmat &u, rmat &vt);
 
     //! Implements the generalized inverse through truncated SVD
     /*! This class provides the functionality to calculate a
      * generalized inverse based on the truncated SVD and related
      * quantities such as model resolution and covariance.
      */
-    class GeneralizedInverse
+    class J3DEXPORT GeneralizedInverse
       {
     private:
       //! The singular values of the matrix G

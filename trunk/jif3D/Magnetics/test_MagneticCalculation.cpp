@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_SUITE( Magnetic_Test_Suite )
     //check that for a box the results are independent of the discretization
     BOOST_AUTO_TEST_CASE(model_gravity_boxcomp_test)
       {
-        const double measx = 9.0;
+//        const double measx = 9.0; // unused
         const double measy = 10.0;
         const double measz = -1.0;
 

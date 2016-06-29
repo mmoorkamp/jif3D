@@ -11,9 +11,10 @@
 #define BOOST_TEST_MAIN ...
 
 #include "Wavelet.h"
+#include "Jif3DPlatformHelper.h"
 #include <stdlib.h>
 #include <boost/multi_array.hpp>
-#include <boost/test/included/unit_test.hpp>
+#include "Jif3DTesting.h"
 #include <boost/test/floating_point_comparison.hpp>
 
 BOOST_AUTO_TEST_SUITE( Wavelet_Test_Suite )
@@ -53,7 +54,7 @@ BOOST_AUTO_TEST_CASE (wavelet_transform_pair)
         //first make a 1D vector
         const size_t length = 64;
         jif3D::rvec Vector(length);
-        std::generate_n(Vector.begin(), length, drand48);
+        std::generate_n(Vector.begin(), length, jif3D::platform::drand48);
         //then a multi_array that is 1D and copy the vector
         boost::multi_array<double, 1> InArray(boost::extents[length]);
         std::copy(Vector.begin(), Vector.end(), InArray.origin());

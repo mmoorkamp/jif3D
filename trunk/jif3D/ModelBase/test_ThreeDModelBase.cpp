@@ -16,6 +16,7 @@
 #include <numeric>
 #include "../Gravity/test_common.h"
 #include "../Gravity/ThreeDGravityModel.h"
+#include "../Global/Jif3DPlatformHelper.h"
 #include "EqualGeometry.h"
 
 //Test the default state of the object
@@ -70,7 +71,7 @@ BOOST_AUTO_TEST_CASE(measpos_test)
 BOOST_AUTO_TEST_CASE(equal_geometry_test)
   {
     jif3D::ThreeDGravityModel Model1;
-    srand(time(0));
+    srand((unsigned int)time(nullptr));
     MakeRandomModel(Model1, rand() % 20, 1);
     //we cannot use a ThreeDBaseModel as a concrete object
     //so we use a derived ThreeDGravityModel instead
@@ -99,14 +100,14 @@ BOOST_AUTO_TEST_CASE(equal_geometry_test)
 BOOST_AUTO_TEST_CASE(concurrent_coordinates_test)
   {
     jif3D::ThreeDGravityModel Model;
-    srand(time(0));
+    srand((unsigned int) time(nullptr));
     MakeRandomModel(Model, rand() % 20, 1);
     jif3D::ThreeDGravityModel ModelCopy(Model);
 
 #pragma omp parallel default(shared)
       {
 #pragma omp for
-        for (size_t i = 0; i < 4; ++i)
+        for (int i = 0; i < 4; ++i)
           {
             Model.GetXCoordinates();
             Model.GetYCoordinates();

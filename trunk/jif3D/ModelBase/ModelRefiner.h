@@ -9,8 +9,9 @@
 #define MODELREFINER_H_
 
 #include "../Global/Serialization.h"
-#include "ThreeDModelBase.h"
+#include "../Global/Jif3DGlobal.h"
 #include "../Global/VecMat.h"
+#include "ThreeDModelBase.h"
 
 namespace jif3D
   {
@@ -28,7 +29,7 @@ namespace jif3D
      * Therefore no interpolation is needed. Also we do not extend the modeling
      * domain beyond the original extent.
      */
-    class ModelRefiner
+    class J3DEXPORT ModelRefiner
       {
     private:
       //! The coordinates in x-direction in the refined model

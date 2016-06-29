@@ -1,7 +1,7 @@
 //============================================================================
 // Name        : MTCovar.h
 // Author      : 11 Jul 2013
-// Version     : 
+// Version     :
 // Copyright   : 2013, mm489
 //============================================================================
 
@@ -9,6 +9,8 @@
 #define MTCOVAR_H_
 
 
+
+#include "../Global/Jif3DGlobal.h"
 #include "../Global/VecMat.h"
 #include <boost/numeric/ublas/symmetric.hpp>
 
@@ -31,7 +33,7 @@ namespace jif3D
      * @param Inv Do we rotate the covariance matrix or its inverse, the weighting matrix
      * @return 4x4 covariance matrix in the rotated coordianate system
      */
-    rmat RotateMTCovar(double angle,const rmat &Cov, bool Inv = false);
+    J3DEXPORT rmat RotateMTCovar(double angle,const rmat &Cov, bool Inv = false);
   /* @} */
   }
 

@@ -1,14 +1,17 @@
 //============================================================================
 // Name        : ReadWriteSparseMatrix.cpp
 // Author      : 1 Jul 2013
-// Version     : 
+// Version     :
 // Copyright   : 2013, mm489
 //============================================================================
 
-#include <netcdfcpp.h>
+#include <netcdf>
 #include <vector>
 #include "ReadWriteSparseMatrix.h"
 #include "NetCDFTools.h"
+
+using netCDF::NcFile;
+using netCDF::NcDim;
 
 namespace jif3D
   {
@@ -18,7 +21,7 @@ namespace jif3D
 
     void ReadSparseMatrixFromNetcdf(const std::string &filename, jif3D::comp_mat &CoVar, const std::string &Name)
       {
-        NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
+        NcFile DataFile(filename, NcFile::read);
         std::vector<int> Index1, Index2;
         std::vector<double> Values;
         ReadVec(DataFile, Index1Name, Index1);
@@ -35,7 +38,7 @@ namespace jif3D
     void WriteSparseMatrixToNetcdf(const std::string &filename,
         const jif3D::comp_mat &CoVar, const std::string &Name)
       {
-        NcFile DataFile(filename.c_str(), NcFile::Replace);
+        NcFile DataFile(filename, NcFile::replace);
 
         typedef jif3D::comp_mat::const_iterator1 i1_t;
         typedef jif3D::comp_mat::const_iterator2 i2_t;
@@ -53,7 +56,8 @@ namespace jif3D
               }
           }
         const size_t nstats = Values.size();
-        NcDim *CovNumDim = DataFile.add_dim(CovDimName.c_str(), nstats);
+
+        NcDim CovNumDim = DataFile.addDim(CovDimName.c_str(), nstats);
         WriteVec(DataFile, Index1Name, Index1, CovNumDim, "");
         WriteVec(DataFile, Index2Name, Index2, CovNumDim, "");
         WriteVec(DataFile, Name, Values, CovNumDim, "");

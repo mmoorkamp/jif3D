@@ -10,10 +10,12 @@
 
 #include "../Global/Serialization.h"
 #include "../Global/VecMat.h"
+#include "../Global/Jif3DGlobal.h"
 #include "../ModelTransforms/GeneralModelTransform.h"
 #include <cassert>
 #include <vector>
 #include <boost/shared_ptr.hpp>
+
 
 
 namespace jif3D
@@ -31,7 +33,7 @@ namespace jif3D
      * function in the inversion that perform the concrete transformation.
      *
      */
-    class ModelDistributor
+    class J3DEXPORT ModelDistributor
       {
     public:
       ModelDistributor() :

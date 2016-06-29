@@ -63,12 +63,12 @@ namespace jif3D
         //we only care about the sign of the angle, so we don't bother normalizing
         //by the norm of the two vectors
         double angle = ublas::inner_prod(SearchDir, RawGrad);
-        int status = 0;
+//        int status = 0; // unused
         //if the search direction is a descent direction use it
         //otherwise use the direction of steepest descent
         if (angle < 0.0)
           {
-            status = OPTPP::mcsrch(&GetObjective(), SearchDir, RawGrad,
+            /*status = */OPTPP::mcsrch(&GetObjective(), SearchDir, RawGrad,
                 CurrentModel, Misfit, &mu, 20, 1e-4, 2.2e-16, 0.1, 1e9, 1e-9);
             jif3D::rvec y(ublas::element_prod(RawGrad, GetModelCovDiag())
                 - OldGradient);
@@ -82,10 +82,11 @@ namespace jif3D
           {
             CovGrad *= -1.0;
             OldGradient.resize(0);
-            status = OPTPP::mcsrch(&GetObjective(), CovGrad, RawGrad,
+            /*status = */OPTPP::mcsrch(&GetObjective(), CovGrad, RawGrad,
                 CurrentModel,
                 Misfit, &mu, 20, 1e-4, 2.2e-16, 0.1, 1e9, 1e-9);
           }
+
         CurrentModel += mu * SearchDir;
         //the line search already calculated the new gradient
         // so we signal that we have calculated everything

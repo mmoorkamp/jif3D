@@ -6,13 +6,21 @@
 //============================================================================
 
 #include <cassert>
-#include <netcdfcpp.h>
+
 #include <fstream>
 #include <iomanip>
 #include <iterator>
-#include "../Global/NumUtil.h"
+
+#include <netcdf>
+
 #include "ThreeDGravityModel.h"
 #include "ReadWriteGravityData.h"
+#include "../Global/NumUtil.h"
+#include "../Global/NetCDFPortHelper.h"
+
+using netCDF::NcFile;
+using netCDF::NcVar;
+using netCDF::NcDim;
 
 namespace jif3D
   {
@@ -63,9 +71,9 @@ namespace jif3D
         return *this;
       }
 
-    void ThreeDGravityModel::WriteNetCDF(const std::string filename) const
+    void ThreeDGravityModel::WriteNetCDF(const std::string &filename) const
       {
-        NcFile DataFile(filename.c_str(), NcFile::Replace);
+        NcFile DataFile(filename, NcFile::replace);
         //first write the 3D discretized part
         WriteDataToNetCDF(DataFile, DensityName, DensityUnit);
         //if we have some background layers, write them as well
@@ -73,49 +81,61 @@ namespace jif3D
           {
             assert(bg_densities.size() == bg_thicknesses.size());
             //Create the matching dimension for the background layers
-            NcDim *BackgroundDim = DataFile.add_dim("bg_layers", bg_thicknesses.size());
+            NcDim BackgroundDim = DataFile.addDim("bg_layers", bg_thicknesses.size());
             //now we can write the actual parameters for the layers
-            NcVar *bgDensVar = DataFile.add_var("bg_densities", ncDouble, BackgroundDim);
-            bgDensVar->add_att("long_name", "Background Densities");
-            bgDensVar->add_att("units", DensityUnit.c_str());
-            NcVar *bgThickVar = DataFile.add_var("bg_thicknesses", ncDouble,
+            NcVar bgDensVar = DataFile.addVar("bg_densities", netCDF::ncDouble, BackgroundDim);
+            bgDensVar.putAtt("long_name", "Background Densities");
+            bgDensVar.putAtt("units", DensityUnit);
+            jif3D::cxxport::put_legacy_ncvar(bgDensVar, bg_densities.data(), bg_densities.size());
+//            bgDensVar.put(&bg_densities[0], bg_densities.size()); // old
+
+            NcVar bgThickVar = DataFile.addVar("bg_thicknesses", netCDF::ncDouble,
                 BackgroundDim);
-            bgThickVar->add_att("long_name", "Background Thicknesses");
-            bgThickVar->add_att("units", "m");
-            bgDensVar->put(&bg_densities[0], bg_densities.size());
-            bgThickVar->put(&bg_thicknesses[0], bg_thicknesses.size());
+            bgThickVar.putAtt("long_name", "Background Thicknesses");
+            bgThickVar.putAtt("units", "m");
+            jif3D::cxxport::put_legacy_ncvar(bgThickVar, bg_thicknesses.data(), bg_thicknesses.size());
+//            bgThickVar.put(&bg_thicknesses[0], bg_thicknesses.size()); // old
           }
       }
 
-    void ThreeDGravityModel::ReadNetCDF(const std::string filename)
+    void ThreeDGravityModel::ReadNetCDF(const std::string &filename)
       {
 
         //create the netcdf file object
-        NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
+        NcFile DataFile(filename, NcFile::read);
         //read in the 3D gridded data
         ReadDataFromNetCDF(DataFile, DensityName, DensityUnit);
 
-        //change the error behaviour of the netcdf api
-        NcError err(NcError::silent_nonfatal);
-        //try to read the background data
-        NcDim *BackgroundDim = DataFile.get_dim("bg_layers");
-        //if we succeed
-        if (BackgroundDim)
-          {
-            //find out how many layers the background has
-            const int nbglayers = BackgroundDim->size();
-            //allocate memory
-            bg_densities.assign(nbglayers, 0.0);
-            bg_thicknesses.assign(nbglayers, 0.0);
-            //and read in from the file
-            NcVar *bgDensVar = DataFile.get_var("bg_densities");
-            NcVar *bgThickVar = DataFile.get_var("bg_thicknesses");
-            bgDensVar->get(&bg_densities[0], nbglayers);
-            bgThickVar->get(&bg_thicknesses[0], nbglayers);
-          }
+        try {
+          //try to read the background data
+          NcDim BackgroundDim = DataFile.getDim("bg_layers");
+          //if we succeed
+          if (!BackgroundDim.isNull())
+            {
+              //find out how many layers the background has
+              const size_t nbglayers = BackgroundDim.getSize();
+              //allocate memory
+              bg_densities.assign(nbglayers, 0.0);
+              bg_thicknesses.assign(nbglayers, 0.0);
+              //and read in from the file
+              NcVar bgDensVar = DataFile.getVar("bg_densities");
+              NcVar bgThickVar = DataFile.getVar("bg_thicknesses");
+
+              jif3D::cxxport::get_legacy_ncvar(bgDensVar, bg_densities.data(), nbglayers);
+              jif3D::cxxport::get_legacy_ncvar(bgThickVar, bg_thicknesses.data(), nbglayers);
+
+//              bgDensVar.getVar(&bg_densities[0], nbglayers);
+//              bgThickVar.getVar(&bg_thicknesses[0], nbglayers);
+            }
+        } catch(const netCDF::exceptions::NcException &ex) {
+        	/*
+        	 * Ignore exception. Before porting, the legacy NcError class was used to temporarily
+        	 * set error handling to "silent_nonfatal".
+        	 */
+        }
       }
 
-    void ThreeDGravityModel::ReadIgmas(const std::string filename)
+    void ThreeDGravityModel::ReadIgmas(const std::string &filename)
       {
         //the file we use to read the ascii data
         std::ifstream infile(filename.c_str());

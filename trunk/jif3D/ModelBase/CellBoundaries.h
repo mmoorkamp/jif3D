@@ -1,13 +1,14 @@
 //============================================================================
 // Name        : CellBoundaries.h
 // Author      : 18 May 2012
-// Version     : 
+// Version     :
 // Copyright   : 2012, mm489
 //============================================================================
 
 #ifndef CELLBOUNDARIES_H_
 #define CELLBOUNDARIES_H_
 
+#include "../Global/Jif3DGlobal.h"
 #include "ThreeDModelBase.h"
 
 namespace jif3D
@@ -20,11 +21,11 @@ namespace jif3D
      * @param CellBoundaries The array of cell boundary values, the first value is implicitly assumed to be zero
      * @return The index of the nearest boundary.
      */
-    size_t FindNearestCellBoundary(double Coordinate,
+  J3DEXPORT size_t FindNearestCellBoundary(double Coordinate,
         const jif3D::ThreeDModelBase::t3DModelDim &CellBoundaries,
         const jif3D::ThreeDModelBase::t3DModelDim &CellSizes);
 
-    size_t ConstructDepthIndices(std::vector<size_t> &MeasDepthIndices,
+  J3DEXPORT size_t ConstructDepthIndices(std::vector<size_t> &MeasDepthIndices,
         std::vector<double> &ShiftDepth, const ThreeDModelBase &Model);
   /* @} */
   }

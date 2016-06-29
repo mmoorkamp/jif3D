@@ -9,6 +9,7 @@
 #define CACHEDGRAVITYCALCULATOR_H_
 
 #include "../Global/Serialization.h"
+#include "../Global/Jif3DGlobal.h"
 #include "ThreeDGravMagCalculator.h"
 
 namespace jif3D
@@ -25,7 +26,7 @@ namespace jif3D
      * Examples for derived classes are FullSensitivityGravityCalculator and WaveletCompressedGravityCalculator.
      */
     template<class ThreeDModelType>
-    class CachedGravMagCalculator: public jif3D::ThreeDGravMagCalculator<ThreeDModelType>
+    class J3DEXPORT CachedGravMagCalculator: public jif3D::ThreeDGravMagCalculator<ThreeDModelType>
       {
     private:
       //! Have we performed a calculation before and build up cached information

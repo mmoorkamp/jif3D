@@ -8,16 +8,17 @@
 #ifndef THREEDMODELBASE_H_
 #define THREEDMODELBASE_H_
 
+
 #include "../Global/Serialization.h"
-#include <netcdfcpp.h>
+#include "../Global/FatalException.h"
+#include "../Global/Jif3DGlobal.h"
+#include <string>
+#include <netcdf>
+#include <boost/multi_array.hpp>
+
 #ifdef HAVEOPENMP
 #include <omp.h>
 #endif
-#include <string>
-#include <boost/multi_array.hpp>
-
-
-#include "../Global/FatalException.h"
 
 /*! \file ThreeDModelBase.h
  * Contains the base class for all 3D models.
@@ -39,7 +40,7 @@ namespace jif3D
      * for types all of three-dimensional models. Any other class
      * that needs to store a three-dimensional model should be derived from it.
      */
-    class ThreeDModelBase
+    class J3DEXPORT ThreeDModelBase
       {
     public:
       friend class MatOpRegularization;
@@ -117,10 +118,10 @@ namespace jif3D
           return ZCellSizes;
         }
       //! Read data and associated cell sizes from a netcdf file
-      void ReadDataFromNetCDF(const NcFile &NetCDFFile, const std::string &DataName,
+      void ReadDataFromNetCDF(const netCDF::NcFile &NetCDFFile, const std::string &DataName,
           const std::string &UnitsName);
       //! Write data and associated cell sizes to a netcdf file
-      void WriteDataToNetCDF(NcFile &NetCDFFile, const std::string &DataName,
+      void WriteDataToNetCDF(netCDF::NcFile &NetCDFFile, const std::string &DataName,
           const std::string &UnitsName) const;
       //! Write the data and cell sizes to a VTK file for plotting in Paraview or Visit etc.
       void WriteVTK(std::string filename, const std::string &DataName) const;
@@ -261,12 +262,12 @@ namespace jif3D
       //! Read the Measurement positions from an ascii file
       void ReadMeasPosAscii(const std::string filename);
       //! Write all model information to a netcdf file
-      virtual void WriteNetCDF(const std::string filename) const
+      virtual void WriteNetCDF(const std::string &filename) const
         {
           throw jif3D::FatalException("WriteNetCDF not implemented in ThreeDModelBase !");
         }
       //! Read all model information from a netcdf file
-      virtual void ReadNetCDF(const std::string filename)
+      virtual void ReadNetCDF(const std::string &filename)
         {
           throw jif3D::FatalException("ReadNetCDF not implemented in ThreeDModelBase !");
         }

@@ -13,5 +13,5 @@ exe time_grav_term : time_grav_term.cpp core ;
 exe comp_grav_moment : comp_grav_moment.cpp core ;
 exe reg_prof : reg_prof.cpp core ;
 exe sparse_prof : sparse_prof.cpp ;
-exe time_vector : time_vector.cpp ;
+exe time_vector : time_vector.cpp ../Global//global ;
 exe inner_product : inner_product.cpp ..//cudart ..//cublas : <gpu>off:<build>no ;

@@ -8,6 +8,7 @@
 #ifndef SETUPMT_H_
 #define SETUPMT_H_
 
+#include "../Global/Jif3DGlobal.h"
 #include "../MT/X3DModel.h"
 #include "../MT/X3DMTCalculator.h"
 #include "../Inversion/ThreeDModelObjective.h"
@@ -27,7 +28,7 @@ namespace jif3D
      * from the command line and through interactive input. It configures the objective
      * function for MT data and adds it to the joint objective.
      */
-    class SetupMT
+    class J3DEXPORT SetupMT
       {
     private:
       //! The objective function object for magnetotelluric data using X3D as a forward engine

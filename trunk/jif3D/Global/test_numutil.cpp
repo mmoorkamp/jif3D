@@ -8,12 +8,13 @@
 //test the small numerical utility functions
 #define BOOST_TEST_MODULE NumUtil test
 #define BOOST_TEST_MAIN ...
-#include <boost/test/included/unit_test.hpp>
+#include "Jif3DTesting.h"
 #include <boost/test/floating_point_comparison.hpp>
 #include <stdlib.h>
 #include "NumUtil.h"
 #include "NormProd.h"
 #include "VecMat.h"
+#include "Jif3DPlatformHelper.h"
 
 BOOST_AUTO_TEST_SUITE( NumUtil_Test_Suite )
 
@@ -64,9 +65,9 @@ BOOST_AUTO_TEST_SUITE( NumUtil_Test_Suite )
         //check that our normed scalar product function works correctly
         const size_t nelements = 1010;
         jif3D::rvec a(nelements), b(nelements), NormDiag(nelements);
-        std::generate_n(a.begin(), nelements, drand48);
-        std::generate_n(b.begin(), nelements, drand48);
-        std::generate_n(NormDiag.begin(), nelements, drand48);
+        std::generate_n(a.begin(), nelements, jif3D::platform::drand48);
+        std::generate_n(b.begin(), nelements, jif3D::platform::drand48);
+        std::generate_n(NormDiag.begin(), nelements, jif3D::platform::drand48);
         double myresult = jif3D::NormProd(a, b, NormDiag);
         double uresult = ublas::inner_prod(a, ublas::element_div(b, NormDiag));
         BOOST_CHECK_CLOSE(myresult, uresult, std::numeric_limits<float>::epsilon());
@@ -87,13 +88,13 @@ BOOST_AUTO_TEST_SUITE( NumUtil_Test_Suite )
 
     BOOST_AUTO_TEST_CASE(test_roughlyEqual)
       {
-        srand48(time(0));
+        jif3D::platform::srand48(time(NULL));
         const size_t nruns = 10;
         for (size_t i = 0; i < nruns; ++i)
           {
-            const double delta = 1e-6 + drand48();
+            const double delta = 1e-6 + jif3D::platform::drand48();
             jif3D::roughlyEqual<double,double> Comp(delta);
-            double number1 = drand48();
+            double number1 = jif3D::platform::drand48();
             double number2 = number1 + delta / 2.0;
             double number3 = number1 + delta * 2.0;
             BOOST_CHECK(Comp(number1, number2));

@@ -8,10 +8,12 @@
 #ifndef DENSITYTRANSFORM_H_
 #define DENSITYTRANSFORM_H_
 
+
 #include "../Global/Serialization.h"
-#include <boost/shared_ptr.hpp>
-#include "../ModelBase/ThreeDModelBase.h"
+#include "../Global/Jif3DGlobal.h"
 #include "GeneralModelTransform.h"
+#include "../ModelBase/ThreeDModelBase.h"
+#include <boost/shared_ptr.hpp>
 
 namespace jif3D
   {
@@ -26,7 +28,7 @@ namespace jif3D
      * is motivated by the common velocity-density relationships
      * used in inversion problems and also observed for the Faeroe data.
      */
-    class DensityTransform: public jif3D::GeneralModelTransform
+    class J3DEXPORT DensityTransform: public jif3D::GeneralModelTransform
       {
     private:
       //! A pointer to a transformation that gives slowness

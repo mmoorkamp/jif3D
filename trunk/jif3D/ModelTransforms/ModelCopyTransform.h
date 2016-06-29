@@ -9,6 +9,7 @@
 #define MODELCOPYTRANSFORM_H_
 
 #include "../Global/Serialization.h"
+#include "../Global/Jif3DGlobal.h"
 #include "../Global/VecMat.h"
 #include "GeneralModelTransform.h"
 
@@ -18,7 +19,7 @@ namespace jif3D
     /* @{ */
 
     //! This is the simplest transformation, the generalized and physical parameters are identical
-    class ModelCopyTransform: public GeneralModelTransform
+    class J3DEXPORT ModelCopyTransform: public GeneralModelTransform
       {
     private:
       friend class access;

@@ -12,15 +12,17 @@
 #include <hpx/hpx.hpp>
 #endif
 
+#include <string>
+#include <vector>
+
+#include "../Global/Jif3DGlobal.h"
 #include "../Global/Serialization.h"
 #include "../Global/VecMat.h"
 #include "../Global/VectorTransform.h"
 #include "ReadWriteX3D.h"
 #include "X3DModel.h"
-#include <string>
-#include <vector>
 
-struct ForwardResult
+struct J3DEXPORT ForwardResult
   {
   jif3D::rvec DistImpedance;
   jif3D::rvec RawImpedance;

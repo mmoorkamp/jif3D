@@ -10,10 +10,11 @@
  * The susceptibilities in this file are all identical to the specified value.
  */
 
+#include "ThreeDMagneticModel.h"
 #include <iostream>
 #include <string>
 #include "../Global/FileUtil.h"
-#include "ThreeDMagneticModel.h"
+
 
 using namespace std;
 

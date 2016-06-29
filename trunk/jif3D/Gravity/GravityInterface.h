@@ -8,6 +8,8 @@
 #ifndef GRAVITYINTERFACE_H_
 #define GRAVITYINTERFACE_H_
 
+#include "../Global/Jif3DGlobal.h"
+
 /*! \file GravityInterface.h
  * Here we declare the interface to the 3D Gravity code for use with R. This has to be done
  * by declaring C-style functions that pass all parameters by reference. As we cannot determine
@@ -30,7 +32,7 @@ extern "C"
      * @param storescalar If > 0 we store the sensitivites for scalar calculations. Increases memory usage, but accelerates calculations
      * @param storetensor If > 0 we store the sensitivites for tensor calculations. Increases memory usage, but accelerates calculations
      */
-    void AllocateModel(const int *storescalar, const int *storetensor);
+    J3DEXPORT void AllocateModel(const int *storescalar, const int *storetensor);
 
     //! Perform a forward calculation for scalar gravity data
     /*! Calculate the scalar gravity response of the specified model
@@ -50,7 +52,7 @@ extern "C"
      * @param nmeas The number of measurement points. Must match the size of all three vectors above
      * @param GravAcceleration The calculated gravitational acceleration in m/s^2. Must be allocated with nmeas elements
      */
-    void CalcScalarForward(const double *XSizes, const unsigned int *nx,
+    J3DEXPORT void CalcScalarForward(const double *XSizes, const unsigned int *nx,
         const double *YSizes, const unsigned int *ny, const double *ZSizes,
         const unsigned int *nz, const double *Densities,
         const double *BG_Thicknesses, const double *BG_Densities, const unsigned int *nbg_layers,
@@ -76,7 +78,7 @@ extern "C"
      * @param GravTensor The calculated FTG tensor in vectorial form. Must be allocated with 9*nmeas elements.
      * Each block of 9 represents one FTG tensor at a measurement point.
      */
-    void CalcTensorForward(const double *XSizes, const unsigned int *nx,
+    J3DEXPORT void CalcTensorForward(const double *XSizes, const unsigned int *nx,
         const double *YSizes, const unsigned int *ny, const double *ZSizes,
         const unsigned int *nz, const double *Densities,
         const double *BG_Thicknesses, const double *BG_Densities, const unsigned int *nbg_layers,

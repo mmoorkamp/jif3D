@@ -1,10 +1,11 @@
 //============================================================================
 // Name        : ResTrans.h
 // Author      : Jun 2, 2010
-// Version     : 
+// Version     :
 // Copyright   : 2010, mmoorkamp
 //============================================================================
 
+#include "../Global/Jif3DGlobal.h"
 #include "../Inversion/ModelTransforms.h"
 
 #ifndef RESTRANS_H_
@@ -12,7 +13,7 @@
 namespace jif3D
   {
     //! The transformation used for calculating velocity and density from resistivity for the synthetic tests developed in Durham
-    class Durham1DTrans: public jif3D::GeneralModelTransform
+    class J3DEXPORT Durham1DTrans: public jif3D::GeneralModelTransform
       {
     private:
       //! The constant in the conversion equation

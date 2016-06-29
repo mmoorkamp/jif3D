@@ -1,7 +1,7 @@
 //============================================================================
 // Name        : InvertBlock.h
 // Author      : 19 Dec 2014
-// Version     : 
+// Version     :
 // Copyright   : 2014, mm489
 //============================================================================
 
@@ -11,11 +11,11 @@
 
 #include <vector>
 #include <string>
+#include "../Global/Jif3DGlobal.h"
 #include "../Global/VecMat.h"
 #include "../MT/X3DModel.h"
 #include "realinfo.h"
 
-double InvertBlock(jif3D::X3DModel Model, jif3D::rvec Data,  std::string tempdir, std::string x3dname);
-
+J3DEXPORT double InvertBlock(jif3D::X3DModel Model, jif3D::rvec Data,  std::string tempdir, std::string x3dname);
 
 #endif /* HPX_SIMER_INVERTBLOCK_H_ */
