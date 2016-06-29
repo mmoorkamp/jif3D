@@ -7,6 +7,7 @@
 #include "SaltRelConstraint.h"
 #include "../Inversion/ModelTransforms.h"
 #include "../Tomo/ThreeDSeismicModel.h"
+#include "../Global/Jif3DPlatformHelper.h"
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/random/linear_congruential.hpp>
 #include <boost/random/uniform_real.hpp>
@@ -54,10 +55,10 @@ jif3D  ::rvec CheckGradient(jif3D::ObjectiveFunction &Objective, const jif3D::rv
 
       const double minslow = 2e-4;
       const double maxslow = 5e-4;
-      srand48(time(0));
+      jif3D::platform::srand48((unsigned int)time(nullptr));
       for (size_t i = 0; i < ncells; ++i)
         {
-          ModelVector(i) = minslow + drand48() * (maxslow - minslow);
+          ModelVector(i) = minslow + jif3D::platform::drand48() * (maxslow - minslow);
         }
       ublas::subrange(ModelVector,ncells,2*ncells) = DensTrans->GeneralizedToPhysical(ublas::subrange(ModelVector,0,ncells));
       ublas::subrange(ModelVector,2* ncells,3*ncells) = CondTrans->GeneralizedToPhysical(ublas::subrange(ModelVector,0,ncells));
@@ -71,7 +72,7 @@ jif3D  ::rvec CheckGradient(jif3D::ObjectiveFunction &Objective, const jif3D::rv
         {
           BOOST_CHECK_SMALL(ZeroGradient(i),1e-12);
         }
-      srand(time(0));
+      srand((unsigned int)time(nullptr));
       //now change one cell to salt values
       const size_t saltindex = rand() % ncells;
       ModelVector(saltindex) =1.0 / jif3D::saltvel;

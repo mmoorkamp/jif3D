@@ -1,7 +1,7 @@
 //============================================================================
 // Name        : OMPMagneticImp.h
 // Author      : 6 Nov 2013
-// Version     : 
+// Version     :
 // Copyright   : 2013, mm489
 //============================================================================
 
@@ -9,13 +9,14 @@
 #define OMPMAGNETICIMP_H_
 
 #include "../Global/Serialization.h"
+#include "../Global/Jif3DGlobal.h"
 #include "../GravMag/ThreeDGravMagImplementation.h"
 #include "ThreeDMagneticModel.h"
 
 namespace jif3D
   {
 
-    class OMPMagneticImp: public jif3D::ThreeDGravMagImplementation<ThreeDMagneticModel>
+    class J3DEXPORT OMPMagneticImp: public jif3D::ThreeDGravMagImplementation<ThreeDMagneticModel>
       {
     private:
       double Inclination;

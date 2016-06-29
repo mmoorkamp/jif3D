@@ -5,11 +5,18 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-#include<fstream>
+
 #include "ReadWriteTomographyData.h"
 #include "../Global/NumUtil.h"
 #include "../Global/NetCDFTools.h"
+#include "../Global/NetCDFPortHelper.h"
 #include "../ModelBase/NetCDFModelTools.h"
+#include<fstream>
+#include <netcdf>
+
+using netCDF::NcFile;
+using netCDF::NcDim;
+using netCDF::NcVar;
 
 namespace jif3D
   {
@@ -37,10 +44,10 @@ namespace jif3D
         //create a netcdf file
         const size_t nsourcepos = Model.GetSourcePosX().size();
         const size_t nrecpos = Model.GetMeasPosX().size();
-        NcFile DataFile(filename.c_str(), NcFile::Replace);
+        NcFile DataFile(filename, NcFile::replace);
         //we use the station number as a dimension
-        NcDim *SourceNumDim = DataFile.add_dim(SourceNumberName.c_str(), nsourcepos);
-        NcDim *RecNumDim = DataFile.add_dim(ReceiverNumberName.c_str(), nrecpos);
+        NcDim SourceNumDim = DataFile.addDim(SourceNumberName, nsourcepos);
+        NcDim RecNumDim = DataFile.addDim(ReceiverNumberName, nrecpos);
 
 
         //write out the measurement coordinates
@@ -52,32 +59,36 @@ namespace jif3D
         WriteVec(DataFile, MeasPosYName, Model.GetMeasPosY(), RecNumDim, "m");
         WriteVec(DataFile, MeasPosZName, Model.GetMeasPosZ(), RecNumDim, "m");
         //generate an index for the receivers
-        NcDim *MeasIndexDim = DataFile.add_dim(MeasIndexName.c_str(), ndata);
+        NcDim MeasIndexDim = DataFile.addDim(MeasIndexName, ndata);
         std::vector<int> MeasIndex;
         std::generate_n(back_inserter(MeasIndex), ndata, IntSequence(0));
-        NcVar *MeasIndexVar = DataFile.add_var(MeasIndexName.c_str(), ncInt,
+        NcVar MeasIndexVar = DataFile.addVar(MeasIndexName, netCDF::ncInt,
             MeasIndexDim);
-        MeasIndexVar->put(&MeasIndex[0], ndata);
+
+//        MeasIndexVar.put(&MeasIndex[0], ndata);
+        cxxport::put_legacy_ncvar(MeasIndexVar, MeasIndex.data(), ndata);
         //Write the travel times and the error
         WriteVec(DataFile, TravelTimeName, Data, MeasIndexDim, "s");
 
         //write the index of the source for each measurement
-        NcVar *SourceIndexVar = DataFile.add_var(SourceIndexName.c_str(), ncInt,
+        NcVar SourceIndexVar = DataFile.addVar(SourceIndexName, netCDF::ncInt,
             MeasIndexDim);
-        SourceIndexVar->put(&Model.GetSourceIndices()[0], MeasIndexDim->size());
+//        SourceIndexVar.put(&Model.GetSourceIndices()[0], MeasIndexDim.getSize());
+        cxxport::put_legacy_ncvar(SourceIndexVar, Model.GetSourceIndices().data(), MeasIndexDim.getSize());
         //write the index of the receiver for each measurement
-        NcVar *RecIndexVar = DataFile.add_var(ReceiverIndexName.c_str(), ncInt,
+        NcVar RecIndexVar = DataFile.addVar(ReceiverIndexName, netCDF::ncInt,
             MeasIndexDim);
-        RecIndexVar->put(&Model.GetReceiverIndices()[0], MeasIndexDim->size());
+
+//        RecIndexVar.put(&Model.GetReceiverIndices()[0], MeasIndexDim.getSize());
+        cxxport::put_legacy_ncvar(RecIndexVar, Model.GetReceiverIndices().data(), MeasIndexDim.getSize());
 
         WriteVec(DataFile, TravelTimeErrorName, Error, MeasIndexDim, "s");
-
       }
 
     void ReadTraveltimes(const std::string &filename, jif3D::rvec &Data,
         jif3D::rvec &Error, jif3D::ThreeDSeismicModel &Model)
       {
-        NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
+        NcFile DataFile(filename, NcFile::read);
         jif3D::ThreeDSeismicModel::tMeasPosVec PosX, PosY, PosZ;
         //delete any old values in the model object
         Model.ClearMeasurementPoints();
@@ -118,16 +129,19 @@ namespace jif3D
         ReadVec(DataFile, TravelTimeName, Data);
         // it is possible that there is no error information in the file
         // so we don't want to crash the program if not but set it to zero
-        NcError NetCDFError(NcError::silent_nonfatal);
-        if (DataFile.get_var(TravelTimeErrorName.c_str()) != nullptr)
-          {
-            ReadVec(DataFile, TravelTimeErrorName, Error);
-          }
-        else
-          {
-            Error.resize(Data.size());
-            Error.clear();
-          }
+        try {
+          if (!DataFile.getVar(TravelTimeErrorName.c_str()).isNull())
+            {
+              ReadVec(DataFile, TravelTimeErrorName, Error);
+            }
+          else
+            {
+              Error.resize(Data.size());
+              Error.clear();
+            }
+        } catch(netCDF::exceptions::NcException &ex) {
+          // ignore
+        }
       }
 
     void PlotRaypath(const std::string &filename, std::vector<RP_STRUCT> &raypath,

@@ -5,18 +5,21 @@
 // Copyright   : 2008, MM
 //============================================================================
 
-#include <netcdfcpp.h>
+#include <netcdf>
 #include "ReadWriteGravityData.h"
 #include "../Global/NumUtil.h"
 #include "../Global/NetCDFTools.h"
 #include "../ModelBase/NetCDFModelTools.h"
+
+using netCDF::NcFile;
+using netCDF::NcDim;
 
 namespace jif3D
   {
 
     static const std::string ScalarGravityName = "Scalar_gravity";
     static const std::string ScalarErrorName = "dGz";
-    static const std::string TensorErrorName = "dU";
+//    static const std::string TensorErrorName = "dU";
     static const std::string UxxName = "Uxx";
     static const std::string UxyName = "Uxy";
     static const std::string UxzName = "Uxz";
@@ -43,11 +46,14 @@ namespace jif3D
 
     //! Write one component of an FTG matrix for all measurement positions
     void WriteMatComp(NcFile &NetCDFFile, const std::string &CompName, const rvec &MatVec,
-        const size_t n, NcDim *Dimension)
+        const size_t n, const NcDim &Dimension)
       {
         rvec tempdata(MatVec.size() / 9);
-        for (size_t i = 0; i < tempdata.size(); ++i)
+
+        for (size_t i = 0; i < tempdata.size(); ++i) {
           tempdata(i) = MatVec(i * 9 + n);
+        }
+
         WriteVec(NetCDFFile, CompName, tempdata, Dimension, "1/s2");
       }
 
@@ -61,18 +67,19 @@ namespace jif3D
      */
     GravityDataType IdentifyGravityDatafileType(const std::string &filename)
       {
-
         //open the file
-        NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
-        const size_t nvars = DataFile.num_vars();
-        for (size_t i = 0; i < nvars; ++i)
-          {
-            std::string currname(DataFile.get_var(i)->name());
-            if (currname == ScalarGravityName)
-              return scalar;
-            if (currname == UxxName)
-              return ftg;
-          }
+        NcFile DataFile(filename.c_str(), NcFile::read);
+
+        if(!DataFile.getVar(ScalarGravityName).isNull())
+        {
+          return scalar;
+        }
+        else if(!DataFile.getVar(UxxName).isNull())
+        {
+          return ftg;
+        }
+
+
         return unknown;;
       }
 
@@ -100,9 +107,9 @@ namespace jif3D
             std::fill(LocalError.begin(), LocalError.end(), 0.0);
           }
         //create a netcdf file
-        NcFile DataFile(filename.c_str(), NcFile::Replace);
+        NcFile DataFile(filename.c_str(), NcFile::replace);
         //we use the station number as a dimension
-        NcDim *StatNumDim = DataFile.add_dim(StationNumberName.c_str(), Data.size());
+        NcDim StatNumDim = DataFile.addDim(StationNumberName.c_str(), Data.size());
 
         //write out the measurement coordinates
         WriteVec(DataFile, MeasPosXName, PosX, StatNumDim, "m");
@@ -125,21 +132,25 @@ namespace jif3D
         ThreeDGravityModel::tMeasPosVec &PosX, ThreeDGravityModel::tMeasPosVec &PosY,
         ThreeDGravityModel::tMeasPosVec &PosZ, jif3D::rvec &Error)
       {
-        NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
+        NcFile DataFile(filename.c_str(), NcFile::read);
         ReadVec(DataFile, MeasPosXName, PosX);
         ReadVec(DataFile, MeasPosYName, PosY);
         ReadVec(DataFile, MeasPosZName, PosZ);
         ReadVec(DataFile, ScalarGravityName, Data);
-        NcError NetCDFError(NcError::silent_nonfatal);
-        if (DataFile.get_var(ScalarErrorName.c_str()) != nullptr)
-          {
-            ReadVec(DataFile, ScalarErrorName, Error);
-          }
-        else
-          {
-            Error.resize(Data.size());
-            Error.clear();
-          }
+
+        try {
+          if (!DataFile.getVar(ScalarErrorName).isNull())
+            {
+              ReadVec(DataFile, ScalarErrorName, Error);
+            }
+          else
+            {
+              Error.resize(Data.size());
+              Error.clear();
+            }
+        } catch(const netCDF::exceptions::NcException &ex) {
+          // ignore
+        }
       }
 
     /*! Read FTG measurements and their position from a netcdf file. Data will have
@@ -155,7 +166,7 @@ namespace jif3D
         ThreeDGravityModel::tMeasPosVec &PosX, ThreeDGravityModel::tMeasPosVec &PosY,
         ThreeDGravityModel::tMeasPosVec &PosZ, jif3D::rvec &Error)
       {
-        NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
+        NcFile DataFile(filename.c_str(), NcFile::read);
         ReadVec(DataFile, MeasPosXName, PosX);
         ReadVec(DataFile, MeasPosYName, PosY);
         ReadVec(DataFile, MeasPosZName, PosZ);
@@ -169,14 +180,18 @@ namespace jif3D
           {
             ReadMatComp(DataFile, TensorNames.at(i), Data, i);
           }
+
         for (size_t i = 0; i < 9; ++i)
           {
-            NcError NetCDFError(NcError::silent_nonfatal);
-            std::string currname = "d" + TensorNames.at(i);
-            if (DataFile.get_var(currname.c_str()) != nullptr)
-              {
-                ReadMatComp(DataFile, currname, Error, i);
-              }
+            try {
+              const std::string currname = "d" + TensorNames.at(i);
+              if (!DataFile.getVar(currname).isNull())
+                {
+                  ReadMatComp(DataFile, currname, Error, i);
+                }
+            } catch(const netCDF::exceptions::NcException &ex) {
+              // ignore
+            }
           }
 
       }
@@ -200,9 +215,9 @@ namespace jif3D
         assert(nmeas == PosZ.size());
         assert(nmeas * 9 == Data.size());
 
-        NcFile DataFile(filename.c_str(), NcFile::Replace);
+        NcFile DataFile(filename.c_str(), NcFile::replace);
 
-        NcDim *StatNumDim = DataFile.add_dim(StationNumberName.c_str(), nmeas);
+        NcDim StatNumDim = DataFile.addDim(StationNumberName.c_str(), nmeas);
 
         WriteVec(DataFile, MeasPosXName, PosX, StatNumDim, "m");
         WriteVec(DataFile, MeasPosYName, PosY, StatNumDim, "m");

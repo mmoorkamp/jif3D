@@ -11,6 +11,7 @@
 
 #include <stdlib.h>
 #include "ThreeDGravityModel.h"
+#include "../Global/Jif3DPlatformHelper.h"
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/lambda/lambda.hpp>
 
@@ -34,7 +35,7 @@ template <typename ModelType>
 void MakeRandomModel(ModelType &Model, const size_t maxcells,
     const size_t nmeas = 10, const bool withbackground = true)
   {
-    srand( time(NULL));
+    srand( (unsigned int)time(NULL));
     //make three random axis, each with possibly different lengths and cell sizes
     jif3D::ThreeDModelBase::t3DModelDim XDim = GenerateDimension(maxcells);
     jif3D::ThreeDModelBase::t3DModelDim YDim = GenerateDimension(maxcells);
@@ -58,7 +59,7 @@ void MakeRandomModel(ModelType &Model, const size_t maxcells,
     Model.SetData().resize(boost::extents[xsize][ysize][zsize]);
     //and fill the grid with random values
     std::generate_n(Model.SetData().origin(), xsize * ysize * zsize,
-        drand48() * boost::lambda::constant(10) + 1.0);
+        jif3D::platform::drand48() * boost::lambda::constant(10) + 1.0);
     //generate measurement  points
     //the z-axis is positive down, so we choose negative z-coordinates
     // => we are measuring above the surface

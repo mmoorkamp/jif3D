@@ -8,9 +8,12 @@
 #ifndef VECTORTRANSFORM_H_
 #define VECTORTRANSFORM_H_
 
+#include <cassert>
 #include "../Global/Serialization.h"
 #include "../Global/VecMat.h"
 #include "../Global/FatalException.h"
+
+#include "Jif3DGlobal.h"
 
 /*! \file VectorTransform.h
  * Provide function objects that transform one vector to another. The main purpose is to
@@ -36,7 +39,7 @@ namespace jif3D
      * For example to calculate an invariant from FTG data, GetInputSize would be 9 and GetOutputSize would give 1. An InputVector
      * of size 90, i.e. 10 tensor observations, would result in and output of 10, i.e. 10 invariants.
      */
-    class VectorTransform
+    class J3DEXPORT VectorTransform
       {
     private:
       friend class access;
@@ -66,7 +69,7 @@ namespace jif3D
     //! In some cases we just want the output be the same as the input, this class simply copies the input
     /*! This class implements the simplest case, we just copy the input to the output.
      */
-    class CopyTransform: public VectorTransform
+    class J3DEXPORT CopyTransform: public VectorTransform
       {
     private:
       //! The number of elements we expect to transform, this is purely used for potential error checking between creating the object and using it
@@ -89,7 +92,7 @@ namespace jif3D
           return ntrans;
         }
       //! This transform only copies its input, but we can specify an expected size to perform error checking in code that uses the transform
-      CopyTransform(size_t intendedsize = 1) :
+      CopyTransform(size_t intendedsize) :
           ntrans(intendedsize)
         {
         }
@@ -117,7 +120,7 @@ namespace jif3D
      * @param Transform The transformation class to apply to the data
      * @return A vector that contains the transformed data
      */
-    template<class VectorTransform>
+    template<class VectorTransform> J3DEXPORT
     jif3D::rvec ApplyTransform(const jif3D::rvec &InputVector, VectorTransform &Transform)
       {
         const size_t insize = InputVector.size();

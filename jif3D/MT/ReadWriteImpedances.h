@@ -1,7 +1,7 @@
 //============================================================================
 // Name        : ReadWriteImpedances.h
 // Author      : Jul 13, 2009
-// Version     : 
+// Version     :
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
@@ -9,6 +9,7 @@
 #define READWRITEIMPEDANCES_H_
 
 #include "../Global/Serialization.h"
+#include "../Global/Jif3DGlobal.h"
 #include "../Global/VecMat.h"
 
 namespace jif3D
@@ -29,7 +30,7 @@ namespace jif3D
      * @param Errors Optional parameter containing the impedance errors with the same number of Elements with Impedances.
      *        As we only have one error estimate per element we write only the components corresponding to the real parts.
      */
-    void WriteImpedancesToNetCDF(const std::string &filename,
+    J3DEXPORT void WriteImpedancesToNetCDF(const std::string &filename,
         const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
         const jif3D::rvec &Impedances, const jif3D::rvec &Errors = jif3D::rvec(),
@@ -49,7 +50,7 @@ namespace jif3D
      *         but contains all zeros if no error information present in the file.
      *         Also the error for the real and imaginary parts are always identical.
      */
-    void ReadImpedancesFromNetCDF(const std::string &filename,
+    J3DEXPORT void ReadImpedancesFromNetCDF(const std::string &filename,
         std::vector<double> &Frequencies, std::vector<double> &StatXCoord,
         std::vector<double> &StatYCoord, std::vector<double> &StatZCoord,
         jif3D::rvec &Impedances, jif3D::rvec &ImpError, std::vector<double> &Distortion);
@@ -63,7 +64,7 @@ namespace jif3D
      * @param Errors The impedance errors recorded in the file, will have the same number of elements as Impedances
      *        but the values for the real and imaginary part of each element are always identical
      */
-    void ReadImpedancesFromMTT(const std::string &filename,
+    J3DEXPORT void ReadImpedancesFromMTT(const std::string &filename,
         std::vector<double> &Frequencies, jif3D::rvec &Impedances, jif3D::rvec &Errors);
 
     //! A very basic routine to write impedances for several sites to  .mtt files in the format used by University of Goettingen.
@@ -74,7 +75,7 @@ namespace jif3D
      * @param Err The impedance errors recorded in the file, will have the same number of elements as Impedances
      *        but the values for the real and imaginary part of each element are always identical
      */
-    void WriteImpedancesToMtt(const std::string &filenamebase,
+    J3DEXPORT void WriteImpedancesToMtt(const std::string &filenamebase,
         const std::vector<double> &Frequencies, const jif3D::rvec &Imp,
         const jif3D::rvec &Err);
 
@@ -91,7 +92,7 @@ namespace jif3D
      * @param Err Impedance errors with the same number of Elements with Impedances.
      *        As we only have one error estimate per element we write only the components corresponding to the real parts.
      */
-    void ReadAppResFromAscii(const std::string &filename,
+    J3DEXPORT void ReadAppResFromAscii(const std::string &filename,
         std::vector<double> &Frequencies, std::vector<double> &StatXCoord,
         std::vector<double> &StatYCoord, std::vector<double> &StatZCoord,
         jif3D::rvec &Imp, jif3D::rvec &Err);
@@ -109,7 +110,7 @@ namespace jif3D
      * @param Err Impedance errors with the same number of Elements with Impedances.
      *        As we only have one error estimate per element we write only the components corresponding to the real parts.
      */
-    void WriteAppResToAscii(const std::string &filename,
+    J3DEXPORT void WriteAppResToAscii(const std::string &filename,
         const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
         const jif3D::rvec &Imp, const jif3D::rvec &Err);
@@ -127,7 +128,7 @@ namespace jif3D
      * @param Err Impedance errors with the same number of Elements with Impedances.
      *        As we only have one error estimate per element we write only the components corresponding to the real parts.
      */
-    void ReadImpedancesFromModEM(const std::string &filename,
+    J3DEXPORT void ReadImpedancesFromModEM(const std::string &filename,
         std::vector<double> &Frequencies, std::vector<double> &StatXCoord,
         std::vector<double> &StatYCoord, std::vector<double> &StatZCoord,
         jif3D::rvec &Imp, jif3D::rvec &Err);
@@ -145,7 +146,7 @@ namespace jif3D
      * @param Err Impedance errors with the same number of Elements with Impedances.
      *        As we only have one error estimate per element we write only the components corresponding to the real parts.
      */
-    void WriteImpedancesToModEM(const std::string &filename,
+    J3DEXPORT void WriteImpedancesToModEM(const std::string &filename,
         const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
         const jif3D::rvec &Imp, const jif3D::rvec &Err);

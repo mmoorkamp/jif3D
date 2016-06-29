@@ -1,7 +1,7 @@
 //============================================================================
 // Name        : X3DModel.h
 // Author      : Jul 2, 2009
-// Version     : 
+// Version     :
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
@@ -9,6 +9,7 @@
 #define X3DMODEL_H_
 
 #include "../Global/Serialization.h"
+#include "../Global/Jif3DGlobal.h"
 #include "ThreeDMTModel.h"
 
 namespace jif3D
@@ -21,7 +22,7 @@ namespace jif3D
      * so that it can seamlessly used with the x3d forward calculation classes.
      *
      */
-    class X3DModel: public ThreeDMTModel
+    class J3DEXPORT X3DModel: public ThreeDMTModel
       {
     private:
       //! The thicknesses of the background layers in m
@@ -95,9 +96,9 @@ namespace jif3D
       FindAssociatedIndices(const double xcoord, const double ycoord,
           const double zcoord) const;
       //! Write all model information to a netcdf file
-      virtual void WriteNetCDF(const std::string filename) const;
+      virtual void WriteNetCDF(const std::string &filename) const override;
       //! Read all model information from a netcdf file
-      virtual void ReadNetCDF(const std::string filename);
+      virtual void ReadNetCDF(const std::string &filename) override;
       //! The copy operator for X3DModels
       X3DModel& operator=(const X3DModel& source);
       //! Other models will be copied by the copy operator for the base class

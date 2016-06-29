@@ -9,6 +9,7 @@
 #ifndef SETUPINVERSION_H_
 #define SETUPINVERSION_H_
 
+#include "../Global/Jif3DGlobal.h"
 #include "../Inversion/ObjectiveFunction.h"
 #include "../Inversion/GradientBasedOptimization.h"
 #include <boost/program_options.hpp>
@@ -25,7 +26,7 @@ namespace jif3D
     /*! Depending on command line options this class sets up different optimization algorithm
      * that can be used for joint inversion.
      */
-    class SetupInversion
+    class J3DEXPORT SetupInversion
       {
     private:
     	//! Scale the initial gradient for the L-BFGS optimization algorithm in the hope to improve convergence

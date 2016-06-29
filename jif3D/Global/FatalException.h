@@ -7,6 +7,7 @@
 
 #ifndef FATALEXCEPTION_H_
 #define FATALEXCEPTION_H_
+
 #include <stdexcept>
 #include <string>
 

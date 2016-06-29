@@ -8,6 +8,7 @@
 #ifndef TARITS2DMT_H_
 #define TARITS2DMT_H_
 
+#include "../Global/Jif3DGlobal.h"
 
 extern "C"
   {
@@ -29,7 +30,7 @@ extern "C"
      * @param EZ_REAL The real part of the vertical electric field in each cell (output)
      * @param EZ_IMAG The imaginary part of the vertical electric field in each cell (output)
      */
-    void hpol_(const double* T, const long* NX, const long* NZ,
+    J3DEXPORT void hpol_(const double* T, const long* NX, const long* NZ,
         const double* DXJ, const double* DZI, const double* RO,
         double* HY_REAL, double* HY_IMAG, double* EX_REAL, double* EX_IMAG,
         double* EZ_REAL, double* EZ_IMAG);
@@ -51,7 +52,7 @@ extern "C"
      * @param EY_REAL The real part of the horizontal electric field in each cell (output)
      * @param EY_IMAG The imaginary part of the horizontal electric field in each cell (output)
      */
-    void epol_(const double* T, const long* NX, const long* NZ,
+    J3DEXPORT void epol_(const double* T, const long* NX, const long* NZ,
         const long* IONOS, const long* IATM, const double* DXJ,
         const double* DZI, const double* RO, const double* RIONOS,
         double* HX_REAL, double* HX_IMAG, double* EY_REAL, double* EY_IMAG);

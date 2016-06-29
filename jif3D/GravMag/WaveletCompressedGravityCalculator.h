@@ -9,7 +9,9 @@
 #ifndef WAVELETCOMPRESSEDGRAVITYCALCULATOR_H_
 #define WAVELETCOMPRESSEDGRAVITYCALCULATOR_H_
 
-#include "CachedGravityCalculator.h"
+#include "CachedGravMagCalculator.h"
+#include "ThreeDGravMagImplementation.h"
+#include "../Global/Jif3DGlobal.h"
 
 namespace jif3D
   {
@@ -26,7 +28,7 @@ namespace jif3D
      * sensitivities occupy completely different coefficient in the wavelet domain than the model. Use with
      * extreme care !
      */
-    class WaveletCompressedGravityCalculator: public jif3D::CachedGravMagCalculator
+    class J3DEXPORT WaveletCompressedGravityCalculator : public jif3D::CachedGravMagCalculator
       {
     private:
       //we store some array sizes when we calculate a new model, so we do not

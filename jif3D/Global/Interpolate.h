@@ -9,6 +9,7 @@
 #define INTERPOLATE_H_
 
 #include "VecMat.h"
+#include "Jif3DGlobal.h"
 
 /*! \file Interpolate.h
  * This file contains routines for interpolation and extrapolation.
@@ -29,7 +30,7 @@ namespace jif3D
      * @param y3 The associated function value f(x3)
      * @return The x-value of the interpolated minimum
      */
-    double QuadraticInterpolation(const double x1, const double y1,
+    J3DEXPORT double QuadraticInterpolation(const double x1, const double y1,
         const double x2, const double y2, const double x3, const double y3)
       {
         double value = (x2 * x2 - x3 * x3) * y1 + (x3 * x3 - x1 * x1) * y2

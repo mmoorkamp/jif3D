@@ -10,6 +10,7 @@
 #define NONLINEARCONJUGATEGRADIENT_H_
 
 #include "GradientBasedOptimization.h"
+#include "../Global/Jif3DGlobal.h"
 
 namespace jif3D
   {
@@ -21,7 +22,7 @@ namespace jif3D
      * and the last gradient. Some of our tests indicate however that L-BFGS
      * performs better at a moderate cost of additional storage.
      */
-    class NonLinearConjugateGradient: public jif3D::GradientBasedOptimization
+    class J3DEXPORT NonLinearConjugateGradient: public jif3D::GradientBasedOptimization
       {
     private:
       //! The gradient at the last iteration

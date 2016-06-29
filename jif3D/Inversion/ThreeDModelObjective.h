@@ -1,7 +1,7 @@
 //============================================================================
 // Name        : ThreeDModelObjective.h
 // Author      : Nov 29, 2010
-// Version     : 
+// Version     :
 // Copyright   : 2010, mmoorkamp
 //============================================================================
 
@@ -11,6 +11,7 @@
 #include "../Global/Serialization.h"
 #include "../Global/FatalException.h"
 #include "../Global/VectorTransform.h"
+#include "../Global/Jif3DGlobal.h"
 #include "../ModelBase/ModelRefiner.h"
 #include "../Inversion/ObjectiveFunction.h"
 
@@ -33,7 +34,7 @@ namespace jif3D
      *
      */
     template<class ThreeDCalculatorType>
-    class ThreeDModelObjective: public jif3D::ObjectiveFunction
+    class J3DEXPORT ThreeDModelObjective: public jif3D::ObjectiveFunction
       {
     public:
       //! We create a shorthand for the template parameter that determines the type of the forward calculation object
@@ -131,12 +132,15 @@ namespace jif3D
             throw jif3D::FatalException(
                 "Cannot have empty observations in objective function. ", __FILE__,
                 __LINE__);
-          if (!DataTransform)
+          if (DataTransform)
             {
-              DataTransform = boost::make_shared<jif3D::CopyTransform>();
-              Calculator.SetDataTransform(DataTransform);
+              ObservedData = jif3D::ApplyTransform(Data, *DataTransform);
             }
-          ObservedData = jif3D::ApplyTransform(Data, *DataTransform);
+          else
+            {
+              ObservedData = Data;
+            }
+
         }
       //! Return a read only version of the observed data
       const jif3D::rvec &GetObservedData() const
@@ -251,7 +255,6 @@ namespace jif3D
           {
             SynthData = Calculator.Calculate(CoarseModel);
           }
-        SynthData = jif3D::ApplyTransform(SynthData, *DataTransform);
         if (SynthData.size() != ObservedData.size())
           throw jif3D::FatalException(
               " ThreeDModelObjective: Forward calculation does not give same amount of data !",

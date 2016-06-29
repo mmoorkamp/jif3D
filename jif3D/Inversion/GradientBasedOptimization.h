@@ -1,7 +1,7 @@
 //============================================================================
 // Name        : GradientBasedOptimization.h
 // Author      : Jun 29, 2009
-// Version     : 
+// Version     :
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
@@ -9,6 +9,7 @@
 #ifndef GRADIENTBASEDOPTIMIZATION_H_
 #define GRADIENTBASEDOPTIMIZATION_H_
 
+#include "../Global/Jif3DGlobal.h"
 #include "NonLinearOptimization.h"
 
 namespace jif3D
@@ -27,7 +28,7 @@ namespace jif3D
      * between two steps of the inversion you have to call InvalidateCache in order to ensure
      * proper calculation of misfit and gradient.
      */
-    class GradientBasedOptimization: public jif3D::NonLinearOptimization
+    class J3DEXPORT GradientBasedOptimization : public jif3D::NonLinearOptimization
       {
     private:
       //! Have we evaluated the misfit and gradient for the current model?

@@ -1,15 +1,17 @@
 //============================================================================
 // Name        : RegularizationFunction.h
 // Author      : 1 Mar 2013
-// Version     : 
+// Version     :
 // Copyright   : 2013, mm489
 //============================================================================
 
 #ifndef REGULARIZATIONFUNCTION_H_
 #define REGULARIZATIONFUNCTION_H_
 
+
 #include "../Global/Serialization.h"
 #include "../Inversion/ObjectiveFunction.h"
+#include "../Global/Jif3DGlobal.h"
 
 namespace jif3D
   {
@@ -19,7 +21,7 @@ namespace jif3D
      * makes setting up the appropriate regularization easier as we can access
      * common functionality through a point to the base class.
      */
-    class RegularizationFunction: public jif3D::ObjectiveFunction
+    class J3DEXPORT RegularizationFunction: public jif3D::ObjectiveFunction
       {
     private:
       //! The storage for a reference model

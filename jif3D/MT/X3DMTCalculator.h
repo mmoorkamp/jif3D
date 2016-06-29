@@ -1,7 +1,7 @@
 //============================================================================
 // Name        : X3DMTCalculator.h
 // Author      : Jul 7, 2009
-// Version     : 
+// Version     :
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
@@ -11,11 +11,17 @@
 #include "../Global/VecMat.h"
 #include "../Global/VectorTransform.h"
 #include <limits>
+
 #include <boost/filesystem.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
+
+#include "../Global/Jif3DGlobal.h"
+#include "../Global/Serialization.h"
+#include "../Global/VecMat.h"
 #include "../Global/convert.h"
+#include "../Global/Jif3DPlatformHelper.h"
 #include "ReadWriteX3D.h"
 #include "X3DModel.h"
 
@@ -44,7 +50,7 @@ namespace jif3D
      * As the difference does not have to be very large, it is probably best to always have one grid cell in each layer
      * that differs from everything else by 0.1% or so.
      */
-    class X3DMTCalculator
+    class J3DEXPORT X3DMTCalculator
       {
     public:
       //! This type definition is necessary so that ThreeDModelObjective can correctly deduce the native type for a model object for this class
@@ -81,8 +87,10 @@ namespace jif3D
           //make a unique filename for the sensitivity file created by this object
           //we use boost uuid to generate a unique identifier tag
           //and translate it to a string to generate the filename
-          return "mt" + jif3D::stringify(getpid()) + "x" + jif3D::stringify(this) + "t"
-              + jif3D::stringify(tag);
+          return "mt"
+		        + jif3D::stringify(jif3D::platform::get_process_id()) + "x"
+				+ jif3D::stringify(this) + "t"
+                + jif3D::stringify(tag);
         }
 
     public:

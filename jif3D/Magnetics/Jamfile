@@ -2,15 +2,15 @@ import testing ;
 lib magnetics : ThreeDMagneticModel.cpp 
               OMPMagneticImp.cpp  OMPMagneticGradImp.cpp ReadWriteMagneticData.cpp
                  ../Global//global ../Gravity//gravity  ../ModelBase//modelbase
-                 ..//boost_core
+                 ..//boost_core ..//netcdf_c++ ..//netcdf
                ;
                
                     
-alias core :  ../ModelBase//modelbase ../Global//global ..//netcdf_c++ ..//netcdf  ..//boost_core ;
+alias core : ../ModelBase//modelbase ../Global//global ..//netcdf_c++ ..//netcdf  ..//boost_core ;
 
 unit-test Calc_test : test_MagneticCalculation.cpp magnetics core  ;
 unit-test Objective_test : test_MagneticObjective.cpp magnetics core ../Inversion//inversion  ;
 unit-test Grad_Objective_test : test_MagneticGradObjective.cpp magnetics core ../Inversion//inversion  ;
-exe maggrid : maggrid.cpp magnetics  core  ;
-exe maggradientgrid : maggradientgrid.cpp magnetics  core  ;
-exe makemagmesh : makemagmesh.cpp magnetics  core  ;
+exe maggrid : maggrid.cpp magnetics  core ;
+exe maggradientgrid : maggradientgrid.cpp magnetics core ;
+exe makemagmesh : makemagmesh.cpp magnetics core ;

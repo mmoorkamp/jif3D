@@ -9,7 +9,7 @@
 //test the file utility functions
 #define BOOST_TEST_MODULE FileUtil test
 #define BOOST_TEST_MAIN ...
-#include <boost/test/included/unit_test.hpp>
+#include "Jif3DTesting.h"
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/algorithm/string.hpp>
 #include <stdlib.h>

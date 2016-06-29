@@ -201,7 +201,7 @@ int hpx_main(boost::program_options::variables_map& vm)
 
     Model.SetDistortionParameters(C);
 //we define a few constants that are used throughout the inversion
-    const size_t ndata = Data.size();
+//    const size_t ndata = Data.size(); // unused
 
     for (size_t i = 0; i < Model.GetConductivities().shape()[2]; ++i)
       {

@@ -1,16 +1,18 @@
 //============================================================================
 // Name        : OneDRegularization.h
 // Author      : 14 Jun 2012
-// Version     : 
+// Version     :
 // Copyright   : 2012, mm489
 //============================================================================
 
 #ifndef ONEDREGULARIZATION_H_
 #define ONEDREGULARIZATION_H_
 
+
 #include "../Global/Serialization.h"
 #include "../Global/VecMat.h"
 #include "../Inversion/ObjectiveFunction.h"
+#include "../Global/Jif3DGlobal.h"
 
 namespace jif3D
   {
@@ -20,7 +22,7 @@ namespace jif3D
     /*! For our 1D experiments we need a special regularization class
      *
      */
-    class OneDRegularization: public jif3D::ObjectiveFunction
+    class J3DEXPORT OneDRegularization: public jif3D::ObjectiveFunction
       {
     private:
       //! The matrix we apply to the model vector to calculate the regularization

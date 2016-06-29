@@ -8,7 +8,9 @@
 #ifndef MINIMUMSUPPORT_H_
 #define MINIMUMSUPPORT_H_
 
+
 #include "../Global/Serialization.h"
+#include "../Global/Jif3DGlobal.h"
 #include "RegularizationFunction.h"
 #include "MatOpRegularization.h"
 #include <boost/shared_ptr.hpp>
@@ -16,7 +18,7 @@
 namespace jif3D
   {
 
-    class MinimumSupport: public jif3D::RegularizationFunction
+    class J3DEXPORT MinimumSupport: public jif3D::RegularizationFunction
       {
     private:
       size_t ModelNumber;

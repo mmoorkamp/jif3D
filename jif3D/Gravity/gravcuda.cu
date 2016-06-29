@@ -42,7 +42,6 @@ void  PrepareData(double **d_xcoord, double **d_ycoord, double **d_zcoord,
       const double *xsize,const double *ysize,const double *zsize, unsigned int nx,unsigned int ny,unsigned int nz)
     {
       //initialize the device and perform basic checks
-      // we always use the first device
       int deviceCount;
       CUDA_SAFE_CALL(cudaGetDeviceCount(&deviceCount));
       if (deviceCount == 0)
@@ -51,6 +50,7 @@ void  PrepareData(double **d_xcoord, double **d_ycoord, double **d_zcoord,
           exit(-1);
         }
       int dev = 0;
+      //find the first unused device
       while (cudaSetDevice(dev) == cudaErrorDeviceAlreadyInUse && dev <  deviceCount)
         {
           ++dev;

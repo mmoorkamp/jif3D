@@ -81,7 +81,7 @@ namespace jif3D
       {
         //if we want to clean all temporary files (default)
         if (CleanFiles)
-         {
+          {
             //remove all the temporary files and directories generated for calculations
             CleanUp();
           }
@@ -99,6 +99,10 @@ namespace jif3D
         //result will hold the final impedance values with
         //applied distortion correction
         jif3D::rvec result(nmeas * nfreq * 8);
+        if (!DataTransform)
+          {
+            DataTransform = boost::make_shared<jif3D::CopyTransform>(result.size());
+          }
         bool FatalError = false;
         result.clear();
         //we store the undistorted impedance with the calculator object
@@ -195,8 +199,8 @@ namespace jif3D
 
         for (int i = minfreqindex; i < maxfreqindex; ++i)
           {
-            size_t currindex = i - minfreqindex;
-            size_t startindex = nmeas * currindex * 8;
+            const size_t currindex = i - minfreqindex;
+            const size_t startindex = nmeas * currindex * 8;
             ForwardResult freqresult = FreqResult[currindex].get();
 
             std::copy(freqresult.DistImpedance.begin(), freqresult.DistImpedance.end(),
@@ -211,8 +215,11 @@ namespace jif3D
         if (FatalError)
           throw jif3D::FatalException("Problem in MT forward calculation.", __FILE__,
           __LINE__);
+        if (DataTransform)
+          {
+            result = jif3D::ApplyTransform(result, *DataTransform);
+          }
         return result;
-
       }
 
     rvec X3DMTCalculator::LQDerivative(const X3DModel &Model, const rvec &Misfit,

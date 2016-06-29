@@ -8,9 +8,10 @@
 //test the vector transforms
 #define BOOST_TEST_MODULE VectorTransform test
 #define BOOST_TEST_MAIN ...
-#include <boost/test/included/unit_test.hpp>
+#include "Jif3DTesting.h"
 #include <boost/test/floating_point_comparison.hpp>
 #include "VectorTransform.h"
+#include "Jif3DPlatformHelper.h"
 
 BOOST_AUTO_TEST_SUITE( VectorTransform_Test_Suite )
 
@@ -75,7 +76,7 @@ class  TestTransform : public jif3D::VectorTransform
           const size_t nelements = nin * ((rand() % 10) + 1);
           //make a random input vector
           jif3D::rvec InVector(nelements);
-          std::generate(InVector.begin(),InVector.end(),drand48);
+          std::generate(InVector.begin(),InVector.end(), jif3D::platform::drand48);
           //transform the vector
           jif3D::rvec OutVector(jif3D::ApplyTransform(InVector,Transform));
           //check that the transform has been applied correctly

@@ -3,6 +3,7 @@
 
 
 #include <vector>
+#include "../Global/Jif3DGlobal.h"
 #include "tomo_types.h"
 
 /*! \file
@@ -19,17 +20,17 @@ namespace jif3D
     /* @{ */
 
     //! The basic forward modeling function, uses the Podvin-Lecomte algorithm to calculate traveltimes and then constructs rays from these times
-    int ForwardModRay(const GEOMETRY &geo, const GRID_STRUCT &grid, DATA_STRUCT &data,
+    J3DEXPORT int ForwardModRay(const GEOMETRY &geo, const GRID_STRUCT &grid, DATA_STRUCT &data,
         std::vector<RP_STRUCT> &raypath);
     /*in podvin-lecomte-3D.c*/
-    float interpolate(float x, float y, float z, const GRID_STRUCT &grid, float *data);
+    J3DEXPORT float interpolate(float x, float y, float z, const GRID_STRUCT &grid, float *data);
 
   /* @} */
   }
 
 
 
-jif3D::RayResult ForwardModShot(const jif3D::GEOMETRY &geo,
+J3DEXPORT jif3D::RayResult ForwardModShot(const jif3D::GEOMETRY &geo,
     const jif3D::GRID_STRUCT &grid);
 
 

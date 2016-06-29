@@ -8,14 +8,16 @@
 #ifndef READWRITEX3D_H_
 #define READWRITEX3D_H_
 
-
-#include "../ModelBase/ThreeDModelBase.h"
-#include "X3DModel.h"
 #include <string>
 #include <vector>
 #include <complex>
+
 #include <boost/multi_array.hpp>
 #include <boost/filesystem.hpp>
+
+#include "../ModelBase/ThreeDModelBase.h"
+#include "../Global/Jif3DGlobal.h"
+#include "X3DModel.h"
 
 namespace jif3D
   {
@@ -35,7 +37,7 @@ namespace jif3D
      * @param bg_conductivities The conductivities in Siemens of the background layers
      * @param bg_thicknesses The thicknesses in m of the background layers
      */
-    void Read3DModelFromX3D(const std::string &filename,
+    J3DEXPORT void Read3DModelFromX3D(const std::string &filename,
         ThreeDModelBase::t3DModelDim &XCellSizes,
         ThreeDModelBase::t3DModelDim &YCellSizes,
         ThreeDModelBase::t3DModelDim &ZCellSizes, ThreeDModelBase::t3DModelData &Data,
@@ -52,7 +54,7 @@ namespace jif3D
      * @param bg_thicknesses The thicknesses in m of the background layers
      * @param Dipole Do we write a model for a dipole gradient calculation
      */
-    void Write3DModelForX3D(const std::string &filename,
+    J3DEXPORT void Write3DModelForX3D(const std::string &filename,
         const ThreeDModelBase::t3DModelDim &XCellSizes,
         const ThreeDModelBase::t3DModelDim &YCellSizes,
         const ThreeDModelBase::t3DModelDim &ZCellSizes,
@@ -79,7 +81,7 @@ namespace jif3D
      * @param Green1 The type of Green's function to be used in stage 1 of the forward calculation
      * @param Green4 The type of Green's function to be used in stage 4 of the forward calculation
      */
-    void WriteProjectFile(const boost::filesystem::path &RootDir,
+    J3DEXPORT void WriteProjectFile(const boost::filesystem::path &RootDir,
         const std::vector<double> &Frequencies, X3DModel::ProblemType Type,
         const std::string &ResultFilename, const std::string &ModelFilename, GreenCalcType Green1 = hst, GreenCalcType Green4 = hst);
 
@@ -97,7 +99,7 @@ namespace jif3D
      * @param maxx The number of cells of the modelling domain in x-direction
      * @param maxy The number of cells of the modelling domain in y-direction
      */
-    void WriteSourceFile(const std::string &filename,
+    J3DEXPORT void WriteSourceFile(const std::string &filename,
         const std::vector<size_t> &SourceXIndex, const std::vector<size_t> &SourceYIndex,
         const std::vector<double> &SourceDepths,
         const std::vector<std::complex<double> > &XPolMoments,
@@ -117,7 +119,7 @@ namespace jif3D
      * @param Hx The x-component of the magnetic field in A/m
      * @param Hy The y-component of the magnetic field in A/m
      */
-    void ReadEMO(const std::string &filename, std::vector<std::complex<double> > &Ex,
+    J3DEXPORT void ReadEMO(const std::string &filename, std::vector<std::complex<double> > &Ex,
         std::vector<std::complex<double> > &Ey, std::vector<std::complex<double> > &Hx,
         std::vector<std::complex<double> > &Hy);
 
@@ -134,7 +136,7 @@ namespace jif3D
      * @param ncellsy The number of cells in y-direction
      * @param ncellsz The number of cells in z-direction
      */
-    void ReadEMA(const std::string &filename, std::vector<std::complex<double> > &Ex,
+    J3DEXPORT void ReadEMA(const std::string &filename, std::vector<std::complex<double> > &Ex,
         std::vector<std::complex<double> > &Ey, std::vector<std::complex<double> > &Ez,
         const size_t ncellsx, const size_t ncellsy, const size_t ncellsz);
 

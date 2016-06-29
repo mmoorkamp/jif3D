@@ -11,9 +11,9 @@
 #include "../Global/VecMat.h"
 #include "../Global/VectorTransform.h"
 #include "../Global/Serialization.h"
+#include "../Global/Jif3DGlobal.h"
 #include "ThreeDGravMagCalculator.h"
 #include <boost/shared_ptr.hpp>
-
 
 namespace jif3D
   {
@@ -37,7 +37,7 @@ namespace jif3D
 
 
     template<class ThreeDModelType>
-    class ThreeDGravMagImplementation
+    class J3DEXPORT ThreeDGravMagImplementation
       {
     private:
       //! A data transform that we can apply to the calculated values, e.g. an invariant of the FTG data

@@ -79,7 +79,7 @@ bool  Between(const double limit1, const double limit2, const double value)
       Model.SetBackgroundThicknesses(bg_thicknesses);
       Model.SetFrequencies().push_back(freqhigh);
       Model.SetFrequencies().push_back(freqlow);
-      const size_t nfreq = Model.GetFrequencies().size();
+      /*const size_t nfreq = */Model.GetFrequencies().size();
 
       jif3D::OneDMTCalculator Calculator;
 
