@@ -30,7 +30,7 @@ project
 		<include>/usr/local/include
 		<include>/usr/local/R-2.6.2/include 
         <include>/usr/local/cuda/include
-        <include>/usr/local/CUDA_SDK/C/common/inc
+        #<include>/usr/local/CUDA_SDK/C/common/inc
         <include>/usr/include/python2.7/
 		<include>"C:/Program Files/NCXX/include/"
 		<include>"C:/Program Files/netCDF 4.4.0/include"
