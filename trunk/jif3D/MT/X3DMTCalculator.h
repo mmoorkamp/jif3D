@@ -107,6 +107,7 @@ namespace jif3D
           std::vector<double> v(RawImpedance.begin(), RawImpedance.end());
           ar & v;
           ar & DataTransform;
+          ar & CleanFiles;
         }
       template<class Archive>
       void load(Archive & ar, const unsigned int version)
@@ -123,6 +124,7 @@ namespace jif3D
           RawImpedance.resize(v.size());
           std::copy(v.begin(), v.end(), RawImpedance.begin());
           ar & DataTransform;
+          ar & CleanFiles;
         }
 #ifdef HAVEHPX
       HPX_SERIALIZATION_SPLIT_MEMBER()

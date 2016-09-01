@@ -95,7 +95,7 @@ namespace jif3D
         maxfreqindex = std::min(maxfreqindex, Model.GetFrequencies().size());
         const size_t nfreq = maxfreqindex - minfreqindex;
         const size_t nmeas = Model.GetMeasPosX().size();
-
+        std::string ErrorMsg;
         //result will hold the final impedance values with
         //applied distortion correction
         jif3D::rvec result(nmeas * nfreq * 8);
@@ -167,6 +167,11 @@ namespace jif3D
 
                 omp_unset_lock(&lck);
               }
+            catch (jif3D::FatalException &e)
+              {
+                ErrorMsg = e.what();
+                FatalError = true;
+              }
             catch (...)
               {
                 FatalError = true;
@@ -213,7 +218,7 @@ namespace jif3D
         //we cannot throw from within the openmp section so if there was an exception
         //inside the parallel region we set FatalErrror to true and throw a new exception here
         if (FatalError)
-          throw jif3D::FatalException("Problem in MT forward calculation.", __FILE__,
+          throw jif3D::FatalException("Problem in MT forward calculation: " + ErrorMsg , __FILE__,
           __LINE__);
         if (DataTransform)
           {
