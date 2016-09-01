@@ -1,13 +1,14 @@
-#include <iostream>
-#include <fstream>
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/assign/std/vector.hpp>
+#include "../Global/Jif3DGlobal.h"
 #include "../Global/convert.h"
 #include "../Gravity/ThreeDGravityModel.h"
 #include "../GravMag/ThreeDGravMagCalculator.h"
 #include "../GravMag/FullSensitivityGravMagCalculator.h"
 #include "../GravMag/MinMemGravMagCalculator.h"
 #include "../Gravity/ThreeDGravityFactory.h"
+#include <iostream>
+#include <fstream>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/assign/std/vector.hpp>
 
 using namespace boost::assign;
 
