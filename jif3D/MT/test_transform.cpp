@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_SUITE( MT_Transforms_Suite )
       {
         jif3D::ComplexLogTransform CLTrans;
         jif3D::rvec TestInput(2);
-        std::generate(TestInput.begin(), TestInput.end(), rand);
+        std::generate(TestInput.begin(), TestInput.end(), drand48);
 
         jif3D::rvec CL(CLTrans.Transform(TestInput));
         jif3D::rmat Deriv(CLTrans.Derivative(TestInput));

@@ -14,6 +14,7 @@ namespace jif3D
     class ComplexLogTransform: public VectorTransform
       {
     private:
+      const double threshold = 1e-30;
       //! The number of elements we expect to transform, this is purely used for potential error checking between creating the object and using it
       size_t ntrans;
       friend class access;
@@ -46,9 +47,13 @@ namespace jif3D
         {
           jif3D::rvec Result(2);
           double absval = std::abs(std::complex<double>(InputVector(0), InputVector(1)));
-          Result(0) = 0.0;
-          if (absval != 0.0)
+          //for impedances any magnitude less than this is negligible
+          //so we use it as a minimum to avoid taking the log of zero
+          if (absval < threshold)
+            Result(0) = std::log(threshold);
+          else
             Result(0) = std::log(absval);
+          //atan2 is protected against small values, so we do not need special precautions here
           Result(1) = std::atan2(InputVector(1), InputVector(0));
           return Result;
         }
@@ -56,7 +61,7 @@ namespace jif3D
       virtual jif3D::rmat Derivative(const jif3D::rvec &InputVector) const
         {
           double p = std::atan2(InputVector(1), InputVector(0));
-          double az = std::abs(std::complex<double>(InputVector(0), InputVector(1)));
+          double az = std::max(threshold,std::abs(std::complex<double>(InputVector(0), InputVector(1))));
           jif3D::rmat Result(2, 2, 0.0);
           Result(0, 0) = cos(p) / az;
           Result(0, 1) = sin(p) / az;
