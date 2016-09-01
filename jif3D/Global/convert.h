@@ -8,6 +8,7 @@
 #ifndef CONVERT_H_
 #define CONVERT_H_
 
+#include "Jif3DGlobal.h"
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -15,7 +16,7 @@
 #include <stdexcept>
 #include <locale>
 
-#include "Jif3DGlobal.h"
+
 
 /*! \file convert.h
  * This file contains routines to convert streamable types to a string and versions of toupper and tolower that
