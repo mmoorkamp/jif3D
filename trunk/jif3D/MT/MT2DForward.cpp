@@ -48,7 +48,7 @@ namespace jif3D
         std::fill_n(Hx_imag.origin(), nelements, 0.0);
         std::fill_n(Ey_real.origin(), nelements, 0.0);
         std::fill_n(Ey_imag.origin(), nelements, 0.0);
-        //we parallelize the calculalion by frequency
+        //we parallelize the calculation by frequency
         //this might not be the most effective way
         //but is easy to implement
 #pragma omp parallel default(shared)

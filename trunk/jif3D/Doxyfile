@@ -574,14 +574,18 @@ WARN_LOGFILE           =
 # directories like "/usr/src/myproject". Separate the files or directories
 # with spaces.
 
-INPUT                  = "Global" \
+INPUT                  = "DCResistivity" \
+                         "Global" \
                          "Gravity" \
-                         "ModelBase" \
+                         "GravMag" \
                          "Inversion" \
-                         "Regularization" \
-                         "MT" \
-                         "Tomo" \
                          "Joint" \
+                         "Magnetics" \
+                         "ModelBase" \
+                         "ModelTransforms" \
+                         "MT" \
+                         "Regularization" \
+                         "Tomo" \
                          "docu.h"
 
 # This tag can be used to specify the character encoding of the source files

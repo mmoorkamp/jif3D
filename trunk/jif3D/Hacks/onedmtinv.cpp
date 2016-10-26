@@ -44,7 +44,8 @@ void MakeInvCovar(jif3D::OneDMTObjective &MTObjective, const jif3D::rvec Imp,
         double freq = Frequencies[i / 2];
         std::cout << "Frequency " << freq << std::endl;
         double appres = jif3D::AppRes(Z, freq);
-        double phase = jif3D::ImpedancePhase(Z) / 180.0 * boost::math::constants::pi<double>();
+        double phase = jif3D::ImpedancePhase(Z) / 180.0
+            * boost::math::constants::pi<double>();
         double sigma_p2 = std::pow(phase * phaseerr, 2);
         double sigma_r2 = std::pow(appres * reserr, 2);
         std::cout << "Z: " << Z << " " << appres << " " << phase << "\n";
@@ -68,7 +69,8 @@ void MakeInvCovar(jif3D::OneDMTObjective &MTObjective, const jif3D::rvec Imp,
         double length2 = sqrt(jif3D::twopimu * freq * appres * sigma_p2);
         double range = std::max(length1, length2);
         double step = 2 * range / (nsamples);
-        std::cout << "Length1: " << length1 << "Length2: " << length2 << "Step: " << step << " " << range << "\n";
+        std::cout << "Length1: " << length1 << "Length2: " << length2 << "Step: " << step
+            << " " << range << "\n";
         for (double zreal = Z.real() - range; zreal < Z.real() + range; zreal += step)
           {
             for (double zimag = Z.imag() - range; zimag < Z.imag() + range; zimag += step)
@@ -111,19 +113,47 @@ int main(int argc, char *argv[])
 
     std::string modelfilename = jif3D::AskFilename("Model file: ");
     std::string datafilename = jif3D::AskFilename("Data file: ");
+    std::string dataextension = jif3D::GetFileExtension(modelfilename);
     jif3D::X3DModel Model;
     Model.ReadNetCDF(modelfilename);
     jif3D::rvec Impedances, ImpError;
     std::vector<double> Frequencies, StatXCoord, StatYCoord, StatZCoord;
-    jif3D::ReadImpedancesFromMTT(datafilename, Frequencies, Impedances, ImpError);
+    if (dataextension.compare(".mod") == 0)
+      {
+        jif3D::ReadImpedancesFromMTT(datafilename, Frequencies, Impedances, ImpError);
+      }
+    else
+      {
+        std::vector<double> C;
+        jif3D::ReadImpedancesFromNetCDF(datafilename, Frequencies, StatXCoord, StatYCoord,
+            StatZCoord, Impedances, ImpError, C);
+      }
 
     boost::shared_ptr<jif3D::OneDMTObjective> MTObjective(new jif3D::OneDMTObjective);
     const size_t nfreq = Frequencies.size();
-    jif3D::rvec OneDImp(nfreq * 2);
-    for (size_t i = 0; i < nfreq; ++i)
+    jif3D::rvec OneDImp(nfreq * 2, 0.0);
+    if (StatXCoord.empty())
       {
-        OneDImp(i * 2) = Impedances(i * 8 + 2);
-        OneDImp(i * 2 + 1) = Impedances(i * 8 + 3);
+        for (size_t i = 0; i < nfreq; ++i)
+          {
+            OneDImp(i * 2) = Impedances(i * 8 + 2);
+            OneDImp(i * 2 + 1) = Impedances(i * 8 + 3);
+          }
+      }
+    else
+      {
+        const size_t nsites = StatXCoord.size();
+        for (size_t i = 0; i < nfreq; ++i)
+          {
+            for (size_t j = 0; j < nsites; ++j)
+              {
+                size_t siteindex = (i * nsites + j) * 8;
+                OneDImp(i * 2) += Impedances( siteindex + 2) - Impedances( siteindex + 4);
+                OneDImp(i * 2 + 1) += Impedances(siteindex + 3)- Impedances( siteindex + 5);
+              }
+            OneDImp(i * 2) /= 2* nsites;
+            OneDImp(i * 2 + 1) /= 2 * nsites;
+          }
       }
     std::cout << "Imp: " << OneDImp << std::endl;
     const size_t nlayers = Model.GetBackgroundConductivities().size();
@@ -233,11 +263,12 @@ int main(int argc, char *argv[])
     std::cout << "Runtime: " << cachedruntime << " s" << std::endl;
     std::cout << std::endl;
     InvModel = ConductivityTransform->GeneralizedToPhysical(InvModel);
+    Model.SetBackgroundConductivities(std::vector<double>(InvModel.begin(),InvModel.end()));
 
-    std::copy(InvModel.begin(),
-        InvModel.begin() + Model.GetConductivities().num_elements(),
-        Model.SetConductivities().origin());
-
+    for (size_t i = 0; i < Model.GetXCellSizes().size(); ++i)
+      for (size_t j = 0; j < Model.GetYCellSizes().size(); ++j)
+        for (size_t k = 0; k < Model.GetZCellSizes().size(); ++k)
+          Model.SetData()[i][j][k] = InvModel(k);
     //calculate the predicted data
     std::cout << "Calculating response of inversion model." << std::endl;
     jif3D::rvec InvData(jif3D::OneDMTCalculator().Calculate(Model));

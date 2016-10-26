@@ -37,7 +37,7 @@ project
         <threading>multi 
         <define>BIND_FORTRAN_LOWERCASE_UNDERSCORE
         <define>BOOST_LOG_DYN_LINK
-        <gpu>on
+        <gpu>off
         <lapack>off
         <optpp>off
         <eigen>off
