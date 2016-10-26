@@ -64,16 +64,15 @@ namespace jif3D
                 gamma = 1.0 / sqrt(NormProd(SearchDir, RawGrad, GetModelCovDiag()));
               }
           }
-        SearchDir *= gamma;
+        SearchDir *= -gamma;
         for (size_t i = 0; i < npairs; ++i)
           {
             double beta = Rho(i)
                 * NormProd(*YHistory.at(i), SearchDir, GetModelCovDiag());
-            SearchDir += *SHistory.at(i) * (Alpha(i) - beta);
+            SearchDir -= *SHistory.at(i) * (Alpha(i) + beta);
           }
         //at each iteration we reset the stepsize
         mu = 1.0;
-        SearchDir *= -1.0;
         //now we do a line search to find the optimum step size mu
         //after this call, both Misfit and RawGrad are already
         //updated for the new model

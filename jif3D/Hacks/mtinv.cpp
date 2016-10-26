@@ -75,9 +75,17 @@ int hpx_main(boost::program_options::variables_map& vm)
         std::string Filename(vm["covmod"].as<std::string>());
         CovModel = *jif3D::ReadAnyModel(Filename).get();
         const size_t ncovmod = CovModel.GetData().num_elements();
+        if (ncovmod == 0)
+          {
+            std::cerr << "Trying to read in covariance model, but no values read !" << std::endl;
+            return 200;
+          }
         CovModVec.resize(ncovmod);
         std::copy(CovModel.GetData().origin(), CovModel.GetData().origin() + ncovmod,
             CovModVec.begin());
+        jif3D::X3DModel WriteModel;
+        WriteModel= CovModel;
+        WriteModel.WriteVTK("cov.vtk");
       }
 
     boost::filesystem::path TempDir = boost::filesystem::current_path();
@@ -93,7 +101,7 @@ int hpx_main(boost::program_options::variables_map& vm)
 
     if (!boost::filesystem::exists(X3DName))
       {
-        std::cerr << X3DName << "is not accessible or  does not exist ! \n";
+        std::cerr << X3DName << " is not accessible or  does not exist ! \n";
         return 500;
       }
 
