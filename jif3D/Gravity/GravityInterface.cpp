@@ -32,8 +32,7 @@ void AllocateModel(const int *storescalar, const int *storetensor)
     bool cachescalar = (storescalar > 0);
     bool cachetensor = (storetensor > 0);
     // we create a new model object that we can use for the calculations
-    GravModel = boost::shared_ptr<jif3D::ThreeDGravityModel>(
-        new jif3D::ThreeDGravityModel);
+    GravModel = boost::make_shared<jif3D::ThreeDGravityModel>();
     //depending on whether we want to save the sensitivities
     //or not we allocate different forward calculation objects
     //for FTG and scalar
