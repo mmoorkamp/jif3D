@@ -14,6 +14,7 @@
 #include "../Global/Jif3DGlobal.h"
 #include "ThreeDGravMagCalculator.h"
 #include <boost/shared_ptr.hpp>
+#include <numeric>
 
 namespace jif3D
   {
