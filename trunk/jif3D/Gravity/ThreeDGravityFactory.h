@@ -58,18 +58,17 @@ namespace jif3D
         if (wantcuda)
           {
 #ifdef HAVEGPU
-            Imp = boost::shared_ptr<ThreeDGravMagImplementation<ThreeDGravityModel> >(
-                new ScalarCudaGravityImp);
+            Imp = boost::make_shared<ScalarCudaGravityImp >();
 #else
-            throw jif3D::FatalException("Code has been compiled without GPU support ! ", __FILE__, __LINE__);
+            throw jif3D::FatalException("Code has been compiled without GPU support ! ",
+            __FILE__, __LINE__);
 #endif
           }
         else
           {
-            Imp = boost::shared_ptr<ThreeDGravMagImplementation<ThreeDGravityModel> >(
-                new ScalarOMPGravityImp);
+            Imp = boost::make_shared<ScalarOMPGravityImp>();
           }
-        return boost::shared_ptr<CalculatorClass>(new CalculatorClass(Imp));
+        return boost::make_shared<CalculatorClass>(Imp);
       }
     /*! Creates a new shared pointer to a calculator object for tensorial gravity. We specify
      * the way the sensitivities are handled through the calculator class in the template parameter. \see ThreeDGravityCalculator
@@ -84,17 +83,17 @@ namespace jif3D
         if (wantcuda)
           {
 #ifdef HAVEGPU
-            Imp = boost::shared_ptr<ThreeDGravMagImplementation<ThreeDGravityModel> >(
-                new TensorCudaGravityImp);
+            Imp = boost::make_shared<TensorCudaGravityImp> >();
 #else
-            throw jif3D::FatalException("Code has been compiled without GPU support ! ", __FILE__, __LINE__);
+            throw jif3D::FatalException("Code has been compiled without GPU support ! ",
+            __FILE__, __LINE__);
 #endif
           }
         else
           {
-            Imp = boost::shared_ptr<ThreeDGravMagImplementation<ThreeDGravityModel> >(new TensorOMPGravityImp);
+            Imp = boost::make_shared<TensorOMPGravityImp >();
           }
-        return boost::shared_ptr<CalculatorClass>(new CalculatorClass(Imp));
+        return boost::make_shared<CalculatorClass>(Imp);
       }
 
   }

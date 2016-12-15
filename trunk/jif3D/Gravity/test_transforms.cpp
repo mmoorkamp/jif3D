@@ -57,8 +57,7 @@ BOOST_AUTO_TEST_SUITE( Gravity_Transforms_Suite )
         boost::shared_ptr<CalculatorType> InvCalculator =
             boost::shared_ptr<CalculatorType>(
                 jif3D::CreateGravityCalculator<CalculatorType>::MakeTensor());
-        boost::shared_ptr<jif3D::VectorTransform> Transform = boost::shared_ptr<
-            jif3D::FTGInvariant>(new jif3D::FTGInvariant());
+        boost::shared_ptr<jif3D::VectorTransform> Transform = boost::make_shared<jif3D::FTGInvariant>();
         InvCalculator->SetDataTransform(Transform);
 
         jif3D::ThreeDGravityModel GravityTest;
@@ -88,8 +87,8 @@ BOOST_AUTO_TEST_SUITE( Gravity_Transforms_Suite )
         boost::shared_ptr<CompType> CompCalculator = boost::shared_ptr<CompType>(
             jif3D::CreateGravityCalculator<CompType>::MakeTensor());
 
-        boost::shared_ptr<jif3D::VectorTransform> Transform = boost::shared_ptr<
-            jif3D::FTGInvariant>(new jif3D::FTGInvariant());
+        boost::shared_ptr<jif3D::VectorTransform> Transform = boost::make_shared<
+            jif3D::FTGInvariant>();
         CacheCalculator->SetDataTransform(Transform);
         CompCalculator->SetDataTransform(Transform);
 
@@ -123,8 +122,8 @@ BOOST_AUTO_TEST_SUITE( Gravity_Transforms_Suite )
             jif3D::CreateGravityCalculator<CalculatorType>::MakeTensor());
         boost::shared_ptr<CalculatorType> InvCalculator(
             jif3D::CreateGravityCalculator<CalculatorType>::MakeTensor());
-        boost::shared_ptr<jif3D::VectorTransform> Transform = boost::shared_ptr<
-            jif3D::FTGInvariant>(new jif3D::FTGInvariant());
+        boost::shared_ptr<jif3D::VectorTransform> Transform = boost::make_shared<
+            jif3D::FTGInvariant>();
         InvCalculator->SetDataTransform(Transform);
 
         jif3D::ThreeDGravityModel GravityTest;
