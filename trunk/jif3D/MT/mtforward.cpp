@@ -5,11 +5,7 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-#include <boost/random/lagged_fibonacci.hpp>
-#include <boost/random/normal_distribution.hpp>
-#include <boost/random/variate_generator.hpp>
-#include <boost/numeric/conversion/cast.hpp>
-#include <boost/program_options.hpp>
+#include "../Global/Jif3DGlobal.h"
 #include "../Global/FileUtil.h"
 #include "../Global/convert.h"
 #include "../Global/Noise.h"
@@ -17,6 +13,14 @@
 #include "X3DModel.h"
 #include "X3DMTCalculator.h"
 #include "ReadWriteImpedances.h"
+
+
+#include <boost/random/lagged_fibonacci.hpp>
+#include <boost/random/normal_distribution.hpp>
+#include <boost/random/variate_generator.hpp>
+#include <boost/numeric/conversion/cast.hpp>
+#include <boost/program_options.hpp>
+
 
 namespace po = boost::program_options;
 

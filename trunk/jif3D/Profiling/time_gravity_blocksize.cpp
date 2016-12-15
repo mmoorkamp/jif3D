@@ -12,8 +12,6 @@
 
 using namespace boost::assign;
 
-
-
 /*! \file time_gravity_blocksize.cpp
  * This program shows the execution time for the gavity forward calculation
  * using CUDA for a fixed model size, but different CUDA thread block sizes.
@@ -85,8 +83,9 @@ int main()
         //set the block size in the implementation object
         Implementation->SetCUDABlockSize(blocksizes.at(i));
         //and assemble the calculator object
-        Calculator = boost::shared_ptr<jif3D::ThreeDGravMagCalculator<jif3D::ThreeDGravityModel> >(
-            new jif3D::MinMemGravMagCalculator<jif3D::ThreeDGravityModel>(Implementation));
+        Calculator =
+            boost::make_shared<MinMemGravMagCalculator<jif3D::ThreeDGravityModel> >(
+                Implementation);
         double rawruntime = 0.0;
         //now we perform several runs and measure the time
         for (size_t j = 0; j < nrunspersize; ++j)

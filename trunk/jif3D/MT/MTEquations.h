@@ -5,12 +5,12 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-#include <complex>
-
-#include <boost/math/constants/constants.hpp>
-
 #include "../Global/Jif3DGlobal.h"
 #include "../Global/VecMat.h"
+#include <complex>
+#include <boost/math/constants/constants.hpp>
+
+
 
 namespace jif3D
   {

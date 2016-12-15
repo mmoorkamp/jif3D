@@ -8,16 +8,18 @@
 #ifndef MTUTILS_H_
 #define MTUTILS_H_
 
+#include "../Global/Jif3DGlobal.h"
+#include "../ModelBase/ThreeDModelBase.h"
+#include "../Global/VecMat.h"
+#include "X3DModel.h"
+
 #include <vector>
 #include <string>
 #include <complex>
 
 #include <boost/filesystem/operations.hpp>
 
-#include "X3DModel.h"
-#include "../ModelBase/ThreeDModelBase.h"
-#include "../Global/VecMat.h"
-#include "../Global/Jif3DGlobal.h"
+
 
 namespace jif3D
   {

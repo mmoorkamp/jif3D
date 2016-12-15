@@ -41,7 +41,7 @@ namespace jif3D
      */
     class J3DEXPORT VectorTransform
       {
-    private:
+    public:
       friend class access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
@@ -49,15 +49,27 @@ namespace jif3D
         {
 
         }
-    public:
+
       //! How many consecutive elements in the input vector form a logical block of data that this transform works on
-      virtual size_t GetInputSize() const = 0;
+      virtual size_t GetInputSize()
+        {
+          return 0;
+        }
       //! How many elements will one logical input block be transformed to
-      virtual size_t GetOutputSize() const = 0;
+      virtual size_t GetOutputSize()
+        {
+          return 0;
+        }
       //! Transform the input vector
-      virtual jif3D::rvec Transform(const jif3D::rvec &InputVector) const = 0;
+      virtual jif3D::rvec Transform(const jif3D::rvec &InputVector)
+        {
+
+        }
       //! Give the matrix of partial derivatives with respect to the input parameters for the transformation \f$ \partial f/\partial m_i \f$.
-      virtual jif3D::rmat Derivative(const jif3D::rvec &InputVector) const = 0;
+      virtual jif3D::rmat Derivative(const jif3D::rvec &InputVector)
+        {
+
+        }
       VectorTransform()
         {
         }
@@ -71,7 +83,7 @@ namespace jif3D
      */
     class J3DEXPORT CopyTransform: public VectorTransform
       {
-    private:
+    public:
       //! The number of elements we expect to transform, this is purely used for potential error checking between creating the object and using it
       size_t ntrans;
       friend class access;
@@ -82,7 +94,6 @@ namespace jif3D
           ar & base_object<VectorTransform>(*this);
           ar & ntrans;
         }
-    public:
       virtual size_t GetInputSize() const
         {
           return ntrans;
@@ -127,7 +138,9 @@ namespace jif3D
         const size_t step = Transform.GetInputSize();
         const size_t nout = Transform.GetOutputSize();
         if (insize % step != 0)
-          throw jif3D::FatalException("Transformation size needs to be integer multiple of input data size",__FILE__, __LINE__);
+          throw jif3D::FatalException(
+              "Transformation size needs to be integer multiple of input data size",
+              __FILE__, __LINE__);
         jif3D::rvec Output(insize / step * nout);
         for (size_t i = 0; i < insize; i += step)
           {

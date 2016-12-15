@@ -9,11 +9,13 @@
  * Make a netcdf conductivity model file with a specified mesh. The conductivities in this file are all identical to the specified value.
  */
 
+#include "../Global/Jif3DGlobal.h"
+#include "../Global/FileUtil.h"
+#include "X3DModel.h"
 #include <boost/program_options.hpp>
 #include <iostream>
 #include <string>
-#include "../Global/FileUtil.h"
-#include "X3DModel.h"
+
 
 using namespace std;
 
