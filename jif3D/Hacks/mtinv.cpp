@@ -6,6 +6,7 @@
 //============================================================================
 #ifdef HAVEHPX
 #include <hpx/hpx.hpp>
+#include <hpx/hpx_init.hpp>
 #endif
 
 #ifdef HAVEOPENMP
