@@ -30,6 +30,7 @@ exe avgmt : avgmt.cpp  ../MT//mt joint ;
 exe smoothmodel : smoothmodel.cpp  ../MT//mt joint ;
 exe parrun : parrun.cpp ..//boost_filesystem ..//boost_system ;
 exe picksort : picksort.cpp  ../Global//global  ../Tomo//tomo ..//boost_filesystem ..//boost_system ;
+exe tomoascii : tomoascii.cpp  ../Global//global  ../Tomo//tomo ..//boost_filesystem ..//boost_system ;
 exe randommtmesh : randommtmesh.cpp  ../Global//global  ../MT//mt ../ModelBase//modelbase ..//boost_filesystem ..//boost_program_options ..//boost_system ;
 exe joinpicks : joinpicks.cpp  ../Global//global  ../Tomo//tomo ..//boost_filesystem ..//boost_system ;
 exe srcrecdist : srcrecdist.cpp  ../Global//global ../Tomo//tomo ../ModelBase//modelbase ..//boost_filesystem ..//boost_system ..//netcdf_c++ ..//netcdf ;

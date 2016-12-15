@@ -104,10 +104,9 @@ int main()
     jif3D::ThreeDSeismicModel Model;
     const double depth = 10.0;
 
-    for (MyMap::iterator sourceiter = SourceMap.begin(); sourceiter != SourceMap.end();
-        ++sourceiter)
+    for (auto sourceiter : SourceMap)
       {
-        Model.AddSource(sourceiter->second[0], sourceiter->second[1], depth);
+        Model.AddSource(sourceiter.second[0], sourceiter.second[1], depth);
       }
 
     const size_t ntime = TravelTime.size();
