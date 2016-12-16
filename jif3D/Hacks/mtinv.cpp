@@ -78,14 +78,15 @@ int hpx_main(boost::program_options::variables_map& vm)
         const size_t ncovmod = CovModel.GetData().num_elements();
         if (ncovmod == 0)
           {
-            std::cerr << "Trying to read in covariance model, but no values read !" << std::endl;
+            std::cerr << "Trying to read in covariance model, but no values read !"
+                << std::endl;
             return 200;
           }
         CovModVec.resize(ncovmod);
         std::copy(CovModel.GetData().origin(), CovModel.GetData().origin() + ncovmod,
             CovModVec.begin());
         jif3D::X3DModel WriteModel;
-        WriteModel= CovModel;
+        WriteModel = CovModel;
         WriteModel.WriteVTK("cov.vtk");
       }
 
@@ -149,11 +150,8 @@ int hpx_main(boost::program_options::variables_map& vm)
       {
         MinErr = jif3D::ConstructMTError(Data, relerr);
       }
-    for (size_t i = 0; i < ZError.size(); ++i)
-      {
-        ZError(i) = std::max(ZError(i), MinErr(i));
-
-      }
+    std::transform(ZError.begin(),ZError.end(),MinErr.begin(),ZError.begin(),[](double a, double b)
+          { return std::max(a,b);});
 
     auto negerr = std::find_if(ZError.begin(), ZError.end(), [](double val)
       { return val <= 0.0;});
@@ -275,7 +273,6 @@ int hpx_main(boost::program_options::variables_map& vm)
         CovModVec.resize(InvModel.size(), true);
         std::copy(CrossModel->GetData().origin(), CrossModel->GetData().origin() + ngrid,
             InvModel.begin() + OldInv.size());
-        std::fill_n(CovModVec.begin(), OldInv.size(), 1.0);
         std::fill_n(CovModVec.begin() + OldInv.size(), ngrid, 1e-32);
 
         std::cout << "Inversion vector length: " << InvModel.size() << " " << ngrid << " "
