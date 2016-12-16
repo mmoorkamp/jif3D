@@ -42,33 +42,30 @@ namespace jif3D
     class J3DEXPORT VectorTransform
       {
     public:
-      friend class access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
         {
-
         }
-
       //! How many consecutive elements in the input vector form a logical block of data that this transform works on
-      virtual size_t GetInputSize()
+      virtual size_t GetInputSize() const
         {
           return 0;
         }
       //! How many elements will one logical input block be transformed to
-      virtual size_t GetOutputSize()
+      virtual size_t GetOutputSize() const
         {
           return 0;
         }
       //! Transform the input vector
-      virtual jif3D::rvec Transform(const jif3D::rvec &InputVector)
+      virtual jif3D::rvec Transform(const jif3D::rvec &InputVector) const
         {
-
+          throw jif3D::FatalException("Illegal call to base class");
         }
       //! Give the matrix of partial derivatives with respect to the input parameters for the transformation \f$ \partial f/\partial m_i \f$.
-      virtual jif3D::rmat Derivative(const jif3D::rvec &InputVector)
+      virtual jif3D::rmat Derivative(const jif3D::rvec &InputVector) const
         {
-
+          throw jif3D::FatalException("Illegal call to base class");
         }
       VectorTransform()
         {
@@ -83,15 +80,14 @@ namespace jif3D
      */
     class J3DEXPORT CopyTransform: public VectorTransform
       {
-    public:
+    private:
       //! The number of elements we expect to transform, this is purely used for potential error checking between creating the object and using it
       size_t ntrans;
-      friend class access;
+    public:
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
         {
-          ar & base_object<VectorTransform>(*this);
           ar & ntrans;
         }
       virtual size_t GetInputSize() const

@@ -5,6 +5,7 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
+#include "../Global/Jif3DTesting.h"
 #include "../Gravity/test_common.h"
 #include "../Inversion/ThreeDModelObjective.h"
 #include "ThreeDMagneticModel.h"

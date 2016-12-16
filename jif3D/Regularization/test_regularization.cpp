@@ -7,6 +7,7 @@
 
 #define BOOST_TEST_MODULE Regularization test
 #define BOOST_TEST_MAIN ...
+#include "../Global/Jif3DTesting.h"
 #include <boost/test/included/unit_test.hpp>
 #include <stdlib.h>
 #include <algorithm>

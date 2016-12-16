@@ -8,6 +8,7 @@
 //test the small numerical utility functions
 #define BOOST_TEST_MODULE NumUtil test
 #define BOOST_TEST_MAIN ...
+
 #include "Jif3DTesting.h"
 #include <boost/test/floating_point_comparison.hpp>
 #include <stdlib.h>

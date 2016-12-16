@@ -7,6 +7,9 @@
 
 #define BOOST_TEST_MODULE ReadWriteDCResistivity test
 #define BOOST_TEST_MAIN ...
+#ifdef HAVEHPX
+#include <hpx/hpx.hpp>
+#endif
 #include <boost/test/included/unit_test.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 #include "ReadWriteDCResistivityData.h"

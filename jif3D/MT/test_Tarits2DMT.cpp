@@ -1,5 +1,6 @@
 #define BOOST_TEST_MODULE Tarits2DModel test
 #define BOOST_TEST_MAIN ...
+#include "../Global/Jif3DTesting.h"
 #include <boost/test/included/unit_test.hpp>
 #include <vector>
 #include <complex>
