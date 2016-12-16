@@ -7,6 +7,7 @@
 
 #define BOOST_TEST_MODULE ReadWriteGravityData test
 #define BOOST_TEST_MAIN ...
+#include "../Global/Jif3DTesting.h"
 #include "ReadWriteGravityData.h"
 #include <boost/test/included/unit_test.hpp>
 #include <boost/test/included/unit_test_framework.hpp>

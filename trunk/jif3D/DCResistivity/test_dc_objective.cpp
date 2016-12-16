@@ -1,5 +1,8 @@
 #define BOOST_TEST_MODULE DCObjective test
 #define BOOST_TEST_MAIN ...
+#ifdef HAVEHPX
+#include <hpx/hpx.hpp>
+#endif
 #include <boost/test/included/unit_test.hpp>
 #include <stdlib.h>
 #include <time.h>

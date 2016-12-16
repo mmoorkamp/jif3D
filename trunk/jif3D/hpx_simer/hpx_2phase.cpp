@@ -7,6 +7,7 @@
 
 #ifdef HAVEHPX
 #include <hpx/hpx.hpp>
+#include <hpx/hpx_init.hpp>
 #include <hpx/include/actions.hpp>
 #include <hpx/include/util.hpp>
 #include <hpx/include/future.hpp>

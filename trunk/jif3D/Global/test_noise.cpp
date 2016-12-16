@@ -9,9 +9,8 @@
 #define BOOST_TEST_MODULE Interpolation test
 #define BOOST_TEST_MAIN ...
 
-#include <stdlib.h>
-#include "Noise.h"
 #include "Jif3DTesting.h"
+#include "Noise.h"
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
