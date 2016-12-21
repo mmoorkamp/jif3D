@@ -101,30 +101,30 @@ ForwardResult CalculateFrequency(const ForwardInfo &Info)
         const size_t meas_index = j * 8;
         const size_t site_index = j * 4;
 
-        result.DistImpedance(meas_index) = Info.C[site_index] * Zxx.real()
+        result.DistImpedance[meas_index] = Info.C[site_index] * Zxx.real()
             + Info.C[site_index + 1] * Zyx.real();
-        result.DistImpedance(meas_index + 1) = Info.C[site_index] * Zxx.imag()
+        result.DistImpedance[meas_index + 1] = Info.C[site_index] * Zxx.imag()
             + Info.C[site_index + 1] * Zyx.imag();
-        result.DistImpedance(meas_index + 2) = Info.C[site_index] * Zxy.real()
+        result.DistImpedance[meas_index + 2] = Info.C[site_index] * Zxy.real()
             + Info.C[site_index + 1] * Zyy.real();
-        result.DistImpedance(meas_index + 3) = Info.C[site_index] * Zxy.imag()
+        result.DistImpedance[meas_index + 3] = Info.C[site_index] * Zxy.imag()
             + Info.C[site_index + 1] * Zyy.imag();
-        result.DistImpedance(meas_index + 4) = Info.C[site_index + 3] * Zyx.real()
+        result.DistImpedance[meas_index + 4] = Info.C[site_index + 3] * Zyx.real()
             + Info.C[site_index + 2] * Zxx.real();
-        result.DistImpedance(meas_index + 5) = Info.C[site_index + 3] * Zyx.imag()
+        result.DistImpedance[meas_index + 5] = Info.C[site_index + 3] * Zyx.imag()
             + Info.C[site_index + 2] * Zxx.imag();
-        result.DistImpedance(meas_index + 6) = Info.C[site_index + 3] * Zyy.real()
+        result.DistImpedance[meas_index + 6] = Info.C[site_index + 3] * Zyy.real()
             + Info.C[site_index + 2] * Zxy.real();
-        result.DistImpedance(meas_index + 7) = Info.C[site_index + 3] * Zyy.imag()
+        result.DistImpedance[meas_index + 7] = Info.C[site_index + 3] * Zyy.imag()
             + Info.C[site_index + 2] * Zxy.imag();
-        result.RawImpedance(meas_index) = Zxx.real();
-        result.RawImpedance(meas_index + 1) = Zxx.imag();
-        result.RawImpedance(meas_index + 2) = Zxy.real();
-        result.RawImpedance(meas_index + 3) = Zxy.imag();
-        result.RawImpedance(meas_index + 4) = Zyx.real();
-        result.RawImpedance(meas_index + 5) = Zyx.imag();
-        result.RawImpedance(meas_index + 6) = Zyy.real();
-        result.RawImpedance(meas_index + 7) = Zyy.imag();
+        result.RawImpedance[meas_index] = Zxx.real();
+        result.RawImpedance[meas_index + 1] = Zxx.imag();
+        result.RawImpedance[meas_index + 2] = Zxy.real();
+        result.RawImpedance[meas_index + 3] = Zxy.imag();
+        result.RawImpedance[meas_index + 4] = Zyx.real();
+        result.RawImpedance[meas_index + 5] = Zyx.imag();
+        result.RawImpedance[meas_index + 6] = Zyy.real();
+        result.RawImpedance[meas_index + 7] = Zyy.imag();
 
       }
 
@@ -150,7 +150,8 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI)
     std::vector<size_t> MeasDepthIndices;
     size_t nlevels = ConstructDepthIndices(MeasDepthIndices, ShiftDepth, Info.Model);
     jif3D::rvec Gradient(nmod, 0.0);
-
+    jif3D::rvec Misfit(GI.Misfit.size());
+    std::copy(GI.Misfit.begin(), GI.Misfit.end(),Misfit.begin());
     fs::path TempDir(Info.TempDirName);
     fs::path ForwardDirName = TempDir
         / (MakeUniqueName(Info.NameRoot, X3DModel::MT, Info.freqindex) + dirext);
@@ -212,7 +213,7 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI)
 
         //this is an implementation of eq. 12 in Avdeev and Avdeeva
         //we do not have any beta, as this is part of the misfit
-        cmat j_ext = CalcEExt(GI.Misfit, Info.C, j, freq_start_index, Hx1_obs[offset],
+        cmat j_ext = CalcEExt(Misfit, Info.C, j, freq_start_index, Hx1_obs[offset],
             Hx2_obs[offset], Hy1_obs[offset], Hy2_obs[offset]);
         //x3d uses a different convention for the complex exponentials
         //so we have to use the complex conjugate for the source
@@ -286,10 +287,10 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI)
     for (size_t j = 0; j < nmeas; ++j)
       {
         size_t offset = freq_start_index + j * 8;
-        std::complex<double> Zxx(GI.RawImpedance(offset), GI.RawImpedance(offset + 1)),
-            Zxy(GI.RawImpedance(offset + 2), GI.RawImpedance(offset + 3)), Zyx(
-                GI.RawImpedance(offset + 4), GI.RawImpedance(offset + 5)), Zyy(
-                GI.RawImpedance(offset + 6), GI.RawImpedance(offset + 7));
+        std::complex<double> Zxx(GI.RawImpedance[offset], GI.RawImpedance[offset + 1]),
+            Zxy(GI.RawImpedance[offset + 2], GI.RawImpedance[offset + 3]), Zyx(
+                GI.RawImpedance[offset + 4], GI.RawImpedance[offset + 5]), Zyy(
+                GI.RawImpedance[offset + 6], GI.RawImpedance[offset + 7]);
         //project the electric dipole to magnetic dipole moments using the undistorted impedance
         CalcHext(omega_mu, XPolMoments1.at(j), XPolMoments2.at(j), YPolMoments1.at(j),
             YPolMoments2.at(j), Zxx, Zxy, Zyx, Zyy);

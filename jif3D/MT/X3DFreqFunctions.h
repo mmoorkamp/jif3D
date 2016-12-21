@@ -24,102 +24,59 @@
 
 struct J3DEXPORT ForwardResult
   {
-  jif3D::rvec DistImpedance;
-  jif3D::rvec RawImpedance;
+  std::vector<double> DistImpedance;
+  std::vector<double> RawImpedance;
   //! Provide serialization to be able to store objects
   template<class Archive>
-  void save(Archive & ar, const unsigned int version) const
+  void serialize(Archive & ar, const unsigned int version)
     {
-      ar & std::vector<double>(DistImpedance.begin(), DistImpedance.end());
-      ar & std::vector<double>(RawImpedance.begin(), RawImpedance.end());
+      ar & DistImpedance;
+      ar & RawImpedance;
     }
-  template<class Archive>
-  void load(Archive & ar, const unsigned int version)
-    {
-      std::vector<double> v;
-      ar & v;
-      DistImpedance.resize(v.size());
-      std::copy(v.begin(), v.end(), DistImpedance.begin());
-      ar & v;
-      RawImpedance.resize(v.size());
-      std::copy(v.begin(), v.end(), RawImpedance.begin());
-    }
-#ifdef HAVEHPX
-  HPX_SERIALIZATION_SPLIT_MEMBER()
-#else
-  BOOST_SERIALIZATION_SPLIT_MEMBER()
-#endif
-}  ;
+  };
 
 struct GradInfo
   {
-  jif3D::rvec Misfit;
-  jif3D::rvec RawImpedance;
+  std::vector<double> Misfit;
+  std::vector<double> RawImpedance;
   template<class Archive>
-  void save(Archive & ar, const unsigned int version) const
+  void serialize(Archive & ar, const unsigned int version)
     {
-      ar & std::vector<double>(Misfit.begin(), Misfit.end());
-      ar & std::vector<double>(RawImpedance.begin(), RawImpedance.end());
+      ar & Misfit;
+      ar & RawImpedance;
     }
-  template<class Archive>
-  void load(Archive & ar, const unsigned int version)
-    {
-      std::vector<double> v;
-      ar & v;
-      Misfit.resize(v.size());
-      std::copy(v.begin(), v.end(), Misfit.begin());
-      ar & v;
-      RawImpedance.resize(v.size());
-      std::copy(v.begin(), v.end(), RawImpedance.begin());
-    }
-#ifdef HAVEHPX
-  HPX_SERIALIZATION_SPLIT_MEMBER()
-#else
-  BOOST_SERIALIZATION_SPLIT_MEMBER()
-#endif
-GradInfo  () :
-  Misfit(), RawImpedance()
+  GradInfo() :
+      Misfit(), RawImpedance()
     {
 
     }
-  GradInfo(jif3D::rvec Mf, jif3D::rvec RI) :
-  Misfit(Mf), RawImpedance(RI)
+  GradInfo(jif3D::rvec Mf, jif3D::rvec RI)
     {
-
+      Misfit.resize(Mf.size());
+      std::copy(Mf.begin(), Mf.end(), Misfit.begin());
+      RawImpedance.resize(RI.size());
+      std::copy(RI.begin(), RI.end(), RawImpedance.begin());
     }
-};
+  };
 
 struct GradResult
   {
-  jif3D::rvec Gradient;
+  std::vector<double> Gradient;
   template<class Archive>
-  void save(Archive & ar, const unsigned int version) const
+  void serialize(Archive & ar, const unsigned int version)
     {
-      ar & std::vector<double>(Gradient.begin(), Gradient.end());
+      ar & Gradient;
     }
-  template<class Archive>
-  void load(Archive & ar, const unsigned int version)
-    {
-      std::vector<double> v;
-      ar & v;
-      Gradient.resize(v.size());
-      std::copy(v.begin(), v.end(), Gradient.begin());
-
-    }
-#ifdef HAVEHPX
-  HPX_SERIALIZATION_SPLIT_MEMBER()
-#else
-  BOOST_SERIALIZATION_SPLIT_MEMBER()
-#endif
-GradResult  () :
-  Gradient()
+  GradResult() :
+      Gradient()
     {
     }
-  GradResult(jif3D::rvec G) :
-  Gradient(G)
+  GradResult(jif3D::rvec G)
     {
+      Gradient.resize(G.size());
+      std::copy(G.begin(),G.end(),Gradient.begin());
     }
-};
+  };
 
 struct ForwardInfo
   {

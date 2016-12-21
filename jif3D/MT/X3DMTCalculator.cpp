@@ -157,7 +157,8 @@ namespace jif3D
               {
                 ForwardInfo Info(Model,C,i,TempDir.string(),X3DName, NameRoot, GreenType1, GreenType4);
                 ForwardResult freqresult = CalculateFrequency(Info);
-                size_t startindex = nmeas * i * 8;
+                const size_t currindex = i - minfreqindex;
+                const size_t startindex = nmeas * currindex * 8;
 
                 omp_set_lock(&lck);
 
@@ -192,22 +193,23 @@ namespace jif3D
         std::vector<hpx::lcos::future<ForwardResult>> FreqResult;
         FreqResult.reserve(nfreq);
         CalculateFrequency_action FreqCalc;
-        for (int i = minfreqindex; i < maxfreqindex; ++i)
+        for (size_t i = minfreqindex; i < maxfreqindex; ++i)
           {
             ForwardInfo Info(Model,C,i,TempDir.string(),X3DName, NameRoot, GreenType1, GreenType4);
             hpx::naming::id_type const locality_id = localities.at(i % localities.size());
+            //std::cout << "Sending frequency: " << i << " to node " << locality_id << std::endl;
             //rvec freqresult = CalculateFrequency(Model, i, TempDir);
             FreqResult.push_back(async(FreqCalc, locality_id, Info));
 
           }
         wait_all(FreqResult);
 
-        for (int i = minfreqindex; i < maxfreqindex; ++i)
+        for (size_t i = minfreqindex; i < maxfreqindex; ++i)
           {
             const size_t currindex = i - minfreqindex;
             const size_t startindex = nmeas * currindex * 8;
             ForwardResult freqresult = FreqResult[currindex].get();
-
+            //std::cout << " Getting results for frequency " << currindex << std::endl;
             std::copy(freqresult.DistImpedance.begin(), freqresult.DistImpedance.end(),
                 result.begin() + startindex);
             std::copy(freqresult.RawImpedance.begin(),freqresult.RawImpedance.end(),RawImpedance.begin()+startindex);
@@ -218,7 +220,8 @@ namespace jif3D
         //we cannot throw from within the openmp section so if there was an exception
         //inside the parallel region we set FatalErrror to true and throw a new exception here
         if (FatalError)
-          throw jif3D::FatalException("Problem in MT forward calculation: " + ErrorMsg , __FILE__,
+          throw jif3D::FatalException("Problem in MT forward calculation: " + ErrorMsg,
+          __FILE__,
           __LINE__);
         if (DataTransform)
           {
@@ -338,7 +341,7 @@ namespace jif3D
         std::vector<hpx::lcos::future<GradResult>> FreqResult;
         FreqResult.reserve(nfreq);
         LQDerivativeFreq_action LQDerivativeFreq;
-        for (int i = minfreqindex; i < maxfreqindex; ++i)
+        for (size_t i = minfreqindex; i < maxfreqindex; ++i)
           {
             ForwardInfo Info(Model,C,i,TempDir.string(),X3DName, NameRoot, GreenType1, GreenType4);
 
@@ -349,10 +352,11 @@ namespace jif3D
           }
         wait_all(FreqResult);
 
-        for (int i = minfreqindex; i < maxfreqindex; ++i)
+        for (int i = 0; i < nfreq; ++i)
           {
-            size_t currindex = i - minfreqindex;
-            boost::numeric::ublas::subrange(Gradient, 0, nmod) += FreqResult[currindex].get().Gradient;
+            std::vector<double> CurrGrad(FreqResult[i].get().Gradient);
+            std::transform(CurrGrad.begin(),CurrGrad.end(),Gradient.begin(),Gradient.begin(),std::plus<double>());
+            //boost::numeric::ublas::subrange(Gradient, 0, nmod) += FreqResult[currindex].get().Gradient;
 
           }
 
@@ -426,7 +430,11 @@ namespace jif3D
                 GradInfo(CurrMisfit, RawImpedance));
 
             boost::numeric::ublas::matrix_row<rmat> CurrRow(Result, i);
-            boost::numeric::ublas::subrange(CurrRow, 0, nmodel) = CurrGrad.Gradient;
+
+            jif3D::rvec Gradient(CurrGrad.Gradient.size());
+            std::copy(CurrGrad.Gradient.begin(), CurrGrad.Gradient.end(),
+                Gradient.begin());
+            boost::numeric::ublas::subrange(CurrRow, 0, nmodel) = Gradient;
             if (WantDistCorr)
               {
                 jif3D::rvec CGrad = AdaptDist(C, RawImpedance, CurrMisfit);
