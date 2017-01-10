@@ -11,7 +11,6 @@
 #include <boost/program_options.hpp>
 #include "../Global/convert.h"
 #include "../Tomo/TomographyCalculator.h"
-#include "../Tomo/ReadWriteTomographyData.h"
 
 void MakeTestModel(jif3D::ThreeDSeismicModel &Model, const size_t size)
   {
@@ -77,10 +76,9 @@ int hpx_main(boost::program_options::variables_map& vm)
     const size_t nruns = 50;
     const size_t nrunspersize = 5;
     std::string filename;
-    bool wantcuda = false;
     jif3D::TomographyCalculator Calculator;
 
-    #ifdef HAVEHPX
+#ifdef HAVEHPX
     filename = "tomo_hpx_";
 #endif
 
@@ -135,8 +133,6 @@ int hpx_main(boost::program_options::variables_map& vm)
         rawruntime /= nrunspersize;
 
         outfile << modelsize * modelsize * modelsize << " " << rawruntime << std::endl;
-        std::string ttfilename(filename + std::to_string(modelsize) + ".nc");
-        jif3D::SaveTraveltimes(ttfilename, seismeas, seismeas, SeisTest);
       }
 #ifdef HAVEHPX
     return hpx::finalize();
