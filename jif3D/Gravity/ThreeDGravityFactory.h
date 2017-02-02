@@ -83,7 +83,7 @@ namespace jif3D
         if (wantcuda)
           {
 #ifdef HAVEGPU
-            Imp = boost::make_shared<TensorCudaGravityImp> >();
+            Imp = boost::make_shared<TensorCudaGravityImp >();
 #else
             throw jif3D::FatalException("Code has been compiled without GPU support ! ",
             __FILE__, __LINE__);
@@ -91,7 +91,7 @@ namespace jif3D
           }
         else
           {
-            Imp = boost::make_shared<TensorOMPGravityImp >();
+            Imp = boost::make_shared<TensorOMPGravityImp>();
           }
         return boost::make_shared<CalculatorClass>(Imp);
       }
