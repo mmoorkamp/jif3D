@@ -40,19 +40,25 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
             Backward(i) -= delta;
             double FDGrad = (Objective.CalcMisfit(Forward)
                 - Objective.CalcMisfit(Backward)) / (2 * delta);
-            BOOST_CHECK_CLOSE(FDGrad, Gradient(i), 0.01);
+            if (std::abs(FDGrad) > 1e-10)
+              {
+                BOOST_CHECK_CLOSE(FDGrad, Gradient(i), 0.01);
+              }
+            else
+              {
+                BOOST_CHECK(std::abs(Gradient(i)) < 1e-10);
+              }
           }
       }
 
     BOOST_AUTO_TEST_CASE (mindiff_test)
       {
-        srand((unsigned int)time(nullptr));
+        srand((unsigned int) time(nullptr));
         jif3D::ThreeDGravityModel GravModel;
         const size_t nx = 5;
         const size_t ny = 4;
         const size_t nz = 3;
-        GravModel.SetMeshSize(nx,ny,nz);
-
+        GravModel.SetMeshSize(nx, ny, nz);
 
         const size_t msize = nx * ny * nz;
         jif3D::rvec StartModel(msize), PertModel(msize);
@@ -73,7 +79,7 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
         const size_t nx = 5;
         const size_t ny = 4;
         const size_t nz = 3;
-        GravModel.SetMeshSize(nx,ny,nz);
+        GravModel.SetMeshSize(nx, ny, nz);
 
         const size_t msize = GravModel.GetDensities().num_elements();
         jif3D::rvec StartModel(msize), PertModel(msize);
@@ -96,13 +102,12 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
 
     BOOST_AUTO_TEST_CASE (minsupp_test)
       {
-        srand((unsigned int)time(nullptr));
+        srand((unsigned int) time(nullptr));
         jif3D::ThreeDGravityModel GravModel;
         const size_t nx = 5;
         const size_t ny = 4;
         const size_t nz = 3;
-        GravModel.SetMeshSize(nx,ny,nz);
-
+        GravModel.SetMeshSize(nx, ny, nz);
 
         const size_t msize = nx * ny * nz;
         jif3D::rvec StartModel(msize), PertModel(msize);
@@ -116,20 +121,19 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
             / StartModel.size();
         jif3D::MinimumSupport MinSupp(Regularization, beta);
 
-        /*double Misfit = */ MinSupp.CalcMisfit(PertModel);
+        /*double Misfit = */MinSupp.CalcMisfit(PertModel);
 
         CheckGradient(MinSupp, PertModel);
       }
 
     BOOST_AUTO_TEST_CASE (mingradsupp_test)
       {
-        srand((unsigned int)time(nullptr));
+        srand((unsigned int) time(nullptr));
         jif3D::ThreeDGravityModel GravModel;
         const size_t nx = 5;
         const size_t ny = 4;
         const size_t nz = 3;
-        GravModel.SetMeshSize(nx,ny,nz);
-
+        GravModel.SetMeshSize(nx, ny, nz);
 
         const size_t msize = nx * ny * nz;
         jif3D::rvec StartModel(msize), PertModel(msize);
@@ -143,7 +147,7 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
             / StartModel.size();
         jif3D::MinimumSupport MinSupp(Regularization, beta);
 
-        /*double Misfit = */ MinSupp.CalcMisfit(PertModel);
+        /*double Misfit = */MinSupp.CalcMisfit(PertModel);
 
         CheckGradient(MinSupp, PertModel);
       }
@@ -157,7 +161,7 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
         const size_t ny = 6;
         const size_t nz = 7;
         const double cellsize = 100;
-        GravModel.SetMeshSize(nx,ny,nz);
+        GravModel.SetMeshSize(nx, ny, nz);
         GradModel.SetCellSize(cellsize, nx, ny, nz);
 
         const size_t msize = GravModel.GetDensities().num_elements();
@@ -206,13 +210,13 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
         const size_t ny = 6;
         const size_t nz = 7;
         const double cellsize = 100;
-        GravModel.SetMeshSize(nx,ny,nz);
+        GravModel.SetMeshSize(nx, ny, nz);
         GradModel.SetCellSize(cellsize, nx, ny, nz);
 
         MakeTearModel(GravModel, TearX);
         MakeTearModel(GravModel, TearY);
         MakeTearModel(GravModel, TearZ);
-        jif3D::platform::srand48((unsigned int)time(nullptr));
+        jif3D::platform::srand48((unsigned int) time(nullptr));
         const double fraction = 0.1;
         for (size_t i = 0; i < TearX.GetNModelElements(); ++i)
           {
@@ -259,20 +263,21 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
         CheckGradient(Regularization, PertModel);
       }
 
-    BOOST_AUTO_TEST_CASE (crossgrad_test)
+    BOOST_AUTO_TEST_CASE (cross_dotgrad_test)
       {
         jif3D::ThreeDGravityModel GravModel;
-        GravModel.SetDensities().resize(boost::extents[3][3][3]);
-        jif3D::platform::srand48((unsigned int)time(nullptr));
+        GravModel.SetMeshSize(3, 4, 5);
+        jif3D::platform::srand48(time(NULL));
         const int msize = GravModel.GetDensities().num_elements();
         jif3D::rvec PertModel(msize * 2);
         for (int i = 0; i < msize; ++i)
           {
-            PertModel(i) = i + 1;
-            PertModel(i + msize) = 1.0 + double(i % 2 == 0) * (i + 1);
+            PertModel(i) = jif3D::platform::drand48();
+            PertModel(i + msize) = jif3D::platform::drand48();
           }
 
-        jif3D::CrossGradient Regularization(GravModel);
+        jif3D::CrossGradient CrossReg(GravModel);
+        jif3D::DotStructureConstraint DotReg(GravModel);
         //if the two models are scaled versions of each other
         //the cross-gradient should be zero
         jif3D::rvec ZeroModel(msize * 2);
@@ -281,50 +286,44 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
             ZeroModel(i) = jif3D::platform::drand48();
             ZeroModel(i + msize) = 3.2 * ZeroModel(i);
           }
-        double zero = Regularization.CalcMisfit(ZeroModel);
+        //check cross gradient
+        double zero = CrossReg.CalcMisfit(ZeroModel);
+        BOOST_CHECK(zero < 1e-10);
+        zero = DotReg.CalcMisfit(ZeroModel);
         //practically it is very small
         BOOST_CHECK(zero < 1e-10);
-        Regularization.CalcMisfit(PertModel);
-        CheckGradient(Regularization, PertModel);
+        jif3D::rvec zcgrad = CrossReg.CalcGradient(ZeroModel);
+        jif3D::rvec zdgrad = DotReg.CalcGradient(ZeroModel);
+        BOOST_CHECK(zcgrad.size() == zdgrad.size());
+        for (size_t i = 0; i < zcgrad.size(); ++i)
+          {
+            BOOST_CHECK(std::abs(zcgrad(i)) < 1e-10);
+            BOOST_CHECK(std::abs(zdgrad(i)) < 1e-10);
+          }
+
+        double cross = CrossReg.CalcMisfit(PertModel);
+        jif3D::rvec CGrad = CrossReg.CalcGradient(PertModel);
+        CheckGradient(CrossReg, PertModel);
+        double dot = DotReg.CalcMisfit(PertModel);
+        jif3D::rvec DGrad = DotReg.CalcGradient(PertModel);
+        BOOST_CHECK_CLOSE(cross, dot, 0.0001);
+        CheckGradient(DotReg, PertModel);
+        for (size_t i = 0; i < DGrad.size(); ++i)
+          {
+            if (std::abs(DGrad(i)) > 1e-10)
+              {
+                BOOST_CHECK_CLOSE(DGrad(i), CGrad(i), 0.1);
+              }
+            else
+              {
+                BOOST_CHECK(std::abs(CGrad(i)) < 1e-10);
+              }
+          }
       }
-//
-//    BOOST_AUTO_TEST_CASE (dotgrad_test)
-//      {
-//        jif3D::ThreeDGravityModel GravModel;
-//        GravModel.SetDensities().resize(boost::extents[3][3][3]);
-//        srand48(time(NULL));
-//        const int msize = GravModel.GetDensities().num_elements();
-//        jif3D::rvec PertModel(msize * 2);
-//        for (int i = 0; i < msize; ++i)
-//          {
-//            PertModel(i) = drand48();
-//            PertModel(i + msize) = drand48();
-//          }
-//
-//        jif3D::CrossGradient CrossReg(GravModel);
-//        jif3D::DotStructureConstraint DotReg(GravModel);
-//        //if the two models are scaled versions of each other
-//        //the cross-gradient should be zero
-//        jif3D::rvec ZeroModel(msize * 2);
-//        for (int i = 0; i < msize; ++i)
-//          {
-//            ZeroModel(i) = drand48();
-//            ZeroModel(i + msize) = 3.2 * ZeroModel(i);
-//          }
-//        double zero = DotReg.CalcMisfit(ZeroModel);
-//        //practically it is very small
-//        BOOST_CHECK(zero < 1e-10);
-//
-//        double cross = CrossReg.CalcMisfit(PertModel);
-//        double dot = DotReg.CalcMisfit(PertModel);
-//        BOOST_CHECK_CLOSE(cross, dot, 0.0001);
-//        DotReg.CalcMisfit(PertModel);
-//        CheckGradient(DotReg, PertModel);
-//      }
 
     BOOST_AUTO_TEST_CASE (gradjoint_test)
       {
-        srand((unsigned int)time(nullptr));
+        srand((unsigned int) time(nullptr));
         jif3D::ThreeDGravityModel GravModel;
         GravModel.SetDensities().resize(boost::extents[5][4][3]);
 

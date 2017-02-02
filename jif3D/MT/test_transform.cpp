@@ -58,7 +58,15 @@ BOOST_AUTO_TEST_SUITE( MT_Transforms_Suite )
                 DeltaInput(i) *= 1.0 + delta;
                 double FD = (CLTrans.Transform(DeltaInput)(j) - CL(j))
                     / (delta * TestInput(i));
-                BOOST_CHECK_CLOSE(Deriv(j,i), FD, 0.1);
+                //for very small values we only get numerical noise
+                if (std::abs(FD) > 1e-30)
+                  {
+                    BOOST_CHECK_CLOSE(Deriv(j, i), FD, 0.5);
+                  }
+                else
+                  {
+                    BOOST_CHECK(std::abs(Deriv(j, i)) < 1e-7);
+                  }
               }
           }
       }
