@@ -24,7 +24,7 @@ namespace jif3D
         file << origin << " ";
         //calculate the coordinates from the cell sizes and write to file
         double CurrCoord = origin;
-        for (double CurrSize: CellSizes)
+        for (double CurrSize : CellSizes)
           {
             CurrCoord += CurrSize;
             file << CurrCoord << " ";
@@ -69,8 +69,8 @@ namespace jif3D
         const ThreeDModelBase::t3DModelDim &XCellSizes,
         const ThreeDModelBase::t3DModelDim &YCellSizes,
         const ThreeDModelBase::t3DModelDim &ZCellSizes,
-        const ThreeDModelBase::t3DModelData &Data,
-        double xorigin, double yorigin, double zorigin)
+        const ThreeDModelBase::t3DModelData &Data, double xorigin, double yorigin,
+        double zorigin)
       {
         //do some consistency checks
         assert(Data.num_dimensions() == 3);
@@ -271,9 +271,24 @@ namespace jif3D
       {
         //do some consistency checks
         const size_t ndata = Data.size();
-        assert(ndata == PosX.size());
-        assert(ndata == PosY.size());
-        assert(ndata == PosZ.size());
+        if (ndata != PosX.size())
+          {
+            throw FatalException(
+                "Amount of x-coordinates does not match data size: " + filename, __FILE__,
+                __LINE__);
+          }
+        if (ndata != PosY.size())
+          {
+            throw FatalException(
+                "Amount of y-coordinates does not match data size: " + filename, __FILE__,
+                __LINE__);
+          }
+        if (ndata != PosZ.size())
+          {
+            throw FatalException(
+                "Amount of z-coordinates does not match data size: " + filename, __FILE__,
+                __LINE__);
+          }
         std::ofstream outfile(filename.c_str());
         //first we have to write some general information about the file format
         WriteDataHeader(outfile, PosX, PosY, PosZ);
@@ -304,9 +319,24 @@ namespace jif3D
         //do some consistency checks
         const size_t ndata = Data.size();
         const size_t nmeas = PosX.size();
-        assert(ndata == nmeas * 3);
-        assert(nmeas == PosY.size());
-        assert(nmeas == PosZ.size());
+        if (ndata * 3 != nmeas)
+          {
+            throw FatalException(
+                "Amount of x-coordinates does not match data size: " + filename, __FILE__,
+                __LINE__);
+          }
+        if (nmeas != PosY.size())
+          {
+            throw FatalException(
+                "Amount of y-coordinates does not match data size: " + filename, __FILE__,
+                __LINE__);
+          }
+        if (nmeas != PosZ.size())
+          {
+            throw FatalException(
+                "Amount of z-coordinates does not match data size: " + filename, __FILE__,
+                __LINE__);
+          }
 
         std::ofstream outfile(filename.c_str());
         //first we have to write some general information about the file format
@@ -343,9 +373,24 @@ namespace jif3D
         //do some consistency checks
         const size_t ndata = Data.size();
         const size_t nmeas = PosX.size();
-        assert(ndata == nmeas * 9);
-        assert(ndata == PosY.size() * 9);
-        assert(ndata == PosZ.size() * 9);
+        if (ndata * 9 != nmeas)
+          {
+            throw FatalException(
+                "Amount of x-coordinates does not match data size: " + filename, __FILE__,
+                __LINE__);
+          }
+        if (nmeas != PosY.size())
+          {
+            throw FatalException(
+                "Amount of y-coordinates does not match data size: " + filename, __FILE__,
+                __LINE__);
+          }
+        if (nmeas != PosZ.size())
+          {
+            throw FatalException(
+                "Amount of z-coordinates does not match data size: " + filename, __FILE__,
+                __LINE__);
+          }
 
         std::ofstream outfile(filename.c_str());
         //first we have to write some general information about the file format
