@@ -22,10 +22,6 @@
 #include "../GravMag/MinMemGravMagCalculator.h"
 #include "../Global/Jif3DPlatformHelper.h"
 
-
-
-
-
 BOOST_AUTO_TEST_SUITE( MagneticObjective_Test_Suite )
 
 //we check the gradient from the forward modeling by comparing it to the result
@@ -44,11 +40,15 @@ BOOST_AUTO_TEST_SUITE( MagneticObjective_Test_Suite )
             jif3D::rvec Backward(Model);
             Forward(i) += delta;
             Backward(i) -= delta;
-            if (delta > 0.0)
+            double FDGrad = (Objective.CalcMisfit(Forward)
+                - Objective.CalcMisfit(Backward)) / (2 * delta);
+            if (std::abs(FDGrad) > 1e-10)
               {
-                double FDGrad = (Objective.CalcMisfit(Forward)
-                    - Objective.CalcMisfit(Backward)) / (2 * delta);
-                BOOST_CHECK_CLOSE(FDGrad, Gradient(i), 0.001);
+                BOOST_CHECK_CLOSE(FDGrad, Gradient(i), 0.01);
+              }
+            else
+              {
+                BOOST_CHECK(std::abs(Gradient(i)) < 1e-10);
               }
           }
       }
@@ -103,8 +103,7 @@ BOOST_AUTO_TEST_SUITE( MagneticObjective_Test_Suite )
         Observed *= 1.1;
 
         jif3D::ThreeDModelObjective<CalculatorType> Objective(*Calculator.get());
-        Objective.SetDataTransform(
-                    boost::make_shared<jif3D::TotalField>());
+        Objective.SetDataTransform(boost::make_shared<jif3D::TotalField>());
         Objective.SetObservedData(Observed);
         Objective.SetCoarseModelGeometry(MagTest);
         jif3D::rvec InvModel(MagTest.GetSusceptibilities().num_elements());
@@ -131,15 +130,14 @@ BOOST_AUTO_TEST_SUITE( MagneticObjective_Test_Suite )
 
         boost::shared_ptr<CalculatorType> Calculator(new CalculatorType(Implementation));
 
-
-
         jif3D::rvec Observed(Calculator->Calculate(MagTest));
 
         Observed *= 1.1;
 
         jif3D::ThreeDModelObjective<CalculatorType> Objective(*Calculator.get());
         Objective.SetDataTransform(
-                            boost::make_shared<jif3D::TotalFieldAnomaly>(inclination, declination, fieldstrength));
+            boost::make_shared<jif3D::TotalFieldAnomaly>(inclination, declination,
+                fieldstrength));
         Objective.SetObservedData(Observed);
         Objective.SetCoarseModelGeometry(MagTest);
         jif3D::rvec InvModel(MagTest.GetSusceptibilities().num_elements());
