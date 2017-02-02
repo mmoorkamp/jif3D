@@ -312,7 +312,8 @@ namespace jif3D
                 GradResult tmp = LQDerivativeFreq(Info, GradInfo(ProjMisfit, RawImpedance));
                 omp_set_lock(&lck);
                 //the total gradient is the sum over the gradients for each frequency
-                boost::numeric::ublas::subrange(Gradient, 0, nmod) += tmp.Gradient;
+                std::transform(tmp.Gradient.begin(),tmp.Gradient.end(),
+                    Gradient.begin(),Gradient.begin(),std::plus<double>());
                 omp_unset_lock(&lck);
               }
             catch (jif3D::FatalException &e)
