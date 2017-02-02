@@ -17,7 +17,6 @@
 #include <boost/program_options/config.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-
 #include "../Global/FileUtil.h"
 #include "../ModelBase/VTKTools.h"
 #include "../ModelBase/NetCDFModelTools.h"
@@ -69,11 +68,8 @@ bool WantSequential = false;
 double xorigin, yorigin;
 double coolingfactor = 1.0;
 
-
 int hpx_main(boost::program_options::variables_map& vm)
   {
-
-
 
     if (vm.count("sequential"))
       {
@@ -140,8 +136,8 @@ int hpx_main(boost::program_options::variables_map& vm)
       {
         geometryfilename = jif3D::AskFilename("Inversion Model Geometry: ");
       }
-    boost::shared_ptr<jif3D::ThreeDModelBase> StartModel = jif3D::ReadAnyModel(geometryfilename);
-
+    boost::shared_ptr<jif3D::ThreeDModelBase> StartModel = jif3D::ReadAnyModel(
+        geometryfilename);
 
     CouplingSetup.SetupTransforms(vm, *StartModel, TomoTransform, GravityTransform,
         MTTransform, WaveletParm);
@@ -226,6 +222,62 @@ int hpx_main(boost::program_options::variables_map& vm)
         jif3D::Write3DDataToVTK(modelfilename + ".mt_sites.vtk", "MTSites", SiteNum,
             MTSetup.GetModel().GetMeasPosX(), MTSetup.GetModel().GetMeasPosY(),
             MTSetup.GetModel().GetMeasPosZ());
+
+        //if we want to correct for distortion within the inversion
+        if (MTSetup.GetDistCorr() > 0)
+          {
+            std::vector<double> C = MTSetup.GetModel().GetDistortionParameters();
+            //if we did not read distortion values together with the
+            //observed data, we set the distortion matrix C at each site
+            // to identity matrix
+            const size_t nmtsites = MTSetup.GetModel().GetMeasPosX().size();
+            jif3D::rvec CRef(nmtsites * 4);
+            for (size_t i = 0; i < nmtsites; ++i)
+              {
+                CRef(i * 4) = 1.0;
+                CRef(i * 4 + 1) = 0.0;
+                CRef(i * 4 + 2) = 0.0;
+                CRef(i * 4 + 3) = 1.0;
+              }
+
+            if (C.empty())
+              {
+                C.resize(CRef.size());
+                std::copy(CRef.begin(), CRef.end(), C.begin());
+              }
+            //we need to expand the model vector to hold the
+            //elements of the distortion matrix
+            const size_t ngrid = InvModel.size();
+            jif3D::rvec Grid(InvModel);
+            InvModel.resize(ngrid + C.size());
+            std::copy(Grid.begin(), Grid.end(), InvModel.begin());
+            std::copy(C.begin(), C.end(), InvModel.begin() + ngrid);
+            //also the diagonal of the model covariance needs to
+            //accommodate the new parameters
+            jif3D::rvec OldCov(CovModVec);
+            CovModVec.resize(InvModel.size());
+            std::fill(CovModVec.begin(), CovModVec.end(), 1.0);
+            std::copy(OldCov.begin(), OldCov.end(), CovModVec.begin());
+
+            jif3D::X3DModel DistModel;
+            DistModel.SetMeshSize(nmtsites * 4, 1, 1);
+            boost::shared_ptr<jif3D::RegularizationFunction> DistReg(
+                new jif3D::MinDiffRegularization(DistModel));
+            DistReg->SetReferenceModel(CRef);
+            boost::shared_ptr<jif3D::GeneralModelTransform> Copier(
+                new jif3D::ModelCopyTransform);
+
+            boost::shared_ptr<jif3D::MultiSectionTransform> DistRegTrans(
+                new jif3D::MultiSectionTransform(InvModel.size(), ngrid,
+                    ngrid + CRef.size(), Copier));
+
+            dynamic_cast<jif3D::MultiSectionTransform *>(MTTransform.get())->SetLength(
+                ngrid + C.size());
+            dynamic_cast<jif3D::MultiSectionTransform *>(MTTransform.get())->AddSection(
+                ngrid, ngrid + C.size(), Copier);
+            Objective->AddObjective(DistReg, DistRegTrans, MTSetup.GetDistCorr(),
+                "DistReg", jif3D::JointObjective::regularization);
+          }
       }
 
     std::cout << "Calculating initial misfit." << std::endl;
@@ -611,7 +663,6 @@ int main(int argc, char* argv[])
     desc.add(InversionSetup.SetupOptions());
     desc.add(RegSetup.SetupOptions());
     desc.add(CouplingSetup.SetupOptions());
-
 
 #ifdef HAVEHPX
     return hpx::init(desc, argc, argv);
