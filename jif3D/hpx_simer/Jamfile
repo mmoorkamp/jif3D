@@ -1,8 +1,8 @@
 import testing ; 
 import python ;
 
-lib hpx_mt :  InvertBlock.cpp CalcRealization.cpp ..//MT
-        ..//ModelBase  ..//boost_core 
+lib hpx_mt :  InvertBlock.cpp CalcRealization.cpp ../MT//mt
+        ../ModelBase//modelbase  ..//boost_core 
          ;
 using python ;
 

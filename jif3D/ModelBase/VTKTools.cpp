@@ -319,7 +319,7 @@ namespace jif3D
         //do some consistency checks
         const size_t ndata = Data.size();
         const size_t nmeas = PosX.size();
-        if (ndata * 3 != nmeas)
+        if (ndata  != nmeas * 3)
           {
             throw FatalException(
                 "Amount of x-coordinates does not match data size: " + filename, __FILE__,
@@ -373,7 +373,7 @@ namespace jif3D
         //do some consistency checks
         const size_t ndata = Data.size();
         const size_t nmeas = PosX.size();
-        if (ndata * 9 != nmeas)
+        if (ndata  != nmeas * 9)
           {
             throw FatalException(
                 "Amount of x-coordinates does not match data size: " + filename, __FILE__,
