@@ -112,8 +112,7 @@ namespace jif3D
        */
       virtual jif3D::rvec PhysicalToGeneralized(const jif3D::rvec &FullModel) const
         {
-          jif3D::rvec Result(length);
-          Result.clear();
+          jif3D::rvec Result(length, 0.0);
           const size_t nsections = startindices.size();
           size_t currstart = 0;
           for (size_t i = 0; i < nsections; ++i)
@@ -140,8 +139,7 @@ namespace jif3D
           const jif3D::rvec &Derivative) const
         {
           using boost::numeric::ublas::subrange;
-          jif3D::rvec Result(length);
-          Result.clear();
+          jif3D::rvec Result(length, 0.0);
           const size_t nsections = startindices.size();
           size_t currstart = 0;
           for (size_t i = 0; i < nsections; ++i)
@@ -174,21 +172,27 @@ namespace jif3D
        * have information on the core grid size. For regularization and cross-gradient this works well.
        * However, for MT and Gravity we might want additional inversion parameters such as background densities
        * or distortion parameters. In order to keep the separation between setting up the coupling
-       * and setting up the different methods intact, we need this function to readjust the indices
+       * and setting up the different methods intact, we need this function to re-adjust the indices
        * when setting the individual functions.
        * @param section The index of the section we want to change
        * @param startindex The index of the first element of the model vector we want to use for this section
        * @param endindex The index of the last element of the model vector we want to use for this section
        */
       void ChangeSectionIndices(size_t section, size_t startindex, size_t endindex)
-      {
-    	  if (section >= startindices.size())
-    	  {
-    		  throw jif3D::FatalException("Trying to change section that does not exist !", __FILE__, __LINE__);
-    	  }
-    	  startindices.at(section) = startindex;
-    	  endindices.at(section) = endindex;
-      }
+        {
+          if (section >= startindices.size())
+            {
+              throw jif3D::FatalException(
+                  "Trying to change section that does not exist !", __FILE__, __LINE__);
+            }
+          startindices.at(section) = startindex;
+          endindices.at(section) = endindex;
+        }
+
+      void SetLength(size_t l)
+        {
+          length = l;
+        }
       //! The constructor needs the length of the full model vector as an argument
       /*! As the transformed model vector is potentially shorter than the input
        * vector, we need to specify the length of the original model vector in
