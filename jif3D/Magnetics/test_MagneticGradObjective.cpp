@@ -5,6 +5,15 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
+#define BOOST_TEST_MODULE ThreeDGravityModel test
+#define BOOST_TEST_MAIN ...
+#include <boost/test/included/unit_test.hpp>
+#include <boost/test/floating_point_comparison.hpp>
+#include <boost/assign/std/vector.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/numeric/conversion/cast.hpp>
+
+
 #include "../Global/Jif3DTesting.h"
 #include "../Gravity/test_common.h"
 #include "../Inversion/ThreeDModelObjective.h"
@@ -15,13 +24,6 @@
 #include "../GravMag/MinMemGravMagCalculator.h"
 #include "../Global/Jif3DPlatformHelper.h"
 
-#define BOOST_TEST_MODULE ThreeDGravityModel test
-#define BOOST_TEST_MAIN ...
-#include <boost/test/included/unit_test.hpp>
-#include <boost/test/floating_point_comparison.hpp>
-#include <boost/assign/std/vector.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/numeric/conversion/cast.hpp>
 
 
 
