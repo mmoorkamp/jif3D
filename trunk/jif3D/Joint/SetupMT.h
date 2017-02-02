@@ -43,6 +43,8 @@ namespace jif3D
       std::string MTInvCovarName;
       //! The name of the executable for x3d
       std::string X3DName;
+      double DistCorr;
+
     public:
       //! Get read-only access to the objective function object, for example to output misfit information
       const jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator> &GetMTObjective()
@@ -73,6 +75,10 @@ namespace jif3D
         {
           return MTModel;
         }
+       double GetDistCorr() const
+         {
+           return DistCorr;
+         }
       SetupMT();
       virtual ~SetupMT();
       };
