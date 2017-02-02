@@ -17,7 +17,7 @@ namespace jif3D
   {
 
     SetupMT::SetupMT() :
-        relerr(0.02)
+        relerr(0.02), DistCorr(0.0)
       {
       }
 
@@ -37,7 +37,9 @@ namespace jif3D
             "Use the individual errors for each element instead of the same for all elements")(
             "x3dname", po::value<std::string>(&X3DName)->default_value("x3d"),
             "The name of the executable for x3d")("opt",
-            "Use opt for Green's function calculation in x3d.");
+            "Use opt for Green's function calculation in x3d.")("distcorr",
+            po::value(&DistCorr)->default_value(0),
+            "Correct for distortion within inversion, value is regularization factor");
         return desc;
       }
 
@@ -95,8 +97,9 @@ namespace jif3D
               }
             MTModel.SetOrigin(xorigin, yorigin, 0.0);
             MTModel.SetDistortionParameters(C);
+            bool WantDistCorr = (DistCorr > 0.0);
             //setup the objective function for the MT data
-            jif3D::X3DMTCalculator Calculator(TempDir, X3DName);
+            jif3D::X3DMTCalculator Calculator(TempDir, X3DName, WantDistCorr);
 
             if (vm.count("opt"))
               {
