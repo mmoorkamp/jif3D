@@ -7,6 +7,7 @@
 
 #include "../Gravity/ReadWriteGravityData.h"
 #include "../Global/FileUtil.h"
+#include "../ModelBase/VTKTools.h"
 #include <iostream>
 #include <fstream>
 
@@ -40,4 +41,5 @@ int main()
     std::copy(ErrorVec.begin(), ErrorVec.end(), Error.begin());
     std::string outfilename = jif3D::AskFilename("Output Filename: ", false);
     jif3D::SaveScalarGravityMeasurements(outfilename, Data, PosX, PosY, PosZ, Error);
+    jif3D::Write3DDataToVTK(outfilename + ".vtk", "grav_accel", Data, PosX, PosY, PosZ);
   }
