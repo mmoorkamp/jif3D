@@ -84,7 +84,7 @@ int main()
         Implementation->SetCUDABlockSize(blocksizes.at(i));
         //and assemble the calculator object
         Calculator =
-            boost::make_shared<MinMemGravMagCalculator<jif3D::ThreeDGravityModel> >(
+            boost::make_shared<jif3D::MinMemGravMagCalculator<jif3D::ThreeDGravityModel> >(
                 Implementation);
         double rawruntime = 0.0;
         //now we perform several runs and measure the time
