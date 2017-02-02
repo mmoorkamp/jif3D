@@ -14,10 +14,12 @@
 
 using boost::format;
 using boost::io::group;
+using boost::numeric::ublas::subrange;
 
 namespace jif3D
   {
 
+    static const std::string MisfitFormat = " %15s ";
     /*! We want to stop the inversion when all of the data misfits are below
      * the expected chi-squared value. If the convergence limit for each individual
      * objective function. If it is positive, this objective function is checked
@@ -27,31 +29,40 @@ namespace jif3D
      */
     bool CheckConvergence(const jif3D::JointObjective &Objective)
       {
+        //assume that the RMS for all objective functions is < 1
         bool terminate = true;
-        for (size_t i = 0; i < Objective.GetIndividualFits().size() - 1; ++i)
+        //get the type (data misfit, regularization, etc.) for all objective functions
+        std::vector<JointObjective::ObjectiveType> ObjectiveTypes = Objective.GetObjectiveTypes();
+        //go through all objective functions
+        for (size_t i = 0; i < Objective.GetIndividualFits().size(); ++i)
           {
-            if (Objective.GetIndividualFits().at(i)
-                > Objective.GetObjective(i).GetNData())
+            //if it is a data misfit
+            if (ObjectiveTypes.at(i) == JointObjective::datafit)
               {
-                terminate = false;
-              }
-            else
-              {
-                if (Objective.GetObjective(i).ConvergenceLimit() > 0.0)
+                //check if RMS < 1
+                if (Objective.GetIndividualFits().at(i)
+                    > Objective.GetObjective(i).GetNData())
                   {
-                    std::cout << "Reached target misfit." << std::endl;
-                    std::cout << "Objective number: " << i << std::endl;
-                    std::cout << "Misfit: " << Objective.GetIndividualFits().at(i)
-                        << std::endl;
-                    std::cout << "Target: " << Objective.GetObjective(i).GetNData()
-                        << std::endl;
+                    //if so we have to continue
+                    terminate = false;
+                  }
+                else
+                  {
+                    //if it has converged, write out information to the screen
+                    if (Objective.GetObjective(i).ConvergenceLimit() > 0.0)
+                      {
+                        std::cout << "Reached target misfit." << std::endl;
+                        std::cout << "Objective number: " << i << std::endl;
+                        std::cout << "Misfit: " << Objective.GetIndividualFits().at(i)
+                            << std::endl;
+                        std::cout << "Target: " << Objective.GetObjective(i).GetNData()
+                            << std::endl;
+                      }
                   }
               }
           }
         return terminate;
       }
-
-    static const std::string MisfitFormat = " %15s ";
 
     JointObjective::JointObjective(bool Verbose) :
         Objectives(), Weights(), IndividualFits(), Distributor(), PrintMisfit(Verbose)
@@ -166,7 +177,11 @@ namespace jif3D
                     std::cout << format(MisfitFormat) % IndividualGradNorms.at(i);
                   }
                 //the total gradient is just the weighted sum of the individual gradients
-                Gradient += Weights.at(i) * CurrGrad;
+                //we take a subrange so that the total model vector can be longer than
+                //the vector returned by each objective function, this allows us
+                //to pad extra model parameters at the end without affecting other
+                //gradient calculations
+                subrange(Gradient, 0, CurrGrad.size()) += Weights.at(i) * CurrGrad;
               }
           }
         if (PrintMisfit)
