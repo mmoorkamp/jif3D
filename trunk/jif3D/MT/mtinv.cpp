@@ -539,7 +539,7 @@ int main(int argc, char* argv[])
         po::value(&yorigin)->default_value(0.0),
         "The origin for the inversion grid in y-direction")("covmod",
         po::value<std::string>(), "A file containing the model covariance")("mincond",
-        po::value(&mincond)->default_value(1e-4),
+        po::value(&mincond)->default_value(1e-6),
         "The minimum value for conductivity in S/m")("maxcond",
         po::value(&maxcond)->default_value(5),
         "The maximum value for conductivity in S/m")("tempdir", po::value<std::string>(),
