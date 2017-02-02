@@ -67,28 +67,6 @@ int hpx_main(boost::program_options::variables_map& vm)
         omp_set_num_threads(vm["threads"].as<int>());
       }
 #endif
-    jif3D::rvec CovModVec;
-    if (vm.count("covmod"))
-      {
-        jif3D::ThreeDModelBase CovModel;
-        //we store the covariances in a seismic model file
-        //but we do not have to have an equidistant grid
-        std::string Filename(vm["covmod"].as<std::string>());
-        CovModel = *jif3D::ReadAnyModel(Filename).get();
-        const size_t ncovmod = CovModel.GetData().num_elements();
-        if (ncovmod == 0)
-          {
-            std::cerr << "Trying to read in covariance model, but no values read !"
-                << std::endl;
-            return 200;
-          }
-        CovModVec.resize(ncovmod);
-        std::copy(CovModel.GetData().origin(), CovModel.GetData().origin() + ncovmod,
-            CovModVec.begin());
-        jif3D::X3DModel WriteModel;
-        WriteModel = CovModel;
-        WriteModel.WriteVTK("cov.vtk");
-      }
 
     boost::filesystem::path TempDir = boost::filesystem::current_path();
     if (vm.count("tempdir"))
@@ -150,7 +128,8 @@ int hpx_main(boost::program_options::variables_map& vm)
       {
         MinErr = jif3D::ConstructMTError(Data, relerr);
       }
-    std::transform(ZError.begin(),ZError.end(),MinErr.begin(),ZError.begin(),[](double a, double b)
+    std::transform(ZError.begin(), ZError.end(), MinErr.begin(), ZError.begin(),
+        [](double a, double b)
           { return std::max(a,b);});
 
     auto negerr = std::find_if(ZError.begin(), ZError.end(), [](double val)
@@ -220,6 +199,35 @@ int hpx_main(boost::program_options::variables_map& vm)
     std::copy(Model.GetConductivities().origin(),
         Model.GetConductivities().origin() + ngrid, InvModel.begin());
     Model.WriteVTK("start.vtk");
+
+    jif3D::rvec CovModVec(ngrid, 1.0);
+    if (vm.count("covmod"))
+      {
+        jif3D::ThreeDModelBase CovModel;
+        //we store the covariances in a seismic model file
+        //but we do not have to have an equidistant grid
+        std::string Filename(vm["covmod"].as<std::string>());
+        CovModel = *jif3D::ReadAnyModel(Filename).get();
+        const size_t ncovmod = CovModel.GetData().num_elements();
+        if (ncovmod == 0)
+          {
+            std::cerr << "Trying to read in covariance model, but no values read !"
+                << std::endl;
+            return 200;
+          }
+        if (ncovmod != ngrid)
+          {
+            std::cerr << "Covariance model, does not have the same number of cells as inversion model !"
+                << std::endl;
+            return 200;
+          }
+        CovModVec.resize(ncovmod);
+        std::copy(CovModel.GetData().origin(), CovModel.GetData().origin() + ncovmod,
+            CovModVec.begin());
+        jif3D::X3DModel WriteModel;
+        WriteModel = CovModel;
+        WriteModel.WriteVTK("cov.vtk");
+      }
 
     //if we want to correct for distortion within the inversion
     if (DistCorr > 0)
@@ -345,6 +353,8 @@ int hpx_main(boost::program_options::variables_map& vm)
     //std::copy(CovModVec.begin(), CovModVec.begin() + ngrid, GridCov.begin());
     boost::shared_ptr<jif3D::RegularizationFunction> Regularization =
         RegSetup.SetupObjective(vm, Model, GridCov);
+    boost::shared_ptr<jif3D::MultiSectionTransform> ModRegTrans(
+        new jif3D::MultiSectionTransform(InvModel.size(), 0, ngrid, Copier));
     if (vm.count("refmodel"))
       {
         jif3D::X3DModel RefModel;
@@ -354,7 +364,7 @@ int hpx_main(boost::program_options::variables_map& vm)
             RefModel.GetConductivities().origin() + RefModel.GetNModelElements(),
             RefVec.begin());
         Regularization->SetReferenceModel(
-            ConductivityTransform->PhysicalToGeneralized(RefVec));
+            ModRegTrans->PhysicalToGeneralized(RefVec));
       }
 
     if (vm.count("regcheck"))
@@ -385,8 +395,6 @@ int hpx_main(boost::program_options::variables_map& vm)
     std::cin >> lambda;
     Objective->AddObjective(X3DObjective, MTTransform, 1.0, "MT",
         jif3D::JointObjective::datafit);
-    boost::shared_ptr<jif3D::MultiSectionTransform> ModRegTrans(
-        new jif3D::MultiSectionTransform(InvModel.size(), 0, ngrid, Copier));
     Objective->AddObjective(Regularization, ModRegTrans, lambda, "Regularization",
         jif3D::JointObjective::regularization);
 
@@ -536,7 +544,7 @@ int main(int argc, char* argv[])
         po::value(&maxcond)->default_value(5),
         "The maximum value for conductivity in S/m")("tempdir", po::value<std::string>(),
         "The name of the directory to store temporary files in")("distcorr",
-        po::value(&DistCorr)->default_value(0), "Correct for distortion within inversion")(
+        po::value(&DistCorr)->default_value(0), "Correct for distortion within inversion, value is regularization factor")(
         "x3dname", po::value(&X3DName)->default_value("x3d"),
         "The name of the executable for x3d")("mtinvcovar",
         po::value<std::string>(&MTInvCovarName),
