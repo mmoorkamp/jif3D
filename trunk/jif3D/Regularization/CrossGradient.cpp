@@ -68,37 +68,29 @@ namespace jif3D
         const size_t zsize = ModelGeometry.GetModelShape()[2];
         //first we perform some calculations for all model cells
         //that do not involve explicit differences to neighboring cells
-        for (size_t i = 0; i < xsize; ++i)
+        for (size_t index = 0; index < halfmod; ++index)
           {
-            for (size_t j = 0; j < ysize; ++j)
-              {
-                for (size_t k = 0; k < zsize; ++k)
-                  {
-                    const size_t index = ModelGeometry.IndexToOffset(i, j, k);
-                    //the gradient of the x-component of the cross-gradient vector
-                    Gradient(index) += Diff(index)
-                        * (SecondGradient.GetDataDifference()(index + halfmod)
-                            - SecondGradient.GetDataDifference()(index + nmod));
-                    Gradient(index + halfmod) += Diff(index)
-                        * (FirstGradient.GetDataDifference()(index + nmod)
-                            - FirstGradient.GetDataDifference()(index + halfmod));
-                    //the gradient of the y-component of the cross-gradient vector
-                    Gradient(index) += Diff(index + halfmod)
-                        * (SecondGradient.GetDataDifference()(index + nmod)
-                            - SecondGradient.GetDataDifference()(index));
-                    Gradient(index + halfmod) += Diff(index + halfmod)
-                        * (FirstGradient.GetDataDifference()(index)
-                            - FirstGradient.GetDataDifference()(index + nmod));
-                    //the gradient of the z-component of the cross-gradient vector
-                    Gradient(index) += Diff(index + nmod)
-                        * (SecondGradient.GetDataDifference()(index)
-                            - SecondGradient.GetDataDifference()(index + halfmod));
-                    Gradient(index + halfmod) += Diff(index + nmod)
-                        * (FirstGradient.GetDataDifference()(index + halfmod)
-                            - FirstGradient.GetDataDifference()(index));
-
-                  }
-              }
+            //the gradient of the x-component of the cross-gradient vector
+            Gradient(index) += Diff(index)
+                * (SecondGradient.GetDataDifference()(index + halfmod)
+                    - SecondGradient.GetDataDifference()(index + nmod));
+            Gradient(index + halfmod) += Diff(index)
+                * (FirstGradient.GetDataDifference()(index + nmod)
+                    - FirstGradient.GetDataDifference()(index + halfmod));
+            //the gradient of the y-component of the cross-gradient vector
+            Gradient(index) += Diff(index + halfmod)
+                * (SecondGradient.GetDataDifference()(index + nmod)
+                    - SecondGradient.GetDataDifference()(index));
+            Gradient(index + halfmod) += Diff(index + halfmod)
+                * (FirstGradient.GetDataDifference()(index)
+                    - FirstGradient.GetDataDifference()(index + nmod));
+            //the gradient of the z-component of the cross-gradient vector
+            Gradient(index) += Diff(index + nmod)
+                * (SecondGradient.GetDataDifference()(index)
+                    - SecondGradient.GetDataDifference()(index + halfmod));
+            Gradient(index + halfmod) += Diff(index + nmod)
+                * (FirstGradient.GetDataDifference()(index + halfmod)
+                    - FirstGradient.GetDataDifference()(index));
           }
         //now there is a always a pair of components that involves
         //the values of neighboring cells, typically for a rotation
