@@ -8,6 +8,7 @@
 #include "SetupCoupling.h"
 #include "../Global/FileUtil.h"
 #include "../Regularization/CrossGradient.h"
+#include "../Regularization/DotStructureConstraint.h"
 #include "../Inversion/ModelTransforms.h"
 #include "SaltRelConstraint.h"
 
@@ -56,10 +57,10 @@ namespace jif3D
             "Use a parameter constraint designed for salt")("minslow",
             po::value(&minslow)->default_value(1e-4))("maxslow",
             po::value(&maxslow)->default_value(0.005))("mincond",
-            po::value(&mincond)->default_value(1e-4))("maxcond",
+            po::value(&mincond)->default_value(1e-6))("maxcond",
             po::value(&maxcond)->default_value(5))("mindens",
-            po::value(&mindens)->default_value(0.5))("maxdens",
-            po::value(&maxdens)->default_value(4.0))("density_a",
+            po::value(&mindens)->default_value(-1.0))("maxdens",
+            po::value(&maxdens)->default_value(1.0))("density_a",
             po::value(&density_a)->default_value(5000),
             "The slope of the velocity-density relationship")("density_b",
             po::value(&density_b)->default_value(8500),
@@ -294,8 +295,8 @@ namespace jif3D
         //then we construct the three cross gradient terms
         //the double section transform takes two sections of the model
         //and feeds them to the objective function
-        boost::shared_ptr<jif3D::CrossGradient> SeisGravCross(
-            new jif3D::CrossGradient(ModelGeometry));
+        boost::shared_ptr<jif3D::DotStructureConstraint> SeisGravCross(
+            new jif3D::DotStructureConstraint(ModelGeometry));
         boost::shared_ptr<jif3D::MultiSectionTransform> SeisGravTrans(
             new jif3D::MultiSectionTransform(3 * ngrid));
         SeisGravTrans->AddSection(0, ngrid, SlowCrossTrans);
@@ -310,8 +311,8 @@ namespace jif3D
             Objective.AddObjective(SeisGravCross, SeisGravTrans, seisgravlambda,
                 "SeisGrav", JointObjective::coupling);
           }
-        boost::shared_ptr<jif3D::CrossGradient> SeisMTCross(
-            new jif3D::CrossGradient(ModelGeometry));
+        boost::shared_ptr<jif3D::DotStructureConstraint> SeisMTCross(
+            new jif3D::DotStructureConstraint(ModelGeometry));
         boost::shared_ptr<jif3D::MultiSectionTransform> SeisMTTrans(
             new jif3D::MultiSectionTransform(3 * ngrid));
         SeisMTTrans->AddSection(0, ngrid, SlowCrossTrans);
@@ -325,8 +326,8 @@ namespace jif3D
             Objective.AddObjective(SeisMTCross, SeisMTTrans, seismtlambda, "SeisMT",
                 JointObjective::coupling);
           }
-        boost::shared_ptr<jif3D::CrossGradient> GravMTCross(
-            new jif3D::CrossGradient(ModelGeometry));
+        boost::shared_ptr<jif3D::DotStructureConstraint> GravMTCross(
+            new jif3D::DotStructureConstraint(ModelGeometry));
         boost::shared_ptr<jif3D::MultiSectionTransform> GravMTTrans(
             new jif3D::MultiSectionTransform(3 * ngrid));
         GravMTTrans->AddSection(ngrid, 2 * ngrid, DensCrossTrans);
