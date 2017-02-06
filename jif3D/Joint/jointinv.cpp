@@ -215,6 +215,20 @@ int hpx_main(boost::program_options::variables_map& vm)
             TomoSetup.GetModel().GetSourcePosZ());
       }
 
+    const size_t nmtsites = MTSetup.GetModel().GetMeasPosX().size();
+    const size_t ngrid = InvModel.size();
+    jif3D::rvec CRef(nmtsites * 4);
+    for (size_t i = 0; i < nmtsites; ++i)
+      {
+        CRef(i * 4) = 1.0;
+        CRef(i * 4 + 1) = 0.0;
+        CRef(i * 4 + 2) = 0.0;
+        CRef(i * 4 + 3) = 1.0;
+      }
+    boost::shared_ptr<jif3D::GeneralModelTransform> Copier(new jif3D::ModelCopyTransform);
+    boost::shared_ptr<jif3D::MultiSectionTransform> DistRegTrans(
+        new jif3D::MultiSectionTransform(InvModel.size(), ngrid, ngrid + CRef.size(),
+            Copier));
     if (havemt)
       {
         jif3D::rvec SiteNum(MTSetup.GetModel().GetMeasPosX().size());
@@ -230,15 +244,7 @@ int hpx_main(boost::program_options::variables_map& vm)
             //if we did not read distortion values together with the
             //observed data, we set the distortion matrix C at each site
             // to identity matrix
-            const size_t nmtsites = MTSetup.GetModel().GetMeasPosX().size();
-            jif3D::rvec CRef(nmtsites * 4);
-            for (size_t i = 0; i < nmtsites; ++i)
-              {
-                CRef(i * 4) = 1.0;
-                CRef(i * 4 + 1) = 0.0;
-                CRef(i * 4 + 2) = 0.0;
-                CRef(i * 4 + 3) = 1.0;
-              }
+
 
             if (C.empty())
               {
@@ -247,7 +253,6 @@ int hpx_main(boost::program_options::variables_map& vm)
               }
             //we need to expand the model vector to hold the
             //elements of the distortion matrix
-            const size_t ngrid = InvModel.size();
             jif3D::rvec Grid(InvModel);
             InvModel.resize(ngrid + C.size());
             std::copy(Grid.begin(), Grid.end(), InvModel.begin());
@@ -264,12 +269,6 @@ int hpx_main(boost::program_options::variables_map& vm)
             boost::shared_ptr<jif3D::RegularizationFunction> DistReg(
                 new jif3D::MinDiffRegularization(DistModel));
             DistReg->SetReferenceModel(CRef);
-            boost::shared_ptr<jif3D::GeneralModelTransform> Copier(
-                new jif3D::ModelCopyTransform);
-
-            boost::shared_ptr<jif3D::MultiSectionTransform> DistRegTrans(
-                new jif3D::MultiSectionTransform(InvModel.size(), ngrid,
-                    ngrid + CRef.size(), Copier));
 
             dynamic_cast<jif3D::MultiSectionTransform *>(MTTransform.get())->SetLength(
                 ngrid + C.size());
@@ -573,16 +572,17 @@ int hpx_main(boost::program_options::variables_map& vm)
     //if we are inverting MT data and have specified site locations
     if (havemt)
       {
-        std::cout << "C: ";
-        std::copy(MTModel.GetDistortionParameters().begin(),
-            MTModel.GetDistortionParameters().end(),
-            std::ostream_iterator<double>(std::cout, "\n"));
+        jif3D::rvec tmp = DistRegTrans->GeneralizedToPhysical(InvModel);
+        std::vector<double> C(tmp.begin(),tmp.end());
         //calculate MT inversion result
         jif3D::rvec MTInvData(MTSetup.GetMTObjective().GetSyntheticData());
+        jif3D::rvec MTObsData(MTSetup.GetMTObjective().GetObservedData());
         jif3D::WriteImpedancesToNetCDF(modelfilename + ".inv_mt.nc",
             MTModel.GetFrequencies(), MTModel.GetMeasPosX(), MTModel.GetMeasPosY(),
-            MTModel.GetMeasPosZ(), MTInvData, MTSetup.GetMTObjective().GetDataError(),
-            MTModel.GetDistortionParameters());
+            MTModel.GetMeasPosZ(), MTInvData, MTSetup.GetMTObjective().GetDataError(), C);
+        jif3D::WriteImpedancesToNetCDF(modelfilename + ".dist_imp.nc",
+            MTModel.GetFrequencies(), MTModel.GetMeasPosX(), MTModel.GetMeasPosY(),
+            MTModel.GetMeasPosZ(), MTObsData, MTSetup.GetMTObjective().GetDataError(), C);
         jif3D::rvec MTDiff(MTSetup.GetMTObjective().GetIndividualMisfit());
         jif3D::WriteImpedancesToNetCDF(modelfilename + ".diff_mt.nc",
             MTModel.GetFrequencies(), MTModel.GetMeasPosX(), MTModel.GetMeasPosY(),
