@@ -245,7 +245,6 @@ int hpx_main(boost::program_options::variables_map& vm)
             //observed data, we set the distortion matrix C at each site
             // to identity matrix
 
-
             if (C.empty())
               {
                 C.resize(CRef.size());
@@ -272,6 +271,7 @@ int hpx_main(boost::program_options::variables_map& vm)
 
             dynamic_cast<jif3D::MultiSectionTransform *>(MTTransform.get())->SetLength(
                 ngrid + C.size());
+            DistRegTrans->SetLength(ngrid + C.size());
             dynamic_cast<jif3D::MultiSectionTransform *>(MTTransform.get())->AddSection(
                 ngrid, ngrid + C.size(), Copier);
             Objective->AddObjective(DistReg, DistRegTrans, MTSetup.GetDistCorr(),
@@ -573,7 +573,7 @@ int hpx_main(boost::program_options::variables_map& vm)
     if (havemt)
       {
         jif3D::rvec tmp = DistRegTrans->GeneralizedToPhysical(InvModel);
-        std::vector<double> C(tmp.begin(),tmp.end());
+        std::vector<double> C(tmp.begin(), tmp.end());
         //calculate MT inversion result
         jif3D::rvec MTInvData(MTSetup.GetMTObjective().GetSyntheticData());
         jif3D::rvec MTObsData(MTSetup.GetMTObjective().GetObservedData());
