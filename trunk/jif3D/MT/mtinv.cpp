@@ -364,7 +364,7 @@ int hpx_main(boost::program_options::variables_map& vm)
             RefModel.GetConductivities().origin() + RefModel.GetNModelElements(),
             RefVec.begin());
         Regularization->SetReferenceModel(
-            ModRegTrans->PhysicalToGeneralized(RefVec));
+            ConductivityTransform->PhysicalToGeneralized(RefVec));
       }
 
     if (vm.count("regcheck"))
