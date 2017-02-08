@@ -8,7 +8,6 @@
 #include "SetupCoupling.h"
 #include "../Global/FileUtil.h"
 #include "../Regularization/CrossGradient.h"
-#include "../Regularization/DotStructureConstraint.h"
 #include "../Inversion/ModelTransforms.h"
 #include "SaltRelConstraint.h"
 
@@ -295,8 +294,8 @@ namespace jif3D
         //then we construct the three cross gradient terms
         //the double section transform takes two sections of the model
         //and feeds them to the objective function
-        boost::shared_ptr<jif3D::DotStructureConstraint> SeisGravCross(
-            new jif3D::DotStructureConstraint(ModelGeometry));
+        boost::shared_ptr<jif3D::CrossGradient> SeisGravCross(
+            new jif3D::CrossGradient(ModelGeometry));
         boost::shared_ptr<jif3D::MultiSectionTransform> SeisGravTrans(
             new jif3D::MultiSectionTransform(3 * ngrid));
         SeisGravTrans->AddSection(0, ngrid, SlowCrossTrans);
@@ -311,8 +310,8 @@ namespace jif3D
             Objective.AddObjective(SeisGravCross, SeisGravTrans, seisgravlambda,
                 "SeisGrav", JointObjective::coupling);
           }
-        boost::shared_ptr<jif3D::DotStructureConstraint> SeisMTCross(
-            new jif3D::DotStructureConstraint(ModelGeometry));
+        boost::shared_ptr<jif3D::CrossGradient> SeisMTCross(
+            new jif3D::CrossGradient(ModelGeometry));
         boost::shared_ptr<jif3D::MultiSectionTransform> SeisMTTrans(
             new jif3D::MultiSectionTransform(3 * ngrid));
         SeisMTTrans->AddSection(0, ngrid, SlowCrossTrans);
@@ -326,8 +325,8 @@ namespace jif3D
             Objective.AddObjective(SeisMTCross, SeisMTTrans, seismtlambda, "SeisMT",
                 JointObjective::coupling);
           }
-        boost::shared_ptr<jif3D::DotStructureConstraint> GravMTCross(
-            new jif3D::DotStructureConstraint(ModelGeometry));
+        boost::shared_ptr<jif3D::CrossGradient> GravMTCross(
+            new jif3D::CrossGradient(ModelGeometry));
         boost::shared_ptr<jif3D::MultiSectionTransform> GravMTTrans(
             new jif3D::MultiSectionTransform(3 * ngrid));
         GravMTTrans->AddSection(ngrid, 2 * ngrid, DensCrossTrans);
