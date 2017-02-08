@@ -30,14 +30,13 @@ int main()
     jif3D::ReadImpedancesFromNetCDF(ncfilename, Frequencies, StatX, StatY, StatZ,
         Impedances, Errors, C);
 
-
     std::cout << "Rotation angle [degree]: ";
     double dangle = 0.0;
     std::cin >> dangle;
     double rangle = dangle / 180.0 * boost::math::constants::pi<double>();
 //    jif3D::rvec RotImp = jif3D::RotateImpedanceVector(rangle, Impedances);
     const size_t nelem = 8;
-  const size_t ntensor = Impedances.size() / nelem;
+    const size_t ntensor = Impedances.size() / nelem;
 //    jif3D::comp_mat InvCov(Errors.size(), Errors.size());
 //    for (size_t i = 0; i < ntensor; ++i)
 //      {
@@ -74,16 +73,16 @@ int main()
 
     for (size_t i = 0; i < StatX.size(); ++i)
       {
-        double newx = StatX.at(i)  * cos(rangle) - StatY.at(i)  * sin(rangle);
-        double newy = StatX.at(i)  * sin(rangle) + StatY.at(i)  * cos(rangle);
+        double newx = StatX.at(i) * cos(rangle) - StatY.at(i) * sin(rangle);
+        double newy = StatX.at(i) * sin(rangle) + StatY.at(i) * cos(rangle);
         StatX.at(i) = newx;
         StatY.at(i) = newy;
       }
 
     //jif3D::WriteSparseMatrixToNetcdf(ncfilename + "_invcov.nc", InvCov, "InvCovariance");
-    jif3D::WriteImpedancesToNetCDF(ncfilename + "_rot" + jif3D::stringify(dangle)+".nc", Frequencies, StatX, StatY,
-        StatZ, Impedances, Errors);
+    jif3D::WriteImpedancesToNetCDF(ncfilename + "_rot" + jif3D::stringify(dangle) + ".nc",
+        Frequencies, StatX, StatY, StatZ, Impedances, Errors);
 
     jif3D::Write3DDataToVTK(ncfilename + "_rot.statpos.vtk", "Station",
-        jif3D::rvec(ntensor, 1.0), StatX, StatY, StatZ);
+        jif3D::rvec(StatX.size(), 1.0), StatX, StatY, StatZ);
   }
