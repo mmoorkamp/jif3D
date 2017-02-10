@@ -201,5 +201,4 @@ namespace jif3D
 
       }
   }
-BOOST_CLASS_EXPORT_IMPLEMENT(jif3D::DCResistivityCalculator)
 

@@ -51,7 +51,7 @@ int main()
 
     //set the cell sizes and allocate memory for the mesh
     Model.SetHorizontalCellSize(deltax, deltay, nx, ny);
-    Model.SetZCellSizes().resize(boost::extents[nz]);
+    Model.SetZCellSizes().resize(nz);
     for (int j = 0; j < nz; j++)
       {
         Model.SetZCellSizes()[j] = deltaz[j];

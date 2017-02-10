@@ -25,7 +25,7 @@ BOOST_AUTO_TEST_SUITE( DC_Objective_Test_Suite )
 
         std::ofstream gradfile("dcgrad.out");
         jif3D::rvec FDGrad(Model.size(), 0.0);
-        double Misfit = Objective.CalcMisfit(Model);
+        Objective.CalcMisfit(Model);
         for (size_t i = 0; i < Gradient.size(); ++i)
           {
             double delta = Model(i) * 0.01;
@@ -48,8 +48,8 @@ BOOST_AUTO_TEST_SUITE( DC_Objective_Test_Suite )
         const size_t ysize = 8;
         const size_t zsize = 7;
         Model.SetHorizontalCellSize(1, 1, xsize, ysize);
-        Model.SetZCellSizes().resize(boost::extents[zsize]);
-        std::fill_n(Model.SetZCellSizes().origin(), zsize, 1.0);
+        Model.SetZCellSizes().resize(zsize);
+        std::fill_n(Model.SetZCellSizes().begin(), zsize, 1.0);
         Model.SetMeshSize(xsize, ysize, zsize);
 
         const size_t ngrid = xsize * ysize * zsize;
@@ -63,7 +63,6 @@ BOOST_AUTO_TEST_SUITE( DC_Objective_Test_Suite )
         const double maxy = 5.5;
         const double deltax = 2.0;
         const double deltay = 2.0;
-        const double measz = 0.0;
         const double sourcez = 0.0;
         const size_t nmeasx = boost::numeric_cast<size_t>((maxx - minx) / deltax);
         const size_t nmeasy = boost::numeric_cast<size_t>((maxy - miny) / deltay);

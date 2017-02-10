@@ -65,6 +65,5 @@ namespace jif3D
   /* @} */
   }
 
-BOOST_CLASS_EXPORT_KEY(jif3D::DCResistivityCalculator)
 
 #endif /* DCRESISTIVITYCALCULATOR_H_ */
