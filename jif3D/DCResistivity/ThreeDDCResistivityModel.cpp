@@ -107,7 +107,7 @@ namespace jif3D
 
     void ThreeDDCResistivityModel::WriteNetCDF(const std::string filename) const
       {
-        NcFile DataFile(filename.c_str(), NcFile::Replace);
+        netCDF::NcFile DataFile(filename.c_str(), netCDF::NcFile::replace);
         //write the 3D discretized part
         WriteDataToNetCDF(DataFile, ResistivityName, ResistivityUnit);
       }
@@ -115,7 +115,7 @@ namespace jif3D
     void ThreeDDCResistivityModel::ReadNetCDF(const std::string filename)
       {
         //create the netcdf file object
-        NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
+        netCDF::NcFile DataFile(filename.c_str(), netCDF::NcFile::read);
         //read in the 3D gridded data
         ReadDataFromNetCDF(DataFile, ResistivityName, ResistivityUnit);
       }

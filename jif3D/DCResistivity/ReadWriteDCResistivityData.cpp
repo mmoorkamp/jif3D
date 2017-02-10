@@ -42,22 +42,21 @@ namespace jif3D
         //assert(ndata == Model.GetMeasSecPosX().size());
         //ndata == Model.GetSourceIndices().size();
 
-
-
         const size_t nsourcepos = Model.GetSourcePosPosX().size();
         //create a netcdf file
-        NcFile DataFile(filename.c_str(), NcFile::Replace);
+        netCDF::NcFile DataFile(filename.c_str(), netCDF::NcFile::replace);
 
         //we use the source sequence number as a dimension
-        NcDim *SourceNumDim = DataFile.add_dim(DCSourceNumberName.c_str(), nsourcepos);
+        netCDF::NcDim SourceNumDim = DataFile.addDim(DCSourceNumberName.c_str(),
+            nsourcepos);
 
         //this is just an index over the source vector
         //and does not have any special meaning
         std::vector<int> SourcePosNumber;
         std::generate_n(std::back_inserter(SourcePosNumber), nsourcepos, IntSequence(0));
-        NcVar *SourceNumVar = DataFile.add_var(DCSourceNumberName.c_str(), ncInt,
-            SourceNumDim);
-        SourceNumVar->put(&SourcePosNumber[0], nsourcepos);
+        netCDF::NcVar SourceNumVar = DataFile.addVar(DCSourceNumberName.c_str(),
+            netCDF::ncInt, SourceNumDim);
+        cxxport::put_legacy_ncvar(SourceNumVar, SourcePosNumber.data(), nsourcepos);
 
         //write out the source coordinates
         WriteVec(DataFile, DCSourcePosXName, Model.GetSourcePosPosX(), SourceNumDim, "m");
@@ -68,10 +67,10 @@ namespace jif3D
         WriteVec(DataFile, DCSourceNegZName, Model.GetSourceNegPosZ(), SourceNumDim, "m");
 
         //write the index of the source for each measurement
-        NcDim *MeasIndexDim = DataFile.add_dim(MeasIndexName.c_str(), ndata);
-        NcVar *SourceIndexVar = DataFile.add_var(DCSourceIndexName.c_str(), ncInt,
-            MeasIndexDim);
-        SourceIndexVar->put(&Model.GetSourceIndices()[0], ndata);
+        netCDF::NcDim MeasIndexDim = DataFile.addDim(MeasIndexName.c_str(), ndata);
+        netCDF::NcVar SourceIndexVar = DataFile.addVar(DCSourceIndexName.c_str(),
+            netCDF::ncInt, MeasIndexDim);
+        cxxport::put_legacy_ncvar(SourceIndexVar, Model.GetSourceIndices().data(), ndata);
 
         //write out the positions of the receivers, i.e. measurement positions
         WriteVec(DataFile, DCReceiverFirXName, Model.GetMeasPosX(), MeasIndexDim, "m");
@@ -90,7 +89,7 @@ namespace jif3D
     void ReadApparentResistivity(const std::string &filename, jif3D::rvec &Data,
         jif3D::rvec &Error, jif3D::ThreeDDCResistivityModel &Model)
       {
-        NcFile DataFile(filename.c_str(), NcFile::ReadOnly);
+        netCDF::NcFile DataFile(filename.c_str(), netCDF::NcFile::read);
         jif3D::ThreeDModelBase::tMeasPosVec PosPosX, PosPosY, PosPosZ, NegPosX, NegPosY,
             NegPosZ, R1X, R1Y, R1Z, R2X, R2Y, R2Z;
 //delete any old values in the model object
@@ -138,16 +137,22 @@ namespace jif3D
         ReadVec(DataFile, DCAppResistivityName, Data);
 // it is possible that there is no error information in the file
 // so we don't want to crash the program if not but set it to zero
-        NcError NetCDFError(NcError::silent_nonfatal);
-        if (DataFile.get_var(DCAppResistivityErrorName.c_str()) != nullptr)
+        Error.resize(Data.size());
+        Error.clear();
+
+        try
           {
-            ReadVec(DataFile, DCAppResistivityErrorName, Error);
-          }
-        else
+            netCDF::NcVar ErrVar = DataFile.getVar(DCAppResistivityErrorName.c_str());
+            if (!ErrVar.isNull())
+              {
+                ReadVec(DataFile, DCAppResistivityErrorName, Error);
+              }
+
+          } catch (const netCDF::exceptions::NcException &ex)
           {
-            Error.resize(Data.size());
-            Error.clear();
+            /*do nothing */
           }
+
       }
 
   }
