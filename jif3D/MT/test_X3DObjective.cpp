@@ -46,11 +46,8 @@ BOOST_AUTO_TEST_SUITE( X3DObjective_Suite )
 
         std::fill_n(Model.SetZCellSizes().begin(), zsize, deltaz);
         std::fill_n(Model.SetConductivities().origin(), nmod, 0.02);
-        typedef boost::multi_array_types::index_range range;
-        boost::multi_array<double, 3>::array_view<3>::type myview =
-            Model.SetConductivities()[boost::indices[range(0, 3)][range(0, 2)][range(0, 0)]];
-        //std::fill_n(myview.origin(),xsize*ysize,1.0);
-        Model.SetConductivities()[0][0][0] = 1.0;
+
+        Model.SetConductivities()[0][0][0] = 0.025;
         std::fill_n(bg_conductivities.begin(), nbglayers, 0.02);
         for (size_t i = 0; i < nbglayers; ++i)
           {
@@ -168,7 +165,7 @@ BOOST_AUTO_TEST_SUITE( X3DObjective_Suite )
 
         for (size_t index = 0; index < ModelVec.size(); ++index)
           {
-            double delta = 0.001;
+            double delta = 0.005;
             jif3D::rvec Forward(ModelVec);
             jif3D::rvec Backward(ModelVec);
             Forward(index) += delta;
@@ -282,7 +279,7 @@ BOOST_AUTO_TEST_SUITE( X3DObjective_Suite )
 
         for (size_t index = 0; index < ModelVec.size(); ++index)
           {
-            double delta = 0.001;
+            double delta = 0.01;
             jif3D::rvec Forward(ModelVec);
             jif3D::rvec Backward(ModelVec);
             Forward(index) += delta;
@@ -312,75 +309,6 @@ BOOST_AUTO_TEST_SUITE( X3DObjective_Suite )
 
       }
 
-//    BOOST_AUTO_TEST_CASE (X3D_sens_test)
-//      {
-//        namespace logging = boost::log;
-////        logging::core::get()->set_filter(
-////            logging::trivial::severity >= logging::trivial::warning);
-//        jif3D::X3DModel Model;
-//        MakeMTModel(Model);
-//
-//        const size_t nmod = Model.GetNModelElements();
-//
-//        jif3D::X3DModel TrueModel(Model);
-//        std::fill_n(TrueModel.SetConductivities().origin(), nmod, 0.01);
-//
-//        //we want to test the distortion correction as well
-//        boost::filesystem::path TDir = boost::filesystem::current_path();
-//        jif3D::X3DMTCalculator Calculator(TDir, "x3d", true);
-//        jif3D::rvec Observed = Calculator.Calculate(TrueModel);
-//
-//        jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator> Objective(Calculator);
-//        Objective.SetObservedData(Observed);
-//        Objective.SetCoarseModelGeometry(Model);
-//
-//        const size_t nstat = Model.GetMeasPosX().size();
-//        jif3D::rvec ModelVec(nmod + 4 * nstat);
-//        std::copy(Model.GetConductivities().origin(),
-//            Model.GetConductivities().origin() + nmod, ModelVec.begin());
-//        for (size_t i = 0; i < nstat; ++i)
-//          {
-//            ModelVec(nmod + i * 4) = 1.1;
-//            ModelVec(nmod + i * 4 + 1) = 0.9;
-//            ModelVec(nmod + i * 4 + 2) = 0.8;
-//            ModelVec(nmod + i * 4 + 3) = 1.2;
-//
-//          }
-//
-//        double misfit = Objective.CalcMisfit(ModelVec);
-//        jif3D::rvec Diff = Objective.GetDataDifference();
-//        std::cout << "Data difference: ";
-//        std::copy(Diff.begin(), Diff.end(),
-//            std::ostream_iterator<double>(std::cout, " "));
-//        std::cout << std::endl;
-//        BOOST_CHECK(misfit > 0.0);
-//        jif3D::rvec ObjDat = Objective.GetObservedData();
-//        jif3D::rvec Gradient = Objective.CalcGradient(ModelVec);
-//        jif3D::rmat Sens = Calculator.SensitivityMatrix(Model, Diff);
-//        jif3D::rvec SensGrad = 2.0 * ublas::prec_prod(ublas::trans(Sens), Diff);
-//        jif3D::rvec SensDat = ublas::prec_prod(Sens, ModelVec);
-//        std::ofstream outfile("sens.comp");
-//        std::ofstream sensfile("sens.out");
-//        for (size_t i = 0; i < Sens.size1(); ++i)
-//          {
-//            ublas::matrix_row<jif3D::rmat> Row(Sens, i);
-//            std::copy(Row.begin(), Row.end(),
-//                std::ostream_iterator<double>(sensfile, " "));
-//            sensfile << std::endl;
-//          }
-//
-//        for (size_t index = 0; index < ObjDat.size(); ++index)
-//          {
-//            //BOOST_CHECK_CLOSE(ObjDat(index), SensDat(index), 2.0);
-//          }
-//        for (size_t index = 0; index < ModelVec.size(); ++index)
-//          {
-//
-//            BOOST_CHECK_CLOSE(Gradient(index), SensGrad(index), 2.0);
-//
-//            outfile << index << " " << Gradient(index) << " " << SensGrad(index)
-//                << std::endl;
-//          }
-//      }
+
 
     BOOST_AUTO_TEST_SUITE_END()
