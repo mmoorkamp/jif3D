@@ -12,7 +12,8 @@ namespace jif3D
 
     void GradientRegularization::ConstructOperator(
         const jif3D::ThreeDModelBase &ModelGeometry,
-        const jif3D::ThreeDModelBase &TearModelX, const jif3D::ThreeDModelBase &TearModelY,
+        const jif3D::ThreeDModelBase &TearModelX,
+        const jif3D::ThreeDModelBase &TearModelY,
         const jif3D::ThreeDModelBase &TearModelZ)
       {
         const size_t xsize = ModelGeometry.GetModelShape()[0];
@@ -33,13 +34,14 @@ namespace jif3D
                     const size_t index = ModelGeometry.IndexToOffset(i, j, k);
                     //we use forward differences for the gradient
                     //so we have two elements per matrix row
-                    //for each operator matrix we have to check
-                    //whether we want a tear for the cell boundary in that direction
+                    //we use the tear model as a weight for the regularization
+                    //so 1.0 means normal regularization, 0.0 no regularization
                     if (TearModelX.GetData()[i][j][k])
                       {
                         XOperatorMatrix(index, ModelGeometry.IndexToOffset(i + 1, j, k)) =
-                            1.0;
-                        XOperatorMatrix(index, index) = CenterValue;
+                            std::abs(TearModelX.GetData()[i][j][k]);
+                        XOperatorMatrix(index, index) = CenterValue
+                            * std::abs(TearModelX.GetData()[i][j][k]);
                       }
                   }
               }
@@ -55,19 +57,18 @@ namespace jif3D
                     const size_t index = ModelGeometry.IndexToOffset(i, j, k);
                     //we use forward differences for the gradient
                     //so we have two elements per matrix row
-                    //for each operator matrix we have to check
-                    //whether we want a tear for the cell boundary in that direction
-
+                    //we use the tear model as a weight for the regularization
+                    //so 1.0 means normal regularization, 0.0 no regularization
                     if (TearModelY.GetData()[i][j][k])
                       {
                         YOperatorMatrix(index, ModelGeometry.IndexToOffset(i, j + 1, k)) =
-                            1.0;
-                        YOperatorMatrix(index, index) = CenterValue;
+                            std::abs(TearModelY.GetData()[i][j][k]);
+                        YOperatorMatrix(index, index) = CenterValue
+                            * std::abs(TearModelY.GetData()[i][j][k]);
                       }
                   }
-              }
-          } //end of for loop for x
-
+              } //end of for loop for x
+          }
         for (size_t i = 0; i < xsize; ++i)
           {
             for (size_t j = 0; j < ysize; ++j)
@@ -78,13 +79,14 @@ namespace jif3D
                     const size_t index = ModelGeometry.IndexToOffset(i, j, k);
                     //we use forward differences for the gradient
                     //so we have two elements per matrix row
-                    //for each operator matrix we have to check
-                    //whether we want a tear for the cell boundary in that direction
+                    //we use the tear model as a weight for the regularization
+                    //so 1.0 means normal regularization, 0.0 no regularization
                     if (TearModelZ.GetData()[i][j][k])
                       {
                         ZOperatorMatrix(index, ModelGeometry.IndexToOffset(i, j, k + 1)) =
-                            1.0;
-                        ZOperatorMatrix(index, index) = CenterValue;
+                            std::abs(TearModelZ.GetData()[i][j][k]);
+                        ZOperatorMatrix(index, index) = CenterValue
+                            * std::abs(TearModelZ.GetData()[i][j][k]);
                       }
                   }
               }
