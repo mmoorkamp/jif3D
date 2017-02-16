@@ -205,9 +205,10 @@ int main(int argc, char *argv[])
     //    boost::shared_ptr<jif3D::GeneralModelTransform>(new jif3D::ModelCopyTransform));
     InvModel = ConductivityTransform->PhysicalToGeneralized(InvModel);
 
+    boost::shared_ptr<jif3D::ModelCopyTransform> RegTrans(new jif3D::ModelCopyTransform);
     boost::shared_ptr<jif3D::JointObjective> Objective(new jif3D::JointObjective(true));
     Objective->AddObjective(MTObjective, ConductivityTransform, 1.0, "MT");
-    Objective->AddObjective(Regularization, ConductivityTransform, reglambda, "Reg");
+    Objective->AddObjective(Regularization, RegTrans, reglambda, "Reg");
 
     jif3D::LimitedMemoryQuasiNewton Optimizer(Objective);
     Optimizer.SetModelCovDiag(InvModel);

@@ -14,7 +14,7 @@ lib mt : ReadWriteX3D.cpp ReadWriteImpedances.cpp
 #: <hpx>on:<linkflags>"`pkg-config --libs hpx_component`"
 
 # switched off unit-test 2DMT_test : test_Tarits2DMT.cpp   mt linkcommon ../Inversion//inversion   ;
-#unit-test X3Dcalc_test : test_X3DCalculator.cpp  B_epol1.for B_hpol.for MT2DForward.cpp ..//gfortran mt ../Global//global linkcommon ../Inversion//inversion  ;
+unit-test X3Dcalc_test : test_X3DCalculator.cpp  B_epol1.for B_hpol.for MT2DForward.cpp ..//gfortran mt ../Global//global linkcommon ../Inversion//inversion  ;
 unit-test MTtransform_test : test_transform.cpp mt  ..//ModelBase   ;
 unit-test RWX3D_test : test_ReadWriteX3D.cpp   mt linkcommon ../Global//global ../Inversion//inversion  ;
 unit-test InterpolateFields_test : test_InterpolateFields.cpp   mt linkcommon ../Global//global ../Inversion//inversion  ;
