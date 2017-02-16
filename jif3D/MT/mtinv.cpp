@@ -128,9 +128,17 @@ int hpx_main(boost::program_options::variables_map& vm)
       {
         MinErr = jif3D::ConstructMTError(Data, relerr);
       }
-    std::transform(ZError.begin(), ZError.end(), MinErr.begin(), ZError.begin(),
-        [](double a, double b)
-          { return std::max(a,b);});
+
+    if (vm.count("forcecommon"))
+      {
+        std::copy(MinErr.begin(),MinErr.end(),ZError.begin());
+      }
+    else
+      {
+        std::transform(ZError.begin(), ZError.end(), MinErr.begin(), ZError.begin(),
+            [](double a, double b)
+              { return std::max(a,b);});
+      }
 
     auto negerr = std::find_if(ZError.begin(), ZError.end(), [](double val)
       { return val <= 0.0;});
@@ -217,7 +225,8 @@ int hpx_main(boost::program_options::variables_map& vm)
           }
         if (ncovmod != ngrid)
           {
-            std::cerr << "Covariance model, does not have the same number of cells as inversion model !"
+            std::cerr
+                << "Covariance model, does not have the same number of cells as inversion model !"
                 << std::endl;
             return 200;
           }
@@ -544,12 +553,14 @@ int main(int argc, char* argv[])
         po::value(&maxcond)->default_value(5),
         "The maximum value for conductivity in S/m")("tempdir", po::value<std::string>(),
         "The name of the directory to store temporary files in")("distcorr",
-        po::value(&DistCorr)->default_value(0), "Correct for distortion within inversion, value is regularization factor")(
+        po::value(&DistCorr)->default_value(0),
+        "Correct for distortion within inversion, value is regularization factor")(
         "x3dname", po::value(&X3DName)->default_value("x3d"),
         "The name of the executable for x3d")("mtinvcovar",
         po::value<std::string>(&MTInvCovarName),
         "Inverse covariance matrix to use in MT misfit calculation.")("inderrors",
-        "Use the individual errors for each element instead of the same for all elements")(
+        "Use the individual errors for each element instead of the same error floor for all elements")(
+        "forcecommon", "Use exactly the same error mtrelerr * Berd(Z) for all elements.")(
         "mtrelerr", po::value(&relerr)->default_value(0.02),
         "Error floor for impedance estimates.")("coolingfactor",
         po::value(&coolingfactor)->default_value(1.0),

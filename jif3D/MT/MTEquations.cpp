@@ -72,17 +72,26 @@ namespace jif3D
         const double sa2 = pow(sin(angle), 2);
         const double casa = sin(angle) * cos(angle);
         //do the rotation R Z R^T
-        newxx = Zxx * ca2 - (Zxy + Zyx) * casa + Zyy * sa2;
-        newxy = Zxy * ca2 + (Zxx - Zyy) * casa - Zyx * sa2;
-        newyx = Zyx * ca2 + (Zxx - Zyy) * casa - Zxy * sa2;
-        newyy = Zyy * ca2 + (Zxy + Zyx) * casa + Zxx * sa2;
+        //see equations 4.36-4.39 in Chave and Jones
+        newxx = Zxx * ca2 + (Zxy + Zyx) * casa + Zyy * sa2;
+        newxy = Zxy * ca2 - (Zxx - Zyy) * casa - Zyx * sa2;
+        newyx = Zyx * ca2 - (Zxx - Zyy) * casa - Zxy * sa2;
+        newyy = Zyy * ca2 - (Zxy + Zyx) * casa + Zxx * sa2;
         //assign temporary values to impedance elements
         Zxx = newxx;
         Zxy = newxy;
         Zyx = newyx;
         Zyy = newyy;
       }
-
+    //! Take a vector that contains magnetotelluric impedance values and rotate it by an angle in radian
+    /*! We often work with MT impedances where the values are stored in a vector of the form
+     * Re(Zxx), Im(Zxx), Re(Zxy), ... for various sites and frequencies. This function takes such a vector
+     * and rotates the elements belonging to the same tensor (i.e. 8 consecutive values) and rotates
+     * it.
+     * @param angle The rotation angle in radian clockwise from North
+     * @param Impedance The vector with the impedance values in the form Re(Zxx), Im(Zxx), Re(Zxy), ...
+     * @return The impedances in the rotated coordinate system.
+     */
     jif3D::rvec RotateImpedanceVector(const double angle, const jif3D::rvec &Impedance)
       {
         jif3D::rvec Result(Impedance.size());
