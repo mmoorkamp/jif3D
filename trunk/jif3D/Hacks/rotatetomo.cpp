@@ -22,10 +22,9 @@ int main()
   {
     std::string ncfilename = jif3D::AskFilename("Name of netcdf file: ");
 
-
     jif3D::rvec Data, Error;
     jif3D::ThreeDSeismicModel Model;
-    jif3D::ReadTraveltimes(ncfilename,Data,Error,Model);
+    jif3D::ReadTraveltimes(ncfilename, Data, Error, Model);
 
     std::cout << "Rotation angle [degree]: ";
     double dangle = 0.0;
@@ -47,28 +46,26 @@ int main()
     Model.ClearSourcePos();
     for (size_t i = 0; i < SourceX.size(); ++i)
       {
-        double newx = SourceX.at(i)  * cos(rangle) - SourceY.at(i)  * sin(rangle);
-        double newy = SourceX.at(i)  * sin(rangle) + SourceY.at(i)  * cos(rangle);
+        double newx = SourceX.at(i) * cos(rangle) + SourceY.at(i) * sin(rangle);
+        double newy = SourceY.at(i) * cos(rangle) - SourceX.at(i) * sin(rangle);
         SourceX.at(i) = newx;
         SourceY.at(i) = newy;
-        Model.AddSource(newx,newy,SourceZ[i]);
+        Model.AddSource(newx, newy, SourceZ[i]);
       }
 
     for (size_t i = 0; i < RecX.size(); ++i)
       {
-        double newx = RecX.at(i)  * cos(rangle) - RecY.at(i)  * sin(rangle);
-        double newy = RecX.at(i)  * sin(rangle) + RecY.at(i)  * cos(rangle);
-        Model.AddMeasurementPoint(newx,newy,RecZ[i]);
+        double newx = RecX.at(i) * cos(rangle) + RecY.at(i) * sin(rangle);
+        double newy = RecY.at(i) * cos(rangle) - RecX.at(i) * sin(rangle) ;
+        Model.AddMeasurementPoint(newx, newy, RecZ[i]);
       }
 
     for (size_t i = 0; i < SourceIndices.size(); ++i)
-    {
-    	Model.AddMeasurementConfiguration(SourceIndices[i],ReceiverIndices[i]);
-    }
-
-
+      {
+        Model.AddMeasurementConfiguration(SourceIndices[i], ReceiverIndices[i]);
+      }
 
     jif3D::Write3DDataToVTK(ncfilename + "_rot.statpos.vtk", "Station",
         jif3D::rvec(SourceX.size(), 1.0), SourceX, SourceY, SourceZ);
-    jif3D::SaveTraveltimes(ncfilename+".rot.nc",Data,Error,Model);
+    jif3D::SaveTraveltimes(ncfilename + ".rot.nc", Data, Error, Model);
   }
