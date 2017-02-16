@@ -33,8 +33,8 @@ int main()
 
     for (size_t i = 0; i < MeasX.size(); ++i)
       {
-        double newx = MeasX.at(i)  * cos(rangle) - MeasY.at(i)  * sin(rangle);
-        double newy = MeasX.at(i)  * sin(rangle) + MeasY.at(i)  * cos(rangle);
+        double newx = MeasX.at(i)  * cos(rangle) + MeasY.at(i)  * sin(rangle);
+        double newy = MeasY.at(i)  * cos(rangle) - MeasX.at(i)  * sin(rangle);
         MeasX.at(i) = newx;
         MeasY.at(i) = newy;
 
