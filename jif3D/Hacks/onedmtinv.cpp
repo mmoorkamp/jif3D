@@ -148,10 +148,11 @@ int main(int argc, char *argv[])
             for (size_t j = 0; j < nsites; ++j)
               {
                 size_t siteindex = (i * nsites + j) * 8;
-                OneDImp(i * 2) += Impedances( siteindex + 2) - Impedances( siteindex + 4);
-                OneDImp(i * 2 + 1) += Impedances(siteindex + 3)- Impedances( siteindex + 5);
+                OneDImp(i * 2) += Impedances(siteindex + 2) - Impedances(siteindex + 4);
+                OneDImp(i * 2 + 1) += Impedances(siteindex + 3)
+                    - Impedances(siteindex + 5);
               }
-            OneDImp(i * 2) /= 2* nsites;
+            OneDImp(i * 2) /= 2 * nsites;
             OneDImp(i * 2 + 1) /= 2 * nsites;
           }
       }
@@ -264,7 +265,8 @@ int main(int argc, char *argv[])
     std::cout << "Runtime: " << cachedruntime << " s" << std::endl;
     std::cout << std::endl;
     InvModel = ConductivityTransform->GeneralizedToPhysical(InvModel);
-    Model.SetBackgroundConductivities(std::vector<double>(InvModel.begin(),InvModel.end()));
+    Model.SetBackgroundConductivities(
+        std::vector<double>(InvModel.begin(), InvModel.end()));
 
     for (size_t i = 0; i < Model.GetXCellSizes().size(); ++i)
       for (size_t j = 0; j < Model.GetYCellSizes().size(); ++j)
@@ -285,8 +287,10 @@ int main(int argc, char *argv[])
         FullErr(i * 8 + 4) = DataError(i * 2);
         FullErr(i * 8 + 5) = DataError(i * 2);
       }
-    jif3D::WriteImpedancesToMtt(modelfilename + ".inv_imp", Frequencies, FullImp,
-        FullErr);
+    std::vector<double> Coord =
+      { 0.0 };
+    jif3D::WriteImpedancesToNetCDF(modelfilename + ".inv_imp.nc", Frequencies, Coord, Coord,
+        Coord, FullImp, FullErr);
 
     //and write out the data and model
     //here we have to distinguish again between scalar and ftg data
