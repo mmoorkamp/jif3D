@@ -34,6 +34,8 @@ namespace jif3D
     private:
       //! A usually small value that controls the amount of absolute model vector minimization performed, see also the description of the constructor
       const double Eps;
+      //! Do we want to perform the gradient calculation considering the cell size
+      const bool WithCellsize;
       //! Construct the matrix operators that approximate the spatial gradient in the three directions
       /*! We construct three operator matrices, one for each spatial direction, to calculate the
        * gradient regularization term. This way we can weight each direction separately. We need
@@ -57,7 +59,7 @@ namespace jif3D
         {
           ar & base_object<MatOpRegularization>(*this);
           ar & Eps;
-
+          ar & WithCellsize;
         }
     public:
       //! The clone function provides a virtual constructor
@@ -76,8 +78,8 @@ namespace jif3D
        * @param ModEps The weight of the absolute value minimization of the model vector.
        */
       explicit GradientRegularization(const jif3D::ThreeDModelBase &Geometry,
-          const double ModEps = 1e-8) :
-        MatOpRegularization(Geometry), Eps(ModEps)
+          const double ModEps = 1e-8, const bool ConsiderSize = false) :
+        MatOpRegularization(Geometry), Eps(ModEps), WithCellsize(ConsiderSize)
         {
           jif3D::ThreeDModelBase TearModel;
           //if we do not want tears in the regularization we temporarily
@@ -99,11 +101,12 @@ namespace jif3D
        * @param TearModelY Contains information about tears in the regularization in y-direction  (East)
        * @param TearModelZ Contains information about tears in the regularization in z-direction  (Down)
        * @param ModEps The weight of the absolute value minimization of the model vector.
+       * @param ConsiderSize Consider the size of the cells in the respective direction when constructing the gradient
        */
       GradientRegularization(const jif3D::ThreeDModelBase &Geometry,
           jif3D::ThreeDModelBase &TearModelX, jif3D::ThreeDModelBase &TearModelY,
-          jif3D::ThreeDModelBase &TearModelZ, const double ModEps = 1e-8) :
-        MatOpRegularization(Geometry), Eps(ModEps)
+          jif3D::ThreeDModelBase &TearModelZ, const double ModEps = 1e-8, const bool ConsiderSize = false) :
+        MatOpRegularization(Geometry), Eps(ModEps), WithCellsize(ConsiderSize)
         {
           //in debug mode we check that the geometry of the tear models
           //matches the geometry we specify for the inversion domain

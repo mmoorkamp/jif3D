@@ -17,7 +17,6 @@
 
 #include <algorithm>
 
-
 namespace jif3D
   {
 
@@ -97,7 +96,8 @@ namespace jif3D
             "Substract the starting model when calculating the roughness")("minsupp",
             po::value(&minsuppb), "Use minimum support regularization (EXPERIMENTAL)")(
             "mingradsupp", po::value(&minsuppb),
-            "Use minimum gradient support regularization (EXPERIMENTAL)");
+            "Use minimum gradient support regularization (EXPERIMENTAL)")("considersize",
+            "Consider the size of the cells when calculating regularization");
 
         return desc;
       }
@@ -159,7 +159,7 @@ namespace jif3D
               {
                 Regularization = boost::shared_ptr<jif3D::MatOpRegularization>(
                     new jif3D::GradientRegularization(StartModel, TearModX, TearModY,
-                        TearModZ, beta));
+                        TearModZ, beta,vm.count("considersize")));
               }
           }
         //We either pass an empty covariance vector then the regularization class
