@@ -1,11 +1,12 @@
 //============================================================================
-// Name        : ReadWriteImpedance.cpp
-// Author      : Jul 13, 2009
+// Name        : ReadWriteTitanData.cpp
+// Author      : Feb 08, 2017
 // Version     :
-// Copyright   : 2009, mmoorkamp
+// Copyright   : 2017, aavdeeva
 //============================================================================
-#include "ReadWriteImpedances.h"
-#include "MTEquations.h"
+#include "ReadWriteTitanData.h"
+#include "../MT/ReadWriteImpedances.h"
+#include "../MT/MTEquations.h"
 #include "../Global/FatalException.h"
 #include "../Global/NumUtil.h"
 #include "../Global/convert.h"
@@ -27,94 +28,107 @@ using netCDF::NcFile;
 using netCDF::NcDim;
 
 namespace jif3D
-  {
-    using namespace std;
-    static const std::string FreqDimName = "Frequency";
-    static const std::string DistortionName = "C";
+{
+using namespace std;
 
-//write one compoment of the impedance tensor to a netcdf file
-//this is an internal helper function
-    void WriteImpedanceComp(NcFile &NetCDFFile, NcDim &StatNumDim, NcDim &FreqDim,
-        const jif3D::rvec &Impedances, const std::string &CompName,
-        const size_t compindex)
-      {
-        std::vector<NcDim> dimVec;
-        dimVec.push_back(FreqDim);
-        dimVec.push_back(StatNumDim);
+	//! The name used for the index of Stations with Ex measurement used to compute Titan TF data in netcdf files
+	static const std::string ExIndicesName = "ExIndices";
+	//! The name used for the index of Stations with Ey measurement used to compute Titan TF data in netcdf files
+	static const std::string EyIndicesName = "EyIndices";
+	//! The name used for the index of Stations with H measurement used to compute Titan TF data in netcdf files
+	static const std::string HIndicesName = "HIndices";
 
-        NcVar CompVar = NetCDFFile.addVar(CompName, netCDF::ncDouble, dimVec);
+	static const std::string FreqDimName = "Frequency";
+	static const std::string DistortionName = "C";
 
-        jif3D::rvec Component(FreqDim.getSize() * StatNumDim.getSize());
 
-        for (size_t i = 0; i < Component.size(); ++i)
-          {
-            Component(i) = Impedances(i * 8 + compindex);
-          }
+	//write the Titan TF indices matrix to a netcdf file
+	//this is an internal helper function
+	void WriteTitanTFIndices(NcFile &NetCDFFile, NcDim &TitanTFNumDim, NcDim &FreqDim,
+		const std::vector<int> &Indices, const std::string &IndexName)
+	{
+		std::vector<NcDim> dimVec;
+		dimVec.push_back(FreqDim);
+		dimVec.push_back(TitanTFNumDim);
 
-//        CompVar.put(&Component[0], FreqDim.getSize(), StatNumDim.getSize());
-        cxxport::put_legacy_ncvar(CompVar, &Component[0], FreqDim.getSize(), StatNumDim.getSize());
-        //we write the impedance in units of Ohm
-        CompVar.putAtt("units", "Ohm");
-      }
+		NcVar IndexVar = NetCDFFile.addVar(IndexName, netCDF::ncInt, dimVec);
 
-//read one component of the impedance tensor from a netcdf file
-//this is an internal helper function
-    void ReadImpedanceComp(NcFile &NetCDFFile, jif3D::rvec &Impedances,
-        const std::string &CompName, const size_t compindex, const bool MustExist)
+		//        CompVar.put(&Component[0], FreqDim.getSize(), StatNumDim.getSize());
+		cxxport::put_legacy_ncvar(IndexVar, &Indices[0], FreqDim.getSize(), TitanTFNumDim.getSize());
+	}
+
+	//read the Titan TF indices from a netcdf file
+	//indices are matrices of size TitanTFNumDim x FreqDim
+	//this is an internal helper function
+    void ReadTitanTFIndices(NcFile &NetCDFFile, std::vector<int> &Indices,
+        const std::string &IndexName, const bool MustExist = true)
       {
         try {
-          NcVar SizeVar = NetCDFFile.getVar(CompName);
+          NcVar SizeVar = NetCDFFile.getVar(IndexName);
           if (!SizeVar.isNull())
             {
-              const size_t nvalues = Impedances.size() / 8;
+
               const std::vector<long> edges = cxxport::get_legacy_var_edges(SizeVar);
-
-              assert(nvalues== boost::numeric_cast<size_t>(
-                          edges[0] * edges[1]));
-              jif3D::rvec Temp(nvalues);
-
+              Indices.resize(edges[0] * edges[1]);
 //              SizeVar.get(&Temp[0], SizeVar->edges()[0], SizeVar->edges()[1]);
-              cxxport::get_legacy_ncvar(SizeVar, &Temp[0], edges[0], edges[1]);
+              cxxport::get_legacy_ncvar(SizeVar, &Indices[0], edges[0], edges[1]);
 
-              for (size_t i = 0; i < nvalues; ++i)
-                {
-                  Impedances(i * 8 + compindex) = Temp(i);
-                }
             }
         } catch (const netCDF::exceptions::NcException &ex) {
           if(MustExist) {
-            throw std::runtime_error("Call to ReadImpedanceComp with MustExist failed.");
+            throw std::runtime_error("Call to ReadTitanTFIndices with MustExist failed.");
           }
         }
       }
 
-    void WriteImpedancesToNetCDF(const std::string &filename,
-        const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
-        const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
+    void WriteTitanDataToNetCDF(const std::string &filename,
+        const std::vector<double> &Frequencies, const std::vector<double> &MeasXCoord,
+        const std::vector<double> &MeasYCoord, const std::vector<double> &MeasZCoord,
+		const std::vector<int> &ExIndices, const std::vector<int> &EyIndices,
+		const std::vector<int> &HIndices,
         const jif3D::rvec &Impedances, const jif3D::rvec &Errors,
         const std::vector<double> &Distortion)
       {
-        const size_t nstats = StatXCoord.size();
+        const size_t nmeas = MeasXCoord.size();
+        const size_t nTitanTFs = ExIndices.size();
         const size_t nfreqs = Frequencies.size();
-        const size_t nimp = nstats * nfreqs * 8;
-        assert(nstats == StatYCoord.size());
-        assert(nstats == StatYCoord.size());
+        const size_t nstats = nTitanTFs/nfreqs;
+
+        const size_t nimp = nTitanTFs * 8;
+        assert(nmeas == MeasYCoord.size());
+        assert(nmeas == MeasZCoord.size());
+        assert(nTitanTFs == EyIndices.size());
+        assert(nTitanTFs == HIndices.size());
         assert(Impedances.size() == nimp);
         //create a netcdf file
         NcFile DataFile(filename, NcFile::replace);
-        //Create the dimensions for the stations
-        NcDim StatNumDim = DataFile.addDim(StationNumberName, nstats);
+        //Create the dimensions for the measurements
+        NcDim MeasNumDim = DataFile.addDim(MeasNumberName, nmeas);
 
         //write out the measurement coordinates
-        WriteVec(DataFile, MeasPosXName, StatXCoord, StatNumDim, "m");
-        WriteVec(DataFile, MeasPosYName, StatYCoord, StatNumDim, "m");
-        WriteVec(DataFile, MeasPosZName, StatZCoord, StatNumDim, "m");
+        WriteVec(DataFile, MeasPosXName, MeasXCoord, MeasNumDim, "m");
+        WriteVec(DataFile, MeasPosYName, MeasYCoord, MeasNumDim, "m");
+        WriteVec(DataFile, MeasPosZName, MeasZCoord, MeasNumDim, "m");
+
+
         //write out the frequencies that we store
         NcDim FreqDim = DataFile.addDim(FreqDimName, Frequencies.size());
         NcVar FreqVar = DataFile.addVar(FreqDimName, netCDF::ncDouble, FreqDim);
 
 //        FreqVar->put(&Frequencies[0], nfreqs);
         cxxport::put_legacy_ncvar(FreqVar, Frequencies.data(), nfreqs);
+
+
+        //Create the dimensions for the stations
+        NcDim StatNumDim = DataFile.addDim(StationNumberName, nstats);
+
+
+        // write indices for Titan TF
+
+        WriteTitanTFIndices(DataFile, StatNumDim, FreqDim, ExIndices, ExIndicesName);
+        WriteTitanTFIndices(DataFile, StatNumDim, FreqDim, EyIndices, EyIndicesName);
+        WriteTitanTFIndices(DataFile, StatNumDim, FreqDim, HIndices, HIndicesName);
+
         //and now we can write all the impedance components
         WriteImpedanceComp(DataFile, StatNumDim, FreqDim, Impedances, "Zxx_re", 0);
         WriteImpedanceComp(DataFile, StatNumDim, FreqDim, Impedances, "Zxx_im", 1);
@@ -154,23 +168,31 @@ namespace jif3D
           }
       }
 
-    void ReadImpedancesFromNetCDF(const std::string &filename,
-        std::vector<double> &Frequencies, std::vector<double> &StatXCoord,
-        std::vector<double> &StatYCoord, std::vector<double> &StatZCoord,
+    void ReadTitanDataFromNetCDF(const std::string &filename,
+        std::vector<double> &Frequencies, std::vector<double> &MeasXCoord,
+        std::vector<double> &MeasYCoord, std::vector<double> &MeasZCoord,
+		std::vector<int> &ExIndices, std::vector<int> &EyIndices,
+		std::vector<int> &HIndices,
         jif3D::rvec &Impedances, jif3D::rvec &ImpError, std::vector<double> &Distortion)
       {
         //open the netcdf file readonly
         NcFile DataFile(filename, NcFile::read);
         //read in the station coordinates in the three directions
-        ReadVec(DataFile, MeasPosXName, StatXCoord);
-        ReadVec(DataFile, MeasPosYName, StatYCoord);
-        ReadVec(DataFile, MeasPosZName, StatZCoord);
+        ReadVec(DataFile, MeasPosXName, MeasXCoord);
+        ReadVec(DataFile, MeasPosYName, MeasYCoord);
+        ReadVec(DataFile, MeasPosZName, MeasZCoord);
         //read in the frequencies
         ReadVec(DataFile, FreqDimName, Frequencies);
-        //for each frequency and each station we have 8 impedances
+
+        ReadTitanTFIndices(DataFile, ExIndices, ExIndicesName, false);
+        ReadTitanTFIndices(DataFile, EyIndices, EyIndicesName, false);
+        ReadTitanTFIndices(DataFile, HIndices, HIndicesName, false);
+
+        //for each frequency and each data index we have 4 titan transfer function elements
         //currently it is not possible to have a different number of frequencies
         //at each site
-        const size_t nimp = Frequencies.size() * StatXCoord.size() * 8;
+        const size_t nimp = ExIndices.size() * 8;
+
         Impedances.resize(nimp);
         ImpError.resize(nimp);
         //read the impedances
@@ -195,37 +217,44 @@ namespace jif3D
           }
 
         try {
-          NcVar DistVar = DataFile.getVar(DistortionName);
+            NcVar DistVar = DataFile.getVar(DistortionName);
 
-          const int nvalues = StatXCoord.size() * 4;
-          Distortion.resize(nvalues);
-          if (!DistVar.isNull())
-            {
-              const std::vector<long> edges = cxxport::get_legacy_var_edges(DistVar);
-              if (nvalues != edges[0] * edges[1])
-                {
-                  throw jif3D::FatalException(
-                      "Number of distortion parameters does not match number of stations !",
-                      __FILE__, __LINE__);
-                }
+             const int nvalues = ExIndices.size() / Frequencies.size() * 4;
+             Distortion.resize(nvalues);
+             if (!DistVar.isNull())
+               {
+                 const std::vector<long> edges = cxxport::get_legacy_var_edges(DistVar);
+                 if (nvalues != edges[0] * edges[1])
+                   {
+                     throw jif3D::FatalException(
+                         "Number of distortion parameters does not match number of stations !",
+                         __FILE__, __LINE__);
+                   }
 
-//              DistVar.get(&Distortion[0], edges[0], edges[1]);
-              cxxport::get_legacy_ncvar(DistVar, Distortion.data(), edges[0], edges[1]);
-            }
-          else
-            {
-              for (size_t i = 0; i < StatXCoord.size(); ++i)
-                {
-                  Distortion[i * 4] = 1.0;
-                  Distortion[i * 4 + 1] = 0.0;
-                  Distortion[i * 4 + 2] = 0.0;
-                  Distortion[i * 4 + 3] = 1.0;
-                }
-            }
+   //              DistVar.get(&Distortion[0], edges[0], edges[1]);
+                 cxxport::get_legacy_ncvar(DistVar, Distortion.data(), edges[0], edges[1]);
+               }
+             else
+               {
+            	 const size_t nstats= ExIndices.size() / Frequencies.size();
+                 for (size_t i = 0; i < nstats; ++i)
+                   {
+                     Distortion[i * 4] = 1.0;
+                     Distortion[i * 4 + 1] = 0.0;
+                     Distortion[i * 4 + 2] = 0.0;
+                     Distortion[i * 4 + 3] = 1.0;
+                   }
+               }
         } catch(const netCDF::exceptions::NcException &ex) {
           // ignore
         }
       }
+
+
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! //
+    // !!!!!!! All the following functions are not yet implemented for the case of Titan-24 data !!!!!!! //
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! //
+/*
 
     void ReadImpedancesFromMTT(const std::string &filename,
         std::vector<double> &Frequencies, jif3D::rvec &Impedances, jif3D::rvec &Errors)
@@ -624,10 +653,12 @@ namespace jif3D
             Err[ImpIndex + 1] = convfactor * AllErr[i];
           }
 
-      }
-    void WriteImpedancesToModEM(const std::string &filename,
+      } */
+
+    void WriteTitanDataToModEM(const std::string &filename,
         const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
+		const std::vector<int> &ExIndices,
         const jif3D::rvec &Imp, const jif3D::rvec &Err)
       {
         const double convfactor = 4.0 * 1e-4 * acos(-1.0);
@@ -640,15 +671,16 @@ namespace jif3D
         outfile << "> [mV/km]/[nT]\n";
         outfile << "> 0.00\n";
         outfile << "> 0.0 0.0\n";
-        size_t nsites = StatXCoord.size();
+
         size_t nfreqs = Frequencies.size();
+        size_t nsites = ExIndices.size()/nfreqs;
         outfile << "> " << nfreqs << " " << nsites << "\n";
         for (size_t i = 0; i < nsites; ++i)
           {
             std::string SiteName = "Site" + std::to_string(i);
             std::ostringstream SiteLine;
-            SiteLine << " " << SiteName << "  0.0  0.0 " << StatXCoord.at(i) << " "
-                << StatYCoord.at(i) << " " << StatZCoord.at(i) << " ";
+            SiteLine << " " << SiteName << "  0.0  0.0 " << StatXCoord[ExIndices[i]] << " "
+                << StatYCoord[ExIndices[i]] << " " << StatZCoord[ExIndices[i]] << " ";
             for (size_t j = 0; j < nfreqs; ++j)
               {
                 size_t index = 8 * (nsites * j + i);

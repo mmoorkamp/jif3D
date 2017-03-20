@@ -162,7 +162,7 @@ namespace jif3D
    * @param maxfreqindex The index one larger than the index of the last frequency for which to calculate the gradient (C++ loop convention)
    * @return The synthetic MT data in the format described above.
    */
-  rvec Calculate(const ModelType &Model, size_t minfreqindex = 0,
+  rvec Calculate(ModelType &Model, size_t minfreqindex = 0,
       size_t maxfreqindex = std::numeric_limits<size_t>::max());
   //! Given a conductivity model and the misfit for each datum, calculate the derivative of the objective function with respect to the model parameters.
   /*! We use an adjoint approach to calculate the gradient of the objective functions with respect to the model parameters. As this approach requires
@@ -176,7 +176,7 @@ namespace jif3D
    */
   rvec LQDerivative(const ModelType &Model, const rvec &Misfit, size_t minfreqindex =
       0, size_t maxfreqindex = std::numeric_limits<size_t>::max());
-  rmat SensitivityMatrix(const ModelType &Model, const rvec &Misfit,
+  rmat SensitivityMatrix(ModelType &Model, const rvec &Misfit,
       size_t minfreqindex = 0, size_t maxfreqindex =
       std::numeric_limits<size_t>::max());
   //! The constructor takes optional arguments to change the directory were temporary files are stored and if we want to correct for distortion

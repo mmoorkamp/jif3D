@@ -29,6 +29,9 @@ namespace jif3D
       std::vector<double> bg_thicknesses;
       //! The conductivities of the background layers in S/m
       std::vector<double> bg_conductivities;
+      std::vector<int> ExIndices;
+      std::vector<int> EyIndices;
+      std::vector<int> HIndices;
     public:
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
@@ -37,6 +40,9 @@ namespace jif3D
           ar & base_object<ThreeDMTModel>(*this);
           ar & bg_thicknesses;
           ar & bg_conductivities;
+          ar & ExIndices;
+          ar & EyIndices;
+          ar & HIndices;
         }
       //! The problem type we want to perform the calculation for
       /*! We can use this enum to specify which type of forward calculation
@@ -47,6 +53,51 @@ namespace jif3D
         {
         MT, CSMT, EDIP, MDIP
         };
+
+      //! Set the indices for electric and magnetic field measurements
+      void SetFieldIndices(const std::vector<int> &value_Ex,const std::vector<int> &value_Ey, std::vector<int> &value_H)
+      	{
+    	  ExIndices.clear();
+    	  ExIndices.reserve(value_Ex.size());
+    	  copy(value_Ex.begin(), value_Ex.end(), back_inserter(ExIndices));
+
+    	  EyIndices.clear();
+    	  EyIndices.reserve(value_Ey.size());
+    	  copy(value_Ey.begin(), value_Ey.end(), back_inserter(EyIndices));
+    	  if(EyIndices.size() != ExIndices.size())
+    	  {
+    		  throw jif3D::FatalException("Number of y-component electric field indices is not the same as the number of indices in x-component!",
+                  __FILE__, __LINE__);
+    	  }
+
+    	  HIndices.clear();
+    	  HIndices.reserve(value_H.size());
+    	  copy(value_H.begin(), value_H.end(), back_inserter(HIndices));
+
+    	  if(HIndices.size() != ExIndices.size())
+    	  {
+    		  throw jif3D::FatalException("Number of magnetic field indices is not the same as the electric field indices!",
+                  __FILE__, __LINE__);
+    	  }
+
+      	}
+
+      //! Return the Indices of x-component electric field measurements
+      const std::vector<int> &GetExIndices() const
+		{
+    	  return ExIndices;
+		}
+      //! Return the Indices of y-component electric field measurements
+      const std::vector<int> &GetEyIndices() const
+		{
+    	  return EyIndices;
+		}
+      //! Return the Indices of the magnetic field measurements
+      const std::vector<int> &GetHIndices() const
+		{
+    	  return HIndices;
+		}
+
       //! Set the thicknesses of the background layers, the individual thicknesses are given in m
       void SetBackgroundThicknesses(const std::vector<double> &value)
         {
@@ -91,7 +142,7 @@ namespace jif3D
         {
           return ThreeDModelBase::SetZCellSizes();
         }
-      //! Given three coordinates in m, find the indices of the model cell that correponds to these coordinates, this is a more efficient implementation than the one in the base class
+      //! Given three coordinates in m, find the indices of the model cell that corresponds to these coordinates, this is a more efficient implementation than the one in the base class
       virtual boost::array<ThreeDModelBase::t3DModelData::index, 3>
       FindAssociatedIndices(const double xcoord, const double ycoord,
           const double zcoord) const;

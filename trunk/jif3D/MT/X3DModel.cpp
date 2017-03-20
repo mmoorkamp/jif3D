@@ -32,7 +32,7 @@ namespace jif3D
 
     X3DModel::X3DModel(const X3DModel &source) :
         ThreeDMTModel(source), bg_thicknesses(source.bg_thicknesses), bg_conductivities(
-            source.bg_conductivities)
+            source.bg_conductivities), ExIndices(source.ExIndices), EyIndices(source.EyIndices),HIndices(source.HIndices)
       {
 
       }
@@ -45,12 +45,12 @@ namespace jif3D
             ThreeDMTModel::operator=(source);
             //then we copy the additional information about the background layers
             //that is not contained in the base class
-            bg_thicknesses.resize(source.bg_thicknesses.size());
-            bg_conductivities.resize(source.bg_conductivities.size());
-            std::copy(source.bg_thicknesses.begin(), source.bg_thicknesses.end(),
-                bg_thicknesses.begin());
-            std::copy(source.bg_conductivities.begin(), source.bg_conductivities.end(),
-                bg_conductivities.begin());
+            bg_thicknesses = source.bg_thicknesses;
+
+            bg_conductivities = source.bg_conductivities;
+            ExIndices = source.ExIndices;
+            EyIndices = source.EyIndices;
+            HIndices = source.HIndices;
           }
         return *this;
       }

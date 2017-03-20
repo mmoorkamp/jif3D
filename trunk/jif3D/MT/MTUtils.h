@@ -67,10 +67,12 @@ namespace jif3D
         const std::vector<std::complex<double> > &XPolMoments,
         const std::vector<std::complex<double> > &YPolMoments,
         std::vector<std::complex<double> > &Ux, std::vector<std::complex<double> > &Uy,
-        std::vector<std::complex<double> > &Uz, const std::vector<size_t> &SourceXIndex,
-        const std::vector<size_t> &SourceYIndex,
-        const std::vector<double> &ObservationDepths,
-        const jif3D::ThreeDModelBase::t3DModelDim &ZCellBoundaries,
+        std::vector<std::complex<double> > &Uz,
+		const std::vector<size_t> &XSourceXIndex,const std::vector<size_t> &XSourceYIndex,
+        const std::vector<double> &XSourceDepths,
+		const std::vector<size_t> &YSourceXIndex,const std::vector<size_t> &YSourceYIndex,
+		const std::vector<double> &YSourceDepths,
+		const jif3D::ThreeDModelBase::t3DModelDim &ZCellBoundaries,
         const jif3D::ThreeDModelBase::t3DModelDim &ZCellSizes, const size_t ncellsx,
         const size_t ncellsy, const size_t ncellsz);
 
