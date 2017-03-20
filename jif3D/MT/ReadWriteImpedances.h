@@ -12,10 +12,41 @@
 #include "../Global/Jif3DGlobal.h"
 #include "../Global/VecMat.h"
 
+#include "../Global/NetCDFPortHelper.h"
+
+
 namespace jif3D
-  {
-    /** \addtogroup mtmodelling Forward modelling of magnetotelluric data */
-    /* @{ */
+{
+	/** \addtogroup mtmodelling Forward modelling of magnetotelluric data */
+	/* @{ */
+
+	//!write one component of the impedance tensor to a netcdf file
+	/*!this is an internal helper function
+	 * @param NetCDFFile The name for the netcdf file
+	 * @param StatNumDim The number of sites
+	 * @param FreqDim The number of frequencies
+	 * @param Impedances The impedances (in Ohm, i.e. E/H) as a vector of real numbers.
+	 *        8 consecutive elements form the impedance matrix for one frequency and site,
+	 *        all impedances for one frequency and all stations form a contiguous block, the frequencies vary slowest.
+	 * @param CompName Name of the component to be written to netcdf file ('Zxx_re' ... 'Zyy_im')
+	 * @param compindex component index (0-7)
+	 */
+	J3DEXPORT void WriteImpedanceComp(netCDF::NcFile &NetCDFFile, netCDF::NcDim &StatNumDim, netCDF::NcDim &FreqDim,
+		const jif3D::rvec &Impedances, const std::string &CompName,
+		const size_t compindex);
+
+	//!read one component of the impedance tensor from a netcdf file
+	/*!this is an internal helper function
+	 * @param NetCDFFile The name for the netcdf file
+	 * @param Impedances The impedances (in Ohm, i.e. E/H) as a vector of real numbers.
+	 *        8 consecutive elements form the impedance matrix for one frequency and site,
+	 *        all impedances for one frequency and all stations form a contiguous block, the frequencies vary slowest.
+	 * @param CompName Name of the component to be written to netcdf file ('Zxx_re' ... 'Zyy_im')
+	 * @param compindex component index (0-7)
+	 */
+	J3DEXPORT void ReadImpedanceComp(netCDF::NcFile &NetCDFFile, jif3D::rvec &Impedances,
+		const std::string &CompName, const size_t compindex, const bool MustExist = true);
+
     //! Write magnetotelluric impedances to a netcdf file
     /*! We can save MT impedances for several stations in a netcdf file for storage
      * and analysis with external programs.

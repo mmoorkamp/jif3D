@@ -31,6 +31,9 @@ namespace jif3D
     static const std::string MeasPosZName = "MeasPosZ";
     //! The name used for the index of the measurements in netcdf files
     static const std::string StationNumberName = "StationNumber";
+    //! The name used for the index of the measurements in netcdf files
+    static const std::string MeasNumberName = "MeasNumber";
+
     //! Read a 3D model from netcdf, this is the preferred storage format
     J3DEXPORT void Read3DModelFromNetCDF(const netCDF::NcFile &NetCDFFile,
         const std::string &DataName, const std::string &UnitsName,

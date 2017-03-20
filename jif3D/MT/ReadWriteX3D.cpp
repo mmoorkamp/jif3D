@@ -490,8 +490,10 @@ namespace jif3D
       }
 
     void WriteSourceFile(const std::string &filename,
-        const std::vector<size_t> &SourceXIndex, const std::vector<size_t> &SourceYIndex,
-        const std::vector<double> &SourceDepths,
+        const std::vector<size_t> &XSourceXIndex, const std::vector<size_t> &XSourceYIndex,
+        const std::vector<double> &XSourceDepths,
+        const std::vector<size_t> &YSourceXIndex, const std::vector<size_t> &YSourceYIndex,
+        const std::vector<double> &YSourceDepths,
         const std::vector<std::complex<double> > &XPolMoments,
         const std::vector<std::complex<double> > &YPolMoments,
         const jif3D::ThreeDModelBase::t3DModelDim &ZCellBoundaries,
@@ -505,8 +507,14 @@ namespace jif3D
         std::vector<size_t> ZIndices;
         for (size_t i = 0; i < nmeas; ++i)
           {
-            size_t zindex = FindNearestCellBoundary(SourceDepths[i], ZCellBoundaries,
+            size_t zindex = FindNearestCellBoundary(XSourceDepths[i], ZCellBoundaries,
                 ZCellSizes);
+            if (std::find(ZIndices.begin(), ZIndices.end(), zindex) == ZIndices.end())
+              {
+                ZIndices.push_back(zindex);
+              }
+            zindex = FindNearestCellBoundary(YSourceDepths[i], ZCellBoundaries,
+                            ZCellSizes);
             if (std::find(ZIndices.begin(), ZIndices.end(), zindex) == ZIndices.end())
               {
                 ZIndices.push_back(zindex);
@@ -538,18 +546,24 @@ namespace jif3D
             std::fill_n(ImagYMoments.origin(), nelements, 0.0);
             for (size_t j = 0; j < nmeas; ++j)
               {
-                size_t zindex = FindNearestCellBoundary(SourceDepths[j], ZCellBoundaries,
+                size_t zindex = FindNearestCellBoundary(XSourceDepths[j], ZCellBoundaries,
                     ZCellSizes);
                 if (zindex == ZIndices[i])
                   {
-                    RealXMoments[SourceXIndex[j]][SourceYIndex[j]] = std::real(
-                        XPolMoments[j]);
-                    ImagXMoments[SourceXIndex[j]][SourceYIndex[j]] = std::imag(
-                        -XPolMoments[j]);
-                    RealYMoments[SourceXIndex[j]][SourceYIndex[j]] = std::real(
-                        YPolMoments[j]);
-                    ImagYMoments[SourceXIndex[j]][SourceYIndex[j]] = std::imag(
-                        -YPolMoments[j]);
+                    RealXMoments[XSourceXIndex[j]][XSourceYIndex[j]] =
+                    		RealXMoments[XSourceXIndex[j]][XSourceYIndex[j]] + std::real(XPolMoments[j]);
+                    ImagXMoments[XSourceXIndex[j]][XSourceYIndex[j]] =
+                    		ImagXMoments[XSourceXIndex[j]][XSourceYIndex[j]] + std::imag(-XPolMoments[j]);
+                  }
+
+                zindex = FindNearestCellBoundary(YSourceDepths[j], ZCellBoundaries,
+                                    ZCellSizes);
+                if (zindex == ZIndices[i])
+                  {
+                    RealYMoments[YSourceXIndex[j]][YSourceYIndex[j]] =
+                    		RealYMoments[YSourceXIndex[j]][YSourceYIndex[j]] + std::real(YPolMoments[j]);
+                    ImagYMoments[YSourceXIndex[j]][YSourceYIndex[j]] =
+                    		ImagYMoments[YSourceXIndex[j]][YSourceYIndex[j]] + std::imag(-YPolMoments[j]);
                   }
               }
 

@@ -17,12 +17,16 @@ namespace fs = boost::filesystem;
 using namespace jif3D;
 ForwardResult CalculateFrequency(const ForwardInfo &Info)
   {
-    const size_t nmeas = Info.Model.GetMeasPosX().size();
+  //  const size_t nmeas = Info.Model.GetMeasPosX().size();
+    const size_t nfreq = Info.Model.GetFrequencies().size();
+    const size_t nstats = Info.Model.GetExIndices().size()/nfreq;
     const size_t nmodx = Info.Model.GetXCoordinates().size();
     const size_t nmody = Info.Model.GetYCoordinates().size();
+    const size_t ind_shift= nstats * Info.freqindex;
+
     ForwardResult result;
-    result.DistImpedance.resize(nmeas * 8);
-    result.RawImpedance.resize(nmeas * 8);
+    result.DistImpedance.resize(nstats * 8);
+    result.RawImpedance.resize(nstats * 8);
 
     fs::path TempDir(Info.TempDirName);
     fs::path RootName = TempDir
@@ -64,12 +68,24 @@ ForwardResult CalculateFrequency(const ForwardInfo &Info)
     CheckField(Hx2, nval);
     CheckField(Hy1, nval);
     CheckField(Hy2, nval);
-    //calculate impedances from the field spectra for all measurement sites
-    for (size_t j = 0; j < nmeas; ++j)
+
+    //calculate impedances from the field spectra for all stations
+    for (size_t j = 0; j < nstats; ++j)
       {
-        boost::array<ThreeDModelBase::t3DModelData::index, 3> StationIndex =
-            Info.Model.FindAssociatedIndices(Info.Model.GetMeasPosX()[j],
-                Info.Model.GetMeasPosY()[j], Info.Model.GetMeasPosZ()[j]);
+    	boost::array<ThreeDModelBase::t3DModelData::index, 3> StationExIndex =
+        		Info.Model.FindAssociatedIndices(Info.Model.GetMeasPosX()[Info.Model.GetExIndices()[j + ind_shift]],
+            		Info.Model.GetMeasPosY()[Info.Model.GetExIndices()[j + ind_shift]],
+					Info.Model.GetMeasPosZ()[Info.Model.GetExIndices()[j + ind_shift]]);
+        boost::array<ThreeDModelBase::t3DModelData::index, 3> StationEyIndex =
+        		Info.Model.FindAssociatedIndices(Info.Model.GetMeasPosX()[Info.Model.GetEyIndices()[j + ind_shift]],
+        				Info.Model.GetMeasPosY()[Info.Model.GetEyIndices()[j + ind_shift]],
+						Info.Model.GetMeasPosZ()[Info.Model.GetEyIndices()[j + ind_shift]]);
+        boost::array<ThreeDModelBase::t3DModelData::index, 3> StationHIndex =
+                    Info.Model.FindAssociatedIndices(Info.Model.GetMeasPosX()[Info.Model.GetHIndices()[j + ind_shift]],
+                        Info.Model.GetMeasPosY()[Info.Model.GetHIndices()[j + ind_shift]],
+						Info.Model.GetMeasPosZ()[Info.Model.GetHIndices()[j + ind_shift]]);
+
+
 // with the current equations we cannot use interpolation as the position
         // of the source in the adjoint calculation is always smeared
         //across the whole cell, this works best for a cell in the centre
@@ -92,10 +108,16 @@ ForwardResult CalculateFrequency(const ForwardInfo &Info)
 //                MeasDepthIndices);
 //            FieldsToImpedance(Ex1Inter, Ex2Inter, Ey1Inter, Ey2Inter, Hx1Inter, Hx2Inter,
 //                Hy1Inter, Hy2Inter, Zxx, Zxy, Zyx, Zyy);
-        const size_t offset = (nmodx * nmody) * MeasDepthIndices[j]
-            + StationIndex[0] * nmody + StationIndex[1];
-        FieldsToImpedance(Ex1[offset], Ex2[offset], Ey1[offset], Ey2[offset], Hx1[offset],
-            Hx2[offset], Hy1[offset], Hy2[offset], Zxx, Zxy, Zyx, Zyy);
+        const size_t offset_Ex = (nmodx * nmody) * MeasDepthIndices[Info.Model.GetExIndices()[j + ind_shift]]
+            + StationExIndex[0] * nmody + StationExIndex[1];
+        const size_t offset_Ey = (nmodx * nmody) * MeasDepthIndices[Info.Model.GetEyIndices()[j + ind_shift]]
+			+ StationEyIndex[0] * nmody + StationEyIndex[1];
+        const size_t offset_H = (nmodx * nmody) * MeasDepthIndices[Info.Model.GetHIndices()[j + ind_shift]]
+            + StationHIndex[0] * nmody + StationHIndex[1];
+
+
+        FieldsToImpedance(Ex1[offset_Ex], Ex2[offset_Ex], Ey1[offset_Ey], Ey2[offset_Ey], Hx1[offset_H],
+            Hx2[offset_H], Hy1[offset_H], Hy2[offset_H], Zxx, Zxy, Zyx, Zyy);
         //result is a local array for this frequency
         //so we can directly use it even in a threaded environment
         const size_t meas_index = j * 8;
@@ -141,6 +163,9 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI)
     const size_t nobs = nmodx * nmody;
     //the number of measurement sites
     const size_t nmeas = Info.Model.GetMeasPosX().size();
+    //the number of transfer functions
+    const size_t nstats= Info.Model.GetExIndices().size() / Info.Model.GetFrequencies().size();
+
     const size_t nmod = nmodx * nmody * nmodz;
     std::vector<double> ShiftDepth;
     //for the controlled source calculations we do not actually
@@ -191,30 +216,64 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI)
             nmody, nmodz);
       }
     //create variables for the adjoint field calculation
-    const size_t freq_start_index = nmeas * Info.freqindex * 8;
-    std::vector<std::complex<double> > XPolMoments1(nmeas), XPolMoments2(nmeas),
-        YPolMoments1(nmeas), YPolMoments2(nmeas), Zeros(nmeas);
-    std::vector<size_t> SourceXIndex(nmeas), SourceYIndex(nmeas);
+    const size_t freq_start_index = nstats * Info.freqindex * 8;
+    const size_t ind_shift = nstats * Info.freqindex;
+
+    std::vector<std::complex<double> > XPolMoments1(nstats), XPolMoments2(nstats),
+        YPolMoments1(nstats), YPolMoments2(nstats), Zeros(nstats);
+    std::vector<double> XSourceDepth(nstats), YSourceDepth(nstats),	HSourceDepth(nstats);
+    std::vector<size_t> XSourceXIndex(nstats), XSourceYIndex(nstats),
+    		YSourceXIndex(nstats), YSourceYIndex(nstats),
+    		HSourceXIndex(nstats), HSourceYIndex(nstats);
+
     //we only calculate sources for the observe sites, so
     //we make sure everything else is zero
     std::fill(Zeros.begin(), Zeros.end(), 0.0);
 
     //make the sources for the electric dipoles
-    for (size_t j = 0; j < nmeas; ++j)
+    for (size_t j = 0; j < nstats; ++j)
       {
-        boost::array<ThreeDModelBase::t3DModelData::index, 3> StationIndex =
-            Info.Model.FindAssociatedIndices(Info.Model.GetMeasPosX()[j],
-                Info.Model.GetMeasPosY()[j], Info.Model.GetMeasPosZ()[j]);
+        boost::array<ThreeDModelBase::t3DModelData::index, 3> StationExIndex =
+            Info.Model.FindAssociatedIndices(Info.Model.GetMeasPosX()[Info.Model.GetExIndices()[j + ind_shift]],
+                Info.Model.GetMeasPosY()[Info.Model.GetExIndices()[j + ind_shift]],
+				Info.Model.GetMeasPosZ()[Info.Model.GetExIndices()[j + ind_shift]]);
 
-        const size_t offset = (nmodx * nmody) * MeasDepthIndices[j]
-            + StationIndex[0] * nmody + StationIndex[1];
-        SourceXIndex.at(j) = StationIndex[0];
-        SourceYIndex.at(j) = StationIndex[1];
+        boost::array<ThreeDModelBase::t3DModelData::index, 3> StationEyIndex =
+            Info.Model.FindAssociatedIndices(Info.Model.GetMeasPosX()[Info.Model.GetEyIndices()[j + ind_shift]],
+                Info.Model.GetMeasPosY()[Info.Model.GetEyIndices()[j + ind_shift]],
+				Info.Model.GetMeasPosZ()[Info.Model.GetEyIndices()[j + ind_shift]]);
+
+        boost::array<ThreeDModelBase::t3DModelData::index, 3> StationHIndex =
+            Info.Model.FindAssociatedIndices(Info.Model.GetMeasPosX()[Info.Model.GetHIndices()[j + ind_shift]],
+                Info.Model.GetMeasPosY()[Info.Model.GetHIndices()[j + ind_shift]],
+				Info.Model.GetMeasPosZ()[Info.Model.GetHIndices()[j + ind_shift]]);
+
+
+/*        const size_t offset_Ex = (nmodx * nmody) * MeasDepthIndices[Info.Model.GetExIndices()[j + ind_shift]]
+            + StationExIndex[0] * nmody + StationExIndex[1];
+        const size_t offset_Ey = (nmodx * nmody) * MeasDepthIndices[Info.Model.GetEyIndices()[j + ind_shift]]
+            + StationEyIndex[0] * nmody + StationEyIndex[1]; */
+        const size_t offset_H = (nmodx * nmody) * MeasDepthIndices[Info.Model.GetHIndices()[j + ind_shift]]
+            + StationHIndex[0] * nmody + StationHIndex[1];
+
+
+        XSourceXIndex.at(j) = StationExIndex[0];
+        XSourceYIndex.at(j) = StationExIndex[1];
+        XSourceDepth.at(j)= Info.Model.GetMeasPosZ()[Info.Model.GetExIndices()[j + ind_shift]];
+
+        YSourceXIndex.at(j) = StationEyIndex[0];
+        YSourceYIndex.at(j) = StationEyIndex[1];
+        YSourceDepth.at(j)= Info.Model.GetMeasPosZ()[Info.Model.GetEyIndices()[j + ind_shift]];
+
+        HSourceXIndex.at(j) = StationHIndex[0];
+        HSourceYIndex.at(j) = StationHIndex[1];
+        HSourceDepth.at(j)= Info.Model.GetMeasPosZ()[Info.Model.GetHIndices()[j + ind_shift]];
+
 
         //this is an implementation of eq. 12 in Avdeev and Avdeeva
         //we do not have any beta, as this is part of the misfit
-        cmat j_ext = CalcEExt(Misfit, Info.C, j, freq_start_index, Hx1_obs[offset],
-            Hx2_obs[offset], Hy1_obs[offset], Hy2_obs[offset]);
+        cmat j_ext = CalcEExt(Misfit, Info.C, j, freq_start_index, Hx1_obs[offset_H],
+            Hx2_obs[offset_H], Hy1_obs[offset_H], Hy2_obs[offset_H]);
         //x3d uses a different convention for the complex exponentials
         //so we have to use the complex conjugate for the source
         size_t imp_offset = freq_start_index + j * 8;
@@ -244,18 +303,23 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI)
             Info.Model.GetBackgroundConductivities(),
             Info.Model.GetBackgroundThicknesses(), true);
         //write an empty source file for the second source polarization
-        WriteSourceFile((EdipDirName / sourcebfilename).string(), SourceXIndex,
-            SourceYIndex, Info.Model.GetMeasPosZ(), Zeros, Zeros,
+        WriteSourceFile((EdipDirName / sourcebfilename).string(),
+        	XSourceXIndex,XSourceYIndex,XSourceDepth,
+			YSourceXIndex,YSourceYIndex,YSourceDepth,
+			Zeros, Zeros,
             Info.Model.GetZCoordinates(), Info.Model.GetZCellSizes(), nmodx, nmody);
       }
     std::vector<std::complex<double> > Ux1_el, Ux2_el, Uy1_el, Uy2_el, Uz1_el, Uz2_el;
     //calculate the first polarization and read the adjoint fields
     CalcU(EdipName.string(), XPolMoments1, YPolMoments1, Ux1_el, Uy1_el, Uz1_el,
-        SourceXIndex, SourceYIndex, Info.Model.GetMeasPosZ(),
+        XSourceXIndex, XSourceYIndex, XSourceDepth,
+		YSourceXIndex, YSourceYIndex, YSourceDepth,
         Info.Model.GetZCoordinates(), Info.Model.GetZCellSizes(), nmodx, nmody, nmodz);
+
     //calculate the second polarization
     CalcU(EdipName.string(), XPolMoments2, YPolMoments2, Ux2_el, Uy2_el, Uz2_el,
-        SourceXIndex, SourceYIndex, Info.Model.GetMeasPosZ(),
+        XSourceXIndex, XSourceYIndex, XSourceDepth,
+		YSourceXIndex, YSourceYIndex, YSourceDepth,
         Info.Model.GetZCoordinates(), Info.Model.GetZCellSizes(), nmodx, nmody, nmodz);
 
     //now we calculate the response to magnetic dipole sources
@@ -274,8 +338,10 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI)
             Info.Model.GetBackgroundConductivities(),
             Info.Model.GetBackgroundThicknesses(), true);
         //write an empty source file for the second source polarization
-        WriteSourceFile((MdipDirName / sourcebfilename).string(), SourceXIndex,
-            SourceYIndex, Info.Model.GetMeasPosZ(), Zeros, Zeros,
+        WriteSourceFile((MdipDirName / sourcebfilename).string(),
+        	HSourceXIndex,HSourceYIndex,HSourceDepth,
+			HSourceXIndex,HSourceYIndex,HSourceDepth,
+			Zeros, Zeros,
             Info.Model.GetZCoordinates(), Info.Model.GetZCellSizes(), nmodx, nmody);
       }
     //make the sources for the magnetic dipoles
@@ -284,7 +350,7 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI)
         / (std::complex<double>(0.0, jif3D::mag_mu) * 2.0
             * boost::math::constants::pi<double>()
             * Info.Model.GetFrequencies()[Info.freqindex]);
-    for (size_t j = 0; j < nmeas; ++j)
+    for (size_t j = 0; j < nstats; ++j)
       {
         size_t offset = freq_start_index + j * 8;
         std::complex<double> Zxx(GI.RawImpedance[offset], GI.RawImpedance[offset + 1]),
@@ -300,11 +366,13 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI)
         Uz2_mag;
     //calculate the first polarization and read the adjoint fields
     CalcU(MdipName.string(), XPolMoments1, YPolMoments1, Ux1_mag, Uy1_mag, Uz1_mag,
-        SourceXIndex, SourceYIndex, Info.Model.GetMeasPosZ(),
+        HSourceXIndex, HSourceYIndex, HSourceDepth,
+		HSourceXIndex, HSourceYIndex, HSourceDepth,
         Info.Model.GetZCoordinates(), Info.Model.GetZCellSizes(), nmodx, nmody, nmodz);
     //calculate the second polarization and read the adjoint fields
     CalcU(MdipName.string(), XPolMoments2, YPolMoments2, Ux2_mag, Uy2_mag, Uz2_mag,
-        SourceXIndex, SourceYIndex, Info.Model.GetMeasPosZ(),
+        HSourceXIndex, HSourceYIndex, HSourceDepth,
+		HSourceXIndex, HSourceYIndex, HSourceDepth,
         Info.Model.GetZCoordinates(), Info.Model.GetZCellSizes(), nmodx, nmody, nmodz);
 
     const double cell_sizex = Info.Model.GetXCellSizes()[0];

@@ -87,18 +87,46 @@ namespace jif3D
           }
       }
 
-    rvec X3DMTCalculator::Calculate(const X3DModel &Model, size_t minfreqindex,
+    rvec X3DMTCalculator::Calculate(X3DModel &Model, size_t minfreqindex,
         size_t maxfreqindex)
       {
-        //we define nfreq as int to make the compiler happy in the openmp loop
+
+
+    	//we define nfreq as int to make the compiler happy in the openmp loop
         assert(minfreqindex <= maxfreqindex);
         maxfreqindex = std::min(maxfreqindex, Model.GetFrequencies().size());
         const size_t nfreq = maxfreqindex - minfreqindex;
         const size_t nmeas = Model.GetMeasPosX().size();
+        //if the current model does not contain any ExIndices information
+        //generate ExIndices, EyIndices and HIndices as 0:nmeas for each Frequency
+        //here we assume that we either have all three indices in the netCDF file or none of them
+        std::vector<int> ExIndices(Model.GetExIndices()), EyIndices(Model.GetEyIndices()), HIndices(Model.GetHIndices());
+        size_t ind_shift = 0;
+        if (ExIndices.empty() )
+        {
+        	ExIndices.resize(nmeas * nfreq);
+        	EyIndices.resize(nmeas * nfreq);
+        	HIndices.resize(nmeas * nfreq);
+        	for (size_t ifr = 0; ifr < nfreq; ++ifr)
+        	{
+        		ind_shift= nmeas*ifr;
+        		for (size_t i = 0; i < nmeas; ++i)
+        		{
+        			ExIndices[i + ind_shift] = i;
+        		}
+        	}
+        	EyIndices = ExIndices;
+        	HIndices = ExIndices;
+        }
+        Model.SetFieldIndices(ExIndices,EyIndices,HIndices);
+
+
+        const size_t nstats = Model.GetExIndices().size() / nfreq;
+
         std::string ErrorMsg;
         //result will hold the final impedance values with
         //applied distortion correction
-        jif3D::rvec result(nmeas * nfreq * 8);
+        jif3D::rvec result(nstats * nfreq * 8);
         if (!DataTransform)
           {
             DataTransform = boost::make_shared<jif3D::CopyTransform>(result.size());
@@ -108,7 +136,7 @@ namespace jif3D
         //we store the undistorted impedance with the calculator object
         //as we need it later for the gradient calculation
         //and the distortion correction
-        RawImpedance.resize(nmeas * nfreq * 8);
+        RawImpedance.resize(nstats * nfreq * 8);
         RawImpedance.clear();
         //we make a call to the coordinate functions to make sure
         //that we have updated the coordinate information and cached it
@@ -116,13 +144,15 @@ namespace jif3D
         Model.GetXCoordinates();
         Model.GetYCoordinates();
         Model.GetZCoordinates();
+
+
         //if the current model does not contain any distortion information
         //generate distortion parameters equivalent to an identity matrix
         std::vector<double> C(Model.GetDistortionParameters());
-        if (C.size() != nmeas * 4)
+        if (C.size() != nstats * 4)
           {
-            C.resize(nmeas * 4);
-            for (size_t i = 0; i < nmeas; ++i)
+            C.resize(nstats * 4);
+            for (size_t i = 0; i < nstats; ++i)
               {
                 C[i * 4] = 1.0;
                 C[i * 4 + 1] = 0.0;
@@ -158,7 +188,7 @@ namespace jif3D
                 ForwardInfo Info(Model,C,i,TempDir.string(),X3DName, NameRoot, GreenType1, GreenType4);
                 ForwardResult freqresult = CalculateFrequency(Info);
                 const size_t currindex = i - minfreqindex;
-                const size_t startindex = nmeas * currindex * 8;
+                const size_t startindex = nstats * currindex * 8;
 
                 omp_set_lock(&lck);
 
@@ -207,7 +237,7 @@ namespace jif3D
         for (size_t i = minfreqindex; i < maxfreqindex; ++i)
           {
             const size_t currindex = i - minfreqindex;
-            const size_t startindex = nmeas * currindex * 8;
+            const size_t startindex = nstats * currindex * 8;
             ForwardResult freqresult = FreqResult[currindex].get();
             //std::cout << " Getting results for frequency " << currindex << std::endl;
             std::copy(freqresult.DistImpedance.begin(), freqresult.DistImpedance.end(),
@@ -247,14 +277,15 @@ namespace jif3D
         const size_t nmodz = Model.GetConductivities().shape()[2];
         //the number of measurement sites
         const size_t nmeas = Model.GetMeasPosX().size();
+        const size_t nstats = Model.GetExIndices().size() / nfreq;
         const size_t nmod = nmodx * nmody * nmodz;
-        assert(Misfit.size() == nmeas * nfreq * 8);
+        assert(Misfit.size() == nstats * nfreq * 8);
         jif3D::rvec Gradient(nmod);
         if (WantDistCorr)
           {
             //if we want to adapt the distortion parameters, we put
             //the gradient with respect to the distortion parameters at the end
-            Gradient.resize(nmod + 4 * nmeas);
+            Gradient.resize(nmod + 4 * nstats);
           }
         bool FatalError = false;
         //we need to initialize all values to zero as we are adding
@@ -270,10 +301,10 @@ namespace jif3D
         std::vector<double> C(Model.GetDistortionParameters());
         //if they have not been set, we use the identity matrix
         //for each station
-        if (C.size() != nmeas * 4)
+        if (C.size() != nstats * 4)
           {
-            C.resize(nmeas * 4);
-            for (size_t i = 0; i < nmeas; ++i)
+            C.resize(nstats * 4);
+            for (size_t i = 0; i < nstats; ++i)
               {
                 C[i * 4] = 1.0;
                 C[i * 4 + 1] = 0.0;
@@ -381,16 +412,21 @@ namespace jif3D
         return 2.0 * Gradient;
       }
 
-    rmat X3DMTCalculator::SensitivityMatrix(const ModelType &Model, const rvec &Misfit,
+    rmat X3DMTCalculator::SensitivityMatrix(ModelType &Model, const rvec &Misfit,
         size_t minfreqindex, size_t maxfreqindex)
       {
         if (!DataTransform)
           {
             DataTransform = boost::make_shared<jif3D::CopyTransform>(Misfit.size());
           }
+        maxfreqindex = std::min(maxfreqindex, Model.GetFrequencies().size());
+        const size_t nfreq = maxfreqindex - minfreqindex;
         const size_t ndata = Misfit.size();
+        const size_t nmeas = Model.GetMeasPosX().size();
+
         const size_t nmodel = Model.GetConductivities().num_elements();
-        const size_t nsites = Model.GetMeasPosX().size();
+        //const size_t nsites = Model.GetMeasPosX().size();
+        const size_t nsites = Model.GetExIndices().size()/nfreq;
         rmat Result;
         if (WantDistCorr)
           {
