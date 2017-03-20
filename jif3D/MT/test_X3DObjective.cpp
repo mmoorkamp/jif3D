@@ -46,6 +46,7 @@ BOOST_AUTO_TEST_SUITE( X3DObjective_Suite )
         Model.SetHorizontalCellSize(deltax, deltay, xsize, ysize);
 
         std::fill_n(Model.SetZCellSizes().begin(), zsize, deltaz);
+        Model.SetZCellSizes()[1] = deltaz * 2.0;
         std::fill_n(Model.SetConductivities().origin(), nmod, 0.02);
 
         Model.SetConductivities()[0][0][0] = 0.025;

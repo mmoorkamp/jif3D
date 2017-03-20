@@ -13,9 +13,9 @@
 #include "../Global/VecMat.h"
 
 namespace jif3D
-{
-	/** \addtogroup mtmodelling Forward modelling of magnetotelluric data */
-	/* @{ */
+  {
+    /** \addtogroup mtmodelling Forward modelling of magnetotelluric data */
+    /* @{ */
 
     //! Write Titan24 Data transfer functions to a netcdf file
     /*! We can save Titan24 Data for several stations in a netcdf file for storage
@@ -37,13 +37,13 @@ namespace jif3D
      * @param Errors Optional parameter containing errors of the Titan24 transfer functions with the same number of Elements with Impedances.
      *        As we only have one error estimate per element we write only the components corresponding to the real parts.
      */
-	J3DEXPORT void WriteTitanDataToNetCDF(const std::string &filename,
-    const std::vector<double> &Frequencies, const std::vector<double> &MeasXCoord,
-    const std::vector<double> &MeasYCoord, const std::vector<double> &MeasZCoord,
-	const std::vector<int> &ExIndices, const std::vector<int> &EyIndices,
-	const std::vector<int> &HIndices,
-    const jif3D::rvec &Impedances, const jif3D::rvec &Errors = jif3D::rvec(),
-    const std::vector<double> &Distortion = std::vector<double>());
+    J3DEXPORT void WriteTitanDataToNetCDF(const std::string &filename,
+        const std::vector<double> &Frequencies, const std::vector<double> &MeasXCoord,
+        const std::vector<double> &MeasYCoord, const std::vector<double> &MeasZCoord,
+        const std::vector<int> &ExIndices, const std::vector<int> &EyIndices,
+        const std::vector<int> &HIndices, const jif3D::rvec &Impedances,
+        const jif3D::rvec &Errors = jif3D::rvec(), const std::vector<double> &Distortion =
+            std::vector<double>());
 
     //! Read Titan24 Data transfer functions from a netcdf file
     /*! Read Titan24 Data for several stations from a netcdf file.
@@ -68,9 +68,9 @@ namespace jif3D
     J3DEXPORT void ReadTitanDataFromNetCDF(const std::string &filename,
         std::vector<double> &Frequencies, std::vector<double> &MeasXCoord,
         std::vector<double> &MeasYCoord, std::vector<double> &MeasZCoord,
-		std::vector<int> &ExIndices, std::vector<int> &EyIndices,
-		std::vector<int> &HIndices,
-        jif3D::rvec &Impedances, jif3D::rvec &ImpError, std::vector<double> &Distortion);
+        std::vector<int> &ExIndices, std::vector<int> &EyIndices,
+        std::vector<int> &HIndices, jif3D::rvec &Impedances, jif3D::rvec &ImpError,
+        std::vector<double> &Distortion);
 
     //! Write Titan24 transfer functions into an ascii file as written by ModEM
     /*! Write Titan24 transfer functions into an ascii file as written by ModEM,
@@ -91,8 +91,8 @@ namespace jif3D
     J3DEXPORT void WriteTitanDataToModEM(const std::string &filename,
         const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
-		const std::vector<int> &ExIndices,
-        const jif3D::rvec &Imp, const jif3D::rvec &Err);
+        const std::vector<int> &ExIndices, const jif3D::rvec &Imp,
+        const jif3D::rvec &Err);
 
   /* @} */
   }
