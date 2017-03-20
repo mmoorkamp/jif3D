@@ -91,8 +91,7 @@ namespace jif3D
         size_t maxfreqindex)
       {
 
-
-    	//we define nfreq as int to make the compiler happy in the openmp loop
+        //we define nfreq as int to make the compiler happy in the openmp loop
         assert(minfreqindex <= maxfreqindex);
         maxfreqindex = std::min(maxfreqindex, Model.GetFrequencies().size());
         const size_t nfreq = maxfreqindex - minfreqindex;
@@ -100,26 +99,26 @@ namespace jif3D
         //if the current model does not contain any ExIndices information
         //generate ExIndices, EyIndices and HIndices as 0:nmeas for each Frequency
         //here we assume that we either have all three indices in the netCDF file or none of them
-        std::vector<int> ExIndices(Model.GetExIndices()), EyIndices(Model.GetEyIndices()), HIndices(Model.GetHIndices());
+        std::vector<int> ExIndices(Model.GetExIndices()), EyIndices(Model.GetEyIndices()),
+            HIndices(Model.GetHIndices());
         size_t ind_shift = 0;
-        if (ExIndices.empty() )
-        {
-        	ExIndices.resize(nmeas * nfreq);
-        	EyIndices.resize(nmeas * nfreq);
-        	HIndices.resize(nmeas * nfreq);
-        	for (size_t ifr = 0; ifr < nfreq; ++ifr)
-        	{
-        		ind_shift= nmeas*ifr;
-        		for (size_t i = 0; i < nmeas; ++i)
-        		{
-        			ExIndices[i + ind_shift] = i;
-        		}
-        	}
-        	EyIndices = ExIndices;
-        	HIndices = ExIndices;
-        }
-        Model.SetFieldIndices(ExIndices,EyIndices,HIndices);
-
+        if (ExIndices.empty())
+          {
+            ExIndices.resize(nmeas * nfreq);
+            EyIndices.resize(nmeas * nfreq);
+            HIndices.resize(nmeas * nfreq);
+            for (size_t ifr = 0; ifr < nfreq; ++ifr)
+              {
+                ind_shift = nmeas * ifr;
+                for (size_t i = 0; i < nmeas; ++i)
+                  {
+                    ExIndices[i + ind_shift] = i;
+                  }
+              }
+            EyIndices = ExIndices;
+            HIndices = ExIndices;
+          }
+        Model.SetFieldIndices(ExIndices, EyIndices, HIndices);
 
         const size_t nstats = Model.GetExIndices().size() / nfreq;
 
@@ -144,7 +143,6 @@ namespace jif3D
         Model.GetXCoordinates();
         Model.GetYCoordinates();
         Model.GetZCoordinates();
-
 
         //if the current model does not contain any distortion information
         //generate distortion parameters equivalent to an identity matrix
@@ -426,7 +424,7 @@ namespace jif3D
 
         const size_t nmodel = Model.GetConductivities().num_elements();
         //const size_t nsites = Model.GetMeasPosX().size();
-        const size_t nsites = Model.GetExIndices().size()/nfreq;
+        const size_t nsites = Model.GetExIndices().size() / nfreq;
         rmat Result;
         if (WantDistCorr)
           {

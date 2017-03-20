@@ -16,8 +16,6 @@
 #include <boost/assign/list_of.hpp> // for 'map_list_of()'
 #include <boost/filesystem.hpp>
 
-
-
 namespace jif3D
   {
     const std::string runext = "_run";
@@ -294,11 +292,11 @@ namespace jif3D
         else
           {
 
-        Ux.resize(ncellsx * ncellsy * ncellsz, 0.0);
-        Uy.resize(ncellsx * ncellsy * ncellsz, 0.0);
-        Uz.resize(ncellsx * ncellsy * ncellsz, 0.0);
+            Ux.resize(ncellsx * ncellsy * ncellsz, 0.0);
+            Uy.resize(ncellsx * ncellsy * ncellsz, 0.0);
+            Uz.resize(ncellsx * ncellsy * ncellsz, 0.0);
+          }
+        //boost::filesystem::remove_all(emaname);
       }
-    //boost::filesystem::remove_all(emaname);
-  }
 
-}
+  }

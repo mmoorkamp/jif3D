@@ -28,71 +28,74 @@ using netCDF::NcFile;
 using netCDF::NcDim;
 
 namespace jif3D
-{
-using namespace std;
+  {
+    using namespace std;
 
-	//! The name used for the index of Stations with Ex measurement used to compute Titan TF data in netcdf files
-	static const std::string ExIndicesName = "ExIndices";
-	//! The name used for the index of Stations with Ey measurement used to compute Titan TF data in netcdf files
-	static const std::string EyIndicesName = "EyIndices";
-	//! The name used for the index of Stations with H measurement used to compute Titan TF data in netcdf files
-	static const std::string HIndicesName = "HIndices";
+    //! The name used for the index of Stations with Ex measurement used to compute Titan TF data in netcdf files
+    static const std::string ExIndicesName = "ExIndices";
+    //! The name used for the index of Stations with Ey measurement used to compute Titan TF data in netcdf files
+    static const std::string EyIndicesName = "EyIndices";
+    //! The name used for the index of Stations with H measurement used to compute Titan TF data in netcdf files
+    static const std::string HIndicesName = "HIndices";
 
-	static const std::string FreqDimName = "Frequency";
-	static const std::string DistortionName = "C";
+    static const std::string FreqDimName = "Frequency";
+    static const std::string DistortionName = "C";
 
+    //write the Titan TF indices matrix to a netcdf file
+    //this is an internal helper function
+    void WriteTitanTFIndices(NcFile &NetCDFFile, NcDim &TitanTFNumDim, NcDim &FreqDim,
+        const std::vector<int> &Indices, const std::string &IndexName)
+      {
+        std::vector<NcDim> dimVec;
+        dimVec.push_back(FreqDim);
+        dimVec.push_back(TitanTFNumDim);
 
-	//write the Titan TF indices matrix to a netcdf file
-	//this is an internal helper function
-	void WriteTitanTFIndices(NcFile &NetCDFFile, NcDim &TitanTFNumDim, NcDim &FreqDim,
-		const std::vector<int> &Indices, const std::string &IndexName)
-	{
-		std::vector<NcDim> dimVec;
-		dimVec.push_back(FreqDim);
-		dimVec.push_back(TitanTFNumDim);
+        NcVar IndexVar = NetCDFFile.addVar(IndexName, netCDF::ncInt, dimVec);
 
-		NcVar IndexVar = NetCDFFile.addVar(IndexName, netCDF::ncInt, dimVec);
+        //        CompVar.put(&Component[0], FreqDim.getSize(), StatNumDim.getSize());
+        cxxport::put_legacy_ncvar(IndexVar, &Indices[0], FreqDim.getSize(),
+            TitanTFNumDim.getSize());
+      }
 
-		//        CompVar.put(&Component[0], FreqDim.getSize(), StatNumDim.getSize());
-		cxxport::put_legacy_ncvar(IndexVar, &Indices[0], FreqDim.getSize(), TitanTFNumDim.getSize());
-	}
-
-	//read the Titan TF indices from a netcdf file
-	//indices are matrices of size TitanTFNumDim x FreqDim
-	//this is an internal helper function
+    //read the Titan TF indices from a netcdf file
+    //indices are matrices of size TitanTFNumDim x FreqDim
+    //this is an internal helper function
     void ReadTitanTFIndices(NcFile &NetCDFFile, std::vector<int> &Indices,
         const std::string &IndexName, const bool MustExist = true)
       {
-        try {
-          NcVar SizeVar = NetCDFFile.getVar(IndexName);
-          if (!SizeVar.isNull())
-            {
+        try
+          {
+            NcVar SizeVar = NetCDFFile.getVar(IndexName);
+            if (!SizeVar.isNull())
+              {
 
-              const std::vector<long> edges = cxxport::get_legacy_var_edges(SizeVar);
-              Indices.resize(edges[0] * edges[1]);
+                const std::vector<long> edges = cxxport::get_legacy_var_edges(SizeVar);
+                Indices.resize(edges[0] * edges[1]);
 //              SizeVar.get(&Temp[0], SizeVar->edges()[0], SizeVar->edges()[1]);
-              cxxport::get_legacy_ncvar(SizeVar, &Indices[0], edges[0], edges[1]);
+                cxxport::get_legacy_ncvar(SizeVar, &Indices[0], edges[0], edges[1]);
 
-            }
-        } catch (const netCDF::exceptions::NcException &ex) {
-          if(MustExist) {
-            throw std::runtime_error("Call to ReadTitanTFIndices with MustExist failed.");
+              }
+          } catch (const netCDF::exceptions::NcException &ex)
+          {
+            if (MustExist)
+              {
+                throw std::runtime_error(
+                    "Call to ReadTitanTFIndices with MustExist failed.");
+              }
           }
-        }
       }
 
     void WriteTitanDataToNetCDF(const std::string &filename,
         const std::vector<double> &Frequencies, const std::vector<double> &MeasXCoord,
         const std::vector<double> &MeasYCoord, const std::vector<double> &MeasZCoord,
-		const std::vector<int> &ExIndices, const std::vector<int> &EyIndices,
-		const std::vector<int> &HIndices,
-        const jif3D::rvec &Impedances, const jif3D::rvec &Errors,
-        const std::vector<double> &Distortion)
+        const std::vector<int> &ExIndices, const std::vector<int> &EyIndices,
+        const std::vector<int> &HIndices, const jif3D::rvec &Impedances,
+        const jif3D::rvec &Errors, const std::vector<double> &Distortion)
       {
         const size_t nmeas = MeasXCoord.size();
         const size_t nTitanTFs = ExIndices.size();
         const size_t nfreqs = Frequencies.size();
-        const size_t nstats = nTitanTFs/nfreqs;
+        const size_t nstats = nTitanTFs / nfreqs;
 
         const size_t nimp = nTitanTFs * 8;
         assert(nmeas == MeasYCoord.size());
@@ -110,7 +113,6 @@ using namespace std;
         WriteVec(DataFile, MeasPosYName, MeasYCoord, MeasNumDim, "m");
         WriteVec(DataFile, MeasPosZName, MeasZCoord, MeasNumDim, "m");
 
-
         //write out the frequencies that we store
         NcDim FreqDim = DataFile.addDim(FreqDimName, Frequencies.size());
         NcVar FreqVar = DataFile.addVar(FreqDimName, netCDF::ncDouble, FreqDim);
@@ -118,10 +120,8 @@ using namespace std;
 //        FreqVar->put(&Frequencies[0], nfreqs);
         cxxport::put_legacy_ncvar(FreqVar, Frequencies.data(), nfreqs);
 
-
         //Create the dimensions for the stations
         NcDim StatNumDim = DataFile.addDim(StationNumberName, nstats);
-
 
         // write indices for Titan TF
 
@@ -171,9 +171,9 @@ using namespace std;
     void ReadTitanDataFromNetCDF(const std::string &filename,
         std::vector<double> &Frequencies, std::vector<double> &MeasXCoord,
         std::vector<double> &MeasYCoord, std::vector<double> &MeasZCoord,
-		std::vector<int> &ExIndices, std::vector<int> &EyIndices,
-		std::vector<int> &HIndices,
-        jif3D::rvec &Impedances, jif3D::rvec &ImpError, std::vector<double> &Distortion)
+        std::vector<int> &ExIndices, std::vector<int> &EyIndices,
+        std::vector<int> &HIndices, jif3D::rvec &Impedances, jif3D::rvec &ImpError,
+        std::vector<double> &Distortion)
       {
         //open the netcdf file readonly
         NcFile DataFile(filename, NcFile::read);
@@ -216,450 +216,450 @@ using namespace std;
             ImpError(i + 1) = ImpError(i);
           }
 
-        try {
+        try
+          {
             NcVar DistVar = DataFile.getVar(DistortionName);
 
-             const int nvalues = ExIndices.size() / Frequencies.size() * 4;
-             Distortion.resize(nvalues);
-             if (!DistVar.isNull())
-               {
-                 const std::vector<long> edges = cxxport::get_legacy_var_edges(DistVar);
-                 if (nvalues != edges[0] * edges[1])
-                   {
-                     throw jif3D::FatalException(
-                         "Number of distortion parameters does not match number of stations !",
-                         __FILE__, __LINE__);
-                   }
+            const int nvalues = ExIndices.size() / Frequencies.size() * 4;
+            Distortion.resize(nvalues);
+            if (!DistVar.isNull())
+              {
+                const std::vector<long> edges = cxxport::get_legacy_var_edges(DistVar);
+                if (nvalues != edges[0] * edges[1])
+                  {
+                    throw jif3D::FatalException(
+                        "Number of distortion parameters does not match number of stations !",
+                        __FILE__, __LINE__);
+                  }
 
-   //              DistVar.get(&Distortion[0], edges[0], edges[1]);
-                 cxxport::get_legacy_ncvar(DistVar, Distortion.data(), edges[0], edges[1]);
-               }
-             else
-               {
-            	 const size_t nstats= ExIndices.size() / Frequencies.size();
-                 for (size_t i = 0; i < nstats; ++i)
-                   {
-                     Distortion[i * 4] = 1.0;
-                     Distortion[i * 4 + 1] = 0.0;
-                     Distortion[i * 4 + 2] = 0.0;
-                     Distortion[i * 4 + 3] = 1.0;
-                   }
-               }
-        } catch(const netCDF::exceptions::NcException &ex) {
-          // ignore
-        }
+                //              DistVar.get(&Distortion[0], edges[0], edges[1]);
+                cxxport::get_legacy_ncvar(DistVar, Distortion.data(), edges[0], edges[1]);
+              }
+            else
+              {
+                const size_t nstats = ExIndices.size() / Frequencies.size();
+                for (size_t i = 0; i < nstats; ++i)
+                  {
+                    Distortion[i * 4] = 1.0;
+                    Distortion[i * 4 + 1] = 0.0;
+                    Distortion[i * 4 + 2] = 0.0;
+                    Distortion[i * 4 + 3] = 1.0;
+                  }
+              }
+          } catch (const netCDF::exceptions::NcException &ex)
+          {
+            // ignore
+          }
       }
-
 
     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! //
     // !!!!!!! All the following functions are not yet implemented for the case of Titan-24 data !!!!!!! //
     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! //
-/*
+    /*
 
-    void ReadImpedancesFromMTT(const std::string &filename,
-        std::vector<double> &Frequencies, jif3D::rvec &Impedances, jif3D::rvec &Errors)
-      {
-        std::ifstream infile;
-        double currentreal, currentimag;
-        int nentries = 0;
-        infile.open(filename.c_str());
-        while (infile.good())
-          {
-            infile >> currentreal;
-            ++nentries;
-          }
-        infile.close();
-        if (((nentries - 1) % 23) != 0)
-          throw FatalException("Number of records does not match expected: " + filename,
-          __FILE__, __LINE__);
-        const int nrecords = (nentries - 1) / 23;
-        Impedances.resize(nrecords * 8);
-        Errors.resize(nrecords * 8);
-        Frequencies.resize(nrecords);
-        infile.open(filename.c_str());
-        int currentrecord = 0;
-        if (infile)
-          {
-            while (infile.good()) // read in inputfile
-              {
-                infile >> Frequencies[currentrecord / 8];
-                if (infile.good())
-                  {
-                    //read number of degrees of freedom in file an throw away
-                    infile >> currentreal;
+     void ReadImpedancesFromMTT(const std::string &filename,
+     std::vector<double> &Frequencies, jif3D::rvec &Impedances, jif3D::rvec &Errors)
+     {
+     std::ifstream infile;
+     double currentreal, currentimag;
+     int nentries = 0;
+     infile.open(filename.c_str());
+     while (infile.good())
+     {
+     infile >> currentreal;
+     ++nentries;
+     }
+     infile.close();
+     if (((nentries - 1) % 23) != 0)
+     throw FatalException("Number of records does not match expected: " + filename,
+     __FILE__, __LINE__);
+     const int nrecords = (nentries - 1) / 23;
+     Impedances.resize(nrecords * 8);
+     Errors.resize(nrecords * 8);
+     Frequencies.resize(nrecords);
+     infile.open(filename.c_str());
+     int currentrecord = 0;
+     if (infile)
+     {
+     while (infile.good()) // read in inputfile
+     {
+     infile >> Frequencies[currentrecord / 8];
+     if (infile.good())
+     {
+     //read number of degrees of freedom in file an throw away
+     infile >> currentreal;
 
-                    infile >> Impedances(currentrecord) >> Impedances(currentrecord + 1)
-                        >> Impedances(currentrecord + 2) >> Impedances(currentrecord + 3)
-                        >> Impedances(currentrecord + 4) >> Impedances(currentrecord + 5)
-                        >> Impedances(currentrecord + 6) >> Impedances(currentrecord + 7);
-                    // read in the impedance errors
-                    infile >> Errors(currentrecord) >> Errors(currentrecord + 2)
-                        >> Errors(currentrecord + 4) >> Errors(currentrecord + 6);
-                    //fpr the moment we ignore these values in the .mtt file
-                    //Tx
-                    infile >> currentreal >> currentimag;
-                    //Ty
-                    infile >> currentreal >> currentimag;
-                    //dTx
-                    infile >> currentreal;
-                    //dTy
-                    infile >> currentreal;
-                    //Coherence Rx
-                    infile >> currentreal;
-                    //Coherence Ry
-                    infile >> currentreal;
-                    //Coherence Rz
-                    infile >> currentreal;
+     infile >> Impedances(currentrecord) >> Impedances(currentrecord + 1)
+     >> Impedances(currentrecord + 2) >> Impedances(currentrecord + 3)
+     >> Impedances(currentrecord + 4) >> Impedances(currentrecord + 5)
+     >> Impedances(currentrecord + 6) >> Impedances(currentrecord + 7);
+     // read in the impedance errors
+     infile >> Errors(currentrecord) >> Errors(currentrecord + 2)
+     >> Errors(currentrecord + 4) >> Errors(currentrecord + 6);
+     //fpr the moment we ignore these values in the .mtt file
+     //Tx
+     infile >> currentreal >> currentimag;
+     //Ty
+     infile >> currentreal >> currentimag;
+     //dTx
+     infile >> currentreal;
+     //dTy
+     infile >> currentreal;
+     //Coherence Rx
+     infile >> currentreal;
+     //Coherence Ry
+     infile >> currentreal;
+     //Coherence Rz
+     infile >> currentreal;
 
-                    currentrecord += 8;
-                  }
-              }
-            infile.close();
+     currentrecord += 8;
+     }
+     }
+     infile.close();
 
-            //we read the error information into the vector components corresponding to the real part
-            //we have to copy that error to the components corresponding to the imaginary part
-            for (size_t i = 0; i < Errors.size() - 1; i += 2)
-              {
-                Errors(i + 1) = Errors(i);
-              }
-            //convert the units in the .mtt file (km/s) into S.I units (Ohm)
-            const double convfactor = 4.0 * 1e-4 * acos(-1.0);
-            Impedances *= convfactor;
-            Errors *= convfactor;
-          }
-        else
-          {
-            throw jif3D::FatalException("File not found: " + filename, __FILE__,
-            __LINE__);
-          }
-      }
+     //we read the error information into the vector components corresponding to the real part
+     //we have to copy that error to the components corresponding to the imaginary part
+     for (size_t i = 0; i < Errors.size() - 1; i += 2)
+     {
+     Errors(i + 1) = Errors(i);
+     }
+     //convert the units in the .mtt file (km/s) into S.I units (Ohm)
+     const double convfactor = 4.0 * 1e-4 * acos(-1.0);
+     Impedances *= convfactor;
+     Errors *= convfactor;
+     }
+     else
+     {
+     throw jif3D::FatalException("File not found: " + filename, __FILE__,
+     __LINE__);
+     }
+     }
 
-    void WriteImpedancesToMtt(const std::string &filenamebase,
-        const std::vector<double> &Frequencies, const jif3D::rvec &Imp,
-        const jif3D::rvec &Err)
-      {
-        const double convfactor = 4.0 * 1e-4 * acos(-1.0);
-        jif3D::rvec Impedances = 1.0 / convfactor * Imp;
-        jif3D::rvec Errors = 1.0 / convfactor * Err;
-        const size_t nfreq = Frequencies.size();
-        const size_t nimp = Impedances.size();
-        const size_t ndatapersite = nfreq * 8;
-        const size_t nsites = nimp / ndatapersite;
-        assert(nimp % ndatapersite == 0);
-        for (size_t i = 0; i < nsites; ++i)
-          {
+     void WriteImpedancesToMtt(const std::string &filenamebase,
+     const std::vector<double> &Frequencies, const jif3D::rvec &Imp,
+     const jif3D::rvec &Err)
+     {
+     const double convfactor = 4.0 * 1e-4 * acos(-1.0);
+     jif3D::rvec Impedances = 1.0 / convfactor * Imp;
+     jif3D::rvec Errors = 1.0 / convfactor * Err;
+     const size_t nfreq = Frequencies.size();
+     const size_t nimp = Impedances.size();
+     const size_t ndatapersite = nfreq * 8;
+     const size_t nsites = nimp / ndatapersite;
+     assert(nimp % ndatapersite == 0);
+     for (size_t i = 0; i < nsites; ++i)
+     {
 
-            ofstream outfile;
-            std::string currfilename = filenamebase + jif3D::stringify(i) + ".mtt";
-            outfile.open(currfilename.c_str());
+     ofstream outfile;
+     std::string currfilename = filenamebase + jif3D::stringify(i) + ".mtt";
+     outfile.open(currfilename.c_str());
 
-            for (unsigned int j = 0; j < nfreq; ++j) //write mtt-file
-              {
-                const size_t startindex = (j * nsites + i) * 8;
-                outfile << Frequencies.at(j);
-                outfile << "   1 \n";
+     for (unsigned int j = 0; j < nfreq; ++j) //write mtt-file
+     {
+     const size_t startindex = (j * nsites + i) * 8;
+     outfile << Frequencies.at(j);
+     outfile << "   1 \n";
 
-                outfile << Impedances(startindex) << " ";
-                outfile << Impedances(startindex + 1) << " ";
-                outfile << Impedances(startindex + 2) << " ";
-                outfile << Impedances(startindex + 3) << " ";
-                outfile << Impedances(startindex + 4) << " ";
-                outfile << Impedances(startindex + 5) << " ";
-                outfile << Impedances(startindex + 6) << " ";
-                outfile << Impedances(startindex + 7) << " ";
-                outfile << "\n";
-                outfile << Errors(startindex) << " ";
-                outfile << Errors(startindex + 2) << " ";
-                outfile << Errors(startindex + 4) << " ";
-                outfile << Errors(startindex + 6) << " ";
-                outfile << 0.0 << " ";
-                outfile << 0.0 << " ";
-                outfile << 0.0 << " ";
-                outfile << 0.0 << " ";
-                outfile << "\n";
-                outfile << 0.0 << " ";
-                outfile << 0.0 << " ";
-                outfile << 0.0 << " ";
-                outfile << 0.0 << " ";
-                outfile << 0.0 << " ";
-                outfile << "\n";
-                //write out mtt file entries
+     outfile << Impedances(startindex) << " ";
+     outfile << Impedances(startindex + 1) << " ";
+     outfile << Impedances(startindex + 2) << " ";
+     outfile << Impedances(startindex + 3) << " ";
+     outfile << Impedances(startindex + 4) << " ";
+     outfile << Impedances(startindex + 5) << " ";
+     outfile << Impedances(startindex + 6) << " ";
+     outfile << Impedances(startindex + 7) << " ";
+     outfile << "\n";
+     outfile << Errors(startindex) << " ";
+     outfile << Errors(startindex + 2) << " ";
+     outfile << Errors(startindex + 4) << " ";
+     outfile << Errors(startindex + 6) << " ";
+     outfile << 0.0 << " ";
+     outfile << 0.0 << " ";
+     outfile << 0.0 << " ";
+     outfile << 0.0 << " ";
+     outfile << "\n";
+     outfile << 0.0 << " ";
+     outfile << 0.0 << " ";
+     outfile << 0.0 << " ";
+     outfile << 0.0 << " ";
+     outfile << 0.0 << " ";
+     outfile << "\n";
+     //write out mtt file entries
 
-              }
-            outfile.close();
-          }
-      }
+     }
+     outfile.close();
+     }
+     }
 
-    inline double rad(double d)
-      {
-        return d / 180.0 * boost::math::constants::pi<double>();
-      }
+     inline double rad(double d)
+     {
+     return d / 180.0 * boost::math::constants::pi<double>();
+     }
 
-    void ReadAppResFromAscii(const std::string &filename,
-        std::vector<double> &Frequencies, std::vector<double> &StatXCoord,
-        std::vector<double> &StatYCoord, std::vector<double> &StatZCoord,
-        jif3D::rvec &Imp, jif3D::rvec &Err)
-      {
-        std::ifstream infile;
-        infile.open(filename.c_str());
-        char dummy[5000];
-        //skip header line
-        infile.getline(dummy, 5000);
-        std::string major, link, site;
-        double x, y, elevation, fre, rxy, ryx, pxy, pyx, erxy, eryx, epxy, epyx;
+     void ReadAppResFromAscii(const std::string &filename,
+     std::vector<double> &Frequencies, std::vector<double> &StatXCoord,
+     std::vector<double> &StatYCoord, std::vector<double> &StatZCoord,
+     jif3D::rvec &Imp, jif3D::rvec &Err)
+     {
+     std::ifstream infile;
+     infile.open(filename.c_str());
+     char dummy[5000];
+     //skip header line
+     infile.getline(dummy, 5000);
+     std::string major, link, site;
+     double x, y, elevation, fre, rxy, ryx, pxy, pyx, erxy, eryx, epxy, epyx;
 
-        std::vector<double> ImpTemp, ErrTemp, tmpx, tmpy, tmpz;
-        while (infile.good())
-          {
-            infile >> major >> link >> site >> x >> y >> elevation >> fre >> rxy >> ryx
-                >> pxy >> pyx >> erxy >> eryx >> epxy >> epyx;
-            if (infile.good())
-              {
-                std::cout << fre << " " << rxy << " " << pxy << std::endl;
-                ImpTemp.push_back(0.0);
-                ImpTemp.push_back(0.0);
-                fre = std::pow(10, fre);
-                const double absZxy = sqrt(twopimu * fre * rxy);
-                const double cpxy = cos(rad(pxy));
-                const double spxy = sin(rad(pxy));
-                double cpyx = cos(rad(pyx));
-                double spyx = sin(rad(pyx));
-                cpyx = cpyx > 0.0 ? -cpyx : cpyx;
-                spyx = spyx > 0.0 ? -spyx : spyx ;
-                ImpTemp.push_back(absZxy * cpxy);
-                ImpTemp.push_back(absZxy * spxy);
-                std::cout << "Fre: " << fre << " Rho: " << AppRes(std::complex<double>(absZxy * cpxy,absZxy * spxy),fre) << std::endl;
-                std::cout << "Zxy_re: " << absZxy * cpxy << " Zxy_im " << absZxy * spxy << std::endl;
-                const double absZyx = sqrt(twopimu * fre * ryx);
-                ImpTemp.push_back(absZyx * cpyx);
-                ImpTemp.push_back(absZyx * spyx);
-                ImpTemp.push_back(0.0);
-                ImpTemp.push_back(0.0);
-                ErrTemp.push_back(0.0);
-                ErrTemp.push_back(0.0);
-                double dR = sqrt(
-                    twopimu * fre / (4 * rxy) * std::pow(erxy * cpxy, 2)
-                        + std::pow(absZxy * spxy * rad(epxy), 2));
-                double dI = sqrt(
-                    twopimu * fre / (4 * rxy) * std::pow(erxy * spxy, 2)
-                        + std::pow(absZxy * cpxy * rad(epxy), 2));
-                ErrTemp.push_back(std::max(dR, dI));
-                ErrTemp.push_back(std::max(dR, dI));
-                dR = sqrt(
-                    twopimu * fre / (4 * ryx) * std::pow(eryx * cpxy, 2)
-                        + std::pow(absZyx * spyx * rad(epyx), 2));
-                dI = sqrt(
-                    twopimu * fre / (4 * ryx) * std::pow(eryx * spxy, 2)
-                        + std::pow(absZyx * cpyx * rad(epyx), 2));
-                ErrTemp.push_back(std::max(dR, dI));
-                ErrTemp.push_back(std::max(dR, dI));
-                ErrTemp.push_back(0.0);
-                ErrTemp.push_back(0.0);
-                Frequencies.push_back(fre);
-                tmpx.push_back(x);
-                tmpy.push_back(y);
-                tmpz.push_back(elevation);
-              }
+     std::vector<double> ImpTemp, ErrTemp, tmpx, tmpy, tmpz;
+     while (infile.good())
+     {
+     infile >> major >> link >> site >> x >> y >> elevation >> fre >> rxy >> ryx
+     >> pxy >> pyx >> erxy >> eryx >> epxy >> epyx;
+     if (infile.good())
+     {
+     std::cout << fre << " " << rxy << " " << pxy << std::endl;
+     ImpTemp.push_back(0.0);
+     ImpTemp.push_back(0.0);
+     fre = std::pow(10, fre);
+     const double absZxy = sqrt(twopimu * fre * rxy);
+     const double cpxy = cos(rad(pxy));
+     const double spxy = sin(rad(pxy));
+     double cpyx = cos(rad(pyx));
+     double spyx = sin(rad(pyx));
+     cpyx = cpyx > 0.0 ? -cpyx : cpyx;
+     spyx = spyx > 0.0 ? -spyx : spyx ;
+     ImpTemp.push_back(absZxy * cpxy);
+     ImpTemp.push_back(absZxy * spxy);
+     std::cout << "Fre: " << fre << " Rho: " << AppRes(std::complex<double>(absZxy * cpxy,absZxy * spxy),fre) << std::endl;
+     std::cout << "Zxy_re: " << absZxy * cpxy << " Zxy_im " << absZxy * spxy << std::endl;
+     const double absZyx = sqrt(twopimu * fre * ryx);
+     ImpTemp.push_back(absZyx * cpyx);
+     ImpTemp.push_back(absZyx * spyx);
+     ImpTemp.push_back(0.0);
+     ImpTemp.push_back(0.0);
+     ErrTemp.push_back(0.0);
+     ErrTemp.push_back(0.0);
+     double dR = sqrt(
+     twopimu * fre / (4 * rxy) * std::pow(erxy * cpxy, 2)
+     + std::pow(absZxy * spxy * rad(epxy), 2));
+     double dI = sqrt(
+     twopimu * fre / (4 * rxy) * std::pow(erxy * spxy, 2)
+     + std::pow(absZxy * cpxy * rad(epxy), 2));
+     ErrTemp.push_back(std::max(dR, dI));
+     ErrTemp.push_back(std::max(dR, dI));
+     dR = sqrt(
+     twopimu * fre / (4 * ryx) * std::pow(eryx * cpxy, 2)
+     + std::pow(absZyx * spyx * rad(epyx), 2));
+     dI = sqrt(
+     twopimu * fre / (4 * ryx) * std::pow(eryx * spxy, 2)
+     + std::pow(absZyx * cpyx * rad(epyx), 2));
+     ErrTemp.push_back(std::max(dR, dI));
+     ErrTemp.push_back(std::max(dR, dI));
+     ErrTemp.push_back(0.0);
+     ErrTemp.push_back(0.0);
+     Frequencies.push_back(fre);
+     tmpx.push_back(x);
+     tmpy.push_back(y);
+     tmpz.push_back(elevation);
+     }
 
-          }
+     }
 
-        Imp.resize(ImpTemp.size());
-        Err.resize(ErrTemp.size());
-        //std::copy(ImpTemp.begin(), ImpTemp.end(), Imp.begin());
-        //std::copy(ErrTemp.begin(), ErrTemp.end(), Err.begin());
-        bool Ascending = true;
-        if (Frequencies.at(0) > Frequencies.at(1))
-          {
-            Ascending = false;
-          }
-        if (Ascending)
-          {
-            std::sort(Frequencies.begin(), Frequencies.end(), std::less<double>());
-          }
-        else
-          {
-            std::sort(Frequencies.begin(), Frequencies.end(), std::greater<double>());
-          }
-        Frequencies.erase(
-            std::unique(Frequencies.begin(), Frequencies.end(), [](double a, double b)
-              { return std::abs((a-b)/std::max(a,b)) < 0.001;}), Frequencies.end());
-        //StatXCoord.erase(std::unique(StatXCoord.begin(), StatXCoord.end()),
-        //    StatXCoord.end());
-        //StatYCoord.erase(std::unique(StatYCoord.begin(), StatYCoord.end()),
-        //    StatYCoord.end());
-        //StatZCoord.erase(std::unique(StatZCoord.begin(), StatZCoord.end()),
-        //    StatZCoord.end());
-        const size_t nfreq = Frequencies.size();
-        const size_t nstat = tmpx.size() / nfreq;
-        for (size_t i = 0; i < nstat; ++i)
-          {
-            StatXCoord.push_back(tmpx.at(i * nfreq));
-            StatYCoord.push_back(tmpy.at(i * nfreq));
-            StatZCoord.push_back(tmpz.at(i * nfreq));
-            for (size_t j = 0; j < nfreq; ++j)
-              {
-                size_t Impindex = (j * nstat + i) * 8;
-                size_t TempIndex = (i * nfreq + j) * 8;
-                std::copy(ImpTemp.begin() + TempIndex, ImpTemp.begin() + TempIndex + 8,
-                    Imp.begin() + Impindex);
-                std::copy(ErrTemp.begin() + TempIndex, ErrTemp.begin() + TempIndex + 8,
-                    Err.begin() + Impindex);
-              }
-          }
-        std::cout << "Stations: " << StatXCoord.size() << std::endl;
-        std::cout << "Frequencies: " << Frequencies.size() << std::endl;
-        std::copy(Frequencies.begin(), Frequencies.end(),
-            std::ostream_iterator<double>(std::cout, " "));
-        std::cout << std::endl;
-        std::cout << "Impendances: " << Imp.size() << std::endl;
-      }
+     Imp.resize(ImpTemp.size());
+     Err.resize(ErrTemp.size());
+     //std::copy(ImpTemp.begin(), ImpTemp.end(), Imp.begin());
+     //std::copy(ErrTemp.begin(), ErrTemp.end(), Err.begin());
+     bool Ascending = true;
+     if (Frequencies.at(0) > Frequencies.at(1))
+     {
+     Ascending = false;
+     }
+     if (Ascending)
+     {
+     std::sort(Frequencies.begin(), Frequencies.end(), std::less<double>());
+     }
+     else
+     {
+     std::sort(Frequencies.begin(), Frequencies.end(), std::greater<double>());
+     }
+     Frequencies.erase(
+     std::unique(Frequencies.begin(), Frequencies.end(), [](double a, double b)
+     { return std::abs((a-b)/std::max(a,b)) < 0.001;}), Frequencies.end());
+     //StatXCoord.erase(std::unique(StatXCoord.begin(), StatXCoord.end()),
+     //    StatXCoord.end());
+     //StatYCoord.erase(std::unique(StatYCoord.begin(), StatYCoord.end()),
+     //    StatYCoord.end());
+     //StatZCoord.erase(std::unique(StatZCoord.begin(), StatZCoord.end()),
+     //    StatZCoord.end());
+     const size_t nfreq = Frequencies.size();
+     const size_t nstat = tmpx.size() / nfreq;
+     for (size_t i = 0; i < nstat; ++i)
+     {
+     StatXCoord.push_back(tmpx.at(i * nfreq));
+     StatYCoord.push_back(tmpy.at(i * nfreq));
+     StatZCoord.push_back(tmpz.at(i * nfreq));
+     for (size_t j = 0; j < nfreq; ++j)
+     {
+     size_t Impindex = (j * nstat + i) * 8;
+     size_t TempIndex = (i * nfreq + j) * 8;
+     std::copy(ImpTemp.begin() + TempIndex, ImpTemp.begin() + TempIndex + 8,
+     Imp.begin() + Impindex);
+     std::copy(ErrTemp.begin() + TempIndex, ErrTemp.begin() + TempIndex + 8,
+     Err.begin() + Impindex);
+     }
+     }
+     std::cout << "Stations: " << StatXCoord.size() << std::endl;
+     std::cout << "Frequencies: " << Frequencies.size() << std::endl;
+     std::copy(Frequencies.begin(), Frequencies.end(),
+     std::ostream_iterator<double>(std::cout, " "));
+     std::cout << std::endl;
+     std::cout << "Impendances: " << Imp.size() << std::endl;
+     }
 
-    void WriteAppResToAscii(const std::string &filename,
-        const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
-        const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
-        const jif3D::rvec &Imp, const jif3D::rvec &Err)
-      {
-        std::ofstream outfile(filename.c_str());
-        outfile.precision(3);
-        outfile
-            << " Major    Link    Site           x            y          elevation       Fre         rxy         ryx";
-        outfile
-            << "          pxy          pyx            erxy         eryx         epxy         epyx\n";
-        const size_t nfreq = Frequencies.size();
-        const size_t nstat = StatXCoord.size();
+     void WriteAppResToAscii(const std::string &filename,
+     const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
+     const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
+     const jif3D::rvec &Imp, const jif3D::rvec &Err)
+     {
+     std::ofstream outfile(filename.c_str());
+     outfile.precision(3);
+     outfile
+     << " Major    Link    Site           x            y          elevation       Fre         rxy         ryx";
+     outfile
+     << "          pxy          pyx            erxy         eryx         epxy         epyx\n";
+     const size_t nfreq = Frequencies.size();
+     const size_t nstat = StatXCoord.size();
 
-        for (size_t j = 0; j < nstat; ++j)
-          {
-            for (size_t i = 0; i < nfreq; ++i)
-              {
-                const size_t currindex = 8 * (i * nstat + j);
-                const double CurrFreq = Frequencies.at(i);
-                double rhoxy = jif3D::AppRes(
-                    std::complex<double>(Imp(currindex + 2), Imp(currindex + 3)),
-                    CurrFreq);
-                double pxy = jif3D::ImpedancePhase(
-                    std::complex<double>(Imp(currindex + 2), Imp(currindex + 3)));
-                double rhoyx = jif3D::AppRes(
-                    std::complex<double>(Imp(currindex + 4), Imp(currindex + 5)),
-                    CurrFreq);
-                double pyx = jif3D::ImpedancePhase(
-                    std::complex<double>(Imp(currindex + 4), Imp(currindex + 5)));
-                outfile << std::fixed;
-                outfile << std::setw(10) << j << std::setw(10) << j << std::setw(10) << j;
-                outfile << std::setw(15) << StatXCoord[j];
-                outfile << std::setw(15) << StatYCoord[j];
-                outfile << std::setw(15) << StatZCoord[j];
-                outfile << std::setw(15) << log10(CurrFreq);
-                outfile << std::setw(15) << rhoxy;
-                outfile << std::setw(15) << rhoyx;
-                outfile << std::setw(15) << pxy;
-                outfile << std::setw(15) << pyx;
-                outfile << " 0      0     0     0\n";
-              }
-          }
-      }
+     for (size_t j = 0; j < nstat; ++j)
+     {
+     for (size_t i = 0; i < nfreq; ++i)
+     {
+     const size_t currindex = 8 * (i * nstat + j);
+     const double CurrFreq = Frequencies.at(i);
+     double rhoxy = jif3D::AppRes(
+     std::complex<double>(Imp(currindex + 2), Imp(currindex + 3)),
+     CurrFreq);
+     double pxy = jif3D::ImpedancePhase(
+     std::complex<double>(Imp(currindex + 2), Imp(currindex + 3)));
+     double rhoyx = jif3D::AppRes(
+     std::complex<double>(Imp(currindex + 4), Imp(currindex + 5)),
+     CurrFreq);
+     double pyx = jif3D::ImpedancePhase(
+     std::complex<double>(Imp(currindex + 4), Imp(currindex + 5)));
+     outfile << std::fixed;
+     outfile << std::setw(10) << j << std::setw(10) << j << std::setw(10) << j;
+     outfile << std::setw(15) << StatXCoord[j];
+     outfile << std::setw(15) << StatYCoord[j];
+     outfile << std::setw(15) << StatZCoord[j];
+     outfile << std::setw(15) << log10(CurrFreq);
+     outfile << std::setw(15) << rhoxy;
+     outfile << std::setw(15) << rhoyx;
+     outfile << std::setw(15) << pxy;
+     outfile << std::setw(15) << pyx;
+     outfile << " 0      0     0     0\n";
+     }
+     }
+     }
 
-    void ReadImpedancesFromModEM(const std::string &filename,
-        std::vector<double> &Frequencies, std::vector<double> &StatXCoord,
-        std::vector<double> &StatYCoord, std::vector<double> &StatZCoord,
-        jif3D::rvec &Imp, jif3D::rvec &Err)
-      {
-        const double convfactor = 4.0 * 1e-4 * acos(-1.0);
-        std::ifstream infile(filename.c_str());
-        char dummy[1024];
-        //swallow up the first 7 lines with header information
-        for (size_t i = 0; i < 7; ++i)
-          infile.getline(dummy, 1024);
-        //ignore the fist character (>) of the last header line
-        infile.ignore(1);
-        size_t nfreq = 0;
-        size_t nsites = 0;
-        infile >> nfreq >> nsites;
-        //swallow up the rest of the line
-        infile.getline(dummy, 1024);
-        Imp.resize(nfreq * nsites * 8);
-        std::fill(Imp.begin(), Imp.end(), 1.0);
-        Err.resize(Imp.size());
-        std::fill(Err.begin(), Err.end(), 100.0);
-        Frequencies.resize(nfreq);
-        StatXCoord.resize(nsites);
-        StatYCoord.resize(nsites);
-        StatZCoord.resize(nsites);
-        bool CanConvert = true;
+     void ReadImpedancesFromModEM(const std::string &filename,
+     std::vector<double> &Frequencies, std::vector<double> &StatXCoord,
+     std::vector<double> &StatYCoord, std::vector<double> &StatZCoord,
+     jif3D::rvec &Imp, jif3D::rvec &Err)
+     {
+     const double convfactor = 4.0 * 1e-4 * acos(-1.0);
+     std::ifstream infile(filename.c_str());
+     char dummy[1024];
+     //swallow up the first 7 lines with header information
+     for (size_t i = 0; i < 7; ++i)
+     infile.getline(dummy, 1024);
+     //ignore the fist character (>) of the last header line
+     infile.ignore(1);
+     size_t nfreq = 0;
+     size_t nsites = 0;
+     infile >> nfreq >> nsites;
+     //swallow up the rest of the line
+     infile.getline(dummy, 1024);
+     Imp.resize(nfreq * nsites * 8);
+     std::fill(Imp.begin(), Imp.end(), 1.0);
+     Err.resize(Imp.size());
+     std::fill(Err.begin(), Err.end(), 100.0);
+     Frequencies.resize(nfreq);
+     StatXCoord.resize(nsites);
+     StatYCoord.resize(nsites);
+     StatZCoord.resize(nsites);
+     bool CanConvert = true;
 
-        std::vector<double> AllFreq, AllX, AllY, AllZ, AllImpReal, AllImpImag, AllErr;
-        std::vector<std::string> StatName, CompName;
-        while (CanConvert && infile.good())
-          {
-            try
-              {
-                string line;
-                std::getline(infile, line);
-                typedef std::vector<std::string> split_vector_type;
+     std::vector<double> AllFreq, AllX, AllY, AllZ, AllImpReal, AllImpImag, AllErr;
+     std::vector<std::string> StatName, CompName;
+     while (CanConvert && infile.good())
+     {
+     try
+     {
+     string line;
+     std::getline(infile, line);
+     typedef std::vector<std::string> split_vector_type;
 
-                split_vector_type SplitVec; // #2: Search for tokens
-                split(SplitVec, line, boost::is_any_of(" \n\r"),
-                    boost::token_compress_on);
+     split_vector_type SplitVec; // #2: Search for tokens
+     split(SplitVec, line, boost::is_any_of(" \n\r"),
+     boost::token_compress_on);
 
-                double p;
-                jif3D::convert(SplitVec[0], p);
-                AllFreq.push_back(1.0 / p);
-                StatName.push_back(SplitVec[1]);
-                jif3D::convert(SplitVec[4], p);
-                AllX.push_back(p);
-                jif3D::convert(SplitVec[5], p);
-                AllY.push_back(p);
-                jif3D::convert(SplitVec[6], p);
-                AllZ.push_back(p);
-                CompName.push_back(SplitVec[7]);
-                jif3D::convert(SplitVec[8], p);
-                AllImpReal.push_back(p);
-                jif3D::convert(SplitVec[9], p);
-                AllImpImag.push_back(p);
-                jif3D::convert(SplitVec[10], p);
-                AllErr.push_back(p);
-              } catch (std::exception &e)
-              {
-                CanConvert = false;
-              }
-          }
-        std::vector<std::string> UniqStats(StatName);
-        UniqStats.erase(std::unique(UniqStats.begin(), UniqStats.end()), UniqStats.end());
+     double p;
+     jif3D::convert(SplitVec[0], p);
+     AllFreq.push_back(1.0 / p);
+     StatName.push_back(SplitVec[1]);
+     jif3D::convert(SplitVec[4], p);
+     AllX.push_back(p);
+     jif3D::convert(SplitVec[5], p);
+     AllY.push_back(p);
+     jif3D::convert(SplitVec[6], p);
+     AllZ.push_back(p);
+     CompName.push_back(SplitVec[7]);
+     jif3D::convert(SplitVec[8], p);
+     AllImpReal.push_back(p);
+     jif3D::convert(SplitVec[9], p);
+     AllImpImag.push_back(p);
+     jif3D::convert(SplitVec[10], p);
+     AllErr.push_back(p);
+     } catch (std::exception &e)
+     {
+     CanConvert = false;
+     }
+     }
+     std::vector<std::string> UniqStats(StatName);
+     UniqStats.erase(std::unique(UniqStats.begin(), UniqStats.end()), UniqStats.end());
 
-        Frequencies = AllFreq;
-        auto FuzzComp = [](double a, double b)
-          { return std::abs((a-b)/std::max(a,b)) < 0.001;};
-        std::sort(Frequencies.begin(), Frequencies.end(), std::greater<double>());
-        Frequencies.erase(std::unique(Frequencies.begin(), Frequencies.end(), FuzzComp),
-            Frequencies.end());
-        std::vector<std::string> Comps =
-          { "ZXX", "ZXY", "ZYX", "ZYY" };
-        size_t ndata = AllFreq.size();
-        for (size_t i = 0; i < ndata; ++i)
-          {
-            auto FreqIter = std::find(Frequencies.begin(), Frequencies.end(), AllFreq[i]);
-            auto StatIter = std::find(UniqStats.begin(), UniqStats.end(), StatName[i]);
-            auto CompIter = std::find(Comps.begin(), Comps.end(), CompName[i]);
-            size_t FreqIndex = std::distance(Frequencies.begin(), FreqIter);
-            size_t StatIndex = std::distance(UniqStats.begin(), StatIter);
-            size_t CompIndex = std::distance(Comps.begin(), CompIter);
-            StatXCoord[StatIndex] = AllX[i];
-            StatYCoord[StatIndex] = AllY[i];
-            StatZCoord[StatIndex] = AllZ[i];
-            size_t ImpIndex = 2 * CompIndex + 8 * StatIndex + 8 * nsites * FreqIndex;
-            Imp[ImpIndex] = convfactor * AllImpReal[i];
-            Imp[ImpIndex + 1] = convfactor * AllImpImag[i];
-            Err[ImpIndex] = convfactor * AllErr[i];
-            Err[ImpIndex + 1] = convfactor * AllErr[i];
-          }
+     Frequencies = AllFreq;
+     auto FuzzComp = [](double a, double b)
+     { return std::abs((a-b)/std::max(a,b)) < 0.001;};
+     std::sort(Frequencies.begin(), Frequencies.end(), std::greater<double>());
+     Frequencies.erase(std::unique(Frequencies.begin(), Frequencies.end(), FuzzComp),
+     Frequencies.end());
+     std::vector<std::string> Comps =
+     { "ZXX", "ZXY", "ZYX", "ZYY" };
+     size_t ndata = AllFreq.size();
+     for (size_t i = 0; i < ndata; ++i)
+     {
+     auto FreqIter = std::find(Frequencies.begin(), Frequencies.end(), AllFreq[i]);
+     auto StatIter = std::find(UniqStats.begin(), UniqStats.end(), StatName[i]);
+     auto CompIter = std::find(Comps.begin(), Comps.end(), CompName[i]);
+     size_t FreqIndex = std::distance(Frequencies.begin(), FreqIter);
+     size_t StatIndex = std::distance(UniqStats.begin(), StatIter);
+     size_t CompIndex = std::distance(Comps.begin(), CompIter);
+     StatXCoord[StatIndex] = AllX[i];
+     StatYCoord[StatIndex] = AllY[i];
+     StatZCoord[StatIndex] = AllZ[i];
+     size_t ImpIndex = 2 * CompIndex + 8 * StatIndex + 8 * nsites * FreqIndex;
+     Imp[ImpIndex] = convfactor * AllImpReal[i];
+     Imp[ImpIndex + 1] = convfactor * AllImpImag[i];
+     Err[ImpIndex] = convfactor * AllErr[i];
+     Err[ImpIndex + 1] = convfactor * AllErr[i];
+     }
 
-      } */
+     } */
 
     void WriteTitanDataToModEM(const std::string &filename,
         const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
-		const std::vector<int> &ExIndices,
-        const jif3D::rvec &Imp, const jif3D::rvec &Err)
+        const std::vector<int> &ExIndices, const jif3D::rvec &Imp, const jif3D::rvec &Err)
       {
         const double convfactor = 4.0 * 1e-4 * acos(-1.0);
         std::ofstream outfile(filename.c_str());
@@ -673,14 +673,15 @@ using namespace std;
         outfile << "> 0.0 0.0\n";
 
         size_t nfreqs = Frequencies.size();
-        size_t nsites = ExIndices.size()/nfreqs;
+        size_t nsites = ExIndices.size() / nfreqs;
         outfile << "> " << nfreqs << " " << nsites << "\n";
         for (size_t i = 0; i < nsites; ++i)
           {
             std::string SiteName = "Site" + std::to_string(i);
             std::ostringstream SiteLine;
-            SiteLine << " " << SiteName << "  0.0  0.0 " << StatXCoord[ExIndices[i]] << " "
-                << StatYCoord[ExIndices[i]] << " " << StatZCoord[ExIndices[i]] << " ";
+            SiteLine << " " << SiteName << "  0.0  0.0 " << StatXCoord[ExIndices[i]]
+                << " " << StatYCoord[ExIndices[i]] << " " << StatZCoord[ExIndices[i]]
+                << " ";
             for (size_t j = 0; j < nfreqs; ++j)
               {
                 size_t index = 8 * (nsites * j + i);
