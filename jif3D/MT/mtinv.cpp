@@ -112,25 +112,24 @@ int hpx_main(boost::program_options::variables_map& vm)
     std::vector<int> ExIndices, EyIndices, HIndices;
 
     if (extension.compare(".dat") == 0)
-    {
-    	jif3D::ReadImpedancesFromModEM(datafilename, Frequencies, XCoord, YCoord, ZCoord,
-    			Data, ZError);
-    }
+      {
+        jif3D::ReadImpedancesFromModEM(datafilename, Frequencies, XCoord, YCoord, ZCoord,
+            Data, ZError);
+      }
     else
-    {
-    	if (vm.count("titan"))
-    	{
-       		jif3D::ReadTitanDataFromNetCDF(datafilename, Frequencies, XCoord, YCoord, ZCoord,
-       				ExIndices, EyIndices, HIndices,
-					Data, ZError, C);
-       		Model.SetFieldIndices(ExIndices,EyIndices,HIndices);
-    	}
-    	else
-    	{
-    		jif3D::ReadImpedancesFromNetCDF(datafilename, Frequencies, XCoord, YCoord, ZCoord,
-    				Data, ZError, C);
-    	}
-    }
+      {
+        if (vm.count("titan"))
+          {
+            jif3D::ReadTitanDataFromNetCDF(datafilename, Frequencies, XCoord, YCoord,
+                ZCoord, ExIndices, EyIndices, HIndices, Data, ZError, C);
+            Model.SetFieldIndices(ExIndices, EyIndices, HIndices);
+          }
+        else
+          {
+            jif3D::ReadImpedancesFromNetCDF(datafilename, Frequencies, XCoord, YCoord,
+                ZCoord, Data, ZError, C);
+          }
+      }
 
     jif3D::rvec MinErr(ZError.size());
     if (vm.count("inderrors"))
@@ -144,7 +143,7 @@ int hpx_main(boost::program_options::variables_map& vm)
 
     if (vm.count("forcecommon"))
       {
-        std::copy(MinErr.begin(),MinErr.end(),ZError.begin());
+        std::copy(MinErr.begin(), MinErr.end(), ZError.begin());
       }
     else
       {
@@ -164,33 +163,29 @@ int hpx_main(boost::program_options::variables_map& vm)
       }
     if (extension.compare(".dat") == 0)
       {
-    	if (vm.count("titan"))
-    	{
-    		jif3D::WriteTitanDataToNetCDF("start_data.nc", Frequencies,
-    				XCoord, YCoord, ZCoord,
-    				ExIndices, EyIndices, HIndices,
-    				Data, ZError);
-    	}
-    	else
-    	{
-    		jif3D::WriteImpedancesToNetCDF("start_data.nc", Frequencies, XCoord, YCoord,
-    	            ZCoord, Data, ZError);
-    	}
+        if (vm.count("titan"))
+          {
+            jif3D::WriteTitanDataToNetCDF("start_data.nc", Frequencies, XCoord, YCoord,
+                ZCoord, ExIndices, EyIndices, HIndices, Data, ZError);
+          }
+        else
+          {
+            jif3D::WriteImpedancesToNetCDF("start_data.nc", Frequencies, XCoord, YCoord,
+                ZCoord, Data, ZError);
+          }
       }
     else
       {
-    	if (vm.count("titan"))
-    	{
-    		jif3D::WriteTitanDataToModEM("start_data.dat", Frequencies,
-    				XCoord, YCoord, ZCoord,
-					ExIndices,
-					Data, ZError);
-    	}
-    	else
-    	{
-    		jif3D::WriteImpedancesToModEM("start_data.dat", Frequencies, XCoord, YCoord,
-    	            ZCoord, Data, ZError);
-    	}
+        if (vm.count("titan"))
+          {
+            jif3D::WriteTitanDataToModEM("start_data.dat", Frequencies, XCoord, YCoord,
+                ZCoord, ExIndices, Data, ZError);
+          }
+        else
+          {
+            jif3D::WriteImpedancesToModEM("start_data.dat", Frequencies, XCoord, YCoord,
+                ZCoord, Data, ZError);
+          }
       }
     //if we have not specified a background in the model file
     if (Model.GetBackgroundConductivities().empty())
@@ -222,57 +217,64 @@ int hpx_main(boost::program_options::variables_map& vm)
 
     jif3D::rvec FirstFreq(XCoord.size());
     if (vm.count("titan"))
-    {
+      {
 
-        const size_t nstats= ExIndices.size() / Frequencies.size();
-    	std::vector<double> tmpx, tmpy, tmpz;
+        const size_t nstats = ExIndices.size() / Frequencies.size();
+        std::vector<double> tmpx, tmpy, tmpz;
 
-		for (unsigned int i = 0; i < nstats; ++i)
-		{
-				tmpx.push_back(XCoord[ExIndices[i]]);
-				tmpy.push_back(YCoord[ExIndices[i]]);
-				tmpz.push_back(ZCoord[ExIndices[i]]);
-		}
+        for (unsigned int i = 0; i < nstats; ++i)
+          {
+            tmpx.push_back(XCoord[ExIndices[i]]);
+            tmpy.push_back(YCoord[ExIndices[i]]);
+            tmpz.push_back(ZCoord[ExIndices[i]]);
+          }
 
-    	FirstFreq.resize(tmpx.size());
-    	std::iota(FirstFreq.begin(), FirstFreq.end(), 1);
- 	    jif3D::Write3DDataToVTK(datafilename + "_Ex.vtk", "ExSites", FirstFreq, tmpx, tmpy, tmpz);
+        FirstFreq.resize(tmpx.size());
+        std::iota(FirstFreq.begin(), FirstFreq.end(), 1);
+        jif3D::Write3DDataToVTK(datafilename + "_Ex.vtk", "ExSites", FirstFreq, tmpx,
+            tmpy, tmpz);
 
-	    tmpx.clear(); tmpy.clear(); tmpz.clear();
+        tmpx.clear();
+        tmpy.clear();
+        tmpz.clear();
 
-		for (unsigned int i = 0; i < nstats; ++i)
-		{
-				tmpx.push_back(XCoord[EyIndices[i]]);
-				tmpy.push_back(YCoord[EyIndices[i]]);
-				tmpz.push_back(ZCoord[EyIndices[i]]);
-		}
+        for (unsigned int i = 0; i < nstats; ++i)
+          {
+            tmpx.push_back(XCoord[EyIndices[i]]);
+            tmpy.push_back(YCoord[EyIndices[i]]);
+            tmpz.push_back(ZCoord[EyIndices[i]]);
+          }
 
-    	FirstFreq.resize(tmpx.size());
-    	std::iota(FirstFreq.begin(), FirstFreq.end(), 1);
-	    jif3D::Write3DDataToVTK(datafilename + "_Ey.vtk", "EySites", FirstFreq, tmpx, tmpy, tmpz);
+        FirstFreq.resize(tmpx.size());
+        std::iota(FirstFreq.begin(), FirstFreq.end(), 1);
+        jif3D::Write3DDataToVTK(datafilename + "_Ey.vtk", "EySites", FirstFreq, tmpx,
+            tmpy, tmpz);
 
-	    tmpx.clear(); tmpy.clear(); tmpz.clear();
+        tmpx.clear();
+        tmpy.clear();
+        tmpz.clear();
 
-		for (unsigned int i = 0; i < nstats; ++i)
-		{
-				tmpx.push_back(XCoord[HIndices[i]]);
-				tmpy.push_back(YCoord[HIndices[i]]);
-				tmpz.push_back(ZCoord[HIndices[i]]);
-		}
+        for (unsigned int i = 0; i < nstats; ++i)
+          {
+            tmpx.push_back(XCoord[HIndices[i]]);
+            tmpy.push_back(YCoord[HIndices[i]]);
+            tmpz.push_back(ZCoord[HIndices[i]]);
+          }
 
-    	FirstFreq.resize(tmpx.size());
-    	std::iota(FirstFreq.begin(), FirstFreq.end(), 1);
-		jif3D::Write3DDataToVTK(datafilename + "_H.vtk", "HSites", FirstFreq, tmpx, tmpy, tmpz);
+        FirstFreq.resize(tmpx.size());
+        std::iota(FirstFreq.begin(), FirstFreq.end(), 1);
+        jif3D::Write3DDataToVTK(datafilename + "_H.vtk", "HSites", FirstFreq, tmpx, tmpy,
+            tmpz);
 
-    }
+      }
     else
-    {
+      {
         std::iota(FirstFreq.begin(), FirstFreq.end(), 1);
         //std::copy(Data.begin(), Data.begin() + XCoord.size(), FirstFreq.begin());
 
-    	jif3D::Write3DDataToVTK(datafilename + ".vtk", "MTSites", FirstFreq, XCoord, YCoord,
-    			ZCoord);
-    }
+        jif3D::Write3DDataToVTK(datafilename + ".vtk", "MTSites", FirstFreq, XCoord,
+            YCoord, ZCoord);
+      }
 
     Model.SetDistortionParameters(C);
 //we define a few constants that are used throughout the inversion
@@ -327,17 +329,17 @@ int hpx_main(boost::program_options::variables_map& vm)
         // to identity matrix
         if (C.empty())
           {
-        	size_t nstats;
-        	if (vm.count("titan"))
-        	{
-        		nstats= ExIndices.size() / Frequencies.size();
-        	}
-        	else
-        	{
-        		nstats= XCoord.size();
-        	}
+            size_t nstats;
+            if (vm.count("titan"))
+              {
+                nstats = ExIndices.size() / Frequencies.size();
+              }
+            else
+              {
+                nstats = XCoord.size();
+              }
 
-        	C.resize(nstats*4);
+            C.resize(nstats * 4);
 
             for (size_t i = 0; i < nstats; ++i)
               {
@@ -361,17 +363,17 @@ int hpx_main(boost::program_options::variables_map& vm)
         std::copy(OldCov.begin(), OldCov.end(), CovModVec.begin());
 
         if (vm.count("titan"))
-        {
-        	size_t nstats= C.size() / 4;
+          {
+            size_t nstats = C.size() / 4;
 
             for (size_t i = 0; i < nstats; ++i)
               {
-            	CovModVec(ngrid + i * 4) = 1.0;
-            	CovModVec(ngrid + i * 4 + 1) = 1e-30;
-            	CovModVec(ngrid + i * 4 + 2) = 1e-30;
-            	CovModVec(ngrid + i * 4 + 3) = 1.0;
+                CovModVec(ngrid + i * 4) = 1.0;
+                CovModVec(ngrid + i * 4 + 1) = 1e-30;
+                CovModVec(ngrid + i * 4 + 2) = 1e-30;
+                CovModVec(ngrid + i * 4 + 3) = 1.0;
               }
-        }
+          }
       }
 
     boost::shared_ptr<jif3D::GeneralModelTransform> Copier(new jif3D::ModelCopyTransform);
@@ -412,15 +414,23 @@ int hpx_main(boost::program_options::variables_map& vm)
     boost::shared_ptr<jif3D::ChainedTransform> ConductivityTransform(
         new jif3D::ChainedTransform);
     jif3D::rvec RefModel(ngrid, 1.0);
+    if (vm.count("loglim"))
+      {
+        ConductivityTransform->AppendTransform(
+            boost::shared_ptr<jif3D::GeneralModelTransform>(
+                new jif3D::LogLimTransform(mincond, maxcond)));
+      }
+    else
+      {
 //because the tanh transform is used inside a logarithmic transform
 //we need to take the natural logarithm of the actual minimum and maximum
-    ConductivityTransform->AppendTransform(
-        boost::shared_ptr<jif3D::GeneralModelTransform>(
-            new jif3D::TanhTransform(std::log(mincond), std::log(maxcond))));
-    ConductivityTransform->AppendTransform(
-        boost::shared_ptr<jif3D::GeneralModelTransform>(
-            new jif3D::LogTransform(RefModel)));
-
+        ConductivityTransform->AppendTransform(
+            boost::shared_ptr<jif3D::GeneralModelTransform>(
+                new jif3D::TanhTransform(std::log(mincond), std::log(maxcond))));
+        ConductivityTransform->AppendTransform(
+            boost::shared_ptr<jif3D::GeneralModelTransform>(
+                new jif3D::LogTransform(RefModel)));
+      }
     boost::shared_ptr<jif3D::MultiSectionTransform> MTTransform(
         new jif3D::MultiSectionTransform(InvModel.size(), 0, ngrid,
             ConductivityTransform));
@@ -514,16 +524,16 @@ int hpx_main(boost::program_options::variables_map& vm)
 
     if (DistCorr > 0)
       {
-    	size_t nstats;
-    	    	if (vm.count("titan"))
-    	    	{
-    	    		nstats= ExIndices.size() / Frequencies.size();
-    	    	}
-    	    	else
-    	    	{
-    	    		nstats= XCoord.size();
-    	    	}
-    	jif3D::rvec CRef(nstats * 4);
+        size_t nstats;
+        if (vm.count("titan"))
+          {
+            nstats = ExIndices.size() / Frequencies.size();
+          }
+        else
+          {
+            nstats = XCoord.size();
+          }
+        jif3D::rvec CRef(nstats * 4);
 
         for (size_t i = 0; i < nstats; ++i)
           {
@@ -588,20 +598,19 @@ int hpx_main(boost::program_options::variables_map& vm)
               {
                 std::copy(DistModel.begin() + Model.GetNModelElements(),
                     DistModel.begin() + Model.GetNModelElements() + C.size(), C.begin());
-            	if (vm.count("titan"))
-            	{
-            		jif3D::WriteTitanDataToNetCDF(
-            				modelfilename + jif3D::stringify(iteration) + ".dist_imp.nc",
-							Frequencies, XCoord, YCoord, ZCoord,
-							ExIndices,EyIndices,HIndices,
-							Data, ZError, C);
-            	}
-            	else
-            	{
-            		jif3D::WriteImpedancesToNetCDF(
-            				modelfilename + jif3D::stringify(iteration) + ".dist_imp.nc",
-							Frequencies, XCoord, YCoord, ZCoord, Data, ZError, C);
-            	}
+                if (vm.count("titan"))
+                  {
+                    jif3D::WriteTitanDataToNetCDF(
+                        modelfilename + jif3D::stringify(iteration) + ".dist_imp.nc",
+                        Frequencies, XCoord, YCoord, ZCoord, ExIndices, EyIndices,
+                        HIndices, Data, ZError, C);
+                  }
+                else
+                  {
+                    jif3D::WriteImpedancesToNetCDF(
+                        modelfilename + jif3D::stringify(iteration) + ".dist_imp.nc",
+                        Frequencies, XCoord, YCoord, ZCoord, Data, ZError, C);
+                  }
               }
             std::cout << "Currrent Misfit: " << Optimizer->GetMisfit() << std::endl;
             std::cout << "Currrent Gradient: " << Optimizer->GetGradNorm() << std::endl;
@@ -642,30 +651,27 @@ int hpx_main(boost::program_options::variables_map& vm)
 //calculate the predicted data
     std::cout << "Calculating response of inversion model." << std::endl;
     jif3D::rvec InvData(X3DObjective->GetSyntheticData());
-	if (vm.count("titan"))
-	{
-		jif3D::WriteTitanDataToNetCDF(modelfilename + ".inv_imp.nc",
-				Frequencies, XCoord, YCoord, ZCoord,
-				ExIndices, EyIndices, HIndices,
-				InvData, X3DObjective->GetDataError(), C);
-		jif3D::WriteTitanDataToNetCDF(modelfilename + ".dist_imp.nc",
-				Frequencies, XCoord, YCoord, ZCoord,
-				ExIndices, EyIndices, HIndices,
-				X3DObjective->GetObservedData(), ZError, C);
-		jif3D::WriteTitanDataToNetCDF(modelfilename + ".diff_imp.nc",
-				Frequencies, XCoord, YCoord, ZCoord,
-				ExIndices, EyIndices, HIndices,
-				Data, X3DObjective->GetIndividualMisfit());
-	}
-	else
-	{
-		jif3D::WriteImpedancesToNetCDF(modelfilename + ".inv_imp.nc", Frequencies,
-				XCoord, YCoord, ZCoord, InvData, X3DObjective->GetDataError(), C);
-		jif3D::WriteImpedancesToNetCDF(modelfilename + ".dist_imp.nc", Frequencies,
-				XCoord, YCoord, ZCoord, X3DObjective->GetObservedData(), ZError, C);
-		jif3D::WriteImpedancesToNetCDF(modelfilename + ".diff_imp.nc", Frequencies,
-				XCoord, YCoord, ZCoord, X3DObjective->GetIndividualMisfit());
-	}
+    if (vm.count("titan"))
+      {
+        jif3D::WriteTitanDataToNetCDF(modelfilename + ".inv_imp.nc", Frequencies, XCoord,
+            YCoord, ZCoord, ExIndices, EyIndices, HIndices, InvData,
+            X3DObjective->GetDataError(), C);
+        jif3D::WriteTitanDataToNetCDF(modelfilename + ".dist_imp.nc", Frequencies, XCoord,
+            YCoord, ZCoord, ExIndices, EyIndices, HIndices,
+            X3DObjective->GetObservedData(), ZError, C);
+        jif3D::WriteTitanDataToNetCDF(modelfilename + ".diff_imp.nc", Frequencies, XCoord,
+            YCoord, ZCoord, ExIndices, EyIndices, HIndices, Data,
+            X3DObjective->GetIndividualMisfit());
+      }
+    else
+      {
+        jif3D::WriteImpedancesToNetCDF(modelfilename + ".inv_imp.nc", Frequencies, XCoord,
+            YCoord, ZCoord, InvData, X3DObjective->GetDataError(), C);
+        jif3D::WriteImpedancesToNetCDF(modelfilename + ".dist_imp.nc", Frequencies,
+            XCoord, YCoord, ZCoord, X3DObjective->GetObservedData(), ZError, C);
+        jif3D::WriteImpedancesToNetCDF(modelfilename + ".diff_imp.nc", Frequencies,
+            XCoord, YCoord, ZCoord, X3DObjective->GetIndividualMisfit());
+      }
 //and write out the data and model
 //here we have to distinguish again between scalar and ftg data
     std::cout << "Writing out inversion results." << std::endl;
@@ -719,7 +725,9 @@ int main(int argc, char* argv[])
         "The relative amount by which the conductivities in the first row of cells is disturbed to ensure proper gradient calculation")(
         "rhophi", "Use apparent resistivity and phase instead of impedance")("cleanfiles",
         po::value(&CleanFiles)->default_value(true),
-        "Clean up all temporary files at the end of the program.")("titan","Read in Titan24 data.");
+        "Clean up all temporary files at the end of the program.")("titan",
+        "Read in Titan24 data.")("loglim",
+        "Use logarithmic transform to bound model parameters");
 
     desc.add(RegSetup.SetupOptions());
     desc.add(InversionSetup.SetupOptions());
