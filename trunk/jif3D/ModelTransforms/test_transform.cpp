@@ -144,6 +144,12 @@ BOOST_AUTO_TEST_SUITE (Transform_Test_Suite)
         TestTransform(jif3D::TanhTransform(0.0, 1000), nelements);
       }
 
+    BOOST_AUTO_TEST_CASE (LogLim_transform_test)
+      {
+        const size_t nelements = 5 + rand() % 100;
+        TestTransform(jif3D::LogLimTransform(0.01, 1000), nelements);
+      }
+
     BOOST_AUTO_TEST_CASE (Density_transform_test)
       {
         //for density transform we can use a model object
