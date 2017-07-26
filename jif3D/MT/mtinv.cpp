@@ -635,9 +635,26 @@ int hpx_main(boost::program_options::variables_map& vm)
 
     if (vm.count("crossmodel"))
       {
+        //write out the reference model, this is mainly for debugging to see
+        //if it has been modified at all (which it should not)
         std::copy(InvModel.end() - Model.GetNModelElements(), InvModel.end(),
             Model.SetConductivities().origin());
         Model.WriteVTK("crossref.final.vtk");
+        //write out the final cross gradient model
+        jif3D::rvec CG(Objective->GetObjective(2).GetIndividualMisfit());
+        const size_t nx = Model.GetXCoordinates().size();
+        const size_t ny = Model.GetYCoordinates().size();
+        const size_t nz = Model.GetZCoordinates().size();
+        const size_t nmod = nx * ny * nz;
+        jif3D::ThreeDModelBase::t3DModelData XGrad(boost::extents[nx][ny][nz]);
+        jif3D::ThreeDModelBase::t3DModelData YGrad(boost::extents[nx][ny][nz]);
+        jif3D::ThreeDModelBase::t3DModelData ZGrad(boost::extents[nx][ny][nz]);
+        std::copy(CG.begin(), CG.begin() + nmod, XGrad.origin());
+        std::copy(CG.begin() + nmod, CG.begin() + 2 * nmod, YGrad.origin());
+        std::copy(CG.begin() + 2 * nmod, CG.begin() + 3 * nmod, ZGrad.origin());
+        jif3D::Write3DVectorModelToVTK("crossgrad.vtk", "CroosGrad",
+            Model.GetXCellSizes(), Model.GetYCellSizes(), Model.GetZCellSizes(), XGrad,
+            YGrad, ZGrad);
       }
 
     InvModel = MTTransform->GeneralizedToPhysical(InvModel);
