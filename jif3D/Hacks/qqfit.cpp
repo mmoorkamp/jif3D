@@ -73,9 +73,15 @@ int main()
     std::string impfilename = jif3D::AskFilename("Name of data file: ");
     jif3D::ReadImpedancesFromNetCDF(impfilename, Frequencies, StatX, StatY, StatZ,
         Impedances, Errors, C);
-    for (size_t i = 0; i < Indices.size(); ++i)
+    std::ofstream indexfile("ind.out");
+    const size_t nfreq = Frequencies.size();
+    const size_t nstat = StatX.size();
+    for (size_t ind : Indices)
       {
-        Errors(Indices.at(i)) = std::abs(Impedances(Indices.at(i)));
+        Errors(ind) = std::abs(Impedances(ind));
+        size_t stati = ind % (nstat * 8) / 8;
+        size_t freqi = ind / (nstat * 8);
+        indexfile << ind << " " << stati << " " << " " << freqi << std::endl;
       }
 
     for (size_t i = 0; i < Errors.size() - 1; i += 2)
