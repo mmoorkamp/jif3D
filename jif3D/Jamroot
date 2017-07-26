@@ -36,10 +36,10 @@ project
         <threading>multi 
         <define>BIND_FORTRAN_LOWERCASE_UNDERSCORE
         <define>BOOST_LOG_DYN_LINK
-        <gpu>on
+        <gpu>off
         <lapack>off
         <optpp>off
-        <eigen>on
+        <eigen>off
     	<variant>release:<define>NDEBUG
     	<variant>profile:<define>NDEBUG  
     	<toolset>gcc<variant>debug:<cflags>" -ggdb3 "
