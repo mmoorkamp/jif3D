@@ -85,22 +85,22 @@ namespace jif3D
 
         std::ofstream outfile(filename.c_str());
         //first we have to write some general information about the file format
-        outfile << "# vtk DataFile Version 2.0" << std::endl;
-        outfile << "3D Model data" << std::endl;
-        outfile << "ASCII" << std::endl;
-        outfile << "DATASET RECTILINEAR_GRID" << std::endl;
+        outfile << "# vtk DataFile Version 2.0 \n";
+        outfile << "3D Model data \n" ;
+        outfile << "ASCII\n ";
+        outfile << "DATASET RECTILINEAR_GRID\n" ;
         //we write the left and right boundaries of each cell, but only store the left
         //so we have to write one extra value
         outfile << "DIMENSIONS " << nxvalues + 1 << " " << nyvalues + 1 << " "
-            << nzvalues + 1 << std::endl;
+            << nzvalues + 1 << "\n";
         //write information about the coordinate axes
         WriteCoordinatesToVTK(outfile, "X_COORDINATES", XCellSizes, xorigin);
         WriteCoordinatesToVTK(outfile, "Y_COORDINATES", YCellSizes, yorigin);
         WriteCoordinatesToVTK(outfile, "Z_COORDINATES", ZCellSizes, zorigin);
         //write some information about the data itself
-        outfile << "CELL_DATA " << nxvalues * nyvalues * nzvalues << std::endl;
-        outfile << "SCALARS " << DataName << " double" << std::endl;
-        outfile << "LOOKUP_TABLE default" << std::endl;
+        outfile << "CELL_DATA " << nxvalues * nyvalues * nzvalues << "\n";
+        outfile << "SCALARS " << DataName << " double" << "\n";
+        outfile << "LOOKUP_TABLE default" << "\n";
         //and then just the data values
 
         typedef boost::multi_array_types::index_range range;
@@ -147,21 +147,21 @@ namespace jif3D
 
         std::ofstream outfile(filename.c_str());
         //first we have to write some general information about the file format
-        outfile << "# vtk DataFile Version 2.0" << std::endl;
-        outfile << "3D Model data" << std::endl;
-        outfile << "ASCII" << std::endl;
-        outfile << "DATASET RECTILINEAR_GRID" << std::endl;
+        outfile << "# vtk DataFile Version 2.0\n";
+        outfile << "3D Model data\n";
+        outfile << "ASCII\n";
+        outfile << "DATASET RECTILINEAR_GRID\n";
         //we write the left and right boundaries of each cell, but only store the left
         //so we have to write one extra value
         outfile << "DIMENSIONS " << nxvalues + 1 << " " << nyvalues + 1 << " "
-            << nzvalues + 1 << std::endl;
+            << nzvalues + 1 << "\n";
         //write information about the coordinate axes
         WriteCoordinatesToVTK(outfile, "X_COORDINATES", XCellSizes);
         WriteCoordinatesToVTK(outfile, "Y_COORDINATES", YCellSizes);
         WriteCoordinatesToVTK(outfile, "Z_COORDINATES", ZCellSizes);
         //write some information about the data itself
-        outfile << "CELL_DATA " << nxvalues * nyvalues * nzvalues << std::endl;
-        outfile << "VECTORS " << DataName << " double" << std::endl;
+        outfile << "CELL_DATA " << nxvalues * nyvalues * nzvalues << "\n";
+        outfile << "VECTORS " << DataName << " double" << "\n";
         //and then just the data values
         for (size_t i = 0; i < nzvalues; ++i)
           {
@@ -242,18 +242,18 @@ namespace jif3D
         const ThreeDModelBase::tMeasPosVec &PosZ)
       {
         const size_t ndata = PosX.size();
-        outfile << "# vtk DataFile Version 2.0" << std::endl;
-        outfile << "3D Data" << std::endl;
-        outfile << "ASCII" << std::endl;
-        outfile << "DATASET UNSTRUCTURED_GRID" << std::endl;
+        outfile << "# vtk DataFile Version 2.0\n";
+        outfile << "3D Data\n";
+        outfile << "ASCII\n";
+        outfile << "DATASET UNSTRUCTURED_GRID\n";
         //we write the number of measurement points
-        outfile << "POINTS " << ndata << " double" << std::endl;
+        outfile << "POINTS " << ndata << " double \n";
         //write the coordinates of each point
         for (size_t i = 0; i < ndata; ++i)
           {
             outfile << PosX.at(i) << " " << PosY.at(i) << " " << PosZ.at(i) << "\n";
           }
-        outfile << "POINT_DATA " << ndata << std::endl;
+        outfile << "POINT_DATA " << ndata << "\n";
       }
 
     /*! Write a collection of scalar measurements to a .vtk file for plotting
@@ -293,11 +293,11 @@ namespace jif3D
         //first we have to write some general information about the file format
         WriteDataHeader(outfile, PosX, PosY, PosZ);
 
-        outfile << "SCALARS " << DataName << " double" << std::endl;
-        outfile << "LOOKUP_TABLE default" << std::endl;
+        outfile << "SCALARS " << DataName << " double\n";
+        outfile << "LOOKUP_TABLE default\n";
         //and then just the data values
         std::copy(Data.begin(), Data.end(), std::ostream_iterator<double>(outfile, " "));
-        outfile << std::endl;
+        outfile << "\n";
         if (outfile.fail())
           throw FatalException("Problem writing vtk  file: " + filename, __FILE__,
           __LINE__);
@@ -342,7 +342,7 @@ namespace jif3D
         //first we have to write some general information about the file format
         WriteDataHeader(outfile, PosX, PosY, PosZ);
 
-        outfile << "VECTORS " << DataName << " double" << std::endl;
+        outfile << "VECTORS " << DataName << " double\n";
         //and then just the data values
         //each line should contain three tensor components
         //and each tensor separated by two line breaks
@@ -351,7 +351,7 @@ namespace jif3D
             outfile << Data(i * 9) << " " << Data(i * 9 + nmeas) << " "
                 << Data(i * 9 + 2 * nmeas) << "\n";
           }
-        outfile << std::endl;
+        outfile << "\n";
         if (outfile.fail())
           throw FatalException("Problem writing vtk  file: " + filename, __FILE__,
           __LINE__);
@@ -396,7 +396,7 @@ namespace jif3D
         //first we have to write some general information about the file format
         WriteDataHeader(outfile, PosX, PosY, PosZ);
 
-        outfile << "TENSORS " << DataName << " double" << std::endl;
+        outfile << "TENSORS " << DataName << " double\n";
         //and then just the data values
         //each line should contain three tensor components
         //and each tensor separated by two line breaks
@@ -409,7 +409,7 @@ namespace jif3D
             outfile << Data(i * 9 + 6) << " " << Data(i * 9 + 7) << " " << Data(i * 9 + 8)
                 << "\n\n\n";
           }
-        outfile << std::endl;
+        outfile << "\n";
         if (outfile.fail())
           throw FatalException("Problem writing vtk  file: " + filename, __FILE__,
           __LINE__);

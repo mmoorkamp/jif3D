@@ -58,9 +58,11 @@ ncatted -O -a units,Density,m,c,"g/cm3" dens_ano.nc
 ncatted -O -a units,Density,m,c,"g/cm3" start_dens.nc
 #create the background around the gridded domain
 #we embedd the density model in a layered background to avoid
-#boundary effects fromt the finite extent of the grid
-ncap2 -A -S makedens dens_ano.nc
-ncap2 -A -S makedens start_dens.nc
+#boundary effects fromt the finite extent of the grid		
+cp dens_ano.nc tmp1.nc
+ncap2 -A -S makedens tmp1.nc dens_ano.nc
+cp start_dens.nc tmp2.nc
+ncap2 -A -S makedens tmp2.nc start_dens.nc
 
 
 #calculate synthetic scalar and tensor gravity data

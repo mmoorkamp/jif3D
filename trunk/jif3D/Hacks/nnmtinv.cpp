@@ -5,6 +5,7 @@
 // Copyright   : 2012, mm489
 //============================================================================
 
+#include <omp.h>
 #include <iostream>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/math/constants/constants.hpp>
@@ -80,12 +81,14 @@ int main(int argc, char *argv[])
     const size_t nstat = StatXCoord.size();
     const size_t nlayers = Model.GetZCellSizes().size();
 
-    std::ofstream misfitfile("misfit.out");
-    std::ofstream modelfile("model.out");
-    std::ofstream impfile("imp.out");
+    std::vector<double> RMS(nstat);
 
     std::vector<std::vector<double> > InvResult;
 
+    omp_lock_t lck;
+    omp_init_lock(&lck);
+
+#pragma omp parallel for default(shared)
     for (size_t i = 0; i < nstat; ++i)
       {
         boost::shared_ptr<jif3D::OneDMTObjective> MTObjective(new jif3D::OneDMTObjective);
@@ -95,8 +98,10 @@ int main(int argc, char *argv[])
           {
 
             size_t siteindex = (j * nstat + i) * 8;
-            OneDImp(j * 2) = (Impedances(siteindex + 2) - Impedances(siteindex + 4)) / 2.0;
-            OneDImp(j * 2 + 1) = (Impedances(siteindex + 3) - Impedances(siteindex + 5))/2.0;
+            OneDImp(j * 2) = (Impedances(siteindex + 2) - Impedances(siteindex + 4))
+                / 2.0;
+            OneDImp(j * 2 + 1) = (Impedances(siteindex + 3) - Impedances(siteindex + 5))
+                / 2.0;
 
             OneDErr(j * 2) = std::max(ImpError(siteindex + 2), ImpError(siteindex + 4));
             OneDErr(j * 2 + 1) = OneDErr(j * 2);
@@ -112,10 +117,6 @@ int main(int argc, char *argv[])
             AvgImp(2 * i) = (OneDImp(2 * i) + OneDImp(2 * i + 1)) / 2.0;
             AvgImp(2 * i + 1) = AvgImp(2 * i);
           }
-        impfile << i << " ";
-        std::copy(AvgImp.begin(), AvgImp.end(),
-            std::ostream_iterator<double>(impfile, " "));
-        impfile << std::endl;
         jif3D::rvec DataError(jif3D::ConstructError(AvgImp, OneDErr, 0.05, 0.0));
         MTObjective->SetDataError(DataError);
 
@@ -147,7 +148,8 @@ int main(int argc, char *argv[])
             new jif3D::ModelCopyTransform);
         boost::shared_ptr<jif3D::JointObjective> Objective(
             new jif3D::JointObjective(false));
-        Objective->AddObjective(MTObjective, ConductivityTransform, 1.0, "MT",jif3D::JointObjective::datafit);
+        Objective->AddObjective(MTObjective, ConductivityTransform, 1.0, "MT",
+            jif3D::JointObjective::datafit);
         Objective->AddObjective(Regularization, RegTrans, reglambda, "Reg");
 
         jif3D::LimitedMemoryQuasiNewton Optimizer(Objective);
@@ -185,27 +187,17 @@ int main(int argc, char *argv[])
           }
 
         double misfit = Objective->CalcMisfit(InvModel);
-        misfitfile << i << " " << misfit << " ";
-
-        std::copy(Objective->GetIndividualFits().begin(),
-            Objective->GetIndividualFits().end(),
-            std::ostream_iterator<double>(misfitfile, " "));
-        misfitfile << " " << Objective->GetNEval() << " " << Objective->GetRMS()[0];
-        misfitfile << std::endl;
+        RMS.at(i) = Objective->GetRMS()[0];
 
         if (sqrt(Objective->GetRMS()[0]) < 3.0)
           {
+            omp_set_lock(&lck);
             InvModel = ConductivityTransform->GeneralizedToPhysical(InvModel);
             GoodXCoord.push_back(StatXCoord[i]);
             GoodYCoord.push_back(StatYCoord[i]);
-            std::vector<double> Result(InvModel.begin(),InvModel.end());
+            std::vector<double> Result(InvModel.begin(), InvModel.end());
             InvResult.push_back(Result);
-
-            modelfile << i << " ";
-            std::copy(InvModel.begin(), InvModel.end(),
-                std::ostream_iterator<double>(modelfile, " "));
-            modelfile << std::endl;
-
+            omp_unset_lock(&lck);
           }
 
       }
@@ -224,6 +216,11 @@ int main(int argc, char *argv[])
             }
         }
 
+    std::ofstream misfitfile("misfit.out");
+    for (size_t i = 0; i < nstat; ++i)
+      {
+        misfitfile << i << " " << RMS.at(i) << "\n";
+      }
     //calculate the predicted data
     /*    std::cout << "Calculating response of inversion model." << std::endl;
      jif3D::rvec InvData(jif3D::OneDMTCalculator().Calculate(Model));
