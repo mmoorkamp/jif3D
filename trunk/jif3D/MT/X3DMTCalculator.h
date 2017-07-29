@@ -11,6 +11,8 @@
 #include "../Global/VecMat.h"
 #include "../Global/VectorTransform.h"
 #include <limits>
+#include <vector>
+#include <utility>
 
 #include <boost/filesystem.hpp>
 #include <boost/uuid/uuid.hpp>
@@ -76,6 +78,9 @@ namespace jif3D
       boost::shared_ptr<jif3D::VectorTransform> DataTransform;
       //! Do we want to delete the temporary files when object is destroyed
       bool CleanFiles;
+      //! Store the previous execution time for different frequencies to optimize speed
+      std::vector<std::pair<size_t, size_t>> ForwardExecTime;
+      std::vector<std::pair<size_t, size_t>> DerivExecTime;
       friend class access;
 
       //create a unique ID that we can use to name things and still
@@ -108,6 +113,7 @@ namespace jif3D
           ar & v;
           ar & DataTransform;
           ar & CleanFiles;
+          ar & ForwardExecTime;
         }
       template<class Archive>
       void load(Archive & ar, const unsigned int version)
@@ -125,6 +131,7 @@ namespace jif3D
           std::copy(v.begin(), v.end(), RawImpedance.begin());
           ar & DataTransform;
           ar & CleanFiles;
+          ar & ForwardExecTime;
         }
 #ifdef HAVEHPX
       HPX_SERIALIZATION_SPLIT_MEMBER()
