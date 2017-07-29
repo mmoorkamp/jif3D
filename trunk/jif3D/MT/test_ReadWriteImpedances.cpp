@@ -5,7 +5,6 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-
 #define BOOST_TEST_MODULE ReadWriteImpedances test
 #define BOOST_TEST_MAIN ...
 #include "../Global/Jif3DTesting.h"
@@ -17,54 +16,141 @@
 #include "X3DModel.h"
 BOOST_AUTO_TEST_SUITE( ReadWriteImpedances_Suite )
 
-BOOST_AUTO_TEST_CASE  (read_write_netcdf_test)
-    {
-      const size_t nfreq = 5;
-      const size_t nstat = 7;
-      const std::string filename("imp.nc");
-      std::vector<double> Frequencies(nfreq);
-      std::vector<double> XCoord(nstat),YCoord(nstat),ZCoord(nstat), C(nstat*4);
-      const size_t ndata = nfreq*nstat*8;
-      jif3D::rvec Impedances(ndata), Error(ndata);
+    void GenerateData(std::vector<double> &Frequencies, std::vector<double> &XCoord,
+        std::vector<double> &YCoord, std::vector<double> &ZCoord, jif3D::rvec &Impedances,
+        jif3D::rvec &Error, std::vector<double> &C, size_t nstat = 7)
+      {
+        const size_t nfreq = 5;
+        Frequencies.resize(nfreq);
+        XCoord.resize(nstat);
+        YCoord.resize(nstat);
+        ZCoord.resize(nstat);
+        const size_t ndata = nfreq * nstat * 8;
+        Impedances.resize(ndata), Error.resize(ndata);
+        C.resize(nstat * 4);
+        std::generate_n(Frequencies.begin(), nfreq, jif3D::platform::drand48);
+        std::sort(Frequencies.begin(), Frequencies.end(), std::greater<double>());
+        std::generate_n(XCoord.begin(), nstat, jif3D::platform::drand48);
+        std::generate_n(YCoord.begin(), nstat, jif3D::platform::drand48);
+        std::generate_n(ZCoord.begin(), nstat, jif3D::platform::drand48);
+        std::generate_n(Impedances.begin(), ndata, jif3D::platform::drand48);
+        std::generate_n(Error.begin(), ndata, jif3D::platform::drand48);
+        std::generate_n(C.begin(), nstat * 4, jif3D::platform::drand48);
+        for (size_t i = 1; i < ndata; ++i)
+          {
+            Error(i) = Error(i - 1);
+          }
 
-      std::generate_n(Frequencies.begin(),nfreq, jif3D::platform::drand48);
-      std::sort(Frequencies.begin(),Frequencies.end());
-      std::generate_n(XCoord.begin(),nstat, jif3D::platform::drand48);
-      std::generate_n(YCoord.begin(),nstat, jif3D::platform::drand48);
-      std::generate_n(ZCoord.begin(),nstat, jif3D::platform::drand48);
-      std::generate_n(Impedances.begin(),ndata, jif3D::platform::drand48);
-      std::generate_n(Error.begin(),ndata, jif3D::platform::drand48);
-      std::generate_n(C.begin(),nstat*4, jif3D::platform::drand48);
-      for (size_t i = 1; i < ndata; ++i)
-        {
-          Error(i) = Error(i - 1);
-        }
-      jif3D::WriteImpedancesToNetCDF(filename,Frequencies,XCoord,YCoord,ZCoord,Impedances,Error,C);
+      }
 
-      std::vector<double> ReadFrequencies;
-      std::vector<double> ReadXCoord,ReadYCoord,ReadZCoord, ReadC;
-      jif3D::rvec ReadImpedances, ReadError;
-      jif3D::ReadImpedancesFromNetCDF(filename,ReadFrequencies,ReadXCoord,ReadYCoord,ReadZCoord,ReadImpedances, ReadError,ReadC);
-      for (size_t i = 0; i < nfreq; ++i)
-        {
-          BOOST_CHECK_CLOSE(Frequencies[i],ReadFrequencies[i],0.001);
-        }
-      for (size_t i = 0; i < nstat; ++i)
-        {
-          BOOST_CHECK_CLOSE(XCoord[i],ReadXCoord[i],0.001);
-          BOOST_CHECK_CLOSE(YCoord[i],ReadYCoord[i],0.001);
-          BOOST_CHECK_CLOSE(ZCoord[i],ReadZCoord[i],0.001);
-        }
-      for (size_t i = 0; i < nstat * 4; ++i)
-              {
-                BOOST_CHECK_CLOSE(C[i],ReadC[i],0.001);
+    BOOST_AUTO_TEST_CASE (read_write_netcdf_test)
+      {
 
-              }
-      for (size_t i = 0; i < ndata; ++i)
-        {
-          BOOST_CHECK_CLOSE(Impedances(i),ReadImpedances(i),0.001);
-          BOOST_CHECK_CLOSE(Error(i),ReadError(i),0.001);
-        }
-    }
+        std::vector<double> Frequencies;
+        std::vector<double> XCoord, YCoord, ZCoord, C;
+        jif3D::rvec Impedances, Error;
 
-  BOOST_AUTO_TEST_SUITE_END()
+        GenerateData(Frequencies, XCoord, YCoord, ZCoord, Impedances, Error, C);
+        const size_t nfreq = Frequencies.size();
+        const size_t nstat = XCoord.size();
+        const size_t ndata = nfreq * nstat * 8;
+        const std::string filename("imp.nc");
+        jif3D::WriteImpedancesToNetCDF(filename, Frequencies, XCoord, YCoord, ZCoord,
+            Impedances, Error, C);
+
+        std::vector<double> ReadFrequencies;
+        std::vector<double> ReadXCoord, ReadYCoord, ReadZCoord, ReadC;
+        jif3D::rvec ReadImpedances, ReadError;
+        jif3D::ReadImpedancesFromNetCDF(filename, ReadFrequencies, ReadXCoord, ReadYCoord,
+            ReadZCoord, ReadImpedances, ReadError, ReadC);
+        for (size_t i = 0; i < nfreq; ++i)
+          {
+            BOOST_CHECK_CLOSE(Frequencies[i], ReadFrequencies[i], 0.001);
+          }
+        for (size_t i = 0; i < nstat; ++i)
+          {
+            BOOST_CHECK_CLOSE(XCoord[i], ReadXCoord[i], 0.001);
+            BOOST_CHECK_CLOSE(YCoord[i], ReadYCoord[i], 0.001);
+            BOOST_CHECK_CLOSE(ZCoord[i], ReadZCoord[i], 0.001);
+          }
+        for (size_t i = 0; i < nstat * 4; ++i)
+          {
+            BOOST_CHECK_CLOSE(C[i], ReadC[i], 0.001);
+
+          }
+        for (size_t i = 0; i < ndata; ++i)
+          {
+            BOOST_CHECK_CLOSE(Impedances(i), ReadImpedances(i), 0.001);
+            BOOST_CHECK_CLOSE(Error(i), ReadError(i), 0.001);
+          }
+      }
+
+    BOOST_AUTO_TEST_CASE (read_write_ModEM_test)
+      {
+
+        std::vector<double> Frequencies;
+        std::vector<double> XCoord, YCoord, ZCoord, C;
+        jif3D::rvec Impedances, Error;
+
+        GenerateData(Frequencies, XCoord, YCoord, ZCoord, Impedances, Error, C);
+        const size_t nfreq = Frequencies.size();
+        const size_t nstat = XCoord.size();
+        const size_t ndata = nfreq * nstat * 8;
+        const std::string filename("imp.modem");
+        jif3D::WriteImpedancesToModEM(filename, Frequencies, XCoord, YCoord, ZCoord,
+            Impedances, Error);
+
+        std::vector<double> ReadFrequencies;
+        std::vector<double> ReadXCoord, ReadYCoord, ReadZCoord;
+        jif3D::rvec ReadImpedances, ReadError;
+        jif3D::ReadImpedancesFromModEM(filename, ReadFrequencies, ReadXCoord, ReadYCoord,
+            ReadZCoord, ReadImpedances, ReadError);
+        for (size_t i = 0; i < nfreq; ++i)
+          {
+            BOOST_CHECK_CLOSE(Frequencies[i], ReadFrequencies[i], 0.001);
+          }
+        for (size_t i = 0; i < nstat; ++i)
+          {
+            BOOST_CHECK_CLOSE(XCoord[i], ReadXCoord[i], 0.001);
+            BOOST_CHECK_CLOSE(YCoord[i], ReadYCoord[i], 0.001);
+            BOOST_CHECK_CLOSE(ZCoord[i], ReadZCoord[i], 0.001);
+          }
+
+        for (size_t i = 0; i < ndata; ++i)
+          {
+            BOOST_CHECK_CLOSE(Impedances(i), ReadImpedances(i), 0.001);
+            BOOST_CHECK_CLOSE(Error(i), ReadError(i), 0.001);
+          }
+      }
+
+    BOOST_AUTO_TEST_CASE (read_write_mtt_test)
+      {
+
+        std::vector<double> Frequencies;
+        std::vector<double> XCoord, YCoord, ZCoord, C;
+        jif3D::rvec Impedances, Error;
+
+        GenerateData(Frequencies, XCoord, YCoord, ZCoord, Impedances, Error, C, 1);
+        const size_t nfreq = Frequencies.size();
+        const size_t nstat = XCoord.size();
+        const size_t ndata = nfreq * nstat * 8;
+        const std::string filename("imp.mtt");
+        jif3D::WriteImpedancesToMtt(filename, Frequencies, Impedances, Error);
+
+        std::vector<double> ReadFrequencies;
+        jif3D::rvec ReadImpedances, ReadError;
+        jif3D::ReadImpedancesFromMTT(filename+"0.mtt", ReadFrequencies, ReadImpedances, ReadError);
+        for (size_t i = 0; i < nfreq; ++i)
+          {
+            BOOST_CHECK_CLOSE(Frequencies[i], ReadFrequencies[i], 0.001);
+          }
+
+
+        for (size_t i = 0; i < ndata; ++i)
+          {
+            BOOST_CHECK_CLOSE(Impedances(i), ReadImpedances(i), 0.001);
+            BOOST_CHECK_CLOSE(Error(i), ReadError(i), 0.001);
+          }
+      }
+
+    BOOST_AUTO_TEST_SUITE_END()

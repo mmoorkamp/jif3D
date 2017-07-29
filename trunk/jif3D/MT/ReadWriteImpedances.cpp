@@ -9,6 +9,7 @@
 #include "../Global/FatalException.h"
 #include "../Global/NumUtil.h"
 #include "../Global/convert.h"
+#include "../Global/FileUtil.h"
 #include "../ModelBase/NetCDFModelTools.h"
 #include "../Global/NetCDFTools.h"
 #include "../Global/NetCDFPortHelper.h"
@@ -52,7 +53,8 @@ namespace jif3D
           }
 
 //        CompVar.put(&Component[0], FreqDim.getSize(), StatNumDim.getSize());
-        cxxport::put_legacy_ncvar(CompVar, &Component[0], FreqDim.getSize(), StatNumDim.getSize());
+        cxxport::put_legacy_ncvar(CompVar, &Component[0], FreqDim.getSize(),
+            StatNumDim.getSize());
         //we write the impedance in units of Ohm
         CompVar.putAtt("units", "Ohm");
       }
@@ -62,30 +64,33 @@ namespace jif3D
     void ReadImpedanceComp(NcFile &NetCDFFile, jif3D::rvec &Impedances,
         const std::string &CompName, const size_t compindex, const bool MustExist)
       {
-        try {
-          NcVar SizeVar = NetCDFFile.getVar(CompName);
-          if (!SizeVar.isNull())
-            {
-              const size_t nvalues = Impedances.size() / 8;
-              const std::vector<long> edges = cxxport::get_legacy_var_edges(SizeVar);
+        try
+          {
+            NcVar SizeVar = NetCDFFile.getVar(CompName);
+            if (!SizeVar.isNull())
+              {
+                const size_t nvalues = Impedances.size() / 8;
+                const std::vector<long> edges = cxxport::get_legacy_var_edges(SizeVar);
 
-              assert(nvalues== boost::numeric_cast<size_t>(
-                          edges[0] * edges[1]));
-              jif3D::rvec Temp(nvalues);
+                assert(nvalues == boost::numeric_cast<size_t>(edges[0] * edges[1]));
+                jif3D::rvec Temp(nvalues);
 
 //              SizeVar.get(&Temp[0], SizeVar->edges()[0], SizeVar->edges()[1]);
-              cxxport::get_legacy_ncvar(SizeVar, &Temp[0], edges[0], edges[1]);
+                cxxport::get_legacy_ncvar(SizeVar, &Temp[0], edges[0], edges[1]);
 
-              for (size_t i = 0; i < nvalues; ++i)
-                {
-                  Impedances(i * 8 + compindex) = Temp(i);
-                }
-            }
-        } catch (const netCDF::exceptions::NcException &ex) {
-          if(MustExist) {
-            throw std::runtime_error("Call to ReadImpedanceComp with MustExist failed.");
+                for (size_t i = 0; i < nvalues; ++i)
+                  {
+                    Impedances(i * 8 + compindex) = Temp(i);
+                  }
+              }
+          } catch (const netCDF::exceptions::NcException &ex)
+          {
+            if (MustExist)
+              {
+                throw std::runtime_error(
+                    "Call to ReadImpedanceComp with MustExist failed.");
+              }
           }
-        }
       }
 
     void WriteImpedancesToNetCDF(const std::string &filename,
@@ -194,37 +199,39 @@ namespace jif3D
             ImpError(i + 1) = ImpError(i);
           }
 
-        try {
-          NcVar DistVar = DataFile.getVar(DistortionName);
+        try
+          {
+            NcVar DistVar = DataFile.getVar(DistortionName);
 
-          const int nvalues = StatXCoord.size() * 4;
-          Distortion.resize(nvalues);
-          if (!DistVar.isNull())
-            {
-              const std::vector<long> edges = cxxport::get_legacy_var_edges(DistVar);
-              if (nvalues != edges[0] * edges[1])
-                {
-                  throw jif3D::FatalException(
-                      "Number of distortion parameters does not match number of stations !",
-                      __FILE__, __LINE__);
-                }
+            const int nvalues = StatXCoord.size() * 4;
+            Distortion.resize(nvalues);
+            if (!DistVar.isNull())
+              {
+                const std::vector<long> edges = cxxport::get_legacy_var_edges(DistVar);
+                if (nvalues != edges[0] * edges[1])
+                  {
+                    throw jif3D::FatalException(
+                        "Number of distortion parameters does not match number of stations !",
+                        __FILE__, __LINE__);
+                  }
 
 //              DistVar.get(&Distortion[0], edges[0], edges[1]);
-              cxxport::get_legacy_ncvar(DistVar, Distortion.data(), edges[0], edges[1]);
-            }
-          else
-            {
-              for (size_t i = 0; i < StatXCoord.size(); ++i)
-                {
-                  Distortion[i * 4] = 1.0;
-                  Distortion[i * 4 + 1] = 0.0;
-                  Distortion[i * 4 + 2] = 0.0;
-                  Distortion[i * 4 + 3] = 1.0;
-                }
-            }
-        } catch(const netCDF::exceptions::NcException &ex) {
-          // ignore
-        }
+                cxxport::get_legacy_ncvar(DistVar, Distortion.data(), edges[0], edges[1]);
+              }
+            else
+              {
+                for (size_t i = 0; i < StatXCoord.size(); ++i)
+                  {
+                    Distortion[i * 4] = 1.0;
+                    Distortion[i * 4 + 1] = 0.0;
+                    Distortion[i * 4 + 2] = 0.0;
+                    Distortion[i * 4 + 3] = 1.0;
+                  }
+              }
+          } catch (const netCDF::exceptions::NcException &ex)
+          {
+            // ignore
+          }
       }
 
     void ReadImpedancesFromMTT(const std::string &filename,
@@ -240,6 +247,9 @@ namespace jif3D
             ++nentries;
           }
         infile.close();
+        if (nentries == 0)
+          throw FatalException("No data in file: " + filename,
+                    __FILE__, __LINE__);
         if (((nentries - 1) % 23) != 0)
           throw FatalException("Number of records does not match expected: " + filename,
           __FILE__, __LINE__);
@@ -396,11 +406,14 @@ namespace jif3D
                 double cpyx = cos(rad(pyx));
                 double spyx = sin(rad(pyx));
                 cpyx = cpyx > 0.0 ? -cpyx : cpyx;
-                spyx = spyx > 0.0 ? -spyx : spyx ;
+                spyx = spyx > 0.0 ? -spyx : spyx;
                 ImpTemp.push_back(absZxy * cpxy);
                 ImpTemp.push_back(absZxy * spxy);
-                std::cout << "Fre: " << fre << " Rho: " << AppRes(std::complex<double>(absZxy * cpxy,absZxy * spxy),fre) << std::endl;
-                std::cout << "Zxy_re: " << absZxy * cpxy << " Zxy_im " << absZxy * spxy << std::endl;
+                std::cout << "Fre: " << fre << " Rho: "
+                    << AppRes(std::complex<double>(absZxy * cpxy, absZxy * spxy), fre)
+                    << std::endl;
+                std::cout << "Zxy_re: " << absZxy * cpxy << " Zxy_im " << absZxy * spxy
+                    << std::endl;
                 const double absZyx = sqrt(twopimu * fre * ryx);
                 ImpTemp.push_back(absZyx * cpyx);
                 ImpTemp.push_back(absZyx * spyx);
@@ -625,6 +638,14 @@ namespace jif3D
           }
 
       }
+
+    void WriteModEMLine(std::ofstream &outfile, double Zr, double Zi, double Err)
+      {
+        const double convfactor = 4.0 * 1e-4 * acos(-1.0);
+        outfile << std::setw(15) << Zr / convfactor << " " << std::setw(15)
+            << Zi / convfactor << " " << std::setw(15) << Err / convfactor << "\n";
+      }
+
     void WriteImpedancesToModEM(const std::string &filename,
         const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
@@ -632,6 +653,8 @@ namespace jif3D
       {
         const double convfactor = 4.0 * 1e-4 * acos(-1.0);
         std::ofstream outfile(filename.c_str());
+        outfile.precision(6);
+
         outfile << "# Description: \n";
         outfile
             << "# Period(s) Code GG_Lat GG_Lon X(m) Y(m) Z(m) Component Real Imag Error \n";
@@ -643,6 +666,7 @@ namespace jif3D
         size_t nsites = StatXCoord.size();
         size_t nfreqs = Frequencies.size();
         outfile << "> " << nfreqs << " " << nsites << "\n";
+        outfile.setf(std::ios::scientific);
         for (size_t i = 0; i < nsites; ++i)
           {
             std::string SiteName = "Site" + std::to_string(i);
@@ -654,25 +678,124 @@ namespace jif3D
                 size_t index = 8 * (nsites * j + i);
                 double period = 1.0 / Frequencies.at(j);
                 outfile << period << SiteLine.str();
-                outfile << " ZXX " << Imp(index) / convfactor << " "
-                    << Imp(index + 1) / convfactor << " " << Err(index) / convfactor
-                    << "\n";
+                outfile << " ZXX ";
+                WriteModEMLine(outfile, Imp(index), Imp(index + 1), Err(index));
 
                 outfile << period << SiteLine.str();
-                outfile << " ZXY " << Imp(index + 2) / convfactor << " "
-                    << Imp(index + 3) / convfactor << " " << Err(index + 2) / convfactor
-                    << "\n";
+                outfile << " ZXY ";
+                WriteModEMLine(outfile, Imp(index+2), Imp(index + 3), Err(index+2));
 
                 outfile << period << SiteLine.str();
-                outfile << " ZYX " << Imp(index + 4) / convfactor << " "
-                    << Imp(index + 5) / convfactor << " " << Err(index + 4) / convfactor
-                    << "\n";
+                outfile << " ZYX ";
+                WriteModEMLine(outfile, Imp(index+4), Imp(index + 5), Err(index+4));
 
                 outfile << period << SiteLine.str();
-                outfile << " ZYY " << Imp(index + 6) / convfactor << " "
-                    << Imp(index + 6) / convfactor << " " << Err(index + 6) / convfactor
-                    << "\n";
+                outfile << " ZYY ";
+                WriteModEMLine(outfile, Imp(index+6), Imp(index + 7), Err(index+6));
               }
+          }
+      }
+
+    J3DEXPORT void ReadImpedancesFromJ(const std::string &filename,
+        std::vector<double> &Frequencies, double &StatXCoord, double &StatYCoord,
+        double &StatZCoord, jif3D::rvec &Imp, jif3D::rvec &Err)
+      {
+        std::ifstream infile;
+        double currentreal, currentimag;
+        int nentries = 0;
+        infile.open(filename.c_str());
+        std::string line;
+        std::vector<std::string> SplitVec; // #2: Search for tokens
+
+        line = jif3D::FindToken(infile, ">LATITUDE");
+        split(SplitVec, line, boost::is_any_of("="), boost::token_compress_on);
+        StatXCoord = std::stod(SplitVec.at(1));
+        infile.seekg(0);
+        line = jif3D::FindToken(infile, ">LONGITUDE");
+        split(SplitVec, line, boost::is_any_of("="), boost::token_compress_on);
+        StatYCoord = std::stod(SplitVec.at(1));
+        infile.seekg(0);
+        line = jif3D::FindToken(infile, ">LATITUDE");
+        split(SplitVec, line, boost::is_any_of("="), boost::token_compress_on);
+        StatZCoord = std::stod(SplitVec.at(1));
+        infile.seekg(0);
+        bool HasZ = false;
+        bool HasRhoPhi = false;
+        try
+          {
+            jif3D::FindToken(infile, "RXX");
+            HasRhoPhi = true;
+          } catch (jif3D::FatalException &e)
+          {
+
+          }
+        infile.clear();
+        infile.seekg(0);
+        try
+          {
+            jif3D::FindToken(infile, "ZXX");
+            HasZ = true;
+          } catch (jif3D::FatalException &e)
+          {
+
+          }
+        infile.clear();
+        infile.seekg(0);
+        if (HasZ)
+          {
+            size_t nfreq = 0;
+            jif3D::FindToken(infile, "ZXX");
+            infile >> nfreq;
+            Imp.resize(nfreq * 8);
+            Err.resize(nfreq * 8);
+            double dummy;
+            Frequencies.resize(nfreq);
+            for (size_t i = 0; i < nfreq; ++i)
+              {
+                infile >> Frequencies.at(i);
+                infile >> Imp(i * 8);
+                infile >> Imp(i * 8 + 1);
+                infile >> Err(i * 8);
+                Err(i * 8 + 1) = Err(i * 8);
+                infile >> dummy;
+              }
+            jif3D::FindToken(infile, "ZXY");
+            infile >> dummy;
+            for (size_t i = 0; i < nfreq; ++i)
+              {
+                infile >> Frequencies.at(i);
+                infile >> Imp(i * 8 + 2);
+                infile >> Imp(i * 8 + 3);
+                infile >> Err(i * 8 + 2);
+                Err(i * 8 + 3) = Err(i * 8);
+                infile >> dummy;
+              }
+            jif3D::FindToken(infile, "ZYX");
+            infile >> dummy;
+            for (size_t i = 0; i < nfreq; ++i)
+              {
+                infile >> Frequencies.at(i);
+                infile >> Imp(i * 8 + 4);
+                infile >> Imp(i * 8 + 5);
+                infile >> Err(i * 8 + 4);
+                Err(i * 8 + 5) = Err(i * 8);
+                infile >> dummy;
+              }
+            jif3D::FindToken(infile, "ZXX");
+            infile >> dummy;
+            for (size_t i = 0; i < nfreq; ++i)
+              {
+                infile >> Frequencies.at(i);
+                infile >> Imp(i * 8 + 6);
+                infile >> Imp(i * 8 + 7);
+                infile >> Err(i * 8 + 6);
+                Err(i * 8 + 7) = Err(i * 8);
+                infile >> dummy;
+              }
+          }
+        else
+          {
+
           }
       }
   }

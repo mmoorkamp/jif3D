@@ -14,38 +14,37 @@
 
 #include "../Global/NetCDFPortHelper.h"
 
-
 namespace jif3D
-{
-	/** \addtogroup mtmodelling Forward modelling of magnetotelluric data */
-	/* @{ */
+  {
+    /** \addtogroup mtmodelling Forward modelling of magnetotelluric data */
+    /* @{ */
 
-	//!write one component of the impedance tensor to a netcdf file
-	/*!this is an internal helper function
-	 * @param NetCDFFile The name for the netcdf file
-	 * @param StatNumDim The number of sites
-	 * @param FreqDim The number of frequencies
-	 * @param Impedances The impedances (in Ohm, i.e. E/H) as a vector of real numbers.
-	 *        8 consecutive elements form the impedance matrix for one frequency and site,
-	 *        all impedances for one frequency and all stations form a contiguous block, the frequencies vary slowest.
-	 * @param CompName Name of the component to be written to netcdf file ('Zxx_re' ... 'Zyy_im')
-	 * @param compindex component index (0-7)
-	 */
-	J3DEXPORT void WriteImpedanceComp(netCDF::NcFile &NetCDFFile, netCDF::NcDim &StatNumDim, netCDF::NcDim &FreqDim,
-		const jif3D::rvec &Impedances, const std::string &CompName,
-		const size_t compindex);
+    //!write one component of the impedance tensor to a netcdf file
+    /*!this is an internal helper function
+     * @param NetCDFFile The name for the netcdf file
+     * @param StatNumDim The number of sites
+     * @param FreqDim The number of frequencies
+     * @param Impedances The impedances (in Ohm, i.e. E/H) as a vector of real numbers.
+     *        8 consecutive elements form the impedance matrix for one frequency and site,
+     *        all impedances for one frequency and all stations form a contiguous block, the frequencies vary slowest.
+     * @param CompName Name of the component to be written to netcdf file ('Zxx_re' ... 'Zyy_im')
+     * @param compindex component index (0-7)
+     */
+    J3DEXPORT void WriteImpedanceComp(netCDF::NcFile &NetCDFFile,
+        netCDF::NcDim &StatNumDim, netCDF::NcDim &FreqDim, const jif3D::rvec &Impedances,
+        const std::string &CompName, const size_t compindex);
 
-	//!read one component of the impedance tensor from a netcdf file
-	/*!this is an internal helper function
-	 * @param NetCDFFile The name for the netcdf file
-	 * @param Impedances The impedances (in Ohm, i.e. E/H) as a vector of real numbers.
-	 *        8 consecutive elements form the impedance matrix for one frequency and site,
-	 *        all impedances for one frequency and all stations form a contiguous block, the frequencies vary slowest.
-	 * @param CompName Name of the component to be written to netcdf file ('Zxx_re' ... 'Zyy_im')
-	 * @param compindex component index (0-7)
-	 */
-	J3DEXPORT void ReadImpedanceComp(netCDF::NcFile &NetCDFFile, jif3D::rvec &Impedances,
-		const std::string &CompName, const size_t compindex, const bool MustExist = true);
+    //!read one component of the impedance tensor from a netcdf file
+    /*!this is an internal helper function
+     * @param NetCDFFile The name for the netcdf file
+     * @param Impedances The impedances (in Ohm, i.e. E/H) as a vector of real numbers.
+     *        8 consecutive elements form the impedance matrix for one frequency and site,
+     *        all impedances for one frequency and all stations form a contiguous block, the frequencies vary slowest.
+     * @param CompName Name of the component to be written to netcdf file ('Zxx_re' ... 'Zyy_im')
+     * @param compindex component index (0-7)
+     */
+    J3DEXPORT void ReadImpedanceComp(netCDF::NcFile &NetCDFFile, jif3D::rvec &Impedances,
+        const std::string &CompName, const size_t compindex, const bool MustExist = true);
 
     //! Write magnetotelluric impedances to a netcdf file
     /*! We can save MT impedances for several stations in a netcdf file for storage
@@ -181,6 +180,23 @@ namespace jif3D
         const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
         const jif3D::rvec &Imp, const jif3D::rvec &Err);
+
+    //! Read magnetotelluric impedances from a .j file
+    /*!
+     * @param filename The name of the .j file
+     * @param Frequencies The vector of frequencies in Hz for the impedances in the vector Impedances
+     * @param StatXCoord The x-coordinate (North) of the measurement station for the impedances
+     * @param StatYCoord The y-coordinate (East) of the measurement stations for the impedances
+     * @param StatZCoord The z-coordinate (Down) of the measurement stations for the impedances
+     * @param Imp The impedances (in Ohm, i.e. E/H) as a vector of real numbers.
+     *        8 consecutive elements form the impedance matrix for one frequency and site,
+     *        all impedances for one frequency and all stations form a contiguous block, the frequencies vary slowest.
+     * @param Err Impedance errors with the same number of Elements with Impedances.
+     *        As we only have one error estimate per element we write only the components corresponding to the real parts.
+     */
+    J3DEXPORT void ReadImpedancesFromJ(const std::string &filename,
+        std::vector<double> &Frequencies, double &StatXCoord, double &StatYCoord,
+        double &StatZCoord, jif3D::rvec &Imp, jif3D::rvec &Err);
   /* @} */
   }
 
