@@ -32,27 +32,6 @@ namespace jif3D
         return -1;
       }
 
-    //! Generate a sequence of integers, for use with generate and generate_n algorithms, taken from Josuttis, p. 296
-    /*! The constructor takes the starting value and each call to operator() returns the current value and increases
-     * it by 1. This class is useful to generate values in a vector with std::generate.
-     */
-    class J3DEXPORT IntSequence
-      {
-    private:
-      //! The current value of the sequence
-      int value;
-    public:
-      //! The constructor takes the first value of the sequence
-      IntSequence(int start) :
-          value(start)
-        {
-        }
-      //! Return a new valuye from the sequence
-      int operator()()
-        {
-          return value++;
-        }
-      };
 
     //! Compare number1 and number2 and return true if the absolute value of number1 is smaller than the absolute value of number2, otherwise return false.
     /*! This template is useful in conjunction with the standard library. For example we can write

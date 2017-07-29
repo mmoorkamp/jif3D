@@ -27,20 +27,5 @@ using boost::serialization::base_object;
 using boost::serialization::access;
 #endif
 
-namespace jif3D
-  {
-//#ifdef HAVEHPX
-//    //template <typename Base, typename Derived> using base_object = hpx::serialization::base_object<Base, Derived>;
-//#else
-//    //template<typename Base, typename Derived> using base_object = boost::serialization::base_object<Base, Derived>(Derived &d);
-//
-//    template<typename ... Args>
-//    auto base_object(
-//        Args&&... args) -> decltype(boost::serialization::base_object(std::forward<Args>(args)...))
-//      {
-//        return boost::serialization::base_object(std::forward<Args>(args)...);
-//      }
-//#endif
-  }
 
 #endif /* GLOBAL_SERIALIZATION_H_ */

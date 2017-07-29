@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_SUITE( InterpolateFields_Suite )
         size_t nlevels = ConstructDepthIndices(MeasDepthIndices, ShiftDepth, Model);
 
         std::vector<std::complex<double> > Field(nx * ny * nlevels);
-        std::generate(Field.begin(), Field.end(), jif3D::IntSequence(0));
+        std::iota(Field.begin(), Field.end(), 0);
 
         std::complex<double> Real = InterpolateField(Field, Model, 0, MeasDepthIndices);
         BOOST_CHECK_EQUAL(Real.real(), 5);

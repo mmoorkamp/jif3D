@@ -60,8 +60,8 @@ namespace jif3D
         WriteVec(DataFile, MeasPosZName, Model.GetMeasPosZ(), RecNumDim, "m");
         //generate an index for the receivers
         NcDim MeasIndexDim = DataFile.addDim(MeasIndexName, ndata);
-        std::vector<int> MeasIndex;
-        std::generate_n(back_inserter(MeasIndex), ndata, IntSequence(0));
+        std::vector<int> MeasIndex(ndata);
+        std::iota(MeasIndex.begin(),MeasIndex.end(),0);
         NcVar MeasIndexVar = DataFile.addVar(MeasIndexName, netCDF::ncInt,
             MeasIndexDim);
 

@@ -93,9 +93,8 @@ namespace jif3D
             NcDim BackgroundDim = DataFile.addDim("bg_layers", bg_thicknesses.size());
             NcVar BackgroundVar = DataFile.addVar("bg_layers", netCDF::ncDouble, BackgroundDim);
             //here we generate the indices for the layers
-            std::vector<double> layerindex;
-            std::generate_n(back_inserter(layerindex), bg_thicknesses.size(),
-                IntSequence(0));
+            std::vector<double> layerindex(bg_thicknesses.size());
+            std::iota(layerindex.begin(),layerindex.end(),0);
 
 //            BackgroundVar.put(&layerindex[0], layerindex.size());
             cxxport::put_legacy_ncvar(BackgroundVar, layerindex.data(), layerindex.size());

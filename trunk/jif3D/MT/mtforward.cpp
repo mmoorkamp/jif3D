@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
     std::copy(frequencies.begin(), frequencies.end(),
         std::back_inserter(MTModel.SetFrequencies()));
     jif3D::rvec StatNum(MTModel.GetMeasPosX().size());
-    std::generate(StatNum.begin(), StatNum.end(), jif3D::IntSequence(0));
+    std::iota(StatNum.begin(), StatNum.end(), 0);
     //! Write scalar data with 3D coordinate information into a .vtk file for plotting
     jif3D::Write3DDataToVTK(outfilename + ".vtk", "MTStats", StatNum,
         MTModel.GetMeasPosX(), MTModel.GetMeasPosY(), MTModel.GetMeasPosZ());
