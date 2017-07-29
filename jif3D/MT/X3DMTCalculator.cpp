@@ -13,6 +13,7 @@
 #include <fstream>
 #include <iomanip>
 #include <map>
+#include <chrono>
 #ifdef HAVEOPENMP
 #include <omp.h>
 #endif
@@ -96,6 +97,14 @@ namespace jif3D
         maxfreqindex = std::min(maxfreqindex, Model.GetFrequencies().size());
         const size_t nfreq = maxfreqindex - minfreqindex;
         const size_t nmeas = Model.GetMeasPosX().size();
+
+        if (ForwardExecTime.empty())
+          {
+            for (size_t i = 0; i < nfreq; ++i)
+              {
+                ForwardExecTime.push_back(std::make_pair(0, minfreqindex + i));
+              }
+          }
         //if the current model does not contain any ExIndices information
         //generate ExIndices, EyIndices and HIndices as 0:nmeas for each Frequency
         //here we assume that we either have all three indices in the netCDF file or none of them
@@ -164,6 +173,7 @@ namespace jif3D
         std::partial_sum(Model.GetBackgroundThicknesses().begin(),
             Model.GetBackgroundThicknesses().end(), BGDepths.begin());
         CompareDepths(BGDepths, Model.GetZCoordinates());
+        std::vector<std::pair<size_t, size_t>> NewExecTime;
 #ifdef HAVEOPENMP
         omp_lock_t lck;
         omp_init_lock(&lck);
@@ -176,16 +186,23 @@ namespace jif3D
         // as we do not have the source for x3d, this is our only possibility anyway
         //the const qualified variables above are predetermined to be shared by the openmp standard
 #pragma omp parallel for shared(result,RawImp) schedule(dynamic,1)
-        for (int i = minfreqindex; i < maxindex; ++i)
+        for (int i = 0; i < nfreq; ++i)
           {
             //the openmp standard specifies that we cannot leave a parallel construct
             //by throwing an exception, so we catch all exceptions and just
             //generate an error message
             try
               {
-                ForwardInfo Info(Model,C,i,TempDir.string(),X3DName, NameRoot, GreenType1, GreenType4);
+                //we want to alternate between items at the beginning of the map and at the end of the map
+                const size_t queueindex = (i % 2) == 0 ? i / 2 : nfreq - 1 - i / 2;
+                const size_t calcindex = ForwardExecTime.at(queueindex).second;
+                ForwardInfo Info(Model,C,calcindex,TempDir.string(),X3DName, NameRoot, GreenType1, GreenType4);
+                std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
                 ForwardResult freqresult = CalculateFrequency(Info);
-                const size_t currindex = i - minfreqindex;
+                std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
+                size_t duration = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
+                NewExecTime.push_back(std::make_pair(duration,calcindex));
+                const size_t currindex = calcindex - minfreqindex;
                 const size_t startindex = nstats * currindex * 8;
 
                 omp_set_lock(&lck);
@@ -208,6 +225,8 @@ namespace jif3D
               }
             //finished with one frequency
           }
+        std::sort(NewExecTime.begin(),NewExecTime.end());
+        ForwardExecTime = NewExecTime;
         RawImpedance = RawImp;
         omp_destroy_lock(&lck);
 #endif
@@ -268,6 +287,13 @@ namespace jif3D
         //we define nfreq as int to make the compiler happy in the openmp loop
         maxfreqindex = std::min(maxfreqindex, Model.GetFrequencies().size());
         const int nfreq = maxfreqindex - minfreqindex;
+        if (DerivExecTime.empty())
+          {
+            for (size_t i = 0; i < nfreq; ++i)
+              {
+                DerivExecTime.push_back(std::make_pair(0, minfreqindex + i));
+              }
+          }
         std::string ErrorMsg;
         //a few commonly used quantities for shorter notation
         const size_t nmodx = Model.GetConductivities().shape()[0];
@@ -321,7 +347,7 @@ namespace jif3D
                 + GradTrans(1, 1) * Misfit(i + 1);
           }
 #ifdef HAVEOPENMP
-
+        std::vector<std::pair<size_t, size_t>> NewExecTime;
         omp_lock_t lck;
         omp_init_lock(&lck);
         //openmp loop indices have to be int, so we cast out upper limit to int
@@ -332,13 +358,21 @@ namespace jif3D
         //here the explicitly shared variable is Gradient
         //all others are predetermined to be shared
 #pragma omp parallel for shared(Gradient) schedule(dynamic,1)
-        for (int i = minfreqindex; i < maxindex; ++i)
+        for (int i = 0; i < nfreq; ++i)
           {
             try
               {
-                ForwardInfo Info(Model,C,i,TempDir.string(),X3DName, NameRoot, GreenType1, GreenType4);
+                //we want to alternate between items at the beginning of the map and at the end of the map
+                const size_t queueindex = (i % 2) == 0 ? i / 2 : nfreq - 1 - i / 2;
+                const size_t calcindex = DerivExecTime.at(queueindex).second;
+
+                ForwardInfo Info(Model,C,calcindex,TempDir.string(),X3DName, NameRoot, GreenType1, GreenType4);
                 //calculate the gradient for each frequency
+                std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
                 GradResult tmp = LQDerivativeFreq(Info, GradInfo(ProjMisfit, RawImpedance));
+                std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
+                size_t duration = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
+                NewExecTime.push_back(std::make_pair(duration,calcindex));
                 omp_set_lock(&lck);
                 //the total gradient is the sum over the gradients for each frequency
                 std::transform(tmp.Gradient.begin(),tmp.Gradient.end(),
@@ -359,6 +393,8 @@ namespace jif3D
               }
             //finished with one frequency
           }
+        std::sort(NewExecTime.begin(),NewExecTime.end());
+        DerivExecTime = NewExecTime;
         omp_destroy_lock(&lck);
 #endif
 
