@@ -30,22 +30,6 @@ BOOST_AUTO_TEST_SUITE( NumUtil_Test_Suite )
         BOOST_CHECK(jif3D::sign(posint) == 1);
       }
 
-    BOOST_AUTO_TEST_CASE(test_intseq)
-      {
-        //test the sequence generator
-        //the length of the vector
-        const int ntries = 30;
-        //the value of the first element
-        const int start = 7;
-        std::vector<int> Sequence;
-        //use the generator and compare the result
-        std::generate_n(back_inserter(Sequence), ntries, jif3D::IntSequence(start));
-        for (int i = 0; i < ntries; ++i)
-          {
-            BOOST_CHECK(Sequence.at(i) == i + start);
-          }
-
-      }
 
     BOOST_AUTO_TEST_CASE(test_absless)
       {

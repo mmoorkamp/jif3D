@@ -48,24 +48,18 @@ namespace jif3D
      * this string the function returns this line. If the token cannot be found it throws a FatalException.
      * @param filestream An open infile stream, will be pointing to the next line after finding the token
      * @param token The token to search for
+     * @param critical When true the token has to be present in the file and an exception is thrown
      * @return The line in the file that contains the token
      */
-    inline std::string FindToken(std::ifstream &filestream,
-        const std::string &token)
+    inline std::string FindToken(std::ifstream &filestream, const std::string &token,
+        bool critical = true)
       {
         bool found = false;
-        bool end = false;
+
         std::string line;
-        while (!found && !end)
+        while (!found && std::getline(filestream, line))
           {
-            if (std::getline(filestream, line))
-              {
-                found = boost::algorithm::contains(line, token);
-              }
-            else
-              {
-                end = true;
-              }
+            found = boost::algorithm::contains(line, token);
           }
         if (found)
           {
@@ -73,8 +67,13 @@ namespace jif3D
           }
         else
           {
-            throw FatalException("Token " + token + " not found ! ", __FILE__, __LINE__);
+            if (critical)
+              {
+                throw FatalException("Token " + token + " not found ! ", __FILE__,
+                __LINE__);
+              }
           }
+        return std::string();
       }
 
     //! Instead of always writing the same things in the main program, we can use this function to ask the use for a filename
@@ -84,15 +83,16 @@ namespace jif3D
      * @param checkexists Shall the function check whether the file exists ? Default true
      * @return The name of the file as typed in by the user.
      */
-    inline std::string AskFilename(const std::string &prompt,
-        const bool checkexists = true)
+    inline std::string AskFilename(const std::string &prompt, const bool checkexists =
+        true)
       {
         std::cout << prompt;
         std::string filename;
         std::cin >> filename;
         if (checkexists && !boost::filesystem::exists(filename))
           {
-            throw jif3D::FatalException("File " + filename + " does not exist ", __FILE__, __LINE__);
+            throw jif3D::FatalException("File " + filename + " does not exist ", __FILE__,
+            __LINE__);
           }
         return filename;
       }
