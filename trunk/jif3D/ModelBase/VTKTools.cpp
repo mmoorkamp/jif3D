@@ -87,7 +87,7 @@ namespace jif3D
         //first we have to write some general information about the file format
         outfile << "# vtk DataFile Version 2.0 \n";
         outfile << "3D Model data \n" ;
-        outfile << "ASCII\n ";
+        outfile << "ASCII\n";
         outfile << "DATASET RECTILINEAR_GRID\n" ;
         //we write the left and right boundaries of each cell, but only store the left
         //so we have to write one extra value

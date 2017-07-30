@@ -95,9 +95,9 @@ namespace jif3D
         //we define nfreq as int to make the compiler happy in the openmp loop
         assert(minfreqindex <= maxfreqindex);
         maxfreqindex = std::min(maxfreqindex, Model.GetFrequencies().size());
-        const size_t nfreq = maxfreqindex - minfreqindex;
-        const size_t nmeas = Model.GetMeasPosX().size();
 
+        const int nfreq = maxfreqindex - minfreqindex;
+        const size_t nmeas = Model.GetMeasPosX().size();
         if (ForwardExecTime.empty())
           {
             for (size_t i = 0; i < nfreq; ++i)
@@ -185,7 +185,7 @@ namespace jif3D
         //but we can use up to 20 processors for typical MT problems
         // as we do not have the source for x3d, this is our only possibility anyway
         //the const qualified variables above are predetermined to be shared by the openmp standard
-#pragma omp parallel for shared(result,RawImp) schedule(dynamic,1)
+#pragma omp parallel for shared(result,RawImp, NewExecTime) schedule(dynamic,1)
         for (int i = 0; i < nfreq; ++i)
           {
             //the openmp standard specifies that we cannot leave a parallel construct
@@ -201,12 +201,12 @@ namespace jif3D
                 ForwardResult freqresult = CalculateFrequency(Info);
                 std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
                 size_t duration = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
-                NewExecTime.push_back(std::make_pair(duration,calcindex));
+
                 const size_t currindex = calcindex - minfreqindex;
                 const size_t startindex = nstats * currindex * 8;
 
                 omp_set_lock(&lck);
-
+                NewExecTime.push_back(std::make_pair(duration,calcindex));
                 std::copy(freqresult.DistImpedance.begin(), freqresult.DistImpedance.end(),
                     result.begin() + startindex);
                 std::copy(freqresult.RawImpedance.begin(),freqresult.RawImpedance.end(),RawImp.begin()+startindex);
@@ -225,6 +225,11 @@ namespace jif3D
               }
             //finished with one frequency
           }
+        /*std::cout << "\n";
+        for (auto time : NewExecTime)
+          {
+            std::cout << time.first << " " << time.second << " \n";
+          }*/
         std::sort(NewExecTime.begin(),NewExecTime.end());
         ForwardExecTime = NewExecTime;
         RawImpedance = RawImp;
@@ -357,7 +362,7 @@ namespace jif3D
         //see also the comments for the forward calculation
         //here the explicitly shared variable is Gradient
         //all others are predetermined to be shared
-#pragma omp parallel for shared(Gradient) schedule(dynamic,1)
+#pragma omp parallel for shared(Gradient, NewExecTime) schedule(dynamic,1)
         for (int i = 0; i < nfreq; ++i)
           {
             try
@@ -372,8 +377,9 @@ namespace jif3D
                 GradResult tmp = LQDerivativeFreq(Info, GradInfo(ProjMisfit, RawImpedance));
                 std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
                 size_t duration = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
-                NewExecTime.push_back(std::make_pair(duration,calcindex));
+
                 omp_set_lock(&lck);
+                NewExecTime.push_back(std::make_pair(duration,calcindex));
                 //the total gradient is the sum over the gradients for each frequency
                 std::transform(tmp.Gradient.begin(),tmp.Gradient.end(),
                     Gradient.begin(),Gradient.begin(),std::plus<double>());
