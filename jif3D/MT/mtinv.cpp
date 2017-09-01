@@ -495,6 +495,7 @@ int hpx_main(boost::program_options::variables_map& vm)
       {
         std::cout << " Regularization: " << Regularization->CalcMisfit(InvModel)
             << std::endl;
+        jif3D::rvec reggrad = Regularization->CalcGradient(InvModel);
         jif3D::rvec RegVals(Regularization->GetDataDifference());
         const size_t nmod = InvModel.size();
         if (RegVals.size() != nmod * 3)
@@ -511,6 +512,8 @@ int hpx_main(boost::program_options::variables_map& vm)
         std::copy(RegVals.begin() + 2 * nmod, RegVals.begin() + 3 * nmod,
             Model.SetData().origin());
         Model.WriteVTK(modelfilename + ".regz.vtk");
+        std::copy(reggrad.begin(),reggrad.end(),Model.SetData().origin());
+        Model.WriteVTK(modelfilename + ".reggrad.vtk");
         return 0;
       }
 
