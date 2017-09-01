@@ -235,32 +235,15 @@ namespace jif3D
         return CtAH;
       }
 
-    void CalcHext(const std::complex<double> &omega_mu, std::complex<double> &Xp1,
-        std::complex<double> &Xp2, std::complex<double> &Yp1, std::complex<double> &Yp2,
-        const std::complex<double> &Zxx, const std::complex<double> &Zxy,
-        const std::complex<double> &Zyx, const std::complex<double> &Zyy)
-      {
-        //we need temporary variables as we calculate a new  value for Xp1 in the first line
-        //but need the old value for Xp1 in the second line
-        std::complex<double> temp1 = Zxx * Xp1 + Zyx * Yp1;
-        std::complex<double> temp2 = Zxy * Xp1 + Zyy * Yp1;
-        Xp1 = temp1 * omega_mu;
-        Yp1 = temp2 * omega_mu;
-        //the same remark applies to Xp2
-        temp1 = Zxx * Xp2 + Zyx * Yp2;
-        temp2 = Zxy * Xp2 + Zyy * Yp2;
-        Xp2 = temp1 * omega_mu;
-        Yp2 = temp2 * omega_mu;
-      }
-
     void CalcU(const std::string &RootName,
         const std::vector<std::complex<double> > &XPolMoments,
         const std::vector<std::complex<double> > &YPolMoments,
         std::vector<std::complex<double> > &Ux, std::vector<std::complex<double> > &Uy,
-        std::vector<std::complex<double> > &Uz,
-		const std::vector<size_t> &XSourceXIndex,const std::vector<size_t> &XSourceYIndex,
+        std::vector<std::complex<double> > &Uz, const std::vector<size_t> &XSourceXIndex,
+        const std::vector<size_t> &XSourceYIndex,
         const std::vector<double> &XSourceDepths,
-		const std::vector<size_t> &YSourceXIndex,const std::vector<size_t> &YSourceYIndex,
+        const std::vector<size_t> &YSourceXIndex,
+        const std::vector<size_t> &YSourceYIndex,
         const std::vector<double> &YSourceDepths,
         const jif3D::ThreeDModelBase::t3DModelDim &ZCellBoundaries,
         const jif3D::ThreeDModelBase::t3DModelDim &ZCellSizes, const size_t ncellsx,
@@ -277,11 +260,10 @@ namespace jif3D
             std::string DirName = RootName + dirext + "/";
 #pragma omp critical(calcU_writesource)
               {
-                WriteSourceFile(DirName + sourceafilename,
-                	XSourceXIndex, XSourceYIndex, XSourceDepths,
-					YSourceXIndex, YSourceYIndex, YSourceDepths,
-					XPolMoments, YPolMoments, ZCellBoundaries,
-                    ZCellSizes, ncellsx, ncellsy);
+                WriteSourceFile(DirName + sourceafilename, XSourceXIndex, XSourceYIndex,
+                    XSourceDepths, YSourceXIndex, YSourceYIndex, YSourceDepths,
+                    XPolMoments, YPolMoments, ZCellBoundaries, ZCellSizes, ncellsx,
+                    ncellsy);
               }
             RunX3D(RootName);
 #pragma omp critical(calcU_readema)

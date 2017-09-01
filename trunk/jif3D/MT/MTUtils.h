@@ -1,5 +1,5 @@
 //============================================================================
-// Name        : MTUtils.h
+  // Name        : MTUtils.h
 // Author      : 10 Mar 2014
 // Version     :
 // Copyright   : 2014, mm489
@@ -57,11 +57,6 @@ namespace jif3D
         const size_t startindex, const size_t freq_start_index,
         const std::complex<double> &Hx1, const std::complex<double> &Hx2,
         const std::complex<double> &Hy1, const std::complex<double> &Hy2);
-    //! Calculate the strength of the magnetic dipole necessary for MT adjoint calculations
-    J3DEXPORT void CalcHext(const std::complex<double> &omega_mu, std::complex<double> &Xp1,
-        std::complex<double> &Xp2, std::complex<double> &Yp1, std::complex<double> &Yp2,
-        const std::complex<double> &Zxx, const std::complex<double> &Zxy,
-        const std::complex<double> &Zyx, const std::complex<double> &Zyy);
 
     J3DEXPORT void CalcU(const std::string &RootName,
         const std::vector<std::complex<double> > &XPolMoments,

@@ -225,15 +225,13 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI)
     const size_t freq_start_index = nstats * Info.freqindex * 8;
     const size_t ind_shift = nstats * Info.freqindex;
 
-    std::vector<std::complex<double> > XPolMoments1(nstats), XPolMoments2(nstats),
-        YPolMoments1(nstats), YPolMoments2(nstats), Zeros(nstats);
+    std::vector<std::complex<double> > EXPolMoments1(nstats), EXPolMoments2(nstats),
+        EYPolMoments1(nstats), EYPolMoments2(nstats), Zeros(nstats, 0.0);
+    std::vector<std::complex<double> > HXPolMoments1(nstats), HXPolMoments2(nstats),
+        HYPolMoments1(nstats), HYPolMoments2(nstats);
     std::vector<double> XSourceDepth(nstats), YSourceDepth(nstats), HSourceDepth(nstats);
     std::vector<size_t> XSourceXIndex(nstats), XSourceYIndex(nstats), YSourceXIndex(
         nstats), YSourceYIndex(nstats), HSourceXIndex(nstats), HSourceYIndex(nstats);
-
-    //we only calculate sources for the observe sites, so
-    //we make sure everything else is zero
-    std::fill(Zeros.begin(), Zeros.end(), 0.0);
 
     //make the sources for the electric dipoles
     for (size_t j = 0; j < nstats; ++j)
@@ -286,70 +284,82 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI)
         //x3d uses a different convention for the complex exponentials
         //so we have to use the complex conjugate for the source
         size_t imp_offset = freq_start_index + j * 8;
-        XPolMoments1.at(j) = j_ext(0, 0);
-        YPolMoments1.at(j) = j_ext(1, 0);
-        XPolMoments2.at(j) = j_ext(0, 1);
-        YPolMoments2.at(j) = j_ext(1, 1);
+        EXPolMoments1.at(j) = j_ext(0, 0);
+        EYPolMoments1.at(j) = j_ext(1, 0);
+        EXPolMoments2.at(j) = j_ext(0, 1);
+        EYPolMoments2.at(j) = j_ext(1, 1);
       }
     //we only want to calculate for one frequency
     //so our vector has just 1 element
-    std::vector<double> CurrFreq(1, 0.0);
-    CurrFreq[0] = Info.Model.GetFrequencies()[Info.freqindex];
+    std::vector<double> CurrFreq =
+      { Info.Model.GetFrequencies()[Info.freqindex] };
     fs::path EdipName = TempDir
         / MakeUniqueName(Info.NameRoot, X3DModel::EDIP, Info.freqindex);
-    fs::path EdipDirName = EdipName.string() + dirext;
+    std::vector<std::string> PolExt =
+      { "a", "b" };
     //again we have to write out some file for the electric
     //dipole calculation with x3d, this shouldn't be done
     //in parallel
 #pragma omp critical(gradient_writemodel_edip)
       {
-        MakeRunFile(EdipName.string(), EdipDirName.string(), Info.X3DName);
-        WriteProjectFile(EdipDirName.string(), CurrFreq, X3DModel::EDIP, resultfilename,
-            modelfilename, Info.GreenStage1, Info.GreenStage4);
-        Write3DModelForX3D((EdipDirName / modelfilename).string(),
-            Info.Model.GetXCellSizes(), Info.Model.GetYCellSizes(),
-            Info.Model.GetZCellSizes(), SourceObserve, Info.Model.GetConductivities(),
-            Info.Model.GetBackgroundConductivities(),
-            Info.Model.GetBackgroundThicknesses(), true);
-        //write an empty source file for the second source polarization
-        WriteSourceFile((EdipDirName / sourcebfilename).string(), XSourceXIndex,
-            XSourceYIndex, XSourceDepth, YSourceXIndex, YSourceYIndex, YSourceDepth,
-            Zeros, Zeros, Info.Model.GetZCoordinates(), Info.Model.GetZCellSizes(), nmodx,
-            nmody);
+        for (auto Ext : PolExt)
+          {
+            std::string CurrName = EdipName.string() + Ext;
+            fs::path CurrDir = EdipName.string() + Ext + dirext;
+            MakeRunFile(CurrName, CurrDir.string(), Info.X3DName);
+            WriteProjectFile(CurrDir.string(), CurrFreq, X3DModel::EDIP, resultfilename,
+                modelfilename, Info.GreenStage1, Info.GreenStage4);
+            Write3DModelForX3D((CurrDir / modelfilename).string(),
+                Info.Model.GetXCellSizes(), Info.Model.GetYCellSizes(),
+                Info.Model.GetZCellSizes(), SourceObserve, Info.Model.GetConductivities(),
+                Info.Model.GetBackgroundConductivities(),
+                Info.Model.GetBackgroundThicknesses(), true);
+            //write an empty source file for the second source polarization
+            WriteSourceFile((CurrDir / sourcebfilename).string(), XSourceXIndex,
+                XSourceYIndex, XSourceDepth, YSourceXIndex, YSourceYIndex, YSourceDepth,
+                Zeros, Zeros, Info.Model.GetZCoordinates(), Info.Model.GetZCellSizes(),
+                nmodx, nmody);
+          }
       }
     std::vector<std::complex<double> > Ux1_el, Ux2_el, Uy1_el, Uy2_el, Uz1_el, Uz2_el;
     //calculate the first polarization and read the adjoint fields
-    CalcU(EdipName.string(), XPolMoments1, YPolMoments1, Ux1_el, Uy1_el, Uz1_el,
-        XSourceXIndex, XSourceYIndex, XSourceDepth, YSourceXIndex, YSourceYIndex,
+#pragma omp task default(shared)
+    CalcU(EdipName.string() + PolExt[0], EXPolMoments1, EYPolMoments1, Ux1_el, Uy1_el,
+        Uz1_el, XSourceXIndex, XSourceYIndex, XSourceDepth, YSourceXIndex, YSourceYIndex,
         YSourceDepth, Info.Model.GetZCoordinates(), Info.Model.GetZCellSizes(), nmodx,
         nmody, nmodz);
 
     //calculate the second polarization
-    CalcU(EdipName.string(), XPolMoments2, YPolMoments2, Ux2_el, Uy2_el, Uz2_el,
-        XSourceXIndex, XSourceYIndex, XSourceDepth, YSourceXIndex, YSourceYIndex,
+#pragma omp task default(shared)
+    CalcU(EdipName.string() + PolExt[1], EXPolMoments2, EYPolMoments2, Ux2_el, Uy2_el,
+        Uz2_el, XSourceXIndex, XSourceYIndex, XSourceDepth, YSourceXIndex, YSourceYIndex,
         YSourceDepth, Info.Model.GetZCoordinates(), Info.Model.GetZCellSizes(), nmodx,
         nmody, nmodz);
 
     //now we calculate the response to magnetic dipole sources
     fs::path MdipName = TempDir
         / MakeUniqueName(Info.NameRoot, X3DModel::MDIP, Info.freqindex);
-    fs::path MdipDirName = MdipName.string() + dirext;
     //write the files for the magnetic dipole calculation
 #pragma omp critical(gradient_writemodel_mdip)
       {
-        MakeRunFile(MdipName.string(), MdipDirName.string(), Info.X3DName);
-        WriteProjectFile(MdipDirName.string(), CurrFreq, X3DModel::MDIP, resultfilename,
-            modelfilename, Info.GreenStage1, Info.GreenStage4);
-        Write3DModelForX3D((MdipDirName / modelfilename).string(),
-            Info.Model.GetXCellSizes(), Info.Model.GetYCellSizes(),
-            Info.Model.GetZCellSizes(), SourceObserve, Info.Model.GetConductivities(),
-            Info.Model.GetBackgroundConductivities(),
-            Info.Model.GetBackgroundThicknesses(), true);
-        //write an empty source file for the second source polarization
-        WriteSourceFile((MdipDirName / sourcebfilename).string(), HSourceXIndex,
-            HSourceYIndex, HSourceDepth, HSourceXIndex, HSourceYIndex, HSourceDepth,
-            Zeros, Zeros, Info.Model.GetZCoordinates(), Info.Model.GetZCellSizes(), nmodx,
-            nmody);
+        for (auto Ext : PolExt)
+          {
+            std::string CurrName = MdipName.string() + Ext;
+            fs::path CurrDir = MdipName.string() + Ext + dirext;
+            MakeRunFile(CurrName, CurrDir.string(), Info.X3DName);
+            WriteProjectFile(CurrDir.string(), CurrFreq, X3DModel::MDIP,
+                resultfilename, modelfilename, Info.GreenStage1, Info.GreenStage4);
+            Write3DModelForX3D((CurrDir / modelfilename).string(),
+                Info.Model.GetXCellSizes(), Info.Model.GetYCellSizes(),
+                Info.Model.GetZCellSizes(), SourceObserve, Info.Model.GetConductivities(),
+                Info.Model.GetBackgroundConductivities(),
+                Info.Model.GetBackgroundThicknesses(), true);
+            //write an empty source file for the second source polarization
+            WriteSourceFile((CurrDir / sourcebfilename).string(), HSourceXIndex,
+                HSourceYIndex, HSourceDepth, HSourceXIndex, HSourceYIndex, HSourceDepth,
+                Zeros, Zeros, Info.Model.GetZCoordinates(), Info.Model.GetZCellSizes(),
+                nmodx, nmody);
+          }
       }
     //make the sources for the magnetic dipoles
     //now we calculate the response to magnetic dipole sources
@@ -365,20 +375,24 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI)
                 GI.RawImpedance[offset + 4], GI.RawImpedance[offset + 5]), Zyy(
                 GI.RawImpedance[offset + 6], GI.RawImpedance[offset + 7]);
         //project the electric dipole to magnetic dipole moments using the undistorted impedance
-        CalcHext(omega_mu, XPolMoments1.at(j), XPolMoments2.at(j), YPolMoments1.at(j),
-            YPolMoments2.at(j), Zxx, Zxy, Zyx, Zyy);
+        HXPolMoments1[j] = omega_mu * (Zxx * EXPolMoments1[j] + Zxy * EYPolMoments1[j]);
+        HYPolMoments1[j] = omega_mu * (Zyx * EXPolMoments1[j] + Zyy * EYPolMoments1[j]);
+        HXPolMoments2[j] = omega_mu * (Zxx * EXPolMoments2[j] + Zxy * EYPolMoments2[j]);
+        HYPolMoments2[j] = omega_mu * (Zyx * EXPolMoments2[j] + Zyy * EYPolMoments2[j]);
       }
 
     std::vector<std::complex<double> > Ux1_mag, Ux2_mag, Uy1_mag, Uy2_mag, Uz1_mag,
         Uz2_mag;
     //calculate the first polarization and read the adjoint fields
-    CalcU(MdipName.string(), XPolMoments1, YPolMoments1, Ux1_mag, Uy1_mag, Uz1_mag,
-        HSourceXIndex, HSourceYIndex, HSourceDepth, HSourceXIndex, HSourceYIndex,
+#pragma omp task default(shared)
+    CalcU(MdipName.string() + PolExt[0], HXPolMoments1, HYPolMoments1, Ux1_mag, Uy1_mag,
+        Uz1_mag, HSourceXIndex, HSourceYIndex, HSourceDepth, HSourceXIndex, HSourceYIndex,
         HSourceDepth, Info.Model.GetZCoordinates(), Info.Model.GetZCellSizes(), nmodx,
         nmody, nmodz);
     //calculate the second polarization and read the adjoint fields
-    CalcU(MdipName.string(), XPolMoments2, YPolMoments2, Ux2_mag, Uy2_mag, Uz2_mag,
-        HSourceXIndex, HSourceYIndex, HSourceDepth, HSourceXIndex, HSourceYIndex,
+#pragma omp task default(shared)
+    CalcU(MdipName.string() + PolExt[1], HXPolMoments2, HYPolMoments2, Ux2_mag, Uy2_mag,
+        Uz2_mag, HSourceXIndex, HSourceYIndex, HSourceDepth, HSourceXIndex, HSourceYIndex,
         HSourceDepth, Info.Model.GetZCoordinates(), Info.Model.GetZCellSizes(), nmodx,
         nmody, nmodz);
 
@@ -386,7 +400,7 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI)
     const double cell_sizey = Info.Model.GetYCellSizes()[0];
     //now we can calculate the gradient for each model cell
     double Volume, gradinc;
-
+#pragma omp taskwait
     for (size_t j = 0; j < nmod; ++j)
       {
         Volume = cell_sizex * cell_sizey * Info.Model.GetZCellSizes()[j % nmodz];
