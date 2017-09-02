@@ -375,10 +375,10 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI)
                 GI.RawImpedance[offset + 4], GI.RawImpedance[offset + 5]), Zyy(
                 GI.RawImpedance[offset + 6], GI.RawImpedance[offset + 7]);
         //project the electric dipole to magnetic dipole moments using the undistorted impedance
-        HXPolMoments1[j] = omega_mu * (Zxx * EXPolMoments1[j] + Zxy * EYPolMoments1[j]);
-        HYPolMoments1[j] = omega_mu * (Zyx * EXPolMoments1[j] + Zyy * EYPolMoments1[j]);
-        HXPolMoments2[j] = omega_mu * (Zxx * EXPolMoments2[j] + Zxy * EYPolMoments2[j]);
-        HYPolMoments2[j] = omega_mu * (Zyx * EXPolMoments2[j] + Zyy * EYPolMoments2[j]);
+        HXPolMoments1[j] = omega_mu * (Zxx * EXPolMoments1[j] + Zyx * EYPolMoments1[j]);
+        HYPolMoments1[j] = omega_mu * (Zxy * EXPolMoments1[j] + Zyy * EYPolMoments1[j]);
+        HXPolMoments2[j] = omega_mu * (Zxx * EXPolMoments2[j] + Zyx * EYPolMoments2[j]);
+        HYPolMoments2[j] = omega_mu * (Zxy * EXPolMoments2[j] + Zyy * EYPolMoments2[j]);
       }
 
     std::vector<std::complex<double> > Ux1_mag, Ux2_mag, Uy1_mag, Uy2_mag, Uz1_mag,
