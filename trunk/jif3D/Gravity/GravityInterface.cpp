@@ -29,8 +29,8 @@ typedef boost::function0<jif3D::ThreeDGravityModel::t3DModelDim &>
 void AllocateModel(const int *storescalar, const int *storetensor)
   {
     //c doesn't have bool so we interpret every positive value as true
-    bool cachescalar = (storescalar > 0);
-    bool cachetensor = (storetensor > 0);
+    bool cachescalar = (*storescalar > 0);
+    bool cachetensor = (*storetensor > 0);
     // we create a new model object that we can use for the calculations
     GravModel = boost::make_shared<jif3D::ThreeDGravityModel>();
     //depending on whether we want to save the sensitivities

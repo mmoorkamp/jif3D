@@ -25,6 +25,8 @@
 	#define JIF3D_PLATFORM "WINDOWS"
 #elif defined __linux
 	#define JIF3D_PLATFORM "LINUX"
+#elif defined __clang__
+  #define JIF3D_PLATFORM "CLANG"
 #else
 	#define JIF3D_PLATFORM "UNKNOWN"
 	#warning Unknown platform detected in Global/Jif3DPlatformHelper.h - compilation unlikely to succeed.
