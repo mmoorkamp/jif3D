@@ -203,6 +203,45 @@ namespace jif3D
             GetZCellSizes(), GetData(), XOrigin, YOrigin, ZOrigin);
       }
 
+    void ThreeDModelBase::WriteXYZ(const std::string &filename) const
+      {
+        std::ofstream outfile(filename.c_str());
+        std::vector<double> XCenter(XCellSizes.size()), YCenter(YCellSizes.size()),
+            ZCenter(ZCellSizes.size());
+        GetXCoordinates();
+        GetYCoordinates();
+        GetZCoordinates();
+        auto avgfunc = [](double a, double b)
+          { return (a+b)/2.0;};
+        std::adjacent_difference(GridXCoordinates.begin(), GridXCoordinates.end(),
+            XCenter.begin(), avgfunc);
+        std::adjacent_difference(GridYCoordinates.begin(), GridYCoordinates.end(),
+            YCenter.begin(), avgfunc);
+        std::adjacent_difference(GridZCoordinates.begin(), GridZCoordinates.end(),
+            ZCenter.begin(), avgfunc);
+        std::rotate(XCenter.begin(), XCenter.begin() + 1, XCenter.end());
+        std::rotate(YCenter.begin(), YCenter.begin() + 1, YCenter.end());
+        std::rotate(ZCenter.begin(), ZCenter.begin() + 1, ZCenter.end());
+
+        XCenter[XCenter.size() - 1] = GridXCoordinates[XCenter.size() - 1]
+            + GetXCellSizes()[XCenter.size() - 1] / 2.0;
+        YCenter[YCenter.size() - 1] = GridYCoordinates[YCenter.size() - 1]
+            + GetYCellSizes()[YCenter.size() - 1] / 2.0;
+        ZCenter[ZCenter.size() - 1] = GridZCoordinates[ZCenter.size() - 1]
+            + GetZCellSizes()[ZCenter.size() - 1] / 2.0;
+
+        size_t ncells = GetNModelElements();
+        std::cout << ncells << "\n";
+        for (size_t i = 0; i < ncells; ++i)
+          {
+            int xi, yi, zi;
+            OffsetToIndex(i, xi, yi, zi);
+            std::cout << i << " " << xi << " " <<  yi << " " << zi << "\n";
+            outfile << XCenter[xi] << " " << YCenter[yi] << " " << ZCenter[zi] << " "
+                << Data[xi][yi][zi] << "\n";
+          }
+      }
+
     void ThreeDModelBase::ReadMeasPosNetCDF(const std::string filename)
       {
         jif3D::ReadMeasPosNetCDF(filename, MeasPosX, MeasPosY, MeasPosZ);
