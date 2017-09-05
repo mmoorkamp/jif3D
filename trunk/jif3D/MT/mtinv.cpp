@@ -698,6 +698,7 @@ int hpx_main(boost::program_options::variables_map& vm)
 
     Model.WriteVTK(modelfilename + ".inv.vtk");
     Model.WriteNetCDF(modelfilename + ".inv.nc");
+    Model.WriteXYZ(modelfilename+".inv.xyz");
 
     std::cout << std::endl;
 #ifdef HAVEHPX
