@@ -34,7 +34,7 @@ namespace jif3D
       //! Have we evaluated the misfit and gradient for the current model?
       bool HaveEvaluated_;
       //! Calculate the misfit and the gradient for the current model
-      virtual void EvaluateModel(const jif3D::rvec &CurrentModel);
+      virtual void EvaluateModel(const jif3D::rvec &CurrentModel) override;
     protected:
       //! Derived classes can call this function to indicate that they have updated the misfit and raw gradient
       void HaveEvaluated()

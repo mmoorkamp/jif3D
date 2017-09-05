@@ -37,7 +37,7 @@ namespace jif3D
        * @param Model The current model
        * @param Diff The difference vector, i.e. raw value of regularization, for each model cell.
        */
-      virtual void ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff)
+      virtual void ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff) override
         {
           const size_t nmod = Model.size();
           //if we didn't specify a reference model that should be substracted
@@ -75,7 +75,7 @@ namespace jif3D
           zrange *= sqrt(zweight);
         }
       //! The gradient of the regularization with respect to the model parameters
-      virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model, const jif3D::rvec &Diff)
+      virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model, const jif3D::rvec &Diff) override
         {
           //set the gradient vector for each individual direction to the correct size
           const size_t nmod = Model.size();
@@ -142,12 +142,12 @@ namespace jif3D
        * function a return a pointer to a copy of itself.
        * @return A pointer to copy of the derived object
        */
-      virtual MatOpRegularization *clone() const
+      virtual MatOpRegularization *clone() const override
         {
           return new MatOpRegularization(*this);
         }
       //! We never want to terminate the inversion because the regularization has reached a particular value, so we return -1
-      virtual double ConvergenceLimit() const
+      virtual double ConvergenceLimit() const override
         {
           return -1.0;
         }

@@ -31,7 +31,7 @@ namespace jif3D
         }
     public:
       //! We setup a clone function to have a virtual constructor and create polymorphic copies
-      virtual ModelCopyTransform* clone() const
+      virtual ModelCopyTransform* clone() const override
         {
           return new ModelCopyTransform(*this);
         }
@@ -41,16 +41,16 @@ namespace jif3D
       virtual ~ModelCopyTransform()
         {
         }
-      virtual jif3D::rvec GeneralizedToPhysical(const jif3D::rvec &FullModel) const
+      virtual jif3D::rvec GeneralizedToPhysical(const jif3D::rvec &FullModel) const override
         {
           return FullModel;
         }
-      virtual jif3D::rvec PhysicalToGeneralized(const jif3D::rvec &FullModel) const
+      virtual jif3D::rvec PhysicalToGeneralized(const jif3D::rvec &FullModel) const override
         {
           return FullModel;
         }
       virtual jif3D::rvec Derivative(const jif3D::rvec &FullModel,
-          const jif3D::rvec &Derivative) const
+          const jif3D::rvec &Derivative) const override
         {
           return Derivative;
         }

@@ -37,7 +37,7 @@ namespace jif3D
           ar & ObservedData;
         }
     private:
-      virtual void ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff)
+      virtual void ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff) override
         {
           //make sure the sizes match
           //std::cout << "Model: " << Model << std::endl;
@@ -57,7 +57,7 @@ namespace jif3D
               Diff.begin(), std::minus<double>());
         }
       //! The implementation of the gradient calculation
-      virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model, const jif3D::rvec &Diff)
+      virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model, const jif3D::rvec &Diff) override
         {
           double misfit = CalcMisfit(Model);
           const size_t nlayers = Model.size();
@@ -91,14 +91,10 @@ namespace jif3D
 
           return Deriv;
         }
-      //! So far transformations have no effect
-      virtual void SetDataTransformAction()
-        {
-          //TODO Implement transformation if necessary
-        }
+
     public:
       //! The clone function provides a virtual constructor
-      virtual OneDMTObjective *clone() const
+      virtual OneDMTObjective *clone() const override
         {
           return new OneDMTObjective(*this);
         }

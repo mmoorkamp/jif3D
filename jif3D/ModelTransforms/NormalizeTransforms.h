@@ -38,25 +38,25 @@ namespace jif3D
         }
     public:
       //! We setup a clone function to have a virtual constructor and create polymorphic copies
-      virtual NormalizeTransform* clone() const
+      virtual NormalizeTransform* clone() const override
         {
           return new NormalizeTransform(*this);
         }
       //! Transform the normalized model parameters back to physical parameters
-      virtual jif3D::rvec GeneralizedToPhysical(const jif3D::rvec &FullModel) const
+      virtual jif3D::rvec GeneralizedToPhysical(const jif3D::rvec &FullModel) const override
         {
           assert(FullModel.size() == Reference.size());
           return ublas::element_prod(FullModel, Reference);
         }
       //! Transform the physical model parameters to generalized model parameters
-      virtual jif3D::rvec PhysicalToGeneralized(const jif3D::rvec &FullModel) const
+      virtual jif3D::rvec PhysicalToGeneralized(const jif3D::rvec &FullModel) const override
         {
           assert(FullModel.size() == Reference.size());
           return ublas::element_div(FullModel, Reference);
         }
       //! Transform the derivative with respect to the physical parameters to normalized parameters
       virtual jif3D::rvec Derivative(const jif3D::rvec &FullModel,
-          const jif3D::rvec &Derivative) const
+          const jif3D::rvec &Derivative) const override
         {
           return GeneralizedToPhysical(Derivative);
         }

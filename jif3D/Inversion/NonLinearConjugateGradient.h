@@ -36,7 +36,7 @@ namespace jif3D
       //! The step-size
       double mu;
       //! Implements a single NLCG step including line search
-      virtual void StepImplementation(jif3D::rvec &CurrentModel);
+      virtual void StepImplementation(jif3D::rvec &CurrentModel) override;
     public:
       //! We only have to provide a shared pointer to an objective function object
       /*! The constructor needs to know what to minimize

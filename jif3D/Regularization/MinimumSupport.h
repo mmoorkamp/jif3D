@@ -40,12 +40,12 @@ namespace jif3D
         }
     public:
       //! The clone function provides a virtual constructor
-      virtual MinimumSupport *clone() const
+      virtual MinimumSupport *clone() const override
         {
           return new MinimumSupport(*this);
         }
-      virtual void ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff);
-      virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model, const jif3D::rvec &Diff);
+      virtual void ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff) override;
+      virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model, const jif3D::rvec &Diff) override;
       MinimumSupport(boost::shared_ptr<jif3D::MatOpRegularization> RF, double b = 1.0);
       virtual ~MinimumSupport();
       };

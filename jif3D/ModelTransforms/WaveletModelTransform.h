@@ -67,19 +67,19 @@ namespace jif3D
         }
 
     public:
-      virtual WaveletModelTransform* clone() const
+      virtual WaveletModelTransform* clone() const override
         {
           return new WaveletModelTransform(*this);
         }
       //! Transform generalized model parameters (wavelet coefficients) to physical parameters
-      virtual jif3D::rvec GeneralizedToPhysical(const jif3D::rvec &FullModel) const
+      virtual jif3D::rvec GeneralizedToPhysical(const jif3D::rvec &FullModel) const override
         {
           boost::function1<void, boost::multi_array<double, 3> &> func =
               &jif3D::WaveletTransform<boost::multi_array<double, 3> >;
           return Transform(FullModel, func);
         }
       //! Transform physical parameters to generalized model parameters (wavelet coefficients)
-      virtual jif3D::rvec PhysicalToGeneralized(const jif3D::rvec &FullModel) const
+      virtual jif3D::rvec PhysicalToGeneralized(const jif3D::rvec &FullModel) const override
         {
           boost::function1<void, boost::multi_array<double, 3> &> func =
               &jif3D::InvWaveletTransform<boost::multi_array<double, 3> >;
@@ -87,7 +87,7 @@ namespace jif3D
         }
       //! Transform the derivative with respect to physical parameters into the wavelet domain
       virtual jif3D::rvec Derivative(const jif3D::rvec &FullModel,
-          const jif3D::rvec &Derivative) const
+          const jif3D::rvec &Derivative) const override
         {
           return GeneralizedToPhysical(Derivative);
         }

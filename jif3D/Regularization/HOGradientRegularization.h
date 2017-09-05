@@ -61,7 +61,7 @@ namespace jif3D
         }
     public:
       //! The clone function provides a virtual constructor
-      virtual HOGradientRegularization *clone() const
+      virtual HOGradientRegularization *clone() const override
         {
           return new HOGradientRegularization(*this);
         }

@@ -42,7 +42,7 @@ namespace jif3D
       //! The difference between the last MaxPairs gradients, \f$y_k\f$ in eq. 9.4 of Nocedal and Wright
       std::vector<boost::shared_ptr<jif3D::rvec> > YHistory;
       //! The implementation of a single step
-      virtual void StepImplementation(jif3D::rvec &CurrentModel);
+      virtual void StepImplementation(jif3D::rvec &CurrentModel) override;
     public:
       //! Set the maximum number of forward evaluations the inversion spends in one line-search
       void SetLineSearchIterations(const size_t iter)

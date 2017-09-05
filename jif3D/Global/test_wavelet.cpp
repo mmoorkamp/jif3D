@@ -5,7 +5,6 @@
 // Copyright   : 2008, MM
 //============================================================================
 
-
 //test the wavelet forward and inverse transforms
 #define BOOST_TEST_MODULE Wavelet test
 #define BOOST_TEST_MAIN ...
@@ -19,7 +18,7 @@
 
 BOOST_AUTO_TEST_SUITE( Wavelet_Test_Suite )
 
-BOOST_AUTO_TEST_CASE (wavelet_transform_pair)
+    BOOST_AUTO_TEST_CASE (wavelet_transform_pair)
       {
         //we check that a transform followed by the inverse
         //gives back the original result for a simple vector
@@ -39,10 +38,9 @@ BOOST_AUTO_TEST_CASE (wavelet_transform_pair)
         //check that they are still the same
         for (size_t i = 0; i < length; ++i)
           {
-            BOOST_CHECK_CLOSE(Original(i),Vector(i),1e-3);
+            BOOST_CHECK_CLOSE(Original(i), Vector(i), 1e-3);
           }
       }
-
 
     BOOST_AUTO_TEST_CASE (multi_dim_1dcomp)
       {
@@ -63,14 +61,14 @@ BOOST_AUTO_TEST_CASE (wavelet_transform_pair)
         jif3D::WaveletTransform(InArray);
         for (size_t i = 0; i < length; ++i)
           {
-            BOOST_CHECK_CLOSE(Vector(i),*(InArray.origin()+i),1e-3);
+            BOOST_CHECK_CLOSE(Vector(i), *(InArray.origin() + i), 1e-3);
           }
         //inverse transform both and check
         jif3D::InvWaveletTransform(Vector);
         jif3D::InvWaveletTransform(InArray);
         for (size_t i = 0; i < length; ++i)
           {
-            BOOST_CHECK_CLOSE(Vector(i),*(InArray.origin()+i),1e-3);
+            BOOST_CHECK_CLOSE(Vector(i), *(InArray.origin() + i), 1e-3);
           }
       }
 
@@ -79,16 +77,15 @@ BOOST_AUTO_TEST_CASE (wavelet_transform_pair)
         //we check that a transform followed by the inverse
         //gives back the original result for 3D arrays
         const size_t length = 8;
-        boost::multi_array<double, 3> InArray(
-            boost::extents[length][length][length]);
-        std::generate_n(InArray.origin(), pow(length, 3), rand);
+        boost::multi_array<double, 3> InArray(boost::extents[length][length][length]);
+        std::generate_n(InArray.origin(), length * length * length, rand);
 
         boost::multi_array<double, 3> Original(InArray);
         jif3D::WaveletTransform(InArray);
         jif3D::InvWaveletTransform(InArray);
         for (size_t i = 0; i < InArray.num_elements(); ++i)
           {
-            BOOST_CHECK_CLOSE(*(Original.origin()+i),*(InArray.origin()+i),1e-3);
+            BOOST_CHECK_CLOSE(*(Original.origin() + i), *(InArray.origin() + i), 1e-3);
           }
       }
     BOOST_AUTO_TEST_SUITE_END()

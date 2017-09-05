@@ -39,12 +39,12 @@ namespace jif3D
       //! The directory and name of the file to write the file with the sensitivities
       boost::filesystem::path FullPath;
       //calculate the raw data without any transformation from the sensitivities stored in the file
-      virtual rvec CalculateRawData(const ThreeDModelType &Model);
+      virtual rvec CalculateRawData(const ThreeDModelType &Model) override;
       //when we calculate a completely new model we have to delete the file with the old sensitivities
-      virtual rvec CalculateNewModel(const ThreeDModelType &Model);
+      virtual rvec CalculateNewModel(const ThreeDModelType &Model) override;
       //calculate the raw derivative without any transformation from the sensitivities stored in the file
       virtual rvec CalculateRawLQDerivative(const ThreeDModelType &Model,
-          const rvec &Misfit);
+          const rvec &Misfit) override;
       friend class access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
@@ -57,7 +57,7 @@ namespace jif3D
         }
     public:
       //! Handle the current row of the sensitivity matrix by storing it in a file
-      virtual void HandleSensitivities(const size_t measindex);
+      virtual void HandleSensitivities(const size_t measindex) override;
       //! The constructor needs a shared pointer to an implementation object, usually handled by CreateGravityCalculator
       explicit DiskGravMagCalculator(
           boost::shared_ptr<ThreeDGravMagImplementation<ThreeDModelType> > TheImp,

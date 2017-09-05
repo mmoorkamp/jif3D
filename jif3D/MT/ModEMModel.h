@@ -27,9 +27,9 @@ namespace jif3D
           ar & base_object<ThreeDMTModel>(*this);
         }
       //! Write all model information to a netcdf file
-      virtual void WriteNetCDF(const std::string &filename) const;
+      virtual void WriteNetCDF(const std::string &filename) const override;
       //! Read all model information from a netcdf file
-      virtual void ReadNetCDF(const std::string &filename);
+      virtual void ReadNetCDF(const std::string &filename) override;
       //! Other models will be copied by the copy operator for the base class
       ModEMModel& operator=(const ThreeDModelBase& source);
       };

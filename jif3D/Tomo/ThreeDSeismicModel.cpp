@@ -5,7 +5,6 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-
 #include "ThreeDSeismicModel.h"
 #include "../Global/FatalException.h"
 #include <boost/numeric/conversion/cast.hpp>
@@ -102,6 +101,11 @@ namespace jif3D
         NcFile DataFile(filename, NcFile::replace);
         //write the 3D discretized part
         WriteDataToNetCDF(DataFile, SlownessName, SlownessUnit);
+      }
+
+    void ThreeDSeismicModel::ReadNetCDF(const std::string &filename)
+      {
+        ReadNetCDF(filename, false);
       }
 
     void ThreeDSeismicModel::ReadNetCDF(const std::string &filename, bool checkgrid)

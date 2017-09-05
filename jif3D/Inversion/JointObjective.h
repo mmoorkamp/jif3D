@@ -74,12 +74,12 @@ namespace jif3D
         }
       //the implementation of the misfit calculation
       virtual void
-      ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff);
+      ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff) override;
       //the implementation of the gradient calculation
-      virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model, const jif3D::rvec &Diff);
+      virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model, const jif3D::rvec &Diff) override;
     public:
       //! The clone function provides a virtual constructor
-      virtual JointObjective *clone() const
+      virtual JointObjective *clone() const override
         {
           return new JointObjective(*this);
         }

@@ -35,16 +35,16 @@ namespace jif3D
 		}
 	public:
     //! The clone function provides a virtual constructor
-    virtual DotStructureConstraint *clone() const
+    virtual DotStructureConstraint *clone() const override
       {
         return new DotStructureConstraint(*this);
       }
 		//! The implementation of the objective function calculation
 		virtual void
-		ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff);
+		ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff) override;
 		//! The gradient of the objective function with respect to the model parameters
 		virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model,
-				const jif3D::rvec &Diff);
+				const jif3D::rvec &Diff) override;
 		explicit DotStructureConstraint(const jif3D::ThreeDModelBase &Geometry) :
 				FirstGradient(Geometry, 0.0), SecondGradient(Geometry, 0.0), ModelGeometry(
 						Geometry)

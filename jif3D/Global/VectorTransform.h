@@ -90,11 +90,11 @@ namespace jif3D
         {
           ar & ntrans;
         }
-      virtual size_t GetInputSize() const
+      virtual size_t GetInputSize() const override
         {
           return ntrans;
         }
-      virtual size_t GetOutputSize() const
+      virtual size_t GetOutputSize() const override
         {
           return ntrans;
         }
@@ -107,12 +107,12 @@ namespace jif3D
         {
         }
       //! This "transformation" just passes the input parameter through
-      virtual jif3D::rvec Transform(const jif3D::rvec &InputVector) const
+      virtual jif3D::rvec Transform(const jif3D::rvec &InputVector) const override
         {
           return InputVector;
         }
       //! When generalized and physical parameters are the same the derivative is 1 for all parameters
-      virtual jif3D::rmat Derivative(const jif3D::rvec &InputVector) const
+      virtual jif3D::rmat Derivative(const jif3D::rvec &InputVector) const override
         {
           return ublas::identity_matrix<double>(InputVector.size());
         }
