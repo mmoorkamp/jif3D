@@ -6,7 +6,7 @@ rm *.nc
 #will change from 3000m/s at the top to 6000m/s at
 #the bottom of the domain
 #the output file name is  start_tomo.nc
-../../Tomo/bin/gcc-4.8/release/parallelization-openmp/threading-multi/makeseismesh << eof
+~/workspace/jif3D/Tomo/bin/gcc-5.4.0/release/parallelization-openmp/threading-multi/makeseismesh << eof
 20
 20
 10
@@ -29,7 +29,7 @@ ncap2 -s "Slowness(0:3,5:10,5:15)=Slowness(0:3,5:10,5:15)*1.2; Slowness(0:3,11:1
 #sources and receivers will be placed at the surface between 1000m and 9000m
 #with a 2000m spacing between them
 #we are adding 2% gaussian noise to the data
-../../Tomo/bin/gcc-4.8/release/parallelization-openmp/threading-multi/tomogrid << eof
+~/workspace/jif3D/Tomo/bin/gcc-5.4.0/release/parallelization-openmp/threading-multi/tomogrid << eof
 1000
 9000
 2000
@@ -58,7 +58,7 @@ ncatted -O -a units,Density,m,c,"g/cm3" dens_ano.nc
 ncatted -O -a units,Density,m,c,"g/cm3" start_dens.nc
 #create the background around the gridded domain
 #we embedd the density model in a layered background to avoid
-#boundary effects fromt the finite extent of the grid		
+#boundary effects fromt the finite extent of the grid
 cp dens_ano.nc tmp1.nc
 ncap2 -A -S makedens tmp1.nc dens_ano.nc
 cp start_dens.nc tmp2.nc
@@ -69,7 +69,7 @@ ncap2 -A -S makedens tmp2.nc start_dens.nc
 #the measurements are located between 1400m and 8400m
 #in x-direction and y-direction with a spacing of 500m
 #we do not add any noise to the data 
-../../Gravity/bin/gcc-4.8/release/parallelization-openmp/threading-multi/gravgrid << eof
+~/workspace/jif3D/Gravity/bin/gcc-5.4.0/release/parallelization-openmp/threading-multi/gravgrid << eof
 1400
 8400
 500
