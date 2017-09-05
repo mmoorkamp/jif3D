@@ -16,7 +16,7 @@ feature.feature eigen : off on : composite incidental ;
 feature.compose <eigen>on : <define>HAVEEIGEN ; 
 
 feature.feature parallelization : openmp hpx  : composite propagated symmetric ;
-feature.compose <parallelization>openmp : <define>HAVEOPENMP <cflags>" -fopenmp -std=c++0x " <linkflags>" -fopenmp  " ;
+feature.compose <parallelization>openmp : <define>HAVEOPENMP <cflags>" -fopenmp  " <linkflags>" -fopenmp  " ;
 feature.compose <parallelization>hpx : <define>HAVEHPX <hpx>on <cflags>"-fopenmp `pkg-config --cflags hpx_application`" <linkflags>"-fopenmp  `pkg-config --libs hpx_application` " ;
 
 constant BOOST_LIB_PATH : /usr/local/lib ;
@@ -43,7 +43,8 @@ project
     	<variant>release:<define>NDEBUG
     	<variant>profile:<define>NDEBUG  
     	<toolset>gcc<variant>debug:<cflags>" -ggdb3 "
-    	<toolset>gcc:<cflags>" -ansi  -Wall  -Wno-long-long   -pedantic"
+    	<toolset>gcc:<cxxflags>" -std=c++11  -Wall  -Wno-long-long   -pedantic"
+    	<toolset>clang:<cxxflags>" -std=c++11  -Wall  -Wno-long-long   -pedantic"
     	<toolset>msvc:<define>_SCL_SECURE_NO_WARNINGS
     	<toolset>msvc:<define>NOMINMAX
 		<toolset>msvc:<define>BOOST_ALL_DYN_LINK
