@@ -28,7 +28,7 @@ namespace jif3D
       boost::shared_ptr<jif3D::GeneralModelTransform> ConductivityTransform;
     public:
       //! The clone function provides a virtual constructor
-      virtual SaltRelConstraint *clone() const
+      virtual SaltRelConstraint *clone() const override
         {
           return new SaltRelConstraint(*this);
         }
@@ -37,8 +37,8 @@ namespace jif3D
           Geometry = Geo;
         }
       virtual void
-      ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff);
-      virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model, const jif3D::rvec &Diff);
+      ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff) override;
+      virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model, const jif3D::rvec &Diff) override;
       SaltRelConstraint(boost::shared_ptr<jif3D::GeneralModelTransform> DensTrans,
           boost::shared_ptr<jif3D::GeneralModelTransform> CondTrans);
       virtual ~SaltRelConstraint();

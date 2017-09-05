@@ -25,14 +25,14 @@ namespace jif3D
       double FieldStrength;
       virtual rvec CalcBackground(const size_t measindex, const double xwidth,
           const double ywidth, const double zwidth, const ThreeDMagneticModel &Model,
-          rmat &Sensitivities)
+          rmat &Sensitivities) override
         {
           rvec returnvector(ndatapermeas, 0.0);
           return returnvector;
         }
       //! Calculate the response of the gridded part
       virtual rvec CalcGridded(const size_t measindex, const ThreeDMagneticModel &Model,
-          rmat &Sensitivities);
+          rmat &Sensitivities)  override;
       //! We chose vertical gradient of Z magnetic component from three magnetic field components
       static const size_t ndatapermeas = 1;
       friend class access;
@@ -47,7 +47,7 @@ namespace jif3D
         }
     public:
       //! How many data do we return before any transformation
-      virtual size_t RawDataPerMeasurement()
+      virtual size_t RawDataPerMeasurement() override
         {
           return ndatapermeas;
         }

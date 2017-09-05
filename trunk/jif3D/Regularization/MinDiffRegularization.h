@@ -44,7 +44,7 @@ namespace jif3D
         }
     public:
       //! The clone function provides a virtual constructor
-      virtual MinDiffRegularization *clone() const
+      virtual MinDiffRegularization *clone() const override
         {
           return new MinDiffRegularization(*this);
         }

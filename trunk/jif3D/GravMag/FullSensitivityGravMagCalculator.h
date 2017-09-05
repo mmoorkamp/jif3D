@@ -42,11 +42,11 @@ namespace jif3D
       virtual rvec CalculateRawLQDerivative(const ThreeDModelType &Model,
           const rvec &Misfit);
       //! Calculate a new model when no cached information is available or valid
-      virtual rvec CalculateNewModel(const ThreeDModelType &Model);
+      virtual rvec CalculateNewModel(const ThreeDModelType &Model) override;
       //! calculate Data with applied transformation when cached sensitivities are still valid
-      virtual rvec CalculateCachedResult(const ThreeDModelType &Model);
+      virtual rvec CalculateCachedResult(const ThreeDModelType &Model) override;
       //! calculate derivative of least squares objective function with applied transformation when cached sensitivities are still valid
-      virtual rvec CachedLQDerivative(const ThreeDModelType &Model, const rvec &Misfit);
+      virtual rvec CachedLQDerivative(const ThreeDModelType &Model, const rvec &Misfit) override;
       friend class access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
@@ -68,7 +68,7 @@ namespace jif3D
           return Sensitivities;
         }
       //! This function is called by the implementation classes and allows to integrate the results from a single measurement
-      virtual void HandleSensitivities(const size_t measindex);
+      virtual void HandleSensitivities(const size_t measindex) override;
       //! The constructor takes a shared pointer to an implementation object
       FullSensitivityGravMagCalculator(
           boost::shared_ptr<ThreeDGravMagImplementation<ThreeDModelType> > TheImp);

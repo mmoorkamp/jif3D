@@ -61,7 +61,7 @@ namespace jif3D
         }
     public:
       //! We setup a clone function to have a virtual constructor and create polymorphic copies
-      virtual MultiSectionTransform* clone() const
+      virtual MultiSectionTransform* clone() const override
         {
           return new MultiSectionTransform(*this);
         }
@@ -76,7 +76,7 @@ namespace jif3D
        * @param FullModel The full model vector containing all information in generalized form
        * @return A vector pieced together from different sections of the full model and with appropriate transformations applied
        */
-      virtual jif3D::rvec GeneralizedToPhysical(const jif3D::rvec &FullModel) const
+      virtual jif3D::rvec GeneralizedToPhysical(const jif3D::rvec &FullModel) const override
         {
           using boost::numeric::ublas::subrange;
           //we calculate the total length of the transformed vector from
@@ -110,7 +110,7 @@ namespace jif3D
        * @param FullModel The (potentially shorter) vector containing the information pieced together by GeneralizedToPhysical
        * @return The (potentially longer) output vector where the information in the input vector has been copied to the appropriate section, all other values are zero
        */
-      virtual jif3D::rvec PhysicalToGeneralized(const jif3D::rvec &FullModel) const
+      virtual jif3D::rvec PhysicalToGeneralized(const jif3D::rvec &FullModel) const override
         {
           jif3D::rvec Result(length, 0.0);
           const size_t nsections = startindices.size();
@@ -136,7 +136,7 @@ namespace jif3D
        * @return The drievative for the full model vector
        */
       virtual jif3D::rvec Derivative(const jif3D::rvec &FullModel,
-          const jif3D::rvec &Derivative) const
+          const jif3D::rvec &Derivative) const override
         {
           using boost::numeric::ublas::subrange;
           jif3D::rvec Result(length, 0.0);

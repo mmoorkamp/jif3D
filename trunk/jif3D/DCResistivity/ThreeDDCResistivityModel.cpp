@@ -105,14 +105,14 @@ namespace jif3D
         ThreeDModelBase::SetOrigin(x, y, z);
       }
 
-    void ThreeDDCResistivityModel::WriteNetCDF(const std::string filename) const
+    void ThreeDDCResistivityModel::WriteNetCDF(const std::string &filename) const
       {
         netCDF::NcFile DataFile(filename.c_str(), netCDF::NcFile::replace);
         //write the 3D discretized part
         WriteDataToNetCDF(DataFile, ResistivityName, ResistivityUnit);
       }
 
-    void ThreeDDCResistivityModel::ReadNetCDF(const std::string filename)
+    void ThreeDDCResistivityModel::ReadNetCDF(const std::string &filename)
       {
         //create the netcdf file object
         netCDF::NcFile DataFile(filename.c_str(), netCDF::NcFile::read);

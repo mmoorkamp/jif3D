@@ -99,12 +99,12 @@ namespace jif3D
       jif3D::rvec SynthData;
       //! The implementation of the objective function
       virtual void
-      ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff);
+      ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff) override;
       //! The implementation of the gradient calculation
-      virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model, const jif3D::rvec &Diff);
+      virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model, const jif3D::rvec &Diff) override;
     public:
       //! The clone function provides a virtual constructor
-      virtual ThreeDModelObjective<ThreeDCalculatorType> *clone() const
+      virtual ThreeDModelObjective<ThreeDCalculatorType> *clone() const override
         {
           return new ThreeDModelObjective<ThreeDCalculatorType>(*this);
         }

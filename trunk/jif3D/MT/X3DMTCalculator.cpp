@@ -100,7 +100,7 @@ namespace jif3D
         const size_t nmeas = Model.GetMeasPosX().size();
         if (ForwardExecTime.empty())
           {
-            for (size_t i = 0; i < nfreq; ++i)
+            for (int i = 0; i < nfreq; ++i)
               {
                 ForwardExecTime.push_back(std::make_pair(0, minfreqindex + i));
               }
@@ -116,7 +116,7 @@ namespace jif3D
             ExIndices.resize(nmeas * nfreq);
             EyIndices.resize(nmeas * nfreq);
             HIndices.resize(nmeas * nfreq);
-            for (size_t ifr = 0; ifr < nfreq; ++ifr)
+            for (int ifr = 0; ifr < nfreq; ++ifr)
               {
                 ind_shift = nmeas * ifr;
                 for (size_t i = 0; i < nmeas; ++i)
@@ -177,9 +177,6 @@ namespace jif3D
 #ifdef HAVEOPENMP
         omp_lock_t lck;
         omp_init_lock(&lck);
-        //openmp loop indices have to be int, so we cast out upper limit to int
-        //to make the compiler happy
-        int maxindex = boost::numeric_cast<int>(maxfreqindex);
         rvec RawImp(RawImpedance.size(),0.0);
         //we parallelize by frequency, this is relatively simple
         //but we can use up to 20 processors for typical MT problems
@@ -294,7 +291,7 @@ namespace jif3D
         const int nfreq = maxfreqindex - minfreqindex;
         if (DerivExecTime.empty())
           {
-            for (size_t i = 0; i < nfreq; ++i)
+            for (int i = 0; i < nfreq; ++i)
               {
                 DerivExecTime.push_back(std::make_pair(0, minfreqindex + i));
               }
@@ -304,8 +301,7 @@ namespace jif3D
         const size_t nmodx = Model.GetConductivities().shape()[0];
         const size_t nmody = Model.GetConductivities().shape()[1];
         const size_t nmodz = Model.GetConductivities().shape()[2];
-        //the number of measurement sites
-        const size_t nmeas = Model.GetMeasPosX().size();
+
         const size_t nstats = Model.GetExIndices().size() / nfreq;
         const size_t nmod = nmodx * nmody * nmodz;
         assert(Misfit.size() == nstats * nfreq * 8);
@@ -355,9 +351,7 @@ namespace jif3D
         std::vector<std::pair<size_t, size_t>> NewExecTime;
         omp_lock_t lck;
         omp_init_lock(&lck);
-        //openmp loop indices have to be int, so we cast out upper limit to int
-        //to make the compiler happy
-        int maxindex = boost::numeric_cast<int>(maxfreqindex);
+
         //we parallelize the gradient calculation by frequency
         //see also the comments for the forward calculation
         //here the explicitly shared variable is Gradient
@@ -462,7 +456,6 @@ namespace jif3D
         maxfreqindex = std::min(maxfreqindex, Model.GetFrequencies().size());
         const size_t nfreq = maxfreqindex - minfreqindex;
         const size_t ndata = Misfit.size();
-        const size_t nmeas = Model.GetMeasPosX().size();
 
         const size_t nmodel = Model.GetConductivities().num_elements();
         //const size_t nsites = Model.GetMeasPosX().size();

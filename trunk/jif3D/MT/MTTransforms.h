@@ -25,11 +25,11 @@ namespace jif3D
           ar & ntrans;
         }
     public:
-      virtual size_t GetInputSize() const
+      virtual size_t GetInputSize() const override
         {
           return ntrans;
         }
-      virtual size_t GetOutputSize() const
+      virtual size_t GetOutputSize() const override
         {
           return ntrans;
         }
@@ -42,7 +42,7 @@ namespace jif3D
         {
         }
 
-      virtual jif3D::rvec Transform(const jif3D::rvec &InputVector) const
+      virtual jif3D::rvec Transform(const jif3D::rvec &InputVector) const override
         {
           jif3D::rvec Result(2);
           double absval = std::abs(std::complex<double>(InputVector(0), InputVector(1)));
@@ -57,7 +57,7 @@ namespace jif3D
           return Result;
         }
 
-      virtual jif3D::rmat Derivative(const jif3D::rvec &InputVector) const
+      virtual jif3D::rmat Derivative(const jif3D::rvec &InputVector) const override
         {
           double p = std::atan2(InputVector(1), InputVector(0));
           double az = std::max(threshold,std::abs(std::complex<double>(InputVector(0), InputVector(1))));
@@ -84,11 +84,11 @@ namespace jif3D
           ar & ntrans;
         }
     public:
-      virtual size_t GetInputSize() const
+      virtual size_t GetInputSize() const override
         {
           return ntrans;
         }
-      virtual size_t GetOutputSize() const
+      virtual size_t GetOutputSize() const override
         {
           return ntrans;
         }
@@ -101,7 +101,7 @@ namespace jif3D
         {
         }
 
-      virtual jif3D::rvec Transform(const jif3D::rvec &InputVector) const
+      virtual jif3D::rvec Transform(const jif3D::rvec &InputVector) const override
         {
           jif3D::rvec Result(2);
           Result(0) = InputVector(1);
@@ -109,7 +109,7 @@ namespace jif3D
           return Result;
         }
 
-      virtual jif3D::rmat Derivative(const jif3D::rvec &InputVector) const
+      virtual jif3D::rmat Derivative(const jif3D::rvec &InputVector) const override
         {
           jif3D::rmat Result(2, 2, 0.0);
           Result(0, 0) = 0.0;

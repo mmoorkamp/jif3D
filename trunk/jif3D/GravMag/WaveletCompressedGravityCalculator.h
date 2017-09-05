@@ -52,9 +52,9 @@ namespace jif3D
       jif3D::map_mat SparseSens;
       //we try depth weighting to solve some numerical problems
       jif3D::rvec WhiteningVector;
-      virtual rvec CalculateNewModel(const ThreeDGravityModel &Model);
-      virtual rvec CalculateCachedResult(const ThreeDGravityModel &Model);
-      virtual rvec CachedLQDerivative(const ThreeDGravityModel &Model, const rvec &Misfit);
+      virtual rvec CalculateNewModel(const ThreeDGravityModel &Model) override;
+      virtual rvec CalculateCachedResult(const ThreeDGravityModel &Model) override;
+      virtual rvec CachedLQDerivative(const ThreeDGravityModel &Model, const rvec &Misfit) override;
     public:
       //! Get the compressed matrix of sensitivities in the wavelet domain
       const jif3D::map_mat &GetSensitivities() const {return SparseSens;}
@@ -72,7 +72,7 @@ namespace jif3D
        * @return A reference to the WhiteningVector
        */
       jif3D::rvec &SetWitheningVector(){return WhiteningVector;}
-      virtual void HandleSensitivities(const size_t measindex);
+      virtual void HandleSensitivities(const size_t measindex) override;
       //! The constructor takes a shared pointer to an implementation object
       WaveletCompressedGravityCalculator(boost::shared_ptr<ThreeDGravMagImplementation> TheImp);
       virtual ~WaveletCompressedGravityCalculator();

@@ -39,12 +39,12 @@ namespace jif3D
         }
     public:
       //! We setup a clone function to have a virtual constructor and create polymorphic copies
-      virtual LogTransform* clone() const
+      virtual LogTransform* clone() const override
         {
           return new LogTransform(*this);
         }
       //! Transform the normalized model parameters back to physical parameters
-      virtual jif3D::rvec GeneralizedToPhysical(const jif3D::rvec &FullModel) const
+      virtual jif3D::rvec GeneralizedToPhysical(const jif3D::rvec &FullModel) const override
         {
           assert(FullModel.size() == Reference.size());
           jif3D::rvec Output(FullModel.size());
@@ -53,7 +53,7 @@ namespace jif3D
           return Output;
         }
       //! Transform the physical model parameters to generalized model parameters
-      virtual jif3D::rvec PhysicalToGeneralized(const jif3D::rvec &FullModel) const
+      virtual jif3D::rvec PhysicalToGeneralized(const jif3D::rvec &FullModel) const override
         {
           assert(FullModel.size() == Reference.size());
           jif3D::rvec Output(FullModel.size());
@@ -63,7 +63,7 @@ namespace jif3D
         }
       //! Transform the derivative with respect to the physical parameters to normalized parameters
       virtual jif3D::rvec Derivative(const jif3D::rvec &FullModel,
-          const jif3D::rvec &Derivative) const
+          const jif3D::rvec &Derivative) const override
         {
 
           jif3D::rvec Output(FullModel.size());

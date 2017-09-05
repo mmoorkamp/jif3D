@@ -59,12 +59,12 @@ namespace jif3D
         }
     public:
       //! We setup a clone function to have a virtual constructor and create polymorphic copies
-      virtual DensityTransform* clone() const
+      virtual DensityTransform* clone() const override
         {
           return new DensityTransform(*this);
         }
       //! Transform the normalized model parameters back to physical parameters, in this case from Slowness to Density
-      virtual jif3D::rvec GeneralizedToPhysical(const jif3D::rvec &FullModel) const
+      virtual jif3D::rvec GeneralizedToPhysical(const jif3D::rvec &FullModel) const override
         {
           assert(RelModel.GetData().num_elements() == FullModel.size());
           jif3D::rvec Slowness(SlownessTransform->GeneralizedToPhysical(FullModel));
@@ -85,7 +85,7 @@ namespace jif3D
           return Density;
         }
       //! Transform from Density to Slowness
-      virtual jif3D::rvec PhysicalToGeneralized(const jif3D::rvec &FullModel) const
+      virtual jif3D::rvec PhysicalToGeneralized(const jif3D::rvec &FullModel) const override
         {
           jif3D::rvec Slowness(FullModel.size());
           for (size_t i = 0; i < FullModel.size(); ++i)
@@ -104,7 +104,7 @@ namespace jif3D
         }
       //! Transform the derivative with respect to the Slowness to Density
       virtual jif3D::rvec Derivative(const jif3D::rvec &FullModel,
-          const jif3D::rvec &Derivative) const
+          const jif3D::rvec &Derivative) const override
         {
           jif3D::rvec Slowness(SlownessTransform->GeneralizedToPhysical(FullModel));
           jif3D::rvec SlowDeriv(SlownessTransform->Derivative(FullModel, Derivative));

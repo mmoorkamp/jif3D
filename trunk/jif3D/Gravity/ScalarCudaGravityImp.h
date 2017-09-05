@@ -65,10 +65,10 @@ namespace jif3D
       //! Calculate the response of the background, currently this is done on the CPU
       virtual rvec CalcBackground(const size_t measindex, const double xwidth,
           const double ywidth, const double zwidth,
-          const ThreeDGravityModel &Model, rmat &Sensitivities);
+          const ThreeDGravityModel &Model, rmat &Sensitivities) override;
       //! Calculate the response of the gridded part, this is done on the GPU with CUDA
       virtual rvec CalcGridded(const size_t measindex,
-          const ThreeDGravityModel &Model, rmat &Sensitivities);
+          const ThreeDGravityModel &Model, rmat &Sensitivities) override;
       //! This class cannot be copied, so copy constructor and assignment are private
       jif3D::ScalarCudaGravityImp &operator=(const jif3D::ScalarCudaGravityImp&);
       ScalarCudaGravityImp(const jif3D::ScalarCudaGravityImp&);

@@ -73,7 +73,7 @@ namespace jif3D
       //! Given three coordinates in m, find the indices of the model cell that correponds to these coordinates, this is a more efficient implementation than the one in the base class
       virtual boost::array<ThreeDModelBase::t3DModelData::index, 3>
       FindAssociatedIndices(const double xcoord, const double ycoord,
-          const double zcoord) const;
+          const double zcoord) const override;
       //! The seismic model has the same cell size for all cells in all directions so we just have one function to set it
       /*! This function sets both the size of all cells as well as the number of cells in x,y and z-direction
        * @param Size The size of each cell in all directions in m
@@ -182,16 +182,24 @@ namespace jif3D
           ReceiverIndices = Source.ReceiverIndices;
         }
       //! Set the origin of the coordinate system, this is a reimplementation from the base class to also change the source positions
-      virtual void SetOrigin(const double x, const double y, const double z);
+      virtual void SetOrigin(const double x, const double y, const double z) override;
       //! Write the seismic model in VTK format, at the moment the best format for plotting, this only writes the slowness and not the source and receiver positions
       void WriteVTK(const std::string filename) const
         {
           ThreeDModelBase::WriteVTK(filename, "Slowness");
         }
       //! Write the seimic model and all associated information in a netcdf file
-      virtual void WriteNetCDF(const std::string &filename) const;
-      //! Read the seismic model and all associated information from a netcdf file
-      virtual void ReadNetCDF(const std::string &filename, bool checkgrid = false);
+      virtual void WriteNetCDF(const std::string &filename) const override;
+      //! Read the seismic model and all associated information from a netcdf file, this version does not check the validity of the grid
+      virtual void ReadNetCDF(const std::string &filename) override;
+      //! Read the seismic model and all associated information from a netcdf file, optionally check if grid is valid for tomography
+      /*! A valid grid for tomography has equal cell sizes in all directions. However,
+       * we reuse grid files for other purposes to make it easier to handle, so this
+       * routine can optionally check if all cells have the same size in all directions
+       * @param filename The name of the netcdf file
+       * @param checkgrid Perform check that all cells have the same size
+       */
+      virtual void ReadNetCDF(const std::string &filename, bool checkgrid);
       ThreeDSeismicModel();
       //! We define our own copy constructor
       ThreeDSeismicModel(const ThreeDSeismicModel &source);

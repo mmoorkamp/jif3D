@@ -22,9 +22,9 @@ namespace jif3D
       private:
       //the implementation of the misfit calculation
       virtual void
-      ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff);
+      ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff) override;
       //the implementation of the gradient calculation
-      virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model, const jif3D::rvec &Diff);
+      virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model, const jif3D::rvec &Diff) override;
     public:
       MultiplicativeObjective(bool Verbose = false);
       virtual ~MultiplicativeObjective();

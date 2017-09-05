@@ -40,7 +40,7 @@ namespace jif3D
         }
     public:
       //! The clone function provides a virtual constructor
-      virtual OneDRegularization *clone() const
+      virtual OneDRegularization *clone() const override
         {
           return new OneDRegularization(*this);
         }
@@ -55,8 +55,8 @@ namespace jif3D
         {
           RefMod = Model;
         }
-      virtual void ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff);
-      virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model, const jif3D::rvec &Diff);
+      virtual void ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff) override;
+      virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model, const jif3D::rvec &Diff) override;
       OneDRegularization(const size_t nlayers);
       virtual ~OneDRegularization();
       };

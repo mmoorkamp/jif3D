@@ -229,16 +229,16 @@ namespace jif3D
 
 
       //! Set the origin of the coordinate system, this is a reimplementation from the base class to also change the source positions
-      virtual void SetOrigin(const double x, const double y, const double z);
+      virtual void SetOrigin(const double x, const double y, const double z) override;
       //! Write the resistivity model in VTK format, at the moment the best format for plotting, this only writes the resistivity and not the source and receiver positions
       void WriteVTK(const std::string filename) const
         {
           ThreeDModelBase::WriteVTK(filename, "Resistivity");
         }
       //! Write the resistivity model and all associated information in a netcdf file
-      virtual void WriteNetCDF(const std::string filename) const;
+      virtual void WriteNetCDF(const std::string &filename) const override;
       //! Read the resistivity model and all associated information from a netcdf file
-      virtual void ReadNetCDF(const std::string filename);
+      virtual void ReadNetCDF(const std::string &filename) override;
       ThreeDDCResistivityModel();
       //! We define our own copy constructor
       ThreeDDCResistivityModel(const ThreeDDCResistivityModel &source);

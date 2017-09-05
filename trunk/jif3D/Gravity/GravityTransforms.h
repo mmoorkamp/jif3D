@@ -36,12 +36,12 @@ namespace jif3D
         }
     public:
       //! Return the size of the input vector this class expects
-      virtual size_t GetInputSize() const
+      virtual size_t GetInputSize() const override
         {
           return ninput;
         }
       //! Return the size of the input vector this class will yield
-      virtual size_t GetOutputSize() const
+      virtual size_t GetOutputSize() const override
         {
           return noutput;
         }
@@ -50,7 +50,7 @@ namespace jif3D
        * @param InputVector The tensor elements as a vector in c-storage order, has to have 9 elements
        * @return A vector with a single element, the calculated invariant.
        */
-      virtual jif3D::rvec Transform(const jif3D::rvec &InputVector) const
+      virtual jif3D::rvec Transform(const jif3D::rvec &InputVector) const override
         {
           assert(InputVector.size() == ninput);
           jif3D::rvec result(1);
@@ -63,7 +63,7 @@ namespace jif3D
        * @param InputVector The tensor elements as a vector in c-storage order, has to have 9 elements
        * @return A 1x9 matrix of partial derivatives
        */
-      virtual jif3D::rmat Derivative(const jif3D::rvec &InputVector) const
+      virtual jif3D::rmat Derivative(const jif3D::rvec &InputVector) const override
         {
           const size_t ndata = InputVector.size();
           if (ndata != ninput)

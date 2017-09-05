@@ -53,20 +53,20 @@ namespace jif3D
         }
     public:
       //! The clone function provides a virtual constructor
-      virtual CrossGradient *clone() const
+      virtual CrossGradient *clone() const override
         {
           return new CrossGradient(*this);
         }
       //! We never want to terminate the inversion because the regularization has reached a particular value, so we return 0
-      virtual double ConvergenceLimit() const
+      virtual double ConvergenceLimit() const override
         {
           return -1.0;
         }
       //! The implementation of the cross-gradient calculation
       virtual void
-      ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff);
+      ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff) override;
       //! The gradient of the cross-gradient objective function with respect to the model parameters
-      virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model, const jif3D::rvec &Diff);
+      virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model, const jif3D::rvec &Diff) override;
       //!The constructor takes any 3D model object as a parameter to extract the geometry information
       /*! The geometry information of the 3D model is passed to the cross-gradient function through
        * the constructor. Note that during the inversion we assume Model.size() == 2*Geometry.GetData().num_elements()

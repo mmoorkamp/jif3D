@@ -1,7 +1,6 @@
 #define BOOST_TEST_MODULE SeismicModel test
 #define BOOST_TEST_MAIN ...
 #include "../Global/Jif3DTesting.h"
-#include <boost/test/included/unit_test.hpp>
 #include <stdlib.h>
 #include <time.h>
 #include <vector>
@@ -140,7 +139,7 @@ BOOST_AUTO_TEST_CASE  (interpolate_test)
       Model.AddSource(geo.x[0], geo.y[0], geo.z[0]);
       Model.AddMeasurementPoint(geo.x[0], geo.y[0], geo.z[0]);
       Model.AddSource(geo.x[1], geo.y[1], geo.z[1]);
-      std::fill_n(Model.SetSlownesses().origin(), pow(double(ncells), 3), 0.1);
+      std::fill_n(Model.SetSlownesses().origin(), ncells * ncells * ncells, 0.1);
       Model.AddMeasurementConfiguration(0, 0);
       Model.AddMeasurementConfiguration(1, 1);
       jif3D::rvec time(Calculator.Calculate(Model));

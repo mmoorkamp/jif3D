@@ -38,9 +38,9 @@ namespace jif3D
         }
     public:
       //! The implementation of the forward calculation
-      virtual rvec Calculate(const ThreeDModelType &Model);
+      virtual rvec Calculate(const ThreeDModelType &Model ) override;
       //! We have to implement this function even though it does not do anything
-      virtual void HandleSensitivities(const size_t measindex)
+      virtual void HandleSensitivities(const size_t measindex) override
         {
         }
       //! The constructor takes a shared pointer to an implementation object

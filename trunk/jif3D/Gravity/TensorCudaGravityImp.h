@@ -73,17 +73,17 @@ namespace jif3D
       //! Calculate the response of the background, currently this is done on the CPU
       virtual rvec CalcBackground(const size_t measindex, const double xwidth,
           const double ywidth, const double zwidth, const ThreeDGravityModel &Model,
-          rmat &Sensitivities);
+          rmat &Sensitivities) override;
       //! Calculate the response of the gridded part, this is done on the GPU with CUDA
       virtual rvec CalcGridded(const size_t measindex, const ThreeDGravityModel &Model,
-          rmat &Sensitivities);
+          rmat &Sensitivities) override;
       //! This class cannot be copied, so copy constructor and assignment are private
       jif3D::TensorCudaGravityImp &operator=(const jif3D::TensorCudaGravityImp&);
       //! This class cannot be copied, so copy constructor and assignment are private
       TensorCudaGravityImp(const jif3D::TensorCudaGravityImp&);
     public:
       //! How many data do we return before any transformation
-      virtual size_t RawDataPerMeasurement()
+      virtual size_t RawDataPerMeasurement() override
         {
           return ndatapermeas;
         }
@@ -94,7 +94,7 @@ namespace jif3D
         }
       //! We reimplement the Calculate method to accommodate some specific CUDA issues
       virtual rvec Calculate(const ThreeDGravityModel &Model,
-          ThreeDGravMagCalculator<ThreeDGravityModel> &Calculator);
+          ThreeDGravMagCalculator<ThreeDGravityModel> &Calculator) override;
       TensorCudaGravityImp();
       virtual ~TensorCudaGravityImp();
       };
