@@ -651,7 +651,6 @@ namespace jif3D
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
         const jif3D::rvec &Imp, const jif3D::rvec &Err)
       {
-        const double convfactor = 4.0 * 1e-4 * acos(-1.0);
         std::ofstream outfile(filename.c_str());
         outfile.precision(6);
 
