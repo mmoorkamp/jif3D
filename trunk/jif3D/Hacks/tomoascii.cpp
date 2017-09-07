@@ -33,20 +33,21 @@ void ExtractIndex(size_t key, size_t &RecNo, size_t &SourceNo)
 int main()
   {
     std::vector<size_t> ShotNo, RecNo;
-    std::vector<double> SourceX, SourceY, RecX, RecY;
+    std::vector<double> SourceX, SourceY, SourceZ, RecX, RecY, RecZ;
 
     std::string RecFileName = jif3D::AskFilename("File with receiver positions: ");
     std::ifstream RecFile(RecFileName.c_str());
     while (RecFile.good())
       {
         size_t CurrRecNo;
-        double CurrRecX, CurrRecY;
-        RecFile >> CurrRecNo >> CurrRecY >> CurrRecX;
+        double CurrRecX, CurrRecY, CurrRecZ;
+        RecFile >> CurrRecNo >> CurrRecX >> CurrRecY >> CurrRecZ;
         if (RecFile.good())
           {
             RecNo.push_back(CurrRecNo);
             RecX.push_back(CurrRecX);
             RecY.push_back(CurrRecY);
+            RecZ.push_back(CurrRecZ);
           }
       }
 
@@ -55,13 +56,14 @@ int main()
     while (SorFile.good())
       {
         size_t CurrSorNo;
-        double CurrSorX, CurrSorY;
-        SorFile >> CurrSorNo >> CurrSorY >> CurrSorX;
+        double CurrSorX, CurrSorY, CurrSorZ;
+        SorFile >> CurrSorNo >> CurrSorX >> CurrSorY >> CurrSorZ;
         if (SorFile.good())
           {
             ShotNo.push_back(CurrSorNo);
             SourceX.push_back(CurrSorX);
             SourceY.push_back(CurrSorY);
+            SourceZ.push_back(CurrSorZ);
           }
       }
 
@@ -100,27 +102,21 @@ int main()
     const size_t nshot = ShotNo.size();
     for (size_t i = 0; i < nshot; ++i)
       {
-        std::vector<double> SourcePos(2, 0.0);
-        SourcePos[0] = SourceX.at(i);
-        SourcePos[1] = SourceY.at(i);
+        std::vector<double> SourcePos({SourceX.at(i), SourceY.at(i), SourceZ.at(i)});
         SourceMap.insert(std::make_pair(ShotNo.at(i), SourcePos));
       }
 
     const size_t nrec = RecNo.size();
     for (size_t i = 0; i < nrec; ++i)
       {
-        std::vector<double> RecPos(2, 0.0);
-        RecPos[0] = RecX.at(i);
-        RecPos[1] = RecY.at(i);
+        std::vector<double> RecPos({RecX.at(i),RecY.at(i),RecZ.at(i)});
         RecMap.insert(std::make_pair(RecNo.at(i), RecPos));
       }
 
     jif3D::ThreeDSeismicModel Model;
-    const double depth = 0.0;
-
     for (auto source : SourceMap)
       {
-        Model.AddSource(source.second[0], source.second[1], depth);
+        Model.AddSource(source.second[0], source.second[1], source.second[2]);
       }
 
 
@@ -147,7 +143,7 @@ int main()
         double currvel = distance / TravelTime.at(i);
         if (distance > mindist && currvel > minvel && currvel < maxvel)
           {
-            Model.AddMeasurementPoint(RecX.at(RI), RecY.at(RI), depth);
+            Model.AddMeasurementPoint(RecX.at(RI), RecY.at(RI), RecZ.at(RI));
             Model.AddMeasurementConfiguration(SI, measindex);
             ++measindex;
           }
