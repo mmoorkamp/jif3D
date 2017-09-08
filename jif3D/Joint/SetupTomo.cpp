@@ -15,7 +15,7 @@ namespace jif3D
   {
 
     SetupTomo::SetupTomo() :
-        pickerr(5.0e-3)
+        pickerr(5.0e-3), tomolambda(0.0)
       {
       }
 
@@ -33,8 +33,8 @@ namespace jif3D
             "The weight for the seismic tomography data")("pickerr",
             po::value(&pickerr)->default_value(5e-3),
             "The picking error for the travel time data")("tomofine",
-            po::value(&FineModelName),
-            "The name for the model with the MT forward geometry")("writerays",
+            po::value(&CellSize),
+            "The cell size in m for the refined tomography model")("writerays",
             "Write out the rays for each seismic forward modelling");
         return desc;
       }
@@ -70,8 +70,7 @@ namespace jif3D
             if (!vm.count("tomodata"))
               {
                 //get the name of the file containing the data and read it in
-                datafilename = jif3D::AskFilename(
-                    "Tomography Data Filename: ");
+                datafilename = jif3D::AskFilename("Tomography Data Filename: ");
               }
             //read in data
             jif3D::rvec TomoError;
@@ -95,10 +94,41 @@ namespace jif3D
             TomoError = ConstructError(TomoData, TomoError, 0.0, pickerr);
             TomoObjective->SetDataError(TomoError);
 
-            if (vm.count("tomofine"))
+            if (vm.count("tomofine") && CellSize > 0.0)
               {
+                const double xmax = TomoModel.GetXCoordinates().back()
+                    + TomoModel.GetXCellSizes().back();
+                const double ymax = TomoModel.GetYCoordinates().back()
+                    + TomoModel.GetYCellSizes().back();
+                const double zmax = TomoModel.GetZCoordinates().back()
+                    + TomoModel.GetZCellSizes().back();
+                const double xextent = xmax - TomoModel.GetXCoordinates().front();
+                const double yextent = ymax - TomoModel.GetYCoordinates().front();
+                const double zextent = zmax - TomoModel.GetZCoordinates().front();
+                const int nx = round(xextent / CellSize);
+                const int ny = round(yextent / CellSize);
+                const int nz = round(zextent / CellSize);
+                //if the finely discretized grid does not fit into the inversion grid
+                //with a tolerance of more than 10cm
+                if (std::abs(nx * CellSize - xmax) > 0.1)
+                  {
+                    throw jif3D::FatalException(
+                        "Refined grid does not fit in x-direction", __FILE__, __LINE__);
+                  }
+                if (std::abs(ny * CellSize - ymax) > 0.1)
+                  {
+                    throw jif3D::FatalException(
+                        "Refined grid does not fit in y-direction", __FILE__, __LINE__);
+                  }
+                if (std::abs(nz * CellSize - zmax) > 0.1)
+                  {
+                    throw jif3D::FatalException(
+                        "Refined grid does not fit in x-direction", __FILE__, __LINE__);
+                  }
+
                 jif3D::ThreeDSeismicModel TomoFineGeometry;
-                TomoFineGeometry.ReadNetCDF(FineModelName);
+                TomoFineGeometry.SetCellSize(CellSize, nx, ny, nz);
+                std::cout << "Refined Model has " << nx << " * " << ny << " * " << nz << "cells\n";
                 //copy measurement configuration to refined model
                 TomoFineGeometry.CopyMeasurementConfigurations(TomoModel);
                 TomoObjective->SetFineModelGeometry(TomoFineGeometry);

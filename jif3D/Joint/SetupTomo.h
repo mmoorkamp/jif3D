@@ -36,8 +36,8 @@ namespace jif3D
       boost::shared_ptr<jif3D::ThreeDModelObjective<jif3D::TomographyCalculator> > TomoObjective;
       //! The picking  error in ms to assume for construction of the data variance
       double pickerr;
-      //! Storage for the name of the refinement model, can optionally be set on the command line
-      std::string FineModelName;
+      //! Cell size in m for  the refinement model, can optionally be set on the command line
+      double CellSize;
       //! The name of the starting model
       std::string modelfilename;
       //! The name of the file with the travel time picks
