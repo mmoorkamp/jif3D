@@ -71,8 +71,18 @@ int main()
             >> StationName;
         if (StationFile.good())
           {
-            jif3D::ReadImpedancesFromMTT(StationName, Frequencies, CurrImpedances,
-                CurrErrors);
+            std::string extension = jif3D::GetFileExtension(StationName);
+            if (extension == ".mtt")
+              {
+                jif3D::ReadImpedancesFromMTT(StationName, Frequencies, CurrImpedances,
+                    CurrErrors);
+              }
+            else
+              {
+                double XC, YC, ZC;
+                jif3D::ReadImpedancesFromJ(StationName, Frequencies,XC, YC, ZC,
+                    CurrImpedances, CurrErrors);
+              }
           }
 
         const size_t nfreq = Frequencies.size();
