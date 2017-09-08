@@ -10,14 +10,16 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <set>
-#include <boost/math/special_functions/round.hpp>
+#include <boost/program_options.hpp>
+#include <boost/program_options/config.hpp>
 
 #include "../Global/VecMat.h"
 #include "../Global/FileUtil.h"
 #include "../Global/convert.h"
 #include "../Tomo/ThreeDSeismicModel.h"
 #include "../Tomo/ReadWriteTomographyData.h"
+
+namespace po = boost::program_options;
 
 size_t MakeKey(size_t RecNo, size_t SourceNo)
   {
@@ -30,8 +32,28 @@ void ExtractIndex(size_t key, size_t &RecNo, size_t &SourceNo)
     SourceNo = key - 1e6 * RecNo;
   }
 
-int main()
+int main(int argc, char* argv[])
   {
+
+    po::options_description desc("General options");
+
+    double mindist = 0.0;
+    double minvel = 0.0;
+
+
+    desc.add_options()("help", "produce help message")("mindist", po::value(&mindist)->default_value(0.0),
+        "Minimum source-receiver distance to consider in conversion")("minvel", po::value(&minvel)->default_value(0.0),
+        "Minimum apparent velocity to consider in conversion");
+
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::notify(vm);
+    if (vm.count("help"))
+      {
+        std::cout << desc << "\n";
+        return 1;
+      }
+
     std::vector<size_t> ShotNo, RecNo;
     std::vector<double> SourceX, SourceY, SourceZ, RecX, RecY, RecZ;
 
@@ -102,14 +124,16 @@ int main()
     const size_t nshot = ShotNo.size();
     for (size_t i = 0; i < nshot; ++i)
       {
-        std::vector<double> SourcePos({SourceX.at(i), SourceY.at(i), SourceZ.at(i)});
+        std::vector<double> SourcePos(
+          { SourceX.at(i), SourceY.at(i), SourceZ.at(i) });
         SourceMap.insert(std::make_pair(ShotNo.at(i), SourcePos));
       }
 
     const size_t nrec = RecNo.size();
     for (size_t i = 0; i < nrec; ++i)
       {
-        std::vector<double> RecPos({RecX.at(i),RecY.at(i),RecZ.at(i)});
+        std::vector<double> RecPos(
+          { RecX.at(i), RecY.at(i), RecZ.at(i) });
         RecMap.insert(std::make_pair(RecNo.at(i), RecPos));
       }
 
@@ -119,29 +143,21 @@ int main()
         Model.AddSource(source.second[0], source.second[1], source.second[2]);
       }
 
-
-
     const size_t ntime = TravelTime.size();
     std::cout << "NTimes total: " << ntime << std::endl;
     size_t measindex = 0;
-    double mindist = 0.0;
-    double minvel = 0.0;
-    const double maxvel = 10000;
-    std::cout << "Minimum offset [m]: ";
-    std::cin >> mindist;
-    std::cout << "Minimum velocity [m/s]: ";
-    std::cin >> minvel;
+
     for (size_t i = 0; i < ntime; ++i)
       {
         MyMap::iterator siter = SourceMap.find(ShotIndex.at(i));
         MyMap::iterator riter = RecMap.find(RecIndex.at(i));
-        size_t SI = std::distance(SourceMap.begin(),siter);
-        size_t RI = std::distance(RecMap.begin(),riter);
+        size_t SI = std::distance(SourceMap.begin(), siter);
+        size_t RI = std::distance(RecMap.begin(), riter);
         double distance = std::sqrt(
             std::pow(SourceX.at(SI) - RecX.at(RI), 2)
                 + std::pow(SourceY.at(SI) - RecY.at(RI), 2));
         double currvel = distance / TravelTime.at(i);
-        if (distance > mindist && currvel > minvel && currvel < maxvel)
+        if (distance > mindist && currvel > minvel)
           {
             Model.AddMeasurementPoint(RecX.at(RI), RecY.at(RI), RecZ.at(RI));
             Model.AddMeasurementConfiguration(SI, measindex);
