@@ -249,7 +249,7 @@ namespace jif3D
         infile.close();
         if (nentries == 0)
           throw FatalException("No data in file: " + filename,
-                    __FILE__, __LINE__);
+          __FILE__, __LINE__);
         if (((nentries - 1) % 23) != 0)
           throw FatalException("Number of records does not match expected: " + filename,
           __FILE__, __LINE__);
@@ -682,15 +682,15 @@ namespace jif3D
 
                 outfile << period << SiteLine.str();
                 outfile << " ZXY ";
-                WriteModEMLine(outfile, Imp(index+2), Imp(index + 3), Err(index+2));
+                WriteModEMLine(outfile, Imp(index + 2), Imp(index + 3), Err(index + 2));
 
                 outfile << period << SiteLine.str();
                 outfile << " ZYX ";
-                WriteModEMLine(outfile, Imp(index+4), Imp(index + 5), Err(index+4));
+                WriteModEMLine(outfile, Imp(index + 4), Imp(index + 5), Err(index + 4));
 
                 outfile << period << SiteLine.str();
                 outfile << " ZYY ";
-                WriteModEMLine(outfile, Imp(index+6), Imp(index + 7), Err(index+6));
+                WriteModEMLine(outfile, Imp(index + 6), Imp(index + 7), Err(index + 6));
               }
           }
       }
@@ -699,6 +699,7 @@ namespace jif3D
         std::vector<double> &Frequencies, double &StatXCoord, double &StatYCoord,
         double &StatZCoord, jif3D::rvec &Imp, jif3D::rvec &Err)
       {
+        const double convfactor = 4.0 * 1e-4 * acos(-1.0);
         std::ifstream infile;
         double currentreal, currentimag;
         int nentries = 0;
@@ -752,6 +753,9 @@ namespace jif3D
             for (size_t i = 0; i < nfreq; ++i)
               {
                 infile >> Frequencies.at(i);
+                Frequencies.at(i) =
+                    Frequencies.at(i) > 0.0 ?
+                        1.0 / Frequencies.at(i) : std::abs(Frequencies.at(i));
                 infile >> Imp(i * 8);
                 infile >> Imp(i * 8 + 1);
                 infile >> Err(i * 8);
@@ -762,35 +766,39 @@ namespace jif3D
             infile >> dummy;
             for (size_t i = 0; i < nfreq; ++i)
               {
-                infile >> Frequencies.at(i);
+                infile >> dummy;
                 infile >> Imp(i * 8 + 2);
                 infile >> Imp(i * 8 + 3);
                 infile >> Err(i * 8 + 2);
-                Err(i * 8 + 3) = Err(i * 8);
+                Err(i * 8 + 3) = Err(i * 8 + 2);
                 infile >> dummy;
               }
             jif3D::FindToken(infile, "ZYX");
             infile >> dummy;
             for (size_t i = 0; i < nfreq; ++i)
               {
-                infile >> Frequencies.at(i);
+                infile >> dummy;
                 infile >> Imp(i * 8 + 4);
                 infile >> Imp(i * 8 + 5);
                 infile >> Err(i * 8 + 4);
-                Err(i * 8 + 5) = Err(i * 8);
+                Err(i * 8 + 5) = Err(i * 8 + 4);
                 infile >> dummy;
               }
-            jif3D::FindToken(infile, "ZXX");
+            jif3D::FindToken(infile, "ZYY");
             infile >> dummy;
             for (size_t i = 0; i < nfreq; ++i)
               {
-                infile >> Frequencies.at(i);
+                infile >> dummy;
                 infile >> Imp(i * 8 + 6);
                 infile >> Imp(i * 8 + 7);
                 infile >> Err(i * 8 + 6);
-                Err(i * 8 + 7) = Err(i * 8);
+                Err(i * 8 + 7) = Err(i * 8 + 6);
                 infile >> dummy;
               }
+            //std::transform(Imp.begin(), Imp.end(), Imp.begin(), [convfactor](double val)
+            //  { return val/convfactor;});
+            //std::transform(Err.begin(), Err.end(), Err.begin(), [convfactor](double val)
+            //              { return val/convfactor;});
           }
         else
           {
