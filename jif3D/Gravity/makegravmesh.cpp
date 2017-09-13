@@ -15,8 +15,6 @@
 #include <iostream>
 #include <string>
 
-
-
 using namespace std;
 
 int main()
@@ -25,17 +23,17 @@ int main()
     jif3D::ThreeDGravityModel Model;
     int nx, ny, nz;
     double deltax, deltay, deltaz;
-    cout << "Nx: ";
+    cout << "Number of cells in x-direction: ";
     cin >> nx;
-    cout << "Ny: ";
+    cout << "Number of cells in y-direction: ";
     cin >> ny;
-    cout << "Nz: ";
+    cout << "Number of cells in z-direction: ";
     cin >> nz;
-    cout << "Delta x: ";
+    cout << "Cells size in x-direction (m): ";
     cin >> deltax;
-    cout << "Delta y: ";
+    cout << "Cells size in y-direction (m): ";
     cin >> deltay;
-    cout << "Delta z: ";
+    cout << "Cells size in z-direction (m): ";
     cin >> deltaz;
 
     Model.SetMeshSize(nx, ny, nz);
@@ -47,7 +45,10 @@ int main()
     fill_n(Model.SetXCellSizes().begin(), nx, deltax);
     fill_n(Model.SetYCellSizes().begin(), ny, deltay);
     fill_n(Model.SetZCellSizes().begin(), nz, deltaz);
+    std::vector<double> bg_densities(nz, defaultdensity), bg_thicknesses(nz, deltaz);
+    Model.SetBackgroundDensities(bg_densities);
+    Model.SetBackgroundThicknesses(bg_thicknesses);
     std::string MeshFilename = jif3D::AskFilename("Meshfile name: ", false);
     Model.WriteNetCDF(MeshFilename);
-
+    Model.WriteVTK(MeshFilename + ".vtk");
   }

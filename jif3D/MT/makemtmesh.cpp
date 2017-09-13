@@ -50,11 +50,11 @@ int main(int argc, char *argv[])
     double deltax, deltay, deltaz;
     //first find out the basic mesh parameters
     //the number of cells in each coordinate direction
-    cout << "Nx: ";
+    cout << "Number of cells in x-direction:: ";
     cin >> nx;
-    cout << "Ny: ";
+    cout << "Number of cells in y-direction:: ";
     cin >> ny;
-    cout << "Nz: ";
+    cout << "Number of cells in z-direction:: ";
     cin >> nz;
     //and the size of the cells in each direction
     cout << "Cell size x [m]: ";

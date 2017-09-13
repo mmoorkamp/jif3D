@@ -231,12 +231,10 @@ namespace jif3D
             + GetZCellSizes()[ZCenter.size() - 1] / 2.0;
 
         size_t ncells = GetNModelElements();
-        std::cout << ncells << "\n";
         for (size_t i = 0; i < ncells; ++i)
           {
             int xi, yi, zi;
             OffsetToIndex(i, xi, yi, zi);
-            std::cout << i << " " << xi << " " <<  yi << " " << zi << "\n";
             outfile << XCenter[xi] << " " << YCenter[yi] << " " << ZCenter[zi] << " "
                 << Data[xi][yi][zi] << "\n";
           }
