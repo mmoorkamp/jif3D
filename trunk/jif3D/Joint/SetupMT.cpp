@@ -61,6 +61,26 @@ namespace jif3D
           {
             //for inversion we need some data, so we ask for the filename
             std::string mtdatafilename = jif3D::AskFilename("MT data filename: ");
+            std::string extension = jif3D::GetFileExtension(mtdatafilename);
+            //read in MT data, the position of the measurement sites, frequencies and impedances
+            // we also try to read in the parameters of the distortion Matrix C
+            //if these are not present they will be set to identity matrix for each site
+            //in the forward calculation, otherwise the synthetic responses will be multiplied
+            std::vector<double> MTXPos, MTYPos, MTZPos, Frequencies, C;
+            jif3D::rvec MTData, MTError;
+
+            if (extension.compare(".dat") == 0)
+              {
+                jif3D::ReadImpedancesFromModEM(mtdatafilename, Frequencies, MTXPos,
+                    MTYPos, MTZPos, MTData, MTError);
+              }
+            else
+              {
+
+                jif3D::ReadImpedancesFromNetCDF(mtdatafilename, Frequencies, MTXPos,
+                    MTYPos, MTZPos, MTData, MTError, C);
+
+              }
 
             std::string mtmodelfilename = jif3D::AskFilename("MT Model Filename: ");
             //read in the model and check whether the geometry matches the one
@@ -76,15 +96,6 @@ namespace jif3D
               {
                 MTModel.SetConductivities()[0][0][i] *= (1 + 0.0001 * (i + 1));
               }
-
-            //read in MT data, the position of the measurement sites, frequencies and impedances
-            // we also try to read in the parameters of the distortion Matrix C
-            //if these are not present they will be set to identity matrix for each site
-            //in the forward calculation, otherwise the synthetic responses will be multiplied
-            std::vector<double> MTXPos, MTYPos, MTZPos, Frequencies, C;
-            jif3D::rvec MTData, MTError;
-            jif3D::ReadImpedancesFromNetCDF(mtdatafilename, Frequencies, MTXPos, MTYPos,
-                MTZPos, MTData, MTError, C);
 
             //set the model object so that we can use it to calculate synthetic data
             // for each observation
