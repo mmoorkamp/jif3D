@@ -23,11 +23,11 @@ int main()
     int nx, ny, nz;
     double cellsize;
     //first we enter the number of cells in each direction
-    cout << "Nx: ";
+    cout << "Number of cells in x-direction: ";
     cin >> nx;
-    cout << "Ny: ";
+    cout << "Number of cells in y-direction: ";
     cin >> ny;
-    cout << "Nz: ";
+    cout << "Number of cells in z-direction: ";
     cin >> nz;
     //for the forward code all cells have to have the same size in each direction
     //so we only need to ask for one cell size
@@ -52,12 +52,13 @@ int main()
     for (size_t i = 0; i < Model.GetSlownesses().num_elements(); ++i)
       {
         double Depth = Model.GetZCoordinates()[i % nz];
-        double Velocity = topvel + (Depth - firstdepth) * (bottomvel - topvel)
-            / (bottomdepth - firstdepth);
+        double Velocity = topvel
+            + (Depth - firstdepth) * (bottomvel - topvel) / (bottomdepth - firstdepth);
         Model.SetSlownesses().origin()[i] = 1.0 / Velocity;
       }
     //finally we ask for a name for the meshfile to write to
     //and save the created mesh with the velocity information
     std::string MeshFilename = jif3D::AskFilename("Meshfile name: ", false);
     Model.WriteNetCDF(MeshFilename);
+    Model.WriteVTK(MeshFilename + ".vtk");
   }
