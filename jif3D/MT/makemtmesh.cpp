@@ -36,25 +36,31 @@ int main(int argc, char *argv[])
     double rounding = 1.0;
     po::options_description desc("General options");
     desc.add_options()("help", "produce help message")("rounding",
-        po::value<double>(&rounding),
+        po::value(&rounding)->default_value(1.0),
         "Round layer thicknesses to multiple of this number in meters.")("incstart",
-        po::value<int>(&incstart),
+        po::value(&incstart)->default_value(0),
         "Index of the layer where to start increasing the cell size in z-direction");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
 
+    if (vm.count("help"))
+      {
+        std::cout << desc << "\n";
+        return 1;
+      }
+
     jif3D::X3DModel Model;
     int nx, ny, nz;
     double deltax, deltay, deltaz;
     //first find out the basic mesh parameters
     //the number of cells in each coordinate direction
-    cout << "Number of cells in x-direction:: ";
+    cout << "Number of cells in x-direction: ";
     cin >> nx;
-    cout << "Number of cells in y-direction:: ";
+    cout << "Number of cells in y-direction: ";
     cin >> ny;
-    cout << "Number of cells in z-direction:: ";
+    cout << "Number of cells in z-direction: ";
     cin >> nz;
     //and the size of the cells in each direction
     cout << "Cell size x [m]: ";
