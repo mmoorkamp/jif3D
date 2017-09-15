@@ -59,6 +59,12 @@ namespace jif3D
         //and there is nothing to do here
         if (mtlambda > 0.0)
           {
+            if (!boost::filesystem::exists(X3DName))
+              {
+                std::cerr << X3DName << " is not accessible or  does not exist ! \n";
+                return 500;
+              }
+
             //for inversion we need some data, so we ask for the filename
             std::string mtdatafilename = jif3D::AskFilename("MT data filename: ");
             std::string extension = jif3D::GetFileExtension(mtdatafilename);

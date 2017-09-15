@@ -68,9 +68,9 @@ namespace jif3D
         const double xcoord, const double ycoord, const double zcoord) const
       {
         const int xindex = boost::numeric_cast<int>(
-            floor(xcoord / GetXCellSizes()[0]));
-        const int yindex = boost::numeric_cast<int>(
-            floor(ycoord / GetYCellSizes()[0]));
+              floor((xcoord - XOrigin) / GetXCellSizes()[0]));
+          const int yindex = boost::numeric_cast<int>(
+              floor((ycoord - YOrigin) / GetYCellSizes()[0]));
         const int zindex = std::distance(GetZCoordinates().begin(),
             std::lower_bound(GetZCoordinates().begin(), GetZCoordinates().end(), zcoord));
         //when we return the value we make sure that we cannot go out of bounds
