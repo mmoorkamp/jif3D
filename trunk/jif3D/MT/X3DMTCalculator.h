@@ -20,8 +20,6 @@
 #include <boost/uuid/uuid_io.hpp>
 
 #include "../Global/Jif3DGlobal.h"
-#include "../Global/Serialization.h"
-#include "../Global/VecMat.h"
 #include "../Global/convert.h"
 #include "../Global/Jif3DPlatformHelper.h"
 #include "ReadWriteX3D.h"
