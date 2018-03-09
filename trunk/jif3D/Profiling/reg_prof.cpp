@@ -14,7 +14,7 @@
 
 int main()
   {
-    for (size_t nelem = 10; nelem < 100; nelem += 1)
+    for (size_t nelem = 10; nelem < 30; nelem += 1)
       {
 
         jif3D::ThreeDGravityModel GravModel;
