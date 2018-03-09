@@ -132,6 +132,9 @@ int main(int argc, char *argv[])
     boost::shared_ptr<jif3D::OneDMTObjective> MTObjective(new jif3D::OneDMTObjective);
     const size_t nfreq = Frequencies.size();
     jif3D::rvec OneDImp(nfreq * 2, 0.0);
+    std::vector<size_t> nest(nfreq, 0);
+    const size_t nsites = StatXCoord.size();
+
     if (StatXCoord.empty())
       {
         for (size_t i = 0; i < nfreq; ++i)
@@ -142,33 +145,69 @@ int main(int argc, char *argv[])
       }
     else
       {
-        const size_t nsites = StatXCoord.size();
+
         for (size_t i = 0; i < nfreq; ++i)
           {
             for (size_t j = 0; j < nsites; ++j)
               {
                 size_t siteindex = (i * nsites + j) * 8;
-                OneDImp(i * 2) += Impedances(siteindex + 2) - Impedances(siteindex + 4);
-                OneDImp(i * 2 + 1) += Impedances(siteindex + 3)
-                    - Impedances(siteindex + 5);
+                double absImp1 = std::sqrt(
+                    std::pow(Impedances(siteindex + 2), 2)
+                        + std::pow(Impedances(siteindex + 3), 2));
+                double absImp2 = std::sqrt(
+                    std::pow(Impedances(siteindex + 4), 2)
+                        + std::pow(Impedances(siteindex + 5), 2));
+                if ( ( ImpError(siteindex + 2)/absImp1 < 0.5)
+                    && (ImpError(siteindex + 4)/absImp2 < 0.5))
+                  {
+                    OneDImp(i * 2) += Impedances(siteindex + 2)
+                        - Impedances(siteindex + 4);
+                    OneDImp(i * 2 + 1) += Impedances(siteindex + 3)
+                        - Impedances(siteindex + 5);
+                    ++nest.at(i);
+                  }
               }
-            OneDImp(i * 2) /= 2 * nsites;
-            OneDImp(i * 2 + 1) /= 2 * nsites;
+            if (nest.at(i) > 0)
+              {
+                OneDImp(i * 2) /= 2 * nest.at(i);
+                OneDImp(i * 2 + 1) /= 2 * nest.at(i);
+              }
+            else
+              {
+                OneDImp(i * 2) = 1.0;
+                OneDImp(i * 2 + 1);
+              }
           }
       }
+    std::cout << "Considered: ";
+    std::copy(nest.begin(), nest.end(), std::ostream_iterator<double>(std::cout, " "));
+    std::cout << " out of " << nsites << std::endl;
     std::cout << "Imp: " << OneDImp << std::endl;
     const size_t nlayers = Model.GetBackgroundConductivities().size();
     Model.SetFrequencies() = Frequencies;
     MTObjective->SetModelGeometry(Model);
     MTObjective->SetObservedData(OneDImp);
-    jif3D::rvec AvgImp(OneDImp.size());
+    jif3D::rvec AvgImp(OneDImp.size(), 0.0);
 
     for (size_t i = 0; i < nfreq; ++i)
       {
         AvgImp(2 * i) = (OneDImp(2 * i) + OneDImp(2 * i + 1)) / 2.0;
         AvgImp(2 * i + 1) = AvgImp(2 * i);
       }
-    jif3D::rvec DataError(jif3D::ConstructError(AvgImp, ImpError, 0.05, 0.0));
+    jif3D::rvec DataError(AvgImp.size(), 0.0);
+    for (size_t i = 0; i < nfreq; ++i)
+      {
+        if (nest.at(i) > 0)
+          {
+            DataError(2 * i) = AvgImp(2 * i) * 0.05;
+            DataError(2 * i + 1) = AvgImp(2 * i) * 0.05;
+          }
+        else
+          {
+            DataError(2 * i) = 10.0;
+            DataError(2 * i + 1) = 10.0;
+          }
+      }
     if (vm.count("appres"))
       {
         MakeInvCovar(*MTObjective.get(), OneDImp, Frequencies);
@@ -275,7 +314,8 @@ int main(int argc, char *argv[])
     //calculate the predicted data
     std::cout << "Calculating response of inversion model." << std::endl;
     jif3D::rvec InvData(jif3D::OneDMTCalculator().Calculate(Model));
-    jif3D::rvec FullImp(nfreq * 8, 0.0), FullErr(nfreq * 8, 0.0);
+    jif3D::rvec FullImp(nfreq * 8, 0.0), FullErr(nfreq * 8, 0.0), Averaged(nfreq * 8,
+        1.0), AvgErr(nfreq * 8, 1.0);
     for (size_t i = 0; i < nfreq; ++i)
       {
         FullImp(i * 8 + 2) = InvData(i * 2);
@@ -286,11 +326,22 @@ int main(int argc, char *argv[])
         FullErr(i * 8 + 3) = DataError(i * 2);
         FullErr(i * 8 + 4) = DataError(i * 2);
         FullErr(i * 8 + 5) = DataError(i * 2);
+        Averaged(i * 8 + 2) = OneDImp(i * 2);
+        Averaged(i * 8 + 3) = OneDImp(i * 2 + 1);
+        Averaged(i * 8 + 4) = -OneDImp(i * 2);
+        Averaged(i * 8 + 5) = -OneDImp(i * 2 + 1);
+        AvgErr(i * 8 + 2) = DataError(i * 2);
+        AvgErr(i * 8 + 3) = DataError(i * 2 + 1);
+        AvgErr(i * 8 + 4) = DataError(i * 2);
+        AvgErr(i * 8 + 5) = DataError(i * 2 + 1);
       }
     std::vector<double> Coord =
       { 0.0 };
-    jif3D::WriteImpedancesToNetCDF(modelfilename + ".inv_imp.nc", Frequencies, Coord, Coord,
-        Coord, FullImp, FullErr);
+    jif3D::WriteImpedancesToNetCDF(modelfilename + ".inv_imp.nc", Frequencies, Coord,
+        Coord, Coord, FullImp, FullErr);
+
+    jif3D::WriteImpedancesToNetCDF(modelfilename + ".avg_imp.nc", Frequencies, Coord,
+        Coord, Coord, Averaged, AvgErr);
 
     //and write out the data and model
     //here we have to distinguish again between scalar and ftg data
