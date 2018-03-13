@@ -339,6 +339,8 @@ namespace jif3D
   ThreeDModelBase& operator=(const ThreeDModelBase& source);
   //! We need to define a copy constructor to deal with openmp locks
   ThreeDModelBase(const ThreeDModelBase &source);
+  bool operator ==(const ThreeDModelBase &b) const;
+
   virtual ~ThreeDModelBase();
 };
 /* @} */

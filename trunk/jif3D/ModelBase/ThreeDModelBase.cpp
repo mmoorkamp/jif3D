@@ -11,6 +11,7 @@
 #include "VTKTools.h"
 #include <cassert>
 #include <fstream>
+#include <boost/math/special_functions/relative_difference.hpp>
 
 using netCDF::NcFile;
 using netCDF::NcVar;
@@ -94,6 +95,59 @@ namespace jif3D
         return *this;
       }
 
+    bool ThreeDModelBase::operator ==(const ThreeDModelBase &b) const
+      {
+        double epsilon = 0.001;
+        if (MeasPosX.size() != b.MeasPosX.size())
+          return false;
+        if (MeasPosY.size() != b.MeasPosY.size())
+          return false;
+        if (MeasPosZ.size() != b.MeasPosZ.size())
+          return false;
+        if (Data.num_elements() != b.Data.num_elements())
+          return false;
+        if (XCellSizes.size() != b.XCellSizes.size())
+          return false;
+        if (YCellSizes.size() != b.YCellSizes.size())
+          return false;
+        if (ZCellSizes.size() != b.ZCellSizes.size())
+          return false;
+        if (!std::equal(MeasPosX.begin(), MeasPosX.end(), b.MeasPosX.begin(),
+            [epsilon](double a, double b)
+              { return (boost::math::relative_difference(a,b) < epsilon);}))
+          return false;
+        if (!std::equal(MeasPosY.begin(), MeasPosY.end(), b.MeasPosZ.begin(),
+            [epsilon](double a, double b)
+              { return boost::math::relative_difference(a,b) < epsilon;}))
+          return false;
+        if (!std::equal(MeasPosZ.begin(), MeasPosZ.end(), b.MeasPosZ.begin(),
+            [epsilon](double a, double b)
+              { return boost::math::relative_difference(a,b) < epsilon;}))
+          return false;
+        if (!std::equal(Data.origin(), Data.origin() + Data.num_elements(),
+            b.Data.origin(), [epsilon](double a, double b)
+              { return boost::math::relative_difference(a,b) < epsilon;}))
+          return false;
+        if (!std::equal(XCellSizes.begin(), XCellSizes.end(), b.XCellSizes.begin(),
+            [epsilon](double a, double b)
+              { return boost::math::relative_difference(a,b) < epsilon;}))
+          return false;
+        if (!std::equal(YCellSizes.begin(), YCellSizes.end(), b.YCellSizes.begin(),
+            [epsilon](double a, double b)
+              { return boost::math::relative_difference(a,b) < epsilon;}))
+          return false;
+        if (!std::equal(ZCellSizes.begin(), ZCellSizes.end(), b.ZCellSizes.begin(),
+            [epsilon](double a, double b)
+              { return boost::math::relative_difference(a,b) < epsilon;}))
+          return false;
+        if (boost::math::relative_difference(XOrigin, b.XOrigin) > epsilon)
+          return false;
+        if (boost::math::relative_difference(YOrigin, b.YOrigin) > epsilon)
+          return false;
+        if (boost::math::relative_difference(ZOrigin, b.ZOrigin) > epsilon)
+          return false;
+        return true;
+      }
     /*! This functions assumes that the coordinate of the upper left front corner of the model is
      * is (0,0,0).
      * @param Coordinates This vector will contain the coordinates of the left upper front corner of each cell
