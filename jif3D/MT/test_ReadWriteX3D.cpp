@@ -83,8 +83,8 @@ BOOST_AUTO_TEST_SUITE( ReadWriteX3D_Suite )
     BOOST_AUTO_TEST_CASE (test_read_emo)
       {
         std::string filename("csmt010a.emo");
-        std::vector<std::complex<double> > Ex, Ey, Hx, Hy;
-        jif3D::ReadEMO(filename, Ex, Ey, Hx, Hy);
+        std::vector<std::complex<double> > Ex, Ey, Hx, Hy, Hz;
+        jif3D::ReadEMO(filename, Ex, Ey, Hx, Hy, Hz);
         BOOST_CHECK(Ex.size() == 7200 * 2);
         BOOST_CHECK(Ex.size() == Ey.size());
         BOOST_CHECK(Ex.size() == Hx.size());

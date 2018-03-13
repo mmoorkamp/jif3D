@@ -121,10 +121,12 @@ namespace jif3D
      * @param Ey The y-component of the electric field in V/m
      * @param Hx The x-component of the magnetic field in A/m
      * @param Hy The y-component of the magnetic field in A/m
+     * @param Hz The z-component of the magnetic field in A/m
      */
+
     J3DEXPORT void ReadEMO(const std::string &filename, std::vector<std::complex<double> > &Ex,
         std::vector<std::complex<double> > &Ey, std::vector<std::complex<double> > &Hx,
-        std::vector<std::complex<double> > &Hy);
+        std::vector<std::complex<double> > &Hy, std::vector<std::complex<double> > &Hz);
 
     //! Read one .ema file produced by x3d that contains the electric field at all model cells
     /*! x3d produces files with ending .ema that contain the electric field in all model cells.

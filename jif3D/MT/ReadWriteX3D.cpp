@@ -36,7 +36,8 @@ namespace jif3D
       {
         if (!boost::filesystem::exists(filename))
           {
-            throw jif3D::FatalException("File does not exist: " + filename, __FILE__, __LINE__);
+            throw jif3D::FatalException("File does not exist: " + filename, __FILE__,
+            __LINE__);
           }
         std::ifstream infile(filename.c_str());
         //find the line in the file that describes the cell size in the horizontal directions
@@ -147,7 +148,8 @@ namespace jif3D
         const std::vector<double> &bg_thicknesses, bool Dipole)
       {
         assert(bg_conductivities.size() == bg_thicknesses.size());
-        boost::iostreams::stream<boost::iostreams::file_descriptor_sink> outfile(filename.c_str());
+        boost::iostreams::stream<boost::iostreams::file_descriptor_sink> outfile(
+            filename.c_str());
         //write out some header information
         outfile << "Version_of_X3D code (yyyy-mm-dd)\n";
         outfile << "2006-06-06\n\n";
@@ -222,7 +224,8 @@ namespace jif3D
                   {
                     outfile << std::scientific << std::setw(valuewidth)
                         << std::setprecision(valueprec) << Data[k][j][i];
-                    if (k > 0 && ((k + 1) % valuesperline) == 0 && (k+1) != XCellSizes.size())
+                    if (k > 0 && ((k + 1) % valuesperline) == 0
+                        && (k + 1) != XCellSizes.size())
                       outfile << "\n";
                   }
                 outfile << "\n";
@@ -264,15 +267,16 @@ namespace jif3D
         outfile
             << "Binding_cell_in_Y-direction     Y-coordinate of centre of Binding cell (m) \n";
         outfile << " 1                             " << YCellSizes[0] / 2.0 << " \n";
-/*        if (outfile.rdbuf())
-        {
-        	outfile.rdbuf()->pubsync();
-        }
-        ::fdatasync(outfile->handle());*/
+        /*        if (outfile.rdbuf())
+         {
+         outfile.rdbuf()->pubsync();
+         }
+         ::fdatasync(outfile->handle());*/
         //if something went wrong during writing we throw an exception
         if (outfile.bad())
           {
-            throw jif3D::FatalException("Problem writing model file.", __FILE__, __LINE__);
+            throw jif3D::FatalException("Problem writing model file.", __FILE__,
+            __LINE__);
           }
       }
 
@@ -284,7 +288,8 @@ namespace jif3D
         const size_t nfreq = Frequencies.size();
         //the filename is always a.project
         std::string filename = (RootDir / "a.project").string();
-        boost::iostreams::stream<boost::iostreams::file_descriptor_sink> outfile(filename.c_str());
+        boost::iostreams::stream<boost::iostreams::file_descriptor_sink> outfile(
+            filename.c_str());
         //write out some information that x3d expects
         outfile << "  Version_of_X3D code (yyyy-mm-dd)\n";
         outfile << "  2006-06-06\n\n";
@@ -338,18 +343,19 @@ namespace jif3D
           }
         //if (outfile.rdbuf())
         //{
-        	//outfile.rdbuf()->pubsync();
+        //outfile.rdbuf()->pubsync();
         //}
         //::fdatasync(outfile->handle());
         if (outfile.bad())
           {
-            throw jif3D::FatalException("Problem writing project file.", __FILE__, __LINE__);
+            throw jif3D::FatalException("Problem writing project file.", __FILE__,
+            __LINE__);
           }
       }
 
     void ReadEMO(const std::string &filename, std::vector<std::complex<double> > &Ex,
         std::vector<std::complex<double> > &Ey, std::vector<std::complex<double> > &Hx,
-        std::vector<std::complex<double> > &Hy)
+        std::vector<std::complex<double> > &Hy, std::vector<std::complex<double> > &Hz)
       {
         if (!boost::filesystem::exists(filename))
           {
@@ -389,13 +395,37 @@ namespace jif3D
                 Hx.push_back(std::complex<double>(real, -imag));
                 infile >> real >> imag;
                 Hy.push_back(std::complex<double>(real, -imag));
+                infile >> real >> imag;
+                Hz.push_back(std::complex<double>(real, -imag));
                 infile.getline(restline, maxlength);
               }
           }
         //make sure all fields have the same size
-        assert(Ex.size() == Ey.size());
-        assert(Ex.size() == Hx.size());
-        assert(Ex.size() == Hy.size());
+        const size_t nelem = Ex.size();
+        if (Ey.size() != nelem)
+          {
+            throw jif3D::FatalException("Problem reading .emo file: " + filename,
+            __FILE__,
+            __LINE__);
+          }
+        if (Hx.size() != nelem)
+          {
+            throw jif3D::FatalException("Problem reading .emo file: " + filename,
+            __FILE__,
+            __LINE__);
+          }
+        if (Hy.size() != nelem)
+          {
+            throw jif3D::FatalException("Problem reading .emo file: " + filename,
+            __FILE__,
+            __LINE__);
+          }
+        if (Hz.size() != nelem)
+          {
+            throw jif3D::FatalException("Problem reading .emo file: " + filename,
+                __FILE__,
+                __LINE__);
+          }
       }
 
     void ReadEMA(const std::string &filename, std::vector<std::complex<double> > &Ex,
@@ -404,7 +434,8 @@ namespace jif3D
       {
         if (!boost::filesystem::exists(filename))
           {
-            throw jif3D::FatalException("File does not exist: " + filename, __FILE__, __LINE__);
+            throw jif3D::FatalException("File does not exist: " + filename, __FILE__,
+            __LINE__);
           }
         std::ifstream infile(filename.c_str());
         //find the description line for the electric fields
@@ -429,17 +460,19 @@ namespace jif3D
         if (Ex.size() != ncellsx * ncellsy * ncellsz)
           {
             throw jif3D::FatalException(
-                "In ReadEma: "+ filename +" number of electric field values: "
+                "In ReadEma: " + filename + " number of electric field values: "
                     + jif3D::stringify(Ex.size()) + " does not match grid size: "
                     + jif3D::stringify(ncellsx * ncellsy * ncellsz), __FILE__, __LINE__);
           }
         if (Ex.size() != Ey.size())
           {
-            throw jif3D::FatalException("In ReadEma, size of Ex != Ey", __FILE__, __LINE__);
+            throw jif3D::FatalException("In ReadEma, size of Ex != Ey", __FILE__,
+            __LINE__);
           }
         if (Ex.size() != Ez.size())
           {
-            throw jif3D::FatalException("In ReadEma, size of Ex != Ez", __FILE__, __LINE__);
+            throw jif3D::FatalException("In ReadEma, size of Ex != Ez", __FILE__,
+            __LINE__);
           }
         //we use a different storage ordering then in the .ema files
         Ex = ResortFields(Ex, ncellsx, ncellsy, ncellsz);
@@ -447,7 +480,8 @@ namespace jif3D
         Ez = ResortFields(Ez, ncellsx, ncellsy, ncellsz);
       }
 
-    void WriteSourceComp(boost::iostreams::stream<boost::iostreams::file_descriptor_sink> &outfile,
+    void WriteSourceComp(
+        boost::iostreams::stream<boost::iostreams::file_descriptor_sink> &outfile,
         const boost::multi_array<double, 2> &Moments)
       {
         const size_t nx = Moments.shape()[0];
@@ -474,7 +508,9 @@ namespace jif3D
         //finished writing out all moments
       }
 
-    void WriteGeometryInfo(boost::iostreams::stream<boost::iostreams::file_descriptor_sink>  &outfile, const size_t endx, const size_t endy)
+    void WriteGeometryInfo(
+        boost::iostreams::stream<boost::iostreams::file_descriptor_sink> &outfile,
+        const size_t endx, const size_t endy)
       {
         outfile << " Scale  ( the ARRAY will be multiplied by this Scale ) \n 1.0 \n\n";
         outfile << "First and last cells in X-direction \n";
@@ -483,16 +519,20 @@ namespace jif3D
         outfile << " 1  " << endy << "\n\n";
       }
 
-    void WriteEmptyArray(boost::iostreams::stream<boost::iostreams::file_descriptor_sink>  &outfile, const size_t XSize, const size_t YSize)
+    void WriteEmptyArray(
+        boost::iostreams::stream<boost::iostreams::file_descriptor_sink> &outfile,
+        const size_t XSize, const size_t YSize)
       {
         outfile << "ARRAY\n";
         outfile << YSize << "Lines: " << XSize << "*0.\n";
       }
 
     void WriteSourceFile(const std::string &filename,
-        const std::vector<size_t> &XSourceXIndex, const std::vector<size_t> &XSourceYIndex,
+        const std::vector<size_t> &XSourceXIndex,
+        const std::vector<size_t> &XSourceYIndex,
         const std::vector<double> &XSourceDepths,
-        const std::vector<size_t> &YSourceXIndex, const std::vector<size_t> &YSourceYIndex,
+        const std::vector<size_t> &YSourceXIndex,
+        const std::vector<size_t> &YSourceYIndex,
         const std::vector<double> &YSourceDepths,
         const std::vector<std::complex<double> > &XPolMoments,
         const std::vector<std::complex<double> > &YPolMoments,
@@ -514,7 +554,7 @@ namespace jif3D
                 ZIndices.push_back(zindex);
               }
             zindex = FindNearestCellBoundary(YSourceDepths[i], ZCellBoundaries,
-                            ZCellSizes);
+                ZCellSizes);
             if (std::find(ZIndices.begin(), ZIndices.end(), zindex) == ZIndices.end())
               {
                 ZIndices.push_back(zindex);
@@ -524,7 +564,8 @@ namespace jif3D
         size_t ndepths = ZIndices.size();
         //write out the required header for the source file
         //x3d is very picky about this
-        boost::iostreams::stream<boost::iostreams::file_descriptor_sink> outfile(filename.c_str());
+        boost::iostreams::stream<boost::iostreams::file_descriptor_sink> outfile(
+            filename.c_str());
         outfile << "  Version_of_X3D code (yyyy-mm-dd)\n";
         outfile << "  2006-06-06\n\n";
         outfile
@@ -551,19 +592,23 @@ namespace jif3D
                 if (zindex == ZIndices[i])
                   {
                     RealXMoments[XSourceXIndex[j]][XSourceYIndex[j]] =
-                    		RealXMoments[XSourceXIndex[j]][XSourceYIndex[j]] + std::real(XPolMoments[j]);
+                        RealXMoments[XSourceXIndex[j]][XSourceYIndex[j]]
+                            + std::real(XPolMoments[j]);
                     ImagXMoments[XSourceXIndex[j]][XSourceYIndex[j]] =
-                    		ImagXMoments[XSourceXIndex[j]][XSourceYIndex[j]] + std::imag(-XPolMoments[j]);
+                        ImagXMoments[XSourceXIndex[j]][XSourceYIndex[j]]
+                            + std::imag(-XPolMoments[j]);
                   }
 
                 zindex = FindNearestCellBoundary(YSourceDepths[j], ZCellBoundaries,
-                                    ZCellSizes);
+                    ZCellSizes);
                 if (zindex == ZIndices[i])
                   {
                     RealYMoments[YSourceXIndex[j]][YSourceYIndex[j]] =
-                    		RealYMoments[YSourceXIndex[j]][YSourceYIndex[j]] + std::real(YPolMoments[j]);
+                        RealYMoments[YSourceXIndex[j]][YSourceYIndex[j]]
+                            + std::real(YPolMoments[j]);
                     ImagYMoments[YSourceXIndex[j]][YSourceYIndex[j]] =
-                    		ImagYMoments[YSourceXIndex[j]][YSourceYIndex[j]] + std::imag(-YPolMoments[j]);
+                        ImagYMoments[YSourceXIndex[j]][YSourceYIndex[j]]
+                            + std::imag(-YPolMoments[j]);
                   }
               }
 
@@ -596,12 +641,13 @@ namespace jif3D
           }
         //if (outfile.rdbuf())
         //{
-        	//outfile.rdbuf()->pubsync();
+        //outfile.rdbuf()->pubsync();
         //}
         //::fdatasync(outfile->handle());
         if (outfile.bad())
           {
-            throw jif3D::FatalException("Problem writing source file.", __FILE__, __LINE__);
+            throw jif3D::FatalException("Problem writing source file.", __FILE__,
+            __LINE__);
           }
       }
 
