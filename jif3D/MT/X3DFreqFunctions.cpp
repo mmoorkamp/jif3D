@@ -51,13 +51,13 @@ ForwardResult CalculateFrequency(const ForwardInfo &Info)
       }
     //run x3d in parallel
     RunX3D(RootName.string());
-    std::vector<std::complex<double> > Ex1, Ex2, Ey1, Ey2, Hx1, Hx2, Hy1, Hy2;
+    std::vector<std::complex<double> > Ex1, Ex2, Ey1, Ey2, Hx1, Hx2, Hy1, Hy2, Hz1, Hz2;
     std::complex<double> Zxx, Zxy, Zyx, Zyy;
     //read in the electric and magnetic field at the observe sites
 #pragma omp critical(forward_read_emo)
       {
-        ReadEMO((DirName / emoAname).string(), Ex1, Ey1, Hx1, Hy1);
-        ReadEMO((DirName / emoBname).string(), Ex2, Ey2, Hx2, Hy2);
+        ReadEMO((DirName / emoAname).string(), Ex1, Ey1, Hx1, Hy1, Hz1);
+        ReadEMO((DirName / emoBname).string(), Ex2, Ey2, Hx2, Hy2, Hz2);
       }
     const size_t nval = (nmodx * nmody * nlevels);
     CheckField(Ex1, nval);
@@ -68,6 +68,8 @@ ForwardResult CalculateFrequency(const ForwardInfo &Info)
     CheckField(Hx2, nval);
     CheckField(Hy1, nval);
     CheckField(Hy2, nval);
+    CheckField(Hz1, nval);
+    CheckField(Hz2, nval);
 
     //calculate impedances from the field spectra for all stations
     for (size_t j = 0; j < nstats; ++j)
@@ -193,11 +195,13 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI)
 
     //read the fields from the forward calculation
     std::vector<std::complex<double> > Ex1_obs, Ex2_obs, Ey1_obs, Ey2_obs, Hx1_obs,
-        Hx2_obs, Hy1_obs, Hy2_obs;
+        Hx2_obs, Hy1_obs, Hy2_obs, Hz1_obs, Hz2_obs;
 #pragma omp critical(gradient_reademo)
       {
-        ReadEMO((ForwardDirName / emoAname).string(), Ex1_obs, Ey1_obs, Hx1_obs, Hy1_obs);
-        ReadEMO((ForwardDirName / emoBname).string(), Ex2_obs, Ey2_obs, Hx2_obs, Hy2_obs);
+        ReadEMO((ForwardDirName / emoAname).string(), Ex1_obs, Ey1_obs, Hx1_obs, Hy1_obs,
+            Hz1_obs);
+        ReadEMO((ForwardDirName / emoBname).string(), Ex2_obs, Ey2_obs, Hx2_obs, Hy2_obs,
+            Hz2_obs);
       }
     const size_t nfield = nobs * nlevels;
     CheckField(Ex1_obs, nfield);
@@ -208,6 +212,8 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI)
     CheckField(Hx2_obs, nfield);
     CheckField(Hy1_obs, nfield);
     CheckField(Hy2_obs, nfield);
+    CheckField(Hz1_obs, nfield);
+    CheckField(Hz2_obs, nfield);
 
     std::vector<std::complex<double> > Ex1_all, Ex2_all, Ey1_all, Ey2_all, Ez1_all,
         Ez2_all;
@@ -347,8 +353,8 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI)
             std::string CurrName = MdipName.string() + Ext;
             fs::path CurrDir = MdipName.string() + Ext + dirext;
             MakeRunFile(CurrName, CurrDir.string(), Info.X3DName);
-            WriteProjectFile(CurrDir.string(), CurrFreq, X3DModel::MDIP,
-                resultfilename, modelfilename, Info.GreenStage1, Info.GreenStage4);
+            WriteProjectFile(CurrDir.string(), CurrFreq, X3DModel::MDIP, resultfilename,
+                modelfilename, Info.GreenStage1, Info.GreenStage4);
             Write3DModelForX3D((CurrDir / modelfilename).string(),
                 Info.Model.GetXCellSizes(), Info.Model.GetYCellSizes(),
                 Info.Model.GetZCellSizes(), SourceObserve, Info.Model.GetConductivities(),
