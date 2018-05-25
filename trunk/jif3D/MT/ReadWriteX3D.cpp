@@ -499,7 +499,9 @@ namespace jif3D
               {
                 outfile << std::scientific << std::setw(valuewidth)
                     << std::setprecision(valueprec) << Moments[k][j];
-                if (k > 0 && ((k + 1) % valuesperline) == 0)
+                //x3d can only handle a certain amount of values per line
+                //so we have to make line breaks when
+                if (k > 0 && ((k + 1) % valuesperline) == 0 && (k + 1) != nx)
                   outfile << "\n";
               }
             outfile << "\n";
