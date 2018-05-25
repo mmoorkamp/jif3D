@@ -204,7 +204,7 @@ namespace jif3D
                 const size_t calcindex = ForwardExecTime.at(queueindex).second;
                 ForwardInfo Info(Model,C,calcindex,TempDir.string(),X3DName, NameRoot, GreenType1, GreenType4);
                 std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
-                ForwardResult freqresult = CalculateFrequency(Info,FieldCalculators.at(i));
+                ForwardResult freqresult = CalculateFrequency(Info,FieldCalculators.at(calcindex));
                 std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
                 size_t duration = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
 
@@ -377,7 +377,7 @@ namespace jif3D
                 ForwardInfo Info(Model,C,calcindex,TempDir.string(),X3DName, NameRoot, GreenType1, GreenType4);
                 //calculate the gradient for each frequency
                 std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
-                GradResult tmp = LQDerivativeFreq(Info, GradInfo(ProjMisfit, RawImpedance),FieldCalculators.at(i));
+                GradResult tmp = LQDerivativeFreq(Info, GradInfo(ProjMisfit, RawImpedance),FieldCalculators.at(calcindex));
                 std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
                 size_t duration = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
 
