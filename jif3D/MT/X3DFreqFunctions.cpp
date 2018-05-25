@@ -155,12 +155,7 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI,
     jif3D::rvec Misfit(GI.Misfit.size());
     std::copy(GI.Misfit.begin(), GI.Misfit.end(), Misfit.begin());
     fs::path TempDir(Info.TempDirName);
-    fs::path ForwardDirName = TempDir
-        / (MakeUniqueName(Info.NameRoot, X3DModel::MT, Info.freqindex) + dirext);
-    if (!fs::is_directory(ForwardDirName))
-      throw FatalException(
-          "In X3D gradient calculation, directory does not exist: "
-              + ForwardDirName.string(), __FILE__, __LINE__);
+    fs::path ForwardDirName = Calc->GetForwardDirName();
 
     std::vector<std::complex<double> > Ex1_all, Ex2_all, Ey1_all, Ey2_all, Ez1_all,
         Ez2_all;

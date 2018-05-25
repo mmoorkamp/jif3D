@@ -41,6 +41,7 @@ namespace jif3D
       jif3D::GreenCalcType GreenStage1;
       jif3D::GreenCalcType GreenStage4;
       jif3D::X3DModel OldModel;
+      std::string ForwardDirName;
       std::string ObjectID()
         {
           //a unique ID created on construction
@@ -91,6 +92,10 @@ namespace jif3D
       const std::vector<std::complex<double> > &GetHz2() const
         {
           return Hz2;
+        }
+      std::string GetForwardDirName() const
+        {
+          return ForwardDirName;
         }
       void CalculateFields(const X3DModel &Model, size_t freqindex);
       X3DFieldCalculator(boost::filesystem::path TDir = boost::filesystem::current_path(),
