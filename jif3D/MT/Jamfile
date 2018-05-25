@@ -5,7 +5,7 @@ alias linkcommon : ../ModelBase//modelbase ../Global//global ..//boost_core ..//
 
 lib mt : ReadWriteX3D.cpp ReadWriteImpedances.cpp
          ThreeDMTModel.cpp X3DModel.cpp ModEMModel.cpp 
-         MTEquations.cpp 
+         MTEquations.cpp X3DFieldCalculator.cpp
          MT3DCalculator.cpp X3DMTCalculator.cpp
          ModEMCalculator.cpp
          OneDMTCalculator.cpp InterpolateField.cpp

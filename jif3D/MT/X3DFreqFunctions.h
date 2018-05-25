@@ -21,6 +21,7 @@
 #include "../Global/VectorTransform.h"
 #include "ReadWriteX3D.h"
 #include "X3DModel.h"
+#include "X3DFieldCalculator.h"
 
 struct J3DEXPORT ForwardResult
   {
@@ -74,7 +75,7 @@ struct GradResult
   GradResult(jif3D::rvec G)
     {
       Gradient.resize(G.size());
-      std::copy(G.begin(),G.end(),Gradient.begin());
+      std::copy(G.begin(), G.end(), Gradient.begin());
     }
   };
 
@@ -116,9 +117,11 @@ struct ForwardInfo
     }
   };
 
-ForwardResult CalculateFrequency(const ForwardInfo &Info);
+ForwardResult CalculateFrequency(const ForwardInfo &Info,
+    boost::shared_ptr<jif3D::X3DFieldCalculator> Calc);
 
-GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI);
+GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI,
+    boost::shared_ptr<jif3D::X3DFieldCalculator> Calc);
 
 #ifdef HAVEHPX
 HPX_DEFINE_PLAIN_ACTION(CalculateFrequency, CalculateFrequency_action);

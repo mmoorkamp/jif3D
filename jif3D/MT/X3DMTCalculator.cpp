@@ -28,6 +28,7 @@
 
 #include "X3DMTCalculator.h"
 #include "X3DFreqFunctions.h"
+#include "X3DFieldCalculator.h"
 #include "ReadWriteX3D.h"
 #include "MTEquations.h"
 #include "InterpolateField.h"
@@ -97,8 +98,16 @@ namespace jif3D
         maxfreqindex = std::min(maxfreqindex, Model.GetFrequencies().size());
 
         const int nfreq = maxfreqindex - minfreqindex;
+        if (FieldCalculators.empty() || FieldCalculators.size() != nfreq)
+          {
+            FieldCalculators.resize(nfreq);
+            for (auto &fc : FieldCalculators)
+              {
+                fc = boost::make_shared<jif3D::X3DFieldCalculator>(TempDir,X3DName);
+              }
+          }
         const size_t nmeas = Model.GetMeasPosX().size();
-        if (ForwardExecTime.empty())
+        if (ForwardExecTime.empty() || ForwardExecTime.size() != nfreq)
           {
             for (int i = 0; i < nfreq; ++i)
               {
@@ -195,7 +204,7 @@ namespace jif3D
                 const size_t calcindex = ForwardExecTime.at(queueindex).second;
                 ForwardInfo Info(Model,C,calcindex,TempDir.string(),X3DName, NameRoot, GreenType1, GreenType4);
                 std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
-                ForwardResult freqresult = CalculateFrequency(Info);
+                ForwardResult freqresult = CalculateFrequency(Info,FieldCalculators.at(i));
                 std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
                 size_t duration = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
 
@@ -223,10 +232,10 @@ namespace jif3D
             //finished with one frequency
           }
         /*std::cout << "\n";
-        for (auto time : NewExecTime)
-          {
-            std::cout << time.first << " " << time.second << " \n";
-          }*/
+         for (auto time : NewExecTime)
+         {
+         std::cout << time.first << " " << time.second << " \n";
+         }*/
         std::sort(NewExecTime.begin(),NewExecTime.end());
         ForwardExecTime = NewExecTime;
         RawImpedance = RawImp;
@@ -368,7 +377,7 @@ namespace jif3D
                 ForwardInfo Info(Model,C,calcindex,TempDir.string(),X3DName, NameRoot, GreenType1, GreenType4);
                 //calculate the gradient for each frequency
                 std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
-                GradResult tmp = LQDerivativeFreq(Info, GradInfo(ProjMisfit, RawImpedance));
+                GradResult tmp = LQDerivativeFreq(Info, GradInfo(ProjMisfit, RawImpedance),FieldCalculators.at(i));
                 std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
                 size_t duration = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
 
@@ -497,7 +506,7 @@ namespace jif3D
             ForwardInfo Info(Model, C, freqindex, TempDir.string(), X3DName, NameRoot,
                 GreenType1, GreenType4);
             GradResult CurrGrad = LQDerivativeFreq(Info,
-                GradInfo(CurrMisfit, RawImpedance));
+                GradInfo(CurrMisfit, RawImpedance),FieldCalculators.at(freqindex));
 
             boost::numeric::ublas::matrix_row<rmat> CurrRow(Result, i);
 
