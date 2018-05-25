@@ -116,7 +116,7 @@ namespace jif3D
             [epsilon](double a, double b)
               { return (boost::math::relative_difference(a,b) < epsilon);}))
           return false;
-        if (!std::equal(MeasPosY.begin(), MeasPosY.end(), b.MeasPosZ.begin(),
+        if (!std::equal(MeasPosY.begin(), MeasPosY.end(), b.MeasPosY.begin(),
             [epsilon](double a, double b)
               { return boost::math::relative_difference(a,b) < epsilon;}))
           return false;
