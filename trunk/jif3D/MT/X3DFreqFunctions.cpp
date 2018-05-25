@@ -15,7 +15,8 @@
 namespace fs = boost::filesystem;
 
 using namespace jif3D;
-ForwardResult CalculateFrequency(const ForwardInfo &Info)
+ForwardResult CalculateFrequency(const ForwardInfo &Info,
+    boost::shared_ptr<jif3D::X3DFieldCalculator> Calc)
   {
     //  const size_t nmeas = Info.Model.GetMeasPosX().size();
     const size_t nfreq = Info.Model.GetFrequencies().size();
@@ -28,48 +29,14 @@ ForwardResult CalculateFrequency(const ForwardInfo &Info)
     result.DistImpedance.resize(nstats * 8);
     result.RawImpedance.resize(nstats * 8);
 
-    fs::path TempDir(Info.TempDirName);
-    fs::path RootName = TempDir
-        / MakeUniqueName(Info.NameRoot, X3DModel::MT, Info.freqindex);
-    fs::path DirName = RootName.string() + dirext;
     std::vector<double> CurrFreq(1, Info.Model.GetFrequencies()[Info.freqindex]);
     std::vector<double> ShiftDepth;
     std::vector<size_t> MeasDepthIndices;
     //construct a vector of indices of unique station depths
     size_t nlevels = ConstructDepthIndices(MeasDepthIndices, ShiftDepth, Info.Model);
-    //writing out files causes problems in parallel
-    // so we make sure it is done one at a time
-#pragma omp critical(forward_write_files)
-      {
-        MakeRunFile(RootName.string(), DirName.string(), Info.X3DName);
-        WriteProjectFile(DirName.string(), CurrFreq, X3DModel::MT, resultfilename,
-            modelfilename, Info.GreenStage1, Info.GreenStage4);
-        Write3DModelForX3D((DirName / modelfilename).string(), Info.Model.GetXCellSizes(),
-            Info.Model.GetYCellSizes(), Info.Model.GetZCellSizes(), ShiftDepth,
-            Info.Model.GetConductivities(), Info.Model.GetBackgroundConductivities(),
-            Info.Model.GetBackgroundThicknesses());
-      }
-    //run x3d in parallel
-    RunX3D(RootName.string());
-    std::vector<std::complex<double> > Ex1, Ex2, Ey1, Ey2, Hx1, Hx2, Hy1, Hy2, Hz1, Hz2;
+
+    Calc->CalculateFields(Info.Model, Info.freqindex);
     std::complex<double> Zxx, Zxy, Zyx, Zyy;
-    //read in the electric and magnetic field at the observe sites
-#pragma omp critical(forward_read_emo)
-      {
-        ReadEMO((DirName / emoAname).string(), Ex1, Ey1, Hx1, Hy1, Hz1);
-        ReadEMO((DirName / emoBname).string(), Ex2, Ey2, Hx2, Hy2, Hz2);
-      }
-    const size_t nval = (nmodx * nmody * nlevels);
-    CheckField(Ex1, nval);
-    CheckField(Ex2, nval);
-    CheckField(Ey1, nval);
-    CheckField(Ey2, nval);
-    CheckField(Hx1, nval);
-    CheckField(Hx2, nval);
-    CheckField(Hy1, nval);
-    CheckField(Hy2, nval);
-    CheckField(Hz1, nval);
-    CheckField(Hz2, nval);
 
     //calculate impedances from the field spectra for all stations
     for (size_t j = 0; j < nstats; ++j)
@@ -122,9 +89,10 @@ ForwardResult CalculateFrequency(const ForwardInfo &Info)
             * MeasDepthIndices[Info.Model.GetHIndices()[j + ind_shift]]
             + StationHIndex[0] * nmody + StationHIndex[1];
 
-        FieldsToImpedance(Ex1[offset_Ex], Ex2[offset_Ex], Ey1[offset_Ey], Ey2[offset_Ey],
-            Hx1[offset_H], Hx2[offset_H], Hy1[offset_H], Hy2[offset_H], Zxx, Zxy, Zyx,
-            Zyy);
+        FieldsToImpedance(Calc->GetEx1()[offset_Ex], Calc->GetEx2()[offset_Ex],
+            Calc->GetEy1()[offset_Ey], Calc->GetEy2()[offset_Ey],
+            Calc->GetHx1()[offset_H], Calc->GetHx2()[offset_H], Calc->GetHy1()[offset_H],
+            Calc->GetHy2()[offset_H], Zxx, Zxy, Zyx, Zyy);
         //result is a local array for this frequency
         //so we can directly use it even in a threaded environment
         const size_t meas_index = j * 8;
@@ -160,7 +128,8 @@ ForwardResult CalculateFrequency(const ForwardInfo &Info)
     return result;
   }
 
-GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI)
+GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI,
+    boost::shared_ptr<jif3D::X3DFieldCalculator> Calc)
   {
     //a few commonly used quantities for shorter notation
     const size_t nmodx = Info.Model.GetConductivities().shape()[0];
@@ -192,28 +161,6 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI)
       throw FatalException(
           "In X3D gradient calculation, directory does not exist: "
               + ForwardDirName.string(), __FILE__, __LINE__);
-
-    //read the fields from the forward calculation
-    std::vector<std::complex<double> > Ex1_obs, Ex2_obs, Ey1_obs, Ey2_obs, Hx1_obs,
-        Hx2_obs, Hy1_obs, Hy2_obs, Hz1_obs, Hz2_obs;
-#pragma omp critical(gradient_reademo)
-      {
-        ReadEMO((ForwardDirName / emoAname).string(), Ex1_obs, Ey1_obs, Hx1_obs, Hy1_obs,
-            Hz1_obs);
-        ReadEMO((ForwardDirName / emoBname).string(), Ex2_obs, Ey2_obs, Hx2_obs, Hy2_obs,
-            Hz2_obs);
-      }
-    const size_t nfield = nobs * nlevels;
-    CheckField(Ex1_obs, nfield);
-    CheckField(Ex2_obs, nfield);
-    CheckField(Ey1_obs, nfield);
-    CheckField(Ey2_obs, nfield);
-    CheckField(Hx1_obs, nfield);
-    CheckField(Hx2_obs, nfield);
-    CheckField(Hy1_obs, nfield);
-    CheckField(Hy2_obs, nfield);
-    CheckField(Hz1_obs, nfield);
-    CheckField(Hz2_obs, nfield);
 
     std::vector<std::complex<double> > Ex1_all, Ex2_all, Ey1_all, Ey2_all, Ez1_all,
         Ez2_all;
@@ -285,8 +232,8 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI)
 
         //this is an implementation of eq. 12 in Avdeev and Avdeeva
         //we do not have any beta, as this is part of the misfit
-        cmat j_ext = CalcEExt(Misfit, Info.C, j, freq_start_index, Hx1_obs[offset_H],
-            Hx2_obs[offset_H], Hy1_obs[offset_H], Hy2_obs[offset_H]);
+        cmat j_ext = CalcEExt(Misfit, Info.C, j, freq_start_index, Calc->GetHx1()[offset_H],
+            Calc->GetHx2()[offset_H], Calc->GetHy1()[offset_H], Calc->GetHy2()[offset_H]);
         //x3d uses a different convention for the complex exponentials
         //so we have to use the complex conjugate for the source
         size_t imp_offset = freq_start_index + j * 8;

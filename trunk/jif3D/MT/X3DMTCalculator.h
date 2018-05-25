@@ -24,6 +24,7 @@
 #include "../Global/Jif3DPlatformHelper.h"
 #include "ReadWriteX3D.h"
 #include "X3DModel.h"
+#include "X3DFieldCalculator.h"
 
 namespace jif3D
   {
@@ -80,7 +81,7 @@ namespace jif3D
       std::vector<std::pair<size_t, size_t>> ForwardExecTime;
       std::vector<std::pair<size_t, size_t>> DerivExecTime;
       friend class access;
-
+      std::vector<boost::shared_ptr<jif3D::X3DFieldCalculator> > FieldCalculators;
       //create a unique ID that we can use to name things and still
       //perform parallel calculations
       std::string ObjectID()
@@ -90,10 +91,8 @@ namespace jif3D
           //make a unique filename for the sensitivity file created by this object
           //we use boost uuid to generate a unique identifier tag
           //and translate it to a string to generate the filename
-          return "mt"
-		        + jif3D::stringify(jif3D::platform::get_process_id()) + "x"
-				+ jif3D::stringify(this) + "t"
-                + jif3D::stringify(tag);
+          return "mt" + jif3D::stringify(jif3D::platform::get_process_id()) + "x"
+              + jif3D::stringify(this) + "t" + jif3D::stringify(tag);
         }
 
     public:
@@ -142,7 +141,7 @@ namespace jif3D
        * data we might want to invert apparent resistivity and phase instead
        * of complex impedance.
        */
-   void  SetDataTransform(boost::shared_ptr<jif3D::VectorTransform> DT)
+void  SetDataTransform(boost::shared_ptr<jif3D::VectorTransform> DT)
     {
       DataTransform = DT;
     }
