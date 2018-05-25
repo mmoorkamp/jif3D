@@ -21,6 +21,7 @@ namespace jif3D
 
         fs::path RootName = TempDir / MakeUniqueName(NameRoot, X3DModel::MT, freqindex);
         fs::path DirName = RootName.string() + dirext;
+        ForwardDirName = DirName.string();
         std::vector<double> CurrFreq(1, Model.GetFrequencies()[freqindex]);
         std::vector<double> ShiftDepth;
         std::vector<size_t> MeasDepthIndices;
