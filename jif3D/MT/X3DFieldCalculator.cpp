@@ -36,6 +36,19 @@ namespace jif3D
             //we assume that we already have the correct results
             return;
           }
+        else
+          {
+            Ex1.clear();
+            Ex2.clear();
+            Ey1.clear();
+            Ey2.clear();
+            Hx1.clear();
+            Hx2.clear();
+            Hy1.clear();
+            Hy2.clear();
+            Hz1.clear();
+            Hz2.clear();
+          }
         //writing out files causes problems in parallel
         // so we make sure it is done one at a time
 #pragma omp critical(forward_write_files)
