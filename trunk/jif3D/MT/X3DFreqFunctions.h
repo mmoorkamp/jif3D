@@ -123,6 +123,10 @@ ForwardResult CalculateFrequency(const ForwardInfo &Info,
 GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI,
     boost::shared_ptr<jif3D::X3DFieldCalculator> Calc);
 
+GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::rvec &Misfit,
+    boost::shared_ptr<jif3D::X3DFieldCalculator> Calc);
+
+
 #ifdef HAVEHPX
 HPX_DEFINE_PLAIN_ACTION(CalculateFrequency, CalculateFrequency_action);
 HPX_DEFINE_PLAIN_ACTION(LQDerivativeFreq, LQDerivativeFreq_action);

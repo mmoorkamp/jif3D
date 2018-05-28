@@ -238,6 +238,7 @@ namespace jif3D
     void CalcU(const std::string &RootName,
         const std::vector<std::complex<double> > &XPolMoments,
         const std::vector<std::complex<double> > &YPolMoments,
+        const std::vector<std::complex<double> > &ZPolMoments,
         std::vector<std::complex<double> > &Ux, std::vector<std::complex<double> > &Uy,
         std::vector<std::complex<double> > &Uz, const std::vector<size_t> &XSourceXIndex,
         const std::vector<size_t> &XSourceYIndex,
@@ -245,6 +246,9 @@ namespace jif3D
         const std::vector<size_t> &YSourceXIndex,
         const std::vector<size_t> &YSourceYIndex,
         const std::vector<double> &YSourceDepths,
+        const std::vector<size_t> &ZSourceXIndex,
+        const std::vector<size_t> &ZSourceYIndex,
+        const std::vector<double> &ZSourceDepths,
         const jif3D::ThreeDModelBase::t3DModelDim &ZCellBoundaries,
         const jif3D::ThreeDModelBase::t3DModelDim &ZCellSizes, const size_t ncellsx,
         const size_t ncellsy, const size_t ncellsz)
@@ -253,16 +257,19 @@ namespace jif3D
           { return std::norm(a) < std::norm(b);};
         auto XPolMax = std::max_element(XPolMoments.begin(), XPolMoments.end(), CompFunc);
         auto YPolMax = std::max_element(YPolMoments.begin(), YPolMoments.end(), CompFunc);
+        auto ZPolMax = std::max_element(ZPolMoments.begin(), ZPolMoments.end(), CompFunc);
         bool HaveXPol = std::norm(*XPolMax) > 1e-30;
         bool HaveYPol = std::norm(*YPolMax) > 1e-30;
-        if (HaveXPol || HaveYPol)
+        bool HaveZPol = std::norm(*ZPolMax) > 1e-30;
+        if (HaveXPol || HaveYPol || HaveZPol)
           {
             std::string DirName = RootName + dirext + "/";
 #pragma omp critical(calcU_writesource)
               {
                 WriteSourceFile(DirName + sourceafilename, XSourceXIndex, XSourceYIndex,
                     XSourceDepths, YSourceXIndex, YSourceYIndex, YSourceDepths,
-                    XPolMoments, YPolMoments, ZCellBoundaries, ZCellSizes, ncellsx,
+                    ZSourceXIndex, ZSourceYIndex, ZSourceDepths,
+                    XPolMoments, YPolMoments, ZPolMoments, ZCellBoundaries, ZCellSizes, ncellsx,
                     ncellsy);
               }
             RunX3D(RootName);
