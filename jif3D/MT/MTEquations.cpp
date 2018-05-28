@@ -39,6 +39,29 @@ namespace jif3D
         Zyy = (Ey2 * Hx1 - Hx2 * Ey1) / magdet;
       }
 
+    /*! Transform the field spectra to tipper values     (dimensionless)
+     * @param Hx1 The magnetic field in x-direction for the first source polarization
+     * @param Hx2 The magnetic field in x-direction for the second source polarization
+     * @param Hy1 The magnetic field in y-direction for the first source polarization
+     * @param Hy2 The magnetic field in y-direction for the second source polarization
+     * @param Hz1 The magnetic field in z-direction for the first source polarization
+     * @param Hz2 The magnetic field in z-direction for the second source polarization
+     * @param Tx The x element of the Tipper (dimensionless)
+     * @param Ty The y element of the Tipper (dimensionless)
+     */
+    void FieldsToTipper(const std::complex<double> &Hx1,
+        const std::complex<double> &Hx2, const std::complex<double> &Hy1,
+        const std::complex<double> &Hy2, const std::complex<double> &Hz1,
+        const std::complex<double> &Hz2, std::complex<double> &Tx,
+        std::complex<double> &Ty)
+      {
+        const std::complex<double> magdet(Hx1 * Hy2 - Hy1 * Hx2);
+        Tx = (Hz1 * Hy2 - Hy1 * Hz2) / magdet;
+        Ty = (Hz2 * Hx1 - Hx2 * Hz1) / magdet;
+      }
+
+
+
     /*! For a given frequency and conductivity, calculate the impedance
      * for a half-space with that conductivity.
      * @param frequency The measurement frequency in Hz
@@ -64,6 +87,7 @@ namespace jif3D
         std::complex<double> &Zxy, std::complex<double> &Zyx, std::complex<double> &Zyy)
       {
         //we need the old impedance elements in all 4 equations
+
         //so we create some temporary variable
         std::complex<double> newxx, newxy, newyx, newyy;
 

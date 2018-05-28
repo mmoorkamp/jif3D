@@ -1,5 +1,5 @@
 //============================================================================
-  // Name        : MTUtils.h
+// Name        : MTUtils.h
 // Author      : 10 Mar 2014
 // Version     :
 // Copyright   : 2014, mm489
@@ -19,8 +19,6 @@
 
 #include <boost/filesystem/operations.hpp>
 
-
-
 namespace jif3D
   {
 
@@ -39,9 +37,8 @@ namespace jif3D
     const std::string emaBname = resultfilename + "0b.ema";
     const std::string dirext = "_dir";
 
-
-    J3DEXPORT std::string MakeUniqueName(const std::string &NameRoot, X3DModel::ProblemType Type,
-        const size_t FreqIndex);
+    J3DEXPORT std::string MakeUniqueName(const std::string &NameRoot,
+        X3DModel::ProblemType Type, const size_t FreqIndex);
     J3DEXPORT void MakeRunFile(const std::string &NameRoot, const std::string &DirName,
         const std::string &X3DName);
     J3DEXPORT void RunX3D(const std::string &NameRoot);
@@ -50,8 +47,8 @@ namespace jif3D
         const boost::filesystem::path &TargetDir);
     J3DEXPORT bool CheckHNK(const boost::filesystem::path &TargetDir);
 
-    J3DEXPORT jif3D::rvec AdaptDist(const std::vector<double> &C, const jif3D::rvec &RawImpedance,
-        const jif3D::rvec &Misfit);
+    J3DEXPORT jif3D::rvec AdaptDist(const std::vector<double> &C,
+        const jif3D::rvec &RawImpedance, const jif3D::rvec &Misfit);
     //! Calculate the strength of the electric dipole necessary for MT adjoint calculations
     J3DEXPORT cmat CalcEExt(const rvec &Misfit, const std::vector<double> &C,
         const size_t startindex, const size_t freq_start_index,
@@ -61,17 +58,23 @@ namespace jif3D
     J3DEXPORT void CalcU(const std::string &RootName,
         const std::vector<std::complex<double> > &XPolMoments,
         const std::vector<std::complex<double> > &YPolMoments,
+        const std::vector<std::complex<double> > &ZPolMoments,
         std::vector<std::complex<double> > &Ux, std::vector<std::complex<double> > &Uy,
-        std::vector<std::complex<double> > &Uz,
-		const std::vector<size_t> &XSourceXIndex,const std::vector<size_t> &XSourceYIndex,
+        std::vector<std::complex<double> > &Uz, const std::vector<size_t> &XSourceXIndex,
+        const std::vector<size_t> &XSourceYIndex,
         const std::vector<double> &XSourceDepths,
-		const std::vector<size_t> &YSourceXIndex,const std::vector<size_t> &YSourceYIndex,
-		const std::vector<double> &YSourceDepths,
-		const jif3D::ThreeDModelBase::t3DModelDim &ZCellBoundaries,
+        const std::vector<size_t> &YSourceXIndex,
+        const std::vector<size_t> &YSourceYIndex,
+        const std::vector<double> &YSourceDepths,
+        const std::vector<size_t> &ZSourceXIndex,
+        const std::vector<size_t> &ZSourceYIndex,
+        const std::vector<double> &ZSourceDepths,
+        const jif3D::ThreeDModelBase::t3DModelDim &ZCellBoundaries,
         const jif3D::ThreeDModelBase::t3DModelDim &ZCellSizes, const size_t ncellsx,
         const size_t ncellsy, const size_t ncellsz);
 
-    J3DEXPORT void CheckField(const std::vector<std::complex<double> > &Field, size_t nelem);
+    J3DEXPORT void CheckField(const std::vector<std::complex<double> > &Field,
+        size_t nelem);
     J3DEXPORT void CompareDepths(const std::vector<double> &BGDepths,
         const jif3D::ThreeDModelBase::t3DModelDim &ModelDepths);
   }
