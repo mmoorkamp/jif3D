@@ -12,15 +12,14 @@
 #include "../ModelBase/VTKTools.h"
 #include "X3DModel.h"
 #include "X3DMTCalculator.h"
+#include "X3DTipperCalculator.h"
 #include "ReadWriteImpedances.h"
-
 
 #include <boost/random/lagged_fibonacci.hpp>
 #include <boost/random/normal_distribution.hpp>
 #include <boost/random/variate_generator.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/program_options.hpp>
-
 
 namespace po = boost::program_options;
 
@@ -218,6 +217,12 @@ int main(int argc, char *argv[])
     jif3D::WriteImpedancesToModEM(outfilename + ".dat", MTModel.GetFrequencies(),
         MTModel.GetMeasPosX(), MTModel.GetMeasPosY(), MTModel.GetMeasPosZ(), Impedances,
         Errors);
+
+    jif3D::X3DTipperCalculator TipCalc(TempDir, X3DName);
+    jif3D::rvec Tipper = TipCalc.Calculate(MTModel);
+    jif3D::WriteTipperToNetCDF(outfilename + ".tip.nc", MTModel.GetFrequencies(),
+        MTModel.GetMeasPosX(), MTModel.GetMeasPosY(), MTModel.GetMeasPosZ(), Tipper);
+
     MTModel.WriteVTK(modelfilename + ".vtk");
     MTModel.WriteModEM(modelfilename + ".dat");
   }

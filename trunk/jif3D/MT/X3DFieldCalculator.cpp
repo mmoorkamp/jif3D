@@ -88,13 +88,11 @@ namespace jif3D
         bool Clean, jif3D::GreenCalcType GS1, jif3D::GreenCalcType GS4) :
         TempDir(TDir), X3DName(x3d), CleanFiles(Clean), GreenStage1(GS1), GreenStage4(GS4)
       {
-        // TODO Auto-generated constructor stub
         NameRoot = ObjectID();
       }
 
     X3DFieldCalculator::~X3DFieldCalculator()
       {
-        // TODO Auto-generated destructor stub
       }
 
   } /* namespace jif3D */

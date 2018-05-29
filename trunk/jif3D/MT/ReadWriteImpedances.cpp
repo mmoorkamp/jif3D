@@ -59,6 +59,30 @@ namespace jif3D
         CompVar.putAtt("units", "Ohm");
       }
 
+    void WriteTipperComp(NcFile &NetCDFFile, NcDim &StatNumDim, NcDim &FreqDim,
+        const jif3D::rvec &Tipper, const std::string &CompName,
+        const size_t compindex)
+      {
+        std::vector<NcDim> dimVec;
+        dimVec.push_back(FreqDim);
+        dimVec.push_back(StatNumDim);
+
+        NcVar CompVar = NetCDFFile.addVar(CompName, netCDF::ncDouble, dimVec);
+
+        jif3D::rvec Component(FreqDim.getSize() * StatNumDim.getSize());
+
+        for (size_t i = 0; i < Component.size(); ++i)
+          {
+            Component(i) = Tipper(i * 4 + compindex);
+          }
+
+//        CompVar.put(&Component[0], FreqDim.getSize(), StatNumDim.getSize());
+        cxxport::put_legacy_ncvar(CompVar, &Component[0], FreqDim.getSize(),
+            StatNumDim.getSize());
+        //we write the impedance in units of Ohm
+        CompVar.putAtt("units", "");
+      }
+
 //read one component of the impedance tensor from a netcdf file
 //this is an internal helper function
     void ReadImpedanceComp(NcFile &NetCDFFile, jif3D::rvec &Impedances,
@@ -81,6 +105,38 @@ namespace jif3D
                 for (size_t i = 0; i < nvalues; ++i)
                   {
                     Impedances(i * 8 + compindex) = Temp(i);
+                  }
+              }
+          } catch (const netCDF::exceptions::NcException &ex)
+          {
+            if (MustExist)
+              {
+                throw std::runtime_error(
+                    "Call to ReadImpedanceComp with MustExist failed.");
+              }
+          }
+      }
+
+    void ReadTipperComp(NcFile &NetCDFFile, jif3D::rvec &Tipper,
+        const std::string &CompName, const size_t compindex, const bool MustExist = true)
+      {
+        try
+          {
+            NcVar SizeVar = NetCDFFile.getVar(CompName);
+            if (!SizeVar.isNull())
+              {
+                const size_t nvalues = Tipper.size() / 4;
+                const std::vector<long> edges = cxxport::get_legacy_var_edges(SizeVar);
+
+                assert(nvalues == boost::numeric_cast<size_t>(edges[0] * edges[1]));
+                jif3D::rvec Temp(nvalues);
+
+//              SizeVar.get(&Temp[0], SizeVar->edges()[0], SizeVar->edges()[1]);
+                cxxport::get_legacy_ncvar(SizeVar, &Temp[0], edges[0], edges[1]);
+
+                for (size_t i = 0; i < nvalues; ++i)
+                  {
+                    Tipper(i * 4 + compindex) = Temp(i);
                   }
               }
           } catch (const netCDF::exceptions::NcException &ex)
@@ -231,6 +287,90 @@ namespace jif3D
           } catch (const netCDF::exceptions::NcException &ex)
           {
             // ignore
+          }
+      }
+
+    void WriteTipperToNetCDF(const std::string &filename,
+        const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
+        const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
+        const jif3D::rvec &Tipper, const jif3D::rvec &Errors )
+      {
+        const size_t nstats = StatXCoord.size();
+        const size_t nfreqs = Frequencies.size();
+        const size_t nimp = nstats * nfreqs * 4;
+        assert(nstats == StatYCoord.size());
+        assert(nstats == StatYCoord.size());
+        assert(Tipper.size() == nimp);
+        //create a netcdf file
+        NcFile DataFile(filename, NcFile::replace);
+        //Create the dimensions for the stations
+        NcDim StatNumDim = DataFile.addDim(StationNumberName, nstats);
+
+        //write out the measurement coordinates
+        WriteVec(DataFile, MeasPosXName, StatXCoord, StatNumDim, "m");
+        WriteVec(DataFile, MeasPosYName, StatYCoord, StatNumDim, "m");
+        WriteVec(DataFile, MeasPosZName, StatZCoord, StatNumDim, "m");
+        //write out the frequencies that we store
+        NcDim FreqDim = DataFile.addDim(FreqDimName, Frequencies.size());
+        NcVar FreqVar = DataFile.addVar(FreqDimName, netCDF::ncDouble, FreqDim);
+
+        //        FreqVar->put(&Frequencies[0], nfreqs);
+        cxxport::put_legacy_ncvar(FreqVar, Frequencies.data(), nfreqs);
+        //and now we can write all the impedance components
+        WriteTipperComp(DataFile, StatNumDim, FreqDim, Tipper, "Tx_re", 0);
+        WriteTipperComp(DataFile, StatNumDim, FreqDim, Tipper, "Tx_im", 1);
+        WriteTipperComp(DataFile, StatNumDim, FreqDim, Tipper, "Ty_re", 2);
+        WriteTipperComp(DataFile, StatNumDim, FreqDim, Tipper, "Ty_im", 3);
+
+        //now we deal with the errors, if no parameter has been explicitly passed
+        //Errors is empty, so we just fill the vector with zeros
+        jif3D::rvec Err(Errors);
+        if (Err.empty())
+          {
+            Err.resize(nimp);
+            std::fill_n(Err.begin(), nimp, 0.0);
+          }
+        //in any case we write some error information even if it is all zero
+        //as the error is identical for real and imaginary part
+        //we only have to write the elements corresponding to the real part
+        WriteTipperComp(DataFile, StatNumDim, FreqDim, Err, "dTx", 0);
+        WriteTipperComp(DataFile, StatNumDim, FreqDim, Err, "dTy", 2);
+
+      }
+
+    void ReadTipperFromNetCDF(const std::string &filename,
+        std::vector<double> &Frequencies, std::vector<double> &StatXCoord,
+        std::vector<double> &StatYCoord, std::vector<double> &StatZCoord,
+        jif3D::rvec &Tipper, jif3D::rvec &Error)
+      {
+        //open the netcdf file readonly
+        NcFile DataFile(filename, NcFile::read);
+        //read in the station coordinates in the three directions
+        ReadVec(DataFile, MeasPosXName, StatXCoord);
+        ReadVec(DataFile, MeasPosYName, StatYCoord);
+        ReadVec(DataFile, MeasPosZName, StatZCoord);
+        //read in the frequencies
+        ReadVec(DataFile, FreqDimName, Frequencies);
+        //for each frequency and each station we have 8 impedances
+        //currently it is not possible to have a different number of frequencies
+        //at each site
+        const size_t nimp = Frequencies.size() * StatXCoord.size() * 4;
+        Tipper.resize(nimp);
+        Error.resize(nimp);
+        //read the impedances
+        ReadTipperComp(DataFile, Tipper, "Tx_re", 0);
+        ReadTipperComp(DataFile, Tipper, "Tx_im", 1);
+        ReadTipperComp(DataFile, Tipper, "Ty_re", 2);
+        ReadTipperComp(DataFile, Tipper, "Ty_im", 3);
+
+        //now read the errors, we make their presence in the file optional
+        ReadTipperComp(DataFile, Error, "dTx", 0, false);
+        ReadTipperComp(DataFile, Error, "dTy", 2, false);
+        //we only read in the errors for the real part
+        //and then assign the same error to the imaginary part
+        for (size_t i = 0; i < nimp - 1; i += 2)
+          {
+            Error(i + 1) = Error(i);
           }
       }
 

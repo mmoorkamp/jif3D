@@ -49,18 +49,23 @@ namespace jif3D
      * @param Tx The x element of the Tipper (dimensionless)
      * @param Ty The y element of the Tipper (dimensionless)
      */
-    void FieldsToTipper(const std::complex<double> &Hx1,
-        const std::complex<double> &Hx2, const std::complex<double> &Hy1,
-        const std::complex<double> &Hy2, const std::complex<double> &Hz1,
-        const std::complex<double> &Hz2, std::complex<double> &Tx,
-        std::complex<double> &Ty)
+    void FieldsToTipper(const std::complex<double> &Hx1, const std::complex<double> &Hx2,
+        const std::complex<double> &Hy1, const std::complex<double> &Hy2,
+        const std::complex<double> &Hz1, const std::complex<double> &Hz2,
+        std::complex<double> &Tx, std::complex<double> &Ty)
       {
         const std::complex<double> magdet(Hx1 * Hy2 - Hy1 * Hx2);
-        Tx = (Hz1 * Hy2 - Hy1 * Hz2) / magdet;
-        Ty = (Hz2 * Hx1 - Hx2 * Hz1) / magdet;
+        if (std::abs(magdet) > 1e-10)
+          {
+            Tx = (Hz1 * Hy2 - Hy1 * Hz2) / magdet;
+            Ty = (Hz2 * Hx1 - Hx2 * Hz1) / magdet;
+          }
+        else
+          {
+            Tx = 0.0;
+            Ty = 0.0;
+          }
       }
-
-
 
     /*! For a given frequency and conductivity, calculate the impedance
      * for a half-space with that conductivity.
