@@ -424,15 +424,16 @@ GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::rvec &Misf
       { "a", "b" };
 
     //now we calculate the response to magnetic dipole sources
-    fs::path MdipName = TempDir
+    fs::path MdipPath = TempDir
         / MakeUniqueName(Info.NameRoot, X3DModel::MDIP, Info.freqindex);
+    std::string MdipName = MdipPath.string() +"tip";
     //write the files for the magnetic dipole calculation
 #pragma omp critical(gradient_writemodel_mdip)
       {
         for (auto Ext : PolExt)
           {
-            std::string CurrName = MdipName.string() + Ext;
-            fs::path CurrDir = MdipName.string() + Ext + dirext;
+            std::string CurrName = MdipName + Ext;
+            fs::path CurrDir = MdipName + Ext + dirext;
             MakeRunFile(CurrName, CurrDir.string(), Info.X3DName);
             WriteProjectFile(CurrDir.string(), CurrFreq, X3DModel::MDIP, resultfilename,
                 modelfilename, Info.GreenStage1, Info.GreenStage4);
@@ -526,14 +527,14 @@ GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::rvec &Misf
         Uz2_mag;
     //calculate the first polarization and read the adjoint fields
 #pragma omp task default(shared)
-    CalcU(MdipName.string() + PolExt[0], HXPolMoments1, HYPolMoments1, HZPolMoments1,
+    CalcU(MdipName + PolExt[0], HXPolMoments1, HYPolMoments1, HZPolMoments1,
         Ux1_mag, Uy1_mag, Uz1_mag, HSourceXIndex, HSourceYIndex, HSourceDepth,
         HSourceXIndex, HSourceYIndex, HSourceDepth, HSourceXIndex, HSourceYIndex,
         HSourceDepth, Info.Model.GetZCoordinates(), Info.Model.GetZCellSizes(), nmodx,
         nmody, nmodz);
     //calculate the second polarization and read the adjoint fields
 #pragma omp task default(shared)
-    CalcU(MdipName.string() + PolExt[1], HXPolMoments2, HYPolMoments2, HZPolMoments2,
+    CalcU(MdipName + PolExt[1], HXPolMoments2, HYPolMoments2, HZPolMoments2,
         Ux2_mag, Uy2_mag, Uz2_mag, HSourceXIndex, HSourceYIndex, HSourceDepth,
         HSourceXIndex, HSourceYIndex, HSourceDepth, HSourceXIndex, HSourceYIndex,
         HSourceDepth, Info.Model.GetZCoordinates(), Info.Model.GetZCellSizes(), nmodx,
