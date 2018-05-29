@@ -31,6 +31,7 @@
 #include "../Inversion/ThreeDModelObjective.h"
 #include "../MT/X3DModel.h"
 #include "../MT/X3DMTCalculator.h"
+#include "../MT/X3DTipperCalculator.h"
 #include "../MT/ReadWriteImpedances.h"
 #include "../MT/MTTransforms.h"
 #include "../Titan24/ReadWriteTitanData.h"
@@ -54,6 +55,9 @@ std::string X3DName = "x3d";
 std::string MTInvCovarName;
 std::string RefModelName;
 std::string CrossModelName;
+std::string TipperName;
+double TipperWeight;
+double tipperr;
 double DistCorr = 0;
 bool CleanFiles = true;
 
@@ -512,16 +516,36 @@ int hpx_main(boost::program_options::variables_map& vm)
         std::copy(RegVals.begin() + 2 * nmod, RegVals.begin() + 3 * nmod,
             Model.SetData().origin());
         Model.WriteVTK(modelfilename + ".regz.vtk");
-        std::copy(reggrad.begin(),reggrad.end(),Model.SetData().origin());
+        std::copy(reggrad.begin(), reggrad.end(), Model.SetData().origin());
         Model.WriteVTK(modelfilename + ".reggrad.vtk");
         return 0;
+      }
+
+    Objective->AddObjective(X3DObjective, MTTransform, 1.0, "MT",
+        jif3D::JointObjective::datafit);
+
+    jif3D::X3DTipperCalculator TipCalc(TempDir, X3DName);
+    boost::shared_ptr<jif3D::ThreeDModelObjective<jif3D::X3DTipperCalculator> > TipperObjective(
+        new jif3D::ThreeDModelObjective<jif3D::X3DTipperCalculator>(TipCalc));
+    if (vm.count("tipperdata"))
+      {
+
+        jif3D::rvec TipperData, TError;
+        jif3D::ReadTipperFromNetCDF(TipperName, Frequencies, XCoord, YCoord, ZCoord,
+            TipperData, TError);
+
+        std::transform(TError.begin(), TError.end(), TError.begin(), [](double a)
+          { return std::max(a,tipperr);});
+        TipperObjective->SetObservedData(TipperData);
+        TipperObjective->SetCoarseModelGeometry(Model);
+        TipperObjective->SetDataError(TError);
+        Objective->AddObjective(TipperObjective, MTTransform, TipperWeight, "Tipper",
+            jif3D::JointObjective::datafit);
       }
 
     double lambda = 1.0;
     std::cout << "Lambda: ";
     std::cin >> lambda;
-    Objective->AddObjective(X3DObjective, MTTransform, 1.0, "MT",
-        jif3D::JointObjective::datafit);
     Objective->AddObjective(Regularization, ModRegTrans, lambda, "Regularization",
         jif3D::JointObjective::regularization);
 
@@ -692,13 +716,19 @@ int hpx_main(boost::program_options::variables_map& vm)
         jif3D::WriteImpedancesToNetCDF(modelfilename + ".diff_imp.nc", Frequencies,
             XCoord, YCoord, ZCoord, X3DObjective->GetIndividualMisfit());
       }
+
+    if (vm.count("tipperdata"))
+      {
+        jif3D::WriteTipperToNetCDF(modelfilename + ".inv_tip.nc", Frequencies, XCoord,
+            YCoord, ZCoord, TipperObjective->GetSyntheticData(), TipperObjective->GetDataError());
+      }
 //and write out the data and model
 //here we have to distinguish again between scalar and ftg data
     std::cout << "Writing out inversion results." << std::endl;
 
     Model.WriteVTK(modelfilename + ".inv.vtk");
     Model.WriteNetCDF(modelfilename + ".inv.nc");
-    Model.WriteXYZ(modelfilename+".inv.xyz");
+    Model.WriteXYZ(modelfilename + ".inv.xyz");
 
     std::cout << std::endl;
 #ifdef HAVEHPX
@@ -748,7 +778,11 @@ int main(int argc, char* argv[])
         po::value(&CleanFiles)->default_value(true),
         "Clean up all temporary files at the end of the program.")("titan",
         "Read in Titan24 data.")("loglim",
-        "Use logarithmic transform to bound model parameters");
+        "Use logarithmic transform to bound model parameters")("tipperdata",
+        po::value(&TipperName), "The name for the tipper data")("tipperlambda",
+        po::value(&TipperWeight)->default_value(1.0), "The weight for the tippe data")(
+        "tippererr", po::value(&tipperr)->default_value(0.02),
+        "The absolute error for the tipper data");
 
     desc.add(RegSetup.SetupOptions());
     desc.add(InversionSetup.SetupOptions());

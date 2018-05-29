@@ -16,10 +16,12 @@ lib mt : ReadWriteX3D.cpp ReadWriteImpedances.cpp
 
 # switched off unit-test 2DMT_test : test_Tarits2DMT.cpp   mt linkcommon ../Inversion//inversion   ;
 unit-test X3Dcalc_test : test_X3DCalculator.cpp  B_epol1.for B_hpol.for MT2DForward.cpp ..//gfortran mt ../Global//global linkcommon ../Inversion//inversion  ;
+unit-test Tippercalc_test : test_X3DTipperCalculator.cpp   mt ../Global//global linkcommon ../Inversion//inversion  ;
 unit-test MTtransform_test : test_transform.cpp mt  ..//ModelBase   ;
 unit-test RWX3D_test : test_ReadWriteX3D.cpp   mt linkcommon ../Global//global ../Inversion//inversion  ;
 unit-test InterpolateFields_test : test_InterpolateFields.cpp   mt linkcommon ../Global//global ../Inversion//inversion  ;
 unit-test X3DObjective_test : test_X3DObjective.cpp mt linkcommon ../Inversion//inversion ../Global//global ../Titan24//titan24 ;
+unit-test X3DTipperObjective_test : test_X3DTipperObjective.cpp mt linkcommon ../Inversion//inversion ../Global//global ../Titan24//titan24 ;
 unit-test OneDMTCalculator_test : test_OneDMTCalculator.cpp mt linkcommon ../Inversion//inversion ../Global//global ;
 unit-test ReadWriteImpedances_test : test_ReadWriteImpedances.cpp mt linkcommon ../Inversion//inversion ../Global//global ;
 unit-test MTCovar_test : test_MTCovar.cpp mt  ..//ModelBase ../Global//global  ;

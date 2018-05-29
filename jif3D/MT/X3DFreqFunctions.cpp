@@ -306,9 +306,8 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI,
             //write an empty source file for the second source polarization
             WriteSourceFile((CurrDir / sourcebfilename).string(), HSourceXIndex,
                 HSourceYIndex, HSourceDepth, HSourceXIndex, HSourceYIndex, HSourceDepth,
-                HSourceXIndex, HSourceYIndex, HSourceDepth,
-                Zeros, Zeros, Zeros, Info.Model.GetZCoordinates(), Info.Model.GetZCellSizes(),
-                nmodx, nmody);
+                HSourceXIndex, HSourceYIndex, HSourceDepth, Zeros, Zeros, Zeros,
+                Info.Model.GetZCoordinates(), Info.Model.GetZCellSizes(), nmodx, nmody);
           }
       }
     //make the sources for the magnetic dipoles
@@ -407,7 +406,7 @@ GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::rvec &Misf
             nmody, nmodz);
       }
     //create variables for the adjoint field calculation
-    const size_t freq_start_index = nstats * Info.freqindex * 8;
+    const size_t freq_start_index = nstats * Info.freqindex * 4;
     const size_t ind_shift = nstats * Info.freqindex;
 
     std::vector<std::complex<double> > HXPolMoments1(nstats), HXPolMoments2(nstats),
@@ -498,7 +497,6 @@ GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::rvec &Misf
         HSourceDepth.at(j) = Info.Model.GetMeasPosZ()[Info.Model.GetHIndices()[j
             + ind_shift]];
 
-
         std::complex<double> Hx1 = Calc->GetHx1()[offset_H];
         std::complex<double> Hx2 = Calc->GetHx2()[offset_H];
         std::complex<double> Hy1 = Calc->GetHy1()[offset_H];
@@ -506,19 +504,22 @@ GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::rvec &Misf
         std::complex<double> Hz1 = Calc->GetHz1()[offset_H];
         std::complex<double> Hz2 = Calc->GetHz2()[offset_H];
 
+        std::complex<double> Tx, Ty;
+        FieldsToTipper(Hx1, Hx2, Hy1, Hy2, Hz1, Hz2, Tx, Ty);
+
         const size_t siteindex = freq_start_index + j * 4;
         cmat AH(2, 1);
         const std::complex<double> magdet = 1. / (Hx1 * Hy2 - Hx2 * Hy1);
         const std::complex<double> A00(Misfit(siteindex), -Misfit(siteindex + 1));
         const std::complex<double> A01(Misfit(siteindex + 2), -Misfit(siteindex + 3));
 
-        HZPolMoments1[j] = magdet * (A00 * Hy2 - A01 * Hx2);
-        HZPolMoments2[j] = magdet * (-A00 * Hy1 + A01 * Hx1);
+        HZPolMoments1.at(j) = magdet * (A00 * Hy2 - A01 * Hx2);
+        HZPolMoments2.at(j) = magdet * (-A00 * Hy1 + A01 * Hx1);
 
-        HXPolMoments1[j] = A00 * HZPolMoments1[j];
-        HYPolMoments1[j] = A01 * HZPolMoments1[j];
-        HXPolMoments2[j] = A00 * HZPolMoments1[j];
-        HYPolMoments2[j] = A01 * HZPolMoments2[j];
+        HXPolMoments1.at(j) = Tx * HZPolMoments1[j];
+        HYPolMoments1.at(j) = Ty * HZPolMoments1[j];
+        HXPolMoments2.at(j) = Tx * HZPolMoments2[j];
+        HYPolMoments2.at(j) = Ty * HZPolMoments2[j];
       }
 
     std::vector<std::complex<double> > Ux1_mag, Ux2_mag, Uy1_mag, Uy2_mag, Uz1_mag,

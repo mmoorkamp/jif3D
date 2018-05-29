@@ -85,6 +85,49 @@ namespace jif3D
         std::vector<double> &StatYCoord, std::vector<double> &StatZCoord,
         jif3D::rvec &Impedances, jif3D::rvec &ImpError, std::vector<double> &Distortion);
 
+
+
+    //! Write tipper to a netcdf file
+    /*! We can save tipper for several stations in a netcdf file for storage
+     * and analysis with external programs.
+     * @param filename The name for the netcdf file
+     * @param Frequencies The vector of frequencies in Hz for the tipper
+     * @param StatXCoord The x-coordinates (North) of the measurement stations for the tipper in m
+     * @param StatYCoord The y-coordinates (East) of the measurement stations for the tipper in m
+     * @param StatZCoord The z-coordinates (Down) of the measurement stations for the tipper in m
+     * @param Tipper The tipper (dimensionless) as a vector of real numbers.
+     *        4 consecutive elements form the tipper vectore for one frequency and site,
+     *        all impedances for one frequency and all stations form a contiguous block, the frequencies vary slowest.
+     * @param Errors Optional parameter containing the errors with the same number of Elements as tipper.
+     *        As we only have one error estimate per element we write only the components corresponding to the real parts.
+     */
+    J3DEXPORT void WriteTipperToNetCDF(const std::string &filename,
+        const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
+        const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
+        const jif3D::rvec &Tipper, const jif3D::rvec &Errors = jif3D::rvec());
+
+    //! Read magnetotelluric tipper from a netcdf file
+    /*! Read MT tipper for several stations from a netcdf file.
+     * @param filename The name for the netcdf file
+     * @param Frequencies The vector of frequencies in Hz for the impedances in the vector Impedances
+     * @param StatXCoord The x-coordinates (North) of the measurement stations for the impedances in m
+     * @param StatYCoord The y-coordinates (East) of the measurement stations for the impedances in m
+     * @param StatZCoord The z-coordinates (Down) of the measurement stations for the impedances in m
+     * @param Tipper The tipper (dimensionless) as a vector of real numbers.
+     *        4 consecutive elements form the tipper vector for one frequency and site,
+     *        all impedances for one frequency and all stations form a contiguous block, the frequencies vary slowest.
+     * @param Error The error  has the same number of elements as tipper
+     *         but contains all zeros if no error information present in the file.
+     *         Also the error for the real and imaginary parts are always identical.
+     */
+    J3DEXPORT void ReadTipperFromNetCDF(const std::string &filename,
+        std::vector<double> &Frequencies, std::vector<double> &StatXCoord,
+        std::vector<double> &StatYCoord, std::vector<double> &StatZCoord,
+        jif3D::rvec &Tipper, jif3D::rvec &Error);
+
+
+
+
     //! A very basic routine to read impedances at a single site from a .mtt file in the format used by University of Goettingen
     /*! A very basic routine to read impedances at a single site from a .mtt file in the
      * format used by University of Goettingen.

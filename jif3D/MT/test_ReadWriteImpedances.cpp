@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_SUITE( ReadWriteImpedances_Suite )
         std::generate_n(Impedances.begin(), ndata, jif3D::platform::drand48);
         std::generate_n(Error.begin(), ndata, jif3D::platform::drand48);
         std::generate_n(C.begin(), nstat * 4, jif3D::platform::drand48);
-        for (size_t i = 1; i < ndata; ++i)
+        for (size_t i = 1; i < ndata; i += 2)
           {
             Error(i) = Error(i - 1);
           }
@@ -81,6 +81,62 @@ BOOST_AUTO_TEST_SUITE( ReadWriteImpedances_Suite )
         for (size_t i = 0; i < ndata; ++i)
           {
             BOOST_CHECK_CLOSE(Impedances(i), ReadImpedances(i), 0.001);
+            BOOST_CHECK_CLOSE(Error(i), ReadError(i), 0.001);
+          }
+      }
+
+    BOOST_AUTO_TEST_CASE (read_write_tipper_netcdf_test)
+      {
+
+        std::vector<double> Frequencies;
+        std::vector<double> XCoord, YCoord, ZCoord;
+        jif3D::rvec Tipper, Error;
+
+        const size_t nstat = 11;
+        const size_t nfreq = 5;
+        Frequencies.resize(nfreq);
+        XCoord.resize(nstat);
+        YCoord.resize(nstat);
+        ZCoord.resize(nstat);
+        const size_t ndata = nfreq * nstat * 4;
+        Tipper.resize(ndata), Error.resize(ndata);
+
+        std::generate_n(Frequencies.begin(), nfreq, jif3D::platform::drand48);
+        std::sort(Frequencies.begin(), Frequencies.end(), std::greater<double>());
+        std::generate_n(XCoord.begin(), nstat, jif3D::platform::drand48);
+        std::generate_n(YCoord.begin(), nstat, jif3D::platform::drand48);
+        std::generate_n(ZCoord.begin(), nstat, jif3D::platform::drand48);
+        std::generate_n(Tipper.begin(), ndata, jif3D::platform::drand48);
+        std::generate_n(Error.begin(), ndata, jif3D::platform::drand48);
+
+        for (size_t i = 1; i < ndata; i+=2)
+          {
+            Error(i) = Error(i - 1);
+          }
+
+        const std::string filename("tipper.nc");
+        jif3D::WriteTipperToNetCDF(filename, Frequencies, XCoord, YCoord, ZCoord, Tipper,
+            Error);
+
+        std::vector<double> ReadFrequencies;
+        std::vector<double> ReadXCoord, ReadYCoord, ReadZCoord;
+        jif3D::rvec ReadTipper, ReadError;
+        jif3D::ReadTipperFromNetCDF(filename, ReadFrequencies, ReadXCoord, ReadYCoord,
+            ReadZCoord, ReadTipper, ReadError);
+        for (size_t i = 0; i < nfreq; ++i)
+          {
+            BOOST_CHECK_CLOSE(Frequencies[i], ReadFrequencies[i], 0.001);
+          }
+        for (size_t i = 0; i < nstat; ++i)
+          {
+            BOOST_CHECK_CLOSE(XCoord[i], ReadXCoord[i], 0.001);
+            BOOST_CHECK_CLOSE(YCoord[i], ReadYCoord[i], 0.001);
+            BOOST_CHECK_CLOSE(ZCoord[i], ReadZCoord[i], 0.001);
+          }
+
+        for (size_t i = 0; i < ndata; ++i)
+          {
+            BOOST_CHECK_CLOSE(Tipper(i), Tipper(i), 0.001);
             BOOST_CHECK_CLOSE(Error(i), ReadError(i), 0.001);
           }
       }
@@ -162,8 +218,10 @@ BOOST_AUTO_TEST_SUITE( ReadWriteImpedances_Suite )
         std::vector<double> JFrequencies;
         jif3D::rvec JImpedances, JError;
         double XC, YC, ZC;
-        jif3D::ReadImpedancesFromJ("testJ.j", JFrequencies, XC,YC,ZC,JImpedances, JError);
-        jif3D::ReadImpedancesFromMTT("testJ.mtt", MttFrequencies, MttImpedances, MttError);
+        jif3D::ReadImpedancesFromJ("testJ.j", JFrequencies, XC, YC, ZC, JImpedances,
+            JError);
+        jif3D::ReadImpedancesFromMTT("testJ.mtt", MttFrequencies, MttImpedances,
+            MttError);
         for (size_t i = 0; i < MttFrequencies.size(); ++i)
           {
             BOOST_CHECK_CLOSE(MttFrequencies[i], JFrequencies[i], 0.001);

@@ -50,7 +50,7 @@ namespace jif3D
 
     X3DTipperCalculator::~X3DTipperCalculator()
       {
-        // TODO Auto-generated destructor stub
+
       }
 
     rvec X3DTipperCalculator::Calculate(ModelType &Model, size_t minfreqindex,
@@ -82,7 +82,7 @@ namespace jif3D
         //here we assume that we either have all three indices in the netCDF file or none of them
         std::vector<int> ExIndices(Model.GetExIndices()), EyIndices(Model.GetEyIndices()),
             HIndices(Model.GetHIndices());
-        size_t ind_shift = 0;
+        size_t ishift = 0;
         if (ExIndices.empty())
           {
             ExIndices.resize(nmeas * nfreq);
@@ -90,10 +90,10 @@ namespace jif3D
             HIndices.resize(nmeas * nfreq);
             for (int ifr = 0; ifr < nfreq; ++ifr)
               {
-                ind_shift = nmeas * ifr;
+                ishift = nmeas * ifr;
                 for (size_t i = 0; i < nmeas; ++i)
                   {
-                    ExIndices[i + ind_shift] = i;
+                    ExIndices[i + ishift] = i;
                   }
               }
             EyIndices = ExIndices;
@@ -149,6 +149,7 @@ namespace jif3D
 
                 const size_t currindex = calcindex - minfreqindex;
                 const size_t startindex = nstats * currindex * 4;
+                const size_t ind_shift = nstats * calcindex;
 
                 std::chrono::system_clock::time_point start =
                     std::chrono::system_clock::now();
@@ -164,27 +165,13 @@ namespace jif3D
 
                 for (size_t j = 0; j < nstats; ++j)
                   {
-                    boost::array<ThreeDModelBase::t3DModelData::index, 3> StationExIndex =
-                        Model.FindAssociatedIndices(
-                            Model.GetMeasPosX()[Model.GetExIndices()[j + ind_shift]],
-                            Model.GetMeasPosY()[Model.GetExIndices()[j + ind_shift]],
-                            Model.GetMeasPosZ()[Model.GetExIndices()[j + ind_shift]]);
-                    boost::array<ThreeDModelBase::t3DModelData::index, 3> StationEyIndex =
-                        Model.FindAssociatedIndices(
-                            Model.GetMeasPosX()[Model.GetEyIndices()[j + ind_shift]],
-                            Model.GetMeasPosY()[Model.GetEyIndices()[j + ind_shift]],
-                            Model.GetMeasPosZ()[Model.GetEyIndices()[j + ind_shift]]);
+
                     boost::array<ThreeDModelBase::t3DModelData::index, 3> StationHIndex =
                         Model.FindAssociatedIndices(
                             Model.GetMeasPosX()[Model.GetHIndices()[j + ind_shift]],
                             Model.GetMeasPosY()[Model.GetHIndices()[j + ind_shift]],
                             Model.GetMeasPosZ()[Model.GetHIndices()[j + ind_shift]]);
-                    const size_t offset_Ex = (nmodx * nmody)
-                        * MeasDepthIndices[Model.GetExIndices()[j + ind_shift]]
-                        + StationExIndex[0] * nmody + StationExIndex[1];
-                    const size_t offset_Ey = (nmodx * nmody)
-                        * MeasDepthIndices[Model.GetEyIndices()[j + ind_shift]]
-                        + StationEyIndex[0] * nmody + StationEyIndex[1];
+
                     const size_t offset_H = (nmodx * nmody)
                         * MeasDepthIndices[Model.GetHIndices()[j + ind_shift]]
                         + StationHIndex[0] * nmody + StationHIndex[1];
@@ -199,21 +186,17 @@ namespace jif3D
                     //so we can directly use it even in a threaded environment
                     const size_t meas_index = j * 4;
 
-                    result[startindex + meas_index] = Tx.real();
-                    result[startindex + meas_index + 1] = Tx.imag();
-                    result[startindex + meas_index + 2] = Ty.real();
-                    result[startindex + meas_index + 3] = Ty.imag();
-
                     std::chrono::system_clock::time_point end =
                         std::chrono::system_clock::now();
                     size_t duration = std::chrono::duration_cast<std::chrono::seconds>(
                         end - start).count();
 
-                    const size_t currindex = calcindex - minfreqindex;
-                    const size_t startindex = nstats * currindex * 4;
-
                     omp_set_lock(&lck);
                     NewExecTime.push_back(std::make_pair(duration, calcindex));
+                    result[startindex + meas_index] = Tx.real();
+                    result[startindex + meas_index + 1] = Tx.imag();
+                    result[startindex + meas_index + 2] = Ty.real();
+                    result[startindex + meas_index + 3] = Ty.imag();
 
                     omp_unset_lock(&lck);
                   }
@@ -247,7 +230,7 @@ namespace jif3D
 
     rvec X3DTipperCalculator::LQDerivative(const ModelType &Model, const rvec &Misfit,
         size_t minfreqindex, size_t maxfreqindex)
-
+      {
         //we define nfreq as int to make the compiler happy in the openmp loop
         maxfreqindex = std::min(maxfreqindex, Model.GetFrequencies().size());
         const int nfreq = maxfreqindex - minfreqindex;
@@ -267,20 +250,6 @@ namespace jif3D
         const size_t nmod = nmodx * nmody * nmodz;
         assert(Misfit.size() == nstats * nfreq * 4);
 
-        std::vector<double> C(Model.GetDistortionParameters());
-        //if they have not been set, we use the identity matrix
-        //for each station
-        if (C.size() != nstats * 4)
-          {
-            C.resize(nstats * 4);
-            for (size_t i = 0; i < nstats; ++i)
-              {
-                C[i * 4] = 1.0;
-                C[i * 4 + 1] = 0.0;
-                C[i * 4 + 2] = 0.0;
-                C[i * 4 + 3] = 1.0;
-              }
-          }
 
         jif3D::rvec Gradient(nmod);
 
@@ -311,7 +280,7 @@ namespace jif3D
                 //we want to alternate between items at the beginning of the map and at the end of the map
                 const size_t queueindex = (i % 2) == 0 ? i / 2 : nfreq - 1 - i / 2;
                 const size_t calcindex = DerivExecTime.at(queueindex).second;
-
+                std::vector<double> C;
                 ForwardInfo Info(Model, C, calcindex, TempDir.string(), X3DName, NameRoot,
                     GreenType1, GreenType4);
                 //calculate the gradient for each frequency
@@ -351,7 +320,8 @@ namespace jif3D
         // a generic error message
         if (FatalError)
           throw jif3D::FatalException(
-              "Problem in MT gradient calculation. Error message: " + ErrorMsg, __FILE__,
+              "Problem in Tipper gradient calculation. Error message: " + ErrorMsg,
+              __FILE__,
               __LINE__);
 
         return 2.0 * Gradient;
