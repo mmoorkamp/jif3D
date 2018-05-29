@@ -186,20 +186,21 @@ namespace jif3D
                     //so we can directly use it even in a threaded environment
                     const size_t meas_index = j * 4;
 
-                    std::chrono::system_clock::time_point end =
-                        std::chrono::system_clock::now();
-                    size_t duration = std::chrono::duration_cast<std::chrono::seconds>(
-                        end - start).count();
-
-                    omp_set_lock(&lck);
-                    NewExecTime.push_back(std::make_pair(duration, calcindex));
                     result[startindex + meas_index] = Tx.real();
                     result[startindex + meas_index + 1] = Tx.imag();
                     result[startindex + meas_index + 2] = Ty.real();
                     result[startindex + meas_index + 3] = Ty.imag();
 
-                    omp_unset_lock(&lck);
                   }
+
+                omp_set_lock(&lck);
+                std::chrono::system_clock::time_point end =
+                    std::chrono::system_clock::now();
+                size_t duration = std::chrono::duration_cast<std::chrono::seconds>(
+                    end - start).count();
+
+                NewExecTime.push_back(std::make_pair(duration, calcindex));
+                omp_unset_lock(&lck);
               } catch (jif3D::FatalException &e)
               {
                 ErrorMsg = e.what();
@@ -209,6 +210,7 @@ namespace jif3D
                 FatalError = true;
                 std::cerr << "Problem in MT forward calculation.";
               }
+
             //finished with one frequency
           }
 
@@ -249,7 +251,6 @@ namespace jif3D
         const size_t nstats = Model.GetExIndices().size() / nfreq;
         const size_t nmod = nmodx * nmody * nmodz;
         assert(Misfit.size() == nstats * nfreq * 4);
-
 
         jif3D::rvec Gradient(nmod);
 
