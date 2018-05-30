@@ -509,18 +509,22 @@ GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::rvec &Misf
         FieldsToTipper(Hx1, Hx2, Hy1, Hy2, Hz1, Hz2, Tx, Ty);
 
         const size_t siteindex = freq_start_index + j * 4;
-        cmat AH(2, 1);
         const std::complex<double> magdet = 1. / (Hx1 * Hy2 - Hx2 * Hy1);
         const std::complex<double> A00(Misfit(siteindex), -Misfit(siteindex + 1));
         const std::complex<double> A01(Misfit(siteindex + 2), -Misfit(siteindex + 3));
 
-        HZPolMoments1.at(j) = magdet * (A00 * Hy2 - A01 * Hx2);
-        HZPolMoments2.at(j) = magdet * (-A00 * Hy1 + A01 * Hx1);
+        const std::complex<double> omega_mu = 1.0
+                / (std::complex<double>(0.0, jif3D::mag_mu) * 2.0
+                    * boost::math::constants::pi<double>()
+                    * Info.Model.GetFrequencies()[Info.freqindex]);
 
-        HXPolMoments1.at(j) = Tx * HZPolMoments1[j];
-        HYPolMoments1.at(j) = Ty * HZPolMoments1[j];
-        HXPolMoments2.at(j) = Tx * HZPolMoments2[j];
-        HYPolMoments2.at(j) = Ty * HZPolMoments2[j];
+        HZPolMoments1.at(j) = -omega_mu *  magdet * (A00 * Hy2 - A01 * Hx2);
+        HZPolMoments2.at(j) = -omega_mu * magdet * (-A00 * Hy1 + A01 * Hx1);
+
+        HXPolMoments1.at(j) = -Tx * HZPolMoments1[j];
+        HYPolMoments1.at(j) = -Ty * HZPolMoments1[j];
+        HXPolMoments2.at(j) = -Tx * HZPolMoments2[j];
+        HYPolMoments2.at(j) = -Ty * HZPolMoments2[j];
       }
 
     std::vector<std::complex<double> > Ux1_mag, Ux2_mag, Uy1_mag, Uy2_mag, Uz1_mag,
