@@ -457,17 +457,6 @@ GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::rvec &Misf
             * Info.Model.GetFrequencies()[Info.freqindex]);
     for (size_t j = 0; j < nstats; ++j)
       {
-        boost::array<ThreeDModelBase::t3DModelData::index, 3> StationExIndex =
-            Info.Model.FindAssociatedIndices(
-                Info.Model.GetMeasPosX()[Info.Model.GetExIndices()[j + ind_shift]],
-                Info.Model.GetMeasPosY()[Info.Model.GetExIndices()[j + ind_shift]],
-                Info.Model.GetMeasPosZ()[Info.Model.GetExIndices()[j + ind_shift]]);
-
-        boost::array<ThreeDModelBase::t3DModelData::index, 3> StationEyIndex =
-            Info.Model.FindAssociatedIndices(
-                Info.Model.GetMeasPosX()[Info.Model.GetEyIndices()[j + ind_shift]],
-                Info.Model.GetMeasPosY()[Info.Model.GetEyIndices()[j + ind_shift]],
-                Info.Model.GetMeasPosZ()[Info.Model.GetEyIndices()[j + ind_shift]]);
 
         boost::array<ThreeDModelBase::t3DModelData::index, 3> StationHIndex =
             Info.Model.FindAssociatedIndices(
@@ -475,23 +464,10 @@ GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::rvec &Misf
                 Info.Model.GetMeasPosY()[Info.Model.GetHIndices()[j + ind_shift]],
                 Info.Model.GetMeasPosZ()[Info.Model.GetHIndices()[j + ind_shift]]);
 
-        /*        const size_t offset_Ex = (nmodx * nmody) * MeasDepthIndices[Info.Model.GetExIndices()[j + ind_shift]]
-         + StationExIndex[0] * nmody + StationExIndex[1];
-         const size_t offset_Ey = (nmodx * nmody) * MeasDepthIndices[Info.Model.GetEyIndices()[j + ind_shift]]
-         + StationEyIndex[0] * nmody + StationEyIndex[1]; */
         const size_t offset_H = (nmodx * nmody)
             * MeasDepthIndices[Info.Model.GetHIndices()[j + ind_shift]]
             + StationHIndex[0] * nmody + StationHIndex[1];
 
-        XSourceXIndex.at(j) = StationExIndex[0];
-        XSourceYIndex.at(j) = StationExIndex[1];
-        XSourceDepth.at(j) = Info.Model.GetMeasPosZ()[Info.Model.GetExIndices()[j
-            + ind_shift]];
-
-        YSourceXIndex.at(j) = StationEyIndex[0];
-        YSourceYIndex.at(j) = StationEyIndex[1];
-        YSourceDepth.at(j) = Info.Model.GetMeasPosZ()[Info.Model.GetEyIndices()[j
-            + ind_shift]];
 
         HSourceXIndex.at(j) = StationHIndex[0];
         HSourceYIndex.at(j) = StationHIndex[1];
