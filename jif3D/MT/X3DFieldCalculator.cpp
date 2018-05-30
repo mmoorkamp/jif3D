@@ -9,10 +9,33 @@
 #include "MTUtils.h"
 #include "../ModelBase/CellBoundaries.h"
 
+#include <boost/filesystem/operations.hpp>
+#include <boost/algorithm/string.hpp>
+
+
 namespace fs = boost::filesystem;
 
 namespace jif3D
   {
+
+  void X3DFieldCalculator::CleanUp()
+    {
+      //under certain conditions we might not be able
+      //to delete all files. We don't want the program to stop
+      //because of this as we can always delete files afterwards
+      //so we pass an error code object to remove_all and ignore the error
+      boost::system::error_code ec;
+      fs::directory_iterator end_itr; // default construction yields past-the-end
+      //go through the directory and delete any file that starts with NameRoot
+      for (fs::directory_iterator itr(TempDir); itr != end_itr; ++itr)
+        {
+          if (boost::algorithm::starts_with(itr->path().filename().string(), NameRoot))
+            {
+              fs::remove_all(itr->path().filename(), ec);
+            }
+        }
+    }
+
     void X3DFieldCalculator::CalculateFields(const X3DModel &Model, size_t freqindex)
       {
 
@@ -93,6 +116,7 @@ namespace jif3D
 
     X3DFieldCalculator::~X3DFieldCalculator()
       {
+        CleanUp();
       }
 
   } /* namespace jif3D */

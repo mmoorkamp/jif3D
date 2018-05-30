@@ -33,6 +33,7 @@ namespace jif3D
     class X3DFieldCalculator
       {
     private:
+      void CleanUp();
       std::vector<std::complex<double> > Ex1, Ex2, Ey1, Ey2, Hx1, Hx2, Hy1, Hy2, Hz1, Hz2;
       boost::filesystem::path TempDir;
       std::string X3DName;

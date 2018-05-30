@@ -32,6 +32,7 @@
 #include "../MT/X3DModel.h"
 #include "../MT/X3DMTCalculator.h"
 #include "../MT/X3DTipperCalculator.h"
+#include "../MT/X3DFieldCalculator.h"
 #include "../MT/ReadWriteImpedances.h"
 #include "../MT/MTTransforms.h"
 #include "../Titan24/ReadWriteTitanData.h"
@@ -447,7 +448,14 @@ int hpx_main(boost::program_options::variables_map& vm)
         0, ngrid);
 
     bool WantDistCorr = (DistCorr > 0);
-    jif3D::X3DMTCalculator Calculator(TempDir, X3DName, WantDistCorr, CleanFiles);
+
+    std::vector<boost::shared_ptr<jif3D::X3DFieldCalculator> > FC;
+    FC.resize(Model.GetFrequencies().size());
+    for (auto &fieldc : FC)
+      {
+        fieldc = boost::make_shared<jif3D::X3DFieldCalculator>(TempDir, X3DName);
+      }
+    jif3D::X3DMTCalculator Calculator(TempDir, X3DName, WantDistCorr, CleanFiles, FC);
     if (vm.count("opt"))
       {
         Calculator.SetGreenType1(jif3D::GreenCalcType::opt);
@@ -524,7 +532,7 @@ int hpx_main(boost::program_options::variables_map& vm)
     Objective->AddObjective(X3DObjective, MTTransform, 1.0, "MT",
         jif3D::JointObjective::datafit);
 
-    jif3D::X3DTipperCalculator TipCalc(TempDir, X3DName);
+    jif3D::X3DTipperCalculator TipCalc(TempDir, X3DName, true, FC);
     boost::shared_ptr<jif3D::ThreeDModelObjective<jif3D::X3DTipperCalculator> > TipperObjective(
         new jif3D::ThreeDModelObjective<jif3D::X3DTipperCalculator>(TipCalc));
     if (vm.count("tipperdata"))
@@ -720,7 +728,12 @@ int hpx_main(boost::program_options::variables_map& vm)
     if (vm.count("tipperdata"))
       {
         jif3D::WriteTipperToNetCDF(modelfilename + ".inv_tip.nc", Frequencies, XCoord,
-            YCoord, ZCoord, TipperObjective->GetSyntheticData(), TipperObjective->GetDataError());
+            YCoord, ZCoord, TipperObjective->GetSyntheticData(),
+            TipperObjective->GetDataError());
+        jif3D::WriteTipperToNetCDF(modelfilename + ".diff_tip.nc", Frequencies, XCoord,
+            YCoord, ZCoord, TipperObjective->GetIndividualMisfit(),
+            TipperObjective->GetDataError());
+
       }
 //and write out the data and model
 //here we have to distinguish again between scalar and ftg data
