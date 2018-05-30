@@ -58,6 +58,7 @@ std::string RefModelName;
 std::string CrossModelName;
 std::string TipperName;
 double TipperWeight;
+double MTWeight;
 double tipperr;
 double DistCorr = 0;
 bool CleanFiles = true;
@@ -529,9 +530,11 @@ int hpx_main(boost::program_options::variables_map& vm)
         return 0;
       }
 
-    Objective->AddObjective(X3DObjective, MTTransform, 1.0, "MT",
-        jif3D::JointObjective::datafit);
-
+    if (MTWeight > 0.0)
+      {
+        Objective->AddObjective(X3DObjective, MTTransform, MTWeight, "MT",
+            jif3D::JointObjective::datafit);
+      }
     jif3D::X3DTipperCalculator TipCalc(TempDir, X3DName, true, FC);
     boost::shared_ptr<jif3D::ThreeDModelObjective<jif3D::X3DTipperCalculator> > TipperObjective(
         new jif3D::ThreeDModelObjective<jif3D::X3DTipperCalculator>(TipCalc));
@@ -793,9 +796,10 @@ int main(int argc, char* argv[])
         "Read in Titan24 data.")("loglim",
         "Use logarithmic transform to bound model parameters")("tipperdata",
         po::value(&TipperName), "The name for the tipper data")("tipperlambda",
-        po::value(&TipperWeight)->default_value(1.0), "The weight for the tippe data")(
-        "tippererr", po::value(&tipperr)->default_value(0.02),
-        "The absolute error for the tipper data");
+        po::value(&TipperWeight)->default_value(1.0), "The weight for the tipper data")(
+        "tippererr", po::value(&tipperr)->default_value(0.005),
+        "The absolute error for the tipper data")("mtlambda",
+        po::value(&MTWeight)->default_value(1.0), "The weight for the MT data");
 
     desc.add(RegSetup.SetupOptions());
     desc.add(InversionSetup.SetupOptions());
