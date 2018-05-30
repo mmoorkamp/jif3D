@@ -28,8 +28,8 @@ namespace jif3D
   {
 
     X3DTipperCalculator::X3DTipperCalculator(boost::filesystem::path TDir,
-        std::string x3d, bool DC, bool Clean) :
-        GreenType1(hst), GreenType4(hst), X3DName(x3d), CleanFiles(Clean)
+        std::string x3d, bool Clean , std::vector<boost::shared_ptr<jif3D::X3DFieldCalculator> > FC) :
+        GreenType1(hst), GreenType4(hst), X3DName(x3d), CleanFiles(Clean), FieldCalculators(FC)
       {
         //each object gets a unique ID, this way we avoid clashes
         //between the temporary files generated for the calculations with x3d

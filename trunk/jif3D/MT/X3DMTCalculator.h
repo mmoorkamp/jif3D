@@ -193,7 +193,7 @@ void  SetDataTransform(boost::shared_ptr<jif3D::VectorTransform> DT)
    * @param Clean Delete all temporary files when object is destroyed
    */
   X3DMTCalculator(boost::filesystem::path TDir = boost::filesystem::current_path(),
-      std::string x3d = "x3d", bool DC = false, bool Clean = true);
+      std::string x3d = "x3d", bool DC = false, bool Clean = true, std::vector<boost::shared_ptr<jif3D::X3DFieldCalculator> > FC = std::vector<boost::shared_ptr<jif3D::X3DFieldCalculator> >());
   virtual ~X3DMTCalculator();
 };
 /* @} */
