@@ -537,6 +537,7 @@ int hpx_main(boost::program_options::variables_map& vm)
         //here we have to distinguish again between scalar and ftg data
         if (GravitySetup.GetHaveScal())
           {
+            GravModel = GravitySetup.GetScalModel();
             jif3D::rvec ScalGravInvData(
                 GravitySetup.GetScalGravObjective().GetSyntheticData());
             jif3D::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc",
@@ -555,6 +556,7 @@ int hpx_main(boost::program_options::variables_map& vm)
           }
         if (GravitySetup.GetHaveFTG())
           {
+            GravModel = GravitySetup.GetFTGModel();
             jif3D::rvec FTGInvData(GravitySetup.GetFTGObjective().GetSyntheticData());
             jif3D::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc",
                 FTGInvData, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
@@ -563,7 +565,7 @@ int hpx_main(boost::program_options::variables_map& vm)
             jif3D::SaveTensorGravityMeasurements(modelfilename + ".diff_ftg.nc", FTGDiff,
                 GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ(),
                 GravitySetup.GetFTGObjective().GetDataError());
-            jif3D::Write3DTensorDataToVTK(modelfilename + ".diff_ftg.vtk", "U",
+            jif3D::Write3DTensorDataToVTK(modelfilename + ".inv_ftg.vtk", "U",
                 FTGInvData, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
                 GravModel.GetMeasPosZ());
           }
