@@ -705,11 +705,11 @@ int hpx_main(boost::program_options::variables_map& vm)
     Model.SetDistortionParameters(C);
 //calculate the predicted data
     std::cout << "Calculating response of inversion model." << std::endl;
-    jif3D::rvec InvData(X3DObjective->GetSyntheticData());
+
     if (vm.count("titan"))
       {
         jif3D::WriteTitanDataToNetCDF(modelfilename + ".inv_imp.nc", Frequencies, XCoord,
-            YCoord, ZCoord, ExIndices, EyIndices, HIndices, InvData,
+            YCoord, ZCoord, ExIndices, EyIndices, HIndices, X3DObjective->GetSyntheticData(),
             X3DObjective->GetDataError(), C);
         jif3D::WriteTitanDataToNetCDF(modelfilename + ".dist_imp.nc", Frequencies, XCoord,
             YCoord, ZCoord, ExIndices, EyIndices, HIndices,
@@ -720,12 +720,15 @@ int hpx_main(boost::program_options::variables_map& vm)
       }
     else
       {
-        jif3D::WriteImpedancesToNetCDF(modelfilename + ".inv_imp.nc", Frequencies, XCoord,
-            YCoord, ZCoord, InvData, X3DObjective->GetDataError(), C);
-        jif3D::WriteImpedancesToNetCDF(modelfilename + ".dist_imp.nc", Frequencies,
-            XCoord, YCoord, ZCoord, X3DObjective->GetObservedData(), ZError, C);
-        jif3D::WriteImpedancesToNetCDF(modelfilename + ".diff_imp.nc", Frequencies,
-            XCoord, YCoord, ZCoord, X3DObjective->GetIndividualMisfit());
+        if (MTWeight > 0.0)
+          {
+            jif3D::WriteImpedancesToNetCDF(modelfilename + ".inv_imp.nc", Frequencies,
+                XCoord, YCoord, ZCoord, X3DObjective->GetSyntheticData(), X3DObjective->GetDataError(), C);
+            jif3D::WriteImpedancesToNetCDF(modelfilename + ".dist_imp.nc", Frequencies,
+                XCoord, YCoord, ZCoord, X3DObjective->GetObservedData(), ZError, C);
+            jif3D::WriteImpedancesToNetCDF(modelfilename + ".diff_imp.nc", Frequencies,
+                XCoord, YCoord, ZCoord, X3DObjective->GetIndividualMisfit());
+          }
       }
 
     if (vm.count("tipperdata"))
