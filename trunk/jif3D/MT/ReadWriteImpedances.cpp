@@ -778,9 +778,8 @@ namespace jif3D
 
       }
 
-    void WriteModEMLine(std::ofstream &outfile, double Zr, double Zi, double Err)
+    void WriteModEMLine(std::ofstream &outfile, double Zr, double Zi, double Err, double convfactor = 1.0)
       {
-        const double convfactor = 4.0 * 1e-4 * acos(-1.0);
         outfile << std::setw(15) << Zr / convfactor << " " << std::setw(15)
             << Zi / convfactor << " " << std::setw(15) << Err / convfactor << "\n";
       }
@@ -805,6 +804,7 @@ namespace jif3D
         size_t nfreqs = Frequencies.size();
         outfile << "> " << nfreqs << " " << nsites << "\n";
         outfile.setf(std::ios::scientific);
+        const double convfactor = 4.0 * 1e-4 * acos(-1.0);
         for (size_t i = 0; i < nsites; ++i)
           {
             std::string SiteName = "Site" + std::to_string(i);
@@ -817,19 +817,19 @@ namespace jif3D
                 double period = 1.0 / Frequencies.at(j);
                 outfile << period << SiteLine.str();
                 outfile << " ZXX ";
-                WriteModEMLine(outfile, Imp(index), Imp(index + 1), Err(index));
+                WriteModEMLine(outfile, Imp(index), Imp(index + 1), Err(index),convfactor);
 
                 outfile << period << SiteLine.str();
                 outfile << " ZXY ";
-                WriteModEMLine(outfile, Imp(index + 2), Imp(index + 3), Err(index + 2));
+                WriteModEMLine(outfile, Imp(index + 2), Imp(index + 3), Err(index + 2),convfactor);
 
                 outfile << period << SiteLine.str();
                 outfile << " ZYX ";
-                WriteModEMLine(outfile, Imp(index + 4), Imp(index + 5), Err(index + 4));
+                WriteModEMLine(outfile, Imp(index + 4), Imp(index + 5), Err(index + 4),convfactor);
 
                 outfile << period << SiteLine.str();
                 outfile << " ZYY ";
-                WriteModEMLine(outfile, Imp(index + 6), Imp(index + 7), Err(index + 6));
+                WriteModEMLine(outfile, Imp(index + 6), Imp(index + 7), Err(index + 6),convfactor);
               }
           }
       }
