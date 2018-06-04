@@ -224,6 +224,12 @@ namespace jif3D
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
         const jif3D::rvec &Imp, const jif3D::rvec &Err);
 
+
+    J3DEXPORT void WriteTipperToModEM(const std::string &filename,
+            const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
+            const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
+            const jif3D::rvec &Tip, const jif3D::rvec &Err);
+
     //! Read magnetotelluric impedances from a .j file
     /*!
      * @param filename The name of the .j file

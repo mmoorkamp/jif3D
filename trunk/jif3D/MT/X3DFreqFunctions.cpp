@@ -489,11 +489,6 @@ GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::rvec &Misf
         const std::complex<double> A00(Misfit(siteindex), -Misfit(siteindex + 1));
         const std::complex<double> A01(Misfit(siteindex + 2), -Misfit(siteindex + 3));
 
-        const std::complex<double> omega_mu = 1.0
-                / (std::complex<double>(0.0, jif3D::mag_mu) * 2.0
-                    * boost::math::constants::pi<double>()
-                    * Info.Model.GetFrequencies()[Info.freqindex]);
-
         HZPolMoments1.at(j) = -omega_mu *  magdet * (A00 * Hy2 - A01 * Hx2);
         HZPolMoments2.at(j) = -omega_mu * magdet * (-A00 * Hy1 + A01 * Hx1);
 
