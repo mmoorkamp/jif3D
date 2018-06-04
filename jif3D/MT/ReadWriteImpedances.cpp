@@ -60,8 +60,7 @@ namespace jif3D
       }
 
     void WriteTipperComp(NcFile &NetCDFFile, NcDim &StatNumDim, NcDim &FreqDim,
-        const jif3D::rvec &Tipper, const std::string &CompName,
-        const size_t compindex)
+        const jif3D::rvec &Tipper, const std::string &CompName, const size_t compindex)
       {
         std::vector<NcDim> dimVec;
         dimVec.push_back(FreqDim);
@@ -293,7 +292,7 @@ namespace jif3D
     void WriteTipperToNetCDF(const std::string &filename,
         const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
-        const jif3D::rvec &Tipper, const jif3D::rvec &Errors )
+        const jif3D::rvec &Tipper, const jif3D::rvec &Errors)
       {
         const size_t nstats = StatXCoord.size();
         const size_t nfreqs = Frequencies.size();
@@ -798,7 +797,7 @@ namespace jif3D
         outfile
             << "# Period(s) Code GG_Lat GG_Lon X(m) Y(m) Z(m) Component Real Imag Error \n";
         outfile << "> Full_Impedance\n";
-        outfile << "> exp(+i\\omega t)\n ";
+        outfile << "> exp(+i\\omega t)\n";
         outfile << "> [mV/km]/[nT]\n";
         outfile << "> 0.00\n";
         outfile << "> 0.0 0.0\n";
@@ -833,6 +832,49 @@ namespace jif3D
                 WriteModEMLine(outfile, Imp(index + 6), Imp(index + 7), Err(index + 6));
               }
           }
+      }
+
+    J3DEXPORT void WriteTipperToModEM(const std::string &filename,
+        const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
+        const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
+        const jif3D::rvec &Tip, const jif3D::rvec &Err)
+      {
+        std::ofstream outfile(filename.c_str());
+        outfile.precision(6);
+
+        outfile << "# Description: \n";
+        outfile
+            << "# Period(s) Code GG_Lat GG_Lon X(m) Y(m) Z(m) Component Real Imag Error \n";
+        outfile << "> Full_Vertical_Components\n";
+        outfile << "> exp(+i\\omega t)\n";
+        outfile << "> []\n";
+        outfile << "> 0.00\n";
+        outfile << "> 0.0 0.0\n";
+        size_t nsites = StatXCoord.size();
+        size_t nfreqs = Frequencies.size();
+        outfile << "> " << nfreqs << " " << nsites << "\n";
+        outfile.setf(std::ios::scientific);
+        for (size_t i = 0; i < nsites; ++i)
+          {
+            std::string SiteName = "Site" + std::to_string(i);
+            std::ostringstream SiteLine;
+            SiteLine << " " << SiteName << "  0.0  0.0 " << StatXCoord.at(i) << " "
+                << StatYCoord.at(i) << " " << StatZCoord.at(i) << " ";
+            for (size_t j = 0; j < nfreqs; ++j)
+              {
+                size_t index = 4 * (nsites * j + i);
+                double period = 1.0 / Frequencies.at(j);
+                outfile << period << SiteLine.str();
+                outfile << " TX ";
+                WriteModEMLine(outfile, Tip(index), Tip(index + 1), Err(index));
+
+                outfile << period << SiteLine.str();
+                outfile << " TY ";
+                WriteModEMLine(outfile, Tip(index + 2), Tip(index + 3), Err(index + 2));
+
+              }
+          }
+
       }
 
     J3DEXPORT void ReadImpedancesFromJ(const std::string &filename,

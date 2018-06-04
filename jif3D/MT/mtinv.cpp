@@ -709,8 +709,8 @@ int hpx_main(boost::program_options::variables_map& vm)
     if (vm.count("titan"))
       {
         jif3D::WriteTitanDataToNetCDF(modelfilename + ".inv_imp.nc", Frequencies, XCoord,
-            YCoord, ZCoord, ExIndices, EyIndices, HIndices, X3DObjective->GetSyntheticData(),
-            X3DObjective->GetDataError(), C);
+            YCoord, ZCoord, ExIndices, EyIndices, HIndices,
+            X3DObjective->GetSyntheticData(), X3DObjective->GetDataError(), C);
         jif3D::WriteTitanDataToNetCDF(modelfilename + ".dist_imp.nc", Frequencies, XCoord,
             YCoord, ZCoord, ExIndices, EyIndices, HIndices,
             X3DObjective->GetObservedData(), ZError, C);
@@ -723,7 +723,8 @@ int hpx_main(boost::program_options::variables_map& vm)
         if (MTWeight > 0.0)
           {
             jif3D::WriteImpedancesToNetCDF(modelfilename + ".inv_imp.nc", Frequencies,
-                XCoord, YCoord, ZCoord, X3DObjective->GetSyntheticData(), X3DObjective->GetDataError(), C);
+                XCoord, YCoord, ZCoord, X3DObjective->GetSyntheticData(),
+                X3DObjective->GetDataError(), C);
             jif3D::WriteImpedancesToNetCDF(modelfilename + ".dist_imp.nc", Frequencies,
                 XCoord, YCoord, ZCoord, X3DObjective->GetObservedData(), ZError, C);
             jif3D::WriteImpedancesToNetCDF(modelfilename + ".diff_imp.nc", Frequencies,
@@ -734,6 +735,9 @@ int hpx_main(boost::program_options::variables_map& vm)
     if (vm.count("tipperdata"))
       {
         jif3D::WriteTipperToNetCDF(modelfilename + ".inv_tip.nc", Frequencies, XCoord,
+            YCoord, ZCoord, TipperObjective->GetSyntheticData(),
+            TipperObjective->GetDataError());
+        jif3D::WriteTipperToModEM(modelfilename + ".inv_tip.dat", Frequencies, XCoord,
             YCoord, ZCoord, TipperObjective->GetSyntheticData(),
             TipperObjective->GetDataError());
         jif3D::WriteTipperToNetCDF(modelfilename + ".diff_tip.nc", Frequencies, XCoord,
