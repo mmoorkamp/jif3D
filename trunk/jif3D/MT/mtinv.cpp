@@ -59,7 +59,7 @@ std::string CrossModelName;
 std::string TipperName;
 double TipperWeight;
 double MTWeight;
-double tipperr;
+double tipperr, tiprelerr;
 double DistCorr = 0;
 bool CleanFiles = true;
 
@@ -541,10 +541,24 @@ int hpx_main(boost::program_options::variables_map& vm)
     if (vm.count("tipperdata"))
       {
 
-        jif3D::rvec TipperData, TError;
+        jif3D::rvec TipperData, TError, TE;
         jif3D::ReadTipperFromNetCDF(TipperName, Frequencies, XCoord, YCoord, ZCoord,
             TipperData, TError);
-
+        size_t ntip = TipperData.size();
+        for (size_t i = 0; i < ntip / 4; ++i)
+          {
+            double abs_re = std::sqrt(
+                std::pow(TipperData(4 * i), 2) + std::pow(TipperData(4 * i + 2), 2));
+            double abs_im = std::sqrt(
+                std::pow(TipperData(4 * i + 1), 2) + std::pow(TipperData(4 * i + 3), 2));
+            TE(4 * i) = std::max(std::max(abs_re * tiprelerr, TError(4 * i)),
+                TError(4 * i + 2));
+            TE(4 * i + 2) = TError(4 * i);
+            TE(4 * i + 1) = std::max(std::max(abs_im * tiprelerr, TError(4 * i)),
+                TError(4 * i + 2));
+            TE(4 * i + 3) = TError(4 * i + 1);
+          }
+        TError = TE;
         std::transform(TError.begin(), TError.end(), TError.begin(), [](double a)
           { return std::max(a,tipperr);});
         TipperObjective->SetObservedData(TipperData);
@@ -804,26 +818,27 @@ int main(int argc, char* argv[])
         "Use logarithmic transform to bound model parameters")("tipperdata",
         po::value(&TipperName), "The name for the tipper data")("tipperlambda",
         po::value(&TipperWeight)->default_value(1.0), "The weight for the tipper data")(
-        "tippererr", po::value(&tipperr)->default_value(0.005),
-        "The absolute error for the tipper data")("mtlambda",
-        po::value(&MTWeight)->default_value(1.0), "The weight for the MT data");
+        "tippererr", po::value(&tipperr)->default_value(0.005))(
+            "tiprelerr", po::value(&tiprelerr)->default_value(0.02),
+            "The absolute error for the tipper data")("mtlambda",
+            po::value(&MTWeight)->default_value(1.0), "The weight for the MT data");
 
-    desc.add(RegSetup.SetupOptions());
-    desc.add(InversionSetup.SetupOptions());
+        desc.add(RegSetup.SetupOptions());
+        desc.add(InversionSetup.SetupOptions());
 
 #ifdef HAVEHPX
-    return hpx::init(desc, argc, argv);
+        return hpx::init(desc, argc, argv);
 #else
 //set up the command line options
-    po::variables_map vm;
-    po::store(po::parse_command_line(argc, argv, desc), vm);
-    po::notify(vm);
-    if (vm.count("help"))
-      {
-        std::cout << desc << "\n";
-        return 1;
-      }
-    return hpx_main(vm);
+        po::variables_map vm;
+        po::store(po::parse_command_line(argc, argv, desc), vm);
+        po::notify(vm);
+        if (vm.count("help"))
+          {
+            std::cout << desc << "\n";
+            return 1;
+          }
+        return hpx_main(vm);
 #endif
 
-  }
+      }
