@@ -10,6 +10,7 @@
 #include "../Global/Jif3DTesting.h"
 #include <boost/test/included/unit_test.hpp>
 #include <boost/test/floating_point_comparison.hpp>
+#include <boost/make_shared.hpp>
 #include <stdlib.h>
 #include <time.h>
 #include "test_common.h"

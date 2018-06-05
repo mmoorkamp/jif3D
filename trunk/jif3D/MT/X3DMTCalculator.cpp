@@ -22,6 +22,7 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/numeric/conversion/cast.hpp>
+#include <boost/make_shared.hpp>
 
 #include "../Global/FatalException.h"
 #include "../Global/convert.h"

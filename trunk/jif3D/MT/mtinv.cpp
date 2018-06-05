@@ -16,6 +16,7 @@
 #include <boost/program_options.hpp>
 #include <boost/program_options/config.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/make_shared.hpp>
 
 #include "../Global/FileUtil.h"
 #include "../Global/Noise.h"

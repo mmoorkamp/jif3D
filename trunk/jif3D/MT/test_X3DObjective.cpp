@@ -12,6 +12,7 @@
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/test/test_tools.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/make_shared.hpp>
 
 #include "../Inversion/ThreeDModelObjective.h"
 #include "../Global/Noise.h"
