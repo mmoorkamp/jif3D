@@ -541,10 +541,11 @@ int hpx_main(boost::program_options::variables_map& vm)
     if (vm.count("tipperdata"))
       {
 
-        jif3D::rvec TipperData, TError, TE;
+        jif3D::rvec TipperData, TError;
         jif3D::ReadTipperFromNetCDF(TipperName, Frequencies, XCoord, YCoord, ZCoord,
             TipperData, TError);
         size_t ntip = TipperData.size();
+        jif3D::rvec TE(ntip,0.0);
         for (size_t i = 0; i < ntip / 4; ++i)
           {
             double abs_re = std::sqrt(
