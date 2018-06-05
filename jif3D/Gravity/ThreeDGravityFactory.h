@@ -13,6 +13,9 @@
 #include "ThreeDGravityModel.h"
 #include "../Global/Jif3DGlobal.h"
 
+#include <boost/make_shared.hpp>
+#include <boost/shared_ptr.hpp>
+
 #ifdef HAVEGPU
 #include "ScalarCudaGravityImp.h"
 #include "TensorCudaGravityImp.h"

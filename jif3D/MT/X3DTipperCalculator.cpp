@@ -11,6 +11,7 @@
 #ifdef HAVEOPENMP
 #include <omp.h>
 #endif
+#include <boost/make_shared.hpp>
 
 #include "X3DTipperCalculator.h"
 #include "../ModelBase/CellBoundaries.h"

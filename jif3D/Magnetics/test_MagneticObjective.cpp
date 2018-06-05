@@ -11,6 +11,7 @@
 #include <boost/assign/std/vector.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/numeric/conversion/cast.hpp>
+#include <boost/make_shared.hpp>
 
 #include "../Global/Jif3DTesting.h"
 #include "../Gravity/test_common.h"

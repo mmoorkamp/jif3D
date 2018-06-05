@@ -9,6 +9,7 @@
 #include <fstream>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/assign/std/vector.hpp>
+#include <boost/make_shared.hpp>
 
 using namespace boost::assign;
 
