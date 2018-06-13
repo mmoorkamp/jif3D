@@ -122,6 +122,8 @@ int hpx_main(boost::program_options::variables_map& vm)
       {
         jif3D::ReadImpedancesFromModEM(datafilename, Frequencies, XCoord, YCoord, ZCoord,
             Data, ZError);
+        jif3D::WriteImpedancesToNetCDF(datafilename+".nc", Frequencies, XCoord, YCoord, ZCoord,
+            Data, ZError);
       }
     else
       {
@@ -543,8 +545,21 @@ int hpx_main(boost::program_options::variables_map& vm)
       {
 
         jif3D::rvec TipperData, TError;
+        std::string tipext = jif3D::GetFileExtension(TipperName);
+        if (tipext == ".nc")
+          {
         jif3D::ReadTipperFromNetCDF(TipperName, Frequencies, XCoord, YCoord, ZCoord,
             TipperData, TError);
+        jif3D::WriteTipperToModEM(TipperName+".dat", Frequencies, XCoord, YCoord, ZCoord,
+            TipperData, TError);
+          }
+        else
+          {
+            jif3D::ReadTipperFromModEM(TipperName, Frequencies, XCoord, YCoord, ZCoord,
+                TipperData, TError);
+            jif3D::WriteTipperToNetCDF(TipperName+".nc", Frequencies, XCoord, YCoord, ZCoord,
+                            TipperData, TError);
+          }
         size_t ntip = TipperData.size();
         jif3D::rvec TE(ntip,0.0);
         for (size_t i = 0; i < ntip / 4; ++i)

@@ -778,6 +778,100 @@ namespace jif3D
 
       }
 
+    void ReadTipperFromModEM(const std::string &filename,
+            std::vector<double> &Frequencies, std::vector<double> &StatXCoord,
+            std::vector<double> &StatYCoord, std::vector<double> &StatZCoord,
+            jif3D::rvec &Tip, jif3D::rvec &Err)
+      {
+            std::ifstream infile(filename.c_str());
+            char dummy[1024];
+            //swallow up the first 7 lines with header information
+            for (size_t i = 0; i < 7; ++i)
+              infile.getline(dummy, 1024);
+            //ignore the fist character (>) of the last header line
+            infile.ignore(1);
+            size_t nfreq = 0;
+            size_t nsites = 0;
+            infile >> nfreq >> nsites;
+            //swallow up the rest of the line
+            infile.getline(dummy, 1024);
+            Tip.resize(nfreq * nsites * 4);
+            std::fill(Tip.begin(), Tip.end(), 1.0);
+            Err.resize(Tip.size());
+            std::fill(Err.begin(), Err.end(), 100.0);
+            Frequencies.resize(nfreq);
+            StatXCoord.resize(nsites);
+            StatYCoord.resize(nsites);
+            StatZCoord.resize(nsites);
+            bool CanConvert = true;
+
+            std::vector<double> AllFreq, AllX, AllY, AllZ, AllTipReal, AllTipImag, AllErr;
+            std::vector<std::string> StatName, CompName;
+            while (CanConvert && infile.good())
+              {
+                try
+                  {
+                    string line;
+                    std::getline(infile, line);
+                    typedef std::vector<std::string> split_vector_type;
+
+                    split_vector_type SplitVec; // #2: Search for tokens
+                    split(SplitVec, line, boost::is_any_of(" \n\r"),
+                        boost::token_compress_on);
+
+                    double p;
+                    jif3D::convert(SplitVec[0], p);
+                    AllFreq.push_back(1.0 / p);
+                    StatName.push_back(SplitVec[1]);
+                    jif3D::convert(SplitVec[4], p);
+                    AllX.push_back(p);
+                    jif3D::convert(SplitVec[5], p);
+                    AllY.push_back(p);
+                    jif3D::convert(SplitVec[6], p);
+                    AllZ.push_back(p);
+                    CompName.push_back(SplitVec[7]);
+                    jif3D::convert(SplitVec[8], p);
+                    AllTipReal.push_back(p);
+                    jif3D::convert(SplitVec[9], p);
+                    AllTipImag.push_back(p);
+                    jif3D::convert(SplitVec[10], p);
+                    AllErr.push_back(p);
+                  } catch (std::exception &e)
+                  {
+                    CanConvert = false;
+                  }
+              }
+            std::vector<std::string> UniqStats(StatName);
+            UniqStats.erase(std::unique(UniqStats.begin(), UniqStats.end()), UniqStats.end());
+
+            Frequencies = AllFreq;
+            auto FuzzComp = [](double a, double b)
+              { return std::abs((a-b)/std::max(a,b)) < 0.001;};
+            std::sort(Frequencies.begin(), Frequencies.end(), std::greater<double>());
+            Frequencies.erase(std::unique(Frequencies.begin(), Frequencies.end(), FuzzComp),
+                Frequencies.end());
+            std::vector<std::string> Comps =
+              { "TX", "TY"};
+            size_t ndata = AllFreq.size();
+            for (size_t i = 0; i < ndata; ++i)
+              {
+                auto FreqIter = std::find(Frequencies.begin(), Frequencies.end(), AllFreq[i]);
+                auto StatIter = std::find(UniqStats.begin(), UniqStats.end(), StatName[i]);
+                auto CompIter = std::find(Comps.begin(), Comps.end(), CompName[i]);
+                size_t FreqIndex = std::distance(Frequencies.begin(), FreqIter);
+                size_t StatIndex = std::distance(UniqStats.begin(), StatIter);
+                size_t CompIndex = std::distance(Comps.begin(), CompIter);
+                StatXCoord[StatIndex] = AllX[i];
+                StatYCoord[StatIndex] = AllY[i];
+                StatZCoord[StatIndex] = AllZ[i];
+                size_t TipIndex = 2 * CompIndex + 4 * StatIndex + 4 * nsites * FreqIndex;
+                Tip[TipIndex] = AllTipReal[i];
+                Tip[TipIndex + 1] = AllTipImag[i];
+                Err[TipIndex] = AllErr[i];
+                Err[TipIndex + 1] =  AllErr[i];
+              }
+      }
+
     void WriteModEMLine(std::ofstream &outfile, double Zr, double Zi, double Err, double convfactor = 1.0)
       {
         outfile << std::setw(15) << Zr / convfactor << " " << std::setw(15)

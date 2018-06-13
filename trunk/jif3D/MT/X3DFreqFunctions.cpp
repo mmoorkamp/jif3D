@@ -527,7 +527,7 @@ GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::rvec &Misf
         gradinc = std::real(
             Ux1_mag[j] * Ex1_all[j] + Uy1_mag[j] * Ey1_all[j] + Uz1_mag[j] * Ez1_all[j]
                 + Ux2_mag[j] * Ex2_all[j] + Uy2_mag[j] * Ey2_all[j]
-                + +Uz2_mag[j] * Ez2_all[j]) * Volume;
+                + Uz2_mag[j] * Ez2_all[j]) * Volume;
         Gradient(j) += gradinc;
       }
     return GradResult(Gradient);
