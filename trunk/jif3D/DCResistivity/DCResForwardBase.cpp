@@ -23,7 +23,7 @@
 #include <boost/graph/bandwidth.hpp>
 #include <boost/numeric/ublas/operation_sparse.hpp>
 #include <boost/multi_array.hpp>
-
+#include <omp.h>
 using namespace Eigen;
 
 namespace jif3D
@@ -757,9 +757,25 @@ namespace jif3D
           {
             cellcenterzpos[i] = zpos[i] + cellwidth_z[i] / 2.0;
           }
+
+        //calculate how many data points we will have
+	size_t ndata = 0;
+	std::vector<int> startindices;
+	startindices.push_back(0);
+	for (size_t i = 0; i < geo.nsource; i++) {
+		for (size_t Qi = 0; Qi < ndata_res; Qi++) {
+			if (i == geo.sno[Qi]) {
+				ndata++;
+			}
+		}
+		startindices.push_back(ndata);
+	}
+
         /* The follows are the main loop for calculating forward response for a model and corresponding geometry of sources/receivers.
          */
-        std::vector<double> datatemp;
+	    jif3D::rvec result(ndata);
+
+#pragma omp parallel for default(shared)
         for (size_t i = 0; i < geo.nsource; i++)
           {
             std::vector<double> q1(np, 0), q2(np, 0), q, Q1(np, 0), Q2(np, 0), Q;
@@ -824,12 +840,12 @@ namespace jif3D
 
             for (size_t ndatatemp = 0; ndatatemp < count; ndatatemp++)
               {
-                datatemp.push_back(eforwarddata(ndatatemp));
+                result(startindices.at(i) + ndatatemp) = eforwarddata(ndatatemp);
               }
           }
 
-        jif3D::rvec result(datatemp.size());
-        std::copy(datatemp.begin(), datatemp.end(), result.begin());
+
+        //std::copy(datatemp.begin(), datatemp.end(), result.begin());
 
         return result;
 
@@ -1460,33 +1476,36 @@ namespace jif3D
           }
         /* The follows are the main loop for calculating gradient of objective function
          */
-        std::vector<double> q1(np, 0), q2(np, 0), q, Q1(np, 0), Q2(np, 0), Q;
-        Eigen::VectorXd permutationeq(np), permutationeu, eu(np);
 
-        Eigen::VectorXd eGu(nax + nay + naz);
-        std::vector<double> Gux(nax), Guy(nay), Guz(naz);
-        std::vector<size_t> lGcx, jGcx, lGcy, jGcy, lGcz, jGcz;
-        std::vector<double> kGcx, kGcy, kGcz;
-        typedef Eigen::Triplet<double> eGcT;
-        std::vector<eGcT> eGcV;
-        eGcV.reserve(2 * (nax + nay + naz));
-        Eigen::SparseMatrix<double> eGc(nax + nay + naz, np);
-
-        std::vector<double> wdwmisfitforproj;
-        Eigen::VectorXd Qtd(np);
-        Eigen::VectorXd permutationeQtd(np), permutationelm, elm(np);
-        //ILU of pFOR transpose
-        Eigen::BiCGSTAB<SparseMatrix<double>, Eigen::IncompleteLUT<double> > pFORBCGSTtrans;
-        pFORBCGSTtrans.preconditioner().setDroptol(0.00001);
-        Eigen::SparseMatrix<double> pFORtrans(np, np);
-        pFORtrans = pFOR.transpose();
-        pFORBCGSTtrans.compute(pFORtrans);
-
+        omp_lock_t lck;
+        omp_init_lock(&lck);
         Eigen::MatrixXd eGuii(np, geo.nsource);
-        Eigen::VectorXd eGui(np);
 
+#pragma omp parallel for default(shared)
         for (size_t i = 0; i < geo.nsource; i++)
           {
+            std::vector<double> q1(np, 0), q2(np, 0), q, Q1(np, 0), Q2(np, 0), Q;
+            Eigen::VectorXd permutationeq(np), permutationeu, eu(np);
+
+            Eigen::VectorXd eGu(nax + nay + naz);
+            std::vector<double> Gux(nax), Guy(nay), Guz(naz);
+            std::vector<size_t> lGcx, jGcx, lGcy, jGcy, lGcz, jGcz;
+            std::vector<double> kGcx, kGcy, kGcz;
+            typedef Eigen::Triplet<double> eGcT;
+            std::vector<eGcT> eGcV;
+            eGcV.reserve(2 * (nax + nay + naz));
+            Eigen::SparseMatrix<double> eGc(nax + nay + naz, np);
+
+            std::vector<double> wdwmisfitforproj;
+            Eigen::VectorXd Qtd(np);
+            Eigen::VectorXd permutationeQtd(np), permutationelm, elm(np);
+            //ILU of pFOR transpose
+            Eigen::BiCGSTAB<SparseMatrix<double>, Eigen::IncompleteLUT<double> > pFORBCGSTtrans;
+            pFORBCGSTtrans.preconditioner().setDroptol(0.00001);
+            Eigen::SparseMatrix<double> pFORtrans(np, np);
+            pFORtrans = pFOR.transpose();
+            pFORBCGSTtrans.compute(pFORtrans);
+            Eigen::VectorXd eGui(np);
             //generate source term q,
             q1 = Linint(cellcenterxpos, cellcenterypos, cellcenterzpos, geo.PosSx[i],
                 geo.PosSy[i], geo.PosSz[i]);
@@ -1724,24 +1743,14 @@ namespace jif3D
             //calculate gradient for each source term
             eGui = (Dm.transpose())
                 * ((eGc.transpose()) * (((S * S).transpose()) * ((D.transpose()) * elm)));
+
+            omp_set_lock(&lck);
             for (size_t l = 0; l < np; l++)
               {
                 eGuii(l, i) = eGui(l);
               }
+            omp_unset_lock(&lck);
 
-            lGcx.clear();
-            jGcx.clear();
-            lGcy.clear();
-            jGcy.clear();
-            lGcz.clear();
-            jGcz.clear();
-            kGcx.clear();
-            kGcy.clear();
-            kGcz.clear();
-            eGcV.clear();
-            wdwmisfitforproj.clear();
-            q.clear();
-            Q.clear();
 
           }
         jif3D::rvec gradient(np);
