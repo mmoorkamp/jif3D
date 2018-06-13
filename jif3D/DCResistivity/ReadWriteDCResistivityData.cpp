@@ -53,7 +53,7 @@ namespace jif3D
         //this is just an index over the source vector
         //and does not have any special meaning
         std::vector<int> SourcePosNumber(nsourcepos,0);
-        std::ioata(SourcePosNumber.begin(),SourcePosNumber.end(),0);
+        std::iota(SourcePosNumber.begin(),SourcePosNumber.end(),0);
 
         netCDF::NcVar SourceNumVar = DataFile.addVar(DCSourceNumberName.c_str(),
             netCDF::ncInt, SourceNumDim);
