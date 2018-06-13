@@ -259,8 +259,8 @@ int main(int argc, char *argv[])
     //in the regularization object
     if (RegSetup.GetSubStart())
       {
-        SeisReg->SetReferenceModel(TomoTransform->GeneralizedToPhysical(InvModel));
-        DCReg->SetReferenceModel(DCTransform->GeneralizedToPhysical(InvModel));
+        SeisReg->SetReferenceModel(TomoRegTransform->GeneralizedToPhysical(InvModel));
+        DCReg->SetReferenceModel(DCRegTransform->GeneralizedToPhysical(InvModel));
       }
     if (seisreglambda > 0.0)
       {
