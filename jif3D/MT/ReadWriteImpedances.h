@@ -224,6 +224,10 @@ namespace jif3D
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
         const jif3D::rvec &Imp, const jif3D::rvec &Err);
 
+    J3DEXPORT void ReadTipperFromModEM(const std::string &filename,
+        std::vector<double> &Frequencies, std::vector<double> &StatXCoord,
+        std::vector<double> &StatYCoord, std::vector<double> &StatZCoord,
+        jif3D::rvec &Tip, jif3D::rvec &Err);
 
     J3DEXPORT void WriteTipperToModEM(const std::string &filename,
             const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
