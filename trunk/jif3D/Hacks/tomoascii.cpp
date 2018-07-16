@@ -143,6 +143,11 @@ int main(int argc, char* argv[])
         Model.AddSource(source.second[0], source.second[1], source.second[2]);
       }
 
+    for (auto rec : RecMap)
+         {
+           Model.AddMeasurementPoint(rec.second[0], rec.second[1], rec.second[2]);
+         }
+
     const size_t ntime = TravelTime.size();
     std::cout << "NTimes total: " << ntime << std::endl;
     size_t measindex = 0;
@@ -159,8 +164,8 @@ int main(int argc, char* argv[])
         double currvel = distance / TravelTime.at(i);
         if (distance > mindist && currvel > minvel)
           {
-            Model.AddMeasurementPoint(RecX.at(RI), RecY.at(RI), RecZ.at(RI));
-            Model.AddMeasurementConfiguration(SI, measindex);
+            //Model.AddMeasurementPoint(RecX.at(RI), RecY.at(RI), RecZ.at(RI));
+            Model.AddMeasurementConfiguration(SI, RI);
             ++measindex;
           }
         else
