@@ -18,7 +18,7 @@ unit-test Model_test : test_ThreeDGravityModel.cpp gravity core  ;
 unit-test scalar_test : test_ScalarCalculation.cpp gravity core  ;
 unit-test tensor_test : test_TensorCalculation.cpp gravity core  ;
 unit-test gravity_objective_test : test_GravityObjective.cpp gravity core ../Inversion//inversion  ;
-unit-test transform_test : test_transforms.cpp  gravity core ..//vecopt  ;
+unit-test transform_test : test_transforms.cpp  gravity core  ;
 #unit-test R_test : test_Rinterface.cpp gravity core ..//vecopt  ;
 # unit-test weighting_test : test_weighting.cpp DepthWeighting.cpp  gravity  ../Inversion//inversion core   ;
 unit-test readwrite_test : test_readwritedata.cpp gravity  ../Inversion//inversion core   ;
