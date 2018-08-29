@@ -11,10 +11,12 @@
 
 #include "Jif3DTesting.h"
 #include <boost/test/floating_point_comparison.hpp>
+#include <boost/shared_ptr.hpp>
 #include <stdlib.h>
 #include "NumUtil.h"
 #include "NormProd.h"
 #include "VecMat.h"
+#include "../Inversion/DiagonalCovariance.h"
 #include "Jif3DPlatformHelper.h"
 
 BOOST_AUTO_TEST_SUITE( NumUtil_Test_Suite )
@@ -53,7 +55,8 @@ BOOST_AUTO_TEST_SUITE( NumUtil_Test_Suite )
         std::generate_n(a.begin(), nelements, jif3D::platform::drand48);
         std::generate_n(b.begin(), nelements, jif3D::platform::drand48);
         std::generate_n(NormDiag.begin(), nelements, jif3D::platform::drand48);
-        double myresult = jif3D::NormProd(a, b, NormDiag);
+        boost::shared_ptr<jif3D::DiagonalCovariance> Cov = boost::make_shared<jif3D::DiagonalCovariance>(NormDiag);
+        double myresult = jif3D::NormProd(a, b, Cov);
         double uresult = ublas::inner_prod(a, ublas::element_div(b, NormDiag));
         BOOST_CHECK_CLOSE(myresult, uresult, std::numeric_limits<float>::epsilon());
       }

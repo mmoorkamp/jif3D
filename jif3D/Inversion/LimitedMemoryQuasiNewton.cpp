@@ -16,9 +16,9 @@ namespace jif3D
   {
 
     LimitedMemoryQuasiNewton::LimitedMemoryQuasiNewton(
-        boost::shared_ptr<jif3D::ObjectiveFunction> ObjFunction, const size_t n,
+        boost::shared_ptr<jif3D::ObjectiveFunction> ObjFunction, boost::shared_ptr<jif3D::GeneralCovariance> Cv, const size_t n,
         bool gradscale) :
-        GradientBasedOptimization(ObjFunction), scale(gradscale), mu(1.0), LineIter(10), MaxPairs(
+        GradientBasedOptimization(ObjFunction, Cv), scale(gradscale), mu(1.0), LineIter(10), MaxPairs(
             n), SHistory(), YHistory()
       {
 
@@ -42,18 +42,18 @@ namespace jif3D
         //and apply algorithm 9.1 from Nocedal and Wright
         for (int i = npairs - 1; i >= 0; --i)
           {
-            Rho(i) = 1. / NormProd(*YHistory.at(i), *SHistory.at(i), GetModelCovDiag());
-            Alpha(i) = Rho(i) * NormProd(*SHistory.at(i), SearchDir, GetModelCovDiag());
+            Rho(i) = 1. / NormProd(*YHistory.at(i), *SHistory.at(i), GetCovObj());
+            Alpha(i) = Rho(i) * NormProd(*SHistory.at(i), SearchDir, GetCovObj());
             SearchDir -= Alpha(i) * *YHistory.at(i);
           }
         //gamma is a scaling factor that we apply to the search direction
         //after the first iteration this scale usually helps to find the minimum
         //without additional steps in the line search
         double gamma = 1.0;
-        if (YHistory.size() > 0)
+        if (npairs > 0)
           {
             gamma = 1.0 / Rho(npairs - 1)
-                / NormProd(*YHistory.back(), *YHistory.back(), GetModelCovDiag());
+                / NormProd(*YHistory.back(), *YHistory.back(), GetCovObj());
           }
         else
           {
@@ -61,14 +61,18 @@ namespace jif3D
             //gradient as a scale
             if (scale)
               {
-                gamma = 1.0 / sqrt(NormProd(SearchDir, RawGrad, GetModelCovDiag()));
+                //we only get here the first time when searchdir is equal to CovGrad
+                // and algorithm 9.1 above has not worked yet
+                //theoretically the norm should use the search direction and the covariance as norm
+                //however, we can save the multiplication by the model covariance and its inverse
+                gamma = 1.0 / sqrt(ublas::inner_prod(RawGrad, RawGrad));
               }
           }
         SearchDir *= -gamma;
         for (size_t i = 0; i < npairs; ++i)
           {
             double beta = Rho(i)
-                * NormProd(*YHistory.at(i), SearchDir, GetModelCovDiag());
+                * NormProd(*YHistory.at(i), SearchDir, GetCovObj());
             SearchDir -= *SHistory.at(i) * (Alpha(i) + beta);
           }
         //at each iteration we reset the stepsize
@@ -107,7 +111,7 @@ namespace jif3D
           }
         //and overwrite the last (oldest) correction pair
         *SHistory.back() = mu * SearchDir;
-        *YHistory.back() = ublas::element_prod(RawGrad, GetModelCovDiag()) - CovGrad;
+        *YHistory.back() = GetCovObj()->ApplyCovar(RawGrad) - CovGrad;
         //the line search has updated the gradient and misfit
         HaveEvaluated();
       }

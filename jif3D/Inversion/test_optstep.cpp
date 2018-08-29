@@ -10,6 +10,7 @@
 #include "../Global/Jif3DTesting.h"
 #include <boost/test/included/unit_test.hpp>
 #include <boost/test/floating_point_comparison.hpp>
+#include <boost/shared_ptr.hpp>
 #include <stdlib.h>
 #include <fstream>
 #include "NonLinearConjugateGradient.h"
@@ -59,12 +60,13 @@ BOOST_AUTO_TEST_SUITE( OptStep_Test_Suite )
     BOOST_AUTO_TEST_CASE (basic_nlcg_test)
       {
         boost::shared_ptr<Rosenbrock> Objective(new Rosenbrock());
-        jif3D::NonLinearConjugateGradient NLCG(Objective);
+
         jif3D::rvec Cov(2);
         //std::fill_n(Cov.begin(), 2, 1.0);
         Cov(0) = 10.0;
         Cov(1) = 0.1;
-        NLCG.SetModelCovDiag(Cov);
+        auto CovObj = boost::make_shared<jif3D::DiagonalCovariance>(Cov);
+        jif3D::NonLinearConjugateGradient NLCG(Objective, CovObj);
         jif3D::rvec Model(2);
         Model(0) = -1.2;
         Model(1) = 1.0;
@@ -84,12 +86,13 @@ BOOST_AUTO_TEST_SUITE( OptStep_Test_Suite )
     BOOST_AUTO_TEST_CASE (basic_lbfgs_test)
       {
         boost::shared_ptr<Rosenbrock> Objective(new Rosenbrock());
-        jif3D::LimitedMemoryQuasiNewton LBFGS(Objective, 5);
+
         jif3D::rvec Cov(2);
         //std::fill_n(Cov.begin(), 2, 1.0);
         Cov(0) = 10.0;
         Cov(1) = 0.1;
-        LBFGS.SetModelCovDiag(Cov);
+        auto CovObj = boost::make_shared<jif3D::DiagonalCovariance>(Cov);
+        jif3D::LimitedMemoryQuasiNewton LBFGS(Objective, CovObj, 5);
 
         jif3D::rvec Model(2);
         Model(0) = -1.2;
@@ -119,14 +122,14 @@ BOOST_AUTO_TEST_SUITE( OptStep_Test_Suite )
         Objective->AddObjective(Rosen1, Transform, 0.8);
         Objective->AddObjective(Rosen2, Transform, 0.2);
 
-        jif3D::LimitedMemoryQuasiNewton JointLBFGS(Objective, 5);
-        jif3D::LimitedMemoryQuasiNewton RosenLBFGS(Rosen3, 5);
         jif3D::rvec Cov(2);
         //std::fill_n(Cov.begin(), 2, 1.0);
         Cov(0) = 10.0;
         Cov(1) = 0.1;
-        JointLBFGS.SetModelCovDiag(Cov);
-        RosenLBFGS.SetModelCovDiag(Cov);
+        auto CovObj = boost::make_shared<jif3D::DiagonalCovariance>(Cov);
+        jif3D::LimitedMemoryQuasiNewton JointLBFGS(Objective, CovObj, 5);
+        jif3D::LimitedMemoryQuasiNewton RosenLBFGS(Rosen3, CovObj, 5);
+
 
         jif3D::rvec JointModel(2);
         JointModel(0) = -1.2;

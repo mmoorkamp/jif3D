@@ -251,7 +251,7 @@ int main(int argc, char *argv[])
     Objective->AddObjective(Regularization, RegTrans, reglambda, "Reg");
 
     jif3D::LimitedMemoryQuasiNewton Optimizer(Objective);
-    Optimizer.SetModelCovDiag(InvModel);
+    //Optimizer.SetModelCovDiag(InvModel);
     std::ofstream misfitfile("misfit.out");
     misfitfile << "0 " << Objective->CalcMisfit(InvModel) << " ";
 

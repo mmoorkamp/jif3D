@@ -5,11 +5,12 @@
 // Copyright   : 2010, mmoorkamp
 //============================================================================
 
-
 #ifndef NORMPROD_H_
 #define NORMPROD_H_
 
 #include <cassert>
+#include <boost/shared_ptr.hpp>
+#include "../Inversion/GeneralCovariance.h"
 
 /*! \file NormProd.h
  * Contains a template to calculate the inner product of two vectors given a norm by the diagonal of covariance matrix
@@ -30,17 +31,18 @@ namespace jif3D
      * @param NormDiag The diagonal elements of the covariance matrix stored in a vector.
      * @return The inner product with respect to the norm
      */
-    template<class UblasVec1, class UblasVec2, class UblasVec3>
+    template<class UblasVec1, class UblasVec2>
     inline double NormProd(const UblasVec1 &a, const UblasVec2 &b,
-        const UblasVec3 &NormDiag)
+        boost::shared_ptr<jif3D::GeneralCovariance> Cv)
       {
         const size_t nelem = a.size();
         assert(nelem == b.size());
-        assert(nelem == NormDiag.size());
         double result = 0.0;
+        jif3D::rvec c = Cv->ApplyInvCovar(b);
+        assert(nelem == c.size());
         for (size_t i = 0; i < nelem; ++i)
           {
-            result += a(i) * b(i) / NormDiag(i);
+            result += a(i) * c(i);
           }
         return result;
       }

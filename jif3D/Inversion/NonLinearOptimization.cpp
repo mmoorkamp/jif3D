@@ -12,8 +12,8 @@ namespace jif3D
   {
 
     NonLinearOptimization::NonLinearOptimization(boost::shared_ptr<
-        jif3D::ObjectiveFunction> ObjFunction) :
-      ModelCovDiag(), Objective(ObjFunction), Misfit()
+        jif3D::ObjectiveFunction> ObjFunction, boost::shared_ptr<jif3D::GeneralCovariance> Cv) :
+      Covar(Cv), Objective(ObjFunction), Misfit()
       {
 
       }
@@ -25,12 +25,6 @@ namespace jif3D
 
     void NonLinearOptimization::MakeStep(jif3D::rvec &CurrentModel)
       {
-        if (ModelCovDiag.size() != CurrentModel.size())
-          {
-            ModelCovDiag.resize(CurrentModel.size());
-            std::fill(ModelCovDiag.begin(), ModelCovDiag.end(), 1.0);
-          }
-
         EvaluateModel(CurrentModel);
         StepImplementation(CurrentModel);
       }

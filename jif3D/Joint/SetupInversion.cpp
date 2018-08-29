@@ -9,9 +9,11 @@
 #include "SetupInversion.h"
 #include "../Global/FatalException.h"
 #include "../Global/convert.h"
+#include "../Inversion/DiagonalCovariance.h"
 #include "../Inversion/LimitedMemoryQuasiNewton.h"
 #include "../Inversion/NonLinearConjugateGradient.h"
 
+#include "../Inversion/StochasticCovariance.h"
 namespace jif3D
   {
 
@@ -27,11 +29,11 @@ namespace jif3D
       {
         //setup the desctription object for the inversioj options
         po::options_description desc("Inversion options");
-        desc.add_options()("corrpairs",
-            po::value(&corrpairs)->default_value(5),
+        desc.add_options()("corrpairs", po::value(&corrpairs)->default_value(5),
             "The number correction pairs for L-BFGS")("nlcg",
-            "Use NLCG optimization, otherwise use L-BFGS")
-            ("scalegrad",po::value(&scalegrad)->default_value(true),"Scale the gradient for the first iteration of the L-BFGS algorithm");
+            "Use NLCG optimization, otherwise use L-BFGS")("scalegrad",
+            po::value(&scalegrad)->default_value(true),
+            "Scale the gradient for the first iteration of the L-BFGS algorithm");
         return desc;
       }
 
@@ -40,38 +42,23 @@ namespace jif3D
         boost::shared_ptr<jif3D::ObjectiveFunction> ObjFunction,
         const jif3D::rvec &InvModel, const jif3D::rvec &CovModVec)
       {
-        //we can either use nlcg or L-BFGS for the optimizer
-        boost::shared_ptr<jif3D::GradientBasedOptimization> Optimizer;
-        if (vm.count("nlcg"))
-          {
-            Optimizer = boost::shared_ptr<jif3D::GradientBasedOptimization>(
-                new jif3D::NonLinearConjugateGradient(ObjFunction));
-          }
-        else
-          {
-            //for L-BFGS we check whether the number of correction pairs is positive
-            if (corrpairs < 0)
-              throw jif3D::FatalException(
-                  "Negative number of correction pairs specified !", __FILE__, __LINE__);
-            Optimizer
-                = boost::shared_ptr<jif3D::GradientBasedOptimization>(
-                    new jif3D::LimitedMemoryQuasiNewton(ObjFunction,
-                        corrpairs, scalegrad));
-          }
+
         //if the model covariance is empty we let the optimizer object
         //take care of setting the values to 1
         //otherwise we perform some checks here
+        const size_t nparm = InvModel.size();
+        const size_t ncovmod = CovModVec.size();
+
+        rvec CovVec(nparm,1.0);
         if (!CovModVec.empty())
           {
-            const size_t nparm = InvModel.size();
-            const size_t ncovmod = CovModVec.size();
 
             if (nparm % ncovmod != 0)
-              throw FatalException("Size of inversion model vector: "
-                  + jif3D::stringify(nparm)
-                  + " is not a multiple of covariance model size: "
-                  + jif3D::stringify(ncovmod) + "!", __FILE__, __LINE__);
-            rvec CovVec(nparm);
+              throw FatalException(
+                  "Size of inversion model vector: " + jif3D::stringify(nparm)
+                      + " is not a multiple of covariance model size: "
+                      + jif3D::stringify(ncovmod) + "!", __FILE__, __LINE__);
+
             const size_t nsections = nparm / ncovmod;
             for (size_t i = 0; i < nsections; ++i)
               {
@@ -81,7 +68,25 @@ namespace jif3D
                   }
 
               }
-            Optimizer->SetModelCovDiag(CovVec);
+          }
+
+        //we can either use nlcg or L-BFGS for the optimizer
+        boost::shared_ptr<jif3D::GradientBasedOptimization> Optimizer;
+        if (vm.count("nlcg"))
+          {
+            Optimizer = boost::shared_ptr<jif3D::GradientBasedOptimization>(
+                new jif3D::NonLinearConjugateGradient(ObjFunction));
+          }
+        else
+          {
+            auto CovObj = boost::make_shared<jif3D::StochasticCovariance>(20,20,10,5.0,1.0,1.0);
+            //for L-BFGS we check whether the number of correction pairs is positive
+            if (corrpairs < 0)
+              throw jif3D::FatalException(
+                  "Negative number of correction pairs specified !", __FILE__, __LINE__);
+            Optimizer = boost::shared_ptr<jif3D::GradientBasedOptimization>(
+                new jif3D::LimitedMemoryQuasiNewton(ObjFunction, CovObj, corrpairs,
+                    scalegrad));
           }
         return Optimizer;
       }
