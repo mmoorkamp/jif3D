@@ -79,7 +79,8 @@ namespace jif3D
           }
         else
           {
-            auto CovObj = boost::make_shared<jif3D::StochasticCovariance>(20,20,10,5.0,1.0,1.0);
+           // auto CovObj = boost::make_shared<jif3D::StochasticCovariance>(20,20,10,5.0,1.0,1.0);
+            auto CovObj = boost::make_shared<jif3D::DiagonalCovariance>();
             //for L-BFGS we check whether the number of correction pairs is positive
             if (corrpairs < 0)
               throw jif3D::FatalException(
