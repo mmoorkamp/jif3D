@@ -31,7 +31,9 @@ namespace jif3D
       std::vector<double> bg_conductivities;
       std::vector<int> ExIndices;
       std::vector<int> EyIndices;
-      std::vector<int> HIndices;
+      std::vector<int> HxIndices;
+      std::vector<int> HyIndices;
+      std::vector<int> HzIndices;
     public:
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
@@ -42,7 +44,9 @@ namespace jif3D
           ar & bg_conductivities;
           ar & ExIndices;
           ar & EyIndices;
-          ar & HIndices;
+          ar & HxIndices;
+          ar & HyIndices;
+          ar & HzIndices;
         }
       //! The problem type we want to perform the calculation for
       /*! We can use this enum to specify which type of forward calculation
@@ -56,30 +60,40 @@ namespace jif3D
 
       //! Set the indices for electric and magnetic field measurements
       void SetFieldIndices(const std::vector<int> &value_Ex,
-          const std::vector<int> &value_Ey, std::vector<int> &value_H)
+          const std::vector<int> &value_Ey, std::vector<int> &value_Hx,
+          std::vector<int> &value_Hy, std::vector<int> &value_Hz)
         {
-          ExIndices.clear();
-          ExIndices.reserve(value_Ex.size());
-          copy(value_Ex.begin(), value_Ex.end(), back_inserter(ExIndices));
 
-          EyIndices.clear();
-          EyIndices.reserve(value_Ey.size());
-          copy(value_Ey.begin(), value_Ey.end(), back_inserter(EyIndices));
-          if (EyIndices.size() != ExIndices.size())
+          ExIndices = value_Ex;
+          EyIndices = value_Ey;
+          HxIndices = value_Hx;
+          HyIndices = value_Hy;
+          HzIndices = value_Hz;
+
+          if (HxIndices.size() != ExIndices.size())
             {
               throw jif3D::FatalException(
-                  "Number of y-component electric field indices is not the same as the number of indices in x-component!",
+                  "Number of Hx magnetic field indices is not the same as the electric field indices!",
                   __FILE__, __LINE__);
             }
 
-          HIndices.clear();
-          HIndices.reserve(value_H.size());
-          copy(value_H.begin(), value_H.end(), back_inserter(HIndices));
-
-          if (HIndices.size() != ExIndices.size())
+          if (HyIndices.size() != ExIndices.size())
             {
               throw jif3D::FatalException(
-                  "Number of magnetic field indices is not the same as the electric field indices!",
+                  "Number of Hy magnetic field indices is not the same as the electric field indices!",
+                  __FILE__, __LINE__);
+            }
+          if (HzIndices.size() != ExIndices.size())
+            {
+              throw jif3D::FatalException(
+                  "Number of Hz magnetic field indices is not the same as the electric field indices!",
+                  __FILE__, __LINE__);
+            }
+
+          if (EyIndices.size() != ExIndices.size())
+            {
+              throw jif3D::FatalException(
+                  "Number of Ey field indices is not the same as the Ex field indices!",
                   __FILE__, __LINE__);
             }
 
@@ -95,10 +109,22 @@ namespace jif3D
         {
           return EyIndices;
         }
-      //! Return the Indices of the magnetic field measurements
-      const std::vector<int> &GetHIndices() const
+      //! Return the Indices of the x-component magnetic field measurements
+      const std::vector<int> &GetHxIndices() const
         {
-          return HIndices;
+          return HxIndices;
+        }
+
+      //! Return the Indices of the y-component magnetic field measurements
+      const std::vector<int> &GetHyIndices() const
+        {
+          return HyIndices;
+        }
+
+      //! Return the Indices of the z-component magnetic field measurements
+      const std::vector<int> &GetHzIndices() const
+        {
+          return HzIndices;
         }
 
       //! Set the thicknesses of the background layers, the individual thicknesses are given in m

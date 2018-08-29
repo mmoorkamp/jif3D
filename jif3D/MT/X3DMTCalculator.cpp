@@ -119,7 +119,7 @@ namespace jif3D
         //generate ExIndices, EyIndices and HIndices as 0:nmeas for each Frequency
         //here we assume that we either have all three indices in the netCDF file or none of them
         std::vector<int> ExIndices(Model.GetExIndices()), EyIndices(Model.GetEyIndices()),
-            HIndices(Model.GetHIndices());
+            HIndices(Model.GetHxIndices());
         size_t ind_shift = 0;
         if (ExIndices.empty())
           {
@@ -137,7 +137,7 @@ namespace jif3D
             EyIndices = ExIndices;
             HIndices = ExIndices;
           }
-        Model.SetFieldIndices(ExIndices, EyIndices, HIndices);
+        Model.SetFieldIndices(ExIndices, EyIndices, HIndices, HIndices, HIndices);
 
         const size_t nstats = Model.GetExIndices().size() / nfreq;
 

@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_SUITE( X3DObjective_Suite )
         // HIndices[0]= (ysize - 1) - 1;  HIndices[1]= 3*(ysize - 1) - 1;
         // EyIndices[0]= (ysize - 1) - 1;  EyIndices[1]= 3*(ysize - 1) - 1;
          ExIndices[0]= (ysize - 1) - 1;  ExIndices[1]= 3*(ysize - 1) - 1;
-         Model.SetFieldIndices(ExIndices,EyIndices,HIndices);
+         Model.SetFieldIndices(ExIndices,EyIndices,HIndices,HIndices,HIndices);
 
        }
 
@@ -318,7 +318,7 @@ BOOST_AUTO_TEST_SUITE( X3DObjective_Suite )
 
            jif3D::WriteTitanDataToNetCDF("gra1dtitan.nc", Freq,
         		   TrueModel.GetMeasPosX(),TrueModel.GetMeasPosY(), TrueModel.GetMeasPosZ(),
-				   TrueModel.GetExIndices(),TrueModel.GetEyIndices(), TrueModel.GetHIndices(),
+				   TrueModel.GetExIndices(),TrueModel.GetEyIndices(), TrueModel.GetHxIndices(),
 				   Observed);
            std::cout << "ExIndices: ";
            std::copy(TrueModel.GetExIndices().begin(), TrueModel.GetExIndices().end(), std::ostream_iterator<double>(std::cout, " "));
@@ -329,7 +329,7 @@ BOOST_AUTO_TEST_SUITE( X3DObjective_Suite )
            std::cout << std::endl;
 
            std::cout << "HIndices: ";
-           std::copy(TrueModel.GetHIndices().begin(), TrueModel.GetHIndices().end(), std::ostream_iterator<double>(std::cout, " "));
+           std::copy(TrueModel.GetHxIndices().begin(), TrueModel.GetHxIndices().end(), std::ostream_iterator<double>(std::cout, " "));
            std::cout << std::endl;
 
            jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator> Objective(Calculator);

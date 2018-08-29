@@ -29,8 +29,10 @@ namespace jif3D
   {
 
     X3DTipperCalculator::X3DTipperCalculator(boost::filesystem::path TDir,
-        std::string x3d, bool Clean , std::vector<boost::shared_ptr<jif3D::X3DFieldCalculator> > FC) :
-        GreenType1(hst), GreenType4(hst), X3DName(x3d), CleanFiles(Clean), FieldCalculators(FC)
+        std::string x3d, bool Clean,
+        std::vector<boost::shared_ptr<jif3D::X3DFieldCalculator> > FC) :
+        GreenType1(hst), GreenType4(hst), X3DName(x3d), CleanFiles(Clean), FieldCalculators(
+            FC)
       {
         //each object gets a unique ID, this way we avoid clashes
         //between the temporary files generated for the calculations with x3d
@@ -78,31 +80,31 @@ namespace jif3D
                 ForwardExecTime.push_back(std::make_pair(0, minfreqindex + i));
               }
           }
-        //if the current model does not contain any ExIndices information
-        //generate ExIndices, EyIndices and HIndices as 0:nmeas for each Frequency
+        //if the current model does not contain any HxIndices information
+        //generate HxIndices, HyIndices and HzIndices as 0:nmeas for each Frequency
         //here we assume that we either have all three indices in the netCDF file or none of them
-        std::vector<int> ExIndices(Model.GetExIndices()), EyIndices(Model.GetEyIndices()),
-            HIndices(Model.GetHIndices());
+        std::vector<int> HxIndices(Model.GetHxIndices()), HyIndices(Model.GetHyIndices()),
+            HzIndices(Model.GetHzIndices());
         size_t ishift = 0;
-        if (ExIndices.empty())
+        if (HxIndices.empty())
           {
-            ExIndices.resize(nmeas * nfreq);
-            EyIndices.resize(nmeas * nfreq);
-            HIndices.resize(nmeas * nfreq);
+            HxIndices.resize(nmeas * nfreq);
+            HyIndices.resize(nmeas * nfreq);
+            HzIndices.resize(nmeas * nfreq);
             for (int ifr = 0; ifr < nfreq; ++ifr)
               {
                 ishift = nmeas * ifr;
                 for (size_t i = 0; i < nmeas; ++i)
                   {
-                    ExIndices[i + ishift] = i;
+                    HxIndices[i + ishift] = i;
                   }
               }
-            EyIndices = ExIndices;
-            HIndices = ExIndices;
+            HyIndices = HxIndices;
+            HzIndices = HxIndices;
           }
-        Model.SetFieldIndices(ExIndices, EyIndices, HIndices);
+        Model.SetFieldIndices(HxIndices, HyIndices, HxIndices, HyIndices, HzIndices);
 
-        const size_t nstats = Model.GetExIndices().size() / nfreq;
+        const size_t nstats = Model.GetHxIndices().size() / nfreq;
         const size_t nmodx = Model.GetXCoordinates().size();
         const size_t nmody = Model.GetYCoordinates().size();
 
@@ -167,22 +169,39 @@ namespace jif3D
                 for (size_t j = 0; j < nstats; ++j)
                   {
 
-                    boost::array<ThreeDModelBase::t3DModelData::index, 3> StationHIndex =
+                    boost::array<ThreeDModelBase::t3DModelData::index, 3> StationHxIndex =
                         Model.FindAssociatedIndices(
-                            Model.GetMeasPosX()[Model.GetHIndices()[j + ind_shift]],
-                            Model.GetMeasPosY()[Model.GetHIndices()[j + ind_shift]],
-                            Model.GetMeasPosZ()[Model.GetHIndices()[j + ind_shift]]);
+                            Model.GetMeasPosX()[Model.GetHxIndices()[j + ind_shift]],
+                            Model.GetMeasPosY()[Model.GetHxIndices()[j + ind_shift]],
+                            Model.GetMeasPosZ()[Model.GetHxIndices()[j + ind_shift]]);
+                    const size_t offset_Hx = (nmodx * nmody)
+                        * MeasDepthIndices[Model.GetHxIndices()[j + ind_shift]]
+                        + StationHxIndex[0] * nmody + StationHxIndex[1];
 
-                    const size_t offset_H = (nmodx * nmody)
-                        * MeasDepthIndices[Model.GetHIndices()[j + ind_shift]]
-                        + StationHIndex[0] * nmody + StationHIndex[1];
+                    boost::array<ThreeDModelBase::t3DModelData::index, 3> StationHyIndex =
+                        Model.FindAssociatedIndices(
+                            Model.GetMeasPosX()[Model.GetHyIndices()[j + ind_shift]],
+                            Model.GetMeasPosY()[Model.GetHyIndices()[j + ind_shift]],
+                            Model.GetMeasPosZ()[Model.GetHyIndices()[j + ind_shift]]);
+                    const size_t offset_Hy = (nmodx * nmody)
+                        * MeasDepthIndices[Model.GetHyIndices()[j + ind_shift]]
+                        + StationHyIndex[0] * nmody + StationHyIndex[1];
 
-                    FieldsToTipper(FieldCalculators.at(calcindex)->GetHx1()[offset_H],
-                        FieldCalculators.at(calcindex)->GetHx2()[offset_H],
-                        FieldCalculators.at(calcindex)->GetHy1()[offset_H],
-                        FieldCalculators.at(calcindex)->GetHy2()[offset_H],
-                        FieldCalculators.at(calcindex)->GetHz1()[offset_H],
-                        FieldCalculators.at(calcindex)->GetHz2()[offset_H], Tx, Ty);
+                    boost::array<ThreeDModelBase::t3DModelData::index, 3> StationHzIndex =
+                        Model.FindAssociatedIndices(
+                            Model.GetMeasPosX()[Model.GetHzIndices()[j + ind_shift]],
+                            Model.GetMeasPosY()[Model.GetHzIndices()[j + ind_shift]],
+                            Model.GetMeasPosZ()[Model.GetHzIndices()[j + ind_shift]]);
+                    const size_t offset_Hz = (nmodx * nmody)
+                        * MeasDepthIndices[Model.GetHzIndices()[j + ind_shift]]
+                        + StationHzIndex[0] * nmody + StationHzIndex[1];
+
+                    FieldsToTipper(FieldCalculators.at(calcindex)->GetHx1()[offset_Hx],
+                        FieldCalculators.at(calcindex)->GetHx2()[offset_Hx],
+                        FieldCalculators.at(calcindex)->GetHy1()[offset_Hy],
+                        FieldCalculators.at(calcindex)->GetHy2()[offset_Hy],
+                        FieldCalculators.at(calcindex)->GetHz1()[offset_Hz],
+                        FieldCalculators.at(calcindex)->GetHz2()[offset_Hz], Tx, Ty);
                     //result is a local array for this frequency
                     //so we can directly use it even in a threaded environment
                     const size_t meas_index = j * 4;
@@ -197,8 +216,8 @@ namespace jif3D
                 omp_set_lock(&lck);
                 std::chrono::system_clock::time_point end =
                     std::chrono::system_clock::now();
-                size_t duration = std::chrono::duration_cast<std::chrono::seconds>(
-                    end - start).count();
+                size_t duration = std::chrono::duration_cast < std::chrono::seconds
+                    > (end - start).count();
 
                 NewExecTime.push_back(std::make_pair(duration, calcindex));
                 omp_unset_lock(&lck);
@@ -292,8 +311,8 @@ namespace jif3D
                     FieldCalculators.at(calcindex));
                 std::chrono::system_clock::time_point end =
                     std::chrono::system_clock::now();
-                size_t duration = std::chrono::duration_cast<std::chrono::seconds>(
-                    end - start).count();
+                size_t duration = std::chrono::duration_cast < std::chrono::seconds
+                    > (end - start).count();
 
                 omp_set_lock(&lck);
                 NewExecTime.push_back(std::make_pair(duration, calcindex));
