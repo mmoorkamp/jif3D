@@ -34,7 +34,8 @@ namespace jif3D
     X3DModel::X3DModel(const X3DModel &source) :
         ThreeDMTModel(source), bg_thicknesses(source.bg_thicknesses), bg_conductivities(
             source.bg_conductivities), ExIndices(source.ExIndices), EyIndices(
-            source.EyIndices), HIndices(source.HIndices)
+            source.EyIndices), HxIndices(source.HxIndices), HyIndices(source.HyIndices), HzIndices(
+            source.HzIndices)
       {
 
       }
@@ -52,7 +53,9 @@ namespace jif3D
             bg_conductivities = source.bg_conductivities;
             ExIndices = source.ExIndices;
             EyIndices = source.EyIndices;
-            HIndices = source.HIndices;
+            HxIndices = source.HxIndices;
+            HyIndices = source.HyIndices;
+            HzIndices = source.HzIndices;
           }
         return *this;
       }
@@ -77,7 +80,11 @@ namespace jif3D
           return false;
         if (EyIndices.size() != b.EyIndices.size())
           return false;
-        if (HIndices.size() != b.HIndices.size())
+        if (HxIndices.size() != b.HxIndices.size())
+          return false;
+        if (HyIndices.size() != b.HyIndices.size())
+          return false;
+        if (HzIndices.size() != b.HzIndices.size())
           return false;
 
         if (!std::equal(bg_thicknesses.begin(), bg_thicknesses.end(),
@@ -94,7 +101,11 @@ namespace jif3D
           return false;
         if (!std::equal(EyIndices.begin(), EyIndices.end(), b.EyIndices.begin()))
           return false;
-        if (!std::equal(HIndices.begin(), HIndices.end(), b.HIndices.begin()))
+        if (!std::equal(HxIndices.begin(), HxIndices.end(), b.HxIndices.begin()))
+          return false;
+        if (!std::equal(HyIndices.begin(), HyIndices.end(), b.HyIndices.begin()))
+          return false;
+        if (!std::equal(HzIndices.begin(), HzIndices.end(), b.HzIndices.begin()))
           return false;
         //we only get here if nothing failed before
         return ThreeDModelBase::operator ==(b);

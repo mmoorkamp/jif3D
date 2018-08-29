@@ -131,7 +131,7 @@ int hpx_main(boost::program_options::variables_map& vm)
           {
             jif3D::ReadTitanDataFromNetCDF(datafilename, Frequencies, XCoord, YCoord,
                 ZCoord, ExIndices, EyIndices, HIndices, Data, ZError, C);
-            Model.SetFieldIndices(ExIndices, EyIndices, HIndices);
+            Model.SetFieldIndices(ExIndices, EyIndices, HIndices, HIndices, HIndices);
           }
         else
           {

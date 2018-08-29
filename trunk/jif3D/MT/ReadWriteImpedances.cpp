@@ -510,6 +510,78 @@ namespace jif3D
           }
       }
 
+    void WriteJBlock(const std::vector<double> &Frequencies, const jif3D::rvec &Imp,
+        const jif3D::rvec &Err, ofstream &outfile, const double convfactor, int CompIndex, int SiteIndex)
+      {
+        const size_t nfreq = Frequencies.size();
+        const size_t nimp = Imp.size();
+        const size_t ndatapersite = nfreq * 8;
+        const size_t nsites = nimp / ndatapersite;
+        for (unsigned int i = 0; i < Frequencies.size(); ++i)
+          {
+            const size_t startindex = (i * nsites + SiteIndex) * 8 + CompIndex;
+            outfile << setfill(' ') << setw(15) << resetiosflags(ios::fixed)
+                << 1. / Frequencies.at(i) << " ";
+            outfile << setfill(' ') << setw(15)
+                << convfactor * Imp(startindex) << " ";
+            outfile << setfill(' ') << setw(15)
+                << convfactor * Imp(startindex +1) << " ";
+            outfile << setfill(' ') << setw(15)
+                << convfactor * Err(startindex) << " ";
+            outfile << setfill(' ') << setw(15) << setiosflags(ios::fixed) << 1.000 << " "
+                << endl;
+
+          }
+      }
+
+    void WriteImpedancesToJ(const std::string &filenamebase,
+        const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
+        const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
+        const jif3D::rvec &Imp, const jif3D::rvec &Err)
+      {
+        //const double convfactor = 4.0 * 1e-4 * acos(-1.0);
+        const double convfactor = 1.0;
+        jif3D::rvec Impedances = 1.0 / convfactor * Imp;
+        jif3D::rvec Errors = 1.0 / convfactor * Err;
+        const size_t nfreq = Frequencies.size();
+        const size_t nimp = Impedances.size();
+        const size_t ndatapersite = nfreq * 8;
+        const size_t nsites = nimp / ndatapersite;
+        assert(nimp % ndatapersite == 0);
+        for (size_t i = 0; i < nsites; ++i)
+          {
+
+            ofstream outfile;
+            std::string currfilename = filenamebase + jif3D::stringify(i) + ".dat";
+            outfile.open(currfilename.c_str());
+
+            outfile << "# J-File Produced by jif3D" << endl;
+            outfile << ">LATITUDE  = " << StatXCoord.at(i) << endl;
+            outfile << ">LONGITUDE = " << StatYCoord.at(i) << endl;
+            outfile << ">ELEVATION = " << StatZCoord.at(i) << endl;
+            outfile << ">AZIMUTH   = " << 0.0 << endl;
+            outfile << currfilename << endl;
+
+            outfile << "ZXX S.I." << endl;
+            outfile << nfreq << endl;
+            //WriteJBlock(DataXX,outfile,convfactor);
+            WriteJBlock(Frequencies, Imp, Err, outfile, convfactor,0,i);
+            outfile << "ZXY S.I." << endl;
+            outfile << nfreq << endl;
+            WriteJBlock(Frequencies, Imp, Err, outfile, convfactor,2,i);
+
+            outfile << "ZYX S.I." << endl;
+            outfile << nfreq << endl;
+            WriteJBlock(Frequencies, Imp, Err, outfile, convfactor,4,i);
+
+            outfile << "ZYY S.I." << endl;
+            outfile << nfreq << endl;
+            WriteJBlock(Frequencies, Imp, Err, outfile, convfactor,6,i);
+
+            outfile.close();
+          }
+      }
+
     inline double rad(double d)
       {
         return d / 180.0 * boost::math::constants::pi<double>();
@@ -779,100 +851,101 @@ namespace jif3D
       }
 
     void ReadTipperFromModEM(const std::string &filename,
-            std::vector<double> &Frequencies, std::vector<double> &StatXCoord,
-            std::vector<double> &StatYCoord, std::vector<double> &StatZCoord,
-            jif3D::rvec &Tip, jif3D::rvec &Err)
+        std::vector<double> &Frequencies, std::vector<double> &StatXCoord,
+        std::vector<double> &StatYCoord, std::vector<double> &StatZCoord,
+        jif3D::rvec &Tip, jif3D::rvec &Err)
       {
-            std::ifstream infile(filename.c_str());
-            char dummy[1024];
-            //swallow up the first 7 lines with header information
-            for (size_t i = 0; i < 7; ++i)
-              infile.getline(dummy, 1024);
-            //ignore the fist character (>) of the last header line
-            infile.ignore(1);
-            size_t nfreq = 0;
-            size_t nsites = 0;
-            infile >> nfreq >> nsites;
-            //swallow up the rest of the line
-            infile.getline(dummy, 1024);
-            Tip.resize(nfreq * nsites * 4);
-            std::fill(Tip.begin(), Tip.end(), 1.0);
-            Err.resize(Tip.size());
-            std::fill(Err.begin(), Err.end(), 100.0);
-            Frequencies.resize(nfreq);
-            StatXCoord.resize(nsites);
-            StatYCoord.resize(nsites);
-            StatZCoord.resize(nsites);
-            bool CanConvert = true;
+        std::ifstream infile(filename.c_str());
+        char dummy[1024];
+        //swallow up the first 7 lines with header information
+        for (size_t i = 0; i < 7; ++i)
+          infile.getline(dummy, 1024);
+        //ignore the fist character (>) of the last header line
+        infile.ignore(1);
+        size_t nfreq = 0;
+        size_t nsites = 0;
+        infile >> nfreq >> nsites;
+        //swallow up the rest of the line
+        infile.getline(dummy, 1024);
+        Tip.resize(nfreq * nsites * 4);
+        std::fill(Tip.begin(), Tip.end(), 1.0);
+        Err.resize(Tip.size());
+        std::fill(Err.begin(), Err.end(), 100.0);
+        Frequencies.resize(nfreq);
+        StatXCoord.resize(nsites);
+        StatYCoord.resize(nsites);
+        StatZCoord.resize(nsites);
+        bool CanConvert = true;
 
-            std::vector<double> AllFreq, AllX, AllY, AllZ, AllTipReal, AllTipImag, AllErr;
-            std::vector<std::string> StatName, CompName;
-            while (CanConvert && infile.good())
+        std::vector<double> AllFreq, AllX, AllY, AllZ, AllTipReal, AllTipImag, AllErr;
+        std::vector<std::string> StatName, CompName;
+        while (CanConvert && infile.good())
+          {
+            try
               {
-                try
-                  {
-                    string line;
-                    std::getline(infile, line);
-                    typedef std::vector<std::string> split_vector_type;
+                string line;
+                std::getline(infile, line);
+                typedef std::vector<std::string> split_vector_type;
 
-                    split_vector_type SplitVec; // #2: Search for tokens
-                    split(SplitVec, line, boost::is_any_of(" \n\r"),
-                        boost::token_compress_on);
+                split_vector_type SplitVec; // #2: Search for tokens
+                split(SplitVec, line, boost::is_any_of(" \n\r"),
+                    boost::token_compress_on);
 
-                    double p;
-                    jif3D::convert(SplitVec[0], p);
-                    AllFreq.push_back(1.0 / p);
-                    StatName.push_back(SplitVec[1]);
-                    jif3D::convert(SplitVec[4], p);
-                    AllX.push_back(p);
-                    jif3D::convert(SplitVec[5], p);
-                    AllY.push_back(p);
-                    jif3D::convert(SplitVec[6], p);
-                    AllZ.push_back(p);
-                    CompName.push_back(SplitVec[7]);
-                    jif3D::convert(SplitVec[8], p);
-                    AllTipReal.push_back(p);
-                    jif3D::convert(SplitVec[9], p);
-                    AllTipImag.push_back(p);
-                    jif3D::convert(SplitVec[10], p);
-                    AllErr.push_back(p);
-                  } catch (std::exception &e)
-                  {
-                    CanConvert = false;
-                  }
-              }
-            std::vector<std::string> UniqStats(StatName);
-            UniqStats.erase(std::unique(UniqStats.begin(), UniqStats.end()), UniqStats.end());
-
-            Frequencies = AllFreq;
-            auto FuzzComp = [](double a, double b)
-              { return std::abs((a-b)/std::max(a,b)) < 0.001;};
-            std::sort(Frequencies.begin(), Frequencies.end(), std::greater<double>());
-            Frequencies.erase(std::unique(Frequencies.begin(), Frequencies.end(), FuzzComp),
-                Frequencies.end());
-            std::vector<std::string> Comps =
-              { "TX", "TY"};
-            size_t ndata = AllFreq.size();
-            for (size_t i = 0; i < ndata; ++i)
+                double p;
+                jif3D::convert(SplitVec[0], p);
+                AllFreq.push_back(1.0 / p);
+                StatName.push_back(SplitVec[1]);
+                jif3D::convert(SplitVec[4], p);
+                AllX.push_back(p);
+                jif3D::convert(SplitVec[5], p);
+                AllY.push_back(p);
+                jif3D::convert(SplitVec[6], p);
+                AllZ.push_back(p);
+                CompName.push_back(SplitVec[7]);
+                jif3D::convert(SplitVec[8], p);
+                AllTipReal.push_back(p);
+                jif3D::convert(SplitVec[9], p);
+                AllTipImag.push_back(p);
+                jif3D::convert(SplitVec[10], p);
+                AllErr.push_back(p);
+              } catch (std::exception &e)
               {
-                auto FreqIter = std::find(Frequencies.begin(), Frequencies.end(), AllFreq[i]);
-                auto StatIter = std::find(UniqStats.begin(), UniqStats.end(), StatName[i]);
-                auto CompIter = std::find(Comps.begin(), Comps.end(), CompName[i]);
-                size_t FreqIndex = std::distance(Frequencies.begin(), FreqIter);
-                size_t StatIndex = std::distance(UniqStats.begin(), StatIter);
-                size_t CompIndex = std::distance(Comps.begin(), CompIter);
-                StatXCoord[StatIndex] = AllX[i];
-                StatYCoord[StatIndex] = AllY[i];
-                StatZCoord[StatIndex] = AllZ[i];
-                size_t TipIndex = 2 * CompIndex + 4 * StatIndex + 4 * nsites * FreqIndex;
-                Tip[TipIndex] = AllTipReal[i];
-                Tip[TipIndex + 1] = AllTipImag[i];
-                Err[TipIndex] = AllErr[i];
-                Err[TipIndex + 1] =  AllErr[i];
+                CanConvert = false;
               }
+          }
+        std::vector<std::string> UniqStats(StatName);
+        UniqStats.erase(std::unique(UniqStats.begin(), UniqStats.end()), UniqStats.end());
+
+        Frequencies = AllFreq;
+        auto FuzzComp = [](double a, double b)
+          { return std::abs((a-b)/std::max(a,b)) < 0.001;};
+        std::sort(Frequencies.begin(), Frequencies.end(), std::greater<double>());
+        Frequencies.erase(std::unique(Frequencies.begin(), Frequencies.end(), FuzzComp),
+            Frequencies.end());
+        std::vector<std::string> Comps =
+          { "TX", "TY" };
+        size_t ndata = AllFreq.size();
+        for (size_t i = 0; i < ndata; ++i)
+          {
+            auto FreqIter = std::find(Frequencies.begin(), Frequencies.end(), AllFreq[i]);
+            auto StatIter = std::find(UniqStats.begin(), UniqStats.end(), StatName[i]);
+            auto CompIter = std::find(Comps.begin(), Comps.end(), CompName[i]);
+            size_t FreqIndex = std::distance(Frequencies.begin(), FreqIter);
+            size_t StatIndex = std::distance(UniqStats.begin(), StatIter);
+            size_t CompIndex = std::distance(Comps.begin(), CompIter);
+            StatXCoord[StatIndex] = AllX[i];
+            StatYCoord[StatIndex] = AllY[i];
+            StatZCoord[StatIndex] = AllZ[i];
+            size_t TipIndex = 2 * CompIndex + 4 * StatIndex + 4 * nsites * FreqIndex;
+            Tip[TipIndex] = AllTipReal[i];
+            Tip[TipIndex + 1] = AllTipImag[i];
+            Err[TipIndex] = AllErr[i];
+            Err[TipIndex + 1] = AllErr[i];
+          }
       }
 
-    void WriteModEMLine(std::ofstream &outfile, double Zr, double Zi, double Err, double convfactor = 1.0)
+    void WriteModEMLine(std::ofstream &outfile, double Zr, double Zi, double Err,
+        double convfactor = 1.0)
       {
         outfile << std::setw(15) << Zr / convfactor << " " << std::setw(15)
             << Zi / convfactor << " " << std::setw(15) << Err / convfactor << "\n";
@@ -911,19 +984,23 @@ namespace jif3D
                 double period = 1.0 / Frequencies.at(j);
                 outfile << period << SiteLine.str();
                 outfile << " ZXX ";
-                WriteModEMLine(outfile, Imp(index), Imp(index + 1), Err(index),convfactor);
+                WriteModEMLine(outfile, Imp(index), Imp(index + 1), Err(index),
+                    convfactor);
 
                 outfile << period << SiteLine.str();
                 outfile << " ZXY ";
-                WriteModEMLine(outfile, Imp(index + 2), Imp(index + 3), Err(index + 2),convfactor);
+                WriteModEMLine(outfile, Imp(index + 2), Imp(index + 3), Err(index + 2),
+                    convfactor);
 
                 outfile << period << SiteLine.str();
                 outfile << " ZYX ";
-                WriteModEMLine(outfile, Imp(index + 4), Imp(index + 5), Err(index + 4),convfactor);
+                WriteModEMLine(outfile, Imp(index + 4), Imp(index + 5), Err(index + 4),
+                    convfactor);
 
                 outfile << period << SiteLine.str();
                 outfile << " ZYY ";
-                WriteModEMLine(outfile, Imp(index + 6), Imp(index + 7), Err(index + 6),convfactor);
+                WriteModEMLine(outfile, Imp(index + 6), Imp(index + 7), Err(index + 6),
+                    convfactor);
               }
           }
       }
@@ -975,10 +1052,7 @@ namespace jif3D
         std::vector<double> &Frequencies, double &StatXCoord, double &StatYCoord,
         double &StatZCoord, jif3D::rvec &Imp, jif3D::rvec &Err)
       {
-        const double convfactor = 4.0 * 1e-4 * acos(-1.0);
         std::ifstream infile;
-        double currentreal, currentimag;
-        int nentries = 0;
         infile.open(filename.c_str());
         std::string line;
         std::vector<std::string> SplitVec; // #2: Search for tokens

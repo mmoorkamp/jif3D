@@ -250,6 +250,11 @@ namespace jif3D
     J3DEXPORT void ReadImpedancesFromJ(const std::string &filename,
         std::vector<double> &Frequencies, double &StatXCoord, double &StatYCoord,
         double &StatZCoord, jif3D::rvec &Imp, jif3D::rvec &Err);
+
+    void WriteImpedancesToJ(const std::string &filenamebase,
+            const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
+            const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
+            const jif3D::rvec &Imp, const jif3D::rvec &Err);
   /* @} */
   }
 
