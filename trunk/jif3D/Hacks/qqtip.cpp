@@ -47,8 +47,7 @@ int main()
     std::cout << " Read " << Misfit.size() << " misfit values " << std::endl;
     std::ofstream Txqq("Tx.qq");
     std::ofstream Tyqq("Ty.qq");
-    std::ofstream Zyxqq("Zyx.qq");
-    std::ofstream Zyyqq("Zyy.qq");
+
 
     QQPlot(Txqq, 0, Misfit);
     QQPlot(Tyqq, 2, Misfit);

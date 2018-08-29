@@ -24,7 +24,7 @@ exe tomoinv : tomoinv.cpp  joint ;
 exe plotgrav : plotgrav.cpp  joint ;
 exe text2grav : text2grav.cpp  joint ;
 exe cleanmt : cleanmt.cpp  ../MT//mt joint ;
-exe qqfit : qqfit.cpp  ../MT//mt joint ;
+exe qqfit : qqfit.cpp  ../MT//mt common ;
 exe qqtip : qqtip.cpp  ../MT//mt joint ;
 exe avgmt : avgmt.cpp  ../MT//mt joint ;
 exe smoothmodel : smoothmodel.cpp  ../MT//mt joint ;
@@ -39,7 +39,7 @@ exe convertmtascii : convertmtascii.cpp   ../Global ../MT ..//boost_filesystem  
 exe convertmtt : convertmtt.cpp   ../Global//global ../MT//mt ..//boost_filesystem  ..//boost_system  ;
 exe onedmtinv : onedmtinv.cpp   joint ../MT//mt ..//boost_program_options ..//boost_filesystem ..//boost_system ;
 exe nnmtinv : nnmtinv.cpp   joint ../MT//mt ..//boost_program_options ..//boost_filesystem ..//boost_system ;
-exe writemtt : writemtt.cpp   ../Global//global ../ModelBase//modelbase ../MT//mt ..//boost_filesystem ..//boost_system ;
+exe writemtt : writemtt.cpp  ../ModelBase//modelbase ../MT//mt ../Global//global ..//boost_filesystem ..//boost_system ;
 exe rotatemt : rotatemt.cpp   ../MT//mt common  ;
 exe rotatetomo : rotatetomo.cpp  joint ..//boost_filesystem ..//boost_system ;
 exe rotategrav : rotategrav.cpp  joint ..//boost_filesystem ..//boost_system ;

@@ -9,10 +9,10 @@
 #include "../Global/FatalException.h"
 #include "../Global/convert.h"
 #include <cmath>
-#include <Eigen/Eigen/Dense>
-#include <Eigen/Eigen/Sparse>
-#include <Eigen/Eigen/LU>
-#include <Eigen/Eigen/Core>
+#include <Eigen/Dense>
+#include <Eigen/Sparse>
+#include <Eigen/LU>
+#include <Eigen/Core>
 #include <boost/config.hpp>
 #include <boost/numeric/ublas/matrix_sparse.hpp>
 #include <boost/numeric/ublas/storage.hpp>

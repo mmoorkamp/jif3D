@@ -25,6 +25,7 @@ int main()
         StatZ, Impedances, Errors, C);
     jif3D::WriteImpedancesToMtt(ncfilename, Frequencies, Impedances, Errors);
 
+    jif3D::WriteImpedancesToJ(ncfilename,Frequencies,StatX,StatY,StatZ,Impedances,Errors);
     jif3D::WriteAppResToAscii(ncfilename+".asc", Frequencies, StatX, StatY,
         StatZ, Impedances, Errors);
     jif3D::rvec Fill(StatX.size(),1.0);
