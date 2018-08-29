@@ -60,7 +60,7 @@ namespace jif3D
         }
       //! The constructor needs the objective function object, without it optimization does not make much sense
       explicit GradientBasedOptimization(boost::shared_ptr<
-          jif3D::ObjectiveFunction> ObjFunction);
+          jif3D::ObjectiveFunction> ObjFunction, boost::shared_ptr<jif3D::GeneralCovariance> Cv = boost::make_shared<jif3D::DiagonalCovariance>());
       virtual ~GradientBasedOptimization();
       };
   /* @} */

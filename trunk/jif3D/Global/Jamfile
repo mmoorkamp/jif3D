@@ -4,8 +4,9 @@ lib global : Wavelet.cpp ReadWriteSparseMatrix.cpp NetCDFPortHelper.cpp Jif3DPla
            
 unit-test interpolate_test : test_interpolate.cpp global  ;
 unit-test wavelet_test : test_wavelet.cpp global ;
+unit-test fft_test : test_fft.cpp global ;
 unit-test rwsmatrix_test : test_rwsmatrix.cpp global ;
-unit-test numutil_test : test_numutil.cpp  global ;
+unit-test numutil_test : test_numutil.cpp  global ../Inversion//inversion ;
 unit-test transform_test : test_transform.cpp global  ;
 unit-test noise_test : test_noise.cpp  global  ;
 unit-test fileutil_test : test_fileutil.cpp  global ..//boost_filesystem ..//boost_system   ;

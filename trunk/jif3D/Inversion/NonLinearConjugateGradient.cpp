@@ -14,10 +14,11 @@
 namespace jif3D
   {
 
-    NonLinearConjugateGradient::NonLinearConjugateGradient(boost::shared_ptr<
-        jif3D::ObjectiveFunction> ObjFunction) :
-      GradientBasedOptimization(ObjFunction), OldGradient(), OldDirection(), gamma(1.0),
-          OldOmega(1.0), mu(1.0)
+    NonLinearConjugateGradient::NonLinearConjugateGradient(
+        boost::shared_ptr<jif3D::ObjectiveFunction> ObjFunction,
+        boost::shared_ptr<jif3D::GeneralCovariance> Cv) :
+        GradientBasedOptimization(ObjFunction, Cv), OldGradient(), OldDirection(), gamma(
+            1.0), OldOmega(1.0), mu(1.0)
       {
 
       }
@@ -27,8 +28,7 @@ namespace jif3D
 
       }
 
-    void NonLinearConjugateGradient::StepImplementation(
-        jif3D::rvec &CurrentModel)
+    void NonLinearConjugateGradient::StepImplementation(jif3D::rvec &CurrentModel)
       {
         const size_t nmod = CovGrad.size();
         //if we are in the first iteration or we took
@@ -48,7 +48,7 @@ namespace jif3D
         //saves us a temporary object and is faster
         for (size_t i = 0; i < nmod; ++i)
           {
-            const double factor = CovGrad(i) / GetModelCovDiag()(i);
+            const double factor = RawGrad(i);
             omega += CovGrad(i) * factor;
             alpha += OldGradient(i) * factor;
           }
@@ -68,22 +68,20 @@ namespace jif3D
         //otherwise use the direction of steepest descent
         if (angle < 0.0)
           {
-            /*status = */OPTPP::mcsrch(&GetObjective(), SearchDir, RawGrad,
-                CurrentModel, Misfit, &mu, 20, 1e-4, 2.2e-16, 0.1, 1e9, 1e-9);
-            jif3D::rvec y(ublas::element_prod(RawGrad, GetModelCovDiag())
-                - OldGradient);
+            /*status = */OPTPP::mcsrch(&GetObjective(), SearchDir, RawGrad, CurrentModel,
+                Misfit, &mu, 20, 1e-4, 2.2e-16, 0.1, 1e9, 1e-9);
+            jif3D::rvec y(GetCovObj()->ApplyCovar(RawGrad) - OldGradient);
             //This is the same calculation as for L-BFGS to scale the search direction for the next iteration
             //we therefore use the same nomenclature
             jif3D::rvec s(mu * SearchDir);
-            double rho = 1.0 / NormProd(y, s, GetModelCovDiag());
-            gamma = 1.0 / rho / NormProd(y, y, GetModelCovDiag());
+            double rho = 1.0 / NormProd(y, s, GetCovObj());
+            gamma = 1.0 / rho / NormProd(y, y, GetCovObj());
           }
         else
           {
             CovGrad *= -1.0;
             OldGradient.resize(0);
-            /*status = */OPTPP::mcsrch(&GetObjective(), CovGrad, RawGrad,
-                CurrentModel,
+            /*status = */OPTPP::mcsrch(&GetObjective(), CovGrad, RawGrad, CurrentModel,
                 Misfit, &mu, 20, 1e-4, 2.2e-16, 0.1, 1e9, 1e-9);
           }
 

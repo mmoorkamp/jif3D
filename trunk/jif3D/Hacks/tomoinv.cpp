@@ -94,7 +94,7 @@ int main()
     std::cin >> maxiter;
     std::cout << "Performing inversion." << std::endl;
 
-    jif3D::LimitedMemoryQuasiNewton LBFGS(Objective, 5);
+    jif3D::LimitedMemoryQuasiNewton LBFGS(Objective);
     std::ofstream misfitfile("misfit.out");
     misfitfile << "0 " << Objective->CalcMisfit(InvModel) << " ";
     size_t iteration = 0;

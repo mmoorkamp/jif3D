@@ -5,16 +5,15 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-
 #include "GradientBasedOptimization.h"
 
 namespace jif3D
   {
 
-    GradientBasedOptimization::GradientBasedOptimization(boost::shared_ptr<
-        jif3D::ObjectiveFunction> ObjFunction) :
-      NonLinearOptimization(ObjFunction), HaveEvaluated_(false), RawGrad(),
-          CovGrad(), SearchDir()
+    GradientBasedOptimization::GradientBasedOptimization(
+        boost::shared_ptr<jif3D::ObjectiveFunction> ObjFunction,
+        boost::shared_ptr<jif3D::GeneralCovariance> Cv) :
+        NonLinearOptimization(ObjFunction, Cv), HaveEvaluated_(false), RawGrad(), CovGrad(), SearchDir()
       {
 
       }
@@ -24,8 +23,7 @@ namespace jif3D
 
       }
 
-    void GradientBasedOptimization::EvaluateModel(
-        const jif3D::rvec &CurrentModel)
+    void GradientBasedOptimization::EvaluateModel(const jif3D::rvec &CurrentModel)
       {
         if (!HaveEvaluated_)
           {
@@ -33,7 +31,7 @@ namespace jif3D
             Misfit = GetObjective().CalcMisfit(CurrentModel);
             RawGrad = GetObjective().CalcGradient(CurrentModel);
           }
-        CovGrad = ublas::element_prod(RawGrad, GetModelCovDiag());
+        CovGrad = GetCovObj()->ApplyCovar(RawGrad);
         HaveEvaluated();
       }
 

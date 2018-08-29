@@ -32,7 +32,12 @@ namespace jif3D
         return -1;
       }
 
-
+    //! Convenience function for squaring numbers, more efficient than std::pow(x,2)
+    template<class N1>
+    N1 pow2(N1 x)
+      {
+      return x*x;
+      }
     //! Compare number1 and number2 and return true if the absolute value of number1 is smaller than the absolute value of number2, otherwise return false.
     /*! This template is useful in conjunction with the standard library. For example we can write
      * std::sort(Vector.begin(),Vector.end(),absLess<double,double>()) to sort a vector of numbers by their absolute values.

@@ -43,7 +43,7 @@ namespace jif3D
        * @param ObjFunction A shared pointer to an objective function obejct
        */
       explicit NonLinearConjugateGradient(boost::shared_ptr<
-          jif3D::ObjectiveFunction> ObjFunction);
+          jif3D::ObjectiveFunction> ObjFunction, boost::shared_ptr<jif3D::GeneralCovariance> Cv = boost::make_shared<jif3D::DiagonalCovariance>());
       virtual ~NonLinearConjugateGradient();
       };
   /* @} */

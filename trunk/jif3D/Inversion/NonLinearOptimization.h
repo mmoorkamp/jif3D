@@ -5,7 +5,6 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-
 #ifndef NONLINEAROPTIMIZATION_H_
 #define NONLINEAROPTIMIZATION_H_
 #ifdef HAVEHPX
@@ -13,6 +12,8 @@
 #endif
 #include <boost/shared_ptr.hpp>
 #include "ObjectiveFunction.h"
+#include "GeneralCovariance.h"
+#include "DiagonalCovariance.h"
 #include "../Global/VecMat.h"
 #include "../Global/Jif3DGlobal.h"
 
@@ -50,8 +51,8 @@ namespace jif3D
        * @param CurrentModel The current model, contains the updated model on exit
        */
       virtual void StepImplementation(jif3D::rvec &CurrentModel) = 0;
-      //! The diagonal elements of the model covariance matrix
-      jif3D::rvec ModelCovDiag;
+      //! The object applying the model covariance
+      boost::shared_ptr<jif3D::GeneralCovariance> Covar;
       //! The objective function object
       boost::shared_ptr<jif3D::ObjectiveFunction> Objective;
     protected:
@@ -63,20 +64,18 @@ namespace jif3D
           return *Objective.get();
         }
     public:
+      const boost::shared_ptr<jif3D::GeneralCovariance> GetCovObj() const
+        {
+          return Covar;
+        }
+      void SetCovObj(boost::shared_ptr<jif3D::GeneralCovariance> Cv)
+        {
+          Covar = Cv;
+        }
       //! Get the misfit after calling MakeStep
       double GetMisfit()
         {
           return Misfit;
-        }
-      //! Read-only access to the diagonal elements of the model covariance
-      const jif3D::rvec &GetModelCovDiag() const
-        {
-          return ModelCovDiag;
-        }
-      //! Set the diagonal elements of the model covariance
-      void SetModelCovDiag(const jif3D::rvec &Cov)
-        {
-          ModelCovDiag = Cov;
         }
       //! Update the current model by making a single step with the optimization method
       /*! This function provides the outline for making a non-linear optimization step, evaluating the
@@ -86,7 +85,9 @@ namespace jif3D
       void MakeStep(jif3D::rvec &CurrentModel);
       //! The constructor needs the objective function object, without it optimization does not make much sense
       explicit NonLinearOptimization(
-          boost::shared_ptr<jif3D::ObjectiveFunction> ObjFunction);
+          boost::shared_ptr<jif3D::ObjectiveFunction> ObjFunction,
+          boost::shared_ptr<jif3D::GeneralCovariance> Cv = boost::make_shared<
+              jif3D::DiagonalCovariance>());
       virtual ~NonLinearOptimization();
       };
   /* @} */

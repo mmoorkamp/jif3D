@@ -56,7 +56,7 @@ namespace jif3D
        * @param n The maximum number of correction pairs
        */
       explicit LimitedMemoryQuasiNewton(boost::shared_ptr<
-          jif3D::ObjectiveFunction> ObjFunction, const size_t n = 5, bool gradscale = true);
+          jif3D::ObjectiveFunction> ObjFunction, boost::shared_ptr<jif3D::GeneralCovariance> Cv = boost::make_shared<jif3D::DiagonalCovariance>(), const size_t n = 5, bool gradscale = true);
       virtual ~LimitedMemoryQuasiNewton();
       };
   /* @} */
