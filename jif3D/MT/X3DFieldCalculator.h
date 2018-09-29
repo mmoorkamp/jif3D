@@ -54,57 +54,109 @@ namespace jif3D
               + jif3D::stringify(this) + "t" + jif3D::stringify(tag);
         }
     public:
-      const std::vector<std::complex<double> > &GetEx1() const
+      //! Provide serialization to be able to store objects and, more importantly for hpx parallelization
+      template<class Archive>
+      void save(Archive & ar, unsigned int version) const
         {
-          return Ex1;
+          ar & Ex1;
+          ar & Ex2;
+          ar & Ey1;
+          ar & Ey2;
+          ar & Hx1;
+          ar & Hx2;
+          ar & Hy1;
+          ar & Hy2;
+          ar & Hz1;
+          ar & Hz2;
+          std::string DirName(TempDir.string());
+          ar & DirName;
+          ar & X3DName;
+          ar & NameRoot;
+          ar & GreenStage1;
+          ar & GreenStage4;
+          ar & OldModel;
+          ar & ForwardDirName;
         }
-      const std::vector<std::complex<double> > &GetEx2() const
+      template<class Archive>
+      void load(Archive & ar, unsigned int version)
         {
-          return Ex2;
+          ar & Ex1;
+          ar & Ex2;
+          ar & Ey1;
+          ar & Ey2;
+          ar & Hx1;
+          ar & Hx2;
+          ar & Hy1;
+          ar & Hy2;
+          ar & Hz1;
+          ar & Hz2;
+          std::string DirName;
+          TempDir = DirName;
+          ar & DirName;
+          ar & X3DName;
+          ar & NameRoot;
+          ar & GreenStage1;
+          ar & GreenStage4;
+          ar & OldModel;
+          ar & ForwardDirName;
         }
-      const std::vector<std::complex<double> > &GetEy1() const
-        {
-          return Ey1;
-        }
-      const std::vector<std::complex<double> > &GetEy2() const
-        {
-          return Ey2;
-        }
-      const std::vector<std::complex<double> > &GetHx1() const
-        {
-          return Hx1;
-        }
-      const std::vector<std::complex<double> > &GetHx2() const
-        {
-          return Hx2;
-        }
-      const std::vector<std::complex<double> > &GetHy1() const
-        {
-          return Hy1;
-        }
-      const std::vector<std::complex<double> > &GetHy2() const
-        {
-          return Hy2;
-        }
-      const std::vector<std::complex<double> > &GetHz1() const
-        {
-          return Hz1;
-        }
-      const std::vector<std::complex<double> > &GetHz2() const
-        {
-          return Hz2;
-        }
-      std::string GetForwardDirName() const
-        {
-          return ForwardDirName;
-        }
-      void CalculateFields(const X3DModel &Model, size_t freqindex);
-      X3DFieldCalculator(boost::filesystem::path TDir = boost::filesystem::current_path(),
-          std::string x3d = "x3d", bool Clean = true, jif3D::GreenCalcType GS1 = hst,
-          jif3D::GreenCalcType GS4 = hst);
-      virtual ~X3DFieldCalculator();
-      };
+#ifdef HAVEHPX
+      HPX_SERIALIZATION_SPLIT_MEMBER()
+#else
+      BOOST_SERIALIZATION_SPLIT_MEMBER()
+#endif
+  const std::vector<std::complex<double> > &GetEx1() const
+    {
+      return Ex1;
+    }
+  const std::vector<std::complex<double> > &GetEx2() const
+    {
+      return Ex2;
+    }
+  const std::vector<std::complex<double> > &GetEy1() const
+    {
+      return Ey1;
+    }
+  const std::vector<std::complex<double> > &GetEy2() const
+    {
+      return Ey2;
+    }
+  const std::vector<std::complex<double> > &GetHx1() const
+    {
+      return Hx1;
+    }
+  const std::vector<std::complex<double> > &GetHx2() const
+    {
+      return Hx2;
+    }
+  const std::vector<std::complex<double> > &GetHy1() const
+    {
+      return Hy1;
+    }
+  const std::vector<std::complex<double> > &GetHy2() const
+    {
+      return Hy2;
+    }
+  const std::vector<std::complex<double> > &GetHz1() const
+    {
+      return Hz1;
+    }
+  const std::vector<std::complex<double> > &GetHz2() const
+    {
+      return Hz2;
+    }
+  std::string GetForwardDirName() const
+    {
+      return ForwardDirName;
+    }
+  void CalculateFields(const X3DModel &Model, size_t freqindex);
+  X3DFieldCalculator(boost::filesystem::path TDir = boost::filesystem::current_path(),
+      std::string x3d = "x3d", bool Clean = true, jif3D::GreenCalcType GS1 = hst,
+      jif3D::GreenCalcType GS4 = hst);
+  virtual ~X3DFieldCalculator();
+};
 
-  } /* namespace jif3D */
+}
+/* namespace jif3D */
 
 #endif /* MT_X3DFIELDCALCULATOR_H_ */
