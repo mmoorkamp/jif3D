@@ -224,15 +224,14 @@ namespace jif3D
         const std::complex<double> A01(Misfit(siteindex + 2), Misfit(siteindex + 3));
         const std::complex<double> A10(Misfit(siteindex + 4), Misfit(siteindex + 5));
         const std::complex<double> A11(Misfit(siteindex + 6), Misfit(siteindex + 7));
+        //x3d uses a different convention for the complex exponentials
+        //so we have to use the complex conjugate for the source
         AH(0, 0) = magdet * (conj(A00) * Hy2 - conj(A01) * Hx2);
         AH(0, 1) = magdet * (-conj(A00) * Hy1 + conj(A01) * Hx1);
         AH(1, 0) = magdet * (conj(A10) * Hy2 - conj(A11) * Hx2);
         AH(1, 1) = magdet * (-conj(A10) * Hy1 + conj(A11) * Hx1);
-        CtAH(0, 0) = AH(0, 0) * C[startindex * 4] + AH(1, 0) * C[startindex * 4 + 2];
-        CtAH(0, 1) = AH(0, 1) * C[startindex * 4] + AH(1, 1) * C[startindex * 4 + 2];
-        CtAH(1, 0) = AH(0, 0) * C[startindex * 4 + 1] + AH(1, 0) * C[startindex * 4 + 3];
-        CtAH(1, 1) = AH(0, 1) * C[startindex * 4 + 1] + AH(1, 1) * C[startindex * 4 + 3];
-        return CtAH;
+
+        return AH;
       }
 
     void CalcU(const std::string &RootName,

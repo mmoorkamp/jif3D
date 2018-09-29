@@ -14,6 +14,7 @@
 #include <hpx/runtime/serialization/base_object.hpp>
 #include <hpx/runtime/serialization/vector.hpp>
 #include <hpx/runtime/serialization/array.hpp>
+#include <hpx/runtime/serialization/complex.hpp>
 #include <hpx/runtime/serialization/shared_ptr.hpp>
 #include <hpx/runtime/serialization/serialization_fwd.hpp>
 using hpx::serialization::base_object;
