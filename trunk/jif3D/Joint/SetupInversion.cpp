@@ -12,8 +12,9 @@
 #include "../Inversion/DiagonalCovariance.h"
 #include "../Inversion/LimitedMemoryQuasiNewton.h"
 #include "../Inversion/NonLinearConjugateGradient.h"
-
+#ifdef HAVEEIGEN
 #include "../Inversion/StochasticCovariance.h"
+#endif
 namespace jif3D
   {
 
