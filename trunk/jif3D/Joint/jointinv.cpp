@@ -99,19 +99,6 @@ int hpx_main(boost::program_options::variables_map& vm)
           }
       }
 
-    jif3D::rvec CovModVec;
-    if (vm.count("covmod"))
-      {
-        jif3D::ThreeDModelBase CovModel;
-        //we store the covariances in a seismic model file
-        //but we do not have to have an equidistant grid
-        std::string Filename(vm["covmod"].as<std::string>());
-        CovModel = *jif3D::ReadAnyModel(Filename).get();
-        const size_t ncovmod = CovModel.GetData().num_elements();
-        CovModVec.resize(ncovmod);
-        std::copy(CovModel.GetData().origin(), CovModel.GetData().origin() + ncovmod,
-            CovModVec.begin());
-      }
     //we want some output so we set Verbose in the constructor to true
     boost::shared_ptr<jif3D::JointObjective> Objective;
     Objective = boost::shared_ptr<jif3D::JointObjective>(new jif3D::JointObjective(true));
@@ -138,6 +125,90 @@ int hpx_main(boost::program_options::variables_map& vm)
       }
     boost::shared_ptr<jif3D::ThreeDModelBase> StartModel = jif3D::ReadAnyModel(
         geometryfilename);
+    const size_t ngrid = StartModel->GetData().num_elements();
+
+    jif3D::rvec CovModVec;
+    if (vm.count("covmod"))
+      {
+        jif3D::ThreeDModelBase CovModel;
+        //we store the covariances in a seismic model file
+        //but we do not have to have an equidistant grid
+        std::string Filename(vm["covmod"].as<std::string>());
+        CovModel = *jif3D::ReadAnyModel(Filename).get();
+        const size_t ncovmod = CovModel.GetData().num_elements();
+        if (ncovmod != ngrid)
+          {
+            std::cerr << "Covariance grid not the same size as inversion grid "
+                << std::endl;
+            return 100;
+          }
+        CovModVec.resize(ncovmod);
+        std::copy(CovModel.GetData().origin(), CovModel.GetData().origin() + ncovmod,
+            CovModVec.begin());
+      }
+
+    if (vm.count("tomocov") || vm.count("gravcov") || vm.count("mtcov"))
+      {
+        std::cout
+            << "Setting individual covariances currently only works with cross-gradient coupling !"
+            << std::endl;
+        CovModVec.resize(3 * ngrid);
+        std::fill(CovModVec.begin(), CovModVec.end(), 1.0);
+      }
+
+    if (vm.count("tomocov"))
+      {
+        jif3D::ThreeDModelBase CovModel;
+        //we store the covariances in a seismic model file
+        //but we do not have to have an equidistant grid
+        std::string Filename(vm["tomocov"].as<std::string>());
+        CovModel = *jif3D::ReadAnyModel(Filename).get();
+        const size_t ncovmod = CovModel.GetData().num_elements();
+        if (ncovmod != ngrid)
+          {
+            std::cerr << "Tomography covariance grid not the same size as inversion grid "
+                << std::endl;
+            return 100;
+          }
+        std::copy(CovModel.GetData().origin(), CovModel.GetData().origin() + ncovmod,
+            CovModVec.begin());
+      }
+
+    if (vm.count("gravcov"))
+      {
+        jif3D::ThreeDModelBase CovModel;
+        //we store the covariances in a seismic model file
+        //but we do not have to have an equidistant grid
+        std::string Filename(vm["gravcov"].as<std::string>());
+        CovModel = *jif3D::ReadAnyModel(Filename).get();
+        const size_t ncovmod = CovModel.GetData().num_elements();
+        if (ncovmod != ngrid)
+          {
+            std::cerr << "Gravity covariance grid not the same size as inversion grid "
+                << std::endl;
+            return 100;
+          }
+        std::copy(CovModel.GetData().origin(), CovModel.GetData().origin() + ncovmod,
+            CovModVec.begin() + ngrid);
+      }
+
+    if (vm.count("mtcov"))
+      {
+        jif3D::ThreeDModelBase CovModel;
+        //we store the covariances in a seismic model file
+        //but we do not have to have an equidistant grid
+        std::string Filename(vm["mtcov"].as<std::string>());
+        CovModel = *jif3D::ReadAnyModel(Filename).get();
+        const size_t ncovmod = CovModel.GetData().num_elements();
+        if (ncovmod != ngrid)
+          {
+            std::cerr << "MT covariance grid not the same size as inversion grid "
+                << std::endl;
+            return 100;
+          }
+        std::copy(CovModel.GetData().origin(), CovModel.GetData().origin() + ncovmod,
+            CovModVec.begin() + 2* ngrid);
+      }
 
     CouplingSetup.SetupTransforms(vm, *StartModel, TomoTransform, GravityTransform,
         MTTransform, WaveletParm);
@@ -173,7 +244,7 @@ int hpx_main(boost::program_options::variables_map& vm)
       }
     //now we setup the regularization
     boost::shared_ptr<jif3D::RegularizationFunction> Regularization =
-        RegSetup.SetupObjective(vm, *StartModel, CovModVec);
+        RegSetup.SetupObjective(vm, *StartModel, jif3D::rvec(ngrid,1.0));
 
     //the vector InvModel will hold the current inversion model
     //depending on the chosen coupling mechanism it will have different size
@@ -216,7 +287,6 @@ int hpx_main(boost::program_options::variables_map& vm)
       }
 
     const size_t nmtsites = MTSetup.GetModel().GetMeasPosX().size();
-    const size_t ngrid = InvModel.size();
     jif3D::rvec CRef(nmtsites * 4);
     for (size_t i = 0; i < nmtsites; ++i)
       {
@@ -303,7 +373,6 @@ int hpx_main(boost::program_options::variables_map& vm)
     std::cout << "Performing inversion." << std::endl;
     if (WantSequential)
       {
-        const size_t ngrid = StartModel->GetData().num_elements();
         boost::shared_ptr<jif3D::JointObjective> TomoObjective(Objective->clone());
         boost::shared_ptr<jif3D::JointObjective> MTObjective(Objective->clone());
         boost::shared_ptr<jif3D::JointObjective> GravObjective(Objective->clone());
@@ -565,8 +634,8 @@ int hpx_main(boost::program_options::variables_map& vm)
             jif3D::SaveTensorGravityMeasurements(modelfilename + ".diff_ftg.nc", FTGDiff,
                 GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ(),
                 GravitySetup.GetFTGObjective().GetDataError());
-            jif3D::Write3DTensorDataToVTK(modelfilename + ".inv_ftg.vtk", "U",
-                FTGInvData, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
+            jif3D::Write3DTensorDataToVTK(modelfilename + ".inv_ftg.vtk", "U", FTGInvData,
+                GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
                 GravModel.GetMeasPosZ());
           }
       }
@@ -644,8 +713,13 @@ int main(int argc, char* argv[])
         "Write debugging information")("iterations", po::value<int>(),
         "The maximum number of iterations")("threads", po::value<int>(),
         "The number of openmp threads")("covmod", po::value<std::string>(),
-        "A file containing the model covariance")("geometrygrid",
+        "A file containing the model covariance for all methods")("tomocov",
         po::value<std::string>(),
+        "A file containing the model covariance only for tomography")("gravcov",
+        po::value<std::string>(),
+        "A file containing the model covariance only for gravity")("mtcov",
+        po::value<std::string>(), "A file containing the model covariance only for MT")(
+        "geometrygrid", po::value<std::string>(),
         "A file containing the model geometry of the inversion grid")("tempdir",
         po::value<std::string>(), "The name of the directory to store temporary files in")(
         "wavelet", "Parametrize inversion by wavelet coefficients")("xorigin",
