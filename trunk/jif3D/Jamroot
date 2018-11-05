@@ -35,7 +35,7 @@ project
 		#<include>"C:/Program Files/netCDF 4.4.0/include"
         <threading>multi 
         <define>BIND_FORTRAN_LOWERCASE_UNDERSCORE
-        <define>BOOST_LOG_DYN_LINK
+        <define>BOOST_DYN_LINK
         <gpu>off
         <lapack>off
         <optpp>off
@@ -72,17 +72,6 @@ path-constant TOP : . ;
 
 import cuda ;
 
-use-project /Global : Global ;
-use-project /Gravity : Gravity ;
-use-project /GravMag : GravMag ;
-use-project /Magnetics : Magnetics ;
-use-project /ModelBase : ModelBase ;
-use-project /Profiling : Profiling ;
-use-project /Inversion : Inversion ;
-use-project /MT : MT ;
-use-project /Joint : Joint ;
-use-project /ModelTransforms : ModelTransforms ;
-use-project /DCResistivity : DCResistivity ;
 
 local BOOST_TEST_LOG_LEVEL = all ;
 lib boost_filesystem : : <name>boost_filesystem <search>$(BOOST_LIB_PATH)  ;
@@ -91,7 +80,6 @@ lib boost_program_options : : <name>boost_program_options  <search>$(BOOST_LIB_P
 lib boost_mpi : : <name>boost_mpi  <search>$(BOOST_LIB_PATH) ;
 lib boost_serialization : : <name>boost_serialization  <search>$(BOOST_LIB_PATH) ;
 lib boost_thread : : <name>boost_thread  <search>$(BOOST_LIB_PATH) ;
-lib boost_log : : <name>boost_log  <search>$(BOOST_LIB_PATH) ;
 lib boost_iostreams : : <name>boost_iostreams  <search>$(BOOST_LIB_PATH) ;
 lib boost_date_time : : <name>boost_date_time  <search>$(BOOST_LIB_PATH) ;
 lib boost_chrono : : <name>boost_chrono  <search>$(BOOST_LIB_PATH) ;
@@ -112,7 +100,7 @@ lib gfortran : :  <name>gfortran ;
 lib cudart : : <name>cudart <search>$(CUDA_LIB_PATH) ;
 lib cublas : : <name>cublas <search>$(CUDA_LIB_PATH) ;
 alias vecopt : lapack cblas atlas gfortran ;
-alias boost_core : boost_program_options boost_filesystem boost_log  boost_system ;
+alias boost_core : boost_program_options boost_filesystem  boost_system ;
 
 build-project Global ;
 build-project Gravity ;
