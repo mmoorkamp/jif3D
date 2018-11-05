@@ -746,7 +746,7 @@ int hpx_main(boost::program_options::variables_map& vm)
             YCoord, ZCoord, ExIndices, EyIndices, HIndices,
             X3DObjective->GetObservedData(), ZError, C);
         jif3D::WriteTitanDataToNetCDF(modelfilename + ".diff_imp.nc", Frequencies, XCoord,
-            YCoord, ZCoord, ExIndices, EyIndices, HIndices, Data,
+            YCoord, ZCoord, ExIndices, EyIndices, HIndices,
             X3DObjective->GetIndividualMisfit());
       }
     else
