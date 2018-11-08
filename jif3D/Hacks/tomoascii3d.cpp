@@ -179,11 +179,14 @@ int main()
         else
           {
             TravelTime.at(i) = -1.0;
+            TTError.at(i) = - 1.0;
           }
 
       }
     TravelTime.erase(std::remove(TravelTime.begin(), TravelTime.end(), -1.0),
         TravelTime.end());
+    TTError.erase(std::remove(TTError.begin(), TTError.end(), -1.0),
+        TTError.end());
     std::cout << "NTimes in file: " << TravelTime.size() << std::endl;
 // MP debug
 //    std::cout << "Test checkpoint 1";
