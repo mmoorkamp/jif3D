@@ -207,7 +207,7 @@ int hpx_main(boost::program_options::variables_map& vm)
             return 100;
           }
         std::copy(CovModel.GetData().origin(), CovModel.GetData().origin() + ncovmod,
-            CovModVec.begin() + 2* ngrid);
+            CovModVec.begin() + 2 * ngrid);
       }
 
     CouplingSetup.SetupTransforms(vm, *StartModel, TomoTransform, GravityTransform,
@@ -243,8 +243,10 @@ int hpx_main(boost::program_options::variables_map& vm)
             "MT model does not have the same geometry as starting model");
       }
     //now we setup the regularization
+    jif3D::ThreeDSeismicModel TearModX, TearModY, TearModZ;
     boost::shared_ptr<jif3D::RegularizationFunction> Regularization =
-        RegSetup.SetupObjective(vm, *StartModel, jif3D::rvec(ngrid,1.0));
+        RegSetup.SetupObjective(vm, *StartModel, jif3D::rvec(ngrid, 1.0), TearModX,
+            TearModY, TearModZ);
 
     //the vector InvModel will hold the current inversion model
     //depending on the chosen coupling mechanism it will have different size
@@ -252,7 +254,7 @@ int hpx_main(boost::program_options::variables_map& vm)
     jif3D::rvec InvModel;
     CouplingSetup.SetupModelVector(vm, InvModel, *StartModel, TomoSetup.GetModel(),
         GravitySetup.GetScalModel(), MTSetup.GetModel(), *Objective.get(), Regularization,
-        RegSetup.GetSubStart());
+        RegSetup.GetSubStart(),TearModX,TearModY,TearModZ);
     //finally ask for the maximum number of iterations
     size_t maxiter = 1;
     if (!vm.count("iterations"))

@@ -104,8 +104,8 @@ namespace jif3D
        * @param ConsiderSize Consider the size of the cells in the respective direction when constructing the gradient
        */
       GradientRegularization(const jif3D::ThreeDModelBase &Geometry,
-          jif3D::ThreeDModelBase &TearModelX, jif3D::ThreeDModelBase &TearModelY,
-          jif3D::ThreeDModelBase &TearModelZ, const double ModEps = 1e-8, const bool ConsiderSize = false) :
+          const jif3D::ThreeDModelBase &TearModelX, const jif3D::ThreeDModelBase &TearModelY,
+          const jif3D::ThreeDModelBase &TearModelZ, const double ModEps = 1e-8, const bool ConsiderSize = false) :
         MatOpRegularization(Geometry), Eps(ModEps), WithCellsize(ConsiderSize)
         {
           //in debug mode we check that the geometry of the tear models

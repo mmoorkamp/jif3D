@@ -159,7 +159,7 @@ namespace jif3D
               {
                 Regularization = boost::shared_ptr<jif3D::MatOpRegularization>(
                     new jif3D::GradientRegularization(StartModel, TearModX, TearModY,
-                        TearModZ, beta,vm.count("considersize")));
+                        TearModZ, beta, vm.count("considersize")));
               }
           }
         //We either pass an empty covariance vector then the regularization class
@@ -193,4 +193,17 @@ namespace jif3D
 
         return Regularization;
       }
+
+    boost::shared_ptr<jif3D::RegularizationFunction> SetupRegularization::SetupObjective(
+        const po::variables_map &vm, const ThreeDModelBase &StartModel,
+        const jif3D::rvec &CovModVec, jif3D::ThreeDModelBase &TearModelX,
+        jif3D::ThreeDModelBase &TearModelY, jif3D::ThreeDModelBase &TearModelZ)
+      {
+        SetTearModel(vm, "tearmodx", StartModel, TearModelX);
+        SetTearModel(vm, "tearmody", StartModel, TearModelY);
+        SetTearModel(vm, "tearmodz", StartModel, TearModelZ);
+        return SetupObjective(vm, StartModel, CovModVec);
+
+      }
+
   }
