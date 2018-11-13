@@ -88,8 +88,6 @@ namespace jif3D
         boost::shared_ptr<jif3D::GeneralModelTransform> &MTTransform, bool Wavelet)
       {
 
-
-
         const std::size_t ngrid = GeometryModel.GetNModelElements();
 
         //we declare WaveletTrans here so that we can use identical
@@ -249,7 +247,10 @@ namespace jif3D
         const jif3D::ThreeDSeismicModel &SeisMod,
         const jif3D::ThreeDGravityModel &GravMod, const jif3D::ThreeDMTModel &MTMod,
         jif3D::JointObjective &Objective,
-        boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart)
+        boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart,
+        const jif3D::ThreeDModelBase &TearModelX,
+        const jif3D::ThreeDModelBase &TearModelY,
+        const jif3D::ThreeDModelBase &TearModelZ)
       {
         const size_t ngrid = ModelGeometry.GetNModelElements();
         InvModel.resize(3 * ngrid, 0.0);
@@ -295,7 +296,7 @@ namespace jif3D
         //the double section transform takes two sections of the model
         //and feeds them to the objective function
         boost::shared_ptr<jif3D::CrossGradient> SeisGravCross(
-            new jif3D::CrossGradient(ModelGeometry));
+            new jif3D::CrossGradient(ModelGeometry, TearModelX, TearModelY, TearModelZ));
         boost::shared_ptr<jif3D::MultiSectionTransform> SeisGravTrans(
             new jif3D::MultiSectionTransform(3 * ngrid));
         SeisGravTrans->AddSection(0, ngrid, SlowCrossTrans);
@@ -311,7 +312,7 @@ namespace jif3D
                 "SeisGrav", JointObjective::coupling);
           }
         boost::shared_ptr<jif3D::CrossGradient> SeisMTCross(
-            new jif3D::CrossGradient(ModelGeometry));
+            new jif3D::CrossGradient(ModelGeometry, TearModelX, TearModelY, TearModelZ));
         boost::shared_ptr<jif3D::MultiSectionTransform> SeisMTTrans(
             new jif3D::MultiSectionTransform(3 * ngrid));
         SeisMTTrans->AddSection(0, ngrid, SlowCrossTrans);
@@ -326,7 +327,7 @@ namespace jif3D
                 JointObjective::coupling);
           }
         boost::shared_ptr<jif3D::CrossGradient> GravMTCross(
-            new jif3D::CrossGradient(ModelGeometry));
+            new jif3D::CrossGradient(ModelGeometry, TearModelX, TearModelY, TearModelZ));
         boost::shared_ptr<jif3D::MultiSectionTransform> GravMTTrans(
             new jif3D::MultiSectionTransform(3 * ngrid));
         GravMTTrans->AddSection(ngrid, 2 * ngrid, DensCrossTrans);
@@ -571,7 +572,8 @@ namespace jif3D
         if (SeisMod.GetNModelElements() != ngrid)
           {
             throw jif3D::FatalException(
-                "Size of seismic model does not match model geometry !", __FILE__, __LINE__);
+                "Size of seismic model does not match model geometry !", __FILE__,
+                __LINE__);
           }
         InvModel.resize(ngrid);
         std::copy(SeisMod.GetSlownesses().origin(),
@@ -602,7 +604,10 @@ namespace jif3D
         const jif3D::ThreeDSeismicModel &SeisMod,
         const jif3D::ThreeDGravityModel &GravMod, const jif3D::ThreeDMTModel &MTMod,
         jif3D::JointObjective &Objective,
-        boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart)
+        boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart,
+        const jif3D::ThreeDModelBase &TearModelX,
+        const jif3D::ThreeDModelBase &TearModelY,
+        const jif3D::ThreeDModelBase &TearModelZ)
       {
         //depending on the type of coupling the model vector looks quite different
         //and we have to setup a number of different things
@@ -611,7 +616,7 @@ namespace jif3D
         if (vm.count("crossgrad"))
           {
             SetupCrossGradModel(InvModel, ModelGeometry, SeisMod, GravMod, MTMod,
-                Objective, Regularization, substart);
+                Objective, Regularization, substart,TearModelX,TearModelY,TearModelZ);
           }
         else
           {

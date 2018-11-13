@@ -8,7 +8,6 @@
 #ifndef CROSSGRADIENT_H_
 #define CROSSGRADIENT_H_
 
-
 #include "../Global/Serialization.h"
 #include "../Global/Jif3DGlobal.h"
 #include "GradientRegularization.h"
@@ -32,7 +31,7 @@ namespace jif3D
      * in  \f$ m_2\f$.
      *
      */
-    class J3DEXPORT CrossGradient : public jif3D::ObjectiveFunction
+    class J3DEXPORT CrossGradient: public jif3D::ObjectiveFunction
       {
     private:
       //! The object to calculate the spatial gradient for the first model
@@ -66,7 +65,8 @@ namespace jif3D
       virtual void
       ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff) override;
       //! The gradient of the cross-gradient objective function with respect to the model parameters
-      virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model, const jif3D::rvec &Diff) override;
+      virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model, const jif3D::rvec &Diff)
+          override;
       //!The constructor takes any 3D model object as a parameter to extract the geometry information
       /*! The geometry information of the 3D model is passed to the cross-gradient function through
        * the constructor. Note that during the inversion we assume Model.size() == 2*Geometry.GetData().num_elements()
@@ -76,6 +76,15 @@ namespace jif3D
       explicit CrossGradient(const jif3D::ThreeDModelBase &Geometry) :
           FirstGradient(Geometry, 0.0), SecondGradient(Geometry, 0.0), ModelGeometry(
               Geometry)
+        {
+
+        }
+      CrossGradient(const jif3D::ThreeDModelBase &Geometry,
+          const jif3D::ThreeDModelBase &TearModelX,
+          const jif3D::ThreeDModelBase &TearModelY,
+          const jif3D::ThreeDModelBase &TearModelZ) :
+          FirstGradient(Geometry, TearModelX, TearModelY, TearModelZ, 0.0), SecondGradient(
+              Geometry, TearModelX, TearModelY, TearModelZ, 0.0), ModelGeometry(Geometry)
         {
 
         }

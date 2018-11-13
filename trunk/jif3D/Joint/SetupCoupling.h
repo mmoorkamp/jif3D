@@ -88,7 +88,10 @@ namespace jif3D
           const jif3D::ThreeDSeismicModel &SeisMod,
           const jif3D::ThreeDGravityModel &GravMod, const jif3D::ThreeDMTModel &MTMod,
           jif3D::JointObjective &Objective,
-          boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart);
+          boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart,
+          const jif3D::ThreeDModelBase &TearModelX,
+          const jif3D::ThreeDModelBase &TearModelY,
+          const jif3D::ThreeDModelBase &TearModelZ);
       //! Internal function to setup coupling and regularization when using a fixed parameter relationship
       void SetupFixedCouplingModel(jif3D::rvec &InvModel,
           const jif3D::ThreeDModelBase &ModelGeometry,
@@ -137,13 +140,19 @@ namespace jif3D
        * @param Objective The joint objective object we want to add the coupling and regularization terms to
        * @param Regularization An object for regularization (gradient/curvature etc.)
        * @param substart Do we want to substract the starting model for roughness calculations
+       * @param TearModelX The model describing the tear in the regularization in x-direction
+       * @param TearModelY The model describing the tear in the regularization in y-direction
+       * @param TearModelZ The model describing the tear in the regularization in z-direction
        */
       void SetupModelVector(const po::variables_map &vm, jif3D::rvec &InvModel,
           const jif3D::ThreeDModelBase &ModelGeometry,
           const jif3D::ThreeDSeismicModel &SeisMod,
           const jif3D::ThreeDGravityModel &GravMod, const jif3D::ThreeDMTModel &MTMod,
           jif3D::JointObjective &Objective,
-          boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart);
+          boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart,
+          const jif3D::ThreeDModelBase &TearModelX,
+          const jif3D::ThreeDModelBase &TearModelY,
+          const jif3D::ThreeDModelBase &TearModelZ);
 
       SetupCoupling();
       virtual ~SetupCoupling();
