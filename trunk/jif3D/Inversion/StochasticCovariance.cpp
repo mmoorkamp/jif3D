@@ -53,7 +53,7 @@ namespace jif3D
               }
 
           }
-        Cmv(0) = Cm(0, 0);
+        /*Cmv(0) = Cm(0, 0);
         for (size_t i = 1; i < nmod; ++i)
           {
             Cmv(i) = Cm(i, 0);
@@ -61,9 +61,9 @@ namespace jif3D
           }
         Cmv(nmod) = Cmv(nmod+1);
         kissfft<double> fft(nmod * 2, false);
-        fft.transform(&Cmv.data()[0], &Cmf.data()[0]);
+        fft.transform(&Cmv.data()[0], &Cmf.data()[0]);*/
         // TODO Auto-generated constructor stub
-        std::ofstream ovfile("cmv.out");
+        /*std::ofstream ovfile("cmv.out");
         for (auto val : Cmv)
           {
             ovfile << std::abs(val) << "\n";
@@ -73,22 +73,22 @@ namespace jif3D
         for (auto val : Cmf)
           {
             offile << std::abs(val) << "\n";
-          }
+          }*/
       }
 
     jif3D::rvec StochasticCovariance::ApplyCovar(const jif3D::rvec &vector)
       {
-        //jif3D::rvec result(vector.size());
-        //typedef Eigen::Matrix<double, Eigen::Dynamic, 1> VectorXi;
-        //typedef Eigen::Map<const VectorXi> MapTypeConst;
-        //typedef Eigen::Map<VectorXi> MapType;
+        jif3D::rvec result(vector.size());
+        typedef Eigen::Matrix<double, Eigen::Dynamic, 1> VectorXi;
+        typedef Eigen::Map<const VectorXi> MapTypeConst;
+        typedef Eigen::Map<VectorXi> MapType;
 
-        //MapTypeConst v(&(vector.data()[0]), vector.size(), 1);
-        //MapType r(&(result.data()[0]), result.size(), 1);
-        //r = Cm * v;
+        MapTypeConst v(&(vector.data()[0]), vector.size(), 1);
+        MapType r(&(result.data()[0]), result.size(), 1);
+        r = Cm * v;
 
-        //return result;
-        const size_t nmod = vector.size() * 2;
+        return result;
+        /*const size_t nmod = vector.size() * 2;
         jif3D::cvec inv(nmod, 0.0), invf(nmod, 0.0);
         jif3D::rvec result(vector.size(), 0.0);
         std::copy(vector.begin(), vector.end(), inv.begin());
@@ -101,7 +101,7 @@ namespace jif3D
           {
             result(i) = 1.0 / double(nmod) * inv(i).real();
           }
-        return result;
+        return result;*/
       }
 
     jif3D::rvec StochasticCovariance::ApplyInvCovar(const jif3D::rvec &vector)
@@ -122,7 +122,7 @@ namespace jif3D
         //r = solver.solve(v);
         //return result;
 
-        const size_t nmod = vector.size() * 2;
+        /*const size_t nmod = vector.size() * 2;
         jif3D::cvec inv(nmod, 0.0), invf(nmod, 0.0);
         jif3D::rvec result(vector.size(), 0.0);
         std::copy(vector.begin(), vector.end(), inv.begin());
@@ -145,16 +145,17 @@ namespace jif3D
                 invf(i) = invf(i) / Cmf(i);
               }
             invfile << " " << std::abs(invf(i)) << " " << std::abs(Cmf(i)) << "\n";
-          }
+          }*/
         //invf = ublas::element_div(invf, Cmf);
-        kissfft<double> ifft(nmod, true);
+        /*kissfft<double> ifft(nmod, true);
         std::fill_n(inv.begin(),nmod,0.0);
         ifft.transform(&invf.data()[0], &inv.data()[0]);
         for (size_t i = 0; i < vector.size(); ++i)
           {
             result(i) = 1.0 / double(nmod) * inv(i).real();
           }
-        return result;
+        return result;*/
+        return vector;
       }
 
     StochasticCovariance::~StochasticCovariance()

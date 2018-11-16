@@ -9,16 +9,14 @@
 #include "SetupInversion.h"
 #include "../Global/FatalException.h"
 #include "../Global/convert.h"
-#include "../Inversion/DiagonalCovariance.h"
 #include "../Inversion/LimitedMemoryQuasiNewton.h"
 #include "../Inversion/NonLinearConjugateGradient.h"
-#ifdef HAVEEIGEN
-#include "../Inversion/StochasticCovariance.h"
-#endif
+
 namespace jif3D
   {
 
-    SetupInversion::SetupInversion()
+    SetupInversion::SetupInversion():
+        scalegrad(),corrpairs()
       {
       }
 
@@ -41,35 +39,14 @@ namespace jif3D
     boost::shared_ptr<jif3D::GradientBasedOptimization> SetupInversion::ConfigureInversion(
         const po::variables_map &vm,
         boost::shared_ptr<jif3D::ObjectiveFunction> ObjFunction,
-        const jif3D::rvec &InvModel, const jif3D::rvec &CovModVec)
+        const jif3D::rvec &InvModel, boost::shared_ptr<jif3D::GeneralCovariance> CovObj)
       {
 
         //if the model covariance is empty we let the optimizer object
         //take care of setting the values to 1
         //otherwise we perform some checks here
         const size_t nparm = InvModel.size();
-        const size_t ncovmod = CovModVec.size();
 
-        rvec CovVec(nparm,1.0);
-        if (!CovModVec.empty())
-          {
-
-            if (nparm % ncovmod != 0)
-              throw FatalException(
-                  "Size of inversion model vector: " + jif3D::stringify(nparm)
-                      + " is not a multiple of covariance model size: "
-                      + jif3D::stringify(ncovmod) + "!", __FILE__, __LINE__);
-
-            const size_t nsections = nparm / ncovmod;
-            for (size_t i = 0; i < nsections; ++i)
-              {
-                for (size_t j = 0; j < ncovmod; ++j)
-                  {
-                    CovVec(j + i * ncovmod) = std::abs(CovModVec(j));
-                  }
-
-              }
-          }
 
         //we can either use nlcg or L-BFGS for the optimizer
         boost::shared_ptr<jif3D::GradientBasedOptimization> Optimizer;
@@ -80,8 +57,9 @@ namespace jif3D
           }
         else
           {
-           // auto CovObj = boost::make_shared<jif3D::StochasticCovariance>(20,20,10,5.0,1.0,1.0);
-            auto CovObj = boost::make_shared<jif3D::DiagonalCovariance>(CovVec);
+
+            //auto CovObj = boost::make_shared<jif3D::StochasticCovariance>(20,20,10,CovWidth,1.0,1.0);
+            //auto CovObj = boost::make_shared<jif3D::DiagonalCovariance>(CovVec);
             //for L-BFGS we check whether the number of correction pairs is positive
             if (corrpairs < 0)
               throw jif3D::FatalException(
