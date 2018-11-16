@@ -30,6 +30,10 @@
 #include "../Inversion/JointObjective.h"
 #include "../Inversion/ModelTransforms.h"
 #include "../Inversion/ThreeDModelObjective.h"
+#include "../Inversion/DiagonalCovariance.h"
+#ifdef HAVEEIGEN
+#include "../Inversion/StochasticCovariance.h"
+#endif
 #include "../MT/X3DModel.h"
 #include "../MT/X3DMTCalculator.h"
 #include "../MT/X3DTipperCalculator.h"
@@ -63,7 +67,7 @@ double MTWeight;
 double tipperr, tiprelerr;
 double DistCorr = 0;
 bool CleanFiles = true;
-
+double CovWidth = 3.0;
 int hpx_main(boost::program_options::variables_map& vm)
   {
 
@@ -122,8 +126,8 @@ int hpx_main(boost::program_options::variables_map& vm)
       {
         jif3D::ReadImpedancesFromModEM(datafilename, Frequencies, XCoord, YCoord, ZCoord,
             Data, ZError);
-        jif3D::WriteImpedancesToNetCDF(datafilename+".nc", Frequencies, XCoord, YCoord, ZCoord,
-            Data, ZError);
+        jif3D::WriteImpedancesToNetCDF(datafilename + ".nc", Frequencies, XCoord, YCoord,
+            ZCoord, Data, ZError);
       }
     else
       {
@@ -548,20 +552,20 @@ int hpx_main(boost::program_options::variables_map& vm)
         std::string tipext = jif3D::GetFileExtension(TipperName);
         if (tipext == ".nc")
           {
-        jif3D::ReadTipperFromNetCDF(TipperName, Frequencies, XCoord, YCoord, ZCoord,
-            TipperData, TError);
-        jif3D::WriteTipperToModEM(TipperName+".dat", Frequencies, XCoord, YCoord, ZCoord,
-            TipperData, TError);
+            jif3D::ReadTipperFromNetCDF(TipperName, Frequencies, XCoord, YCoord, ZCoord,
+                TipperData, TError);
+            jif3D::WriteTipperToModEM(TipperName + ".dat", Frequencies, XCoord, YCoord,
+                ZCoord, TipperData, TError);
           }
         else
           {
             jif3D::ReadTipperFromModEM(TipperName, Frequencies, XCoord, YCoord, ZCoord,
                 TipperData, TError);
-            jif3D::WriteTipperToNetCDF(TipperName+".nc", Frequencies, XCoord, YCoord, ZCoord,
-                            TipperData, TError);
+            jif3D::WriteTipperToNetCDF(TipperName + ".nc", Frequencies, XCoord, YCoord,
+                ZCoord, TipperData, TError);
           }
         size_t ntip = TipperData.size();
-        jif3D::rvec TE(ntip,0.0);
+        jif3D::rvec TE(ntip, 0.0);
         for (size_t i = 0; i < ntip / 4; ++i)
           {
             double abs_re = std::sqrt(
@@ -630,8 +634,19 @@ int hpx_main(boost::program_options::variables_map& vm)
     std::cin >> maxiter;
     std::cout << "Performing inversion." << std::endl;
 
+    boost::shared_ptr<jif3D::GeneralCovariance> CovObj;
+    if (CovWidth > 0.0)
+      {
+        CovObj = boost::make_shared<jif3D::StochasticCovariance>(20, 20, 10, CovWidth,
+            1.0, 1.0);
+      }
+    else
+      {
+        CovObj = boost::make_shared<jif3D::DiagonalCovariance>(CovModVec);
+      }
+
     boost::shared_ptr<jif3D::GradientBasedOptimization> Optimizer =
-        InversionSetup.ConfigureInversion(vm, Objective, InvModel, CovModVec);
+        InversionSetup.ConfigureInversion(vm, Objective, InvModel, CovObj);
 
     std::ofstream misfitfile("misfit.out");
     std::ofstream rmsfile("rms.out");
@@ -835,27 +850,29 @@ int main(int argc, char* argv[])
         "Use logarithmic transform to bound model parameters")("tipperdata",
         po::value(&TipperName), "The name for the tipper data")("tipperlambda",
         po::value(&TipperWeight)->default_value(1.0), "The weight for the tipper data")(
-        "tippererr", po::value(&tipperr)->default_value(0.005))(
-            "tiprelerr", po::value(&tiprelerr)->default_value(0.02),
-            "The absolute error for the tipper data")("mtlambda",
-            po::value(&MTWeight)->default_value(1.0), "The weight for the MT data");
+        "tippererr", po::value(&tipperr)->default_value(0.005))("tiprelerr",
+        po::value(&tiprelerr)->default_value(0.02),
+        "The absolute error for the tipper data")("mtlambda",
+        po::value(&MTWeight)->default_value(1.0), "The weight for the MT data")(
+        "stochcov", po::value(&CovWidth)->default_value(0),
+        "Width of stochastic regularization, enabled if > 0, EXPERIMENTAL");
 
-        desc.add(RegSetup.SetupOptions());
-        desc.add(InversionSetup.SetupOptions());
+    desc.add(RegSetup.SetupOptions());
+    desc.add(InversionSetup.SetupOptions());
 
 #ifdef HAVEHPX
-        return hpx::init(desc, argc, argv);
+    return hpx::init(desc, argc, argv);
 #else
 //set up the command line options
-        po::variables_map vm;
-        po::store(po::parse_command_line(argc, argv, desc), vm);
-        po::notify(vm);
-        if (vm.count("help"))
-          {
-            std::cout << desc << "\n";
-            return 1;
-          }
-        return hpx_main(vm);
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::notify(vm);
+    if (vm.count("help"))
+      {
+        std::cout << desc << "\n";
+        return 1;
+      }
+    return hpx_main(vm);
 #endif
 
-      }
+  }

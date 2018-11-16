@@ -17,6 +17,7 @@
 #include "../Inversion/LimitedMemoryQuasiNewton.h"
 #include "../Inversion/NonLinearConjugateGradient.h"
 #include "../Inversion/JointObjective.h"
+#include "../Inversion/DiagonalCovariance.h"
 #include "../Regularization/MinDiffRegularization.h"
 #include "../Regularization/CrossGradient.h"
 #include "../Inversion/ModelTransforms.h"
@@ -267,8 +268,10 @@ int main(int argc, char *argv[])
 
     //jif3D::rvec Ones(CovModVec);
     //std::fill(Ones.begin(),Ones.end(),1.0);
+    auto CovObj = boost::make_shared<jif3D::DiagonalCovariance>(CovModVec);
+
     boost::shared_ptr<jif3D::GradientBasedOptimization> Optimizer =
-        InversionSetup.ConfigureInversion(vm, Objective, InvModel, CovModVec);
+        InversionSetup.ConfigureInversion(vm, Objective, InvModel, CovObj);
 
     size_t iteration = 0;
     size_t maxiter = 30;

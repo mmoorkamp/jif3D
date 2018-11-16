@@ -26,6 +26,7 @@
 #include "../Inversion/JointObjective.h"
 #include "../Inversion/ThreeDModelObjective.h"
 #include "../Inversion/ModelTransforms.h"
+#include "../Inversion/DiagonalCovariance.h"
 #include "../Regularization/CrossGradient.h"
 #include "../Regularization/MinDiffRegularization.h"
 #include "../Tomo/ThreeDSeismicModel.h"
@@ -282,9 +283,10 @@ int main(int argc, char *argv[])
     boost::posix_time::ptime starttime = boost::posix_time::microsec_clock::local_time();
 
     std::cout << "Performing inversion." << std::endl;
+    auto CovObj = boost::make_shared<jif3D::DiagonalCovariance>(CovModVec);
 
     boost::shared_ptr<jif3D::GradientBasedOptimization> Optimizer =
-        InversionSetup.ConfigureInversion(vm, Objective, InvModel, CovModVec);
+        InversionSetup.ConfigureInversion(vm, Objective, InvModel, CovObj);
 
     std::string modelfilename = "result";
     jif3D::ThreeDSeismicModel TomoModel(TomoSetup.GetModel());

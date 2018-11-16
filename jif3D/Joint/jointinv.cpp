@@ -24,6 +24,7 @@
 #include "../ModelBase/ReadAnyModel.h"
 #include "../Inversion/JointObjective.h"
 #include "../Inversion/ThreeDModelObjective.h"
+#include "../Inversion/StochasticCovariance.h"
 #include "../Regularization/MinDiffRegularization.h"
 #include "../Inversion/ModelTransforms.h"
 #include "../Tomo/ThreeDSeismicModel.h"
@@ -421,14 +422,19 @@ int hpx_main(boost::program_options::variables_map& vm)
         jif3D::rvec GravCovMod(3 * ngrid, 1e-15);
         std::fill_n(GravCovMod.begin() + ngrid, ngrid, 1.0);
 
+        auto TomoCovObj = boost::make_shared<jif3D::DiagonalCovariance>(TomoCovMod);
         boost::shared_ptr<jif3D::GradientBasedOptimization> TomoOptimizer =
             InversionSetup.ConfigureInversion(vm, TomoObjective, TomoInvModel,
-                TomoCovMod);
+                TomoCovObj);
+
+        auto MTCovObj = boost::make_shared<jif3D::DiagonalCovariance>(MTCovMod);
         boost::shared_ptr<jif3D::GradientBasedOptimization> MTOptimizer =
-            InversionSetup.ConfigureInversion(vm, MTObjective, MTInvModel, MTCovMod);
+            InversionSetup.ConfigureInversion(vm, MTObjective, MTInvModel, MTCovObj);
+
+        auto GravCovObj = boost::make_shared<jif3D::DiagonalCovariance>(GravCovMod);
         boost::shared_ptr<jif3D::GradientBasedOptimization> GravOptimizer =
             InversionSetup.ConfigureInversion(vm, GravObjective, GravInvModel,
-                GravCovMod);
+                GravCovObj);
 
         bool terminate = false;
         jif3D::rvec OldModel(InvModel);
@@ -524,8 +530,34 @@ int hpx_main(boost::program_options::variables_map& vm)
     else
       {
 
+        const size_t nparm = InvModel.size();
+        const size_t ncovmod = CovModVec.size();
+
+        jif3D::rvec CovVec(nparm,1.0);
+        if (!CovModVec.empty())
+          {
+
+            if (nparm % ncovmod != 0)
+              throw jif3D::FatalException(
+                  "Size of inversion model vector: " + jif3D::stringify(nparm)
+                      + " is not a multiple of covariance model size: "
+                      + jif3D::stringify(ncovmod) + "!", __FILE__, __LINE__);
+
+            const size_t nsections = nparm / ncovmod;
+            for (size_t i = 0; i < nsections; ++i)
+              {
+                for (size_t j = 0; j < ncovmod; ++j)
+                  {
+                    CovVec(j + i * ncovmod) = std::abs(CovModVec(j));
+                  }
+
+              }
+          }
+
+        auto CovObj = boost::make_shared<jif3D::DiagonalCovariance>(CovVec);
+
         boost::shared_ptr<jif3D::GradientBasedOptimization> Optimizer =
-            InversionSetup.ConfigureInversion(vm, Objective, InvModel, CovModVec);
+            InversionSetup.ConfigureInversion(vm, Objective, InvModel, CovObj);
 
         bool terminate = false;
         jif3D::rvec OldModel(InvModel);
