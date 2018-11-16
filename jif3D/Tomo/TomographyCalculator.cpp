@@ -5,12 +5,11 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-
-
 #include "TomographyCalculator.h"
 #include "ReadWriteTomographyData.h"
 #include "modeling_seismic.h"
 #include <boost/numeric/conversion/cast.hpp>
+#include <algorithm>
 
 namespace jif3D
   {
@@ -62,9 +61,31 @@ namespace jif3D
         const size_t nmeas = Model.GetMeasPosX().size();
         const size_t nshot = Model.GetSourcePosX().size();
         const size_t npos = nmeas + nshot;
-        //all grid cells have the same size in all directions, so we just
+        //we assume that all grid cells have the same size in all directions, so we just
         //read one of the values
         const double gridspacing = Model.GetXCellSizes()[0];
+        //now check that this assumption holds
+        if (!std::all_of(Model.GetXCellSizes().begin(), Model.GetXCellSizes().end(),
+            [gridspacing](double d)
+              { return ((gridspacing * 0.99 < d) && (gridspacing * 1.01 > d));}))
+          {
+            throw jif3D::FatalException(
+                "Spacing of tomographic model not uniform in x-direction");
+          }
+        if (!std::all_of(Model.GetYCellSizes().begin(), Model.GetYCellSizes().end(),
+            [gridspacing](double d)
+              { return ((gridspacing * 0.99 < d) && (gridspacing * 1.01 > d));}))
+          {
+            throw jif3D::FatalException(
+                "Spacing of tomographic model not uniform in y-direction");
+          }
+        if (!std::all_of(Model.GetZCellSizes().begin(), Model.GetZCellSizes().end(),
+            [gridspacing](double d)
+              { return ((gridspacing * 0.99 < d) && (gridspacing * 1.01 > d));}))
+          {
+            throw jif3D::FatalException(
+                "Spacing of tomographic model not uniform in z-direction");
+          }
         const int padding = 5;
         auto xmeasrange = std::minmax_element(Model.GetMeasPosX().begin(),
             Model.GetMeasPosX().end());
@@ -236,5 +257,4 @@ namespace jif3D
         return DerivMod;
       }
   }
-
 
