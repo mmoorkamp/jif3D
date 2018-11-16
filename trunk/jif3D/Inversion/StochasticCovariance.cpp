@@ -24,7 +24,7 @@ namespace jif3D
         //Cm.resize(nmod, nmod);
         //Cmf.resize(nmod * 2);
         //Cmv.resize(nmod * 2);
-#pragma omp parallel for default(shared)
+/*#pragma omp parallel for default(shared)
         for (size_t i = 0; i < nmod; ++i)
           {
             int xi, yi, zi;
@@ -52,7 +52,7 @@ namespace jif3D
 
               }
 
-          }
+          }*/
         /*Cmv(0) = Cm(0, 0);
         for (size_t i = 1; i < nmod; ++i)
           {
