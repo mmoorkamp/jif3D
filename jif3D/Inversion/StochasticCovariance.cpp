@@ -21,9 +21,9 @@ namespace jif3D
         double factor = sigma * sigma / (std::pow(2, nu - 1) * boost::math::tgamma(nu));
 
         const size_t nmod = nx * ny * nz;
-        Cm.resize(nmod, nmod);
-        Cmf.resize(nmod * 2);
-        Cmv.resize(nmod * 2);
+        //Cm.resize(nmod, nmod);
+        //Cmf.resize(nmod * 2);
+        //Cmv.resize(nmod * 2);
 #pragma omp parallel for default(shared)
         for (size_t i = 0; i < nmod; ++i)
           {
