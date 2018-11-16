@@ -78,14 +78,49 @@ namespace jif3D
 
     jif3D::rvec StochasticCovariance::ApplyCovar(const jif3D::rvec &vector)
       {
-        jif3D::rvec result(vector.size());
-        typedef Eigen::Matrix<double, Eigen::Dynamic, 1> VectorXi;
+
+        double factor = sigma * sigma / (std::pow(2, nu - 1) * boost::math::tgamma(nu));
+
+        const size_t nmod = nx * ny * nz;
+        jif3D::rvec result(vector.size(),0.0);
+#pragma omp parallel for default(shared)
+        for (size_t i = 0; i < nmod; ++i)
+          {
+            int xi, yi, zi;
+            OffsetToIndex(i, xi, yi, zi);
+            //double currx = Model.GetXCoordinates()[xi] + Model.GetXCellSizes()[xi] / 2.0;
+            //double curry = Model.GetYCoordinates()[yi] + Model.GetYCellSizes()[yi] / 2.0;
+            //double currz = Model.GetZCoordinates()[zi] + Model.GetZCellSizes()[zi] / 2.0;
+            for (size_t j = 0; j < nmod; ++j)
+              {
+                int xj, yj, zj;
+                OffsetToIndex(j, xj, yj, zj);
+                //double x = Model.GetXCoordinates()[xj] + Model.GetXCellSizes()[xj] / 2.0;
+                //double y = Model.GetYCoordinates()[yj] + Model.GetYCellSizes()[yj] / 2.0;
+                //double z = Model.GetZCoordinates()[zj] + Model.GetZCellSizes()[zj] / 2.0;
+                //double r = std::sqrt(
+                //    jif3D::pow2(currx - x) + jif3D::pow2(curry - y)
+                //        + jif3D::pow2(currz - z));
+                double r = std::sqrt(
+                    jif3D::pow2(xi - xj) + jif3D::pow2(yi - yj) + jif3D::pow2(zi - zj));
+                const double ra = std::abs(r / a);
+                double matelem =
+                    (ra == 0.0) ?
+                        1.0 :
+                        factor * std::pow(ra, nu) * boost::math::cyl_bessel_k(nu, ra);
+                 result(i) += matelem * vector(j);
+              }
+
+          }
+
+
+/*        typedef Eigen::Matrix<double, Eigen::Dynamic, 1> VectorXi;
         typedef Eigen::Map<const VectorXi> MapTypeConst;
         typedef Eigen::Map<VectorXi> MapType;
 
         MapTypeConst v(&(vector.data()[0]), vector.size(), 1);
         MapType r(&(result.data()[0]), result.size(), 1);
-        r = Cm * v;
+        r = Cm * v;*/
 
         return result;
         /*const size_t nmod = vector.size() * 2;
