@@ -637,7 +637,7 @@ int hpx_main(boost::program_options::variables_map& vm)
     boost::shared_ptr<jif3D::GeneralCovariance> CovObj;
     if (CovWidth > 0.0)
       {
-        CovObj = boost::make_shared<jif3D::StochasticCovariance>(20, 20, 10, CovWidth,
+        CovObj = boost::make_shared<jif3D::StochasticCovariance>(Model.GetModelShape()[0], Model.GetModelShape()[1], Model.GetModelShape()[2], CovWidth,
             1.0, 1.0);
       }
     else
