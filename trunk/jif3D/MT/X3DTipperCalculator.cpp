@@ -4,7 +4,7 @@
  *  Created on: 25 May 2018
  *      Author: mm489
  */
-
+#include "X3DTipperCalculator.h"
 #include <complex>
 #include <map>
 #include <chrono>
@@ -13,7 +13,7 @@
 #endif
 #include <boost/make_shared.hpp>
 
-#include "X3DTipperCalculator.h"
+
 #include "../ModelBase/CellBoundaries.h"
 #include "X3DMTCalculator.h"
 #include "X3DFreqFunctions.h"
@@ -130,10 +130,10 @@ namespace jif3D
             Model.GetBackgroundThicknesses().end(), BGDepths.begin());
         CompareDepths(BGDepths, Model.GetZCoordinates());
         std::vector<std::pair<size_t, size_t>> NewExecTime;
-
+#ifdef HAVEOPENMP
         omp_lock_t lck;
         omp_init_lock(&lck);
-
+#endif
         //we parallelize by frequency, this is relatively simple
         //but we can use up to 20 processors for typical MT problems
         // as we do not have the source for x3d, this is our only possibility anyway
@@ -212,15 +212,18 @@ namespace jif3D
                     result[startindex + meas_index + 3] = Ty.imag();
 
                   }
-
+#ifdef HAVEOPENMP
                 omp_set_lock(&lck);
+#endif
                 std::chrono::system_clock::time_point end =
                     std::chrono::system_clock::now();
                 size_t duration = std::chrono::duration_cast < std::chrono::seconds
                     > (end - start).count();
 
                 NewExecTime.push_back(std::make_pair(duration, calcindex));
+#ifdef HAVEOPENMP
                 omp_unset_lock(&lck);
+#endif
               } catch (jif3D::FatalException &e)
               {
                 ErrorMsg = e.what();
@@ -236,9 +239,9 @@ namespace jif3D
 
         std::sort(NewExecTime.begin(), NewExecTime.end());
         ForwardExecTime = NewExecTime;
-
+#ifdef HAVEOPENMP
         omp_destroy_lock(&lck);
-
+#endif
         //we cannot throw from within the openmp section so if there was an exception
         //inside the parallel region we set FatalErrror to true and throw a new exception here
         if (FatalError)
@@ -286,9 +289,10 @@ namespace jif3D
         Model.GetZCoordinates();
 
         std::vector<std::pair<size_t, size_t>> NewExecTime;
+#ifdef HAVEOPENMP
         omp_lock_t lck;
         omp_init_lock(&lck);
-
+#endif
         //we parallelize the gradient calculation by frequency
         //see also the comments for the forward calculation
         //here the explicitly shared variable is Gradient
@@ -313,13 +317,17 @@ namespace jif3D
                     std::chrono::system_clock::now();
                 size_t duration = std::chrono::duration_cast < std::chrono::seconds
                     > (end - start).count();
-
+#ifdef HAVEOPENMP
                 omp_set_lock(&lck);
+#endif
+
                 NewExecTime.push_back(std::make_pair(duration, calcindex));
                 //the total gradient is the sum over the gradients for each frequency
                 std::transform(tmp.Gradient.begin(), tmp.Gradient.end(), Gradient.begin(),
                     Gradient.begin(), std::plus<double>());
+#ifdef HAVEOPENMP
                 omp_unset_lock(&lck);
+#endif
               } catch (jif3D::FatalException &e)
               {
                 ErrorMsg = e.what();
@@ -335,8 +343,9 @@ namespace jif3D
           }
         std::sort(NewExecTime.begin(), NewExecTime.end());
         DerivExecTime = NewExecTime;
+#ifdef HAVEOPENMP
         omp_destroy_lock(&lck);
-
+#endif
         //if we had some exception inside the openmp region, we throw
         // a generic error message
         if (FatalError)

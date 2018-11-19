@@ -110,7 +110,7 @@ namespace jif3D
           ar & v;
           ar & DataTransform;
           ar & CleanFiles;
-          ar & ForwardExecTime;
+          //ar & ForwardExecTime;
         }
       template<class Archive>
       void load(Archive & ar, const unsigned int version)
@@ -128,7 +128,7 @@ namespace jif3D
           std::copy(v.begin(), v.end(), RawImpedance.begin());
           ar & DataTransform;
           ar & CleanFiles;
-          ar & ForwardExecTime;
+          //ar & ForwardExecTime;
         }
 #ifdef HAVEHPX
       HPX_SERIALIZATION_SPLIT_MEMBER()

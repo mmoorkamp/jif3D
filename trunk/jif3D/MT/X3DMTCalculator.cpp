@@ -258,7 +258,7 @@ namespace jif3D
             hpx::naming::id_type const locality_id = localities.at(i % localities.size());
             //std::cout << "Sending frequency: " << i << " to node " << locality_id << std::endl;
             //rvec freqresult = CalculateFrequency(Model, i, TempDir);
-            FreqResult.push_back(async(FreqCalc, locality_id, Info));
+            FreqResult.push_back(async(FreqCalc, locality_id, Info,FieldCalculators.at(i)));
 
           }
         wait_all(FreqResult);
@@ -423,7 +423,7 @@ namespace jif3D
 
             hpx::naming::id_type const locality_id = localities.at(i % localities.size());
             //rvec freqresult = CalculateFrequency(Model, i, TempDir);
-            FreqResult.push_back(async(LQDerivativeFreq, locality_id, Info, GradInfo(ProjMisfit, RawImpedance)));
+            FreqResult.push_back(async(LQDerivativeFreq, locality_id, Info, GradInfo(ProjMisfit, RawImpedance),FieldCalculators.at(i)));
 
           }
         wait_all(FreqResult);
