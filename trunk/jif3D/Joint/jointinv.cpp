@@ -68,7 +68,7 @@ bool WaveletParm = false;
 bool WantSequential = false;
 double xorigin, yorigin;
 double coolingfactor = 1.0;
-
+int saveinterval = 1;
 int hpx_main(boost::program_options::variables_map& vm)
   {
 
@@ -581,14 +581,18 @@ int hpx_main(boost::program_options::variables_map& vm)
                 Objective->MultiplyWeights(jif3D::JointObjective::regularization,
                     coolingfactor);
                 ++iteration;
-                //we save all models at each iteration, so we can look at the development
+                //we save all models at the iterations the user has selected (default is every iteration)
+                //this way  we can look at the development
                 // and use intermediate models in case something goes wrong
-                SaveModel(InvModel, *TomoTransform.get(), TomoModel,
-                    modelfilename + jif3D::stringify(iteration) + ".tomo.inv");
-                SaveModel(InvModel, *MTTransform.get(), MTModel,
-                    modelfilename + jif3D::stringify(iteration) + ".mt.inv");
-                SaveModel(InvModel, *GravityTransform.get(), GravModel,
-                    modelfilename + jif3D::stringify(iteration) + ".grav.inv");
+                if (iteration % saveinterval == 0)
+                {
+                   SaveModel(InvModel, *TomoTransform.get(), TomoModel,
+                       modelfilename + jif3D::stringify(iteration) + ".tomo.inv");
+                   SaveModel(InvModel, *MTTransform.get(), MTModel,
+                       modelfilename + jif3D::stringify(iteration) + ".mt.inv");
+                   SaveModel(InvModel, *GravityTransform.get(), GravModel,
+                       modelfilename + jif3D::stringify(iteration) + ".grav.inv");
+                }
                 //write out some information about misfit to the screen
                 std::cout << "Currrent Misfit: " << Optimizer->GetMisfit() << std::endl;
                 std::cout << "Currrent Gradient: " << Optimizer->GetGradNorm()
@@ -632,6 +636,10 @@ int hpx_main(boost::program_options::variables_map& vm)
         jif3D::rvec TomoDiff(TomoSetup.GetTomoObjective().GetIndividualMisfit());
         jif3D::SaveTraveltimes(modelfilename + ".diff_tt.nc", TomoDiff, TomoError,
             TomoModel);
+        if (vm.count("writerays"))
+        {
+            TomoSetup.GetTomoObjective().GetCalculator().WriteRays("rays.vtk");
+        }
       }
     //if we are inverting gravity data and have specified site locations
     if (havegrav)
@@ -764,7 +772,8 @@ int main(int argc, char* argv[])
         po::value(&coolingfactor)->default_value(1.0),
         "The factor to multiply the weight for the regularization at each iteration EXPERIMENTAL")(
         "sequential",
-        "Do not create a single objective function, but split into on OF per method EXPERIMENTAL");
+        "Do not create a single objective function, but split into on OF per method EXPERIMENTAL")
+		("saveinterval",po::value(&saveinterval)->default_value(1),"The interval in iterations at which intermediate models are saved.");
 //we need to add the description for each part to the boost program options object
 //that way the user can get a help output and the parser object recongnizes these options
     desc.add(TomoSetup.SetupOptions());
