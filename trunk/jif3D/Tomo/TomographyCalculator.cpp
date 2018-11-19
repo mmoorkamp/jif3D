@@ -16,8 +16,8 @@ namespace jif3D
 
     using boost::numeric_cast;
 
-    TomographyCalculator::TomographyCalculator(bool saverays) :
-        writerays(saverays), minxindex(), minyindex(), nairlayers(3), geo(), grid(), data(), raypath()
+    TomographyCalculator::TomographyCalculator() :
+        minxindex(), minyindex(), nairlayers(3), geo(), grid(), data(), raypath()
       {
       }
 
@@ -25,6 +25,13 @@ namespace jif3D
       {
 
       }
+
+    void TomographyCalculator::WriteRays(const std::string &filename) const
+    {
+
+            PlotRaypath("ray.vtk", raypath, data.ndata_seis, grid.h, nairlayers, minxindex,
+                minyindex);
+    }
 
     void TomographyCalculator::Allocate(const size_t ngrid, const size_t ndata,
         const size_t npos)
@@ -199,13 +206,7 @@ namespace jif3D
 
         //now we can do the forward modeling
         ForwardModRay(geo, grid, data, raypath);
-        //we only write out the file with the rays, if the corresponding
-        //option is set to true
-        if (writerays)
-          {
-            PlotRaypath("ray.vtk", raypath, ndata, grid.h, nairlayers, minxindex,
-                minyindex);
-          }
+
         //and return the result as a vector
         jif3D::rvec result(ndata, 0.0);
         /*for (size_t i = 0; i < ndata; ++i)
