@@ -103,6 +103,10 @@ namespace jif3D
       //! The implementation of the gradient calculation
       virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model, const jif3D::rvec &Diff) override;
     public:
+      const ThreeDCalculatorType &GetCalculator() const
+      {
+    	  return Calculator;
+      }
       //! The clone function provides a virtual constructor
       virtual ThreeDModelObjective<ThreeDCalculatorType> *clone() const override
         {

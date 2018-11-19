@@ -10,12 +10,13 @@
 #include "../Global/Noise.h"
 #include "SetupTomo.h"
 #include <iostream>
+#include <boost/make_shared.hpp>
 
 namespace jif3D
   {
 
     SetupTomo::SetupTomo() :
-        pickerr(5.0e-3), tomolambda(0.0)
+        pickerr(5.0e-3), CellSize(), tomolambda(0.0)
       {
       }
 
@@ -81,11 +82,10 @@ namespace jif3D
               {
                 writerays = true;
               }
-            jif3D::TomographyCalculator Calculator(writerays);
+            jif3D::TomographyCalculator Calculator;
 
-            TomoObjective = boost::shared_ptr<
-                jif3D::ThreeDModelObjective<jif3D::TomographyCalculator> >(
-                new jif3D::ThreeDModelObjective<jif3D::TomographyCalculator>(Calculator));
+            TomoObjective = boost::make_shared<jif3D::ThreeDModelObjective<jif3D::TomographyCalculator>>(Calculator);
+
             TomoObjective->SetObservedData(TomoData);
             TomoObjective->SetCoarseModelGeometry(TomoModel);
             //we assume the same error for all measurements
