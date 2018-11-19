@@ -31,8 +31,6 @@ namespace jif3D
       //! This type definition is necessary so that ThreeDModelObjective can correctly deduce the native type for a model object for this class
       typedef ThreeDSeismicModel ModelType;
     private:
-      //! Do we want to write out the file showing the ray distribution
-      bool writerays;
       //! Internally we only calculate traveltime in the area where we have sources and receivers, this is the shift between the model and the internal grid in x-direction
       int minxindex;
       //! Internally we only calculate traveltime in the area where we have sources and receivers, this is the shift between the model and the internal grid in y-direction
@@ -48,7 +46,7 @@ namespace jif3D
       //! The various segments of each raypath through the model cells
       std::vector<jif3D::RP_STRUCT> raypath;
       //! Set a transform for the observed data
-            boost::shared_ptr<jif3D::VectorTransform> DataTransform;
+      boost::shared_ptr<jif3D::VectorTransform> DataTransform;
       //! Perform the dynamic allocation for the c-structures above
       void Allocate(const size_t ngrid, const size_t ndata, const size_t npos);
 
@@ -62,7 +60,6 @@ namespace jif3D
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
         {
-          ar & writerays;
           ar & minxindex;
           ar & minyindex;
           ar & nairlayers;
@@ -72,18 +69,16 @@ namespace jif3D
           ar & raypath;
           ar & DataTransform;
         }
-      //! We can tell the forward modelling object to write out the rays whenever it performs a calculation
-      /*! Writing out rays is helpful to show coverage and identify problems, but the
-       * files can be several Gigabytes, so we have this as an option.
-       * @param saverays If True we write out a .vtk file showing the rays in the model
-       */
-      explicit TomographyCalculator(bool saverays = false);
+      //! The constructor sets everything to default values
+      TomographyCalculator();
       virtual ~TomographyCalculator();
       //! Return the raypath structure for the last forward modelling
       const std::vector<jif3D::RP_STRUCT> &GetRayPath() const
         {
           return raypath;
         }
+      //! Write out ray distribution for the last forward modelling
+      void WriteRays(const std::string &filename) const;
       //! Calculate the travel times for the given model
       /*! This is the core call to the forward modeling code. Has to be performed before LQDerivative can be called
        * @param Model The object containing the slowness distribution and measurement setup
