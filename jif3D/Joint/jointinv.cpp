@@ -24,7 +24,9 @@
 #include "../ModelBase/ReadAnyModel.h"
 #include "../Inversion/JointObjective.h"
 #include "../Inversion/ThreeDModelObjective.h"
+#ifdef HAVEEIGEN
 #include "../Inversion/StochasticCovariance.h"
+#endif
 #include "../Regularization/MinDiffRegularization.h"
 #include "../Inversion/ModelTransforms.h"
 #include "../Tomo/ThreeDSeismicModel.h"
