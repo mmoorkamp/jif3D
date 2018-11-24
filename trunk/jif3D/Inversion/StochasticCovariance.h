@@ -25,6 +25,8 @@ namespace jif3D
       double a;
       double nu;
       double sigma;
+      jif3D::rvec previous_vec;
+      jif3D::rvec previous_result;
       MatrixXd Cm;
       bool HaveInv;
       Eigen::LDLT<MatrixXd > solver;
