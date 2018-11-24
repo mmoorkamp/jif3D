@@ -33,6 +33,7 @@
 #include "../Inversion/DiagonalCovariance.h"
 #ifdef HAVEEIGEN
 #include "../Inversion/StochasticCovariance.h"
+#include "../Inversion/MultiSectionCovariance.h"
 #endif
 #include "../MT/X3DModel.h"
 #include "../MT/X3DMTCalculator.h"
@@ -634,12 +635,18 @@ int hpx_main(boost::program_options::variables_map& vm)
     std::cin >> maxiter;
     std::cout << "Performing inversion." << std::endl;
 
-    boost::shared_ptr<jif3D::GeneralCovariance> CovObj;
+    boost::shared_ptr<jif3D::MultiSectionCovariance> CovObj = boost::make_shared<jif3D::MultiSectionCovariance>(InvModel.size());
     if (CovWidth > 0.0)
       {
 #ifdef HAVEEIGEN
-        CovObj = boost::make_shared<jif3D::StochasticCovariance>(Model.GetModelShape()[0], Model.GetModelShape()[1], Model.GetModelShape()[2], CovWidth,
+        boost::shared_ptr<jif3D::GeneralCovariance> StochCov = boost::make_shared<jif3D::StochasticCovariance>(Model.GetModelShape()[0], Model.GetModelShape()[1], Model.GetModelShape()[2], CovWidth,
             1.0, 1.0);
+        CovObj->AddSection(0,ngrid,StochCov);
+        if (DistCorr > 0)
+          {
+            boost::shared_ptr<jif3D::GeneralCovariance> DistCov = boost::make_shared<jif3D::DiagonalCovariance>();
+            CovObj->AddSection(ngrid,InvModel.size(),DistCov);
+          }
 #else
         std::cerr << "Code has been compiled without support for Stochastic Covariance, you need the Eigen library " << std::endl;
         return 100;
@@ -647,7 +654,8 @@ int hpx_main(boost::program_options::variables_map& vm)
       }
     else
       {
-        CovObj = boost::make_shared<jif3D::DiagonalCovariance>(CovModVec);
+        CovObj->AddSection(0,InvModel.size(),boost::make_shared<jif3D::DiagonalCovariance>(CovModVec));
+
       }
 
     boost::shared_ptr<jif3D::GradientBasedOptimization> Optimizer =
