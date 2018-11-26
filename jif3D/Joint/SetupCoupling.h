@@ -91,7 +91,8 @@ namespace jif3D
           boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart,
           const jif3D::ThreeDModelBase &TearModelX,
           const jif3D::ThreeDModelBase &TearModelY,
-          const jif3D::ThreeDModelBase &TearModelZ);
+          const jif3D::ThreeDModelBase &TearModelZ,
+          const jif3D::rvec &CovVec);
       //! Internal function to setup coupling and regularization when using a fixed parameter relationship
       void SetupFixedCouplingModel(jif3D::rvec &InvModel,
           const jif3D::ThreeDModelBase &ModelGeometry,
@@ -143,6 +144,7 @@ namespace jif3D
        * @param TearModelX The model describing the tear in the regularization in x-direction
        * @param TearModelY The model describing the tear in the regularization in y-direction
        * @param TearModelZ The model describing the tear in the regularization in z-direction
+       * @param CovVec The vector containing the diagonal elements of the model covariance
        */
       void SetupModelVector(const po::variables_map &vm, jif3D::rvec &InvModel,
           const jif3D::ThreeDModelBase &ModelGeometry,
@@ -152,7 +154,8 @@ namespace jif3D
           boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart,
           const jif3D::ThreeDModelBase &TearModelX,
           const jif3D::ThreeDModelBase &TearModelY,
-          const jif3D::ThreeDModelBase &TearModelZ);
+          const jif3D::ThreeDModelBase &TearModelZ,
+          const jif3D::rvec CovVec);
 
       SetupCoupling();
       virtual ~SetupCoupling();
