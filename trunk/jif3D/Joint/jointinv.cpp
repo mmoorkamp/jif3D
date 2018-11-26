@@ -257,7 +257,7 @@ int hpx_main(boost::program_options::variables_map& vm)
     jif3D::rvec InvModel;
     CouplingSetup.SetupModelVector(vm, InvModel, *StartModel, TomoSetup.GetModel(),
         GravitySetup.GetScalModel(), MTSetup.GetModel(), *Objective.get(), Regularization,
-        RegSetup.GetSubStart(),TearModX,TearModY,TearModZ);
+        RegSetup.GetSubStart(),TearModX,TearModY,TearModZ,CovModVec);
     //finally ask for the maximum number of iterations
     size_t maxiter = 1;
     if (!vm.count("iterations"))

@@ -250,7 +250,7 @@ namespace jif3D
         boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart,
         const jif3D::ThreeDModelBase &TearModelX,
         const jif3D::ThreeDModelBase &TearModelY,
-        const jif3D::ThreeDModelBase &TearModelZ)
+        const jif3D::ThreeDModelBase &TearModelZ, const jif3D::rvec &CovVec)
       {
         const size_t ngrid = ModelGeometry.GetNModelElements();
         InvModel.resize(3 * ngrid, 0.0);
@@ -345,32 +345,62 @@ namespace jif3D
         //we ask for a weight and construct a regularization object
         //for each type of physical parameter separately
         //first we set up seismic tomography
-        jif3D::rvec Ones(GravModel.size(), 1.0);
+
+        jif3D::rvec TomoCovVec(ngrid, 1.0);
+        if (CovVec.size() == ngrid)
+          {
+            TomoCovVec = CovVec;
+          }
+        else
+          {
+            TomoCovVec = ublas::subrange(CovVec, 0, ngrid);
+          }
+
         double seisreglambda = 1.0;
         std::cout << " Weight for seismic regularization: ";
         std::cin >> seisreglambda;
         boost::shared_ptr<jif3D::RegularizationFunction> SeisReg(Regularization->clone());
         jif3D::rvec TomoCovar(3 * ngrid);
-        SetupModelCovar(TomoCovar, Ones, SeisReg->GetDataError(), ngrid);
+        SetupModelCovar(TomoCovar, TomoCovVec, SeisReg->GetDataError(), ngrid);
         SeisReg->SetDataError(TomoCovar);
 
         //then the regularization of densities
+
+        jif3D::rvec GravCovVec(ngrid, 1.0);
+        if (CovVec.size() == ngrid)
+          {
+            GravCovVec = CovVec;
+          }
+        else
+          {
+            GravCovVec = ublas::subrange(CovVec, ngrid, 2 * ngrid);
+          }
+
         double gravreglambda = 1.0;
         std::cout << " Weight for gravity regularization: ";
         std::cin >> gravreglambda;
         boost::shared_ptr<jif3D::RegularizationFunction> GravReg(Regularization->clone());
         jif3D::rvec GravCovar(3 * ngrid);
 
-        SetupModelCovar(GravCovar, Ones, GravReg->GetDataError(), ngrid);
+        SetupModelCovar(GravCovar, GravCovVec, GravReg->GetDataError(), ngrid);
         GravReg->SetDataError(GravCovar);
 
         //and finally conductivities
+        jif3D::rvec CondCovVec(ngrid, 1.0);
+        if (CovVec.size() == ngrid)
+          {
+            CondCovVec = CovVec;
+          }
+        else
+          {
+            CondCovVec = ublas::subrange(CovVec, 2*ngrid, 3 * ngrid);
+          }
         double mtreglambda = 1.0;
         std::cout << " Weight for MT regularization: ";
         std::cin >> mtreglambda;
         boost::shared_ptr<jif3D::RegularizationFunction> MTReg(Regularization->clone());
         jif3D::rvec MTCovar(3 * ngrid);
-        SetupModelCovar(MTCovar, Ones, MTReg->GetDataError(), ngrid);
+        SetupModelCovar(MTCovar, CondCovVec, MTReg->GetDataError(), ngrid);
         MTReg->SetDataError(MTCovar);
         //if we specify on the command line that we want to subtract the
         //starting model, we set the corresponding reference model
@@ -607,7 +637,7 @@ namespace jif3D
         boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart,
         const jif3D::ThreeDModelBase &TearModelX,
         const jif3D::ThreeDModelBase &TearModelY,
-        const jif3D::ThreeDModelBase &TearModelZ)
+        const jif3D::ThreeDModelBase &TearModelZ, const jif3D::rvec CovVec)
       {
         //depending on the type of coupling the model vector looks quite different
         //and we have to setup a number of different things
@@ -616,7 +646,8 @@ namespace jif3D
         if (vm.count("crossgrad"))
           {
             SetupCrossGradModel(InvModel, ModelGeometry, SeisMod, GravMod, MTMod,
-                Objective, Regularization, substart,TearModelX,TearModelY,TearModelZ);
+                Objective, Regularization, substart, TearModelX, TearModelY, TearModelZ,
+                CovVec);
           }
         else
           {
