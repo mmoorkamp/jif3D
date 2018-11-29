@@ -27,9 +27,8 @@ namespace jif3D
         //Cm.resize(nmod, nmod);
         //Cmf.resize(nmod * 2);
         //Cmv.resize(nmod * 2);
-        std::vector<double> values;
         double min = 0.0;
-        double max = std::sqrt(jif3D::pow2(nx)+jif3D::pow2(ny)+jif3D::pow2(nz));
+        double max = std::sqrt(jif3D::pow2(nx)+jif3D::pow2(ny)+jif3D::pow2(nz))/a;
         double steps = 1000;
         double delta = (max - min)/steps;
         for (double currval = 0; currval <= max; currval += delta)
@@ -118,6 +117,11 @@ namespace jif3D
             boost::posix_time::microsec_clock::local_time();
         const size_t nmod = nx * ny * nz;
 
+        double min = 0.0;
+        double max = std::sqrt(jif3D::pow2(nx)+jif3D::pow2(ny)+jif3D::pow2(nz))/a;
+        double steps = 1000;
+        double delta = (max - min)/steps;
+
 #pragma omp parallel for default(shared)
         for (size_t i = 0; i < nmod; ++i)
           {
@@ -143,7 +147,9 @@ namespace jif3D
                 //    (ra == 0.0) ?
                 //        1.0 :
                 //        factor * std::pow(ra, nu) * boost::math::cyl_bessel_k(nu, ra);
-                previous_result(i) += spline(ra) * vector(j);
+                int index = (ra - min)/delta;
+                double inter = values[index] + (values[index+1] - values[index])/delta * (ra - index*delta);
+                previous_result(i) += inter * vector(j);
               }
 
           }
