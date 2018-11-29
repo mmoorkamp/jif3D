@@ -27,6 +27,20 @@ namespace jif3D
         //Cm.resize(nmod, nmod);
         //Cmf.resize(nmod * 2);
         //Cmv.resize(nmod * 2);
+        std::vector<double> values;
+        double min = 0.0;
+        double max = std::sqrt(jif3D::pow2(nx)+jif3D::pow2(ny)+jif3D::pow2(nz));
+        double steps = 1000;
+        double delta = (max - min)/steps;
+        for (double currval = 0; currval <= max; currval += delta)
+        {
+        	double res = (currval == 0.0) ?
+        	         1.0 :
+        	         factor * std::pow(currval, nu) * boost::math::cyl_bessel_k(nu,currval);
+        	values.push_back(res);
+        }
+        boost::math::cubic_b_spline<double> localspline(values.begin(), values.end(), min, delta);
+        spline = localspline;
         /*#pragma omp parallel for default(shared)
          for (size_t i = 0; i < nmod; ++i)
          {
@@ -125,11 +139,11 @@ namespace jif3D
                 double r = std::sqrt(
                     jif3D::pow2(xi - xj) + jif3D::pow2(yi - yj) + jif3D::pow2(zi - zj));
                 const double ra = std::abs(r / a);
-                double matelem =
-                    (ra == 0.0) ?
-                        1.0 :
-                        factor * std::pow(ra, nu) * boost::math::cyl_bessel_k(nu, ra);
-                previous_result(i) += matelem * vector(j);
+                //double matelem =
+                //    (ra == 0.0) ?
+                //        1.0 :
+                //        factor * std::pow(ra, nu) * boost::math::cyl_bessel_k(nu, ra);
+                previous_result(i) += spline(ra) * vector(j);
               }
 
           }
