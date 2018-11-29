@@ -30,6 +30,8 @@ namespace jif3D
       jif3D::rvec previous_result;
       MatrixXd Cm;
       bool HaveInv;
+      std::vector<double> values;
+
       Eigen::LDLT<MatrixXd > solver;
       jif3D::cvec Cmv, Cmf;
       boost::math::cubic_b_spline<double> spline;
