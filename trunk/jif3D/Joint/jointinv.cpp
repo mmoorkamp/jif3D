@@ -328,7 +328,7 @@ int hpx_main(boost::program_options::variables_map& vm)
             //we need to expand the model vector to hold the
             //elements of the distortion matrix
             jif3D::rvec Grid(InvModel);
-            InvModel.resize(ngrid + C.size());
+            InvModel.resize(InvModel.size() + C.size());
             std::copy(Grid.begin(), Grid.end(), InvModel.begin());
             std::copy(C.begin(), C.end(), InvModel.begin() + ngrid);
             //also the diagonal of the model covariance needs to
