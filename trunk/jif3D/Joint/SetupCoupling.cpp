@@ -347,6 +347,8 @@ namespace jif3D
         //first we set up seismic tomography
 
         jif3D::rvec TomoCovVec(ngrid, 1.0);
+        if (!CovVec.empty())
+        {
         if (CovVec.size() == ngrid)
           {
             TomoCovVec = CovVec;
@@ -355,7 +357,7 @@ namespace jif3D
           {
             TomoCovVec = ublas::subrange(CovVec, 0, ngrid);
           }
-
+        }
         double seisreglambda = 1.0;
         std::cout << " Weight for seismic regularization: ";
         std::cin >> seisreglambda;
@@ -367,6 +369,8 @@ namespace jif3D
         //then the regularization of densities
 
         jif3D::rvec GravCovVec(ngrid, 1.0);
+        if (!CovVec.empty())
+                {
         if (CovVec.size() == ngrid)
           {
             GravCovVec = CovVec;
@@ -375,7 +379,7 @@ namespace jif3D
           {
             GravCovVec = ublas::subrange(CovVec, ngrid, 2 * ngrid);
           }
-
+                }
         double gravreglambda = 1.0;
         std::cout << " Weight for gravity regularization: ";
         std::cin >> gravreglambda;
@@ -387,6 +391,8 @@ namespace jif3D
 
         //and finally conductivities
         jif3D::rvec CondCovVec(ngrid, 1.0);
+        if (!CovVec.empty())
+                {
         if (CovVec.size() == ngrid)
           {
             CondCovVec = CovVec;
@@ -395,6 +401,7 @@ namespace jif3D
           {
             CondCovVec = ublas::subrange(CovVec, 2*ngrid, 3 * ngrid);
           }
+                }
         double mtreglambda = 1.0;
         std::cout << " Weight for MT regularization: ";
         std::cin >> mtreglambda;
