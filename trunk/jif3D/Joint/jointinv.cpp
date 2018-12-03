@@ -345,8 +345,8 @@ int hpx_main(boost::program_options::variables_map& vm)
             DistReg->SetReferenceModel(CRef);
 
             dynamic_cast<jif3D::MultiSectionTransform *>(MTTransform.get())->SetLength(
-                ngrid + C.size());
-            DistRegTrans->SetLength(ngrid + C.size());
+            		InvModel.size());
+            DistRegTrans->SetLength(InvModel.size());
             dynamic_cast<jif3D::MultiSectionTransform *>(MTTransform.get())->AddSection(
                 ngrid, ngrid + C.size(), Copier);
             Objective->AddObjective(DistReg, DistRegTrans, MTSetup.GetDistCorr(),
