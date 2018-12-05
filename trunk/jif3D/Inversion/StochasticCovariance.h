@@ -11,7 +11,7 @@
 #include "../Global/VecMat.h"
 #include "GeneralCovariance.h"
 #include "../ModelBase/ThreeDModelBase.h"
-#include <Eigen/Dense>
+//#include <Eigen/Dense>
 #include <boost/math/interpolators/cubic_b_spline.hpp>
 
 namespace jif3D
@@ -20,7 +20,7 @@ namespace jif3D
     class StochasticCovariance : public GeneralCovariance
       {
     public:
-      typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> MatrixXd;
+      //typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> MatrixXd;
     private:
       size_t nx, ny, nz;
       double a;
@@ -28,11 +28,11 @@ namespace jif3D
       double sigma;
       jif3D::rvec previous_vec;
       jif3D::rvec previous_result;
-      MatrixXd Cm;
+      //MatrixXd Cm;
       bool HaveInv;
       std::vector<double> values;
 
-      Eigen::LDLT<MatrixXd > solver;
+      //Eigen::LDLT<MatrixXd > solver;
       jif3D::cvec Cmv, Cmf;
       boost::math::cubic_b_spline<double> spline;
       void OffsetToIndex(int offset, int &xi, int &yi, int &zi) const
@@ -43,10 +43,10 @@ namespace jif3D
           xi = (xi - yi) / ny;
         }
     public:
-      const MatrixXd &GetCovar()
-        {
-          return Cm;
-        }
+      //const MatrixXd &GetCovar()
+      //  {
+      //    return Cm;
+      //  }
       virtual jif3D::rvec ApplyCovar(const jif3D::rvec &vector) override;
       virtual jif3D::rvec ApplyInvCovar(const jif3D::rvec &vector) override;
       StochasticCovariance(size_t x, size_t y, size_t z, double ma, double mnu, double msigma);
