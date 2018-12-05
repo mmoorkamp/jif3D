@@ -638,7 +638,8 @@ int hpx_main(boost::program_options::variables_map& vm)
     boost::shared_ptr<jif3D::MultiSectionCovariance> CovObj = boost::make_shared<jif3D::MultiSectionCovariance>(InvModel.size());
     if (CovWidth > 0.0)
       {
-#ifdef HAVEEIGEN
+//#ifdef HAVEEIGEN
+
         boost::shared_ptr<jif3D::GeneralCovariance> StochCov = boost::make_shared<jif3D::StochasticCovariance>(Model.GetModelShape()[0], Model.GetModelShape()[1], Model.GetModelShape()[2], CovWidth,
             1.0, 1.0);
         CovObj->AddSection(0,ngrid,StochCov);
@@ -647,10 +648,10 @@ int hpx_main(boost::program_options::variables_map& vm)
             boost::shared_ptr<jif3D::GeneralCovariance> DistCov = boost::make_shared<jif3D::DiagonalCovariance>();
             CovObj->AddSection(ngrid,InvModel.size(),DistCov);
           }
-#else
-        std::cerr << "Code has been compiled without support for Stochastic Covariance, you need the Eigen library " << std::endl;
-        return 100;
-#endif
+//#else
+//        std::cerr << "Code has been compiled without support for Stochastic Covariance, you need the Eigen library " << std::endl;
+//        return 100;
+//#endif
       }
     else
       {
