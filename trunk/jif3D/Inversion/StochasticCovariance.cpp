@@ -38,8 +38,8 @@ namespace jif3D
         	         factor * std::pow(currval, nu) * boost::math::cyl_bessel_k(nu,currval);
         	values.push_back(res);
         }
-        boost::math::cubic_b_spline<double> localspline(values.begin(), values.end(), min, delta);
-        spline = localspline;
+//        boost::math::cubic_b_spline<double> localspline(values.begin(), values.end(), min, delta);
+  //      spline = localspline;
         /*#pragma omp parallel for default(shared)
          for (size_t i = 0; i < nmod; ++i)
          {
