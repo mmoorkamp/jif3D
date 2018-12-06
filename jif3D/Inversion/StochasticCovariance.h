@@ -12,7 +12,7 @@
 #include "GeneralCovariance.h"
 #include "../ModelBase/ThreeDModelBase.h"
 //#include <Eigen/Dense>
-#include <boost/math/interpolators/cubic_b_spline.hpp>
+//#include <boost/math/interpolators/cubic_b_spline.hpp>
 
 namespace jif3D
   {
@@ -34,7 +34,7 @@ namespace jif3D
 
       //Eigen::LDLT<MatrixXd > solver;
       jif3D::cvec Cmv, Cmf;
-      boost::math::cubic_b_spline<double> spline;
+      //boost::math::cubic_b_spline<double> spline;
       void OffsetToIndex(int offset, int &xi, int &yi, int &zi) const
         {
           zi = offset % nz;

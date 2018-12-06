@@ -8,8 +8,8 @@ lib inversion : NonLinearOptimization.cpp
 				MatrixTools.cpp
 				ObjectiveFunction.cpp JointObjective.cpp 
 				DiagonalCovariance.cpp 
+				StochasticCovariance.cpp
 				../ModelBase//modelbase
-				: <eigen>on:<source>StochasticCovariance.cpp
                  ;
 
 lib lininv : LinearInversion.cpp  : <lapack>on:<library>..//vecopt  <lapack>on:<source>GeneralizedInverse.cpp ;
