@@ -22,12 +22,13 @@ namespace jif3D
     public:
       //typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> MatrixXd;
     private:
-      size_t nx, ny, nz;
+      int nx, ny, nz;
       double a;
       double nu;
       double sigma;
       jif3D::rvec previous_vec;
       jif3D::rvec previous_result;
+      int distindex;
       //MatrixXd Cm;
       bool HaveInv;
       std::vector<double> values;
@@ -41,6 +42,10 @@ namespace jif3D
           xi = (offset - zi) / nz;
           yi = xi % ny;
           xi = (xi - yi) / ny;
+        }
+      int IndexToOffset(int xi, int yi, int zi) const
+        {
+          return nz * (xi * ny + yi) + zi;
         }
     public:
       //const MatrixXd &GetCovar()
