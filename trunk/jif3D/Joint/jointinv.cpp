@@ -24,9 +24,9 @@
 #include "../ModelBase/ReadAnyModel.h"
 #include "../Inversion/JointObjective.h"
 #include "../Inversion/ThreeDModelObjective.h"
-#ifdef HAVEEIGEN
+#include "../Inversion/MultiSectionCovariance.h"
 #include "../Inversion/StochasticCovariance.h"
-#endif
+
 #include "../Regularization/MinDiffRegularization.h"
 #include "../Inversion/ModelTransforms.h"
 #include "../Tomo/ThreeDSeismicModel.h"
@@ -71,6 +71,9 @@ bool WantSequential = false;
 double xorigin, yorigin;
 double coolingfactor = 1.0;
 int saveinterval = 1;
+double CovWidth = 3.0;
+
+
 int hpx_main(boost::program_options::variables_map& vm)
   {
 
@@ -258,6 +261,7 @@ int hpx_main(boost::program_options::variables_map& vm)
     CouplingSetup.SetupModelVector(vm, InvModel, *StartModel, TomoSetup.GetModel(),
         GravitySetup.GetScalModel(), MTSetup.GetModel(), *Objective.get(), Regularization,
         RegSetup.GetSubStart(),TearModX,TearModY,TearModZ,CovModVec);
+
     //finally ask for the maximum number of iterations
     size_t maxiter = 1;
     if (!vm.count("iterations"))
@@ -291,6 +295,30 @@ int hpx_main(boost::program_options::variables_map& vm)
             TomoSetup.GetModel().GetSourcePosZ());
       }
 
+    const size_t nparm = InvModel.size();
+    const size_t ncovmod = CovModVec.size();
+    std::cout << nparm << " Inversion parameters " << ncovmod << " Covariance values " << std::endl;
+    jif3D::rvec CovVec(nparm,1.0);
+    if (!CovModVec.empty())
+      {
+
+        if (nparm % ncovmod != 0)
+          throw jif3D::FatalException(
+              "Size of inversion model vector: " + jif3D::stringify(nparm)
+                  + " is not a multiple of covariance model size: "
+                  + jif3D::stringify(ncovmod) + "!", __FILE__, __LINE__);
+
+        const size_t nsections = nparm / ncovmod;
+        for (size_t i = 0; i < nsections; ++i)
+          {
+            for (size_t j = 0; j < ncovmod; ++j)
+              {
+                CovVec(j + i * ncovmod) = std::abs(CovModVec(j));
+              }
+
+          }
+      }
+
     const size_t nmtsites = MTSetup.GetModel().GetMeasPosX().size();
     jif3D::rvec CRef(nmtsites * 4);
     for (size_t i = 0; i < nmtsites; ++i)
@@ -301,8 +329,12 @@ int hpx_main(boost::program_options::variables_map& vm)
         CRef(i * 4 + 3) = 1.0;
       }
     boost::shared_ptr<jif3D::GeneralModelTransform> Copier(new jif3D::ModelCopyTransform);
+    //this transformation only becomes active if we use distortion correction with MT data
+    //in this case we add extra inversion parameters beyond the current ones
+    //so we set it up here that we can access it later, but with a parameter setting that only
+    //works if we actually have distortion correction, so we have to be careful later
     boost::shared_ptr<jif3D::MultiSectionTransform> DistRegTrans(
-        new jif3D::MultiSectionTransform(InvModel.size(), ngrid, ngrid + CRef.size(),
+        new jif3D::MultiSectionTransform(InvModel.size() + CRef.size(), InvModel.size(), InvModel.size() + CRef.size(),
             Copier));
     if (havemt)
       {
@@ -330,7 +362,7 @@ int hpx_main(boost::program_options::variables_map& vm)
             jif3D::rvec Grid(InvModel);
             InvModel.resize(InvModel.size() + C.size());
             std::copy(Grid.begin(), Grid.end(), InvModel.begin());
-            std::copy(C.begin(), C.end(), InvModel.begin() + ngrid);
+            std::copy(C.begin(), C.end(), InvModel.begin() + Grid.size());
             //also the diagonal of the model covariance needs to
             //accommodate the new parameters
             jif3D::rvec OldCov(CovModVec);
@@ -346,9 +378,9 @@ int hpx_main(boost::program_options::variables_map& vm)
 
             dynamic_cast<jif3D::MultiSectionTransform *>(MTTransform.get())->SetLength(
             		InvModel.size());
-            DistRegTrans->SetLength(InvModel.size());
+            //DistRegTrans->SetLength(InvModel.size());
             dynamic_cast<jif3D::MultiSectionTransform *>(MTTransform.get())->AddSection(
-                ngrid, ngrid + C.size(), Copier);
+                Grid.size(), InvModel.size(), Copier);
             Objective->AddObjective(DistReg, DistRegTrans, MTSetup.GetDistCorr(),
                 "DistReg", jif3D::JointObjective::regularization);
           }
@@ -532,31 +564,29 @@ int hpx_main(boost::program_options::variables_map& vm)
     else
       {
 
-        const size_t nparm = InvModel.size();
-        const size_t ncovmod = CovModVec.size();
-
-        jif3D::rvec CovVec(nparm,1.0);
-        if (!CovModVec.empty())
+        boost::shared_ptr<jif3D::MultiSectionCovariance> CovObj = boost::make_shared<jif3D::MultiSectionCovariance>(InvModel.size());
+        if (CovWidth > 0.0)
           {
 
-            if (nparm % ncovmod != 0)
-              throw jif3D::FatalException(
-                  "Size of inversion model vector: " + jif3D::stringify(nparm)
-                      + " is not a multiple of covariance model size: "
-                      + jif3D::stringify(ncovmod) + "!", __FILE__, __LINE__);
-
-            const size_t nsections = nparm / ncovmod;
-            for (size_t i = 0; i < nsections; ++i)
+            boost::shared_ptr<jif3D::GeneralCovariance> StochCov = boost::make_shared<jif3D::StochasticCovariance>(TomoModel.GetModelShape()[0],
+            		TomoModel.GetModelShape()[1], TomoModel.GetModelShape()[2], CovWidth, 1.0, 1.0);
+            CovObj->AddSection(0,ngrid,StochCov);
+            CovObj->AddSection(ngrid,2*ngrid,StochCov);
+            CovObj->AddSection(2*ngrid,3*ngrid,StochCov);
+            if (MTSetup.GetDistCorr() > 0)
               {
-                for (size_t j = 0; j < ncovmod; ++j)
-                  {
-                    CovVec(j + i * ncovmod) = std::abs(CovModVec(j));
-                  }
-
+                boost::shared_ptr<jif3D::GeneralCovariance> DistCov = boost::make_shared<jif3D::DiagonalCovariance>();
+                CovObj->AddSection(ngrid,InvModel.size(),DistCov);
               }
           }
+        else
+          {
+            CovObj->AddSection(0,InvModel.size(),boost::make_shared<jif3D::DiagonalCovariance>(CovVec));
 
-        auto CovObj = boost::make_shared<jif3D::DiagonalCovariance>(CovVec);
+          }
+
+
+        //auto CovObj = boost::make_shared<jif3D::DiagonalCovariance>(CovVec);
 
         boost::shared_ptr<jif3D::GradientBasedOptimization> Optimizer =
             InversionSetup.ConfigureInversion(vm, Objective, InvModel, CovObj);
@@ -687,8 +717,12 @@ int hpx_main(boost::program_options::variables_map& vm)
     //if we are inverting MT data and have specified site locations
     if (havemt)
       {
-        jif3D::rvec tmp = DistRegTrans->GeneralizedToPhysical(InvModel);
-        std::vector<double> C(tmp.begin(), tmp.end());
+    	std::vector<double> C;
+    	if (MTSetup.GetDistCorr() > 0.0)
+    	{
+          jif3D::rvec tmp = DistRegTrans->GeneralizedToPhysical(InvModel);
+          std::copy(tmp.begin(),tmp.end(),std::back_inserter(C));
+    	}
         //calculate MT inversion result
         jif3D::rvec MTInvData(MTSetup.GetMTObjective().GetSyntheticData());
         jif3D::rvec MTObsData(MTSetup.GetMTObjective().GetObservedData());
@@ -775,7 +809,9 @@ int main(int argc, char* argv[])
         "The factor to multiply the weight for the regularization at each iteration EXPERIMENTAL")(
         "sequential",
         "Do not create a single objective function, but split into on OF per method EXPERIMENTAL")
-		("saveinterval",po::value(&saveinterval)->default_value(1),"The interval in iterations at which intermediate models are saved.");
+		("saveinterval",po::value(&saveinterval)->default_value(1),"The interval in iterations at which intermediate models are saved.")
+		("stochcov", po::value(&CovWidth)->default_value(0),
+		        "Width of stochastic regularization, enabled if > 0, EXPERIMENTAL");
 //we need to add the description for each part to the boost program options object
 //that way the user can get a help output and the parser object recongnizes these options
     desc.add(TomoSetup.SetupOptions());
