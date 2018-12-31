@@ -575,10 +575,10 @@ int hpx_main(boost::program_options::variables_map& vm)
                 std::pow(TipperData(4 * i + 1), 2) + std::pow(TipperData(4 * i + 3), 2));
             TE(4 * i) = std::max(std::max(abs_re * tiprelerr, TError(4 * i)),
                 TError(4 * i + 2));
-            TE(4 * i + 2) = TError(4 * i);
+            TE(4 * i + 2) = TE(4 * i);
             TE(4 * i + 1) = std::max(std::max(abs_im * tiprelerr, TError(4 * i)),
                 TError(4 * i + 2));
-            TE(4 * i + 3) = TError(4 * i + 1);
+            TE(4 * i + 3) = TE(4 * i + 1);
           }
         TError = TE;
         std::transform(TError.begin(), TError.end(), TError.begin(), [](double a)
