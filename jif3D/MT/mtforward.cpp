@@ -220,8 +220,25 @@ int main(int argc, char *argv[])
 
     jif3D::X3DTipperCalculator TipCalc(TempDir, X3DName);
     jif3D::rvec Tipper = TipCalc.Calculate(MTModel);
+
+    const size_t ntip = Tipper.size();
+    jif3D::rvec TipErrors(ntip, 0.0);
+
+    for (size_t i = 0; i < ntip; i += 4)
+      {
+        double maxtip = *std::max_element(Tipper.begin() + i,
+            Tipper.begin() + i + 4, [](double a, double b)
+              { return std::abs(a) < std::abs(b);});
+        double threshold = std::max(absnoise, std::abs(range * maxtip));
+        std::transform(Tipper.begin() + i, Tipper.begin() + i + 4,
+            TipErrors.begin() + i, [&] (double d) -> double
+              { return std::max(std::abs(d * relnoise),threshold);});
+      }
+
+    jif3D::AddNoise(Tipper, relnoise, TipErrors);
+
     jif3D::WriteTipperToNetCDF(outfilename + ".tip.nc", MTModel.GetFrequencies(),
-        MTModel.GetMeasPosX(), MTModel.GetMeasPosY(), MTModel.GetMeasPosZ(), Tipper);
+        MTModel.GetMeasPosX(), MTModel.GetMeasPosY(), MTModel.GetMeasPosZ(), Tipper,TipErrors);
 
     MTModel.WriteVTK(modelfilename + ".vtk");
     MTModel.WriteModEM(modelfilename + ".dat");
