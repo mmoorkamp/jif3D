@@ -40,6 +40,8 @@ exe convertmtt : convertmtt.cpp   ../Global//global ../MT//mt ..//boost_filesyst
 exe onedmtinv : onedmtinv.cpp   joint ../MT//mt ..//boost_program_options ..//boost_filesystem ..//boost_system ;
 exe nnmtinv : nnmtinv.cpp   joint ../MT//mt ..//boost_program_options ..//boost_filesystem ..//boost_system ;
 exe writemtt : writemtt.cpp  ../ModelBase//modelbase ../MT//mt ../Global//global ..//boost_filesystem ..//boost_system ;
+exe mergemtdata : mergemtdata.cpp  ../ModelBase//modelbase ../MT//mt ../Global//global ..//boost_filesystem ..//boost_system ;
+
 exe rotatemt : rotatemt.cpp   ../MT//mt common  ;
 exe rotatetomo : rotatetomo.cpp  joint ..//boost_filesystem ..//boost_system ;
 exe rotategrav : rotategrav.cpp  joint ..//boost_filesystem ..//boost_system ;
