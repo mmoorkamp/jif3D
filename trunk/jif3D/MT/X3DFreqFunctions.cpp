@@ -528,48 +528,47 @@ GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::rvec &Misf
             * Info.Model.GetFrequencies()[Info.freqindex]);
     for (size_t j = 0; j < nstats; ++j)
       {
-
+        const size_t hxind = Info.Model.GetHxIndices()[j + ind_shift];
+        const size_t hyind = Info.Model.GetHyIndices()[j + ind_shift];
+        const size_t hzind = Info.Model.GetHzIndices()[j + ind_shift];
         boost::array<ThreeDModelBase::t3DModelData::index, 3> StationHxIndex =
             Info.Model.FindAssociatedIndices(
-                Info.Model.GetMeasPosX()[Info.Model.GetHxIndices()[j + ind_shift]],
-                Info.Model.GetMeasPosY()[Info.Model.GetHxIndices()[j + ind_shift]],
-                Info.Model.GetMeasPosZ()[Info.Model.GetHxIndices()[j + ind_shift]]);
+                Info.Model.GetMeasPosX()[hxind],
+                Info.Model.GetMeasPosY()[hxind],
+                Info.Model.GetMeasPosZ()[hxind]);
         const size_t offset_Hx = (nmodx * nmody)
-            * MeasDepthIndices[Info.Model.GetHxIndices()[j + ind_shift]]
+            * MeasDepthIndices[hxind]
             + StationHxIndex[0] * nmody + StationHxIndex[1];
 
         boost::array<ThreeDModelBase::t3DModelData::index, 3> StationHyIndex =
             Info.Model.FindAssociatedIndices(
-                Info.Model.GetMeasPosX()[Info.Model.GetHyIndices()[j + ind_shift]],
-                Info.Model.GetMeasPosY()[Info.Model.GetHyIndices()[j + ind_shift]],
-                Info.Model.GetMeasPosZ()[Info.Model.GetHyIndices()[j + ind_shift]]);
+                Info.Model.GetMeasPosX()[hyind],
+                Info.Model.GetMeasPosY()[hyind],
+                Info.Model.GetMeasPosZ()[hyind]);
         const size_t offset_Hy = (nmodx * nmody)
-            * MeasDepthIndices[Info.Model.GetHyIndices()[j + ind_shift]]
+            * MeasDepthIndices[hyind]
             + StationHyIndex[0] * nmody + StationHyIndex[1];
 
         boost::array<ThreeDModelBase::t3DModelData::index, 3> StationHzIndex =
             Info.Model.FindAssociatedIndices(
-                Info.Model.GetMeasPosX()[Info.Model.GetHzIndices()[j + ind_shift]],
-                Info.Model.GetMeasPosY()[Info.Model.GetHzIndices()[j + ind_shift]],
-                Info.Model.GetMeasPosZ()[Info.Model.GetHzIndices()[j + ind_shift]]);
+                Info.Model.GetMeasPosX()[hzind],
+                Info.Model.GetMeasPosY()[hzind],
+                Info.Model.GetMeasPosZ()[hzind]);
         const size_t offset_Hz = (nmodx * nmody)
-            * MeasDepthIndices[Info.Model.GetHzIndices()[j + ind_shift]]
+            * MeasDepthIndices[hzind]
             + StationHzIndex[0] * nmody + StationHzIndex[1];
 
         HxSourceXIndex.at(j) = StationHxIndex[0];
         HxSourceYIndex.at(j) = StationHxIndex[1];
-        HxSourceDepth.at(j) = Info.Model.GetMeasPosZ()[Info.Model.GetHxIndices()[j
-            + ind_shift]];
+        HxSourceDepth.at(j) = Info.Model.GetMeasPosZ()[hxind];
 
         HySourceXIndex.at(j) = StationHyIndex[0];
         HySourceYIndex.at(j) = StationHyIndex[1];
-        HySourceDepth.at(j) = Info.Model.GetMeasPosZ()[Info.Model.GetHyIndices()[j
-            + ind_shift]];
+        HySourceDepth.at(j) = Info.Model.GetMeasPosZ()[hyind];
 
         HzSourceXIndex.at(j) = StationHzIndex[0];
         HzSourceYIndex.at(j) = StationHzIndex[1];
-        HzSourceDepth.at(j) = Info.Model.GetMeasPosZ()[Info.Model.GetHzIndices()[j
-            + ind_shift]];
+        HzSourceDepth.at(j) = Info.Model.GetMeasPosZ()[hzind];
 
         std::complex<double> Hx1 = Calc->GetHx1()[offset_Hx];
         std::complex<double> Hx2 = Calc->GetHx2()[offset_Hx];
@@ -589,10 +588,14 @@ GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::rvec &Misf
         HZPolMoments1.at(j) = -omega_mu * magdet * (A00 * Hy2 - A01 * Hx2);
         HZPolMoments2.at(j) = -omega_mu * magdet * (-A00 * Hy1 + A01 * Hx1);
 
+
+
         HXPolMoments1.at(j) = -Tx * HZPolMoments1[j];
         HYPolMoments1.at(j) = -Ty * HZPolMoments1[j];
         HXPolMoments2.at(j) = -Tx * HZPolMoments2[j];
         HYPolMoments2.at(j) = -Ty * HZPolMoments2[j];
+
+
       }
 
     std::vector<std::complex<double> > Ux1_mag, Ux2_mag, Uy1_mag, Uy2_mag, Uz1_mag,
@@ -619,11 +622,10 @@ GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::rvec &Misf
       {
         Volume = cell_sizex * cell_sizey * Info.Model.GetZCellSizes()[j % nmodz];
         //this is an implementation of eq. 14 in Avdeev and Avdeeva
-        gradinc = std::real(
+        Gradient(j) = std::real(
             Ux1_mag[j] * Ex1_all[j] + Uy1_mag[j] * Ey1_all[j] + Uz1_mag[j] * Ez1_all[j]
                 + Ux2_mag[j] * Ex2_all[j] + Uy2_mag[j] * Ey2_all[j]
                 + Uz2_mag[j] * Ez2_all[j]) * Volume;
-        Gradient(j) += gradinc;
       }
     return GradResult(Gradient);
   }
