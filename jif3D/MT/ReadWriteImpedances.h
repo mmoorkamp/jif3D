@@ -136,9 +136,11 @@ namespace jif3D
      * @param Impedances The impedances in the same convention as above
      * @param Errors The impedance errors recorded in the file, will have the same number of elements as Impedances
      *        but the values for the real and imaginary part of each element are always identical
+     * @param Tipper The tipper for the same frequencies as the impedances, convention Txr,Txi,Tyr,Tyi,... with same convention as impedances, i.e. frequency varies slowest
+     * @param TippErr The error for the tipper
      */
     J3DEXPORT void ReadImpedancesFromMTT(const std::string &filename,
-        std::vector<double> &Frequencies, jif3D::rvec &Impedances, jif3D::rvec &Errors);
+        std::vector<double> &Frequencies, jif3D::rvec &Impedances, jif3D::rvec &Errors, jif3D::rvec &Tipper, jif3D::rvec &TippErr);
 
     //! A very basic routine to write impedances for several sites to  .mtt files in the format used by University of Goettingen.
     /*! A very basic routine to write impedances for several sites to  .mtt files in the format used by University of Goettingen.

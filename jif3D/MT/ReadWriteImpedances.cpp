@@ -374,7 +374,7 @@ namespace jif3D
       }
 
     void ReadImpedancesFromMTT(const std::string &filename,
-        std::vector<double> &Frequencies, jif3D::rvec &Impedances, jif3D::rvec &Errors)
+        std::vector<double> &Frequencies, jif3D::rvec &Impedances, jif3D::rvec &Errors, jif3D::rvec &Tipper, jif3D::rvec &TippErr)
       {
         std::ifstream infile;
         double currentreal, currentimag;
@@ -395,9 +395,12 @@ namespace jif3D
         const int nrecords = (nentries - 1) / 23;
         Impedances.resize(nrecords * 8);
         Errors.resize(nrecords * 8);
+        Tipper.resize(nrecords * 4);
+        TippErr.resize(nrecords * 4);
         Frequencies.resize(nrecords);
         infile.open(filename.c_str());
         int currentrecord = 0;
+        int currentip =0;
         if (infile)
           {
             while (infile.good()) // read in inputfile
@@ -417,13 +420,13 @@ namespace jif3D
                         >> Errors(currentrecord + 4) >> Errors(currentrecord + 6);
                     //fpr the moment we ignore these values in the .mtt file
                     //Tx
-                    infile >> currentreal >> currentimag;
+                    infile >> Tipper(currentip) >> Tipper(currentip+1);
                     //Ty
-                    infile >> currentreal >> currentimag;
+                    infile >> Tipper(currentip+2) >> Tipper(currentip+3);
                     //dTx
-                    infile >> currentreal;
+                    infile >> TippErr(currentip);
                     //dTy
-                    infile >> currentreal;
+                    infile >> TippErr(currentip+2);
                     //Coherence Rx
                     infile >> currentreal;
                     //Coherence Ry
@@ -432,6 +435,7 @@ namespace jif3D
                     infile >> currentreal;
 
                     currentrecord += 8;
+                    currentip +=4;
                   }
               }
             infile.close();
@@ -442,6 +446,11 @@ namespace jif3D
               {
                 Errors(i + 1) = Errors(i);
               }
+            for (size_t i = 0; i < TippErr.size() - 1; i += 2)
+              {
+                TippErr(i + 1) = TippErr(i);
+              }
+
             //convert the units in the .mtt file (km/s) into S.I units (Ohm)
             const double convfactor = 4.0 * 1e-4 * acos(-1.0);
             Impedances *= convfactor;
