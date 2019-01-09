@@ -144,15 +144,15 @@ jif3D::rvec StochasticCovariance::ApplyCovar(const jif3D::rvec &vector) {
 		for (size_t j = startx; j < endx; ++j) {
 			for (size_t k = starty; k < endy; ++k) {
 				for (size_t l = startz; l < endz; ++l) {
-					int offset = IndexToOffset(j,k,l);
-					double r = std::sqrt(
+					const int offset = IndexToOffset(j,k,l);
+					const double r = std::sqrt(
 							jif3D::pow2(xi - j) + jif3D::pow2(yi - k)
 									+ jif3D::pow2(zi - l));
-					int index = std::round((r - min) / delta);
-					double inter = values[index]
-							+ (values[index + 1] - values[index]) / delta
-									* (r - index * delta);
-					previous_result(i) += inter * vector(offset);
+					const int index = std::round((r - min) / delta);
+					//double inter = values[index]
+						//	+ (values[index + 1] - values[index]) / delta
+						//			* (r - index * delta);
+					previous_result(i) += values[index] * vector(offset);
 				}
 			}
 		}
