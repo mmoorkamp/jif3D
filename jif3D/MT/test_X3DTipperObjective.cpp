@@ -29,8 +29,8 @@ BOOST_AUTO_TEST_SUITE( X3DTipperObjective_Suite )
 
     void MakeMTModel(jif3D::X3DModel &Model)
       {
-        const size_t xsize = 4;
-        const size_t ysize = 3;
+        const size_t xsize = 12;
+        const size_t ysize = 9;
         const size_t zsize = 2;
         const size_t nbglayers = 2;
         const size_t nmod = xsize * ysize * zsize;
@@ -42,15 +42,23 @@ BOOST_AUTO_TEST_SUITE( X3DTipperObjective_Suite )
 
         const double deltax = 100.0;
         const double deltay = 100.0;
-        const double deltaz = 100.0;
+        const double deltaz = 300.0;
         Model.SetHorizontalCellSize(deltax, deltay, xsize, ysize);
 
         std::fill_n(Model.SetZCellSizes().begin(), zsize, deltaz);
-        Model.SetZCellSizes()[1] = deltaz * 2.0;
-        std::fill_n(Model.SetConductivities().origin(), nmod, 0.02);
+        Model.SetZCellSizes()[1] = deltaz;
+        std::fill_n(Model.SetConductivities().origin(), nmod, 0.01);
 
-        Model.SetConductivities()[0][0][0] = 0.025;
-        std::fill_n(bg_conductivities.begin(), nbglayers, 0.02);
+        Model.SetConductivities()[xsize / 2 + 1][ysize / 2][0] = 0.025;
+        Model.SetConductivities()[xsize / 2][ysize / 2][0] = 0.025;
+        Model.SetConductivities()[xsize / 2 - 1][ysize / 2][0] = 0.025;
+        Model.SetConductivities()[xsize / 2 + 1][ysize / 2 + 1][0] = 0.025;
+        Model.SetConductivities()[xsize / 2][ysize / 2 + 1][0] = 0.025;
+        Model.SetConductivities()[xsize / 2 - 1][ysize / 2 + 1][0] = 0.025;
+        Model.SetConductivities()[xsize / 2 + 1][ysize / 2 - 1][0] = 0.025;
+        Model.SetConductivities()[xsize / 2][ysize / 2 - 1][0] = 0.025;
+        Model.SetConductivities()[xsize / 2 - 1][ysize / 2 - 1][0] = 0.025;
+        std::fill_n(bg_conductivities.begin(), nbglayers, 0.01);
         for (size_t i = 0; i < nbglayers; ++i)
           {
             bg_conductivities[i] *= 1.05 + i * 0.1;
@@ -59,19 +67,17 @@ BOOST_AUTO_TEST_SUITE( X3DTipperObjective_Suite )
 
         Model.SetBackgroundConductivities(bg_conductivities);
         Model.SetBackgroundThicknesses(bg_thicknesses);
+        //Model.SetFrequencies().push_back(0.1);
+        //Model.SetFrequencies().push_back(2.0);
+        //Model.SetFrequencies().push_back(5.0);
         Model.SetFrequencies().push_back(1.0);
-        Model.SetFrequencies().push_back(2.0);
-        Model.SetFrequencies().push_back(5.0);
-        Model.SetFrequencies().push_back(10.0);
-        for (size_t i = 1; i < xsize - 1; ++i)
+        const size_t nsites = 2;
+        const double startx = 450.0;
+        const double starty = 450.0;
+        for (size_t i = 1; i < nsites; ++i)
           {
-            for (size_t j = 1; j < ysize - 1; ++j)
-              {
-                double currx = Model.GetXCoordinates()[i] + deltax / 3.0;
-                double curry = Model.GetYCoordinates()[j] + deltay / 4.0;
-                double currz = (j - 1) * deltaz;
-                Model.AddMeasurementPoint(currx, curry, currz);
-              }
+
+            Model.AddMeasurementPoint(startx+i*deltax, starty+i*deltay, 0.0);
           }
       }
 
@@ -94,7 +100,15 @@ BOOST_AUTO_TEST_SUITE( X3DTipperObjective_Suite )
 
         jif3D::X3DModel TrueModel(Model);
         std::fill_n(TrueModel.SetConductivities().origin(), nmod, 0.01);
-
+        TrueModel.SetConductivities()[xsize / 2 + 1][ysize / 2][0] = 0.0025;
+        TrueModel.SetConductivities()[xsize / 2][ysize / 2][0] = 0.0025;
+        TrueModel.SetConductivities()[xsize / 2 - 1][ysize / 2][0] = 0.0025;
+        TrueModel.SetConductivities()[xsize / 2 + 1][ysize / 2 + 1][0] = 0.0025;
+        TrueModel.SetConductivities()[xsize / 2][ysize / 2 + 1][0] = 0.0025;
+        TrueModel.SetConductivities()[xsize / 2 - 1][ysize / 2 + 1][0] = 0.0025;
+        TrueModel.SetConductivities()[xsize / 2 + 1][ysize / 2 - 1][0] = 0.0025;
+        TrueModel.SetConductivities()[xsize / 2][ysize / 2 - 1][0] = 0.0025;
+        TrueModel.SetConductivities()[xsize / 2 - 1][ysize / 2 - 1][0] = 0.0025;
         //we want to test the distortion correction as well
         boost::filesystem::path TDir = boost::filesystem::current_path();
         jif3D::X3DTipperCalculator Calculator(TDir, "x3d", true);
@@ -107,10 +121,22 @@ BOOST_AUTO_TEST_SUITE( X3DTipperObjective_Suite )
         //jif3D::WriteImpedancesToNetCDF("gra1dimp.nc", Freq, TrueModel.GetMeasPosX(),
         //    TrueModel.GetMeasPosY(), TrueModel.GetMeasPosZ(), Observed);
 
+        jif3D::X3DModel FineModel;
+        FineModel.SetMeshSize(3 * xsize, 3 * ysize, 3 * zsize);
+        FineModel.SetHorizontalCellSize(100.0, 100.0, 3 * xsize, 3 * ysize);
+        std::fill_n(FineModel.SetZCellSizes().begin(), 3 * zsize, 100.0);
+        FineModel.SetBackgroundConductivities(Model.GetBackgroundConductivities());
+        FineModel.SetBackgroundThicknesses(Model.GetBackgroundThicknesses());
+        FineModel.SetFrequencies() = Model.GetFrequencies();
+        for (size_t i = 0; i < Model.GetMeasPosX().size(); ++i)
+          FineModel.AddMeasurementPoint(Model.GetMeasPosX().at(i),
+              Model.GetMeasPosY().at(i), Model.GetMeasPosZ().at(i));
+
         jif3D::ThreeDModelObjective<jif3D::X3DTipperCalculator> Objective(Calculator);
         Objective.SetObservedData(Observed);
         Objective.SetCoarseModelGeometry(Model);
-        jif3D::rvec Error(jif3D::ConstructMTError(Observed, 0.02));
+//        Objective.SetFineModelGeometry(FineModel);
+        jif3D::rvec Error(Observed.size(), 0.02);
 
         Objective.SetDataError(Error);
         const size_t nstat = Model.GetMeasPosX().size();

@@ -465,7 +465,8 @@ namespace jif3D
 
     void WriteImpedancesToMtt(const std::string &filenamebase,
         const std::vector<double> &Frequencies, const jif3D::rvec &Imp,
-        const jif3D::rvec &Err)
+        const jif3D::rvec &Err, const jif3D::rvec &Tipper,
+        const jif3D::rvec &TipErr )
       {
         const double convfactor = 4.0 * 1e-4 * acos(-1.0);
         jif3D::rvec Impedances = 1.0 / convfactor * Imp;
@@ -485,6 +486,7 @@ namespace jif3D
             for (unsigned int j = 0; j < nfreq; ++j) //write mtt-file
               {
                 const size_t startindex = (j * nsites + i) * 8;
+                const size_t tipindex = (j * nsites + i) * 4;
                 outfile << Frequencies.at(j);
                 outfile << "   1 \n";
 
@@ -501,13 +503,13 @@ namespace jif3D
                 outfile << Errors(startindex + 2) << " ";
                 outfile << Errors(startindex + 4) << " ";
                 outfile << Errors(startindex + 6) << " ";
-                outfile << 0.0 << " ";
-                outfile << 0.0 << " ";
-                outfile << 0.0 << " ";
-                outfile << 0.0 << " ";
+                outfile << Tipper(tipindex ) << " ";
+                outfile << Tipper(tipindex +1) << " ";
+                outfile << Tipper(tipindex +2) << " ";
+                outfile << Tipper(tipindex +3) << " ";
                 outfile << "\n";
-                outfile << 0.0 << " ";
-                outfile << 0.0 << " ";
+                outfile << TipErr(tipindex ) << " ";
+                outfile << TipErr(tipindex +1) << " ";
                 outfile << 0.0 << " ";
                 outfile << 0.0 << " ";
                 outfile << 0.0 << " ";

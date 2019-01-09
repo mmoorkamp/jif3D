@@ -232,7 +232,7 @@ namespace jif3D
         const std::string &DataName, const std::string &UnitsName)
       {
         Read3DModelFromNetCDF(NetCDFFile, DataName, UnitsName, XCellSizes, YCellSizes,
-            ZCellSizes, Data);
+            ZCellSizes, Data, XOrigin, YOrigin, ZOrigin);
 
         //we check that the sizes of the grid cell specifications and the data are matching
         if (XCellSizes.size() != Data.shape()[0] || YCellSizes.size() != Data.shape()[1]
@@ -247,7 +247,7 @@ namespace jif3D
         const std::string &DataName, const std::string &UnitsName) const
       {
         Write3DModelToNetCDF(NetCDFFile, DataName, UnitsName, XCellSizes, YCellSizes,
-            ZCellSizes, Data);
+            ZCellSizes, Data, XOrigin, YOrigin, ZOrigin);
       }
 
     void ThreeDModelBase::WriteVTK(std::string filename,

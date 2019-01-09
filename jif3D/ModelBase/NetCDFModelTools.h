@@ -40,25 +40,25 @@ namespace jif3D
         ThreeDModelBase::t3DModelDim &XCellSizes,
         ThreeDModelBase::t3DModelDim &YCellSizes,
         ThreeDModelBase::t3DModelDim &ZCellSizes,
-        ThreeDModelBase::t3DModelData &Data);
+        ThreeDModelBase::t3DModelData &Data, double &xorigin, double &yorigin, double &zorigin);
     //! Write a 3D model to a netcdf file using an opened NcFile, this is the preferred storage format
     J3DEXPORT void Write3DModelToNetCDF(netCDF::NcFile &NetCDFFile, const std::string &DataName,
         const std::string &UnitsName,
         const ThreeDModelBase::t3DModelDim &XCellSizes,
         const ThreeDModelBase::t3DModelDim &YCellSizes,
         const ThreeDModelBase::t3DModelDim &ZCellSizes,
-        const ThreeDModelBase::t3DModelData &Data);
+        const ThreeDModelBase::t3DModelData &Data, double xorigin = 0, double yorigin = 0, double zorigin = 0);
     //! Write a 3D model to a netcdf file, this version creates the necessary NcFile object
     inline void Write3DModelToNetCDF(const std::string filename,
         const std::string &DataName, const std::string &UnitsName,
         const ThreeDModelBase::t3DModelDim &XCellSizes,
         const ThreeDModelBase::t3DModelDim &YCellSizes,
         const ThreeDModelBase::t3DModelDim &ZCellSizes,
-        const ThreeDModelBase::t3DModelData &Data)
+        const ThreeDModelBase::t3DModelData &Data, double xorigin = 0, double yorigin = 0, double zorigin = 0)
       {
       netCDF::NcFile DataFile(filename, netCDF::NcFile::replace);
         Write3DModelToNetCDF(DataFile, DataName, UnitsName, XCellSizes,
-            YCellSizes, ZCellSizes, Data);
+            YCellSizes, ZCellSizes, Data,xorigin, yorigin, zorigin);
       }
     //! A helper function that reads only measurement positions from a netcdf file regardless of data type
     J3DEXPORT void ReadMeasPosNetCDF(const std::string &filename,

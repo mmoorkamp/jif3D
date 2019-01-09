@@ -12,10 +12,11 @@
 #include "../Global/Jif3DGlobal.h"
 #include "../Global/FileUtil.h"
 #include "X3DModel.h"
+#include "ReadWriteImpedances.h"
 #include <boost/program_options.hpp>
+#include <boost/algorithm/minmax_element.hpp>
 #include <iostream>
 #include <string>
-
 
 using namespace std;
 
@@ -34,12 +35,15 @@ int main(int argc, char *argv[])
   {
     int incstart = 0;
     double rounding = 1.0;
+    std::string DataName;
     po::options_description desc("General options");
     desc.add_options()("help", "produce help message")("rounding",
         po::value(&rounding)->default_value(1.0),
         "Round layer thicknesses to multiple of this number in meters.")("incstart",
         po::value(&incstart)->default_value(0),
-        "Index of the layer where to start increasing the cell size in z-direction");
+        "Index of the layer where to start increasing the cell size in z-direction")(
+        "center", po::value(&DataName),
+        "Adjust the origin so the data in the specified file sits in the center of the mesh");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -81,13 +85,53 @@ int main(int argc, char *argv[])
       {
         double thickness = deltaz;
         if (i >= incstart)
-          thickness *= pow(factor, i-incstart);
+          thickness *= pow(factor, i - incstart);
         //x3d has some problems handling thicknesses over 10km with full meter precision
         //so if the thickness is > 10km we round to 100m
         thickness = floor(thickness / rounding) * rounding;
         Model.SetZCellSizes()[i] = thickness;
       }
 
+    if (vm.count("center"))
+      {
+        std::vector<double> Dummy, StatPosX, StatPosY, StatPosZ;
+        jif3D::rvec DVec;
+        jif3D::ReadImpedancesFromNetCDF(DataName, Dummy, StatPosX, StatPosY, StatPosZ,
+            DVec, DVec, Dummy);
+        auto mmx = boost::minmax_element(StatPosX.begin(), StatPosX.end());
+        auto mmy = boost::minmax_element(StatPosY.begin(), StatPosY.end());
+        auto mmz = boost::minmax_element(StatPosZ.begin(), StatPosZ.end());
+        double centerx = (*mmx.second + *mmx.first) / 2.0;
+        double centery = (*mmy.second + *mmy.first) / 2.0;
+        double centerz = (*mmz.second + *mmz.first) / 2.0;
+        std::cout << "Center X: " << centerx << " Center Y: " << centery << " Center Z:"
+            << centerz << std::endl;
+        double originx = centerx - (nx * deltax / 2.0) + deltax / 2.0;
+        double originy = centery - (ny * deltay / 2.0) + deltay / 2.0;
+        std::cout << "Origin X: " << originx << " Origin  Y: " << originy << " Origin  Z:"
+            << centerz << std::endl;
+        Model.SetOrigin(originx, originy, centerz);
+        if (originx > *mmx.first)
+          {
+            std::cout << " Warning, minimum model x: " << originx
+                << " is larger than smallest X-Coordinate " << *mmx.first << std::endl;
+          }
+        if (originx + nx * deltax < *mmx.second)
+          {
+            std::cout << " Warning, maximum model x: " << originx + nx * deltax
+                << " is smaller than largest X-Coordinate " << *mmx.second << std::endl;
+          }
+        if (originy > *mmy.first)
+          {
+            std::cout << " Warning, minimum model y: " << originy
+                << " is larger than smallest y-Coordinate " << *mmy.first << std::endl;
+          }
+        if (originy + ny * deltay < *mmy.second)
+          {
+            std::cout << " Warning, maximum model x: " << originy + ny * deltay
+                << " is smaller than largest y-Coordinate " << *mmy.second << std::endl;
+          }
+      }
     //ask for a conductivity to fill the mesh with
     double defaultconductivity = 1.0;
     std::cout << "Conductivity: ";

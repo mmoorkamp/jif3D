@@ -8,7 +8,6 @@
 #include "ThreeDMTModel.h"
 #include <fstream>
 
-
 namespace jif3D
   {
 
@@ -88,7 +87,7 @@ namespace jif3D
               }
             outfile << "\n\n";
           }
-        outfile << "\n  0.0 0.0 0.0\n 0.0 \n";
+        outfile << "\n  " << XOrigin << " " << YOrigin << " " << ZOrigin << "\n 0.0 \n";
       }
 
     void ThreeDMTModel::ReadModEM(const std::string filename)
@@ -118,5 +117,6 @@ namespace jif3D
                 infile >> value;
                 SetData()[k][j][i] = std::exp(-value);
               }
+        infile >> XOrigin >> YOrigin >> ZOrigin;
       }
   }

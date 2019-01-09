@@ -45,7 +45,7 @@ namespace jif3D
      * @param NetCDFFile The netcdf file object to check
      * @param Name The name of the variable
      */
-    J3DEXPORT inline bool CheckExists(netCDF::NcFile &NetCDFFile, const std::string &Name)
+    J3DEXPORT inline bool CheckExists(const netCDF::NcFile &NetCDFFile, const std::string &Name)
       {
         bool exists = false;
         try

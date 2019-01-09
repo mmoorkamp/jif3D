@@ -116,11 +116,11 @@ int main(int argc, char *argv[])
     std::string dataextension = jif3D::GetFileExtension(modelfilename);
     jif3D::X3DModel Model;
     Model.ReadNetCDF(modelfilename);
-    jif3D::rvec Impedances, ImpError;
+    jif3D::rvec Impedances, ImpError, Tip, TipError;
     std::vector<double> Frequencies, StatXCoord, StatYCoord, StatZCoord;
     if (dataextension.compare(".mod") == 0)
       {
-        jif3D::ReadImpedancesFromMTT(datafilename, Frequencies, Impedances, ImpError);
+        jif3D::ReadImpedancesFromMTT(datafilename, Frequencies, Impedances, ImpError,Tip,TipError);
       }
     else
       {

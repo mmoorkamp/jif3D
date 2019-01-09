@@ -13,6 +13,7 @@
 #include <limits>
 #include <vector>
 #include <utility>
+#include <fstream>
 
 #include <boost/filesystem.hpp>
 #include <boost/uuid/uuid.hpp>
@@ -57,6 +58,10 @@ namespace jif3D
       //! This type definition is necessary so that ThreeDModelObjective can correctly deduce the native type for a model object for this class
       typedef X3DModel ModelType;
     private:
+      //! A file to store statistics of execution time for the forward, can help to find problematic frequencies
+      std::ofstream ForwardTimesFile;
+      //! A file to store statistics of execution time for the derivative, can help to find problematic frequencies
+      std::ofstream DerivTimesFile;
       //! The type of green's function for forward calculation in x3d (stage 1)
       jif3D::GreenCalcType GreenType1;
       //! The type of green's function for forward calculation in x3d (stage 4)
@@ -96,6 +101,7 @@ namespace jif3D
         }
 
     public:
+      X3DMTCalculator(const jif3D::X3DMTCalculator& Source);
       //! Provide serialization to be able to store objects and, more importantly for hpx parallelization
       template<class Archive>
       void save(Archive & ar, const unsigned int version) const
