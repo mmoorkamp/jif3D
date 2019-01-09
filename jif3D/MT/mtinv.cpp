@@ -92,7 +92,7 @@ int hpx_main(boost::program_options::variables_map& vm)
           }
       }
 
-    if (!boost::filesystem::exists(X3DName))
+    if (!boost::filesystem::exists(X3DName) && !vm.count("regcheck"))
       {
         std::cerr << X3DName << " is not accessible or  does not exist ! \n";
         return 500;
@@ -115,6 +115,89 @@ int hpx_main(boost::program_options::variables_map& vm)
         Model.ReadNetCDF(modelfilename);
         Model.WriteModEM(modelfilename + ".dat");
       }
+
+    for (size_t i = 0; i < Model.GetConductivities().shape()[2]; ++i)
+      {
+        Model.SetConductivities()[0][0][i] *= (1 + conddelta * (i + 1));
+      }
+
+    const size_t ngrid = Model.GetConductivities().num_elements();
+    jif3D::rvec InvModel(ngrid);
+    std::copy(Model.GetConductivities().origin(),
+        Model.GetConductivities().origin() + ngrid, InvModel.begin());
+    Model.WriteVTK("start.vtk");
+    auto Copier = boost::make_shared<jif3D::ModelCopyTransform>();
+
+    boost::shared_ptr<jif3D::ChainedTransform> ConductivityTransform(
+        new jif3D::ChainedTransform);
+
+    if (vm.count("loglim"))
+      {
+        ConductivityTransform->AppendTransform(
+            boost::shared_ptr<jif3D::GeneralModelTransform>(
+                new jif3D::LogLimTransform(mincond, maxcond)));
+      }
+    else
+      {
+        jif3D::rvec RefModel(ngrid, 1.0);
+//because the tanh transform is used inside a logarithmic transform
+//we need to take the natural logarithm of the actual minimum and maximum
+        ConductivityTransform->AppendTransform(
+            boost::shared_ptr<jif3D::GeneralModelTransform>(
+                new jif3D::TanhTransform(std::log(mincond), std::log(maxcond))));
+        ConductivityTransform->AppendTransform(
+            boost::shared_ptr<jif3D::GeneralModelTransform>(
+                new jif3D::LogTransform(RefModel)));
+      }
+
+    boost::shared_ptr<jif3D::MultiSectionTransform> MTTransform(
+        new jif3D::MultiSectionTransform(InvModel.size(), 0, ngrid,
+            ConductivityTransform));
+    subrange(InvModel, 0, ngrid) = subrange(MTTransform->PhysicalToGeneralized(InvModel),
+        0, ngrid);
+    jif3D::rvec GridCov(ngrid, 1.0);
+    //std::copy(CovModVec.begin(), CovModVec.begin() + ngrid, GridCov.begin());
+    boost::shared_ptr<jif3D::RegularizationFunction> Regularization =
+        RegSetup.SetupObjective(vm, Model, GridCov);
+    boost::shared_ptr<jif3D::MultiSectionTransform> ModRegTrans(
+        new jif3D::MultiSectionTransform(InvModel.size(), 0, ngrid, Copier));
+    if (vm.count("refmodel"))
+      {
+        jif3D::X3DModel RefModel;
+        RefModel.ReadNetCDF(RefModelName);
+        jif3D::rvec RefVec(RefModel.GetNModelElements());
+        std::copy(RefModel.GetConductivities().origin(),
+            RefModel.GetConductivities().origin() + RefModel.GetNModelElements(),
+            RefVec.begin());
+        Regularization->SetReferenceModel(ModRegTrans->PhysicalToGeneralized(RefVec));
+      }
+
+    if (vm.count("regcheck"))
+      {
+        std::cout << " Regularization: " << Regularization->CalcMisfit(InvModel)
+            << std::endl;
+        jif3D::rvec reggrad = Regularization->CalcGradient(InvModel);
+        jif3D::rvec RegVals(Regularization->GetDataDifference());
+        const size_t nmod = InvModel.size();
+        if (RegVals.size() != nmod * 3)
+          {
+            std::cerr << "Number of model parameters " << nmod << " is not 3* "
+                << RegVals.size() << std::endl;
+            return 100;
+          }
+        std::copy(RegVals.begin(), RegVals.begin() + nmod, Model.SetData().origin());
+        Model.WriteVTK(modelfilename + ".regx.vtk");
+        std::copy(RegVals.begin() + nmod, RegVals.begin() + 2 * nmod,
+            Model.SetData().origin());
+        Model.WriteVTK(modelfilename + ".regy.vtk");
+        std::copy(RegVals.begin() + 2 * nmod, RegVals.begin() + 3 * nmod,
+            Model.SetData().origin());
+        Model.WriteVTK(modelfilename + ".regz.vtk");
+        std::copy(reggrad.begin(), reggrad.end(), Model.SetData().origin());
+        Model.WriteVTK(modelfilename + ".reggrad.vtk");
+        return 0;
+      }
+
 //get the name of the file containing the data and read it in
     std::string datafilename = jif3D::AskFilename("Data Filename: ");
     extension = jif3D::GetFileExtension(datafilename);
@@ -294,17 +377,6 @@ int hpx_main(boost::program_options::variables_map& vm)
 //we define a few constants that are used throughout the inversion
 //    const size_t ndata = Data.size(); // unused
 
-    for (size_t i = 0; i < Model.GetConductivities().shape()[2]; ++i)
-      {
-        Model.SetConductivities()[0][0][i] *= (1 + conddelta * (i + 1));
-      }
-
-    const size_t ngrid = Model.GetConductivities().num_elements();
-    jif3D::rvec InvModel(ngrid);
-    std::copy(Model.GetConductivities().origin(),
-        Model.GetConductivities().origin() + ngrid, InvModel.begin());
-    Model.WriteVTK("start.vtk");
-
     jif3D::rvec CovModVec(ngrid, 1.0);
     if (vm.count("covmod"))
       {
@@ -390,7 +462,6 @@ int hpx_main(boost::program_options::variables_map& vm)
           }
       }
 
-    boost::shared_ptr<jif3D::GeneralModelTransform> Copier(new jif3D::ModelCopyTransform);
     if (vm.count("crossmodel"))
       {
         boost::shared_ptr<jif3D::ThreeDModelBase> CrossModel(
@@ -425,36 +496,10 @@ int hpx_main(boost::program_options::variables_map& vm)
             jif3D::JointObjective::coupling);
       }
 
-    boost::shared_ptr<jif3D::ChainedTransform> ConductivityTransform(
-        new jif3D::ChainedTransform);
-    jif3D::rvec RefModel(ngrid, 1.0);
-    if (vm.count("loglim"))
-      {
-        ConductivityTransform->AppendTransform(
-            boost::shared_ptr<jif3D::GeneralModelTransform>(
-                new jif3D::LogLimTransform(mincond, maxcond)));
-      }
-    else
-      {
-//because the tanh transform is used inside a logarithmic transform
-//we need to take the natural logarithm of the actual minimum and maximum
-        ConductivityTransform->AppendTransform(
-            boost::shared_ptr<jif3D::GeneralModelTransform>(
-                new jif3D::TanhTransform(std::log(mincond), std::log(maxcond))));
-        ConductivityTransform->AppendTransform(
-            boost::shared_ptr<jif3D::GeneralModelTransform>(
-                new jif3D::LogTransform(RefModel)));
-      }
-    boost::shared_ptr<jif3D::MultiSectionTransform> MTTransform(
-        new jif3D::MultiSectionTransform(InvModel.size(), 0, ngrid,
-            ConductivityTransform));
     if (DistCorr > 0)
       {
         MTTransform->AddSection(ngrid, ngrid + C.size(), Copier);
       }
-
-    subrange(InvModel, 0, ngrid) = subrange(MTTransform->PhysicalToGeneralized(InvModel),
-        0, ngrid);
 
     bool WantDistCorr = (DistCorr > 0);
 
@@ -492,50 +537,6 @@ int hpx_main(boost::program_options::variables_map& vm)
     else
       {
         X3DObjective->SetDataError(ZError);
-      }
-
-    jif3D::rvec GridCov(ngrid, 1.0);
-    //std::copy(CovModVec.begin(), CovModVec.begin() + ngrid, GridCov.begin());
-    boost::shared_ptr<jif3D::RegularizationFunction> Regularization =
-        RegSetup.SetupObjective(vm, Model, GridCov);
-    boost::shared_ptr<jif3D::MultiSectionTransform> ModRegTrans(
-        new jif3D::MultiSectionTransform(InvModel.size(), 0, ngrid, Copier));
-    if (vm.count("refmodel"))
-      {
-        jif3D::X3DModel RefModel;
-        RefModel.ReadNetCDF(RefModelName);
-        jif3D::rvec RefVec(RefModel.GetNModelElements());
-        std::copy(RefModel.GetConductivities().origin(),
-            RefModel.GetConductivities().origin() + RefModel.GetNModelElements(),
-            RefVec.begin());
-        Regularization->SetReferenceModel(
-            ConductivityTransform->PhysicalToGeneralized(RefVec));
-      }
-
-    if (vm.count("regcheck"))
-      {
-        std::cout << " Regularization: " << Regularization->CalcMisfit(InvModel)
-            << std::endl;
-        jif3D::rvec reggrad = Regularization->CalcGradient(InvModel);
-        jif3D::rvec RegVals(Regularization->GetDataDifference());
-        const size_t nmod = InvModel.size();
-        if (RegVals.size() != nmod * 3)
-          {
-            std::cerr << "Number of model parameters " << nmod << " is not 3* "
-                << RegVals.size() << std::endl;
-            return 100;
-          }
-        std::copy(RegVals.begin(), RegVals.begin() + nmod, Model.SetData().origin());
-        Model.WriteVTK(modelfilename + ".regx.vtk");
-        std::copy(RegVals.begin() + nmod, RegVals.begin() + 2 * nmod,
-            Model.SetData().origin());
-        Model.WriteVTK(modelfilename + ".regy.vtk");
-        std::copy(RegVals.begin() + 2 * nmod, RegVals.begin() + 3 * nmod,
-            Model.SetData().origin());
-        Model.WriteVTK(modelfilename + ".regz.vtk");
-        std::copy(reggrad.begin(), reggrad.end(), Model.SetData().origin());
-        Model.WriteVTK(modelfilename + ".reggrad.vtk");
-        return 0;
       }
 
     if (MTWeight > 0.0)
@@ -630,37 +631,47 @@ int hpx_main(boost::program_options::variables_map& vm)
             jif3D::JointObjective::regularization);
       }
 
-    size_t maxiter = 30;
-    std::cout << "Maximum number of iterations: ";
-    std::cin >> maxiter;
-    std::cout << "Performing inversion." << std::endl;
-
-    boost::shared_ptr<jif3D::MultiSectionCovariance> CovObj = boost::make_shared<jif3D::MultiSectionCovariance>(InvModel.size());
+    auto CovObj = boost::make_shared<jif3D::MultiSectionCovariance>(InvModel.size());
     if (CovWidth > 0.0)
       {
-//#ifdef HAVEEIGEN
-
-        boost::shared_ptr<jif3D::GeneralCovariance> StochCov = boost::make_shared<jif3D::StochasticCovariance>(Model.GetModelShape()[0], Model.GetModelShape()[1], Model.GetModelShape()[2], CovWidth,
-            1.0, 1.0);
-        CovObj->AddSection(0,ngrid,StochCov);
+        boost::shared_ptr<jif3D::GeneralCovariance> StochCov = boost::make_shared<
+            jif3D::StochasticCovariance>(Model.GetModelShape()[0],
+            Model.GetModelShape()[1], Model.GetModelShape()[2], CovWidth, 1.0, 1.0);
+        CovObj->AddSection(0, ngrid, StochCov);
         if (DistCorr > 0)
           {
-            boost::shared_ptr<jif3D::GeneralCovariance> DistCov = boost::make_shared<jif3D::DiagonalCovariance>();
-            CovObj->AddSection(ngrid,InvModel.size(),DistCov);
+            boost::shared_ptr<jif3D::GeneralCovariance> DistCov = boost::make_shared<
+                jif3D::DiagonalCovariance>();
+            CovObj->AddSection(ngrid, InvModel.size(), DistCov);
           }
-//#else
-//        std::cerr << "Code has been compiled without support for Stochastic Covariance, you need the Eigen library " << std::endl;
-//        return 100;
-//#endif
       }
     else
       {
-        CovObj->AddSection(0,InvModel.size(),boost::make_shared<jif3D::DiagonalCovariance>(CovModVec));
-
+        CovObj->AddSection(0, InvModel.size(),
+            boost::make_shared<jif3D::DiagonalCovariance>(CovModVec));
       }
 
     boost::shared_ptr<jif3D::GradientBasedOptimization> Optimizer =
         InversionSetup.ConfigureInversion(vm, Objective, InvModel, CovObj);
+
+    if (vm.count("writegrad"))
+      {
+        jif3D::rvec GM = MTTransform->GeneralizedToPhysical(InvModel);
+        std::cout << " Data Misfit: " << X3DObjective->CalcMisfit(GM) << std::endl;
+        jif3D::rvec grad = X3DObjective->CalcGradient(GM);
+
+        std::copy(grad.begin(), grad.end(), Model.SetData().origin());
+        Model.WriteVTK(modelfilename + ".datagrad.vtk");
+        jif3D::rvec covgrad = CovObj->ApplyCovar(grad);
+        std::copy(covgrad.begin(), covgrad.end(), Model.SetData().origin());
+        Model.WriteVTK(modelfilename + ".datacovgrad.vtk");
+        return 0;
+      }
+
+    size_t maxiter = 30;
+    std::cout << "Maximum number of iterations: ";
+    std::cin >> maxiter;
+    std::cout << "Performing inversion." << std::endl;
 
     std::ofstream misfitfile("misfit.out");
     std::ofstream rmsfile("rms.out");
@@ -854,7 +865,8 @@ int main(int argc, char* argv[])
         "The name of the reference model to substract before calculating smoothness")(
         "crossmodel", po::value(&CrossModelName),
         "The name of a model to use as a cross-gradient constraint")("regcheck",
-        "Only perform a regularization calculation")("conddelta",
+        "Only perform a regularization calculation")("writegrad",
+        "Write out the gradient for the data and quit")("conddelta",
         po::value(&conddelta)->default_value(0.001),
         "The relative amount by which the conductivities in the first row of cells is disturbed to ensure proper gradient calculation")(
         "rhophi", "Use apparent resistivity and phase instead of impedance")("cleanfiles",
