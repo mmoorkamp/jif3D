@@ -125,9 +125,7 @@ namespace jif3D
                 Calculator.SetGreenType4(jif3D::GreenCalcType::opt);
               }
 
-            MTObjective = boost::shared_ptr<
-                jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator> >(
-                new jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator>(Calculator));
+            MTObjective = boost::make_shared<jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator> >(Calculator);
             //if we specified the name for a refined model for forward calculations
             //we read in that model, set the measurement configuration for the observed
             //data and pass it to the objective function

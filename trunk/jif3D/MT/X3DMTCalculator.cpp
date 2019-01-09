@@ -59,13 +59,15 @@ namespace jif3D
       }
 
     X3DMTCalculator::X3DMTCalculator(boost::filesystem::path TDir, std::string x3d,
-        bool DC, bool Clean, std::vector<boost::shared_ptr<jif3D::X3DFieldCalculator> > FC) :
+        bool DC, bool Clean,
+        std::vector<boost::shared_ptr<jif3D::X3DFieldCalculator> > FC) :
         GreenType1(hst), GreenType4(hst), X3DName(x3d), WantDistCorr(DC), CleanFiles(
             Clean), FieldCalculators(FC)
       {
         //each object gets a unique ID, this way we avoid clashes
         //between the temporary files generated for the calculations with x3d
         NameRoot = ObjectID();
+
         if (!fs::is_directory(TDir))
           throw FatalException("TDir is not a directory: " + TDir.string(), __FILE__,
           __LINE__);
@@ -80,6 +82,16 @@ namespace jif3D
           }
       }
 
+    X3DMTCalculator::X3DMTCalculator(const jif3D::X3DMTCalculator& Source) :
+        GreenType1(Source.GreenType1), GreenType4(Source.GreenType4), X3DName(
+            Source.X3DName), TempDir(Source.TempDir), WantDistCorr(Source.WantDistCorr), DataTransform(
+            Source.DataTransform), CleanFiles(Source.CleanFiles), FieldCalculators(
+            Source.FieldCalculators)
+      {
+        NameRoot = ObjectID();
+
+      }
+
     X3DMTCalculator::~X3DMTCalculator()
       {
         //if we want to clean all temporary files (default)
@@ -88,12 +100,18 @@ namespace jif3D
             //remove all the temporary files and directories generated for calculations
             CleanUp();
           }
+        ForwardTimesFile.close();
+        DerivTimesFile.close();
       }
 
     rvec X3DMTCalculator::Calculate(X3DModel &Model, size_t minfreqindex,
         size_t maxfreqindex)
       {
 
+        if (!ForwardTimesFile.is_open())
+          {
+            ForwardTimesFile.open("mtforward" + NameRoot + ".out");
+          }
         //we define nfreq as int to make the compiler happy in the openmp loop
         assert(minfreqindex <= maxfreqindex);
         maxfreqindex = std::min(maxfreqindex, Model.GetFrequencies().size());
@@ -104,7 +122,7 @@ namespace jif3D
             FieldCalculators.resize(nfreq);
             for (auto &fc : FieldCalculators)
               {
-                fc = boost::make_shared<jif3D::X3DFieldCalculator>(TempDir,X3DName);
+                fc = boost::make_shared<jif3D::X3DFieldCalculator>(TempDir, X3DName);
               }
           }
         const size_t nmeas = Model.GetMeasPosX().size();
@@ -232,11 +250,12 @@ namespace jif3D
               }
             //finished with one frequency
           }
-        /*std::cout << "\n";
-         for (auto time : NewExecTime)
-         {
-         std::cout << time.first << " " << time.second << " \n";
-         }*/
+
+        for (auto time : NewExecTime)
+          {
+            ForwardTimesFile << time.second << " " << time.first << " \n";
+          }
+        ForwardTimesFile << "\n" << std::endl;
         std::sort(NewExecTime.begin(),NewExecTime.end());
         ForwardExecTime = NewExecTime;
         RawImpedance = RawImp;
@@ -292,6 +311,10 @@ namespace jif3D
     rvec X3DMTCalculator::LQDerivative(const X3DModel &Model, const rvec &Misfit,
         size_t minfreqindex, size_t maxfreqindex)
       {
+        if (!DerivTimesFile.is_open())
+          {
+            DerivTimesFile.open("mtderiv" + NameRoot + ".out");
+          }
         if (!DataTransform)
           {
             DataTransform = boost::make_shared<jif3D::CopyTransform>(Misfit.size());
@@ -403,6 +426,11 @@ namespace jif3D
               }
             //finished with one frequency
           }
+        for (auto time : NewExecTime)
+          {
+            DerivTimesFile << time.second << " " << time.first << " \n";
+          }
+        DerivTimesFile << "\n" << std::endl;
         std::sort(NewExecTime.begin(),NewExecTime.end());
         DerivExecTime = NewExecTime;
         omp_destroy_lock(&lck);
@@ -450,7 +478,8 @@ namespace jif3D
         // a generic error message
         if (FatalError)
           throw jif3D::FatalException(
-              "Problem in MT gradient calculation. Error message: " + ErrorMsg, __FILE__,
+              "Problem in MT gradient calculation. Error message: " + ErrorMsg,
+              __FILE__,
               __LINE__);
 
         return 2.0 * Gradient;
@@ -507,7 +536,7 @@ namespace jif3D
             ForwardInfo Info(Model, C, freqindex, TempDir.string(), X3DName, NameRoot,
                 GreenType1, GreenType4);
             GradResult CurrGrad = LQDerivativeFreq(Info,
-                GradInfo(CurrMisfit, RawImpedance),FieldCalculators.at(freqindex));
+                GradInfo(CurrMisfit, RawImpedance), FieldCalculators.at(freqindex));
 
             boost::numeric::ublas::matrix_row<rmat> CurrRow(Result, i);
 

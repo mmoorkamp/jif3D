@@ -225,8 +225,10 @@ int main(int argc, char *argv[])
 
     std::cout << "Performing inversion." << std::endl;
 
+    auto CovObj = boost::make_shared<jif3D::DiagonalCovariance>(CovModVec);
+
     boost::shared_ptr<jif3D::GradientBasedOptimization> Optimizer =
-        InversionSetup.ConfigureInversion(vm, Objective, InvModel, CovModVec);
+        InversionSetup.ConfigureInversion(vm, Objective, InvModel, CovObj);
 
     std::string modelfilename = "result";
     //write out the seismic source and receiver positions for plotting

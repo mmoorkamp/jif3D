@@ -85,8 +85,6 @@ namespace jif3D
         std::vector<double> &StatYCoord, std::vector<double> &StatZCoord,
         jif3D::rvec &Impedances, jif3D::rvec &ImpError, std::vector<double> &Distortion);
 
-
-
     //! Write tipper to a netcdf file
     /*! We can save tipper for several stations in a netcdf file for storage
      * and analysis with external programs.
@@ -125,9 +123,6 @@ namespace jif3D
         std::vector<double> &StatYCoord, std::vector<double> &StatZCoord,
         jif3D::rvec &Tipper, jif3D::rvec &Error);
 
-
-
-
     //! A very basic routine to read impedances at a single site from a .mtt file in the format used by University of Goettingen
     /*! A very basic routine to read impedances at a single site from a .mtt file in the
      * format used by University of Goettingen.
@@ -140,7 +135,8 @@ namespace jif3D
      * @param TippErr The error for the tipper
      */
     J3DEXPORT void ReadImpedancesFromMTT(const std::string &filename,
-        std::vector<double> &Frequencies, jif3D::rvec &Impedances, jif3D::rvec &Errors, jif3D::rvec &Tipper, jif3D::rvec &TippErr);
+        std::vector<double> &Frequencies, jif3D::rvec &Impedances, jif3D::rvec &Errors,
+        jif3D::rvec &Tipper, jif3D::rvec &TippErr);
 
     //! A very basic routine to write impedances for several sites to  .mtt files in the format used by University of Goettingen.
     /*! A very basic routine to write impedances for several sites to  .mtt files in the format used by University of Goettingen.
@@ -149,11 +145,20 @@ namespace jif3D
      * @param Imp The impedances in the same convention as above
      * @param Err The impedance errors recorded in the file, will have the same number of elements as Impedances
      *        but the values for the real and imaginary part of each element are always identical
+     * @param Tipper The tipper for the same frequencies as the impedances, convention Txr,Txi,Tyr,Tyi,... with same convention as impedances, i.e. frequency varies slowest
+     * @param TippErr The error for the tipper
      */
     J3DEXPORT void WriteImpedancesToMtt(const std::string &filenamebase,
         const std::vector<double> &Frequencies, const jif3D::rvec &Imp,
-        const jif3D::rvec &Err);
+        const jif3D::rvec &Err, const jif3D::rvec &Tipper, const jif3D::rvec &TipErr);
 
+    J3DEXPORT inline void WriteImpedancesToMtt(const std::string &filenamebase,
+        const std::vector<double> &Frequencies, const jif3D::rvec &Imp,
+        const jif3D::rvec &Err)
+      {
+        jif3D::rvec Dummy(Imp.size() / 2, 0.0);
+        WriteImpedancesToMtt(filenamebase, Frequencies, Imp, Err, Dummy, Dummy);
+      }
     //! Reads apparent resistivity and phase information from an ascii file with all stations joined together
     /*!
      * @param filename The name of the ascii file
@@ -232,9 +237,9 @@ namespace jif3D
         jif3D::rvec &Tip, jif3D::rvec &Err);
 
     J3DEXPORT void WriteTipperToModEM(const std::string &filename,
-            const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
-            const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
-            const jif3D::rvec &Tip, const jif3D::rvec &Err);
+        const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
+        const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
+        const jif3D::rvec &Tip, const jif3D::rvec &Err);
 
     //! Read magnetotelluric impedances from a .j file
     /*!
@@ -254,9 +259,9 @@ namespace jif3D
         double &StatZCoord, jif3D::rvec &Imp, jif3D::rvec &Err);
 
     void WriteImpedancesToJ(const std::string &filenamebase,
-            const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
-            const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
-            const jif3D::rvec &Imp, const jif3D::rvec &Err);
+        const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
+        const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
+        const jif3D::rvec &Imp, const jif3D::rvec &Err);
   /* @} */
   }
 
