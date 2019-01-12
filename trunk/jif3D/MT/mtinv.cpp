@@ -499,6 +499,7 @@ int hpx_main(boost::program_options::variables_map& vm)
     if (DistCorr > 0)
       {
         MTTransform->AddSection(ngrid, ngrid + C.size(), Copier);
+        MTTransform->SetLength(ngrid + C.size());
       }
 
     bool WantDistCorr = (DistCorr > 0);
