@@ -48,13 +48,16 @@ int main(int argc, char *argv[])
   {
     double mincond = 1e-6;
     double maxcond = 10;
+    double fitthreshold = 1e6;
     po::options_description desc("General options");
     desc.add_options()("help", "produce help message")("threads", po::value<int>(),
         "The number of openmp threads")("mincond",
         po::value(&mincond)->default_value(1e-6),
         "The minimum value for conductivity in S/m")("maxcond",
         po::value(&maxcond)->default_value(10),
-        "The maximum value for conductivity in S/m");
+        "The maximum value for conductivity in S/m")("fitthreshold",
+        po::value(&fitthreshold)->default_value(1e6),
+        "Only sites that fit below this value will be used in the model");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -84,7 +87,7 @@ int main(int argc, char *argv[])
     std::vector<double> RMS(nstat);
 
     std::vector<std::vector<double> > InvResult;
-
+    jif3D::rvec InvData(Impedances.size(), 0.0);
     omp_lock_t lck;
     omp_init_lock(&lck);
 
@@ -164,10 +167,6 @@ int main(int argc, char *argv[])
           {
             try
               {
-                jif3D::rvec CondInvModel = ConductivityTransform->GeneralizedToPhysical(
-                    InvModel);
-                std::vector<double> Tmp(CondInvModel.begin(), CondInvModel.end());
-                //Model.SetBackgroundConductivities(Tmp);
                 Optimizer.MakeStep(InvModel);
                 /*Model.WriteNetCDF(
                  modelfilename + jif3D::stringify(iteration) + ".mt.inv.nc");
@@ -187,18 +186,35 @@ int main(int argc, char *argv[])
           }
 
         double misfit = Objective->CalcMisfit(InvModel);
+        InvModel = ConductivityTransform->GeneralizedToPhysical(InvModel);
+        Model.SetBackgroundConductivities(
+            std::vector<double>(InvModel.begin(), InvModel.end()));
+
+
+
+        jif3D::rvec currdata(jif3D::OneDMTCalculator().Calculate(Model));
+
         RMS.at(i) = Objective->GetRMS()[0];
 
-        if (sqrt(Objective->GetRMS()[0]) < 3.0)
+        omp_set_lock(&lck);
+        if (sqrt(Objective->GetRMS()[0]) < fitthreshold)
           {
-            omp_set_lock(&lck);
             InvModel = ConductivityTransform->GeneralizedToPhysical(InvModel);
             GoodXCoord.push_back(StatXCoord[i]);
             GoodYCoord.push_back(StatYCoord[i]);
             std::vector<double> Result(InvModel.begin(), InvModel.end());
             InvResult.push_back(Result);
-            omp_unset_lock(&lck);
           }
+
+        for (size_t j = 0; j < nfreq; ++j)
+          {
+            size_t siteindex = (j * nstat + i) * 8;
+            InvData(siteindex + 2) = currdata(j * 2);
+            InvData(siteindex + 3) = currdata(j * 2 + 1);
+            InvData(siteindex + 4) = -currdata(j * 2);
+            InvData(siteindex + 5) = -currdata(j * 2 + 1);
+          }
+        omp_unset_lock(&lck);
 
       }
 
@@ -249,7 +265,8 @@ int main(int argc, char *argv[])
     std::iota(si.begin(), si.end(), 1);
     jif3D::Write3DDataToVTK(datafilename + ".vtk", "MTSites", si, StatXCoord, StatYCoord,
         StatZCoord);
-
+    jif3D::WriteImpedancesToNetCDF(modelfilename + ".inv_imp.nc", Frequencies, StatXCoord,
+        StatYCoord, StatZCoord, InvData, ImpError);
     Model.WriteVTK(modelfilename + ".inv.vtk");
     Model.WriteNetCDF(modelfilename + ".inv.nc");
     std::cout << std::endl;
