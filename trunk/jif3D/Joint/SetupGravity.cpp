@@ -36,7 +36,7 @@ namespace jif3D
             "The relative error for the scalar gravity data")("scalminerr",
             po::value(&scalminerr)->default_value(0.0),
             "The minimum absolute error for the scalar gravity data")("ftgrelerr",
-            po::value(&scalrelerr)->default_value(0.02),
+            po::value(&ftgrelerr)->default_value(0.02),
             "The relative error for the FTG gravity data")("ftgminerr",
             po::value(&ftgminerr)->default_value(1e-9),
             "The minimum absolute error for the FTG gravity data");
