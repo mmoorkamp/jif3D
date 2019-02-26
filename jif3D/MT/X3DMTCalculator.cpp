@@ -256,7 +256,7 @@ namespace jif3D
             ForwardTimesFile << time.second << " " << time.first << " \n";
           }
         ForwardTimesFile << "\n" << std::endl;
-        std::sort(NewExecTime.begin(),NewExecTime.end());
+        std::stable_sort(NewExecTime.begin(),NewExecTime.end());
         ForwardExecTime = NewExecTime;
         RawImpedance = RawImp;
         omp_destroy_lock(&lck);
@@ -431,7 +431,7 @@ namespace jif3D
             DerivTimesFile << time.second << " " << time.first << " \n";
           }
         DerivTimesFile << "\n" << std::endl;
-        std::sort(NewExecTime.begin(),NewExecTime.end());
+        std::stable_sort(NewExecTime.begin(),NewExecTime.end());
         DerivExecTime = NewExecTime;
         omp_destroy_lock(&lck);
 #endif
