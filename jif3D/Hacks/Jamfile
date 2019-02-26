@@ -27,6 +27,8 @@ exe cleanmt : cleanmt.cpp  ../MT//mt joint ;
 exe qqfit : qqfit.cpp  ../MT//mt common ;
 exe qqtip : qqtip.cpp  ../MT//mt joint ;
 exe avgmt : avgmt.cpp  ../MT//mt joint ;
+exe mtshift : mtshift.cpp  ../MT//mt common ;
+
 exe smoothmodel : smoothmodel.cpp  ../MT//mt joint ;
 exe parrun : parrun.cpp ..//boost_filesystem ..//boost_system ;
 exe picksort : picksort.cpp  ../Global//global  ../Tomo//tomo ..//boost_filesystem ..//boost_system ;
