@@ -16,11 +16,11 @@ namespace jif3D
 
     class DiagonalCovariance: public GeneralCovariance
       {
-      private:
+    private:
       jif3D::rvec CovDiag;
     public:
-      virtual jif3D::rvec ApplyCovar(const jif3D::rvec &vector) override;
-      virtual jif3D::rvec ApplyInvCovar(const jif3D::rvec &vector) override;
+      virtual jif3D::rvec ApplyCovar(const jif3D::rvec &vector) const override;
+      virtual jif3D::rvec ApplyInvCovar(const jif3D::rvec &vector) const override;
       DiagonalCovariance(const jif3D::rvec &CD = jif3D::rvec());
       virtual ~DiagonalCovariance();
       };
