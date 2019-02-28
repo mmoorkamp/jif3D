@@ -38,9 +38,9 @@ namespace jif3D
         //we have to implement the copy operator to make sure
         //all information is updated appropriately
         //first we copy all the measurement positions
-        MeasPosX  = source.MeasPosX;
-        MeasPosY  = source.MeasPosY;
-        MeasPosZ  = source.MeasPosZ;
+        MeasPosX = source.MeasPosX;
+        MeasPosY = source.MeasPosY;
+        MeasPosZ = source.MeasPosZ;
         //then we copy the data, i.e. the cells values of the 3D model
         Data.resize(
             boost::extents[source.Data.shape()[0]][source.Data.shape()[1]][source.Data.shape()[2]]);
@@ -165,17 +165,21 @@ namespace jif3D
     void ThreeDModelBase::SetOrigin(const double x, const double y, const double z)
       {
 
+        double OldX = GridXCoordinates[0];
+        double OldY = GridYCoordinates[0];
+        double OldZ = GridZCoordinates[0];
         //copy the information about the new origin
         std::transform(GridXCoordinates.begin(), GridXCoordinates.end(),
-            GridXCoordinates.begin(), [x](double val)
-              { return val +x;});
+            GridXCoordinates.begin(), [x,OldX](double val)
+              { return val +x - OldX;});
         std::transform(GridYCoordinates.begin(), GridYCoordinates.end(),
-            GridYCoordinates.begin(), [y](double val)
-              { return val +y;});
+            GridYCoordinates.begin(), [y,OldY](double val)
+              { return val +y - OldY;});
         std::transform(GridZCoordinates.begin(), GridZCoordinates.end(),
-            GridZCoordinates.begin(), [z](double val)
-              { return val +z;});
-
+            GridZCoordinates.begin(), [z,OldZ](double val)
+              { return val +z - OldZ;});
+        //cell sizes do not change when shifting the origin, so nothing
+        //needs to be done for those
       }
 
     void ThreeDModelBase::ReadDataFromNetCDF(const NcFile &NetCDFFile,
