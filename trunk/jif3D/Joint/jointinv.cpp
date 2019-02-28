@@ -73,7 +73,6 @@ double coolingfactor = 1.0;
 int saveinterval = 1;
 double CovWidth = 3.0;
 
-
 int hpx_main(boost::program_options::variables_map& vm)
   {
 
@@ -260,7 +259,7 @@ int hpx_main(boost::program_options::variables_map& vm)
     jif3D::rvec InvModel;
     CouplingSetup.SetupModelVector(vm, InvModel, *StartModel, TomoSetup.GetModel(),
         GravitySetup.GetScalModel(), MTSetup.GetModel(), *Objective.get(), Regularization,
-        RegSetup.GetSubStart(),TearModX,TearModY,TearModZ,CovModVec);
+        RegSetup.GetSubStart(), TearModX, TearModY, TearModZ, CovModVec);
 
     //finally ask for the maximum number of iterations
     size_t maxiter = 1;
@@ -297,8 +296,9 @@ int hpx_main(boost::program_options::variables_map& vm)
 
     const size_t nparm = InvModel.size();
     const size_t ncovmod = CovModVec.size();
-    std::cout << nparm << " Inversion parameters " << ncovmod << " Covariance values " << std::endl;
-    jif3D::rvec CovVec(nparm,1.0);
+    std::cout << nparm << " Inversion parameters " << ncovmod << " Covariance values "
+        << std::endl;
+    jif3D::rvec CovVec(nparm, 1.0);
     if (!CovModVec.empty())
       {
 
@@ -334,8 +334,8 @@ int hpx_main(boost::program_options::variables_map& vm)
     //so we set it up here that we can access it later, but with a parameter setting that only
     //works if we actually have distortion correction, so we have to be careful later
     boost::shared_ptr<jif3D::MultiSectionTransform> DistRegTrans(
-        new jif3D::MultiSectionTransform(InvModel.size() + CRef.size(), InvModel.size(), InvModel.size() + CRef.size(),
-            Copier));
+        new jif3D::MultiSectionTransform(InvModel.size() + CRef.size(), InvModel.size(),
+            InvModel.size() + CRef.size(), Copier));
     if (havemt)
       {
         jif3D::rvec SiteNum(MTSetup.GetModel().GetMeasPosX().size());
@@ -377,7 +377,7 @@ int hpx_main(boost::program_options::variables_map& vm)
             DistReg->SetReferenceModel(CRef);
 
             dynamic_cast<jif3D::MultiSectionTransform *>(MTTransform.get())->SetLength(
-            		InvModel.size());
+                InvModel.size());
             //DistRegTrans->SetLength(InvModel.size());
             dynamic_cast<jif3D::MultiSectionTransform *>(MTTransform.get())->AddSection(
                 Grid.size(), InvModel.size(), Copier);
@@ -564,27 +564,31 @@ int hpx_main(boost::program_options::variables_map& vm)
     else
       {
 
-        boost::shared_ptr<jif3D::MultiSectionCovariance> CovObj = boost::make_shared<jif3D::MultiSectionCovariance>(InvModel.size());
-        if (CovWidth > 0.0)
+        boost::shared_ptr<jif3D::MultiSectionCovariance> CovObj = boost::make_shared<
+            jif3D::MultiSectionCovariance>(InvModel.size());
+        if (CovWidth != 0.0)
           {
 
-            boost::shared_ptr<jif3D::GeneralCovariance> StochCov = boost::make_shared<jif3D::StochasticCovariance>(TomoModel.GetModelShape()[0],
-            		TomoModel.GetModelShape()[1], TomoModel.GetModelShape()[2], CovWidth, 1.0, 1.0);
-            CovObj->AddSection(0,ngrid,StochCov);
-            CovObj->AddSection(ngrid,2*ngrid,StochCov);
-            CovObj->AddSection(2*ngrid,3*ngrid,StochCov);
+            boost::shared_ptr<jif3D::GeneralCovariance> StochCov = boost::make_shared<
+                jif3D::StochasticCovariance>(TomoModel.GetModelShape()[0],
+                TomoModel.GetModelShape()[1], TomoModel.GetModelShape()[2], CovWidth, 1.0,
+                1.0);
+            CovObj->AddSection(0, ngrid, StochCov);
+            CovObj->AddSection(ngrid, 2 * ngrid, StochCov);
+            CovObj->AddSection(2 * ngrid, 3 * ngrid, StochCov);
             if (MTSetup.GetDistCorr() > 0)
               {
-                boost::shared_ptr<jif3D::GeneralCovariance> DistCov = boost::make_shared<jif3D::DiagonalCovariance>();
-                CovObj->AddSection(ngrid,InvModel.size(),DistCov);
+                boost::shared_ptr<jif3D::GeneralCovariance> DistCov = boost::make_shared<
+                    jif3D::DiagonalCovariance>();
+                CovObj->AddSection(ngrid, InvModel.size(), DistCov);
               }
           }
         else
           {
-            CovObj->AddSection(0,InvModel.size(),boost::make_shared<jif3D::DiagonalCovariance>(CovVec));
+            CovObj->AddSection(0, InvModel.size(),
+                boost::make_shared<jif3D::DiagonalCovariance>(CovVec));
 
           }
-
 
         //auto CovObj = boost::make_shared<jif3D::DiagonalCovariance>(CovVec);
 
@@ -617,14 +621,14 @@ int hpx_main(boost::program_options::variables_map& vm)
                 //this way  we can look at the development
                 // and use intermediate models in case something goes wrong
                 if (iteration % saveinterval == 0)
-                {
-                   SaveModel(InvModel, *TomoTransform.get(), TomoModel,
-                       modelfilename + jif3D::stringify(iteration) + ".tomo.inv");
-                   SaveModel(InvModel, *MTTransform.get(), MTModel,
-                       modelfilename + jif3D::stringify(iteration) + ".mt.inv");
-                   SaveModel(InvModel, *GravityTransform.get(), GravModel,
-                       modelfilename + jif3D::stringify(iteration) + ".grav.inv");
-                }
+                  {
+                    SaveModel(InvModel, *TomoTransform.get(), TomoModel,
+                        modelfilename + jif3D::stringify(iteration) + ".tomo.inv");
+                    SaveModel(InvModel, *MTTransform.get(), MTModel,
+                        modelfilename + jif3D::stringify(iteration) + ".mt.inv");
+                    SaveModel(InvModel, *GravityTransform.get(), GravModel,
+                        modelfilename + jif3D::stringify(iteration) + ".grav.inv");
+                  }
                 //write out some information about misfit to the screen
                 std::cout << "Currrent Misfit: " << Optimizer->GetMisfit() << std::endl;
                 std::cout << "Currrent Gradient: " << Optimizer->GetGradNorm()
@@ -669,9 +673,9 @@ int hpx_main(boost::program_options::variables_map& vm)
         jif3D::SaveTraveltimes(modelfilename + ".diff_tt.nc", TomoDiff, TomoError,
             TomoModel);
         if (vm.count("writerays"))
-        {
+          {
             TomoSetup.GetTomoObjective().GetCalculator().WriteRays("rays.vtk");
-        }
+          }
       }
     //if we are inverting gravity data and have specified site locations
     if (havegrav)
@@ -717,12 +721,12 @@ int hpx_main(boost::program_options::variables_map& vm)
     //if we are inverting MT data and have specified site locations
     if (havemt)
       {
-    	std::vector<double> C;
-    	if (MTSetup.GetDistCorr() > 0.0)
-    	{
-          jif3D::rvec tmp = DistRegTrans->GeneralizedToPhysical(InvModel);
-          std::copy(tmp.begin(),tmp.end(),std::back_inserter(C));
-    	}
+        std::vector<double> C;
+        if (MTSetup.GetDistCorr() > 0.0)
+          {
+            jif3D::rvec tmp = DistRegTrans->GeneralizedToPhysical(InvModel);
+            std::copy(tmp.begin(), tmp.end(), std::back_inserter(C));
+          }
         //calculate MT inversion result
         jif3D::rvec MTInvData(MTSetup.GetMTObjective().GetSyntheticData());
         jif3D::rvec MTObsData(MTSetup.GetMTObjective().GetObservedData());
@@ -808,10 +812,11 @@ int main(int argc, char* argv[])
         po::value(&coolingfactor)->default_value(1.0),
         "The factor to multiply the weight for the regularization at each iteration EXPERIMENTAL")(
         "sequential",
-        "Do not create a single objective function, but split into on OF per method EXPERIMENTAL")
-		("saveinterval",po::value(&saveinterval)->default_value(1),"The interval in iterations at which intermediate models are saved.")
-		("stochcov", po::value(&CovWidth)->default_value(0),
-		        "Width of stochastic regularization, enabled if > 0, EXPERIMENTAL");
+        "Do not create a single objective function, but split into on OF per method EXPERIMENTAL")(
+        "saveinterval", po::value(&saveinterval)->default_value(1),
+        "The interval in iterations at which intermediate models are saved.")("stochcov",
+        po::value(&CovWidth)->default_value(0),
+        "Width of stochastic regularization, enabled if > 0, EXPERIMENTAL");
 //we need to add the description for each part to the boost program options object
 //that way the user can get a help output and the parser object recongnizes these options
     desc.add(TomoSetup.SetupOptions());

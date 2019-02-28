@@ -174,17 +174,17 @@ namespace jif3D
       //! Get the Model origin for the x-coordinate
       double GetXOrigin() const
         {
-          return GridXCoordinates.at(0);
+          return GridXCoordinates.empty() ? 0.0 : GridXCoordinates.at(0);
         }
       //! Get the Model origin for the y-coordinate
       double GetYOrigin() const
         {
-          return GridYCoordinates.at(0);
+          return GridYCoordinates.empty() ? 0.0 : GridYCoordinates.at(0);
         }
       //! Get the Model origin for the z-coordinate
       double GetZOrigin() const
         {
-          return GridZCoordinates.at(0);
+          return GridZCoordinates.empty() ? 0.0 : GridZCoordinates.at(0);
         }
       //! Set the size of the mesh and the coordinate axes
       void SetMeshSize(const size_t nx, const size_t ny, const size_t nz)
@@ -343,6 +343,7 @@ namespace jif3D
 #endif
 friend class  ModelRefiner;
   ThreeDModelBase();
+  ThreeDModelBase(const ThreeDModelBase& source);
   bool operator ==(const ThreeDModelBase &b) const;
   ThreeDModelBase& operator=(const ThreeDModelBase& source);
   virtual ~ThreeDModelBase();

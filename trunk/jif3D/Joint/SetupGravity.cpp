@@ -119,8 +119,11 @@ namespace jif3D
                         ScalPosZ.at(i));
                   }
               }
-            ScalGravModel.SetOrigin(xorigin, yorigin, 0.0);
-            FTGGravModel.SetOrigin(xorigin, yorigin, 0.0);
+            if (xorigin != 0.0 || yorigin != 0.0)
+              {
+                ScalGravModel.SetOrigin(xorigin, yorigin, 0.0);
+                FTGGravModel.SetOrigin(xorigin, yorigin, 0.0);
+              }
           }
         if (Transform.get() == NULL)
           {
@@ -169,7 +172,7 @@ namespace jif3D
                 jif3D::ConstructError(ScalGravData, ScalError, scalrelerr, scalminerr));
 
             Objective.AddObjective(ScalGravObjective, Transform, scalgravlambda,
-                "ScalGrav",JointObjective::datafit);
+                "ScalGrav", JointObjective::datafit);
             std::cout << "Scalar Gravity ndata: " << ScalGravData.size() << std::endl;
             std::cout << "Scalar Gravity lambda: " << scalgravlambda << std::endl;
           }
@@ -207,7 +210,8 @@ namespace jif3D
             FTGObjective->SetDataError(
                 jif3D::ConstructError(FTGData, FTGError, ftgrelerr, ftgminerr));
 
-            Objective.AddObjective(FTGObjective, Transform, ftglambda, "FTG",JointObjective::datafit);
+            Objective.AddObjective(FTGObjective, Transform, ftglambda, "FTG",
+                JointObjective::datafit);
             std::cout << "FTG ndata: " << FTGData.size() << std::endl;
             std::cout << "FTG lambda: " << ftglambda << std::endl;
           }
