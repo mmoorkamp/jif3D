@@ -21,8 +21,8 @@ ForwardResult CalculateFrequency(const ForwardInfo &Info,
     //  const size_t nmeas = Info.Model.GetMeasPosX().size();
     const size_t nfreq = Info.Model.GetFrequencies().size();
     const size_t nstats = Info.Model.GetExIndices().size() / nfreq;
-    const size_t nmodx = Info.Model.GetXCoordinates().size();
-    const size_t nmody = Info.Model.GetYCoordinates().size();
+    const size_t nmodx = Info.Model.GetData().shape()[0];
+    const size_t nmody = Info.Model.GetData().shape()[1];
     const size_t ind_shift = nstats * Info.freqindex;
 
     ForwardResult result;

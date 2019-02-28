@@ -82,19 +82,25 @@ BOOST_AUTO_TEST_CASE(equal_geometry_test)
     //do we recognize differences in x-direction
     const size_t xsize = Model1.GetXCellSizes().size();
     jif3D::ThreeDGravityModel DiffX(Model1);
-    DiffX.SetXCellSizes()[rand() % xsize] += 0.1;
+    auto XCS = Model1.GetXCellSizes();
+    XCS[rand() % xsize] += 0.1;
+    DiffX.SetXCellSizes(XCS);
     BOOST_CHECK(!jif3D::EqualGridGeometry(Model1, DiffX));
 
     //do we recognize differences in y-direction
     const size_t ysize = Model1.GetYCellSizes().size();
     jif3D::ThreeDGravityModel DiffY(Model1);
-    DiffY.SetYCellSizes()[rand() % ysize] += 0.1;
+    auto YCS = Model1.GetYCellSizes();
+    YCS[rand() % ysize] += 0.1;
+    DiffY.SetYCellSizes(YCS);
     BOOST_CHECK(!jif3D::EqualGridGeometry(Model1, DiffY));
 
     //do we recognize differences in z-direction
     const size_t zsize = Model1.GetZCellSizes().size();
     jif3D::ThreeDGravityModel DiffZ(Model1);
-    DiffZ.SetZCellSizes()[rand() % zsize] += 0.1;
+    auto ZCS = Model1.GetZCellSizes();
+    ZCS[rand() % zsize] += 0.1;
+    DiffZ.SetZCellSizes(ZCS);
     BOOST_CHECK(!jif3D::EqualGridGeometry(Model1, DiffZ));
   }
 

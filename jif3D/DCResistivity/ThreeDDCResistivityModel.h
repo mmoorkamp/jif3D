@@ -84,15 +84,15 @@ namespace jif3D
       void SetHorizontalCellSize(const double XSize, const double YSize, const size_t nx,
           const size_t ny)
         {
-          ThreeDModelBase::SetXCellSizes().resize(nx);
-          std::fill_n(ThreeDModelBase::SetXCellSizes().begin(), nx, XSize);
-          ThreeDModelBase::SetYCellSizes().resize(ny);
-          std::fill_n(ThreeDModelBase::SetYCellSizes().begin(), ny, YSize);
+          ThreeDModelBase::t3DModelDim XCS(nx,XSize);
+          ThreeDModelBase::t3DModelDim YCS(ny,YSize);
+          ThreeDModelBase::SetXCellSizes(XCS);
+          ThreeDModelBase::SetYCellSizes(YCS);
         }
-      //! The vertical cells can have different sizes so we allow direct access to the CellSize structure
-      t3DModelDim &SetZCellSizes()
+      //! The vertical cells can all have different sizes so we allow direct access to the CellSize structure
+      void SetZCellSizes(ThreeDModelBase::t3DModelDim &ZCS)
         {
-          return ThreeDModelBase::SetZCellSizes();
+          ThreeDModelBase::SetZCellSizes(ZCS);
         }
       //! return read only access to the stored resistivity values
       const t3DModelData &GetResistivities() const
@@ -108,12 +108,12 @@ namespace jif3D
       void AddSource(double xcoord, double ycoord, double zcoord, double negxcoord,
           double negycoord, double negzcoord)
         {
-          SourcePosPosX.push_back(xcoord - XOrigin);
-          SourcePosPosY.push_back(ycoord - YOrigin);
-          SourcePosPosZ.push_back(zcoord - ZOrigin);
-          SourceNegPosX.push_back(negxcoord - XOrigin);
-          SourceNegPosY.push_back(negycoord - YOrigin);
-          SourceNegPosZ.push_back(negzcoord - ZOrigin);
+          SourcePosPosX.push_back(xcoord);
+          SourcePosPosY.push_back(ycoord);
+          SourcePosPosZ.push_back(zcoord);
+          SourceNegPosX.push_back(negxcoord);
+          SourceNegPosY.push_back(negycoord);
+          SourceNegPosZ.push_back(negzcoord);
         }
 
       //! Add a the second receiver electrode to the model
@@ -122,9 +122,9 @@ namespace jif3D
           int sourceindex)
         {
           ThreeDModelBase::AddMeasurementPoint(xcoord, ycoord, zcoord);
-          MeasSecPosX.push_back(negxcoord - XOrigin);
-          MeasSecPosY.push_back(negycoord - YOrigin);
-          MeasSecPosZ.push_back(negzcoord - ZOrigin);
+          MeasSecPosX.push_back(negxcoord);
+          MeasSecPosY.push_back(negycoord);
+          MeasSecPosZ.push_back(negzcoord);
           SourceIndices.push_back(sourceindex);
         }
       //! read only access to the x-positions of the Positive sources in m
@@ -226,10 +226,6 @@ namespace jif3D
                   Source.GetMeasPosZ()[i]);
             }
         }
-
-
-      //! Set the origin of the coordinate system, this is a reimplementation from the base class to also change the source positions
-      virtual void SetOrigin(const double x, const double y, const double z) override;
       //! Write the resistivity model in VTK format, at the moment the best format for plotting, this only writes the resistivity and not the source and receiver positions
       void WriteVTK(const std::string filename) const
         {

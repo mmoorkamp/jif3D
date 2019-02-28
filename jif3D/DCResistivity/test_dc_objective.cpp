@@ -47,10 +47,12 @@ BOOST_AUTO_TEST_SUITE( DC_Objective_Test_Suite )
         const size_t xsize = 7;
         const size_t ysize = 8;
         const size_t zsize = 7;
-        Model.SetHorizontalCellSize(1, 1, xsize, ysize);
-        Model.SetZCellSizes().resize(zsize);
-        std::fill_n(Model.SetZCellSizes().begin(), zsize, 1.0);
+
+        jif3D::ThreeDModelBase::t3DModelDim ZCS(zsize,1.0);
+
         Model.SetMeshSize(xsize, ysize, zsize);
+        Model.SetHorizontalCellSize(1, 1, xsize, ysize);
+        Model.SetZCellSizes(ZCS);
 
         const size_t ngrid = xsize * ysize * zsize;
         //generate a random mesh resistivity between 1 and 3000 Ohmm

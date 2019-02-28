@@ -174,12 +174,6 @@ namespace jif3D
         //and the distortion correction
         RawImpedance.resize(nstats * nfreq * 8);
         RawImpedance.clear();
-        //we make a call to the coordinate functions to make sure
-        //that we have updated the coordinate information and cached it
-        //only then the subsequent calls are thread safe
-        Model.GetXCoordinates();
-        Model.GetYCoordinates();
-        Model.GetZCoordinates();
 
         //if the current model does not contain any distortion information
         //generate distortion parameters equivalent to an identity matrix
@@ -200,6 +194,8 @@ namespace jif3D
         std::vector<double> BGDepths(Model.GetBackgroundThicknesses().size(), 0.0);
         std::partial_sum(Model.GetBackgroundThicknesses().begin(),
             Model.GetBackgroundThicknesses().end(), BGDepths.begin());
+        double ZOrigin = Model.GetZCoordinates()[0];
+        std::for_each(BGDepths.begin(), BGDepths.end(), [ZOrigin](double& d) { d+=ZOrigin;});
         CompareDepths(BGDepths, Model.GetZCoordinates());
         std::vector<std::pair<size_t, size_t>> NewExecTime;
 #ifdef HAVEOPENMP

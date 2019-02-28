@@ -187,6 +187,8 @@ BOOST_AUTO_TEST_SUITE( ReadWriteImpedances_Suite )
         jif3D::rvec Impedances, Error, Tipper, TipErr;
 
         GenerateData(Frequencies, XCoord, YCoord, ZCoord, Impedances, Error, C, 1);
+        Tipper.resize(Impedances.size()/2);
+        TipErr.resize(Impedances.size()/2);
         std::generate(Tipper.begin(), Tipper.end(), jif3D::platform::drand48);
         std::generate(TipErr.begin(), TipErr.end(), jif3D::platform::drand48);
 

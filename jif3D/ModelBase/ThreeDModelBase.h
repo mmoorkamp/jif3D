@@ -8,17 +8,19 @@
 #ifndef THREEDMODELBASE_H_
 #define THREEDMODELBASE_H_
 
-
 #include "../Global/Serialization.h"
 #include "../Global/FatalException.h"
 #include "../Global/Jif3DGlobal.h"
 #include <string>
 #include <netcdf>
-#include <boost/multi_array.hpp>
 
-#ifdef HAVEOPENMP
-#include <omp.h>
-#endif
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#pragma GCC diagnostic ignored "-Wmisleading-indentation"
+#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
+#include <boost/multi_array.hpp>
+#pragma GCC diagnostic pop
+
 
 /*! \file ThreeDModelBase.h
  * Contains the base class for all 3D models.
@@ -57,22 +59,6 @@ namespace jif3D
       tMeasPosVec MeasPosY;
       //! the z-coordinates of the measurement points
       tMeasPosVec MeasPosZ;
-      //! Have the cell sizes for the x-coordinate changed
-      /*! This is basically a flag for caching, we could recalculate the Grid coordinates
-       * every time from the cell sizes. This is slow and the coordinates are often needed.
-       * Therefore we store whether the sizes have changed and only recalculate then, otherwise
-       * we take the values from GridXCoordinates. This should also be possible for const
-       * objects, even though the object is not bitwise constant any more. Thus it is mutable.
-       */
-      mutable bool XCellSizesChanged;
-      //! Have the cell sizes for the y-coordinate changed
-      mutable bool YCellSizesChanged;
-      //! Have the cell sizes for the z-coordinate changed
-      mutable bool ZCellSizesChanged;
-#ifdef HAVEOPENMP
-      //! a locking variable to allow concurrent coordinate calculation calls
-      mutable omp_lock_t lck_model_coord;
-#endif
       //! The object containing the actual value, e.g. conductivity, velocity
       t3DModelData Data;
       //! The size of the cells in x-direction
@@ -81,45 +67,55 @@ namespace jif3D
       t3DModelDim YCellSizes;
       //! The size of the cells in z-direction
       t3DModelDim ZCellSizes;
-      //! The x-coordinate of the upper left front corner
-      /*! See the explanation for XCellSizesChanged why this is mutable
-       */
-      mutable t3DModelDim GridXCoordinates;
-      //! The y-coordinate of the upper left front corner
-      mutable t3DModelDim GridYCoordinates;
-      //! The z-coordinate of the upper left front corner
-      mutable t3DModelDim GridZCoordinates;
+      //! The coordinate of the grid cells in x-direction, contains both corners and therefore has nx+1 elements
+      t3DModelDim GridXCoordinates;
+      //! The coordinate of the grid cells in y-direction, contains both corners and therefore has ny+1 elements
+      t3DModelDim GridYCoordinates;
+      //! The coordinate of the grid cells in y-direction, contains both corners and therefore has nz+1 elements
+      t3DModelDim GridZCoordinates;
       //! Calculate the coordinates of the model cells from the sizes of each cell, this is a helper function used by ThreeDModelBase
-      void CalcCoordinates(t3DModelDim &Coordinates, const t3DModelDim Sizes,
-          bool &ChangeFlag) const;
+      void CalcSizes(const t3DModelDim &Coordinates, t3DModelDim &Sizes);
+      void CalcCoords(t3DModelDim &Coordinates, const t3DModelDim &Sizes);
     protected:
-      //! The origin of the coordinate system in x-direction in m
-      double XOrigin;
-      //! The origin of the coordinate system in y-direction in m
-      double YOrigin;
-      //! The origin of the coordinate system in z-direction in m
-      double ZOrigin;
-      //! read-write access to the cell size in x-direction in m
-      t3DModelDim &SetXCellSizes()
+      //! write access to the cell size in x-direction in m
+      void SetXCellSizes(const t3DModelDim &XCS)
         {
-          XCellSizesChanged = true;
-          return XCellSizes;
+          XCellSizes = XCS;
+          CalcCoords(GridXCoordinates, XCellSizes);
         }
-      //! read-write access to the cell size in y-direction in m
-      t3DModelDim &SetYCellSizes()
+      //! write access to the cell size in y-direction in m
+      void SetYCellSizes(const t3DModelDim &YCS)
         {
-          YCellSizesChanged = true;
-          return YCellSizes;
+          YCellSizes = YCS;
+          CalcCoords(GridYCoordinates, YCellSizes);
         }
-      //! read-write access to the cell size in z-direction in m
-      t3DModelDim &SetZCellSizes()
+      //! write access to the cell size in z-direction in m
+      void SetZCellSizes(const t3DModelDim &ZCS)
         {
-          ZCellSizesChanged = true;
-          return ZCellSizes;
+          ZCellSizes = ZCS;
+          CalcCoords(GridZCoordinates, ZCellSizes);
+        }
+      //! write access to the cell size in x-direction in m
+      void SetXCoordinates(const t3DModelDim &XCS)
+        {
+          GridXCoordinates = XCS;
+          CalcSizes(GridXCoordinates, XCellSizes);
+        }
+      //! write access to the cell size in y-direction in m
+      void SetYCoordinates(const t3DModelDim &YCS)
+        {
+          GridYCoordinates = YCS;
+          CalcSizes(GridYCoordinates, YCellSizes);
+        }
+      //! write access to the cell size in z-direction in m
+      void SetZCoordinates(const t3DModelDim &ZCS)
+        {
+          GridZCoordinates = ZCS;
+          CalcSizes(GridZCoordinates, ZCellSizes);
         }
       //! Read data and associated cell sizes from a netcdf file
-      void ReadDataFromNetCDF(const netCDF::NcFile &NetCDFFile, const std::string &DataName,
-          const std::string &UnitsName);
+      void ReadDataFromNetCDF(const netCDF::NcFile &NetCDFFile,
+          const std::string &DataName, const std::string &UnitsName);
       //! Write data and associated cell sizes to a netcdf file
       void WriteDataToNetCDF(netCDF::NcFile &NetCDFFile, const std::string &DataName,
           const std::string &UnitsName) const;
@@ -140,9 +136,9 @@ namespace jif3D
       void AddMeasurementPoint(const double xcoord, const double ycoord,
           const double zcoord)
         {
-          MeasPosX.push_back(xcoord - XOrigin);
-          MeasPosY.push_back(ycoord - YOrigin);
-          MeasPosZ.push_back(zcoord - ZOrigin);
+          MeasPosX.push_back(xcoord);
+          MeasPosY.push_back(ycoord);
+          MeasPosZ.push_back(zcoord);
         }
       //! remove all information about measurement points
       void ClearMeasurementPoints()
@@ -175,12 +171,30 @@ namespace jif3D
         }
       //! Set the origin of the coordinate system
       virtual void SetOrigin(const double x, const double y, const double z);
+      //! Get the Model origin for the x-coordinate
+      double GetXOrigin() const
+        {
+          return GridXCoordinates.at(0);
+        }
+      //! Get the Model origin for the y-coordinate
+      double GetYOrigin() const
+        {
+          return GridYCoordinates.at(0);
+        }
+      //! Get the Model origin for the z-coordinate
+      double GetZOrigin() const
+        {
+          return GridZCoordinates.at(0);
+        }
       //! Set the size of the mesh and the coordinate axes
       void SetMeshSize(const size_t nx, const size_t ny, const size_t nz)
         {
           XCellSizes.resize(nx);
           YCellSizes.resize(ny);
           ZCellSizes.resize(nz);
+          GridXCoordinates.resize(nx + 1);
+          GridYCoordinates.resize(ny + 1);
+          GridZCoordinates.resize(nz + 1);
           Data.resize(boost::extents[nx][ny][nz]);
         }
       //! From the three spatial indices, calculate the offset in memory
@@ -233,19 +247,16 @@ namespace jif3D
       //!Get the x (north) coordinates of the cells, might perform calculations and write operation but is now thread-safe
       const t3DModelDim &GetXCoordinates() const
         {
-          CalcCoordinates(GridXCoordinates, XCellSizes, XCellSizesChanged);
           return GridXCoordinates;
         }
       //!Get the y (east) coordinates of the cells, might perform calculations and write operation but is now thread-safe
       const t3DModelDim &GetYCoordinates() const
         {
-          CalcCoordinates(GridYCoordinates, YCellSizes, YCellSizesChanged);
           return GridYCoordinates;
         }
       //!Get the z (depth) coordinates of the cells, might perform calculations and write operation but is now thread-safe
       const t3DModelDim &GetZCoordinates() const
         {
-          CalcCoordinates(GridZCoordinates, ZCellSizes, ZCellSizesChanged);
           return GridZCoordinates;
         }
       //! The derived model classes also manage the synthetic data configuration, for parallel calculations we can signal how many chunks can be calculated independently (e.g. how many frequencies)
@@ -292,13 +303,10 @@ namespace jif3D
           //then serialize the raw data
           ar & boost::serialization::make_array(Data.origin(), Data.num_elements());
 #endif
-          ar & XCellSizes;
-          ar & YCellSizes;
-          ar & ZCellSizes;
-          //finally we need the origin of the model
-          ar & XOrigin;
-          ar & YOrigin;
-          ar & ZOrigin;
+          ar & GridXCoordinates;
+          ar & GridYCoordinates;
+          ar & GridZCoordinates;
+
         }
       //! Provide serialization to be able to load objects
       template<class Archive>
@@ -321,26 +329,22 @@ namespace jif3D
           Data.resize(boost::extents[nx][ny][nz]);
           ar & boost::serialization::make_array(Data.origin(), Data.num_elements());
 #endif
-          ar & XCellSizes;
-          ar & YCellSizes;
-          ar & ZCellSizes;
-          ar & XOrigin;
-          ar & YOrigin;
-          ar & ZOrigin;
+          ar & GridXCoordinates;
+          ar & GridYCoordinates;
+          ar & GridZCoordinates;
+          CalcSizes(GridXCoordinates, XCellSizes);
+          CalcSizes(GridYCoordinates, YCellSizes);
+          CalcSizes(GridZCoordinates, ZCellSizes);
         }
 #ifdef HAVEHPX
       HPX_SERIALIZATION_SPLIT_MEMBER()
 #else
       BOOST_SERIALIZATION_SPLIT_MEMBER()
 #endif
-      friend class ModelRefiner;
+friend class  ModelRefiner;
   ThreeDModelBase();
-  //! The copy operator copies all independent variables of ThreeDModelBase
-  ThreeDModelBase& operator=(const ThreeDModelBase& source);
-  //! We need to define a copy constructor to deal with openmp locks
-  ThreeDModelBase(const ThreeDModelBase &source);
   bool operator ==(const ThreeDModelBase &b) const;
-
+  ThreeDModelBase& operator=(const ThreeDModelBase& source);
   virtual ~ThreeDModelBase();
 };
 /* @} */

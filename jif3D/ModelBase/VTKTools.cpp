@@ -16,25 +16,17 @@ namespace jif3D
 
     //! A helper function to write the Coordinates for the 3 axes into a .vtk file
     void WriteCoordinatesToVTK(std::ofstream &file, const std::string &name,
-        const ThreeDModelBase::t3DModelDim &CellSizes, double origin = 0)
+        const ThreeDModelBase::t3DModelDim &CellCoords)
       {
         //write the coordinate name, the number of cell boundary values and its type
-        file << name << " " << CellSizes.size() + 1 << " double" << std::endl;
-        //write out the origin of the coordinate system
-        file << origin << " ";
-        //calculate the coordinates from the cell sizes and write to file
-        double CurrCoord = origin;
-        for (double CurrSize : CellSizes)
-          {
-            CurrCoord += CurrSize;
-            file << CurrCoord << " ";
-          }
+        file << name << " " << CellCoords.size() << " double" << std::endl;
+        std::copy(CellCoords.begin(),CellCoords.end(),std::ostream_iterator<double>(file," "));
         file << "\n";
       }
 
     //! A helper function to read the Coordinates for the 3 axes from a .vtk file
-    void ReadCoordinatesTFromVTK(std::ifstream &file,
-        ThreeDModelBase::t3DModelDim &CellSizes)
+    void ReadCoordinatesFromVTK(std::ifstream &file,
+        ThreeDModelBase::t3DModelDim &CellCoords)
       {
         //we need to read in a few key words from the vtk file
         //that are not of particular interest to us
@@ -42,61 +34,56 @@ namespace jif3D
         int nvalues;
         //get the number of values and swallow up the vtk keywords
         file >> dummy >> nvalues >> dummy;
-        std::vector<double> coordinates(nvalues);
+        CellCoords.resize(nvalues);
         //read in all the coordinate values
-        for (double &val : coordinates)
+        for (double &val : CellCoords)
           {
             file >> val;
           }
-        CellSizes.resize(nvalues - 1);
-        //translate coordinates to cell sizes
-        std::adjacent_difference(coordinates.begin() + 1, coordinates.end(),
-            CellSizes.begin());
       }
 
     /*! Write a .vtk file to plot a 3D model
      * @param filename The name of the output file, should contain the ending .vtk
      * @param DataName The name of the model data, for information for plotting programs
-     * @param XCellSizes The sizes of the cells in x-direction in m
-     * @param YCellSizes The sizes of the cells in y-direction in m
-     * @param ZCellSizes The sizes of the cells in z-direction in m
+     * @param XCellCoords The coordinates of the cells in x-direction in m
+     * @param YCellCoords The coordinates of the cells in y-direction in m
+     * @param ZCellCoords The coordinates of the cells in z-direction in m
      * @param Data The model values within each cell, shape has to match the  cell sizes
      * @param XOrigin The x-origin of the coordinate system in m
      * @param YOrigin The y-origin of the coordinate system in m
      * @param ZOrigin The z-origin of the coordinate system in m
      */
     void Write3DModelToVTK(const std::string &filename, const std::string &DataName,
-        const ThreeDModelBase::t3DModelDim &XCellSizes,
-        const ThreeDModelBase::t3DModelDim &YCellSizes,
-        const ThreeDModelBase::t3DModelDim &ZCellSizes,
-        const ThreeDModelBase::t3DModelData &Data, double xorigin, double yorigin,
-        double zorigin)
+        const ThreeDModelBase::t3DModelDim &XCellCoords,
+        const ThreeDModelBase::t3DModelDim &YCellCoords,
+        const ThreeDModelBase::t3DModelDim &ZCellCoords,
+        const ThreeDModelBase::t3DModelData &Data)
       {
         //do some consistency checks
         assert(Data.num_dimensions() == 3);
-        assert(Data.shape()[0] == XCellSizes.size());
-        assert(Data.shape()[1] == YCellSizes.size());
-        assert(Data.shape()[2] == ZCellSizes.size());
+        assert(Data.shape()[0] == XCellCoords.size() - 1);
+        assert(Data.shape()[1] == YCellCoords.size() - 1);
+        assert(Data.shape()[2] == ZCellCoords.size() - 1);
 
         //get the size of each model direction
-        const size_t nxvalues = XCellSizes.size();
-        const size_t nyvalues = YCellSizes.size();
-        const size_t nzvalues = ZCellSizes.size();
+        const size_t nxvalues = XCellCoords.size() - 1;
+        const size_t nyvalues = YCellCoords.size() - 1;
+        const size_t nzvalues = ZCellCoords.size() - 1;
 
         std::ofstream outfile(filename.c_str());
         //first we have to write some general information about the file format
         outfile << "# vtk DataFile Version 2.0 \n";
-        outfile << "3D Model data \n" ;
+        outfile << "3D Model data \n";
         outfile << "ASCII\n";
-        outfile << "DATASET RECTILINEAR_GRID\n" ;
+        outfile << "DATASET RECTILINEAR_GRID\n";
         //we write the left and right boundaries of each cell, but only store the left
         //so we have to write one extra value
         outfile << "DIMENSIONS " << nxvalues + 1 << " " << nyvalues + 1 << " "
             << nzvalues + 1 << "\n";
         //write information about the coordinate axes
-        WriteCoordinatesToVTK(outfile, "X_COORDINATES", XCellSizes, xorigin);
-        WriteCoordinatesToVTK(outfile, "Y_COORDINATES", YCellSizes, yorigin);
-        WriteCoordinatesToVTK(outfile, "Z_COORDINATES", ZCellSizes, zorigin);
+        WriteCoordinatesToVTK(outfile, "X_COORDINATES", XCellCoords);
+        WriteCoordinatesToVTK(outfile, "Y_COORDINATES", YCellCoords);
+        WriteCoordinatesToVTK(outfile, "Z_COORDINATES", ZCellCoords);
         //write some information about the data itself
         outfile << "CELL_DATA " << nxvalues * nyvalues * nzvalues << "\n";
         outfile << "SCALARS " << DataName << " double" << "\n";
@@ -124,26 +111,26 @@ namespace jif3D
     /*! Write a .vtk file to plot a 3D model with vector valued cells (.e.g the cross-gradient)
      * @param filename The name of the output file, should contain the ending .vtk
      * @param DataName The name of the model data, for information for plotting programs
-     * @param XCellSizes The sizes of the cells in x-direction in m
-     * @param YCellSizes The sizes of the cells in y-direction in m
-     * @param ZCellSizes The sizes of the cells in z-direction in m
+     * @param XCellCoords The coordinates of the cells in x-direction in m
+     * @param YCellCoords The coordinates of the cells in y-direction in m
+     * @param ZCellCoords The coordinates of the cells in z-direction in m
      * @param CompX The x-component of the vector within each cell, shape has to match the  cell sizes
      * @param CompY The y-component of the vector within each cell, shape has to match the  cell sizes
      * @param CompZ The z-component of the vector within each cell, shape has to match the  cell sizes
      */
     void Write3DVectorModelToVTK(const std::string &filename, const std::string &DataName,
-        const ThreeDModelBase::t3DModelDim &XCellSizes,
-        const ThreeDModelBase::t3DModelDim &YCellSizes,
-        const ThreeDModelBase::t3DModelDim &ZCellSizes,
+        const ThreeDModelBase::t3DModelDim &XCellCoords,
+        const ThreeDModelBase::t3DModelDim &YCellCoords,
+        const ThreeDModelBase::t3DModelDim &ZCellCoords,
         const ThreeDModelBase::t3DModelData &CompX,
         const ThreeDModelBase::t3DModelData &CompY,
         const ThreeDModelBase::t3DModelData &CompZ)
       {
 
         //get the size of each model direction
-        const size_t nxvalues = XCellSizes.size();
-        const size_t nyvalues = YCellSizes.size();
-        const size_t nzvalues = ZCellSizes.size();
+        const size_t nxvalues = XCellCoords.size() - 1;
+        const size_t nyvalues = YCellCoords.size() - 1;
+        const size_t nzvalues = ZCellCoords.size() - 1;
 
         std::ofstream outfile(filename.c_str());
         //first we have to write some general information about the file format
@@ -156,9 +143,9 @@ namespace jif3D
         outfile << "DIMENSIONS " << nxvalues + 1 << " " << nyvalues + 1 << " "
             << nzvalues + 1 << "\n";
         //write information about the coordinate axes
-        WriteCoordinatesToVTK(outfile, "X_COORDINATES", XCellSizes);
-        WriteCoordinatesToVTK(outfile, "Y_COORDINATES", YCellSizes);
-        WriteCoordinatesToVTK(outfile, "Z_COORDINATES", ZCellSizes);
+        WriteCoordinatesToVTK(outfile, "X_COORDINATES", XCellCoords);
+        WriteCoordinatesToVTK(outfile, "Y_COORDINATES", YCellCoords);
+        WriteCoordinatesToVTK(outfile, "Z_COORDINATES", ZCellCoords);
         //write some information about the data itself
         outfile << "CELL_DATA " << nxvalues * nyvalues * nzvalues << "\n";
         outfile << "VECTORS " << DataName << " double" << "\n";
@@ -181,15 +168,15 @@ namespace jif3D
 
     /*! Read a .vtk file containing a 3D model
      * @param filename The name of the input file, should contain the ending .vtk
-     * @param XCellSizes The sizes of the cells in x-direction in m
-     * @param YCellSizes The sizes of the cells in y-direction in m
-     * @param ZCellSizes The sizes of the cells in z-direction in m
+     * @param XCellCoords The coordinates of the cells in x-direction in m
+     * @param YCellCoords The coordinates of the cells in y-direction in m
+     * @param ZCellCoords The coordinates of the cells in z-direction in m
      * @param Data The model values within each cell, shape has to match the  cell sizes
      */
     void Read3DModelFromVTK(const std::string &filename,
-        ThreeDModelBase::t3DModelDim &XCellSizes,
-        ThreeDModelBase::t3DModelDim &YCellSizes,
-        ThreeDModelBase::t3DModelDim &ZCellSizes, ThreeDModelBase::t3DModelData &Data)
+        ThreeDModelBase::t3DModelDim &XCellCoords,
+        ThreeDModelBase::t3DModelDim &YCellCoords,
+        ThreeDModelBase::t3DModelDim &ZCellCoords, ThreeDModelBase::t3DModelData &Data)
       {
         std::ifstream infile(filename.c_str());
         char dummy[255];
@@ -208,9 +195,9 @@ namespace jif3D
         nyvalues -= 1;
         nzvalues -= 1;
         //read the coordinate of the axes
-        ReadCoordinatesTFromVTK(infile, XCellSizes);
-        ReadCoordinatesTFromVTK(infile, YCellSizes);
-        ReadCoordinatesTFromVTK(infile, ZCellSizes);
+        ReadCoordinatesFromVTK(infile, XCellCoords);
+        ReadCoordinatesFromVTK(infile, YCellCoords);
+        ReadCoordinatesFromVTK(infile, ZCellCoords);
         //skip some more vtk specific information
         infile.getline(dummy, 255);
         infile.getline(dummy, 255);
@@ -319,7 +306,7 @@ namespace jif3D
         //do some consistency checks
         const size_t ndata = Data.size();
         const size_t nmeas = PosX.size();
-        if (ndata  != nmeas * 3)
+        if (ndata != nmeas * 3)
           {
             throw FatalException(
                 "Amount of x-coordinates does not match data size: " + filename, __FILE__,
@@ -373,7 +360,7 @@ namespace jif3D
         //do some consistency checks
         const size_t ndata = Data.size();
         const size_t nmeas = PosX.size();
-        if (ndata  != nmeas * 9)
+        if (ndata != nmeas * 9)
           {
             throw FatalException(
                 "Amount of x-coordinates does not match data size: " + filename, __FILE__,

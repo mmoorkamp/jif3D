@@ -21,6 +21,10 @@
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/program_options.hpp>
 
+#ifdef HAVEOPENMP
+#include <omp.h>
+#endif
+
 namespace po = boost::program_options;
 
 int main(int argc, char *argv[])

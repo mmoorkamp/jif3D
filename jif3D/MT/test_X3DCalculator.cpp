@@ -30,8 +30,6 @@ BOOST_AUTO_TEST_SUITE( X3DCalculator_Suite )
         const size_t nbglayers = 5;
         jif3D::X3DModel Model;
 
-        Model.SetZCellSizes().resize(zsize);
-
         Model.SetConductivities().resize(boost::extents[xsize][ysize][zsize]);
         std::vector<double> bg_thicknesses(nbglayers), bg_conductivities(nbglayers);
 
@@ -42,7 +40,8 @@ BOOST_AUTO_TEST_SUITE( X3DCalculator_Suite )
         const double cond = 0.01;
         Model.SetHorizontalCellSize(deltax, deltay, xsize, ysize);
 
-        std::fill_n(Model.SetZCellSizes().begin(), zsize, deltaz);
+        jif3D::ThreeDModelBase::t3DModelDim ZCS(zsize, deltaz);
+        Model.SetZCellSizes(ZCS);
         std::fill_n(Model.SetConductivities().origin(), xsize * ysize * zsize, cond);
         std::fill_n(bg_conductivities.begin(), nbglayers, cond);
         bg_conductivities.back() *= 1.001;
@@ -82,7 +81,6 @@ BOOST_AUTO_TEST_SUITE( X3DCalculator_Suite )
         const size_t nbglayers = 5;
         jif3D::X3DModel Model;
 
-        Model.SetZCellSizes().resize(zsize);
 
         Model.SetConductivities().resize(boost::extents[xsize][ysize][zsize]);
         std::vector<double> bg_thicknesses(nbglayers), bg_conductivities(nbglayers);
@@ -93,8 +91,8 @@ BOOST_AUTO_TEST_SUITE( X3DCalculator_Suite )
 
         const double cond = 0.01;
         Model.SetHorizontalCellSize(deltax, deltay, xsize, ysize);
-
-        std::fill_n(Model.SetZCellSizes().begin(), zsize, deltaz);
+        jif3D::ThreeDModelBase::t3DModelDim ZCS(zsize, deltaz);
+        Model.SetZCellSizes(ZCS);
         std::fill_n(Model.SetConductivities().origin(), xsize * ysize * zsize, cond);
         std::fill_n(bg_conductivities.begin(), nbglayers, cond);
         std::fill_n(bg_thicknesses.begin(), nbglayers, 200.0);
@@ -164,15 +162,16 @@ BOOST_AUTO_TEST_SUITE( X3DCalculator_Suite )
         const double anom_cond = 0.5;
 
         Model.SetHorizontalCellSize(deltax, deltay, xsize, ysize);
-        Model.SetZCellSizes().resize(zsize);
+        jif3D::ThreeDModelBase::t3DModelDim ZCS(zsize, deltaz);
 
         double currsize = deltaz;
         for (size_t i = 0; i < zsize; ++i)
           {
             bg_thicknesses[i] = floor(currsize);
-            Model.SetZCellSizes()[i] = floor(currsize);
+            ZCS[i] = floor(currsize);
             currsize *= 1.1;
           }
+        Model.SetZCellSizes(ZCS);
         //std::fill_n(bg_thicknesses.begin(), nbglayers, bg_thick);
         //std::fill_n(Model.SetZCellSizes().origin(),zsize,deltaz);
 

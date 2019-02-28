@@ -9,21 +9,20 @@
 #include "ModelRefiner.h"
 #include "../Global/FatalException.h"
 
- #pragma GCC diagnostic ignored "-Wuninitialized"
+#pragma GCC diagnostic ignored "-Wuninitialized"
 
 namespace jif3D
   {
 
-    void ModelRefiner::RefineOneAxis(
-        const ThreeDModelBase::t3DModelDim &OldCoordinates,
+    void ModelRefiner::RefineOneAxis(const ThreeDModelBase::t3DModelDim &OldCoordinates,
         const ThreeDModelBase::t3DModelDim &RefCoordinates,
         const ThreeDModelBase::t3DModelDim &OldSizes,
         ThreeDModelBase::t3DModelDim &NewSizes)
       {
         //we need an index for the current position on the refined axes
         size_t refineindex = 0;
-        const size_t nold = OldCoordinates.size();
-        const size_t nref = RefCoordinates.size();
+        const size_t nold = OldCoordinates.size() - 1;
+        const size_t nref = RefCoordinates.size() - 1;
         //a vector is slightly easier to handle than boost::multi_array, so we work with it and copy the result
         std::vector<double> TempCoord;
         // we go through all the coordinates of the original axes
@@ -33,8 +32,7 @@ namespace jif3D
             TempCoord.push_back(OldCoordinates[i]);
             //we do not want to have a coordinate twice
             //even if the original coordinates also appear in the refined coordinates
-            if (refineindex < nref && RefCoordinates[refineindex]
-                == OldCoordinates[i])
+            if (refineindex < nref && RefCoordinates[refineindex] == OldCoordinates[i])
               {
                 ++refineindex;
               }
@@ -42,8 +40,7 @@ namespace jif3D
             const double CurrLimit = OldCoordinates[i] + OldSizes[i];
             // as long as we haven't exceeded the index of the refinement coordinates
             //and we are still in the current cell
-            while (refineindex < nref && RefCoordinates[refineindex]
-                < CurrLimit)
+            while (refineindex < nref && RefCoordinates[refineindex] < CurrLimit)
               {
                 //we add the refinement coordinates
                 TempCoord.push_back(RefCoordinates[refineindex]);
@@ -54,16 +51,14 @@ namespace jif3D
         //we work with sizes so we transform the coordinates
         //to cell sizes
         NewSizes.resize(TempCoord.size());
-        std::adjacent_difference(TempCoord.begin(), TempCoord.end(),
-            NewSizes.begin());
+        std::adjacent_difference(TempCoord.begin(), TempCoord.end(), NewSizes.begin());
         std::rotate(NewSizes.begin(), NewSizes.begin() + 1, NewSizes.end());
         //finally adjust the size of the last cell so that the modeling domain
         //is the same as before
         double lastsize = OldSizes[OldSizes.size() - 1];
         if (refineindex > 0)
           {
-            lastsize += OldCoordinates[OldCoordinates.size() - 1]
-                - TempCoord.back();
+            lastsize += OldCoordinates[OldCoordinates.size() - 2] - TempCoord.back();
           }
         if (lastsize > 0.0)
           {
@@ -71,8 +66,8 @@ namespace jif3D
           }
         else
           {
-            throw jif3D::FatalException(
-                "Negative cell size in model refinement !", __FILE__, __LINE__);
+            throw jif3D::FatalException("Negative cell size in model refinement !",
+                __FILE__, __LINE__);
           }
       }
 
@@ -80,13 +75,17 @@ namespace jif3D
         ThreeDModelBase &RefinedModel)
       {
         //Refine all three axes and allocate memory for the new grid
+        ThreeDModelBase::t3DModelDim XCS, YCS, ZCS;
         RefineOneAxis(InputModel.GetXCoordinates(), RefiningXCoordinates,
-            InputModel.GetXCellSizes(), RefinedModel.SetXCellSizes());
+            InputModel.GetXCellSizes(), XCS);
+        RefinedModel.SetXCellSizes(XCS);
         RefineOneAxis(InputModel.GetYCoordinates(), RefiningYCoordinates,
-            InputModel.GetYCellSizes(), RefinedModel.SetYCellSizes());
+            InputModel.GetYCellSizes(), YCS);
+        RefinedModel.SetYCellSizes(YCS);
         RefineOneAxis(InputModel.GetZCoordinates(), RefiningZCoordinates,
-            InputModel.GetZCellSizes(), RefinedModel.SetZCellSizes());
-        RefinedModel .SetData().resize(
+            InputModel.GetZCellSizes(), ZCS);
+        RefinedModel.SetZCellSizes(ZCS);
+        RefinedModel.SetData().resize(
             boost::extents[RefinedModel.GetXCellSizes().size()][RefinedModel.GetYCellSizes().size()][RefinedModel.GetZCellSizes().size()]);
       }
     //find the index of the last refined cell that still corresponds to the current old cell
@@ -102,8 +101,7 @@ namespace jif3D
           }
       }
     //assign the same value to the subset of refined cells that correspond to one coarse cell
-    void AssignValue(
-        ThreeDModelBase::t3DModelData::array_view<3>::type &myview,
+    void AssignValue(ThreeDModelBase::t3DModelData::array_view<3>::type &myview,
         const double value)
       {
         for (size_t i = 0; i < myview.shape()[0]; ++i)
@@ -113,8 +111,7 @@ namespace jif3D
       }
 
     //assign the same value to the subset of refined cells that correspond to one coarse cell
-    double CombineValues(
-        ThreeDModelBase::t3DModelData::array_view<3>::type &myview)
+    double CombineValues(ThreeDModelBase::t3DModelData::array_view<3>::type &myview)
       {
         double result = 0;
         for (size_t i = 0; i < myview.shape()[0]; ++i)
@@ -155,8 +152,8 @@ namespace jif3D
                     //and we can assign the right value to these cells
                     typedef boost::multi_array_types::index_range range;
                     ThreeDModelBase::t3DModelData::array_view<3>::type myview =
-                        RefinedModel.SetData()[boost::indices[range(startx,
-                            endx)][range(starty, endy)][range(startz, endz)]];
+                        RefinedModel.SetData()[boost::indices[range(startx, endx)][range(
+                            starty, endy)][range(startz, endz)]];
                     AssignValue(myview, InputModel.GetData()[i][j][k]);
                     //the next cell starts at the end of the current cell
                     startz = endz;
@@ -203,10 +200,10 @@ namespace jif3D
                         RefinedModel.GetZCellSizes());
                     typedef boost::multi_array_types::index_range range;
                     ThreeDModelBase::t3DModelData::array_view<3>::type myview =
-                        GradientModel.SetData()[boost::indices[range(startx,
-                            endx)][range(starty, endy)][range(startz, endz)]];
-                    CoarseGradient(CoarseModel.IndexToOffset(i, j, k))
-                        = CombineValues(myview);
+                        GradientModel.SetData()[boost::indices[range(startx, endx)][range(
+                            starty, endy)][range(startz, endz)]];
+                    CoarseGradient(CoarseModel.IndexToOffset(i, j, k)) = CombineValues(
+                        myview);
                     //the next cell starts at the end of the current cell
                     startz = endz;
                   }
@@ -221,7 +218,7 @@ namespace jif3D
       }
 
     ModelRefiner::ModelRefiner() :
-      RefiningXCoordinates(), RefiningYCoordinates(), RefiningZCoordinates()
+        RefiningXCoordinates(), RefiningYCoordinates(), RefiningZCoordinates()
       {
 
       }

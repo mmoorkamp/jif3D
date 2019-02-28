@@ -44,12 +44,9 @@ void MakeRandomModel(ModelType &Model, const size_t maxcells,
     const size_t ysize = YDim.size();
     const size_t zsize = ZDim.size();
     //copy the generated sizes to the model object
-    Model.SetXCellSizes().resize(xsize);
-    Model.SetXCellSizes() = XDim;
-    Model.SetYCellSizes().resize(ysize);
-    Model.SetYCellSizes() = YDim;
-    Model.SetZCellSizes().resize(zsize);
-    Model.SetZCellSizes() = ZDim;
+    Model.SetXCellSizes(XDim);
+    Model.SetYCellSizes(YDim);
+    Model.SetZCellSizes(ZDim);
     //get the horizontal dimensions of the model
     int xlength = boost::numeric_cast<int>(floor(std::accumulate(XDim.begin(),
         XDim.end(), 0.0)));

@@ -50,8 +50,8 @@ exe rotategrav : rotategrav.cpp  joint ..//boost_filesystem ..//boost_system ;
 exe mergetomo : mergetomo.cpp  ../Tomo//tomo  ../Global//global ../ModelBase//modelbase ..//boost_filesystem ..//boost_system ;
 exe vtk2netcdf : vtk2netcdf.cpp   ../Global//global ../ModelBase//modelbase ../MT//mt ..//boost_filesystem ..//boost_system ;
 exe tomoregion : tomoregion.cpp  ../Tomo//tomo  ../Global//global ../ModelBase//modelbase ..//boost_filesystem ..//boost_system ;
-exe eikonal : eikonal.cpp  ../Tomo//tomo  ../Global//global ;
-exe eikonal2D : eikonal2D.cpp  ../Tomo//tomo  ../Global//global ;
+exe eikonal : eikonal.cpp  ../Tomo//tomo  ../Global//global ../ModelBase//modelbase ;
+exe eikonal2D : eikonal2D.cpp  ../Tomo//tomo  ../Global//global ../ModelBase//modelbase ;
 exe modelwave : modelwave.cpp  ../Tomo//tomo  ../Global//global ../ModelBase//modelbase ..//boost_filesystem ..//boost_system ;
 
 exe opttest : opttest.cpp  ../Joint//joint ../Joint//setup ../MT//mt ..//optpp ..//newmat joint ..//boost_program_options : 

@@ -64,46 +64,7 @@ namespace jif3D
         return *this;
       }
 
-    void ThreeDDCResistivityModel::SetOrigin(const double x, const double y,
-        const double z)
-      {
-        //transform the source coordinates from old model to real coordinates
-        //the coordinates of the receivers are changed by the implementation
-        //in the base class that we call below
-        std::transform(SourcePosPosX.begin(), SourcePosPosX.end(), SourcePosPosX.begin(),
-            [&] (double val)
-              { return val + XOrigin - x;});
-        std::transform(SourcePosPosY.begin(), SourcePosPosY.end(), SourcePosPosY.begin(),
-            [&] (double val)
-              { return val + YOrigin - y;});
-        std::transform(SourcePosPosZ.begin(), SourcePosPosZ.end(), SourcePosPosZ.begin(),
-            [&] (double val)
-              { return val + ZOrigin - z;});
 
-        std::transform(SourceNegPosX.begin(), SourceNegPosX.end(), SourceNegPosX.begin(),
-            [&] (double val)
-              { return val + XOrigin - x;});
-        std::transform(SourceNegPosY.begin(), SourceNegPosY.end(), SourceNegPosY.begin(),
-            [&] (double val)
-              { return val + YOrigin - y;});
-        std::transform(SourceNegPosZ.begin(), SourceNegPosZ.end(), SourceNegPosZ.begin(),
-            [&] (double val)
-              { return val + ZOrigin - z;});
-
-        std::transform(MeasSecPosX.begin(), MeasSecPosX.end(), MeasSecPosX.begin(),
-            [&] (double val)
-              { return val + XOrigin - x;});
-        std::transform(MeasSecPosY.begin(), MeasSecPosY.end(), MeasSecPosY.begin(),
-            [&] (double val)
-              { return val + YOrigin - y;});
-        std::transform(MeasSecPosZ.begin(), MeasSecPosZ.end(), MeasSecPosZ.begin(),
-            [&] (double val)
-              { return val + ZOrigin - z;});
-
-        //we have to call the base implementation in the end because
-        //it changes the first measurement positions and the Origin
-        ThreeDModelBase::SetOrigin(x, y, z);
-      }
 
     void ThreeDDCResistivityModel::WriteNetCDF(const std::string &filename) const
       {

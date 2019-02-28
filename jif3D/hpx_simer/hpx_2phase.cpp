@@ -95,11 +95,14 @@ int hpx_main(po::variables_map& vm)
     //set the cell sizes and allocate memory for the mesh
     Model.SetMeshSize(nx, ny, nz);
     Model.SetHorizontalCellSize(deltax, deltay, nx, ny);
-    std::fill_n(Model.SetZCellSizes().begin(), nz, deltaz);
+    jif3D::ThreeDModelBase::t3DModelDim XCS(nz,deltaz);
+
     if (topthick > 0.0)
       {
-        Model.SetZCellSizes()[0] = topthick;
+        XCS[0] = topthick;
       }
+    Model.SetZCellSizes(XCS);
+
     //ask for a conductivity to fill the mesh with
     double bg_conductivity = 1.0;
     cout << "Background Conductivity [S/m] : ";

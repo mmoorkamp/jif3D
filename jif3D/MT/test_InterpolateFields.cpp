@@ -37,7 +37,9 @@ BOOST_AUTO_TEST_SUITE( InterpolateFields_Suite )
         Model.SetMeshSize(nx, ny, nz);
         const double deltax = 100, deltay = 70, deltaz = 80;
         Model.SetHorizontalCellSize(deltax, deltay, nx, ny);
-        std::fill_n(Model.SetZCellSizes().begin(), nz, deltaz);
+        jif3D::ThreeDModelBase::t3DModelDim ZCS(nz, deltaz);
+        Model.SetZCellSizes(ZCS);
+
         const size_t nmeas = 2;
         for (size_t i = 0; i < nmeas; ++i)
           {
@@ -101,13 +103,14 @@ BOOST_AUTO_TEST_SUITE( InterpolateFields_Suite )
 
     BOOST_AUTO_TEST_CASE (functioninter_test)
       {
-        jif3D::platform::srand48((int)time(nullptr));
+        jif3D::platform::srand48((int) time(nullptr));
         const size_t nx = 11, ny = 12, nz = 5;
         jif3D::X3DModel Model;
         Model.SetMeshSize(nx, ny, nz);
         const double deltax = 100, deltay = 70, deltaz = 80;
         Model.SetHorizontalCellSize(deltax, deltay, nx, ny);
-        std::fill_n(Model.SetZCellSizes().begin(), nz, deltaz);
+        jif3D::ThreeDModelBase::t3DModelDim ZCS(nz, deltaz);
+        Model.SetZCellSizes(ZCS);
         const double xcoeff = jif3D::platform::drand48();
         const double ycoeff = jif3D::platform::drand48();
 

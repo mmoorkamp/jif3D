@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_SUITE( X3DTipperObjective_Suite )
         const size_t nmod = xsize * ysize * zsize;
 
         Model.SetMeshSize(xsize, ysize, zsize);
-        Model.SetZCellSizes().resize(zsize);
+
 
         std::vector<double> bg_thicknesses(nbglayers), bg_conductivities(nbglayers);
 
@@ -44,9 +44,8 @@ BOOST_AUTO_TEST_SUITE( X3DTipperObjective_Suite )
         const double deltay = 100.0;
         const double deltaz = 300.0;
         Model.SetHorizontalCellSize(deltax, deltay, xsize, ysize);
-
-        std::fill_n(Model.SetZCellSizes().begin(), zsize, deltaz);
-        Model.SetZCellSizes()[1] = deltaz;
+        jif3D::ThreeDModelBase::t3DModelDim ZCS(zsize, deltaz);
+        Model.SetZCellSizes(ZCS);
         std::fill_n(Model.SetConductivities().origin(), nmod, 0.01);
 
         Model.SetConductivities()[xsize / 2 + 1][ysize / 2][0] = 0.025;
@@ -124,7 +123,10 @@ BOOST_AUTO_TEST_SUITE( X3DTipperObjective_Suite )
         jif3D::X3DModel FineModel;
         FineModel.SetMeshSize(3 * xsize, 3 * ysize, 3 * zsize);
         FineModel.SetHorizontalCellSize(100.0, 100.0, 3 * xsize, 3 * ysize);
-        std::fill_n(FineModel.SetZCellSizes().begin(), 3 * zsize, 100.0);
+        jif3D::ThreeDModelBase::t3DModelDim ZCS(3*zsize, 100.0);
+        Model.SetZCellSizes(ZCS);
+
+        FineModel.SetZCellSizes(ZCS);
         FineModel.SetBackgroundConductivities(Model.GetBackgroundConductivities());
         FineModel.SetBackgroundThicknesses(Model.GetBackgroundThicknesses());
         FineModel.SetFrequencies() = Model.GetFrequencies();

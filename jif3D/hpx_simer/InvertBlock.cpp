@@ -32,8 +32,11 @@ double InvertBlock(jif3D::X3DModel Model, jif3D::rvec Data, std::string tempdir,
     const size_t nzold = Model.GetZCoordinates().size();
     double maxz = Model.GetZCoordinates()[nzold - 1] + Model.GetZCellSizes()[nzold - 1];
     CoarseModel.SetHorizontalCellSize(maxx, maxy, 1, 1);
-    CoarseModel.SetZCellSizes()[0] = Model.GetZCellSizes()[0];
-    CoarseModel.SetZCellSizes()[1] = maxz - Model.GetZCellSizes()[0];
+    jif3D::ThreeDModelBase::t3DModelDim XCS(nz,0.0);
+
+    XCS[0] = Model.GetZCellSizes()[0];
+    XCS[1] = maxz - Model.GetZCellSizes()[0];
+    CoarseModel.SetZCellSizes(XCS);
     CoarseModel.SetBackgroundConductivities(Model.GetBackgroundConductivities());
     CoarseModel.SetBackgroundThicknesses(Model.GetBackgroundThicknesses());
     CoarseModel.CopyMeasurementConfigurations(Model);

@@ -21,39 +21,14 @@ namespace jif3D
   {
 
     ThreeDModelBase::ThreeDModelBase() :
-        MeasPosX(), MeasPosY(), MeasPosZ(), XCellSizesChanged(true), YCellSizesChanged(
-            true), ZCellSizesChanged(true), Data(), XCellSizes(), YCellSizes(), ZCellSizes(), GridXCoordinates(), GridYCoordinates(), GridZCoordinates(), XOrigin(
-            0.0), YOrigin(0.0), ZOrigin(0.0)
+        MeasPosX(), MeasPosY(), MeasPosZ(), Data(), XCellSizes(), YCellSizes(), ZCellSizes(), GridXCoordinates(), GridYCoordinates(), GridZCoordinates()
       {
-#ifdef HAVEOPENMP
-        omp_init_lock(&lck_model_coord);
-#endif
+
       }
 
     ThreeDModelBase::~ThreeDModelBase()
       {
-#ifdef HAVEOPENMP
-        omp_destroy_lock(&lck_model_coord);
-#endif
-      }
 
-    //when we copy a model we always set the cell size change flags to true
-    //this costs us recalculation of the grid coordinates, but we do not
-    //have to worry whether the grid coordinate values are updated or not
-    ThreeDModelBase::ThreeDModelBase(const ThreeDModelBase &source) :
-        MeasPosX(source.MeasPosX), MeasPosY(source.MeasPosY), MeasPosZ(source.MeasPosZ), XCellSizesChanged(
-            true), YCellSizesChanged(true), ZCellSizesChanged(true), Data(source.Data), XCellSizes(
-            source.XCellSizes), YCellSizes(source.YCellSizes), ZCellSizes(
-            source.ZCellSizes), GridXCoordinates(), GridYCoordinates(), GridZCoordinates(), XOrigin(
-            source.XOrigin), YOrigin(source.YOrigin), ZOrigin(source.ZOrigin)
-
-      {
-        //each object needs its own lock for openmp
-        //so we do not copy the value from the source object
-        //but we reinitialize
-#ifdef HAVEOPENMP
-        omp_init_lock(&lck_model_coord);
-#endif
       }
 
     ThreeDModelBase& ThreeDModelBase::operator=(const ThreeDModelBase& source)
@@ -63,38 +38,20 @@ namespace jif3D
         //we have to implement the copy operator to make sure
         //all information is updated appropriately
         //first we copy all the measurement positions
-        MeasPosX.resize(source.MeasPosX.size());
-        std::copy(source.MeasPosX.begin(), source.MeasPosX.end(), MeasPosX.begin());
-        MeasPosY.resize(source.MeasPosY.size());
-        std::copy(source.MeasPosY.begin(), source.MeasPosY.end(), MeasPosY.begin());
-        MeasPosZ.resize(source.MeasPosZ.size());
-        std::copy(source.MeasPosZ.begin(), source.MeasPosZ.end(), MeasPosZ.begin());
+        MeasPosX  = source.MeasPosX;
+        MeasPosY  = source.MeasPosY;
+        MeasPosZ  = source.MeasPosZ;
         //then we copy the data, i.e. the cells values of the 3D model
         Data.resize(
             boost::extents[source.Data.shape()[0]][source.Data.shape()[1]][source.Data.shape()[2]]);
         Data = source.Data;
         //now we copy the cell sizes for all three directions
-        XCellSizes.resize(source.XCellSizes.size());
-        std::copy(source.XCellSizes.begin(), source.XCellSizes.end(), XCellSizes.begin());
-        YCellSizes.resize(source.YCellSizes.size());
-        std::copy(source.YCellSizes.begin(), source.YCellSizes.end(), YCellSizes.begin());
-        ZCellSizes.resize(source.ZCellSizes.size());
-        std::copy(source.ZCellSizes.begin(), source.ZCellSizes.end(), ZCellSizes.begin());
-        //we copy origin of the coordinate system
-        XOrigin = source.XOrigin;
-        YOrigin = source.YOrigin;
-        ZOrigin = source.ZOrigin;
-        //we regenerate the coordinate information by pretending that the cell sizes changed
-        XCellSizesChanged = true;
-        YCellSizesChanged = true;
-        ZCellSizesChanged = true;
-
-        //we do not perform any copying of the ompenmp lock
-        //they are initialized by the constructor
+        SetXCoordinates(source.GridXCoordinates);
+        SetYCoordinates(source.GridYCoordinates);
+        SetZCoordinates(source.GridZCoordinates);
 
         return *this;
       }
-
     bool ThreeDModelBase::operator ==(const ThreeDModelBase &b) const
       {
         double epsilon = 0.001;
@@ -106,11 +63,11 @@ namespace jif3D
           return false;
         if (Data.num_elements() != b.Data.num_elements())
           return false;
-        if (XCellSizes.size() != b.XCellSizes.size())
+        if (GridXCoordinates.size() != b.GridXCoordinates.size())
           return false;
-        if (YCellSizes.size() != b.YCellSizes.size())
+        if (GridYCoordinates.size() != b.GridYCoordinates.size())
           return false;
-        if (ZCellSizes.size() != b.ZCellSizes.size())
+        if (GridZCoordinates.size() != b.GridZCoordinates.size())
           return false;
         if (!std::equal(MeasPosX.begin(), MeasPosX.end(), b.MeasPosX.begin(),
             [epsilon](double a, double b)
@@ -128,54 +85,50 @@ namespace jif3D
             b.Data.origin(), [epsilon](double a, double b)
               { return boost::math::relative_difference(a,b) < epsilon;}))
           return false;
-        if (!std::equal(XCellSizes.begin(), XCellSizes.end(), b.XCellSizes.begin(),
-            [epsilon](double a, double b)
+        if (!std::equal(GridXCoordinates.begin(), GridXCoordinates.end(),
+            b.GridXCoordinates.begin(), [epsilon](double a, double b)
               { return boost::math::relative_difference(a,b) < epsilon;}))
           return false;
-        if (!std::equal(YCellSizes.begin(), YCellSizes.end(), b.YCellSizes.begin(),
-            [epsilon](double a, double b)
+        if (!std::equal(GridYCoordinates.begin(), GridYCoordinates.end(),
+            b.GridYCoordinates.begin(), [epsilon](double a, double b)
               { return boost::math::relative_difference(a,b) < epsilon;}))
           return false;
-        if (!std::equal(ZCellSizes.begin(), ZCellSizes.end(), b.ZCellSizes.begin(),
-            [epsilon](double a, double b)
+        if (!std::equal(GridZCoordinates.begin(), GridZCoordinates.end(),
+            b.GridZCoordinates.begin(), [epsilon](double a, double b)
               { return boost::math::relative_difference(a,b) < epsilon;}))
           return false;
-        if (boost::math::relative_difference(XOrigin, b.XOrigin) > epsilon)
-          return false;
-        if (boost::math::relative_difference(YOrigin, b.YOrigin) > epsilon)
-          return false;
-        if (boost::math::relative_difference(ZOrigin, b.ZOrigin) > epsilon)
-          return false;
+
         return true;
       }
-    /*! This functions assumes that the coordinate of the upper left front corner of the model is
-     * is (0,0,0).
+    /*! Calculate the coordinates of the cells from the sizes and the Origin
      * @param Coordinates This vector will contain the coordinates of the left upper front corner of each cell
      * @param Sizes The size of each cell in m
      * @param ChangeFlag The flag that stores whether this coordinate has been changed
+     * @param Origin The origin of the model axis
      */
-    void ThreeDModelBase::CalcCoordinates(t3DModelDim &Coordinates,
-        const t3DModelDim Sizes, bool &ChangeFlag) const
+    void ThreeDModelBase::CalcCoords(t3DModelDim &Coordinates, const t3DModelDim &Sizes)
       {
         //create a shorthand for the number of elements
         const size_t nelements = Sizes.size();
         //if the sizes have changed and there is something to calculate
-        if (ChangeFlag && nelements > 0)
+        double Origin = Coordinates.size() >= 1 ? Coordinates.at(0) : 0;
+        Coordinates.resize(nelements + 1);
+        Coordinates[0] = Origin;
+        double sum = Origin;
+        for (size_t i = 0; i < nelements; ++i)
           {
-#ifdef HAVEOPENMP
-            omp_set_lock(&lck_model_coord);
-#endif
-            //make sure we have enough space for the coordinates
-            Coordinates.resize(nelements);
-            //sum up the sizes to get the coordinates
-            //in the current setup the first coordinate is always zero
-            //this is not ideal and should be changed in the future
-            std::partial_sum(Sizes.begin(), Sizes.end() - 1, Coordinates.begin() + 1);
-            Coordinates[0] = 0.0;
-            ChangeFlag = false;
-#ifdef HAVEOPENMP
-            omp_unset_lock(&lck_model_coord);
-#endif
+            sum += Sizes[i];
+            Coordinates[i + 1] = sum;
+          }
+      }
+
+    void ThreeDModelBase::CalcSizes(const t3DModelDim &Coordinates, t3DModelDim &Sizes)
+      {
+        const size_t nelements = Coordinates.size();
+        Sizes.resize(nelements - 1);
+        for (size_t i = 1; i < nelements; ++i)
+          {
+            Sizes[i - 1] = Coordinates[i] - Coordinates[i - 1];
           }
       }
 
@@ -211,32 +164,33 @@ namespace jif3D
 
     void ThreeDModelBase::SetOrigin(const double x, const double y, const double z)
       {
-        //transform the measurement coordinates from old model to new coordinates
-        std::transform(MeasPosX.begin(), MeasPosX.end(), MeasPosX.begin(),
-            [this,x] (double val)
-              { return val + this->XOrigin -x;});
-        std::transform(MeasPosY.begin(), MeasPosY.end(), MeasPosY.begin(),
-            [this,y] (double val)
-              { return val + this->YOrigin -y;});
-        std::transform(MeasPosZ.begin(), MeasPosZ.end(), MeasPosZ.begin(),
-            [this,z] (double val)
-              { return val + this->ZOrigin -z;});
+
         //copy the information about the new origin
-        XOrigin = x;
-        YOrigin = y;
-        ZOrigin = z;
+        std::transform(GridXCoordinates.begin(), GridXCoordinates.end(),
+            GridXCoordinates.begin(), [x](double val)
+              { return val +x;});
+        std::transform(GridYCoordinates.begin(), GridYCoordinates.end(),
+            GridYCoordinates.begin(), [y](double val)
+              { return val +y;});
+        std::transform(GridZCoordinates.begin(), GridZCoordinates.end(),
+            GridZCoordinates.begin(), [z](double val)
+              { return val +z;});
 
       }
 
     void ThreeDModelBase::ReadDataFromNetCDF(const NcFile &NetCDFFile,
         const std::string &DataName, const std::string &UnitsName)
       {
-        Read3DModelFromNetCDF(NetCDFFile, DataName, UnitsName, XCellSizes, YCellSizes,
-            ZCellSizes, Data, XOrigin, YOrigin, ZOrigin);
+        t3DModelDim XCD, YCD, ZCD;
+        Read3DModelFromNetCDF(NetCDFFile, DataName, UnitsName, XCD, YCD, ZCD, Data);
+        SetXCoordinates(XCD);
+        SetYCoordinates(YCD);
+        SetZCoordinates(ZCD);
 
         //we check that the sizes of the grid cell specifications and the data are matching
-        if (XCellSizes.size() != Data.shape()[0] || YCellSizes.size() != Data.shape()[1]
-            || ZCellSizes.size() != Data.shape()[2])
+        if (GridXCoordinates.size() != Data.shape()[0] + 1
+            || GridYCoordinates.size() != Data.shape()[1] + 1
+            || GridZCoordinates.size() != Data.shape()[2] + 1)
           {
             throw jif3D::FatalException("Cell size specification does not match data !",
             __FILE__, __LINE__);
@@ -246,15 +200,15 @@ namespace jif3D
     void ThreeDModelBase::WriteDataToNetCDF(NcFile &NetCDFFile,
         const std::string &DataName, const std::string &UnitsName) const
       {
-        Write3DModelToNetCDF(NetCDFFile, DataName, UnitsName, XCellSizes, YCellSizes,
-            ZCellSizes, Data, XOrigin, YOrigin, ZOrigin);
+        Write3DModelToNetCDF(NetCDFFile, DataName, UnitsName, GetXCoordinates(),
+            GetYCoordinates(), GetZCoordinates(), Data);
       }
 
     void ThreeDModelBase::WriteVTK(std::string filename,
         const std::string &DataName) const
       {
-        Write3DModelToVTK(filename, DataName, GetXCellSizes(), GetYCellSizes(),
-            GetZCellSizes(), GetData(), XOrigin, YOrigin, ZOrigin);
+        Write3DModelToVTK(filename, DataName, GetXCoordinates(), GetYCoordinates(),
+            GetZCoordinates(), GetData());
       }
 
     void ThreeDModelBase::WriteXYZ(const std::string &filename) const
@@ -262,9 +216,7 @@ namespace jif3D
         std::ofstream outfile(filename.c_str());
         std::vector<double> XCenter(XCellSizes.size()), YCenter(YCellSizes.size()),
             ZCenter(ZCellSizes.size());
-        GetXCoordinates();
-        GetYCoordinates();
-        GetZCoordinates();
+
         auto avgfunc = [](double a, double b)
           { return (a+b)/2.0;};
         std::adjacent_difference(GridXCoordinates.begin(), GridXCoordinates.end(),

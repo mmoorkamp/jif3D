@@ -14,6 +14,10 @@
 #ifdef HAVEHPX
 #include "Serialization.h"
 #endif
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#pragma GCC diagnostic ignored "-Wmisleading-indentation"
+#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
 #include <boost/numeric/ublas/vector.hpp>
 #include <boost/numeric/ublas/vector_expression.hpp>
 #include <boost/numeric/ublas/matrix.hpp>
@@ -21,6 +25,8 @@
 #include <boost/numeric/ublas/matrix_sparse.hpp>
 #include <boost/numeric/ublas/io.hpp>
 #include <boost/numeric/ublas/lu.hpp>
+#pragma GCC diagnostic pop
+
 #include <complex>
 
 namespace ublas = boost::numeric::ublas;

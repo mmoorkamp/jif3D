@@ -42,9 +42,11 @@ int main()
     std::cin >> defaultdensity;
     fill_n(Model.SetDensities().origin(), Model.GetDensities().num_elements(),
         defaultdensity);
-    fill_n(Model.SetXCellSizes().begin(), nx, deltax);
-    fill_n(Model.SetYCellSizes().begin(), ny, deltay);
-    fill_n(Model.SetZCellSizes().begin(), nz, deltaz);
+    jif3D::ThreeDModelBase::t3DModelDim XCS(nx, deltax), YCS(ny, deltay), ZCS(nz, deltaz);
+    Model.SetXCellSizes(XCS);
+    Model.SetYCellSizes(YCS);
+    Model.SetZCellSizes(ZCS);
+
     std::vector<double> bg_densities(nz, defaultdensity), bg_thicknesses(nz, deltaz);
     Model.SetBackgroundDensities(bg_densities);
     Model.SetBackgroundThicknesses(bg_thicknesses);

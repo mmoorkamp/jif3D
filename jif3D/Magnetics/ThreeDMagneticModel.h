@@ -45,19 +45,19 @@ namespace jif3D
       ThreeDMagneticModel& operator=(const ThreeDModelBase& source);
       virtual ~ThreeDMagneticModel();
       //! Set the sizes of the grid cells in x-direction in m
-      t3DModelDim &SetXCellSizes()
+      void SetXCellSizes(ThreeDModelBase::t3DModelDim &XCS)
         {
-          return ThreeDModelBase::SetXCellSizes();
+          ThreeDModelBase::SetXCellSizes(XCS);
         }
       //! Set the sizes of the grid cells in y-direction in m
-      t3DModelDim &SetYCellSizes()
+      void SetYCellSizes(ThreeDModelBase::t3DModelDim &YCS)
         {
-          return ThreeDModelBase::SetYCellSizes();
+          ThreeDModelBase::SetYCellSizes(YCS);
         }
       //! Set the sizes of the grid cells in z-direction in m
-      t3DModelDim &SetZCellSizes()
+      void SetZCellSizes(ThreeDModelBase::t3DModelDim &ZCS)
         {
-          return ThreeDModelBase::SetZCellSizes();
+          ThreeDModelBase::SetZCellSizes(ZCS);
         }
       //! return read only access to the stored susceptibility values
       const t3DModelData &GetSusceptibilities() const

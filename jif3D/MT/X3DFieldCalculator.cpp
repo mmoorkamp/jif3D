@@ -39,8 +39,8 @@ namespace jif3D
     void X3DFieldCalculator::CalculateFields(const X3DModel &Model, size_t freqindex)
       {
 
-        const size_t nmodx = Model.GetXCoordinates().size();
-        const size_t nmody = Model.GetYCoordinates().size();
+        const size_t nmodx = Model.GetData().shape()[0];
+        const size_t nmody = Model.GetData().shape()[1];
 
         fs::path RootName = TempDir / MakeUniqueName(NameRoot, X3DModel::MT, freqindex);
         fs::path DirName = RootName.string() + dirext;
