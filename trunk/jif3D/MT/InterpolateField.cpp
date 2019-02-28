@@ -24,8 +24,8 @@ namespace jif3D
         const X3DModel &Model, size_t MeasIndex,
         const std::vector<size_t> &MeasDepthIndices)
       {
-        const int nmodx = Model.GetXCoordinates().size();
-        const int nmody = Model.GetYCoordinates().size();
+        const int nmodx = Model.GetConductivities().shape()[0];
+        const int nmody = Model.GetConductivities().shape()[1];
         //get the coordinates of the measurement site of interest
         double MeasPosX = Model.GetMeasPosX()[MeasIndex];
         double MeasPosY = Model.GetMeasPosY()[MeasIndex];

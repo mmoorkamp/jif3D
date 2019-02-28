@@ -171,13 +171,7 @@ namespace jif3D
         //our z-coordinates are positive down, here they are positive up
         std::transform(zcoord.begin(), zcoord.end(), zcoord.begin(),
             std::negate<double>());
-        //we always start with 0, in igmas it can be any number
-        double minx = *std::min_element(xcoord.begin(), xcoord.end());
-        std::transform(xcoord.begin(), xcoord.end(), xcoord.begin(), [minx] (double val)
-          { return val - minx;});
-        double miny = *std::min_element(ycoord.begin(), ycoord.end());
-        std::transform(ycoord.begin(), ycoord.end(), ycoord.begin(), [miny] (double val)
-          { return val - miny;});
+
         const size_t nx = xcoord.size();
         const size_t ny = ycoord.size();
         const size_t nz = zcoord.size();
@@ -185,23 +179,10 @@ namespace jif3D
         if (nx * ny * nz != density.size())
           throw std::runtime_error("Mesh and density values are not consistent !");
         //reserve space and copy
-        SetXCellSizes().resize(nx);
-        SetYCellSizes().resize(ny);
-        SetZCellSizes().resize(nz);
-        SetDensities().resize(boost::extents[nx][ny][nz]);
-        //we skip the first one, because it is always zero
-        std::adjacent_difference(xcoord.begin() + 1, xcoord.end(),
-            SetXCellSizes().begin());
-        std::adjacent_difference(ycoord.begin() + 1, ycoord.end(),
-            SetYCellSizes().begin());
-        std::adjacent_difference(zcoord.rbegin() + 1, zcoord.rend(),
-            SetZCellSizes().begin());
-        //we need z varying fastest, but it is x varying fastest
-        for (size_t i = 0; i < nvalues; ++i)
-          {
-            SetDensities()[i % nx][(i / nx) % ny][nz - 1 - ((i / (nx * ny)) % nz)] =
-                density.at(i);
-          }
+        SetXCoordinates(xcoord);
+        SetYCoordinates(ycoord);
+        SetZCoordinates(zcoord);
+        //THIS STILL NEEDS SOME CHECKING IF COMPATIBLE WITH NEW VERSION
       }
 
   }

@@ -77,13 +77,12 @@ BOOST_AUTO_TEST_SUITE( ScalarGravity_Test_Suite )
         //create a model of 10x10x10 cells with 2m length in each dimension
         const size_t ncells = 10;
         const double cellsize = 2.0;
-        GravityTest.SetMeshSize(ncells,ncells,ncells);
-        for (size_t i = 0; i < ncells; ++i)
-          {
-            GravityTest.SetXCellSizes()[i] = cellsize;
-            GravityTest.SetYCellSizes()[i] = cellsize;
-            GravityTest.SetZCellSizes()[i] = cellsize;
-          }
+        GravityTest.SetMeshSize(ncells, ncells, ncells);
+        jif3D::ThreeDModelBase::t3DModelDim XCD(ncells, cellsize);
+        GravityTest.SetXCellSizes(XCD);
+        GravityTest.SetYCellSizes(XCD);
+        GravityTest.SetZCellSizes(XCD);
+
         jif3D::rvec DensityVector(ncells * ncells * ncells, 1.0);
         std::fill_n(GravityTest.SetDensities().origin(), ncells * ncells * ncells, 1.0);
 
@@ -151,17 +150,17 @@ BOOST_AUTO_TEST_SUITE( ScalarGravity_Test_Suite )
         const size_t nzcells = 10;
         GravityTest.SetMeshSize(nhorcells, nhorcells, nzcells);
         jif3D::rvec DensityVector(nhorcells * nhorcells * nzcells + 4); // 4 background layers
+        jif3D::ThreeDModelBase::t3DModelDim XCD(nhorcells), YCD(nhorcells), ZCD(nzcells,500.0);
+
         for (size_t i = 0; i < nhorcells; ++i) // set the values of the inner cells
 
           {
-            GravityTest.SetXCellSizes()[i] = rand() % 10000 + 1000;
-            GravityTest.SetYCellSizes()[i] = rand() % 10000 + 1000;
+            XCD[i] = rand() % 10000 + 1000;
+            YCD[i] = rand() % 10000 + 1000;
           }
-        for (size_t i = 0; i < nzcells; ++i)
-          {
-            GravityTest.SetZCellSizes()[i] = 500;
-          }
-
+        GravityTest.SetXCellSizes(XCD);
+        GravityTest.SetYCellSizes(YCD);
+        GravityTest.SetZCellSizes(ZCD);
 
         for (size_t i = 0; i < nhorcells; ++i)
           for (size_t j = 0; j < nhorcells; ++j)

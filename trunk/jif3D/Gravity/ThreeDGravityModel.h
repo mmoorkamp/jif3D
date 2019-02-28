@@ -102,19 +102,31 @@ namespace jif3D
           return GetData().num_elements() + bg_densities.size();
         }
       //! Set the sizes of the grid cells in x-direction in m
-      t3DModelDim &SetXCellSizes()
+      void SetXCellSizes(t3DModelDim &XCS)
         {
-          return ThreeDModelBase::SetXCellSizes();
+          ThreeDModelBase::SetXCellSizes(XCS);
         }
       //! Set the sizes of the grid cells in y-direction in m
-      t3DModelDim &SetYCellSizes()
+      void SetYCellSizes(t3DModelDim &YCS)
         {
-          return ThreeDModelBase::SetYCellSizes();
+          ThreeDModelBase::SetYCellSizes(YCS);
         }
       //! Set the sizes of the grid cells in z-direction in m
-      t3DModelDim &SetZCellSizes()
+      void SetZCellSizes(t3DModelDim &ZCS)
         {
-          return ThreeDModelBase::SetZCellSizes();
+          ThreeDModelBase::SetZCellSizes(ZCS);
+        }
+      void SetXCoordinates(t3DModelDim &XCS)
+        {
+          ThreeDModelBase::SetXCoordinates(XCS);
+        }
+      void SetYCoordinates(t3DModelDim &YCS)
+        {
+          ThreeDModelBase::SetYCoordinates(YCS);
+        }
+      void SetZCoordinates(t3DModelDim &ZCS)
+        {
+          ThreeDModelBase::SetZCoordinates(ZCS);
         }
       //! return read only access to the stored density values
       const t3DModelData &GetDensities() const

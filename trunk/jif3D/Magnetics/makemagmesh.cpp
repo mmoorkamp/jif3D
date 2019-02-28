@@ -43,9 +43,10 @@ int main()
     std::cin >> defaultsusceptibility;
     fill_n(Model.SetSusceptibilities().origin(),
         Model.GetSusceptibilities().num_elements(), defaultsusceptibility);
-    fill_n(Model.SetXCellSizes().begin(), nx, deltax);
-    fill_n(Model.SetYCellSizes().begin(), ny, deltay);
-    fill_n(Model.SetZCellSizes().begin(), nz, deltaz);
+    jif3D::ThreeDModelBase::t3DModelDim XCS(nx, deltax), YCS(ny, deltay), ZCS(nz, deltaz);
+    Model.SetXCellSizes(XCS);
+    Model.SetYCellSizes(YCS);
+    Model.SetZCellSizes(ZCS);
     std::string MeshFilename = jif3D::AskFilename("Meshfile name: ", false);
     Model.WriteNetCDF(MeshFilename);
 

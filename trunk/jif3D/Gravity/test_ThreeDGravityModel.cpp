@@ -67,9 +67,9 @@ BOOST_AUTO_TEST_SUITE( GravityModel_Test_Suite )
         for (size_t i = 0; i < nelements; ++i)
           TestDim[i] = i;
 
-        BaseTest.SetXCellSizes() = TestDim;
-        BaseTest.SetYCellSizes() = TestDim;
-        BaseTest.SetZCellSizes() = TestDim;
+        BaseTest.SetXCellSizes(TestDim);
+        BaseTest.SetYCellSizes(TestDim);
+        BaseTest.SetZCellSizes(TestDim);
         BOOST_CHECK(
             std::equal(TestDim.begin(), TestDim.end(), BaseTest.GetXCellSizes().begin()));
         BOOST_CHECK(
@@ -86,9 +86,9 @@ BOOST_AUTO_TEST_SUITE( GravityModel_Test_Suite )
         for (size_t i = 0; i < nelements; ++i)
           TestDim[i] = rand();
 
-        BaseTest.SetXCellSizes() = TestDim;
-        BaseTest.SetYCellSizes() = TestDim;
-        BaseTest.SetZCellSizes() = TestDim;
+        BaseTest.SetXCellSizes(TestDim);
+        BaseTest.SetYCellSizes(TestDim);
+        BaseTest.SetZCellSizes(TestDim);
 
         jif3D::ThreeDModelBase::t3DModelDim XCoordinates(BaseTest.GetXCoordinates());
         jif3D::ThreeDModelBase::t3DModelDim YCoordinates(BaseTest.GetYCoordinates());
@@ -113,16 +113,12 @@ BOOST_AUTO_TEST_SUITE( GravityModel_Test_Suite )
       {
         const size_t nelements = 5;
         jif3D::ThreeDGravityModel BaseTest;
-        BaseTest.SetXCellSizes().resize(nelements);
-        BaseTest.SetYCellSizes().resize(nelements);
-        BaseTest.SetZCellSizes().resize(nelements);
-        for (size_t i = 0; i < nelements; ++i)
-          {
-            BaseTest.SetXCellSizes()[i] = 1.5;
-            BaseTest.SetYCellSizes()[i] = 2.0;
-            BaseTest.SetZCellSizes()[i] = 2.5;
+        jif3D::ThreeDModelBase::t3DModelDim XCS(nelements, 1.5), YCS(nelements, 2.0), ZCS(
+            nelements, 2.5);
+        BaseTest.SetXCellSizes(XCS);
+        BaseTest.SetYCellSizes(YCS);
+        BaseTest.SetZCellSizes(ZCS);
 
-          }
         boost::array<jif3D::ThreeDModelBase::t3DModelData::index, 3> indices(
             BaseTest.FindAssociatedIndices(2.2, 2.2, 2.2));
         BOOST_CHECK_EQUAL(indices[0], 1);
@@ -145,9 +141,9 @@ BOOST_AUTO_TEST_SUITE( GravityModel_Test_Suite )
         const size_t zsize = ZDim.size();
         GravityTest.SetMeshSize(xsize, ysize, zsize);
 
-        GravityTest.SetXCellSizes() = XDim;
-        GravityTest.SetYCellSizes() = YDim;
-        GravityTest.SetZCellSizes() = ZDim;
+        GravityTest.SetXCellSizes(XDim);
+        GravityTest.SetYCellSizes(YDim);
+        GravityTest.SetZCellSizes(ZDim);
 
         jif3D::ThreeDModelBase::t3DModelData TestData(
             boost::extents[xsize][ysize][zsize]);

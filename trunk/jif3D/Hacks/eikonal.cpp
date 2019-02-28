@@ -6,7 +6,14 @@
 //============================================================================
 
 #include <iostream>
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#pragma GCC diagnostic ignored "-Wmisleading-indentation"
+#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
 #include <boost/multi_array.hpp>
+#pragma GCC diagnostic pop
+
 #include "../Global/convert.h"
 #include "../Tomo/ThreeDSeismicModel.h"
 #include "../Tomo/ReadWriteTomographyData.h"

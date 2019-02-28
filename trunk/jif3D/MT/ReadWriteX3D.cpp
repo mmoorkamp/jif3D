@@ -635,7 +635,7 @@ namespace jif3D
               }
 
             outfile << "zS(m)  (Depth to the source level)\n";
-            outfile << ZCellBoundaries[ZIndices[i]] << "\n$\n";
+            outfile << ZCellBoundaries[ZIndices[i]] - ZCellBoundaries[0] << "\n$\n";
             //myarray[ boost::indices[range()][range() < 5 ][4 <= range().stride(2) <= 7] ];
             //write real part of x-component
             WriteGeometryInfo(outfile, maxx, maxy);

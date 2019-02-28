@@ -61,34 +61,16 @@ namespace jif3D
         return *this;
       }
 
-    void ThreeDSeismicModel::SetOrigin(const double x, const double y, const double z)
-      {
-        //transform the source coordinates from old model to real coordinates
-        //the coordinates of the receivers are changed by the implementation
-        //in the base class that we call below
-        std::transform(SourcePosX.begin(), SourcePosX.end(), SourcePosX.begin(),
-            [this,x] (double val)
-              { return val + this->XOrigin -x;});
-        std::transform(SourcePosY.begin(), SourcePosY.end(), SourcePosY.begin(),
-            [this,y] (double val)
-              { return val + this->YOrigin -y;});
-        std::transform(SourcePosZ.begin(), SourcePosZ.end(), SourcePosZ.begin(),
-            [this,z] (double val)
-              { return val + this->ZOrigin -z;});
-        //we have to call the base implementation in the end because
-        //it changes the measurement positions and the Origin
-        ThreeDModelBase::SetOrigin(x, y, z);
-      }
 
     boost::array<ThreeDModelBase::t3DModelData::index, 3> ThreeDSeismicModel::FindAssociatedIndices(
         const double xcoord, const double ycoord, const double zcoord) const
       {
         const int xindex = boost::numeric_cast<int>(
-            floor((xcoord - XOrigin) / GetXCellSizes()[0]));
+            floor((xcoord - GetXCoordinates()[0]) / GetXCellSizes()[0]));
         const int yindex = boost::numeric_cast<int>(
-            floor((ycoord - YOrigin) / GetYCellSizes()[0]));
+            floor((ycoord - GetYCoordinates()[0]) / GetYCellSizes()[0]));
         const int zindex = boost::numeric_cast<int>(
-            floor((zcoord - ZOrigin) / GetZCellSizes()[0]));
+            floor((zcoord - GetZCoordinates()[0]) / GetZCellSizes()[0]));
         //when we return the value we make sure that we cannot go out of bounds
         boost::array<t3DModelData::index, 3> idx =
           {

@@ -29,9 +29,10 @@ BOOST_AUTO_TEST_SUITE( ReadWriteDCResistivity_Suite )
         jif3D::ThreeDDCResistivityModel Model;
         Model.SetMeshSize(xsize, ysize, zsize);
         Model.SetHorizontalCellSize(xcellsize, ycellsize, xsize, ysize);
-        std::generate(Model.SetZCellSizes().begin(), Model.SetZCellSizes().end(),
-            drand48);
+        jif3D::ThreeDModelBase::t3DModelDim ZCS(zsize, 1.0);
 
+        std::generate(ZCS.begin(), ZCS.end(), drand48);
+        Model.SetZCellSizes(ZCS);
         std::generate_n(Model.SetData().origin(), Model.SetData().num_elements(),
             drand48);
 

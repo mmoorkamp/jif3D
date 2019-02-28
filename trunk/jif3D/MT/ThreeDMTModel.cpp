@@ -87,7 +87,7 @@ namespace jif3D
               }
             outfile << "\n\n";
           }
-        outfile << "\n  " << XOrigin << " " << YOrigin << " " << ZOrigin << "\n 0.0 \n";
+        outfile << "\n  " << GetXCoordinates()[0] << " " << GetYCoordinates()[0] << " " << GetZCoordinates()[0] << "\n 0.0 \n";
       }
 
     void ThreeDMTModel::ReadModEM(const std::string filename)
@@ -99,16 +99,17 @@ namespace jif3D
         int nx, ny, nz;
         infile >> nx >> ny >> nz;
         infile.getline(dummy, 1024);
-        SetXCellSizes().resize(nx);
-        SetYCellSizes().resize(ny);
-        SetZCellSizes().resize(nz);
+        ThreeDModelBase::t3DModelDim XCS, YCS, ZCS;
+        XCS.resize(nx);
+        YCS.resize(ny);
+        ZCS.resize(nz);
         SetData().resize(boost::extents[nx][ny][nz]);
         for (int i = 0; i < nx; ++i)
-          infile >> SetXCellSizes()[i];
+          infile >> XCS[i];
         for (int i = 0; i < ny; ++i)
-          infile >> SetYCellSizes()[i];
+          infile >> YCS[i];
         for (int i = 0; i < nz; ++i)
-          infile >> SetZCellSizes()[i];
+          infile >> ZCS[i];
         double value;
         for (int i = 0; i < nz; ++i)
           for (int j = 0; j < ny; ++j)
@@ -117,6 +118,11 @@ namespace jif3D
                 infile >> value;
                 SetData()[k][j][i] = std::exp(-value);
               }
+        SetXCellSizes(XCS);
+        SetYCellSizes(YCS);
+        SetZCellSizes(ZCS);
+        double XOrigin, YOrigin, ZOrigin;
         infile >> XOrigin >> YOrigin >> ZOrigin;
+        SetOrigin(XOrigin,YOrigin,ZOrigin);
       }
   }

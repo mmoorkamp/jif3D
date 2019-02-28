@@ -51,11 +51,7 @@ int main()
 
     //set the cell sizes and allocate memory for the mesh
     Model.SetHorizontalCellSize(deltax, deltay, nx, ny);
-    Model.SetZCellSizes().resize(nz);
-    for (int j = 0; j < nz; j++)
-      {
-        Model.SetZCellSizes()[j] = deltaz[j];
-      }
+    Model.SetZCellSizes(deltaz);
     Model.SetResistivities().resize(boost::extents[nx][ny][nz]);
     //ask for a resistivity to fill the mesh with
 

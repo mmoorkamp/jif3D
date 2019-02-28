@@ -27,13 +27,14 @@
 void MakeTestModel(jif3D::ThreeDGravityModel &Model, const size_t size)
   {
     Model.SetMeshSize(size, size, size);
-
-    for (size_t i = 0; i < size; ++i) // set the values of the inner cells
-      {
-        Model.SetXCellSizes()[i] = rand() % 10000 + 1000;
-        Model.SetYCellSizes()[i] = rand() % 10000 + 1000;
-        Model.SetZCellSizes()[i] = 500;
-      }
+    jif3D::ThreeDModelBase::t3DModelDim XCS(size), YCS(size), ZCS(size, 500);
+    Model.SetZCellSizes(ZCS);
+    std::generate(XCS.begin(), XCS.end(), []() -> double
+      { return rand() % 10000 + 1000;});
+    std::generate(YCS.begin(), YCS.end(), []() -> double
+          { return rand() % 10000 + 1000;});
+    Model.SetXCellSizes(XCS);
+    Model.SetYCellSizes(YCS);
     //fill the grid with some random values that are in a similar range
     // as densities
     std::generate_n(Model.SetDensities().origin(), Model.SetDensities().num_elements(),

@@ -43,13 +43,11 @@ void MakeModelandRefinement(jif3D::ThreeDGravityModel &CoarseModel,
     size_t ncoarsecellsy = 3;
     size_t ncoarsecellsz = 5;
 
-    CoarseModel.SetXCellSizes().resize(ncoarsecellsx);
-    CoarseModel.SetYCellSizes().resize(ncoarsecellsy);
-    CoarseModel.SetZCellSizes().resize(ncoarsecellsz);
+    jif3D::ThreeDModelBase::t3DModelDim XCS(ncoarsecellsx,50.0), YCS(ncoarsecellsy,40.0), ZCS(ncoarsecellsz,30.0);
+    CoarseModel.SetXCellSizes(XCS);
+    CoarseModel.SetYCellSizes(YCS);
+    CoarseModel.SetZCellSizes(ZCS);
 
-    std::fill_n(CoarseModel.SetXCellSizes().begin(), ncoarsecellsx, 50.0);
-    std::fill_n(CoarseModel.SetYCellSizes().begin(), ncoarsecellsy, 40.0);
-    std::fill_n(CoarseModel.SetZCellSizes().begin(), ncoarsecellsz, 30.0);
 
     const size_t xrefinement = 20;
     const size_t yrefinement = 20;

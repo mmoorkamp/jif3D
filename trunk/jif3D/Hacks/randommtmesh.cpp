@@ -75,12 +75,14 @@ int main(int argc, char *argv[])
     cin >> deltaz;
     //set the cell sizes and allocate memory for the mesh
     Model.SetHorizontalCellSize(deltax, deltay, nx, ny);
-    Model.SetZCellSizes().resize(nz);
-    fill_n(Model.SetZCellSizes().begin(), nz, deltaz);
+    jif3D::ThreeDModelBase::t3DModelDim ZCD(nz);
+
+    std::fill_n(ZCD.begin(), nz, deltaz);
     if (topthick > 0.0 )
       {
-        Model.SetZCellSizes()[0] = topthick;
+        ZCD[0] = topthick;
       }
+    Model.SetZCellSizes(ZCD);
     Model.SetConductivities().resize(boost::extents[nx][ny][nz]);
     //ask for a conductivity to fill the mesh with
     double bg_conductivity = 1.0;

@@ -23,12 +23,13 @@ double CalcRawRealization(int nx, int ny, int nz, double delta, double topthick,
     jif3D::X3DModel Model;
     Model.SetMeshSize(nx, ny, nz);
     Model.SetHorizontalCellSize(delta, delta, nx, ny);
-    std::fill_n(Model.SetZCellSizes().begin(), nz, delta);
+    jif3D::ThreeDModelBase::t3DModelDim XCS(nz,delta);
+
     if (topthick > 0.0)
       {
-        Model.SetZCellSizes()[0] = topthick;
+        XCS[0] = topthick;
       }
-
+    Model.SetZCellSizes(XCS);
     double posx, posy, posz = 0;
     posx = (delta * nx) / 2.0;
     posy = (delta * ny) / 2.0;

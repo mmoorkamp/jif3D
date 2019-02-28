@@ -71,6 +71,11 @@ namespace jif3D
         //we assume that all grid cells have the same size in all directions, so we just
         //read one of the values
         const double gridspacing = Model.GetXCellSizes()[0];
+
+        const double orx = Model.GetXOrigin();
+        const double ory = Model.GetYOrigin();
+        const double orz = Model.GetZOrigin();
+
         //now check that this assumption holds
         if (!std::all_of(Model.GetXCellSizes().begin(), Model.GetXCellSizes().end(),
             [gridspacing](double d)
@@ -103,10 +108,10 @@ namespace jif3D
         auto ysourcerange = std::minmax_element(Model.GetSourcePosY().begin(),
             Model.GetSourcePosY().end());
 
-        double minx = std::min(*xmeasrange.first, *xsourcerange.first);
-        double maxx = std::max(*xmeasrange.second, *xsourcerange.second);
-        double miny = std::min(*ymeasrange.first, *ysourcerange.first);
-        double maxy = std::max(*ymeasrange.second, *ysourcerange.second);
+        double minx = std::min(*xmeasrange.first, *xsourcerange.first) - orx;
+        double maxx = std::max(*xmeasrange.second, *xsourcerange.second) - orx;
+        double miny = std::min(*ymeasrange.first, *ysourcerange.first) - ory;
+        double maxy = std::max(*ymeasrange.second, *ysourcerange.second) - ory;
 
         minxindex = std::max(numeric_cast<int>(std::floor(minx / gridspacing)) - padding,
             0);
@@ -182,27 +187,28 @@ namespace jif3D
         //we use the convention that first we store all shot positions
         //we have to adjust for the fact that we are only calculating on
         //a subgrid
+
         std::transform(Model.GetSourcePosX().begin(), Model.GetSourcePosX().end(),
-            geo.x.begin(), [xshift](double pos)
-              { return pos-xshift;});
+            geo.x.begin(), [xshift,orx](double pos)
+              { return pos-xshift-orx;});
         std::transform(Model.GetSourcePosY().begin(), Model.GetSourcePosY().end(),
-            geo.y.begin(), [yshift](double pos)
-              { return pos-yshift;});
+            geo.y.begin(), [yshift,ory](double pos)
+              { return pos-yshift -ory;});
         //we also have to adjust for the offset by the airlayers
         const double zoffset = grid.h * nairlayers;
         std::transform(Model.GetSourcePosZ().begin(), Model.GetSourcePosZ().end(),
-            geo.z.begin(), [zoffset] (double pos)
-              { return pos + zoffset;});
+            geo.z.begin(), [zoffset,orz] (double pos)
+              { return pos + zoffset-orz;});
         //and then all measurement position
         std::transform(Model.GetMeasPosX().begin(), Model.GetMeasPosX().end(),
-            geo.x.begin() + nshot, [xshift](double pos)
-              { return pos-xshift;});
+            geo.x.begin() + nshot, [xshift,orx](double pos)
+              { return pos-xshift-orx;});
         std::transform(Model.GetMeasPosY().begin(), Model.GetMeasPosY().end(),
-            geo.y.begin() + nshot, [yshift](double pos)
-              { return pos-yshift;});
+            geo.y.begin() + nshot, [yshift,ory](double pos)
+              { return pos-yshift-ory;});
         std::transform(Model.GetMeasPosZ().begin(), Model.GetMeasPosZ().end(),
-            geo.z.begin() + nshot, [zoffset] (double pos)
-              { return pos + zoffset;});
+            geo.z.begin() + nshot, [zoffset,orz] (double pos)
+              { return pos + zoffset-orz;});
 
         //now we can do the forward modeling
         ForwardModRay(geo, grid, data, raypath);

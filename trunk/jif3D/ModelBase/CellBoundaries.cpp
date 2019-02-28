@@ -19,19 +19,19 @@ namespace jif3D
         const jif3D::ThreeDModelBase::t3DModelDim &CellSizes)
       {
         size_t result = 0;
-        const size_t ncells = CellBoundaries.size();
-        assert(ncells == CellSizes.size());
+        const size_t ncells = CellSizes.size();
+        assert(ncells == CellBoundaries.size() - 1);
         //we check whether the coordinate value is larger than the largest cell boundary
         //and throw an exception is true
         if (Coordinate > CellBoundaries[ncells - 1] + CellSizes[ncells - 1]
-            || Coordinate < 0)
+            || Coordinate < CellBoundaries[0])
           throw jif3D::FatalException(
               "Specified depth: " + jif3D::stringify(Coordinate)
                   + " is outside domain limit: "
+                  + jif3D::stringify(CellBoundaries[0] ) + " - "
                   + jif3D::stringify(CellBoundaries[ncells - 1] + CellSizes[ncells - 1]),
               __FILE__, __LINE__);
-        //we implictly assume the coordinates to start at zero
-        //so the boundary values are the upper limits of the cells
+        //the boundary values are the upper limits of the cells
         //and we search for the index of the next higher cell boundary
         while (Coordinate > (CellBoundaries[result] + CellSizes[result])
             && result < ncells)
@@ -69,7 +69,7 @@ namespace jif3D
             if (CurrIndex == ZIndices.end())
               {
                 ZIndices.push_back(zindex);
-                ShiftDepth.push_back(Model.GetZCoordinates()[zindex]);
+                ShiftDepth.push_back(Model.GetZCoordinates()[zindex] - Model.GetZOrigin());
                 MeasDepthIndices.push_back(nlevels);
                 ++nlevels;
               }

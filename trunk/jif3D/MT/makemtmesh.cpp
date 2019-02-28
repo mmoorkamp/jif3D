@@ -80,6 +80,7 @@ int main(int argc, char *argv[])
     //set the cell sizes and allocate memory for the mesh
     Model.SetMeshSize(nx, ny, nz);
     Model.SetHorizontalCellSize(deltax, deltay, nx, ny);
+    jif3D::ThreeDModelBase::t3DModelDim ZCS(nz, deltaz);
     //the size of each cell in z-direction increases by the specified factor for each layer
     for (int i = 0; i < nz; ++i)
       {
@@ -89,9 +90,9 @@ int main(int argc, char *argv[])
         //x3d has some problems handling thicknesses over 10km with full meter precision
         //so if the thickness is > 10km we round to 100m
         thickness = floor(thickness / rounding) * rounding;
-        Model.SetZCellSizes()[i] = thickness;
+        ZCS[i] = thickness;
       }
-
+    Model.SetZCellSizes(ZCS);
     if (vm.count("center"))
       {
         std::vector<double> Dummy, StatPosX, StatPosY, StatPosZ;

@@ -161,15 +161,15 @@ namespace jif3D
       void SetHorizontalCellSize(const double XSize, const double YSize, const size_t nx,
           const size_t ny)
         {
-          ThreeDModelBase::SetXCellSizes().resize(nx);
-          std::fill_n(ThreeDModelBase::SetXCellSizes().begin(), nx, XSize);
-          ThreeDModelBase::SetYCellSizes().resize(ny);
-          std::fill_n(ThreeDModelBase::SetYCellSizes().begin(), ny, YSize);
+          ThreeDModelBase::t3DModelDim XCS(nx,XSize);
+          ThreeDModelBase::t3DModelDim YCS(ny,YSize);
+          SetXCellSizes(XCS);
+          SetYCellSizes(YCS);
         }
       //! The vertical cells can all have different sizes so we allow direct access to the CellSize structure
-      t3DModelDim &SetZCellSizes()
+      void SetZCellSizes(ThreeDModelBase::t3DModelDim &ZCS)
         {
-          return ThreeDModelBase::SetZCellSizes();
+          ThreeDModelBase::SetZCellSizes(ZCS);
         }
       //! Given three coordinates in m, find the indices of the model cell that corresponds to these coordinates, this is a more efficient implementation than the one in the base class
       virtual boost::array<ThreeDModelBase::t3DModelData::index, 3>

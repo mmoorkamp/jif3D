@@ -84,12 +84,12 @@ namespace jif3D
       void SetCellSize(const double Size, const size_t nx, const size_t ny,
           const size_t nz)
         {
-          ThreeDModelBase::SetXCellSizes().resize(nx);
-          std::fill_n(ThreeDModelBase::SetXCellSizes().begin(), nx, Size);
-          ThreeDModelBase::SetYCellSizes().resize(ny);
-          std::fill_n(ThreeDModelBase::SetYCellSizes().begin(), ny, Size);
-          ThreeDModelBase::SetZCellSizes().resize(nz);
-          std::fill_n(ThreeDModelBase::SetZCellSizes().begin(), nz, Size);
+          ThreeDModelBase::t3DModelDim XCS(nx,Size);
+          ThreeDModelBase::t3DModelDim YCS(ny,Size);
+          ThreeDModelBase::t3DModelDim ZCS(nz,Size);
+          SetXCellSizes(XCS);
+          SetYCellSizes(YCS);
+          SetZCellSizes(ZCS);
           ThreeDModelBase::SetData().resize(boost::extents[nx][ny][nz]);
         }
       //! return read only access to the stored slowness values
@@ -105,9 +105,9 @@ namespace jif3D
       //! Add a source to the model
       void AddSource(const double xcoord, const double ycoord, const double zcoord)
         {
-          SourcePosX.push_back(xcoord - XOrigin);
-          SourcePosY.push_back(ycoord - YOrigin);
-          SourcePosZ.push_back(zcoord - ZOrigin);
+          SourcePosX.push_back(xcoord);
+          SourcePosY.push_back(ycoord);
+          SourcePosZ.push_back(zcoord);
         }
       //! read only access to the x-positions of the sources in m
       const ThreeDModelBase::tMeasPosVec &GetSourcePosX() const
@@ -181,8 +181,7 @@ namespace jif3D
 
           ReceiverIndices = Source.ReceiverIndices;
         }
-      //! Set the origin of the coordinate system, this is a reimplementation from the base class to also change the source positions
-      virtual void SetOrigin(const double x, const double y, const double z) override;
+
       //! Write the seismic model in VTK format, at the moment the best format for plotting, this only writes the slowness and not the source and receiver positions
       void WriteVTK(const std::string filename) const
         {
