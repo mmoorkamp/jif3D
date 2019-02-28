@@ -26,6 +26,15 @@ namespace jif3D
 
       }
 
+    ThreeDModelBase::ThreeDModelBase(const ThreeDModelBase& source) :
+        MeasPosX(source.MeasPosX), MeasPosY(source.MeasPosY), MeasPosZ(source.MeasPosZ), Data(
+            source.Data)
+      {
+        SetXCoordinates(source.GridXCoordinates);
+        SetYCoordinates(source.GridYCoordinates);
+        SetZCoordinates(source.GridZCoordinates);
+      }
+
     ThreeDModelBase::~ThreeDModelBase()
       {
 
@@ -45,7 +54,8 @@ namespace jif3D
         Data.resize(
             boost::extents[source.Data.shape()[0]][source.Data.shape()[1]][source.Data.shape()[2]]);
         Data = source.Data;
-        //now we copy the cell sizes for all three directions
+        //now we copy the cell coordinates for all three directions
+        //using the access function makes sure everything else is updated accordingly
         SetXCoordinates(source.GridXCoordinates);
         SetYCoordinates(source.GridYCoordinates);
         SetZCoordinates(source.GridZCoordinates);
@@ -108,27 +118,33 @@ namespace jif3D
      */
     void ThreeDModelBase::CalcCoords(t3DModelDim &Coordinates, const t3DModelDim &Sizes)
       {
-        //create a shorthand for the number of elements
-        const size_t nelements = Sizes.size();
-        //if the sizes have changed and there is something to calculate
-        double Origin = Coordinates.size() >= 1 ? Coordinates.at(0) : 0;
-        Coordinates.resize(nelements + 1);
-        Coordinates[0] = Origin;
-        double sum = Origin;
-        for (size_t i = 0; i < nelements; ++i)
+        if (!Sizes.empty())
           {
-            sum += Sizes[i];
-            Coordinates[i + 1] = sum;
+            //create a shorthand for the number of elements
+            const size_t nelements = Sizes.size();
+            //if the sizes have changed and there is something to calculate
+            double Origin = Coordinates.size() >= 1 ? Coordinates.at(0) : 0;
+            Coordinates.resize(nelements + 1);
+            Coordinates[0] = Origin;
+            double sum = Origin;
+            for (size_t i = 0; i < nelements; ++i)
+              {
+                sum += Sizes[i];
+                Coordinates[i + 1] = sum;
+              }
           }
       }
 
     void ThreeDModelBase::CalcSizes(const t3DModelDim &Coordinates, t3DModelDim &Sizes)
       {
-        const size_t nelements = Coordinates.size();
-        Sizes.resize(nelements - 1);
-        for (size_t i = 1; i < nelements; ++i)
+        if (!Coordinates.empty())
           {
-            Sizes[i - 1] = Coordinates[i] - Coordinates[i - 1];
+            const size_t nelements = Coordinates.size();
+            Sizes.resize(nelements - 1);
+            for (size_t i = 1; i < nelements; ++i)
+              {
+                Sizes[i - 1] = Coordinates[i] - Coordinates[i - 1];
+              }
           }
       }
 
@@ -165,9 +181,9 @@ namespace jif3D
     void ThreeDModelBase::SetOrigin(const double x, const double y, const double z)
       {
 
-        double OldX = GridXCoordinates[0];
-        double OldY = GridYCoordinates[0];
-        double OldZ = GridZCoordinates[0];
+        double OldX = GridXCoordinates.empty() ? 0.0 : GridXCoordinates[0];
+        double OldY = GridYCoordinates.empty() ? 0.0 : GridYCoordinates[0];
+        double OldZ = GridZCoordinates.empty() ? 0.0 : GridZCoordinates[0];
         //copy the information about the new origin
         std::transform(GridXCoordinates.begin(), GridXCoordinates.end(),
             GridXCoordinates.begin(), [x,OldX](double val)

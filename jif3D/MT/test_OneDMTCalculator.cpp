@@ -100,15 +100,11 @@ bool  Between(const double limit1, const double limit2, const double value)
       const size_t nbglayers = 7;
       const size_t nfreq = 11;
       jif3D::X3DModel Model;
-      std::vector<double> bg_thicknesses(nbglayers),bg_conductivities(nbglayers);
-
       const double freqhigh = 100.0;
       const double freqlow = 0.00001;
       const double cond = 0.01;
 
-      std::fill_n(bg_conductivities.begin(),nbglayers,cond);
-      std::fill_n(bg_thicknesses.begin(),nbglayers,500.0);
-
+      std::vector<double> bg_thicknesses(nbglayers,500.0),bg_conductivities(nbglayers,cond);
       Model.SetBackgroundConductivities(bg_conductivities);
       Model.SetBackgroundThicknesses(bg_thicknesses);
       for (size_t i = 0; i< nfreq; ++i)

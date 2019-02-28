@@ -56,13 +56,13 @@ BOOST_AUTO_TEST_SUITE( X3DCalculator_Suite )
             }
 
         jif3D::rvec Impedance = Calculator.Calculate(Model);
-        const double prec = 0.05;
+        const double prec = 1e-5;
         for (size_t i = 0; i < Impedance.size() / 4; ++i)
           {
-            BOOST_CHECK_CLOSE(Impedance(i * 4 ), 0.0, prec);
-            BOOST_CHECK_CLOSE(Impedance(i * 4 + 1), 0.0, prec);
-            BOOST_CHECK_CLOSE(Impedance(i * 4 + 2), 0.0, prec);
-            BOOST_CHECK_CLOSE(Impedance(i * 4 + 3), 0.0, prec);
+            BOOST_CHECK_SMALL(Impedance(i * 4 ), prec);
+            BOOST_CHECK_SMALL(Impedance(i * 4 + 1), prec);
+            BOOST_CHECK_SMALL(Impedance(i * 4 + 2), prec);
+            BOOST_CHECK_SMALL(Impedance(i * 4 + 3), prec);
           }
 
       }

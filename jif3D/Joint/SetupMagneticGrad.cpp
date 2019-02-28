@@ -89,9 +89,10 @@ namespace jif3D
               {
                 Model.AddMeasurementPoint(PosX.at(i), PosY.at(i), PosZ.at(i));
               }
-
-            Model.SetOrigin(xorigin, yorigin, 0.0);
-
+            if (xorigin != 0.0 || yorigin != 0.0)
+              {
+                Model.SetOrigin(xorigin, yorigin, 0.0);
+              }
             if (Transform.get() == NULL)
               {
                 jif3D::rvec RefVec(Model.GetSusceptibilities().num_elements(), 1.0);
@@ -112,7 +113,8 @@ namespace jif3D
               {
                 Implementation = boost::shared_ptr<
                     jif3D::ThreeDGravMagImplementation<jif3D::ThreeDMagneticModel> >(
-                    new jif3D::OMPMagneticGradImp(inclination, declination, fieldstrength));
+                    new jif3D::OMPMagneticGradImp(inclination, declination,
+                        fieldstrength));
               }
             Calculator = boost::shared_ptr<CalculatorType>(
                 new CalculatorType(Implementation, TempDir));
@@ -125,8 +127,8 @@ namespace jif3D
             jif3D::rvec Error(jif3D::ConstructError(MagData, MagError, relerr, minerr));
             MagObjective->SetDataError(Error);
 
-            Objective.AddObjective(MagObjective, Transform, maglambda, "Magnetic Gradient",
-                JointObjective::datafit);
+            Objective.AddObjective(MagObjective, Transform, maglambda,
+                "Magnetic Gradient", JointObjective::datafit);
             std::cout << " Magnetic gradient ndata: " << MagData.size() << std::endl;
             std::cout << " Magnetic gradient lambda: " << maglambda << std::endl;
           }

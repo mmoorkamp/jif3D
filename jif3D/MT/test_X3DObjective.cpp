@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_SUITE( X3DObjective_Suite )
           {
             bg_conductivities[i] *= 1.05 + i * 0.1;
           }
-        std::fill_n(bg_thicknesses.begin(), nbglayers, deltaz);
+        bg_thicknesses = ZCS;
 
         Model.SetBackgroundConductivities(bg_conductivities);
         Model.SetBackgroundThicknesses(bg_thicknesses);
@@ -166,10 +166,8 @@ BOOST_AUTO_TEST_SUITE( X3DObjective_Suite )
 
         jif3D::X3DModel Model;
         MakeMTModel(Model);
-        const size_t xsize = Model.GetXCoordinates().size();
-        const size_t ysize = Model.GetYCoordinates().size();
-        const size_t zsize = Model.GetZCoordinates().size();
-        const size_t nmod = xsize * ysize * zsize;
+
+        const size_t nmod = Model.GetConductivities().num_elements();
 
         jif3D::X3DModel TrueModel(Model);
         std::fill_n(TrueModel.SetConductivities().origin(), nmod, 0.01);
@@ -294,10 +292,7 @@ BOOST_AUTO_TEST_SUITE( X3DObjective_Suite )
 
         jif3D::X3DModel Model;
         MakeTitanModel(Model);
-        const size_t xsize = Model.GetXCoordinates().size();
-        const size_t ysize = Model.GetYCoordinates().size();
-        const size_t zsize = Model.GetZCoordinates().size();
-        const size_t nmod = xsize * ysize * zsize;
+        const size_t nmod = Model.GetConductivities().num_elements();
 
         jif3D::X3DModel TrueModel(Model);
         std::fill_n(TrueModel.SetConductivities().origin(), nmod, 0.01);
@@ -397,10 +392,7 @@ BOOST_AUTO_TEST_SUITE( X3DObjective_Suite )
 
         jif3D::X3DModel Model;
         MakeMTModel(Model);
-        const size_t xsize = Model.GetXCoordinates().size();
-        const size_t ysize = Model.GetYCoordinates().size();
-        const size_t zsize = Model.GetZCoordinates().size();
-        const size_t nmod = xsize * ysize * zsize;
+        const size_t nmod = Model.GetConductivities().num_elements();
 
         jif3D::X3DModel TrueModel(Model);
         std::fill_n(TrueModel.SetConductivities().origin(), nmod, 0.01);

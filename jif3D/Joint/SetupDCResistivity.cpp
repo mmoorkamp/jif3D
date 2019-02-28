@@ -20,8 +20,8 @@ namespace jif3D
         desc.add_options()("dcrelerr", po::value(&relerr)->default_value(0.02),
             "The relative error for the DC resistivity data")("dcminerr",
             po::value(&minerr)->default_value(1e-3))("dcfine",
-                    po::value(&DCFineModelName),
-                    "The name for the model with the DC forward geometry");
+            po::value(&DCFineModelName),
+            "The name for the model with the DC forward geometry");
 
         return desc;
       }
@@ -50,9 +50,12 @@ namespace jif3D
             std::string dcmodelfilename = jif3D::AskFilename(
                 "DC Resistivity Model Filename: ");
             Model.ReadNetCDF(dcmodelfilename);
-
-            Model.SetOrigin(xorigin, yorigin, 0.0);
-            Calculator = boost::shared_ptr<DCResistivityCalculator>(new DCResistivityCalculator);
+            if (xorigin != 0.0 || yorigin != 0.0)
+              {
+                Model.SetOrigin(xorigin, yorigin, 0.0);
+              }
+            Calculator = boost::shared_ptr<DCResistivityCalculator>(
+                new DCResistivityCalculator);
             DCObjective = boost::shared_ptr<
                 jif3D::ThreeDModelObjective<DCResistivityCalculator> >(
                 new jif3D::ThreeDModelObjective<DCResistivityCalculator>(*Calculator));

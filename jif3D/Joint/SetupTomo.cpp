@@ -34,9 +34,8 @@ namespace jif3D
             "The weight for the seismic tomography data")("pickerr",
             po::value(&pickerr)->default_value(5e-3),
             "The picking error for the travel time data")("tomofine",
-            po::value(&CellSize),
-            "The cell size in m for the refined tomography model")("writerays",
-            "Write out the rays for each seismic forward modelling");
+            po::value(&CellSize), "The cell size in m for the refined tomography model")(
+            "writerays", "Write out the rays for each seismic forward modelling");
         return desc;
       }
 
@@ -76,7 +75,10 @@ namespace jif3D
             //read in data
             jif3D::rvec TomoError;
             jif3D::ReadTraveltimes(datafilename, TomoData, TomoError, TomoModel);
-            TomoModel.SetOrigin(xorigin, yorigin, 0.0);
+            if (xorigin != 0.0 || yorigin != 0.0)
+              {
+                TomoModel.SetOrigin(xorigin, yorigin, 0.0);
+              }
             bool writerays = false;
             if (vm.count("writerays"))
               {
@@ -84,7 +86,8 @@ namespace jif3D
               }
             jif3D::TomographyCalculator Calculator;
 
-            TomoObjective = boost::make_shared<jif3D::ThreeDModelObjective<jif3D::TomographyCalculator>>(Calculator);
+            TomoObjective = boost::make_shared<
+                jif3D::ThreeDModelObjective<jif3D::TomographyCalculator>>(Calculator);
 
             TomoObjective->SetObservedData(TomoData);
             TomoObjective->SetCoarseModelGeometry(TomoModel);
@@ -128,7 +131,8 @@ namespace jif3D
 
                 jif3D::ThreeDSeismicModel TomoFineGeometry;
                 TomoFineGeometry.SetCellSize(CellSize, nx, ny, nz);
-                std::cout << "Refined Model has " << nx << " * " << ny << " * " << nz << "cells\n";
+                std::cout << "Refined Model has " << nx << " * " << ny << " * " << nz
+                    << "cells\n";
                 //copy measurement configuration to refined model
                 TomoFineGeometry.CopyMeasurementConfigurations(TomoModel);
                 TomoObjective->SetFineModelGeometry(TomoFineGeometry);

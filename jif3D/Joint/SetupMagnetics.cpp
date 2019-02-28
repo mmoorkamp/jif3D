@@ -90,8 +90,10 @@ namespace jif3D
                 Model.AddMeasurementPoint(PosX.at(i), PosY.at(i), PosZ.at(i));
               }
 
-            Model.SetOrigin(xorigin, yorigin, 0.0);
-
+            if (xorigin != 0.0 || yorigin != 0.0)
+              {
+                Model.SetOrigin(xorigin, yorigin, 0.0);
+              }
             if (Transform.get() == NULL)
               {
                 jif3D::rvec RefVec(Model.GetSusceptibilities().num_elements(), 1.0);
