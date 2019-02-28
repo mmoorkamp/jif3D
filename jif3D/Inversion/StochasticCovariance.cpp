@@ -186,17 +186,19 @@ namespace jif3D
               }
 
           }
-        std::cout << "Preparing inverse covariance " << std::endl;
-        A.setFromTriplets(coefficients.begin(), coefficients.end());
-        A.makeCompressed();
-        cg.compute(A);
+        if (a < 0.0)
+          {
+            std::cout << "Preparing inverse covariance " << std::endl;
+            A.setFromTriplets(coefficients.begin(), coefficients.end());
+            A.makeCompressed();
+            cg.compute(A);
 
-        boost::posix_time::ptime endtime =
-            boost::posix_time::microsec_clock::local_time();
-        double time = (endtime - starttime).total_seconds();
+            boost::posix_time::ptime endtime =
+                boost::posix_time::microsec_clock::local_time();
+            double time = (endtime - starttime).total_seconds();
 
-        std::cout << " took " << time << " seconds " << std::endl;
-
+            std::cout << " took " << time << " seconds " << std::endl;
+          }
         //previous_vec = vector;
 
 //        boost::math::cubic_b_spline<double> localspline(values.begin(), values.end(), min, delta);
