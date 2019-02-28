@@ -126,7 +126,7 @@ namespace jif3D
           InvCovMat.resize(Cov.size(), Cov.size(), false);
           for (size_t i = 0; i < Cov.size(); ++i)
             {
-              InvCovMat(i, i) = 1.0 / std::pow(Cov(i), 2);
+              InvCovMat(i, i) = 1.0 / jif3D::pow2(Cov(i));
             }
         }
       //! Return a read-only version of the diagonal of the data covariance

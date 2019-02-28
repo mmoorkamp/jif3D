@@ -24,8 +24,8 @@ namespace jif3D
         {
 
         }
-      virtual jif3D::rvec ApplyCovar(const jif3D::rvec &vector) = 0;
-      virtual jif3D::rvec ApplyInvCovar(const jif3D::rvec &vector) = 0;
+      virtual jif3D::rvec ApplyCovar(const jif3D::rvec &vector) const = 0;
+      virtual jif3D::rvec ApplyInvCovar(const jif3D::rvec &vector) const = 0;
       };
 
   } /* namespace jif3D */

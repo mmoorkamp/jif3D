@@ -10,7 +10,7 @@
 namespace jif3D
   {
 
-    jif3D::rvec DiagonalCovariance::ApplyCovar(const jif3D::rvec &vector)
+    jif3D::rvec DiagonalCovariance::ApplyCovar(const jif3D::rvec &vector) const
       {
 
         if (CovDiag.empty())
@@ -19,7 +19,7 @@ namespace jif3D
         return ublas::element_prod(vector, CovDiag);
       }
 
-    jif3D::rvec DiagonalCovariance::ApplyInvCovar(const jif3D::rvec &vector)
+    jif3D::rvec DiagonalCovariance::ApplyInvCovar(const jif3D::rvec &vector) const
       {
         if (CovDiag.empty())
           return vector;

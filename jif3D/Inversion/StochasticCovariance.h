@@ -11,23 +11,32 @@
 #include "../Global/VecMat.h"
 #include "GeneralCovariance.h"
 #include "../ModelBase/ThreeDModelBase.h"
+#include <Eigen/Sparse>
+#include <Eigen/SparseQR>
+#include <Eigen/OrderingMethods>
 //#include <Eigen/Dense>
 //#include <boost/math/interpolators/cubic_b_spline.hpp>
 
 namespace jif3D
   {
 
-    class StochasticCovariance : public GeneralCovariance
+    class StochasticCovariance: public GeneralCovariance
       {
     public:
+      typedef Eigen::SparseMatrix<double> SpMat; // declares a column-major sparse matrix type of double
+
       //typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> MatrixXd;
     private:
+      Eigen::ConjugateGradient<Eigen::SparseMatrix<double>, Eigen::Lower | Eigen::Upper,
+      		Eigen::IncompleteCholesky<double>> cg;
+      //Eigen::SparseQR<Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int>> cg;
+      SpMat A;
       int nx, ny, nz;
       double a;
       double nu;
       double sigma;
-      jif3D::rvec previous_vec;
-      jif3D::rvec previous_result;
+      mutable jif3D::rvec previous_vec;
+      mutable jif3D::rvec previous_result;
       int distindex;
       //MatrixXd Cm;
       bool HaveInv;
@@ -52,9 +61,10 @@ namespace jif3D
       //  {
       //    return Cm;
       //  }
-      virtual jif3D::rvec ApplyCovar(const jif3D::rvec &vector) override;
-      virtual jif3D::rvec ApplyInvCovar(const jif3D::rvec &vector) override;
-      StochasticCovariance(size_t x, size_t y, size_t z, double ma, double mnu, double msigma);
+      virtual jif3D::rvec ApplyCovar(const jif3D::rvec &vector) const override;
+      virtual jif3D::rvec ApplyInvCovar(const jif3D::rvec &vector) const override;
+      StochasticCovariance(size_t x, size_t y, size_t z, double ma, double mnu,
+          double msigma);
       virtual ~StochasticCovariance();
       };
 
