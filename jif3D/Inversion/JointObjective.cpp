@@ -18,7 +18,7 @@ using boost::numeric::ublas::subrange;
 
 namespace jif3D
   {
-
+    static const double MinWeight = 1e-32;
     static const std::string MisfitFormat = " %15s ";
     /*! We want to stop the inversion when all of the data misfits are below
      * the expected chi-squared value. If the convergence limit for each individual
@@ -86,7 +86,7 @@ namespace jif3D
           {
             for (size_t i = 0; i < nobjective; ++i)
               {
-                if (Weights.at(i) > 0)
+                if (Weights.at(i) > MinWeight)
                   {
                     std::cout << format(MisfitFormat) % Names.at(i);
                   }
@@ -129,7 +129,7 @@ namespace jif3D
             std::cout << "Runtimes: \n";
             for (size_t i = 0; i < nobjective; ++i)
               {
-                if (Weights.at(i) > 0)
+                if (Weights.at(i) > MinWeight)
                   {
                     std::cout << format(MisfitFormat) % times.at(i);
                   }
@@ -157,7 +157,7 @@ namespace jif3D
           }
         for (size_t i = 0; i < nobjective; ++i)
           {
-            if (Weights.at(i) > 0)
+            if (Weights.at(i) > MinWeight)
               {
                 //we calculate the "natural" gradient for each method
                 // and then pass it to the corresponding parameter transformation
@@ -189,7 +189,7 @@ namespace jif3D
             std::cout << "\nRuntimes: \n";
             for (size_t i = 0; i < nobjective; ++i)
               {
-                if (Weights.at(i) > 0)
+                if (Weights.at(i) > MinWeight)
                   {
                     std::cout << format(MisfitFormat) % times.at(i);
                   }
