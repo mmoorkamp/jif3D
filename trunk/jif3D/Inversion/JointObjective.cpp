@@ -97,7 +97,7 @@ namespace jif3D
         Diff.resize(nobjective);
         for (size_t i = 0; i < nobjective; ++i)
           {
-            if (Weights.at(i) > 0)
+            if (Weights.at(i) > MinWeight)
               {
                 boost::posix_time::ptime starttime =
                     boost::posix_time::microsec_clock::local_time();
