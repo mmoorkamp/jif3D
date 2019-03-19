@@ -570,8 +570,8 @@ int hpx_main(boost::program_options::variables_map& vm)
           {
 
             boost::shared_ptr<jif3D::GeneralCovariance> StochCov = boost::make_shared<
-                jif3D::StochasticCovariance>(TomoModel.GetModelShape()[0],
-                TomoModel.GetModelShape()[1], TomoModel.GetModelShape()[2], CovWidth, 1.0,
+                jif3D::StochasticCovariance>(StartModel->GetModelShape()[0],
+                StartModel->GetModelShape()[1], StartModel->GetModelShape()[2], CovWidth, 1.0,
                 1.0);
             CovObj->AddSection(0, ngrid, StochCov);
             CovObj->AddSection(ngrid, 2 * ngrid, StochCov);
@@ -764,8 +764,8 @@ int hpx_main(boost::program_options::variables_map& vm)
                 std::copy(CG.begin() + 2 * nmod, CG.begin() + 3 * nmod, ZGrad.origin());
                 std::string Name = Names.at(i);
                 jif3D::Write3DVectorModelToVTK(Name + ".vtk", Name,
-                    StartModel->GetXCellSizes(), StartModel->GetYCellSizes(),
-                    StartModel->GetZCellSizes(), XGrad, YGrad, ZGrad);
+                    StartModel->GetXCoordinates(), StartModel->GetYCoordinates(),
+                    StartModel->GetZCoordinates(), XGrad, YGrad, ZGrad);
               }
           }
 
