@@ -752,9 +752,9 @@ int hpx_main(boost::program_options::variables_map& vm)
             if (ObjectiveTypes.at(i) == jif3D::JointObjective::coupling)
               {
                 jif3D::rvec CG(Objective->GetObjective(i).GetIndividualMisfit());
-                const size_t nx = StartModel->GetXCoordinates().size();
-                const size_t ny = StartModel->GetYCoordinates().size();
-                const size_t nz = StartModel->GetZCoordinates().size();
+                const size_t nx = StartModel->GetXCoordinates().size() -1;
+                const size_t ny = StartModel->GetYCoordinates().size()-1;
+                const size_t nz = StartModel->GetZCoordinates().size()-1;
                 const size_t nmod = nx * ny * nz;
                 jif3D::ThreeDModelBase::t3DModelData XGrad(boost::extents[nx][ny][nz]);
                 jif3D::ThreeDModelBase::t3DModelData YGrad(boost::extents[nx][ny][nz]);
