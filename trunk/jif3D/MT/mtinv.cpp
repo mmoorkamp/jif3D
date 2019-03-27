@@ -227,7 +227,7 @@ int hpx_main(boost::program_options::variables_map& vm)
                 ZCoord, Data, ZError, C);
           }
       }
-
+    jif3D::rvec DataError = ZError;
     jif3D::rvec MinErr(ZError.size());
     if (vm.count("inderrors"))
       {
@@ -235,7 +235,14 @@ int hpx_main(boost::program_options::variables_map& vm)
       }
     else
       {
-        MinErr = jif3D::ConstructMTError(Data, relerr);
+        if (vm.count("rowerrors"))
+          {
+            MinErr = jif3D::ConstructMTRowError(Data, relerr);
+          }
+        else
+          {
+            MinErr = jif3D::ConstructMTError(Data, relerr);
+          }
       }
 
     if (vm.count("forcecommon"))
@@ -798,7 +805,7 @@ int hpx_main(boost::program_options::variables_map& vm)
                 XCoord, YCoord, ZCoord, X3DObjective->GetSyntheticData(),
                 X3DObjective->GetDataError(), C);
             jif3D::WriteImpedancesToNetCDF(modelfilename + ".dist_imp.nc", Frequencies,
-                XCoord, YCoord, ZCoord, X3DObjective->GetObservedData(), ZError, C);
+                XCoord, YCoord, ZCoord, X3DObjective->GetObservedData(), DataError, C);
             jif3D::WriteImpedancesToNetCDF(modelfilename + ".diff_imp.nc", Frequencies,
                 XCoord, YCoord, ZCoord, X3DObjective->GetIndividualMisfit());
           }
@@ -855,6 +862,8 @@ int main(int argc, char* argv[])
         po::value<std::string>(&MTInvCovarName),
         "Inverse covariance matrix to use in MT misfit calculation.")("inderrors",
         "Use the individual errors for each element instead of the same error floor for all elements")(
+        "rowerrors",
+        "Use rowwise errors for each element instead of the same error floor for all elements")(
         "forcecommon", "Use exactly the same error mtrelerr * Berd(Z) for all elements.")(
         "mtrelerr", po::value(&relerr)->default_value(0.02),
         "Error floor for impedance estimates.")("coolingfactor",
