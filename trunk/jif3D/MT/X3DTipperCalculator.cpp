@@ -105,8 +105,9 @@ namespace jif3D
         Model.SetFieldIndices(HxIndices, HyIndices, HxIndices, HyIndices, HzIndices);
 
         const size_t nstats = Model.GetHxIndices().size() / nfreq;
-        const size_t nmodx = Model.GetXCoordinates().size();
-        const size_t nmody = Model.GetYCoordinates().size();
+        const size_t nmodx = Model.GetConductivities().shape()[0];
+        const size_t nmody = Model.GetConductivities().shape()[1];
+        const size_t nmodz = Model.GetConductivities().shape()[2];
 
         std::string ErrorMsg;
         //result will hold the final impedance values with
