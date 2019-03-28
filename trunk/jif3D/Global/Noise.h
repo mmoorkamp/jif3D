@@ -16,7 +16,6 @@
 #include <boost/random/normal_distribution.hpp>
 #include <boost/random/variate_generator.hpp>
 
-
 /*! \file Noise.h
  * General routines for adding noise to observed data or constructing error estimates
  * for the inversion of noisy data.
@@ -107,7 +106,7 @@ namespace jif3D
           }
         return Error;
       }
-    //! Assign errors to noise free synthetic MT data for inversion purposes
+    //! Assign errors to  MT data for inversion purposes
     /*! When inverting synthetic data for which we do not have any noise information, we still have
      * to assign some data covariance for inversion, usually we use a relative error. This function, in contrast
      * to ConstructError, is particularly geared towards MT data. We use a percentage of the Berdichevskyi invariant
@@ -153,6 +152,41 @@ namespace jif3D
           }
         return DataError;
       }
+
+    inline jif3D::rvec ConstructMTRowError(const jif3D::rvec &Data, const double relerror)
+      {
+        if (relerror <= 0.0)
+          {
+            throw jif3D::FatalException("Specifiying relative error <= 0 is not valid! ",
+            __FILE__, __LINE__);
+          }
+        const size_t ndata = Data.size();
+        //set the default value negative, everything should be overwritten
+        //with a positive number below
+        //so we can spot mistakes by looking for negative numbers
+        jif3D::rvec DataError(ndata, -1.0);
+        const size_t ntensorelem = 8;
+        const size_t nrowelem = 4;
+        if ((Data.size() % ntensorelem) != 0)
+          {
+            throw jif3D::FatalException(
+                "MT Data vector size is not an integer multiple of 8! ", __FILE__,
+                __LINE__);
+          }
+        const size_t nrows = ndata / nrowelem;
+        for (size_t i = 0; i < nrows; ++i)
+          {
+            double abs1 = std::sqrt(
+                jif3D::pow2(Data(i * nrows)) + jif3D::pow2(Data(i * nrows + 1)));
+            double abs2 = std::sqrt(
+                jif3D::pow2(Data(i * nrows + 2)) + jif3D::pow2(Data(i * nrows + 3)));
+            double maxabs = std::max(abs1, abs2);
+            std::fill_n(DataError.begin() + i * ntensorelem, ntensorelem,
+                maxabs * relerror);
+          }
+        return DataError;
+      }
+
   /* @} */
   }
 #endif /* NOISE_H_ */
