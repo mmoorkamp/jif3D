@@ -36,7 +36,6 @@ namespace jif3D
      * for different platforms with different sensitivity handlings.
      */
 
-
     template<class ThreeDModelType>
     class J3DEXPORT ThreeDGravMagImplementation
       {
@@ -122,26 +121,12 @@ namespace jif3D
     void ThreeDGravMagImplementation<ThreeDModelType>::CacheGeometry(
         const ThreeDModelType &Model)
       {
-
-        XCoord.resize(Model.GetXCoordinates().size());
-        YCoord.resize(Model.GetYCoordinates().size());
-        ZCoord.resize(Model.GetZCoordinates().size());
-        XSizes.resize(Model.GetXCellSizes().size());
-        YSizes.resize(Model.GetYCellSizes().size());
-        ZSizes.resize(Model.GetZCellSizes().size());
-        std::copy(Model.GetXCoordinates().begin(), Model.GetXCoordinates().end(),
-            XCoord.begin());
-        std::copy(Model.GetYCoordinates().begin(), Model.GetYCoordinates().end(),
-            YCoord.begin());
-        std::copy(Model.GetZCoordinates().begin(), Model.GetZCoordinates().end(),
-            ZCoord.begin());
-        std::copy(Model.GetXCellSizes().begin(), Model.GetXCellSizes().end(),
-            XSizes.begin());
-        std::copy(Model.GetYCellSizes().begin(), Model.GetYCellSizes().end(),
-            YSizes.begin());
-        std::copy(Model.GetZCellSizes().begin(), Model.GetZCellSizes().end(),
-            ZSizes.begin());
-
+        XCoord = Model.GetXCoordinates();
+        YCoord = Model.GetYCoordinates();
+        ZCoord = Model.GetZCoordinates();
+        XSizes = Model.GetXCellSizes();
+        YSizes = Model.GetYCellSizes();
+        ZSizes = Model.GetZCellSizes();
       }
 
     /*! This function implements the grand structure of gravity forward calculation, i.e. processing

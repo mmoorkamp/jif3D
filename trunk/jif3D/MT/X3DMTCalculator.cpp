@@ -345,12 +345,7 @@ namespace jif3D
         //we need to initialize all values to zero as we are adding
         //the individual gradients per frequency
         std::fill(Gradient.begin(), Gradient.end(), 0.0);
-        //we make a call to the coordinate functions to make sure
-        //that we have updated the coordinate information and cached it
-        //only then the subsequent calls are thread safe
-        Model.GetXCoordinates();
-        Model.GetYCoordinates();
-        Model.GetZCoordinates();
+
         //we read the distortion parameters from the model
         std::vector<double> C(Model.GetDistortionParameters());
         //if they have not been set, we use the identity matrix

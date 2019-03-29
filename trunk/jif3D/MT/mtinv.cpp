@@ -759,9 +759,9 @@ int hpx_main(boost::program_options::variables_map& vm)
         Model.WriteVTK("crossref.final.vtk");
         //write out the final cross gradient model
         jif3D::rvec CG(Objective->GetObjective(2).GetIndividualMisfit());
-        const size_t nx = Model.GetXCoordinates().size();
-        const size_t ny = Model.GetYCoordinates().size();
-        const size_t nz = Model.GetZCoordinates().size();
+        const size_t nx = Model.GetData().shape()[0];
+        const size_t ny = Model.GetData().shape()[1];
+        const size_t nz = Model.GetData().shape()[2];
         const size_t nmod = nx * ny * nz;
         jif3D::ThreeDModelBase::t3DModelData XGrad(boost::extents[nx][ny][nz]);
         jif3D::ThreeDModelBase::t3DModelData YGrad(boost::extents[nx][ny][nz]);

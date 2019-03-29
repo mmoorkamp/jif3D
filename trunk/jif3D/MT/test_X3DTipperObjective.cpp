@@ -92,9 +92,9 @@ BOOST_AUTO_TEST_SUITE( X3DTipperObjective_Suite )
 
         jif3D::X3DModel Model;
         MakeMTModel(Model);
-        const size_t xsize = Model.GetXCoordinates().size();
-        const size_t ysize = Model.GetYCoordinates().size();
-        const size_t zsize = Model.GetZCoordinates().size();
+        const size_t xsize = Model.GetData().shape()[0];
+        const size_t ysize = Model.GetData().shape()[1];
+        const size_t zsize = Model.GetData().shape()[2];
         const size_t nmod = xsize * ysize * zsize;
 
         jif3D::X3DModel TrueModel(Model);
