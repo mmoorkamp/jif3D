@@ -102,12 +102,10 @@ namespace jif3D
         jif3D::rvec &SensProfile)
       {
         ModelType LocalModel(Model);
-        const size_t nx = LocalModel.GetXCellSizes().size();
-        const size_t ny = LocalModel.GetYCellSizes().size();
-        const double sizex = LocalModel.GetXCoordinates()[nx - 1]
-            + LocalModel.GetXCellSizes()[nx - 1];
-        const double sizey = LocalModel.GetYCoordinates()[ny - 1]
-            + LocalModel.GetYCellSizes()[ny - 1];
+        const size_t nx = LocalModel.GetXCoordinates().size();
+        const size_t ny = LocalModel.GetYCoordinates().size();
+        const double sizex = LocalModel.GetXCoordinates()[nx - 1];
+        const double sizey = LocalModel.GetYCoordinates()[ny - 1];
         double zpos = -0.01;
         if (LocalModel.GetMeasPosZ().size() > 0)
           {

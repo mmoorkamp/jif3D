@@ -14,9 +14,9 @@
 
 std::vector<double>  CalcRealization(realinfo Info)
   {
-    const size_t nx = Info.Model.GetXCoordinates().size();
-    const size_t ny = Info.Model.GetYCoordinates().size();
-    const size_t nz = Info.Model.GetZCoordinates().size();
+    const size_t nx = Info.Model.GetData().shape()[0];
+    const size_t ny = Info.Model.GetData().shape()[1];
+    const size_t nz = Info.Model.GetData().shape()[2];
 
     for (size_t i = 0; i < nx; ++i)
       {
