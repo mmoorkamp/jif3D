@@ -298,7 +298,7 @@ int hpx_main(boost::program_options::variables_map& vm)
     const size_t ncovmod = CovModVec.size();
     std::cout << nparm << " Inversion parameters " << ncovmod << " Covariance values "
         << std::endl;
-    jif3D::rvec CovVec(nparm, 1.0);
+    jif3D::rvec CVec(nparm, 1.0);
     if (!CovModVec.empty())
       {
 
@@ -313,11 +313,12 @@ int hpx_main(boost::program_options::variables_map& vm)
           {
             for (size_t j = 0; j < ncovmod; ++j)
               {
-                CovVec(j + i * ncovmod) = std::abs(CovModVec(j));
+                CVec(j + i * ncovmod) = std::abs(CovModVec(j));
               }
 
           }
       }
+    CovModVec = CVec;
 
     const size_t nmtsites = MTSetup.GetModel().GetMeasPosX().size();
     jif3D::rvec CRef(nmtsites * 4);
@@ -580,13 +581,13 @@ int hpx_main(boost::program_options::variables_map& vm)
               {
                 boost::shared_ptr<jif3D::GeneralCovariance> DistCov = boost::make_shared<
                     jif3D::DiagonalCovariance>();
-                CovObj->AddSection(ngrid, InvModel.size(), DistCov);
+                CovObj->AddSection(3*ngrid, InvModel.size(), DistCov);
               }
           }
         else
           {
             CovObj->AddSection(0, InvModel.size(),
-                boost::make_shared<jif3D::DiagonalCovariance>(CovVec));
+                boost::make_shared<jif3D::DiagonalCovariance>(CovModVec));
 
           }
 
