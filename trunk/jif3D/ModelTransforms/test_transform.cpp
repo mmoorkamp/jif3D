@@ -11,6 +11,7 @@
 #include <boost/test/included/unit_test.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/lambda/lambda.hpp>
+#include <boost/math/special_functions/fpclassify.hpp>
 #include <stdlib.h>
 #include "../Inversion/ModelTransforms.h"
 #include "../Gravity/ThreeDGravityModel.h"
@@ -57,7 +58,7 @@ void TestTransform(const jif3D::GeneralModelTransform &Transform, const size_t n
         jif3D::rvec TransDeriv = Transform.Derivative(Generalized, One);
         jif3D::rvec PlusVec(Generalized), MinusVec(Generalized);
         const double delta = 0.001;
-        const double h = Generalized(i) * delta;
+        const double h =  delta;
         PlusVec(i) += h;
         MinusVec(i) -= h;
         const double DiffDeriv = (Transform.GeneralizedToPhysical(PlusVec)(i)
@@ -144,6 +145,15 @@ BOOST_AUTO_TEST_SUITE (Transform_Test_Suite)
         TestTransform(jif3D::TanhTransform(0.0, 1000), nelements);
       }
 
+    BOOST_AUTO_TEST_CASE (Tanh_vector_transform_test)
+      {
+        const size_t nelements = 5 + rand() % 100;
+        jif3D::rvec min(nelements), max(nelements);
+        std::generate(min.begin(),min.end(),[](){return drand48();});
+        std::generate(max.begin(),max.end(),[](){return 3.0 + 5 * drand48();});
+        TestTransform(jif3D::TanhTransform(min, max), nelements);
+      }
+
     BOOST_AUTO_TEST_CASE (LogLim_transform_test)
       {
         const size_t nelements = 5 + rand() % 100;
@@ -210,7 +220,7 @@ BOOST_AUTO_TEST_SUITE (Transform_Test_Suite)
         jif3D::rvec Reference(nelements);
         for (size_t i = 0; i < nelements; ++i)
           {
-            Reference(i) = 2.0 + drand48();
+            Reference(i) = 2.0 + jif3D::platform::drand48();
           }
 
         jif3D::ChainedTransform TransformForward;

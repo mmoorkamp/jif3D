@@ -640,7 +640,7 @@ int hpx_main(boost::program_options::variables_map& vm)
       }
 
     auto CovObj = boost::make_shared<jif3D::MultiSectionCovariance>(InvModel.size());
-    if (CovWidth > 0.0)
+    if (CovWidth != 0.0)
       {
         boost::shared_ptr<jif3D::GeneralCovariance> StochCov = boost::make_shared<
             jif3D::StochasticCovariance>(Model.GetModelShape()[0],
