@@ -454,19 +454,6 @@ int hpx_main(boost::program_options::variables_map& vm)
         CovModVec.resize(InvModel.size());
         std::fill(CovModVec.begin(), CovModVec.end(), 1.0);
         std::copy(OldCov.begin(), OldCov.end(), CovModVec.begin());
-
-        if (vm.count("titan"))
-          {
-            size_t nstats = C.size() / 4;
-
-            for (size_t i = 0; i < nstats; ++i)
-              {
-                CovModVec(ngrid + i * 4) = 1.0;
-                CovModVec(ngrid + i * 4 + 1) = 1e-30;
-                CovModVec(ngrid + i * 4 + 2) = 1e-30;
-                CovModVec(ngrid + i * 4 + 3) = 1.0;
-              }
-          }
       }
 
     if (vm.count("crossmodel"))
