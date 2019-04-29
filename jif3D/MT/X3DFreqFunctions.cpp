@@ -289,15 +289,33 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI,
         cmat AH = CalcEExt(Misfit, Info.C, j, freq_start_index, Calc->GetHx1()[offset_Hx],
             Calc->GetHx2()[offset_Hx], Calc->GetHy1()[offset_Hy],
             Calc->GetHy2()[offset_Hy]);
-
-        EXPolMoments1.at(2 * j) = AH(0, 0) * Info.C[j * 4];
-        EXPolMoments2.at(2 * j) = AH(0, 1) * Info.C[j * 4];
-        EYPolMoments1.at(2 * j) = AH(0, 0) * Info.C[j * 4 + 1];
-        EYPolMoments2.at(2 * j) = AH(0, 1) * Info.C[j * 4 + 1];
-        EXPolMoments1.at(2 * j + 1) = AH(1, 0) * Info.C[j * 4 + 2];
-        EXPolMoments2.at(2 * j + 1) = AH(1, 1) * Info.C[j * 4 + 2];
-        EYPolMoments1.at(2 * j + 1) = AH(1, 0) * Info.C[j * 4 + 3];
-        EYPolMoments2.at(2 * j + 1) = AH(1, 1) * Info.C[j * 4 + 3];
+        rmat R(2, 2), C1(2, 2), C2(2, 2);
+        const double angle = Info.Model.GetRotAngles().at(j) / 180.0 * M_PI;
+        R(0, 0) = std::cos(angle);
+        R(0, 1) = -1.0 * std::sin(angle);
+        R(1, 0) = std::sin(angle);
+        R(1, 1) = std::cos(angle);
+        C1(0, 0) = Info.C[j * 4];
+        C1(0, 1) = 0.0;
+        C1(1, 0) = Info.C[j * 4 + 1];
+        C1(1, 1) = 0.0;
+        C2(0, 1) = Info.C[j * 4 + 2];
+        C2(0, 0) = 0.0;
+        C2(1, 1) = Info.C[j * 4 + 3];
+        C2(0, 1) = 0.0;
+        cmat RAH = ublas::prod(ublas::trans(R), AH);
+        rmat RC1 = ublas::prod(R, C1);
+        rmat RC2 = ublas::prod(R, C2);
+        cmat E1eff = ublas::prod(RC1, RAH); //ublas::prod(ublas::prod(ublas::prod(R , C1), ublas::trans(R)),AH);
+        cmat E2eff = ublas::prod(RC2, RAH); //ublas::prod(ublas::prod(ublas::prod(R , C2), ublas::trans(R)),AH)
+        EXPolMoments1.at(2 * j) = E1eff(0, 0); //AH(0, 0) * Info.C[j * 4];
+        EXPolMoments2.at(2 * j) = E1eff(0, 1); //AH(0, 1) * Info.C[j * 4];
+        EYPolMoments1.at(2 * j) = E1eff(1, 0); //AH(0, 0) * Info.C[j * 4 + 1];
+        EYPolMoments2.at(2 * j) = E1eff(1, 1); //AH(0, 1) * Info.C[j * 4 + 1];
+        EXPolMoments1.at(2 * j + 1) = E2eff(0, 0); //AH(1, 0) * Info.C[j * 4 + 2];
+        EXPolMoments2.at(2 * j + 1) = E2eff(0, 1); //AH(1, 1) * Info.C[j * 4 + 2];
+        EYPolMoments1.at(2 * j + 1) = E2eff(1, 0); //AH(1, 0) * Info.C[j * 4 + 3];
+        EYPolMoments2.at(2 * j + 1) = E2eff(1, 1); //AH(1, 1) * Info.C[j * 4 + 3];
       }
     //we only want to calculate for one frequency
     //so our vector has just 1 element
