@@ -31,34 +31,7 @@ namespace jif3D
 
       }
 
-    X3DModel::X3DModel(const X3DModel &source) :
-        ThreeDMTModel(source), bg_thicknesses(source.bg_thicknesses), bg_conductivities(
-            source.bg_conductivities), ExIndices(source.ExIndices), EyIndices(
-            source.EyIndices), HxIndices(source.HxIndices), HyIndices(source.HyIndices), HzIndices(
-            source.HzIndices)
-      {
 
-      }
-
-    X3DModel& X3DModel::operator=(const X3DModel& source)
-      {
-        if (&source != this)
-          {
-            //first we copy the base class
-            ThreeDMTModel::operator=(source);
-            //then we copy the additional information about the background layers
-            //that is not contained in the base class
-            bg_thicknesses = source.bg_thicknesses;
-
-            bg_conductivities = source.bg_conductivities;
-            ExIndices = source.ExIndices;
-            EyIndices = source.EyIndices;
-            HxIndices = source.HxIndices;
-            HyIndices = source.HyIndices;
-            HzIndices = source.HzIndices;
-          }
-        return *this;
-      }
 
     X3DModel& X3DModel::operator=(const ThreeDModelBase& source)
       {
@@ -86,6 +59,8 @@ namespace jif3D
           return false;
         if (HzIndices.size() != b.HzIndices.size())
           return false;
+        if (RotAngles.size() != b.RotAngles.size())
+          return false;
 
         if (!std::equal(bg_thicknesses.begin(), bg_thicknesses.end(),
             b.bg_thicknesses.begin(), [epsilon](double a, double b)
@@ -96,6 +71,12 @@ namespace jif3D
             b.bg_conductivities.begin(), [epsilon](double a, double b)
               { return boost::math::relative_difference(a,b) < epsilon;}))
           return false;
+
+        if (!std::equal(RotAngles.begin(), RotAngles.end(),
+            b.RotAngles.begin(), [epsilon](double a, double b)
+              { return boost::math::relative_difference(a,b) < epsilon;}))
+          return false;
+
 
         if (!std::equal(ExIndices.begin(), ExIndices.end(), b.ExIndices.begin()))
           return false;
@@ -114,8 +95,10 @@ namespace jif3D
     boost::array<ThreeDModelBase::t3DModelData::index, 3> X3DModel::FindAssociatedIndices(
         const double xcoord, const double ycoord, const double zcoord) const
       {
-        const int xindex = boost::numeric_cast<int>(floor((xcoord - GetXCoordinates()[0]) / GetXCellSizes()[0]));
-        const int yindex = boost::numeric_cast<int>(floor((ycoord - GetYCoordinates()[0])/ GetYCellSizes()[0]));
+        const int xindex = boost::numeric_cast<int>(
+            floor((xcoord - GetXCoordinates()[0]) / GetXCellSizes()[0]));
+        const int yindex = boost::numeric_cast<int>(
+            floor((ycoord - GetYCoordinates()[0]) / GetYCellSizes()[0]));
         const int zindex = std::distance(GetZCoordinates().begin(),
             std::lower_bound(GetZCoordinates().begin(), GetZCoordinates().end(), zcoord));
         //when we return the value we make sure that we cannot go out of bounds

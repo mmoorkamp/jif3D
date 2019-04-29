@@ -6,6 +6,7 @@
  */
 #include "X3DFreqFunctions.h"
 #include "../Global/FatalException.h"
+#include "../Global/NumUtil.h"
 #include "../ModelBase/CellBoundaries.h"
 
 #include "ReadWriteX3D.h"
@@ -103,41 +104,59 @@ ForwardResult CalculateFrequency(const ForwardInfo &Info,
         FieldsToImpedance(Calc->GetEx1()[offset_Ex], Calc->GetEx2()[offset_Ex],
             Calc->GetEy1()[offset_Ex], Calc->GetEy2()[offset_Ex],
             Calc->GetHx1()[offset_Hx], Calc->GetHx2()[offset_Hx],
-            Calc->GetHy1()[offset_Hy], Calc->GetHy2()[offset_Hy], ZxxEx, ZxyEx, ZyxEx, ZyyEx);
+            Calc->GetHy1()[offset_Hy], Calc->GetHy2()[offset_Hy], ZxxEx, ZxyEx, ZyxEx,
+            ZyyEx);
         //calculate the full impedance at the location of the Ey field measurements
         FieldsToImpedance(Calc->GetEx1()[offset_Ey], Calc->GetEx2()[offset_Ey],
             Calc->GetEy1()[offset_Ey], Calc->GetEy2()[offset_Ey],
             Calc->GetHx1()[offset_Hx], Calc->GetHx2()[offset_Hx],
-            Calc->GetHy1()[offset_Hy], Calc->GetHy2()[offset_Hy], ZxxEy, ZxyEy, ZyxEy, ZyyEy);
+            Calc->GetHy1()[offset_Hy], Calc->GetHy2()[offset_Hy], ZxxEy, ZxyEy, ZyxEy,
+            ZyyEy);
         //result is a local array for this frequency
         //so we can directly use it even in a threaded environment
         const size_t meas_index = j * 8;
         const size_t site_index = j * 4;
+        const double angle = Info.Model.GetRotAngles().at(j) / 180.0 * M_PI;
+        const double c2 = jif3D::pow2(std::cos(angle));
+        const double s2 = jif3D::pow2(std::sin(angle));
+        const double sc = std::sin(angle) * cos(angle);
+        const double Cxx = Info.C[site_index];
+        const double Cxy = Info.C[site_index + 1];
+        const double Cyx = Info.C[site_index + 2];
+        const double Cyy = Info.C[site_index + 3];
+        std::complex<double> Zxx = (c2 * Cxx - sc * Cxy) * ZxxEx
+            + (sc * Cxx + c2 * Cxy) * ZyxEx + (s2 * Cyy - sc * Cyx) * ZxxEy
+            - (s2 * Cyx + sc * Cyy) * ZyxEy;
+        std::complex<double> Zxy = (c2 * Cxx - sc * Cxy) * ZxyEx
+            + (sc * Cxx + c2 * Cxy) * ZyyEx + (s2 * Cyy - sc * Cyx) * ZxyEy
+            - (s2 * Cyx + sc * Cyy) * ZyyEy;
+        std::complex<double> Zyx = (sc * Cxx - s2 * Cxy) * ZxxEx
+            + (s2 * Cxx + sc * Cxy) * ZyxEx + (c2 * Cyx - sc * Cyy) * ZxxEy
+            + (sc * Cyx + c2 * Cyy) * ZyxEx;
+        std::complex<double> Zyy = (sc * Cxx - s2 * Cxy) * ZxyEx
+            + (s2 * Cxx + sc * Cxy) * ZyyEx + (c2 * Cyx - sc * Cyy) * ZxyEy
+            + (sc * Cyx + c2 * Cyy) * ZyyEx;
+        result.DistImpedance[meas_index] = Zxx.real();
+        result.DistImpedance[meas_index + 1] = Zxx.imag();
+        result.DistImpedance[meas_index + 2] = Zxy.real();
+        result.DistImpedance[meas_index + 3] = Zxy.imag();
+        result.DistImpedance[meas_index + 4] = Zyx.real();
+        result.DistImpedance[meas_index + 5] = Zyx.imag();
+        result.DistImpedance[meas_index + 6] = Zyy.real();
+        result.DistImpedance[meas_index + 7] = Zyy.imag();
+        std::complex<double> Zxxr = c2 * ZxxEx + sc * ZyxEx + s2 * ZxxEy - sc * ZyxEy;
+        std::complex<double> Zxyr = c2 * ZxyEx + sc * ZyyEx + s2 * ZxyEy - sc * ZyyEy;
+        std::complex<double> Zyxr = sc * ZxxEx + s2 * ZyxEx - sc * ZxxEy + c2 * ZyxEx;
+        std::complex<double> Zyyr = sc * ZxyEx + s2 * ZyyEx - sc * ZxyEy + c2 * ZyyEx;
 
-        result.DistImpedance[meas_index] = Info.C[site_index] * ZxxEx.real()
-            + Info.C[site_index + 1] * ZyxEx.real();
-        result.DistImpedance[meas_index + 1] = Info.C[site_index] * ZxxEx.imag()
-            + Info.C[site_index + 1] * ZyxEx.imag();
-        result.DistImpedance[meas_index + 2] = Info.C[site_index] * ZxyEx.real()
-            + Info.C[site_index + 1] * ZyyEx.real();
-        result.DistImpedance[meas_index + 3] = Info.C[site_index] * ZxyEx.imag()
-            + Info.C[site_index + 1] * ZyyEx.imag();
-        result.DistImpedance[meas_index + 4] = Info.C[site_index + 3] * ZyxEy.real()
-            + Info.C[site_index + 2] * ZxxEy.real();
-        result.DistImpedance[meas_index + 5] = Info.C[site_index + 3] * ZyxEy.imag()
-            + Info.C[site_index + 2] * ZxxEy.imag();
-        result.DistImpedance[meas_index + 6] = Info.C[site_index + 3] * ZyyEy.real()
-            + Info.C[site_index + 2] * ZxyEy.real();
-        result.DistImpedance[meas_index + 7] = Info.C[site_index + 3] * ZyyEy.imag()
-            + Info.C[site_index + 2] * ZxyEy.imag();
-        result.RawImpedance[meas_index] = ZxxEx.real();
-        result.RawImpedance[meas_index + 1] = ZxxEx.imag();
-        result.RawImpedance[meas_index + 2] = ZxyEx.real();
-        result.RawImpedance[meas_index + 3] = ZxyEx.imag();
-        result.RawImpedance[meas_index + 4] = ZyxEy.real();
-        result.RawImpedance[meas_index + 5] = ZyxEy.imag();
-        result.RawImpedance[meas_index + 6] = ZyyEy.real();
-        result.RawImpedance[meas_index + 7] = ZyyEy.imag();
+        result.RawImpedance[meas_index] = Zxxr.real();
+        result.RawImpedance[meas_index + 1] = Zxxr.imag();
+        result.RawImpedance[meas_index + 2] = Zxyr.real();
+        result.RawImpedance[meas_index + 3] = Zxyr.imag();
+        result.RawImpedance[meas_index + 4] = Zyxr.real();
+        result.RawImpedance[meas_index + 5] = Zyxr.imag();
+        result.RawImpedance[meas_index + 6] = Zyyr.real();
+        result.RawImpedance[meas_index + 7] = Zyyr.imag();
 
       }
 
@@ -189,15 +208,17 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI,
     const size_t freq_start_index = nstats * Info.freqindex * 8;
     const size_t ind_shift = nstats * Info.freqindex;
 
-    std::vector<std::complex<double> > EXPolMoments1(2*nstats), EXPolMoments2(2*nstats),
-        EYPolMoments1(2*nstats), EYPolMoments2(2*nstats), Zeros(2*nstats, 0.0), HZeros(nstats, 0.0);
+    std::vector<std::complex<double> > EXPolMoments1(2 * nstats), EXPolMoments2(
+        2 * nstats), EYPolMoments1(2 * nstats), EYPolMoments2(2 * nstats), Zeros(
+        2 * nstats, 0.0), HZeros(nstats, 0.0);
     std::vector<std::complex<double> > HXPolMoments1(nstats), HXPolMoments2(nstats),
         HYPolMoments1(nstats), HYPolMoments2(nstats);
-    std::vector<double> XSourceDepth(2*nstats), YSourceDepth(2*nstats), HxSourceDepth(nstats),
-        HySourceDepth(nstats);
-    std::vector<size_t> XSourceXIndex(2*nstats), XSourceYIndex(2*nstats), YSourceXIndex(2*
-        nstats), YSourceYIndex(2*nstats), HxSourceXIndex(nstats), HxSourceYIndex(nstats),
-        HySourceXIndex(nstats), HySourceYIndex(nstats), ZeroIndex(2*nstats, 0);
+    std::vector<double> XSourceDepth(2 * nstats), YSourceDepth(2 * nstats), HxSourceDepth(
+        nstats), HySourceDepth(nstats);
+    std::vector<size_t> XSourceXIndex(2 * nstats), XSourceYIndex(2 * nstats),
+        YSourceXIndex(2 * nstats), YSourceYIndex(2 * nstats), HxSourceXIndex(nstats),
+        HxSourceYIndex(nstats), HySourceXIndex(nstats), HySourceYIndex(nstats), ZeroIndex(
+            2 * nstats, 0);
 
     //make the sources for the electric dipoles
     for (size_t j = 0; j < nstats; ++j)
@@ -236,22 +257,21 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI,
             * MeasDepthIndices[Info.Model.GetHyIndices()[j + ind_shift]]
             + StationHyIndex[0] * nmody + StationHyIndex[1];
 
-        XSourceXIndex.at(2*j) = StationExIndex[0];
-        XSourceYIndex.at(2*j) = StationExIndex[1];
-        XSourceDepth.at(2*j) = Info.Model.GetMeasPosZ()[Info.Model.GetExIndices()[j
+        XSourceXIndex.at(2 * j) = StationExIndex[0];
+        XSourceYIndex.at(2 * j) = StationExIndex[1];
+        XSourceDepth.at(2 * j) = Info.Model.GetMeasPosZ()[Info.Model.GetExIndices()[j
             + ind_shift]];
-        YSourceXIndex.at(2*j) = XSourceXIndex.at(2*j);
-        YSourceYIndex.at(2*j) = XSourceYIndex.at(2*j);
-        YSourceDepth.at(2*j) = XSourceDepth.at(2*j);
+        YSourceXIndex.at(2 * j) = XSourceXIndex.at(2 * j);
+        YSourceYIndex.at(2 * j) = XSourceYIndex.at(2 * j);
+        YSourceDepth.at(2 * j) = XSourceDepth.at(2 * j);
 
-        XSourceXIndex.at(2*j+1) = StationEyIndex[0];
-        XSourceYIndex.at(2*j+1) = StationEyIndex[1];
-        XSourceDepth.at(2*j+1) = Info.Model.GetMeasPosZ()[Info.Model.GetEyIndices()[j
-                    + ind_shift]];
-        YSourceXIndex.at(2*j+1) = XSourceXIndex.at(2*j+1);
-        YSourceYIndex.at(2*j+1) = XSourceYIndex.at(2*j+1);
-        YSourceDepth.at(2*j+1) = XSourceDepth.at(2*j+1);
-
+        XSourceXIndex.at(2 * j + 1) = StationEyIndex[0];
+        XSourceYIndex.at(2 * j + 1) = StationEyIndex[1];
+        XSourceDepth.at(2 * j + 1) = Info.Model.GetMeasPosZ()[Info.Model.GetEyIndices()[j
+            + ind_shift]];
+        YSourceXIndex.at(2 * j + 1) = XSourceXIndex.at(2 * j + 1);
+        YSourceYIndex.at(2 * j + 1) = XSourceYIndex.at(2 * j + 1);
+        YSourceDepth.at(2 * j + 1) = XSourceDepth.at(2 * j + 1);
 
         HxSourceXIndex.at(j) = StationHxIndex[0];
         HxSourceYIndex.at(j) = StationHxIndex[1];
@@ -266,18 +286,18 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI,
 
         //this is an implementation of eq. 12 in Avdeev and Avdeeva
         //we do not have any beta, as this is part of the misfit
-        cmat AH = CalcEExt(Misfit, Info.C, j, freq_start_index,
-            Calc->GetHx1()[offset_Hx], Calc->GetHx2()[offset_Hx],
-            Calc->GetHy1()[offset_Hy], Calc->GetHy2()[offset_Hy]);
+        cmat AH = CalcEExt(Misfit, Info.C, j, freq_start_index, Calc->GetHx1()[offset_Hx],
+            Calc->GetHx2()[offset_Hx], Calc->GetHy1()[offset_Hy],
+            Calc->GetHy2()[offset_Hy]);
 
-        EXPolMoments1.at(2*j) = AH(0, 0) * Info.C[j * 4] ;
-        EXPolMoments2.at(2*j) = AH(0, 1) * Info.C[j * 4] ;
-        EYPolMoments1.at(2*j) = AH(0, 0) * Info.C[j * 4 + 1] ;
-        EYPolMoments2.at(2*j) = AH(0, 1) * Info.C[j * 4 + 1] ;
-        EXPolMoments1.at(2*j + 1) = AH(1, 0) * Info.C[j * 4 + 2];
-        EXPolMoments2.at(2*j + 1) = AH(1, 1) * Info.C[j * 4 + 2];
-        EYPolMoments1.at(2*j + 1) = AH(1, 0) * Info.C[j * 4 + 3];
-        EYPolMoments2.at(2*j + 1) = AH(1, 1) * Info.C[j * 4 + 3];
+        EXPolMoments1.at(2 * j) = AH(0, 0) * Info.C[j * 4];
+        EXPolMoments2.at(2 * j) = AH(0, 1) * Info.C[j * 4];
+        EYPolMoments1.at(2 * j) = AH(0, 0) * Info.C[j * 4 + 1];
+        EYPolMoments2.at(2 * j) = AH(0, 1) * Info.C[j * 4 + 1];
+        EXPolMoments1.at(2 * j + 1) = AH(1, 0) * Info.C[j * 4 + 2];
+        EXPolMoments2.at(2 * j + 1) = AH(1, 1) * Info.C[j * 4 + 2];
+        EYPolMoments1.at(2 * j + 1) = AH(1, 0) * Info.C[j * 4 + 3];
+        EYPolMoments2.at(2 * j + 1) = AH(1, 1) * Info.C[j * 4 + 3];
       }
     //we only want to calculate for one frequency
     //so our vector has just 1 element
@@ -365,38 +385,46 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI,
       {
 
         const size_t offset_Ex = (nmodx * nmody)
-                  * MeasDepthIndices[Info.Model.GetExIndices()[j + ind_shift]]
-                  + XSourceXIndex.at(2*j) * nmody + XSourceYIndex.at(2*j);
-              const size_t offset_Ey = (nmodx * nmody)
-                  * MeasDepthIndices[Info.Model.GetEyIndices()[j + ind_shift]]
-                  + XSourceXIndex.at(2*j+1) * nmody + XSourceYIndex.at(2*j+1);
-              const size_t offset_Hx = (nmodx * nmody)
-                  * MeasDepthIndices[Info.Model.GetHxIndices()[j + ind_shift]]
-                  + HxSourceXIndex.at(j) * nmody + HxSourceYIndex.at(j);
-              const size_t offset_Hy = (nmodx * nmody)
-                  * MeasDepthIndices[Info.Model.GetHyIndices()[j + ind_shift]]
-                  + HySourceXIndex.at(j) * nmody + HySourceYIndex.at(j);
-              //calculate the full impedance at the location of the Ex field measurements
-              FieldsToImpedance(Calc->GetEx1()[offset_Ex], Calc->GetEx2()[offset_Ex],
-                  Calc->GetEy1()[offset_Ex], Calc->GetEy2()[offset_Ex],
-                  Calc->GetHx1()[offset_Hx], Calc->GetHx2()[offset_Hx],
-                  Calc->GetHy1()[offset_Hy], Calc->GetHy2()[offset_Hy], ZxxEx, ZxyEx, ZyxEx, ZyyEx);
-              //calculate the full impedance at the location of the Ey field measurements
-              FieldsToImpedance(Calc->GetEx1()[offset_Ey], Calc->GetEx2()[offset_Ey],
-                  Calc->GetEy1()[offset_Ey], Calc->GetEy2()[offset_Ey],
-                  Calc->GetHx1()[offset_Hx], Calc->GetHx2()[offset_Hx],
-                  Calc->GetHy1()[offset_Hy], Calc->GetHy2()[offset_Hy], ZxxEy, ZxyEy, ZyxEy, ZyyEy);
-
-
+            * MeasDepthIndices[Info.Model.GetExIndices()[j + ind_shift]]
+            + XSourceXIndex.at(2 * j) * nmody + XSourceYIndex.at(2 * j);
+        const size_t offset_Ey = (nmodx * nmody)
+            * MeasDepthIndices[Info.Model.GetEyIndices()[j + ind_shift]]
+            + XSourceXIndex.at(2 * j + 1) * nmody + XSourceYIndex.at(2 * j + 1);
+        const size_t offset_Hx = (nmodx * nmody)
+            * MeasDepthIndices[Info.Model.GetHxIndices()[j + ind_shift]]
+            + HxSourceXIndex.at(j) * nmody + HxSourceYIndex.at(j);
+        const size_t offset_Hy = (nmodx * nmody)
+            * MeasDepthIndices[Info.Model.GetHyIndices()[j + ind_shift]]
+            + HySourceXIndex.at(j) * nmody + HySourceYIndex.at(j);
+        //calculate the full impedance at the location of the Ex field measurements
+        FieldsToImpedance(Calc->GetEx1()[offset_Ex], Calc->GetEx2()[offset_Ex],
+            Calc->GetEy1()[offset_Ex], Calc->GetEy2()[offset_Ex],
+            Calc->GetHx1()[offset_Hx], Calc->GetHx2()[offset_Hx],
+            Calc->GetHy1()[offset_Hy], Calc->GetHy2()[offset_Hy], ZxxEx, ZxyEx, ZyxEx,
+            ZyyEx);
+        //calculate the full impedance at the location of the Ey field measurements
+        FieldsToImpedance(Calc->GetEx1()[offset_Ey], Calc->GetEx2()[offset_Ey],
+            Calc->GetEy1()[offset_Ey], Calc->GetEy2()[offset_Ey],
+            Calc->GetHx1()[offset_Hx], Calc->GetHx2()[offset_Hx],
+            Calc->GetHy1()[offset_Hy], Calc->GetHy2()[offset_Hy], ZxxEy, ZxyEy, ZyxEy,
+            ZyyEy);
 
         size_t offset = freq_start_index + j * 8;
 
         //project the electric dipole to magnetic dipole moments using the undistorted impedance
-        HXPolMoments1[j] = omega_mu * (ZxxEx * EXPolMoments1[2*j] + ZyxEx * EYPolMoments1[2*j]+ZxxEy * EXPolMoments1[2*j+1] + ZyxEy * EYPolMoments1[2*j+1]);
-        HYPolMoments1[j] = omega_mu * (ZxyEx * EXPolMoments1[2*j] + ZyyEx * EYPolMoments1[2*j]+ZxyEy * EXPolMoments1[2*j+1] + ZyyEy * EYPolMoments1[2*j+1]);
-        HXPolMoments2[j] = omega_mu * (ZxxEx * EXPolMoments2[2*j] + ZyxEx * EYPolMoments2[2*j]+ZxxEy * EXPolMoments2[2*j+1] + ZyxEy * EYPolMoments2[2*j+1]);
-        HYPolMoments2[j] = omega_mu * (ZxyEx * EXPolMoments2[2*j] + ZyyEx * EYPolMoments2[2*j]+ZxyEy * EXPolMoments2[2*j+1] + ZyyEy * EYPolMoments2[2*j+1]);
-       }
+        HXPolMoments1[j] = omega_mu
+            * (ZxxEx * EXPolMoments1[2 * j] + ZyxEx * EYPolMoments1[2 * j]
+                + ZxxEy * EXPolMoments1[2 * j + 1] + ZyxEy * EYPolMoments1[2 * j + 1]);
+        HYPolMoments1[j] = omega_mu
+            * (ZxyEx * EXPolMoments1[2 * j] + ZyyEx * EYPolMoments1[2 * j]
+                + ZxyEy * EXPolMoments1[2 * j + 1] + ZyyEy * EYPolMoments1[2 * j + 1]);
+        HXPolMoments2[j] = omega_mu
+            * (ZxxEx * EXPolMoments2[2 * j] + ZyxEx * EYPolMoments2[2 * j]
+                + ZxxEy * EXPolMoments2[2 * j + 1] + ZyxEy * EYPolMoments2[2 * j + 1]);
+        HYPolMoments2[j] = omega_mu
+            * (ZxyEx * EXPolMoments2[2 * j] + ZyyEx * EYPolMoments2[2 * j]
+                + ZxyEy * EXPolMoments2[2 * j + 1] + ZyyEy * EYPolMoments2[2 * j + 1]);
+      }
 
     std::vector<std::complex<double> > Ux1_mag, Ux2_mag, Uy1_mag, Uy2_mag, Uz1_mag,
         Uz2_mag;
@@ -532,30 +560,21 @@ GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::rvec &Misf
         const size_t hyind = Info.Model.GetHyIndices()[j + ind_shift];
         const size_t hzind = Info.Model.GetHzIndices()[j + ind_shift];
         boost::array<ThreeDModelBase::t3DModelData::index, 3> StationHxIndex =
-            Info.Model.FindAssociatedIndices(
-                Info.Model.GetMeasPosX()[hxind],
-                Info.Model.GetMeasPosY()[hxind],
-                Info.Model.GetMeasPosZ()[hxind]);
-        const size_t offset_Hx = (nmodx * nmody)
-            * MeasDepthIndices[hxind]
+            Info.Model.FindAssociatedIndices(Info.Model.GetMeasPosX()[hxind],
+                Info.Model.GetMeasPosY()[hxind], Info.Model.GetMeasPosZ()[hxind]);
+        const size_t offset_Hx = (nmodx * nmody) * MeasDepthIndices[hxind]
             + StationHxIndex[0] * nmody + StationHxIndex[1];
 
         boost::array<ThreeDModelBase::t3DModelData::index, 3> StationHyIndex =
-            Info.Model.FindAssociatedIndices(
-                Info.Model.GetMeasPosX()[hyind],
-                Info.Model.GetMeasPosY()[hyind],
-                Info.Model.GetMeasPosZ()[hyind]);
-        const size_t offset_Hy = (nmodx * nmody)
-            * MeasDepthIndices[hyind]
+            Info.Model.FindAssociatedIndices(Info.Model.GetMeasPosX()[hyind],
+                Info.Model.GetMeasPosY()[hyind], Info.Model.GetMeasPosZ()[hyind]);
+        const size_t offset_Hy = (nmodx * nmody) * MeasDepthIndices[hyind]
             + StationHyIndex[0] * nmody + StationHyIndex[1];
 
         boost::array<ThreeDModelBase::t3DModelData::index, 3> StationHzIndex =
-            Info.Model.FindAssociatedIndices(
-                Info.Model.GetMeasPosX()[hzind],
-                Info.Model.GetMeasPosY()[hzind],
-                Info.Model.GetMeasPosZ()[hzind]);
-        const size_t offset_Hz = (nmodx * nmody)
-            * MeasDepthIndices[hzind]
+            Info.Model.FindAssociatedIndices(Info.Model.GetMeasPosX()[hzind],
+                Info.Model.GetMeasPosY()[hzind], Info.Model.GetMeasPosZ()[hzind]);
+        const size_t offset_Hz = (nmodx * nmody) * MeasDepthIndices[hzind]
             + StationHzIndex[0] * nmody + StationHzIndex[1];
 
         HxSourceXIndex.at(j) = StationHxIndex[0];
@@ -588,13 +607,10 @@ GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::rvec &Misf
         HZPolMoments1.at(j) = -omega_mu * magdet * (A00 * Hy2 - A01 * Hx2);
         HZPolMoments2.at(j) = -omega_mu * magdet * (-A00 * Hy1 + A01 * Hx1);
 
-
-
         HXPolMoments1.at(j) = -Tx * HZPolMoments1[j];
         HYPolMoments1.at(j) = -Ty * HZPolMoments1[j];
         HXPolMoments2.at(j) = -Tx * HZPolMoments2[j];
         HYPolMoments2.at(j) = -Ty * HZPolMoments2[j];
-
 
       }
 
