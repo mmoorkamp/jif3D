@@ -34,6 +34,7 @@ namespace jif3D
       std::vector<int> HxIndices;
       std::vector<int> HyIndices;
       std::vector<int> HzIndices;
+      std::vector<double> RotAngles;
     public:
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
@@ -47,6 +48,7 @@ namespace jif3D
           ar & HxIndices;
           ar & HyIndices;
           ar & HzIndices;
+          ar & RotAngles;
         }
       //! The problem type we want to perform the calculation for
       /*! We can use this enum to specify which type of forward calculation
@@ -130,9 +132,7 @@ namespace jif3D
       //! Set the thicknesses of the background layers, the individual thicknesses are given in m
       void SetBackgroundThicknesses(const std::vector<double> &value)
         {
-          bg_thicknesses.clear();
-          bg_thicknesses.reserve(value.size());
-          copy(value.begin(), value.end(), back_inserter(bg_thicknesses));
+          bg_thicknesses = value;
         }
       //! Return the thicknesses of the background layers in m
       const std::vector<double> &GetBackgroundThicknesses() const
@@ -142,9 +142,15 @@ namespace jif3D
       //! Set the conductivities of the background layers, the individual thicknesses are given in S/m
       void SetBackgroundConductivities(const std::vector<double> &value)
         {
-          bg_conductivities.clear();
-          bg_conductivities.reserve(value.size());
-          copy(value.begin(), value.end(), back_inserter(bg_conductivities));
+          bg_conductivities = value;
+        }
+      void SetRotAngles(const std::vector<double> &value)
+        {
+          RotAngles = value;
+        }
+      const std::vector<double> &GetRotAngles() const
+        {
+          return RotAngles;
         }
       //! Return the conductivities of the background layers in S/m
       const std::vector<double> &GetBackgroundConductivities() const
@@ -161,8 +167,8 @@ namespace jif3D
       void SetHorizontalCellSize(const double XSize, const double YSize, const size_t nx,
           const size_t ny)
         {
-          ThreeDModelBase::t3DModelDim XCS(nx,XSize);
-          ThreeDModelBase::t3DModelDim YCS(ny,YSize);
+          ThreeDModelBase::t3DModelDim XCS(nx, XSize);
+          ThreeDModelBase::t3DModelDim YCS(ny, YSize);
           SetXCellSizes(XCS);
           SetYCellSizes(YCS);
         }
@@ -179,14 +185,12 @@ namespace jif3D
       virtual void WriteNetCDF(const std::string &filename) const override;
       //! Read all model information from a netcdf file
       virtual void ReadNetCDF(const std::string &filename) override;
-      //! The copy operator for X3DModels
-      X3DModel& operator=(const X3DModel& source);
+
       //! Other models will be copied by the copy operator for the base class
       X3DModel& operator=(const ThreeDModelBase& source);
       bool operator ==(const X3DModel &b) const;
       X3DModel();
-      //! We define our own copy constructor. This has to be updated if additional information is stored in this object.
-      X3DModel(const X3DModel &source);
+
       virtual ~X3DModel();
       };
   /* @} */

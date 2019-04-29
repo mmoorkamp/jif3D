@@ -27,6 +27,7 @@ BOOST_AUTO_TEST_SUITE( ReadWriteTitanData_Suite )
         std::vector<int> ExIndices(nfreq * nstat), EyIndices(nfreq * nstat), HIndices(
             nfreq * nstat);
         std::vector<double> C(nstat * 4);
+        std::vector<double> Angles(nstat);
         const size_t ndata = nfreq * nstat * 8;
         jif3D::rvec Impedances(ndata), Error(ndata);
 
@@ -43,20 +44,21 @@ BOOST_AUTO_TEST_SUITE( ReadWriteTitanData_Suite )
         std::generate_n(Impedances.begin(), ndata, jif3D::platform::drand48);
         std::generate_n(Error.begin(), ndata, jif3D::platform::drand48);
         std::generate_n(C.begin(), nstat * 4, jif3D::platform::drand48);
+        std::generate_n(Angles.begin(), nstat, jif3D::platform::drand48);
         for (size_t i = 1; i < ndata; ++i)
           {
             Error(i) = Error(i - 1);
           }
         jif3D::WriteTitanDataToNetCDF(filename, Frequencies, XCoord, YCoord, ZCoord,
-            ExIndices, EyIndices, HIndices, Impedances, Error, C);
+            ExIndices, EyIndices, HIndices, Impedances, Error, C, Angles);
 
         std::vector<double> ReadFrequencies;
-        std::vector<double> ReadXCoord, ReadYCoord, ReadZCoord, ReadC;
+        std::vector<double> ReadXCoord, ReadYCoord, ReadZCoord, ReadC, ReadAngles;
         std::vector<int> ReadExIndices, ReadEyIndices, ReadHIndices;
         jif3D::rvec ReadImpedances, ReadError;
         jif3D::ReadTitanDataFromNetCDF(filename, ReadFrequencies, ReadXCoord, ReadYCoord,
             ReadZCoord, ReadExIndices, ReadEyIndices, ReadHIndices, ReadImpedances,
-            ReadError, ReadC);
+            ReadError, ReadC, ReadAngles);
         for (size_t i = 0; i < nfreq; ++i)
           {
             BOOST_CHECK_CLOSE(Frequencies[i], ReadFrequencies[i], 0.001);
@@ -66,6 +68,7 @@ BOOST_AUTO_TEST_SUITE( ReadWriteTitanData_Suite )
             BOOST_CHECK_CLOSE(XCoord[i], ReadXCoord[i], 0.001);
             BOOST_CHECK_CLOSE(YCoord[i], ReadYCoord[i], 0.001);
             BOOST_CHECK_CLOSE(ZCoord[i], ReadZCoord[i], 0.001);
+            BOOST_CHECK_CLOSE(Angles[i], ReadAngles[i], 0.001);
           }
 
         for (size_t i = 0; i < nfreq * nstat; ++i)

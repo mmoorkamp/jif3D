@@ -126,6 +126,7 @@ namespace jif3D
               }
           }
         const size_t nmeas = Model.GetMeasPosX().size();
+
         if (ForwardExecTime.empty() || ForwardExecTime.size() != nfreq)
           {
             for (int i = 0; i < nfreq; ++i)
@@ -138,6 +139,7 @@ namespace jif3D
         //here we assume that we either have all three indices in the netCDF file or none of them
         std::vector<int> ExIndices(Model.GetExIndices()), EyIndices(Model.GetEyIndices()),
             HIndices(Model.GetHxIndices());
+
         size_t ind_shift = 0;
         if (ExIndices.empty())
           {
@@ -156,8 +158,14 @@ namespace jif3D
             HIndices = ExIndices;
           }
         Model.SetFieldIndices(ExIndices, EyIndices, HIndices, HIndices, HIndices);
-
         const size_t nstats = Model.GetExIndices().size() / nfreq;
+        std::vector<double> RotAngles(Model.GetRotAngles());
+        if (RotAngles.empty())
+          {
+            RotAngles.resize(nstats);
+            std::fill(RotAngles.begin(),RotAngles.end(),0.0);
+          }
+        Model.SetRotAngles(RotAngles);
 
         std::string ErrorMsg;
         //result will hold the final impedance values with
@@ -206,7 +214,7 @@ namespace jif3D
         //but we can use up to 20 processors for typical MT problems
         // as we do not have the source for x3d, this is our only possibility anyway
         //the const qualified variables above are predetermined to be shared by the openmp standard
-#pragma omp parallel for shared(result,RawImp, NewExecTime) schedule(dynamic,1)
+#pragma omp parallel for default(shared) schedule(dynamic,1)
         for (int i = 0; i < nfreq; ++i)
           {
             //the openmp standard specifies that we cannot leave a parallel construct

@@ -203,7 +203,7 @@ int hpx_main(boost::program_options::variables_map& vm)
     extension = jif3D::GetFileExtension(datafilename);
 //read in data
     jif3D::rvec Data, ZError;
-    std::vector<double> XCoord, YCoord, ZCoord, Frequencies, C;
+    std::vector<double> XCoord, YCoord, ZCoord, Frequencies, C, RotAngles;
     std::vector<int> ExIndices, EyIndices, HIndices;
 
     if (extension.compare(".dat") == 0)
@@ -218,8 +218,9 @@ int hpx_main(boost::program_options::variables_map& vm)
         if (vm.count("titan"))
           {
             jif3D::ReadTitanDataFromNetCDF(datafilename, Frequencies, XCoord, YCoord,
-                ZCoord, ExIndices, EyIndices, HIndices, Data, ZError, C);
+                ZCoord, ExIndices, EyIndices, HIndices, Data, ZError, C, RotAngles);
             Model.SetFieldIndices(ExIndices, EyIndices, HIndices, HIndices, HIndices);
+            Model.SetRotAngles(RotAngles);
           }
         else
           {
@@ -707,7 +708,7 @@ int hpx_main(boost::program_options::variables_map& vm)
                     jif3D::WriteTitanDataToNetCDF(
                         modelfilename + jif3D::stringify(iteration) + ".dist_imp.nc",
                         Frequencies, XCoord, YCoord, ZCoord, ExIndices, EyIndices,
-                        HIndices, Data, ZError, C);
+                        HIndices, Data, ZError, C, RotAngles);
                   }
                 else
                   {
@@ -776,10 +777,10 @@ int hpx_main(boost::program_options::variables_map& vm)
       {
         jif3D::WriteTitanDataToNetCDF(modelfilename + ".inv_imp.nc", Frequencies, XCoord,
             YCoord, ZCoord, ExIndices, EyIndices, HIndices,
-            X3DObjective->GetSyntheticData(), X3DObjective->GetDataError(), C);
+            X3DObjective->GetSyntheticData(), X3DObjective->GetDataError(), C, RotAngles);
         jif3D::WriteTitanDataToNetCDF(modelfilename + ".dist_imp.nc", Frequencies, XCoord,
             YCoord, ZCoord, ExIndices, EyIndices, HIndices,
-            X3DObjective->GetObservedData(), ZError, C);
+            X3DObjective->GetObservedData(), ZError, C, RotAngles);
         jif3D::WriteTitanDataToNetCDF(modelfilename + ".diff_imp.nc", Frequencies, XCoord,
             YCoord, ZCoord, ExIndices, EyIndices, HIndices,
             X3DObjective->GetIndividualMisfit());
