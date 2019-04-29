@@ -218,7 +218,6 @@ namespace jif3D
       {
         const size_t siteindex = freq_start_index + startindex * 8;
         cmat AH(2, 2);
-        cmat CtAH(2, 2);
         const std::complex<double> magdet = 1. / (Hx1 * Hy2 - Hx2 * Hy1);
         const std::complex<double> A00(Misfit(siteindex), Misfit(siteindex + 1));
         const std::complex<double> A01(Misfit(siteindex + 2), Misfit(siteindex + 3));
