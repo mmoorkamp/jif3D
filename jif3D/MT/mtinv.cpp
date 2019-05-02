@@ -380,7 +380,14 @@ int hpx_main(boost::program_options::variables_map& vm)
         jif3D::Write3DDataToVTK(datafilename + ".vtk", "MTSites", FirstFreq, XCoord,
             YCoord, ZCoord);
       }
+    std::vector<double> angles = Model.GetRotAngles();
 
+    if (angles.empty())
+      {
+        angles.resize(Model.GetMeasPosX().size());
+        std::fill(angles.begin(),angles.end(),0.0);
+        Model.SetRotAngles(angles);
+      }
     Model.SetDistortionParameters(C);
 //we define a few constants that are used throughout the inversion
 //    const size_t ndata = Data.size(); // unused
