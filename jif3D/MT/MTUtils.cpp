@@ -6,24 +6,25 @@
 //============================================================================
 
 #include "MTUtils.h"
+#include "../Global/NumUtil.h"
 #include "../Global/convert.h"
 #include "../Global/FatalException.h"
 #include "ReadWriteX3D.h"
 
 #include <fstream>
-//#include <boost/iostreams/stream.hpp>
-//#include <boost/iostreams/device/file_descriptor.hpp>
-#include <boost/assign/list_of.hpp> // for 'map_list_of()'
 #include <boost/filesystem.hpp>
+#include <boost/math/constants/constants.hpp>
 
 namespace jif3D
   {
     const std::string runext = "_run";
 
-    //associate a type of calculation with a name string
+//associate a type of calculation with a name string
     const std::map<X3DModel::ProblemType, std::string> Extension =
-        boost::assign::map_list_of(X3DModel::MT, "MT")(X3DModel::EDIP, "EDIP")(
-            X3DModel::MDIP, "MDIP");
+      {
+        { X3DModel::MT, "MT" },
+        { X3DModel::EDIP, "EDIP" },
+        { X3DModel::MDIP, "MDIP" } };
 
     namespace fs = boost::filesystem;
 
@@ -107,7 +108,7 @@ namespace jif3D
           }
       }
 
-    //check that the .hnk file for x3d are in a certain directory
+//check that the .hnk file for x3d are in a certain directory
     bool CheckHNK(const fs::path &TargetDir)
       {
         return fs::exists(TargetDir / "ndec15.hnk")
@@ -176,36 +177,138 @@ namespace jif3D
       }
 
     jif3D::rvec AdaptDist(const std::vector<double> &C, const jif3D::rvec &RawImpedance,
-        const jif3D::rvec &Misfit)
+        const jif3D::rvec &Misfit, const std::vector<double> &RotAngles)
       {
         jif3D::rvec result(C.size(), 0.0);
         const size_t nstat = C.size() / 4;
-        const size_t nfreq = RawImpedance.size() / (nstat * 8);
+        const size_t nfreq = RawImpedance.size() / (nstat * 16);
         //This is an implementation of equation 10 in Avdeeva et al. 2015
         //we calculate the partial derivative of the objective function
         //with respect to the distortion parameters
-        //this version has been checked with Maxima
+
         for (size_t i = 0; i < nfreq; ++i)
           {
             for (size_t j = 0; j < nstat; ++j)
               {
-                const size_t offset = (i * nstat + j) * 8;
-                result(j * 4) += Misfit(offset) * RawImpedance(offset)
-                    + Misfit(offset + 1) * RawImpedance(offset + 1)
-                    + Misfit(offset + 2) * RawImpedance(offset + 2)
-                    + Misfit(offset + 3) * RawImpedance(offset + 3);
-                result(j * 4 + 1) += Misfit(offset) * RawImpedance(offset + 4)
-                    + Misfit(offset + 1) * RawImpedance(offset + 5)
-                    + Misfit(offset + 2) * RawImpedance(offset + 6)
-                    + Misfit(offset + 3) * RawImpedance(offset + 7);
-                result(j * 4 + 2) += Misfit(offset + 4) * RawImpedance(offset)
-                    + Misfit(offset + 5) * RawImpedance(offset + 1)
-                    + Misfit(offset + 6) * RawImpedance(offset + 2)
-                    + Misfit(offset + 7) * RawImpedance(offset + 3);
-                result(j * 4 + 3) += Misfit(offset + 4) * RawImpedance(offset + 4)
-                    + Misfit(offset + 5) * RawImpedance(offset + 5)
-                    + Misfit(offset + 6) * RawImpedance(offset + 6)
-                    + Misfit(offset + 7) * RawImpedance(offset + 7);
+                const double angle = RotAngles.at(j) / 180.0
+                    * boost::math::constants::pi<double>();
+                const double c2 = jif3D::pow2(std::cos(angle));
+                const double s2 = jif3D::pow2(std::sin(angle));
+                const double sc = std::sin(angle) * cos(angle);
+
+//                result(j * 4) += Misfit(offset) * RawImpedance(offset)
+//                    + Misfit(offset + 1) * RawImpedance(offset + 1)
+//                    + Misfit(offset + 2) * RawImpedance(offset + 2)
+//                    + Misfit(offset + 3) * RawImpedance(offset + 3);
+//                result(j * 4 + 1) += Misfit(offset) * RawImpedance(offset + 4)
+//                    + Misfit(offset + 1) * RawImpedance(offset + 5)
+//                    + Misfit(offset + 2) * RawImpedance(offset + 6)
+//                    + Misfit(offset + 3) * RawImpedance(offset + 7);
+//                result(j * 4 + 2) += Misfit(offset + 4) * RawImpedance(offset)
+//                    + Misfit(offset + 5) * RawImpedance(offset + 1)
+//                    + Misfit(offset + 6) * RawImpedance(offset + 2)
+//                    + Misfit(offset + 7) * RawImpedance(offset + 3);
+//                result(j * 4 + 3) += Misfit(offset + 4) * RawImpedance(offset + 4)
+//                    + Misfit(offset + 5) * RawImpedance(offset + 5)
+//                    + Misfit(offset + 6) * RawImpedance(offset + 6)
+//                    + Misfit(offset + 7) * RawImpedance(offset + 7);
+
+                const size_t moffset = (i * nstat + j) * 8;
+                const size_t roffset = moffset * 2;
+                result(j * 4) +=
+                    Misfit(moffset)
+                        * (c2 * RawImpedance(roffset) + sc * RawImpedance(roffset + 4))
+                        + Misfit(moffset + 1)
+                            * (c2 * RawImpedance(roffset + 1)
+                                + sc * RawImpedance(roffset + 5))
+                        + Misfit(moffset + 2)
+                            * (c2 * RawImpedance(roffset + 2)
+                                + sc * RawImpedance(roffset + 6))
+                        + Misfit(moffset + 3)
+                            * (c2 * RawImpedance(roffset + 3)
+                                + sc * RawImpedance(roffset + 7))
+                        + Misfit(moffset + 4)
+                            * (sc * RawImpedance(roffset) + s2 * RawImpedance(roffset + 4))
+                        + Misfit(moffset + 5)
+                            * (sc * RawImpedance(roffset + 1)
+                                + s2 * RawImpedance(roffset + 5))
+                        + Misfit(moffset + 6)
+                            * (sc * RawImpedance(roffset + 2)
+                                + s2 * RawImpedance(roffset + 6))
+                        + Misfit(moffset + 7)
+                            * (sc * RawImpedance(roffset + 3)
+                                + s2 * RawImpedance(roffset + 7));
+
+                result(j * 4 + 1) += Misfit(moffset)
+                    * (-sc * RawImpedance(roffset) + c2 * RawImpedance(roffset + 4))
+                    + Misfit(moffset + 1)
+                        * (-sc * RawImpedance(roffset + 1)
+                            + c2 * RawImpedance(roffset + 5))
+                    + Misfit(moffset + 2)
+                        * (-sc * RawImpedance(roffset + 2)
+                            + c2 * RawImpedance(roffset + 6))
+                    + Misfit(moffset + 3)
+                        * (-sc * RawImpedance(roffset + 3)
+                            + c2 * RawImpedance(roffset + 7))
+                    + Misfit(moffset + 4)
+                        * (-s2 * RawImpedance(roffset) + sc * RawImpedance(roffset + 4))
+                    + Misfit(moffset + 5)
+                        * (-s2 * RawImpedance(roffset + 1)
+                            + sc * RawImpedance(roffset + 5))
+                    + Misfit(moffset + 6)
+                        * (-s2 * RawImpedance(roffset + 2)
+                            + sc * RawImpedance(roffset + 6))
+                    + Misfit(moffset + 7)
+                        * (-s2 * RawImpedance(roffset + 3)
+                            + sc * RawImpedance(roffset + 7));
+
+                result(j * 4 + 2) += Misfit(moffset)
+                    * (-sc * RawImpedance(roffset + 8) - s2 * RawImpedance(roffset + 12))
+                    + Misfit(moffset + 1)
+                        * (-sc * RawImpedance(roffset + 9)
+                            - s2 * RawImpedance(roffset + 13))
+                    + Misfit(moffset + 2)
+                        * (-sc * RawImpedance(roffset + 10)
+                            - s2 * RawImpedance(roffset + 14))
+                    + Misfit(moffset + 3)
+                        * (-sc * RawImpedance(roffset + 11)
+                            - s2 * RawImpedance(roffset + 15))
+                    + Misfit(moffset + 4)
+                        * (c2 * RawImpedance(roffset + 8)
+                            + sc * RawImpedance(roffset + 12))
+                    + Misfit(moffset + 5)
+                        * (c2 * RawImpedance(roffset + 9)
+                            + sc * RawImpedance(roffset + 13))
+                    + Misfit(moffset + 6)
+                        * (c2 * RawImpedance(roffset + 10)
+                            + sc * RawImpedance(roffset + 14))
+                    + Misfit(moffset + 7)
+                        * (c2 * RawImpedance(roffset + 11)
+                            + sc * RawImpedance(roffset + 15));
+                result(j * 4 + 3) += Misfit(moffset)
+                    * (s2 * RawImpedance(roffset + 8) - sc * RawImpedance(roffset + 12))
+                    + Misfit(moffset + 1)
+                        * (s2 * RawImpedance(roffset + 9)
+                            - sc * RawImpedance(roffset + 13))
+                    + Misfit(moffset + 2)
+                        * (s2 * RawImpedance(roffset + 10)
+                            - sc * RawImpedance(roffset + 14))
+                    + Misfit(moffset + 3)
+                        * (s2 * RawImpedance(roffset + 11)
+                            - sc * RawImpedance(roffset + 15))
+                    + Misfit(moffset + 4)
+                        * (-sc * RawImpedance(roffset + 8)
+                            + c2 * RawImpedance(roffset + 12))
+                    + Misfit(moffset + 5)
+                        * (-sc * RawImpedance(roffset + 9)
+                            + c2 * RawImpedance(roffset + 13))
+                    + Misfit(moffset + 6)
+                        * (-sc * RawImpedance(roffset + 10)
+                            + c2 * RawImpedance(roffset + 14))
+                    + Misfit(moffset + 7)
+                        * (-sc * RawImpedance(roffset + 11)
+                            + c2 * RawImpedance(roffset + 15));
+
               }
           }
         return result;
@@ -266,9 +369,8 @@ namespace jif3D
               {
                 WriteSourceFile(DirName + sourceafilename, XSourceXIndex, XSourceYIndex,
                     XSourceDepths, YSourceXIndex, YSourceYIndex, YSourceDepths,
-                    ZSourceXIndex, ZSourceYIndex, ZSourceDepths,
-                    XPolMoments, YPolMoments, ZPolMoments, ZCellBoundaries, ZCellSizes, ncellsx,
-                    ncellsy);
+                    ZSourceXIndex, ZSourceYIndex, ZSourceDepths, XPolMoments, YPolMoments,
+                    ZPolMoments, ZCellBoundaries, ZCellSizes, ncellsx, ncellsy);
               }
             RunX3D(RootName);
 #pragma omp critical(calcU_readema)

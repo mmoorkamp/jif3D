@@ -13,6 +13,7 @@
 #include "MTUtils.h"
 #include "MTEquations.h"
 #include <iostream>
+#include <boost/math/constants/constants.hpp>
 namespace fs = boost::filesystem;
 
 using namespace jif3D;
@@ -28,7 +29,9 @@ ForwardResult CalculateFrequency(const ForwardInfo &Info,
 
     ForwardResult result;
     result.DistImpedance.resize(nstats * 8);
-    result.RawImpedance.resize(nstats * 8);
+    //we store the impedances at the two potential locations for Titan
+    //this is needed when inverting Titan data but redundant for MT
+    result.RawImpedance.resize(nstats * 8 * 2);
 
     std::vector<double> ShiftDepth;
     std::vector<size_t> MeasDepthIndices;
@@ -116,7 +119,7 @@ ForwardResult CalculateFrequency(const ForwardInfo &Info,
         //so we can directly use it even in a threaded environment
         const size_t meas_index = j * 8;
         const size_t site_index = j * 4;
-        const double angle = Info.Model.GetRotAngles().at(j) / 180.0 * M_PI;
+        const double angle = Info.Model.GetRotAngles().at(j) / 180.0 * boost::math::constants::pi<double>();
         const double c2 = jif3D::pow2(std::cos(angle));
         const double s2 = jif3D::pow2(std::sin(angle));
         const double sc = std::sin(angle) * cos(angle);
@@ -132,10 +135,10 @@ ForwardResult CalculateFrequency(const ForwardInfo &Info,
             - (s2 * Cyx + sc * Cyy) * ZyyEy;
         std::complex<double> Zyx = (sc * Cxx - s2 * Cxy) * ZxxEx
             + (s2 * Cxx + sc * Cxy) * ZyxEx + (c2 * Cyx - sc * Cyy) * ZxxEy
-            + (sc * Cyx + c2 * Cyy) * ZyxEx;
+            + (sc * Cyx + c2 * Cyy) * ZyxEy;
         std::complex<double> Zyy = (sc * Cxx - s2 * Cxy) * ZxyEx
             + (s2 * Cxx + sc * Cxy) * ZyyEx + (c2 * Cyx - sc * Cyy) * ZxyEy
-            + (sc * Cyx + c2 * Cyy) * ZyyEx;
+            + (sc * Cyx + c2 * Cyy) * ZyyEy;
         result.DistImpedance[meas_index] = Zxx.real();
         result.DistImpedance[meas_index + 1] = Zxx.imag();
         result.DistImpedance[meas_index + 2] = Zxy.real();
@@ -144,20 +147,24 @@ ForwardResult CalculateFrequency(const ForwardInfo &Info,
         result.DistImpedance[meas_index + 5] = Zyx.imag();
         result.DistImpedance[meas_index + 6] = Zyy.real();
         result.DistImpedance[meas_index + 7] = Zyy.imag();
-        std::complex<double> Zxxr = c2 * ZxxEx + sc * ZyxEx + s2 * ZxxEy - sc * ZyxEy;
-        std::complex<double> Zxyr = c2 * ZxyEx + sc * ZyyEx + s2 * ZxyEy - sc * ZyyEy;
-        std::complex<double> Zyxr = sc * ZxxEx + s2 * ZyxEx - sc * ZxxEy + c2 * ZyxEx;
-        std::complex<double> Zyyr = sc * ZxyEx + s2 * ZyyEx - sc * ZxyEy + c2 * ZyyEx;
 
-        result.RawImpedance[meas_index] = Zxxr.real();
-        result.RawImpedance[meas_index + 1] = Zxxr.imag();
-        result.RawImpedance[meas_index + 2] = Zxyr.real();
-        result.RawImpedance[meas_index + 3] = Zxyr.imag();
-        result.RawImpedance[meas_index + 4] = Zyxr.real();
-        result.RawImpedance[meas_index + 5] = Zyxr.imag();
-        result.RawImpedance[meas_index + 6] = Zyyr.real();
-        result.RawImpedance[meas_index + 7] = Zyyr.imag();
 
+        result.RawImpedance[meas_index] = ZxxEx.real();
+        result.RawImpedance[meas_index + 1] = ZxxEx.imag();
+        result.RawImpedance[meas_index + 2] = ZxyEx.real();
+        result.RawImpedance[meas_index + 3] = ZxyEx.imag();
+        result.RawImpedance[meas_index + 4] = ZyxEx.real();
+        result.RawImpedance[meas_index + 5] = ZyxEx.imag();
+        result.RawImpedance[meas_index + 6] = ZyyEx.real();
+        result.RawImpedance[meas_index + 7] = ZyyEx.imag();
+        result.RawImpedance[meas_index + 8] = ZxxEy.real();
+        result.RawImpedance[meas_index + 9] = ZxxEy.imag();
+        result.RawImpedance[meas_index + 10] = ZxyEy.real();
+        result.RawImpedance[meas_index + 11] = ZxyEy.imag();
+        result.RawImpedance[meas_index + 12] = ZyxEy.real();
+        result.RawImpedance[meas_index + 13] = ZyxEy.imag();
+        result.RawImpedance[meas_index + 14] = ZyyEy.real();
+        result.RawImpedance[meas_index + 15] = ZyyEy.imag();
       }
 
     return result;
