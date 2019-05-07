@@ -48,7 +48,7 @@ namespace jif3D
     J3DEXPORT bool CheckHNK(const boost::filesystem::path &TargetDir);
 
     J3DEXPORT jif3D::rvec AdaptDist(const std::vector<double> &C,
-        const jif3D::rvec &RawImpedance, const jif3D::rvec &Misfit);
+        const jif3D::rvec &RawImpedance, const jif3D::rvec &Misfit, const std::vector<double> &RotAngles);
     //! Calculate the strength of the electric dipole necessary for MT adjoint calculations
     J3DEXPORT cmat CalcEExt(const rvec &Misfit, const std::vector<double> &C,
         const size_t startindex, const size_t freq_start_index,

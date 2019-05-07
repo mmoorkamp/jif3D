@@ -163,7 +163,7 @@ namespace jif3D
         if (RotAngles.empty())
           {
             RotAngles.resize(nstats);
-            std::fill(RotAngles.begin(),RotAngles.end(),0.0);
+            std::fill(RotAngles.begin(), RotAngles.end(), 0.0);
           }
         Model.SetRotAngles(RotAngles);
 
@@ -180,7 +180,9 @@ namespace jif3D
         //we store the undistorted impedance with the calculator object
         //as we need it later for the gradient calculation
         //and the distortion correction
-        RawImpedance.resize(nstats * nfreq * 8);
+        //for Titan data we potentially have two impedances from different
+        //locations that can get mixed through distortion, so we have to store both
+        RawImpedance.resize(nstats * nfreq * 8 * 2);
         RawImpedance.clear();
 
         //if the current model does not contain any distortion information
@@ -203,7 +205,8 @@ namespace jif3D
         std::partial_sum(Model.GetBackgroundThicknesses().begin(),
             Model.GetBackgroundThicknesses().end(), BGDepths.begin());
         double ZOrigin = Model.GetZCoordinates()[0];
-        std::for_each(BGDepths.begin(), BGDepths.end(), [ZOrigin](double& d) { d+=ZOrigin;});
+        std::for_each(BGDepths.begin(), BGDepths.end(), [ZOrigin](double& d)
+          { d+=ZOrigin;});
         CompareDepths(BGDepths, Model.GetZCoordinates());
         std::vector<std::pair<size_t, size_t>> NewExecTime;
 #ifdef HAVEOPENMP
@@ -238,7 +241,8 @@ namespace jif3D
                 NewExecTime.push_back(std::make_pair(duration,calcindex));
                 std::copy(freqresult.DistImpedance.begin(), freqresult.DistImpedance.end(),
                     result.begin() + startindex);
-                std::copy(freqresult.RawImpedance.begin(),freqresult.RawImpedance.end(),RawImp.begin()+startindex);
+                //we have twice as many values in the RawImpedance to be able to deal with Titan data
+                std::copy(freqresult.RawImpedance.begin(),freqresult.RawImpedance.end(),RawImp.begin()+startindex *2);
 
                 omp_unset_lock(&lck);
               }
@@ -294,7 +298,7 @@ namespace jif3D
             //std::cout << " Getting results for frequency " << currindex << std::endl;
             std::copy(freqresult.DistImpedance.begin(), freqresult.DistImpedance.end(),
                 result.begin() + startindex);
-            std::copy(freqresult.RawImpedance.begin(),freqresult.RawImpedance.end(),RawImpedance.begin()+startindex);
+            std::copy(freqresult.RawImpedance.begin(),freqresult.RawImpedance.end(),RawImpedance.begin()+startindex * 2);
           }
 
 #endif
@@ -370,15 +374,19 @@ namespace jif3D
               }
           }
 
-        jif3D::rvec ProjMisfit(Misfit.size(), 0.0);
-        for (size_t i = 0; i < Misfit.size(); i += 2)
-          {
-            auto GradTrans = DataTransform->Derivative(
-                ublas::subrange(RawImpedance, i, i + 2));
-            ProjMisfit(i) = GradTrans(0, 0) * Misfit(i) + GradTrans(1, 0) * Misfit(i + 1);
-            ProjMisfit(i + 1) = GradTrans(0, 1) * Misfit(i)
-                + GradTrans(1, 1) * Misfit(i + 1);
-          }
+        /*
+         jif3D::rvec ProjMisfit(Misfit.size(), 0.0);
+         for (size_t i = 0; i < Misfit.size(); i += 2)
+         {
+         auto GradTrans = DataTransform->Derivative(
+         ublas::subrange(RawImpedance, i, i + 2));
+         ProjMisfit(i) = GradTrans(0, 0) * Misfit(i) + GradTrans(1, 0) * Misfit(i + 1);
+         ProjMisfit(i + 1) = GradTrans(0, 1) * Misfit(i)
+         + GradTrans(1, 1) * Misfit(i + 1);
+         }*/
+        //The transformation code has been disabled for the moment, as it does not work easily
+        //with the changes made to accommodate distorted Titan data, will have to investigate how to make this work
+        jif3D::rvec ProjMisfit(Misfit);
 #ifdef HAVEOPENMP
         std::vector<std::pair<size_t, size_t>> NewExecTime;
         omp_lock_t lck;
@@ -469,7 +477,7 @@ namespace jif3D
             //if we want distortion correct, we calculate the gradient with respect
             //to the distortion parameters and copy the values to the end
             //of the gradient
-            jif3D::rvec CGrad = AdaptDist(C, RawImpedance, Misfit);
+            jif3D::rvec CGrad = AdaptDist(C, RawImpedance, Misfit, Model.GetRotAngles());
             boost::numeric::ublas::subrange(Gradient, nmod, Gradient.size()) = CGrad;
             //std::copy(CGrad.begin(), CGrad.end(), Gradient.begin() + nmod);
           }
@@ -545,7 +553,8 @@ namespace jif3D
             boost::numeric::ublas::subrange(CurrRow, 0, nmodel) = Gradient;
             if (WantDistCorr)
               {
-                jif3D::rvec CGrad = AdaptDist(C, RawImpedance, CurrMisfit);
+                jif3D::rvec CGrad = AdaptDist(C, RawImpedance, CurrMisfit,
+                    Model.GetRotAngles());
                 boost::numeric::ublas::subrange(CurrRow, nmodel, CurrRow.size()) = CGrad;
               }
           }
