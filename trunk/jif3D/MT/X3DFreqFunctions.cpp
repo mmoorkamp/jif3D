@@ -148,23 +148,24 @@ ForwardResult CalculateFrequency(const ForwardInfo &Info,
         result.DistImpedance[meas_index + 6] = Zyy.real();
         result.DistImpedance[meas_index + 7] = Zyy.imag();
 
+        const size_t rindex = j * 16;
 
-        result.RawImpedance[meas_index] = ZxxEx.real();
-        result.RawImpedance[meas_index + 1] = ZxxEx.imag();
-        result.RawImpedance[meas_index + 2] = ZxyEx.real();
-        result.RawImpedance[meas_index + 3] = ZxyEx.imag();
-        result.RawImpedance[meas_index + 4] = ZyxEx.real();
-        result.RawImpedance[meas_index + 5] = ZyxEx.imag();
-        result.RawImpedance[meas_index + 6] = ZyyEx.real();
-        result.RawImpedance[meas_index + 7] = ZyyEx.imag();
-        result.RawImpedance[meas_index + 8] = ZxxEy.real();
-        result.RawImpedance[meas_index + 9] = ZxxEy.imag();
-        result.RawImpedance[meas_index + 10] = ZxyEy.real();
-        result.RawImpedance[meas_index + 11] = ZxyEy.imag();
-        result.RawImpedance[meas_index + 12] = ZyxEy.real();
-        result.RawImpedance[meas_index + 13] = ZyxEy.imag();
-        result.RawImpedance[meas_index + 14] = ZyyEy.real();
-        result.RawImpedance[meas_index + 15] = ZyyEy.imag();
+        result.RawImpedance[rindex] = ZxxEx.real();
+        result.RawImpedance[rindex + 1] = ZxxEx.imag();
+        result.RawImpedance[rindex + 2] = ZxyEx.real();
+        result.RawImpedance[rindex + 3] = ZxyEx.imag();
+        result.RawImpedance[rindex + 4] = ZyxEx.real();
+        result.RawImpedance[rindex + 5] = ZyxEx.imag();
+        result.RawImpedance[rindex + 6] = ZyyEx.real();
+        result.RawImpedance[rindex + 7] = ZyyEx.imag();
+        result.RawImpedance[rindex + 8] = ZxxEy.real();
+        result.RawImpedance[rindex + 9] = ZxxEy.imag();
+        result.RawImpedance[rindex + 10] = ZxyEy.real();
+        result.RawImpedance[rindex + 11] = ZxyEy.imag();
+        result.RawImpedance[rindex + 12] = ZyxEy.real();
+        result.RawImpedance[rindex + 13] = ZyxEy.imag();
+        result.RawImpedance[rindex + 14] = ZyyEy.real();
+        result.RawImpedance[rindex + 15] = ZyyEy.imag();
       }
 
     return result;

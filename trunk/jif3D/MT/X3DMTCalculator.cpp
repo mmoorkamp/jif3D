@@ -339,20 +339,14 @@ namespace jif3D
           }
         std::string ErrorMsg;
         //a few commonly used quantities for shorter notation
-        const size_t nmodx = Model.GetConductivities().shape()[0];
-        const size_t nmody = Model.GetConductivities().shape()[1];
-        const size_t nmodz = Model.GetConductivities().shape()[2];
-
+        const size_t nmod = Model.GetNModelElements();
         const size_t nstats = Model.GetExIndices().size() / nfreq;
-        const size_t nmod = nmodx * nmody * nmodz;
+        //if we want to adapt the distortion parameters, we put
+        //the gradient with respect to the distortion parameters at the end
+        const size_t ngrad = WantDistCorr ?  nmod + 4 * nstats : nmod;
         assert(Misfit.size() == nstats * nfreq * 8);
-        jif3D::rvec Gradient(nmod);
-        if (WantDistCorr)
-          {
-            //if we want to adapt the distortion parameters, we put
-            //the gradient with respect to the distortion parameters at the end
-            Gradient.resize(nmod + 4 * nstats);
-          }
+        jif3D::rvec Gradient(ngrad);
+
         bool FatalError = false;
         //we need to initialize all values to zero as we are adding
         //the individual gradients per frequency
