@@ -234,8 +234,8 @@ namespace jif3D
     void ThreeDModelBase::WriteXYZ(const std::string &filename) const
       {
         std::ofstream outfile(filename.c_str());
-        std::vector<double> XCenter(XCellSizes.size()), YCenter(YCellSizes.size()),
-            ZCenter(ZCellSizes.size());
+        std::vector<double> XCenter(GridXCoordinates.size()), YCenter(GridYCoordinates.size()),
+            ZCenter(GridZCoordinates.size());
 
         auto avgfunc = [](double a, double b)
           { return (a+b)/2.0;};
@@ -245,23 +245,14 @@ namespace jif3D
             YCenter.begin(), avgfunc);
         std::adjacent_difference(GridZCoordinates.begin(), GridZCoordinates.end(),
             ZCenter.begin(), avgfunc);
-        std::rotate(XCenter.begin(), XCenter.begin() + 1, XCenter.end());
-        std::rotate(YCenter.begin(), YCenter.begin() + 1, YCenter.end());
-        std::rotate(ZCenter.begin(), ZCenter.begin() + 1, ZCenter.end());
 
-        XCenter[XCenter.size() - 1] = GridXCoordinates[XCenter.size() - 1]
-            + GetXCellSizes()[XCenter.size() - 1] / 2.0;
-        YCenter[YCenter.size() - 1] = GridYCoordinates[YCenter.size() - 1]
-            + GetYCellSizes()[YCenter.size() - 1] / 2.0;
-        ZCenter[ZCenter.size() - 1] = GridZCoordinates[ZCenter.size() - 1]
-            + GetZCellSizes()[ZCenter.size() - 1] / 2.0;
 
         size_t ncells = GetNModelElements();
         for (size_t i = 0; i < ncells; ++i)
           {
             int xi, yi, zi;
             OffsetToIndex(i, xi, yi, zi);
-            outfile << XCenter[xi] << " " << YCenter[yi] << " " << ZCenter[zi] << " "
+            outfile << XCenter[xi + 1] << " " << YCenter[yi + 1] << " " << ZCenter[zi +1] << " "
                 << Data[xi][yi][zi] << "\n";
           }
       }
