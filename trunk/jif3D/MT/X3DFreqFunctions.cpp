@@ -119,7 +119,8 @@ ForwardResult CalculateFrequency(const ForwardInfo &Info,
         //so we can directly use it even in a threaded environment
         const size_t meas_index = j * 8;
         const size_t site_index = j * 4;
-        const double angle = Info.Model.GetRotAngles().at(j) / 180.0 * boost::math::constants::pi<double>();
+        const double angle = Info.Model.GetRotAngles().at(j) / 180.0
+            * boost::math::constants::pi<double>();
         const double c2 = jif3D::pow2(std::cos(angle));
         const double s2 = jif3D::pow2(std::sin(angle));
         const double sc = std::sin(angle) * cos(angle);
@@ -216,17 +217,17 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI,
     const size_t freq_start_index = nstats * Info.freqindex * 8;
     const size_t ind_shift = nstats * Info.freqindex;
 
-    std::vector<std::complex<double> > EXPolMoments1(2 * nstats), EXPolMoments2(
-        2 * nstats), EYPolMoments1(2 * nstats), EYPolMoments2(2 * nstats), Zeros(
-        2 * nstats, 0.0), HZeros(nstats, 0.0);
-    std::vector<std::complex<double> > HXPolMoments1(nstats), HXPolMoments2(nstats),
-        HYPolMoments1(nstats), HYPolMoments2(nstats);
-    std::vector<double> XSourceDepth(2 * nstats), YSourceDepth(2 * nstats), HxSourceDepth(
-        nstats), HySourceDepth(nstats);
-    std::vector<size_t> XSourceXIndex(2 * nstats), XSourceYIndex(2 * nstats),
-        YSourceXIndex(2 * nstats), YSourceYIndex(2 * nstats), HxSourceXIndex(nstats),
-        HxSourceYIndex(nstats), HySourceXIndex(nstats), HySourceYIndex(nstats), ZeroIndex(
-            2 * nstats, 0);
+    std::vector<std::complex<double> > EXPolMoments1(2 * nstats, 0.0), EXPolMoments2(
+        2 * nstats, 0.0), EYPolMoments1(2 * nstats, 0.0), EYPolMoments2(2 * nstats, 0.0),
+        Zeros(2 * nstats, 0.0), HZeros(nstats, 0.0);
+    std::vector<std::complex<double> > HXPolMoments1(nstats, 0.0), HXPolMoments2(nstats,
+        0.0), HYPolMoments1(nstats, 0.0), HYPolMoments2(nstats, 0.0);
+    std::vector<double> XSourceDepth(2 * nstats, 0.0), YSourceDepth(2 * nstats, 0.0),
+        HxSourceDepth(nstats), HySourceDepth(nstats, 0.0);
+    std::vector<size_t> XSourceXIndex(2 * nstats, 0), XSourceYIndex(2 * nstats, 0),
+        YSourceXIndex(2 * nstats, 0), YSourceYIndex(2 * nstats, 0), HxSourceXIndex(nstats,
+            0), HxSourceYIndex(nstats, 0), HySourceXIndex(nstats, 0), HySourceYIndex(
+            nstats, 0), ZeroIndex(2 * nstats, 0);
 
     //make the sources for the electric dipoles
     for (size_t j = 0; j < nstats; ++j)
@@ -310,10 +311,12 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI,
         C2(0, 1) = Info.C[j * 4 + 2];
         C2(0, 0) = 0.0;
         C2(1, 1) = Info.C[j * 4 + 3];
-        C2(0, 1) = 0.0;
+        C2(1, 0) = 0.0;
         cmat RAH = ublas::prod(ublas::trans(R), AH);
         rmat RC1 = ublas::prod(R, C1);
         rmat RC2 = ublas::prod(R, C2);
+        //std::cout << "Matrices: " << std::endl;
+        //std::cout << R << " " << C1 << " " << C2 << " " << AH << " " << RAH << " " << RC1 << " " << RC2 << std::endl;
         cmat E1eff = ublas::prod(RC1, RAH); //ublas::prod(ublas::prod(ublas::prod(R , C1), ublas::trans(R)),AH);
         cmat E2eff = ublas::prod(RC2, RAH); //ublas::prod(ublas::prod(ublas::prod(R , C2), ublas::trans(R)),AH)
         EXPolMoments1.at(2 * j) = E1eff(0, 0); //AH(0, 0) * Info.C[j * 4];
@@ -407,6 +410,7 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI,
 
     std::complex<double> ZxxEx, ZxyEx, ZyxEx, ZyyEx;
     std::complex<double> ZxxEy, ZxyEy, ZyxEy, ZyyEy;
+    //std::cout << " Freq: " << CurrFreq.at(0) << std::endl;
     for (size_t j = 0; j < nstats; ++j)
       {
 
@@ -450,6 +454,16 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI,
         HYPolMoments2[j] = omega_mu
             * (ZxyEx * EXPolMoments2[2 * j] + ZyyEx * EYPolMoments2[2 * j]
                 + ZxyEy * EXPolMoments2[2 * j + 1] + ZyyEy * EYPolMoments2[2 * j + 1]);
+        /*std::cout << "ZEx:" << ZxxEx << " " << ZxyEx << " " << ZyxEx << " " << ZyyEx
+            << std::endl;
+        std::cout << "ZEy:" << ZxxEy << " " << ZxyEy << " " << ZyxEy << " " << ZyyEy
+            << std::endl;
+        std::cout << "EPol1:" << EXPolMoments1[2 * j] << " " << EXPolMoments1[2 * j + 1]
+            << " " << EYPolMoments1[2 * j] << EYPolMoments1[2 * j + 1] << std::endl;
+        std::cout << "EPol2:" << EXPolMoments2[2 * j] << " " << EXPolMoments2[2 * j + 1]
+            << " " << EYPolMoments2[2 * j] << EYPolMoments2[2 * j + 1] << std::endl;
+        std::cout << j << " " << HXPolMoments1[j] << " " << HYPolMoments1[j] << " "
+            << HXPolMoments2[j] << HYPolMoments2[j] << std::endl << std::endl;*/
       }
 
     std::vector<std::complex<double> > Ux1_mag, Ux2_mag, Uy1_mag, Uy2_mag, Uz1_mag,
