@@ -498,6 +498,7 @@ int hpx_main(boost::program_options::variables_map& vm)
             jif3D::JointObjective::coupling);
       }
 
+    auto TipperTransform = boost::shared_ptr<jif3D::MultiSectionTransform>(MTTransform->clone());
     if (DistCorr > 0)
       {
         MTTransform->AddSection(ngrid, ngrid + C.size(), Copier);
@@ -590,7 +591,7 @@ int hpx_main(boost::program_options::variables_map& vm)
         TipperObjective->SetObservedData(TipperData);
         TipperObjective->SetCoarseModelGeometry(Model);
         TipperObjective->SetDataError(TError);
-        Objective->AddObjective(TipperObjective, MTTransform, TipperWeight, "Tipper",
+        Objective->AddObjective(TipperObjective, TipperTransform, TipperWeight, "Tipper",
             jif3D::JointObjective::datafit);
       }
 

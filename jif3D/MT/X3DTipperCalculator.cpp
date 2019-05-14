@@ -262,11 +262,9 @@ namespace jif3D
           }
         std::string ErrorMsg;
         //a few commonly used quantities for shorter notation
-        const size_t nmodx = Model.GetConductivities().shape()[0];
-        const size_t nmody = Model.GetConductivities().shape()[1];
-        const size_t nmodz = Model.GetConductivities().shape()[2];
+
         const size_t nstats = Model.GetExIndices().size() / nfreq;
-        const size_t nmod = nmodx * nmody * nmodz;
+        const size_t nmod = Model.GetNModelElements();
         assert(Misfit.size() == nstats * nfreq * 4);
 
         jif3D::rvec Gradient(nmod);
