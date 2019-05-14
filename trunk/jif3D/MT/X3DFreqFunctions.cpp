@@ -545,11 +545,11 @@ GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::rvec &Misf
     const size_t freq_start_index = nstats * Info.freqindex * 4;
     const size_t ind_shift = nstats * Info.freqindex;
 
-    std::vector<std::complex<double> > HXPolMoments1(nstats), HXPolMoments2(nstats),
-        HYPolMoments1(nstats), HYPolMoments2(nstats), HZPolMoments1(nstats),
-        HZPolMoments2(nstats), Zeros(nstats, 0.0);
-    std::vector<double> HxSourceDepth(nstats), HySourceDepth(nstats), HzSourceDepth(
-        nstats);
+    std::vector<std::complex<double> > HXPolMoments1(nstats, 0.0), HXPolMoments2(nstats, 0.0),
+        HYPolMoments1(nstats, 0.0), HYPolMoments2(nstats, 0.0), HZPolMoments1(nstats, 0.0),
+        HZPolMoments2(nstats, 0.0), Zeros(nstats, 0.0);
+    std::vector<double> HxSourceDepth(nstats, 0.0), HySourceDepth(nstats, 0.0), HzSourceDepth(
+        nstats, 0.0);
     std::vector<size_t> HxSourceXIndex(nstats, 0), HxSourceYIndex(nstats, 0),
         HySourceXIndex(nstats, 0), HySourceYIndex(nstats, 0), HzSourceXIndex(nstats, 0),
         HzSourceYIndex(nstats, 0);
