@@ -572,8 +572,8 @@ int hpx_main(boost::program_options::variables_map& vm)
 
             boost::shared_ptr<jif3D::GeneralCovariance> StochCov = boost::make_shared<
                 jif3D::StochasticCovariance>(StartModel->GetModelShape()[0],
-                StartModel->GetModelShape()[1], StartModel->GetModelShape()[2], CovWidth, 1.0,
-                1.0);
+                StartModel->GetModelShape()[1], StartModel->GetModelShape()[2], CovWidth,
+                1.0, 1.0);
             CovObj->AddSection(0, ngrid, StochCov);
             CovObj->AddSection(ngrid, 2 * ngrid, StochCov);
             CovObj->AddSection(2 * ngrid, 3 * ngrid, StochCov);
@@ -581,7 +581,7 @@ int hpx_main(boost::program_options::variables_map& vm)
               {
                 boost::shared_ptr<jif3D::GeneralCovariance> DistCov = boost::make_shared<
                     jif3D::DiagonalCovariance>();
-                CovObj->AddSection(3*ngrid, InvModel.size(), DistCov);
+                CovObj->AddSection(3 * ngrid, InvModel.size(), DistCov);
               }
           }
         else
@@ -765,6 +765,15 @@ int hpx_main(boost::program_options::variables_map& vm)
                 std::copy(CG.begin() + 2 * nmod, CG.begin() + 3 * nmod, ZGrad.origin());
                 std::string Name = Names.at(i);
                 jif3D::Write3DVectorModelToVTK(Name + ".vtk", Name,
+                    StartModel->GetXCoordinates(), StartModel->GetYCoordinates(),
+                    StartModel->GetZCoordinates(), XGrad, YGrad, ZGrad);
+                jif3D::rvec CG_Cov(Objective->GetObjective(i).GetDataError());
+                std::copy(CG_Cov.begin(), CG_Cov.begin() + nmod, XGrad.origin());
+                std::copy(CG_Cov.begin() + nmod, CG_Cov.begin() + 2 * nmod,
+                    YGrad.origin());
+                std::copy(CG_Cov.begin() + 2 * nmod, CG_Cov.begin() + 3 * nmod,
+                    ZGrad.origin());
+                jif3D::Write3DVectorModelToVTK(Name + "_cov.vtk", Name,
                     StartModel->GetXCoordinates(), StartModel->GetYCoordinates(),
                     StartModel->GetZCoordinates(), XGrad, YGrad, ZGrad);
               }
