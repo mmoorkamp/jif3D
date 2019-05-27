@@ -58,11 +58,11 @@ namespace jif3D
      * @param MeasPerPos How many measurements per site,e.g. 1 for only scalar and 9 for only FTG
      * @param SensProfile The depth profile of the sensitivity below the site
      */
-    template<class ModelType>
-    J3DEXPORT void ExtractMiddleSens(const ModelType &Model, const jif3D::rmat &Sensitivities,
+    template<class ModelType, class DataType>
+    J3DEXPORT void ExtractMiddleSens(const ModelType &Model, const DataType &Data, const jif3D::rmat &Sensitivities,
         const size_t MeasPerPos, jif3D::rvec &SensProfile)
       {
-        const size_t nmeas = Model.GetMeasPosX().size();
+        const size_t nmeas = Data.GetMeasPosX().size();
         const double midx = Model.GetXCoordinates()[Model.GetXCoordinates().size() - 1]
             / 2.0;
         const double midy = Model.GetYCoordinates()[Model.GetYCoordinates().size() - 1]
@@ -72,14 +72,14 @@ namespace jif3D
         for (size_t i = 0; i < nmeas; ++i)
           {
             distances(i) = sqrt(
-                pow(Model.GetMeasPosX()[i] - midx, 2)
-                    + pow(Model.GetMeasPosY()[i] - midy, 2));
+                pow(Data.GetMeasPosX()[i] - midx, 2)
+                    + pow(Data.GetMeasPosY()[i] - midy, 2));
           }
         const size_t midindex = distance(distances.begin(),
             std::min_element(distances.begin(), distances.end()));
         boost::array<jif3D::ThreeDModelBase::t3DModelData::index, 3> modelindex(
-            Model.FindAssociatedIndices(Model.GetMeasPosX()[midindex],
-                Model.GetMeasPosY()[midindex], 0.0));
+            Model.FindAssociatedIndices(Data.GetMeasPosX()[midindex],
+                Data.GetMeasPosY()[midindex], 0.0));
         //we store the sensitivities for the background at the end of the matrix
         //so we can ignore it here
         boost::numeric::ublas::matrix_row<const jif3D::rmat> MiddleSens(Sensitivities,
@@ -102,24 +102,22 @@ namespace jif3D
         jif3D::rvec &SensProfile)
       {
         ModelType LocalModel(Model);
+        typename CalculatorType::DataType Data;
         const size_t nx = LocalModel.GetXCoordinates().size();
         const size_t ny = LocalModel.GetYCoordinates().size();
         const double sizex = LocalModel.GetXCoordinates()[nx - 1];
         const double sizey = LocalModel.GetYCoordinates()[ny - 1];
         double zpos = -0.01;
-        if (LocalModel.GetMeasPosZ().size() > 0)
-          {
-            zpos = LocalModel.GetMeasPosZ()[0];
-          }
-        LocalModel.ClearMeasurementPoints();
-        LocalModel.AddMeasurementPoint(sizex / 2.0, sizey / 2.0, zpos);
 
-        Calculator.Calculate(LocalModel);
+        Data.ClearMeasurementPoints();
+        Data.AddMeasurementPoint(sizex / 2.0, sizey / 2.0, zpos);
+
+        Calculator.Calculate(LocalModel, Data);
         rvec Misfit(Calculator.GetDataPerMeasurement(), 1.0);
-        rvec Deriv = Calculator.LQDerivative(LocalModel, Misfit);
+        rvec Deriv = Calculator.LQDerivative(LocalModel, Data, Misfit);
         rmat Sens(1.0, Deriv.size());
         std::copy(Deriv.begin(),Deriv.end(),Sens.data().begin());
-        ExtractMiddleSens(LocalModel,Sens,1,SensProfile);
+        ExtractMiddleSens(LocalModel, Data, Sens,1,SensProfile);
 
       }
   /* @} */

@@ -29,12 +29,6 @@ namespace jif3D
       std::vector<double> bg_thicknesses;
       //! The conductivities of the background layers in S/m
       std::vector<double> bg_conductivities;
-      std::vector<int> ExIndices;
-      std::vector<int> EyIndices;
-      std::vector<int> HxIndices;
-      std::vector<int> HyIndices;
-      std::vector<int> HzIndices;
-      std::vector<double> RotAngles;
     public:
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
@@ -43,12 +37,6 @@ namespace jif3D
           ar & base_object<ThreeDMTModel>(*this);
           ar & bg_thicknesses;
           ar & bg_conductivities;
-          ar & ExIndices;
-          ar & EyIndices;
-          ar & HxIndices;
-          ar & HyIndices;
-          ar & HzIndices;
-          ar & RotAngles;
         }
       //! The problem type we want to perform the calculation for
       /*! We can use this enum to specify which type of forward calculation
@@ -59,75 +47,6 @@ namespace jif3D
         {
         MT, CSMT, EDIP, MDIP
         };
-
-      //! Set the indices for electric and magnetic field measurements
-      void SetFieldIndices(const std::vector<int> &value_Ex,
-          const std::vector<int> &value_Ey, std::vector<int> &value_Hx,
-          std::vector<int> &value_Hy, std::vector<int> &value_Hz)
-        {
-
-          ExIndices = value_Ex;
-          EyIndices = value_Ey;
-          HxIndices = value_Hx;
-          HyIndices = value_Hy;
-          HzIndices = value_Hz;
-
-          if (HxIndices.size() != ExIndices.size())
-            {
-              throw jif3D::FatalException(
-                  "Number of Hx magnetic field indices is not the same as the electric field indices!",
-                  __FILE__, __LINE__);
-            }
-
-          if (HyIndices.size() != ExIndices.size())
-            {
-              throw jif3D::FatalException(
-                  "Number of Hy magnetic field indices is not the same as the electric field indices!",
-                  __FILE__, __LINE__);
-            }
-          if (HzIndices.size() != ExIndices.size())
-            {
-              throw jif3D::FatalException(
-                  "Number of Hz magnetic field indices is not the same as the electric field indices!",
-                  __FILE__, __LINE__);
-            }
-
-          if (EyIndices.size() != ExIndices.size())
-            {
-              throw jif3D::FatalException(
-                  "Number of Ey field indices is not the same as the Ex field indices!",
-                  __FILE__, __LINE__);
-            }
-
-        }
-
-      //! Return the Indices of x-component electric field measurements
-      const std::vector<int> &GetExIndices() const
-        {
-          return ExIndices;
-        }
-      //! Return the Indices of y-component electric field measurements
-      const std::vector<int> &GetEyIndices() const
-        {
-          return EyIndices;
-        }
-      //! Return the Indices of the x-component magnetic field measurements
-      const std::vector<int> &GetHxIndices() const
-        {
-          return HxIndices;
-        }
-
-      //! Return the Indices of the y-component magnetic field measurements
-      const std::vector<int> &GetHyIndices() const
-        {
-          return HyIndices;
-        }
-
-      //! Return the Indices of the z-component magnetic field measurements
-      const std::vector<int> &GetHzIndices() const
-        {
-          return HzIndices;
-        }
 
       //! Set the thicknesses of the background layers, the individual thicknesses are given in m
       void SetBackgroundThicknesses(const std::vector<double> &value)
@@ -143,14 +62,6 @@ namespace jif3D
       void SetBackgroundConductivities(const std::vector<double> &value)
         {
           bg_conductivities = value;
-        }
-      void SetRotAngles(const std::vector<double> &value)
-        {
-          RotAngles = value;
-        }
-      const std::vector<double> &GetRotAngles() const
-        {
-          return RotAngles;
         }
       //! Return the conductivities of the background layers in S/m
       const std::vector<double> &GetBackgroundConductivities() const

@@ -222,11 +222,70 @@ namespace jif3D
           }
       }
 
+
+    /*! Read a .vtk file containing a 3D model
+     * @param filename The name of the input file, should contain the ending .vtk
+     * @param XCellCoords The coordinates of the cells in x-direction in m
+     * @param YCellCoords The coordinates of the cells in y-direction in m
+     * @param ZCellCoords The coordinates of the cells in z-direction in m
+     * @param Data The model values within each cell, shape has to match the  cell sizes
+     */
+    void Read3DVectorModelFromVTK(const std::string &filename,
+        ThreeDModelBase::t3DModelDim &XCellCoords,
+        ThreeDModelBase::t3DModelDim &YCellCoords,
+        ThreeDModelBase::t3DModelDim &ZCellCoords, ThreeDModelBase::t3DModelData &CompX,
+         ThreeDModelBase::t3DModelData &CompY, ThreeDModelBase::t3DModelData &CompZ)
+      {
+        std::ifstream infile(filename.c_str());
+        char dummy[255];
+        //read the header information, but we do not need it
+        infile.getline(dummy, 255);
+        infile.getline(dummy, 255);
+        infile.getline(dummy, 255);
+        infile.getline(dummy, 255);
+        //get the number of values in each direction
+        int nxvalues, nyvalues, nzvalues;
+        infile >> dummy >> nxvalues >> nyvalues >> nzvalues;
+        //for vtk we need both boundaries of the cells,
+        //but internally we just use the right boundary
+        //so we need on element less for each axis
+        nxvalues -= 1;
+        nyvalues -= 1;
+        nzvalues -= 1;
+        //read the coordinate of the axes
+        ReadCoordinatesFromVTK(infile, XCellCoords);
+        ReadCoordinatesFromVTK(infile, YCellCoords);
+        ReadCoordinatesFromVTK(infile, ZCellCoords);
+        //skip some more vtk specific information
+        infile.getline(dummy, 255);
+        infile.getline(dummy, 255);
+        infile.getline(dummy, 255);
+        CompX.resize(boost::extents[nxvalues][nyvalues][nzvalues]);
+        CompY.resize(boost::extents[nxvalues][nyvalues][nzvalues]);
+        CompZ.resize(boost::extents[nxvalues][nyvalues][nzvalues]);
+        //read the values from the file, the storage ordering
+        //is different from our internal storage, so we
+        //have to use nested loops
+        for (int i = 0; i < nzvalues; ++i)
+          {
+            for (int j = 0; j < nyvalues; ++j)
+              {
+                for (int k = 0; k < nxvalues; ++k)
+                  {
+                    infile >> CompX[k][j][i] >> CompY[k][j][i] >> CompZ[k][j][i];
+                    if (infile.fail())
+                      throw FatalException("Problem reading vtk  file: " + filename,
+                      __FILE__, __LINE__);
+                  }
+              }
+          }
+      }
+
     //helper function that writes the common header information
     //for scalar and tensor data
-    void WriteDataHeader(std::ofstream &outfile, const ThreeDModelBase::tMeasPosVec &PosX,
-        const ThreeDModelBase::tMeasPosVec &PosY,
-        const ThreeDModelBase::tMeasPosVec &PosZ)
+    void WriteDataHeader(std::ofstream &outfile, const std::vector<double> &PosX,
+        const std::vector<double> &PosY,
+        const std::vector<double> &PosZ)
       {
         const size_t ndata = PosX.size();
         outfile << "# vtk DataFile Version 2.0\n";
@@ -252,9 +311,9 @@ namespace jif3D
      * @param PosZ The position of the measurement points in z-direction in m
      */
     void Write3DDataToVTK(const std::string &filename, const std::string &DataName,
-        const jif3D::rvec &Data, const ThreeDModelBase::tMeasPosVec &PosX,
-        const ThreeDModelBase::tMeasPosVec &PosY,
-        const ThreeDModelBase::tMeasPosVec &PosZ)
+        const jif3D::rvec &Data, const std::vector<double> &PosX,
+        const std::vector<double> &PosY,
+        const std::vector<double> &PosZ)
       {
         //do some consistency checks
         const size_t ndata = Data.size();
@@ -299,9 +358,9 @@ namespace jif3D
      * @param PosZ The position of the measurement points in z-direction in m
      */
     void Write3DVectorDataToVTK(const std::string &filename, const std::string &DataName,
-        const jif3D::rvec &Data, const ThreeDModelBase::tMeasPosVec &PosX,
-        const ThreeDModelBase::tMeasPosVec &PosY,
-        const ThreeDModelBase::tMeasPosVec &PosZ)
+        const jif3D::rvec &Data, const std::vector<double> &PosX,
+        const std::vector<double> &PosY,
+        const std::vector<double> &PosZ)
       {
         //do some consistency checks
         const size_t ndata = Data.size();
@@ -353,9 +412,9 @@ namespace jif3D
      * @param PosZ The position of the measurement points in z-direction in m
      */
     void Write3DTensorDataToVTK(const std::string &filename, const std::string &DataName,
-        const jif3D::rvec &Data, const ThreeDModelBase::tMeasPosVec &PosX,
-        const ThreeDModelBase::tMeasPosVec &PosY,
-        const ThreeDModelBase::tMeasPosVec &PosZ)
+        const jif3D::rvec &Data, const std::vector<double> &PosX,
+        const std::vector<double> &PosY,
+        const std::vector<double> &PosZ)
       {
         //do some consistency checks
         const size_t ndata = Data.size();

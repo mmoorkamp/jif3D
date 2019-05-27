@@ -33,9 +33,9 @@ namespace jif3D
      * @param Model A X3D model object containing background conductivities, thicknesses and N calculation frequencies
      * @return A real vector of size 2N with the real and imaginary parts of the corresponding MT impedances.
      */
-    jif3D::rvec OneDMTCalculator::Calculate(const ModelType &Model)
+    jif3D::rvec OneDMTCalculator::Calculate(const ModelType &Model, const jif3D::MTData &Data)
       {
-        const size_t nfreq = Model.GetFrequencies().size();
+        const size_t nfreq = Data.GetFrequencies().size();
         const size_t nlayers = Model.GetBackgroundThicknesses().size();
         const double PI = std::acos(-1.0);
         const std::complex<double> I(0.0, 1.0);
@@ -54,7 +54,7 @@ namespace jif3D
         alpha.resize(nlayers, nfreq);
         for (size_t i = 0; i < nfreq; ++i)
           {
-            const double omega = 2. * PI * Model.GetFrequencies().at(i);
+            const double omega = 2. * PI * Data.GetFrequencies().at(i);
             omegamu = I * 4e-7 * PI * omega;
             alpha(nlayers - 1, i) = 0.0;
             sigmacurr = Model.GetBackgroundConductivities().back();
@@ -96,9 +96,9 @@ namespace jif3D
         return result;
       }
 
-    jif3D::rvec OneDMTCalculator::LQDerivative(const ModelType &Model, const rvec &Misfit)
+    jif3D::rvec OneDMTCalculator::LQDerivative(const ModelType &Model, const jif3D::MTData &Data, const rvec &Misfit)
       {
-        const size_t nfreq = Model.GetFrequencies().size();
+        const size_t nfreq = Data.GetFrequencies().size();
         const size_t nlayers = Model.GetBackgroundThicknesses().size();
         jif3D::rvec result(nlayers, 0.0);
         for (size_t i = 0; i < nfreq; ++i)
@@ -117,7 +117,7 @@ namespace jif3D
                         * std::complex<double>(Misfit(2 * i), Misfit(2 * i + 1)));
                 if (boost::math::isnan(result(j)))
                   {
-                    std::cout << j << " " << i << " " << Model.GetFrequencies().at(i)
+                    std::cout << j << " " << i << " " << Data.GetFrequencies().at(i)
                         << " " << alpha(j, i) << " " << Z(i) << std::endl;
                   }
               }

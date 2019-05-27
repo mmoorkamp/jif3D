@@ -104,8 +104,8 @@ namespace jif3D
         DerivTimesFile.close();
       }
 
-    rvec X3DMTCalculator::Calculate(X3DModel &Model, size_t minfreqindex,
-        size_t maxfreqindex)
+    rvec X3DMTCalculator::Calculate(const X3DModel &Model, const MTData &Data,
+        size_t minfreqindex, size_t maxfreqindex)
       {
 
         if (!ForwardTimesFile.is_open())
@@ -114,7 +114,7 @@ namespace jif3D
           }
         //we define nfreq as int to make the compiler happy in the openmp loop
         assert(minfreqindex <= maxfreqindex);
-        maxfreqindex = std::min(maxfreqindex, Model.GetFrequencies().size());
+        maxfreqindex = std::min(maxfreqindex, Data.GetFrequencies().size());
 
         const int nfreq = maxfreqindex - minfreqindex;
         if (FieldCalculators.empty() || FieldCalculators.size() != nfreq)
@@ -125,7 +125,7 @@ namespace jif3D
                 fc = boost::make_shared<jif3D::X3DFieldCalculator>(TempDir, X3DName);
               }
           }
-        const size_t nmeas = Model.GetMeasPosX().size();
+        const size_t nmeas = Data.GetMeasPosX().size();
 
         if (ForwardExecTime.empty() || ForwardExecTime.size() != nfreq)
           {
@@ -134,38 +134,9 @@ namespace jif3D
                 ForwardExecTime.push_back(std::make_pair(0, minfreqindex + i));
               }
           }
-        //if the current model does not contain any ExIndices information
-        //generate ExIndices, EyIndices and HIndices as 0:nmeas for each Frequency
-        //here we assume that we either have all three indices in the netCDF file or none of them
-        std::vector<int> ExIndices(Model.GetExIndices()), EyIndices(Model.GetEyIndices()),
-            HIndices(Model.GetHxIndices());
 
-        size_t ind_shift = 0;
-        if (ExIndices.empty())
-          {
-            ExIndices.resize(nmeas * nfreq);
-            EyIndices.resize(nmeas * nfreq);
-            HIndices.resize(nmeas * nfreq);
-            for (int ifr = 0; ifr < nfreq; ++ifr)
-              {
-                ind_shift = nmeas * ifr;
-                for (size_t i = 0; i < nmeas; ++i)
-                  {
-                    ExIndices[i + ind_shift] = i;
-                  }
-              }
-            EyIndices = ExIndices;
-            HIndices = ExIndices;
-          }
-        Model.SetFieldIndices(ExIndices, EyIndices, HIndices, HIndices, HIndices);
-        const size_t nstats = Model.GetExIndices().size() / nfreq;
-        std::vector<double> RotAngles(Model.GetRotAngles());
-        if (RotAngles.empty())
-          {
-            RotAngles.resize(nstats);
-            std::fill(RotAngles.begin(), RotAngles.end(), 0.0);
-          }
-        Model.SetRotAngles(RotAngles);
+        const size_t nstats = Data.GetExIndices().size() / nfreq;
+        std::vector<double> RotAngles(Data.GetRotAngles());
 
         std::string ErrorMsg;
         //result will hold the final impedance values with
@@ -185,20 +156,8 @@ namespace jif3D
         RawImpedance.resize(nstats * nfreq * 8 * 2);
         RawImpedance.clear();
 
-        //if the current model does not contain any distortion information
-        //generate distortion parameters equivalent to an identity matrix
-        std::vector<double> C(Model.GetDistortionParameters());
-        if (C.size() != nstats * 4)
-          {
-            C.resize(nstats * 4);
-            for (size_t i = 0; i < nstats; ++i)
-              {
-                C[i * 4] = 1.0;
-                C[i * 4 + 1] = 0.0;
-                C[i * 4 + 2] = 0.0;
-                C[i * 4 + 3] = 1.0;
-              }
-          }
+        std::vector<double> C(Data.GetDistortion());
+
         //check that the depths to the different background layers match
         //with the depths to grid cell boundaries
         std::vector<double> BGDepths(Model.GetBackgroundThicknesses().size(), 0.0);
@@ -228,9 +187,9 @@ namespace jif3D
                 //we want to alternate between items at the beginning of the map and at the end of the map
                 const size_t queueindex = (i % 2) == 0 ? i / 2 : nfreq - 1 - i / 2;
                 const size_t calcindex = ForwardExecTime.at(queueindex).second;
-                ForwardInfo Info(Model,C,calcindex,TempDir.string(),X3DName, NameRoot, GreenType1, GreenType4);
+                ForwardInfo Info(Model,  C,calcindex,TempDir.string(),X3DName, NameRoot, GreenType1, GreenType4);
                 std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
-                ForwardResult freqresult = CalculateFrequency(Info,FieldCalculators.at(calcindex));
+                ForwardResult freqresult = CalculateFrequency(Info,Data, FieldCalculators.at(calcindex));
                 std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
                 size_t duration = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
 
@@ -311,13 +270,13 @@ namespace jif3D
           __LINE__);
         if (DataTransform)
           {
-            result = jif3D::ApplyTransform(result, *DataTransform);
+            // result = jif3D::ApplyTransform(result, *DataTransform);
           }
         return result;
       }
 
-    rvec X3DMTCalculator::LQDerivative(const X3DModel &Model, const rvec &Misfit,
-        size_t minfreqindex, size_t maxfreqindex)
+    rvec X3DMTCalculator::LQDerivative(const X3DModel &Model, const MTData &Data,
+        const rvec &Misfit, size_t minfreqindex, size_t maxfreqindex)
       {
         if (!DerivTimesFile.is_open())
           {
@@ -328,7 +287,7 @@ namespace jif3D
             DataTransform = boost::make_shared<jif3D::CopyTransform>(Misfit.size());
           }
         //we define nfreq as int to make the compiler happy in the openmp loop
-        maxfreqindex = std::min(maxfreqindex, Model.GetFrequencies().size());
+        maxfreqindex = std::min(maxfreqindex, Data.GetFrequencies().size());
         const int nfreq = maxfreqindex - minfreqindex;
         if (DerivExecTime.empty())
           {
@@ -340,10 +299,10 @@ namespace jif3D
         std::string ErrorMsg;
         //a few commonly used quantities for shorter notation
         const size_t nmod = Model.GetNModelElements();
-        const size_t nstats = Model.GetExIndices().size() / nfreq;
+        const size_t nstats = Data.GetExIndices().size() / nfreq;
         //if we want to adapt the distortion parameters, we put
         //the gradient with respect to the distortion parameters at the end
-        const size_t ngrad = WantDistCorr ?  nmod + 4 * nstats : nmod;
+        const size_t ngrad = WantDistCorr ? nmod + 4 * nstats : nmod;
         assert(Misfit.size() == nstats * nfreq * 8);
         jif3D::rvec Gradient(ngrad);
 
@@ -352,21 +311,8 @@ namespace jif3D
         //the individual gradients per frequency
         std::fill(Gradient.begin(), Gradient.end(), 0.0);
 
-        //we read the distortion parameters from the model
-        std::vector<double> C(Model.GetDistortionParameters());
-        //if they have not been set, we use the identity matrix
-        //for each station
-        if (C.size() != nstats * 4)
-          {
-            C.resize(nstats * 4);
-            for (size_t i = 0; i < nstats; ++i)
-              {
-                C[i * 4] = 1.0;
-                C[i * 4 + 1] = 0.0;
-                C[i * 4 + 2] = 0.0;
-                C[i * 4 + 3] = 1.0;
-              }
-          }
+        //we read the distortion parameters
+        std::vector<double> C(Data.GetDistortion());
 
         /*
          jif3D::rvec ProjMisfit(Misfit.size(), 0.0);
@@ -402,7 +348,7 @@ namespace jif3D
                 ForwardInfo Info(Model,C,calcindex,TempDir.string(),X3DName, NameRoot, GreenType1, GreenType4);
                 //calculate the gradient for each frequency
                 std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
-                GradResult tmp = LQDerivativeFreq(Info, GradInfo(ProjMisfit, RawImpedance),FieldCalculators.at(calcindex));
+                GradResult tmp = LQDerivativeFreq(Info, Data, GradInfo(ProjMisfit, RawImpedance),FieldCalculators.at(calcindex));
                 std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
                 size_t duration = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
 
@@ -471,7 +417,7 @@ namespace jif3D
             //if we want distortion correct, we calculate the gradient with respect
             //to the distortion parameters and copy the values to the end
             //of the gradient
-            jif3D::rvec CGrad = AdaptDist(C, RawImpedance, Misfit, Model.GetRotAngles());
+            jif3D::rvec CGrad = AdaptDist(C, RawImpedance, Misfit, Data.GetRotAngles());
             boost::numeric::ublas::subrange(Gradient, nmod, Gradient.size()) = CGrad;
             //std::copy(CGrad.begin(), CGrad.end(), Gradient.begin() + nmod);
           }
@@ -486,20 +432,20 @@ namespace jif3D
         return 2.0 * Gradient;
       }
 
-    rmat X3DMTCalculator::SensitivityMatrix(ModelType &Model, const rvec &Misfit,
-        size_t minfreqindex, size_t maxfreqindex)
+    rmat X3DMTCalculator::SensitivityMatrix(ModelType &Model, const MTData &Data,
+        const rvec &Misfit, size_t minfreqindex, size_t maxfreqindex)
       {
         if (!DataTransform)
           {
             DataTransform = boost::make_shared<jif3D::CopyTransform>(Misfit.size());
           }
-        maxfreqindex = std::min(maxfreqindex, Model.GetFrequencies().size());
+        maxfreqindex = std::min(maxfreqindex, Data.GetFrequencies().size());
         const size_t nfreq = maxfreqindex - minfreqindex;
         const size_t ndata = Misfit.size();
 
         const size_t nmodel = Model.GetConductivities().num_elements();
         //const size_t nsites = Model.GetMeasPosX().size();
-        const size_t nsites = Model.GetExIndices().size() / nfreq;
+        const size_t nsites = Data.GetExIndices().size() / nfreq;
         rmat Result;
         if (WantDistCorr)
           {
@@ -514,20 +460,7 @@ namespace jif3D
         //set all sensitivities initially to zero
         Result.clear();
         //we read the distortion parameters from the model
-        std::vector<double> C(Model.GetDistortionParameters());
-        //if they have not been set, we use the identity matrix
-        //for each station
-        if (C.size() != nsites * 4)
-          {
-            C.resize(nsites * 4);
-            for (size_t i = 0; i < nsites; ++i)
-              {
-                C[i * 4] = 1.0;
-                C[i * 4 + 1] = 0.0;
-                C[i * 4 + 2] = 0.0;
-                C[i * 4 + 3] = 1.0;
-              }
-          }
+        std::vector<double> C(Data.GetDistortion());
 
         for (size_t i = 0; i < ndata; ++i)
           {
@@ -536,7 +469,7 @@ namespace jif3D
             CurrMisfit(i) = 1.0;
             ForwardInfo Info(Model, C, freqindex, TempDir.string(), X3DName, NameRoot,
                 GreenType1, GreenType4);
-            GradResult CurrGrad = LQDerivativeFreq(Info,
+            GradResult CurrGrad = LQDerivativeFreq(Info, Data,
                 GradInfo(CurrMisfit, RawImpedance), FieldCalculators.at(freqindex));
 
             boost::numeric::ublas::matrix_row<rmat> CurrRow(Result, i);
@@ -548,7 +481,7 @@ namespace jif3D
             if (WantDistCorr)
               {
                 jif3D::rvec CGrad = AdaptDist(C, RawImpedance, CurrMisfit,
-                    Model.GetRotAngles());
+                    Data.GetRotAngles());
                 boost::numeric::ublas::subrange(CurrRow, nmodel, CurrRow.size()) = CGrad;
               }
           }

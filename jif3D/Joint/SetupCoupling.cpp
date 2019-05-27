@@ -16,7 +16,7 @@ namespace ublas = boost::numeric::ublas;
 namespace jif3D
   {
     void SetupModelCovar(jif3D::rvec &Covar, const jif3D::rvec &InvModel,
-        const jif3D::rvec &OldCov, size_t ngrid)
+        const std::vector<double> &OldCov, size_t ngrid)
       {
         assert(Covar.size() == 3 * ngrid);
         assert(InvModel.size() == ngrid);
@@ -29,12 +29,13 @@ namespace jif3D
         else
           {
             assert(OldCov.size() == 3 * ngrid);
-            ublas::subrange(Covar, 0, ngrid) = ublas::element_prod(InvModel,
-                ublas::subrange(OldCov, 0, ngrid));
-            ublas::subrange(Covar, ngrid, 2 * ngrid) = ublas::element_prod(InvModel,
-                ublas::subrange(OldCov, ngrid, 2 * ngrid));
-            ublas::subrange(Covar, 2 * ngrid, 3 * ngrid) = ublas::element_prod(InvModel,
-                ublas::subrange(OldCov, 2 * ngrid, 3 * ngrid));
+            std::transform(InvModel.begin(), InvModel.end(), OldCov.begin(),
+                Covar.begin(), std::multiplies<double>());
+            std::transform(InvModel.begin(), InvModel.end(), OldCov.begin() + ngrid,
+                Covar.begin() + ngrid, std::multiplies<double>());
+            std::transform(InvModel.begin(), InvModel.end(), OldCov.begin() + 2 * ngrid,
+                Covar.begin() + 2 * ngrid, std::multiplies<double>());
+
           }
       }
 
@@ -348,38 +349,38 @@ namespace jif3D
 
         jif3D::rvec TomoCovVec(ngrid, 1.0);
         if (!CovVec.empty())
-        {
-        if (CovVec.size() == ngrid)
           {
-            TomoCovVec = CovVec;
+            if (CovVec.size() == ngrid)
+              {
+                TomoCovVec = CovVec;
+              }
+            else
+              {
+                TomoCovVec = ublas::subrange(CovVec, 0, ngrid);
+              }
           }
-        else
-          {
-            TomoCovVec = ublas::subrange(CovVec, 0, ngrid);
-          }
-        }
         double seisreglambda = 1.0;
         std::cout << " Weight for seismic regularization: ";
         std::cin >> seisreglambda;
         boost::shared_ptr<jif3D::RegularizationFunction> SeisReg(Regularization->clone());
         jif3D::rvec TomoCovar(3 * ngrid);
         SetupModelCovar(TomoCovar, TomoCovVec, SeisReg->GetDataError(), ngrid);
-        SeisReg->SetDataError(TomoCovar);
+        SeisReg->SetDataError(std::vector<double>(TomoCovar.begin(), TomoCovar.end()));
 
         //then the regularization of densities
 
         jif3D::rvec GravCovVec(ngrid, 1.0);
         if (!CovVec.empty())
-                {
-        if (CovVec.size() == ngrid)
           {
-            GravCovVec = CovVec;
+            if (CovVec.size() == ngrid)
+              {
+                GravCovVec = CovVec;
+              }
+            else
+              {
+                GravCovVec = ublas::subrange(CovVec, ngrid, 2 * ngrid);
+              }
           }
-        else
-          {
-            GravCovVec = ublas::subrange(CovVec, ngrid, 2 * ngrid);
-          }
-                }
         double gravreglambda = 1.0;
         std::cout << " Weight for gravity regularization: ";
         std::cin >> gravreglambda;
@@ -387,28 +388,28 @@ namespace jif3D
         jif3D::rvec GravCovar(3 * ngrid);
 
         SetupModelCovar(GravCovar, GravCovVec, GravReg->GetDataError(), ngrid);
-        GravReg->SetDataError(GravCovar);
+        GravReg->SetDataError(std::vector<double>(GravCovar.begin(), GravCovar.end()));
 
         //and finally conductivities
         jif3D::rvec CondCovVec(ngrid, 1.0);
         if (!CovVec.empty())
-                {
-        if (CovVec.size() == ngrid)
           {
-            CondCovVec = CovVec;
+            if (CovVec.size() == ngrid)
+              {
+                CondCovVec = CovVec;
+              }
+            else
+              {
+                CondCovVec = ublas::subrange(CovVec, 2 * ngrid, 3 * ngrid);
+              }
           }
-        else
-          {
-            CondCovVec = ublas::subrange(CovVec, 2*ngrid, 3 * ngrid);
-          }
-                }
         double mtreglambda = 1.0;
         std::cout << " Weight for MT regularization: ";
         std::cin >> mtreglambda;
         boost::shared_ptr<jif3D::RegularizationFunction> MTReg(Regularization->clone());
         jif3D::rvec MTCovar(3 * ngrid);
         SetupModelCovar(MTCovar, CondCovVec, MTReg->GetDataError(), ngrid);
-        MTReg->SetDataError(MTCovar);
+        MTReg->SetDataError(std::vector<double>(MTCovar.begin(), MTCovar.end()));
         //if we specify on the command line that we want to subtract the
         //starting model, we set the corresponding reference model
         //in the regularization object
@@ -546,7 +547,7 @@ namespace jif3D
         boost::shared_ptr<jif3D::RegularizationFunction> SeisReg(Regularization->clone());
         jif3D::rvec TomoCovar(3 * ngrid);
         SetupModelCovar(TomoCovar, Ones, SeisReg->GetDataError(), ngrid);
-        SeisReg->SetDataError(TomoCovar);
+        SeisReg->SetDataError(std::vector<double>(TomoCovar.begin(), TomoCovar.end()));
 
         //then the regularization of densities
         double gravreglambda = 1.0;
@@ -555,7 +556,7 @@ namespace jif3D
         boost::shared_ptr<jif3D::RegularizationFunction> GravReg(Regularization->clone());
         jif3D::rvec GravCovar(3 * ngrid);
         SetupModelCovar(GravCovar, Ones, GravReg->GetDataError(), ngrid);
-        GravReg->SetDataError(GravCovar);
+        GravReg->SetDataError(std::vector<double>(GravCovar.begin(), GravCovar.end()));
 
         //and finally conductivities
         double mtreglambda = 1.0;
@@ -564,7 +565,7 @@ namespace jif3D
         boost::shared_ptr<jif3D::RegularizationFunction> MTReg(Regularization->clone());
         jif3D::rvec MTCovar(3 * ngrid);
         SetupModelCovar(MTCovar, Ones, MTReg->GetDataError(), ngrid);
-        MTReg->SetDataError(MTCovar);
+        MTReg->SetDataError(std::vector<double>(MTCovar.begin(), MTCovar.end()));
 
         //if we specify on the command line that we want to subtract the
         //starting model, we set the corresponding reference model
@@ -622,7 +623,8 @@ namespace jif3D
           {
             jif3D::rvec TomoCovar(3 * ngrid);
             SetupModelCovar(TomoCovar, InvModel, Regularization->GetDataError(), ngrid);
-            Regularization->SetDataError(TomoCovar);
+            Regularization->SetDataError(
+                std::vector<double>(TomoCovar.begin(), TomoCovar.end()));
           }
         if (substart)
           {

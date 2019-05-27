@@ -41,7 +41,8 @@
 #include "../MT/X3DFieldCalculator.h"
 #include "../MT/ReadWriteImpedances.h"
 #include "../MT/MTTransforms.h"
-#include "../Titan24/ReadWriteTitanData.h"
+#include "MTData.h"
+#include "TipperData.h"
 #include "../Joint/SetupRegularization.h"
 #include "../Joint/SetupInversion.h"
 #include "../Joint/InversionOutput.h"
@@ -198,51 +199,53 @@ int hpx_main(boost::program_options::variables_map& vm)
         return 0;
       }
 
+    //if we have not specified a background in the model file
+    if (Model.GetBackgroundConductivities().empty())
+      {
+        jif3D::rvec Cond(Model.GetConductivities().num_elements());
+        std::copy(Model.GetConductivities().origin(),
+            Model.GetConductivities().origin() + Model.GetConductivities().num_elements(),
+            Cond.begin());
+        std::nth_element(Cond.begin(), Cond.begin() + Cond.size() / 2, Cond.end());
+        double MedCond = Cond(Cond.size() / 2);
+        std::vector<double> bg_thick(2), bg_cond(2, MedCond);
+        bg_thick.at(0) = Model.GetZCoordinates().at(Model.GetZCoordinates().size() - 1);
+        bg_thick.at(1) = bg_thick.at(0);
+        Model.SetBackgroundConductivities(bg_cond);
+        Model.SetBackgroundThicknesses(bg_thick);
+      }
+
 //get the name of the file containing the data and read it in
     std::string datafilename = jif3D::AskFilename("Data Filename: ");
     extension = jif3D::GetFileExtension(datafilename);
 //read in data
-    jif3D::rvec Data, ZError;
-    std::vector<double> XCoord, YCoord, ZCoord, Frequencies, C, RotAngles;
-    std::vector<int> ExIndices, EyIndices, HIndices;
+    jif3D::MTData DataMT;
 
+    DataMT.ReadNetCDF(datafilename);
     if (extension.compare(".dat") == 0)
       {
-        jif3D::ReadImpedancesFromModEM(datafilename, Frequencies, XCoord, YCoord, ZCoord,
-            Data, ZError);
-        jif3D::WriteImpedancesToNetCDF(datafilename + ".nc", Frequencies, XCoord, YCoord,
-            ZCoord, Data, ZError);
+        DataMT.WriteNetCDF("start_data.nc");
       }
     else
       {
-        if (vm.count("titan"))
-          {
-            jif3D::ReadTitanDataFromNetCDF(datafilename, Frequencies, XCoord, YCoord,
-                ZCoord, ExIndices, EyIndices, HIndices, Data, ZError, C, RotAngles);
-            Model.SetFieldIndices(ExIndices, EyIndices, HIndices, HIndices, HIndices);
-            Model.SetRotAngles(RotAngles);
-          }
-        else
-          {
-            jif3D::ReadImpedancesFromNetCDF(datafilename, Frequencies, XCoord, YCoord,
-                ZCoord, Data, ZError, C);
-          }
+        DataMT.WriteModEM("start_data.dat");
       }
-    jif3D::rvec DataError = ZError;
-    jif3D::rvec MinErr(ZError.size());
+    std::vector<double> ZError = DataMT.GetErrors();
+    std::vector<double> DataError = ZError;
+    std::vector<double> MinErr(ZError.size());
     if (vm.count("inderrors"))
       {
-        MinErr = jif3D::ConstructError(Data, ZError, relerr);
+        MinErr = jif3D::ConstructError(DataMT.GetData(), ZError, relerr);
       }
     else
       {
         if (vm.count("rowerrors"))
           {
-            MinErr = jif3D::ConstructMTRowError(Data, relerr);
+            MinErr = jif3D::ConstructMTRowError(DataMT.GetData(), relerr);
           }
         else
           {
-            MinErr = jif3D::ConstructMTError(Data, relerr);
+            MinErr = jif3D::ConstructMTError(DataMT.GetData(), relerr);
           }
       }
 
@@ -266,129 +269,14 @@ int hpx_main(boost::program_options::variables_map& vm)
             << " will cause problem in inversion, exiting " << std::endl;
         return 100;
       }
-    if (extension.compare(".dat") == 0)
-      {
-        if (vm.count("titan"))
-          {
-            jif3D::WriteTitanDataToNetCDF("start_data.nc", Frequencies, XCoord, YCoord,
-                ZCoord, ExIndices, EyIndices, HIndices, Data, ZError);
-          }
-        else
-          {
-            jif3D::WriteImpedancesToNetCDF("start_data.nc", Frequencies, XCoord, YCoord,
-                ZCoord, Data, ZError);
-          }
-      }
-    else
-      {
-        if (vm.count("titan"))
-          {
-            jif3D::WriteTitanDataToModEM("start_data.dat", Frequencies, XCoord, YCoord,
-                ZCoord, ExIndices, Data, ZError);
-          }
-        else
-          {
-            jif3D::WriteImpedancesToModEM("start_data.dat", Frequencies, XCoord, YCoord,
-                ZCoord, Data, ZError);
-          }
-      }
-    //if we have not specified a background in the model file
-    if (Model.GetBackgroundConductivities().empty())
-      {
-        jif3D::rvec Cond(Model.GetConductivities().num_elements());
-        std::copy(Model.GetConductivities().origin(),
-            Model.GetConductivities().origin() + Model.GetConductivities().num_elements(),
-            Cond.begin());
-        std::nth_element(Cond.begin(), Cond.begin() + Cond.size() / 2, Cond.end());
-        double MedCond = Cond(Cond.size() / 2);
-        std::vector<double> bg_thick(2), bg_cond(2, MedCond);
-        bg_thick.at(0) = Model.GetZCoordinates().at(Model.GetZCoordinates().size() - 1);
-        bg_thick.at(1) = bg_thick.at(0);
-        Model.SetBackgroundConductivities(bg_cond);
-        Model.SetBackgroundThicknesses(bg_thick);
-      }
-    std::copy(Frequencies.begin(), Frequencies.end(),
-        std::back_inserter(Model.SetFrequencies()));
+
 //if we don't have data inversion doesn't make sense;
-    if (Data.empty())
+    if (DataMT.GetData().empty())
       {
         std::cerr << "No measurements defined" << std::endl;
         exit(100);
       }
-    for (size_t i = 0; i < XCoord.size(); ++i)
-      {
-        Model.AddMeasurementPoint(XCoord[i], YCoord[i], ZCoord[i]);
-      }
 
-    jif3D::rvec FirstFreq(XCoord.size());
-    if (vm.count("titan"))
-      {
-
-        const size_t nstats = ExIndices.size() / Frequencies.size();
-        std::vector<double> tmpx, tmpy, tmpz;
-
-        for (unsigned int i = 0; i < nstats; ++i)
-          {
-            tmpx.push_back(XCoord[ExIndices[i]]);
-            tmpy.push_back(YCoord[ExIndices[i]]);
-            tmpz.push_back(ZCoord[ExIndices[i]]);
-          }
-
-        FirstFreq.resize(tmpx.size());
-        std::iota(FirstFreq.begin(), FirstFreq.end(), 1);
-        jif3D::Write3DDataToVTK(datafilename + "_Ex.vtk", "ExSites", FirstFreq, tmpx,
-            tmpy, tmpz);
-
-        tmpx.clear();
-        tmpy.clear();
-        tmpz.clear();
-
-        for (unsigned int i = 0; i < nstats; ++i)
-          {
-            tmpx.push_back(XCoord[EyIndices[i]]);
-            tmpy.push_back(YCoord[EyIndices[i]]);
-            tmpz.push_back(ZCoord[EyIndices[i]]);
-          }
-
-        FirstFreq.resize(tmpx.size());
-        std::iota(FirstFreq.begin(), FirstFreq.end(), 1);
-        jif3D::Write3DDataToVTK(datafilename + "_Ey.vtk", "EySites", FirstFreq, tmpx,
-            tmpy, tmpz);
-
-        tmpx.clear();
-        tmpy.clear();
-        tmpz.clear();
-
-        for (unsigned int i = 0; i < nstats; ++i)
-          {
-            tmpx.push_back(XCoord[HIndices[i]]);
-            tmpy.push_back(YCoord[HIndices[i]]);
-            tmpz.push_back(ZCoord[HIndices[i]]);
-          }
-
-        FirstFreq.resize(tmpx.size());
-        std::iota(FirstFreq.begin(), FirstFreq.end(), 1);
-        jif3D::Write3DDataToVTK(datafilename + "_H.vtk", "HSites", FirstFreq, tmpx, tmpy,
-            tmpz);
-
-      }
-    else
-      {
-        std::iota(FirstFreq.begin(), FirstFreq.end(), 1);
-        //std::copy(Data.begin(), Data.begin() + XCoord.size(), FirstFreq.begin());
-
-        jif3D::Write3DDataToVTK(datafilename + ".vtk", "MTSites", FirstFreq, XCoord,
-            YCoord, ZCoord);
-      }
-    std::vector<double> angles = Model.GetRotAngles();
-
-    if (angles.empty())
-      {
-        angles.resize(Model.GetMeasPosX().size());
-        std::fill(angles.begin(),angles.end(),0.0);
-        Model.SetRotAngles(angles);
-      }
-    Model.SetDistortionParameters(C);
 //we define a few constants that are used throughout the inversion
 //    const size_t ndata = Data.size(); // unused
 
@@ -422,34 +310,12 @@ int hpx_main(boost::program_options::variables_map& vm)
         WriteModel.WriteVTK("cov.vtk");
       }
 
+    std::vector<double> C = DataMT.GetDistortion();
+
+    bool WantDistCorr = (DistCorr > 0);
     //if we want to correct for distortion within the inversion
-    if (DistCorr > 0)
+    if (WantDistCorr)
       {
-        //if we did not read distortion values together with the
-        //observed data, we set the distortion matrix C at each site
-        // to identity matrix
-        if (C.empty())
-          {
-            size_t nstats;
-            if (vm.count("titan"))
-              {
-                nstats = ExIndices.size() / Frequencies.size();
-              }
-            else
-              {
-                nstats = XCoord.size();
-              }
-
-            C.resize(nstats * 4);
-
-            for (size_t i = 0; i < nstats; ++i)
-              {
-                C[i * 4] = 1.0;
-                C[i * 4 + 1] = 0.0;
-                C[i * 4 + 2] = 0.0;
-                C[i * 4 + 3] = 1.0;
-              }
-          }
         //we need to expand the model vector to hold the
         //elements of the distortion matrix
         jif3D::rvec Grid(InvModel);
@@ -498,17 +364,16 @@ int hpx_main(boost::program_options::variables_map& vm)
             jif3D::JointObjective::coupling);
       }
 
-    auto TipperTransform = boost::shared_ptr<jif3D::MultiSectionTransform>(MTTransform->clone());
-    if (DistCorr > 0)
+    auto TipperTransform = boost::shared_ptr<jif3D::MultiSectionTransform>(
+        MTTransform->clone());
+    if (WantDistCorr)
       {
-        MTTransform->AddSection(ngrid, ngrid + C.size(), Copier);
-        MTTransform->SetLength(ngrid + C.size());
+        MTTransform->AddSection(ngrid, ngrid + DataMT.GetDistortion().size(), Copier);
+        MTTransform->SetLength(ngrid + DataMT.GetDistortion().size());
       }
 
-    bool WantDistCorr = (DistCorr > 0);
-
     std::vector<boost::shared_ptr<jif3D::X3DFieldCalculator> > FC;
-    FC.resize(Model.GetFrequencies().size());
+    FC.resize(DataMT.GetFrequencies().size());
     for (auto &fieldc : FC)
       {
         fieldc = boost::make_shared<jif3D::X3DFieldCalculator>(TempDir, X3DName);
@@ -524,17 +389,18 @@ int hpx_main(boost::program_options::variables_map& vm)
     if (vm.count("rhophi"))
       {
         X3DObjective->SetDataTransform(boost::make_shared<jif3D::ComplexLogTransform>());
-        std::transform(ZError.begin(), ZError.end(), Data.begin(), ZError.begin(),
+        std::transform(ZError.begin(), ZError.end(), DataMT.GetData().begin(),
+            ZError.begin(),
             [](double err, double dat)
               { return err/std::max(std::numeric_limits<double>::epsilon(),std::abs(dat));});
       }
-    X3DObjective->SetObservedData(Data);
+    X3DObjective->SetObservedData(DataMT);
     X3DObjective->SetCoarseModelGeometry(Model);
 
 //create objects for the misfit and error estimates
     if (vm.count("mtinvcovar"))
       {
-        jif3D::comp_mat InvCov(Data.size(), Data.size());
+        jif3D::comp_mat InvCov(DataMT.GetData().size(), DataMT.GetData().size());
         jif3D::ReadSparseMatrixFromNetcdf(MTInvCovarName, InvCov, "InvCovariance");
         X3DObjective->SetInvCovMat(InvCov);
       }
@@ -548,47 +414,46 @@ int hpx_main(boost::program_options::variables_map& vm)
         Objective->AddObjective(X3DObjective, MTTransform, MTWeight, "MT",
             jif3D::JointObjective::datafit);
       }
+    jif3D::TipperData DataTip;
+
     jif3D::X3DTipperCalculator TipCalc(TempDir, X3DName, true, FC);
     boost::shared_ptr<jif3D::ThreeDModelObjective<jif3D::X3DTipperCalculator> > TipperObjective(
         new jif3D::ThreeDModelObjective<jif3D::X3DTipperCalculator>(TipCalc));
     if (vm.count("tipperdata"))
       {
 
-        jif3D::rvec TipperData, TError;
         std::string tipext = jif3D::GetFileExtension(TipperName);
         if (tipext == ".nc")
           {
-            jif3D::ReadTipperFromNetCDF(TipperName, Frequencies, XCoord, YCoord, ZCoord,
-                TipperData, TError);
-            jif3D::WriteTipperToModEM(TipperName + ".dat", Frequencies, XCoord, YCoord,
-                ZCoord, TipperData, TError);
+            DataTip.ReadNetCDF(TipperName);
           }
         else
           {
-            jif3D::ReadTipperFromModEM(TipperName, Frequencies, XCoord, YCoord, ZCoord,
-                TipperData, TError);
-            jif3D::WriteTipperToNetCDF(TipperName + ".nc", Frequencies, XCoord, YCoord,
-                ZCoord, TipperData, TError);
+            DataTip.ReadModEM(TipperName);
           }
-        size_t ntip = TipperData.size();
+        size_t ntip = DataTip.GetData().size();
         jif3D::rvec TE(ntip, 0.0);
+        std::vector<double> TError = DataTip.GetErrors();
         for (size_t i = 0; i < ntip / 4; ++i)
           {
             double abs_re = std::sqrt(
-                std::pow(TipperData(4 * i), 2) + std::pow(TipperData(4 * i + 2), 2));
+                std::pow(DataTip.GetData().at(4 * i), 2)
+                    + std::pow(DataTip.GetData().at(4 * i + 2), 2));
             double abs_im = std::sqrt(
-                std::pow(TipperData(4 * i + 1), 2) + std::pow(TipperData(4 * i + 3), 2));
-            TE(4 * i) = std::max(std::max(abs_re * tiprelerr, TError(4 * i)),
-                TError(4 * i + 2));
+                std::pow(DataTip.GetData().at(4 * i + 1), 2)
+                    + std::pow(DataTip.GetData().at(4 * i + 3), 2));
+            TE(4 * i) = std::max(std::max(abs_re * tiprelerr, TError.at(4 * i)),
+                TError.at(4 * i + 2));
             TE(4 * i + 2) = TE(4 * i);
-            TE(4 * i + 1) = std::max(std::max(abs_im * tiprelerr, TError(4 * i)),
-                TError(4 * i + 2));
+            TE(4 * i + 1) = std::max(std::max(abs_im * tiprelerr, TError.at(4 * i)),
+                TError.at(4 * i + 2));
             TE(4 * i + 3) = TE(4 * i + 1);
           }
-        TError = TE;
+        std::copy(TE.begin(), TE.end(), TError.begin());
+
         std::transform(TError.begin(), TError.end(), TError.begin(), [](double a)
           { return std::max(a,tipperr);});
-        TipperObjective->SetObservedData(TipperData);
+        TipperObjective->SetObservedData(DataTip);
         TipperObjective->SetCoarseModelGeometry(Model);
         TipperObjective->SetDataError(TError);
         Objective->AddObjective(TipperObjective, TipperTransform, TipperWeight, "Tipper",
@@ -603,15 +468,7 @@ int hpx_main(boost::program_options::variables_map& vm)
 
     if (DistCorr > 0)
       {
-        size_t nstats;
-        if (vm.count("titan"))
-          {
-            nstats = ExIndices.size() / Frequencies.size();
-          }
-        else
-          {
-            nstats = XCoord.size();
-          }
+        size_t nstats = DataMT.GetExIndices().size() / DataMT.GetFrequencies().size();
         jif3D::rvec CRef(nstats * 4);
 
         for (size_t i = 0; i < nstats; ++i)
@@ -711,19 +568,9 @@ int hpx_main(boost::program_options::variables_map& vm)
               {
                 std::copy(DistModel.begin() + Model.GetNModelElements(),
                     DistModel.begin() + Model.GetNModelElements() + C.size(), C.begin());
-                if (vm.count("titan"))
-                  {
-                    jif3D::WriteTitanDataToNetCDF(
-                        modelfilename + jif3D::stringify(iteration) + ".dist_imp.nc",
-                        Frequencies, XCoord, YCoord, ZCoord, ExIndices, EyIndices,
-                        HIndices, Data, ZError, C, RotAngles);
-                  }
-                else
-                  {
-                    jif3D::WriteImpedancesToNetCDF(
-                        modelfilename + jif3D::stringify(iteration) + ".dist_imp.nc",
-                        Frequencies, XCoord, YCoord, ZCoord, Data, ZError, C);
-                  }
+                DataMT.SetDistortion(C);
+                DataMT.WriteNetCDF(
+                    modelfilename + jif3D::stringify(iteration) + ".dist_imp.nc");
               }
             std::cout << "Currrent Misfit: " << Optimizer->GetMisfit() << std::endl;
             std::cout << "Currrent Gradient: " << Optimizer->GetGradNorm() << std::endl;
@@ -776,48 +623,34 @@ int hpx_main(boost::program_options::variables_map& vm)
         InvModel.begin() + Model.GetConductivities().num_elements(),
         Model.SetConductivities().origin());
     std::copy(InvModel.begin() + Model.GetNModelElements(), InvModel.end(), C.begin());
-
-    Model.SetDistortionParameters(C);
 //calculate the predicted data
     std::cout << "Calculating response of inversion model." << std::endl;
 
-    if (vm.count("titan"))
+    if (MTWeight > 0.0)
       {
-        jif3D::WriteTitanDataToNetCDF(modelfilename + ".inv_imp.nc", Frequencies, XCoord,
-            YCoord, ZCoord, ExIndices, EyIndices, HIndices,
-            X3DObjective->GetSyntheticData(), X3DObjective->GetDataError(), C, RotAngles);
-        jif3D::WriteTitanDataToNetCDF(modelfilename + ".dist_imp.nc", Frequencies, XCoord,
-            YCoord, ZCoord, ExIndices, EyIndices, HIndices,
-            X3DObjective->GetObservedData(), ZError, C, RotAngles);
-        jif3D::WriteTitanDataToNetCDF(modelfilename + ".diff_imp.nc", Frequencies, XCoord,
-            YCoord, ZCoord, ExIndices, EyIndices, HIndices,
-            X3DObjective->GetIndividualMisfit());
-      }
-    else
-      {
-        if (MTWeight > 0.0)
-          {
-            jif3D::WriteImpedancesToNetCDF(modelfilename + ".inv_imp.nc", Frequencies,
-                XCoord, YCoord, ZCoord, X3DObjective->GetSyntheticData(),
-                X3DObjective->GetDataError(), C);
-            jif3D::WriteImpedancesToNetCDF(modelfilename + ".dist_imp.nc", Frequencies,
-                XCoord, YCoord, ZCoord, X3DObjective->GetObservedData(), DataError, C);
-            jif3D::WriteImpedancesToNetCDF(modelfilename + ".diff_imp.nc", Frequencies,
-                XCoord, YCoord, ZCoord, X3DObjective->GetIndividualMisfit());
-          }
+        DataMT.SetDistortion(C);
+        DataMT.WriteNetCDF(modelfilename + ".dist_imp.nc");
+        std::vector<double> SData(X3DObjective->GetSyntheticData().begin(),
+            X3DObjective->GetSyntheticData().end());
+        DataMT.SetDataAndErrors(SData, X3DObjective->GetDataError());
+        DataMT.WriteNetCDF(modelfilename + ".inv_imp.nc");
+        std::vector<double> Misfit(X3DObjective->GetIndividualMisfit().begin(),
+            X3DObjective->GetIndividualMisfit().end());
+        DataMT.SetDataAndErrors(Misfit, X3DObjective->GetDataError());
+        DataMT.WriteNetCDF(modelfilename + ".diff_imp.nc");
       }
 
     if (vm.count("tipperdata"))
       {
-        jif3D::WriteTipperToNetCDF(modelfilename + ".inv_tip.nc", Frequencies, XCoord,
-            YCoord, ZCoord, TipperObjective->GetSyntheticData(),
-            TipperObjective->GetDataError());
-        jif3D::WriteTipperToModEM(modelfilename + ".inv_tip.dat", Frequencies, XCoord,
-            YCoord, ZCoord, TipperObjective->GetSyntheticData(),
-            TipperObjective->GetDataError());
-        jif3D::WriteTipperToNetCDF(modelfilename + ".diff_tip.nc", Frequencies, XCoord,
-            YCoord, ZCoord, TipperObjective->GetIndividualMisfit(),
-            TipperObjective->GetDataError());
+        std::vector<double> STipper(TipperObjective->GetSyntheticData().begin(),
+            TipperObjective->GetSyntheticData().end());
+        std::vector<double> TippE = TipperObjective->GetDataError();
+        DataTip.SetDataAndErrors(STipper, TippE);
+        DataTip.WriteNetCDF(modelfilename + ".inv_tip.nc");
+        std::vector<double> TippFit(TipperObjective->GetIndividualMisfit().begin(),
+            TipperObjective->GetIndividualMisfit().end());
+        DataTip.SetDataAndErrors(TippFit, TippE);
+        DataTip.WriteNetCDF(modelfilename + ".diff_tip.nc");
 
       }
 //and write out the data and model

@@ -8,12 +8,13 @@
 #ifndef TOMOGRAPHYCALCULATOR_H_
 #define TOMOGRAPHYCALCULATOR_H_
 
+#include "../Tomo/tomo_types.h"
+#include "../Tomo/ThreeDSeismicModel.h"
+#include "../Tomo/TomographyData.h"
 #include "../Global/Serialization.h"
 #include "../Global/VecMat.h"
 #include "../Global/Jif3DGlobal.h"
 #include "../Global/VectorTransform.h"
-#include "ThreeDSeismicModel.h"
-#include "tomo_types.h"
 
 namespace jif3D
   {
@@ -30,6 +31,8 @@ namespace jif3D
     public:
       //! This type definition is necessary so that ThreeDModelObjective can correctly deduce the native type for a model object for this class
       typedef ThreeDSeismicModel ModelType;
+      typedef TomographyData DataType;
+
     private:
       //! Internally we only calculate traveltime in the area where we have sources and receivers, this is the shift between the model and the internal grid in x-direction
       int minxindex;
@@ -84,7 +87,7 @@ namespace jif3D
        * @param Model The object containing the slowness distribution and measurement setup
        * @return The calculated travel times
        */
-      rvec Calculate(const ModelType &Model);
+      rvec Calculate(const ModelType &Model, const jif3D::TomographyData &Data);
       //! Calculate the least-square derivative for the given model and data difference
       /*! For inversion we need the derivative of a least-squares objective function
        * with respect to the model parameters.
@@ -92,7 +95,7 @@ namespace jif3D
        * @param Misfit The difference between observed and calculated data
        * @return The partial derivatives with respect to each model parameter
        */
-      rvec LQDerivative(const ModelType &Model, const rvec &Misfit);
+      rvec LQDerivative(const ModelType &Model, const jif3D::TomographyData &Data, const rvec &Misfit);
       };
   /* @} */
   }

@@ -90,8 +90,8 @@ namespace jif3D
         const std::vector<double> &Frequencies, const std::vector<double> &MeasXCoord,
         const std::vector<double> &MeasYCoord, const std::vector<double> &MeasZCoord,
         const std::vector<int> &ExIndices, const std::vector<int> &EyIndices,
-        const std::vector<int> &HIndices, const jif3D::rvec &Impedances,
-        const jif3D::rvec &Errors, const std::vector<double> &Distortion,
+        const std::vector<int> &HIndices, const std::vector<double> &Impedances,
+        const std::vector<double> &Errors, const std::vector<double> &Distortion,
         const std::vector<double> &RotAngles)
       {
         const size_t nmeas = MeasXCoord.size();
@@ -142,7 +142,7 @@ namespace jif3D
         WriteImpedanceComp(DataFile, StatNumDim, FreqDim, Impedances, "Zyy_im", 7);
         //now we deal with the errors, if no parameter has been explicitly passed
         //Errors is empty, so we just fill the vector with zeros
-        jif3D::rvec ZErr(Errors);
+        std::vector<double> ZErr(Errors);
         if (ZErr.empty())
           {
             ZErr.resize(nimp);
@@ -184,8 +184,9 @@ namespace jif3D
         std::vector<double> &Frequencies, std::vector<double> &MeasXCoord,
         std::vector<double> &MeasYCoord, std::vector<double> &MeasZCoord,
         std::vector<int> &ExIndices, std::vector<int> &EyIndices,
-        std::vector<int> &HIndices, jif3D::rvec &Impedances, jif3D::rvec &ImpError,
-        std::vector<double> &Distortion, std::vector<double> &RotAngles)
+        std::vector<int> &HIndices, std::vector<double> &Impedances,
+        std::vector<double> &ImpError, std::vector<double> &Distortion,
+        std::vector<double> &RotAngles)
       {
         //open the netcdf file readonly
         NcFile DataFile(filename, NcFile::read);
@@ -200,10 +201,37 @@ namespace jif3D
         ReadTitanTFIndices(DataFile, EyIndices, EyIndicesName, false);
         ReadTitanTFIndices(DataFile, HIndices, HIndicesName, false);
 
+        if (EyIndices.size() != ExIndices.size() || HIndices.size() != ExIndices.size())
+          {
+            throw jif3D::FatalException("Inconsistent index informationfor Titan Data",
+            __FILE__, __LINE__);
+          }
+
+        const size_t nmeas = MeasXCoord.size();
+        const size_t nfreq = Frequencies.size();
+        size_t ind_shift = 0;
+        if (ExIndices.empty())
+          {
+            ExIndices.resize(nmeas * nfreq);
+            EyIndices.resize(nmeas * nfreq);
+            HIndices.resize(nmeas * nfreq);
+            for (int ifr = 0; ifr < nfreq; ++ifr)
+              {
+                ind_shift = nmeas * ifr;
+                for (size_t i = 0; i < nmeas; ++i)
+                  {
+                    ExIndices[i + ind_shift] = i;
+                  }
+              }
+            EyIndices = ExIndices;
+            HIndices = ExIndices;
+          }
+
         //for each frequency and each data index we have 4 titan transfer function elements
         //currently it is not possible to have a different number of frequencies
         //at each site
-        const size_t nimp = ExIndices.size() * 8;
+        const size_t nindex = ExIndices.size();
+        const size_t nimp = nindex * 8;
 
         Impedances.resize(nimp);
         ImpError.resize(nimp);
@@ -225,7 +253,7 @@ namespace jif3D
         //and then assign the same error to the imaginary part
         for (size_t i = 0; i < nimp - 1; i += 2)
           {
-            ImpError(i + 1) = ImpError(i);
+            ImpError.at(i + 1) = ImpError.at(i);
           }
 
         const int nstats = ExIndices.size() / Frequencies.size();

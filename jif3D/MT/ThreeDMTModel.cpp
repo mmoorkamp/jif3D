@@ -7,12 +7,27 @@
 
 #include "ThreeDMTModel.h"
 #include <fstream>
+#include "MTData.h"
+#include "TipperData.h"
 
 namespace jif3D
   {
 
-    ThreeDMTModel::ThreeDMTModel() :
-        Frequencies()
+    void MTDistortionSetter::operator()(ThreeDMTModel &Model, MTData &Data,
+        const std::vector<double> &Dist)
+      {
+        Data.SetDistortion(Dist);
+        // Model.SetDistortionParameters(Dist);
+      }
+
+    void MTDistortionSetter::operator()(ThreeDMTModel &Model, TipperData &Data,
+        const std::vector<double> &Dist)
+      {
+        throw jif3D::FatalException("Cannot have extra inversion parameters with Tipper",
+            __FILE__, __LINE__);
+      }
+
+    ThreeDMTModel::ThreeDMTModel()
       {
 
       }
@@ -20,26 +35,6 @@ namespace jif3D
     ThreeDMTModel::~ThreeDMTModel()
       {
 
-      }
-
-    ThreeDMTModel::ThreeDMTModel(const ThreeDMTModel &source) :
-        ThreeDModelBase(source), Frequencies(source.Frequencies)
-      {
-
-      }
-
-    ThreeDMTModel& ThreeDMTModel::operator=(const ThreeDMTModel& source)
-      {
-        if (&source != this)
-          {
-            //apart from copying the contents of the base class
-            //we have to copy the vector of frequencies which
-            //is the only additional data in this class
-            ThreeDModelBase::operator=(source);
-            DistortionParameters = source.DistortionParameters;
-            Frequencies = source.Frequencies;
-          }
-        return *this;
       }
 
     ThreeDMTModel& ThreeDMTModel::operator=(const ThreeDModelBase& source)
@@ -87,7 +82,8 @@ namespace jif3D
               }
             outfile << "\n\n";
           }
-        outfile << "\n  " << GetXCoordinates()[0] << " " << GetYCoordinates()[0] << " " << GetZCoordinates()[0] << "\n 0.0 \n";
+        outfile << "\n  " << GetXCoordinates()[0] << " " << GetYCoordinates()[0] << " "
+            << GetZCoordinates()[0] << "\n 0.0 \n";
       }
 
     void ThreeDMTModel::ReadModEM(const std::string filename)
@@ -123,6 +119,6 @@ namespace jif3D
         SetZCellSizes(ZCS);
         double XOrigin, YOrigin, ZOrigin;
         infile >> XOrigin >> YOrigin >> ZOrigin;
-        SetOrigin(XOrigin,YOrigin,ZOrigin);
+        SetOrigin(XOrigin, YOrigin, ZOrigin);
       }
   }

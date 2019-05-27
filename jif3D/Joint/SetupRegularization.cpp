@@ -182,7 +182,7 @@ namespace jif3D
             ublas::subrange(Cov, 0, ngrid) = CovModVec;
             ublas::subrange(Cov, ngrid, 2 * ngrid) = CovModVec;
             ublas::subrange(Cov, 2 * ngrid, 3 * ngrid) = CovModVec;
-            Regularization->SetDataError(Cov);
+            Regularization->SetDataError(std::vector<double>(Cov.begin(),Cov.end()));
           }
 
         //we can directly use the values for the weights without checking

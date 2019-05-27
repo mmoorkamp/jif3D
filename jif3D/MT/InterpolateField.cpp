@@ -21,19 +21,19 @@ namespace jif3D
      * @return Interpolated field value at the measurement site
      */
     std::complex<double> InterpolateField(std::vector<std::complex<double> > &Field,
-        const X3DModel &Model, size_t MeasIndex,
+        const X3DModel &Model,  const EMData &Data,size_t MeasIndex,
         const std::vector<size_t> &MeasDepthIndices)
       {
         const int nmodx = Model.GetConductivities().shape()[0];
         const int nmody = Model.GetConductivities().shape()[1];
         //get the coordinates of the measurement site of interest
-        double MeasPosX = Model.GetMeasPosX()[MeasIndex];
-        double MeasPosY = Model.GetMeasPosY()[MeasIndex];
+        double MeasPosX = Data.GetMeasPosX()[MeasIndex];
+        double MeasPosY = Data.GetMeasPosY()[MeasIndex];
         //where are we in the model grid, we need the indices of the cell
         //in which the site is located
         boost::array<ThreeDModelBase::t3DModelData::index, 3> StationIndex =
             Model.FindAssociatedIndices(MeasPosX, MeasPosY,
-                Model.GetMeasPosZ()[MeasIndex]);
+                Data.GetMeasPosZ()[MeasIndex]);
         //get the position of the cell center
         double CellCenterX = Model.GetXCoordinates()[StationIndex[0]]
             + Model.GetXCellSizes()[StationIndex[0]] / 2.0;

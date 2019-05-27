@@ -6,6 +6,7 @@
 //============================================================================
 
 #include "../Tomo/ReadWriteTomographyData.h"
+#include "../Tomo/TomographyData.h"
 #include "../Global/FileUtil.h"
 #include "../Global/Noise.h"
 #include "SetupTomo.h"
@@ -44,7 +45,7 @@ namespace jif3D
         boost::shared_ptr<jif3D::GeneralModelTransform> Transform, double xorigin,
         double yorigin)
       {
-        jif3D::rvec TomoData;
+        jif3D::TomographyData TomoData;
 
         tomolambda = 1.0;
         if (!vm.count("tomolamda"))
@@ -73,8 +74,8 @@ namespace jif3D
                 datafilename = jif3D::AskFilename("Tomography Data Filename: ");
               }
             //read in data
-            jif3D::rvec TomoError;
-            jif3D::ReadTraveltimes(datafilename, TomoData, TomoError, TomoModel);
+            TomoData.ReadNetCDF(datafilename);
+
             if (xorigin != 0.0 || yorigin != 0.0)
               {
                 TomoModel.SetOrigin(xorigin, yorigin, 0.0);
@@ -94,7 +95,7 @@ namespace jif3D
             //we assume the same error for all measurements
             //this is either the default value set in the constructor
             //or set by the user
-            TomoError = ConstructError(TomoData, TomoError, 0.0, pickerr);
+            std::vector<double> TomoError = ConstructError(TomoData.GetData(), TomoData.GetErrors(), 0.0, pickerr);
             TomoObjective->SetDataError(TomoError);
 
             if (vm.count("tomofine") && CellSize > 0.0)
@@ -134,12 +135,11 @@ namespace jif3D
                 std::cout << "Refined Model has " << nx << " * " << ny << " * " << nz
                     << "cells\n";
                 //copy measurement configuration to refined model
-                TomoFineGeometry.CopyMeasurementConfigurations(TomoModel);
                 TomoObjective->SetFineModelGeometry(TomoFineGeometry);
               }
             Objective.AddObjective(TomoObjective, Transform, tomolambda, "Tomo",
                 JointObjective::datafit);
-            std::cout << "Tomo ndata: " << TomoData.size() << std::endl;
+            std::cout << "Tomo ndata: " << TomoData.GetData().size() << std::endl;
             std::cout << "Tomo lambda: " << tomolambda << std::endl;
           }
         //indicate whether we added a tomography objective

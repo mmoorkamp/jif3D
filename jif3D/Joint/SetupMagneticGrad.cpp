@@ -62,7 +62,7 @@ namespace jif3D
             wantcuda = true;
           }
 
-        jif3D::rvec MagData, MagError;
+        jif3D::MagneticData MagData;
         double maglambda = 1.0;
 
         //we first ask for the weights for scalar and tensor Magnetics
@@ -70,25 +70,16 @@ namespace jif3D
         std::cout << "Magnetics Lambda: ";
         std::cin >> maglambda;
 
-        jif3D::ThreeDMagneticModel::tMeasPosVec PosX, PosY, PosZ;
-
         //if the weight is different from zero
         //we have to read in scalar Magnetics data
         if (maglambda > 0.0)
           {
             std::string magdatafilename = jif3D::AskFilename(
                 "Z Component vertical gradient field magnetic Data Filename: ");
-            jif3D::ReadTotalFieldMagneticMeasurements(magdatafilename, MagData, PosX,
-                PosY, PosZ, MagError);
+            MagData.ReadNetCDF(magdatafilename);
             std::string magmodelfilename = jif3D::AskFilename(
                 "Magnetics Model Filename: ");
             Model.ReadNetCDF(magmodelfilename);
-            Model.ClearMeasurementPoints();
-
-            for (size_t i = 0; i < PosX.size(); ++i)
-              {
-                Model.AddMeasurementPoint(PosX.at(i), PosY.at(i), PosZ.at(i));
-              }
             if (xorigin != 0.0 || yorigin != 0.0)
               {
                 Model.SetOrigin(xorigin, yorigin, 0.0);
@@ -104,7 +95,7 @@ namespace jif3D
             //the factory function cannot perform this, so we
             //have to assemble the calculator object ourselves
             boost::shared_ptr<
-                jif3D::ThreeDGravMagImplementation<jif3D::ThreeDMagneticModel> > Implementation;
+                jif3D::ThreeDGravMagImplementation<jif3D::MagneticData> > Implementation;
             if (wantcuda)
               {
                 throw jif3D::FatalException("No GPU support, yet !", __FILE__, __LINE__);
@@ -112,7 +103,7 @@ namespace jif3D
             else
               {
                 Implementation = boost::shared_ptr<
-                    jif3D::ThreeDGravMagImplementation<jif3D::ThreeDMagneticModel> >(
+                    jif3D::ThreeDGravMagImplementation<jif3D::MagneticData> >(
                     new jif3D::OMPMagneticGradImp(inclination, declination,
                         fieldstrength));
               }
@@ -124,12 +115,12 @@ namespace jif3D
                     new jif3D::ThreeDModelObjective<CalculatorType>(*Calculator));
             MagObjective->SetObservedData(MagData);
             MagObjective->SetCoarseModelGeometry(Model);
-            jif3D::rvec Error(jif3D::ConstructError(MagData, MagError, relerr, minerr));
+            std::vector<double> Error(jif3D::ConstructError(MagData.GetData(), MagData.GetErrors(), relerr, minerr));
             MagObjective->SetDataError(Error);
 
             Objective.AddObjective(MagObjective, Transform, maglambda,
                 "Magnetic Gradient", JointObjective::datafit);
-            std::cout << " Magnetic gradient ndata: " << MagData.size() << std::endl;
+            std::cout << " Magnetic gradient ndata: " << MagData.GetData().size() << std::endl;
             std::cout << " Magnetic gradient lambda: " << maglambda << std::endl;
           }
 

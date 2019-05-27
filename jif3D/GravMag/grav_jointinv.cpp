@@ -26,9 +26,12 @@
 #include "../GravMag/MinMemGravMagCalculator.h"
 #include "../Gravity/DepthWeighting.h"
 #include "../Gravity/ThreeDGravityFactory.h"
+#include "../Gravity/ScalarGravityData.h"
+#include "../Gravity/TensorGravityData.h"
 #include "../Magnetics/OMPMagneticImp.h"
 #include "../Magnetics/ReadWriteMagneticData.h"
 #include "../Magnetics/MagneticTransforms.h"
+#include "../Magnetics/MagneticData.h"
 #include "../Joint/SetupRegularization.h"
 #include "../Joint/SetupInversion.h"
 #include "../Joint/SetupGravity.h"
@@ -157,10 +160,10 @@ int main(int argc, char *argv[])
 
     if (vm.count("magdepth"))
       {
-        boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::ThreeDMagneticModel> > Implementation(
+        boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::MagneticData> > Implementation(
             new jif3D::OMPMagneticImp(MagneticsSetup.GetInclination(),
                 MagneticsSetup.GetDeclination(), MagneticsSetup.GetFielStrength()));
-        jif3D::FullSensitivityGravMagCalculator<jif3D::ThreeDMagneticModel> FullCalc(
+        jif3D::FullSensitivityGravMagCalculator<jif3D::MagneticData> FullCalc(
             Implementation);
         FullCalc.SetDataTransform(
             boost::shared_ptr<jif3D::TotalFieldAnomaly>(
@@ -201,9 +204,9 @@ int main(int argc, char *argv[])
     if (vm.count("gravdepth"))
       {
 
-        boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::ThreeDGravityModel> > Implementation(
+        boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::ScalarGravityData> > Implementation(
             new jif3D::ScalarOMPGravityImp);
-        jif3D::FullSensitivityGravMagCalculator<jif3D::ThreeDGravityModel> FullCalc(
+        jif3D::FullSensitivityGravMagCalculator<jif3D::ScalarGravityData> FullCalc(
             Implementation);
 
         std::cout << "Calculating depth weighting." << std::endl;
@@ -212,8 +215,7 @@ int main(int argc, char *argv[])
         //we find a measurement site close to the centre of the model and extract the
         //sensitivity variation with depth
         jif3D::rmat Sens;
-        jif3D::CalculateMiddleSens(GravitySetup.GetScalModel(), FullCalc,
-            SensProfile);
+        jif3D::CalculateMiddleSens(GravitySetup.GetScalModel(), FullCalc, SensProfile);
 
         double DepthExponent = -2.0;
         //we fit a curve of the form 1/(z+z0)^n to the extracted sensitivities
@@ -345,48 +347,57 @@ int main(int argc, char *argv[])
 
     //calculate the predicted data
     std::cout << "Calculating response of inversion model." << std::endl;
-    typedef typename jif3D::MinMemGravMagCalculator<jif3D::ThreeDGravityModel> GravCalculatorType;
-    typedef typename jif3D::MinMemGravMagCalculator<jif3D::ThreeDMagneticModel> MagCalculatorType;
+    typedef typename jif3D::MinMemGravMagCalculator<jif3D::ScalarGravityData> ScalGravCalculatorType;
+    typedef typename jif3D::MinMemGravMagCalculator<jif3D::TensorGravityData> TensGravCalculatorType;
+    typedef typename jif3D::MinMemGravMagCalculator<jif3D::MagneticData> MagCalculatorType;
     if (GravitySetup.GetHaveScal())
       {
+        auto ObsData = GravitySetup.GetScalGravObjective().GetObservedData();
         std::copy(DensInvModel.begin(), DensInvModel.begin() + ngrid,
             GravModel.SetDensities().origin());
-        boost::shared_ptr<GravCalculatorType> ScalGravityCalculator = boost::shared_ptr<
-            GravCalculatorType>(
-            jif3D::CreateGravityCalculator<GravCalculatorType>::MakeScalar());
-        jif3D::rvec GravInvData(ScalGravityCalculator->Calculate(GravModel));
-        jif3D::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc", GravInvData,
-            GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ(),
+        boost::shared_ptr<ScalGravCalculatorType> ScalGravityCalculator =
+            boost::shared_ptr<ScalGravCalculatorType>(
+                jif3D::CreateGravityCalculator<ScalGravCalculatorType>::MakeScalar());
+        jif3D::rvec GravInvData(ScalGravityCalculator->Calculate(GravModel, ObsData));
+
+        jif3D::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc",
+            std::vector<double>(GravInvData.begin(), GravInvData.end()),
+            ObsData.GetMeasPosX(), ObsData.GetMeasPosY(), ObsData.GetMeasPosZ(),
             GravitySetup.GetScalGravObjective().GetDataError());
         jif3D::Write3DDataToVTK(modelfilename + ".inv_sgd.vtk", "grav_accel", GravInvData,
-            GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ());
+            ObsData.GetMeasPosX(), ObsData.GetMeasPosY(), ObsData.GetMeasPosZ());
       }
     if (GravitySetup.GetHaveFTG())
       {
         std::copy(DensInvModel.begin(), DensInvModel.begin() + ngrid,
             GravModel.SetDensities().origin());
-        boost::shared_ptr<GravCalculatorType> FTGGravityCalculator = boost::shared_ptr<
-            GravCalculatorType>(
-            jif3D::CreateGravityCalculator<GravCalculatorType>::MakeTensor());
-        jif3D::rvec FTGInvData(FTGGravityCalculator->Calculate(GravModel));
-        jif3D::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc", FTGInvData,
-            GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ(),
-            GravitySetup.GetFTGObjective().GetDataError());
+        auto ObsData = GravitySetup.GetFTGObjective().GetObservedData();
+        boost::shared_ptr<TensGravCalculatorType> FTGGravityCalculator =
+            boost::shared_ptr<TensGravCalculatorType>(
+                jif3D::CreateGravityCalculator<TensGravCalculatorType>::MakeTensor());
+        jif3D::rvec FTGInvData(FTGGravityCalculator->Calculate(GravModel, ObsData));
+        jif3D::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc",
+            std::vector<double>(FTGInvData.begin(), FTGInvData.end()),
+            ObsData.GetMeasPosX(), ObsData.GetMeasPosY(), ObsData.GetMeasPosZ(),
+            GravitySetup.GetScalGravObjective().GetDataError());
         jif3D::Write3DTensorDataToVTK(modelfilename + ".inv_ftg.vtk", "U", FTGInvData,
-            GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ());
+            ObsData.GetMeasPosX(), ObsData.GetMeasPosY(), ObsData.GetMeasPosZ());
       }
 
     if (HaveMag)
       {
         std::copy(MagInvModel.begin(), MagInvModel.begin() + ngrid,
             MagModel.SetSusceptibilities().origin());
-
-        jif3D::rvec MagInvData(MagneticsSetup.GetCalculator()->Calculate(MagModel));
+        auto ObservedData = MagneticsSetup.GetObjective().GetObservedData();
+        jif3D::rvec MagInvData(
+            MagneticsSetup.GetCalculator()->Calculate(MagModel, ObservedData));
         jif3D::SaveTotalFieldMagneticMeasurements(modelfilename + ".inv_mag.nc",
-            MagInvData, MagModel.GetMeasPosX(), MagModel.GetMeasPosY(),
-            MagModel.GetMeasPosZ(), MagneticsSetup.GetObjective().GetDataError());
+            std::vector<double>(MagInvData.begin(), MagInvData.end()),
+            ObservedData.GetMeasPosX(), ObservedData.GetMeasPosY(),
+            ObservedData.GetMeasPosZ(), MagneticsSetup.GetObjective().GetDataError());
         jif3D::Write3DDataToVTK(modelfilename + ".inv_mag.vtk", "T", MagInvData,
-            MagModel.GetMeasPosX(), MagModel.GetMeasPosY(), MagModel.GetMeasPosZ());
+            ObservedData.GetMeasPosX(), ObservedData.GetMeasPosY(),
+            ObservedData.GetMeasPosZ());
         MagModel.WriteVTK(modelfilename + ".mag.inv.vtk");
         MagModel.WriteNetCDF(modelfilename + ".mag.inv.nc");
       }

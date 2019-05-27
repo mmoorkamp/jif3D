@@ -14,6 +14,8 @@
 #include <iostream>
 #include <string>
 #include "ThreeDGravityModel.h"
+#include "ScalarGravityData.h"
+#include "TensorGravityData.h"
 #include "ReadWriteGravityData.h"
 #include "../GravMag/MinMemGravMagCalculator.h"
 #include "ThreeDGravityFactory.h"
@@ -44,7 +46,8 @@ int main(int argc, char *argv[])
       }
 
     jif3D::ThreeDGravityModel GravModel;
-
+    jif3D::ScalarGravityData ScalData;
+    jif3D::TensorGravityData TensData;
     double minx, miny, maxx, maxy, deltax, deltay, z;
     //ask for the measurement grid specifications
     //first x-direction
@@ -71,7 +74,8 @@ int main(int argc, char *argv[])
       {
         for (size_t j = 0; j <= nmeasy; ++j)
           {
-            GravModel.AddMeasurementPoint(minx + i * deltax, miny + j * deltay, z);
+            ScalData.AddMeasurementPoint(minx + i * deltax, miny + j * deltay, z);
+            TensData.AddMeasurementPoint(minx + i * deltax, miny + j * deltay, z);
           }
       }
     //ask for the name of the netcdf file containing the model
@@ -89,14 +93,15 @@ int main(int argc, char *argv[])
         GravModel.ReadIgmas(ModelFilename);
         GravModel.WriteNetCDF(ModelFilename + ".nc");
       }
-    typedef typename jif3D::MinMemGravMagCalculator<jif3D::ThreeDGravityModel> CalculatorType;
+    typedef typename jif3D::MinMemGravMagCalculator<jif3D::ScalarGravityData> ScalCalculatorType;
+    typedef typename jif3D::MinMemGravMagCalculator<jif3D::TensorGravityData> TensCalculatorType;
     //save the measurements and some plots
-    boost::shared_ptr<CalculatorType> TensorCalculator(
-        jif3D::CreateGravityCalculator<CalculatorType>::MakeTensor(wantcuda));
-    boost::shared_ptr<CalculatorType> ScalarCalculator(
-        jif3D::CreateGravityCalculator<CalculatorType>::MakeScalar(wantcuda));
-    jif3D::rvec ScalarResults(ScalarCalculator->Calculate(GravModel));
-    jif3D::rvec TensorResults(TensorCalculator->Calculate(GravModel));
+    boost::shared_ptr<TensCalculatorType> TensorCalculator(
+        jif3D::CreateGravityCalculator<TensCalculatorType>::MakeTensor(wantcuda));
+    boost::shared_ptr<ScalCalculatorType> ScalarCalculator(
+        jif3D::CreateGravityCalculator<ScalCalculatorType>::MakeScalar(wantcuda));
+    jif3D::rvec ScalarResults(ScalarCalculator->Calculate(GravModel, ScalData));
+    jif3D::rvec TensorResults(TensorCalculator->Calculate(GravModel, TensData));
 
     jif3D::rvec ScalErr(ScalarResults.size());
     jif3D::rvec TensErr(TensorResults.size());
@@ -113,21 +118,29 @@ int main(int argc, char *argv[])
     cout << "Absolute noise level (ftg data): ";
     cin >> ftgabsnoise;
     jif3D::AddNoise(ScalarResults, scalrelnoise, scalabsnoise);
-    std::transform(ScalarResults.begin(),ScalarResults.end(),ScalErr.begin(),
-        [scalrelnoise, scalabsnoise] (const double data) {return std::max(scalabsnoise,data*scalrelnoise);});
+    std::transform(ScalarResults.begin(), ScalarResults.end(), ScalErr.begin(),
+        [scalrelnoise, scalabsnoise] (const double data)
+          { return std::max(scalabsnoise,data*scalrelnoise);});
     jif3D::AddNoise(TensorResults, ftgrelnoise, ftgabsnoise);
-    std::transform(TensorResults.begin(),TensorResults.end(),TensErr.begin(),
-            [ftgrelnoise, ftgabsnoise] (const double data) {return std::max(ftgabsnoise,data*ftgrelnoise);});
-    jif3D::SaveScalarGravityMeasurements(ModelFilename + ".sgd.nc", ScalarResults,
-        GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ(),ScalErr);
-    jif3D::SaveTensorGravityMeasurements(ModelFilename + ".ftg.nc", TensorResults,
-        GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ(),TensErr);
+    std::transform(TensorResults.begin(), TensorResults.end(), TensErr.begin(),
+        [ftgrelnoise, ftgabsnoise] (const double data)
+          { return std::max(ftgabsnoise,data*ftgrelnoise);});
+    ScalData.SetDataAndErrors(
+        std::vector<double>(ScalarResults.begin(), ScalarResults.end()),
+        std::vector<double>(ScalErr.begin(), ScalErr.end()));
+    TensData.SetDataAndErrors(
+        std::vector<double>(TensorResults.begin(), TensorResults.end()),
+        std::vector<double>(TensErr.begin(), TensErr.end()));
+
+    ScalData.WriteNetCDF(ModelFilename + ".sgd.nc");
+    TensData.WriteNetCDF(ModelFilename + ".ftg.nc");
+
     //write the model in .vtk format, at the moment the best plotting option
     GravModel.WriteVTK(ModelFilename + ".vtk");
 
     jif3D::Write3DDataToVTK(ModelFilename + ".data.vtk", "grav_accel", ScalarResults,
-        GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ());
+        ScalData.GetMeasPosX(), ScalData.GetMeasPosY(), ScalData.GetMeasPosZ());
     jif3D::Write3DTensorDataToVTK(ModelFilename + ".ftgdata.vtk", "U", TensorResults,
-        GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ());
+        TensData.GetMeasPosX(), TensData.GetMeasPosY(), TensData.GetMeasPosZ());
 
   }

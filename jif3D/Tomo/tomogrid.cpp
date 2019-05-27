@@ -11,15 +11,16 @@
  * a netcdf file.
  */
 
-#include "ThreeDSeismicModel.h"
-#include "TomographyCalculator.h"
-#include "ReadWriteTomographyData.h"
 #include "../ModelBase/VTKTools.h"
 #include "../Global/FileUtil.h"
 #include "../Global/Noise.h"
 #include <iostream>
 #include <string>
 #include <boost/cast.hpp>
+#include "../Tomo/ReadWriteTomographyData.h"
+#include "../Tomo/ThreeDSeismicModel.h"
+#include "../Tomo/TomographyCalculator.h"
+#include "../Tomo/TomographyData.h"
 
 using namespace std;
 
@@ -27,7 +28,7 @@ int main(int argc, char *argv[])
   {
 
     jif3D::ThreeDSeismicModel SeisModel;
-
+    jif3D::TomographyData Data;
     double recminx, recminy, recmaxx, recmaxy, recdeltax, recdeltay, recz;
     //ask for the measurement grid specifications
     //first x-direction
@@ -81,8 +82,8 @@ int main(int argc, char *argv[])
       {
         for (size_t j = 0; j <= recnmeasy; ++j)
           {
-            SeisModel.AddMeasurementPoint(recminx + i * recdeltax,
-                recminy + j * recdeltay, recz);
+            Data.AddMeasurementPoint(recminx + i * recdeltax, recminy + j * recdeltay,
+                recz);
 
           }
       }
@@ -93,23 +94,23 @@ int main(int argc, char *argv[])
       {
         for (size_t j = 0; j <= sornmeasy; ++j)
           {
-            SeisModel.AddSource(sorminx + i * sordeltax, sorminy + j * sordeltay, sorz);
+            Data.AddSource(sorminx + i * sordeltax, sorminy + j * sordeltay, sorz);
 
           }
       }
 
-    const size_t nsource = SeisModel.GetSourcePosX().size();
-    const size_t nrec = SeisModel.GetMeasPosX().size();
+    const size_t nsource = Data.GetSourcePosX().size();
+    const size_t nrec = Data.GetMeasPosX().size();
     for (size_t i = 0; i < nsource; ++i)
       {
         for (size_t j = 0; j < nrec; ++j)
           {
-            SeisModel.AddMeasurementConfiguration(i, j);
+            Data.AddMeasurementConfiguration(i, j);
           }
       }
 
     jif3D::TomographyCalculator Calculator;
-    jif3D::rvec TravelTimes(Calculator.Calculate(SeisModel));
+    jif3D::rvec TravelTimes(Calculator.Calculate(SeisModel, Data));
     double error = 0.0;
     std::cout << "Traveltime error (s): ";
     std::cin >> error;
@@ -121,12 +122,12 @@ int main(int argc, char *argv[])
         std::fill(Errors.begin(), Errors.end(), error);
       }
 
-    jif3D::SaveTraveltimes(ModelFilename + ".tt.nc", TravelTimes, Errors, SeisModel);
+    Data.SetDataAndErrors(std::vector<double>(TravelTimes.begin(), TravelTimes.end()),
+        std::vector<double>(Errors.begin(), Errors.end()));
+    Data.WriteNetCDF(ModelFilename + ".tt.nc");
+
     SeisModel.WriteVTK(ModelFilename + ".vtk");
-    jif3D::Write3DDataToVTK(ModelFilename + ".rec.vtk", "Receiver",
-        jif3D::rvec(SeisModel.GetMeasPosX().size()), SeisModel.GetMeasPosX(),
-        SeisModel.GetMeasPosY(), SeisModel.GetMeasPosZ());
-    jif3D::Write3DDataToVTK(ModelFilename + ".sor.vtk", "Source",
-        jif3D::rvec(SeisModel.GetSourcePosX().size()), SeisModel.GetSourcePosX(),
-        SeisModel.GetSourcePosY(), SeisModel.GetSourcePosZ());
+    Data.WriteMeasurementPoints(ModelFilename + ".rec.vtk");
+    Data.WriteSourcePoints(ModelFilename + ".sor.vtk");
+
   }

@@ -13,6 +13,7 @@
 #include "../Global/Jif3DGlobal.h"
 #include "../Gravity/ThreeDGravityModel.h"
 #include "../GravMag/ThreeDGravMagImplementation.h"
+#include "ScalarGravityData.h"
 
 namespace jif3D
   {
@@ -23,17 +24,17 @@ namespace jif3D
      * This is the standard implementation and as openmp uses pragma directives can
      * also be used in serial with a compiler that does not understand openmp.
      */
-    class J3DEXPORT ScalarOMPGravityImp: public jif3D::ThreeDGravMagImplementation<ThreeDGravityModel>
+    class J3DEXPORT ScalarOMPGravityImp: public jif3D::ThreeDGravMagImplementation<ScalarGravityData>
       {
     private:
       //! We calculate scalar data, so we have one data point per site
       static const size_t ndatapermeas = 1;
       //! Implement the calculation of the background response
       virtual rvec CalcBackground(const size_t measindex, const double xwidth, const double ywidth,
-          const double zwidth, const ThreeDGravityModel &Model,
+          const double zwidth, const ThreeDGravityModel &Model, const ScalarGravityData &Data,
           rmat &Sensitivities) override;
       //! Calculate the response of the gridded part
-      virtual rvec CalcGridded(const size_t measindex, const ThreeDGravityModel &Model,
+      virtual rvec CalcGridded(const size_t measindex, const ThreeDGravityModel &Model, const ScalarGravityData &Data,
           rmat &Sensitivities) override;
       friend class access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization

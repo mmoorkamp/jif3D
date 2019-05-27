@@ -21,7 +21,6 @@
 #include <boost/multi_array.hpp>
 #pragma GCC diagnostic pop
 
-
 /*! \file ThreeDModelBase.h
  * Contains the base class for all 3D models.
  */
@@ -50,15 +49,8 @@ namespace jif3D
       typedef boost::multi_array<double, 3> t3DModelData;
       //! A shorthand for the dimensions, i.e. cell-sizes for the 3D models
       typedef std::vector<double> t3DModelDim;
-      //! The type of the measurement position vector, this is a std::vector because we want to easily append elements
-      typedef std::vector<double> tMeasPosVec;
     private:
-      //! the x-coordinates of the measurement points
-      tMeasPosVec MeasPosX;
-      //! the y-coordinates of the measurement points
-      tMeasPosVec MeasPosY;
-      //! the z-coordinates of the measurement points
-      tMeasPosVec MeasPosZ;
+
       //! The object containing the actual value, e.g. conductivity, velocity
       t3DModelData Data;
       //! The size of the cells in x-direction
@@ -131,43 +123,6 @@ namespace jif3D
       const t3DModelData &GetData() const
         {
           return Data;
-        }
-      //! Add a measurement point to the model
-      void AddMeasurementPoint(const double xcoord, const double ycoord,
-          const double zcoord)
-        {
-          MeasPosX.push_back(xcoord);
-          MeasPosY.push_back(ycoord);
-          MeasPosZ.push_back(zcoord);
-        }
-      //! remove all information about measurement points
-      void ClearMeasurementPoints()
-        {
-          MeasPosX.clear();
-          MeasPosY.clear();
-          MeasPosZ.clear();
-        }
-      //! Return the x-coordinates (Northing) of all measurement points read-only
-      /*! This function provides read-only access to the x-coordinates
-       * of the measurement points. The only way to modify the position of
-       * the measurements is to delete them with ClearMeasurementPoints and
-       * add new ones with AddMeasurementPoint. This ensures that we have all
-       * three coordinate values for all points.
-       * @return A vector with the x-coordinates of all measurement points in m
-       */
-      const tMeasPosVec &GetMeasPosX() const
-        {
-          return MeasPosX;
-        }
-      //! Return the y-coordinates (Easting)of all measurement points read-only
-      const tMeasPosVec &GetMeasPosY() const
-        {
-          return MeasPosY;
-        }
-      //! Return the z-coordinates (Depth) of all measurement points read-only
-      const tMeasPosVec &GetMeasPosZ() const
-        {
-          return MeasPosZ;
         }
       //! Set the origin of the coordinate system
       virtual void SetOrigin(const double x, const double y, const double z);
@@ -268,11 +223,6 @@ namespace jif3D
       virtual boost::array<ThreeDModelBase::t3DModelData::index, 3>
       FindAssociatedIndices(const double xcoord, const double ycoord,
           const double zcoord) const;
-      //! Read the Measurement positions from a netcdf file
-      void ReadMeasPosNetCDF(const std::string filename);
-      //! Read the Measurement positions from an ascii file
-      void ReadMeasPosAscii(const std::string filename);
-      //! Write all model information to a netcdf file
       virtual void WriteNetCDF(const std::string &filename) const
         {
           throw jif3D::FatalException("WriteNetCDF not implemented in ThreeDModelBase !");
@@ -288,21 +238,13 @@ namespace jif3D
       template<class Archive>
       void save(Archive & ar, const unsigned int version) const
         {
-          //we can directly serialize std::vector, so MeasPos are simple
-          ar & MeasPosX;
-          ar & MeasPosY;
-          ar & MeasPosZ;
           //multi-array does not have serialization support
           //so we have to store the shape of the arrays
           ar & Data.shape()[0];
           ar & Data.shape()[1];
           ar & Data.shape()[2];
-#ifdef HAVEHPX
-          ar & hpx::serialization::make_array(Data.origin(), Data.num_elements());
-#else
           //then serialize the raw data
-          ar & boost::serialization::make_array(Data.origin(), Data.num_elements());
-#endif
+          ar & make_array(Data.origin(), Data.num_elements());
           ar & GridXCoordinates;
           ar & GridYCoordinates;
           ar & GridZCoordinates;
@@ -312,23 +254,14 @@ namespace jif3D
       template<class Archive>
       void load(Archive & ar, const unsigned int version)
         {
-          //we can directly serialize std::vector, so MeasPos are simple
-          ar & MeasPosX;
-          ar & MeasPosY;
-          ar & MeasPosZ;
           //multi-array does not have serialization support
           //so we have to load the shape of the arrays
           size_t nx = 0, ny = 0, nz = 0;
           ar & nx;
           ar & ny;
           ar & nz;
-#ifdef HAVEHPX
           Data.resize(boost::extents[nx][ny][nz]);
-          ar & hpx::serialization::make_array(Data.origin(), Data.num_elements());
-#else
-          Data.resize(boost::extents[nx][ny][nz]);
-          ar & boost::serialization::make_array(Data.origin(), Data.num_elements());
-#endif
+          ar & make_array(Data.origin(), Data.num_elements());
           ar & GridXCoordinates;
           ar & GridYCoordinates;
           ar & GridZCoordinates;
@@ -341,14 +274,14 @@ namespace jif3D
 #else
       BOOST_SERIALIZATION_SPLIT_MEMBER()
 #endif
-friend class  ModelRefiner;
-  ThreeDModelBase();
-  ThreeDModelBase(const ThreeDModelBase& source);
-  bool operator ==(const ThreeDModelBase &b) const;
-  ThreeDModelBase& operator=(const ThreeDModelBase& source);
-  virtual ~ThreeDModelBase();
-};
-/* @} */
-}
+      friend class ModelRefiner;
+      ThreeDModelBase();
+      ThreeDModelBase(const ThreeDModelBase& source);
+      bool operator ==(const ThreeDModelBase &b) const;
+      ThreeDModelBase& operator=(const ThreeDModelBase& source);
+      virtual ~ThreeDModelBase();
+      };
+  /* @} */
+  }
 
 #endif /*THREEDMODELBASE_H_*/

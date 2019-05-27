@@ -9,6 +9,7 @@
 #define READWRITEMAGNETICDATA_H_
 
 #include <string>
+#include <vector>
 
 #include "ThreeDMagneticModel.h"
 #include "../Global/VecMat.h"
@@ -22,18 +23,18 @@ namespace jif3D
 
     //!Read a collection of scalar Magnetic measurements and associated positions from a netcdf file
     J3DEXPORT void ReadTotalFieldMagneticMeasurements(const std::string &filename,
-        jif3D::rvec &Data,
-        ThreeDMagneticModel::tMeasPosVec &PosX,
-        ThreeDMagneticModel::tMeasPosVec &PosY,
-        ThreeDMagneticModel::tMeasPosVec &PosZ,
-        jif3D::rvec &Error );
+        std::vector<double> &Data,
+        std::vector<double> &PosX,
+        std::vector<double> &PosY,
+        std::vector<double> &PosZ,
+        std::vector<double> &Error );
     //!Save a collection of scalar Magnetic measurements and associated positions to a netcdf file
     J3DEXPORT void SaveTotalFieldMagneticMeasurements(const std::string &filename,
-        const jif3D::rvec &Data,
-        const ThreeDMagneticModel::tMeasPosVec &PosX,
-        const ThreeDMagneticModel::tMeasPosVec &PosY,
-        const ThreeDMagneticModel::tMeasPosVec &PosZ,
-        const jif3D::rvec &Error );
+        const std::vector<double> &Data,
+        const std::vector<double> &PosX,
+        const std::vector<double> &PosY,
+        const std::vector<double> &PosZ,
+        const std::vector<double> &Error );
 
   /* @} */
   }

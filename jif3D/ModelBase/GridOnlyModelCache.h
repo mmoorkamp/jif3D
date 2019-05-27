@@ -17,7 +17,6 @@ namespace jif3D
       {
     public:
       typedef typename ThreeDModelType::t3DModelDim ModelDimType;
-      typedef typename ThreeDModelType::tMeasPosVec MeasPosType;
     private:
       //! The size of the model cells in x-direction for the previous calculations
       ModelDimType OldXSizes;
@@ -25,22 +24,12 @@ namespace jif3D
       ModelDimType OldYSizes;
       //! The size of the model cells in z-direction for the previous calculations
       ModelDimType OldZSizes;
-      //! The measurement coordinates in x-direction for the previous calculations
-      MeasPosType OldMeasPosX;
-      //! The measurement coordinates in y-direction for the previous calculations
-      MeasPosType OldMeasPosY;
-      //! The measurement coordinates in z-direction for the previous calculations
-      MeasPosType OldMeasPosZ;
+
       //! Copy the cell sizes from the current model to store them for caching
       void CopySizes(const ModelDimType &NewXSizes, const ModelDimType &NewYSizes,
           const ModelDimType &NewZSizes);
-      //! Copy the measurement positions from the current model to store them for caching
-      void CopyMeasPos(const MeasPosType &NewMeasPosX, const MeasPosType &NewMeasPosY,
-          const MeasPosType &NewMeasPosZ);
       //! Check whether the model geometry, i.e. cell sizes, has changed since the last calculation
       bool CheckGeometryChange(const ThreeDModelType &Model);
-      //! Check whether the measurement positions have changed since the last calculation
-      bool CheckMeasPosChange(const ThreeDModelType &Model);
     public:
       bool HasChanged(const ThreeDModelType &Model);
       GridOnlyModelCache();
@@ -63,10 +52,7 @@ namespace jif3D
     template<class ThreeDModelType>
     bool GridOnlyModelCache<ThreeDModelType>::HasChanged(const ThreeDModelType &Model)
       {
-        bool HasGeometryChanged = CheckGeometryChange(Model);
-        bool HasMeasPosChanged = CheckMeasPosChange(Model);
-        bool HasChanged = HasGeometryChanged || HasMeasPosChanged;
-        return HasChanged;
+        return CheckGeometryChange(Model);
       }
 
     template<class ThreeDModelType>
@@ -83,49 +69,7 @@ namespace jif3D
         std::copy(NewZSizes.begin(), NewZSizes.end(), OldZSizes.begin());
       }
 
-    template<class ThreeDModelType>
-    void GridOnlyModelCache<ThreeDModelType>::CopyMeasPos(const MeasPosType &NewMeasPosX,
-        const MeasPosType &NewMeasPosY, const MeasPosType &NewMeasPosZ)
-      {
-        OldMeasPosX.resize(NewMeasPosX.size());
-        OldMeasPosY.resize(NewMeasPosY.size());
-        OldMeasPosZ.resize(NewMeasPosZ.size());
-        std::copy(NewMeasPosX.begin(), NewMeasPosX.end(), OldMeasPosX.begin());
-        std::copy(NewMeasPosY.begin(), NewMeasPosY.end(), OldMeasPosY.begin());
-        std::copy(NewMeasPosZ.begin(), NewMeasPosZ.end(), OldMeasPosZ.begin());
-      }
 
-    template<class ThreeDModelType>
-    bool GridOnlyModelCache<ThreeDModelType>::CheckMeasPosChange(
-        const ThreeDModelType &Model)
-      {
-        bool change = true;
-        // if all the sizes are the same as before then nothing has changed
-        change = !(OldMeasPosX.size() == Model.GetMeasPosX().size()
-            && OldMeasPosY.size() == Model.GetMeasPosY().size()
-            && OldMeasPosZ.size() == Model.GetMeasPosZ().size());
-        // if we already know that something has changed we do not need to perform the more expensive tests
-        if (change)
-          {
-            //copy the new information into the cache
-            CopyMeasPos(Model.GetMeasPosX(), Model.GetMeasPosY(), Model.GetMeasPosZ());
-            return change;
-          }
-        //check whether any of the cell coordinates have changed
-        bool xsame = std::equal(OldMeasPosX.begin(), OldMeasPosX.end(),
-            Model.GetMeasPosX().begin());
-        bool ysame = std::equal(OldMeasPosY.begin(), OldMeasPosY.end(),
-            Model.GetMeasPosY().begin());
-        bool zsame = std::equal(OldMeasPosZ.begin(), OldMeasPosZ.end(),
-            Model.GetMeasPosZ().begin());
-        //only if they are all the same we know that nothing has changed
-        change = !(xsame && ysame && zsame);
-        if (change)
-          {
-            CopyMeasPos(Model.GetMeasPosX(), Model.GetMeasPosY(), Model.GetMeasPosZ());
-          }
-        return change;
-      }
 
     template<class ThreeDModelType>
     bool GridOnlyModelCache<ThreeDModelType>::CheckGeometryChange(

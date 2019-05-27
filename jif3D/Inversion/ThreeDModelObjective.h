@@ -41,6 +41,7 @@ namespace jif3D
       typedef ThreeDCalculatorType CalculatorType;
       //! The forward calculation class must contain a type definition that sets the type of the model object
       typedef typename CalculatorType::ModelType ModelType;
+      typedef typename CalculatorType::DataType DataType;
       //! Some forward calculators have extra parameters in addition to the grid values, e.g. gravity can have background densities or MT distortion parameters
       typedef typename CalculatorType::ModelType::ExtraParameterSetter ExtraParameterSetter;
     private:
@@ -71,7 +72,7 @@ namespace jif3D
        */
       jif3D::ModelRefiner Refiner;
       //! The vector of observed data for all stations. The exact ordering of the data depends on the calculator object.
-      jif3D::rvec ObservedData;
+      DataType ObservedData;
       //! A transformation for the observed data, for example to invert apparent resistivity and phase instead of impedance for MT data
       boost::shared_ptr<jif3D::VectorTransform> DataTransform;
       //! Calculate the difference between observed and synthetic data for a given model
@@ -101,12 +102,13 @@ namespace jif3D
       virtual void
       ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff) override;
       //! The implementation of the gradient calculation
-      virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model, const jif3D::rvec &Diff) override;
+      virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model, const jif3D::rvec &Diff)
+          override;
     public:
       const ThreeDCalculatorType &GetCalculator() const
-      {
-    	  return Calculator;
-      }
+        {
+          return Calculator;
+        }
       //! The clone function provides a virtual constructor
       virtual ThreeDModelObjective<ThreeDCalculatorType> *clone() const override
         {
@@ -130,15 +132,17 @@ namespace jif3D
        * example by adding measurement points to the model object in the right order.
        * @param Data A vector with real values containing the observed data
        */
-      void SetObservedData(const jif3D::rvec &Data)
+      void SetObservedData(const DataType &Data)
         {
-          if (Data.empty())
+          if (Data.GetData().empty())
             throw jif3D::FatalException(
                 "Cannot have empty observations in objective function. ", __FILE__,
                 __LINE__);
           if (DataTransform)
             {
-              ObservedData = jif3D::ApplyTransform(Data, *DataTransform);
+              throw jif3D::FatalException("Implementation currently disabled", __FILE__,
+                __LINE__);
+             //ObservedData = jif3D::ApplyTransform(Data, *DataTransform);
             }
           else
             {
@@ -147,7 +151,7 @@ namespace jif3D
 
         }
       //! Return a read only version of the observed data
-      const jif3D::rvec &GetObservedData() const
+      const DataType &GetObservedData() const
         {
           return ObservedData;
         }
@@ -157,7 +161,7 @@ namespace jif3D
        * are small enough that this does not pose a serious limitation.
        * @return A real vector containing the synthetic data in the same order as the observed data
        */
-      jif3D::rvec GetSyntheticData() const
+      const jif3D::rvec &GetSyntheticData() const
         {
           return SynthData;
         }
@@ -229,7 +233,7 @@ namespace jif3D
     void ThreeDModelObjective<ThreeDCalculatorType>::ImplDataDifference(
         const jif3D::rvec &Model, jif3D::rvec &Diff)
       {
-        const size_t ngrid = CoarseModel.GetData().num_elements();
+        const size_t ngrid = CoarseModel.GetNModelElements();
         if (Model.size() < ngrid)
           {
             throw jif3D::FatalException(
@@ -241,8 +245,8 @@ namespace jif3D
         if (Model.size() > ngrid)
           {
             std::vector<double> Extra(Model.begin() + ngrid, Model.end());
-            ExtraParameterSetter()(CoarseModel, Extra);
-            ExtraParameterSetter()(FineModel, Extra);
+            ExtraParameterSetter()(CoarseModel, ObservedData, Extra);
+            ExtraParameterSetter()(FineModel, ObservedData, Extra);
           }
 
         //depending on whether we want to refine the inversion model
@@ -253,19 +257,19 @@ namespace jif3D
             //project the values from the coarse model onto the fine model
             Refiner.RefineModel(CoarseModel, FineModel);
             //Calculate the synthetic data for the 3D model
-            SynthData = Calculator.Calculate(FineModel);
+            SynthData = Calculator.Calculate(FineModel, ObservedData);
           }
         else
           {
-            SynthData = Calculator.Calculate(CoarseModel);
+            SynthData = Calculator.Calculate(CoarseModel, ObservedData);
           }
-        if (SynthData.size() != ObservedData.size())
+        if (SynthData.size() != ObservedData.GetData().size())
           throw jif3D::FatalException(
               " ThreeDModelObjective: Forward calculation does not give same amount of data !",
               __FILE__, __LINE__);
-        Diff.resize(ObservedData.size());
+        Diff.resize(ObservedData.GetData().size());
         //calculate the difference between observed and synthetic
-        std::transform(SynthData.begin(), SynthData.end(), ObservedData.begin(),
+        std::transform(SynthData.begin(), SynthData.end(), ObservedData.GetData().begin(),
             Diff.begin(), std::minus<double>());
       }
 
@@ -296,7 +300,7 @@ namespace jif3D
           {
             Refiner.RefineModel(CoarseModel, FineModel);
             //calculate the gradient for the fine model
-            jif3D::rvec FineGradient(Calculator.LQDerivative(FineModel, Diff));
+            jif3D::rvec FineGradient(Calculator.LQDerivative(FineModel, ObservedData, Diff));
             const size_t nfine = FineModel.GetNModelElements();
             jif3D::rvec CoarseGrad(Model.size());
             //and return the projection of the fine gradient onto the coarse model
@@ -308,7 +312,7 @@ namespace jif3D
           }
         //we only get here if we do not do any refinement
         //omitting the else saves us a compiler warning
-        return Calculator.LQDerivative(CoarseModel, Diff);
+        return Calculator.LQDerivative(CoarseModel, ObservedData, Diff);
 
       }
 

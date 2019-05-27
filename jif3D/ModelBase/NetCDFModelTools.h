@@ -62,8 +62,8 @@ namespace jif3D
       }
     //! A helper function that reads only measurement positions from a netcdf file regardless of data type
     J3DEXPORT void ReadMeasPosNetCDF(const std::string &filename,
-        ThreeDModelBase::tMeasPosVec &PosX, ThreeDModelBase::tMeasPosVec &PosY,
-        ThreeDModelBase::tMeasPosVec &PosZ);
+        std::vector<double> &PosX, std::vector<double> &PosY,
+        std::vector<double> &PosZ);
 
   /* @} */
   }

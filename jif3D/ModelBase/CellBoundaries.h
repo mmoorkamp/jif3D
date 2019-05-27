@@ -26,7 +26,7 @@ namespace jif3D
         const jif3D::ThreeDModelBase::t3DModelDim &CellSizes);
 
   J3DEXPORT size_t ConstructDepthIndices(std::vector<size_t> &MeasDepthIndices,
-        std::vector<double> &ShiftDepth, const ThreeDModelBase &Model);
+        std::vector<double> &ShiftDepth, const ThreeDModelBase &Model, const std::vector<double> &MeasPosZ);
   /* @} */
   }
 

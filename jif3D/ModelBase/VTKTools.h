@@ -49,29 +49,35 @@ namespace jif3D
         ThreeDModelBase::t3DModelDim &ZCellCoords,
         ThreeDModelBase::t3DModelData &Data);
 
+    J3DEXPORT void Read3DVectorModelFromVTK(const std::string &filename,
+        ThreeDModelBase::t3DModelDim &XCellCoords,
+        ThreeDModelBase::t3DModelDim &YCellCoords,
+        ThreeDModelBase::t3DModelDim &ZCellCoords, ThreeDModelBase::t3DModelData &CompX,
+         ThreeDModelBase::t3DModelData &CompY, ThreeDModelBase::t3DModelData &CompZ);
+
     //! Write scalar data with 3D coordinate information into a .vtk file for plotting
     J3DEXPORT void Write3DDataToVTK(const std::string &filename,
         const std::string &DataName,
         const jif3D::rvec &Data,
-        const ThreeDModelBase::tMeasPosVec &PosX,
-        const ThreeDModelBase::tMeasPosVec &PosY,
-        const ThreeDModelBase::tMeasPosVec &PosZ);
+        const std::vector<double> &PosX,
+        const std::vector<double> &PosY,
+        const std::vector<double> &PosZ);
 
     //! Write three-component vector data with 3D coordinate information into a .vtk file for plotting
     J3DEXPORT void Write3DVectorDataToVTK(const std::string &filename,
         const std::string &DataName,
         const jif3D::rvec &Data,
-        const ThreeDModelBase::tMeasPosVec &PosX,
-        const ThreeDModelBase::tMeasPosVec &PosY,
-        const ThreeDModelBase::tMeasPosVec &PosZ);
+        const std::vector<double> &PosX,
+        const std::vector<double> &PosY,
+        const std::vector<double> &PosZ);
 
     //! Write \f$ 3 \times 3\f$ tensor data with 3D coordinate information into a .vtk file for plotting
     J3DEXPORT void Write3DTensorDataToVTK(const std::string &filename,
         const std::string &DataName,
         const jif3D::rvec &Data,
-        const ThreeDModelBase::tMeasPosVec &PosX,
-        const ThreeDModelBase::tMeasPosVec &PosY,
-        const ThreeDModelBase::tMeasPosVec &PosZ);
+        const std::vector<double> &PosX,
+        const std::vector<double> &PosY,
+        const std::vector<double> &PosZ);
   /* @} */
 
   }

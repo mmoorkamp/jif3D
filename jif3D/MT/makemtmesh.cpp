@@ -96,9 +96,9 @@ int main(int argc, char *argv[])
     if (vm.count("center"))
       {
         std::vector<double> Dummy, StatPosX, StatPosY, StatPosZ;
-        jif3D::rvec DVec;
+
         jif3D::ReadImpedancesFromNetCDF(DataName, Dummy, StatPosX, StatPosY, StatPosZ,
-            DVec, DVec, Dummy);
+            Dummy, Dummy, Dummy);
         auto mmx = boost::minmax_element(StatPosX.begin(), StatPosX.end());
         auto mmy = boost::minmax_element(StatPosY.begin(), StatPosY.end());
         auto mmz = boost::minmax_element(StatPosZ.begin(), StatPosZ.end());
@@ -141,9 +141,7 @@ int main(int argc, char *argv[])
         defaultconductivity);
     //ask for a filename to write the mesh to
     std::string MeshFilename = jif3D::AskFilename("Meshfile name: ", false);
-    //we set the calculation frequencies to a dummy value
-    //the forward modeling program asks for those anyway
-    Model.SetFrequencies().assign(1, 10.0);
+
     //fill the background
     std::vector<double> bg_thicknesses(Model.GetZCellSizes().size());
     std::copy(Model.GetZCellSizes().begin(), Model.GetZCellSizes().end(),

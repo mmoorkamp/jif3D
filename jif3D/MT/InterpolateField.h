@@ -12,6 +12,7 @@
 #include "X3DModel.h"
 #include <complex>
 #include <vector>
+#include "EMData.h"
 
 namespace jif3D
   {
@@ -19,7 +20,7 @@ namespace jif3D
     /* @{ */
     //! Interpolate magnetic and electric fields horizontally to allow for arbitrary horizontal site positions
     J3DEXPORT std::complex<double> InterpolateField(std::vector<std::complex<double> > &Field,
-        const X3DModel &Model, size_t MeasIndex,
+        const X3DModel &Model, const EMData &Data, size_t MeasIndex,
         const std::vector<size_t> &MeasDepthIndices);
   /* @} */
   }

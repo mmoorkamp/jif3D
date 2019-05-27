@@ -12,6 +12,7 @@
 #include "../Inversion/ThreeDModelObjective.h"
 #include "../GravMag/DiskGravMagCalculator.h"
 #include "../Magnetics/ThreeDMagneticModel.h"
+#include "../Magnetics/MagneticData.h"
 #include "../Inversion/JointObjective.h"
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
@@ -30,7 +31,7 @@ namespace jif3D
     class J3DEXPORT SetupMagnetics
       {
     public:
-      typedef typename jif3D::DiskGravMagCalculator<jif3D::ThreeDMagneticModel> CalculatorType;
+      typedef typename jif3D::DiskGravMagCalculator<jif3D::MagneticData> CalculatorType;
     private:
       double inclination;
       double declination;

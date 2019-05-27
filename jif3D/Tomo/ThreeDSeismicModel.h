@@ -28,6 +28,8 @@ namespace jif3D
      * */
     /* @{ */
     class TomoExtraParameterSetter;
+
+    class TomographyData;
     //! The seismic model class stores all the information necessary to calculate arrival times, i.e. slownesses as well as source and receiver positions
     /*! As this class is derived from ThreeDModelBase the overall handling is similar to the other model classes. There are a few notable exceptions.
      * The model has to have equal cell sizes in all three directions, therefore there is only a single function to set the size and
@@ -44,31 +46,14 @@ namespace jif3D
       {
     public:
       typedef TomoExtraParameterSetter ExtraParameterSetter;
-      //! We need vectors of indices to associate a source with a receiver for a given shot
-      typedef std::vector<int> tIndexVec;
-    private:
-      //! The x-position of the sources
-      ThreeDModelBase::tMeasPosVec SourcePosX;
-      //! The y-position of the sources
-      ThreeDModelBase::tMeasPosVec SourcePosY;
-      //! The z-position of the sources
-      ThreeDModelBase::tMeasPosVec SourcePosZ;
-      //! Each source can can correspond to a number of measurements with different receivers
-      //! here we record for each datum the index of the source position in the above arrays
-      tIndexVec SourceIndices;
-      //! The index in the position vectors for the receivers
-      tIndexVec ReceiverIndices;
+
     public:
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
         {
           ar & base_object<ThreeDModelBase>(*this);
-          ar & SourcePosX;
-          ar & SourcePosY;
-          ar & SourcePosZ;
-          ar & SourceIndices;
-          ar & ReceiverIndices;
+
         }
       //! Given three coordinates in m, find the indices of the model cell that correponds to these coordinates, this is a more efficient implementation than the one in the base class
       virtual boost::array<ThreeDModelBase::t3DModelData::index, 3>
@@ -102,85 +87,6 @@ namespace jif3D
         {
           return ThreeDModelBase::SetData();
         }
-      //! Add a source to the model
-      void AddSource(const double xcoord, const double ycoord, const double zcoord)
-        {
-          SourcePosX.push_back(xcoord);
-          SourcePosY.push_back(ycoord);
-          SourcePosZ.push_back(zcoord);
-        }
-      //! read only access to the x-positions of the sources in m
-      const ThreeDModelBase::tMeasPosVec &GetSourcePosX() const
-        {
-          return SourcePosX;
-        }
-      //! read only access to the y-positions of the sources in m
-      const ThreeDModelBase::tMeasPosVec &GetSourcePosY() const
-        {
-          return SourcePosY;
-        }
-      //! read only access to the z-positions of the sources in m
-      const ThreeDModelBase::tMeasPosVec &GetSourcePosZ() const
-        {
-          return SourcePosZ;
-        }
-      //! read only access to the indices of the sources for each data point
-      const tIndexVec &GetSourceIndices() const
-        {
-          return SourceIndices;
-        }
-      //! read only access to the indices of the receivers for each data point
-      const tIndexVec &GetReceiverIndices() const
-        {
-          return ReceiverIndices;
-        }
-      //! add a source-receiver combination for which a travel time will be calculated
-      /*! We only store the positions of the sources and receivers once. With this
-       * function we can add a configuration for which we want to calculate a travel time.
-       * @param SourceIndex The index of the source in the vector of positions
-       * @param ReceiverIndex The index of the receiver in the vector of positions
-       */
-      void AddMeasurementConfiguration(const size_t SourceIndex,
-          const size_t ReceiverIndex)
-        {
-          assert(SourceIndex < SourcePosX.size());
-          assert(ReceiverIndex < GetMeasPosX().size());
-          SourceIndices.push_back(SourceIndex);
-          ReceiverIndices.push_back(ReceiverIndex);
-        }
-      //! Remove all the index values that determine which source-receiver combinations are active
-      void ClearMeasurementConfigurations()
-        {
-          SourceIndices.clear();
-          ReceiverIndices.clear();
-        }
-      //! Clear all the source position definitions including the source-receiver combinations
-      void ClearSourcePos()
-        {
-          SourcePosX.clear();
-          SourcePosY.clear();
-          SourcePosZ.clear();
-          ClearMeasurementConfigurations();
-        }
-      //! Copy the source and receiver positions and the indices for the source-receiver combinations from the source model
-      void CopyMeasurementConfigurations(const ThreeDSeismicModel &Source)
-        {
-
-          SourcePosX = Source.SourcePosX;
-          SourcePosY = Source.SourcePosY;
-          SourcePosZ = Source.SourcePosZ;
-          SourceIndices = Source.SourceIndices;
-
-          ClearMeasurementPoints();
-          const size_t nmeas = Source.GetMeasPosX().size();
-          for (size_t i = 0; i < nmeas; ++i)
-            {
-              AddMeasurementPoint(Source.GetMeasPosX()[i], Source.GetMeasPosY()[i],
-                  Source.GetMeasPosZ()[i]);
-            }
-
-          ReceiverIndices = Source.ReceiverIndices;
-        }
 
       //! Write the seismic model in VTK format, at the moment the best format for plotting, this only writes the slowness and not the source and receiver positions
       void WriteVTK(const std::string filename) const
@@ -200,10 +106,6 @@ namespace jif3D
        */
       virtual void ReadNetCDF(const std::string &filename, bool checkgrid);
       ThreeDSeismicModel();
-      //! We define our own copy constructor
-      ThreeDSeismicModel(const ThreeDSeismicModel &source);
-      //! We define our own copy operator
-      ThreeDSeismicModel& operator=(const ThreeDSeismicModel& source);
       ThreeDSeismicModel& operator=(const ThreeDModelBase& source);
       virtual ~ThreeDSeismicModel();
       };
@@ -211,7 +113,7 @@ namespace jif3D
     class TomoExtraParameterSetter
       {
     public:
-      void operator()(ThreeDSeismicModel &Model, const std::vector<double> &Dens)
+      void operator()(ThreeDSeismicModel &Model, TomographyData &Data, const std::vector<double> &Dens)
         {
           throw jif3D::FatalException(
               "Tomography class does not support extra parameters !", __FILE__, __LINE__);

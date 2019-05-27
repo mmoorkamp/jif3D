@@ -26,6 +26,7 @@
 #include "ReadWriteX3D.h"
 #include "X3DModel.h"
 #include "X3DFieldCalculator.h"
+#include "MTData.h"
 
 namespace jif3D
   {
@@ -57,6 +58,8 @@ namespace jif3D
     public:
       //! This type definition is necessary so that ThreeDModelObjective can correctly deduce the native type for a model object for this class
       typedef X3DModel ModelType;
+      typedef MTData DataType;
+
     private:
       //! A file to store statistics of execution time for the forward, can help to find problematic frequencies
       std::ofstream ForwardTimesFile;
@@ -172,7 +175,7 @@ void  SetDataTransform(boost::shared_ptr<jif3D::VectorTransform> DT)
    * @param maxfreqindex The index one larger than the index of the last frequency for which to calculate the gradient (C++ loop convention)
    * @return The synthetic MT data in the format described above.
    */
-  rvec Calculate(ModelType &Model, size_t minfreqindex = 0,
+  rvec Calculate(const ModelType &Model, const MTData &Data, size_t minfreqindex = 0,
       size_t maxfreqindex = std::numeric_limits<size_t>::max());
   //! Given a conductivity model and the misfit for each datum, calculate the derivative of the objective function with respect to the model parameters.
   /*! We use an adjoint approach to calculate the gradient of the objective functions with respect to the model parameters. As this approach requires
@@ -184,9 +187,9 @@ void  SetDataTransform(boost::shared_ptr<jif3D::VectorTransform> DT)
    * @param maxfreqindex The index one larger than the index of the last frequency for which to calculate the gradient (C++ loop convention)
    * @return The gradient of the objective function with respect to the model parameters for the given model. The storage ordering is identical to X3DModel.
    */
-  rvec LQDerivative(const ModelType &Model, const rvec &Misfit, size_t minfreqindex =
+  rvec LQDerivative(const ModelType &Model, const MTData &Data, const rvec &Misfit, size_t minfreqindex =
       0, size_t maxfreqindex = std::numeric_limits<size_t>::max());
-  rmat SensitivityMatrix(ModelType &Model, const rvec &Misfit,
+  rmat SensitivityMatrix(ModelType &Model, const MTData &Data, const rvec &Misfit,
       size_t minfreqindex = 0, size_t maxfreqindex =
       std::numeric_limits<size_t>::max());
   //! The constructor takes optional arguments to change the directory were temporary files are stored and if we want to correct for distortion

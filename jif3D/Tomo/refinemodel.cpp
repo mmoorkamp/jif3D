@@ -7,8 +7,9 @@
 
 #include "../Global/FileUtil.h"
 #include "../ModelBase/ModelRefiner.h"
-#include "ThreeDSeismicModel.h"
+#include "../Tomo/ThreeDSeismicModel.h"
 #include <limits>
+
 
 /*! \file refinemodel.cpp
  * Refine the grid of input model. You can specify a new grid size. The old

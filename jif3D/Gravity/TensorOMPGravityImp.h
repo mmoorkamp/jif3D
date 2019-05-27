@@ -5,7 +5,6 @@
 // Copyright   : 2008, mmoorkamp
 //============================================================================
 
-
 #ifndef TENSOROMPGRAVITYIMP_H_
 #define TENSOROMPGRAVITYIMP_H_
 
@@ -13,6 +12,7 @@
 #include "../Global/Jif3DGlobal.h"
 #include "../Gravity/ThreeDGravityModel.h"
 #include "../GravMag/ThreeDGravMagImplementation.h"
+#include "TensorGravityData.h"
 
 namespace jif3D
   {
@@ -24,16 +24,17 @@ namespace jif3D
      * It only implements the calculation of the background and the gridded part.
      * The assembly of the two parts is performed by the base class ThreeDGravityImplementation.
      */
-    class J3DEXPORT TensorOMPGravityImp: public jif3D::ThreeDGravMagImplementation<ThreeDGravityModel>
+    class J3DEXPORT TensorOMPGravityImp: public jif3D::ThreeDGravMagImplementation<
+        TensorGravityData>
       {
     private:
       //! Implement the calculation of the background response
       virtual rvec CalcBackground(const size_t measindex, const double xwidth,
-          const double ywidth, const double zwidth,
-          const ThreeDGravityModel &Model, rmat &Sensitivities) override;
+          const double ywidth, const double zwidth, const ThreeDGravityModel &Model,
+          const TensorGravityData &Data, rmat &Sensitivities) override;
       //! Calculate the response of the gridded part
-      virtual rvec CalcGridded(const size_t measindex,
-          const ThreeDGravityModel &Model, rmat &Sensitivities) override;
+      virtual rvec CalcGridded(const size_t measindex, const ThreeDGravityModel &Model,
+          const TensorGravityData &Data, rmat &Sensitivities) override;
       //! The gravity tensor has 9 elements and we return all of them even though they are not all independent
       static const size_t ndatapermeas = 9;
       friend class access;

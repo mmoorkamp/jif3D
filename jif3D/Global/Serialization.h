@@ -19,6 +19,7 @@
 #include <hpx/runtime/serialization/serialization_fwd.hpp>
 using hpx::serialization::base_object;
 using hpx::serialization::access;
+using hpx::serialization::make_array
 #else
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/base_object.hpp>
@@ -26,6 +27,7 @@ using hpx::serialization::access;
 #include <boost/serialization/array.hpp>
 using boost::serialization::base_object;
 using boost::serialization::access;
+using boost::serialization::make_array;
 #endif
 
 

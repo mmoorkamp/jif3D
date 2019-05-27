@@ -5,9 +5,10 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-#include "TomographyCalculator.h"
-#include "ReadWriteTomographyData.h"
-#include "modeling_seismic.h"
+#include "../Tomo/TomographyCalculator.h"
+#include "../Tomo/modeling_seismic.h"
+#include "../Tomo/ReadWriteTomographyData.h"
+
 #include <boost/numeric/conversion/cast.hpp>
 #include <algorithm>
 
@@ -27,11 +28,11 @@ namespace jif3D
       }
 
     void TomographyCalculator::WriteRays(const std::string &filename) const
-    {
+      {
 
-            PlotRaypath("ray.vtk", raypath, data.ndata_seis, grid.h, nairlayers, minxindex,
-                minyindex);
-    }
+        PlotRaypath("ray.vtk", raypath, data.ndata_seis, grid.h, nairlayers, minxindex,
+            minyindex);
+      }
 
     void TomographyCalculator::Allocate(const size_t ngrid, const size_t ndata,
         const size_t npos)
@@ -62,11 +63,12 @@ namespace jif3D
 
       }
 
-    rvec TomographyCalculator::Calculate(const ThreeDSeismicModel &Model)
+    rvec TomographyCalculator::Calculate(const ThreeDSeismicModel &Model,
+        const jif3D::TomographyData &Data)
       {
-        const size_t ndata = Model.GetSourceIndices().size();
-        const size_t nmeas = Model.GetMeasPosX().size();
-        const size_t nshot = Model.GetSourcePosX().size();
+        const size_t ndata = Data.GetSourceIndices().size();
+        const size_t nmeas = Data.GetMeasPosX().size();
+        const size_t nshot = Data.GetSourcePosX().size();
         const size_t npos = nmeas + nshot;
         //we assume that all grid cells have the same size in all directions, so we just
         //read one of the values
@@ -99,14 +101,14 @@ namespace jif3D
                 "Spacing of tomographic model not uniform in z-direction");
           }
         const int padding = 5;
-        auto xmeasrange = std::minmax_element(Model.GetMeasPosX().begin(),
-            Model.GetMeasPosX().end());
-        auto ymeasrange = std::minmax_element(Model.GetMeasPosY().begin(),
-            Model.GetMeasPosY().end());
-        auto xsourcerange = std::minmax_element(Model.GetSourcePosX().begin(),
-            Model.GetSourcePosX().end());
-        auto ysourcerange = std::minmax_element(Model.GetSourcePosY().begin(),
-            Model.GetSourcePosY().end());
+        auto xmeasrange = std::minmax_element(Data.GetMeasPosX().begin(),
+            Data.GetMeasPosX().end());
+        auto ymeasrange = std::minmax_element(Data.GetMeasPosY().begin(),
+            Data.GetMeasPosY().end());
+        auto xsourcerange = std::minmax_element(Data.GetSourcePosX().begin(),
+            Data.GetSourcePosX().end());
+        auto ysourcerange = std::minmax_element(Data.GetSourcePosY().begin(),
+            Data.GetSourcePosY().end());
 
         double minx = std::min(*xmeasrange.first, *xsourcerange.first) - orx;
         double maxx = std::max(*xmeasrange.second, *xsourcerange.second) - orx;
@@ -169,7 +171,7 @@ namespace jif3D
         data.ndata_seis = ndata;
         data.ndata_seis_act = ndata;
         //our indices are 0 based, the forward uses a base of 1
-        std::transform(Model.GetSourceIndices().begin(), Model.GetSourceIndices().end(),
+        std::transform(Data.GetSourceIndices().begin(), Data.GetSourceIndices().end(),
             data.sno.begin(), [](int i)
               { return i+1;});
 
@@ -177,8 +179,8 @@ namespace jif3D
         //but the forward stores the positions in a single array
         //our indices are 0 based, the forward uses a base of 1
         //and we have to add the number of shots that we already stored
-        std::transform(Model.GetReceiverIndices().begin(),
-            Model.GetReceiverIndices().end(), data.rno.begin(), [nshot](int i)
+        std::transform(Data.GetReceiverIndices().begin(),
+            Data.GetReceiverIndices().end(), data.rno.begin(), [nshot](int i)
               { return i+nshot+1;});
 
         geo.nrec = nmeas;
@@ -188,25 +190,25 @@ namespace jif3D
         //we have to adjust for the fact that we are only calculating on
         //a subgrid
 
-        std::transform(Model.GetSourcePosX().begin(), Model.GetSourcePosX().end(),
+        std::transform(Data.GetSourcePosX().begin(), Data.GetSourcePosX().end(),
             geo.x.begin(), [xshift,orx](double pos)
               { return pos-xshift-orx;});
-        std::transform(Model.GetSourcePosY().begin(), Model.GetSourcePosY().end(),
+        std::transform(Data.GetSourcePosY().begin(), Data.GetSourcePosY().end(),
             geo.y.begin(), [yshift,ory](double pos)
               { return pos-yshift -ory;});
         //we also have to adjust for the offset by the airlayers
         const double zoffset = grid.h * nairlayers;
-        std::transform(Model.GetSourcePosZ().begin(), Model.GetSourcePosZ().end(),
+        std::transform(Data.GetSourcePosZ().begin(), Data.GetSourcePosZ().end(),
             geo.z.begin(), [zoffset,orz] (double pos)
               { return pos + zoffset-orz;});
         //and then all measurement position
-        std::transform(Model.GetMeasPosX().begin(), Model.GetMeasPosX().end(),
+        std::transform(Data.GetMeasPosX().begin(), Data.GetMeasPosX().end(),
             geo.x.begin() + nshot, [xshift,orx](double pos)
               { return pos-xshift-orx;});
-        std::transform(Model.GetMeasPosY().begin(), Model.GetMeasPosY().end(),
+        std::transform(Data.GetMeasPosY().begin(), Data.GetMeasPosY().end(),
             geo.y.begin() + nshot, [yshift,ory](double pos)
               { return pos-yshift-ory;});
-        std::transform(Model.GetMeasPosZ().begin(), Model.GetMeasPosZ().end(),
+        std::transform(Data.GetMeasPosZ().begin(), Data.GetMeasPosZ().end(),
             geo.z.begin() + nshot, [zoffset,orz] (double pos)
               { return pos + zoffset-orz;});
 
@@ -233,7 +235,7 @@ namespace jif3D
       }
 
     rvec TomographyCalculator::LQDerivative(const ThreeDSeismicModel &Model,
-        const rvec &Misfit)
+        const jif3D::TomographyData &Data, const rvec &Misfit)
       {
         //in the forward modeling we also perform ray tracing
         //the length of the path in each cell is the sensitivity

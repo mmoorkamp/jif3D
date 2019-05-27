@@ -17,12 +17,12 @@
 namespace fs = boost::filesystem;
 
 using namespace jif3D;
-ForwardResult CalculateFrequency(const ForwardInfo &Info,
+ForwardResult CalculateFrequency(const ForwardInfo &Info, const jif3D::MTData &Data,
     boost::shared_ptr<jif3D::X3DFieldCalculator> Calc)
   {
     //  const size_t nmeas = Info.Model.GetMeasPosX().size();
-    const size_t nfreq = Info.Model.GetFrequencies().size();
-    const size_t nstats = Info.Model.GetExIndices().size() / nfreq;
+    const size_t nfreq = Data.GetFrequencies().size();
+    const size_t nstats = Data.GetExIndices().size() / nfreq;
     const size_t nmodx = Info.Model.GetData().shape()[0];
     const size_t nmody = Info.Model.GetData().shape()[1];
     const size_t ind_shift = nstats * Info.freqindex;
@@ -36,9 +36,11 @@ ForwardResult CalculateFrequency(const ForwardInfo &Info,
     std::vector<double> ShiftDepth;
     std::vector<size_t> MeasDepthIndices;
     //construct a vector of indices of unique station depths
-    size_t nlevels = ConstructDepthIndices(MeasDepthIndices, ShiftDepth, Info.Model);
+    size_t nlevels = ConstructDepthIndices(MeasDepthIndices, ShiftDepth, Info.Model,
+        Data.GetMeasPosZ());
 
-    Calc->CalculateFields(Info.Model, Info.freqindex);
+    Calc->CalculateFields(Info.Model, Data.GetFrequencies(), Data.GetMeasPosZ(),
+        Info.freqindex);
     //for Titan24 and other DAS we might have different impedances at the
     //different electric field measurement positions and we need all four of them
     //for MT ZxxEx = ZxxEy and so on, it makes it easier to consider both cases
@@ -51,24 +53,24 @@ ForwardResult CalculateFrequency(const ForwardInfo &Info,
       {
         boost::array<ThreeDModelBase::t3DModelData::index, 3> StationExIndex =
             Info.Model.FindAssociatedIndices(
-                Info.Model.GetMeasPosX()[Info.Model.GetExIndices()[j + ind_shift]],
-                Info.Model.GetMeasPosY()[Info.Model.GetExIndices()[j + ind_shift]],
-                Info.Model.GetMeasPosZ()[Info.Model.GetExIndices()[j + ind_shift]]);
+                Data.GetMeasPosX()[Data.GetExIndices()[j + ind_shift]],
+                Data.GetMeasPosY()[Data.GetExIndices()[j + ind_shift]],
+                Data.GetMeasPosZ()[Data.GetExIndices()[j + ind_shift]]);
         boost::array<ThreeDModelBase::t3DModelData::index, 3> StationEyIndex =
             Info.Model.FindAssociatedIndices(
-                Info.Model.GetMeasPosX()[Info.Model.GetEyIndices()[j + ind_shift]],
-                Info.Model.GetMeasPosY()[Info.Model.GetEyIndices()[j + ind_shift]],
-                Info.Model.GetMeasPosZ()[Info.Model.GetEyIndices()[j + ind_shift]]);
+                Data.GetMeasPosX()[Data.GetEyIndices()[j + ind_shift]],
+                Data.GetMeasPosY()[Data.GetEyIndices()[j + ind_shift]],
+                Data.GetMeasPosZ()[Data.GetEyIndices()[j + ind_shift]]);
         boost::array<ThreeDModelBase::t3DModelData::index, 3> StationHxIndex =
             Info.Model.FindAssociatedIndices(
-                Info.Model.GetMeasPosX()[Info.Model.GetHxIndices()[j + ind_shift]],
-                Info.Model.GetMeasPosY()[Info.Model.GetHxIndices()[j + ind_shift]],
-                Info.Model.GetMeasPosZ()[Info.Model.GetHxIndices()[j + ind_shift]]);
+                Data.GetMeasPosX()[Data.GetHxIndices()[j + ind_shift]],
+                Data.GetMeasPosY()[Data.GetHxIndices()[j + ind_shift]],
+                Data.GetMeasPosZ()[Data.GetHxIndices()[j + ind_shift]]);
         boost::array<ThreeDModelBase::t3DModelData::index, 3> StationHyIndex =
             Info.Model.FindAssociatedIndices(
-                Info.Model.GetMeasPosX()[Info.Model.GetHyIndices()[j + ind_shift]],
-                Info.Model.GetMeasPosY()[Info.Model.GetHyIndices()[j + ind_shift]],
-                Info.Model.GetMeasPosZ()[Info.Model.GetHyIndices()[j + ind_shift]]);
+                Data.GetMeasPosX()[Data.GetHyIndices()[j + ind_shift]],
+                Data.GetMeasPosY()[Data.GetHyIndices()[j + ind_shift]],
+                Data.GetMeasPosZ()[Data.GetHyIndices()[j + ind_shift]]);
 // with the current equations we cannot use interpolation as the position
         // of the source in the adjoint calculation is always smeared
         //across the whole cell, this works best for a cell in the centre
@@ -92,16 +94,16 @@ ForwardResult CalculateFrequency(const ForwardInfo &Info,
 //            FieldsToImpedance(Ex1Inter, Ex2Inter, Ey1Inter, Ey2Inter, Hx1Inter, Hx2Inter,
 //                Hy1Inter, Hy2Inter, Zxx, Zxy, Zyx, Zyy);
         const size_t offset_Ex = (nmodx * nmody)
-            * MeasDepthIndices[Info.Model.GetExIndices()[j + ind_shift]]
+            * MeasDepthIndices[Data.GetExIndices()[j + ind_shift]]
             + StationExIndex[0] * nmody + StationExIndex[1];
         const size_t offset_Ey = (nmodx * nmody)
-            * MeasDepthIndices[Info.Model.GetEyIndices()[j + ind_shift]]
+            * MeasDepthIndices[Data.GetEyIndices()[j + ind_shift]]
             + StationEyIndex[0] * nmody + StationEyIndex[1];
         const size_t offset_Hx = (nmodx * nmody)
-            * MeasDepthIndices[Info.Model.GetHxIndices()[j + ind_shift]]
+            * MeasDepthIndices[Data.GetHxIndices()[j + ind_shift]]
             + StationHxIndex[0] * nmody + StationHxIndex[1];
         const size_t offset_Hy = (nmodx * nmody)
-            * MeasDepthIndices[Info.Model.GetHyIndices()[j + ind_shift]]
+            * MeasDepthIndices[Data.GetHyIndices()[j + ind_shift]]
             + StationHyIndex[0] * nmody + StationHyIndex[1];
         //calculate the full impedance at the location of the Ex field measurements
         FieldsToImpedance(Calc->GetEx1()[offset_Ex], Calc->GetEx2()[offset_Ex],
@@ -119,7 +121,7 @@ ForwardResult CalculateFrequency(const ForwardInfo &Info,
         //so we can directly use it even in a threaded environment
         const size_t meas_index = j * 8;
         const size_t site_index = j * 4;
-        const double angle = Info.Model.GetRotAngles().at(j) / 180.0
+        const double angle = Data.GetRotAngles().at(j) / 180.0
             * boost::math::constants::pi<double>();
         const double c2 = jif3D::pow2(std::cos(angle));
         const double s2 = jif3D::pow2(std::sin(angle));
@@ -172,8 +174,8 @@ ForwardResult CalculateFrequency(const ForwardInfo &Info,
     return result;
   }
 
-GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI,
-    boost::shared_ptr<jif3D::X3DFieldCalculator> Calc)
+GradResult LQDerivativeFreq(const ForwardInfo &Info, const jif3D::MTData &Data,
+    const GradInfo &GI, boost::shared_ptr<jif3D::X3DFieldCalculator> Calc)
   {
     //a few commonly used quantities for shorter notation
     const size_t nmodx = Info.Model.GetConductivities().shape()[0];
@@ -182,10 +184,9 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI,
     //the number of observations in the fields files, one for each cell in the layer
     const size_t nobs = nmodx * nmody;
     //the number of measurement sites
-    const size_t nmeas = Info.Model.GetMeasPosX().size();
+    const size_t nmeas = Data.GetMeasPosX().size();
     //the number of transfer functions
-    const size_t nstats = Info.Model.GetExIndices().size()
-        / Info.Model.GetFrequencies().size();
+    const size_t nstats = Data.GetExIndices().size() / Data.GetFrequencies().size();
 
     const size_t nmod = nmodx * nmody * nmodz;
     std::vector<double> ShiftDepth;
@@ -194,7 +195,8 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI,
     //anomalous fields
     std::vector<double> SourceObserve(1, 0.0);
     std::vector<size_t> MeasDepthIndices;
-    size_t nlevels = ConstructDepthIndices(MeasDepthIndices, ShiftDepth, Info.Model);
+    size_t nlevels = ConstructDepthIndices(MeasDepthIndices, ShiftDepth, Info.Model,
+        Data.GetMeasPosZ());
     jif3D::rvec Gradient(nmod, 0.0);
     jif3D::rvec Misfit(GI.Misfit.size());
     std::copy(GI.Misfit.begin(), GI.Misfit.end(), Misfit.begin());
@@ -232,52 +234,45 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI,
     //make the sources for the electric dipoles
     for (size_t j = 0; j < nstats; ++j)
       {
+        const int ExInd = Data.GetExIndices()[j + ind_shift];
+        const int EyInd = Data.GetEyIndices()[j + ind_shift];
+        const int HxInd = Data.GetHxIndices()[j + ind_shift];
+        const int HyInd = Data.GetHyIndices()[j + ind_shift];
+
         boost::array<ThreeDModelBase::t3DModelData::index, 3> StationExIndex =
-            Info.Model.FindAssociatedIndices(
-                Info.Model.GetMeasPosX()[Info.Model.GetExIndices()[j + ind_shift]],
-                Info.Model.GetMeasPosY()[Info.Model.GetExIndices()[j + ind_shift]],
-                Info.Model.GetMeasPosZ()[Info.Model.GetExIndices()[j + ind_shift]]);
+            Info.Model.FindAssociatedIndices(Data.GetMeasPosX()[ExInd],
+                Data.GetMeasPosY()[ExInd], Data.GetMeasPosZ()[ExInd]);
 
         boost::array<ThreeDModelBase::t3DModelData::index, 3> StationEyIndex =
-            Info.Model.FindAssociatedIndices(
-                Info.Model.GetMeasPosX()[Info.Model.GetEyIndices()[j + ind_shift]],
-                Info.Model.GetMeasPosY()[Info.Model.GetEyIndices()[j + ind_shift]],
-                Info.Model.GetMeasPosZ()[Info.Model.GetEyIndices()[j + ind_shift]]);
+            Info.Model.FindAssociatedIndices(Data.GetMeasPosX()[EyInd],
+                Data.GetMeasPosY()[EyInd], Data.GetMeasPosZ()[EyInd]);
 
         boost::array<ThreeDModelBase::t3DModelData::index, 3> StationHxIndex =
-            Info.Model.FindAssociatedIndices(
-                Info.Model.GetMeasPosX()[Info.Model.GetHxIndices()[j + ind_shift]],
-                Info.Model.GetMeasPosY()[Info.Model.GetHxIndices()[j + ind_shift]],
-                Info.Model.GetMeasPosZ()[Info.Model.GetHxIndices()[j + ind_shift]]);
+            Info.Model.FindAssociatedIndices(Data.GetMeasPosX()[HxInd],
+                Data.GetMeasPosY()[HxInd], Data.GetMeasPosZ()[HxInd]);
 
         boost::array<ThreeDModelBase::t3DModelData::index, 3> StationHyIndex =
-            Info.Model.FindAssociatedIndices(
-                Info.Model.GetMeasPosX()[Info.Model.GetHyIndices()[j + ind_shift]],
-                Info.Model.GetMeasPosY()[Info.Model.GetHyIndices()[j + ind_shift]],
-                Info.Model.GetMeasPosZ()[Info.Model.GetHyIndices()[j + ind_shift]]);
+            Info.Model.FindAssociatedIndices(Data.GetMeasPosX()[HyInd],
+                Data.GetMeasPosY()[HyInd], Data.GetMeasPosZ()[HyInd]);
         /*        const size_t offset_Ex = (nmodx * nmody) * MeasDepthIndices[Info.Model.GetExIndices()[j + ind_shift]]
          + StationExIndex[0] * nmody + StationExIndex[1];
          const size_t offset_Ey = (nmodx * nmody) * MeasDepthIndices[Info.Model.GetEyIndices()[j + ind_shift]]
          + StationEyIndex[0] * nmody + StationEyIndex[1]; */
-        const size_t offset_Hx = (nmodx * nmody)
-            * MeasDepthIndices[Info.Model.GetHxIndices()[j + ind_shift]]
+        const size_t offset_Hx = (nmodx * nmody) * MeasDepthIndices[HxInd]
             + StationHxIndex[0] * nmody + StationHxIndex[1];
-        const size_t offset_Hy = (nmodx * nmody)
-            * MeasDepthIndices[Info.Model.GetHyIndices()[j + ind_shift]]
+        const size_t offset_Hy = (nmodx * nmody) * MeasDepthIndices[HyInd]
             + StationHyIndex[0] * nmody + StationHyIndex[1];
 
         XSourceXIndex.at(2 * j) = StationExIndex[0];
         XSourceYIndex.at(2 * j) = StationExIndex[1];
-        XSourceDepth.at(2 * j) = Info.Model.GetMeasPosZ()[Info.Model.GetExIndices()[j
-            + ind_shift]];
+        XSourceDepth.at(2 * j) = Data.GetMeasPosZ()[ExInd];
         YSourceXIndex.at(2 * j) = XSourceXIndex.at(2 * j);
         YSourceYIndex.at(2 * j) = XSourceYIndex.at(2 * j);
         YSourceDepth.at(2 * j) = XSourceDepth.at(2 * j);
 
         XSourceXIndex.at(2 * j + 1) = StationEyIndex[0];
         XSourceYIndex.at(2 * j + 1) = StationEyIndex[1];
-        XSourceDepth.at(2 * j + 1) = Info.Model.GetMeasPosZ()[Info.Model.GetEyIndices()[j
-            + ind_shift]];
+        XSourceDepth.at(2 * j + 1) = Data.GetMeasPosZ()[EyInd];
         YSourceXIndex.at(2 * j + 1) = XSourceXIndex.at(2 * j + 1);
         YSourceYIndex.at(2 * j + 1) = XSourceYIndex.at(2 * j + 1);
         YSourceDepth.at(2 * j + 1) = XSourceDepth.at(2 * j + 1);
@@ -288,10 +283,8 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI,
         HySourceXIndex.at(j) = StationHyIndex[0];
         HySourceYIndex.at(j) = StationHyIndex[1];
 
-        HxSourceDepth.at(j) = Info.Model.GetMeasPosZ()[Info.Model.GetHxIndices()[j
-            + ind_shift]];
-        HySourceDepth.at(j) = Info.Model.GetMeasPosZ()[Info.Model.GetHyIndices()[j
-            + ind_shift]];
+        HxSourceDepth.at(j) = Data.GetMeasPosZ()[HxInd];
+        HySourceDepth.at(j) = Data.GetMeasPosZ()[HyInd];
 
         //this is an implementation of eq. 12 in Avdeev and Avdeeva
         //we do not have any beta, as this is part of the misfit
@@ -299,7 +292,7 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI,
             Calc->GetHx2()[offset_Hx], Calc->GetHy1()[offset_Hy],
             Calc->GetHy2()[offset_Hy]);
         rmat R(2, 2), C1(2, 2), C2(2, 2);
-        const double angle = Info.Model.GetRotAngles().at(j) / 180.0 * M_PI;
+        const double angle = Data.GetRotAngles().at(j) / 180.0 * M_PI;
         R(0, 0) = std::cos(angle);
         R(0, 1) = -1.0 * std::sin(angle);
         R(1, 0) = std::sin(angle);
@@ -331,7 +324,7 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI,
     //we only want to calculate for one frequency
     //so our vector has just 1 element
     std::vector<double> CurrFreq =
-      { Info.Model.GetFrequencies()[Info.freqindex] };
+      { Data.GetFrequencies()[Info.freqindex] };
     fs::path EdipName = TempDir
         / MakeUniqueName(Info.NameRoot, X3DModel::EDIP, Info.freqindex);
     std::vector<std::string> PolExt =
@@ -403,10 +396,11 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI,
       }
     //make the sources for the magnetic dipoles
     //now we calculate the response to magnetic dipole sources
-    const std::complex<double> omega_mu = 1.0
-        / (std::complex<double>(0.0, jif3D::mag_mu) * 2.0
-            * boost::math::constants::pi<double>()
-            * Info.Model.GetFrequencies()[Info.freqindex]);
+    const std::complex<double> omega_mu =
+        1.0
+            / (std::complex<double>(0.0, jif3D::mag_mu) * 2.0
+                * boost::math::constants::pi<double>()
+                * Data.GetFrequencies()[Info.freqindex]);
 
     std::complex<double> ZxxEx, ZxyEx, ZyxEx, ZyyEx;
     std::complex<double> ZxxEy, ZxyEy, ZyxEy, ZyyEy;
@@ -415,16 +409,16 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI,
       {
 
         const size_t offset_Ex = (nmodx * nmody)
-            * MeasDepthIndices[Info.Model.GetExIndices()[j + ind_shift]]
+            * MeasDepthIndices[Data.GetExIndices()[j + ind_shift]]
             + XSourceXIndex.at(2 * j) * nmody + XSourceYIndex.at(2 * j);
         const size_t offset_Ey = (nmodx * nmody)
-            * MeasDepthIndices[Info.Model.GetEyIndices()[j + ind_shift]]
+            * MeasDepthIndices[Data.GetEyIndices()[j + ind_shift]]
             + XSourceXIndex.at(2 * j + 1) * nmody + XSourceYIndex.at(2 * j + 1);
         const size_t offset_Hx = (nmodx * nmody)
-            * MeasDepthIndices[Info.Model.GetHxIndices()[j + ind_shift]]
+            * MeasDepthIndices[Data.GetHxIndices()[j + ind_shift]]
             + HxSourceXIndex.at(j) * nmody + HxSourceYIndex.at(j);
         const size_t offset_Hy = (nmodx * nmody)
-            * MeasDepthIndices[Info.Model.GetHyIndices()[j + ind_shift]]
+            * MeasDepthIndices[Data.GetHyIndices()[j + ind_shift]]
             + HySourceXIndex.at(j) * nmody + HySourceYIndex.at(j);
         //calculate the full impedance at the location of the Ex field measurements
         FieldsToImpedance(Calc->GetEx1()[offset_Ex], Calc->GetEx2()[offset_Ex],
@@ -455,15 +449,15 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI,
             * (ZxyEx * EXPolMoments2[2 * j] + ZyyEx * EYPolMoments2[2 * j]
                 + ZxyEy * EXPolMoments2[2 * j + 1] + ZyyEy * EYPolMoments2[2 * j + 1]);
         /*std::cout << "ZEx:" << ZxxEx << " " << ZxyEx << " " << ZyxEx << " " << ZyyEx
-            << std::endl;
-        std::cout << "ZEy:" << ZxxEy << " " << ZxyEy << " " << ZyxEy << " " << ZyyEy
-            << std::endl;
-        std::cout << "EPol1:" << EXPolMoments1[2 * j] << " " << EXPolMoments1[2 * j + 1]
-            << " " << EYPolMoments1[2 * j] << EYPolMoments1[2 * j + 1] << std::endl;
-        std::cout << "EPol2:" << EXPolMoments2[2 * j] << " " << EXPolMoments2[2 * j + 1]
-            << " " << EYPolMoments2[2 * j] << EYPolMoments2[2 * j + 1] << std::endl;
-        std::cout << j << " " << HXPolMoments1[j] << " " << HYPolMoments1[j] << " "
-            << HXPolMoments2[j] << HYPolMoments2[j] << std::endl << std::endl;*/
+         << std::endl;
+         std::cout << "ZEy:" << ZxxEy << " " << ZxyEy << " " << ZyxEy << " " << ZyyEy
+         << std::endl;
+         std::cout << "EPol1:" << EXPolMoments1[2 * j] << " " << EXPolMoments1[2 * j + 1]
+         << " " << EYPolMoments1[2 * j] << EYPolMoments1[2 * j + 1] << std::endl;
+         std::cout << "EPol2:" << EXPolMoments2[2 * j] << " " << EXPolMoments2[2 * j + 1]
+         << " " << EYPolMoments2[2 * j] << EYPolMoments2[2 * j + 1] << std::endl;
+         std::cout << j << " " << HXPolMoments1[j] << " " << HYPolMoments1[j] << " "
+         << HXPolMoments2[j] << HYPolMoments2[j] << std::endl << std::endl;*/
       }
 
     std::vector<std::complex<double> > Ux1_mag, Ux2_mag, Uy1_mag, Uy2_mag, Uz1_mag,
@@ -501,8 +495,8 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const GradInfo &GI,
     return GradResult(Gradient);
   }
 
-GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::rvec &Misfit,
-    boost::shared_ptr<jif3D::X3DFieldCalculator> Calc)
+GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::TipperData &Data,
+    const jif3D::rvec &Misfit, boost::shared_ptr<jif3D::X3DFieldCalculator> Calc)
   {
     //a few commonly used quantities for shorter notation
     const size_t nmodx = Info.Model.GetConductivities().shape()[0];
@@ -511,10 +505,9 @@ GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::rvec &Misf
     //the number of observations in the fields files, one for each cell in the layer
     const size_t nobs = nmodx * nmody;
     //the number of measurement sites
-    const size_t nmeas = Info.Model.GetMeasPosX().size();
+    const size_t nmeas = Data.GetMeasPosX().size();
     //the number of transfer functions
-    const size_t nstats = Info.Model.GetExIndices().size()
-        / Info.Model.GetFrequencies().size();
+    const size_t nstats = Data.GetHxIndices().size() / Data.GetFrequencies().size();
 
     const size_t nmod = nmodx * nmody * nmodz;
     std::vector<double> ShiftDepth;
@@ -523,7 +516,8 @@ GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::rvec &Misf
     //anomalous fields
     std::vector<double> SourceObserve(1, 0.0);
     std::vector<size_t> MeasDepthIndices;
-    size_t nlevels = ConstructDepthIndices(MeasDepthIndices, ShiftDepth, Info.Model);
+    size_t nlevels = ConstructDepthIndices(MeasDepthIndices, ShiftDepth, Info.Model,
+        Data.GetMeasPosZ());
     jif3D::rvec Gradient(nmod, 0.0);
 
     fs::path TempDir(Info.TempDirName);
@@ -545,11 +539,11 @@ GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::rvec &Misf
     const size_t freq_start_index = nstats * Info.freqindex * 4;
     const size_t ind_shift = nstats * Info.freqindex;
 
-    std::vector<std::complex<double> > HXPolMoments1(nstats, 0.0), HXPolMoments2(nstats, 0.0),
-        HYPolMoments1(nstats, 0.0), HYPolMoments2(nstats, 0.0), HZPolMoments1(nstats, 0.0),
-        HZPolMoments2(nstats, 0.0), Zeros(nstats, 0.0);
-    std::vector<double> HxSourceDepth(nstats, 0.0), HySourceDepth(nstats, 0.0), HzSourceDepth(
-        nstats, 0.0);
+    std::vector<std::complex<double> > HXPolMoments1(nstats, 0.0), HXPolMoments2(nstats,
+        0.0), HYPolMoments1(nstats, 0.0), HYPolMoments2(nstats, 0.0), HZPolMoments1(
+        nstats, 0.0), HZPolMoments2(nstats, 0.0), Zeros(nstats, 0.0);
+    std::vector<double> HxSourceDepth(nstats, 0.0), HySourceDepth(nstats, 0.0),
+        HzSourceDepth(nstats, 0.0);
     std::vector<size_t> HxSourceXIndex(nstats, 0), HxSourceYIndex(nstats, 0),
         HySourceXIndex(nstats, 0), HySourceYIndex(nstats, 0), HzSourceXIndex(nstats, 0),
         HzSourceYIndex(nstats, 0);
@@ -557,7 +551,7 @@ GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::rvec &Misf
     //we only want to calculate for one frequency
     //so our vector has just 1 element
     std::vector<double> CurrFreq =
-      { Info.Model.GetFrequencies()[Info.freqindex] };
+      { Data.GetFrequencies()[Info.freqindex] };
     std::vector<std::string> PolExt =
       { "a", "b" };
 
@@ -593,41 +587,41 @@ GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::rvec &Misf
     const std::complex<double> omega_mu = 1.0
         / (std::complex<double>(0.0, jif3D::mag_mu) * 2.0
             * boost::math::constants::pi<double>()
-            * Info.Model.GetFrequencies()[Info.freqindex]);
+            * Data.GetFrequencies()[Info.freqindex]);
     for (size_t j = 0; j < nstats; ++j)
       {
-        const size_t hxind = Info.Model.GetHxIndices()[j + ind_shift];
-        const size_t hyind = Info.Model.GetHyIndices()[j + ind_shift];
-        const size_t hzind = Info.Model.GetHzIndices()[j + ind_shift];
+        const size_t hxind = Data.GetHxIndices()[j + ind_shift];
+        const size_t hyind = Data.GetHyIndices()[j + ind_shift];
+        const size_t hzind = Data.GetHzIndices()[j + ind_shift];
         boost::array<ThreeDModelBase::t3DModelData::index, 3> StationHxIndex =
-            Info.Model.FindAssociatedIndices(Info.Model.GetMeasPosX()[hxind],
-                Info.Model.GetMeasPosY()[hxind], Info.Model.GetMeasPosZ()[hxind]);
+            Info.Model.FindAssociatedIndices(Data.GetMeasPosX()[hxind],
+                Data.GetMeasPosY()[hxind], Data.GetMeasPosZ()[hxind]);
         const size_t offset_Hx = (nmodx * nmody) * MeasDepthIndices[hxind]
             + StationHxIndex[0] * nmody + StationHxIndex[1];
 
         boost::array<ThreeDModelBase::t3DModelData::index, 3> StationHyIndex =
-            Info.Model.FindAssociatedIndices(Info.Model.GetMeasPosX()[hyind],
-                Info.Model.GetMeasPosY()[hyind], Info.Model.GetMeasPosZ()[hyind]);
+            Info.Model.FindAssociatedIndices(Data.GetMeasPosX()[hyind],
+                Data.GetMeasPosY()[hyind], Data.GetMeasPosZ()[hyind]);
         const size_t offset_Hy = (nmodx * nmody) * MeasDepthIndices[hyind]
             + StationHyIndex[0] * nmody + StationHyIndex[1];
 
         boost::array<ThreeDModelBase::t3DModelData::index, 3> StationHzIndex =
-            Info.Model.FindAssociatedIndices(Info.Model.GetMeasPosX()[hzind],
-                Info.Model.GetMeasPosY()[hzind], Info.Model.GetMeasPosZ()[hzind]);
+            Info.Model.FindAssociatedIndices(Data.GetMeasPosX()[hzind],
+                Data.GetMeasPosY()[hzind], Data.GetMeasPosZ()[hzind]);
         const size_t offset_Hz = (nmodx * nmody) * MeasDepthIndices[hzind]
             + StationHzIndex[0] * nmody + StationHzIndex[1];
 
         HxSourceXIndex.at(j) = StationHxIndex[0];
         HxSourceYIndex.at(j) = StationHxIndex[1];
-        HxSourceDepth.at(j) = Info.Model.GetMeasPosZ()[hxind];
+        HxSourceDepth.at(j) = Data.GetMeasPosZ()[hxind];
 
         HySourceXIndex.at(j) = StationHyIndex[0];
         HySourceYIndex.at(j) = StationHyIndex[1];
-        HySourceDepth.at(j) = Info.Model.GetMeasPosZ()[hyind];
+        HySourceDepth.at(j) = Data.GetMeasPosZ()[hyind];
 
         HzSourceXIndex.at(j) = StationHzIndex[0];
         HzSourceYIndex.at(j) = StationHzIndex[1];
-        HzSourceDepth.at(j) = Info.Model.GetMeasPosZ()[hzind];
+        HzSourceDepth.at(j) = Data.GetMeasPosZ()[hzind];
 
         std::complex<double> Hx1 = Calc->GetHx1()[offset_Hx];
         std::complex<double> Hx2 = Calc->GetHx2()[offset_Hx];

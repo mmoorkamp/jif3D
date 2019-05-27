@@ -11,7 +11,7 @@
 #include "../Global/Serialization.h"
 #include "../Global/Jif3DGlobal.h"
 #include "../Global/VecMat.h"
-
+#include <vector>
 namespace jif3D
   {
     /** \addtogroup mtmodelling Forward modelling of magnetotelluric data */
@@ -41,10 +41,9 @@ namespace jif3D
         const std::vector<double> &Frequencies, const std::vector<double> &MeasXCoord,
         const std::vector<double> &MeasYCoord, const std::vector<double> &MeasZCoord,
         const std::vector<int> &ExIndices, const std::vector<int> &EyIndices,
-        const std::vector<int> &HIndices, const jif3D::rvec &Impedances,
-        const jif3D::rvec &Errors = jif3D::rvec(), const std::vector<double> &Distortion =
-            std::vector<double>(), const std::vector<double> &RotAngles =
-                std::vector<double>());
+        const std::vector<int> &HIndices, const std::vector<double> &Impedances,
+        const std::vector<double> &Errors, const std::vector<double> &Distortion,
+        const std::vector<double> &RotAngles);
 
     //! Read Titan24 Data transfer functions from a netcdf file
     /*! Read Titan24 Data for several stations from a netcdf file.
@@ -70,7 +69,7 @@ namespace jif3D
         std::vector<double> &Frequencies, std::vector<double> &MeasXCoord,
         std::vector<double> &MeasYCoord, std::vector<double> &MeasZCoord,
         std::vector<int> &ExIndices, std::vector<int> &EyIndices,
-        std::vector<int> &HIndices, jif3D::rvec &Impedances, jif3D::rvec &ImpError,
+        std::vector<int> &HIndices, std::vector<double>  &Impedances, std::vector<double>  &ImpError,
         std::vector<double> &Distortion, std::vector<double> &RotAngles);
 
     //! Write Titan24 transfer functions into an ascii file as written by ModEM

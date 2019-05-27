@@ -1,3 +1,4 @@
+
 #define BOOST_TEST_MODULE TomoTypes test
 #define BOOST_TEST_MAIN ...
 #include "../Global/Jif3DTesting.h"
@@ -10,7 +11,7 @@
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #endif
-#include "tomo_types.h"
+#include "../Tomo/tomo_types.h"
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/random/linear_congruential.hpp>
 #include <boost/random/uniform_real.hpp>

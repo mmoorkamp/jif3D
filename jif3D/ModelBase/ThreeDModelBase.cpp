@@ -21,14 +21,13 @@ namespace jif3D
   {
 
     ThreeDModelBase::ThreeDModelBase() :
-        MeasPosX(), MeasPosY(), MeasPosZ(), Data(), XCellSizes(), YCellSizes(), ZCellSizes(), GridXCoordinates(), GridYCoordinates(), GridZCoordinates()
+        Data(), XCellSizes(), YCellSizes(), ZCellSizes(), GridXCoordinates(), GridYCoordinates(), GridZCoordinates()
       {
 
       }
 
     ThreeDModelBase::ThreeDModelBase(const ThreeDModelBase& source) :
-        MeasPosX(source.MeasPosX), MeasPosY(source.MeasPosY), MeasPosZ(source.MeasPosZ), Data(
-            source.Data)
+        Data(source.Data)
       {
         SetXCoordinates(source.GridXCoordinates);
         SetYCoordinates(source.GridYCoordinates);
@@ -44,12 +43,6 @@ namespace jif3D
       {
         if (this == &source)
           return *this;
-        //we have to implement the copy operator to make sure
-        //all information is updated appropriately
-        //first we copy all the measurement positions
-        MeasPosX = source.MeasPosX;
-        MeasPosY = source.MeasPosY;
-        MeasPosZ = source.MeasPosZ;
         //then we copy the data, i.e. the cells values of the 3D model
         Data.resize(
             boost::extents[source.Data.shape()[0]][source.Data.shape()[1]][source.Data.shape()[2]]);
@@ -65,12 +58,6 @@ namespace jif3D
     bool ThreeDModelBase::operator ==(const ThreeDModelBase &b) const
       {
         double epsilon = 0.001;
-        if (MeasPosX.size() != b.MeasPosX.size())
-          return false;
-        if (MeasPosY.size() != b.MeasPosY.size())
-          return false;
-        if (MeasPosZ.size() != b.MeasPosZ.size())
-          return false;
         if (Data.num_elements() != b.Data.num_elements())
           return false;
         if (GridXCoordinates.size() != b.GridXCoordinates.size())
@@ -78,18 +65,6 @@ namespace jif3D
         if (GridYCoordinates.size() != b.GridYCoordinates.size())
           return false;
         if (GridZCoordinates.size() != b.GridZCoordinates.size())
-          return false;
-        if (!std::equal(MeasPosX.begin(), MeasPosX.end(), b.MeasPosX.begin(),
-            [epsilon](double a, double b)
-              { return (boost::math::relative_difference(a,b) < epsilon);}))
-          return false;
-        if (!std::equal(MeasPosY.begin(), MeasPosY.end(), b.MeasPosY.begin(),
-            [epsilon](double a, double b)
-              { return boost::math::relative_difference(a,b) < epsilon;}))
-          return false;
-        if (!std::equal(MeasPosZ.begin(), MeasPosZ.end(), b.MeasPosZ.begin(),
-            [epsilon](double a, double b)
-              { return boost::math::relative_difference(a,b) < epsilon;}))
           return false;
         if (!std::equal(Data.origin(), Data.origin() + Data.num_elements(),
             b.Data.origin(), [epsilon](double a, double b)
@@ -234,8 +209,8 @@ namespace jif3D
     void ThreeDModelBase::WriteXYZ(const std::string &filename) const
       {
         std::ofstream outfile(filename.c_str());
-        std::vector<double> XCenter(GridXCoordinates.size()), YCenter(GridYCoordinates.size()),
-            ZCenter(GridZCoordinates.size());
+        std::vector<double> XCenter(GridXCoordinates.size()), YCenter(
+            GridYCoordinates.size()), ZCenter(GridZCoordinates.size());
 
         auto avgfunc = [](double a, double b)
           { return (a+b)/2.0;};
@@ -246,40 +221,14 @@ namespace jif3D
         std::adjacent_difference(GridZCoordinates.begin(), GridZCoordinates.end(),
             ZCenter.begin(), avgfunc);
 
-
         size_t ncells = GetNModelElements();
         for (size_t i = 0; i < ncells; ++i)
           {
             int xi, yi, zi;
             OffsetToIndex(i, xi, yi, zi);
-            outfile << XCenter[xi + 1] << " " << YCenter[yi + 1] << " " << ZCenter[zi +1] << " "
-                << Data[xi][yi][zi] << "\n";
+            outfile << XCenter[xi + 1] << " " << YCenter[yi + 1] << " " << ZCenter[zi + 1]
+                << " " << Data[xi][yi][zi] << "\n";
           }
-      }
-
-    void ThreeDModelBase::ReadMeasPosNetCDF(const std::string filename)
-      {
-        jif3D::ReadMeasPosNetCDF(filename, MeasPosX, MeasPosY, MeasPosZ);
-      }
-
-    void ThreeDModelBase::ReadMeasPosAscii(const std::string filename)
-      {
-        //we assume that the measurement positions are simply
-        //in the format x,y,z
-        std::ifstream infile(filename.c_str());
-        double posx, posy, posz;
-        while (infile.good())
-          {
-            infile >> posx >> posy >> posz;
-            if (infile.good())
-              {
-                MeasPosX.push_back(posx);
-                MeasPosY.push_back(posy);
-                MeasPosZ.push_back(posz);
-              }
-          }
-        assert(MeasPosX.size() == MeasPosY.size());
-        assert(MeasPosX.size() == MeasPosZ.size());
       }
 
   }
