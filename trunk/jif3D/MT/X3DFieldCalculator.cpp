@@ -8,35 +8,37 @@
 #include "X3DFieldCalculator.h"
 #include "MTUtils.h"
 #include "../ModelBase/CellBoundaries.h"
+#include "ReadWriteX3D.h"
 
 #include <boost/filesystem/operations.hpp>
 #include <boost/algorithm/string.hpp>
-
 
 namespace fs = boost::filesystem;
 
 namespace jif3D
   {
 
-  void X3DFieldCalculator::CleanUp()
-    {
-      //under certain conditions we might not be able
-      //to delete all files. We don't want the program to stop
-      //because of this as we can always delete files afterwards
-      //so we pass an error code object to remove_all and ignore the error
-      boost::system::error_code ec;
-      fs::directory_iterator end_itr; // default construction yields past-the-end
-      //go through the directory and delete any file that starts with NameRoot
-      for (fs::directory_iterator itr(TempDir); itr != end_itr; ++itr)
-        {
-          if (boost::algorithm::starts_with(itr->path().filename().string(), NameRoot))
-            {
-              fs::remove_all(itr->path().filename(), ec);
-            }
-        }
-    }
+    void X3DFieldCalculator::CleanUp()
+      {
+        //under certain conditions we might not be able
+        //to delete all files. We don't want the program to stop
+        //because of this as we can always delete files afterwards
+        //so we pass an error code object to remove_all and ignore the error
+        boost::system::error_code ec;
+        fs::directory_iterator end_itr; // default construction yields past-the-end
+        //go through the directory and delete any file that starts with NameRoot
+        for (fs::directory_iterator itr(TempDir); itr != end_itr; ++itr)
+          {
+            if (boost::algorithm::starts_with(itr->path().filename().string(), NameRoot))
+              {
+                fs::remove_all(itr->path().filename(), ec);
+              }
+          }
+      }
 
-    void X3DFieldCalculator::CalculateFields(const X3DModel &Model, size_t freqindex)
+    void X3DFieldCalculator::CalculateFields(const X3DModel &Model,
+        const std::vector<double> &Frequencies, const std::vector<double> MeasPosZ,
+        size_t freqindex)
       {
 
         const size_t nmodx = Model.GetData().shape()[0];
@@ -45,11 +47,12 @@ namespace jif3D
         fs::path RootName = TempDir / MakeUniqueName(NameRoot, X3DModel::MT, freqindex);
         fs::path DirName = RootName.string() + dirext;
         ForwardDirName = DirName.string();
-        std::vector<double> CurrFreq(1, Model.GetFrequencies()[freqindex]);
+        std::vector<double> CurrFreq(1, Frequencies[freqindex]);
         std::vector<double> ShiftDepth;
         std::vector<size_t> MeasDepthIndices;
         //construct a vector of indices of unique station depths
-        size_t nlevels = ConstructDepthIndices(MeasDepthIndices, ShiftDepth, Model);
+        size_t nlevels = ConstructDepthIndices(MeasDepthIndices, ShiftDepth, Model,
+            MeasPosZ);
         const size_t nval = (nmodx * nmody * nlevels);
 
         if (Ex1.size() == nval && OldModel == Model)

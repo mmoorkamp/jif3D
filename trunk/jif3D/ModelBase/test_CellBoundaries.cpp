@@ -76,13 +76,14 @@ BOOST_AUTO_TEST_CASE(index_test)
     Model.SetZCellSizes(ZCS);
     size_t nmeas = 70;
     double delta = 0.1;
+    std::vector<double> MeasPosZ(nmeas);
     for (size_t i = 0; i < nmeas; ++i)
       {
-        Model.AddMeasurementPoint(0.5, 0.5, i * delta);
+        MeasPosZ.at(i) = i * delta;
       }
     std::vector<size_t> MeasDepthIndices;
     std::vector<double> ShiftDepth;
-    size_t nlevels = jif3D::ConstructDepthIndices(MeasDepthIndices, ShiftDepth, Model);
+    size_t nlevels = jif3D::ConstructDepthIndices(MeasDepthIndices, ShiftDepth, Model, MeasPosZ);
     BOOST_CHECK_EQUAL(nlevels, nz);
     BOOST_CHECK_EQUAL(MeasDepthIndices.size(), nmeas);
     BOOST_CHECK_EQUAL(ShiftDepth.size(), nz);
@@ -95,10 +96,10 @@ BOOST_AUTO_TEST_CASE(index_test)
     //below that they are always shifted up, so test separately
     for (size_t i = 0; i < nmeas - 5; ++i)
       {
-        BOOST_CHECK_EQUAL(MeasDepthIndices[i], std::round(Model.GetMeasPosZ()[i]));
+        BOOST_CHECK_EQUAL(MeasDepthIndices[i], std::round(MeasPosZ[i]));
       }
     for (size_t i = nmeas - 5; i < nmeas; ++i)
       {
-        BOOST_CHECK_EQUAL(MeasDepthIndices[i], std::floor(Model.GetMeasPosZ()[i]));
+        BOOST_CHECK_EQUAL(MeasDepthIndices[i], std::floor(MeasPosZ[i]));
       }
   }

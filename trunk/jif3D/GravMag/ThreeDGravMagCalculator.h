@@ -19,7 +19,7 @@ namespace jif3D
     /** \addtogroup gravity Gravity forward modeling, display and inversion */
     /* @{ */
 
-    template<class ThreeDModelType> class ThreeDGravMagImplementation;
+    template<class PotentialDataType> class ThreeDGravMagImplementation;
     //! The base class for all calculator objects, these handle how the sensitivities are stored and processed
     /*! The ThreeDGravityCalculator class is the base class that provides
      * the user interface to the gravity forward calculation. It uses a
@@ -44,12 +44,14 @@ namespace jif3D
      * We can set a transformation to directly calculate derived quantities and the associated gradient. This transform
      * is forwarded to the implementation object and all returned data and gradients will be with respect to this transformation.
      */
-    template<class ThreeDModelType>
+    template<class PotentialDataType>
     class J3DEXPORT ThreeDGravMagCalculator
       {
     public:
       //! We want to use this class with the ThreeDObjective function class template, so we need to define ModelType as the class that contains the forward model
-      typedef ThreeDModelType ModelType;
+      typedef PotentialDataType DataType;
+      typedef typename PotentialDataType::ModelType ThreeDModelType;
+      typedef typename PotentialDataType::ModelType ModelType;
     private:
       /*! We need a structure to hold the sensitivities for
        * the current measurement that can be passed to
@@ -70,7 +72,7 @@ namespace jif3D
       //! In some cases we might want to apply a transformation to the data, e.g. FTG to an invariant
       boost::shared_ptr<VectorTransform> Transform;
       //! The shared pointer to the implementation object that does the actual calculation
-      boost::shared_ptr<ThreeDGravMagImplementation<ThreeDModelType> > Imp;
+      boost::shared_ptr<ThreeDGravMagImplementation<DataType> > Imp;
       //! Check the the information in the model is consistent, i.e. corresponding vectors have the same size
       void CheckModelConsistency(const ModelType &Model);
     public:
@@ -81,9 +83,10 @@ namespace jif3D
           Imp->SetDataTransform(DataTransform);
         }
       //! Calculate the forward response of the given model, this simple implementation just forwards the call to the implementation class
-      virtual rvec Calculate(const ModelType &Model);
+      virtual rvec Calculate(const ModelType &Model, const DataType &Data);
       //! Get the least squares derivative \f$ \partial O/ \partial \f$ of a least squares objective function \f$ O = \sum (d^{obs} - d^{pred})^2 \f$
-      virtual rvec LQDerivative(const ModelType &Model, const rvec &Misfit);
+      virtual rvec LQDerivative(const ModelType &Model, const DataType &Data,
+          const rvec &Misfit);
       //! Read and write access to the sensitivity information for the current measurement, only intended for implementation classes
       rmat &SetCurrentSensitivities()
         {
@@ -98,25 +101,25 @@ namespace jif3D
       virtual void HandleSensitivities(const size_t measindex) = 0;
       //! This class is useless without an implementation object so we have to pass one to the constructor
       ThreeDGravMagCalculator(
-          boost::shared_ptr<ThreeDGravMagImplementation<ThreeDModelType> > TheImp);
+          boost::shared_ptr<ThreeDGravMagImplementation<DataType> > TheImp);
       virtual ~ThreeDGravMagCalculator();
       };
 
-    template<class ThreeDModelType>
-    ThreeDGravMagCalculator<ThreeDModelType>::ThreeDGravMagCalculator(
-        boost::shared_ptr<jif3D::ThreeDGravMagImplementation<ThreeDModelType> > TheImp) :
+    template<class PotentialDataType>
+    ThreeDGravMagCalculator<PotentialDataType>::ThreeDGravMagCalculator(
+        boost::shared_ptr<jif3D::ThreeDGravMagImplementation<DataType> > TheImp) :
         CurrentSensitivities(), Transform(), Imp(TheImp)
       {
 
       }
 
-    template<class ThreeDModelType>
-    ThreeDGravMagCalculator<ThreeDModelType>::~ThreeDGravMagCalculator()
+    template<class PotentialDataType>
+    ThreeDGravMagCalculator<PotentialDataType>::~ThreeDGravMagCalculator()
       {
       }
 
-    template<class ThreeDModelType>
-    void ThreeDGravMagCalculator<ThreeDModelType>::CheckModelConsistency(
+    template<class PotentialDataType>
+    void ThreeDGravMagCalculator<PotentialDataType>::CheckModelConsistency(
         const ThreeDModelType &Model)
       {
         //do some sanity checks
@@ -125,26 +128,20 @@ namespace jif3D
         if (Model.GetData().shape()[0] != Model.GetXCellSizes().size())
           {
             throw jif3D::FatalException(
-                "Model x-dimension does not match size for specification of cell sizes. ", __FILE__, __LINE__);
+                "Model x-dimension does not match size for specification of cell sizes. ",
+                __FILE__, __LINE__);
           }
         if (Model.GetData().shape()[1] != Model.GetYCellSizes().size())
           {
             throw jif3D::FatalException(
-                "Model y-dimension does not match size for specification of cell sizes. ", __FILE__, __LINE__);
+                "Model y-dimension does not match size for specification of cell sizes. ",
+                __FILE__, __LINE__);
           }
         if (Model.GetData().shape()[2] != Model.GetZCellSizes().size())
           {
             throw jif3D::FatalException(
-                "Model x-dimension does not match size for specification of cell sizes. ", __FILE__, __LINE__);
-          }
-
-        // make sure we have coordinates for all sites
-        //these should always be equal, so we use an assertion
-        //to catch strange cases that should not occur
-        const size_t nmeas = Model.GetMeasPosX().size();
-        if (nmeas != Model.GetMeasPosY().size() || nmeas != Model.GetMeasPosZ().size())
-          {
-            throw jif3D::FatalException("Inconsistent measurement configuration !", __FILE__, __LINE__);
+                "Model x-dimension does not match size for specification of cell sizes. ",
+                __FILE__, __LINE__);
           }
       }
 
@@ -154,12 +151,12 @@ namespace jif3D
      * @param Misfit The misfit at which we need the derivative, has to match the type of data in the derived class
      * @return The partial derivative of the objective function, size and storage order depends on the type of data
      */
-    template<class ThreeDModelType>
-    rvec ThreeDGravMagCalculator<ThreeDModelType>::LQDerivative(
-        const ThreeDModelType &Model, const rvec &Misfit)
+    template<class PotentialDataType>
+    rvec ThreeDGravMagCalculator<PotentialDataType>::LQDerivative(
+        const ThreeDModelType &Model, const PotentialDataType &Data, const rvec &Misfit)
       {
         CheckModelConsistency(Model);
-        return Imp->LQDerivative(Model, Misfit);
+        return Imp->LQDerivative(Model, Data, Misfit);
       }
 
     /*! Given a 3D model this routine calculates the forward response. The type of data is determined
@@ -167,11 +164,12 @@ namespace jif3D
      * @param Model The model for which we want the response
      * @return The calculated data, the length of the vector and the order of the data depends on the derived class
      */
-    template<class ThreeDModelType>
-    rvec ThreeDGravMagCalculator<ThreeDModelType>::Calculate(const ThreeDModelType &Model)
+    template<class PotentialDataType>
+    rvec ThreeDGravMagCalculator<PotentialDataType>::Calculate(
+        const ThreeDModelType &Model, const PotentialDataType &Data)
       {
         CheckModelConsistency(Model);
-        return Imp->Calculate(Model, *this);
+        return Imp->Calculate(Model, Data, *this);
       }
   /* @} */
   }

@@ -19,6 +19,7 @@ namespace jif3D
   {
 
     class MagneticsExtraParameterSetter;
+    class MagneticData;
 
     static const std::string SusceptibilityName = "Susceptibility";
     static const std::string SusceptibilityUnit = " ";
@@ -106,7 +107,7 @@ namespace jif3D
     class J3DEXPORT MagneticsExtraParameterSetter
       {
     public:
-      void operator()(ThreeDMagneticModel &Model, const std::vector<double> &Dens)
+      void operator()(ThreeDMagneticModel &Model, MagneticData &Data, const std::vector<double> &Dens)
         {
           throw jif3D::FatalException(
               "Magnetics class does not support extra parameters !", __FILE__, __LINE__);

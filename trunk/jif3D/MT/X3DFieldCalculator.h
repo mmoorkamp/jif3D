@@ -24,8 +24,10 @@
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include "X3DModel.h"
-//#include "X3DTypes.h"
+#include "MTData.h"
 #include "ReadWriteX3D.h"
+//#include "X3DTypes.h"
+
 
 namespace jif3D
   {
@@ -149,7 +151,7 @@ namespace jif3D
     {
       return ForwardDirName;
     }
-  void CalculateFields(const X3DModel &Model, size_t freqindex);
+  void CalculateFields(const X3DModel &Model, const std::vector<double> &Frequencies, const std::vector<double> MeasPosZ, size_t freqindex);
   X3DFieldCalculator(boost::filesystem::path TDir = boost::filesystem::current_path(),
       std::string x3d = "x3d", bool Clean = true, jif3D::GreenCalcType GS1 = hst,
       jif3D::GreenCalcType GS4 = hst);

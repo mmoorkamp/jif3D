@@ -17,6 +17,7 @@
 #include "../Gravity/test_common.h"
 #include "../Inversion/ThreeDModelObjective.h"
 #include "ThreeDMagneticModel.h"
+#include "MagneticData.h"
 #include "OMPMagneticImp.h"
 #include "MagneticTransforms.h"
 #include "../GravMag/FullSensitivityGravMagCalculator.h"
@@ -57,24 +58,29 @@ BOOST_AUTO_TEST_SUITE( MagneticObjective_Test_Suite )
     BOOST_AUTO_TEST_CASE (full_field_deriv_test)
       {
         jif3D::ThreeDMagneticModel MagTest;
+        jif3D::MagneticData Data;
         const size_t nmeas = 3;
         const size_t ncells = 5;
-        MakeRandomModel(MagTest, ncells, nmeas, false);
+        MakeRandomModel(MagTest, Data, ncells, nmeas, false);
         double inclination = jif3D::platform::drand48();
         double declination = jif3D::platform::drand48();
         double fieldstrength = 1.0 + jif3D::platform::drand48();
 
-        typedef typename jif3D::MinMemGravMagCalculator<jif3D::ThreeDMagneticModel> CalculatorType;
-        boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::ThreeDMagneticModel> > Implementation(
+        typedef typename jif3D::MinMemGravMagCalculator<jif3D::MagneticData> CalculatorType;
+        boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::MagneticData> > Implementation(
             new jif3D::OMPMagneticImp(inclination, declination, fieldstrength));
 
         boost::shared_ptr<CalculatorType> Calculator(new CalculatorType(Implementation));
-        jif3D::rvec Observed(Calculator->Calculate(MagTest));
+        jif3D::rvec Observed(Calculator->Calculate(MagTest, Data));
 
         Observed *= 1.1;
+        std::vector<double> d(Observed.size()), e(Observed.size(), 1.0);
+        std::copy(Observed.begin(),Observed.end(),d.begin());
+        Data.SetDataAndErrors(d,e);
+
 
         jif3D::ThreeDModelObjective<CalculatorType> Objective(*Calculator.get());
-        Objective.SetObservedData(Observed);
+        Objective.SetObservedData(Data);
         Objective.SetCoarseModelGeometry(MagTest);
         jif3D::rvec InvModel(MagTest.GetSusceptibilities().num_elements());
         std::copy(MagTest.GetSusceptibilities().origin(),
@@ -87,25 +93,31 @@ BOOST_AUTO_TEST_SUITE( MagneticObjective_Test_Suite )
     BOOST_AUTO_TEST_CASE (T_deriv_test)
       {
         jif3D::ThreeDMagneticModel MagTest;
+        jif3D::MagneticData Data;
+
         const size_t nmeas = 3;
         const size_t ncells = 5;
-        MakeRandomModel(MagTest, ncells, nmeas, false);
+        MakeRandomModel(MagTest, Data, ncells, nmeas, false);
         double inclination = jif3D::platform::drand48();
         double declination = jif3D::platform::drand48();
         double fieldstrength = 1.0 + jif3D::platform::drand48();
 
-        typedef typename jif3D::MinMemGravMagCalculator<jif3D::ThreeDMagneticModel> CalculatorType;
-        boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::ThreeDMagneticModel> > Implementation(
+        typedef typename jif3D::MinMemGravMagCalculator<jif3D::MagneticData> CalculatorType;
+        boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::MagneticData> > Implementation(
             new jif3D::OMPMagneticImp(inclination, declination, fieldstrength));
 
         boost::shared_ptr<CalculatorType> Calculator(new CalculatorType(Implementation));
-        jif3D::rvec Observed(Calculator->Calculate(MagTest));
+        jif3D::rvec Observed(Calculator->Calculate(MagTest, Data));
+
 
         Observed *= 1.1;
+        std::vector<double> d(Observed.size()), e(Observed.size(), 1.0);
+        std::copy(Observed.begin(),Observed.end(),d.begin());
+        Data.SetDataAndErrors(d,e);
 
         jif3D::ThreeDModelObjective<CalculatorType> Objective(*Calculator.get());
         Objective.SetDataTransform(boost::make_shared<jif3D::TotalField>());
-        Objective.SetObservedData(Observed);
+        Objective.SetObservedData(Data);
         Objective.SetCoarseModelGeometry(MagTest);
         jif3D::rvec InvModel(MagTest.GetSusceptibilities().num_elements());
         std::copy(MagTest.GetSusceptibilities().origin(),
@@ -118,28 +130,33 @@ BOOST_AUTO_TEST_SUITE( MagneticObjective_Test_Suite )
     BOOST_AUTO_TEST_CASE (deltaT_deriv_test)
       {
         jif3D::ThreeDMagneticModel MagTest;
+        jif3D::MagneticData Data;
+
         const size_t nmeas = 3;
         const size_t ncells = 5;
-        MakeRandomModel(MagTest, ncells, nmeas, false);
+        MakeRandomModel(MagTest, Data, ncells, nmeas, false);
         double inclination = jif3D::platform::drand48();
         double declination = jif3D::platform::drand48();
         double fieldstrength = 1.0 + jif3D::platform::drand48();
 
-        typedef typename jif3D::MinMemGravMagCalculator<jif3D::ThreeDMagneticModel> CalculatorType;
-        boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::ThreeDMagneticModel> > Implementation(
+        typedef typename jif3D::MinMemGravMagCalculator<jif3D::MagneticData> CalculatorType;
+        boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::MagneticData> > Implementation(
             new jif3D::OMPMagneticImp(inclination, declination, fieldstrength));
 
         boost::shared_ptr<CalculatorType> Calculator(new CalculatorType(Implementation));
 
-        jif3D::rvec Observed(Calculator->Calculate(MagTest));
+        jif3D::rvec Observed(Calculator->Calculate(MagTest,Data));
 
         Observed *= 1.1;
+        std::vector<double> d(Observed.size()), e(Observed.size(), 1.0);
+        std::copy(Observed.begin(),Observed.end(),d.begin());
+        Data.SetDataAndErrors(d,e);
 
         jif3D::ThreeDModelObjective<CalculatorType> Objective(*Calculator.get());
         Objective.SetDataTransform(
             boost::make_shared<jif3D::TotalFieldAnomaly>(inclination, declination,
                 fieldstrength));
-        Objective.SetObservedData(Observed);
+        Objective.SetObservedData(Data);
         Objective.SetCoarseModelGeometry(MagTest);
         jif3D::rvec InvModel(MagTest.GetSusceptibilities().num_elements());
         std::copy(MagTest.GetSusceptibilities().origin(),

@@ -5,6 +5,7 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
+#include "GravityBackground.h"
 #include "ThreeDGravityModel.h"
 #include "BasicGravElements.h"
 #include "../Global/VecMat.h"
@@ -21,13 +22,13 @@ namespace jif3D
      * @return A vector with a single component that contains the gravitational effect of the background
      */
     rvec CalcScalarBackground(const size_t measindex, const double xwidth,
-        const double ywidth, const double zwidth,
-        const ThreeDGravityModel &Model, rmat &Sensitivities)
+        const double ywidth, const double zwidth, const ThreeDGravityModel &Model,
+        const ScalarGravityData &Data, rmat &Sensitivities)
       {
         const size_t ndatapermeas = 1;
-        const double x_meas = Model.GetMeasPosX()[measindex];
-        const double y_meas = Model.GetMeasPosY()[measindex];
-        const double z_meas = Model.GetMeasPosZ()[measindex];
+        const double x_meas = Data.GetMeasPosX()[measindex];
+        const double y_meas = Data.GetMeasPosY()[measindex];
+        const double z_meas = Data.GetMeasPosZ()[measindex];
         const size_t nbglayers = Model.GetBackgroundThicknesses().size();
         double result = 0.0;
         double currtop = 0.0;
@@ -48,15 +49,15 @@ namespace jif3D
             if (currtop < zwidth && (currbottom <= zwidth))
 
               {
-                currvalue -= CalcGravBoxTerm(x_meas, y_meas, z_meas, 0.0, 0.0,
-                    currtop, xwidth, ywidth, currthick);
+                currvalue -= CalcGravBoxTerm(x_meas, y_meas, z_meas, 0.0, 0.0, currtop,
+                    xwidth, ywidth, currthick);
               }
             //if some of the background coincides and some is below
             if (currtop < zwidth && currbottom > zwidth)
 
               {
-                currvalue -= CalcGravBoxTerm(x_meas, y_meas, z_meas, 0.0, 0.0,
-                    currtop, xwidth, ywidth, (zwidth - currtop));
+                currvalue -= CalcGravBoxTerm(x_meas, y_meas, z_meas, 0.0, 0.0, currtop,
+                    xwidth, ywidth, (zwidth - currtop));
               }
             if (storesens)
               {
@@ -69,7 +70,6 @@ namespace jif3D
         returnvector(0) = result;
         return returnvector;
       }
-
 
     /*! Calculate the effect of the background layers for a single scalar measurement
      * the general structure of this function is very similar to CalcScalarBackground
@@ -85,16 +85,18 @@ namespace jif3D
      * @return A vector with a 9 components that contains the gravitational effect of the background on the different tensor elements
      */
     rvec CalcTensorBackground(const size_t measindex, const double xwidth,
-        const double ywidth, const double zwidth,
-        const ThreeDGravityModel &Model, rmat &Sensitivities)
+        const double ywidth, const double zwidth, const ThreeDGravityModel &Model,
+        const TensorGravityData &Data, rmat &Sensitivities)
       {
         const size_t ndatapermeas = 9;
         //make sure we have thicknesses and densities for all layers
-        assert(Model.GetBackgroundDensities().size() == Model.GetBackgroundThicknesses().size());
+        assert(
+            Model.GetBackgroundDensities().size()
+                == Model.GetBackgroundThicknesses().size());
         const size_t nbglayers = Model.GetBackgroundDensities().size();
-        const double x_meas = Model.GetMeasPosX()[measindex];
-        const double y_meas = Model.GetMeasPosY()[measindex];
-        const double z_meas = Model.GetMeasPosZ()[measindex];
+        const double x_meas = Data.GetMeasPosX()[measindex];
+        const double y_meas = Data.GetMeasPosY()[measindex];
+        const double z_meas = Data.GetMeasPosZ()[measindex];
         rmat result(3, 3);
         rmat currvalue(3, 3);
         std::fill_n(result.data().begin(), ndatapermeas, 0.0);
@@ -113,13 +115,13 @@ namespace jif3D
             currvalue(2, 2) = CalcUzzInfSheetTerm(z_meas, currtop, currbottom);
             if (currtop < zwidth && (currbottom <= zwidth)) // if the background layer complete coincides with the discretized area
               {
-                currvalue -= CalcTensorBoxTerm(x_meas, y_meas, z_meas, 0.0,
-                    0.0, currtop, xwidth, ywidth, currthick);
+                currvalue -= CalcTensorBoxTerm(x_meas, y_meas, z_meas, 0.0, 0.0, currtop,
+                    xwidth, ywidth, currthick);
               }
             if (currtop < zwidth && currbottom > zwidth) //if some of the background coincides and some is below
               {
-                currvalue -= CalcTensorBoxTerm(x_meas, y_meas, z_meas, 0.0,
-                    0.0, currtop, xwidth, ywidth, (zwidth - currtop));
+                currvalue -= CalcTensorBoxTerm(x_meas, y_meas, z_meas, 0.0, 0.0, currtop,
+                    xwidth, ywidth, (zwidth - currtop));
               }
             if (storesens)
               {
@@ -130,8 +132,7 @@ namespace jif3D
             currtop += currthick;
           }
         rvec resultvector(ndatapermeas);
-        std::copy(result.data().begin(), result.data().end(),
-            resultvector.begin());
+        std::copy(result.data().begin(), result.data().end(), resultvector.begin());
         return resultvector;
       }
   }

@@ -7,7 +7,8 @@
 
 #include <iostream>
 #include <string>
-#include "ThreeDSeismicModel.h"
+
+#include "../Tomo/ThreeDSeismicModel.h"
 #include "../Global/FileUtil.h"
 
 /*! \file reldiff.cpp

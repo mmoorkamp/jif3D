@@ -37,6 +37,8 @@ exe randommtmesh : randommtmesh.cpp  ../Global//global  ../MT//mt ../ModelBase//
 exe joinpicks : joinpicks.cpp  ../Global//global  ../Tomo//tomo ..//boost_filesystem ..//boost_system ;
 exe srcrecdist : srcrecdist.cpp  ../Global//global ../Tomo//tomo ../ModelBase//modelbase ..//boost_filesystem ..//boost_system ..//netcdf_c++ ..//netcdf ;
 exe calccross : calccross.cpp  joint ../ModelBase//anymodel ;
+exe crossthreshold : crossthreshold.cpp  joint ../ModelBase//anymodel ;
+
 exe convertmtascii : convertmtascii.cpp   ../Global ../MT ..//boost_filesystem  ..//boost_system ;
 exe convertmtt : convertmtt.cpp   ../Global//global ../MT//mt ..//boost_filesystem  ..//boost_system  ;
 exe onedmtinv : onedmtinv.cpp   joint ../MT//mt ..//boost_program_options ..//boost_filesystem ..//boost_system ;

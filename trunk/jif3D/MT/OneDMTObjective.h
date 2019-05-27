@@ -8,14 +8,13 @@
 #ifndef THREEDMODELOBJECTIVE_H_
 #define THREEDMODELOBJECTIVE_H_
 
-#include <fstream>
-
 #include "../Global/Serialization.h"
 #include "../Global/Jif3DGlobal.h"
 #include "../Global/FatalException.h"
 #include "../Inversion/ObjectiveFunction.h"
 #include "OneDMTCalculator.h"
-
+#include <fstream>
+#include <vector>
 namespace jif3D
   {
     //! Calculate the data misfit for MT observations assuming a 1D layered half-space as Earth structure.
@@ -25,7 +24,7 @@ namespace jif3D
     private:
       jif3D::OneDMTCalculator Calculator;
       jif3D::X3DModel MTModel;
-      jif3D::rvec ObservedData;
+      jif3D::MTData ObservedData;
       //! Calculate the difference between observed and synthetic data for a given model
       friend class access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
@@ -37,7 +36,8 @@ namespace jif3D
           ar & ObservedData;
         }
     private:
-      virtual void ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff) override
+      virtual void ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff)
+          override
         {
           //make sure the sizes match
           //std::cout << "Model: " << Model << std::endl;
@@ -46,7 +46,7 @@ namespace jif3D
           MTModel.SetBackgroundConductivities(
               std::vector<double>(Model.begin(), Model.end()));
           jif3D::rvec SynthData;
-          SynthData = Calculator.Calculate(MTModel);
+          SynthData = Calculator.Calculate(MTModel, ObservedData);
           if (SynthData.size() != ObservedData.size())
             throw jif3D::FatalException(
                 " ThreeDModelObjective: Forward calculation does not give same amount of data !",
@@ -57,7 +57,8 @@ namespace jif3D
               Diff.begin(), std::minus<double>());
         }
       //! The implementation of the gradient calculation
-      virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model, const jif3D::rvec &Diff) override
+      virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model, const jif3D::rvec &Diff)
+          override
         {
           double misfit = CalcMisfit(Model);
           const size_t nlayers = Model.size();
@@ -85,7 +86,7 @@ namespace jif3D
                 "Gradient calculation needs identical model to forward !", __FILE__,
                 __LINE__);
           //calculate the gradient
-          jif3D::rvec Deriv = Calculator.LQDerivative(MTModel, Diff);
+          jif3D::rvec Deriv = Calculator.LQDerivative(MTModel, ObservedData, Diff);
           //std::cout << Calculator.GetGamma() << std::endl;
           //std::cout << "Deriv: " << Deriv << std::endl;
 
@@ -105,9 +106,9 @@ namespace jif3D
        * example by adding measurement points to the model object in the right order.
        * @param Data A vector with real values containing the observed data
        */
-      void SetObservedData(const jif3D::rvec &Data)
+      void SetObservedData(const jif3D::MTData &Data)
         {
-          if (Data.empty())
+          if (Data.GetData().empty())
             throw jif3D::FatalException(
                 "Cannot have empty observations in objective function.", __FILE__,
                 __LINE__);
@@ -126,7 +127,9 @@ namespace jif3D
       jif3D::rvec GetSyntheticData() const
         {
           jif3D::rvec Synthetic(GetDataDifference());
-          Synthetic = ublas::element_prod(Synthetic, GetDataError());
+          std::transform(Synthetic.begin(), Synthetic.end(), GetDataError().begin(),
+              Synthetic.begin(), std::multiplies<double>());
+
           Synthetic += ObservedData;
           return Synthetic;
         }
@@ -142,7 +145,7 @@ namespace jif3D
         {
           if (TheModel.GetBackgroundConductivities().size() == 0)
             throw jif3D::FatalException("Cannot have empty model in objective function.",
-                __FILE__, __LINE__);
+            __FILE__, __LINE__);
           MTModel = TheModel;
         }
     public:

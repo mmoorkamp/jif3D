@@ -5,7 +5,8 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-#include "ThreeDSeismicModel.h"
+#include "../Tomo/ThreeDSeismicModel.h"
+
 #include "../Global/FatalException.h"
 #include <boost/numeric/conversion/cast.hpp>
 #include <cassert>
@@ -22,8 +23,7 @@ namespace jif3D
     static const std::string SlownessName = "Slowness";
     static const std::string SlownessUnit = "s/m";
 
-    ThreeDSeismicModel::ThreeDSeismicModel() :
-        SourcePosX(), SourcePosY(), SourcePosZ(), SourceIndices(), ReceiverIndices()
+    ThreeDSeismicModel::ThreeDSeismicModel()
       {
       }
 
@@ -31,13 +31,6 @@ namespace jif3D
       {
       }
 
-    ThreeDSeismicModel::ThreeDSeismicModel(const ThreeDSeismicModel &source) :
-        ThreeDModelBase(source), SourcePosX(source.SourcePosX), SourcePosY(
-            source.SourcePosY), SourcePosZ(source.SourcePosZ), SourceIndices(
-            source.SourceIndices), ReceiverIndices(source.ReceiverIndices)
-      {
-
-      }
 
     ThreeDSeismicModel& ThreeDSeismicModel::operator=(const ThreeDModelBase& source)
       {
@@ -48,18 +41,7 @@ namespace jif3D
         return *this;
       }
 
-    ThreeDSeismicModel& ThreeDSeismicModel::operator=(const ThreeDSeismicModel& source)
-      {
-        if (this == &source)
-          return *this;
-        ThreeDModelBase::operator =(source);
-        SourcePosX = source.SourcePosX;
-        SourcePosY = source.SourcePosY;
-        SourcePosZ = source.SourcePosZ;
-        SourceIndices = source.SourceIndices;
-        ReceiverIndices = source.ReceiverIndices;
-        return *this;
-      }
+
 
 
     boost::array<ThreeDModelBase::t3DModelData::index, 3> ThreeDSeismicModel::FindAssociatedIndices(

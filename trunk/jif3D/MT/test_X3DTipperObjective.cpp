@@ -15,7 +15,6 @@
 
 #include "../Inversion/ThreeDModelObjective.h"
 #include "../Global/Noise.h"
-#include "../Titan24/ReadWriteTitanData.h"
 #include "X3DModel.h"
 #include "OneDMTCalculator.h"
 #include "OneDMTObjective.h"

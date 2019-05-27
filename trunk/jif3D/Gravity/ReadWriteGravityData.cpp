@@ -33,26 +33,27 @@ namespace jif3D
       { UxxName, UxyName, UxzName, UyxName, UyyName, UyzName, UzxName, UzyName, UzzName };
 
     //! Read a component of an FTG matrix for all measurement positions
-    void ReadMatComp(NcFile &NetCDFFile, const std::string &CompName, rvec &MatVec,
-        size_t n)
+    void ReadMatComp(NcFile &NetCDFFile, const std::string &CompName,
+        std::vector<double> &MatVec, size_t n)
       {
         //read in the component from the netcdf file
-        rvec tempdata(MatVec.size() / 9);
+        std::vector<double> tempdata(MatVec.size() / 9);
         ReadVec(NetCDFFile, CompName, tempdata);
         //copy to the right location in the matrix
         for (size_t i = 0; i < tempdata.size(); ++i)
-          MatVec(i * 9 + n) = tempdata(i);
+          MatVec.at(i * 9 + n) = tempdata.at(i);
       }
 
     //! Write one component of an FTG matrix for all measurement positions
-    void WriteMatComp(NcFile &NetCDFFile, const std::string &CompName, const rvec &MatVec,
-        const size_t n, const NcDim &Dimension)
+    void WriteMatComp(NcFile &NetCDFFile, const std::string &CompName,
+        const std::vector<double> &MatVec, const size_t n, const NcDim &Dimension)
       {
-        rvec tempdata(MatVec.size() / 9);
+        std::vector<double> tempdata(MatVec.size() / 9);
 
-        for (size_t i = 0; i < tempdata.size(); ++i) {
-          tempdata(i) = MatVec(i * 9 + n);
-        }
+        for (size_t i = 0; i < tempdata.size(); ++i)
+          {
+            tempdata.at(i) = MatVec.at(i * 9 + n);
+          }
 
         WriteVec(NetCDFFile, CompName, tempdata, Dimension, "1/s2");
       }
@@ -70,15 +71,14 @@ namespace jif3D
         //open the file
         NcFile DataFile(filename.c_str(), NcFile::read);
 
-        if(!DataFile.getVar(ScalarGravityName).isNull())
-        {
-          return scalar;
-        }
-        else if(!DataFile.getVar(UxxName).isNull())
-        {
-          return ftg;
-        }
-
+        if (!DataFile.getVar(ScalarGravityName).isNull())
+          {
+            return scalar;
+          }
+        else if (!DataFile.getVar(UxxName).isNull())
+          {
+            return ftg;
+          }
 
         return unknown;;
       }
@@ -92,20 +92,16 @@ namespace jif3D
      * @param Error The error estimate for each measurement
      */
     void SaveScalarGravityMeasurements(const std::string &filename,
-        const jif3D::rvec &Data, const ThreeDGravityModel::tMeasPosVec &PosX,
-        const ThreeDGravityModel::tMeasPosVec &PosY,
-        const ThreeDGravityModel::tMeasPosVec &PosZ, const jif3D::rvec &Error)
+        const std::vector<double> &Data, const std::vector<double> &PosX,
+        const std::vector<double> &PosY, const std::vector<double> &PosZ,
+        const std::vector<double> &Error)
       {
         //make sure all vectors have consistent sizes
         assert(Data.size() == PosX.size());
         assert(Data.size() == PosY.size());
         assert(Data.size() == PosZ.size());
-        jif3D::rvec LocalError(Error);
-        if (Error.empty())
-          {
-            LocalError.resize(Data.size(), false);
-            std::fill(LocalError.begin(), LocalError.end(), 0.0);
-          }
+        assert(Data.size() == Error.size());
+
         //create a netcdf file
         NcFile DataFile(filename.c_str(), NcFile::replace);
         //we use the station number as a dimension
@@ -117,7 +113,7 @@ namespace jif3D
         WriteVec(DataFile, MeasPosZName, PosZ, StatNumDim, "m");
         //Write the measurements and the error
         WriteVec(DataFile, ScalarGravityName, Data, StatNumDim, "m/s2");
-        WriteVec(DataFile, ScalarErrorName, LocalError, StatNumDim, "m/s2");
+        WriteVec(DataFile, ScalarErrorName, Error, StatNumDim, "m/s2");
       }
 
     /*! Read scalar gravity measurements and their position from a netcdf file
@@ -128,9 +124,9 @@ namespace jif3D
      * @param PosZ The z-coordinate (Depth) of each measurement in m
      * @param Error The error estimate for each measurement
      */
-    void ReadScalarGravityMeasurements(const std::string &filename, jif3D::rvec &Data,
-        ThreeDGravityModel::tMeasPosVec &PosX, ThreeDGravityModel::tMeasPosVec &PosY,
-        ThreeDGravityModel::tMeasPosVec &PosZ, jif3D::rvec &Error)
+    void ReadScalarGravityMeasurements(const std::string &filename,
+        std::vector<double> &Data, std::vector<double> &PosX, std::vector<double> &PosY,
+        std::vector<double> &PosZ, std::vector<double> &Error)
       {
         NcFile DataFile(filename.c_str(), NcFile::read);
         ReadVec(DataFile, MeasPosXName, PosX);
@@ -138,19 +134,21 @@ namespace jif3D
         ReadVec(DataFile, MeasPosZName, PosZ);
         ReadVec(DataFile, ScalarGravityName, Data);
 
-        try {
-          if (!DataFile.getVar(ScalarErrorName).isNull())
-            {
-              ReadVec(DataFile, ScalarErrorName, Error);
-            }
-          else
-            {
-              Error.resize(Data.size());
-              Error.clear();
-            }
-        } catch(const netCDF::exceptions::NcException &ex) {
-          // ignore
-        }
+        try
+          {
+            if (!DataFile.getVar(ScalarErrorName).isNull())
+              {
+                ReadVec(DataFile, ScalarErrorName, Error);
+              }
+            else
+              {
+                Error.resize(Data.size());
+                std::fill(Error.begin(), Error.end(), 0.0);
+              }
+          } catch (const netCDF::exceptions::NcException &ex)
+          {
+            // ignore
+          }
       }
 
     /*! Read FTG measurements and their position from a netcdf file. Data will have
@@ -162,9 +160,9 @@ namespace jif3D
      * @param PosZ The z-coordinate (Depth) of each measurement in m
      * @param Error The error estimate for each measurement
      */
-    void ReadTensorGravityMeasurements(const std::string &filename, jif3D::rvec &Data,
-        ThreeDGravityModel::tMeasPosVec &PosX, ThreeDGravityModel::tMeasPosVec &PosY,
-        ThreeDGravityModel::tMeasPosVec &PosZ, jif3D::rvec &Error)
+    void ReadTensorGravityMeasurements(const std::string &filename,
+        std::vector<double> &Data, std::vector<double> &PosX, std::vector<double> &PosY,
+        std::vector<double> &PosZ, std::vector<double> &Error)
       {
         NcFile DataFile(filename.c_str(), NcFile::read);
         ReadVec(DataFile, MeasPosXName, PosX);
@@ -175,7 +173,9 @@ namespace jif3D
 
         Data.resize(PosX.size() * 9);
         Error.resize(Data.size());
-        Error.clear();
+        //we are not guaranteed that the data file contains error information
+        //so we allocate the right size and fill with zeros
+        std::fill(Error.begin(), Error.end(), 0.0);
         for (size_t i = 0; i < 9; ++i)
           {
             ReadMatComp(DataFile, TensorNames.at(i), Data, i);
@@ -183,15 +183,17 @@ namespace jif3D
 
         for (size_t i = 0; i < 9; ++i)
           {
-            try {
-              const std::string currname = "d" + TensorNames.at(i);
-              if (!DataFile.getVar(currname).isNull())
-                {
-                  ReadMatComp(DataFile, currname, Error, i);
-                }
-            } catch(const netCDF::exceptions::NcException &ex) {
-              // ignore
-            }
+            try
+              {
+                const std::string currname = "d" + TensorNames.at(i);
+                if (!DataFile.getVar(currname).isNull())
+                  {
+                    ReadMatComp(DataFile, currname, Error, i);
+                  }
+              } catch (const netCDF::exceptions::NcException &ex)
+              {
+                // ignore
+              }
           }
 
       }
@@ -206,9 +208,9 @@ namespace jif3D
      * @param Error The error estimate for each measurement
      */
     void SaveTensorGravityMeasurements(const std::string &filename,
-        const jif3D::rvec &Data, const ThreeDGravityModel::tMeasPosVec &PosX,
-        const ThreeDGravityModel::tMeasPosVec &PosY,
-        const ThreeDGravityModel::tMeasPosVec &PosZ, const jif3D::rvec &Error)
+        const std::vector<double> &Data, const std::vector<double> &PosX,
+        const std::vector<double> &PosY, const std::vector<double> &PosZ,
+        const std::vector<double> &Error)
       {
         const size_t nmeas = PosX.size();
         assert(nmeas == PosY.size());

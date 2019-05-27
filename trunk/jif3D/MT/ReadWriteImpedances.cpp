@@ -33,10 +33,16 @@ namespace jif3D
     static const std::string FreqDimName = "Frequency";
     static const std::string DistortionName = "C";
 
+    //! The name used for the index of Stations with Ex measurement used to compute Titan TF data in netcdf files
+    static const std::string HxIndicesName = "HxIndices";
+    //! The name used for the index of Stations with Ey measurement used to compute Titan TF data in netcdf files
+    static const std::string HyIndicesName = "HyIndices";
+    //! The name used for the index of Stations with H measurement used to compute Titan TF data in netcdf files
+    static const std::string HzIndicesName = "HzIndices";
 //write one compoment of the impedance tensor to a netcdf file
 //this is an internal helper function
     void WriteImpedanceComp(NcFile &NetCDFFile, NcDim &StatNumDim, NcDim &FreqDim,
-        const jif3D::rvec &Impedances, const std::string &CompName,
+        const std::vector<double> &Impedances, const std::string &CompName,
         const size_t compindex)
       {
         std::vector<NcDim> dimVec;
@@ -45,11 +51,11 @@ namespace jif3D
 
         NcVar CompVar = NetCDFFile.addVar(CompName, netCDF::ncDouble, dimVec);
 
-        jif3D::rvec Component(FreqDim.getSize() * StatNumDim.getSize());
+        std::vector<double> Component(FreqDim.getSize() * StatNumDim.getSize());
 
         for (size_t i = 0; i < Component.size(); ++i)
           {
-            Component(i) = Impedances(i * 8 + compindex);
+            Component.at(i) = Impedances.at(i * 8 + compindex);
           }
 
 //        CompVar.put(&Component[0], FreqDim.getSize(), StatNumDim.getSize());
@@ -60,7 +66,7 @@ namespace jif3D
       }
 
     void WriteTipperComp(NcFile &NetCDFFile, NcDim &StatNumDim, NcDim &FreqDim,
-        const jif3D::rvec &Tipper, const std::string &CompName, const size_t compindex)
+        const std::vector<double> &Tipper, const std::string &CompName, const size_t compindex)
       {
         std::vector<NcDim> dimVec;
         dimVec.push_back(FreqDim);
@@ -72,7 +78,7 @@ namespace jif3D
 
         for (size_t i = 0; i < Component.size(); ++i)
           {
-            Component(i) = Tipper(i * 4 + compindex);
+            Component(i) = Tipper.at(i * 4 + compindex);
           }
 
 //        CompVar.put(&Component[0], FreqDim.getSize(), StatNumDim.getSize());
@@ -82,9 +88,34 @@ namespace jif3D
         CompVar.putAtt("units", "");
       }
 
+    void ReadTFIndices(NcFile &NetCDFFile, std::vector<int> &Indices,
+        const std::string &IndexName, const bool MustExist = true)
+      {
+        try
+          {
+            NcVar SizeVar = NetCDFFile.getVar(IndexName);
+            if (!SizeVar.isNull())
+              {
+
+                const std::vector<long> edges = cxxport::get_legacy_var_edges(SizeVar);
+                Indices.resize(edges[0] * edges[1]);
+//              SizeVar.get(&Temp[0], SizeVar->edges()[0], SizeVar->edges()[1]);
+                cxxport::get_legacy_ncvar(SizeVar, &Indices[0], edges[0], edges[1]);
+
+              }
+          } catch (const netCDF::exceptions::NcException &ex)
+          {
+            if (MustExist)
+              {
+                throw std::runtime_error(
+                    "Call to ReadTitanTFIndices with MustExist failed.");
+              }
+          }
+      }
+
 //read one component of the impedance tensor from a netcdf file
 //this is an internal helper function
-    void ReadImpedanceComp(NcFile &NetCDFFile, jif3D::rvec &Impedances,
+    void ReadImpedanceComp(NcFile &NetCDFFile, std::vector<double> &Impedances,
         const std::string &CompName, const size_t compindex, const bool MustExist)
       {
         try
@@ -96,14 +127,14 @@ namespace jif3D
                 const std::vector<long> edges = cxxport::get_legacy_var_edges(SizeVar);
 
                 assert(nvalues == boost::numeric_cast<size_t>(edges[0] * edges[1]));
-                jif3D::rvec Temp(nvalues);
+                std::vector<double> Temp(nvalues);
 
 //              SizeVar.get(&Temp[0], SizeVar->edges()[0], SizeVar->edges()[1]);
                 cxxport::get_legacy_ncvar(SizeVar, &Temp[0], edges[0], edges[1]);
 
                 for (size_t i = 0; i < nvalues; ++i)
                   {
-                    Impedances(i * 8 + compindex) = Temp(i);
+                    Impedances.at(i * 8 + compindex) = Temp.at(i);
                   }
               }
           } catch (const netCDF::exceptions::NcException &ex)
@@ -116,7 +147,7 @@ namespace jif3D
           }
       }
 
-    void ReadTipperComp(NcFile &NetCDFFile, jif3D::rvec &Tipper,
+    void ReadTipperComp(NcFile &NetCDFFile, std::vector<double> &Tipper,
         const std::string &CompName, const size_t compindex, const bool MustExist = true)
       {
         try
@@ -135,7 +166,7 @@ namespace jif3D
 
                 for (size_t i = 0; i < nvalues; ++i)
                   {
-                    Tipper(i * 4 + compindex) = Temp(i);
+                    Tipper.at(i * 4 + compindex) = Temp(i);
                   }
               }
           } catch (const netCDF::exceptions::NcException &ex)
@@ -151,7 +182,7 @@ namespace jif3D
     void WriteImpedancesToNetCDF(const std::string &filename,
         const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
-        const jif3D::rvec &Impedances, const jif3D::rvec &Errors,
+        const std::vector<double> &Impedances, const std::vector<double> &Errors,
         const std::vector<double> &Distortion)
       {
         const size_t nstats = StatXCoord.size();
@@ -186,7 +217,7 @@ namespace jif3D
         WriteImpedanceComp(DataFile, StatNumDim, FreqDim, Impedances, "Zyy_im", 7);
         //now we deal with the errors, if no parameter has been explicitly passed
         //Errors is empty, so we just fill the vector with zeros
-        jif3D::rvec ZErr(Errors);
+        std::vector<double> ZErr(Errors);
         if (ZErr.empty())
           {
             ZErr.resize(nimp);
@@ -217,7 +248,8 @@ namespace jif3D
     void ReadImpedancesFromNetCDF(const std::string &filename,
         std::vector<double> &Frequencies, std::vector<double> &StatXCoord,
         std::vector<double> &StatYCoord, std::vector<double> &StatZCoord,
-        jif3D::rvec &Impedances, jif3D::rvec &ImpError, std::vector<double> &Distortion)
+        std::vector<double> &Impedances, std::vector<double> &ImpError,
+        std::vector<double> &Distortion)
       {
         //open the netcdf file readonly
         NcFile DataFile(filename, NcFile::read);
@@ -251,7 +283,7 @@ namespace jif3D
         //and then assign the same error to the imaginary part
         for (size_t i = 0; i < nimp - 1; i += 2)
           {
-            ImpError(i + 1) = ImpError(i);
+            ImpError.at(i + 1) = ImpError.at(i);
           }
 
         try
@@ -292,7 +324,7 @@ namespace jif3D
     void WriteTipperToNetCDF(const std::string &filename,
         const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
-        const jif3D::rvec &Tipper, const jif3D::rvec &Errors)
+        const std::vector<double> &Tipper, const std::vector<double> &Errors)
       {
         const size_t nstats = StatXCoord.size();
         const size_t nfreqs = Frequencies.size();
@@ -321,26 +353,19 @@ namespace jif3D
         WriteTipperComp(DataFile, StatNumDim, FreqDim, Tipper, "Ty_re", 2);
         WriteTipperComp(DataFile, StatNumDim, FreqDim, Tipper, "Ty_im", 3);
 
-        //now we deal with the errors, if no parameter has been explicitly passed
-        //Errors is empty, so we just fill the vector with zeros
-        jif3D::rvec Err(Errors);
-        if (Err.empty())
-          {
-            Err.resize(nimp);
-            std::fill_n(Err.begin(), nimp, 0.0);
-          }
         //in any case we write some error information even if it is all zero
         //as the error is identical for real and imaginary part
         //we only have to write the elements corresponding to the real part
-        WriteTipperComp(DataFile, StatNumDim, FreqDim, Err, "dTx", 0);
-        WriteTipperComp(DataFile, StatNumDim, FreqDim, Err, "dTy", 2);
+        WriteTipperComp(DataFile, StatNumDim, FreqDim, Errors, "dTx", 0);
+        WriteTipperComp(DataFile, StatNumDim, FreqDim, Errors, "dTy", 2);
 
       }
 
     void ReadTipperFromNetCDF(const std::string &filename,
         std::vector<double> &Frequencies, std::vector<double> &StatXCoord,
         std::vector<double> &StatYCoord, std::vector<double> &StatZCoord,
-        jif3D::rvec &Tipper, jif3D::rvec &Error)
+        std::vector<int> &HxIndices, std::vector<int> &HyIndices, std::vector<int> &HzIndices,
+        std::vector<double> &Tipper, std::vector<double> &Error)
       {
         //open the netcdf file readonly
         NcFile DataFile(filename, NcFile::read);
@@ -350,9 +375,39 @@ namespace jif3D
         ReadVec(DataFile, MeasPosZName, StatZCoord);
         //read in the frequencies
         ReadVec(DataFile, FreqDimName, Frequencies);
-        //for each frequency and each station we have 8 impedances
+        //for each frequency and each station we have 4 tipper values
         //currently it is not possible to have a different number of frequencies
         //at each site
+        ReadTFIndices(DataFile, HxIndices, HxIndicesName, false);
+        ReadTFIndices(DataFile, HyIndices, HyIndicesName, false);
+        ReadTFIndices(DataFile, HzIndices, HzIndicesName, false);
+
+        if (HyIndices.size() != HxIndices.size() || HzIndices.size() != HxIndices.size())
+          {
+            throw jif3D::FatalException("Inconsistent index information for Tipper Data",
+            __FILE__, __LINE__);
+          }
+
+        const size_t nmeas = StatXCoord.size();
+        const size_t nfreq = Frequencies.size();
+        size_t ind_shift = 0;
+        if (HxIndices.empty())
+          {
+            HxIndices.resize(nmeas * nfreq);
+            HyIndices.resize(nmeas * nfreq);
+            HzIndices.resize(nmeas * nfreq);
+            for (int ifr = 0; ifr < nfreq; ++ifr)
+              {
+                ind_shift = nmeas * ifr;
+                for (size_t i = 0; i < nmeas; ++i)
+                  {
+                    HxIndices[i + ind_shift] = i;
+                  }
+              }
+            HyIndices = HxIndices;
+            HzIndices = HxIndices;
+          }
+
         const size_t nimp = Frequencies.size() * StatXCoord.size() * 4;
         Tipper.resize(nimp);
         Error.resize(nimp);
@@ -369,15 +424,16 @@ namespace jif3D
         //and then assign the same error to the imaginary part
         for (size_t i = 0; i < nimp - 1; i += 2)
           {
-            Error(i + 1) = Error(i);
+            Error.at(i + 1) = Error.at(i);
           }
       }
 
     void ReadImpedancesFromMTT(const std::string &filename,
-        std::vector<double> &Frequencies, jif3D::rvec &Impedances, jif3D::rvec &Errors, jif3D::rvec &Tipper, jif3D::rvec &TippErr)
+        std::vector<double> &Frequencies, jif3D::rvec &Impedances, jif3D::rvec &Errors,
+        jif3D::rvec &Tipper, jif3D::rvec &TippErr)
       {
         std::ifstream infile;
-        double currentreal, currentimag;
+        double currentreal;
         int nentries = 0;
         infile.open(filename.c_str());
         while (infile.good())
@@ -400,7 +456,7 @@ namespace jif3D
         Frequencies.resize(nrecords);
         infile.open(filename.c_str());
         int currentrecord = 0;
-        int currentip =0;
+        int currentip = 0;
         if (infile)
           {
             while (infile.good()) // read in inputfile
@@ -420,13 +476,13 @@ namespace jif3D
                         >> Errors(currentrecord + 4) >> Errors(currentrecord + 6);
                     //fpr the moment we ignore these values in the .mtt file
                     //Tx
-                    infile >> Tipper(currentip) >> Tipper(currentip+1);
+                    infile >> Tipper(currentip) >> Tipper(currentip + 1);
                     //Ty
-                    infile >> Tipper(currentip+2) >> Tipper(currentip+3);
+                    infile >> Tipper(currentip + 2) >> Tipper(currentip + 3);
                     //dTx
                     infile >> TippErr(currentip);
                     //dTy
-                    infile >> TippErr(currentip+2);
+                    infile >> TippErr(currentip + 2);
                     //Coherence Rx
                     infile >> currentreal;
                     //Coherence Ry
@@ -435,7 +491,7 @@ namespace jif3D
                     infile >> currentreal;
 
                     currentrecord += 8;
-                    currentip +=4;
+                    currentip += 4;
                   }
               }
             infile.close();
@@ -465,8 +521,7 @@ namespace jif3D
 
     void WriteImpedancesToMtt(const std::string &filenamebase,
         const std::vector<double> &Frequencies, const jif3D::rvec &Imp,
-        const jif3D::rvec &Err, const jif3D::rvec &Tipper,
-        const jif3D::rvec &TipErr )
+        const jif3D::rvec &Err, const jif3D::rvec &Tipper, const jif3D::rvec &TipErr)
       {
         const double convfactor = 4.0 * 1e-4 * acos(-1.0);
         jif3D::rvec Impedances = 1.0 / convfactor * Imp;
@@ -503,13 +558,13 @@ namespace jif3D
                 outfile << Errors(startindex + 2) << " ";
                 outfile << Errors(startindex + 4) << " ";
                 outfile << Errors(startindex + 6) << " ";
-                outfile << Tipper(tipindex ) << " ";
-                outfile << Tipper(tipindex +1) << " ";
-                outfile << Tipper(tipindex +2) << " ";
-                outfile << Tipper(tipindex +3) << " ";
+                outfile << Tipper(tipindex) << " ";
+                outfile << Tipper(tipindex + 1) << " ";
+                outfile << Tipper(tipindex + 2) << " ";
+                outfile << Tipper(tipindex + 3) << " ";
                 outfile << "\n";
-                outfile << TipErr(tipindex ) << " ";
-                outfile << TipErr(tipindex +1) << " ";
+                outfile << TipErr(tipindex) << " ";
+                outfile << TipErr(tipindex + 1) << " ";
                 outfile << 0.0 << " ";
                 outfile << 0.0 << " ";
                 outfile << 0.0 << " ";
@@ -522,7 +577,8 @@ namespace jif3D
       }
 
     void WriteJBlock(const std::vector<double> &Frequencies, const jif3D::rvec &Imp,
-        const jif3D::rvec &Err, ofstream &outfile, const double convfactor, int CompIndex, int SiteIndex)
+        const jif3D::rvec &Err, ofstream &outfile, const double convfactor, int CompIndex,
+        int SiteIndex)
       {
         const size_t nfreq = Frequencies.size();
         const size_t nimp = Imp.size();
@@ -533,12 +589,10 @@ namespace jif3D
             const size_t startindex = (i * nsites + SiteIndex) * 8 + CompIndex;
             outfile << setfill(' ') << setw(15) << resetiosflags(ios::fixed)
                 << 1. / Frequencies.at(i) << " ";
-            outfile << setfill(' ') << setw(15)
-                << convfactor * Imp(startindex) << " ";
-            outfile << setfill(' ') << setw(15)
-                << convfactor * Imp(startindex +1) << " ";
-            outfile << setfill(' ') << setw(15)
-                << convfactor * Err(startindex) << " ";
+            outfile << setfill(' ') << setw(15) << convfactor * Imp(startindex) << " ";
+            outfile << setfill(' ') << setw(15) << convfactor * Imp(startindex + 1)
+                << " ";
+            outfile << setfill(' ') << setw(15) << convfactor * Err(startindex) << " ";
             outfile << setfill(' ') << setw(15) << setiosflags(ios::fixed) << 1.000 << " "
                 << endl;
 
@@ -576,18 +630,18 @@ namespace jif3D
             outfile << "ZXX S.I." << endl;
             outfile << nfreq << endl;
             //WriteJBlock(DataXX,outfile,convfactor);
-            WriteJBlock(Frequencies, Imp, Err, outfile, convfactor,0,i);
+            WriteJBlock(Frequencies, Imp, Err, outfile, convfactor, 0, i);
             outfile << "ZXY S.I." << endl;
             outfile << nfreq << endl;
-            WriteJBlock(Frequencies, Imp, Err, outfile, convfactor,2,i);
+            WriteJBlock(Frequencies, Imp, Err, outfile, convfactor, 2, i);
 
             outfile << "ZYX S.I." << endl;
             outfile << nfreq << endl;
-            WriteJBlock(Frequencies, Imp, Err, outfile, convfactor,4,i);
+            WriteJBlock(Frequencies, Imp, Err, outfile, convfactor, 4, i);
 
             outfile << "ZYY S.I." << endl;
             outfile << nfreq << endl;
-            WriteJBlock(Frequencies, Imp, Err, outfile, convfactor,6,i);
+            WriteJBlock(Frequencies, Imp, Err, outfile, convfactor, 6, i);
 
             outfile.close();
           }
@@ -768,7 +822,7 @@ namespace jif3D
     void ReadImpedancesFromModEM(const std::string &filename,
         std::vector<double> &Frequencies, std::vector<double> &StatXCoord,
         std::vector<double> &StatYCoord, std::vector<double> &StatZCoord,
-        jif3D::rvec &Imp, jif3D::rvec &Err)
+        std::vector<double> &Imp,  std::vector<double> &Err)
       {
         const double convfactor = 4.0 * 1e-4 * acos(-1.0);
         std::ifstream infile(filename.c_str());
@@ -864,7 +918,7 @@ namespace jif3D
     void ReadTipperFromModEM(const std::string &filename,
         std::vector<double> &Frequencies, std::vector<double> &StatXCoord,
         std::vector<double> &StatYCoord, std::vector<double> &StatZCoord,
-        jif3D::rvec &Tip, jif3D::rvec &Err)
+         std::vector<double> &Tip, std::vector<double> &Err)
       {
         std::ifstream infile(filename.c_str());
         char dummy[1024];
@@ -965,7 +1019,7 @@ namespace jif3D
     void WriteImpedancesToModEM(const std::string &filename,
         const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
-        const jif3D::rvec &Imp, const jif3D::rvec &Err)
+        const std::vector<double> &Imp, const std::vector<double>  &Err)
       {
         std::ofstream outfile(filename.c_str());
         outfile.precision(6);
@@ -995,22 +1049,22 @@ namespace jif3D
                 double period = 1.0 / Frequencies.at(j);
                 outfile << period << SiteLine.str();
                 outfile << " ZXX ";
-                WriteModEMLine(outfile, Imp(index), Imp(index + 1), Err(index),
+                WriteModEMLine(outfile, Imp.at(index), Imp.at(index + 1), Err.at(index),
                     convfactor);
 
                 outfile << period << SiteLine.str();
                 outfile << " ZXY ";
-                WriteModEMLine(outfile, Imp(index + 2), Imp(index + 3), Err(index + 2),
+                WriteModEMLine(outfile, Imp.at(index + 2), Imp.at(index + 3), Err.at(index + 2),
                     convfactor);
 
                 outfile << period << SiteLine.str();
                 outfile << " ZYX ";
-                WriteModEMLine(outfile, Imp(index + 4), Imp(index + 5), Err(index + 4),
+                WriteModEMLine(outfile, Imp.at(index + 4), Imp.at(index + 5), Err.at(index + 4),
                     convfactor);
 
                 outfile << period << SiteLine.str();
                 outfile << " ZYY ";
-                WriteModEMLine(outfile, Imp(index + 6), Imp(index + 7), Err(index + 6),
+                WriteModEMLine(outfile, Imp.at(index + 6), Imp.at(index + 7), Err.at(index + 6),
                     convfactor);
               }
           }
@@ -1163,7 +1217,14 @@ namespace jif3D
           }
         else
           {
+            if (HasRhoPhi)
+              {
 
+              }
+            else
+              {
+                throw jif3D::FatalException("No valid MT data in file",__FILE__,__LINE__);
+              }
           }
       }
   }

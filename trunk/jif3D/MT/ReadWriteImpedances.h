@@ -31,8 +31,9 @@ namespace jif3D
      * @param compindex component index (0-7)
      */
     J3DEXPORT void WriteImpedanceComp(netCDF::NcFile &NetCDFFile,
-        netCDF::NcDim &StatNumDim, netCDF::NcDim &FreqDim, const jif3D::rvec &Impedances,
-        const std::string &CompName, const size_t compindex);
+        netCDF::NcDim &StatNumDim, netCDF::NcDim &FreqDim,
+        const std::vector<double> &Impedances, const std::string &CompName,
+        const size_t compindex);
 
     //!read one component of the impedance tensor from a netcdf file
     /*!this is an internal helper function
@@ -43,8 +44,9 @@ namespace jif3D
      * @param CompName Name of the component to be written to netcdf file ('Zxx_re' ... 'Zyy_im')
      * @param compindex component index (0-7)
      */
-    J3DEXPORT void ReadImpedanceComp(netCDF::NcFile &NetCDFFile, jif3D::rvec &Impedances,
-        const std::string &CompName, const size_t compindex, const bool MustExist = true);
+    J3DEXPORT void ReadImpedanceComp(netCDF::NcFile &NetCDFFile,
+        std::vector<double> &Impedances, const std::string &CompName,
+        const size_t compindex, const bool MustExist = true);
 
     //! Write magnetotelluric impedances to a netcdf file
     /*! We can save MT impedances for several stations in a netcdf file for storage
@@ -63,8 +65,8 @@ namespace jif3D
     J3DEXPORT void WriteImpedancesToNetCDF(const std::string &filename,
         const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
-        const jif3D::rvec &Impedances, const jif3D::rvec &Errors = jif3D::rvec(),
-        const std::vector<double> &Distortion = std::vector<double>());
+        const std::vector<double> &Impedances, const std::vector<double> &Errors,
+        const std::vector<double> &Distortion);
 
     //! Read magnetotelluric impedances from a netcdf file
     /*! Read MT impedances for several stations from a netcdf file.
@@ -83,7 +85,8 @@ namespace jif3D
     J3DEXPORT void ReadImpedancesFromNetCDF(const std::string &filename,
         std::vector<double> &Frequencies, std::vector<double> &StatXCoord,
         std::vector<double> &StatYCoord, std::vector<double> &StatZCoord,
-        jif3D::rvec &Impedances, jif3D::rvec &ImpError, std::vector<double> &Distortion);
+        std::vector<double> &Impedances, std::vector<double> &ImpError,
+        std::vector<double> &Distortion);
 
     //! Write tipper to a netcdf file
     /*! We can save tipper for several stations in a netcdf file for storage
@@ -102,7 +105,7 @@ namespace jif3D
     J3DEXPORT void WriteTipperToNetCDF(const std::string &filename,
         const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
-        const jif3D::rvec &Tipper, const jif3D::rvec &Errors = jif3D::rvec());
+        const std::vector<double> &Tipper, const std::vector<double> &Errors);
 
     //! Read magnetotelluric tipper from a netcdf file
     /*! Read MT tipper for several stations from a netcdf file.
@@ -121,7 +124,8 @@ namespace jif3D
     J3DEXPORT void ReadTipperFromNetCDF(const std::string &filename,
         std::vector<double> &Frequencies, std::vector<double> &StatXCoord,
         std::vector<double> &StatYCoord, std::vector<double> &StatZCoord,
-        jif3D::rvec &Tipper, jif3D::rvec &Error);
+        std::vector<int> &HxIndices, std::vector<int> &HyIndices, std::vector<int> &HzIndices,
+        std::vector<double> &Tipper, std::vector<double> &Error);
 
     //! A very basic routine to read impedances at a single site from a .mtt file in the format used by University of Goettingen
     /*! A very basic routine to read impedances at a single site from a .mtt file in the
@@ -136,7 +140,7 @@ namespace jif3D
      */
     J3DEXPORT void ReadImpedancesFromMTT(const std::string &filename,
         std::vector<double> &Frequencies, jif3D::rvec &Impedances, jif3D::rvec &Errors,
-        jif3D::rvec &Tipper, jif3D::rvec &TippErr);
+        const std::vector<double> &Tipper, const std::vector<double> &TippErr);
 
     //! A very basic routine to write impedances for several sites to  .mtt files in the format used by University of Goettingen.
     /*! A very basic routine to write impedances for several sites to  .mtt files in the format used by University of Goettingen.
@@ -211,7 +215,7 @@ namespace jif3D
     J3DEXPORT void ReadImpedancesFromModEM(const std::string &filename,
         std::vector<double> &Frequencies, std::vector<double> &StatXCoord,
         std::vector<double> &StatYCoord, std::vector<double> &StatZCoord,
-        jif3D::rvec &Imp, jif3D::rvec &Err);
+        std::vector<double> &Imp, std::vector<double> &Err);
 
     //! Write impedances to an ascii file as written by ModEM
     /*!
@@ -229,17 +233,17 @@ namespace jif3D
     J3DEXPORT void WriteImpedancesToModEM(const std::string &filename,
         const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
-        const jif3D::rvec &Imp, const jif3D::rvec &Err);
+        const std::vector<double> &Imp, const std::vector<double> &Err);
 
     J3DEXPORT void ReadTipperFromModEM(const std::string &filename,
         std::vector<double> &Frequencies, std::vector<double> &StatXCoord,
         std::vector<double> &StatYCoord, std::vector<double> &StatZCoord,
-        jif3D::rvec &Tip, jif3D::rvec &Err);
+        std::vector<double> &Tip, std::vector<double> &Err);
 
     J3DEXPORT void WriteTipperToModEM(const std::string &filename,
         const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
-        const jif3D::rvec &Tip, const jif3D::rvec &Err);
+        const std::vector<double> &Tip, const std::vector<double> &Err);
 
     //! Read magnetotelluric impedances from a .j file
     /*!

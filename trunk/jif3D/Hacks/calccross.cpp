@@ -73,7 +73,7 @@ int main()
     std::copy(CG.begin(), CG.begin() + nmod, XGrad.origin());
     std::copy(CG.begin() + nmod, CG.begin() + 2 * nmod, YGrad.origin());
     std::copy(CG.begin() + 2 * nmod, CG.begin() + 3 * nmod, ZGrad.origin());
-    jif3D::Write3DVectorModelToVTK("crossgrad.vtk", "CroosGrad", Model1->GetXCellSizes(),
+    jif3D::Write3DVectorModelToVTK("crossgrad.vtk", "CrossGrad", Model1->GetXCellSizes(),
         Model1->GetYCellSizes(), Model1->GetZCellSizes(), XGrad, YGrad, ZGrad);
   }
 

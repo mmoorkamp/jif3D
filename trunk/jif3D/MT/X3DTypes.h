@@ -8,7 +8,6 @@
 #ifndef MT_X3DTYPES_H_
 #define MT_X3DTYPES_H_
 
-
 #include "../Global/Jif3DGlobal.h"
 #include "../Global/Serialization.h"
 #include "../Global/VecMat.h"
@@ -17,7 +16,6 @@
 
 #include <string>
 #include <vector>
-
 
 struct J3DEXPORT ForwardResult
   {
@@ -71,7 +69,7 @@ struct GradResult
   GradResult(jif3D::rvec G)
     {
       Gradient.resize(G.size());
-      std::copy(G.begin(),G.end(),Gradient.begin());
+      std::copy(G.begin(), G.end(), Gradient.begin());
     }
   };
 
@@ -79,7 +77,6 @@ struct ForwardInfo
   {
   jif3D::X3DModel Model;
   std::vector<double> C;
-  std::vector<double> Angles;
   size_t freqindex;
   std::string TempDirName;
   std::string X3DName;
@@ -91,7 +88,6 @@ struct ForwardInfo
     {
       ar & Model;
       ar & C;
-      ar & Angles;
       ar & freqindex;
       ar & TempDirName;
       ar & X3DName;
@@ -99,22 +95,20 @@ struct ForwardInfo
       ar & GreenStage1;
       ar & GreenStage4;
     }
-  ForwardInfo(jif3D::X3DModel M, std::vector<double> Dist, td::vector<double> Rot, size_t f, std::string TD,
-      std::string XN, std::string NR, jif3D::GreenCalcType G1 = jif3D::GreenCalcType::hst,
-      jif3D::GreenCalcType G4 = jif3D::GreenCalcType::hst) :
-      Model(M), C(Dist), Angles(Rot), freqindex(f), TempDirName(TD), X3DName(XN), NameRoot(NR), GreenStage1(
+  ForwardInfo(jif3D::X3DModel M, std::vector<double> Dist, size_t f,
+      std::string TD, std::string XN, std::string NR, jif3D::GreenCalcType G1 =
+          jif3D::GreenCalcType::hst, jif3D::GreenCalcType G4 = jif3D::GreenCalcType::hst) :
+      Model(M), C(Dist), freqindex(f), TempDirName(TD), X3DName(XN), NameRoot(NR), GreenStage1(
           G1), GreenStage4(G4)
     {
 
     }
   ForwardInfo() :
-      Model(), C(), Angles(), freqindex(), TempDirName(), X3DName(), NameRoot(), GreenStage1(
+      Model(), C(), freqindex(), TempDirName(), X3DName(), NameRoot(), GreenStage1(
           jif3D::GreenCalcType::hst), GreenStage4(jif3D::GreenCalcType::hst)
     {
 
     }
   };
-
-
 
 #endif /* MT_X3DTYPES_H_ */

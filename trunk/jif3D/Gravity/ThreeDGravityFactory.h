@@ -11,6 +11,8 @@
 #include "ScalarOMPGravityImp.h"
 #include "TensorOMPGravityImp.h"
 #include "ThreeDGravityModel.h"
+#include "ScalarGravityData.h"
+#include "TensorGravityData.h"
 #include "../Global/Jif3DGlobal.h"
 
 #include <boost/make_shared.hpp>
@@ -57,7 +59,7 @@ namespace jif3D
     boost::shared_ptr<CalculatorClass> CreateGravityCalculator<CalculatorClass>::MakeScalar(
         bool wantcuda)
       {
-        boost::shared_ptr<ThreeDGravMagImplementation<ThreeDGravityModel> > Imp;
+        boost::shared_ptr<ThreeDGravMagImplementation<ScalarGravityData> > Imp;
         if (wantcuda)
           {
 #ifdef HAVEGPU
@@ -82,7 +84,7 @@ namespace jif3D
     boost::shared_ptr<CalculatorClass> CreateGravityCalculator<CalculatorClass>::MakeTensor(
         bool wantcuda)
       {
-        boost::shared_ptr<ThreeDGravMagImplementation<ThreeDGravityModel> > Imp;
+        boost::shared_ptr<ThreeDGravMagImplementation<TensorGravityData> > Imp;
         if (wantcuda)
           {
 #ifdef HAVEGPU

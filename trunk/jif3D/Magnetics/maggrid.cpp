@@ -17,6 +17,7 @@
 #include "ReadWriteMagneticData.h"
 #include "MagneticTransforms.h"
 #include "OMPMagneticImp.h"
+#include "MagneticData.h"
 #include "../GravMag/MinMemGravMagCalculator.h"
 #include "../GravMag/ThreeDGravMagImplementation.h"
 #include "../ModelBase/VTKTools.h"
@@ -45,7 +46,7 @@ int main(int argc, char *argv[])
       }
 
     jif3D::ThreeDMagneticModel MagModel;
-
+    jif3D::MagneticData Data;
     double minx, miny, maxx, maxy, deltax, deltay, z;
     double inclination, declination, fieldstrength;
     //ask for the measurement grid specifications
@@ -79,7 +80,7 @@ int main(int argc, char *argv[])
       {
         for (size_t j = 0; j <= nmeasy; ++j)
           {
-            MagModel.AddMeasurementPoint(minx + i * deltax, miny + j * deltay, z);
+            Data.AddMeasurementPoint(minx + i * deltax, miny + j * deltay, z);
           }
       }
     //ask for the name of the netcdf file containing the model
@@ -87,8 +88,8 @@ int main(int argc, char *argv[])
 
     MagModel.ReadNetCDF(ModelFilename);
 
-    typedef typename jif3D::MinMemGravMagCalculator<jif3D::ThreeDMagneticModel> CalculatorType;
-    boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::ThreeDMagneticModel> > Implementation(
+    typedef typename jif3D::MinMemGravMagCalculator<jif3D::MagneticData> CalculatorType;
+    boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::MagneticData> > Implementation(
         new jif3D::OMPMagneticImp(inclination, declination, fieldstrength));
 
     boost::shared_ptr<CalculatorType> Calculator(new CalculatorType(Implementation));
@@ -97,8 +98,8 @@ int main(int argc, char *argv[])
         boost::shared_ptr<jif3D::TotalFieldAnomaly>(
             new jif3D::TotalFieldAnomaly(inclination, declination, fieldstrength)));
 
-    jif3D::rvec Results(Calculator->Calculate(MagModel));
-    jif3D::rvec Err(Results.size());
+    jif3D::rvec Results(Calculator->Calculate(MagModel, Data));
+    std::vector<double> Err(Results.size());
 
     double relnoise = 0.0;
     double absnoise = 0.0;
@@ -113,13 +114,13 @@ int main(int argc, char *argv[])
         [relnoise, absnoise] (const double data)
           { return std::max(absnoise,data*relnoise);});
 
-    jif3D::SaveTotalFieldMagneticMeasurements(ModelFilename + ".mag.nc", Results,
-        MagModel.GetMeasPosX(), MagModel.GetMeasPosY(), MagModel.GetMeasPosZ(), Err);
+    jif3D::SaveTotalFieldMagneticMeasurements(ModelFilename + ".mag.nc", std::vector<double>(Results.begin(),Results.end()),
+        Data.GetMeasPosX(),  Data.GetMeasPosY(),  Data.GetMeasPosZ(), Err);
 
     //write the model in .vtk format, at the moment the best plotting option
     MagModel.WriteVTK(ModelFilename + ".vtk");
 
     jif3D::Write3DDataToVTK(ModelFilename + ".data.vtk", "T", Results,
-        MagModel.GetMeasPosX(), MagModel.GetMeasPosY(), MagModel.GetMeasPosZ());
+        Data.GetMeasPosX(),  Data.GetMeasPosY(),  Data.GetMeasPosZ());
 
   }

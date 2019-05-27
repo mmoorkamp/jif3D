@@ -17,6 +17,7 @@
 #include <numeric>
 #include "../Gravity/test_common.h"
 #include "../Gravity/ThreeDGravityModel.h"
+#include "../Gravity/ScalarGravityData.h"
 #include "../Global/Jif3DPlatformHelper.h"
 #include "EqualGeometry.h"
 
@@ -29,51 +30,13 @@ BOOST_AUTO_TEST_CASE(constructors_test)
     BOOST_CHECK_EQUAL(ConstBaseTest.GetZCellSizes().size(), (size_t )0);
   }
 
-BOOST_AUTO_TEST_CASE(measpos_test)
-  {
-    jif3D::ThreeDModelBase BaseTest;
-    const double oldshiftx = rand();
-    const double oldshifty = rand();
-    const double oldshiftz = rand();
-    const size_t nmeas = 10;
-    std::vector<double> MeasX, MeasY, MeasZ;
-    for (size_t i = 0; i < nmeas; ++i)
-      {
-        MeasX.push_back(rand());
-        MeasY.push_back(rand());
-        MeasZ.push_back(rand());
-        BaseTest.AddMeasurementPoint(MeasX.at(i), MeasY.at(i), MeasZ.at(i));
-      }
-    BaseTest.SetOrigin(oldshiftx, oldshifty, oldshiftz);
-    for (size_t i = 0; i < nmeas; ++i)
-      {
-        BOOST_CHECK_CLOSE(MeasX.at(i), BaseTest.GetMeasPosX().at(i),
-            std::numeric_limits<float>::epsilon());
-        BOOST_CHECK_CLOSE(MeasY.at(i), BaseTest.GetMeasPosY().at(i),
-            std::numeric_limits<float>::epsilon());
-        BOOST_CHECK_CLOSE(MeasZ.at(i), BaseTest.GetMeasPosZ().at(i),
-            std::numeric_limits<float>::epsilon());
-      }
-    const double newshiftx = rand();
-    const double newshifty = rand();
-    const double newshiftz = rand();
-    BaseTest.SetOrigin(newshiftx, newshifty, newshiftz);
-    for (size_t i = 0; i < nmeas; ++i)
-      {
-        BOOST_CHECK_CLOSE(MeasX.at(i), BaseTest.GetMeasPosX().at(i),
-            std::numeric_limits<float>::epsilon());
-        BOOST_CHECK_CLOSE(MeasY.at(i), BaseTest.GetMeasPosY().at(i),
-            std::numeric_limits<float>::epsilon());
-        BOOST_CHECK_CLOSE(MeasZ.at(i), BaseTest.GetMeasPosZ().at(i),
-            std::numeric_limits<float>::epsilon());
-      }
-  }
 
 BOOST_AUTO_TEST_CASE(equal_geometry_test)
   {
     jif3D::ThreeDGravityModel Model1;
+    jif3D::ScalarGravityData Data;
     srand((unsigned int) time(nullptr));
-    MakeRandomModel(Model1, rand() % 20, 1);
+    MakeRandomModel(Model1, Data, rand() % 20, 1);
     //we cannot use a ThreeDBaseModel as a concrete object
     //so we use a derived ThreeDGravityModel instead
     jif3D::ThreeDGravityModel Model2(Model1);

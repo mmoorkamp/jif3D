@@ -21,7 +21,7 @@ namespace jif3D
     /** \addtogroup gravity Gravity forward modeling, display and inversion */
     /* @{ */
     //this is just a forward declaration to avoid circular inclusions
-    template<class ThreeDModelType> class ThreeDGravMagCalculator;
+    template<class PotentialDataType> class ThreeDGravMagCalculator;
     //! The base class that provides the interface for the numerical implementation of the gravity forward calculations.
     /*! The calculation of the forward response is split into two class hierarchies that
      * have to be used in conjunction. The classes derived from ThreeDGravityImplementation
@@ -36,9 +36,11 @@ namespace jif3D
      * for different platforms with different sensitivity handlings.
      */
 
-    template<class ThreeDModelType>
+    template<class PotentialDataType>
     class J3DEXPORT ThreeDGravMagImplementation
       {
+    public:
+      typedef typename PotentialDataType::ModelType ThreeDModelType;
     private:
       //! A data transform that we can apply to the calculated values, e.g. an invariant of the FTG data
       boost::shared_ptr<VectorTransform> Transform;
@@ -47,42 +49,17 @@ namespace jif3D
       //! Calculate the response of the 1D background for a single measurement, this function has to be implemented in the derived class.
       virtual rvec CalcBackground(const size_t measindex, const double xwidth,
           const double ywidth, const double zwidth, const ThreeDModelType &Model,
-          rmat &Sensitivities) = 0;
+          const PotentialDataType &Data, rmat &Sensitivities) = 0;
       //! Calculate the response of the gridded domain for a single measurement, this function has to be implemented in the derived class.
       virtual rvec CalcGridded(const size_t measindex, const ThreeDModelType &Model,
-          rmat &Sensitivities) = 0;
+          const PotentialDataType &Data, rmat &Sensitivities) = 0;
       friend class access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
         {
           ar & Transform;
-          ar & XCoord;
-          ar & YCoord;
-          ar & ZCoord;
-          ar & XSizes;
-          ar & YSizes;
-          ar & ZSizes;
         }
-    protected:
-      /*! The access functions for the coordinates are not thread safe
-       * so we cache the values once in the default implementation of calculate.
-       * Because CalcBackground and CalcGridded can only be called from within
-       * there we are guaranteed correct values in the implementation of those functions
-       */
-      typedef typename ThreeDModelType::t3DModelDim ModelDimType;
-      //! The cached values of the x-coordinates in m for each cell
-      ModelDimType XCoord;
-      //! The cached values of the y-coordinates in m for each cell
-      ModelDimType YCoord;
-      //! The cached values of the z-coordinates in m for each cell
-      ModelDimType ZCoord;
-      //! The cached values for the size of each cell in x-direction
-      ModelDimType XSizes;
-      //! The cached values for the size of each cell in y-direction
-      ModelDimType YSizes;
-      //! The cached values for the size of each cell in z-direction
-      ModelDimType ZSizes;
     public:
       //! Returns the number of data before any transformation is applied
       virtual size_t RawDataPerMeasurement() = 0;
@@ -97,36 +74,25 @@ namespace jif3D
           return Transform ? Transform->GetOutputSize() : RawDataPerMeasurement();
         }
       //! For a given Model calculate the forward response for all measurements and return it as a real vector, the calculator object is passed to process the sensitivity information
-      virtual rvec Calculate(const ThreeDModelType &Model,
-          jif3D::ThreeDGravMagCalculator<ThreeDModelType> &Calculator);
-      //! Calculate the least-squres derivative vector for the given model and vector
-      virtual rvec LQDerivative(const ThreeDModelType &Model, const rvec &Misfit);
+      virtual rvec Calculate(const ThreeDModelType &Model, const PotentialDataType &Data,
+          jif3D::ThreeDGravMagCalculator<PotentialDataType> &Calculator);
+      //! Calculate the least-squares derivative vector for the given model and vector
+      virtual rvec LQDerivative(const ThreeDModelType &Model,
+          const PotentialDataType &Data, const rvec &Misfit);
       ThreeDGravMagImplementation();
       virtual ~ThreeDGravMagImplementation();
       };
 
-    template<class ThreeDModelType>
-    ThreeDGravMagImplementation<ThreeDModelType>::ThreeDGravMagImplementation() :
-        Transform(), XCoord(), YCoord(), ZCoord(), XSizes(), YSizes(), ZSizes()
+    template<class PotentialDataType>
+    ThreeDGravMagImplementation<PotentialDataType>::ThreeDGravMagImplementation() :
+        Transform()
       {
 
       }
 
-    template<class ThreeDModelType>
-    ThreeDGravMagImplementation<ThreeDModelType>::~ThreeDGravMagImplementation()
+    template<class PotentialDataType>
+    ThreeDGravMagImplementation<PotentialDataType>::~ThreeDGravMagImplementation()
       {
-      }
-
-    template<class ThreeDModelType>
-    void ThreeDGravMagImplementation<ThreeDModelType>::CacheGeometry(
-        const ThreeDModelType &Model)
-      {
-        XCoord = Model.GetXCoordinates();
-        YCoord = Model.GetYCoordinates();
-        ZCoord = Model.GetZCoordinates();
-        XSizes = Model.GetXCellSizes();
-        YSizes = Model.GetYCellSizes();
-        ZSizes = Model.GetZCellSizes();
       }
 
     /*! This function implements the grand structure of gravity forward calculation, i.e. processing
@@ -147,19 +113,16 @@ namespace jif3D
      * @param Calculator A derived class of ThreeDGravityCalculator
      * @return A vector of measurements
      */
-    template<class ThreeDModelType>
-    rvec ThreeDGravMagImplementation<ThreeDModelType>::Calculate(
-        const ThreeDModelType &Model,
-        jif3D::ThreeDGravMagCalculator<ThreeDModelType> &Calculator)
+    template<class PotentialDataType>
+    rvec ThreeDGravMagImplementation<PotentialDataType>::Calculate(
+        const ThreeDModelType &Model, const PotentialDataType &Data,
+        jif3D::ThreeDGravMagCalculator<PotentialDataType> &Calculator)
       {
 
         // get the number of measurements
         // this class is only called from a calculator object
         // which performs consistency check
-        const size_t nmeas = Model.GetMeasPosX().size();
-        //Cache the coordinate and size information
-        //to avoid problems with thread safety
-        CacheGeometry(Model);
+        const size_t nmeas = Data.GetMeasPosX().size();
 
         //allocate enough memory for all datapoints in the result vector
         rvec result(nmeas * GetDataPerMeasurement());
@@ -179,11 +142,11 @@ namespace jif3D
             // the vector to hold the result for the current measurement
             rvec currdata(RawDataPerMeasurement());
 
-            currdata = CalcGridded(i, Model, Calculator.SetCurrentSensitivities());
+            currdata = CalcGridded(i, Model, Data, Calculator.SetCurrentSensitivities());
 
             //adjust for the effects of finite extents of the grid
             currdata += CalcBackground(i, modelxwidth, modelywidth, modelzwidth, Model,
-                Calculator.SetCurrentSensitivities());
+                Data, Calculator.SetCurrentSensitivities());
             if (Transform)
               {
                 //now apply the transformation to the data
@@ -211,19 +174,16 @@ namespace jif3D
      * @param Misfit The Misfit between observed and synthetic data
      * @return The derivative of a least-squares objective function with respect to the model parameters
      */
-    template<class ThreeDModelType>
-    rvec ThreeDGravMagImplementation<ThreeDModelType>::LQDerivative(
-        const ThreeDModelType &Model, const rvec &Misfit)
+    template<class PotentialDataType>
+    rvec ThreeDGravMagImplementation<PotentialDataType>::LQDerivative(
+        const ThreeDModelType &Model, const PotentialDataType &Data, const rvec &Misfit)
       {
         // get the number of measurements
         // this class is only called from a calculator object
         // which performs consistency check
-        const size_t nmeas = Model.GetMeasPosX().size();
+        const size_t nmeas = Data.GetMeasPosX().size();
         const size_t TransDataPerMeas = GetDataPerMeasurement();
         assert(Misfit.size() == nmeas * TransDataPerMeas);
-        //Cache the coordinate and size information
-        //to avoid problems with thread safety
-        CacheGeometry(Model);
 
         // calculate the size of the modelling domain for the background adjustment
         // this way we do not have to recalculate within the loop
@@ -246,9 +206,9 @@ namespace jif3D
           {
             rvec currdata(RawDataPerMeasurement());
             //build up the full sensitivity matrix for the current measurement
-            currdata = CalcGridded(i, Model, CurrentSensitivities);
+            currdata = CalcGridded(i, Model, Data, CurrentSensitivities);
             currdata += CalcBackground(i, modelxwidth, modelywidth, modelzwidth, Model,
-                CurrentSensitivities);
+                Data, CurrentSensitivities);
             if (Transform)
               {
                 rmat TransDeriv(Transform->Derivative(currdata));
@@ -263,7 +223,7 @@ namespace jif3D
               }
             for (size_t j = 0; j < TransDataPerMeas; ++j)
               {
-                boost::numeric::ublas::matrix_row<rmat> CurrRow(NewSensitivities, j);
+                boost::numeric::ublas::matrix_row < rmat > CurrRow(NewSensitivities, j);
                 DerivMod += Misfit(i * TransDataPerMeas + j) * CurrRow;
               }
           }

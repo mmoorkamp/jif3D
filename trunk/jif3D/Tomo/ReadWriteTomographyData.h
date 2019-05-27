@@ -11,34 +11,13 @@
 
 #include "../Global/VecMat.h"
 #include "../Global/Jif3DGlobal.h"
-#include "ThreeDSeismicModel.h"
-#include "tomo_types.h"
 #include <fstream>
+#include "../Tomo/tomo_types.h"
+#include "../Tomo/ThreeDSeismicModel.h"
 
 namespace jif3D
   {
-    /** \addtogroup tomo Seismic tomography classes and functions */
-    /* @{ */
-    //!Save a collection of travel times and associated positions to a netcdf file
-    /*! Saves traveltimes together with the source receiver configuration to a netcdf file.
-     * @param filename The name of the file to store the data
-     * @param Data The traveltimes in s, the length of this vector matches the number of
-     *             source-receiver combinations in the Model object
-     * @param The error of the traveltimes
-     * @param Model The model object containing information about the source and receiver setup
-     */
-    J3DEXPORT void SaveTraveltimes(const std::string &filename, const jif3D::rvec &Data,
-        const jif3D::rvec &Error, const jif3D::ThreeDSeismicModel &Model);
-    //!Read a collection of travel times and associated positions from a netcdf file
-    /*! Read traveltimes together with the source receiver configuration from a netcdf file.
-     * @param filename The name of the file to store the data
-     * @param Data The traveltimes in s, the length of this vector matches the number of
-     *         source-receiver combinations in the Model object
-     * @param The error of the traveltimes
-     * @param Model The model object containing information about the source and receiver setup
-     */
-    J3DEXPORT void ReadTraveltimes(const std::string &filename, jif3D::rvec &Data,
-        jif3D::rvec &Error, jif3D::ThreeDSeismicModel &Model);
+
 
     //! Plot the travel time field, i.e. the travel time at each grid cell in a vtk file
     /*! Write the travel time field to a .vtk file. This is a template so that we can

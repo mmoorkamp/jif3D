@@ -9,9 +9,9 @@
 #include <hpx/hpx.hpp>
 #endif
 
-#include "modeling_seismic.h"
-#include "ReadWriteTomographyData.h"
-#include "PodvinTime3D.h"
+#include "../Tomo/modeling_seismic.h"
+#include "../Tomo/ReadWriteTomographyData.h"
+#include "../Tomo/PodvinTime3D.h"
 #include "../Global/FatalException.h"
 #include "../Global/convert.h"
 #include <cmath>

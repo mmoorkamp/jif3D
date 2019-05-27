@@ -12,12 +12,13 @@
 #include "../Global/Jif3DGlobal.h"
 #include "../GravMag/ThreeDGravMagImplementation.h"
 #include "ThreeDMagneticModel.h"
+#include "MagneticData.h"
 
 namespace jif3D
   {
 
     class J3DEXPORT OMPMagneticGradImp : public jif3D::ThreeDGravMagImplementation<
-        ThreeDMagneticModel>
+        MagneticData>
       {
     private:
       double Inclination;
@@ -25,6 +26,7 @@ namespace jif3D
       double FieldStrength;
       virtual rvec CalcBackground(const size_t measindex, const double xwidth,
           const double ywidth, const double zwidth, const ThreeDMagneticModel &Model,
+          const MagneticData &Data,
           rmat &Sensitivities) override
         {
           rvec returnvector(ndatapermeas, 0.0);
@@ -32,6 +34,7 @@ namespace jif3D
         }
       //! Calculate the response of the gridded part
       virtual rvec CalcGridded(const size_t measindex, const ThreeDMagneticModel &Model,
+          const MagneticData &Data,
           rmat &Sensitivities)  override;
       //! We chose vertical gradient of Z magnetic component from three magnetic field components
       static const size_t ndatapermeas = 1;

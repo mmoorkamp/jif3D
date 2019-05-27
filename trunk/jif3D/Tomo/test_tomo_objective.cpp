@@ -1,3 +1,4 @@
+
 #define BOOST_TEST_MODULE SeismicModel test
 #define BOOST_TEST_MAIN ...
 #include "../Global/Jif3DTesting.h"
@@ -5,7 +6,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <vector>
-#include "TomographyCalculator.h"
+#include "../Tomo/TomographyCalculator.h"
 #include "../Inversion/ModelTransforms.h"
 #include "../Inversion/ThreeDModelObjective.h"
 #include <boost/test/floating_point_comparison.hpp>

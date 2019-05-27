@@ -52,9 +52,9 @@ namespace jif3D
       }
 
     size_t ConstructDepthIndices(std::vector<size_t> &MeasDepthIndices,
-        std::vector<double> &ShiftDepth, const ThreeDModelBase &Model)
+        std::vector<double> &ShiftDepth, const ThreeDModelBase &Model, const std::vector<double> &MeasPosZ)
       {
-        const size_t nmeas = Model.GetMeasPosX().size();
+        const size_t nmeas = MeasPosZ.size();
         size_t nlevels = 0;
         if (nmeas == 0)
           return nlevels;
@@ -62,7 +62,7 @@ namespace jif3D
 
         for (size_t i = 0; i < nmeas; ++i)
           {
-            size_t zindex = FindNearestCellBoundary(Model.GetMeasPosZ()[i],
+            size_t zindex = FindNearestCellBoundary(MeasPosZ[i],
                 Model.GetZCoordinates(), Model.GetZCellSizes());
             std::vector<size_t>::iterator CurrIndex = std::find(ZIndices.begin(),
                 ZIndices.end(), zindex);

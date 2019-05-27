@@ -1,9 +1,10 @@
 import testing ; 
 #using gfortran ;
 
-alias linkcommon : ../ModelBase//modelbase ../Global//global ..//boost_core ..//boost_iostreams ..//boost_thread ..//boost_chrono ..//boost_date_time ..//netcdf ..//netcdf_c++ ; 
+alias linkcommon : ../DataBase//database ../ModelBase//modelbase ../Global//global ..//boost_core ..//boost_iostreams ..//boost_thread ..//boost_chrono ..//boost_date_time ..//netcdf ..//netcdf_c++ ; 
 
-lib mt : ReadWriteX3D.cpp ReadWriteImpedances.cpp
+lib mt : MTData.cpp TipperData.cpp EMData.cpp
+         ReadWriteX3D.cpp ReadWriteImpedances.cpp ReadWriteTitanData.cpp
          ThreeDMTModel.cpp X3DModel.cpp ModEMModel.cpp 
          MTEquations.cpp X3DFieldCalculator.cpp
          MT3DCalculator.cpp X3DMTCalculator.cpp
@@ -20,8 +21,8 @@ unit-test Tippercalc_test : test_X3DTipperCalculator.cpp   mt ../Global//global 
 unit-test MTtransform_test : test_transform.cpp mt  ../ModelBase//modelbase   ;
 unit-test RWX3D_test : test_ReadWriteX3D.cpp   mt linkcommon ../Global//global ../Inversion//inversion  ;
 unit-test InterpolateFields_test : test_InterpolateFields.cpp   mt linkcommon ../Global//global ../Inversion//inversion  ;
-unit-test X3DObjective_test : test_X3DObjective.cpp mt linkcommon ../Inversion//inversion ../Global//global ../Titan24//titan24 ;
-unit-test X3DTipperObjective_test : test_X3DTipperObjective.cpp mt linkcommon ../Inversion//inversion ../Global//global ../Titan24//titan24 ;
+unit-test X3DObjective_test : test_X3DObjective.cpp mt linkcommon ../Inversion//inversion ../Global//global ;
+unit-test X3DTipperObjective_test : test_X3DTipperObjective.cpp mt linkcommon ../Inversion//inversion ../Global//global ;
 unit-test OneDMTCalculator_test : test_OneDMTCalculator.cpp mt linkcommon ../Inversion//inversion ../Global//global ;
 unit-test ReadWriteImpedances_test : test_ReadWriteImpedances.cpp mt linkcommon ../Inversion//inversion ../Global//global ;
 unit-test MTCovar_test : test_MTCovar.cpp mt  ../ModelBase//modelbase ../Global//global  ;
@@ -30,4 +31,4 @@ unit-test MTCovar_test : test_MTCovar.cpp mt  ../ModelBase//modelbase ../Global/
 exe mtforward : mtforward.cpp mt linkcommon ;
 exe makemtmesh : makemtmesh.cpp mt linkcommon ;
 exe refinemt : refinemt.cpp mt ../Gravity//gravity ../Magnetics//magnetics ../Tomo//tomo linkcommon ..//netcdf ..//netcdf_c++ ;
-exe mtinv : mtinv.cpp  linkcommon mt ../Joint//joint ../Joint//setup  ../Titan24//titan24 ;
+exe mtinv : mtinv.cpp  linkcommon mt ../Joint//joint ../Joint//setup ;

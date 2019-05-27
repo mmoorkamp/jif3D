@@ -36,9 +36,9 @@ namespace jif3D
       {
         rvec tempdata(MatVec.size() / 3);
         for (size_t i = 0; i < tempdata.size(); ++i)
-        {
-          tempdata(i) = MatVec(i * 3 + n);
-        }
+          {
+            tempdata(i) = MatVec(i * 3 + n);
+          }
 
         WriteVec(NetCDFFile, CompName, tempdata, Dimension, "1/s2");
       }
@@ -65,20 +65,15 @@ namespace jif3D
      * @param Error The error estimate for each measurement
      */
     void SaveTotalFieldMagneticMeasurements(const std::string &filename,
-        const jif3D::rvec &Data, const ThreeDMagneticModel::tMeasPosVec &PosX,
-        const ThreeDMagneticModel::tMeasPosVec &PosY,
-        const ThreeDMagneticModel::tMeasPosVec &PosZ, const jif3D::rvec &Error)
+        const std::vector<double> &Data, const std::vector<double> &PosX,
+        const std::vector<double> &PosY, const std::vector<double> &PosZ,
+        const std::vector<double> &Error)
       {
         //make sure all vectors have consistent sizes
         assert(Data.size() == PosX.size());
         assert(Data.size() == PosY.size());
         assert(Data.size() == PosZ.size());
-        jif3D::rvec LocalError(Error);
-        if (Error.empty())
-          {
-            LocalError.resize(Data.size(), false);
-            std::fill(LocalError.begin(), LocalError.end(), 0.0);
-          }
+
         //create a netcdf file
         NcFile DataFile(filename, NcFile::replace);
         //we use the station number as a dimension
@@ -90,7 +85,7 @@ namespace jif3D
         WriteVec(DataFile, MeasPosZName, PosZ, StatNumDim, "m");
         //Write the measurements and the error
         WriteVec(DataFile, TotalFieldName, Data, StatNumDim, "nT");
-        WriteVec(DataFile, TotalFieldErrorName, LocalError, StatNumDim, "nT");
+        WriteVec(DataFile, TotalFieldErrorName, Error, StatNumDim, "nT");
       }
 
     /*! Read scalar Magnetic measurements and their position from a netcdf file
@@ -102,9 +97,8 @@ namespace jif3D
      * @param Error The error estimate for each measurement
      */
     void ReadTotalFieldMagneticMeasurements(const std::string &filename,
-        jif3D::rvec &Data, ThreeDMagneticModel::tMeasPosVec &PosX,
-        ThreeDMagneticModel::tMeasPosVec &PosY, ThreeDMagneticModel::tMeasPosVec &PosZ,
-        jif3D::rvec &Error)
+        std::vector<double> &Data, std::vector<double> &PosX, std::vector<double> &PosY,
+        std::vector<double> &PosZ, std::vector<double> &Error)
       {
         NcFile DataFile(filename, NcFile::read);
 
@@ -113,19 +107,21 @@ namespace jif3D
         ReadVec(DataFile, MeasPosZName, PosZ);
         ReadVec(DataFile, TotalFieldName, Data);
 
-        try {
-          if (!DataFile.getVar(TotalFieldErrorName).isNull())
-            {
-              ReadVec(DataFile, TotalFieldErrorName, Error);
-            }
-          else
-            {
-              Error.resize(Data.size());
-              Error.clear();
-            }
-        } catch(netCDF::exceptions::NcException &ex) {
-          // ignore
-        }
+        try
+          {
+            if (!DataFile.getVar(TotalFieldErrorName).isNull())
+              {
+                ReadVec(DataFile, TotalFieldErrorName, Error);
+              }
+            else
+              {
+                Error.resize(Data.size());
+                Error.clear();
+              }
+          } catch (netCDF::exceptions::NcException &ex)
+          {
+            // ignore
+          }
       }
 
     /*! Read each magnetic field component and their position to a netcdf file. Data will have
@@ -138,8 +134,8 @@ namespace jif3D
      * @param Error The error estimate for each measurement
      */
     void ReadMagneticComponentMeasurements(const std::string &filename, jif3D::rvec &Data,
-        ThreeDMagneticModel::tMeasPosVec &PosX, ThreeDMagneticModel::tMeasPosVec &PosY,
-        ThreeDMagneticModel::tMeasPosVec &PosZ, jif3D::rvec &Error)
+        std::vector<double> &PosX, std::vector<double> &PosY, std::vector<double> &PosZ,
+        jif3D::rvec &Error)
       {
         NcFile DataFile(filename, NcFile::read);
 
@@ -157,17 +153,19 @@ namespace jif3D
           {
             ReadMagComp(DataFile, ComponentNames.at(i), Data, i);
           }
-        try {
-        for (size_t i = 0; i < 3; ++i)
+        try
           {
-            if (!DataFile.getVar(ComponentErrorNames.at(i)).isNull())
+            for (size_t i = 0; i < 3; ++i)
               {
-                ReadMagComp(DataFile, ComponentErrorNames.at(i), Error, i);
+                if (!DataFile.getVar(ComponentErrorNames.at(i)).isNull())
+                  {
+                    ReadMagComp(DataFile, ComponentErrorNames.at(i), Error, i);
+                  }
               }
+          } catch (const netCDF::exceptions::NcException &ex)
+          {
+            // ignore
           }
-        } catch(const netCDF::exceptions::NcException &ex) {
-          // ignore
-        }
       }
 
     /*! Write each magnetic field component and their position to a netcdf file. Data has to have
@@ -180,9 +178,9 @@ namespace jif3D
      * @param Error The error estimate for each measurement
      */
     void SaveTensorMagneticMeasurements(const std::string &filename,
-        const jif3D::rvec &Data, const ThreeDMagneticModel::tMeasPosVec &PosX,
-        const ThreeDMagneticModel::tMeasPosVec &PosY,
-        const ThreeDMagneticModel::tMeasPosVec &PosZ, const jif3D::rvec &Error)
+        const jif3D::rvec &Data, const std::vector<double> &PosX,
+        const std::vector<double> &PosY, const std::vector<double> &PosZ,
+        const jif3D::rvec &Error)
       {
         const size_t nmeas = PosX.size();
 
@@ -193,7 +191,7 @@ namespace jif3D
         NcFile DataFile(filename, NcFile::replace);
         //create a dimension for the stations
         NcDim StatNumDim = DataFile.addDim(StationNumberName.c_str(), nmeas);
-       //write out the measurement positions
+        //write out the measurement positions
         WriteVec(DataFile, MeasPosXName, PosX, StatNumDim, "m");
         WriteVec(DataFile, MeasPosYName, PosY, StatNumDim, "m");
         WriteVec(DataFile, MeasPosZName, PosZ, StatNumDim, "m");

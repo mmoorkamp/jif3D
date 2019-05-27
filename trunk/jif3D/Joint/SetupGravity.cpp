@@ -9,6 +9,8 @@
 #include "../Inversion/ModelTransforms.h"
 #include "../Gravity/ReadWriteGravityData.h"
 #include "../Gravity/ThreeDGravityFactory.h"
+#include "../Gravity/ScalarGravityData.h"
+#include "../Gravity/TensorGravityData.h"
 #include "../Global/FileUtil.h"
 #include "../Global/Noise.h"
 
@@ -59,7 +61,8 @@ namespace jif3D
             wantcuda = true;
           }
 
-        jif3D::rvec ScalGravData, FTGData, ScalError, FTGError;
+        jif3D::ScalarGravityData ScalGravData;
+        jif3D::TensorGravityData FTGData;
         double scalgravlambda = 1.0;
         double ftglambda = 1.0;
         //we first ask for the weights for scalar and tensor gravity
@@ -69,8 +72,6 @@ namespace jif3D
         std::cout << "FTG Lambda: ";
         std::cin >> ftglambda;
 
-        jif3D::ThreeDGravityModel::tMeasPosVec ScalPosX, ScalPosY, ScalPosZ;
-        jif3D::ThreeDGravityModel::tMeasPosVec FTGPosX, FTGPosY, FTGPosZ;
         //if the weight is different from zero
         //we have to read in scalar gravity data
         if (scalgravlambda > 0.0)
@@ -78,8 +79,7 @@ namespace jif3D
             std::string scalgravdatafilename = jif3D::AskFilename(
                 "Scalar Gravity Data Filename: ");
 
-            jif3D::ReadScalarGravityMeasurements(scalgravdatafilename, ScalGravData,
-                ScalPosX, ScalPosY, ScalPosZ, ScalError);
+            ScalGravData.ReadNetCDF(scalgravdatafilename);
             HaveScal = true;
           }
 
@@ -88,8 +88,7 @@ namespace jif3D
         if (ftglambda > 0.0)
           {
             std::string ftgdatafilename = jif3D::AskFilename("FTG Data Filename: ");
-            jif3D::ReadTensorGravityMeasurements(ftgdatafilename, FTGData, FTGPosX,
-                FTGPosY, FTGPosZ, FTGError);
+            FTGData.ReadNetCDF(ftgdatafilename);
             HaveFTG = true;
           }
         //if the inversion includes any type of gravity data
@@ -100,25 +99,6 @@ namespace jif3D
                 "Gravity Model Filename: ");
             ScalGravModel.ReadNetCDF(gravmodelfilename);
             FTGGravModel.ReadNetCDF(gravmodelfilename);
-
-            ScalGravModel.ClearMeasurementPoints();
-            FTGGravModel.ClearMeasurementPoints();
-            if (ftglambda > 0.0)
-              {
-                for (size_t i = 0; i < FTGPosX.size(); ++i)
-                  {
-                    FTGGravModel.AddMeasurementPoint(FTGPosX.at(i), FTGPosY.at(i),
-                        FTGPosZ.at(i));
-                  }
-              }
-            if (scalgravlambda > 0.0)
-              {
-                for (size_t i = 0; i < ScalPosX.size(); ++i)
-                  {
-                    ScalGravModel.AddMeasurementPoint(ScalPosX.at(i), ScalPosY.at(i),
-                        ScalPosZ.at(i));
-                  }
-              }
             if (xorigin != 0.0 || yorigin != 0.0)
               {
                 ScalGravModel.SetOrigin(xorigin, yorigin, 0.0);
@@ -142,12 +122,11 @@ namespace jif3D
             //we want to set the path for temporary file storage
             //the factory function cannot perform this, so we
             //have to assemble the calculator object ourselves
-            boost::shared_ptr<
-                jif3D::ThreeDGravMagImplementation<jif3D::ThreeDGravityModel> > Implementation;
+            boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::ScalarGravityData> > Implementation;
             if (wantcuda)
               {
 #ifdef HAVEGPU
-                Implementation = boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::ThreeDGravityModel> >(
+                Implementation = boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::ScalarGravityData> >(
                     new jif3D::ScalarCudaGravityImp);
 #else
                 throw jif3D::FatalException(
@@ -157,23 +136,23 @@ namespace jif3D
             else
               {
                 Implementation = boost::shared_ptr<
-                    jif3D::ThreeDGravMagImplementation<jif3D::ThreeDGravityModel> >(
+                    jif3D::ThreeDGravMagImplementation<jif3D::ScalarGravityData> >(
                     new jif3D::ScalarOMPGravityImp);
               }
-            boost::shared_ptr<CalculatorType> ScalarCalculator(
-                new CalculatorType(Implementation, TempDir));
+            boost::shared_ptr<ScalarCalculatorType> ScalarCalculator(
+                new ScalarCalculatorType(Implementation, TempDir));
 
-            ScalGravObjective = boost::shared_ptr<
-                jif3D::ThreeDModelObjective<CalculatorType> >(
-                new jif3D::ThreeDModelObjective<CalculatorType>(*ScalarCalculator));
+            ScalGravObjective = boost::make_shared<
+                jif3D::ThreeDModelObjective<ScalarCalculatorType> >(*ScalarCalculator);
             ScalGravObjective->SetObservedData(ScalGravData);
             ScalGravObjective->SetCoarseModelGeometry(ScalGravModel);
             ScalGravObjective->SetDataError(
-                jif3D::ConstructError(ScalGravData, ScalError, scalrelerr, scalminerr));
+                jif3D::ConstructError(ScalGravData.GetData(), ScalGravData.GetErrors(),
+                    scalrelerr, scalminerr));
 
             Objective.AddObjective(ScalGravObjective, Transform, scalgravlambda,
                 "ScalGrav", JointObjective::datafit);
-            std::cout << "Scalar Gravity ndata: " << ScalGravData.size() << std::endl;
+            std::cout << "Scalar Gravity ndata: " << ScalGravData.GetData().size() << std::endl;
             std::cout << "Scalar Gravity lambda: " << scalgravlambda << std::endl;
           }
         if (ftglambda > 0.0)
@@ -181,12 +160,11 @@ namespace jif3D
             //we want to set the path for temporary file storage
             //the factory function cannot perform this, so we
             //have to assemble the calculator object ourselves
-            boost::shared_ptr<
-                jif3D::ThreeDGravMagImplementation<jif3D::ThreeDGravityModel> > Implementation;
+            boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::TensorGravityData> > Implementation;
             if (wantcuda)
               {
 #ifdef HAVEGPU
-                Implementation = boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::ThreeDGravityModel> >(
+                Implementation = boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::TensorGravityData> >(
                     new jif3D::TensorCudaGravityImp);
 #else
                 throw jif3D::FatalException(
@@ -196,23 +174,23 @@ namespace jif3D
             else
               {
                 Implementation = boost::shared_ptr<
-                    jif3D::ThreeDGravMagImplementation<jif3D::ThreeDGravityModel> >(
+                    jif3D::ThreeDGravMagImplementation<jif3D::TensorGravityData> >(
                     new jif3D::TensorOMPGravityImp);
               }
-            boost::shared_ptr<CalculatorType> TensorCalculator(
-                new CalculatorType(Implementation, TempDir));
+            boost::shared_ptr<TensorCalculatorType> TensorCalculator(
+                new TensorCalculatorType(Implementation, TempDir));
 
-            FTGObjective =
-                boost::shared_ptr<jif3D::ThreeDModelObjective<CalculatorType> >(
-                    new jif3D::ThreeDModelObjective<CalculatorType>(*TensorCalculator));
+            FTGObjective = boost::make_shared<
+                jif3D::ThreeDModelObjective<TensorCalculatorType> >(*TensorCalculator);
             FTGObjective->SetObservedData(FTGData);
             FTGObjective->SetCoarseModelGeometry(FTGGravModel);
             FTGObjective->SetDataError(
-                jif3D::ConstructError(FTGData, FTGError, ftgrelerr, ftgminerr));
+                jif3D::ConstructError(FTGData.GetData(), FTGData.GetErrors(), ftgrelerr,
+                    ftgminerr));
 
             Objective.AddObjective(FTGObjective, Transform, ftglambda, "FTG",
                 JointObjective::datafit);
-            std::cout << "FTG ndata: " << FTGData.size() << std::endl;
+            std::cout << "FTG ndata: " << FTGData.GetData().size() << std::endl;
             std::cout << "FTG lambda: " << ftglambda << std::endl;
           }
         //indicate whether we added a gravity objective function

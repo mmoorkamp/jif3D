@@ -31,8 +31,8 @@ jif3D::ThreeDModelBase::t3DModelDim GenerateDimension(const size_t maxcells)
   }
 
 //create a random density model
-template <typename ModelType>
-void MakeRandomModel(ModelType &Model, const size_t maxcells,
+template <typename ModelType, typename DataType>
+void MakeRandomModel(ModelType &Model, DataType &Data, const size_t maxcells,
     const size_t nmeas = 10, const bool withbackground = true)
   {
     srand( (unsigned int)time(NULL));
@@ -62,7 +62,7 @@ void MakeRandomModel(ModelType &Model, const size_t maxcells,
     // => we are measuring above the surface
     for (size_t i = 0; i < nmeas; ++i)
       {
-        Model.AddMeasurementPoint(rand() % xlength + 1, rand() % ylength + 1,
+        Data.AddMeasurementPoint(rand() % xlength + 1, rand() % ylength + 1,
             -(rand() % 100 + 1.0));
       }
 //    //if we also need to generate a background

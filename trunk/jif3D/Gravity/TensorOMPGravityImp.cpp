@@ -5,7 +5,6 @@
 // Copyright   : 2008, mmoorkamp
 //============================================================================
 
-
 #include "TensorOMPGravityImp.h"
 #include "BasicGravElements.h"
 #include "GravityBackground.h"
@@ -32,11 +31,11 @@ namespace jif3D
      * @param Sensitivities The \f$ 9 \times m\f$ matrix of sensitivities for the current measurement
      * @return The gravitational tensor due to the background
      */
-    rvec TensorOMPGravityImp::CalcBackground(const size_t measindex,
-        const double xwidth, const double ywidth, const double zwidth,
-        const ThreeDGravityModel &Model, rmat &Sensitivities)
+    rvec TensorOMPGravityImp::CalcBackground(const size_t measindex, const double xwidth,
+        const double ywidth, const double zwidth, const ThreeDGravityModel &Model,
+        const TensorGravityData &Data, rmat &Sensitivities)
       {
-        return CalcTensorBackground(measindex, xwidth, ywidth, zwidth, Model,
+        return CalcTensorBackground(measindex, xwidth, ywidth, zwidth, Model, Data,
             Sensitivities);
       }
     /*! Calculate the FTG response of the gridded domain.
@@ -46,14 +45,15 @@ namespace jif3D
      * @return A 9 component vector with the FTG matrix components
      */
     rvec TensorOMPGravityImp::CalcGridded(const size_t measindex,
-        const ThreeDGravityModel &Model, rmat &Sensitivities)
+        const ThreeDGravityModel &Model, const TensorGravityData &Data,
+        rmat &Sensitivities)
       {
         const size_t xsize = Model.GetDensities().shape()[0];
         const size_t ysize = Model.GetDensities().shape()[1];
         const size_t zsize = Model.GetDensities().shape()[2];
-        const double x_meas = Model.GetMeasPosX()[measindex];
-        const double y_meas = Model.GetMeasPosY()[measindex];
-        const double z_meas = Model.GetMeasPosZ()[measindex];
+        const double x_meas = Data.GetMeasPosX()[measindex];
+        const double y_meas = Data.GetMeasPosY()[measindex];
+        const double z_meas = Data.GetMeasPosZ()[measindex];
         const int nmod = xsize * ysize * zsize;
         const bool storesens = (Sensitivities.size1() >= ndatapermeas)
             && (Sensitivities.size2() >= size_t(nmod));
@@ -62,8 +62,8 @@ namespace jif3D
         //we cannot add up a user defined quantity in parallel
         //so break up the tensor into its component with different variables
         //and assign the results after the parallel loop
-        double U0 = 0.0, U1 = 0.0, U2 = 0.0, U3 = 0.0, U4 = 0.0, U5 = 0.0, U6 =
-            0.0, U7 = 0.0, U8 = 0.0;
+        double U0 = 0.0, U1 = 0.0, U2 = 0.0, U3 = 0.0, U4 = 0.0, U5 = 0.0, U6 = 0.0, U7 =
+            0.0, U8 = 0.0;
         //sum up the contributions of all prisms
 #pragma omp parallel default(shared) private(currvalue) reduction(+:U0,U1,U2,U3,U4,U5,U6,U7,U8)
           {
@@ -79,11 +79,11 @@ namespace jif3D
                 Model.OffsetToIndex(offset, xindex, yindex, zindex);
                 //currvalue contains only the geometric term
                 currvalue = CalcTensorBoxTerm(x_meas, y_meas, z_meas,
-                    XCoord[xindex], YCoord[yindex], ZCoord[zindex],
-                    XSizes[xindex], YSizes[yindex], ZSizes[zindex]);
+                    Model.GetXCoordinates()[xindex], Model.GetYCoordinates()[yindex],
+                    Model.GetZCoordinates()[zindex], Model.GetXCellSizes()[xindex],
+                    Model.GetYCellSizes()[yindex], Model.GetZCellSizes()[zindex]);
                 //to we have to multiply each element by the density
-                const double Density =
-                    Model.GetDensities()[xindex][yindex][zindex];
+                const double Density = Model.GetDensities()[xindex][yindex][zindex];
                 U0 += currvalue(0, 0) * Density;
                 U1 += currvalue(0, 1) * Density;
                 U2 += currvalue(0, 2) * Density;
@@ -99,7 +99,7 @@ namespace jif3D
                       Sensitivities(i, offset) = currvalue.data()[i];
                   }
               }
-          }//end of parallel region
+          } //end of parallel region
 
         rvec returnvalue(ndatapermeas);
         returnvalue(0) = U0;

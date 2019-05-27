@@ -49,18 +49,6 @@ namespace jif3D
           return false;
         if (bg_conductivities.size() != b.bg_conductivities.size())
           return false;
-        if (ExIndices.size() != b.ExIndices.size())
-          return false;
-        if (EyIndices.size() != b.EyIndices.size())
-          return false;
-        if (HxIndices.size() != b.HxIndices.size())
-          return false;
-        if (HyIndices.size() != b.HyIndices.size())
-          return false;
-        if (HzIndices.size() != b.HzIndices.size())
-          return false;
-        if (RotAngles.size() != b.RotAngles.size())
-          return false;
 
         if (!std::equal(bg_thicknesses.begin(), bg_thicknesses.end(),
             b.bg_thicknesses.begin(), [epsilon](double a, double b)
@@ -72,22 +60,6 @@ namespace jif3D
               { return boost::math::relative_difference(a,b) < epsilon;}))
           return false;
 
-        if (!std::equal(RotAngles.begin(), RotAngles.end(),
-            b.RotAngles.begin(), [epsilon](double a, double b)
-              { return boost::math::relative_difference(a,b) < epsilon;}))
-          return false;
-
-
-        if (!std::equal(ExIndices.begin(), ExIndices.end(), b.ExIndices.begin()))
-          return false;
-        if (!std::equal(EyIndices.begin(), EyIndices.end(), b.EyIndices.begin()))
-          return false;
-        if (!std::equal(HxIndices.begin(), HxIndices.end(), b.HxIndices.begin()))
-          return false;
-        if (!std::equal(HyIndices.begin(), HyIndices.end(), b.HyIndices.begin()))
-          return false;
-        if (!std::equal(HzIndices.begin(), HzIndices.end(), b.HzIndices.begin()))
-          return false;
         //we only get here if nothing failed before
         return ThreeDModelBase::operator ==(b);
       }

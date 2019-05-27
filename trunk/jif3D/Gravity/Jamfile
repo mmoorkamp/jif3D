@@ -1,5 +1,7 @@
 import testing ; 
-lib gravity : ThreeDGravityModel.cpp DepthWeighting.cpp
+lib gravity : ThreeDGravityModel.cpp ScalarGravityData.cpp
+              TensorGravityData.cpp 
+              DepthWeighting.cpp
               GravityBackground.cpp BasicGravElements.cpp
               ScalarOMPGravityImp.cpp  TensorOMPGravityImp.cpp
                  ReadWriteGravityData.cpp
@@ -12,7 +14,7 @@ lib gravity : ThreeDGravityModel.cpp DepthWeighting.cpp
                 <gpu>on:<source>gravcuda.cu ;
                
                     
-alias core :  ../ModelBase//modelbase ../Global//global ..//boost_core ;
+alias core :  ../DataBase//database ../ModelBase//modelbase ../Global//global ..//boost_core ;
 
 unit-test Model_test : test_ThreeDGravityModel.cpp gravity core  ;
 unit-test scalar_test : test_ScalarCalculation.cpp gravity core  ;
@@ -23,7 +25,6 @@ unit-test transform_test : test_transforms.cpp  gravity core  ;
 # unit-test weighting_test : test_weighting.cpp DepthWeighting.cpp  gravity  ../Inversion//inversion core   ;
 unit-test readwrite_test : test_readwritedata.cpp gravity  ../Inversion//inversion core   ;
 
-exe gravforward : gravforward.cpp gravity  core ;
 exe gravgrid : gravgrid.cpp gravity  core  ;
 exe gravinv : gravinv.cpp  ../Inversion/LinearInversion.cpp ../Inversion/MatrixTools.cpp gravity  core ../Inversion//inversion
               ..//vecopt : <lapack>off:<build>no  ;

@@ -16,6 +16,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <vector>
 #include <boost/shared_ptr.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 
@@ -104,7 +105,7 @@ namespace jif3D
           return DataDifference;
         }
       //! Get the error weighted misfit for each datum
-      const jif3D::rvec GetIndividualMisfit() const
+      const jif3D::rvec &GetIndividualMisfit() const
         {
           return IndividualMisfits;
         }
@@ -119,24 +120,24 @@ namespace jif3D
           return nEval;
         }
       //! We assume that the data covariance is in diagonal form and store its square root as vector, if we do not assign a covariance it is assumed to be 1
-      void SetDataError(const jif3D::rvec &Cov)
+      void SetDataError(const std::vector<double> &Cov)
         {
           //the last parameter false is important here so that ublas
           //does not try to preserve which is broken in boost 1.49
           InvCovMat.resize(Cov.size(), Cov.size(), false);
           for (size_t i = 0; i < Cov.size(); ++i)
             {
-              InvCovMat(i, i) = 1.0 / jif3D::pow2(Cov(i));
+              InvCovMat(i, i) = 1.0 / jif3D::pow2(Cov.at(i));
             }
         }
       //! Return a read-only version of the diagonal of the data covariance
-      const jif3D::rvec GetDataError() const
+      const std::vector<double> GetDataError() const
         {
           assert(InvCovMat.size1() == InvCovMat.size2());
-          jif3D::rvec CovarDiag(InvCovMat.size1());
+          std::vector<double> CovarDiag(InvCovMat.size1());
           for (size_t i = 0; i < InvCovMat.size1(); ++i)
             {
-              CovarDiag(i) = 1.0 / sqrt(InvCovMat(i, i));
+              CovarDiag.at(i) = 1.0 / sqrt(InvCovMat(i, i));
             }
           return CovarDiag;
         }

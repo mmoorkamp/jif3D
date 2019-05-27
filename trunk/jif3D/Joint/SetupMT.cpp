@@ -6,10 +6,13 @@
 //============================================================================
 
 #include "../MT/ReadWriteImpedances.h"
+#include "../MT/MTData.h"
 #include "../Global/FileUtil.h"
 #include "../Global/Noise.h"
 #include "../Global/ReadWriteSparseMatrix.h"
+
 #include "SetupMT.h"
+#include <boost/make_shared.hpp>
 #include <algorithm>
 #include <string>
 
@@ -72,22 +75,18 @@ namespace jif3D
             // we also try to read in the parameters of the distortion Matrix C
             //if these are not present they will be set to identity matrix for each site
             //in the forward calculation, otherwise the synthetic responses will be multiplied
-            std::vector<double> MTXPos, MTYPos, MTZPos, Frequencies, C;
-            jif3D::rvec MTData, MTError;
+
+            jif3D::MTData MTData;
 
             if (extension.compare(".dat") == 0)
               {
-                jif3D::ReadImpedancesFromModEM(mtdatafilename, Frequencies, MTXPos,
-                    MTYPos, MTZPos, MTData, MTError);
+                MTData.ReadModEM(mtdatafilename);
               }
             else
               {
-
-                jif3D::ReadImpedancesFromNetCDF(mtdatafilename, Frequencies, MTXPos,
-                    MTYPos, MTZPos, MTData, MTError, C);
-
+                MTData.ReadNetCDF(mtdatafilename);
               }
-
+            const size_t ndata = MTData.GetData().size();
             std::string mtmodelfilename = jif3D::AskFilename("MT Model Filename: ");
             //read in the model and check whether the geometry matches the one
             //of the tomography starting model
@@ -102,21 +101,10 @@ namespace jif3D
               {
                 MTModel.SetConductivities()[0][0][i] *= (1 + 0.0001 * (i + 1));
               }
-
-            //set the model object so that we can use it to calculate synthetic data
-            // for each observation
-            MTModel.ClearMeasurementPoints();
-            std::copy(Frequencies.begin(), Frequencies.end(),
-                std::back_inserter(MTModel.SetFrequencies()));
-            for (size_t i = 0; i < MTXPos.size(); ++i)
-              {
-                MTModel.AddMeasurementPoint(MTXPos[i], MTYPos[i], MTZPos[i]);
-              }
             if (xorigin != 0.0 || yorigin != 0.0)
               {
                 MTModel.SetOrigin(xorigin, yorigin, 0.0);
               }
-            MTModel.SetDistortionParameters(C);
             bool WantDistCorr = (DistCorr > 0.0);
             //setup the objective function for the MT data
             jif3D::X3DMTCalculator Calculator(TempDir, X3DName, WantDistCorr);
@@ -137,37 +125,36 @@ namespace jif3D
               {
                 jif3D::X3DModel FineModel;
                 FineModel.ReadNetCDF(FineModelName);
-                FineModel.CopyMeasurementConfigurations(MTModel);
                 MTObjective->SetFineModelGeometry(FineModel);
               }
             MTObjective->SetCoarseModelGeometry(MTModel);
             MTObjective->SetObservedData(MTData);
             if (vm.count("mtinvcovar"))
               {
-                comp_mat InvCov(MTData.size(), MTData.size());
+                comp_mat InvCov(ndata, ndata);
                 ReadSparseMatrixFromNetcdf(MTInvCovarName, InvCov, "InvCovariance");
                 MTObjective->SetInvCovMat(InvCov);
               }
             else
               {
                 //construct an error floor for each impedance element
-                jif3D::rvec MinErr(MTError.size());
+                std::vector<double> MinErr(MTData.GetErrors().size());
                 if (vm.count("inderrors"))
                   {
                     //use a relative value for each impedance element separately
-                    MinErr = jif3D::ConstructError(MTData, MTError, relerr);
+                    MinErr = jif3D::ConstructError(MTData.GetData(), MTData.GetErrors(), relerr);
                   }
                 else
                   {
                     //use a relative value for the Berdichevskyi invariant at each period/site
-                    MinErr = jif3D::ConstructMTError(MTData, relerr);
+                    MinErr = jif3D::ConstructMTError(MTData.GetData(), relerr);
                   }
                 //the error used in the inversion is the maximum of the error floor
                 //and the actual data error.
-                std::transform(MTError.begin(), MTError.end(), MinErr.begin(),
-                    MTError.begin(), [](double a, double b)
+                std::transform(MTData.GetErrors().begin(),MTData.GetErrors().end(), MinErr.begin(),
+                    MinErr.begin(), [](double a, double b)
                       { return std::max(a,b);});
-                MTObjective->SetDataError(MTError);
+                MTObjective->SetDataError(MinErr);
               }
             //add the MT part to the JointObjective that will be used
             //for the inversion
@@ -175,7 +162,7 @@ namespace jif3D
                 JointObjective::datafit);
             //output some information to the screen
             //to signal that we added the MT data
-            std::cout << "MT ndata: " << MTData.size() << std::endl;
+            std::cout << "MT ndata: " << ndata << std::endl;
             std::cout << "MT lambda: " << mtlambda << std::endl;
           }
         //return true if we added an MT objective function

@@ -281,17 +281,9 @@ int hpx_main(boost::program_options::variables_map& vm)
     //and general quality control
     if (havetomo)
       {
-        jif3D::rvec RecNum(TomoSetup.GetModel().GetMeasPosX().size());
-        std::iota(RecNum.begin(), RecNum.end(), 1);
-        jif3D::Write3DDataToVTK(modelfilename + ".rec.vtk", "Receiver", RecNum,
-            TomoSetup.GetModel().GetMeasPosX(), TomoSetup.GetModel().GetMeasPosY(),
-            TomoSetup.GetModel().GetMeasPosZ());
-
-        jif3D::rvec SourceNum(TomoSetup.GetModel().GetSourcePosX().size());
-        std::iota(SourceNum.begin(), SourceNum.end(), 1);
-        jif3D::Write3DDataToVTK(modelfilename + ".sor.vtk", "Source", SourceNum,
-            TomoSetup.GetModel().GetSourcePosX(), TomoSetup.GetModel().GetSourcePosY(),
-            TomoSetup.GetModel().GetSourcePosZ());
+        auto TomoData(TomoSetup.GetTomoObjective().GetObservedData());
+        TomoData.WriteMeasurementPoints(modelfilename + ".rec.vtk");
+        TomoData.WriteSourcePoints(modelfilename + ".sor.vtk");
       }
 
     const size_t nparm = InvModel.size();
@@ -320,7 +312,8 @@ int hpx_main(boost::program_options::variables_map& vm)
       }
     CovModVec = CVec;
 
-    const size_t nmtsites = MTSetup.GetModel().GetMeasPosX().size();
+    const size_t nmtsites =
+        MTSetup.GetMTObjective().GetObservedData().GetMeasPosX().size();
     jif3D::rvec CRef(nmtsites * 4);
     for (size_t i = 0; i < nmtsites; ++i)
       {
@@ -339,25 +332,15 @@ int hpx_main(boost::program_options::variables_map& vm)
             InvModel.size() + CRef.size(), Copier));
     if (havemt)
       {
-        jif3D::rvec SiteNum(MTSetup.GetModel().GetMeasPosX().size());
-        std::iota(SiteNum.begin(), SiteNum.end(), 1);
-        jif3D::Write3DDataToVTK(modelfilename + ".mt_sites.vtk", "MTSites", SiteNum,
-            MTSetup.GetModel().GetMeasPosX(), MTSetup.GetModel().GetMeasPosY(),
-            MTSetup.GetModel().GetMeasPosZ());
+        auto MTData = MTSetup.GetMTObjective().GetObservedData();
+        MTData.WriteMeasurementPoints(modelfilename + ".mt_sites.vtk");
 
         //if we want to correct for distortion within the inversion
         if (MTSetup.GetDistCorr() > 0)
           {
-            std::vector<double> C = MTSetup.GetModel().GetDistortionParameters();
-            //if we did not read distortion values together with the
-            //observed data, we set the distortion matrix C at each site
-            // to identity matrix
+            std::vector<double> C =
+                MTSetup.GetMTObjective().GetObservedData().GetDistortion();
 
-            if (C.empty())
-              {
-                C.resize(CRef.size());
-                std::copy(CRef.begin(), CRef.end(), C.begin());
-              }
             //we need to expand the model vector to hold the
             //elements of the distortion matrix
             jif3D::rvec Grid(InvModel);
@@ -666,13 +649,16 @@ int hpx_main(boost::program_options::variables_map& vm)
       }
     if (havetomo)
       {
+        auto TomoData = TomoSetup.GetTomoObjective().GetObservedData();
         jif3D::rvec TomoInvData(TomoSetup.GetTomoObjective().GetSyntheticData());
-        jif3D::rvec TomoError(TomoSetup.GetTomoObjective().GetDataError());
-        jif3D::SaveTraveltimes(modelfilename + ".inv_tt.nc", TomoInvData, TomoError,
-            TomoModel);
+        std::vector<double> TomoError(TomoSetup.GetTomoObjective().GetDataError());
+        TomoData.SetDataAndErrors(
+            std::vector<double>(TomoInvData.begin(), TomoInvData.end()), TomoError);
+        TomoData.WriteNetCDF(modelfilename + ".inv_tt.nc");
         jif3D::rvec TomoDiff(TomoSetup.GetTomoObjective().GetIndividualMisfit());
-        jif3D::SaveTraveltimes(modelfilename + ".diff_tt.nc", TomoDiff, TomoError,
-            TomoModel);
+        TomoData.SetDataAndErrors(std::vector<double>(TomoDiff.begin(), TomoDiff.end()),
+            TomoError);
+        TomoData.WriteNetCDF(modelfilename + ".diff_tt.nc");
         if (vm.count("writerays"))
           {
             TomoSetup.GetTomoObjective().GetCalculator().WriteRays("rays.vtk");
@@ -686,36 +672,42 @@ int hpx_main(boost::program_options::variables_map& vm)
         if (GravitySetup.GetHaveScal())
           {
             GravModel = GravitySetup.GetScalModel();
+            auto ScalGravData = GravitySetup.GetScalGravObjective().GetObservedData();
             jif3D::rvec ScalGravInvData(
                 GravitySetup.GetScalGravObjective().GetSyntheticData());
             jif3D::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc",
-                ScalGravInvData, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
-                GravModel.GetMeasPosZ(),
+                std::vector<double>(ScalGravInvData.begin(), ScalGravInvData.end()),
+                ScalGravData.GetMeasPosX(), ScalGravData.GetMeasPosY(),
+                ScalGravData.GetMeasPosZ(),
                 GravitySetup.GetScalGravObjective().GetDataError());
             jif3D::rvec ScalDiff(
                 GravitySetup.GetScalGravObjective().GetIndividualMisfit());
-            jif3D::SaveScalarGravityMeasurements(modelfilename + ".diff_sgd.nc", ScalDiff,
-                GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ(),
+            jif3D::SaveScalarGravityMeasurements(modelfilename + ".diff_sgd.nc",
+                std::vector<double>(ScalDiff.begin(), ScalDiff.end()),
+                ScalGravData.GetMeasPosX(), ScalGravData.GetMeasPosY(),
+                ScalGravData.GetMeasPosZ(),
                 GravitySetup.GetScalGravObjective().GetDataError());
             jif3D::Write3DDataToVTK(modelfilename + ".inv_sgd.vtk", "grav_accel",
-                ScalGravInvData, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
-                GravModel.GetMeasPosZ());
+                ScalGravInvData, ScalGravData.GetMeasPosX(), ScalGravData.GetMeasPosY(),
+                ScalGravData.GetMeasPosZ());
 
           }
         if (GravitySetup.GetHaveFTG())
           {
+            auto FTGData = GravitySetup.GetFTGObjective().GetObservedData();
             GravModel = GravitySetup.GetFTGModel();
             jif3D::rvec FTGInvData(GravitySetup.GetFTGObjective().GetSyntheticData());
             jif3D::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc",
-                FTGInvData, GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
-                GravModel.GetMeasPosZ(), GravitySetup.GetFTGObjective().GetDataError());
+                std::vector<double>(FTGInvData.begin(), FTGInvData.end()),
+                FTGData.GetMeasPosX(), FTGData.GetMeasPosY(), FTGData.GetMeasPosZ(),
+                GravitySetup.GetFTGObjective().GetDataError());
             jif3D::rvec FTGDiff(GravitySetup.GetFTGObjective().GetIndividualMisfit());
-            jif3D::SaveTensorGravityMeasurements(modelfilename + ".diff_ftg.nc", FTGDiff,
-                GravModel.GetMeasPosX(), GravModel.GetMeasPosY(), GravModel.GetMeasPosZ(),
+            jif3D::SaveTensorGravityMeasurements(modelfilename + ".diff_ftg.nc",
+                std::vector<double>(FTGDiff.begin(), FTGDiff.end()),
+                FTGData.GetMeasPosX(), FTGData.GetMeasPosY(), FTGData.GetMeasPosZ(),
                 GravitySetup.GetFTGObjective().GetDataError());
             jif3D::Write3DTensorDataToVTK(modelfilename + ".inv_ftg.vtk", "U", FTGInvData,
-                GravModel.GetMeasPosX(), GravModel.GetMeasPosY(),
-                GravModel.GetMeasPosZ());
+                FTGData.GetMeasPosX(), FTGData.GetMeasPosY(), FTGData.GetMeasPosZ());
           }
       }
 
@@ -728,19 +720,19 @@ int hpx_main(boost::program_options::variables_map& vm)
             jif3D::rvec tmp = DistRegTrans->GeneralizedToPhysical(InvModel);
             std::copy(tmp.begin(), tmp.end(), std::back_inserter(C));
           }
+        auto MTData = MTSetup.GetMTObjective().GetObservedData();
         //calculate MT inversion result
+        MTData.SetDistortion(C);
+        MTData.WriteNetCDF(modelfilename + ".dist_imp.nc");
         jif3D::rvec MTInvData(MTSetup.GetMTObjective().GetSyntheticData());
-        jif3D::rvec MTObsData(MTSetup.GetMTObjective().GetObservedData());
-        jif3D::WriteImpedancesToNetCDF(modelfilename + ".inv_mt.nc",
-            MTModel.GetFrequencies(), MTModel.GetMeasPosX(), MTModel.GetMeasPosY(),
-            MTModel.GetMeasPosZ(), MTInvData, MTSetup.GetMTObjective().GetDataError(), C);
-        jif3D::WriteImpedancesToNetCDF(modelfilename + ".dist_imp.nc",
-            MTModel.GetFrequencies(), MTModel.GetMeasPosX(), MTModel.GetMeasPosY(),
-            MTModel.GetMeasPosZ(), MTObsData, MTSetup.GetMTObjective().GetDataError(), C);
+        MTData.SetDataAndErrors(std::vector<double>(MTInvData.begin(), MTInvData.end()),
+            MTSetup.GetMTObjective().GetDataError());
+        MTData.WriteNetCDF(modelfilename + ".inv_imp.nc");
         jif3D::rvec MTDiff(MTSetup.GetMTObjective().GetIndividualMisfit());
-        jif3D::WriteImpedancesToNetCDF(modelfilename + ".diff_mt.nc",
-            MTModel.GetFrequencies(), MTModel.GetMeasPosX(), MTModel.GetMeasPosY(),
-            MTModel.GetMeasPosZ(), MTDiff, MTSetup.GetMTObjective().GetDataError());
+        MTData.SetDataAndErrors(std::vector<double>(MTDiff.begin(), MTDiff.end()),
+            MTSetup.GetMTObjective().GetDataError());
+        MTData.WriteNetCDF(modelfilename + ".diff_imp.nc");
+
       }
     //if we are using cross gradient coupling, we want to output the final
     //values of the cross-gradient
@@ -767,7 +759,7 @@ int hpx_main(boost::program_options::variables_map& vm)
                 jif3D::Write3DVectorModelToVTK(Name + ".vtk", Name,
                     StartModel->GetXCoordinates(), StartModel->GetYCoordinates(),
                     StartModel->GetZCoordinates(), XGrad, YGrad, ZGrad);
-                jif3D::rvec CG_Cov(Objective->GetObjective(i).GetDataError());
+                std::vector<double> CG_Cov(Objective->GetObjective(i).GetDataError());
                 std::copy(CG_Cov.begin(), CG_Cov.begin() + nmod, XGrad.origin());
                 std::copy(CG_Cov.begin() + nmod, CG_Cov.begin() + 2 * nmod,
                     YGrad.origin());

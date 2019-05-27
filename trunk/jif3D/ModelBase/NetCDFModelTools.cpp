@@ -277,8 +277,8 @@ namespace jif3D
       }
 
     void ReadMeasPosNetCDF(const std::string &filename,
-        ThreeDModelBase::tMeasPosVec &PosX, ThreeDModelBase::tMeasPosVec &PosY,
-        ThreeDModelBase::tMeasPosVec &PosZ)
+        std::vector<double> &PosX, std::vector<double> &PosY,
+        std::vector<double> &PosZ)
       {
 
         //open the file

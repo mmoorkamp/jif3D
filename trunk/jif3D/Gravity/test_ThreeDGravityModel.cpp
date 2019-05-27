@@ -190,36 +190,6 @@ BOOST_AUTO_TEST_SUITE( GravityModel_Test_Suite )
                 NetCDFReadTest.GetDensities().begin()));
       }
 
-    BOOST_AUTO_TEST_CASE(ascii_measpos_test)
-      {
-        std::ofstream outfile;
-        const size_t nmeas = 20;
-        std::string filename = "meas.test";
-        outfile.open(filename.c_str());
-        std::vector<double> posx, posy, posz;
-        for (size_t i = 0; i < nmeas; ++i)
-          {
-            posx.push_back(rand() % 1000);
-            posy.push_back(rand() % 1000);
-            posz.push_back(rand() % 1000);
-            outfile << posx.at(i) << " " << posy.at(i) << " " << posz.at(i) << "\n";
-          }
-        outfile.close();
-        jif3D::ThreeDGravityModel TestModel;
-        TestModel.ReadMeasPosAscii(filename);
-        for (size_t i = 0; i < nmeas; ++i)
-          {
-            BOOST_CHECK_EQUAL(posx.at(i), TestModel.GetMeasPosX()[i]);
-            BOOST_CHECK_EQUAL(posy.at(i), TestModel.GetMeasPosY()[i]);
-            BOOST_CHECK_EQUAL(posz.at(i), TestModel.GetMeasPosZ()[i]);
-          }
-      }
 
-    BOOST_AUTO_TEST_CASE(netcdf_measpos_test)
-      {
-        jif3D::ThreeDGravityModel GravityTest;
-        const size_t nmeas = 10;
-        MakeRandomModel(GravityTest, nmeas);
-      }
 
     BOOST_AUTO_TEST_SUITE_END()

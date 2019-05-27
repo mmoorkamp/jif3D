@@ -116,9 +116,9 @@ namespace jif3D
      */
     rvec ScalarOMPGravityImp::CalcBackground(const size_t measindex, const double xwidth,
         const double ywidth, const double zwidth, const ThreeDGravityModel &Model,
-        rmat &Sensitivities)
+        const ScalarGravityData &Data, rmat &Sensitivities)
       {
-        return CalcScalarBackground(measindex, xwidth, ywidth, zwidth, Model,
+        return CalcScalarBackground(measindex, xwidth, ywidth, zwidth, Model, Data,
             Sensitivities);
       }
 
@@ -129,15 +129,16 @@ namespace jif3D
      * @return The gravitational acceleration in m/s^2 due to the model at this site
      */
     rvec ScalarOMPGravityImp::CalcGridded(const size_t measindex,
-        const ThreeDGravityModel &Model, rmat &Sensitivities)
+        const ThreeDGravityModel &Model, const ScalarGravityData &Data,
+        rmat &Sensitivities)
       {
         //get the dimensions of the model
         const size_t xsize = Model.GetDensities().shape()[0];
         const size_t ysize = Model.GetDensities().shape()[1];
         const size_t zsize = Model.GetDensities().shape()[2];
-        const double x_meas = Model.GetMeasPosX()[measindex];
-        const double y_meas = Model.GetMeasPosY()[measindex];
-        const double z_meas = Model.GetMeasPosZ()[measindex];
+        const double x_meas = Data.GetMeasPosX().at(measindex);
+        const double y_meas = Data.GetMeasPosY().at(measindex);
+        const double z_meas = Data.GetMeasPosZ().at(measindex);
         const int nmod = xsize * ysize * zsize;
         const bool storesens = (Sensitivities.size1() >= ndatapermeas)
             && (Sensitivities.size2() >= size_t(nmod));
@@ -159,8 +160,8 @@ namespace jif3D
                 int xindex, yindex, zindex;
                 Model.OffsetToIndex(offset, xindex, yindex, zindex);
                 currvalue = CalcGravBoxTerm(x_meas, y_meas, z_meas,
-                    XCoord[xindex], YCoord[yindex], ZCoord[zindex],
-                    XSizes[xindex], YSizes[yindex], ZSizes[zindex]);
+                    Model.GetXCoordinates()[xindex], Model.GetYCoordinates()[yindex], Model.GetZCoordinates()[zindex],
+                    Model.GetXCellSizes()[xindex], Model.GetYCellSizes()[yindex], Model.GetZCellSizes()[zindex]);
                 returnvalue += currvalue
                 * Model.GetDensities()[xindex][yindex][zindex];
                 if (storesens)

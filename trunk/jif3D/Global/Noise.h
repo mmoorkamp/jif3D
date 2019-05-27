@@ -12,6 +12,7 @@
 #include "VecMat.h"
 #include "NumUtil.h"
 #include <ctime>
+#include <vector>
 #include <boost/random/lagged_fibonacci.hpp>
 #include <boost/random/normal_distribution.hpp>
 #include <boost/random/variate_generator.hpp>
@@ -84,20 +85,20 @@ namespace jif3D
      * @param absmin The absolute minimum data value considered for error calculation, this reduced the influence of very small data
      * @return The vector of error estimates
      */
-    inline jif3D::rvec ConstructError(const jif3D::rvec &Data,
-        const jif3D::rvec &DataError, const double relerror, const double absmin = 0.0)
+    inline std::vector<double> ConstructError(const std::vector<double> &Data,
+        const std::vector<double> &DataError, const double relerror, const double absmin = 0.0)
       {
 
         const size_t ndata = Data.size();
         //create objects for the misfit and a very basic error estimate
-        jif3D::rvec Error(ndata, 0.0);
+        std::vector<double> Error(ndata, 0.0);
         for (size_t i = 0; i < ndata; ++i)
           {
-            double minerr = std::max(std::abs(Data(i)) * relerror, absmin);
-            Error(i) = std::max(DataError(i), minerr);
-            assert(Error(i) > 0.0);
+            double minerr = std::max(std::abs(Data.at(i)) * relerror, absmin);
+            Error.at(i) = std::max(DataError.at(i), minerr);
+            assert(Error.at(i) > 0.0);
             //check for reasonable relative and absolute error value
-            if (Error(i) <= 0.0)
+            if (Error.at(i) <= 0.0)
               {
                 throw jif3D::FatalException(
                     "Non-positive error will lead to problems in inversion",
@@ -116,7 +117,7 @@ namespace jif3D
      * @param relerror The relative error of the maximum tensor element
      * @return The vector of error estimates
      */
-    inline jif3D::rvec ConstructMTError(const jif3D::rvec &Data, const double relerror)
+    inline std::vector<double> ConstructMTError(const std::vector<double> &Data, const double relerror)
       {
         if (relerror <= 0.0)
           {
@@ -127,7 +128,7 @@ namespace jif3D
         //set the default value negative, everything should be overwritten
         //with a positive number below
         //so we can spot mistakes by looking for negative numbers
-        jif3D::rvec DataError(ndata, -1.0);
+        std::vector<double> DataError(ndata, -1.0);
         const size_t ntensorelem = 8;
         if ((Data.size() % ntensorelem) != 0)
           {
@@ -141,9 +142,9 @@ namespace jif3D
             //compute the real and imaginary parts of the berdichevskyi invariant
             //Berd = 0.5 * (Zxy - Zyx)
             double berdreal = 0.5
-                * (Data(i * ntensorelem + 2) - Data(i * ntensorelem + 4));
+                * (Data.at(i * ntensorelem + 2) - Data.at(i * ntensorelem + 4));
             double berdimag = 0.5
-                * (Data(i * ntensorelem + 3) - Data(i * ntensorelem + 5));
+                * (Data.at(i * ntensorelem + 3) - Data.at(i * ntensorelem + 5));
             // we assume the absolute value of the invariant as a reference threshold
             //for the error calculation
             double berdabs = sqrt(berdreal * berdreal + berdimag * berdimag);
@@ -153,7 +154,7 @@ namespace jif3D
         return DataError;
       }
 
-    inline jif3D::rvec ConstructMTRowError(const jif3D::rvec &Data, const double relerror)
+    inline std::vector<double> ConstructMTRowError(const std::vector<double> &Data, const double relerror)
       {
         if (relerror <= 0.0)
           {
@@ -164,7 +165,7 @@ namespace jif3D
         //set the default value negative, everything should be overwritten
         //with a positive number below
         //so we can spot mistakes by looking for negative numbers
-        jif3D::rvec DataError(ndata, -1.0);
+        std::vector<double> DataError(ndata, -1.0);
         const size_t ntensorelem = 8;
         const size_t nrowelem = 4;
         if ((Data.size() % ntensorelem) != 0)
@@ -177,9 +178,9 @@ namespace jif3D
         for (size_t i = 0; i < nrows; ++i)
           {
             double abs1 = std::sqrt(
-                jif3D::pow2(Data(i * nrows)) + jif3D::pow2(Data(i * nrows + 1)));
+                jif3D::pow2(Data.at(i * nrows)) + jif3D::pow2(Data.at(i * nrows + 1)));
             double abs2 = std::sqrt(
-                jif3D::pow2(Data(i * nrows + 2)) + jif3D::pow2(Data(i * nrows + 3)));
+                jif3D::pow2(Data.at(i * nrows + 2)) + jif3D::pow2(Data.at(i * nrows + 3)));
             double maxabs = std::max(abs1, abs2);
             std::fill_n(DataError.begin() + i * ntensorelem, ntensorelem,
                 maxabs * relerror);

@@ -3,8 +3,9 @@
 
 
 #include <vector>
+
+#include "../Tomo/tomo_types.h"
 #include "../Global/Jif3DGlobal.h"
-#include "tomo_types.h"
 
 /*! \file
  * This file contains some data structures and function definitions for tomography modeling.

@@ -14,7 +14,8 @@
  * with other code.
  */
 
-#include "PodvinTime3D.h"
+#include "../Tomo/PodvinTime3D.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
