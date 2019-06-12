@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
     DataMT.SetFrequencies(frequencies);
     DataTipper.SetFrequencies(frequencies);
 
-    jif3D::rvec StatNum(DataMT.GetMeasPosX().size());
+    std::vector<double> StatNum(DataMT.GetMeasPosX().size());
     std::iota(StatNum.begin(), StatNum.end(), 0);
     //! Write scalar data with 3D coordinate information into a .vtk file for plotting
     jif3D::Write3DDataToVTK(outfilename + ".vtk", "MTStats", StatNum,
@@ -254,10 +254,10 @@ int main(int argc, char *argv[])
 
     jif3D::AddNoise(Tipper, relnoise, TipErrors);
 
-    jif3D::WriteTipperToNetCDF(outfilename + ".tip.nc", DataTipper.GetFrequencies(),
-        DataTipper.GetMeasPosX(), DataTipper.GetMeasPosY(), DataTipper.GetMeasPosZ(),
-        std::vector<double>(Tipper.begin(), Tipper.end()),
+
+    DataTipper.SetDataAndErrors( std::vector<double>(Tipper.begin(), Tipper.end()),
         std::vector<double>(TipErrors.begin(), TipErrors.end()));
+    DataTipper.WriteNetCDF(outfilename + ".tip.nc");
 
     MTModel.WriteVTK(modelfilename + ".vtk");
     MTModel.WriteModEM(modelfilename + ".dat");

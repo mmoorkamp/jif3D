@@ -19,17 +19,18 @@ int main()
   {
     std::string ncfilename = jif3D::AskFilename("Name of netcdf file: ");
 
-    jif3D::rvec Impedances, Errors;
+    std::vector<double> Impedances, Errors;
     std::vector<double> Frequencies, StatX, StatY, StatZ, C;
-    jif3D::ReadImpedancesFromNetCDF(ncfilename, Frequencies, StatX, StatY,
-        StatZ, Impedances, Errors, C);
+    jif3D::ReadImpedancesFromNetCDF(ncfilename, Frequencies, StatX, StatY, StatZ,
+        Impedances, Errors, C);
     jif3D::WriteImpedancesToMtt(ncfilename, Frequencies, Impedances, Errors);
 
-    jif3D::WriteImpedancesToJ(ncfilename,Frequencies,StatX,StatY,StatZ,Impedances,Errors);
-    jif3D::WriteAppResToAscii(ncfilename+".asc", Frequencies, StatX, StatY,
-        StatZ, Impedances, Errors);
-    jif3D::rvec Fill(StatX.size(),1.0);
-    jif3D::Write3DDataToVTK(ncfilename+".vtk","StatPos",Fill,StatX,StatY,StatZ);
+    jif3D::WriteImpedancesToJ(ncfilename, Frequencies, StatX, StatY, StatZ, Impedances,
+        Errors);
+    jif3D::WriteAppResToAscii(ncfilename + ".asc", Frequencies, StatX, StatY, StatZ,
+        Impedances, Errors);
+    std::vector<double> Fill(StatX.size(), 1.0);
+    jif3D::Write3DDataToVTK(ncfilename + ".vtk", "StatPos", Fill, StatX, StatY, StatZ);
     std::ofstream Zxx_rho("Zxx_rho.xyz");
     std::ofstream Zxy_rho("Zxy_rho.xyz");
     std::ofstream Zyx_rho("Zyx_rho.xyz");
@@ -53,36 +54,44 @@ int main()
         size_t freqindex = i / nstats;
         size_t statindex = i % nstats;
         Zxx_rho << statindex << " " << Frequencies.at(freqindex) << " "
-            << jif3D::AppRes(std::complex<double>(Impedances(i * 8), Impedances(
-                i * 8 + 1)), Frequencies.at(freqindex)) << "\n";
+            << jif3D::AppRes(
+                std::complex<double>(Impedances.at(i * 8), Impedances.at(i * 8 + 1)),
+                Frequencies.at(freqindex)) << "\n";
 
         Zxy_rho << statindex << " " << Frequencies.at(freqindex) << " "
-            << jif3D::AppRes(std::complex<double>(Impedances(i * 8 + 2),
-                Impedances(i * 8 + 3)), Frequencies.at(freqindex)) << "\n";
+            << jif3D::AppRes(
+                std::complex<double>(Impedances.at(i * 8 + 2), Impedances.at(i * 8 + 3)),
+                Frequencies.at(freqindex)) << "\n";
 
         Zyx_rho << statindex << " " << Frequencies.at(freqindex) << " "
-            << jif3D::AppRes(std::complex<double>(Impedances(i * 8 + 4),
-                Impedances(i * 8 + 5)), Frequencies.at(freqindex)) << "\n";
+            << jif3D::AppRes(
+                std::complex<double>(Impedances.at(i * 8 + 4), Impedances.at(i * 8 + 5)),
+                Frequencies.at(freqindex)) << "\n";
 
         Zyy_rho << statindex << " " << Frequencies.at(freqindex) << " "
-            << jif3D::AppRes(std::complex<double>(Impedances(i * 8 + 6),
-                Impedances(i * 8 + 7)), Frequencies.at(freqindex)) << "\n";
+            << jif3D::AppRes(
+                std::complex<double>(Impedances.at(i * 8 + 6), Impedances.at(i * 8 + 7)),
+                Frequencies.at(freqindex)) << "\n";
 
         Zxx_phi << statindex << " " << Frequencies.at(freqindex) << " "
-            << jif3D::ImpedancePhase(std::complex<double>(Impedances(i * 8),
-                Impedances(i * 8 + 1))) << "\n";
+            << jif3D::ImpedancePhase(
+                std::complex<double>(Impedances.at(i * 8), Impedances.at(i * 8 + 1)))
+            << "\n";
 
         Zxy_phi << statindex << " " << Frequencies.at(freqindex) << " "
-            << jif3D::ImpedancePhase(std::complex<double>(Impedances(i * 8 + 2),
-                Impedances(i * 8 + 3))) << "\n";
+            << jif3D::ImpedancePhase(
+                std::complex<double>(Impedances.at(i * 8 + 2), Impedances.at(i * 8 + 3)))
+            << "\n";
 
         Zyx_phi << statindex << " " << Frequencies.at(freqindex) << " "
-            << jif3D::ImpedancePhase(std::complex<double>(Impedances(i * 8 + 4),
-                Impedances(i * 8 + 5))) << "\n";
+            << jif3D::ImpedancePhase(
+                std::complex<double>(Impedances.at(i * 8 + 4), Impedances.at(i * 8 + 5)))
+            << "\n";
 
         Zyy_phi << statindex << " " << Frequencies.at(freqindex) << " "
-            << jif3D::ImpedancePhase(std::complex<double>(Impedances(i * 8 + 6),
-                Impedances(i * 8 + 7))) << "\n";
+            << jif3D::ImpedancePhase(
+                std::complex<double>(Impedances.at(i * 8 + 6), Impedances.at(i * 8 + 7)))
+            << "\n";
       }
 
   }

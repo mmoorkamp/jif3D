@@ -364,7 +364,8 @@ int main(int argc, char *argv[])
             std::vector<double>(GravInvData.begin(), GravInvData.end()),
             ObsData.GetMeasPosX(), ObsData.GetMeasPosY(), ObsData.GetMeasPosZ(),
             GravitySetup.GetScalGravObjective().GetDataError());
-        jif3D::Write3DDataToVTK(modelfilename + ".inv_sgd.vtk", "grav_accel", GravInvData,
+        jif3D::Write3DDataToVTK(modelfilename + ".inv_sgd.vtk", "grav_accel",
+            std::vector<double>(GravInvData.begin(), GravInvData.end()),
             ObsData.GetMeasPosX(), ObsData.GetMeasPosY(), ObsData.GetMeasPosZ());
       }
     if (GravitySetup.GetHaveFTG())
@@ -380,7 +381,8 @@ int main(int argc, char *argv[])
             std::vector<double>(FTGInvData.begin(), FTGInvData.end()),
             ObsData.GetMeasPosX(), ObsData.GetMeasPosY(), ObsData.GetMeasPosZ(),
             GravitySetup.GetScalGravObjective().GetDataError());
-        jif3D::Write3DTensorDataToVTK(modelfilename + ".inv_ftg.vtk", "U", FTGInvData,
+        jif3D::Write3DTensorDataToVTK(modelfilename + ".inv_ftg.vtk", "U",
+            std::vector<double>(FTGInvData.begin(), FTGInvData.end()),
             ObsData.GetMeasPosX(), ObsData.GetMeasPosY(), ObsData.GetMeasPosZ());
       }
 
@@ -395,7 +397,8 @@ int main(int argc, char *argv[])
             std::vector<double>(MagInvData.begin(), MagInvData.end()),
             ObservedData.GetMeasPosX(), ObservedData.GetMeasPosY(),
             ObservedData.GetMeasPosZ(), MagneticsSetup.GetObjective().GetDataError());
-        jif3D::Write3DDataToVTK(modelfilename + ".inv_mag.vtk", "T", MagInvData,
+        jif3D::Write3DDataToVTK(modelfilename + ".inv_mag.vtk", "T",
+            std::vector<double>(MagInvData.begin(), MagInvData.end()),
             ObservedData.GetMeasPosX(), ObservedData.GetMeasPosY(),
             ObservedData.GetMeasPosZ());
         MagModel.WriteVTK(modelfilename + ".mag.inv.vtk");

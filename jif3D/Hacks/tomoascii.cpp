@@ -18,6 +18,7 @@
 #include "../Global/convert.h"
 #include "../Tomo/ThreeDSeismicModel.h"
 #include "../Tomo/ReadWriteTomographyData.h"
+#include "../Tomo/TomographyData.h"
 
 namespace po = boost::program_options;
 
@@ -40,9 +41,10 @@ int main(int argc, char* argv[])
     double mindist = 0.0;
     double minvel = 0.0;
 
-
-    desc.add_options()("help", "produce help message")("mindist", po::value(&mindist)->default_value(0.0),
-        "Minimum source-receiver distance to consider in conversion")("minvel", po::value(&minvel)->default_value(0.0),
+    desc.add_options()("help", "produce help message")("mindist",
+        po::value(&mindist)->default_value(0.0),
+        "Minimum source-receiver distance to consider in conversion")("minvel",
+        po::value(&minvel)->default_value(0.0),
         "Minimum apparent velocity to consider in conversion");
 
     po::variables_map vm;
@@ -137,16 +139,16 @@ int main(int argc, char* argv[])
         RecMap.insert(std::make_pair(RecNo.at(i), RecPos));
       }
 
-    jif3D::ThreeDSeismicModel Model;
+    jif3D::TomographyData Data;
     for (auto source : SourceMap)
       {
-        Model.AddSource(source.second[0], source.second[1], source.second[2]);
+        Data.AddSource(source.second[0], source.second[1], source.second[2]);
       }
 
     for (auto rec : RecMap)
-         {
-           Model.AddMeasurementPoint(rec.second[0], rec.second[1], rec.second[2]);
-         }
+      {
+        Data.AddMeasurementPoint(rec.second[0], rec.second[1], rec.second[2]);
+      }
 
     const size_t ntime = TravelTime.size();
     std::cout << "NTimes total: " << ntime << std::endl;
@@ -165,7 +167,7 @@ int main(int argc, char* argv[])
         if (distance > mindist && currvel > minvel)
           {
             //Model.AddMeasurementPoint(RecX.at(RI), RecY.at(RI), RecZ.at(RI));
-            Model.AddMeasurementConfiguration(SI, RI);
+            Data.AddMeasurementConfiguration(SI, RI);
             ++measindex;
           }
         else
@@ -178,9 +180,9 @@ int main(int argc, char* argv[])
         TravelTime.end());
     std::cout << "NTimes in file: " << TravelTime.size() << std::endl;
     std::string outfilename = jif3D::AskFilename("Output file: ", false);
-    jif3D::rvec TT(TravelTime.size());
-    std::copy(TravelTime.begin(), TravelTime.end(), TT.begin());
-    jif3D::rvec Error(TT.size(), 0.0);
-    jif3D::SaveTraveltimes(outfilename, TT, Error, Model);
+
+    std::vector<double> Error(TravelTime.size(), 0.0);
+    Data.SetDataAndErrors(TravelTime, Error);
+    Data.WriteNetCDF(outfilename);
   }
 

@@ -138,9 +138,11 @@ int main(int argc, char *argv[])
     //write the model in .vtk format, at the moment the best plotting option
     GravModel.WriteVTK(ModelFilename + ".vtk");
 
-    jif3D::Write3DDataToVTK(ModelFilename + ".data.vtk", "grav_accel", ScalarResults,
+    jif3D::Write3DDataToVTK(ModelFilename + ".data.vtk", "grav_accel",
+        std::vector<double>(ScalarResults.begin(), ScalarResults.end()),
         ScalData.GetMeasPosX(), ScalData.GetMeasPosY(), ScalData.GetMeasPosZ());
-    jif3D::Write3DTensorDataToVTK(ModelFilename + ".ftgdata.vtk", "U", TensorResults,
+    jif3D::Write3DTensorDataToVTK(ModelFilename + ".ftgdata.vtk", "U",
+        std::vector<double>(TensorResults.begin(), TensorResults.end()),
         TensData.GetMeasPosX(), TensData.GetMeasPosY(), TensData.GetMeasPosZ());
 
   }

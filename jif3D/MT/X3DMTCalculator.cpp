@@ -117,6 +117,13 @@ namespace jif3D
         maxfreqindex = std::min(maxfreqindex, Data.GetFrequencies().size());
 
         const int nfreq = maxfreqindex - minfreqindex;
+        if (nfreq < 1)
+          {
+            throw jif3D::FatalException(
+                "No frequencies defined for forward calculation! ",
+                __FILE__,
+                __LINE__);
+          }
         if (FieldCalculators.empty() || FieldCalculators.size() != nfreq)
           {
             FieldCalculators.resize(nfreq);
@@ -187,7 +194,7 @@ namespace jif3D
                 //we want to alternate between items at the beginning of the map and at the end of the map
                 const size_t queueindex = (i % 2) == 0 ? i / 2 : nfreq - 1 - i / 2;
                 const size_t calcindex = ForwardExecTime.at(queueindex).second;
-                ForwardInfo Info(Model,  C,calcindex,TempDir.string(),X3DName, NameRoot, GreenType1, GreenType4);
+                ForwardInfo Info(Model, C,calcindex,TempDir.string(),X3DName, NameRoot, GreenType1, GreenType4);
                 std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
                 ForwardResult freqresult = CalculateFrequency(Info,Data, FieldCalculators.at(calcindex));
                 std::chrono::system_clock::time_point end = std::chrono::system_clock::now();

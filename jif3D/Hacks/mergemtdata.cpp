@@ -14,59 +14,58 @@
 #include "../ModelBase/VTKTools.h"
 #include "../MT/ReadWriteImpedances.h"
 #include "../MT/MTEquations.h"
+#include "../MT/MTData.h"
 
 int main()
   {
     std::string ncfilename1 = jif3D::AskFilename("Name of first netcdf file: ");
     std::string ncfilename2 = jif3D::AskFilename("Name of second netcdf file: ");
 
-    jif3D::rvec Impedances1, Errors1;
-    std::vector<double> Frequencies1, StatX1, StatY1, StatZ1, C1;
-    jif3D::ReadImpedancesFromNetCDF(ncfilename1, Frequencies1, StatX1, StatY1, StatZ1,
-        Impedances1, Errors1, C1);
+    jif3D::MTData Data1, Data2;
+    Data1.ReadNetCDF(ncfilename1);
+    Data2.ReadNetCDF(ncfilename2);
 
-    jif3D::rvec Impedances2, Errors2;
-    std::vector<double> Frequencies2, StatX2, StatY2, StatZ2, C2;
-    jif3D::ReadImpedancesFromNetCDF(ncfilename2, Frequencies2, StatX2, StatY2, StatZ2,
-        Impedances2, Errors2, C2);
+    std::vector<double> Impedances(Data1.GetData().size() + Data1.GetData().size()), Errors(
+        Data1.GetErrors().size() + Data1.GetErrors().size());
+    std::vector<double> Frequencies(Data1.GetFrequencies().size()), StatX(
+        Data1.GetMeasPosX().size() + Data2.GetMeasPosX().size()), StatY(
+        Data1.GetMeasPosY().size() + Data2.GetMeasPosY().size()), StatZ(
+        Data1.GetMeasPosZ().size() + Data2.GetMeasPosZ().size()), C(
+        Data1.GetDistortion().size() + Data2.GetDistortion().size());
 
-    jif3D::rvec Impedances(Impedances1.size() + Impedances2.size()), Errors(
-        Errors1.size() + Errors2.size());
-    std::vector<double> Frequencies(Frequencies1.size()), StatX(
-        StatX1.size() + StatX2.size()), StatY(StatY1.size() + StatY2.size()), StatZ(
-        StatZ1.size() + StatZ2.size()), C(C1.size() + C2.size());
+    std::copy(Data1.GetMeasPosX().begin(), Data1.GetMeasPosX().end(), StatX.begin());
+    std::copy(Data2.GetMeasPosX().begin(), Data2.GetMeasPosX().end(),
+        StatX.begin() + Data1.GetMeasPosX().size());
 
-    std::copy(StatX1.begin(), StatX1.end(), StatX.begin());
-    std::copy(StatX2.begin(), StatX2.end(), StatX.begin() + StatX1.size());
+    std::copy(Data1.GetMeasPosY().begin(), Data1.GetMeasPosY().end(), StatY.begin());
+    std::copy(Data2.GetMeasPosY().begin(), Data2.GetMeasPosY().end(),
+        StatY.begin() + Data1.GetMeasPosY().size());
 
-    std::copy(StatY1.begin(), StatY1.end(), StatY.begin());
-    std::copy(StatY2.begin(), StatY2.end(), StatY.begin() + StatY1.size());
+    std::copy(Data1.GetMeasPosZ().begin(), Data1.GetMeasPosZ().end(), StatZ.begin());
+    std::copy(Data2.GetMeasPosZ().begin(), Data2.GetMeasPosZ().end(),
+        StatZ.begin() + Data1.GetMeasPosZ().size());
 
-    std::copy(StatZ1.begin(), StatZ1.end(), StatZ.begin());
-    std::copy(StatZ2.begin(), StatZ2.end(), StatZ.begin() + StatZ1.size());
-
-    std::copy(C1.begin(), C1.end(), C.begin());
-    std::copy(C2.begin(), C2.end(), C.begin() + C1.size());
-
+    std::copy(Data1.GetDistortion().begin(), Data1.GetDistortion().end(), C.begin());
+    std::copy(Data2.GetDistortion().begin(), Data2.GetDistortion().end(),
+        C.begin() + Data1.GetDistortion().size());
 
     for (size_t i = 0; i < Frequencies.size(); ++i)
       {
-        size_t shift1 = StatX1.size() * 8;
-        size_t shift2 = StatX2.size() * 8;
-        std::copy(Impedances1.begin() + shift1 * i,
-            Impedances1.begin() + shift1 * (i + 1),
+        size_t shift1 = Data1.GetMeasPosX().size() * 8;
+        size_t shift2 = Data2.GetMeasPosX().size() * 8;
+        std::copy(Data1.GetData().begin() + shift1 * i,
+            Data1.GetData().begin() + shift1 * (i + 1),
             Impedances.begin() + (shift1 + shift2) * i);
-        std::copy(Impedances2.begin() + shift2 * i,
-            Impedances2.begin() + shift2 * (i + 1),
+        std::copy(Data2.GetData().begin() + shift2 * i,
+            Data2.GetData().begin() + shift2 * (i + 1),
             Impedances.begin() + (shift1 + shift2) * i + shift1);
 
-        std::copy(Errors1.begin() + shift1 * i,
-            Errors1.begin() + shift1 * (i + 1),
+        std::copy(Data1.GetErrors().begin() + shift1 * i, Data1.GetErrors().begin() + shift1 * (i + 1),
             Errors.begin() + (shift1 + shift2) * i);
-        std::copy(Errors2.begin() + shift2 * i,
-            Errors2.begin() + shift2 * (i + 1),
+        std::copy(Data2.GetErrors().begin() + shift2 * i, Data2.GetErrors().begin() + shift2 * (i + 1),
             Errors.begin() + (shift1 + shift2) * i + shift1);
       }
 
-    jif3D::WriteImpedancesToNetCDF(ncfilename1 + ".merged.nc",Frequencies1,StatX,StatY,StatZ,Impedances,Errors,C);
+    jif3D::WriteImpedancesToNetCDF(ncfilename1 + ".merged.nc", Frequencies, StatX, StatY,
+        StatZ, Impedances, Errors, C);
   }

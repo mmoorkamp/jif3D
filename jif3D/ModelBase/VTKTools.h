@@ -58,7 +58,7 @@ namespace jif3D
     //! Write scalar data with 3D coordinate information into a .vtk file for plotting
     J3DEXPORT void Write3DDataToVTK(const std::string &filename,
         const std::string &DataName,
-        const jif3D::rvec &Data,
+        const std::vector<double> &Data,
         const std::vector<double> &PosX,
         const std::vector<double> &PosY,
         const std::vector<double> &PosZ);
@@ -66,7 +66,7 @@ namespace jif3D
     //! Write three-component vector data with 3D coordinate information into a .vtk file for plotting
     J3DEXPORT void Write3DVectorDataToVTK(const std::string &filename,
         const std::string &DataName,
-        const jif3D::rvec &Data,
+        const std::vector<double> &Data,
         const std::vector<double> &PosX,
         const std::vector<double> &PosY,
         const std::vector<double> &PosZ);
@@ -74,7 +74,7 @@ namespace jif3D
     //! Write \f$ 3 \times 3\f$ tensor data with 3D coordinate information into a .vtk file for plotting
     J3DEXPORT void Write3DTensorDataToVTK(const std::string &filename,
         const std::string &DataName,
-        const jif3D::rvec &Data,
+        const std::vector<double> &Data,
         const std::vector<double> &PosX,
         const std::vector<double> &PosY,
         const std::vector<double> &PosZ);

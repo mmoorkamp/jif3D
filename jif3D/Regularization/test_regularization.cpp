@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
 
         jif3D::GradientRegularization Regularization(GravModel, 0.0);
         Regularization.SetReferenceModel(StartModel);
-        Regularization.SetDataError(StartModel);
+        Regularization.SetDataError(std::vector<double>(StartModel.begin(),StartModel.end()));
         Regularization.SetXWeight(5.0);
         Regularization.SetYWeight(4.0);
         Regularization.SetZWeight(3.0);
@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
 
         jif3D::CurvatureRegularization Regularization(GravModel, 0.0);
         Regularization.SetReferenceModel(StartModel);
-        Regularization.SetDataError(StartModel);
+        Regularization.SetDataError(std::vector<double>(StartModel.begin(),StartModel.end()));
         Regularization.SetXWeight(5.0);
         Regularization.SetYWeight(4.0);
         Regularization.SetZWeight(3.0);
@@ -236,7 +236,7 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
 
         jif3D::CurvatureRegularization Regularization(GravModel, TearX, TearY, TearZ);
         Regularization.SetReferenceModel(StartModel);
-        Regularization.SetDataError(StartModel);
+        Regularization.SetDataError(std::vector<double>(StartModel.begin(),StartModel.end()));
         Regularization.SetXWeight(5.0);
         Regularization.SetYWeight(4.0);
         Regularization.SetZWeight(3.0);

@@ -105,6 +105,7 @@ namespace jif3D
     J3DEXPORT void WriteTipperToNetCDF(const std::string &filename,
         const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
+        const std::vector<int> &HxIndices, const std::vector<int> &HyIndices, const std::vector<int> &HzIndices,
         const std::vector<double> &Tipper, const std::vector<double> &Errors);
 
     //! Read magnetotelluric tipper from a netcdf file
@@ -139,8 +140,8 @@ namespace jif3D
      * @param TippErr The error for the tipper
      */
     J3DEXPORT void ReadImpedancesFromMTT(const std::string &filename,
-        std::vector<double> &Frequencies, jif3D::rvec &Impedances, jif3D::rvec &Errors,
-        const std::vector<double> &Tipper, const std::vector<double> &TippErr);
+        std::vector<double> &Frequencies, std::vector<double> &Impedances, std::vector<double> &Errors,
+         std::vector<double> &Tipper,  std::vector<double> &TippErr);
 
     //! A very basic routine to write impedances for several sites to  .mtt files in the format used by University of Goettingen.
     /*! A very basic routine to write impedances for several sites to  .mtt files in the format used by University of Goettingen.
@@ -153,16 +154,13 @@ namespace jif3D
      * @param TippErr The error for the tipper
      */
     J3DEXPORT void WriteImpedancesToMtt(const std::string &filenamebase,
-        const std::vector<double> &Frequencies, const jif3D::rvec &Imp,
-        const jif3D::rvec &Err, const jif3D::rvec &Tipper, const jif3D::rvec &TipErr);
+        const std::vector<double> &Frequencies, const std::vector<double> &Imp,
+        const std::vector<double> &Err, const std::vector<double> &Tipper, const std::vector<double> &TipErr);
 
-    J3DEXPORT inline void WriteImpedancesToMtt(const std::string &filenamebase,
-        const std::vector<double> &Frequencies, const jif3D::rvec &Imp,
-        const jif3D::rvec &Err)
-      {
-        jif3D::rvec Dummy(Imp.size() / 2, 0.0);
-        WriteImpedancesToMtt(filenamebase, Frequencies, Imp, Err, Dummy, Dummy);
-      }
+    J3DEXPORT void WriteImpedancesToMtt(const std::string &filenamebase,
+        const std::vector<double> &Frequencies, const std::vector<double> &Imp,
+        const std::vector<double> &Err);
+
     //! Reads apparent resistivity and phase information from an ascii file with all stations joined together
     /*!
      * @param filename The name of the ascii file
@@ -179,7 +177,7 @@ namespace jif3D
     J3DEXPORT void ReadAppResFromAscii(const std::string &filename,
         std::vector<double> &Frequencies, std::vector<double> &StatXCoord,
         std::vector<double> &StatYCoord, std::vector<double> &StatZCoord,
-        jif3D::rvec &Imp, jif3D::rvec &Err);
+        std::vector<double> &Imp, std::vector<double> &Err);
 
     //! Write apparent resistivity and phase information to an ascii file with all stations joined together
     /*!
@@ -194,10 +192,11 @@ namespace jif3D
      * @param Err Impedance errors with the same number of Elements with Impedances.
      *        As we only have one error estimate per element we write only the components corresponding to the real parts.
      */
-    J3DEXPORT void WriteAppResToAscii(const std::string &filename,
+    void WriteAppResToAscii(const std::string &filename,
         const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
-        const jif3D::rvec &Imp, const jif3D::rvec &Err);
+        const std::vector<double> &Imp, const std::vector<double> &Err)
+;
 
     //! Reads impedances from an ascii file as written by ModEM
     /*!
@@ -260,12 +259,12 @@ namespace jif3D
      */
     J3DEXPORT void ReadImpedancesFromJ(const std::string &filename,
         std::vector<double> &Frequencies, double &StatXCoord, double &StatYCoord,
-        double &StatZCoord, jif3D::rvec &Imp, jif3D::rvec &Err);
+        double &StatZCoord, std::vector<double> &Imp, std::vector<double> &Err);
 
     void WriteImpedancesToJ(const std::string &filenamebase,
         const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
-        const jif3D::rvec &Imp, const jif3D::rvec &Err);
+        const std::vector<double> &Imp, const std::vector<double> &Err);
   /* @} */
   }
 

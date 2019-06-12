@@ -28,6 +28,7 @@ namespace jif3D
         }
       virtual void ReadNetCDF(const std::string &filename) override;
       virtual void WriteNetCDF(const std::string &filename) override;
+      void WriteVTK(const std::string &filename) const;
       TensorGravityData();
       virtual ~TensorGravityData();
       };

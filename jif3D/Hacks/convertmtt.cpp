@@ -12,7 +12,8 @@
 #include "../Global/FileUtil.h"
 #include "../Global/FatalException.h"
 #include "../MT/ReadWriteImpedances.h"
-
+#include "../MT/MTData.h"
+#include "../MT/TipperData.h"
 int main()
   {
     std::string filename = jif3D::AskFilename("File with station names/positions: ");
@@ -60,12 +61,12 @@ int main()
     std::cout << "Number of stations: " << nstats << std::endl;
     if (nstats > 0)
       {
-        jif3D::rvec Impedances, Errors, Tipper, TipErr;
+        std::vector<double> Impedances, Errors, Tipper, TipErr;
         std::vector<double> Frequencies, StatXCoord(nstats), StatYCoord(nstats),
             StatZCoord(nstats);
         StationFile.open(filename.c_str());
         std::vector<double> CurrFrequencies;
-        jif3D::rvec CurrImpedances, CurrErrors, CurrTip, CurrTipErr;
+        std::vector<double> CurrImpedances, CurrErrors, CurrTip, CurrTipErr;
         std::string StationName;
         StationFile >> StatXCoord.front() >> StatYCoord.front() >> StatZCoord.front()
             >> StationName;
@@ -139,9 +140,19 @@ int main()
             ++stationindex;
           }
         std::string outfilename = jif3D::AskFilename("Output file: ", false);
-        jif3D::WriteImpedancesToNetCDF(outfilename, Frequencies, StatXCoord, StatYCoord,
-            StatZCoord, Impedances, Errors, C);
-        jif3D::WriteTipperToNetCDF(outfilename+".tip.nc", Frequencies, StatXCoord, StatYCoord,
-            StatZCoord, Tipper, TipErr);
+        jif3D::MTData MTData;
+        MTData.SetMeasurementPoints(StatXCoord, StatYCoord, StatZCoord);
+        MTData.SetDataAndErrors(Impedances, Errors);
+        MTData.SetFrequencies(Frequencies);
+        MTData.CompleteObject();
+        MTData.WriteNetCDF(outfilename);
+
+        jif3D::TipperData TipperData;
+        TipperData.SetMeasurementPoints(StatXCoord, StatYCoord, StatZCoord);
+        TipperData.SetDataAndErrors(Impedances, Errors);
+        TipperData.SetFrequencies(Frequencies);
+        TipperData.CompleteObject();
+        TipperData.WriteNetCDF(outfilename+".tip.nc");
+
       }
   }

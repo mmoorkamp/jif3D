@@ -33,7 +33,7 @@ namespace jif3D
      * @param Model A X3D model object containing background conductivities, thicknesses and N calculation frequencies
      * @return A real vector of size 2N with the real and imaginary parts of the corresponding MT impedances.
      */
-    jif3D::rvec OneDMTCalculator::Calculate(const ModelType &Model, const jif3D::MTData &Data)
+    std::vector<double> OneDMTCalculator::Calculate(const ModelType &Model, const jif3D::MTData &Data)
       {
         const size_t nfreq = Data.GetFrequencies().size();
         const size_t nlayers = Model.GetBackgroundThicknesses().size();
@@ -47,7 +47,7 @@ namespace jif3D
         double d;
         double sigmacurr, sigmalow;
 
-        jif3D::rvec result(nfreq * 2);
+        std::vector<double> result(nfreq * 2);
         Z.resize(nfreq);
         gammakj.resize(nlayers, nfreq);
         gammaj.resize(nlayers, nfreq);
@@ -90,8 +90,8 @@ namespace jif3D
               }
             alpha(0, i) = kcurr / (omegamu) * ((1. - alpha(0, i)) / (1. + alpha(0, i)));
             Z(i) = 1. / alpha(0, i);
-            result(2 * i) = Z(i).real();
-            result(2 * i + 1) = Z(i).imag();
+            result.at(2 * i) = Z(i).real();
+            result.at(2 * i + 1) = Z(i).imag();
           }
         return result;
       }

@@ -16,8 +16,7 @@
 #include "../Global/VecMat.h"
 #include "../Global/FileUtil.h"
 #include "../Global/convert.h"
-#include "../Tomo/ThreeDSeismicModel.h"
-#include "../Tomo/ReadWriteTomographyData.h"
+#include "../Tomo/TomographyData.h"
 
 size_t MakeKey(size_t RecNo, size_t SourceNo)
   {
@@ -101,12 +100,12 @@ int main()
           }
       }
 
-    jif3D::ThreeDSeismicModel Model;
+    jif3D::TomographyData Data;
     const double depth = 10.0;
 
     for (auto sourceiter : SourceMap)
       {
-        Model.AddSource(sourceiter.second[0], sourceiter.second[1], depth);
+        Data.AddSource(sourceiter.second[0], sourceiter.second[1], depth);
       }
 
     const size_t ntime = TravelTime.size();
@@ -149,8 +148,8 @@ int main()
             double currvel = distance / TravelTime.at(i);
             if (distance > mindist && currvel > minvel && currvel < maxvel)
               {
-                Model.AddMeasurementPoint(sriter->second[0], sriter->second[1], depth);
-                Model.AddMeasurementConfiguration(CurrShotIndex, measindex);
+                Data.AddMeasurementPoint(sriter->second[0], sriter->second[1], depth);
+                Data.AddMeasurementConfiguration(CurrShotIndex, measindex);
                 ++measindex;
               }
             else
@@ -169,9 +168,9 @@ int main()
         TravelTime.end());
     std::cout << "NTimes in file: " << TravelTime.size() << std::endl;
     std::string outfilename = jif3D::AskFilename("Output file: ", false);
-    jif3D::rvec TT(TravelTime.size());
-    std::copy(TravelTime.begin(), TravelTime.end(), TT.begin());
-    jif3D::rvec Error(TT.size(), 0.0);
-    jif3D::SaveTraveltimes(outfilename, TT, Error, Model);
+    std::vector<double> Error(TravelTime.size(), 0.0);
+    Data.SetDataAndErrors(TravelTime,Error);
+    Data.WriteNetCDF(outfilename);
+
   }
 

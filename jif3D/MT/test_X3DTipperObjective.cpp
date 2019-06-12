@@ -23,10 +23,11 @@
 #include "MTEquations.h"
 #include "ReadWriteImpedances.h"
 #include "MTTransforms.h"
+#include "TipperData.h"
 
 BOOST_AUTO_TEST_SUITE( X3DTipperObjective_Suite )
 
-    void MakeMTModel(jif3D::X3DModel &Model)
+    void MakeTipperModel(jif3D::X3DModel &Model, jif3D::TipperData &Data)
       {
         const size_t xsize = 12;
         const size_t ysize = 9;
@@ -68,15 +69,16 @@ BOOST_AUTO_TEST_SUITE( X3DTipperObjective_Suite )
         //Model.SetFrequencies().push_back(0.1);
         //Model.SetFrequencies().push_back(2.0);
         //Model.SetFrequencies().push_back(5.0);
-        Model.SetFrequencies().push_back(1.0);
+        Data.SetFrequencies({1.0});
         const size_t nsites = 2;
         const double startx = 450.0;
         const double starty = 450.0;
         for (size_t i = 1; i < nsites; ++i)
           {
 
-            Model.AddMeasurementPoint(startx+i*deltax, starty+i*deltay, 0.0);
+            Data.AddMeasurementPoint(startx+i*deltax, starty+i*deltay, 0.0);
           }
+        Data.CompleteObject();
       }
 
     bool Between(const double limit1, const double limit2, const double value)
@@ -90,7 +92,8 @@ BOOST_AUTO_TEST_SUITE( X3DTipperObjective_Suite )
       {
 
         jif3D::X3DModel Model;
-        MakeMTModel(Model);
+        jif3D::TipperData Data;
+        MakeTipperModel(Model, Data);
         const size_t xsize = Model.GetData().shape()[0];
         const size_t ysize = Model.GetData().shape()[1];
         const size_t zsize = Model.GetData().shape()[2];
@@ -110,11 +113,11 @@ BOOST_AUTO_TEST_SUITE( X3DTipperObjective_Suite )
         //we want to test the distortion correction as well
         boost::filesystem::path TDir = boost::filesystem::current_path();
         jif3D::X3DTipperCalculator Calculator(TDir, "x3d", true);
-        jif3D::rvec Observed = Calculator.Calculate(TrueModel);
+        jif3D::rvec Observed = Calculator.Calculate(TrueModel, Data);
         std::ofstream impfile("tipper.out");
         std::copy(Observed.begin(), Observed.end(),
             std::ostream_iterator<double>(impfile, "\n"));
-        std::vector<double> Freq(TrueModel.GetFrequencies());
+        std::vector<double> Freq(Data.GetFrequencies());
 
         //jif3D::WriteImpedancesToNetCDF("gra1dimp.nc", Freq, TrueModel.GetMeasPosX(),
         //    TrueModel.GetMeasPosY(), TrueModel.GetMeasPosZ(), Observed);
@@ -123,24 +126,24 @@ BOOST_AUTO_TEST_SUITE( X3DTipperObjective_Suite )
         FineModel.SetMeshSize(3 * xsize, 3 * ysize, 3 * zsize);
         FineModel.SetHorizontalCellSize(100.0, 100.0, 3 * xsize, 3 * ysize);
         jif3D::ThreeDModelBase::t3DModelDim ZCS(3*zsize, 100.0);
-        Model.SetZCellSizes(ZCS);
+
 
         FineModel.SetZCellSizes(ZCS);
         FineModel.SetBackgroundConductivities(Model.GetBackgroundConductivities());
         FineModel.SetBackgroundThicknesses(Model.GetBackgroundThicknesses());
-        FineModel.SetFrequencies() = Model.GetFrequencies();
-        for (size_t i = 0; i < Model.GetMeasPosX().size(); ++i)
-          FineModel.AddMeasurementPoint(Model.GetMeasPosX().at(i),
-              Model.GetMeasPosY().at(i), Model.GetMeasPosZ().at(i));
+
+        std::vector<double> Error(Observed.size(), 0.02);
+        Data.SetDataAndErrors(std::vector<double>(Observed.begin(), Observed.end()),Error);
+
 
         jif3D::ThreeDModelObjective<jif3D::X3DTipperCalculator> Objective(Calculator);
-        Objective.SetObservedData(Observed);
+        Objective.SetObservedData(Data);
         Objective.SetCoarseModelGeometry(Model);
 //        Objective.SetFineModelGeometry(FineModel);
-        jif3D::rvec Error(Observed.size(), 0.02);
+
 
         Objective.SetDataError(Error);
-        const size_t nstat = Model.GetMeasPosX().size();
+        const size_t nstat = Data.GetMeasPosX().size();
         jif3D::rvec ModelVec(nmod);
         // jif3D::rvec ModelVec(nmod);
         std::copy(Model.GetConductivities().origin(),

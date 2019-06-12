@@ -51,14 +51,14 @@ BOOST_AUTO_TEST_CASE (OneD_forward_hs_test)
 
     jif3D::OneDMTCalculator Calculator;
 
-    jif3D::rvec Impedance = Calculator.Calculate(Model, Data);
+    std::vector<double> Impedance = Calculator.Calculate(Model, Data);
 
     const double prec = 0.05;
     for (size_t i = 0; i < nfreq; ++i)
       {
         std::complex<double> HsImp = jif3D::ImpedanceHalfspace(freq*(i+1),cond);
-        BOOST_CHECK_CLOSE(Impedance(i*2),HsImp.real(),prec);
-        BOOST_CHECK_CLOSE(Impedance(i*2+1),HsImp.imag(),prec);
+        BOOST_CHECK_CLOSE(Impedance.at(i*2),HsImp.real(),prec);
+        BOOST_CHECK_CLOSE(Impedance.at(i*2+1),HsImp.imag(),prec);
       }
 
   }
@@ -87,11 +87,11 @@ BOOST_AUTO_TEST_CASE (OneD_twolayer_test)
 
     jif3D::OneDMTCalculator Calculator;
 
-    jif3D::rvec Impedance = Calculator.Calculate(Model, Data);
+    std::vector<double> Impedance = Calculator.Calculate(Model, Data);
 
     const double prec = 1.0;
-    std::complex<double> HighZ(Impedance(0), Impedance(1));
-    std::complex<double> LowZ(Impedance(2), Impedance(3));
+    std::complex<double> HighZ(Impedance.at(0), Impedance.at(1));
+    std::complex<double> LowZ(Impedance.at(2), Impedance.at(3));
     BOOST_CHECK_CLOSE(1.0/bg_conductivities.front(),jif3D::AppRes(HighZ,freqhigh),prec);
     BOOST_CHECK_CLOSE(1.0/bg_conductivities.back(),jif3D::AppRes(LowZ,freqlow),prec);
     BOOST_CHECK_CLOSE(45.0,jif3D::ImpedancePhase(HighZ),prec);
@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE (OneDMT_basic_deriv_test)
     TrueModel.SetBackgroundConductivities(bg_conductivities);
 
     jif3D::OneDMTCalculator Calculator;
-    jif3D::rvec Observed = Calculator.Calculate(TrueModel, Data);
+    std::vector<double> Observed = Calculator.Calculate(TrueModel, Data);
     std::vector<double> Error(Observed.size(), 0.0);
     Data.SetDataAndErrors(std::vector<double>(Observed.begin(),Observed.end()),Error);
     jif3D::OneDMTObjective Objective;

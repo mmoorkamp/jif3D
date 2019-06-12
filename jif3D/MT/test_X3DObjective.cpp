@@ -147,8 +147,9 @@ BOOST_AUTO_TEST_CASE (X3D_fail_test)
     BOOST_CHECK_THROW(Objective.SetObservedData(Observed), jif3D::FatalException);
     BOOST_CHECK_THROW(Objective.SetCoarseModelGeometry(Model), jif3D::FatalException);
 
-    BOOST_CHECK_NO_THROW(Objective.SetObservedData(Observed));
     MakeMTModel (Model, Observed);
+    BOOST_CHECK_NO_THROW(Objective.SetObservedData(Observed));
+
     BOOST_CHECK_NO_THROW(Objective.SetCoarseModelGeometry(Model));
     Observed.ClearMeasurementPoints();
     Observed.AddMeasurementPoint(10.0, 12.0, 0.0);

@@ -8,6 +8,7 @@
 #include "../Global/Jif3DGlobal.h"
 #include "../Global/VecMat.h"
 #include <complex>
+#include <vector>
 #include <boost/math/constants/constants.hpp>
 
 namespace jif3D
@@ -38,8 +39,8 @@ namespace jif3D
     J3DEXPORT void RotateImpedance(const double angle, std::complex<double> & Zxx,
         std::complex<double> &Zxy, std::complex<double> &Zyx, std::complex<double> &Zyy);
     //! Rotate several impedance values stored in a vector as we use for inversion
-    J3DEXPORT jif3D::rvec RotateImpedanceVector(const double angle,
-        const jif3D::rvec &Impedance);
+    J3DEXPORT  std::vector<double> RotateImpedanceVector(const double angle,
+        const  std::vector<double> &Impedance);
     //! Given a complex impedance value in S.I. units, and the Frequency in Hz calculate the corresponding apparent resistivity
     inline double AppRes(const std::complex<double> &Z, const double Frequency)
       {

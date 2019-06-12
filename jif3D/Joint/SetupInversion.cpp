@@ -15,8 +15,8 @@
 namespace jif3D
   {
 
-    SetupInversion::SetupInversion():
-        scalegrad(),corrpairs()
+    SetupInversion::SetupInversion() :
+        scalegrad(), corrpairs()
       {
       }
 
@@ -41,13 +41,6 @@ namespace jif3D
         boost::shared_ptr<jif3D::ObjectiveFunction> ObjFunction,
         const jif3D::rvec &InvModel, boost::shared_ptr<jif3D::GeneralCovariance> CovObj)
       {
-
-        //if the model covariance is empty we let the optimizer object
-        //take care of setting the values to 1
-        //otherwise we perform some checks here
-        const size_t nparm = InvModel.size();
-
-
         //we can either use nlcg or L-BFGS for the optimizer
         boost::shared_ptr<jif3D::GradientBasedOptimization> Optimizer;
         if (vm.count("nlcg"))

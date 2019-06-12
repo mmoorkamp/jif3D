@@ -69,9 +69,7 @@ namespace jif3D
         if (ExIndices.size() != nmeas * nfreq)
           {
             ExIndices.resize(nmeas * nfreq);
-
-
-            for (int ifr = 0; ifr < nfreq; ++ifr)
+            for (size_t ifr = 0; ifr < nfreq; ++ifr)
               {
                 const size_t ind_shift = nmeas * ifr;
                 for (size_t i = 0; i < nmeas; ++i)
@@ -88,6 +86,11 @@ namespace jif3D
             std::vector<double> RA(nmeas, 0.0);
             SetRotAngles(RA);
           }
+        if (GetData().size() != nmeas)
+          {
+            std::vector<double> dummy(nmeas,0.0);
+            SetDataAndErrors(dummy,dummy);
+          }
       }
 
     void MTData::ReadModEM(const std::string &filename)
@@ -102,7 +105,7 @@ namespace jif3D
 
     void MTData::PlotMeasurementConfiguration(const std::string &filename)
       {
-        jif3D::rvec FirstFreq(GetMeasPosX().size());
+        std::vector<double> FirstFreq(GetMeasPosX().size());
 
         const size_t nstats = ExIndices.size() / GetFrequencies().size();
         std::vector<double> tmpx, tmpy, tmpz;

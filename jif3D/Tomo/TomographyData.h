@@ -123,6 +123,26 @@ namespace jif3D
 
           ReceiverIndices = Source.ReceiverIndices;
         }
+      void SetSourcePoints(const std::vector<double> &xcoords,
+          const std::vector<double> &ycoords, const std::vector<double> &zcoords)
+        {
+          const size_t nsource = xcoords.size();
+          if (ycoords.size() != nsource)
+            {
+              throw jif3D::FatalException(
+                  "Trying to set coordinates with different number of values", __FILE__,
+                  __LINE__);
+            }
+          if (zcoords.size() != nsource)
+            {
+              throw jif3D::FatalException(
+                  "Trying to set coordinates with different number of values", __FILE__,
+                  __LINE__);
+            }
+          SourcePosX = xcoords;
+          SourcePosY = ycoords;
+          SourcePosZ = zcoords;
+        }
       void WriteSourcePoints(const std::string &filename);
       virtual void ReadNetCDF(const std::string &filename) override;
       virtual void WriteNetCDF(const std::string &filename) override;

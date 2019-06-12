@@ -141,12 +141,13 @@ namespace jif3D
           if (DataTransform)
             {
               throw jif3D::FatalException("Implementation currently disabled", __FILE__,
-                __LINE__);
-             //ObservedData = jif3D::ApplyTransform(Data, *DataTransform);
+              __LINE__);
+              //ObservedData = jif3D::ApplyTransform(Data, *DataTransform);
             }
           else
             {
               ObservedData = Data;
+              SetDataError(Data.GetErrors());
             }
 
         }
@@ -300,7 +301,8 @@ namespace jif3D
           {
             Refiner.RefineModel(CoarseModel, FineModel);
             //calculate the gradient for the fine model
-            jif3D::rvec FineGradient(Calculator.LQDerivative(FineModel, ObservedData, Diff));
+            jif3D::rvec FineGradient(
+                Calculator.LQDerivative(FineModel, ObservedData, Diff));
             const size_t nfine = FineModel.GetNModelElements();
             jif3D::rvec CoarseGrad(Model.size());
             //and return the projection of the fine gradient onto the coarse model

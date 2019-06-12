@@ -114,13 +114,15 @@ int main(int argc, char *argv[])
         [relnoise, absnoise] (const double data)
           { return std::max(absnoise,data*relnoise);});
 
-    jif3D::SaveTotalFieldMagneticMeasurements(ModelFilename + ".mag.nc", std::vector<double>(Results.begin(),Results.end()),
-        Data.GetMeasPosX(),  Data.GetMeasPosY(),  Data.GetMeasPosZ(), Err);
+    jif3D::SaveTotalFieldMagneticMeasurements(ModelFilename + ".mag.nc",
+        std::vector<double>(Results.begin(), Results.end()), Data.GetMeasPosX(),
+        Data.GetMeasPosY(), Data.GetMeasPosZ(), Err);
 
     //write the model in .vtk format, at the moment the best plotting option
     MagModel.WriteVTK(ModelFilename + ".vtk");
 
-    jif3D::Write3DDataToVTK(ModelFilename + ".data.vtk", "T", Results,
-        Data.GetMeasPosX(),  Data.GetMeasPosY(),  Data.GetMeasPosZ());
+    jif3D::Write3DDataToVTK(ModelFilename + ".data.vtk", "T",
+        std::vector<double>(Results.begin(), Results.end()), Data.GetMeasPosX(),
+        Data.GetMeasPosY(), Data.GetMeasPosZ());
 
   }

@@ -18,6 +18,7 @@
 #include "../MT/ReadWriteImpedances.h"
 #include "../MT/OneDMTObjective.h"
 #include "../MT/MTEquations.h"
+#include "../MT/MTData.h"
 #include "../Inversion/LimitedMemoryQuasiNewton.h"
 #include "../Inversion/JointObjective.h"
 #include "../Inversion/ModelTransforms.h"
@@ -68,59 +69,60 @@ int main(int argc, char *argv[])
     std::string dataextension = jif3D::GetFileExtension(modelfilename);
     jif3D::X3DModel Model;
     Model.ReadNetCDF(modelfilename);
-    jif3D::rvec Impedances, ImpError;
-    std::vector<double> Frequencies, StatXCoord, StatYCoord, StatZCoord, GoodXCoord,
-        GoodYCoord;
-
-    std::vector<double> C;
-    jif3D::ReadImpedancesFromNetCDF(datafilename, Frequencies, StatXCoord, StatYCoord,
-        StatZCoord, Impedances, ImpError, C);
+    jif3D::MTData Data;
+    Data.ReadNetCDF(datafilename);
 
     double reglambda = 1.0;
     std::cout << "Lambda: ";
     std::cin >> reglambda;
 
-    const size_t nfreq = Frequencies.size();
-    const size_t nstat = StatXCoord.size();
+    const size_t nfreq = Data.GetFrequencies().size();
+    const size_t nstat = Data.GetMeasPosX().size();
     const size_t nlayers = Model.GetZCellSizes().size();
 
     std::vector<double> RMS(nstat);
 
     std::vector<std::vector<double> > InvResult;
-    jif3D::rvec InvData(Impedances.size(), 0.0);
+    jif3D::rvec InvData(Data.GetData().size(), 0.0);
     omp_lock_t lck;
     omp_init_lock(&lck);
+    std::vector<double> Impedances(Data.GetData()), ImpError(Data.GetErrors());
+    std::vector<double> GoodXCoord, GoodYCoord;
 
 #pragma omp parallel for default(shared)
     for (size_t i = 0; i < nstat; ++i)
       {
-        boost::shared_ptr<jif3D::OneDMTObjective> MTObjective(new jif3D::OneDMTObjective);
-        jif3D::rvec OneDImp(nfreq * 2, 0.0), OneDErr(nfreq * 2, 0.0);
+        boost::shared_ptr<jif3D::OneDMTObjective> MTObjective = boost::make_shared<
+            jif3D::OneDMTObjective>();
+
+        std::vector<double> OneDImp(nfreq * 2, 0.0), OneDErr(nfreq * 2, 0.0);
 
         for (size_t j = 0; j < nfreq; ++j)
           {
 
             size_t siteindex = (j * nstat + i) * 8;
-            OneDImp(j * 2) = (Impedances(siteindex + 2) - Impedances(siteindex + 4))
-                / 2.0;
-            OneDImp(j * 2 + 1) = (Impedances(siteindex + 3) - Impedances(siteindex + 5))
-                / 2.0;
+            OneDImp.at(j * 2) = (Impedances.at(siteindex + 2)
+                - Impedances.at(siteindex + 4)) / 2.0;
+            OneDImp.at(j * 2 + 1) = (Impedances.at(siteindex + 3)
+                - Impedances.at(siteindex + 5)) / 2.0;
 
-            OneDErr(j * 2) = std::max(ImpError(siteindex + 2), ImpError(siteindex + 4));
-            OneDErr(j * 2 + 1) = OneDErr(j * 2);
+            OneDErr.at(j * 2) = std::max(ImpError.at(siteindex + 2),
+                ImpError.at(siteindex + 4));
+            OneDErr.at(j * 2 + 1) = OneDErr.at(j * 2);
           }
 
-        Model.SetFrequencies() = Frequencies;
-        MTObjective->SetModelGeometry(Model);
-        MTObjective->SetObservedData(OneDImp);
-        jif3D::rvec AvgImp(OneDImp.size());
-
+        std::vector<double> AvgImp(OneDImp.size());
         for (size_t i = 0; i < nfreq; ++i)
           {
-            AvgImp(2 * i) = (OneDImp(2 * i) + OneDImp(2 * i + 1)) / 2.0;
-            AvgImp(2 * i + 1) = AvgImp(2 * i);
+            AvgImp.at(2 * i) = (OneDImp.at(2 * i) + OneDImp.at(2 * i + 1)) / 2.0;
+            AvgImp.at(2 * i + 1) = AvgImp.at(2 * i);
           }
-        jif3D::rvec DataError(jif3D::ConstructError(AvgImp, OneDErr, 0.05, 0.0));
+        jif3D::MTData ObsData(Data);
+
+        std::vector<double> DataError(jif3D::ConstructError(AvgImp, OneDErr, 0.05, 0.0));
+        ObsData.SetDataAndErrors(AvgImp, DataError);
+        MTObjective->SetModelGeometry(Model);
+        MTObjective->SetObservedData(ObsData);
         MTObjective->SetDataError(DataError);
 
         jif3D::rvec InvModel(nlayers);
@@ -190,18 +192,15 @@ int main(int argc, char *argv[])
         Model.SetBackgroundConductivities(
             std::vector<double>(InvModel.begin(), InvModel.end()));
 
-
-
-        jif3D::rvec currdata(jif3D::OneDMTCalculator().Calculate(Model));
+        std::vector<double> currdata(jif3D::OneDMTCalculator().Calculate(Model,Data));
 
         RMS.at(i) = Objective->GetRMS()[0];
-
         omp_set_lock(&lck);
         if (sqrt(Objective->GetRMS()[0]) < fitthreshold)
           {
             InvModel = ConductivityTransform->GeneralizedToPhysical(InvModel);
-            GoodXCoord.push_back(StatXCoord[i]);
-            GoodYCoord.push_back(StatYCoord[i]);
+            GoodXCoord.push_back(Data.GetMeasPosX()[i]);
+            GoodYCoord.push_back(Data.GetMeasPosY()[i]);
             std::vector<double> Result(InvModel.begin(), InvModel.end());
             InvResult.push_back(Result);
           }
@@ -209,10 +208,10 @@ int main(int argc, char *argv[])
         for (size_t j = 0; j < nfreq; ++j)
           {
             size_t siteindex = (j * nstat + i) * 8;
-            InvData(siteindex + 2) = currdata(j * 2);
-            InvData(siteindex + 3) = currdata(j * 2 + 1);
-            InvData(siteindex + 4) = -currdata(j * 2);
-            InvData(siteindex + 5) = -currdata(j * 2 + 1);
+            InvData(siteindex + 2) = currdata.at(j * 2);
+            InvData(siteindex + 3) = currdata.at(j * 2 + 1);
+            InvData(siteindex + 4) = -currdata.at(j * 2);
+            InvData(siteindex + 5) = -currdata.at(j * 2 + 1);
           }
         omp_unset_lock(&lck);
 
@@ -261,12 +260,9 @@ int main(int argc, char *argv[])
     //here we have to distinguish again between scalar and ftg data
     std::cout << "Writing out inversion results." << std::endl;
 
-    jif3D::rvec si(StatXCoord.size());
+    jif3D::rvec si(Data.GetMeasPosX().size());
     std::iota(si.begin(), si.end(), 1);
-    jif3D::Write3DDataToVTK(datafilename + ".vtk", "MTSites", si, StatXCoord, StatYCoord,
-        StatZCoord);
-    jif3D::WriteImpedancesToNetCDF(modelfilename + ".inv_imp.nc", Frequencies, StatXCoord,
-        StatYCoord, StatZCoord, InvData, ImpError);
+    Data.WriteMeasurementPoints(datafilename + ".vtk");
     Model.WriteVTK(modelfilename + ".inv.vtk");
     Model.WriteNetCDF(modelfilename + ".inv.nc");
     std::cout << std::endl;

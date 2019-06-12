@@ -11,8 +11,9 @@
 #include <boost/program_options.hpp>
 #include "../Global/convert.h"
 #include "../Tomo/TomographyCalculator.h"
+#include "../Tomo/TomographyData.h"
 
-void MakeTestModel(jif3D::ThreeDSeismicModel &Model, const size_t size)
+void MakeTestModel(jif3D::ThreeDSeismicModel &Model, jif3D::TomographyData &Data, const size_t size)
   {
     const double cellsize = 100.0;
     Model.SetCellSize(cellsize, size, size, size);
@@ -47,13 +48,13 @@ void MakeTestModel(jif3D::ThreeDSeismicModel &Model, const size_t size)
       {
         for (size_t j = 0; j <= nmeasy; ++j)
           {
-            Model.AddSource(minx + i * deltax, miny + j * deltay, sourcez);
-            Model.AddMeasurementPoint(minx + i * deltax, miny + j * deltay, measz);
+            Data.AddSource(minx + i * deltax, miny + j * deltay, sourcez);
+            Data.AddMeasurementPoint(minx + i * deltax, miny + j * deltay, measz);
           }
       }
 
-    const size_t nsource = Model.GetSourcePosX().size();
-    const size_t nmeas = Model.GetMeasPosX().size();
+    const size_t nsource = Data.GetSourcePosX().size();
+    const size_t nmeas = Data.GetMeasPosX().size();
     for (size_t i = 0; i < nmeas; ++i)
       {
         for (size_t j = 0; j < nsource; ++j)
@@ -61,7 +62,7 @@ void MakeTestModel(jif3D::ThreeDSeismicModel &Model, const size_t size)
             if (j != i)
 
               {
-                Model.AddMeasurementConfiguration(j, i);
+                Data.AddMeasurementConfiguration(j, i);
               }
           }
       }
@@ -77,7 +78,6 @@ int hpx_main(boost::program_options::variables_map& vm)
     const size_t nrunspersize = 5;
     std::string filename;
     jif3D::TomographyCalculator Calculator;
-
 #ifdef HAVEHPX
     filename = "tomo_hpx_";
 #endif
@@ -111,6 +111,7 @@ int hpx_main(boost::program_options::variables_map& vm)
         const size_t modelsize = 10 + (i + 1) * 2;
         std::cout << "Current model size: " << pow(modelsize, 3) << std::endl;
         jif3D::ThreeDSeismicModel SeisTest;
+        jif3D::TomographyData Data;
 
         double rawruntime = 0.0;
         jif3D::rvec seismeas;
@@ -119,11 +120,11 @@ int hpx_main(boost::program_options::variables_map& vm)
         for (size_t j = 0; j < nrunspersize; ++j)
           {
 
-            MakeTestModel(SeisTest, modelsize);
+            MakeTestModel(SeisTest, Data, modelsize);
 
             boost::posix_time::ptime firststarttime =
                 boost::posix_time::microsec_clock::local_time();
-            seismeas = Calculator.Calculate(SeisTest);
+            seismeas = Calculator.Calculate(SeisTest, Data);
 
             boost::posix_time::ptime firstendtime =
                 boost::posix_time::microsec_clock::local_time();

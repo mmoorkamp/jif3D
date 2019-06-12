@@ -24,25 +24,27 @@ int main()
         GravModel.SetMeshSize(nx, ny, nz);
 
         const size_t msize = GravModel.GetDensities().num_elements();
-        jif3D::rvec StartModel(msize), PertModel(msize);
-        jif3D::rvec ConstMod(msize);
-        std::fill(ConstMod.begin(), ConstMod.end(), 1.0);
-        std::generate(StartModel.begin(), StartModel.end(), rand);
-        std::generate(PertModel.begin(), PertModel.end(), rand);
+        std::vector<double> StartModel(msize);
+        jif3D::rvec PertModel(msize);
+
+        std::generate(StartModel.begin(), StartModel.end(), drand48);
+        std::generate(PertModel.begin(), PertModel.end(), drand48);
+        jif3D::rvec RefModel(StartModel.size());
+        std::copy(StartModel.begin(),StartModel.end(),RefModel.begin());
 
         boost::posix_time::ptime firststarttime =
             boost::posix_time::microsec_clock::local_time();
         jif3D::GradientRegularization Regularization(GravModel, 0.0);
         boost::posix_time::ptime firstendtime =
             boost::posix_time::microsec_clock::local_time();
-        Regularization.SetReferenceModel(StartModel);
+        Regularization.SetReferenceModel(RefModel);
         Regularization.SetDataError(StartModel);
         Regularization.SetXWeight(5.0);
         Regularization.SetYWeight(4.0);
         Regularization.SetZWeight(3.0);
         boost::posix_time::ptime secondstarttime =
             boost::posix_time::microsec_clock::local_time();
-        double zero = Regularization.CalcMisfit(StartModel + ConstMod);
+        double zero = Regularization.CalcMisfit(PertModel);
         boost::posix_time::ptime secondendtime =
             boost::posix_time::microsec_clock::local_time();
         std::cout << nelem << " " << (firstendtime - firststarttime).total_microseconds()
