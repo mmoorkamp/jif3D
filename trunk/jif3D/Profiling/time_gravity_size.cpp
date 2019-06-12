@@ -16,6 +16,8 @@
 #include "../GravMag/MinMemGravMagCalculator.h"
 #include "../GravMag/DiskGravMagCalculator.h"
 #include "../Gravity/ThreeDGravityFactory.h"
+#include "../Gravity/ScalarGravityData.h"
+#include "../Gravity/TensorGravityData.h"
 
 /*! \file time_gravity_size.cpp
  * This program can be used to benchmark the different methods for calculating
@@ -24,7 +26,12 @@
  * time_gravity_size --help.
  */
 
-void MakeTestModel(jif3D::ThreeDGravityModel &Model, const size_t size)
+namespace po = boost::program_options;
+int caching = 0;
+po::options_description desc("Allowed options");
+
+void MakeTestModel(jif3D::ThreeDGravityModel &Model, jif3D::GeneralData &Data,
+    const size_t size)
   {
     Model.SetMeshSize(size, size, size);
     jif3D::ThreeDModelBase::t3DModelDim XCS(size), YCS(size), ZCS(size, 500);
@@ -32,7 +39,7 @@ void MakeTestModel(jif3D::ThreeDGravityModel &Model, const size_t size)
     std::generate(XCS.begin(), XCS.end(), []() -> double
       { return rand() % 10000 + 1000;});
     std::generate(YCS.begin(), YCS.end(), []() -> double
-          { return rand() % 10000 + 1000;});
+      { return rand() % 10000 + 1000;});
     Model.SetXCellSizes(XCS);
     Model.SetYCellSizes(YCS);
     //fill the grid with some random values that are in a similar range
@@ -43,7 +50,7 @@ void MakeTestModel(jif3D::ThreeDGravityModel &Model, const size_t size)
 
     const size_t nmeas = 30;
     for (size_t i = 0; i < nmeas; ++i)
-      Model.AddMeasurementPoint(rand() % 50000 + 2e4, rand() % 50000 + 2e4, 0.0);
+      Data.AddMeasurementPoint(rand() % 50000 + 2e4, rand() % 50000 + 2e4, 0.0);
     std::vector<double> bg_dens =
       { 1.0, 1.0, 5.0, 5.0 };
     std::vector<double> bg_thick =
@@ -52,9 +59,57 @@ void MakeTestModel(jif3D::ThreeDGravityModel &Model, const size_t size)
     Model.SetBackgroundThicknesses(bg_thick);
   }
 
-namespace po = boost::program_options;
-int caching = 0;
-po::options_description desc("Allowed options");
+template<class CalculatorType>
+void RunCalculation(CalculatorType &Calculator, const std::string &filename)
+  {
+    const size_t nruns = 50;
+    const size_t nrunspersize = 5;
+    std::ofstream outfile(filename.c_str());
+    typename CalculatorType::DataType Data;
+    std::cout << " Starting calculations. " << std::endl;
+    // we calculate gravity data for a number of different grid sizes
+    for (size_t i = 0; i < nruns; ++i)
+      {
+        const size_t modelsize = (i + 1) * 2;
+        std::cout << "Current model size: " << pow(modelsize, 3) << std::endl;
+        jif3D::ThreeDGravityModel GravityTest;
+
+        double rawruntime = 0.0;
+        double cachedruntime = 0.0;
+        //for each grid size we perform several runs and average the run time
+        //to reduce the influence from other processes running on the system
+        for (size_t j = 0; j < nrunspersize; ++j)
+          {
+            rawruntime = 0.0;
+            cachedruntime = 0.0;
+            MakeTestModel(GravityTest, Data, modelsize);
+
+            boost::posix_time::ptime firststarttime =
+                boost::posix_time::microsec_clock::local_time();
+            jif3D::rvec gravmeas(Calculator.Calculate(GravityTest, Data));
+
+            boost::posix_time::ptime firstendtime =
+                boost::posix_time::microsec_clock::local_time();
+            rawruntime += (firstendtime - firststarttime).total_microseconds();
+            //if we want to compare to the time using caching we calculate
+            //a cached result right after the original run
+            if (caching > 0)
+              {
+                boost::posix_time::ptime secondstarttime =
+                    boost::posix_time::microsec_clock::local_time();
+                jif3D::rvec gravmeas2(Calculator.Calculate(GravityTest, Data));
+                boost::posix_time::ptime secondendtime =
+                    boost::posix_time::microsec_clock::local_time();
+
+                cachedruntime += (secondendtime - secondstarttime).total_microseconds();
+              }
+          }
+        rawruntime /= nrunspersize;
+        cachedruntime /= nrunspersize;
+        outfile << modelsize * modelsize * modelsize << " " << rawruntime << " "
+            << cachedruntime << std::endl;
+      }
+  }
 
 int hpx_main(boost::program_options::variables_map& vm)
   {
@@ -68,11 +123,8 @@ int hpx_main(boost::program_options::variables_map& vm)
 #endif
         return 1;
       }
-    const size_t nruns = 50;
-    const size_t nrunspersize = 5;
     std::string filename;
     bool wantcuda = false;
-    boost::shared_ptr<jif3D::ThreeDGravMagCalculator<jif3D::ThreeDGravityModel> > Calculator;
 
     if (vm.count("gpu"))
       {
@@ -104,97 +156,57 @@ int hpx_main(boost::program_options::variables_map& vm)
 
     if (vm.count("ftg"))
       {
+        boost::shared_ptr<jif3D::ThreeDGravMagCalculator<jif3D::TensorGravityData> > Calculator;
         filename += "ftg.time";
         switch (caching)
           {
         case 2:
           Calculator =
               jif3D::CreateGravityCalculator<
-                  jif3D::FullSensitivityGravMagCalculator<jif3D::ThreeDGravityModel> >::MakeTensor(
+                  jif3D::FullSensitivityGravMagCalculator<jif3D::TensorGravityData> >::MakeTensor(
                   wantcuda);
           break;
         case 1:
           Calculator = jif3D::CreateGravityCalculator<
-              jif3D::DiskGravMagCalculator<jif3D::ThreeDGravityModel> >::MakeTensor(
+              jif3D::DiskGravMagCalculator<jif3D::TensorGravityData> >::MakeTensor(
               wantcuda);
           break;
         case 0:
           Calculator = jif3D::CreateGravityCalculator<
-              jif3D::MinMemGravMagCalculator<jif3D::ThreeDGravityModel> >::MakeTensor(
+              jif3D::MinMemGravMagCalculator<jif3D::TensorGravityData> >::MakeTensor(
               wantcuda);
           break;
 
           }
+        RunCalculation(*Calculator, filename);
       }
     else
       {
+        boost::shared_ptr<jif3D::ThreeDGravMagCalculator<jif3D::ScalarGravityData> > Calculator;
         filename += "scalar.time";
         switch (caching)
           {
         case 2:
           Calculator =
               jif3D::CreateGravityCalculator<
-                  jif3D::FullSensitivityGravMagCalculator<jif3D::ThreeDGravityModel> >::MakeScalar(
+                  jif3D::FullSensitivityGravMagCalculator<jif3D::ScalarGravityData> >::MakeScalar(
                   wantcuda);
           break;
         case 1:
           Calculator = jif3D::CreateGravityCalculator<
-              jif3D::DiskGravMagCalculator<jif3D::ThreeDGravityModel> >::MakeScalar(
+              jif3D::DiskGravMagCalculator<jif3D::ScalarGravityData> >::MakeScalar(
               wantcuda);
           break;
         case 0:
           Calculator = jif3D::CreateGravityCalculator<
-              jif3D::MinMemGravMagCalculator<jif3D::ThreeDGravityModel> >::MakeScalar(
+              jif3D::MinMemGravMagCalculator<jif3D::ScalarGravityData> >::MakeScalar(
               wantcuda);
           break;
 
           }
+        RunCalculation(*Calculator, filename);
       }
 
-    std::ofstream outfile(filename.c_str());
-    std::cout << " Starting calculations. " << std::endl;
-    // we calculate gravity data for a number of different grid sizes
-    for (size_t i = 0; i < nruns; ++i)
-      {
-        const size_t modelsize = (i + 1) * 2;
-        std::cout << "Current model size: " << pow(modelsize, 3) << std::endl;
-        jif3D::ThreeDGravityModel GravityTest;
-
-        double rawruntime = 0.0;
-        double cachedruntime = 0.0;
-        //for each grid size we perform several runs and average the run time
-        //to reduce the influence from other processes running on the system
-        for (size_t j = 0; j < nrunspersize; ++j)
-          {
-            rawruntime = 0.0;
-            cachedruntime = 0.0;
-            MakeTestModel(GravityTest, modelsize);
-
-            boost::posix_time::ptime firststarttime =
-                boost::posix_time::microsec_clock::local_time();
-            jif3D::rvec gravmeas(Calculator->Calculate(GravityTest));
-
-            boost::posix_time::ptime firstendtime =
-                boost::posix_time::microsec_clock::local_time();
-            rawruntime += (firstendtime - firststarttime).total_microseconds();
-            //if we want to compare to the time using caching we calculate
-            //a cached result right after the original run
-            if (caching > 0)
-              {
-                boost::posix_time::ptime secondstarttime =
-                    boost::posix_time::microsec_clock::local_time();
-                jif3D::rvec gravmeas2(Calculator->Calculate(GravityTest));
-                boost::posix_time::ptime secondendtime =
-                    boost::posix_time::microsec_clock::local_time();
-
-                cachedruntime += (secondendtime - secondstarttime).total_microseconds();
-              }
-          }
-        rawruntime /= nrunspersize;
-        cachedruntime /= nrunspersize;
-        outfile << modelsize * modelsize * modelsize << " " << rawruntime << " "
-            << cachedruntime << std::endl;
-      }
 #ifdef HAVEHPX
     return hpx::finalize();
 #endif

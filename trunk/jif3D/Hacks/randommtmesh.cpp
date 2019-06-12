@@ -22,6 +22,7 @@
 #include "../MT/X3DModel.h"
 #include "../MT/X3DMTCalculator.h"
 #include "../MT/ReadWriteImpedances.h"
+#include "../MT/MTData.h"
 
 using namespace std;
 namespace po = boost::program_options;
@@ -56,6 +57,7 @@ int main(int argc, char *argv[])
       }
 #endif
     jif3D::X3DModel Model;
+    jif3D::MTData Data;
     size_t nx, ny, nz;
     double deltax, deltay, deltaz;
     //first find out the basic mesh parameters
@@ -102,8 +104,8 @@ int main(int argc, char *argv[])
     double posx, posy, posz = 0;
     posx = (deltax * nx) / 2.0;
     posy = (deltay * ny) / 2.0;
-    Model.SetFrequencies().assign(1, frequency);
-    Model.AddMeasurementPoint(posx, posy, posz);
+    Data.SetFrequencies({frequency});
+    Data.AddMeasurementPoint(posx, posy, posz);
 
     //ask for a filename to write the mesh to
     std::string OutFilename = jif3D::AskFilename("Outfile name: ", false);
@@ -115,7 +117,7 @@ int main(int argc, char *argv[])
     std::vector<double> bg_conductivities(Model.GetZCellSizes().size(), bg_conductivity);
     Model.SetBackgroundThicknesses(bg_thicknesses);
     Model.SetBackgroundConductivities(bg_conductivities);
-    size_t nrealmax;
+    int nrealmax;
     std::cout << "Realizations: ";
     std::cin >> nrealmax;
 
@@ -149,7 +151,7 @@ int main(int argc, char *argv[])
         std::string realstring(jif3D::stringify(nreal));
 
         jif3D::X3DMTCalculator Calculator;
-        jif3D::rvec Impedances(Calculator.Calculate(RealModel));
+        jif3D::rvec Impedances(Calculator.Calculate(RealModel,Data));
         jif3D::rvec Errors(Impedances.size(), 0.0);
 #pragma omp critical(write_files)
           {

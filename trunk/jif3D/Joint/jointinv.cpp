@@ -688,7 +688,8 @@ int hpx_main(boost::program_options::variables_map& vm)
                 ScalGravData.GetMeasPosZ(),
                 GravitySetup.GetScalGravObjective().GetDataError());
             jif3D::Write3DDataToVTK(modelfilename + ".inv_sgd.vtk", "grav_accel",
-                ScalGravInvData, ScalGravData.GetMeasPosX(), ScalGravData.GetMeasPosY(),
+                std::vector<double>(ScalGravInvData.begin(), ScalGravInvData.end()),
+                ScalGravData.GetMeasPosX(), ScalGravData.GetMeasPosY(),
                 ScalGravData.GetMeasPosZ());
 
           }
@@ -706,7 +707,8 @@ int hpx_main(boost::program_options::variables_map& vm)
                 std::vector<double>(FTGDiff.begin(), FTGDiff.end()),
                 FTGData.GetMeasPosX(), FTGData.GetMeasPosY(), FTGData.GetMeasPosZ(),
                 GravitySetup.GetFTGObjective().GetDataError());
-            jif3D::Write3DTensorDataToVTK(modelfilename + ".inv_ftg.vtk", "U", FTGInvData,
+            jif3D::Write3DTensorDataToVTK(modelfilename + ".inv_ftg.vtk", "U",
+                std::vector<double>(FTGInvData.begin(), FTGInvData.end()),
                 FTGData.GetMeasPosX(), FTGData.GetMeasPosY(), FTGData.GetMeasPosZ());
           }
       }

@@ -70,8 +70,9 @@ BOOST_AUTO_TEST_CASE(equal_geometry_test)
 BOOST_AUTO_TEST_CASE(concurrent_coordinates_test)
   {
     jif3D::ThreeDGravityModel Model;
+    jif3D::ScalarGravityData Data;
     srand((unsigned int) time(nullptr));
-    MakeRandomModel(Model, rand() % 20, 1);
+    MakeRandomModel(Model, Data, rand() % 20, 1);
     jif3D::ThreeDGravityModel ModelCopy(Model);
 
 #pragma omp parallel default(shared)

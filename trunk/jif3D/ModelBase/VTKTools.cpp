@@ -311,7 +311,7 @@ namespace jif3D
      * @param PosZ The position of the measurement points in z-direction in m
      */
     void Write3DDataToVTK(const std::string &filename, const std::string &DataName,
-        const jif3D::rvec &Data, const std::vector<double> &PosX,
+        const std::vector<double> &Data, const std::vector<double> &PosX,
         const std::vector<double> &PosY,
         const std::vector<double> &PosZ)
       {
@@ -358,7 +358,7 @@ namespace jif3D
      * @param PosZ The position of the measurement points in z-direction in m
      */
     void Write3DVectorDataToVTK(const std::string &filename, const std::string &DataName,
-        const jif3D::rvec &Data, const std::vector<double> &PosX,
+        const std::vector<double> &Data, const std::vector<double> &PosX,
         const std::vector<double> &PosY,
         const std::vector<double> &PosZ)
       {
@@ -394,8 +394,8 @@ namespace jif3D
         //and each tensor separated by two line breaks
         for (size_t i = 0; i < nmeas; ++i)
           {
-            outfile << Data(i * 9) << " " << Data(i * 9 + nmeas) << " "
-                << Data(i * 9 + 2 * nmeas) << "\n";
+            outfile << Data.at(i * 9) << " " << Data.at(i * 9 + nmeas) << " "
+                << Data.at(i * 9 + 2 * nmeas) << "\n";
           }
         outfile << "\n";
         if (outfile.fail())
@@ -412,7 +412,7 @@ namespace jif3D
      * @param PosZ The position of the measurement points in z-direction in m
      */
     void Write3DTensorDataToVTK(const std::string &filename, const std::string &DataName,
-        const jif3D::rvec &Data, const std::vector<double> &PosX,
+        const std::vector<double> &Data, const std::vector<double> &PosX,
         const std::vector<double> &PosY,
         const std::vector<double> &PosZ)
       {
@@ -448,11 +448,11 @@ namespace jif3D
         //and each tensor separated by two line breaks
         for (size_t i = 0; i < nmeas; ++i)
           {
-            outfile << Data(i * 9) << " " << Data(i * 9 + 1) << " " << Data(i * 9 + 2)
+            outfile << Data.at(i * 9) << " " << Data.at(i * 9 + 1) << " " << Data.at(i * 9 + 2)
                 << "\n";
-            outfile << Data(i * 9 + 3) << " " << Data(i * 9 + 4) << " " << Data(i * 9 + 5)
+            outfile << Data.at(i * 9 + 3) << " " << Data.at(i * 9 + 4) << " " << Data.at(i * 9 + 5)
                 << "\n";
-            outfile << Data(i * 9 + 6) << " " << Data(i * 9 + 7) << " " << Data(i * 9 + 8)
+            outfile << Data.at(i * 9 + 6) << " " << Data.at(i * 9 + 7) << " " << Data.at(i * 9 + 8)
                 << "\n\n\n";
           }
         outfile << "\n";

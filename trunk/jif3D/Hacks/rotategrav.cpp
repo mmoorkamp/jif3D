@@ -15,34 +15,32 @@
 #include "../Global/VecMat.h"
 #include "../Global/ReadWriteSparseMatrix.h"
 #include "../Gravity/ReadWriteGravityData.h"
+#include "../Gravity/ScalarGravityData.h"
 #include "../ModelBase/VTKTools.h"
 
 int main()
   {
     std::string ncfilename = jif3D::AskFilename("Name of netcdf file: ");
 
-
-    jif3D::rvec Data, Error;
-    jif3D::ThreeDModelBase::tMeasPosVec MeasX, MeasY, MeasZ;
-    jif3D::ReadScalarGravityMeasurements(ncfilename,Data,MeasX,MeasY,MeasZ,Error);
+    jif3D::ScalarGravityData Data;
+    Data.ReadNetCDF(ncfilename);
 
     std::cout << "Rotation angle [degree]: ";
     double dangle = 0.0;
     std::cin >> dangle;
     double rangle = dangle / 180.0 * boost::math::constants::pi<double>();
+    const size_t ndata =Data.GetMeasPosX().size();
+    std::vector<double> newx(ndata), newy(ndata);
 
-    for (size_t i = 0; i < MeasX.size(); ++i)
+    for (size_t i = 0; i < ndata; ++i)
       {
-        double newx = MeasX.at(i)  * cos(rangle) + MeasY.at(i)  * sin(rangle);
-        double newy = MeasY.at(i)  * cos(rangle) - MeasX.at(i)  * sin(rangle);
-        MeasX.at(i) = newx;
-        MeasY.at(i) = newy;
-
+        newx.at(i) = Data.GetMeasPosX().at(i) * cos(rangle)
+            + Data.GetMeasPosY().at(i) * sin(rangle);
+        newy.at(i) = Data.GetMeasPosY().at(i) * cos(rangle)
+            - Data.GetMeasPosX().at(i) * sin(rangle);
       }
-    jif3D::SaveScalarGravityMeasurements(ncfilename+".rot.nc",Data,MeasX,MeasY,MeasZ,Error);
-
-
-    jif3D::Write3DDataToVTK(ncfilename + "_rot.statpos.vtk", "Station",
-        jif3D::rvec(MeasX.size(), 1.0), MeasX, MeasY, MeasZ);
+    Data.SetMeasurementPoints(newx, newy, Data.GetMeasPosZ());
+    Data.WriteNetCDF(ncfilename + ".rot.nc");
+    Data.WriteVTK(ncfilename + "_rot.statpos.vtk");
 
   }

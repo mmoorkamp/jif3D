@@ -134,7 +134,7 @@ namespace jif3D
 
     void TomographyData::WriteSourcePoints(const std::string &filename)
       {
-        jif3D::rvec SourceNum(GetSourcePosX().size());
+        std::vector<double> SourceNum(GetSourcePosX().size());
         std::iota(SourceNum.begin(), SourceNum.end(), 1);
         jif3D::Write3DDataToVTK(filename, "Sources", SourceNum, GetSourcePosX(),
             GetSourcePosY(), GetSourcePosZ());

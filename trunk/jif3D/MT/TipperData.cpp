@@ -35,7 +35,7 @@ namespace jif3D
     void TipperData::WriteNetCDF(const std::string &filename)
       {
         WriteTipperToNetCDF(filename, GetFrequencies(), GetMeasPosX(), GetMeasPosY(),
-            GetMeasPosZ(), GetData(), GetErrors());
+            GetMeasPosZ(), HxIndices, HyIndices, HzIndices, GetData(), GetErrors());
       }
 
     void TipperData::CompleteObject()
@@ -54,13 +54,12 @@ namespace jif3D
                 "No frequencies specified, cannot complete MT Object", __FILE__,
                 __LINE__);
           }
-        const size_t ndist = nmeas * 4;
 
         if (HxIndices.size() != nmeas * nfreq)
           {
             HxIndices.resize(nmeas * nfreq);
 
-            for (int ifr = 0; ifr < nfreq; ++ifr)
+            for (size_t ifr = 0; ifr < nfreq; ++ifr)
               {
                 const size_t ind_shift = nmeas * ifr;
                 for (size_t i = 0; i < nmeas; ++i)
@@ -75,6 +74,11 @@ namespace jif3D
           {
             std::vector<double> RA(nmeas, 0.0);
             SetRotAngles(RA);
+          }
+        if (GetData().size() != nmeas)
+          {
+            std::vector<double> dummy(nmeas, 0.0);
+            SetDataAndErrors(dummy, dummy);
           }
       }
 

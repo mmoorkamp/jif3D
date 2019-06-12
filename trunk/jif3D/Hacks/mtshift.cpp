@@ -19,12 +19,12 @@ int main()
   {
     std::string datafilename = jif3D::AskFilename("Name of data file: ");
 
-    jif3D::rvec Impedances, Errors;
+    std::vector<double> Impedances, Errors;
     std::vector<double> Frequencies, StatX, StatY, StatZ, C;
     jif3D::ReadImpedancesFromNetCDF(datafilename, Frequencies, StatX, StatY, StatZ,
         Impedances, Errors, C);
 
-    jif3D::rvec SynthImpedances, SynthErrors;
+    std::vector<double> SynthImpedances, SynthErrors;
     std::vector<double> SynthFrequencies, SynthStatX, SynthStatY, SynthStatZ, SynthC;
     std::string synthfilename = jif3D::AskFilename("Name of synthetic file: ");
     jif3D::ReadImpedancesFromNetCDF(synthfilename, SynthFrequencies, SynthStatX,
@@ -33,11 +33,11 @@ int main()
     size_t nshift = 0;
     for (size_t i = 0; i < Errors.size() - 1; i += 2)
       {
-        if (Errors(i)
-            > 0.5 * sqrt(jif3D::pow2(Impedances(i)) + jif3D::pow2(Impedances(i + 1))))
+        if (Errors.at(i)
+            > 0.5 * sqrt(jif3D::pow2(Impedances.at(i)) + jif3D::pow2(Impedances.at(i + 1))))
           {
-            Impedances(i) = SynthImpedances(i);
-            Impedances(i + 1) = SynthImpedances(i + 1);
+            Impedances.at(i) = SynthImpedances.at(i);
+            Impedances.at(i + 1) = SynthImpedances.at(i + 1);
             ++nshift;
           }
 

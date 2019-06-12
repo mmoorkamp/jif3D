@@ -2,7 +2,7 @@ import testing ;
 import mpi ;
 
 
-alias common : ../Inversion//inversion 
+alias common : ../Inversion//inversion ../DataBase//database
               ../Global//global ../Regularization//regularization ../ModelBase//modelbase 
               ..//boost_core ;
 alias joint : ../Tomo//tomo ../Gravity//gravity common ;
@@ -23,10 +23,9 @@ exe plotsaltrel : plotsaltrel.cpp joint ../Joint//joint ../Joint//setup ;
 exe tomoinv : tomoinv.cpp  joint ;
 exe plotgrav : plotgrav.cpp  joint ;
 exe text2grav : text2grav.cpp  joint ;
-exe cleanmt : cleanmt.cpp  ../MT//mt joint ;
 exe qqfit : qqfit.cpp  ../MT//mt common ;
-exe qqtip : qqtip.cpp  ../MT//mt joint ;
-exe avgmt : avgmt.cpp  ../MT//mt joint ;
+exe qqtip : qqtip.cpp  ../MT//mt common ;
+exe avgmt : avgmt.cpp  ../MT//mt common ;
 exe mtshift : mtshift.cpp  ../MT//mt common ;
 
 exe smoothmodel : smoothmodel.cpp  ../MT//mt joint ;
@@ -39,12 +38,12 @@ exe srcrecdist : srcrecdist.cpp  ../Global//global ../Tomo//tomo ../ModelBase//m
 exe calccross : calccross.cpp  joint ../ModelBase//anymodel ;
 exe crossthreshold : crossthreshold.cpp  joint ../ModelBase//anymodel ;
 
-exe convertmtascii : convertmtascii.cpp   ../Global ../MT ..//boost_filesystem  ..//boost_system ;
-exe convertmtt : convertmtt.cpp   ../Global//global ../MT//mt ..//boost_filesystem  ..//boost_system  ;
-exe onedmtinv : onedmtinv.cpp   joint ../MT//mt ..//boost_program_options ..//boost_filesystem ..//boost_system ;
-exe nnmtinv : nnmtinv.cpp   joint ../MT//mt ..//boost_program_options ..//boost_filesystem ..//boost_system ;
-exe writemtt : writemtt.cpp  ../ModelBase//modelbase ../MT//mt ../Global//global ..//boost_filesystem ..//boost_system ;
-exe mergemtdata : mergemtdata.cpp  ../ModelBase//modelbase ../MT//mt ../Global//global ..//boost_filesystem ..//boost_system ;
+exe convertmtascii : convertmtascii.cpp  common ../MT//mt  ;
+exe convertmtt : convertmtt.cpp ../MT//mt   common  ;
+exe onedmtinv : onedmtinv.cpp   common ../MT//mt  ;
+exe nnmtinv : nnmtinv.cpp   common ../MT//mt  ;
+exe writemtt : writemtt.cpp  common ../MT//mt ../Global//global  ;
+exe mergemtdata : mergemtdata.cpp  common ../MT//mt ../Global//global ;
 
 exe rotatemt : rotatemt.cpp   ../MT//mt common  ;
 exe rotatetomo : rotatetomo.cpp  joint ..//boost_filesystem ..//boost_system ;

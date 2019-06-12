@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE (X3D_layered_hs_test)
       }
     Data.CompleteObject();
     jif3D::rvec Impedance3D = Calculator.Calculate(Model, Data);
-    jif3D::rvec Impedance1D = jif3D::OneDMTCalculator().Calculate(Model, Data);
+    std::vector<double> Impedance1D = jif3D::OneDMTCalculator().Calculate(Model, Data);
     Data.SetDataAndErrors(std::vector<double>(Impedance3D.begin(),Impedance3D.end()),std::vector<double>(Impedance3D.size(),0.0));
     Data.WriteNetCDF("imp3D.nc");
 
@@ -134,13 +134,13 @@ BOOST_AUTO_TEST_CASE (X3D_layered_hs_test)
         for (size_t j = 0; j < nfreq; ++j)
           {
             BOOST_CHECK_CLOSE(Impedance3D((j * nsites + i) * 8 + 2),
-                Impedance1D(2 * j), prec);
+                Impedance1D.at(2 * j), prec);
             BOOST_CHECK_CLOSE(Impedance3D((j * nsites + i) * 8 + 3),
-                Impedance1D(2 * j + 1), prec);
+                Impedance1D.at(2 * j + 1), prec);
             BOOST_CHECK_CLOSE(Impedance3D((j * nsites + i) * 8 + 4),
-                -Impedance1D(2 * j), prec);
+                -Impedance1D.at(2 * j), prec);
             BOOST_CHECK_CLOSE(Impedance3D((j * nsites + i) * 8 + 5),
-                -Impedance1D(2 * j + 1), prec);
+                -Impedance1D.at(2 * j + 1), prec);
           }
       }
 

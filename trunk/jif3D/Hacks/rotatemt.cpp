@@ -8,6 +8,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <cmath>
 #include <boost/program_options.hpp>
 #include <boost/math/constants/constants.hpp>
 #include "../Global/FileUtil.h"
@@ -20,7 +21,7 @@
 #include "../MT/MTCovar.h"
 #include "../Inversion/MatrixTools.h"
 #include "../ModelBase/VTKTools.h"
-
+#include "../MT/MTData.h"
 
 namespace po = boost::program_options;
 
@@ -37,27 +38,25 @@ int main(int argc, char *argv[])
     po::notify(vm);
 
     std::string ncfilename = jif3D::AskFilename("Name of netcdf file: ");
-
-    jif3D::rvec Impedances, Errors;
-    std::vector<double> Frequencies, StatX, StatY, StatZ, C;
-    jif3D::ReadImpedancesFromNetCDF(ncfilename, Frequencies, StatX, StatY, StatZ,
-        Impedances, Errors, C);
+    jif3D::MTData Data;
+    Data.ReadNetCDF(ncfilename);
 
     std::cout << "Rotation angle [degree]: ";
     double dangle = 0.0;
     std::cin >> dangle;
     double rangle = dangle / 180.0 * boost::math::constants::pi<double>();
-    jif3D::rvec RotImp = jif3D::RotateImpedanceVector(rangle, Impedances);
+    std::vector<double> RotImp = jif3D::RotateImpedanceVector(rangle, Data.GetData());
     const size_t nelem = 8;
-    const size_t ntensor = Impedances.size() / nelem;
-    jif3D::comp_mat InvCov(Errors.size(), Errors.size());
+    const size_t ntensor = Data.GetData().size() / nelem;
+    jif3D::comp_mat InvCov(ntensor, ntensor);
+    std::vector<double> Errors(Data.GetErrors());
     for (size_t i = 0; i < ntensor; ++i)
       {
         jif3D::rmat InvCovOrig(4, 4, 0.0), CovOrig(4, 4, 0.0);
-        CovOrig(0, 0) = pow(Errors(i * nelem), 2);
-        CovOrig(1, 1) = pow(Errors(i * nelem + 2), 2);
-        CovOrig(2, 2) = pow(Errors(i * nelem + 4), 2);
-        CovOrig(3, 3) = pow(Errors(i * nelem + 6), 2);
+        CovOrig(0, 0) = pow(Errors.at(i * nelem), 2);
+        CovOrig(1, 1) = pow(Errors.at(i * nelem + 2), 2);
+        CovOrig(2, 2) = pow(Errors.at(i * nelem + 4), 2);
+        CovOrig(3, 3) = pow(Errors.at(i * nelem + 6), 2);
 
         InvCovOrig(0, 0) = 1.0 / CovOrig(0, 0);
         InvCovOrig(1, 1) = 1.0 / CovOrig(1, 1);
@@ -74,16 +73,17 @@ int main(int argc, char *argv[])
                 InvCov(i * nelem + j * 2 + 1, i * nelem + k * 2 + 1) = RotInvCov(j, k);
               }
           }
-        Errors(i * nelem) = sqrt(RotCov(0, 0));
-        Errors(i * nelem + 2) = sqrt(RotCov(1, 1));
-        Errors(i * nelem + 4) = sqrt(RotCov(2, 2));
-        Errors(i * nelem + 6) = sqrt(RotCov(3, 3));
+        Errors.at(i * nelem) = std::sqrt(RotCov(0, 0));
+        Errors.at(i * nelem + 2) = std::sqrt(RotCov(1, 1));
+        Errors.at(i * nelem + 4) = std::sqrt(RotCov(2, 2));
+        Errors.at(i * nelem + 6) = std::sqrt(RotCov(3, 3));
 
       }
 
     double MeanX = 0.0;
     double MeanY = 0.0;
 
+    std::vector<double> StatX(Data.GetMeasPosX()), StatY(Data.GetMeasPosY());
     if (RotCenter)
       {
         MeanX = std::accumulate(StatX.begin(), StatX.end(), 0.0) / StatX.size();
@@ -102,9 +102,8 @@ int main(int argc, char *argv[])
       }
 
     jif3D::WriteSparseMatrixToNetcdf(ncfilename + "_invcov.nc", InvCov, "InvCovariance");
-    jif3D::WriteImpedancesToNetCDF(ncfilename + "_rot" + jif3D::stringify(dangle) + ".nc",
-        Frequencies, StatX, StatY, StatZ, RotImp, Errors);
-
-    jif3D::Write3DDataToVTK(ncfilename + "_rot.statpos.vtk", "Station",
-        jif3D::rvec(StatX.size(), 1.0), StatX, StatY, StatZ);
+    Data.SetMeasurementPoints(StatX, StatY, Data.GetMeasPosZ());
+    Data.SetDataAndErrors(RotImp, Errors);
+    Data.WriteNetCDF(ncfilename + "_rot" + jif3D::stringify(dangle) + ".nc");
+    Data.WriteMeasurementPoints(ncfilename + "_rot.statpos.vtk");
   }

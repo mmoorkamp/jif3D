@@ -54,7 +54,7 @@ int main()
     jif3D::ReadVec(DataFile, SourceIndexName, SourceIndices);
     jif3D::ReadVec(DataFile, ReceiverIndexName, ReceiverIndices);
 
-    jif3D::rvec Data;
+    std::vector<double> Data;
     jif3D::ReadVec(DataFile, TravelTimeName, Data);
     const size_t ntimes = Data.size();
 
@@ -73,12 +73,12 @@ int main()
         double XDist = SourcePosX[SourceIndices[i]] - RecPosX[ReceiverIndices[i]];
         double YDist = SourcePosY[SourceIndices[i]] - RecPosY[ReceiverIndices[i]];
         double Dist = sqrt(XDist * XDist + YDist * YDist);
-        outfile << Dist << " " << Data(i) << "\n";
+        outfile << Dist << " " << Data.at(i) << "\n";
         PosX[i] = SourcePosX[SourceIndices[i]] - XDist / 2.0 - refx;
         PosY[i] = SourcePosY[SourceIndices[i]] - YDist / 2.0 - refy;
         PosZ[i] = Dist;
         double coord = sqrt(PosX[i] * PosX[i] + PosY[i] * PosY[i]);
-        pseudofile << coord << " " << Dist << " " << Data(i) << "\n";
+        pseudofile << coord << " " << Dist << " " << Data.at(i) << "\n";
       }
     jif3D::Write3DDataToVTK(filename + ".vtk", "Traveltimes", Data, PosX, PosY, PosZ);
 

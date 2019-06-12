@@ -7,6 +7,7 @@
 
 #include "../Tomo/ReadWriteTomographyData.h"
 #include "../Tomo/ThreeDSeismicModel.h"
+#include "../Tomo/TomographyData.h"
 #include "../Global/FileUtil.h"
 #include <iostream>
 
@@ -14,9 +15,10 @@ int main()
   {
     std::string datafilename = jif3D::AskFilename("Data Filename: ");
 
-    jif3D::rvec TomoData, Error;
-    jif3D::ThreeDSeismicModel Orig, New;
-    jif3D::ReadTraveltimes(datafilename, TomoData, Error, Orig);
+    jif3D::TomographyData Orig, New;
+    Orig.ReadNetCDF(datafilename);
+
+
 
     double minx, maxx, miny, maxy;
     std::cout << "Minimum Northing value: ";
@@ -56,7 +58,7 @@ int main()
           }
       }
 
-    size_t nmeas = TomoData.size();
+    size_t nmeas = Orig.GetData().size();
     std::vector<double> TmpData, TmpError;
     for (size_t i = 0; i < nmeas; ++i)
       {
@@ -71,18 +73,14 @@ int main()
             && Orig.GetSourcePosY().at(OldSourceIndex) < maxy
             && Orig.GetSourcePosY().at(OldSourceIndex) > miny)
           {
-            TmpData.push_back(TomoData(i));
-            TmpError.push_back(Error(i));
+            TmpData.push_back(Orig.GetData().at(i));
+            TmpError.push_back(Orig.GetErrors().at(i));
             New.AddMeasurementConfiguration(NewSourceIndex.at(OldSourceIndex),
                 NewMeasIndex.at(OldRecIndex));
           }
       }
-    jif3D::rvec NewTomoData(TmpData.size());
-    std::copy(TmpData.begin(), TmpData.end(), NewTomoData.begin());
-    jif3D::rvec NewError(TmpError.size());
-    std::copy(TmpError.begin(), TmpError.end(), NewError.begin());
+    New.SetDataAndErrors(TmpData,TmpError);
     std::string newdatafilename = datafilename + ".cut.nc";
-    jif3D::SaveTraveltimes(newdatafilename, NewTomoData, NewError, New);
-
+    New.WriteNetCDF(newdatafilename);
   }
 

@@ -25,6 +25,7 @@ namespace jif3D
       jif3D::OneDMTCalculator Calculator;
       jif3D::X3DModel MTModel;
       jif3D::MTData ObservedData;
+      std::vector<double> SynthData;
       //! Calculate the difference between observed and synthetic data for a given model
       friend class access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
@@ -34,6 +35,7 @@ namespace jif3D
           ar & base_object<ObjectiveFunction>(*this);
           ar & Calculator;
           ar & ObservedData;
+          ar & SynthData;
         }
     private:
       virtual void ImplDataDifference(const jif3D::rvec &Model, jif3D::rvec &Diff)
@@ -45,15 +47,14 @@ namespace jif3D
           //Copy the model vector into the object with the geometry information
           MTModel.SetBackgroundConductivities(
               std::vector<double>(Model.begin(), Model.end()));
-          jif3D::rvec SynthData;
           SynthData = Calculator.Calculate(MTModel, ObservedData);
-          if (SynthData.size() != ObservedData.size())
+          if (SynthData.size() != ObservedData.GetData().size())
             throw jif3D::FatalException(
                 " ThreeDModelObjective: Forward calculation does not give same amount of data !",
                 __FILE__, __LINE__);
-          Diff.resize(ObservedData.size());
+          Diff.resize(ObservedData.GetData().size());
           //calculate the difference between observed and synthetic
-          std::transform(SynthData.begin(), SynthData.end(), ObservedData.begin(),
+          std::transform(SynthData.begin(), SynthData.end(), ObservedData.GetData().begin(),
               Diff.begin(), std::minus<double>());
         }
       //! The implementation of the gradient calculation
@@ -115,7 +116,7 @@ namespace jif3D
           ObservedData = Data;
         }
       //! Return a read only version of the observed data
-      const jif3D::rvec &GetObservedData() const
+      const MTData &GetObservedData() const
         {
           return ObservedData;
         }
@@ -124,14 +125,10 @@ namespace jif3D
        * As we only need the synthetic data occasionally, we generate it from the data difference
        * when needed and save memory.
        */
-      jif3D::rvec GetSyntheticData() const
+      std::vector<double> GetSyntheticData() const
         {
-          jif3D::rvec Synthetic(GetDataDifference());
-          std::transform(Synthetic.begin(), Synthetic.end(), GetDataError().begin(),
-              Synthetic.begin(), std::multiplies<double>());
 
-          Synthetic += ObservedData;
-          return Synthetic;
+          return SynthData;
         }
       //! Set a skeleton for the  model that contains all information about cell sizes, site coordinates etc.
       /*! During the inversion we only copy a vector of values, so we have to store the

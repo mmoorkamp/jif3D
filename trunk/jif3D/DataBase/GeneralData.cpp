@@ -27,7 +27,7 @@ namespace jif3D
 
     void GeneralData::WriteMeasurementPoints(const std::string &filename)
       {
-        jif3D::rvec RecNum(GetMeasPosX().size());
+        std::vector<double> RecNum(GetMeasPosX().size());
         std::iota(RecNum.begin(), RecNum.end(), 1);
         jif3D::Write3DDataToVTK(filename, "Receiver", RecNum, GetMeasPosX(),
             GetMeasPosY(), GetMeasPosZ());

@@ -80,13 +80,8 @@ namespace jif3D
               {
                 TomoModel.SetOrigin(xorigin, yorigin, 0.0);
               }
-            bool writerays = false;
-            if (vm.count("writerays"))
-              {
-                writerays = true;
-              }
-            jif3D::TomographyCalculator Calculator;
 
+            jif3D::TomographyCalculator Calculator;
             TomoObjective = boost::make_shared<
                 jif3D::ThreeDModelObjective<jif3D::TomographyCalculator>>(Calculator);
 

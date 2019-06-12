@@ -7,7 +7,9 @@
 
 #include "ScalarGravityData.h"
 #include "ReadWriteGravityData.h"
+#include "../ModelBase/VTKTools.h"
 #include <cassert>
+
 namespace jif3D
   {
 
@@ -33,6 +35,12 @@ namespace jif3D
         SaveScalarGravityMeasurements(filename, GetData(), GetMeasPosX(), GetMeasPosY(),
             GetMeasPosZ(), GetErrors());
 
+      }
+
+    void ScalarGravityData::WriteVTK(const std::string &filename) const
+      {
+        jif3D::Write3DDataToVTK(filename + ".vtk", "grav_accel", GetData(), GetMeasPosX(),
+            GetMeasPosY(), GetMeasPosZ());
       }
 
     ScalarGravityData::ScalarGravityData()

@@ -4,7 +4,7 @@ lib modelbase : CellBoundaries.cpp ThreeDModelBase.cpp NetCDFModelTools.cpp VTKT
                 
 lib anymodel : ReadAnyModel.cpp modelbase ../Gravity//gravity ../Magnetics//magnetics ../MT//mt ../Tomo//tomo ..//netcdf_c++ ..//netcdf ..//boost_system ;                
 
-unit-test base_test : test_ThreeDModelBase.cpp modelbase ../Gravity//gravity ../Global//global ..//netcdf_c++ ..//netcdf ..//boost_core ;
+unit-test base_test : test_ThreeDModelBase.cpp modelbase ../Gravity//gravity ../Global//global ../DataBase//database ..//netcdf_c++ ..//netcdf ..//boost_core ;
 unit-test refiner_test : test_ModelRefiner.cpp modelbase ../Gravity//gravity ../Global//global ..//netcdf_c++ ..//netcdf  ;
 unit-test CellBoundaries_test : test_CellBoundaries.cpp ../Global//global ../Gravity//gravity modelbase  ;
 unit-test vtktools_test : test_VTKTools.cpp modelbase ../Global//global ../Gravity//gravity ..//netcdf_c++ ..//netcdf ;

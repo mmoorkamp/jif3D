@@ -1,7 +1,7 @@
 import testing ; 
 
 
-alias core :  ../ModelBase//modelbase ../Global//global ../Regularization//regularization 
+alias core :  ../ModelBase//modelbase ../DataBase//database ../Global//global ../Regularization//regularization 
               ../Inversion//inversion  ../Gravity//gravity ..//netcdf_c++ ..//netcdf 
               ..//boost_core ;
     

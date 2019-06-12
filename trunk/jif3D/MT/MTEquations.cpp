@@ -121,9 +121,9 @@ namespace jif3D
      * @param Impedance The vector with the impedance values in the form Re(Zxx), Im(Zxx), Re(Zxy), ...
      * @return The impedances in the rotated coordinate system.
      */
-    jif3D::rvec RotateImpedanceVector(const double angle, const jif3D::rvec &Impedance)
+    std::vector<double> RotateImpedanceVector(const double angle, const std::vector<double> &Impedance)
       {
-        jif3D::rvec Result(Impedance.size());
+        std::vector<double> Result(Impedance.size());
         const size_t nelem = 8;
         if (Impedance.size() % nelem != 0)
           {
@@ -134,19 +134,19 @@ namespace jif3D
         const size_t ntensors = Impedance.size() / nelem;
         for (size_t i = 0; i < ntensors; ++i)
           {
-            std::complex<double> Zxx(Impedance(i * nelem), Impedance(i * nelem + 1));
-            std::complex<double> Zxy(Impedance(i * nelem + 2), Impedance(i * nelem + 3));
-            std::complex<double> Zyx(Impedance(i * nelem + 4), Impedance(i * nelem + 5));
-            std::complex<double> Zyy(Impedance(i * nelem + 6), Impedance(i * nelem + 7));
+            std::complex<double> Zxx(Impedance.at(i * nelem), Impedance.at(i * nelem + 1));
+            std::complex<double> Zxy(Impedance.at(i * nelem + 2), Impedance.at(i * nelem + 3));
+            std::complex<double> Zyx(Impedance.at(i * nelem + 4), Impedance.at(i * nelem + 5));
+            std::complex<double> Zyy(Impedance.at(i * nelem + 6), Impedance.at(i * nelem + 7));
             RotateImpedance(angle, Zxx, Zxy, Zyx, Zyy);
-            Result(i * nelem) = Zxx.real();
-            Result(i * nelem + 1) = Zxx.imag();
-            Result(i * nelem + 2) = Zxy.real();
-            Result(i * nelem + 3) = Zxy.imag();
-            Result(i * nelem + 4) = Zyx.real();
-            Result(i * nelem + 5) = Zyx.imag();
-            Result(i * nelem + 6) = Zyy.real();
-            Result(i * nelem + 7) = Zyy.imag();
+            Result.at(i * nelem) = Zxx.real();
+            Result.at(i * nelem + 1) = Zxx.imag();
+            Result.at(i * nelem + 2) = Zxy.real();
+            Result.at(i * nelem + 3) = Zxy.imag();
+            Result.at(i * nelem + 4) = Zyx.real();
+            Result.at(i * nelem + 5) = Zyx.imag();
+            Result.at(i * nelem + 6) = Zyy.real();
+            Result.at(i * nelem + 7) = Zyy.imag();
           }
         return Result;
       }

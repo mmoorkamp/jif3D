@@ -14,16 +14,16 @@
 #include "../MT/ReadWriteImpedances.h"
 #include "../MT/MTEquations.h"
 
-void QQPlot(std::ofstream &outfile, size_t index, jif3D::rvec &Misfit)
+void QQPlot(std::ofstream &outfile, size_t index, std::vector<double> &Misfit)
   {
     const size_t nimp = Misfit.size();
     const size_t nval = nimp / 8;
-    jif3D::rvec sorted(nval * 2);
+    std::vector<double> sorted(nval * 2);
     std::cout << "Processing " << nval << " impedance elements" << std::endl;
     for (size_t i = 0; i < nval; ++i)
       {
-        sorted(2 * i) = Misfit(8 * i + index);
-        sorted(2 * i + 1) = Misfit(8 * i + index + 1);
+        sorted.at(2 * i) = Misfit.at(8 * i + index);
+        sorted.at(2 * i + 1) = Misfit.at(8 * i + index + 1);
       }
     std::sort(sorted.begin(), sorted.end());
     std::cout << "Writing out " << sorted.size() << " values for qq-plot" << std::endl;
@@ -39,7 +39,7 @@ int main()
   {
     std::string misfitfilename = jif3D::AskFilename("Name of misfit file: ");
 
-    jif3D::rvec Impedances, Errors, Misfit;
+    std::vector<double> Impedances, Errors, Misfit;
     std::vector<double> Frequencies, StatX, StatY, StatZ, C;
     jif3D::ReadImpedancesFromNetCDF(misfitfilename, Frequencies, StatX, StatY, StatZ,
         Misfit, Errors, C);
@@ -65,7 +65,7 @@ int main()
     std::vector<size_t> Indices;
     for (size_t i = 0; i < Misfit.size(); ++i)
       {
-        if (Misfit(i) < minthresh || Misfit(i) > maxthresh)
+        if (Misfit.at(i) < minthresh || Misfit.at(i) > maxthresh)
           {
             Indices.push_back(i);
           }
@@ -77,7 +77,7 @@ int main()
     const size_t nstat = StatX.size();
     for (size_t ind : Indices)
       {
-        Errors(ind) = std::abs(Impedances(ind));
+        Errors.at(ind) = std::abs(Impedances.at(ind));
         size_t stati = ind % (nstat * 8) / 8;
         size_t freqi = ind / (nstat * 8);
         indexfile << ind << " " << stati << " " << " " << freqi << std::endl;
@@ -85,7 +85,7 @@ int main()
 
     for (size_t i = 0; i < Errors.size() - 1; i += 2)
       {
-        Errors(i) = std::max(Errors(i),Errors(i+1));
+        Errors.at(i) = std::max(Errors.at(i),Errors.at(i+1));
       }
     std::cout << "Modified: " << Indices.size() << " out of " << Impedances.size()
         << " data " << std::endl;

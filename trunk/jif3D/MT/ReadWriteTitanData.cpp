@@ -215,7 +215,7 @@ namespace jif3D
             ExIndices.resize(nmeas * nfreq);
             EyIndices.resize(nmeas * nfreq);
             HIndices.resize(nmeas * nfreq);
-            for (int ifr = 0; ifr < nfreq; ++ifr)
+            for (size_t ifr = 0; ifr < nfreq; ++ifr)
               {
                 ind_shift = nmeas * ifr;
                 for (size_t i = 0; i < nmeas; ++i)

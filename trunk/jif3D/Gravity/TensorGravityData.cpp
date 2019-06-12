@@ -7,7 +7,7 @@
 
 #include "TensorGravityData.h"
 #include "ReadWriteGravityData.h"
-
+#include "../ModelBase/VTKTools.h"
 
 namespace jif3D
   {
@@ -35,6 +35,13 @@ namespace jif3D
             GetMeasPosZ(), GetErrors());
 
       }
+
+    void TensorGravityData::WriteVTK(const std::string &filename) const
+      {
+        jif3D::Write3DTensorDataToVTK(filename + ".vtk", "U", GetData(), GetMeasPosX(),
+            GetMeasPosY(), GetMeasPosZ());
+      }
+
     TensorGravityData::TensorGravityData()
       {
         // TODO Auto-generated constructor stub
