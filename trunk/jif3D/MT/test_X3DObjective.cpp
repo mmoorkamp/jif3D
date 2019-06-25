@@ -60,7 +60,7 @@ void MakeMTModel(jif3D::X3DModel &Model, jif3D::MTData &Data)
     Model.SetBackgroundConductivities(bg_conductivities);
     Model.SetBackgroundThicknesses(bg_thicknesses);
     Data.SetFrequencies(
-      { 1.0, 2.0, 5.0, 10.0 });
+      { 1.0, 2.0});
     for (size_t i = 1; i < xsize - 1; ++i)
       {
         for (size_t j = 1; j < ysize - 1; ++j)
@@ -304,7 +304,7 @@ BOOST_AUTO_TEST_CASE (X3D_Titan_deriv_test)
     std::ofstream impfile("titandata.out");
     std::copy(Observed.begin(), Observed.end(),
         std::ostream_iterator<double>(impfile, "\n"));
-
+    impfile.close();
     std::cout << "ExIndices: ";
     std::copy(Data.GetExIndices().begin(),Data.GetExIndices().end(),
         std::ostream_iterator<double>(std::cout, " "));
@@ -321,13 +321,15 @@ BOOST_AUTO_TEST_CASE (X3D_Titan_deriv_test)
     std::cout << std::endl;
 
     jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator> Objective(Calculator);
-    Objective.SetObservedData(Data);
+
     Objective.SetCoarseModelGeometry(Model);
     std::vector<double> Error(
         jif3D::ConstructMTError(std::vector<double>(Observed.begin(), Observed.end()),
             0.02));
     Data.SetDataAndErrors(std::vector<double>(Observed.begin(),Observed.end()),Error);
+    Data.WriteNetCDF("titanobs.nc");
     Objective.SetDataError(Error);
+    Objective.SetObservedData(Data);
     //const size_t nstat = Model.GetExIndices().size() / Model.GetFrequencies().size();
     jif3D::rvec ModelVec(nmod);
     // jif3D::rvec ModelVec(nmod);

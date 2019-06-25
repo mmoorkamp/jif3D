@@ -59,10 +59,9 @@ namespace jif3D
       }
 
     X3DMTCalculator::X3DMTCalculator(boost::filesystem::path TDir, std::string x3d,
-        bool DC, bool Clean,
-        std::vector<boost::shared_ptr<jif3D::X3DFieldCalculator> > FC) :
+        bool DC, bool Clean, boost::shared_ptr<jif3D::X3DFieldCalculator> FC) :
         GreenType1(hst), GreenType4(hst), X3DName(x3d), WantDistCorr(DC), CleanFiles(
-            Clean), FieldCalculators(FC)
+            Clean), FieldCalculator(FC)
       {
         //each object gets a unique ID, this way we avoid clashes
         //between the temporary files generated for the calculations with x3d
@@ -80,13 +79,17 @@ namespace jif3D
             throw jif3D::FatalException("Cannot find .hnk files in current directory! ",
             __FILE__, __LINE__);
           }
+        if (FieldCalculator.get() == nullptr)
+          {
+            FieldCalculator = boost::make_shared<jif3D::X3DFieldCalculator>(TDir, x3d);
+          }
       }
 
     X3DMTCalculator::X3DMTCalculator(const jif3D::X3DMTCalculator& Source) :
         GreenType1(Source.GreenType1), GreenType4(Source.GreenType4), X3DName(
             Source.X3DName), TempDir(Source.TempDir), WantDistCorr(Source.WantDistCorr), DataTransform(
-            Source.DataTransform), CleanFiles(Source.CleanFiles), FieldCalculators(
-            Source.FieldCalculators)
+            Source.DataTransform), CleanFiles(Source.CleanFiles), FieldCalculator(
+            Source.FieldCalculator)
       {
         NameRoot = ObjectID();
 
@@ -100,7 +103,6 @@ namespace jif3D
             //remove all the temporary files and directories generated for calculations
             CleanUp();
           }
-        ForwardTimesFile.close();
         DerivTimesFile.close();
       }
 
@@ -108,10 +110,6 @@ namespace jif3D
         size_t minfreqindex, size_t maxfreqindex)
       {
 
-        if (!ForwardTimesFile.is_open())
-          {
-            ForwardTimesFile.open("mtforward" + NameRoot + ".out");
-          }
         //we define nfreq as int to make the compiler happy in the openmp loop
         assert(minfreqindex <= maxfreqindex);
         maxfreqindex = std::min(maxfreqindex, Data.GetFrequencies().size());
@@ -124,24 +122,8 @@ namespace jif3D
                 __FILE__,
                 __LINE__);
           }
-        if (FieldCalculators.empty() || FieldCalculators.size() != nfreq)
-          {
-            FieldCalculators.resize(nfreq);
-            for (auto &fc : FieldCalculators)
-              {
-                fc = boost::make_shared<jif3D::X3DFieldCalculator>(TempDir, X3DName);
-              }
-          }
+
         const size_t nmeas = Data.GetMeasPosX().size();
-
-        if (ForwardExecTime.empty() || ForwardExecTime.size() != nfreq)
-          {
-            for (int i = 0; i < nfreq; ++i)
-              {
-                ForwardExecTime.push_back(std::make_pair(0, minfreqindex + i));
-              }
-          }
-
         const size_t nstats = Data.GetExIndices().size() / nfreq;
         std::vector<double> RotAngles(Data.GetRotAngles());
 
@@ -174,16 +156,13 @@ namespace jif3D
         std::for_each(BGDepths.begin(), BGDepths.end(), [ZOrigin](double& d)
           { d+=ZOrigin;});
         CompareDepths(BGDepths, Model.GetZCoordinates());
+        FieldCalculator->CalculateFields(Model, Data.GetFrequencies(),
+            Data.GetMeasPosZ());
         std::vector<std::pair<size_t, size_t>> NewExecTime;
 #ifdef HAVEOPENMP
         omp_lock_t lck;
         omp_init_lock(&lck);
         rvec RawImp(RawImpedance.size(),0.0);
-        //we parallelize by frequency, this is relatively simple
-        //but we can use up to 20 processors for typical MT problems
-        // as we do not have the source for x3d, this is our only possibility anyway
-        //the const qualified variables above are predetermined to be shared by the openmp standard
-#pragma omp parallel for default(shared) schedule(dynamic,1)
         for (int i = 0; i < nfreq; ++i)
           {
             //the openmp standard specifies that we cannot leave a parallel construct
@@ -192,19 +171,12 @@ namespace jif3D
             try
               {
                 //we want to alternate between items at the beginning of the map and at the end of the map
-                const size_t queueindex = (i % 2) == 0 ? i / 2 : nfreq - 1 - i / 2;
-                const size_t calcindex = ForwardExecTime.at(queueindex).second;
-                ForwardInfo Info(Model, C,calcindex,TempDir.string(),X3DName, NameRoot, GreenType1, GreenType4);
-                std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
-                ForwardResult freqresult = CalculateFrequency(Info,Data, FieldCalculators.at(calcindex));
-                std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
-                size_t duration = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
-
-                const size_t currindex = calcindex - minfreqindex;
+                ForwardInfo Info(Model, C,i,TempDir.string(),X3DName, NameRoot, GreenType1, GreenType4);
+                ForwardResult freqresult = CalculateFrequency(Info,Data, FieldCalculator);
+                const size_t currindex = i - minfreqindex;
                 const size_t startindex = nstats * currindex * 8;
 
                 omp_set_lock(&lck);
-                NewExecTime.push_back(std::make_pair(duration,calcindex));
                 std::copy(freqresult.DistImpedance.begin(), freqresult.DistImpedance.end(),
                     result.begin() + startindex);
                 //we have twice as many values in the RawImpedance to be able to deal with Titan data
@@ -224,14 +196,6 @@ namespace jif3D
               }
             //finished with one frequency
           }
-
-        for (auto time : NewExecTime)
-          {
-            ForwardTimesFile << time.second << " " << time.first << " \n";
-          }
-        ForwardTimesFile << "\n" << std::endl;
-        std::stable_sort(NewExecTime.begin(),NewExecTime.end());
-        ForwardExecTime = NewExecTime;
         RawImpedance = RawImp;
         omp_destroy_lock(&lck);
 #endif
@@ -251,7 +215,7 @@ namespace jif3D
             hpx::naming::id_type const locality_id = localities.at(i % localities.size());
             //std::cout << "Sending frequency: " << i << " to node " << locality_id << std::endl;
             //rvec freqresult = CalculateFrequency(Model, i, TempDir);
-            FreqResult.push_back(async(FreqCalc, locality_id, Info,FieldCalculators.at(i)));
+            FreqResult.push_back(async(FreqCalc, locality_id, Info,FieldCalculator));
 
           }
         wait_all(FreqResult);
@@ -355,7 +319,7 @@ namespace jif3D
                 ForwardInfo Info(Model,C,calcindex,TempDir.string(),X3DName, NameRoot, GreenType1, GreenType4);
                 //calculate the gradient for each frequency
                 std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
-                GradResult tmp = LQDerivativeFreq(Info, Data, GradInfo(ProjMisfit, RawImpedance),FieldCalculators.at(calcindex));
+                GradResult tmp = LQDerivativeFreq(Info, Data, GradInfo(ProjMisfit, RawImpedance),FieldCalculator);
                 std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
                 size_t duration = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
 
@@ -405,7 +369,7 @@ namespace jif3D
 
             hpx::naming::id_type const locality_id = localities.at(i % localities.size());
             //rvec freqresult = CalculateFrequency(Model, i, TempDir);
-            FreqResult.push_back(async(LQDerivativeFreq, locality_id, Info, GradInfo(ProjMisfit, RawImpedance),FieldCalculators.at(i)));
+            FreqResult.push_back(async(LQDerivativeFreq, locality_id, Info, GradInfo(ProjMisfit, RawImpedance),FieldCalculator));
 
           }
         wait_all(FreqResult);
@@ -477,7 +441,7 @@ namespace jif3D
             ForwardInfo Info(Model, C, freqindex, TempDir.string(), X3DName, NameRoot,
                 GreenType1, GreenType4);
             GradResult CurrGrad = LQDerivativeFreq(Info, Data,
-                GradInfo(CurrMisfit, RawImpedance), FieldCalculators.at(freqindex));
+                GradInfo(CurrMisfit, RawImpedance), FieldCalculator);
 
             boost::numeric::ublas::matrix_row<rmat> CurrRow(Result, i);
 

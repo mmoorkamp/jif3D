@@ -28,9 +28,8 @@ namespace jif3D
   {
 
     X3DTipperCalculator::X3DTipperCalculator(boost::filesystem::path TDir,
-        std::string x3d, bool Clean,
-        std::vector<boost::shared_ptr<jif3D::X3DFieldCalculator> > FC) :
-        GreenType1(hst), GreenType4(hst), X3DName(x3d), CleanFiles(Clean), FieldCalculators(
+        std::string x3d, bool Clean, boost::shared_ptr<jif3D::X3DFieldCalculator> FC) :
+        GreenType1(hst), GreenType4(hst), X3DName(x3d), CleanFiles(Clean), FieldCalculator(
             FC)
       {
         //each object gets a unique ID, this way we avoid clashes
@@ -48,6 +47,10 @@ namespace jif3D
             throw jif3D::FatalException("Cannot find .hnk files in current directory! ",
             __FILE__, __LINE__);
           }
+        if (FieldCalculator.get() == nullptr)
+          {
+            FieldCalculator = boost::make_shared<jif3D::X3DFieldCalculator>(TDir, x3d);
+          }
       }
 
     X3DTipperCalculator::~X3DTipperCalculator()
@@ -63,14 +66,7 @@ namespace jif3D
         maxfreqindex = std::min(maxfreqindex, Data.GetFrequencies().size());
 
         const int nfreq = maxfreqindex - minfreqindex;
-        if (FieldCalculators.empty() || FieldCalculators.size() != nfreq)
-          {
-            FieldCalculators.resize(nfreq);
-            for (auto &fc : FieldCalculators)
-              {
-                fc = boost::make_shared<jif3D::X3DFieldCalculator>(TempDir, X3DName);
-              }
-          }
+
         const size_t nmeas = Data.GetMeasPosX().size();
         if (ForwardExecTime.empty() || ForwardExecTime.size() != nfreq)
           {
@@ -79,7 +75,6 @@ namespace jif3D
                 ForwardExecTime.push_back(std::make_pair(0, minfreqindex + i));
               }
           }
-
 
         const size_t nstats = Data.GetHxIndices().size() / nfreq;
         const size_t nmodx = Model.GetConductivities().shape()[0];
@@ -109,6 +104,8 @@ namespace jif3D
         //but we can use up to 20 processors for typical MT problems
         // as we do not have the source for x3d, this is our only possibility anyway
         //the const qualified variables above are predetermined to be shared by the openmp standard
+        FieldCalculator->CalculateFields(Model, Data.GetFrequencies(),
+            Data.GetMeasPosZ());
 #pragma omp parallel for shared(result,NewExecTime) schedule(dynamic,1)
         for (int i = 0; i < nfreq; ++i)
           {
@@ -134,9 +131,14 @@ namespace jif3D
                 size_t nlevels = ConstructDepthIndices(MeasDepthIndices, ShiftDepth,
                     Model, Data.GetMeasPosZ());
 
-                FieldCalculators.at(calcindex)->CalculateFields(Model, Data.GetFrequencies(), Data.GetMeasPosZ(), calcindex);
                 std::complex<double> Tx, Ty;
-
+                double Frequency = Data.GetFrequencies().at(calcindex);
+                std::vector<std::complex<double>> Hx1(FieldCalculator->GetHx1(Frequency)),
+                    Hx2(FieldCalculator->GetHx2(Frequency));
+                std::vector<std::complex<double>> Hy1(FieldCalculator->GetHy1(Frequency)),
+                    Hy2(FieldCalculator->GetHy2(Frequency));
+                std::vector<std::complex<double>> Hz1(FieldCalculator->GetHz1(Frequency)),
+                    Hz2(FieldCalculator->GetHz2(Frequency));
                 for (size_t j = 0; j < nstats; ++j)
                   {
 
@@ -167,12 +169,8 @@ namespace jif3D
                         * MeasDepthIndices[Data.GetHzIndices()[j + ind_shift]]
                         + StationHzIndex[0] * nmody + StationHzIndex[1];
 
-                    FieldsToTipper(FieldCalculators.at(calcindex)->GetHx1()[offset_Hx],
-                        FieldCalculators.at(calcindex)->GetHx2()[offset_Hx],
-                        FieldCalculators.at(calcindex)->GetHy1()[offset_Hy],
-                        FieldCalculators.at(calcindex)->GetHy2()[offset_Hy],
-                        FieldCalculators.at(calcindex)->GetHz1()[offset_Hz],
-                        FieldCalculators.at(calcindex)->GetHz2()[offset_Hz], Tx, Ty);
+                    FieldsToTipper(Hx1[offset_Hx], Hx2[offset_Hx], Hy1[offset_Hy],
+                        Hy2[offset_Hy], Hz1[offset_Hz], Hz2[offset_Hz], Tx, Ty);
                     //result is a local array for this frequency
                     //so we can directly use it even in a threaded environment
                     const size_t meas_index = j * 4;
@@ -269,13 +267,13 @@ namespace jif3D
                 const size_t queueindex = (i % 2) == 0 ? i / 2 : nfreq - 1 - i / 2;
                 const size_t calcindex = DerivExecTime.at(queueindex).second;
                 std::vector<double> C;
-                ForwardInfo Info(Model,  C, calcindex, TempDir.string(), X3DName, NameRoot,
+                ForwardInfo Info(Model, C, calcindex, TempDir.string(), X3DName, NameRoot,
                     GreenType1, GreenType4);
                 //calculate the gradient for each frequency
                 std::chrono::system_clock::time_point start =
                     std::chrono::system_clock::now();
-                GradResult tmp = TipperDerivativeFreq(Info,Data, Misfit,
-                    FieldCalculators.at(calcindex));
+                GradResult tmp = TipperDerivativeFreq(Info, Data, Misfit,
+                    FieldCalculator);
                 std::chrono::system_clock::time_point end =
                     std::chrono::system_clock::now();
                 size_t duration = std::chrono::duration_cast<std::chrono::seconds>(
