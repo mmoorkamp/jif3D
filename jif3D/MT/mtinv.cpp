@@ -372,12 +372,8 @@ int hpx_main(boost::program_options::variables_map& vm)
         MTTransform->SetLength(ngrid + DataMT.GetDistortion().size());
       }
 
-    std::vector<boost::shared_ptr<jif3D::X3DFieldCalculator> > FC;
-    FC.resize(DataMT.GetFrequencies().size());
-    for (auto &fieldc : FC)
-      {
-        fieldc = boost::make_shared<jif3D::X3DFieldCalculator>(TempDir, X3DName);
-      }
+    boost::shared_ptr<jif3D::X3DFieldCalculator>  FC = boost::make_shared<jif3D::X3DFieldCalculator>(TempDir, X3DName);
+
     jif3D::X3DMTCalculator Calculator(TempDir, X3DName, WantDistCorr, CleanFiles, FC);
     if (vm.count("opt"))
       {

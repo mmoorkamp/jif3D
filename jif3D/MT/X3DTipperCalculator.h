@@ -75,7 +75,7 @@ namespace jif3D
       std::vector<std::pair<size_t, size_t>> ForwardExecTime;
       std::vector<std::pair<size_t, size_t>> DerivExecTime;
       friend class access;
-      std::vector<boost::shared_ptr<jif3D::X3DFieldCalculator> > FieldCalculators;
+      boost::shared_ptr<jif3D::X3DFieldCalculator> FieldCalculator;
       //create a unique ID that we can use to name things and still
       //perform parallel calculations
       std::string ObjectID()
@@ -121,55 +121,56 @@ namespace jif3D
 #endif
 
       //! Set type of green's function for forward calculation i X3D (stage 1)
-void  SetGreenType1(jif3D::GreenCalcType G)
-    {
-      GreenType1 = G;
-    }
-  //! Set type of green's function for forward calculation i X3D (stage 4)
-  void SetGreenType4(jif3D::GreenCalcType G)
-    {
-      GreenType4 = G;
-    }
-  //! Given a conductivity model, calculate a vector of impedances
-  /*! For a conductivity model given by the input parameter Model, we calculate the synthetic magnetotelluric data. When compiled with
-   * an appropriate compiler the calculation is run in parallel for each frequency. We return the synthetic data as a real valued vector.
-   * The ordering is \f$Re(Z_xx),Im(Z_xx),Re(Z_xy),\ldots,Im(Z_yy)\f$ for the first frequency for all sites, then second frequency for all sites etc.
-   *
-   * @param Model The description of the conductivity model including sites locations and frequencies.
-   * @param minfreqindex The index of the first frequency for which to calculate the gradient
-   * @param maxfreqindex The index one larger than the index of the last frequency for which to calculate the gradient (C++ loop convention)
-   * @return The synthetic MT data in the format described above.
-   */
-  rvec Calculate(const ModelType &Model, const TipperData &Data,size_t minfreqindex = 0,
-      size_t maxfreqindex = std::numeric_limits<size_t>::max());
-  //! Given a conductivity model and the misfit for each datum, calculate the derivative of the objective function with respect to the model parameters.
-  /*! We use an adjoint approach to calculate the gradient of the objective functions with respect to the model parameters. As this approach requires
-   * some of the fields from the forward calculation, the gradient will only be correct if the function Calculate of the same object has been called for
-   * the same model beforehand. It is safe to calculate different models with separate objects between those calls.
-   * @param Model The description of the conductivity model. Has to be the same as for the previous call to calculate.
-   * @param Misfit The data misfit associated with the model.
-   * @param minfreqindex The index of the first frequency for which to calculate the gradient
-   * @param maxfreqindex The index one larger than the index of the last frequency for which to calculate the gradient (C++ loop convention)
-   * @return The gradient of the objective function with respect to the model parameters for the given model. The storage ordering is identical to X3DModel.
-   */
-  rvec LQDerivative(const ModelType &Model, const TipperData &Data, const rvec &Misfit, size_t minfreqindex =
-      0, size_t maxfreqindex = std::numeric_limits<size_t>::max());
+      void SetGreenType1(jif3D::GreenCalcType G)
+        {
+          GreenType1 = G;
+        }
+      //! Set type of green's function for forward calculation i X3D (stage 4)
+      void SetGreenType4(jif3D::GreenCalcType G)
+        {
+          GreenType4 = G;
+        }
+      //! Given a conductivity model, calculate a vector of impedances
+      /*! For a conductivity model given by the input parameter Model, we calculate the synthetic magnetotelluric data. When compiled with
+       * an appropriate compiler the calculation is run in parallel for each frequency. We return the synthetic data as a real valued vector.
+       * The ordering is \f$Re(Z_xx),Im(Z_xx),Re(Z_xy),\ldots,Im(Z_yy)\f$ for the first frequency for all sites, then second frequency for all sites etc.
+       *
+       * @param Model The description of the conductivity model including sites locations and frequencies.
+       * @param minfreqindex The index of the first frequency for which to calculate the gradient
+       * @param maxfreqindex The index one larger than the index of the last frequency for which to calculate the gradient (C++ loop convention)
+       * @return The synthetic MT data in the format described above.
+       */
+      rvec Calculate(const ModelType &Model, const TipperData &Data, size_t minfreqindex =
+          0, size_t maxfreqindex = std::numeric_limits<size_t>::max());
+      //! Given a conductivity model and the misfit for each datum, calculate the derivative of the objective function with respect to the model parameters.
+      /*! We use an adjoint approach to calculate the gradient of the objective functions with respect to the model parameters. As this approach requires
+       * some of the fields from the forward calculation, the gradient will only be correct if the function Calculate of the same object has been called for
+       * the same model beforehand. It is safe to calculate different models with separate objects between those calls.
+       * @param Model The description of the conductivity model. Has to be the same as for the previous call to calculate.
+       * @param Misfit The data misfit associated with the model.
+       * @param minfreqindex The index of the first frequency for which to calculate the gradient
+       * @param maxfreqindex The index one larger than the index of the last frequency for which to calculate the gradient (C++ loop convention)
+       * @return The gradient of the objective function with respect to the model parameters for the given model. The storage ordering is identical to X3DModel.
+       */
+      rvec LQDerivative(const ModelType &Model, const TipperData &Data,
+          const rvec &Misfit, size_t minfreqindex = 0, size_t maxfreqindex =
+              std::numeric_limits<size_t>::max());
 
-  //! The constructor takes optional arguments to change the directory were temporary files are stored and if we want to correct for distortion
-  /*! When running calculations on a cluster in particular, it makes sense to store the files for x3D in a local
-   * directory instead of the central filesystem. We can achieve this through setting TDir to an appropriate path.
-   * If we set DC to true we calculate the derivative with respect to the distortion parameters.
-   * @param TDir Directory to store the temporary files for x3D
-   * @param x3d The name of the executable for the x3d code
-   * @param Clean Delete all temporary files when object is destroyed
-   */
-  X3DTipperCalculator(boost::filesystem::path TDir = boost::filesystem::current_path(),
-      std::string x3d = "x3d",  bool Clean = true , std::vector<boost::shared_ptr<jif3D::X3DFieldCalculator> > FC = std::vector<boost::shared_ptr<jif3D::X3DFieldCalculator> >());
-  virtual ~X3DTipperCalculator();
-};
-/* @} */
+      //! The constructor takes optional arguments to change the directory were temporary files are stored and if we want to correct for distortion
+      /*! When running calculations on a cluster in particular, it makes sense to store the files for x3D in a local
+       * directory instead of the central filesystem. We can achieve this through setting TDir to an appropriate path.
+       * If we set DC to true we calculate the derivative with respect to the distortion parameters.
+       * @param TDir Directory to store the temporary files for x3D
+       * @param x3d The name of the executable for the x3d code
+       * @param Clean Delete all temporary files when object is destroyed
+       */
+      X3DTipperCalculator(boost::filesystem::path TDir = boost::filesystem::current_path(),
+          std::string x3d = "x3d", bool Clean = true , boost::shared_ptr<jif3D::X3DFieldCalculator> FC = boost::make_shared<jif3D::X3DFieldCalculator> ());
+      virtual ~X3DTipperCalculator();
+      };
+  /* @} */
 
-}
+  }
 /* namespace jif3D */
 
 #endif /* MT_X3DTIPPERCALCULATOR_H_ */

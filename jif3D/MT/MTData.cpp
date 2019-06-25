@@ -47,7 +47,7 @@ namespace jif3D
 
     void MTData::CompleteObject()
       {
-        const size_t nmeas = GetMeasPosX().size();
+        const size_t nmeas = ExIndices.empty() ? GetMeasPosX().size() : ExIndices.size();
         if (nmeas == 0)
           {
             throw jif3D::FatalException(

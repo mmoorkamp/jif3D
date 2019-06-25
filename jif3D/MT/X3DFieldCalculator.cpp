@@ -12,6 +12,8 @@
 
 #include <boost/filesystem/operations.hpp>
 #include <boost/algorithm/string.hpp>
+#include <chrono>
+#include <omp.h>
 
 namespace fs = boost::filesystem;
 
@@ -36,6 +38,105 @@ namespace jif3D
           }
       }
 
+    const std::vector<std::complex<double> > &X3DFieldCalculator::ReturnField(double Freq,
+        const std::vector<std::vector<std::complex<double>>> &Field) const
+      {
+        size_t index = FrequencyMap.at(Freq);
+        return Field.at(index);
+      }
+
+    void X3DFieldCalculator::CalculateFields(const X3DModel &Model,
+        const std::vector<double> &Frequencies, const std::vector<double> MeasPosZ)
+      {
+        const size_t nfreq = Frequencies.size();
+        for (size_t i = 0; i < nfreq; ++i)
+          {
+            size_t nmap = FrequencyMap.size();
+            //insert is only successful when the frequency does not already exist
+            auto HasInserted = FrequencyMap.insert(
+                std::pair<double, int>(Frequencies.at(i), nmap));
+            if (HasInserted.second)
+              {
+                HaveCurrentFields.push_back(false);
+              }
+          }
+        size_t ncalcfreq = FrequencyMap.size();
+        std::vector<double> CalcFreqs(ncalcfreq);
+        for (auto FreqPair : FrequencyMap)
+          {
+            CalcFreqs.at(FreqPair.second) = FreqPair.first;
+          }
+
+        if (!(OldModel == Model))
+          {
+            HaveCurrentFields.resize(ncalcfreq);
+            std::fill(HaveCurrentFields.begin(), HaveCurrentFields.end(), false);
+          }
+        if (Ex1.size() != ncalcfreq)
+          {
+            Ex1.resize(ncalcfreq);
+            Ex2.resize(ncalcfreq);
+            Ey1.resize(ncalcfreq);
+            Ey2.resize(ncalcfreq);
+            Hx1.resize(ncalcfreq);
+            Hx2.resize(ncalcfreq);
+            Hy1.resize(ncalcfreq);
+            Hy2.resize(ncalcfreq);
+            Hz1.resize(ncalcfreq);
+            Hz2.resize(ncalcfreq);
+          }
+
+        if (ForwardExecTime.empty() || ForwardExecTime.size() != ncalcfreq)
+          {
+            for (size_t i = 0; i < ncalcfreq; ++i)
+              {
+                ForwardExecTime.push_back(std::make_pair(0, i));
+              }
+          }
+
+        std::vector<std::pair<size_t, size_t>> NewExecTime;
+        omp_lock_t lck;
+        omp_init_lock(&lck);
+
+        //we parallelize by frequency, this is relatively simple
+        //but we can use up to 20 processors for typical MT problems
+        // as we do not have the source for x3d, this is our only possibility anyway
+        //the const qualified variables above are predetermined to be shared by the openmp standard
+#pragma omp parallel for default(shared) schedule(dynamic,1)
+        for (size_t i = 0; i < ncalcfreq; ++i)
+          {
+            const size_t queueindex = (i % 2) == 0 ? i / 2 : ncalcfreq - 1 - i / 2;
+            const size_t calcindex = ForwardExecTime.at(queueindex).second;
+
+            if (!HaveCurrentFields.at(calcindex))
+              {
+                std::chrono::system_clock::time_point start =
+                    std::chrono::system_clock::now();
+                CalculateFields(Model, CalcFreqs, MeasPosZ, calcindex);
+                HaveCurrentFields.at(calcindex) = true;
+                std::chrono::system_clock::time_point end =
+                    std::chrono::system_clock::now();
+                size_t duration = std::chrono::duration_cast<std::chrono::seconds>(
+                    end - start).count();
+
+                omp_set_lock(&lck);
+                NewExecTime.push_back(std::make_pair(duration, calcindex));
+                omp_unset_lock(&lck);
+
+              }
+          }
+        for (auto time : NewExecTime)
+          {
+            ForwardTimesFile << time.second << " " << time.first << " \n";
+          }
+        ForwardTimesFile << "\n" << std::endl;
+        std::stable_sort(NewExecTime.begin(), NewExecTime.end());
+        ForwardExecTime = NewExecTime;
+        omp_destroy_lock(&lck);
+
+        OldModel = Model;
+      }
+
     void X3DFieldCalculator::CalculateFields(const X3DModel &Model,
         const std::vector<double> &Frequencies, const std::vector<double> MeasPosZ,
         size_t freqindex)
@@ -54,8 +155,8 @@ namespace jif3D
         size_t nlevels = ConstructDepthIndices(MeasDepthIndices, ShiftDepth, Model,
             MeasPosZ);
         const size_t nval = (nmodx * nmody * nlevels);
-
-        if (Ex1.size() == nval && OldModel == Model)
+        //std::cout << "CurrFreq: " << CurrFreq.at(0) << " Freqindex: " << freqindex << std::endl;
+        if (Ex1.at(freqindex).size() == nval && OldModel == Model)
           {
             //we only check Ex1, because all fields have the same size
             // so if we have the right amount of values in the fields
@@ -65,16 +166,16 @@ namespace jif3D
           }
         else
           {
-            Ex1.clear();
-            Ex2.clear();
-            Ey1.clear();
-            Ey2.clear();
-            Hx1.clear();
-            Hx2.clear();
-            Hy1.clear();
-            Hy2.clear();
-            Hz1.clear();
-            Hz2.clear();
+            Ex1.at(freqindex).clear();
+            Ex2.at(freqindex).clear();
+            Ey1.at(freqindex).clear();
+            Ey2.at(freqindex).clear();
+            Hx1.at(freqindex).clear();
+            Hx2.at(freqindex).clear();
+            Hy1.at(freqindex).clear();
+            Hy2.at(freqindex).clear();
+            Hz1.at(freqindex).clear();
+            Hz2.at(freqindex).clear();
           }
         //writing out files causes problems in parallel
         // so we make sure it is done one at a time
@@ -93,21 +194,22 @@ namespace jif3D
         //read in the electric and magnetic field at the observe sites
 #pragma omp critical(forward_read_emo)
           {
-            ReadEMO((DirName / emoAname).string(), Ex1, Ey1, Hx1, Hy1, Hz1);
-            ReadEMO((DirName / emoBname).string(), Ex2, Ey2, Hx2, Hy2, Hz2);
+            ReadEMO((DirName / emoAname).string(), Ex1.at(freqindex), Ey1.at(freqindex),
+                Hx1.at(freqindex), Hy1.at(freqindex), Hz1.at(freqindex));
+            ReadEMO((DirName / emoBname).string(), Ex2.at(freqindex), Ey2.at(freqindex),
+                Hx2.at(freqindex), Hy2.at(freqindex), Hz2.at(freqindex));
           }
 
-        CheckField(Ex1, nval);
-        CheckField(Ex2, nval);
-        CheckField(Ey1, nval);
-        CheckField(Ey2, nval);
-        CheckField(Hx1, nval);
-        CheckField(Hx2, nval);
-        CheckField(Hy1, nval);
-        CheckField(Hy2, nval);
-        CheckField(Hz1, nval);
-        CheckField(Hz2, nval);
-        OldModel = Model;
+        CheckField(Ex1.at(freqindex), nval);
+        CheckField(Ex2.at(freqindex), nval);
+        CheckField(Ey1.at(freqindex), nval);
+        CheckField(Ey2.at(freqindex), nval);
+        CheckField(Hx1.at(freqindex), nval);
+        CheckField(Hx2.at(freqindex), nval);
+        CheckField(Hy1.at(freqindex), nval);
+        CheckField(Hy2.at(freqindex), nval);
+        CheckField(Hz1.at(freqindex), nval);
+        CheckField(Hz2.at(freqindex), nval);
       }
 
     X3DFieldCalculator::X3DFieldCalculator(boost::filesystem::path TDir, std::string x3d,
@@ -115,10 +217,12 @@ namespace jif3D
         TempDir(TDir), X3DName(x3d), CleanFiles(Clean), GreenStage1(GS1), GreenStage4(GS4)
       {
         NameRoot = ObjectID();
+        ForwardTimesFile.open("mtforward" + NameRoot + ".out");
       }
 
     X3DFieldCalculator::~X3DFieldCalculator()
       {
+        ForwardTimesFile.close();
         CleanUp();
       }
 

@@ -18,7 +18,7 @@
 #include <limits>
 #include <vector>
 #include <utility>
-
+#include <map>
 #include <boost/filesystem.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
@@ -28,7 +28,6 @@
 #include "ReadWriteX3D.h"
 //#include "X3DTypes.h"
 
-
 namespace jif3D
   {
 
@@ -36,7 +35,10 @@ namespace jif3D
       {
     private:
       void CleanUp();
-      std::vector<std::complex<double> > Ex1, Ex2, Ey1, Ey2, Hx1, Hx2, Hy1, Hy2, Hz1, Hz2;
+      std::vector<std::vector<std::complex<double>>> Ex1, Ex2, Ey1, Ey2, Hx1, Hx2, Hy1,
+          Hy2, Hz1, Hz2;
+      std::vector<bool> HaveCurrentFields;
+      std::map<double, int> FrequencyMap;
       boost::filesystem::path TempDir;
       std::string X3DName;
       std::string NameRoot;
@@ -44,6 +46,9 @@ namespace jif3D
       jif3D::GreenCalcType GreenStage1;
       jif3D::GreenCalcType GreenStage4;
       jif3D::X3DModel OldModel;
+      std::vector<std::pair<size_t, size_t>> ForwardExecTime;
+      //! A file to store statistics of execution time for the forward, can help to find problematic frequencies
+      std::ofstream ForwardTimesFile;
       std::string ForwardDirName;
       std::string ObjectID()
         {
@@ -55,6 +60,10 @@ namespace jif3D
           return "mt" + jif3D::stringify(jif3D::platform::get_process_id()) + "x"
               + jif3D::stringify(this) + "t" + jif3D::stringify(tag);
         }
+      const std::vector<std::complex<double> > &ReturnField(double Freq,
+          const std::vector<std::vector<std::complex<double>>> &Field) const;
+      void CalculateFields(const X3DModel &Model, const std::vector<double> &Frequencies,
+          const std::vector<double> MeasPosZ, size_t freqindex);
     public:
       //! Provide serialization to be able to store objects and, more importantly for hpx parallelization
       template<class Archive>
@@ -107,58 +116,59 @@ namespace jif3D
 #else
       BOOST_SERIALIZATION_SPLIT_MEMBER()
 #endif
-  const std::vector<std::complex<double> > &GetEx1() const
-    {
-      return Ex1;
-    }
-  const std::vector<std::complex<double> > &GetEx2() const
-    {
-      return Ex2;
-    }
-  const std::vector<std::complex<double> > &GetEy1() const
-    {
-      return Ey1;
-    }
-  const std::vector<std::complex<double> > &GetEy2() const
-    {
-      return Ey2;
-    }
-  const std::vector<std::complex<double> > &GetHx1() const
-    {
-      return Hx1;
-    }
-  const std::vector<std::complex<double> > &GetHx2() const
-    {
-      return Hx2;
-    }
-  const std::vector<std::complex<double> > &GetHy1() const
-    {
-      return Hy1;
-    }
-  const std::vector<std::complex<double> > &GetHy2() const
-    {
-      return Hy2;
-    }
-  const std::vector<std::complex<double> > &GetHz1() const
-    {
-      return Hz1;
-    }
-  const std::vector<std::complex<double> > &GetHz2() const
-    {
-      return Hz2;
-    }
-  std::string GetForwardDirName() const
-    {
-      return ForwardDirName;
-    }
-  void CalculateFields(const X3DModel &Model, const std::vector<double> &Frequencies, const std::vector<double> MeasPosZ, size_t freqindex);
-  X3DFieldCalculator(boost::filesystem::path TDir = boost::filesystem::current_path(),
-      std::string x3d = "x3d", bool Clean = true, jif3D::GreenCalcType GS1 = hst,
-      jif3D::GreenCalcType GS4 = hst);
-  virtual ~X3DFieldCalculator();
-};
+      const std::vector<std::complex<double> > &GetEx1(double Freq) const
+        {
+          return ReturnField(Freq,Ex1);
+        }
+      const std::vector<std::complex<double> > &GetEx2(double Freq) const
+        {
+          return ReturnField(Freq,Ex2);
+        }
+      const std::vector<std::complex<double> > &GetEy1(double Freq) const
+        {
+          return ReturnField(Freq,Ey1);
+        }
+      const std::vector<std::complex<double> > &GetEy2(double Freq) const
+        {
+          return ReturnField(Freq,Ey2);
+        }
+      const std::vector<std::complex<double> > &GetHx1(double Freq) const
+        {
+          return ReturnField(Freq,Hx1);
+        }
+      const std::vector<std::complex<double> > &GetHx2(double Freq) const
+        {
+          return ReturnField(Freq,Hx2);
+        }
+      const std::vector<std::complex<double> > &GetHy1(double Freq) const
+        {
+          return ReturnField(Freq,Hy1);
+        }
+      const std::vector<std::complex<double> > &GetHy2(double Freq) const
+        {
+          return ReturnField(Freq,Hy2);
+        }
+      const std::vector<std::complex<double> > &GetHz1(double Freq) const
+        {
+          return ReturnField(Freq,Hz1);
+        }
+      const std::vector<std::complex<double> > &GetHz2(double Freq) const
+        {
+          return ReturnField(Freq,Hz2);
+        }
+      std::string GetForwardDirName() const
+        {
+          return ForwardDirName;
+        }
+      void CalculateFields(const X3DModel &Model, const std::vector<double> &Frequencies,
+          const std::vector<double> MeasPosZ);
+      X3DFieldCalculator(boost::filesystem::path TDir = boost::filesystem::current_path(),
+          std::string x3d = "x3d", bool Clean = true, jif3D::GreenCalcType GS1 = hst,
+          jif3D::GreenCalcType GS4 = hst);
+      virtual ~X3DFieldCalculator();
+      };
 
-}
+  }
 /* namespace jif3D */
 
 #endif /* MT_X3DFIELDCALCULATOR_H_ */

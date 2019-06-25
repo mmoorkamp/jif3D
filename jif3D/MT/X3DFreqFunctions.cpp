@@ -27,6 +27,7 @@ ForwardResult CalculateFrequency(const ForwardInfo &Info, const jif3D::MTData &D
     const size_t nmody = Info.Model.GetData().shape()[1];
     const size_t ind_shift = nstats * Info.freqindex;
 
+    double CurrFreq = Data.GetFrequencies().at(Info.freqindex);
     ForwardResult result;
     result.DistImpedance.resize(nstats * 8);
     //we store the impedances at the two potential locations for Titan
@@ -39,14 +40,21 @@ ForwardResult CalculateFrequency(const ForwardInfo &Info, const jif3D::MTData &D
     size_t nlevels = ConstructDepthIndices(MeasDepthIndices, ShiftDepth, Info.Model,
         Data.GetMeasPosZ());
 
-    Calc->CalculateFields(Info.Model, Data.GetFrequencies(), Data.GetMeasPosZ(),
-        Info.freqindex);
     //for Titan24 and other DAS we might have different impedances at the
     //different electric field measurement positions and we need all four of them
     //for MT ZxxEx = ZxxEy and so on, it makes it easier to consider both cases
     //by keeping both impedances and make redundant calculations,
     std::complex<double> ZxxEx, ZxyEx, ZyxEx, ZyyEx;
     std::complex<double> ZxxEy, ZxyEy, ZyxEy, ZyyEy;
+
+    std::vector<std::complex<double>> Hx1(Calc->GetHx1(CurrFreq)), Hx2(
+        Calc->GetHx2(CurrFreq));
+    std::vector<std::complex<double>> Hy1(Calc->GetHy1(CurrFreq)), Hy2(
+        Calc->GetHy2(CurrFreq));
+    std::vector<std::complex<double>> Ex1(Calc->GetEx1(CurrFreq)), Ex2(
+        Calc->GetEx2(CurrFreq));
+    std::vector<std::complex<double>> Ey1(Calc->GetEy1(CurrFreq)), Ey2(
+        Calc->GetEy2(CurrFreq));
 
     //calculate impedances from the field spectra for all stations
     for (size_t j = 0; j < nstats; ++j)
@@ -106,17 +114,13 @@ ForwardResult CalculateFrequency(const ForwardInfo &Info, const jif3D::MTData &D
             * MeasDepthIndices[Data.GetHyIndices()[j + ind_shift]]
             + StationHyIndex[0] * nmody + StationHyIndex[1];
         //calculate the full impedance at the location of the Ex field measurements
-        FieldsToImpedance(Calc->GetEx1()[offset_Ex], Calc->GetEx2()[offset_Ex],
-            Calc->GetEy1()[offset_Ex], Calc->GetEy2()[offset_Ex],
-            Calc->GetHx1()[offset_Hx], Calc->GetHx2()[offset_Hx],
-            Calc->GetHy1()[offset_Hy], Calc->GetHy2()[offset_Hy], ZxxEx, ZxyEx, ZyxEx,
-            ZyyEx);
+        FieldsToImpedance(Ex1[offset_Ex], Ex2[offset_Ex], Ey1[offset_Ex], Ey2[offset_Ex],
+            Hx1[offset_Hx], Hx2[offset_Hx], Hy1[offset_Hy], Hy2[offset_Hy], ZxxEx, ZxyEx,
+            ZyxEx, ZyyEx);
         //calculate the full impedance at the location of the Ey field measurements
-        FieldsToImpedance(Calc->GetEx1()[offset_Ey], Calc->GetEx2()[offset_Ey],
-            Calc->GetEy1()[offset_Ey], Calc->GetEy2()[offset_Ey],
-            Calc->GetHx1()[offset_Hx], Calc->GetHx2()[offset_Hx],
-            Calc->GetHy1()[offset_Hy], Calc->GetHy2()[offset_Hy], ZxxEy, ZxyEy, ZyxEy,
-            ZyyEy);
+        FieldsToImpedance(Ex1[offset_Ey], Ex2[offset_Ey], Ey1[offset_Ey], Ey2[offset_Ey],
+            Hx1[offset_Hx], Hx2[offset_Hx], Hy1[offset_Hy], Hy2[offset_Hy], ZxxEy, ZxyEy,
+            ZyxEy, ZyyEy);
         //result is a local array for this frequency
         //so we can directly use it even in a threaded environment
         const size_t meas_index = j * 8;
@@ -230,7 +234,17 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const jif3D::MTData &Data,
         YSourceXIndex(2 * nstats, 0), YSourceYIndex(2 * nstats, 0), HxSourceXIndex(nstats,
             0), HxSourceYIndex(nstats, 0), HySourceXIndex(nstats, 0), HySourceYIndex(
             nstats, 0), ZeroIndex(2 * nstats, 0);
+    double CurrFreq = Data.GetFrequencies().at(Info.freqindex);
 
+
+    std::vector<std::complex<double>> Hx1(Calc->GetHx1(CurrFreq)), Hx2(
+        Calc->GetHx2(CurrFreq));
+    std::vector<std::complex<double>> Hy1(Calc->GetHy1(CurrFreq)), Hy2(
+        Calc->GetHy2(CurrFreq));
+    std::vector<std::complex<double>> Ex1(Calc->GetEx1(CurrFreq)), Ex2(
+        Calc->GetEx2(CurrFreq));
+    std::vector<std::complex<double>> Ey1(Calc->GetEy1(CurrFreq)), Ey2(
+        Calc->GetEy2(CurrFreq));
     //make the sources for the electric dipoles
     for (size_t j = 0; j < nstats; ++j)
       {
@@ -288,9 +302,8 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const jif3D::MTData &Data,
 
         //this is an implementation of eq. 12 in Avdeev and Avdeeva
         //we do not have any beta, as this is part of the misfit
-        cmat AH = CalcEExt(Misfit, Info.C, j, freq_start_index, Calc->GetHx1()[offset_Hx],
-            Calc->GetHx2()[offset_Hx], Calc->GetHy1()[offset_Hy],
-            Calc->GetHy2()[offset_Hy]);
+        cmat AH = CalcEExt(Misfit, Info.C, j, freq_start_index, Hx1[offset_Hx],
+            Hx2[offset_Hx], Hy1[offset_Hy], Hy2[offset_Hy]);
         rmat R(2, 2), C1(2, 2), C2(2, 2);
         const double angle = Data.GetRotAngles().at(j) / 180.0 * M_PI;
         R(0, 0) = std::cos(angle);
@@ -321,10 +334,7 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const jif3D::MTData &Data,
         EYPolMoments1.at(2 * j + 1) = E2eff(1, 0); //AH(1, 0) * Info.C[j * 4 + 3];
         EYPolMoments2.at(2 * j + 1) = E2eff(1, 1); //AH(1, 1) * Info.C[j * 4 + 3];
       }
-    //we only want to calculate for one frequency
-    //so our vector has just 1 element
-    std::vector<double> CurrFreq =
-      { Data.GetFrequencies()[Info.freqindex] };
+
     fs::path EdipName = TempDir
         / MakeUniqueName(Info.NameRoot, X3DModel::EDIP, Info.freqindex);
     std::vector<std::string> PolExt =
@@ -339,8 +349,9 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const jif3D::MTData &Data,
             std::string CurrName = EdipName.string() + Ext;
             fs::path CurrDir = EdipName.string() + Ext + dirext;
             MakeRunFile(CurrName, CurrDir.string(), Info.X3DName);
-            WriteProjectFile(CurrDir.string(), CurrFreq, X3DModel::EDIP, resultfilename,
-                modelfilename, Info.GreenStage1, Info.GreenStage4);
+            WriteProjectFile(CurrDir.string(),
+              { CurrFreq }, X3DModel::EDIP, resultfilename, modelfilename,
+                Info.GreenStage1, Info.GreenStage4);
             Write3DModelForX3D((CurrDir / modelfilename).string(),
                 Info.Model.GetXCellSizes(), Info.Model.GetYCellSizes(),
                 Info.Model.GetZCellSizes(), SourceObserve, Info.Model.GetConductivities(),
@@ -379,8 +390,9 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const jif3D::MTData &Data,
             std::string CurrName = MdipName.string() + Ext;
             fs::path CurrDir = MdipName.string() + Ext + dirext;
             MakeRunFile(CurrName, CurrDir.string(), Info.X3DName);
-            WriteProjectFile(CurrDir.string(), CurrFreq, X3DModel::MDIP, resultfilename,
-                modelfilename, Info.GreenStage1, Info.GreenStage4);
+            WriteProjectFile(CurrDir.string(),
+              { CurrFreq }, X3DModel::MDIP, resultfilename, modelfilename,
+                Info.GreenStage1, Info.GreenStage4);
             Write3DModelForX3D((CurrDir / modelfilename).string(),
                 Info.Model.GetXCellSizes(), Info.Model.GetYCellSizes(),
                 Info.Model.GetZCellSizes(), SourceObserve, Info.Model.GetConductivities(),
@@ -421,17 +433,13 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const jif3D::MTData &Data,
             * MeasDepthIndices[Data.GetHyIndices()[j + ind_shift]]
             + HySourceXIndex.at(j) * nmody + HySourceYIndex.at(j);
         //calculate the full impedance at the location of the Ex field measurements
-        FieldsToImpedance(Calc->GetEx1()[offset_Ex], Calc->GetEx2()[offset_Ex],
-            Calc->GetEy1()[offset_Ex], Calc->GetEy2()[offset_Ex],
-            Calc->GetHx1()[offset_Hx], Calc->GetHx2()[offset_Hx],
-            Calc->GetHy1()[offset_Hy], Calc->GetHy2()[offset_Hy], ZxxEx, ZxyEx, ZyxEx,
-            ZyyEx);
+        FieldsToImpedance(Ex1[offset_Ex], Ex2[offset_Ex], Ey1[offset_Ex], Ey2[offset_Ex],
+            Hx1[offset_Hx], Hx2[offset_Hx], Hy1[offset_Hy], Hy2[offset_Hy], ZxxEx, ZxyEx,
+            ZyxEx, ZyyEx);
         //calculate the full impedance at the location of the Ey field measurements
-        FieldsToImpedance(Calc->GetEx1()[offset_Ey], Calc->GetEx2()[offset_Ey],
-            Calc->GetEy1()[offset_Ey], Calc->GetEy2()[offset_Ey],
-            Calc->GetHx1()[offset_Hx], Calc->GetHx2()[offset_Hx],
-            Calc->GetHy1()[offset_Hy], Calc->GetHy2()[offset_Hy], ZxxEy, ZxyEy, ZyxEy,
-            ZyyEy);
+        FieldsToImpedance(Ex1[offset_Ey], Ex2[offset_Ey], Ey1[offset_Ey], Ey2[offset_Ey],
+            Hx1[offset_Hx], Hx2[offset_Hx], Hy1[offset_Hy], Hy2[offset_Hy], ZxxEy, ZxyEy,
+            ZyxEy, ZyyEy);
 
         size_t offset = freq_start_index + j * 8;
 
@@ -550,8 +558,7 @@ GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::TipperData
 
     //we only want to calculate for one frequency
     //so our vector has just 1 element
-    std::vector<double> CurrFreq =
-      { Data.GetFrequencies()[Info.freqindex] };
+    double CurrFreq = Data.GetFrequencies()[Info.freqindex];
     std::vector<std::string> PolExt =
       { "a", "b" };
 
@@ -567,8 +574,9 @@ GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::TipperData
             std::string CurrName = MdipName + Ext;
             fs::path CurrDir = MdipName + Ext + dirext;
             MakeRunFile(CurrName, CurrDir.string(), Info.X3DName);
-            WriteProjectFile(CurrDir.string(), CurrFreq, X3DModel::MDIP, resultfilename,
-                modelfilename, Info.GreenStage1, Info.GreenStage4);
+            WriteProjectFile(CurrDir.string(),
+              { CurrFreq }, X3DModel::MDIP, resultfilename, modelfilename,
+                Info.GreenStage1, Info.GreenStage4);
             Write3DModelForX3D((CurrDir / modelfilename).string(),
                 Info.Model.GetXCellSizes(), Info.Model.GetYCellSizes(),
                 Info.Model.GetZCellSizes(), SourceObserve, Info.Model.GetConductivities(),
@@ -584,10 +592,18 @@ GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::TipperData
       }
     //make the sources for the magnetic dipoles
     //now we calculate the response to magnetic dipole sources
-    const std::complex<double> omega_mu = 1.0
-        / (std::complex<double>(0.0, jif3D::mag_mu) * 2.0
-            * boost::math::constants::pi<double>()
-            * Data.GetFrequencies()[Info.freqindex]);
+    const std::complex<double> omega_mu =
+        1.0
+            / (std::complex<double>(0.0, jif3D::mag_mu) * 2.0
+                * boost::math::constants::pi<double>()
+                * Data.GetFrequencies()[Info.freqindex]);
+
+    std::vector<std::complex<double>> Hx1(Calc->GetHx1(CurrFreq)), Hx2(
+        Calc->GetHx2(CurrFreq));
+    std::vector<std::complex<double>> Hy1(Calc->GetHy1(CurrFreq)), Hy2(
+        Calc->GetHy2(CurrFreq));
+    std::vector<std::complex<double>> Hz1(Calc->GetHz1(CurrFreq)), Hz2(
+        Calc->GetHz2(CurrFreq));
     for (size_t j = 0; j < nstats; ++j)
       {
         const size_t hxind = Data.GetHxIndices()[j + ind_shift];
@@ -623,23 +639,23 @@ GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::TipperData
         HzSourceYIndex.at(j) = StationHzIndex[1];
         HzSourceDepth.at(j) = Data.GetMeasPosZ()[hzind];
 
-        std::complex<double> Hx1 = Calc->GetHx1()[offset_Hx];
-        std::complex<double> Hx2 = Calc->GetHx2()[offset_Hx];
-        std::complex<double> Hy1 = Calc->GetHy1()[offset_Hy];
-        std::complex<double> Hy2 = Calc->GetHy2()[offset_Hy];
-        std::complex<double> Hz1 = Calc->GetHz1()[offset_Hz];
-        std::complex<double> Hz2 = Calc->GetHz2()[offset_Hz];
+        std::complex<double> Hx1i = Hx1[offset_Hx];
+        std::complex<double> Hx2i = Hx2[offset_Hx];
+        std::complex<double> Hy1i = Hy1[offset_Hy];
+        std::complex<double> Hy2i = Hy2[offset_Hy];
+        std::complex<double> Hz1i = Hz1[offset_Hz];
+        std::complex<double> Hz2i = Hz2[offset_Hz];
 
         std::complex<double> Tx, Ty;
-        FieldsToTipper(Hx1, Hx2, Hy1, Hy2, Hz1, Hz2, Tx, Ty);
+        FieldsToTipper(Hx1i, Hx2i, Hy1i, Hy2i, Hz1i, Hz2i, Tx, Ty);
 
         const size_t siteindex = freq_start_index + j * 4;
-        const std::complex<double> magdet = 1. / (Hx1 * Hy2 - Hx2 * Hy1);
+        const std::complex<double> magdet = 1. / (Hx1i * Hy2i - Hx2i * Hy1i);
         const std::complex<double> A00(Misfit(siteindex), -Misfit(siteindex + 1));
         const std::complex<double> A01(Misfit(siteindex + 2), -Misfit(siteindex + 3));
 
-        HZPolMoments1.at(j) = -omega_mu * magdet * (A00 * Hy2 - A01 * Hx2);
-        HZPolMoments2.at(j) = -omega_mu * magdet * (-A00 * Hy1 + A01 * Hx1);
+        HZPolMoments1.at(j) = -omega_mu * magdet * (A00 * Hy2i - A01 * Hx2i);
+        HZPolMoments2.at(j) = -omega_mu * magdet * (-A00 * Hy1i + A01 * Hx1i);
 
         HXPolMoments1.at(j) = -Tx * HZPolMoments1[j];
         HYPolMoments1.at(j) = -Ty * HZPolMoments1[j];
