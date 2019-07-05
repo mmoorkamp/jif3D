@@ -312,26 +312,28 @@ int hpx_main(boost::program_options::variables_map& vm)
       }
     CovModVec = CVec;
 
-    const size_t nmtsites =
-        MTSetup.GetMTObjective().GetObservedData().GetMeasPosX().size();
-    jif3D::rvec CRef(nmtsites * 4);
-    for (size_t i = 0; i < nmtsites; ++i)
-      {
-        CRef(i * 4) = 1.0;
-        CRef(i * 4 + 1) = 0.0;
-        CRef(i * 4 + 2) = 0.0;
-        CRef(i * 4 + 3) = 1.0;
-      }
-    boost::shared_ptr<jif3D::GeneralModelTransform> Copier(new jif3D::ModelCopyTransform);
-    //this transformation only becomes active if we use distortion correction with MT data
-    //in this case we add extra inversion parameters beyond the current ones
-    //so we set it up here that we can access it later, but with a parameter setting that only
-    //works if we actually have distortion correction, so we have to be careful later
-    boost::shared_ptr<jif3D::MultiSectionTransform> DistRegTrans(
-        new jif3D::MultiSectionTransform(InvModel.size() + CRef.size(), InvModel.size(),
-            InvModel.size() + CRef.size(), Copier));
+    boost::shared_ptr<jif3D::MultiSectionTransform> DistRegTrans;
     if (havemt)
       {
+        const size_t nmtsites =
+            MTSetup.GetMTObjective().GetObservedData().GetMeasPosX().size();
+        jif3D::rvec CRef(nmtsites * 4);
+        for (size_t i = 0; i < nmtsites; ++i)
+          {
+            CRef(i * 4) = 1.0;
+            CRef(i * 4 + 1) = 0.0;
+            CRef(i * 4 + 2) = 0.0;
+            CRef(i * 4 + 3) = 1.0;
+          }
+        boost::shared_ptr<jif3D::GeneralModelTransform> Copier(
+            new jif3D::ModelCopyTransform);
+        //this transformation only becomes active if we use distortion correction with MT data
+        //in this case we add extra inversion parameters beyond the current ones
+        //so we set it up here that we can access it later, but with a parameter setting that only
+        //works if we actually have distortion correction, so we have to be careful later
+        DistRegTrans = boost::make_shared<jif3D::MultiSectionTransform>(
+            InvModel.size() + CRef.size(), InvModel.size(), InvModel.size() + CRef.size(),
+            Copier);
         auto MTData = MTSetup.GetMTObjective().GetObservedData();
         MTData.WriteMeasurementPoints(modelfilename + ".mt_sites.vtk");
 
@@ -606,12 +608,21 @@ int hpx_main(boost::program_options::variables_map& vm)
                 // and use intermediate models in case something goes wrong
                 if (iteration % saveinterval == 0)
                   {
-                    SaveModel(InvModel, *TomoTransform.get(), TomoModel,
-                        modelfilename + jif3D::stringify(iteration) + ".tomo.inv");
-                    SaveModel(InvModel, *MTTransform.get(), MTModel,
-                        modelfilename + jif3D::stringify(iteration) + ".mt.inv");
-                    SaveModel(InvModel, *GravityTransform.get(), GravModel,
-                        modelfilename + jif3D::stringify(iteration) + ".grav.inv");
+                    if (havetomo)
+                      {
+                        SaveModel(InvModel, *TomoTransform.get(), TomoModel,
+                            modelfilename + jif3D::stringify(iteration) + ".tomo.inv");
+                      }
+                    if (havemt)
+                      {
+                        SaveModel(InvModel, *MTTransform.get(), MTModel,
+                            modelfilename + jif3D::stringify(iteration) + ".mt.inv");
+                      }
+                    if (havegrav)
+                      {
+                        SaveModel(InvModel, *GravityTransform.get(), GravModel,
+                            modelfilename + jif3D::stringify(iteration) + ".grav.inv");
+                      }
                   }
                 //write out some information about misfit to the screen
                 std::cout << "Currrent Misfit: " << Optimizer->GetMisfit() << std::endl;
@@ -634,9 +645,19 @@ int hpx_main(boost::program_options::variables_map& vm)
             terminate = terminate || jif3D::WantAbort();
           }
       }
-    SaveModel(InvModel, *TomoTransform.get(), TomoModel, modelfilename + ".tomo.inv");
-    SaveModel(InvModel, *MTTransform.get(), MTModel, modelfilename + ".mt.inv");
-    SaveModel(InvModel, *GravityTransform.get(), GravModel, modelfilename + ".grav.inv");
+    if (havetomo)
+      {
+        SaveModel(InvModel, *TomoTransform.get(), TomoModel, modelfilename + ".tomo.inv");
+      }
+    if (havemt)
+      {
+        SaveModel(InvModel, *MTTransform.get(), MTModel, modelfilename + ".mt.inv");
+      }
+    if (havegrav)
+      {
+        SaveModel(InvModel, *GravityTransform.get(), GravModel,
+            modelfilename + ".grav.inv");
+      }
 
     //calculate the predicted refraction data
     std::cout << "Calculating response of inversion model." << std::endl;
