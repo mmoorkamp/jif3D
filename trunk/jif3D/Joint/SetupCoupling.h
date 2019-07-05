@@ -93,6 +93,12 @@ namespace jif3D
           const jif3D::ThreeDModelBase &TearModelY,
           const jif3D::ThreeDModelBase &TearModelZ,
           const jif3D::rvec &CovVec);
+      void SetupMIModel(jif3D::rvec &InvModel,
+          const jif3D::ThreeDModelBase &ModelGeometry,
+          const jif3D::ThreeDSeismicModel &SeisMod,
+          const jif3D::ThreeDGravityModel &GravMod, const jif3D::ThreeDMTModel &MTMod,
+          jif3D::JointObjective &Objective,
+          boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart);
       //! Internal function to setup coupling and regularization when using a fixed parameter relationship
       void SetupFixedCouplingModel(jif3D::rvec &InvModel,
           const jif3D::ThreeDModelBase &ModelGeometry,

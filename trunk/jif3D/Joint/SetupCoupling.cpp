@@ -9,6 +9,7 @@
 #include "../Global/FileUtil.h"
 #include "../Regularization/CrossGradient.h"
 #include "../Inversion/ModelTransforms.h"
+#include "../MI/MutualInformationConstraint.h"
 #include "SaltRelConstraint.h"
 
 namespace ublas = boost::numeric::ublas;
@@ -54,7 +55,8 @@ namespace jif3D
       {
         po::options_description desc("Coupling options");
         desc.add_options()("crossgrad", "Use cross-gradient coupling")("saltrel",
-            "Use a parameter constraint designed for salt")("minslow",
+            "Use a parameter constraint designed for salt")("mutual_information",
+            "Use a MI based coupling constraint")("minslow",
             po::value(&minslow)->default_value(1e-4))("maxslow",
             po::value(&maxslow)->default_value(0.005))("mincond",
             po::value(&mincond)->default_value(1e-6))("maxcond",
@@ -109,7 +111,8 @@ namespace jif3D
         //that extract the right part of the model vector
         //and then transform from generalized to physical parameters
 
-        if (vm.count("crossgrad") || vm.count("saltrel"))
+        if (vm.count("crossgrad") || vm.count("saltrel")
+            || vm.count("mutual_information"))
           {
             //each set of transformations is chained together in a similar way
             //the section transform takes the right part of the model vector
@@ -436,6 +439,157 @@ namespace jif3D
           }
       }
 
+    void SetupCoupling::SetupMIModel(jif3D::rvec &InvModel,
+        const jif3D::ThreeDModelBase &ModelGeometry,
+        const jif3D::ThreeDSeismicModel &SeisMod,
+        const jif3D::ThreeDGravityModel &GravMod, const jif3D::ThreeDMTModel &MTMod,
+        jif3D::JointObjective &Objective,
+        boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart)
+      {
+        const size_t ngrid = ModelGeometry.GetNModelElements();
+        InvModel.resize(3 * ngrid, 0.0);
+
+        jif3D::rvec SeisModel(ngrid, 0.0);
+        if (SeisMod.GetNModelElements() == ngrid)
+          {
+            std::copy(SeisMod.GetSlownesses().origin(),
+                SeisMod.GetSlownesses().origin() + ngrid, SeisModel.begin());
+            std::cout << "Transforming slowness model. " << std::endl;
+            ublas::subrange(InvModel, 0, ngrid) = ublas::subrange(
+                SlowTrans->PhysicalToGeneralized(SeisModel), 0, ngrid);
+          }
+
+        jif3D::rvec GravModel(ngrid, 1.0);
+        if (GravMod.GetNModelElements() == ngrid)
+          {
+            std::copy(GravMod.GetDensities().origin(),
+                GravMod.GetDensities().origin() + ngrid, GravModel.begin());
+            std::cout << "Transforming Density model. " << std::endl;
+            ublas::subrange(InvModel, ngrid, 2 * ngrid) = ublas::subrange(
+                DensTrans->PhysicalToGeneralized(GravModel), ngrid, 2 * ngrid);
+          }
+
+        jif3D::rvec MTModel(ngrid, 1.0);
+        if (MTMod.GetNModelElements() == ngrid)
+          {
+
+            std::copy(MTMod.GetConductivities().origin(),
+                MTMod.GetConductivities().origin() + ngrid, MTModel.begin());
+            //make sure that each layer has a slightly different conductivity
+            //at least in one cell, otherwise x3d optimizes by joining layers
+            //and messes up the gradient calculation
+            for (size_t i = 0; i < MTMod.GetConductivities().shape()[2]; ++i)
+              {
+                MTModel(MTMod.IndexToOffset(0, 0, i)) *= (1 + 0.0001 * (i + 1));
+              }
+            std::cout << "Transforming conductivity model. " << std::endl;
+            ublas::subrange(InvModel, 2 * ngrid, 3 * ngrid) = ublas::subrange(
+                CondTrans->PhysicalToGeneralized(MTModel), 2 * ngrid, 3 * ngrid);
+          }
+        boost::shared_ptr<jif3D::GeneralModelTransform> Copier(
+            new jif3D::ModelCopyTransform);
+
+        //then we construct the three cross gradient terms
+        //the double section transform takes two sections of the model
+        //and feeds them to the objective function
+        boost::shared_ptr<jif3D::MutualInformationConstraint> SeisGravMI =
+            boost::make_shared<jif3D::MutualInformationConstraint>(-2.5,-1.0,-2.0,2.0);
+        boost::shared_ptr<jif3D::MultiSectionTransform> SeisGravTrans(
+            new jif3D::MultiSectionTransform(3 * ngrid));
+        SeisGravTrans->AddSection(0, ngrid, Copier);
+        SeisGravTrans->AddSection(ngrid, 2 * ngrid, Copier);
+
+        //for each cross-gradient term we ask for a weight
+        double seisgravlambda = 1.0;
+        std::cout << "Weight for seismic-gravity MI term: ";
+        std::cin >> seisgravlambda;
+        if (seisgravlambda > 0.0)
+          {
+            Objective.AddObjective(SeisGravMI, SeisGravTrans, seisgravlambda, "SeisGrav",
+                JointObjective::coupling);
+          }
+        boost::shared_ptr<jif3D::MutualInformationConstraint> SeisMTMI =
+            boost::make_shared<jif3D::MutualInformationConstraint>(-2.5,-1.0,0.0,1.5);
+        boost::shared_ptr<jif3D::MultiSectionTransform> SeisMTTrans(
+            new jif3D::MultiSectionTransform(3 * ngrid));
+        SeisMTTrans->AddSection(0, ngrid, Copier);
+        SeisMTTrans->AddSection(2 * ngrid, 3 * ngrid, Copier);
+
+        double seismtlambda = 1.0;
+        std::cout << "Weight for seismic-MT MI term: ";
+        std::cin >> seismtlambda;
+        if (seismtlambda > 0.0)
+          {
+            Objective.AddObjective(SeisMTMI, SeisMTTrans, seismtlambda, "SeisMT",
+                JointObjective::coupling);
+          }
+        boost::shared_ptr<jif3D::MutualInformationConstraint> GravMTMI =
+            boost::make_shared<jif3D::MutualInformationConstraint>(-2.0,2.0,-2.0,2.0);
+        boost::shared_ptr<jif3D::MultiSectionTransform> GravMTTrans(
+            new jif3D::MultiSectionTransform(3 * ngrid));
+        GravMTTrans->AddSection(ngrid, 2 * ngrid, Copier);
+        GravMTTrans->AddSection(2 * ngrid, 3 * ngrid, Copier);
+
+        double gravmtlambda = 1.0;
+        std::cout << "Weight for gravity-MT MI term: ";
+        std::cin >> gravmtlambda;
+        if (gravmtlambda > 0.0)
+          {
+            Objective.AddObjective(GravMTMI, GravMTTrans, gravmtlambda, "GravMT",
+                JointObjective::coupling);
+          }
+        //finally we construct the regularization terms
+        //we ask for a weight and construct a regularization object
+        //for each type of physical parameter separately
+        //first we set up seismic tomography
+
+        jif3D::rvec TomoCovVec(ngrid, 1.0);
+        double seisreglambda = 1.0;
+        std::cout << " Weight for seismic regularization: ";
+        std::cin >> seisreglambda;
+        boost::shared_ptr<jif3D::RegularizationFunction> SeisReg(Regularization->clone());
+
+        //then the regularization of densities
+
+        jif3D::rvec GravCovVec(ngrid, 1.0);
+        double gravreglambda = 1.0;
+        std::cout << " Weight for gravity regularization: ";
+        std::cin >> gravreglambda;
+        boost::shared_ptr<jif3D::RegularizationFunction> GravReg(Regularization->clone());
+
+        //and finally conductivities
+        jif3D::rvec CondCovVec(ngrid, 1.0);
+        double mtreglambda = 1.0;
+        std::cout << " Weight for MT regularization: ";
+        std::cin >> mtreglambda;
+        boost::shared_ptr<jif3D::RegularizationFunction> MTReg(Regularization->clone());
+
+        //if we specify on the command line that we want to subtract the
+        //starting model, we set the corresponding reference model
+        //in the regularization object
+        if (substart)
+          {
+            SeisReg->SetReferenceModel(SlowRegTrans->GeneralizedToPhysical(InvModel));
+            GravReg->SetReferenceModel(DensRegTrans->GeneralizedToPhysical(InvModel));
+            MTReg->SetReferenceModel(CondRegTrans->GeneralizedToPhysical(InvModel));
+          }
+        if (seisreglambda > 0.0)
+          {
+            Objective.AddObjective(SeisReg, SlowRegTrans, seisreglambda, "SeisReg",
+                JointObjective::regularization);
+          }
+        if (gravreglambda > 0.0)
+          {
+            Objective.AddObjective(GravReg, DensRegTrans, gravreglambda, "GravReg",
+                JointObjective::regularization);
+          }
+        if (mtreglambda > 0.0)
+          {
+            Objective.AddObjective(MTReg, CondRegTrans, mtreglambda, "MTReg",
+                JointObjective::regularization);
+          }
+      }
+
     void SetupCoupling::SetupSaltModel(const po::variables_map &vm, jif3D::rvec &InvModel,
         const jif3D::ThreeDModelBase &ModelGeometry,
         const jif3D::ThreeDSeismicModel &SeisMod,
@@ -667,8 +821,16 @@ namespace jif3D
               }
             else
               {
-                SetupFixedCouplingModel(InvModel, ModelGeometry, SeisMod, GravMod, MTMod,
-                    Objective, Regularization, substart);
+                if (vm.count("mutual_information"))
+                  {
+                    SetupMIModel(InvModel, ModelGeometry, SeisMod, GravMod, MTMod,
+                        Objective, Regularization, substart);
+                  }
+                else
+                  {
+                    SetupFixedCouplingModel(InvModel, ModelGeometry, SeisMod, GravMod,
+                        MTMod, Objective, Regularization, substart);
+                  }
               }
           }
       }
