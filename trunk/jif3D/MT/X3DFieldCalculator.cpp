@@ -74,6 +74,7 @@ namespace jif3D
           }
         if (Ex1.size() != ncalcfreq)
           {
+            ForwardDirName.resize(ncalcfreq);
             Ex1.resize(ncalcfreq);
             Ex2.resize(ncalcfreq);
             Ey1.resize(ncalcfreq);
@@ -147,7 +148,7 @@ namespace jif3D
 
         fs::path RootName = TempDir / MakeUniqueName(NameRoot, X3DModel::MT, freqindex);
         fs::path DirName = RootName.string() + dirext;
-        ForwardDirName = DirName.string();
+        ForwardDirName.at(freqindex) = DirName.string();
         std::vector<double> CurrFreq(1, Frequencies[freqindex]);
         std::vector<double> ShiftDepth;
         std::vector<size_t> MeasDepthIndices;

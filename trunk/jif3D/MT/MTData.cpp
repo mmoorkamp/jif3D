@@ -8,6 +8,8 @@
 #include "MTData.h"
 #include "ReadWriteTitanData.h"
 #include "../ModelBase/VTKTools.h"
+#include "ReadWriteImpedances.h"
+
 namespace jif3D
   {
 
@@ -47,13 +49,6 @@ namespace jif3D
 
     void MTData::CompleteObject()
       {
-        const size_t nmeas = ExIndices.empty() ? GetMeasPosX().size() : ExIndices.size();
-        if (nmeas == 0)
-          {
-            throw jif3D::FatalException(
-                "No measurements specified, cannot complete MT Object", __FILE__,
-                __LINE__);
-          }
         const size_t nfreq = GetFrequencies().size();
         if (nfreq == 0)
           {
@@ -61,6 +56,15 @@ namespace jif3D
                 "No frequencies specified, cannot complete MT Object", __FILE__,
                 __LINE__);
           }
+
+        const size_t nmeas = ExIndices.empty() ? GetMeasPosX().size() : ExIndices.size() / nfreq;
+        if (nmeas == 0)
+          {
+            throw jif3D::FatalException(
+                "No measurements specified, cannot complete MT Object", __FILE__,
+                __LINE__);
+          }
+
         const size_t ndist = nmeas * 4;
         if (GetDistortion().size() != ndist)
           {
@@ -86,16 +90,16 @@ namespace jif3D
             std::vector<double> RA(nmeas, 0.0);
             SetRotAngles(RA);
           }
-        if (GetData().size() != nmeas)
-          {
-            std::vector<double> dummy(nmeas,0.0);
-            SetDataAndErrors(dummy,dummy);
-          }
       }
 
     void MTData::ReadModEM(const std::string &filename)
       {
-
+        std::vector<double> PosX, PosY, PosZ, Freqs, Imp, Err;
+        ReadImpedancesFromModEM(filename, Freqs, PosX, PosY, PosZ,  Imp, Err);
+        SetFrequencies(Freqs);
+        SetMeasurementPoints(PosX, PosY, PosZ);
+        SetDataAndErrors(Imp, Err);
+        CompleteObject();
       }
 
     void MTData::WriteModEM(const std::string &filename)
