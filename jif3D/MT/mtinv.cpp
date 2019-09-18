@@ -220,16 +220,17 @@ int hpx_main(boost::program_options::variables_map& vm)
     extension = jif3D::GetFileExtension(datafilename);
 //read in data
     jif3D::MTData DataMT;
-
-    DataMT.ReadNetCDF(datafilename);
     if (extension.compare(".dat") == 0)
       {
+        DataMT.ReadModEM(datafilename);
         DataMT.WriteNetCDF("start_data.nc");
       }
     else
       {
+        DataMT.ReadNetCDF(datafilename);
         DataMT.WriteModEM("start_data.dat");
       }
+    DataMT.PlotMeasurementConfiguration(datafilename+".vtk");
     std::vector<double> ZError = DataMT.GetErrors();
     std::vector<double> DataError = ZError;
     std::vector<double> MinErr(ZError.size());

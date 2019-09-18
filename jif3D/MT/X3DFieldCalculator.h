@@ -49,7 +49,7 @@ namespace jif3D
       std::vector<std::pair<size_t, size_t>> ForwardExecTime;
       //! A file to store statistics of execution time for the forward, can help to find problematic frequencies
       std::ofstream ForwardTimesFile;
-      std::string ForwardDirName;
+      std::vector<std::string> ForwardDirName;
       std::string ObjectID()
         {
           //a unique ID created on construction
@@ -156,9 +156,9 @@ namespace jif3D
         {
           return ReturnField(Freq,Hz2);
         }
-      std::string GetForwardDirName() const
+      std::string GetForwardDirName(size_t freqindex) const
         {
-          return ForwardDirName;
+          return ForwardDirName.at(freqindex);
         }
       void CalculateFields(const X3DModel &Model, const std::vector<double> &Frequencies,
           const std::vector<double> MeasPosZ);

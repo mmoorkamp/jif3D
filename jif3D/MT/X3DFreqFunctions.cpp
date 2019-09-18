@@ -205,7 +205,7 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const jif3D::MTData &Data,
     jif3D::rvec Misfit(GI.Misfit.size());
     std::copy(GI.Misfit.begin(), GI.Misfit.end(), Misfit.begin());
     fs::path TempDir(Info.TempDirName);
-    fs::path ForwardDirName = Calc->GetForwardDirName();
+    fs::path ForwardDirName = Calc->GetForwardDirName(Info.freqindex);
 
     std::vector<std::complex<double> > Ex1_all, Ex2_all, Ey1_all, Ey2_all, Ez1_all,
         Ez2_all;
@@ -529,7 +529,7 @@ GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::TipperData
     jif3D::rvec Gradient(nmod, 0.0);
 
     fs::path TempDir(Info.TempDirName);
-    fs::path ForwardDirName = Calc->GetForwardDirName();
+    fs::path ForwardDirName = Calc->GetForwardDirName(Info.freqindex);
 
     std::vector<std::complex<double> > Ex1_all, Ex2_all, Ey1_all, Ey2_all, Ez1_all,
         Ez2_all;

@@ -22,6 +22,7 @@
 #include <boost/cast.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string.hpp>
 
 using netCDF::NcVar;
 using netCDF::NcFile;
@@ -902,9 +903,9 @@ namespace jif3D
                 string line;
                 std::getline(infile, line);
                 typedef std::vector<std::string> split_vector_type;
-
+                boost::algorithm::trim(line);
                 split_vector_type SplitVec; // #2: Search for tokens
-                split(SplitVec, line, boost::is_any_of(" \n\r"),
+                split(SplitVec, line, boost::is_any_of(" \n\r\t"),
                     boost::token_compress_on);
 
                 double p;
