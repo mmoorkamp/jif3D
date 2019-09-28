@@ -644,6 +644,7 @@ int hpx_main(boost::program_options::variables_map& vm)
         std::vector<double> TippE = TipperObjective->GetDataError();
         DataTip.SetDataAndErrors(STipper, TippE);
         DataTip.WriteNetCDF(modelfilename + ".inv_tip.nc");
+        DataTip.PlotMeasurementConfiguration(modelfilename+".tip.");
         std::vector<double> TippFit(TipperObjective->GetIndividualMisfit().begin(),
             TipperObjective->GetIndividualMisfit().end());
         DataTip.SetDataAndErrors(TippFit, TippE);

@@ -346,21 +346,24 @@ namespace jif3D
         const std::vector<int> &HzIndices, const std::vector<double> &Tipper,
         const std::vector<double> &Errors)
       {
-        const size_t nstats = StatXCoord.size();
         const size_t nfreqs = Frequencies.size();
+        const size_t nstats = HxIndices.size() / nfreqs;
         const size_t nimp = nstats * nfreqs * 4;
-        assert(nstats == StatYCoord.size());
-        assert(nstats == StatYCoord.size());
-        assert(Tipper.size() == nimp);
+
+        assert(Tipper.size() == HxIndices.size()*4);
+        assert(HxIndices.size() == HyIndices.size());
+        assert(HxIndices.size() == HzIndices.size());
         //create a netcdf file
         NcFile DataFile(filename, NcFile::replace);
         //Create the dimensions for the stations
         NcDim StatNumDim = DataFile.addDim(StationNumberName, nstats);
+        NcDim MeasNumDim = DataFile.addDim(MeasNumberName, StatXCoord.size());
+
 
         //write out the measurement coordinates
-        WriteVec(DataFile, MeasPosXName, StatXCoord, StatNumDim, "m");
-        WriteVec(DataFile, MeasPosYName, StatYCoord, StatNumDim, "m");
-        WriteVec(DataFile, MeasPosZName, StatZCoord, StatNumDim, "m");
+        WriteVec(DataFile, MeasPosXName, StatXCoord, MeasNumDim, "m");
+        WriteVec(DataFile, MeasPosYName, StatYCoord, MeasNumDim, "m");
+        WriteVec(DataFile, MeasPosZName, StatZCoord, MeasNumDim, "m");
 
         //write out the frequencies that we store
         NcDim FreqDim = DataFile.addDim(FreqDimName, Frequencies.size());
@@ -414,11 +417,11 @@ namespace jif3D
             __FILE__, __LINE__);
           }
 
-        const size_t nmeas = StatXCoord.size();
         const size_t nfreq = Frequencies.size();
         size_t ind_shift = 0;
         if (HxIndices.empty())
           {
+            const size_t nmeas = StatXCoord.size();
             HxIndices.resize(nmeas * nfreq);
             HyIndices.resize(nmeas * nfreq);
             HzIndices.resize(nmeas * nfreq);
@@ -434,7 +437,7 @@ namespace jif3D
             HzIndices = HxIndices;
           }
 
-        const size_t nimp = Frequencies.size() * StatXCoord.size() * 4;
+        const size_t nimp = HxIndices .size() * 4;
         Tipper.resize(nimp);
         Error.resize(nimp);
         //read the impedances
