@@ -183,7 +183,7 @@ namespace jif3D
             // if the units in the file are different from what we expect|
             if (unitInFile.compare(UnitsName) != 0)
               {
-                throw std::runtime_error("Units in file do not match expected units !");
+                throw jif3D::FatalException("Units in file do not match expected units !");
               }
 
             //read netcdf data from file

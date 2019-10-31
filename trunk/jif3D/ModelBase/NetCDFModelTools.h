@@ -65,6 +65,12 @@ namespace jif3D
         std::vector<double> &PosX, std::vector<double> &PosY,
         std::vector<double> &PosZ);
 
+    netCDF::NcDim WriteCoordinatesToNetCDF(netCDF::NcFile &NetCDFFile, const std::string &CoordName,
+        const ThreeDModelBase::t3DModelDim &CellCoord, const netCDF::NcDim &BoundaryDim);
+
+    size_t ReadCoordinatesFromNetCDF(const netCDF::NcFile &NetCDFFile,
+        const std::string &CoordName, ThreeDModelBase::t3DModelDim &CellCoord);
+
   /* @} */
   }
 #endif /*NetCDFModelTools_H_*/

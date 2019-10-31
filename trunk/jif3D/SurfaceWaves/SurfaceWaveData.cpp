@@ -6,9 +6,9 @@
  */
 
 #include "../SurfaceWaves/SurfaceWaveData.h"
-#include "../Global/NetCDFTools.h"
 #include "../ModelBase/VTKTools.h"
 #include "../Global/NetCDFPortHelper.h"
+#include "../Global/NetCDFTools.h"
 #include <netcdf>
 #include <vector>
 using netCDF::NcFile;
@@ -25,25 +25,27 @@ namespace jif3D
         // Read phase delay time observations
         NcFile dtpFile(datafile, NcFile::read);
 
-        NcVar periodsIn = dtpFile.getVar("Periods");
-        periodsIn.getVar(periods.data());
-
+        ReadVec(dtpFile,"Periods",periods);
         std::vector<double> MPX, MPY, MPZ;
-        NcVar mpnIn = dtpFile.getVar("MeasPosX");
-        mpnIn.getVar(MPX.data());
-        NcVar mpeIn = dtpFile.getVar("MeasPosY");
-        mpeIn.getVar(MPY.data());
-        NcVar mpzIn = dtpFile.getVar("MeasPosZ");
-        mpzIn.getVar(MPZ.data());
+        ReadVec(dtpFile,"MeasPosX",MPX);
+        ReadVec(dtpFile,"MeasPosY",MPY);
+        ReadVec(dtpFile,"MeasPosZ",MPZ);
         SetMeasurementPoints(MPX, MPY, MPZ);
 
-        NcVar src_rcvr_cmbIn = dtpFile.getVar("StatComb");
+        NcDim nsrcsIn = dtpFile.getDim("NumberOfRays");
+        NcDim SRIn = dtpFile.getDim("SR");
+        stat_comb.resize(nsrcsIn.getSize() * SRIn.getSize());
+        NcVar src_rcvr_cmbIn=dtpFile.getVar("StatComb");
         src_rcvr_cmbIn.getVar(stat_comb.data());
 
-        std::vector<double> dtp, err;
+        NcDim nperiodsIn = dtpFile.getDim("NumberOfPeriods");
+        NcDim nevents_per_srcIn = dtpFile.getDim("EventsPerSRC");
+        std::vector<double> dtp(nperiodsIn.getSize() * nevents_per_srcIn.getSize() * nsrcsIn.getSize()), err;
         NcVar dtpIn = dtpFile.getVar("dtp");
         dtpIn.getVar(dtp.data());
+
         std::string errname = "dtau";
+        err.resize(dtp.size(),0.0);
         // check if there is an error in the data file, set to zero if not.
         try
           {
@@ -52,29 +54,23 @@ namespace jif3D
                 NcVar errIn = dtpFile.getVar("dtau");
                 errIn.getVar(err.data());
               }
-            else
-              {
-                err.resize(dtp.size());
-                std::fill(err.begin(), err.end(), 0.0);
-              }
           } catch (netCDF::exceptions::NcException &ex)
           {
             // ignore
           }
         SetDataAndErrors(dtp, err);
 
-        NcVar event_stat_cmbIn = dtpFile.getVar("EventStatComb");
+        event_stat_comb.resize(nevents_per_srcIn.getSize() * nsrcsIn.getSize());
+        NcVar event_stat_cmbIn=dtpFile.getVar("EventStatComb");
         event_stat_cmbIn.getVar(event_stat_comb.data());
-        NcVar eventxIn = dtpFile.getVar("EventPosX");
-        eventxIn.getVar(EventPosX.data());
-        NcVar eventyIn = dtpFile.getVar("EventPosY");
-        eventyIn.getVar(EventPosY.data());
-        NcVar eventzIn = dtpFile.getVar("EventPosZ");
-        eventzIn.getVar(EventPosZ.data());
+
+        ReadVec(dtpFile,"EventPosX",EventPosX);
+        ReadVec(dtpFile,"EventPosY",EventPosY);
 
         NcVarAtt dummyIn = dtpIn.getAtt("_FillValue");
         dummyIn.getValues(&dummy);
-
+        
+        NcVar mpnIn = dtpFile.getVar("MeasPosX");        
         NcVarAtt lonc = mpnIn.getAtt("Central_meridian");
         lonc.getValues(&lon_centr);
       }

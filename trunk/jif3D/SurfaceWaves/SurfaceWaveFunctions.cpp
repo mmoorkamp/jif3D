@@ -36,7 +36,7 @@ namespace jif3D
     std::vector<double> array2vector(const ThreeDModelBase::t3DModelData &array,
         const int &NX, const int &NY, const int &NZ)
       {
-        std::vector<double> tmp;
+        std::vector<double> tmp(NX*NY*NZ);
         for (int i = 0; i < NZ; ++i)
           {
             for (int j = 0; j < NY; ++j)
@@ -55,8 +55,8 @@ namespace jif3D
       {
         // variables to store rayleigh velocity
         double vrlast = vs * 0.99;
-        double vr;
-        double diff = 99999.0;
+        double vr = vrlast;
+        double diff = tolerance + 99999.0;
         // calculate Rayleigh velocity for homogenous half space
         while (diff > tolerance)
           {

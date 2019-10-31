@@ -51,9 +51,9 @@ namespace jif3D
         const int nperiods = periods.size();
         const int nsrcs = src_rcvr_cmb.size() / 2;
         const int nevents_per_src = dtp.size() / (nsrcs * nperiods);
-        const int NX = northing.size();
-        const int NY = easting.size();
-        const int NZ = depth.size();
+        const int NX = northing.size() -1;
+        const int NY = easting.size() -1;
+        const int NZ = depth.size() -1;
 
         const std::vector<double> vs = array2vector(vs_all, NX, NY, NZ);
         const std::vector<double> vp = array2vector(vp_all, NX, NY, NZ);

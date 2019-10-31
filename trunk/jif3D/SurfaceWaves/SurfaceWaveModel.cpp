@@ -7,6 +7,7 @@
 
 #include "../SurfaceWaves/SurfaceWaveModel.h"
 #include "../Global/NetCDFPortHelper.h"
+#include "../ModelBase/NetCDFModelTools.h"
 #include <netcdf>
 #include <vector>
 using netCDF::NcFile;
@@ -18,6 +19,30 @@ static const std::string OriginSuffix = "_Origin";
 
 namespace jif3D
   {
+
+    SurfaceWaveModel& SurfaceWaveModel::operator=(const ThreeDModelBase& source)
+      {
+        if (this == &source)
+          return *this;
+        ThreeDModelBase::operator =(source);
+
+        return *this;
+      }
+
+    SurfaceWaveModel& SurfaceWaveModel::operator=(const SurfaceWaveModel& source)
+      {
+        if (this == &source)
+          return *this;
+        ThreeDModelBase::operator =(source);
+        DataVp.resize(
+            boost::extents[source.DataVp.shape()[0]][source.DataVp.shape()[1]][source.DataVp.shape()[2]]);
+        DataVp = source.DataVp;
+        DataDens.resize(
+            boost::extents[source.DataDens.shape()[0]][source.DataDens.shape()[1]][source.DataDens.shape()[2]]);
+        DataDens = source.DataDens;
+        return *this;
+      }
+
     void SurfaceWaveModel::ReadNetCDF(const std::string &model_file)
       {
 
@@ -41,7 +66,7 @@ namespace jif3D
         DataDens.resize(boost::extents[NX][NY][NZ]);
 
         // Read model from nc file
-        std::vector<double> tmp_data_dns, tmp_data_vp;
+        std::vector<double> tmp_data_dns(NX * NY * NZ), tmp_data_vp(NX * NY * NZ);
         NcVar densIn = ModelFile.getVar("Density");
         densIn.getVar(tmp_data_dns.data());
         NcVar vpIn = ModelFile.getVar("Vp");
@@ -62,52 +87,6 @@ namespace jif3D
 
     SurfaceWaveModel::SurfaceWaveModel()
       {
-      }
-
-    NcDim WriteCoordinatesToNetCDF(NcFile &NetCDFFile, const std::string &CoordName,
-        const ThreeDModelBase::t3DModelDim &CellCoord, const NcDim &BoundaryDim)
-      {
-        const size_t nvalues = CellCoord.size() - 1;
-        // Add a dimension and a variable with the same name to the netcdf file
-        NcDim CoordDim = NetCDFFile.addDim(CoordName, nvalues);
-        NcVar CoordVar = NetCDFFile.addVar(CoordName, netCDF::ncDouble, CoordDim);
-        //All length is measured in meters
-        CoordVar.putAtt("units", "m");
-        //We also store the name
-        CoordVar.putAtt("long_name", (CoordName + " coordinate"));
-        //we have to store the boundary values of the cells for plotting
-        const std::string boundary_name = CoordName + "_bnds";
-        CoordVar.putAtt("bounds", boundary_name);
-
-        CoordVar.putVar(std::vector<std::size_t>(
-          { 0 }), std::vector<std::size_t>(
-          { nvalues }), CellCoord.data() + 1);
-
-        //create the boundary variable
-        std::vector<NcDim> dims;
-        dims.push_back(CoordDim);
-        dims.push_back(BoundaryDim);
-
-        NcVar BoundaryVar = NetCDFFile.addVar(boundary_name, netCDF::ncDouble, dims);
-        BoundaryVar.putAtt("units", "m");
-
-        //the boundary variable contains two values per cell, the lower and upper boundary
-        std::vector<double> BoundaryValues(nvalues * 2, 0);
-
-        for (size_t i = 0; i < CellCoord.size() - 1; ++i)
-          {
-            BoundaryValues.at(2 * i) = CellCoord[i];
-            BoundaryValues.at(2 * i + 1) = CellCoord[i + 1];
-          }
-        //        BoundaryVar->put(&BoundaryValues[0], nvalues, 2); // old
-        cxxport::put_legacy_ncvar(BoundaryVar, BoundaryValues.data(), nvalues, 2);
-
-        std::string OriginName = CoordName + OriginSuffix;
-        NcVar OrVar = NetCDFFile.addVar(OriginName, netCDF::ncDouble);
-        OrVar.putVar(&CellCoord[0]);
-
-        // We return the NcDim object, because we need it to write the model data
-        return CoordDim;
       }
 
     void SurfaceWaveModel::WriteNetCDF(const std::string &filename)
@@ -185,7 +164,8 @@ namespace jif3D
         //        DataVar.put(databuffer, zsize, ysize, xsize);
         cxxport::put_legacy_ncvar(DataVar, databuffer.data(), zsize, ysize, xsize);
         cxxport::put_legacy_ncvar(VpDataVar, databuffer_vp.data(), zsize, ysize, xsize);
-        cxxport::put_legacy_ncvar(DensDataVar, databuffer_dens.data(), zsize, ysize, xsize);
+        cxxport::put_legacy_ncvar(DensDataVar, databuffer_dens.data(), zsize, ysize,
+            xsize);
 
         NetCDFFile.putAtt("Conventions", "CF-1.3");
       }
