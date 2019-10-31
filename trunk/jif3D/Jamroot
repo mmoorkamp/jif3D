@@ -19,7 +19,7 @@ feature.feature parallelization : openmp hpx  : composite propagated symmetric ;
 feature.compose <parallelization>openmp : <define>HAVEOPENMP <cflags>" -fopenmp  " <linkflags>" -fopenmp  " ;
 feature.compose <parallelization>hpx : <define>HAVEHPX <hpx>on <cflags>"-fopenmp `pkg-config --cflags hpx_application`" <linkflags>"-fopenmp  `pkg-config --libs hpx_application` " ;
 
-constant BOOST_LIB_PATH : /usr/local/lib ;
+constant BOOST_LIB_PATH : /media/bweise/Grimsel/boost_1_71_0/stage/lib ;
 constant CUDA_LIB_PATH : /usr/local/cuda/lib64 ;
 #constant NETCDF_CXX_DIR : /usr/lib ;
 #constant NETCDF_CXX_DIR : C:/Program Files/NCXX/lib ;
@@ -27,12 +27,12 @@ constant CUDA_LIB_PATH : /usr/local/cuda/lib64 ;
 
 project 
     : requirements
-		<include>/usr/local/include
-		<include>/usr/local/R-2.6.2/include 
+    	<include>/media/bweise/Grimsel/geographiclib/include
+        <include>/media/bweise/Grimsel/boost_1_71_0
+		<include>/media/bweise/Grimsel/netcdf/include
+        <include>/media/bweise/Grimsel/eigen-eigen-323c052e1731
         <include>/usr/local/cuda/include
         <include>/usr/include/python2.7/
-		#<include>"C:/Program Files/NCXX/include/"
-		#<include>"C:/Program Files/netCDF 4.4.0/include"
         <threading>multi 
         <define>BIND_FORTRAN_LOWERCASE_UNDERSCORE
         <define>BOOST_DYN_LINK
@@ -43,8 +43,8 @@ project
     	<variant>release:<define>NDEBUG
     	<variant>profile:<define>NDEBUG  
     	<toolset>gcc<variant>debug:<cflags>" -ggdb3 "
-    	<toolset>gcc:<cxxflags>" -std=c++11  -Wall  -Wno-long-long   -pedantic"
-    	<toolset>clang:<cxxflags>" -std=c++11  -Wall  -Wno-long-long   -pedantic"
+    	<toolset>gcc:<cxxflags>" -std=c++17  -Wall  -Wno-long-long   -pedantic"
+    	<toolset>clang:<cxxflags>" -std=c++17  -Wall  -Wno-long-long   -pedantic"
     	<toolset>msvc:<define>_SCL_SECURE_NO_WARNINGS
     	<toolset>msvc:<define>NOMINMAX
 		<toolset>msvc:<define>BOOST_ALL_DYN_LINK
@@ -94,7 +94,8 @@ lib atlas : : <name>atlas ;
 lib optpp : : <name>opt ;
 lib newmat : : <name>newmat ;
 lib netcdf : : <name>netcdf <link>shared ;
-lib netcdf_c++ : : <name>netcdf_c++4 ; # linux
+lib netcdf_c++ : : <name>netcdf_c++4 <search>/media/bweise/Grimsel/netcdf/lib ; # linux
+lib Geographic : : <name>Geographic <search>/media/bweise/Grimsel/geographiclib/lib ;
 #lib netcdf_c++ : : <name>netcdf-cxx4 <link>shared ; #windows
 lib gfortran : :  <name>gfortran ;
 lib cudart : : <name>cudart <search>$(CUDA_LIB_PATH) ;
@@ -116,5 +117,4 @@ build-project Hacks ;
 build-project Joint ;
 build-project ModelTransforms ;
 build-project DCResistivity ;
-build-project hpx_simer ;
-build-project Titan24 ;
+#build-project SurfaceWaves ;
