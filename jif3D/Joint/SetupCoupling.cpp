@@ -248,7 +248,7 @@ namespace jif3D
 
     void SetupCoupling::SetupCrossGradModel(jif3D::rvec &InvModel,
         const jif3D::ThreeDModelBase &ModelGeometry,
-        const jif3D::ThreeDSeismicModel &SeisMod,
+        const jif3D::SurfaceWaveModel &SeisMod,
         const jif3D::ThreeDGravityModel &GravMod, const jif3D::ThreeDMTModel &MTMod,
         jif3D::JointObjective &Objective,
         boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart,
@@ -441,7 +441,7 @@ namespace jif3D
 
     void SetupCoupling::SetupMIModel(jif3D::rvec &InvModel,
         const jif3D::ThreeDModelBase &ModelGeometry,
-        const jif3D::ThreeDSeismicModel &SeisMod,
+        const jif3D::SurfaceWaveModel &SeisMod,
         const jif3D::ThreeDGravityModel &GravMod, const jif3D::ThreeDMTModel &MTMod,
         jif3D::JointObjective &Objective,
         boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart)
@@ -592,7 +592,7 @@ namespace jif3D
 
     void SetupCoupling::SetupSaltModel(const po::variables_map &vm, jif3D::rvec &InvModel,
         const jif3D::ThreeDModelBase &ModelGeometry,
-        const jif3D::ThreeDSeismicModel &SeisMod,
+        const jif3D::SurfaceWaveModel &SeisMod,
         const jif3D::ThreeDGravityModel &GravMod, const jif3D::ThreeDMTModel &MTMod,
         jif3D::JointObjective &Objective,
         boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart)
@@ -751,7 +751,7 @@ namespace jif3D
 
     void SetupCoupling::SetupFixedCouplingModel(jif3D::rvec &InvModel,
         const jif3D::ThreeDModelBase &ModelGeometry,
-        const jif3D::ThreeDSeismicModel &SeisMod,
+        const jif3D::SurfaceWaveModel &SeisMod,
         const jif3D::ThreeDGravityModel &GravMod, const jif3D::ThreeDMTModel &MTMod,
         jif3D::JointObjective &Objective,
         boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart)
@@ -794,7 +794,7 @@ namespace jif3D
 
     void SetupCoupling::SetupModelVector(const po::variables_map &vm,
         jif3D::rvec &InvModel, const jif3D::ThreeDModelBase &ModelGeometry,
-        const jif3D::ThreeDSeismicModel &SeisMod,
+        const jif3D::SurfaceWaveModel &SeisMod,
         const jif3D::ThreeDGravityModel &GravMod, const jif3D::ThreeDMTModel &MTMod,
         jif3D::JointObjective &Objective,
         boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart,

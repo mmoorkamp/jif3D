@@ -29,15 +29,15 @@
 
 #include "../Regularization/MinDiffRegularization.h"
 #include "../Inversion/ModelTransforms.h"
-#include "../Tomo/ThreeDSeismicModel.h"
-#include "../Tomo/ReadWriteTomographyData.h"
-#include "../Tomo/TomographyCalculator.h"
+#include "../SurfaceWaves/SurfaceWaveModel.h"
+//#include "../Tomo/ReadWriteTomographyData.h"
+#include "../SurfaceWaves/SurfaceWaveCalculator.h"
 #include "../Gravity/ReadWriteGravityData.h"
 #include "../Gravity/ThreeDGravityFactory.h"
 #include "../MT/X3DModel.h"
 #include "../MT/X3DMTCalculator.h"
 #include "../MT/ReadWriteImpedances.h"
-#include "SetupTomo.h"
+#include "SetupSW.h"
 #include "SetupGravity.h"
 #include "SetupMT.h"
 #include "SetupInversion.h"
@@ -60,7 +60,7 @@ namespace po = boost::program_options;
 //first we create objects that manage the setup of individual parts
 //that way we can reuse these objects so that other programs use
 //exactly the same options
-jif3D::SetupTomo TomoSetup;
+jif3D::SetupSW TomoSetup;
 jif3D::SetupGravity GravitySetup;
 jif3D::SetupMT MTSetup;
 jif3D::SetupInversion InversionSetup;
@@ -281,9 +281,9 @@ int hpx_main(boost::program_options::variables_map& vm)
     //and general quality control
     if (havetomo)
       {
-        auto TomoData(TomoSetup.GetTomoObjective().GetObservedData());
+        auto TomoData(TomoSetup.GetSurfaceWaveObjective().GetObservedData());
         TomoData.WriteMeasurementPoints(modelfilename + ".rec.vtk");
-        TomoData.WriteSourcePoints(modelfilename + ".sor.vtk");
+        //TomoData.WriteSourcePoints(modelfilename + ".sor.vtk");
       }
 
     const size_t nparm = InvModel.size();
@@ -384,10 +384,10 @@ int hpx_main(boost::program_options::variables_map& vm)
     StoreWeights(weightfile, 0, *Objective);
     jif3D::ThreeDGravityModel GravModel(GravitySetup.GetScalModel());
     jif3D::X3DModel MTModel(MTSetup.GetModel());
-    jif3D::ThreeDSeismicModel TomoModel(TomoSetup.GetModel());
+    jif3D::SurfaceWaveModel SWModel(TomoSetup.GetModel());
 
     if (!havetomo)
-      TomoModel = *StartModel;
+      SWModel = *StartModel;
     if (!havemt)
       MTModel = *StartModel;
     if (!havegrav)
@@ -518,7 +518,7 @@ int hpx_main(boost::program_options::variables_map& vm)
             ++iteration;
             //we save all models at each iteration, so we can look at the development
             // and use intermediate models in case something goes wrong
-            SaveModel(TomoInvModel, *TomoTransform.get(), TomoModel,
+            SaveModel(TomoInvModel, *TomoTransform.get(), SWModel,
                 modelfilename + jif3D::stringify(iteration) + ".tomo.inv");
             SaveModel(MTInvModel, *MTTransform.get(), MTModel,
                 modelfilename + jif3D::stringify(iteration) + ".mt.inv");
@@ -610,7 +610,7 @@ int hpx_main(boost::program_options::variables_map& vm)
                   {
                     if (havetomo)
                       {
-                        SaveModel(InvModel, *TomoTransform.get(), TomoModel,
+                        SaveModel(InvModel, *TomoTransform.get(), SWModel,
                             modelfilename + jif3D::stringify(iteration) + ".tomo.inv");
                       }
                     if (havemt)
@@ -647,7 +647,7 @@ int hpx_main(boost::program_options::variables_map& vm)
       }
     if (havetomo)
       {
-        SaveModel(InvModel, *TomoTransform.get(), TomoModel, modelfilename + ".tomo.inv");
+        SaveModel(InvModel, *TomoTransform.get(), SWModel, modelfilename + ".tomo.inv");
       }
     if (havemt)
       {
@@ -670,20 +670,20 @@ int hpx_main(boost::program_options::variables_map& vm)
       }
     if (havetomo)
       {
-        auto TomoData = TomoSetup.GetTomoObjective().GetObservedData();
-        jif3D::rvec TomoInvData(TomoSetup.GetTomoObjective().GetSyntheticData());
-        std::vector<double> TomoError(TomoSetup.GetTomoObjective().GetDataError());
+        auto TomoData = TomoSetup.GetSurfaceWaveObjective().GetObservedData();
+        jif3D::rvec TomoInvData(TomoSetup.GetSurfaceWaveObjective().GetSyntheticData());
+        std::vector<double> TomoError(TomoSetup.GetSurfaceWaveObjective().GetDataError());
         TomoData.SetDataAndErrors(
             std::vector<double>(TomoInvData.begin(), TomoInvData.end()), TomoError);
         TomoData.WriteNetCDF(modelfilename + ".inv_tt.nc");
-        jif3D::rvec TomoDiff(TomoSetup.GetTomoObjective().GetIndividualMisfit());
+        jif3D::rvec TomoDiff(TomoSetup.GetSurfaceWaveObjective().GetIndividualMisfit());
         TomoData.SetDataAndErrors(std::vector<double>(TomoDiff.begin(), TomoDiff.end()),
             TomoError);
         TomoData.WriteNetCDF(modelfilename + ".diff_tt.nc");
-        if (vm.count("writerays"))
+        /*if (vm.count("writerays"))
           {
-            TomoSetup.GetTomoObjective().GetCalculator().WriteRays("rays.vtk");
-          }
+            TomoSetup.GetSurfaceWaveObjective().GetCalculator().WriteRays("rays.vtk");
+          }*/
       }
     //if we are inverting gravity data and have specified site locations
     if (havegrav)

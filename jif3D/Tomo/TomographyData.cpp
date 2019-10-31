@@ -17,8 +17,9 @@
 #include <netcdf>
 
 using netCDF::NcFile;
-using netCDF::NcDim;
 using netCDF::NcVar;
+using netCDF::NcDim;
+using netCDF::NcVarAtt;
 namespace jif3D
   {
 
