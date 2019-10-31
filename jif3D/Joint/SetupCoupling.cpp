@@ -262,8 +262,8 @@ namespace jif3D
         jif3D::rvec SeisModel(ngrid, 0.0);
         if (SeisMod.GetNModelElements() == ngrid)
           {
-            std::copy(SeisMod.GetSlownesses().origin(),
-                SeisMod.GetSlownesses().origin() + ngrid, SeisModel.begin());
+            std::copy(SeisMod.GetData().origin(),
+                SeisMod.GetData().origin() + ngrid, SeisModel.begin());
             std::cout << "Transforming slowness model. " << std::endl;
             ublas::subrange(InvModel, 0, ngrid) = ublas::subrange(
                 SlowTrans->PhysicalToGeneralized(SeisModel), 0, ngrid);
@@ -452,8 +452,8 @@ namespace jif3D
         jif3D::rvec SeisModel(ngrid, 0.0);
         if (SeisMod.GetNModelElements() == ngrid)
           {
-            std::copy(SeisMod.GetSlownesses().origin(),
-                SeisMod.GetSlownesses().origin() + ngrid, SeisModel.begin());
+            std::copy(SeisMod.GetData().origin(),
+                SeisMod.GetData().origin() + ngrid, SeisModel.begin());
             std::cout << "Transforming slowness model. " << std::endl;
             ublas::subrange(InvModel, 0, ngrid) = ublas::subrange(
                 SlowTrans->PhysicalToGeneralized(SeisModel), 0, ngrid);
@@ -603,8 +603,8 @@ namespace jif3D
         jif3D::rvec SeisModel(ngrid, 0.0);
         if (SeisMod.GetNModelElements() == ngrid)
           {
-            std::copy(SeisMod.GetSlownesses().origin(),
-                SeisMod.GetSlownesses().origin() + ngrid, SeisModel.begin());
+            std::copy(SeisMod.GetData().origin(),
+                SeisMod.GetData().origin() + ngrid, SeisModel.begin());
             std::cout << "Transforming slowness model. " << std::endl;
             ublas::subrange(InvModel, 0, ngrid) = ublas::subrange(
                 SlowTrans->PhysicalToGeneralized(SeisModel), 0, ngrid);
@@ -768,8 +768,8 @@ namespace jif3D
                 __LINE__);
           }
         InvModel.resize(ngrid);
-        std::copy(SeisMod.GetSlownesses().origin(),
-            SeisMod.GetSlownesses().origin() + ngrid, InvModel.begin());
+        std::copy(SeisMod.GetData().origin(),
+            SeisMod.GetData().origin() + ngrid, InvModel.begin());
         double reglambda = 1.0;
         std::cout << " Weight for regularization: ";
         std::cin >> reglambda;

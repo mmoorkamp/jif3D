@@ -39,6 +39,9 @@ namespace jif3D
               GetYCoordinates(), GetZCoordinates(), GetVp());
         }
       virtual void WriteNetCDF(const std::string &filename);
+      SurfaceWaveModel& operator=(const ThreeDModelBase& source);
+      SurfaceWaveModel& operator=(const SurfaceWaveModel& source);
+
     private:
       t3DModelData DataVp, DataDens;
       };

@@ -120,10 +120,10 @@ int main(int argc, char *argv[])
     jif3D::MTData Data;
 
     Data.ReadNetCDF(datafilename);
-    std::vector<double> Impedances(Data.GetData()), ImpError, Tip, TipError;
+    std::vector<double> Impedances(Data.GetData()), ImpError(Data.GetErrors());
     boost::shared_ptr<jif3D::OneDMTObjective> MTObjective(new jif3D::OneDMTObjective);
     const size_t nfreq = Data.GetFrequencies().size();
-    std::vector<double> OneDImp(nfreq * 2, 0.0);
+    std::vector<double> OneDImp(nfreq * 2, 0.0), OneDErr(nfreq * 2, 1.0);
     std::vector<size_t> nest(nfreq, 0);
     const size_t nsites = Data.GetMeasPosX().size();
 
@@ -156,16 +156,21 @@ int main(int argc, char *argv[])
         else
           {
             OneDImp.at(i * 2) = 1.0;
-            OneDImp.at(i * 2 + 1);
+            OneDImp.at(i * 2 + 1) = 1.0;
           }
       }
+    jif3D::MTData OneDData;
+    OneDData.SetFrequencies(Data.GetFrequencies());
+    OneDData.SetMeasurementPoints({0},{0}, {0});
+    OneDData.SetDataAndErrors(OneDImp, OneDErr);
+    OneDData.CompleteObject();
 
     std::cout << "Considered: ";
     std::copy(nest.begin(), nest.end(), std::ostream_iterator<double>(std::cout, " "));
     std::cout << " out of " << nsites << std::endl;
     const size_t nlayers = Model.GetBackgroundConductivities().size();
     MTObjective->SetModelGeometry(Model);
-    MTObjective->SetObservedData(Data);
+    MTObjective->SetObservedData(OneDData);
     std::vector<double> AvgImp(OneDImp.size(), 0.0);
 
     for (size_t i = 0; i < nfreq; ++i)
