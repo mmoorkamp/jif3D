@@ -138,7 +138,7 @@ namespace jif3D
         dimVec_dtp.push_back(NumberOfRays);
         dimVec_dtp.push_back(EventsPerSRC);
         dimVec_dtp.push_back(NumberOfPeriods);
-        NcVar DTPVar = DataFile.addVar("EventStatComb", netCDF::ncDouble, dimVec_dtp);
+        NcVar DTPVar = DataFile.addVar("dtp", netCDF::ncDouble, dimVec_dtp);
         DTPVar.putAtt(dummy, NC_DOUBLE, GetDummy());
         cxxport::put_legacy_ncvar(DTPVar, GetData().data(), nrays, events_per_src, nperiods);
       }

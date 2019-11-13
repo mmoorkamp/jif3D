@@ -78,8 +78,8 @@ namespace jif3D
               {
                 for (int k = 0; k < NX; ++k)
                   {
-                    DataVp[k][j][i] = tmp_data_dns[k + j * NX + i * (NX * NY)];
-                    DataDens[k][j][i] = tmp_data_vp[k + j * NX + i * (NX * NY)];
+                    DataVp[k][j][i] = tmp_data_vp[k + j * NX + i * (NX * NY)];
+                    DataDens[k][j][i] = tmp_data_dns[k + j * NX + i * (NX * NY)];
                   }
               }
           }

@@ -44,7 +44,7 @@ namespace jif3D
                 for (int k = 0; k < NX; ++k)
                   {
                     //DataVp[k][j][i] = tmp_data[k + j * NX + i * (NX * NY)];
-                    tmp[k + j * NX + i * (NX * NY)] = array[k][j][i];
+                    tmp[i + j * NZ + k * (NZ * NY)] = array[k][j][i];
                   }
               }
           }
