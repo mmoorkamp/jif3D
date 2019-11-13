@@ -41,12 +41,15 @@ namespace jif3D
         const double lon_centr = Data.GetCentrLon();
         const double dtp_dummy = Data.GetDummy();
 
-        std::vector<double> depth(Model.GetZCoordinates().size()-1);
-        std::vector<double> easting(Model.GetYCoordinates().size()-1);
-        std::vector<double> northing(Model.GetXCoordinates().size()-1);
-        std::copy(Model.GetXCoordinates().begin()+1,Model.GetXCoordinates().end(),northing.begin());
-        std::copy(Model.GetYCoordinates().begin()+1,Model.GetYCoordinates().end(),easting.begin());
-        std::copy(Model.GetZCoordinates().begin()+1,Model.GetZCoordinates().end(),depth.begin());
+        std::vector<double> depth(Model.GetZCoordinates().size() - 1);
+        std::vector<double> easting(Model.GetYCoordinates().size() - 1);
+        std::vector<double> northing(Model.GetXCoordinates().size() - 1);
+        std::copy(Model.GetXCoordinates().begin() + 1, Model.GetXCoordinates().end(),
+            northing.begin());
+        std::copy(Model.GetYCoordinates().begin() + 1, Model.GetYCoordinates().end(),
+            easting.begin());
+        std::copy(Model.GetZCoordinates().begin() + 1, Model.GetZCoordinates().end(),
+            depth.begin());
 
         ThreeDModelBase::t3DModelData vp_all = Model.GetVp();
         ThreeDModelBase::t3DModelData vs_all = Model.GetData();
@@ -69,10 +72,10 @@ namespace jif3D
           {
             dtp_mod.resize(dtp.size());
           }
-        std::fill(dens_grad.begin(),dens_grad.end(),0.0);
-        std::fill(vs_grad.begin(),vs_grad.end(),0.0);
-        std::fill(vp_grad.begin(),vp_grad.end(),0.0);
-        std::fill(dtp_mod.begin(),dtp_mod.end(),0.0);
+        std::fill(dens_grad.begin(), dens_grad.end(), 0.0);
+        std::fill(vs_grad.begin(), vs_grad.end(), 0.0);
+        std::fill(vp_grad.begin(), vp_grad.end(), 0.0);
+        std::fill(dtp_mod.begin(), dtp_mod.end(), 0.0);
         const std::vector<double> vs = array2vector(vs_all, NX, NY, NZ);
         const std::vector<double> vp = array2vector(vp_all, NX, NY, NZ);
         const std::vector<double> dens = array2vector(dens_all, NX, NY, NZ);
@@ -141,9 +144,9 @@ namespace jif3D
                         const double mu = pow(vs_1D[NZ - 1], 2) * dens_1D[NZ - 1];
 
                         // Compute initial R1212 polarization for large period below fundamental mode
-                        double R1212 = compute_R1212(w[nperiods - 1] / 10.0, c_lim[0],
-                            vp_1D, vs_1D, mu, depth, dens_1D, NZ, 0, -999);
-                        const bool pol0 = signbit(R1212);
+                        std::vector<double> R1212 = compute_R1212(w[nperiods - 1] / 10.0,
+                            c_lim[0], vp_1D, vs_1D, mu, depth, dens_1D, NZ, 0, -999);
+                        const bool pol0 = signbit(R1212[0]);
 
                         double c_last = c_lim[0]; //initial value for c to start search
 
@@ -166,7 +169,7 @@ namespace jif3D
                             // Check polarization of R1212 for the upper bracket
                             R1212 = compute_R1212(w[freq], c1, vp_1D, vs_1D, mu, depth,
                                 dens_1D, NZ, 0, -999);
-                            pol1 = signbit(R1212);
+                            pol1 = signbit(R1212[0]);
 
                             // If a sign change is found check for mode skipping
                             if (pol0 != pol1 && (c1 - c0) > (2.0 * tolerance))
@@ -180,7 +183,7 @@ namespace jif3D
                                   {
                                     R1212 = compute_R1212(w[freq], c2, vp_1D, vs_1D, mu,
                                         depth, dens_1D, NZ, 0, -999);
-                                    const bool pol2 = signbit(R1212);
+                                    const bool pol2 = signbit(R1212[0]);
                                     // if mode skipping detected increase precision (-> decrease step ratio) and return to bracket search
                                     if (pol2 == pol1)
                                       {
@@ -213,21 +216,20 @@ namespace jif3D
                         // Write output to file
                         //resultfile << "\n" << easting[estep] << "\t" << northing[nstep] << "\t" << (2.0*M_PI)/w[freq] << "\t" << c_last << "\t" << brackets.second-brackets.first << "\t" << max_iter;
 
+                        const std::vector<double> R_c = compute_R1212(w[freq], c_last,
+                            vp_1D, vs_1D, mu, depth, dens_1D, NZ, 4, -999);
                         for (int n = 0; n < NZ; n++)
                           {
                             //Computation of Gradients
-                            double R_tmp = compute_R1212(w[freq], c_last, vp_1D, vs_1D,
-                                mu, depth, dens_1D, NZ, 1, n);
-                            dsdvs[n + NZ * estep + NY * NZ * nstep] = R_tmp
-                                * (-1.0 / pow(c_last, 2));
+                            std::vector<double> R_tmp = compute_R1212(w[freq], c_last,
+                                vp_1D, vs_1D, mu, depth, dens_1D, NZ, 1, n);
+                            dsdvs[n + NZ * estep + NY * NZ * nstep] = ((-1.0)*R_tmp[0]/R_c[1]);
                             R_tmp = compute_R1212(w[freq], c_last, vp_1D, vs_1D, mu,
                                 depth, dens_1D, NZ, 2, n);
-                            dsdvp[n + NZ * estep + NY * NZ * nstep] = R_tmp
-                                * (-1.0 / pow(c_last, 2));
+                            dsdvp[n + NZ * estep + NY * NZ * nstep] = ((-1.0)*R_tmp[0]/R_c[1]);
                             R_tmp = compute_R1212(w[freq], c_last, vp_1D, vs_1D, mu,
                                 depth, dens_1D, NZ, 3, n);
-                            dsdrho[n + NZ * estep + NY * NZ * nstep] = R_tmp
-                                * (-1.0 / pow(c_last, 2));
+                            dsdrho[n + NZ * estep + NY * NZ * nstep] = ((-1.0)*R_tmp[0]/R_c[1]);
                           }
                       }
                   } //end loop over northing
@@ -290,15 +292,13 @@ namespace jif3D
                             dtp[freq * nsrcs * nevents_per_src + event * nsrcs + src]
                                 - time_total);
 
-                        std::transform(vs_grad.begin(),
-                            vs_grad.end(), vs_tmpgrd.begin(),
+                        std::transform(vs_grad.begin(), vs_grad.end(), vs_tmpgrd.begin(),
                             vs_grad.begin(), weighted_add(residual));
-                        std::transform(vp_grad.begin(),
-                            vp_grad.end(), vp_tmpgrd.begin(),
+                        std::transform(vp_grad.begin(), vp_grad.end(), vp_tmpgrd.begin(),
                             vp_grad.begin(), weighted_add(residual));
-                        std::transform(dens_grad.begin(),
-                            dens_grad.end(), dens_tmpgrd.begin(),
-                            dens_grad.begin(), weighted_add(residual));
+                        std::transform(dens_grad.begin(), dens_grad.end(),
+                            dens_tmpgrd.begin(), dens_grad.begin(),
+                            weighted_add(residual));
                       }
                   } //end loop over events
               } // end loop rays

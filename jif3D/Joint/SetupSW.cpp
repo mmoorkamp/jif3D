@@ -10,6 +10,7 @@
 #include "../Global/Noise.h"
 #include "SetupSW.h"
 #include <iostream>
+#include <vector>
 #include <boost/make_shared.hpp>
 
 namespace jif3D

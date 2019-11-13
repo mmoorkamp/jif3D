@@ -36,7 +36,7 @@ namespace jif3D
     std::vector<double> array2vector(const ThreeDModelBase::t3DModelData &array,
         const int &NX, const int &NY, const int &NZ)
       {
-        std::vector<double> tmp(NX*NY*NZ);
+        std::vector<double> tmp(NX * NY * NZ);
         for (int i = 0; i < NZ; ++i)
           {
             for (int j = 0; j < NY; ++j)
@@ -134,6 +134,7 @@ namespace jif3D
       }
 
     std::tuple<dcomp, dcomp, double, double, double, double, double, double, double,
+        double, dcomp, dcomp, double, double, double, double, double, double, double,
         double> compute_util_grads(const double &w, const double &vs, const double &vp,
         const double &c, const double &thck, const bool &botlay)
       {
@@ -146,46 +147,70 @@ namespace jif3D
         const double mh = std::get<10>(util);
         const double mk = std::get<11>(util);
 
-        dcomp hv_h, kv_k;
-        double mkk, mhh;
+        dcomp hv_h, kv_k, hv_c, kv_c;
+        double mkk, mhh, mhc, mkc;
         const double k = w / c;
         if (c < vp)
           {
             mhh = pow(w, 2) / (mh * pow(vp, 3));
             hv_h = mhh;
+            mhc = (-1.0) * (pow(w, 2) / (mh * pow(c, 3)));
+            hv_c = mhc;
           }
         else
           {
             mhh = ((-1.0) * pow(w, 2)) / (mh * pow(vp, 3));
             hv_h = mhh;
+            mhc = pow(w, 2) / (mh * pow(c, 3));
+            hv_c = mhc;
             if (botlay == 0)
-              hv_h = i * mhh;
+              {
+                hv_h = i * mhh;
+                hv_c = i * mhc;
+              }
           }
 
         if (c < vs)
           {
             mkk = pow(w, 2) / (mk * pow(vs, 3));
             kv_k = mkk;
+            mkc = (-1.0) * (pow(w, 2) / (mk * pow(c, 3)));
+            kv_c = mkc;
           }
         else
           {
             mkk = ((-1.0) * pow(w, 2)) / (mk * pow(vs, 3));
             kv_k = mkk;
+            mkc = pow(w, 2) / (mk * pow(c, 3));
+            kv_c = mkc;
             if (botlay == 0)
-              kv_k = i * mkk;
+              {
+                kv_k = i * mkk;
+                kv_c = i * mkc;
+              }
           }
 
+        const double hvnorm_c = (-1.0) * (2.0 * c) / pow(vp, 2);
         const double hvnorm_h = (2.0 * pow(c, 2)) / pow(vp, 3);
+        const double kvnorm_c = (-1.0) * (2.0 * c) / pow(vs, 2);
         const double kvnorm_k = (2.0 * pow(c, 2)) / pow(vs, 3);
         const double gam_k = (4.0 * vs) / pow(c, 2);
+        const double gam_c = (-4.0 * pow(vs, 2)) / pow(c, 3);
         const double l_k = 2.0 * pow(w, 2) / pow(vs, 3);
+        const double l_c = -4.0 * pow(w, 2) / pow(c, 3);
         const double CHH = (w * c * thck * SH) / pow(vp, 3);
         const double CKK = (w * c * thck * SK) / pow(vs, 3);
+        const double CHC = (-(1.0) * k * thck * SH) / c;
+        const double CKC = (-(1.0) * k * thck * SK) / c;
+        const double SHC = (-1.0) * ((mhc / mh) + (1 / c)) * SH
+            + (k * thck * mhc * CH / mh);
+        const double SKC = (-1.0) * ((mkc / mk) + (1 / c)) * SK
+            + (k * thck * mkc * CK / mk);
         const double SHH = (mhh / mh) * (k * thck * CH - SH);
         const double SKK = (mkk / mk) * (k * thck * CK - SK);
 
         return std::make_tuple(hv_h, kv_k, hvnorm_h, kvnorm_k, gam_k, l_k, CHH, CKK, SHH,
-            SKK);
+            SKK, hv_c, kv_c, hvnorm_c, kvnorm_c, gam_c, l_c, CHC, CKC, SHC, SKC);
       }
 
     std::tuple<double, double, double, double, double> compute_T(const double &w,
@@ -288,6 +313,48 @@ namespace jif3D
         const double gT1234 = (-2.0) * T1234 * pow(vs, 2) / mu;
 
         return std::make_tuple(gT1212, gT1213, igT1214, gT1224, gT1234);
+      }
+
+    std::vector<double> compute_T_c(const double &w, const double &c, const double &vp,
+        const double &vs, const double &mu)
+      {
+        auto util = compute_util(w, c, vp, vs, 99999.0, 1);
+        const dcomp hv = std::get<0>(util);
+        const dcomp kv = std::get<1>(util);
+        const double l = std::get<9>(util);
+
+        auto util_g = compute_util_grads(w, vs, vp, c, 99999.0, 1);
+        const dcomp hv_c = std::get<10>(util_g);
+        const dcomp kv_c = std::get<11>(util_g);
+        const double l_c = std::get<15>(util_g);
+
+        const auto T = compute_T(w, c, vp, vs, mu);
+        const double iT1214 = std::get<2>(T);
+
+        const double dens = mu / pow(vs, 2);
+
+        const double gT1212 = std::real(
+            (pow(vs, 4) / 4.0 * pow(w, 4))
+                * (((2.0 * l * l_c * hv * kv - pow(l, 2) * (hv_c * kv + hv * kv_c))
+                    / (pow(hv * kv, 2))) + (8.0 * pow(w, 2) / pow(c, 3))));
+        const double gT1213 = std::real(kv_c / (4.0 * dens * pow(w * kv, 2)));
+        const double igT1214 = std::real(
+            ((-1.0) * iT1214 / c)
+                + ((pow(vs, 2) * (l_c * kv * hv - l * (hv_c * kv + hv * kv_c)))
+                    / (4.0 * dens * pow(w, 3) * c * pow(kv * hv, 2))));
+        const double gT1224 = std::real(
+            (((-1.0) * hv_c) / (4.0 * dens * pow(w * hv, 2))));
+        const double gT1234 = std::real(
+            ((-2.0 * hv * kv + c * (hv_c * kv + hv * kv_c))
+                / (4.0 * pow(dens * w * hv * kv, 2) * pow(c, 3))));
+
+        std::vector<double> gT(5);
+        gT[0] = gT1212;
+        gT[1] = gT1213;
+        gT[2] = igT1214;
+        gT[3] = gT1224;
+        gT[4] = gT1234;
+        return gT;
       }
 
     std::vector<double> compute_G(const double &c, const double &dn, const double &w,
@@ -627,6 +694,222 @@ namespace jif3D
         return Gout;
       }
 
+    std::vector<double> compute_G_c(const double &c, const double &dn, const double &w,
+        const double &vp, const double &vs, const double &dens)
+      {
+        const auto utils = compute_util(w, c, vp, vs, dn, 0);
+        const double SH = std::get<2>(utils);
+        const double CH = std::get<3>(utils);
+        const double SK = std::get<4>(utils);
+        const double CK = std::get<5>(utils);
+        const double gam = std::get<6>(utils);
+        const dcomp hvnorm = std::get<7>(utils);
+        const dcomp kvnorm = std::get<8>(utils);
+
+        const auto utils_c = compute_util_grads(w, vs, vp, c, dn, 0);
+        const double SHC = std::get<18>(utils_c);
+        const double CHC = std::get<16>(utils_c);
+        const double SKC = std::get<19>(utils_c);
+        const double CKC = std::get<17>(utils_c);
+        const double gam_c = std::get<14>(utils_c);
+        const double hvnorm_c = std::get<12>(utils_c);
+        const double kvnorm_c = std::get<13>(utils_c);
+
+        const double dCC = CHC * CK + CH * CKC;
+        const double dSS = SHC * SK + SH * SKC;
+        const double dCS = CHC * SK + CH * SKC;
+        const double dSC = SHC * CK + SH * CKC;
+        const double dk = std::real(
+            hvnorm_c * pow(kvnorm, 2) + pow(hvnorm, 2) * kvnorm_c);
+
+        const auto G = compute_G(c, dn, w, vp, vs, dens);
+        const double G1213 = G[1];
+        const double iG1214 = G[2];
+        const double G1224 = G[3];
+        const double G1234 = G[4];
+        const double G1312 = G[5];
+        const double iG1412 = G[9];
+        const double G2412 = G[12];
+        const double G3412 = G[14];
+
+        const double gG1212 = std::real(
+            2.0 * gam_c * (1.0 - 2.0 * gam) * (1.0 - CH * CK)
+                + (2.0 * pow(gam, 2) - 2.0 * gam + 1.0) * dCC
+                - (2.0 * gam_c * (gam - 1.0 + gam * pow(hvnorm * kvnorm, 2))
+                    + pow(gam, 2) * dk) * SH * SK
+                - (pow(1.0 - gam, 2) + pow(gam * hvnorm * kvnorm, 2)) * dSS);
+        const double gG1213 = std::real(
+            ((-1.0) * G1213 / c)
+                + (1.0 / (dens * w * c))
+                    * (dCS - hvnorm_c * SH * CK - pow(hvnorm, 2) * dSC));
+        const double igG1214 =
+            std::real(
+                ((-1.0) * iG1214 / c)
+                    + (1.0 / (dens * w * c))
+                        * ((2.0 * gam - 1.0) * dCC - 2.0 * gam_c * (1.0 - CH * CK))
+                    + (1.0 / (dens * w * c))
+                        * ((1.0 - gam - gam * pow(hvnorm * kvnorm, 2)) * dSS
+                            - (gam_c + gam_c * pow(hvnorm * kvnorm, 2) + gam * dk) * SH
+                                * SK));
+        const double gG1224 = std::real(
+            ((-1.0) * G1224 / c)
+                + (1.0 / (dens * w * c))
+                    * (kvnorm_c * CH * SK + pow(kvnorm, 2) * dCS - dSC));
+        const double gG1234 = std::real(
+            ((-1.0) * G1234 / c)
+                + pow((1.0 / (dens * w * c)), 2)
+                    * (2.0 * dCC - dk * SH * SK - (1.0 + pow(hvnorm * kvnorm, 2)) * dSS));
+        const double gG1312 = std::real(
+            (G1312 / c)
+                + dens * w * c
+                    * (2.0 * gam * gam_c * pow(kvnorm, 2) * CH * SK
+                        + pow(gam, 2) * kvnorm_c * CH * SK + pow(gam * kvnorm, 2) * dCS)
+                + dens * w * c
+                    * (2.0 * gam_c * (1.0 - gam) * SH * CK - pow(1.0 - gam, 2) * dSC));
+        const double gG1313 = std::real(dCC);
+        const double igG1314 = std::real(
+            (-1.0) * gam_c * SH * CK + (1.0 - gam) * dSC
+                + (gam_c * pow(kvnorm, 2) + gam * kvnorm_c) * CH * SK
+                + gam * pow(kvnorm, 2) * dCS);
+        const double gG1324 = std::real(
+            (-1.0) * (kvnorm_c * SH * SK + pow(kvnorm, 2) * dSS));
+        const double igG1412 = std::real(
+            (iG1412 / c)
+                + dens * w * c
+                    * (gam_c * (-6.0 * pow(gam, 2) + 6.0 * gam - 1.0) * (1.0 - CH * CK)
+                        - (pow(gam, 2) - gam) * (1.0 - 2.0 * gam) * dCC)
+                + dens * c * w
+                    * ((pow(1.0 - gam, 3) - pow(gam, 3) * pow(hvnorm * kvnorm, 2)) * dSS
+                        + (-3.0 * gam_c * pow(1.0 - gam, 2)
+                            - 3.0 * pow(gam, 2) * gam_c * pow(hvnorm * kvnorm, 2)
+                            - pow(gam, 3) * dk) * SH * SK));
+        const double igG1413 = std::real(
+            gam_c * CH * SK - (1.0 - gam) * dCS
+                - (gam_c * pow(hvnorm, 2) + gam * hvnorm_c) * SH * CK
+                - gam * pow(hvnorm, 2) * dSC);
+        const double gG1414 = std::real(
+            2.0 * gam * (1.0 - gam) * dCC
+                + 2.0 * gam_c * (2.0 * gam - 1.0) * (1.0 - CH * CK)
+                + (pow(1 - gam, 2) + pow(gam * hvnorm * kvnorm, 2)) * dSS
+                + (2 * gam_c * (gam - 1.0 + gam * pow(hvnorm * kvnorm, 2))
+                    + pow(gam, 2) * dk) * SH * SK);
+        const double gG2412 = std::real(
+            (G2412 / c)
+                + dens * w * c
+                    * (-2.0 * (1.0 - gam) * gam_c * CH * SK + pow(1.0 - gam, 2) * dCS)
+                + dens * w * c
+                    * (-1.0
+                        * (2.0 * gam * gam_c * pow(hvnorm, 2) + pow(gam, 2) * kvnorm_c)
+                        * SH * CK - pow(gam * hvnorm, 2) * dSC));
+        const double gG2413 = std::real(
+            (-1.0) * (hvnorm_c * SH * SK + pow(hvnorm, 2) * dSS));
+        const double gG3412 = std::real(
+            (2.0 * G3412 / c)
+                - pow(dens * c * w, 2)
+                    * (4.0 * gam * gam_c * (gam - 1.0) * (2.0 * gam - 1.0)
+                        * (1.0 - CH * CK) - 2.0 * pow(gam * (1.0 - gam), 2) * dCC)
+                - pow(dens * c * w, 2)
+                    * ((pow(1.0 - gam, 4) + pow(gam, 4) * pow(hvnorm * kvnorm, 2)) * dSS
+                        + (-4.0 * gam_c * pow(1.0 - gam, 3)
+                            + 4.0 * pow(gam, 3) * gam_c * pow(hvnorm * kvnorm, 2)
+                            + pow(gam, 4) * dk) * SH * SK));
+
+        std::vector<double> Gout(15);
+        Gout[0] = gG1212;
+        Gout[1] = gG1213;
+        Gout[2] = igG1214;
+        Gout[3] = gG1224;
+        Gout[4] = gG1234;
+        Gout[5] = gG1312;
+        Gout[6] = gG1313;
+        Gout[7] = igG1314;
+        Gout[8] = gG1324;
+        Gout[9] = igG1412;
+        Gout[10] = igG1413;
+        Gout[11] = gG1414;
+        Gout[12] = gG2412;
+        Gout[13] = gG2413;
+        Gout[14] = gG3412;
+        return Gout;
+      }
+
+    std::vector<double> compute_R_c(const double &w, const double &c, const double &vp,
+        const double &vs, const double &dn, const double &dens,
+        const std::tuple<double, double, double, double, double> &T,
+        const std::vector<double> &T_c)
+      {
+
+        const double T1212 = std::get<0>(T);
+        const double T1213 = std::get<1>(T);
+        const double iT1214 = std::get<2>(T);
+        const double T1224 = std::get<3>(T);
+        const double T1234 = std::get<4>(T);
+
+        const double T1212_c = T_c[0];
+        const double T1213_c = T_c[1];
+        const double iT1214_c = T_c[2];
+        const double T1224_c = T_c[3];
+        const double T1234_c = T_c[4];
+
+        std::vector<double> G = compute_G(c, dn, w, vp, vs, dens);
+        const double G1212 = G[0];
+        const double G1213 = G[1];
+        const double iG1214 = G[2];
+        const double G1224 = G[3];
+        const double G1234 = G[4];
+        const double G1312 = G[5];
+        const double G1313 = G[6];
+        const double iG1314 = G[7];
+        const double G1324 = G[8];
+        const double iG1412 = G[9];
+        const double iG1413 = G[10];
+        const double G1414 = G[11];
+        const double G2412 = G[12];
+        const double G2413 = G[13];
+        const double G3412 = G[14];
+
+        std::vector<double> G_c = compute_G_c(c, dn, w, vp, vs, dens);
+        const double G1212_c = G_c[0];
+        const double G1213_c = G_c[1];
+        const double iG1214_c = G_c[2];
+        const double G1224_c = G_c[3];
+        const double G1234_c = G_c[4];
+        const double G1312_c = G_c[5];
+        const double G1313_c = G_c[6];
+        const double iG1314_c = G_c[7];
+        const double G1324_c = G_c[8];
+        const double iG1412_c = G_c[9];
+        const double iG1413_c = G_c[10];
+        const double G1414_c = G_c[11];
+        const double G2412_c = G_c[12];
+        const double G2413_c = G_c[13];
+        const double G3412_c = G_c[14];
+
+        double R1212 = T1212_c * G1212 + T1212 * G1212_c + T1213_c * G1312
+            + T1213 * G1312_c - 2.0 * iT1214_c * iG1412 - 2.0 * iT1214 * iG1412_c
+            + T1224_c * G2412 + T1224 * G2412_c + T1234_c * G3412 + T1234 * G3412_c;
+        double R1213 = T1212_c * G1213 + T1212 * G1213_c + T1213_c * G1313
+            + T1213 * G1313_c - 2.0 * iT1214_c * iG1413 - 2.0 * iT1214 * iG1413_c
+            + T1224_c * G2413 + T1224 * G2413_c + T1234_c * G2412 + T1234 * G2412_c;
+        double iR1214 = T1212_c * iG1214 + T1212 * iG1214_c + T1213_c * iG1314
+            + T1213 * iG1314_c + iT1214_c * (2.0 * G1414 - 1.0) + iT1214 * (2.0 * G1414_c)
+            + T1224_c * iG1413 + T1224 * iG1413_c + T1234_c * iG1412 + T1234 * iG1412_c;
+        double R1224 = T1212_c * G1224 + T1212 * G1224_c + T1213_c * G1324
+            + T1213 * G1324_c - 2.0 * iT1214_c * iG1314 - 2.0 * iT1214 * iG1314_c
+            + T1224_c * G1313 + T1224 * G1313_c + T1234_c * G1312 + T1234 * G1312_c;
+        double R1234 = T1212_c * G1234 + T1212 * G1234_c + T1213_c * G1224
+            + T1213 * G1224_c - 2.0 * iT1214_c * iG1214 - 2.0 * iT1214 * iG1214_c
+            + T1224_c * G1213 + T1224 * G1213_c + T1234_c * G1212 + T1234 * G1212_c;
+
+        std::vector<double> R(5);
+        R[0] = R1212;
+        R[1] = R1213;
+        R[2] = iR1214;
+        R[3] = R1224;
+        R[4] = R1234;
+        return R;
+      }
+
     std::tuple<double, double, double, double, double> compute_R(const double &w,
         const double &c, const double &vp, const double &vs, const double &dn,
         const double &dens, const std::tuple<double, double, double, double, double> &T,
@@ -723,13 +1006,14 @@ namespace jif3D
         return std::make_tuple(R1212, R1213, iR1214, R1224, R1234);
       }
 
-    double compute_R1212(const double &w, const double &c, const std::vector<double> &vp,
-        const std::vector<double> &vs, const double &mu, const std::vector<double> &depth,
-        const std::vector<double> &dens, const int &nlay, const int &param,
-        const int &gradlay)
+    std::vector<double> compute_R1212(const double &w, const double &c,
+        const std::vector<double> &vp, const std::vector<double> &vs, const double &mu,
+        const std::vector<double> &depth, const std::vector<double> &dens,
+        const int &nlay, const int &param, const int &gradlay)
       {
         // Recursive layer stacking from bottom to top to get R1212
         std::tuple<double, double, double, double, double> R;
+        std::vector<double> R_c(5, 0);
         for (int n = nlay - 1; n >= 0; n--)
           {
             if (n == nlay - 1)
@@ -742,6 +1026,9 @@ namespace jif3D
                       R = compute_T_vp(w, c, vp[n], vs[n], mu);
                     else if (param == 3)
                       R = compute_T_rho(w, c, vp[n], vs[n], mu);
+                    else if (param == 4)
+                      R = compute_T(w, c, vp[n], vs[n], mu);
+                    R_c = compute_T_c(w, c, vp[n], vs[n], mu);
                   }
                 else
                   {
@@ -751,13 +1038,21 @@ namespace jif3D
             else
               {
                 double dn = depth[n + 1] - depth[n];
-                if (n == gradlay)
+                if ((param != 4) && (n == gradlay))
                   R = compute_R(w, c, vp[n], vs[n], dn, dens[n], R, param);
-                else
+                else if (param == 4)
+                  {
+                    R_c = compute_R_c(w, c, vp[n], vs[n], dn, dens[n], R, R_c);
+                    R = compute_R(w, c, vp[n], vs[n], dn, dens[n], R, 0);
+                  }
+                else if (param == 0)
                   R = compute_R(w, c, vp[n], vs[n], dn, dens[n], R, 0);
               }
           }
-        return (std::get<0>(R));
+        std::vector<double> R1212(2);
+        R1212[0] = std::get<0>(R);
+        R1212[1] = R_c[0];
+        return R1212;
       }
 
     std::vector<std::vector<double>> get_gc_segments(const double &east0,
@@ -884,7 +1179,7 @@ namespace jif3D
         std::vector<double> times(1);
         double time = 0.0;
         double mid_e, mid_n, mid_lon, mid_lat, s12, az1, az2, se, sn, dist_segment_e,
-            dist_segment_n, dsedvs, dsndvs, dsedvp, dsndvp, dsedrho, dsndrho;
+            dist_segment_n;
         std::vector<double> rhograd(dsdrho.size(), 0.0), vsgrad(dsdrho.size(), 0.0),
             vpgrad(dsdrho.size(), 0.0);
 
@@ -952,30 +1247,35 @@ namespace jif3D
             sn = sin((90.0 - az2) * M_PI / 180.0)
                 * (1.0 / c[ncell0 * ncells_east + ecell0]);
             time = time + (se * dist_segment_e + sn * dist_segment_n) * (-1.0);
+            double gradfactor = (cos((90.0 - az2) * M_PI / 180.0) * dist_segment_e
+                + sin((90.0 - az2) * M_PI / 180.0) * dist_segment_n)
+                / pow(c[ncell0 * ncells_east + ecell0], 2);
 
             for (int n = 0; n < nlay; n++)
               {
-                dsedvs = cos((90.0 - az2) * M_PI / 180.0)
-                    * dsdvs[ncell0 * ncells_east * nlay + ecell0 * nlay + n];
-                dsedvp = cos((90.0 - az2) * M_PI / 180.0)
-                    * dsdvp[ncell0 * ncells_east * nlay + ecell0 * nlay + n];
-                dsedrho = cos((90.0 - az2) * M_PI / 180.0)
-                    * dsdrho[ncell0 * ncells_east * nlay + ecell0 * nlay + n];
-                dsndvs = sin((90.0 - az2) * M_PI / 180.0)
-                    * dsdvs[ncell0 * ncells_east * nlay + ecell0 * nlay + n];
-                dsndvp = sin((90.0 - az2) * M_PI / 180.0)
-                    * dsdvp[ncell0 * ncells_east * nlay + ecell0 * nlay + n];
-                dsndrho = sin((90.0 - az2) * M_PI / 180.0)
-                    * dsdrho[ncell0 * ncells_east * nlay + ecell0 * nlay + n];
+                /*dsedvs = cos((90.0 - az2) * M_PI / 180.0)
+                 * dsdvs[ncell0 * ncells_east * nlay + ecell0 * nlay + n];
+                 dsedvp = cos((90.0 - az2) * M_PI / 180.0)
+                 * dsdvp[ncell0 * ncells_east * nlay + ecell0 * nlay + n];
+                 dsedrho = cos((90.0 - az2) * M_PI / 180.0)
+                 * dsdrho[ncell0 * ncells_east * nlay + ecell0 * nlay + n];
+                 dsndvs = sin((90.0 - az2) * M_PI / 180.0)
+                 * dsdvs[ncell0 * ncells_east * nlay + ecell0 * nlay + n];
+                 dsndvp = sin((90.0 - az2) * M_PI / 180.0)
+                 * dsdvp[ncell0 * ncells_east * nlay + ecell0 * nlay + n];
+                 dsndrho = sin((90.0 - az2) * M_PI / 180.0)
+                 * dsdrho[ncell0 * ncells_east * nlay + ecell0 * nlay + n];*/
                 vsgrad[ncell0 * ncells_east * nlay + ecell0 * nlay + n] = vsgrad[ncell0
                     * ncells_east * nlay + ecell0 * nlay + n]
-                    + (dsedvs * dist_segment_e + dsndvs * dist_segment_n) * (-1.0);
+                    + dsdvs[ncell0 * ncells_east * nlay + ecell0 * nlay + n] * gradfactor;
                 vpgrad[ncell0 * ncells_east * nlay + ecell0 * nlay + n] = vpgrad[ncell0
                     * ncells_east * nlay + ecell0 * nlay + n]
-                    + (dsedvp * dist_segment_e + dsndvp * dist_segment_n) * (-1.0);
+                    + dsdvp[ncell0 * ncells_east * nlay + ecell0 * nlay + n] * gradfactor;
                 rhograd[ncell0 * ncells_east * nlay + ecell0 * nlay + n] = rhograd[ncell0
                     * ncells_east * nlay + ecell0 * nlay + n]
-                    + (dsedrho * dist_segment_e + dsndrho * dist_segment_n) * (-1.0);
+                    + dsdrho[ncell0 * ncells_east * nlay + ecell0 * nlay + n]
+                        * gradfactor;
+                ;
               }
           }
         dist_segment_e = east1 - east0;
@@ -987,30 +1287,33 @@ namespace jif3D
         se = cos((90 - az2) * M_PI / 180) * (1 / c[ncell1 * ncells_east + ecell1]);
         sn = sin((90 - az2) * M_PI / 180) * (1 / c[ncell1 * ncells_east + ecell1]);
         time = time + (se * dist_segment_e + sn * dist_segment_n) * (-1.0);
+        double gradfactor = (cos((90.0 - az2) * M_PI / 180.0) * dist_segment_e
+            + sin((90.0 - az2) * M_PI / 180.0) * dist_segment_n)
+            / pow(c[ncell1 * ncells_east + ecell1], 2);
 
         for (int n = 0; n < nlay; n++)
           {
-            dsedvs = cos((90.0 - az2) * M_PI / 180.0)
-                * dsdvs[ncell1 * ncells_east * nlay + ecell1 * nlay + n];
-            dsedvp = cos((90.0 - az2) * M_PI / 180.0)
-                * dsdvp[ncell1 * ncells_east * nlay + ecell1 * nlay + n];
-            dsedrho = cos((90.0 - az2) * M_PI / 180.0)
-                * dsdrho[ncell1 * ncells_east * nlay + ecell1 * nlay + n];
-            dsndvs = sin((90.0 - az2) * M_PI / 180.0)
-                * dsdvs[ncell1 * ncells_east * nlay + ecell1 * nlay + n];
-            dsndvp = sin((90.0 - az2) * M_PI / 180.0)
-                * dsdvp[ncell1 * ncells_east * nlay + ecell1 * nlay + n];
-            dsndrho = sin((90.0 - az2) * M_PI / 180.0)
-                * dsdrho[ncell1 * ncells_east * nlay + ecell1 * nlay + n];
+            /*dsedvs = cos((90.0 - az2) * M_PI / 180.0)
+             * dsdvs[ncell1 * ncells_east * nlay + ecell1 * nlay + n];
+             dsedvp = cos((90.0 - az2) * M_PI / 180.0)
+             * dsdvp[ncell1 * ncells_east * nlay + ecell1 * nlay + n];
+             dsedrho = cos((90.0 - az2) * M_PI / 180.0)
+             * dsdrho[ncell1 * ncells_east * nlay + ecell1 * nlay + n];
+             dsndvs = sin((90.0 - az2) * M_PI / 180.0)
+             * dsdvs[ncell1 * ncells_east * nlay + ecell1 * nlay + n];
+             dsndvp = sin((90.0 - az2) * M_PI / 180.0)
+             * dsdvp[ncell1 * ncells_east * nlay + ecell1 * nlay + n];
+             dsndrho = sin((90.0 - az2) * M_PI / 180.0)
+             * dsdrho[ncell1 * ncells_east * nlay + ecell1 * nlay + n];*/
             vsgrad[ncell1 * ncells_east * nlay + ecell1 * nlay + n] = vsgrad[ncell1
                 * ncells_east * nlay + ecell1 * nlay + n]
-                + (dsedvs * dist_segment_e + dsndvs * dist_segment_n) * (-1.0);
+                + dsdvs[ncell1 * ncells_east * nlay + ecell1 * nlay + n] * gradfactor;
             vpgrad[ncell1 * ncells_east * nlay + ecell1 * nlay + n] = vpgrad[ncell1
                 * ncells_east * nlay + ecell1 * nlay + n]
-                + (dsedvp * dist_segment_e + dsndvp * dist_segment_n) * (-1.0);
+                + dsdvp[ncell1 * ncells_east * nlay + ecell1 * nlay + n] * gradfactor;
             rhograd[ncell1 * ncells_east * nlay + ecell1 * nlay + n] = rhograd[ncell1
                 * ncells_east * nlay + ecell1 * nlay + n]
-                + (dsedrho * dist_segment_e + dsndrho * dist_segment_n) * (-1.0);
+                + dsdrho[ncell1 * ncells_east * nlay + ecell1 * nlay + n] * gradfactor;
           }
 
         times[0] = time;
