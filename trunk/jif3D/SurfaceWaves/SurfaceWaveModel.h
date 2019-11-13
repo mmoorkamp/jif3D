@@ -32,10 +32,10 @@ namespace jif3D
         }
       virtual void WriteVTK(const std::string filename) const
         {
-          ThreeDModelBase::WriteVTK(filename + ".vs", "Vs");
-          Write3DModelToVTK(filename + ".vp", "Vp", GetXCoordinates(), GetYCoordinates(),
+          ThreeDModelBase::WriteVTK(filename + ".vs.vtk", "Vs");
+          Write3DModelToVTK(filename + ".vp.vtk", "Vp", GetXCoordinates(), GetYCoordinates(),
               GetZCoordinates(), GetVp());
-          Write3DModelToVTK(filename + ".dens", "Density", GetXCoordinates(),
+          Write3DModelToVTK(filename + ".dens.vtk", "Density", GetXCoordinates(),
               GetYCoordinates(), GetZCoordinates(), GetVp());
         }
       virtual void WriteNetCDF(const std::string &filename);

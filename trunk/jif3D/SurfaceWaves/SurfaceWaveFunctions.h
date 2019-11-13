@@ -29,6 +29,7 @@ namespace jif3D
         double, double> compute_util(const double &w, const double &c, const double &vp,
         const double &vs, const double &dn, const bool &botlay);
     std::tuple<dcomp, dcomp, double, double, double, double, double, double, double,
+        double, dcomp, dcomp, double, double, double, double, double, double, double,
         double> compute_util_grads(const double &w, const double &vs, const double &vp,
         const double &c, const double &thck, const bool &botlay);
     std::tuple<double, double, double, double, double> compute_T(const double &w,
@@ -39,6 +40,8 @@ namespace jif3D
         const double &c, const double &vp, const double &vs, const double &mu);
     std::tuple<double, double, double, double, double> compute_T_rho(const double &w,
         const double &c, const double &vp, const double &vs, const double &mu);
+    std::vector<double> compute_T_c(const double &w, const double &c, const double &vp,
+        const double &vs, const double &mu);
     std::vector<double> compute_G(const double &c, const double &dn, const double &w,
         const double &vp, const double &vs, const double &dens);
     std::vector<double> compute_G_vs(const double &c, const double &dn, const double &w,
@@ -47,14 +50,20 @@ namespace jif3D
         const double &vp, const double &vs, const double &dens);
     std::vector<double> compute_G_rho(const double &c, const double &dn, const double &w,
         const double &vp, const double &vs, const double &dens);
+    std::vector<double> compute_G_c(const double &c, const double &dn, const double &w,
+        const double &vp, const double &vs, const double &dens);
+    std::vector<double> compute_R_c(const double &w, const double &c, const double &vp,
+        const double &vs, const double &dn, const double &dens,
+        const std::tuple<double, double, double, double, double> &T,
+        const std::vector<double> &T_c);
     std::tuple<double, double, double, double, double> compute_R(const double &w,
         const double &c, const double &vp, const double &vs, const double &dn,
         const double &dens, const std::tuple<double, double, double, double, double> &T,
         const int &param);
-    double compute_R1212(const double &w, const double &c, const std::vector<double> &vp,
-        const std::vector<double> &vs, const double &mu, const std::vector<double> &depth,
-        const std::vector<double> &dens, const int &nlay, const int &param,
-        const int &gradlay);
+    std::vector<double> compute_R1212(const double &w, const double &c,
+        const std::vector<double> &vp, const std::vector<double> &vs, const double &mu,
+        const std::vector<double> &depth, const std::vector<double> &dens,
+        const int &nlay, const int &param, const int &gradlay);
     std::vector<std::vector<double>> get_gc_segments(const double &east0,
         const double &north0, const double &east1, const double &north1,
         const double &lon_centr, const double &false_east,
@@ -81,7 +90,10 @@ namespace jif3D
       ;
       double operator()(const double c)
         {
-          return compute_R1212(w, c, vp, vs, mu, depth, dens, nlay, 0, -999);
+          std::vector<double> R1212 = compute_R1212(w, c, vp, vs, mu, depth, dens, nlay,
+              0, -999);
+          ;
+          return R1212[0];
         }
     private:
       const double &w;
