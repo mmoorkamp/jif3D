@@ -22,7 +22,8 @@
 
 namespace jif3D
   {
-    SurfaceWaveCalculator::SurfaceWaveCalculator()
+    SurfaceWaveCalculator::SurfaceWaveCalculator(): false_east(500000), tolerance(0.01), length_tolerance(1.0),
+    mode_skip_it(2), toms_max_iter(50)
       {
       }
 
@@ -92,7 +93,7 @@ namespace jif3D
             //cout << "Period: " << periods[freq] << " s.";
             //cout << "\n";
             //Vectors to store gradients, dispersion curves
-            std::vector<double> dsdrho(dens.size()), dsdvs(vs.size()), dsdvp(vp.size()),
+            std::vector<double> dcdrho(dens.size()), dcdvs(vs.size()), dcdvp(vp.size()),
                 vph_map(NX * NY);
             for (int nstep = 0; nstep < NX; nstep++)
               {
@@ -223,13 +224,16 @@ namespace jif3D
                             //Computation of Gradients
                             std::vector<double> R_tmp = compute_R1212(w[freq], c_last,
                                 vp_1D, vs_1D, mu, depth, dens_1D, NZ, 1, n);
-                            dsdvs[n + NZ * estep + NY * NZ * nstep] = ((-1.0)*R_tmp[0]/R_c[1]);
+                            dcdvs[n + NZ * estep + NY * NZ * nstep] = ((-1.0) * R_tmp[0]
+                                / R_c[1]);
                             R_tmp = compute_R1212(w[freq], c_last, vp_1D, vs_1D, mu,
                                 depth, dens_1D, NZ, 2, n);
-                            dsdvp[n + NZ * estep + NY * NZ * nstep] = ((-1.0)*R_tmp[0]/R_c[1]);
+                            dcdvp[n + NZ * estep + NY * NZ * nstep] = ((-1.0) * R_tmp[0]
+                                / R_c[1]);
                             R_tmp = compute_R1212(w[freq], c_last, vp_1D, vs_1D, mu,
                                 depth, dens_1D, NZ, 3, n);
-                            dsdrho[n + NZ * estep + NY * NZ * nstep] = ((-1.0)*R_tmp[0]/R_c[1]);
+                            dcdrho[n + NZ * estep + NY * NZ * nstep] = ((-1.0) * R_tmp[0]
+                                / R_c[1]);
                           }
                       }
                   } //end loop over northing
@@ -271,11 +275,11 @@ namespace jif3D
                                     eventy[event_stat_cmb[event * nsrcs + src]],
                                     eventx[event_stat_cmb[event * nsrcs + src]],
                                     lon_centr, model_origin, deast, dnorth, vph_map, NY,
-                                    dsdvs, dsdvp, dsdrho, NZ, false_east);
-                            std::vector<double> ts = time_segment[0];
-                            time_total = time_total + ts[0];
+                                    dcdvs, dcdvp, dcdrho, NZ, false_east);
+                            std::vector<double> tmp = time_segment[0];
+                            time_total = time_total + tmp[0];
 
-                            std::vector<double> tmp = time_segment[1];
+                            tmp = time_segment[1];
                             std::transform(vs_tmpgrd.begin(), vs_tmpgrd.end(),
                                 tmp.begin(), vs_tmpgrd.begin(), std::plus<double>());
                             tmp = time_segment[2];
@@ -288,10 +292,12 @@ namespace jif3D
                         dtp_mod[src + nsrcs * event + freq * nsrcs * nevents_per_src] =
                             time_total;
                         //delayfile << "\n" << event_stat_cmb[event*nsrcs+src] << "\t" << src_rcvr_cmb[src] << "\t" << src_rcvr_cmb[src+nsrcs] << "\t" << (2.0*M_PI)/w[freq] << "\t" << time_total;
-                        const double residual = abs(
-                            dtp[freq * nsrcs * nevents_per_src + event * nsrcs + src]
-                                - time_total);
 
+                        const double residual =
+                            (time_total
+                                - dtp[freq * nsrcs * nevents_per_src + event * nsrcs + src])
+                                / dtp_err[freq * nsrcs * nevents_per_src + event * nsrcs
+                                    + src];
                         std::transform(vs_grad.begin(), vs_grad.end(), vs_tmpgrd.begin(),
                             vs_grad.begin(), weighted_add(residual));
                         std::transform(vp_grad.begin(), vp_grad.end(), vp_tmpgrd.begin(),

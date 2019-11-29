@@ -80,12 +80,15 @@ namespace jif3D
                 SWModel.SetOrigin(xorigin, yorigin, 0.0);
               }
 
+            std::vector<double> SurfaceWaveError = ConstructError(
+                SurfaceWaveData.GetData(), SurfaceWaveData.GetErrors(), relerr, minerr);
             jif3D::SurfaceWaveCalculator Calculator;
             Calculator.set_distance_tolerance(1.0);
             Calculator.set_vel_tolerance(0.01);
             Calculator.set_false_east(500000.0);
             Calculator.set_root_search_iterations(50);
             Calculator.set_mode_skip_iterations(2);
+            Calculator.set_data_err(SurfaceWaveError);
 
             SurfaceWaveObjective = boost::make_shared<
                 jif3D::ThreeDModelObjective<jif3D::SurfaceWaveCalculator>>(Calculator);
@@ -95,8 +98,6 @@ namespace jif3D
             //we assume the same error for all measurements
             //this is either the default value set in the constructor
             //or set by the user
-            std::vector<double> SurfaceWaveError = ConstructError(
-                SurfaceWaveData.GetData(), SurfaceWaveData.GetErrors(), relerr, minerr);
             SurfaceWaveObjective->SetDataError(SurfaceWaveError);
 
             Objective.AddObjective(SurfaceWaveObjective, Transform, swlambda, "SWTomo",
