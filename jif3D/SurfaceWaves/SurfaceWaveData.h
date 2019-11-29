@@ -48,6 +48,39 @@ namespace jif3D
         {
           return lon_centr;
         }
+      void SetEventPositions(const std::vector<double> &epx,
+          const std::vector<double> &epy, const std::vector<double> &epz)
+        {
+          EventPosX.resize(epx.size());
+          EventPosY.resize(epy.size());
+          EventPosZ.resize(epz.size());
+          std::copy(epx.begin(), epx.end(), EventPosX.begin());
+          std::copy(epy.begin(), epy.end(), EventPosY.begin());
+          std::copy(epz.begin(), epz.end(), EventPosZ.begin());
+        }
+      void SetPeriods(const std::vector<double> &T)
+        {
+          periods.resize(T.size());
+          std::copy(T.begin(), T.end(), periods.begin());
+        }
+      void SetStatComb(const std::vector<double> &SC)
+        {
+          stat_comb.resize(SC.size());
+          std::copy(SC.begin(), SC.end(), stat_comb.begin());
+        }
+      void SetEventStatCmb(const std::vector<double> &ESC)
+        {
+          event_stat_comb.resize(ESC.size());
+          std::copy(ESC.begin(), ESC.end(), event_stat_comb.begin());
+        }
+      void SetLonCentr(const double &lc)
+        {
+          lon_centr = lc;
+        }
+      void SetDummy(const double &d)
+        {
+          dummy = d;
+        }
       virtual void WriteNetCDF(const std::string &filename) override;
       void WriteStationLocations(const std::string &filename);
     private:
@@ -60,6 +93,5 @@ namespace jif3D
       double lon_centr, dummy;
       };
   }
-
 
 #endif /* SURFACEWAVES_SURFACEWAVEDATA_H_ */

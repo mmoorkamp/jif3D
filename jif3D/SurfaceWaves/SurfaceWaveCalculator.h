@@ -57,13 +57,16 @@ namespace jif3D
         {
           mode_skip_it = mskip_it;
         }
+      void set_data_err(const std::vector<double> &err)
+        {
+          dtp_err.resize(err.size());
+          dtp_err = err;
+        }
     private:
       double false_east, tolerance, length_tolerance;
       int mode_skip_it, toms_max_iter;
-      std::vector<double> dens_grad, vs_grad, vp_grad, dtp_mod;
+      std::vector<double> dens_grad, vs_grad, vp_grad, dtp_mod, dtp_err;
       void forward(const ModelType &Model, const DataType &Data);
-    public:
-
       };
   }
 

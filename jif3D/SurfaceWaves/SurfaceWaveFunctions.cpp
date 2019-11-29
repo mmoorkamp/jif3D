@@ -254,13 +254,13 @@ namespace jif3D
         const double l_k = std::get<5>(util_grads);
 
         const double gT1212 = std::real(
-            4.0 * T1212 / vs
+            (4.0 * T1212 / vs)
                 + pow(vs, 4) * (2.0 * l * l_k * kv - pow(l, 2) * kv_k)
                     / (4.0 * pow(w, 4) * hv * pow(kv, 2)));
         const double gT1213 = std::real(
             kv_k * pow(vs, 2) / (4.0 * mu * pow(w, 2) * pow(kv, 2)));
         const double igT1214 = std::real(
-            2.0 * iT1214 / vs
+            (2.0 * iT1214 / vs)
                 + pow(vs, 4) * (l_k * kv - l * kv_k)
                     / (4.0 * mu * pow(w, 3) * c * hv * pow(kv, 2)));
         const double gT1224 = 0.0;
@@ -289,7 +289,7 @@ namespace jif3D
             (-1.0) * pow(vs, 4) * l * hv_h
                 / (4.0 * mu * pow(w, 3) * c * pow(hv, 2) * kv));
         const double gT1224 = std::real(
-            (-1.0) * hv_h * pow(vs, 2) / (4.0 * mu * pow(w, 2) * pow(hv, 2)));
+            (-1.0) * hv_h * pow(vs, 2) / (4.0 * mu * pow(hv, 2)));
         const double gT1234 = std::real(
             (-1.0) * hv_h * pow(vs, 4)
                 / (4.0 * pow(mu, 2) * pow(w, 2) * pow(c, 2) * pow(hv, 2) * kv));
@@ -342,11 +342,10 @@ namespace jif3D
             ((-1.0) * iT1214 / c)
                 + ((pow(vs, 2) * (l_c * kv * hv - l * (hv_c * kv + hv * kv_c)))
                     / (4.0 * dens * pow(w, 3) * c * pow(kv * hv, 2))));
-        const double gT1224 = std::real(
-            (((-1.0) * hv_c) / (4.0 * dens * pow(w * hv, 2))));
+        const double gT1224 = std::real(((-1.0) * hv_c) / (4.0 * dens * pow(hv, 2)));
         const double gT1234 = std::real(
-            ((-2.0 * hv * kv + c * (hv_c * kv + hv * kv_c))
-                / (4.0 * pow(dens * w * hv * kv, 2) * pow(c, 3))));
+            (-2.0 * hv * kv + c * (hv_c * kv + hv * kv_c))
+                / (4.0 * pow(dens * w * hv * kv, 2) * pow(c, 3)));
 
         std::vector<double> gT(5);
         gT[0] = gT1212;
@@ -453,7 +452,7 @@ namespace jif3D
 
         const double gG1212 = std::real(
             2.0 * gam_k * (1.0 - 2.0 * gam) * (1.0 - CH * CK)
-                + (2.0 * pow(gam, 2) - 2.0 * gam + 1) * CH * CKK
+                + (2.0 * pow(gam, 2) - 2.0 * gam + 1.0) * CH * CKK
                 - (2.0 * gam_k * (gam - 1.0)
                     + 2.0 * gam * gam_k * pow(hvnorm, 2) * pow(kvnorm, 2)
                     + pow(gam, 2) * pow(hvnorm, 2) * kvnorm_k) * SH * SK
@@ -756,7 +755,7 @@ namespace jif3D
                 + (1.0 / (dens * w * c))
                     * (kvnorm_c * CH * SK + pow(kvnorm, 2) * dCS - dSC));
         const double gG1234 = std::real(
-            ((-1.0) * G1234 / c)
+            ((-2.0) * G1234 / c)
                 + pow((1.0 / (dens * w * c)), 2)
                     * (2.0 * dCC - dk * SH * SK - (1.0 + pow(hvnorm * kvnorm, 2)) * dSS));
         const double gG1312 = std::real(
@@ -799,7 +798,7 @@ namespace jif3D
                     * (-2.0 * (1.0 - gam) * gam_c * CH * SK + pow(1.0 - gam, 2) * dCS)
                 + dens * w * c
                     * (-1.0
-                        * (2.0 * gam * gam_c * pow(hvnorm, 2) + pow(gam, 2) * kvnorm_c)
+                        * (2.0 * gam * gam_c * pow(hvnorm, 2) + pow(gam, 2) * hvnorm_c)
                         * SH * CK - pow(gam * hvnorm, 2) * dSC));
         const double gG2413 = std::real(
             (-1.0) * (hvnorm_c * SH * SK + pow(hvnorm, 2) * dSS));
@@ -807,7 +806,7 @@ namespace jif3D
             (2.0 * G3412 / c)
                 - pow(dens * c * w, 2)
                     * (4.0 * gam * gam_c * (gam - 1.0) * (2.0 * gam - 1.0)
-                        * (1.0 - CH * CK) - 2.0 * pow(gam * (1.0 - gam), 2) * dCC)
+                        * (1.0 - CH * CK) - 2.0 * pow(gam, 2) * pow(1.0 - gam, 2) * dCC)
                 - pow(dens * c * w, 2)
                     * ((pow(1.0 - gam, 4) + pow(gam, 4) * pow(hvnorm * kvnorm, 2)) * dSS
                         + (-4.0 * gam_c * pow(1.0 - gam, 3)
@@ -1027,8 +1026,10 @@ namespace jif3D
                     else if (param == 3)
                       R = compute_T_rho(w, c, vp[n], vs[n], mu);
                     else if (param == 4)
-                      R = compute_T(w, c, vp[n], vs[n], mu);
-                    R_c = compute_T_c(w, c, vp[n], vs[n], mu);
+                      {
+                        R = compute_T(w, c, vp[n], vs[n], mu);
+                        R_c = compute_T_c(w, c, vp[n], vs[n], mu);
+                      }
                   }
                 else
                   {
@@ -1148,13 +1149,13 @@ namespace jif3D
         return pts;
       }
 
-    std::vector<std::vector<double>> get_t_segments(double east0, double north0,
+    std::vector<std::vector<double>> get_t_segments(double &east0, double &north0,
         const double &east1, const double &north1, const double &event_e,
         const double &event_n, const double &lon_centr, const std::vector<double> &origin,
         const double &deast, const double &dnorth, const std::vector<double> &c,
-        const int &ncells_east, const std::vector<double> &dsdvs,
-        const std::vector<double> &dsdvp, const std::vector<double> &dsdrho,
-        const int &nlay, const double false_east)
+        const int &ncells_east, const std::vector<double> &dcdvs,
+        const std::vector<double> &dcdvp, const std::vector<double> &dcdrho,
+        const int &nlay, const double &false_east)
       {
         // Computes relative phase delay for a station pair and a given earthquake
 
@@ -1178,45 +1179,72 @@ namespace jif3D
         std::vector<std::vector<double>> times_grads(4);
         std::vector<double> times(1);
         double time = 0.0;
-        double mid_e, mid_n, mid_lon, mid_lat, s12, az1, az2, se, sn, dist_segment_e,
+        double mid_e, mid_n, mid_lon, mid_lat, s12, az1, az2, dist_segment_e,
             dist_segment_n;
-        std::vector<double> rhograd(dsdrho.size(), 0.0), vsgrad(dsdrho.size(), 0.0),
-            vpgrad(dsdrho.size(), 0.0);
+        std::vector<double> rhograd(dcdrho.size(), 0.0), vsgrad(dcdvs.size(), 0.0),
+            vpgrad(dcdvp.size(), 0.0);
 
         while ((abs(ecell0 - ecell1) > 0.0) || (abs(ncell0 - ncell1) > 0.0))
           {
             double north_intercept, east_intercept, estep, nstep;
-            if (east0 <= east1)
+            if (east0 < east1)
               {
                 east_intercept = origin[0] + (ecell0 + 1) * deast;
                 estep = 1.0;
                 if (slope < 0)
                   {
-                    north_intercept = ((origin[1] + ncell0 * dnorth) - intercept) / slope;
+                    north_intercept = ((origin[1] + (ncell0 + 1) * dnorth) - intercept)
+                        / slope;
+                    if (north_intercept != east_intercept)
+                      north_intercept = ((origin[1] + ncell0 * dnorth) - intercept)
+                          / slope;
                     nstep = -1.0;
                   }
-                else
+                else if (slope > 0)
                   {
                     north_intercept = ((origin[1] + (ncell0 + 1) * dnorth) - intercept)
                         / slope;
                     nstep = 1.0;
                   }
+                else
+                  {
+                    north_intercept = east_intercept + 9999999.9;
+                    nstep = 0.0;
+                  }
               }
-            else
+            else if (east0 > east1)
               {
                 east_intercept = origin[0] + ecell0 * deast;
                 estep = -1.0;
                 if (slope < 0)
                   {
-                    north_intercept = ((origin[1] + (ncell0 + 1) * dnorth) - intercept)
-                        / slope;
+                    north_intercept = ((origin[1] + ncell0 * dnorth) - intercept) / slope;
+                    if (north_intercept != east_intercept)
+                      north_intercept = ((origin[1] + (ncell0 + 1) * dnorth) - intercept)
+                          / slope;
                     nstep = 1.0;
                   }
-                else
+                else if (slope > 0)
                   {
                     north_intercept = ((origin[1] + ncell0 * dnorth) - intercept) / slope;
                     nstep = -1.0;
                   }
+                else
+                  {
+                    north_intercept = east_intercept + 9999999.9;
+                    nstep = 0.0;
+                  }
+              }
+            else
+              {
+                estep = 0.0;
+                north_intercept = east0;
+                east_intercept = north_intercept + 9999999.9;
+                if (north0 < north1)
+                  nstep = 1.0;
+                else
+                  nstep = -1.0;
+
               }
             double east_dist = abs(east0 - east_intercept);
             double north_dist = abs(east0 - north_intercept);
@@ -1224,11 +1252,32 @@ namespace jif3D
               {
                 dist_segment_e = north_intercept - east0;
                 dist_segment_n = (slope * north_intercept + intercept) - north0;
+                if (east0 == east1)
+                  {
+                    if (north0 < north1)
+                      {
+                        dist_segment_n = (origin[1] + (ncell0 + 1) * dnorth) - north0;
+                      }
+                    else
+                      {
+                        dist_segment_n = (origin[1] + ncell0 * dnorth) - north0;
+                      }
+                  }
                 mid_e = east0 + dist_segment_e / 2.0;
                 mid_n = north0 + dist_segment_n / 2.0;
-                north0 = slope * north_intercept + intercept;
+                north0 = north0 + dist_segment_n;
                 east0 = north_intercept;
                 ncell0 = ncell0 + nstep;
+              }
+            else if (east_dist < north_dist)
+              {
+                dist_segment_e = east_intercept - east0;
+                dist_segment_n = (slope * east_intercept + intercept) - north0;
+                mid_e = east0 + dist_segment_e / 2.0;
+                mid_n = north0 + dist_segment_n / 2.0;
+                east0 = east_intercept;
+                north0 = north0 + dist_segment_n;
+                ecell0 = ecell0 + estep;
               }
             else
               {
@@ -1237,44 +1286,31 @@ namespace jif3D
                 mid_e = east0 + dist_segment_e / 2.0;
                 mid_n = north0 + dist_segment_n / 2.0;
                 east0 = east_intercept;
-                north0 = slope * east_intercept + intercept;
+                north0 = north0 + dist_segment_n;
                 ecell0 = ecell0 + estep;
+                ncell0 = ncell0 + nstep;
               }
             proj.Reverse(lon_centr, mid_e - false_east, mid_n, mid_lat, mid_lon);
             geod.Inverse(event_lat, event_lon, mid_lat, mid_lon, s12, az1, az2);
-            se = cos((90.0 - az2) * M_PI / 180.0)
-                * (1.0 / c[ncell0 * ncells_east + ecell0]);
-            sn = sin((90.0 - az2) * M_PI / 180.0)
-                * (1.0 / c[ncell0 * ncells_east + ecell0]);
-            time = time + (se * dist_segment_e + sn * dist_segment_n) * (-1.0);
-            double gradfactor = (cos((90.0 - az2) * M_PI / 180.0) * dist_segment_e
+            double ti = (cos((90.0 - az2) * M_PI / 180.0) * dist_segment_e
                 + sin((90.0 - az2) * M_PI / 180.0) * dist_segment_n)
-                / pow(c[ncell0 * ncells_east + ecell0], 2);
+                / c[ncell0 * ncells_east + ecell0];
+            time = time + (-1.0) * ti;
 
             for (int n = 0; n < nlay; n++)
               {
-                /*dsedvs = cos((90.0 - az2) * M_PI / 180.0)
-                 * dsdvs[ncell0 * ncells_east * nlay + ecell0 * nlay + n];
-                 dsedvp = cos((90.0 - az2) * M_PI / 180.0)
-                 * dsdvp[ncell0 * ncells_east * nlay + ecell0 * nlay + n];
-                 dsedrho = cos((90.0 - az2) * M_PI / 180.0)
-                 * dsdrho[ncell0 * ncells_east * nlay + ecell0 * nlay + n];
-                 dsndvs = sin((90.0 - az2) * M_PI / 180.0)
-                 * dsdvs[ncell0 * ncells_east * nlay + ecell0 * nlay + n];
-                 dsndvp = sin((90.0 - az2) * M_PI / 180.0)
-                 * dsdvp[ncell0 * ncells_east * nlay + ecell0 * nlay + n];
-                 dsndrho = sin((90.0 - az2) * M_PI / 180.0)
-                 * dsdrho[ncell0 * ncells_east * nlay + ecell0 * nlay + n];*/
                 vsgrad[ncell0 * ncells_east * nlay + ecell0 * nlay + n] = vsgrad[ncell0
                     * ncells_east * nlay + ecell0 * nlay + n]
-                    + dsdvs[ncell0 * ncells_east * nlay + ecell0 * nlay + n] * gradfactor;
+                    + dcdvs[ncell0 * ncells_east * nlay + ecell0 * nlay + n]
+                        * (ti / c[ncell0 * ncells_east + ecell0]);
                 vpgrad[ncell0 * ncells_east * nlay + ecell0 * nlay + n] = vpgrad[ncell0
                     * ncells_east * nlay + ecell0 * nlay + n]
-                    + dsdvp[ncell0 * ncells_east * nlay + ecell0 * nlay + n] * gradfactor;
+                    + dcdvp[ncell0 * ncells_east * nlay + ecell0 * nlay + n]
+                        * (ti / c[ncell0 * ncells_east + ecell0]);
                 rhograd[ncell0 * ncells_east * nlay + ecell0 * nlay + n] = rhograd[ncell0
                     * ncells_east * nlay + ecell0 * nlay + n]
-                    + dsdrho[ncell0 * ncells_east * nlay + ecell0 * nlay + n]
-                        * gradfactor;
+                    + dcdrho[ncell0 * ncells_east * nlay + ecell0 * nlay + n]
+                        * (ti / c[ncell0 * ncells_east + ecell0]);
                 ;
               }
           }
@@ -1284,36 +1320,25 @@ namespace jif3D
         mid_n = north0 + dist_segment_n / 2.0;
         proj.Reverse(lon_centr, mid_e - false_east, mid_n, mid_lat, mid_lon);
         geod.Inverse(event_lat, event_lon, mid_lat, mid_lon, s12, az1, az2);
-        se = cos((90 - az2) * M_PI / 180) * (1 / c[ncell1 * ncells_east + ecell1]);
-        sn = sin((90 - az2) * M_PI / 180) * (1 / c[ncell1 * ncells_east + ecell1]);
-        time = time + (se * dist_segment_e + sn * dist_segment_n) * (-1.0);
-        double gradfactor = (cos((90.0 - az2) * M_PI / 180.0) * dist_segment_e
+        double ti = (cos((90.0 - az2) * M_PI / 180.0) * dist_segment_e
             + sin((90.0 - az2) * M_PI / 180.0) * dist_segment_n)
-            / pow(c[ncell1 * ncells_east + ecell1], 2);
+            / c[ncell1 * ncells_east + ecell1];
+        time = time + (-1.0) * ti;
 
         for (int n = 0; n < nlay; n++)
           {
-            /*dsedvs = cos((90.0 - az2) * M_PI / 180.0)
-             * dsdvs[ncell1 * ncells_east * nlay + ecell1 * nlay + n];
-             dsedvp = cos((90.0 - az2) * M_PI / 180.0)
-             * dsdvp[ncell1 * ncells_east * nlay + ecell1 * nlay + n];
-             dsedrho = cos((90.0 - az2) * M_PI / 180.0)
-             * dsdrho[ncell1 * ncells_east * nlay + ecell1 * nlay + n];
-             dsndvs = sin((90.0 - az2) * M_PI / 180.0)
-             * dsdvs[ncell1 * ncells_east * nlay + ecell1 * nlay + n];
-             dsndvp = sin((90.0 - az2) * M_PI / 180.0)
-             * dsdvp[ncell1 * ncells_east * nlay + ecell1 * nlay + n];
-             dsndrho = sin((90.0 - az2) * M_PI / 180.0)
-             * dsdrho[ncell1 * ncells_east * nlay + ecell1 * nlay + n];*/
             vsgrad[ncell1 * ncells_east * nlay + ecell1 * nlay + n] = vsgrad[ncell1
                 * ncells_east * nlay + ecell1 * nlay + n]
-                + dsdvs[ncell1 * ncells_east * nlay + ecell1 * nlay + n] * gradfactor;
+                + dcdvs[ncell1 * ncells_east * nlay + ecell1 * nlay + n]
+                    * (ti / c[ncell1 * ncells_east + ecell1]);
             vpgrad[ncell1 * ncells_east * nlay + ecell1 * nlay + n] = vpgrad[ncell1
                 * ncells_east * nlay + ecell1 * nlay + n]
-                + dsdvp[ncell1 * ncells_east * nlay + ecell1 * nlay + n] * gradfactor;
+                + dcdvp[ncell1 * ncells_east * nlay + ecell1 * nlay + n]
+                    * (ti / c[ncell1 * ncells_east + ecell1]);
             rhograd[ncell1 * ncells_east * nlay + ecell1 * nlay + n] = rhograd[ncell1
                 * ncells_east * nlay + ecell1 * nlay + n]
-                + dsdrho[ncell1 * ncells_east * nlay + ecell1 * nlay + n] * gradfactor;
+                + dcdrho[ncell1 * ncells_east * nlay + ecell1 * nlay + n]
+                    * (ti / c[ncell1 * ncells_east + ecell1]);
           }
 
         times[0] = time;
