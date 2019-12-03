@@ -21,14 +21,18 @@ int main()
 
     std::vector<double> Impedances, Errors;
     std::vector<double> Frequencies, StatX, StatY, StatZ, C;
+    std::vector<std::string> Names;
+
     jif3D::ReadImpedancesFromNetCDF(datafilename, Frequencies, StatX, StatY, StatZ,
-        Impedances, Errors, C);
+        Impedances, Errors, C, Names);
 
     std::vector<double> SynthImpedances, SynthErrors;
     std::vector<double> SynthFrequencies, SynthStatX, SynthStatY, SynthStatZ, SynthC;
+    std::vector<std::string> SynthNames;
+
     std::string synthfilename = jif3D::AskFilename("Name of synthetic file: ");
     jif3D::ReadImpedancesFromNetCDF(synthfilename, SynthFrequencies, SynthStatX,
-        SynthStatY, SynthStatZ, SynthImpedances, SynthErrors, SynthC);
+        SynthStatY, SynthStatZ, SynthImpedances, SynthErrors, SynthC,SynthNames);
 
     size_t nshift = 0;
     for (size_t i = 0; i < Errors.size() - 1; i += 2)
@@ -45,5 +49,5 @@ int main()
     std::cout << "Modified: " << nshift * 2 << " out of " << Impedances.size() << " data "
         << std::endl;
     jif3D::WriteImpedancesToNetCDF(datafilename + ".shf.nc", Frequencies, StatX, StatY,
-        StatZ, Impedances, Errors, C);
+        StatZ, Impedances, Errors, C, Names);
   }

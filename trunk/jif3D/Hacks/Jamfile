@@ -42,6 +42,8 @@ exe convertmtascii : convertmtascii.cpp  common ../MT//mt  ;
 exe convertmtt : convertmtt.cpp ../MT//mt   common  ;
 exe onedmtinv : onedmtinv.cpp   common ../MT//mt  ;
 exe nnmtinv : nnmtinv.cpp   common ../MT//mt  ;
+exe mergemodels : mergemodels.cpp   common ../MT//mt  ;
+
 exe writemtt : writemtt.cpp  common ../MT//mt ../Global//global  ;
 exe mergemtdata : mergemtdata.cpp  common ../MT//mt ../Global//global ;
 

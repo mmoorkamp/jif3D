@@ -21,8 +21,10 @@ int main()
 
     std::vector<double> Impedances, Errors;
     std::vector<double> Frequencies, StatX, StatY, StatZ, C;
+    std::vector<std::string> Names;
+
     jif3D::ReadImpedancesFromNetCDF(ncfilename, Frequencies, StatX, StatY, StatZ,
-        Impedances, Errors, C);
+        Impedances, Errors, C, Names);
     jif3D::WriteImpedancesToMtt(ncfilename, Frequencies, Impedances, Errors);
 
     jif3D::WriteImpedancesToJ(ncfilename, Frequencies, StatX, StatY, StatZ, Impedances,

@@ -161,7 +161,10 @@ int main(int argc, char *argv[])
       }
     jif3D::MTData OneDData;
     OneDData.SetFrequencies(Data.GetFrequencies());
-    OneDData.SetMeasurementPoints({0},{0}, {0});
+    OneDData.SetMeasurementPoints(
+      { 0 },
+      { 0 },
+      { 0 });
     OneDData.SetDataAndErrors(OneDImp, OneDErr);
     OneDData.CompleteObject();
 
@@ -323,11 +326,12 @@ int main(int argc, char *argv[])
       { 0.0 };
     std::vector<double> C =
       { 1, 0, 0, 1 };
+    std::vector<std::string> Names;
     jif3D::WriteImpedancesToNetCDF(modelfilename + ".inv_imp.nc", Data.GetFrequencies(),
-        Coord, Coord, Coord, FullImp, FullErr,C);
+        Coord, Coord, Coord, FullImp, FullErr, C, Names);
 
-    jif3D::WriteImpedancesToNetCDF(modelfilename + ".avg_imp.nc", Data.GetFrequencies(), Coord,
-        Coord, Coord, Averaged, AvgErr,C);
+    jif3D::WriteImpedancesToNetCDF(modelfilename + ".avg_imp.nc", Data.GetFrequencies(),
+        Coord, Coord, Coord, Averaged, AvgErr, C, Names);
 
     //and write out the data and model
     //here we have to distinguish again between scalar and ftg data
