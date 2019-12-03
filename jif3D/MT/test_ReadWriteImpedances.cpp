@@ -10,11 +10,35 @@
 #include "../Global/Jif3DTesting.h"
 #include <boost/test/included/unit_test.hpp>
 #include <boost/test/floating_point_comparison.hpp>
+#include <random>
+#include <string>
 
 #include "../Global/Jif3DPlatformHelper.h"
 #include "ReadWriteImpedances.h"
 #include "X3DModel.h"
 BOOST_AUTO_TEST_SUITE (ReadWriteImpedances_Suite)
+
+
+
+
+std::string random_string(std::string::size_type length)
+{
+    static auto& chrs = "0123456789"
+        "abcdefghijklmnopqrstuvwxyz"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    thread_local static std::mt19937 rg{std::random_device{}()};
+    thread_local static std::uniform_int_distribution<std::string::size_type> pick(0, sizeof(chrs) - 2);
+
+    std::string s;
+
+    s.reserve(length);
+
+    while(length--)
+        s += chrs[pick(rg)];
+
+    return s;
+}
 
 void GenerateData(std::vector<double> &Frequencies, std::vector<double> &XCoord,
     std::vector<double> &YCoord, std::vector<double> &ZCoord,
@@ -51,19 +75,24 @@ BOOST_AUTO_TEST_CASE (read_write_netcdf_test)
     std::vector<double> XCoord, YCoord, ZCoord, C;
     std::vector<double> Impedances, Error;
 
+
+
     GenerateData(Frequencies, XCoord, YCoord, ZCoord, Impedances, Error, C);
     const size_t nfreq = Frequencies.size();
     const size_t nstat = XCoord.size();
     const size_t ndata = nfreq * nstat * 8;
+    std::vector<std::string> Names(nstat);
+    std::generate_n(Names.begin(),nstat,[](){return random_string(19);});
     const std::string filename("imp.nc");
     jif3D::WriteImpedancesToNetCDF(filename, Frequencies, XCoord, YCoord, ZCoord,
-        Impedances, Error, C);
+        Impedances, Error, C,Names);
 
     std::vector<double> ReadFrequencies;
     std::vector<double> ReadXCoord, ReadYCoord, ReadZCoord, ReadC;
     std::vector<double> ReadImpedances, ReadError;
+    std::vector<std::string> ReadNames;
     jif3D::ReadImpedancesFromNetCDF(filename, ReadFrequencies, ReadXCoord, ReadYCoord,
-        ReadZCoord, ReadImpedances, ReadError, ReadC);
+        ReadZCoord, ReadImpedances, ReadError, ReadC,ReadNames);
     for (size_t i = 0; i < nfreq; ++i)
       {
         BOOST_CHECK_CLOSE(Frequencies[i], ReadFrequencies[i], 0.001);
@@ -73,6 +102,7 @@ BOOST_AUTO_TEST_CASE (read_write_netcdf_test)
         BOOST_CHECK_CLOSE(XCoord[i], ReadXCoord[i], 0.001);
         BOOST_CHECK_CLOSE(YCoord[i], ReadYCoord[i], 0.001);
         BOOST_CHECK_CLOSE(ZCoord[i], ReadZCoord[i], 0.001);
+        BOOST_TEST(Names.at(i) == ReadNames.at(i));
       }
     for (size_t i = 0; i < nstat * 4; ++i)
       {
@@ -96,7 +126,9 @@ BOOST_AUTO_TEST_CASE (read_write_tipper_netcdf_test)
     std::vector<double> Frequencies(nfreq);
     std::vector<double> XCoord(nstat), YCoord(nstat), ZCoord(nstat);
     std::vector<double> Tipper(ndata), Error(ndata);
-    std::vector<int> HxIndex(nstat), HyIndex(nstat), HzIndex(nstat);
+    std::vector<int> HxIndex(nstat*nfreq), HyIndex(nstat*nfreq), HzIndex(nstat*nfreq);
+    std::vector<std::string> Names(nstat);
+    std::generate_n(Names.begin(),nstat,[](){return random_string(19);});
 
     std::generate_n(Frequencies.begin(), nfreq, jif3D::platform::drand48);
     std::sort(Frequencies.begin(), Frequencies.end(), std::greater<double>());
@@ -105,9 +137,9 @@ BOOST_AUTO_TEST_CASE (read_write_tipper_netcdf_test)
     std::generate_n(ZCoord.begin(), nstat, jif3D::platform::drand48);
     std::generate_n(Tipper.begin(), ndata, jif3D::platform::drand48);
     std::generate_n(Error.begin(), ndata, jif3D::platform::drand48);
-    std::generate_n(HxIndex.begin(), nstat, jif3D::platform::drand48);
-    std::generate_n(HyIndex.begin(), nstat, jif3D::platform::drand48);
-    std::generate_n(HzIndex.begin(), nstat, jif3D::platform::drand48);
+    std::generate_n(HxIndex.begin(), nstat * nfreq, std::rand);
+    std::generate_n(HyIndex.begin(), nstat* nfreq, std::rand);
+    std::generate_n(HzIndex.begin(), nstat* nfreq, std::rand);
 
     for (size_t i = 1; i < ndata; i += 2)
       {
@@ -116,15 +148,16 @@ BOOST_AUTO_TEST_CASE (read_write_tipper_netcdf_test)
 
     const std::string filename("tipper.nc");
     jif3D::WriteTipperToNetCDF(filename, Frequencies, XCoord, YCoord, ZCoord, HxIndex,
-        HyIndex, HzIndex, Tipper, Error);
+        HyIndex, HzIndex, Tipper, Error,Names);
 
     std::vector<double> ReadFrequencies;
     std::vector<double> ReadXCoord, ReadYCoord, ReadZCoord;
     std::vector<double> ReadTipper, ReadError;
     std::vector<int> ReadHxIndex, ReadHyIndex, ReadHzIndex;
+    std::vector<std::string> ReadNames;
 
     jif3D::ReadTipperFromNetCDF(filename, ReadFrequencies, ReadXCoord, ReadYCoord,
-        ReadZCoord, ReadHxIndex, ReadHyIndex, ReadHzIndex, ReadTipper, ReadError);
+        ReadZCoord, ReadHxIndex, ReadHyIndex, ReadHzIndex, ReadTipper, ReadError, ReadNames);
     for (size_t i = 0; i < nfreq; ++i)
       {
         BOOST_CHECK_CLOSE(Frequencies[i], ReadFrequencies[i], 0.001);
@@ -137,6 +170,8 @@ BOOST_AUTO_TEST_CASE (read_write_tipper_netcdf_test)
         BOOST_CHECK_EQUAL(HxIndex[i], ReadHxIndex[i]);
         BOOST_CHECK_EQUAL(HyIndex[i], ReadHyIndex[i]);
         BOOST_CHECK_EQUAL(HzIndex[i], ReadHzIndex[i]);
+        BOOST_TEST(Names.at(i) == ReadNames.at(i));
+
 
       }
 

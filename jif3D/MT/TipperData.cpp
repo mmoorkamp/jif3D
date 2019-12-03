@@ -9,7 +9,6 @@
 #include "ReadWriteImpedances.h"
 #include "../ModelBase/VTKTools.h"
 
-
 namespace jif3D
   {
 
@@ -28,17 +27,19 @@ namespace jif3D
     void TipperData::ReadNetCDF(const std::string &filename)
       {
         std::vector<double> PosX, PosY, PosZ, D, E, Freqs;
+        std::vector<std::string> Names;
         ReadTipperFromNetCDF(filename, Freqs, PosX, PosY, PosZ, HxIndices, HyIndices,
-            HzIndices, D, E);
+            HzIndices, D, E, Names);
         SetFrequencies(Freqs);
-
+        SetNames(Names);
         SetMeasurementPoints(PosX, PosY, PosZ);
         SetDataAndErrors(D, E);
       }
     void TipperData::WriteNetCDF(const std::string &filename)
       {
         WriteTipperToNetCDF(filename, GetFrequencies(), GetMeasPosX(), GetMeasPosY(),
-            GetMeasPosZ(), HxIndices, HyIndices, HzIndices, GetData(), GetErrors());
+            GetMeasPosZ(), HxIndices, HyIndices, HzIndices, GetData(), GetErrors(),
+            GetNames());
       }
 
     void TipperData::CompleteObject()

@@ -171,6 +171,7 @@ int main(int argc, char *argv[])
 
     jif3D::AddNoise(Impedances, relnoise, Errors);
     std::vector<double> C, NoC;
+    std::vector<std::string> Names;
     if (DistDeviation > 0.0)
       {
         boost::lagged_fibonacci607 generator(static_cast<unsigned int>(std::time(0)));
@@ -223,13 +224,13 @@ int main(int argc, char *argv[])
         jif3D::WriteImpedancesToNetCDF(outfilename + "dist.nc", DataMT.GetFrequencies(),
             DataMT.GetMeasPosX(), DataMT.GetMeasPosY(), DataMT.GetMeasPosZ(),
             std::vector<double>(Impedances.begin(), Impedances.end()),
-            std::vector<double>(Errors.begin(), Errors.end()), NoC);
+            std::vector<double>(Errors.begin(), Errors.end()), NoC, Names);
       }
 
     jif3D::WriteImpedancesToNetCDF(outfilename, DataMT.GetFrequencies(),
         DataMT.GetMeasPosX(), DataMT.GetMeasPosY(), DataMT.GetMeasPosZ(),
         std::vector<double>(Impedances.begin(), Impedances.end()),
-        std::vector<double>(Errors.begin(), Errors.end()), C);
+        std::vector<double>(Errors.begin(), Errors.end()), C, Names);
     jif3D::WriteImpedancesToModEM(outfilename + ".dat", DataMT.GetFrequencies(),
         DataMT.GetMeasPosX(), DataMT.GetMeasPosY(), DataMT.GetMeasPosZ(),
         std::vector<double>(Impedances.begin(), Impedances.end()),
@@ -254,8 +255,7 @@ int main(int argc, char *argv[])
 
     jif3D::AddNoise(Tipper, relnoise, TipErrors);
 
-
-    DataTipper.SetDataAndErrors( std::vector<double>(Tipper.begin(), Tipper.end()),
+    DataTipper.SetDataAndErrors(std::vector<double>(Tipper.begin(), Tipper.end()),
         std::vector<double>(TipErrors.begin(), TipErrors.end()));
     DataTipper.WriteNetCDF(outfilename + ".tip.nc");
 

@@ -31,10 +31,8 @@
 #include "../Inversion/ModelTransforms.h"
 #include "../Inversion/ThreeDModelObjective.h"
 #include "../Inversion/DiagonalCovariance.h"
-#ifdef HAVEEIGEN
 #include "../Inversion/StochasticCovariance.h"
 #include "../Inversion/MultiSectionCovariance.h"
-#endif
 #include "../MT/X3DModel.h"
 #include "../MT/X3DMTCalculator.h"
 #include "../MT/X3DTipperCalculator.h"
@@ -230,7 +228,7 @@ int hpx_main(boost::program_options::variables_map& vm)
         DataMT.ReadNetCDF(datafilename);
         DataMT.WriteModEM("start_data.dat");
       }
-    DataMT.PlotMeasurementConfiguration(datafilename+".vtk");
+    DataMT.PlotMeasurementConfiguration(datafilename + ".vtk");
     std::vector<double> ZError = DataMT.GetErrors();
     std::vector<double> DataError = ZError;
     std::vector<double> MinErr(ZError.size());
@@ -373,7 +371,8 @@ int hpx_main(boost::program_options::variables_map& vm)
         MTTransform->SetLength(ngrid + DataMT.GetDistortion().size());
       }
 
-    boost::shared_ptr<jif3D::X3DFieldCalculator>  FC = boost::make_shared<jif3D::X3DFieldCalculator>(TempDir, X3DName);
+    boost::shared_ptr<jif3D::X3DFieldCalculator> FC = boost::make_shared<
+        jif3D::X3DFieldCalculator>(TempDir, X3DName);
 
     jif3D::X3DMTCalculator Calculator(TempDir, X3DName, WantDistCorr, CleanFiles, FC);
     if (vm.count("opt"))
@@ -523,6 +522,17 @@ int hpx_main(boost::program_options::variables_map& vm)
         jif3D::rvec covgrad = CovObj->ApplyCovar(grad);
         std::copy(covgrad.begin(), covgrad.end(), Model.SetData().origin());
         Model.WriteVTK(modelfilename + ".datacovgrad.vtk");
+
+        GM = ModRegTrans->GeneralizedToPhysical(InvModel);
+        std::cout << " Regularization: " << Regularization->CalcMisfit(GM) << std::endl;
+        grad = Regularization->CalcGradient(GM);
+
+        std::copy(grad.begin(), grad.end(), Model.SetData().origin());
+        Model.WriteVTK(modelfilename + ".reggrad.vtk");
+        covgrad = CovObj->ApplyCovar(grad);
+        std::copy(covgrad.begin(), covgrad.end(), Model.SetData().origin());
+        Model.WriteVTK(modelfilename + ".regcovgrad.vtk");
+
         return 0;
       }
 
@@ -644,7 +654,7 @@ int hpx_main(boost::program_options::variables_map& vm)
         std::vector<double> TippE = TipperObjective->GetDataError();
         DataTip.SetDataAndErrors(STipper, TippE);
         DataTip.WriteNetCDF(modelfilename + ".inv_tip.nc");
-        DataTip.PlotMeasurementConfiguration(modelfilename+".tip.");
+        DataTip.PlotMeasurementConfiguration(modelfilename + ".tip.");
         std::vector<double> TippFit(TipperObjective->GetIndividualMisfit().begin(),
             TipperObjective->GetIndividualMisfit().end());
         DataTip.SetDataAndErrors(TippFit, TippE);

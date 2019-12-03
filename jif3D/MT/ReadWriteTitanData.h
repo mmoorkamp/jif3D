@@ -43,7 +43,7 @@ namespace jif3D
         const std::vector<int> &ExIndices, const std::vector<int> &EyIndices,
         const std::vector<int> &HIndices, const std::vector<double> &Impedances,
         const std::vector<double> &Errors, const std::vector<double> &Distortion,
-        const std::vector<double> &RotAngles);
+        const std::vector<double> &RotAngles, const std::vector<std::string> &Names);
 
     //! Read Titan24 Data transfer functions from a netcdf file
     /*! Read Titan24 Data for several stations from a netcdf file.
@@ -70,7 +70,7 @@ namespace jif3D
         std::vector<double> &MeasYCoord, std::vector<double> &MeasZCoord,
         std::vector<int> &ExIndices, std::vector<int> &EyIndices,
         std::vector<int> &HIndices, std::vector<double>  &Impedances, std::vector<double>  &ImpError,
-        std::vector<double> &Distortion, std::vector<double> &RotAngles);
+        std::vector<double> &Distortion, std::vector<double> &RotAngles, std::vector<std::string> &Names);
 
     //! Write Titan24 transfer functions into an ascii file as written by ModEM
     /*! Write Titan24 transfer functions into an ascii file as written by ModEM,

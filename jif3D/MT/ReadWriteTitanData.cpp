@@ -41,6 +41,8 @@ namespace jif3D
     static const std::string FreqDimName = "Frequency";
     static const std::string DistortionName = "C";
     static const std::string AngleName = "RotationAngle";
+    static const std::string SiteNameName = "Names";
+
 
     //write the Titan TF indices matrix to a netcdf file
     //this is an internal helper function
@@ -92,7 +94,7 @@ namespace jif3D
         const std::vector<int> &ExIndices, const std::vector<int> &EyIndices,
         const std::vector<int> &HIndices, const std::vector<double> &Impedances,
         const std::vector<double> &Errors, const std::vector<double> &Distortion,
-        const std::vector<double> &RotAngles)
+        const std::vector<double> &RotAngles, const std::vector<std::string> &Names)
       {
         const size_t nmeas = MeasXCoord.size();
         const size_t nTitanTFs = ExIndices.size();
@@ -177,6 +179,20 @@ namespace jif3D
 //            CVar.put(&Distortion[0], nstats, 4);
             cxxport::put_legacy_ncvar(AngleVar, RotAngles.data(), nstats);
           }
+        if (!Names.empty())
+          {
+            //NcDim StringDim = DataFile.addDim("NameLength", 255);
+            std::vector<NcDim> dimVec;
+            dimVec.push_back(StatNumDim);
+            NcVar NameVar = DataFile.addVar(SiteNameName, netCDF::ncString, dimVec);
+            for (size_t i = 0; i < nstats; ++i)
+              {
+                NameVar.putVar(
+                  { i }, Names.at(i));
+              }
+
+            //cxxport::put_legacy_ncvar(NameVar, Names, nstats);
+          }
 
       }
 
@@ -186,7 +202,7 @@ namespace jif3D
         std::vector<int> &ExIndices, std::vector<int> &EyIndices,
         std::vector<int> &HIndices, std::vector<double> &Impedances,
         std::vector<double> &ImpError, std::vector<double> &Distortion,
-        std::vector<double> &RotAngles)
+        std::vector<double> &RotAngles, std::vector<std::string> &Names)
       {
         //open the netcdf file readonly
         NcFile DataFile(filename, NcFile::read);
@@ -203,7 +219,7 @@ namespace jif3D
 
         if (EyIndices.size() != ExIndices.size() || HIndices.size() != ExIndices.size())
           {
-            throw jif3D::FatalException("Inconsistent index informationfor Titan Data",
+            throw jif3D::FatalException("Inconsistent index information for Titan Data",
             __FILE__, __LINE__);
           }
 
@@ -319,7 +335,34 @@ namespace jif3D
           {
             // ignore
           }
+        try
+          {
+            NcVar NameVar = DataFile.getVar(SiteNameName);
+            const int nvalues = MeasXCoord.size();
+            Names.resize(nvalues);
+            if (!NameVar.isNull())
+              {
+                const std::vector<long> edges = cxxport::get_legacy_var_edges(NameVar);
+                if (nvalues != edges[0])
+                  {
+                    throw jif3D::FatalException(
+                        "Number of Names does not match number of stations !",
+                        __FILE__, __LINE__);
+                  }
+                for (size_t i = 0; i < nvalues; ++i)
+                  {
+                    char *buffer;
+                    NameVar.getVar(
+                      { i }, &buffer);
+                    std::cout << buffer << std::endl;
+                    Names.at(i) = buffer;
+                  }
+              }
 
+          } catch (const netCDF::exceptions::NcException &ex)
+          {
+            // ignore
+          }
       }
 
     void WriteTitanDataToModEM(const std::string &filename,

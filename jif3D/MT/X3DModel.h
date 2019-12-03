@@ -84,7 +84,7 @@ namespace jif3D
           SetYCellSizes(YCS);
         }
       //! The vertical cells can all have different sizes so we allow direct access to the CellSize structure
-      void SetZCellSizes(ThreeDModelBase::t3DModelDim &ZCS)
+      void SetZCellSizes(const ThreeDModelBase::t3DModelDim &ZCS)
         {
           ThreeDModelBase::SetZCellSizes(ZCS);
         }
