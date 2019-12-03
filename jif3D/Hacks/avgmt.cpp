@@ -31,8 +31,10 @@ int main()
 
     std::vector<double> Frequencies, XCoord, YCoord, ZCoord, C;
     std::vector<double> Imp, Err;
+    std::vector<std::string> Names;
+
     jif3D::ReadImpedancesFromNetCDF(filename, Frequencies, XCoord, YCoord, ZCoord, Imp,
-        Err, C);
+        Err, C, Names);
 
     size_t nstat = XCoord.size();
     size_t nfreq = Frequencies.size();
@@ -49,7 +51,7 @@ int main()
     std::vector<double> Dist({1,0,0,1});
     std::vector<double> AvgXCoord(1, 0.0), AvgYCoord(1, 0.0), AvgZCoord(1, 0.0);
     jif3D::WriteImpedancesToNetCDF(filename + ".avg.nc", Frequencies, AvgXCoord,
-        AvgYCoord, AvgZCoord, AvgImp, AvgErr,Dist);
+        AvgYCoord, AvgZCoord, AvgImp, AvgErr,Dist, Names);
     jif3D::WriteImpedancesToMtt(filename + ".avg.nc", Frequencies, AvgImp, AvgErr);
 
   }

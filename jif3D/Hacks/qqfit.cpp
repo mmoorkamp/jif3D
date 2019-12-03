@@ -41,8 +41,9 @@ int main()
 
     std::vector<double> Impedances, Errors, Misfit;
     std::vector<double> Frequencies, StatX, StatY, StatZ, C;
+    std::vector<std::string> Names;
     jif3D::ReadImpedancesFromNetCDF(misfitfilename, Frequencies, StatX, StatY, StatZ,
-        Misfit, Errors, C);
+        Misfit, Errors, C, Names);
 
     std::cout << " Read " << Misfit.size() << " misfit values " << std::endl;
     std::ofstream Zxxqq("Zxx.qq");
@@ -72,7 +73,7 @@ int main()
       }
     std::string impfilename = jif3D::AskFilename("Name of data file: ");
     jif3D::ReadImpedancesFromNetCDF(impfilename, Frequencies, StatX, StatY, StatZ,
-        Impedances, Errors, C);
+        Impedances, Errors, C, Names);
     std::ofstream indexfile("ind.out");
     const size_t nstat = StatX.size();
     for (size_t ind : Indices)
@@ -90,5 +91,5 @@ int main()
     std::cout << "Modified: " << Indices.size() << " out of " << Impedances.size()
         << " data " << std::endl;
     jif3D::WriteImpedancesToNetCDF(impfilename + ".qq.nc", Frequencies, StatX, StatY,
-        StatZ, Impedances, Errors, C);
+        StatZ, Impedances, Errors, C, Names);
   }

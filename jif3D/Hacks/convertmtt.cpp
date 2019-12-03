@@ -64,6 +64,7 @@ int main()
         std::vector<double> Impedances, Errors, Tipper, TipErr;
         std::vector<double> Frequencies, StatXCoord(nstats), StatYCoord(nstats),
             StatZCoord(nstats);
+        std::vector<std::string> Names;
         StationFile.open(filename.c_str());
         std::vector<double> CurrFrequencies;
         std::vector<double> CurrImpedances, CurrErrors, CurrTip, CurrTipErr;
@@ -85,7 +86,7 @@ int main()
                     CurrImpedances, CurrErrors);
               }
           }
-
+        Names.push_back(StationName);
         const size_t nfreq = Frequencies.size();
         assert(nfreq * 8 == CurrImpedances.size());
         Impedances.resize(nstats * nfreq * 8);
@@ -118,6 +119,7 @@ int main()
                 StatXCoord.at(stationindex + 1) = xcoord;
                 StatYCoord.at(stationindex + 1) = ycoord;
                 StatZCoord.at(stationindex + 1) = zcoord;
+                Names.push_back(StationName);
                 std::string extension = jif3D::GetFileExtension(StationName);
                 if (extension == ".mtt")
                   {
@@ -144,12 +146,13 @@ int main()
         MTData.SetMeasurementPoints(StatXCoord, StatYCoord, StatZCoord);
         MTData.SetDataAndErrors(Impedances, Errors);
         MTData.SetFrequencies(Frequencies);
+        MTData.SetNames(Names);
         MTData.CompleteObject();
         MTData.WriteNetCDF(outfilename);
 
         jif3D::TipperData TipperData;
         TipperData.SetMeasurementPoints(StatXCoord, StatYCoord, StatZCoord);
-        TipperData.SetDataAndErrors(Impedances, Errors);
+        TipperData.SetDataAndErrors(Tipper, TipErr);
         TipperData.SetFrequencies(Frequencies);
         TipperData.CompleteObject();
         TipperData.WriteNetCDF(outfilename+".tip.nc");

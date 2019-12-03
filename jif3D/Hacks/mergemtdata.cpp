@@ -65,7 +65,7 @@ int main()
         std::copy(Data2.GetErrors().begin() + shift2 * i, Data2.GetErrors().begin() + shift2 * (i + 1),
             Errors.begin() + (shift1 + shift2) * i + shift1);
       }
-
+    std::vector<std::string> Names;
     jif3D::WriteImpedancesToNetCDF(ncfilename1 + ".merged.nc", Frequencies, StatX, StatY,
-        StatZ, Impedances, Errors, C);
+        StatZ, Impedances, Errors, C, Names);
   }
