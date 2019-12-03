@@ -66,7 +66,7 @@ namespace jif3D
         const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
         const std::vector<double> &Impedances, const std::vector<double> &Errors,
-        const std::vector<double> &Distortion);
+        const std::vector<double> &Distortion, const std::vector<std::string> &Names);
 
     //! Read magnetotelluric impedances from a netcdf file
     /*! Read MT impedances for several stations from a netcdf file.
@@ -86,7 +86,7 @@ namespace jif3D
         std::vector<double> &Frequencies, std::vector<double> &StatXCoord,
         std::vector<double> &StatYCoord, std::vector<double> &StatZCoord,
         std::vector<double> &Impedances, std::vector<double> &ImpError,
-        std::vector<double> &Distortion);
+        std::vector<double> &Distortion, std::vector<std::string> &Names);
 
     //! Write tipper to a netcdf file
     /*! We can save tipper for several stations in a netcdf file for storage
@@ -106,7 +106,7 @@ namespace jif3D
         const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
         const std::vector<int> &HxIndices, const std::vector<int> &HyIndices, const std::vector<int> &HzIndices,
-        const std::vector<double> &Tipper, const std::vector<double> &Errors);
+        const std::vector<double> &Tipper, const std::vector<double> &Errors, const std::vector<std::string> &Names);
 
     //! Read magnetotelluric tipper from a netcdf file
     /*! Read MT tipper for several stations from a netcdf file.
@@ -126,7 +126,7 @@ namespace jif3D
         std::vector<double> &Frequencies, std::vector<double> &StatXCoord,
         std::vector<double> &StatYCoord, std::vector<double> &StatZCoord,
         std::vector<int> &HxIndices, std::vector<int> &HyIndices, std::vector<int> &HzIndices,
-        std::vector<double> &Tipper, std::vector<double> &Error);
+        std::vector<double> &Tipper, std::vector<double> &Error, std::vector<std::string> &Names);
 
     //! A very basic routine to read impedances at a single site from a .mtt file in the format used by University of Goettingen
     /*! A very basic routine to read impedances at a single site from a .mtt file in the

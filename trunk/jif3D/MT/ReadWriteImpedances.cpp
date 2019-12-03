@@ -33,6 +33,7 @@ namespace jif3D
     using namespace std;
     static const std::string FreqDimName = "Frequency";
     static const std::string DistortionName = "C";
+    static const std::string SiteNameName = "Names";
 
     //! The name used for the index of Stations with Ex measurement used to compute Titan TF data in netcdf files
     static const std::string HxIndicesName = "HxIndices";
@@ -201,7 +202,7 @@ namespace jif3D
         const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
         const std::vector<double> &Impedances, const std::vector<double> &Errors,
-        const std::vector<double> &Distortion)
+        const std::vector<double> &Distortion, const std::vector<std::string> &Names)
       {
         const size_t nstats = StatXCoord.size();
         const size_t nfreqs = Frequencies.size();
@@ -261,13 +262,27 @@ namespace jif3D
 //            CVar.put(&Distortion[0], nstats, 4);
             cxxport::put_legacy_ncvar(CVar, Distortion.data(), nstats, 4);
           }
+        if (!Names.empty())
+          {
+            //NcDim StringDim = DataFile.addDim("NameLength", 255);
+            std::vector<NcDim> dimVec;
+            dimVec.push_back(StatNumDim);
+            NcVar NameVar = DataFile.addVar(SiteNameName, netCDF::ncString, dimVec);
+            for (size_t i = 0; i < nstats; ++i)
+              {
+                NameVar.putVar(
+                  { i }, Names.at(i));
+              }
+
+            //cxxport::put_legacy_ncvar(NameVar, Names, nstats);
+          }
       }
 
     void ReadImpedancesFromNetCDF(const std::string &filename,
         std::vector<double> &Frequencies, std::vector<double> &StatXCoord,
         std::vector<double> &StatYCoord, std::vector<double> &StatZCoord,
         std::vector<double> &Impedances, std::vector<double> &ImpError,
-        std::vector<double> &Distortion)
+        std::vector<double> &Distortion, std::vector<std::string> &Names)
       {
         //open the netcdf file readonly
         NcFile DataFile(filename, NcFile::read);
@@ -320,7 +335,8 @@ namespace jif3D
                         __FILE__, __LINE__);
                   }
 
-//              DistVar.get(&Distortion[0], edges[0], edges[1]);
+                //DistVar.getVar(  std::vector<size_t>({0,0}), std::vector<size_t>({edges[0], edges[1]}),Distortion.data());
+
                 cxxport::get_legacy_ncvar(DistVar, Distortion.data(), edges[0], edges[1]);
               }
             else
@@ -337,6 +353,34 @@ namespace jif3D
           {
             // ignore
           }
+        try
+          {
+            NcVar NameVar = DataFile.getVar(SiteNameName);
+            const int nvalues = StatXCoord.size();
+            Names.resize(nvalues);
+            if (!NameVar.isNull())
+              {
+                const std::vector<long> edges = cxxport::get_legacy_var_edges(NameVar);
+                if (nvalues != edges[0])
+                  {
+                    throw jif3D::FatalException(
+                        "Number of Names does not match number of stations !",
+                        __FILE__, __LINE__);
+                  }
+                for (size_t i = 0; i < nvalues; ++i)
+                  {
+                    char *buffer;
+                    NameVar.getVar(
+                      { i }, &buffer);
+                    std::cout << buffer << std::endl;
+                    Names.at(i) = buffer;
+                  }
+              }
+
+          } catch (const netCDF::exceptions::NcException &ex)
+          {
+            // ignore
+          }
       }
 
     void WriteTipperToNetCDF(const std::string &filename,
@@ -344,13 +388,13 @@ namespace jif3D
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
         const std::vector<int> &HxIndices, const std::vector<int> &HyIndices,
         const std::vector<int> &HzIndices, const std::vector<double> &Tipper,
-        const std::vector<double> &Errors)
+        const std::vector<double> &Errors, const std::vector<std::string> &Names)
       {
         const size_t nfreqs = Frequencies.size();
         const size_t nstats = HxIndices.size() / nfreqs;
         const size_t nimp = nstats * nfreqs * 4;
 
-        assert(Tipper.size() == HxIndices.size()*4);
+        assert(Tipper.size() == HxIndices.size() * 4);
         assert(HxIndices.size() == HyIndices.size());
         assert(HxIndices.size() == HzIndices.size());
         //create a netcdf file
@@ -358,7 +402,6 @@ namespace jif3D
         //Create the dimensions for the stations
         NcDim StatNumDim = DataFile.addDim(StationNumberName, nstats);
         NcDim MeasNumDim = DataFile.addDim(MeasNumberName, StatXCoord.size());
-
 
         //write out the measurement coordinates
         WriteVec(DataFile, MeasPosXName, StatXCoord, MeasNumDim, "m");
@@ -386,7 +429,20 @@ namespace jif3D
         //we only have to write the elements corresponding to the real part
         WriteTipperComp(DataFile, StatNumDim, FreqDim, Errors, "dTx", 0);
         WriteTipperComp(DataFile, StatNumDim, FreqDim, Errors, "dTy", 2);
+        if (!Names.empty())
+          {
+            //NcDim StringDim = DataFile.addDim("NameLength", 255);
+            std::vector<NcDim> dimVec;
+            dimVec.push_back(StatNumDim);
+            NcVar NameVar = DataFile.addVar(SiteNameName, netCDF::ncString, dimVec);
+            for (size_t i = 0; i < nstats; ++i)
+              {
+                NameVar.putVar(
+                  { i }, Names.at(i));
+              }
 
+            //cxxport::put_legacy_ncvar(NameVar, Names, nstats);
+          }
       }
 
     void ReadTipperFromNetCDF(const std::string &filename,
@@ -394,7 +450,7 @@ namespace jif3D
         std::vector<double> &StatYCoord, std::vector<double> &StatZCoord,
         std::vector<int> &HxIndices, std::vector<int> &HyIndices,
         std::vector<int> &HzIndices, std::vector<double> &Tipper,
-        std::vector<double> &Error)
+        std::vector<double> &Error, std::vector<std::string> &Names)
       {
         //open the netcdf file readonly
         NcFile DataFile(filename, NcFile::read);
@@ -437,7 +493,7 @@ namespace jif3D
             HzIndices = HxIndices;
           }
 
-        const size_t nimp = HxIndices .size() * 4;
+        const size_t nimp = HxIndices.size() * 4;
         Tipper.resize(nimp);
         Error.resize(nimp);
         //read the impedances
@@ -454,6 +510,35 @@ namespace jif3D
         for (size_t i = 0; i < nimp - 1; i += 2)
           {
             Error.at(i + 1) = Error.at(i);
+          }
+
+        try
+          {
+            NcVar NameVar = DataFile.getVar(SiteNameName);
+            const int nvalues = StatXCoord.size();
+            Names.resize(nvalues);
+            if (!NameVar.isNull())
+              {
+                const std::vector<long> edges = cxxport::get_legacy_var_edges(NameVar);
+                if (nvalues != edges[0])
+                  {
+                    throw jif3D::FatalException(
+                        "Number of Names does not match number of stations !",
+                        __FILE__, __LINE__);
+                  }
+                for (size_t i = 0; i < nvalues; ++i)
+                  {
+                    char *buffer;
+                    NameVar.getVar(
+                      { i }, &buffer);
+                    std::cout << buffer << std::endl;
+                    Names.at(i) = buffer;
+                  }
+              }
+
+          } catch (const netCDF::exceptions::NcException &ex)
+          {
+            // ignore
           }
       }
 

@@ -20,6 +20,7 @@ namespace jif3D
     private:
       std::vector<double> Frequencies;
       std::vector<double> RotAngles;
+      std::vector<std::string> Names;
     public:
       typedef jif3D::X3DModel ModelType;
       template<class Archive>
@@ -45,6 +46,15 @@ namespace jif3D
         {
           RotAngles = RA;
         }
+      const std::vector<std::string> &GetNames() const
+        {
+          return Names;
+        }
+      void SetNames(const std::vector<std::string> &s)
+        {
+          Names = s;
+        }
+
       EMData();
       virtual ~EMData();
       };

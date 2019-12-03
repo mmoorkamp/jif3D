@@ -96,9 +96,9 @@ int main(int argc, char *argv[])
     if (vm.count("center"))
       {
         std::vector<double> Dummy, StatPosX, StatPosY, StatPosZ;
-
+        std::vector<std::string> Names;
         jif3D::ReadImpedancesFromNetCDF(DataName, Dummy, StatPosX, StatPosY, StatPosZ,
-            Dummy, Dummy, Dummy);
+            Dummy, Dummy, Dummy, Names);
         auto mmx = boost::minmax_element(StatPosX.begin(), StatPosX.end());
         auto mmy = boost::minmax_element(StatPosY.begin(), StatPosY.end());
         auto mmz = boost::minmax_element(StatPosZ.begin(), StatPosZ.end());

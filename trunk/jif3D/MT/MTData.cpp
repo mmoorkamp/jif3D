@@ -17,9 +17,12 @@ namespace jif3D
     void MTData::ReadNetCDF(const std::string &filename)
       {
         std::vector<double> PosX, PosY, PosZ, Freqs, Imp, Err, RA;
+        std::vector<std::string> Names;
+
         ReadTitanDataFromNetCDF(filename, Freqs, PosX, PosY, PosZ, ExIndices, EyIndices,
-            HxIndices, Imp, Err, Distortion, RA);
+            HxIndices, Imp, Err, Distortion, RA, Names);
         HyIndices = HxIndices;
+        SetNames(Names);
         SetFrequencies(Freqs);
         SetRotAngles(RA);
         SetMeasurementPoints(PosX, PosY, PosZ);
@@ -29,7 +32,7 @@ namespace jif3D
       {
         WriteTitanDataToNetCDF(filename, GetFrequencies(), GetMeasPosX(), GetMeasPosY(),
             GetMeasPosZ(), ExIndices, EyIndices, HxIndices, GetData(), GetErrors(),
-            Distortion, GetRotAngles());
+            Distortion, GetRotAngles(), GetNames());
       }
 
     void MTData::SetDefaultDistortion()
