@@ -178,11 +178,11 @@ namespace jif3D
         for (size_t i = 0; i < nrows; ++i)
           {
             double abs1 = std::sqrt(
-                jif3D::pow2(Data.at(i * nrows)) + jif3D::pow2(Data.at(i * nrows + 1)));
+                jif3D::pow2(Data.at(i * nrowelem)) + jif3D::pow2(Data.at(i * nrowelem + 1)));
             double abs2 = std::sqrt(
-                jif3D::pow2(Data.at(i * nrows + 2)) + jif3D::pow2(Data.at(i * nrows + 3)));
+                jif3D::pow2(Data.at(i * nrowelem + 2)) + jif3D::pow2(Data.at(i * nrowelem + 3)));
             double maxabs = std::max(abs1, abs2);
-            std::fill_n(DataError.begin() + i * ntensorelem, ntensorelem,
+            std::fill_n(DataError.begin() + i * nrowelem, nrowelem,
                 maxabs * relerror);
           }
         return DataError;
