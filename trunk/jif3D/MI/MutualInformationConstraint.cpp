@@ -9,17 +9,18 @@
 #include <omp.h>
 #include <boost/histogram.hpp>
 #include <boost/algorithm/minmax_element.hpp>
+#include <boost/math/distributions/normal.hpp>
 #include <algorithm>
+#include <cmath>
 
 namespace jif3D
   {
 
- // def shan_entropy(c):
- //     c_normalized = c / float(np.sum(c))
- //     c_normalized = c_normalized[np.nonzero(c_normalized)]
- //     H = -sum(c_normalized* np.log(c_normalized))
- //     return H
-
+    // def shan_entropy(c):
+    //     c_normalized = c / float(np.sum(c))
+    //     c_normalized = c_normalized[np.nonzero(c_normalized)]
+    //     H = -sum(c_normalized* np.log(c_normalized))
+    //     return H
 
     double shan_entropy(const jif3D::rvec &x)
       {
@@ -37,7 +38,7 @@ namespace jif3D
         return H;
       }
 
-    double CalcMI(const jif3D::rvec &x, const jif3D::rvec &y, double xmin, double xmax,
+    double MIHist(const jif3D::rvec &x, const jif3D::rvec &y, double xmin, double xmax,
         double ymin, double ymax, size_t nbins)
       {
         using namespace boost::histogram;
@@ -71,8 +72,63 @@ namespace jif3D
         double H_XY = shan_entropy(xycount);
         //std::cout << H_X << " " << H_Y << " "<< H_XY << std::endl;
         //double H = 2.0 * H_XY - H_X - H_Y;
+
+        //MI = H_X + H_Y - H_XY
+        double I = 2.0 * H_XY - H_X - H_Y;
         double H = H_X + H_Y - H_XY;
-        return std::exp(-H);
+        //return std::exp(-H);
+        return I;
+      }
+
+    double MIGauss(const jif3D::rvec &x, const jif3D::rvec &y, double xmin, double xmax,
+        double ymin, double ymax, size_t nbins)
+      {
+       /* const size_t nprecomp = 1000;
+        jif3D::rvec GaussComp(nprecomp);
+
+        for (size_t i = 0; i < nprecomp; ++i)
+          {
+            double x = i / double(nprecomp) * 3.0;
+            GaussComp(i) = boost::math::pdf(norm, x);
+          }*/
+        boost::math::normal norm;
+        const size_t nparm = x.size();
+        double xw = (xmax - xmin) / nbins;
+        double yw = (ymax - ymin) / nbins;
+        jif3D::rvec Counts(nbins * nbins, 0.0), CountsX(nbins,0.0),CountsY(nbins,0.0);
+        for (size_t i = 0; i < nparm; ++i)
+          {
+            //int xc = std::floor(std::min((x(i) - xmin) / xw, nbins - 1));
+            //int yc = std::floor(std::min((y(i) - ymin) / yw, nbins - 1));
+            for (size_t j = 0; j < nbins; ++j)
+              {
+                for (size_t k = 0; k < nbins; ++k)
+                  {
+                    double distx = x(i) - (xmin + j * xw);
+                    double disty = y(i) - (ymin + k * yw);
+                    double val = boost::math::pdf(norm,std::sqrt(distx * distx + disty * disty)/0.05);
+                    Counts(j * nbins + k) += val;
+                    CountsX(j) += val;
+                    CountsY(k) += val;
+                  }
+              }
+          }
+        //std::cout << CountsX << "\n" << CountsY << "\n" << Counts << std::endl;
+        double H_X = shan_entropy(CountsX);
+        double H_Y = shan_entropy(CountsY);
+        double H_XY = shan_entropy(Counts);
+        //std::cout << H_X << " " << H_Y << " " << H_XY << std::endl;
+        double I = 2.0 * H_XY - H_X - H_Y;
+        double H = H_X + H_Y - H_XY;
+        //return std::exp(-H);
+        return I;
+
+      }
+
+    double CalcMI(const jif3D::rvec &x, const jif3D::rvec &y, double xmin, double xmax,
+        double ymin, double ymax, size_t nbins)
+      {
+        return MIGauss(x, y, xmin, xmax, ymin, ymax, nbins);
       }
 
     //! The implementation of the cross-gradient calculation
