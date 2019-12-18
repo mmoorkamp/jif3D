@@ -80,6 +80,7 @@ namespace jif3D
                 "Scalar Gravity Data Filename: ");
 
             ScalGravData.ReadNetCDF(scalgravdatafilename);
+            ScalGravData.WriteVTK(scalgravdatafilename+".vtk");
             HaveScal = true;
           }
 
