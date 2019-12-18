@@ -72,9 +72,10 @@ namespace jif3D
        * the constructor. Note that during the inversion we assume Model.size() == 2*Geometry.GetData().num_elements()
        * as explained in the general description of this class.
        * @param Geometry An object that contains the information about the model geometry (cell sizes etc.)
+       * @param considersize Use the cell size when calculating the gradient, otherwise the distance is measured in number of cells
        */
-      explicit CrossGradient(const jif3D::ThreeDModelBase &Geometry) :
-          FirstGradient(Geometry, 0.0), SecondGradient(Geometry, 0.0), ModelGeometry(
+      explicit CrossGradient(const jif3D::ThreeDModelBase &Geometry, bool considersize = false) :
+          FirstGradient(Geometry, 0.0, considersize), SecondGradient(Geometry, 0.0, considersize), ModelGeometry(
               Geometry)
         {
 
