@@ -15,10 +15,10 @@
 #include <iostream>
 #include <fstream>
 
-#include <Eigen/Core>
-#include <Eigen/Dense>
-#include <Eigen/Sparse>
-#include <Eigen/IterativeLinearSolvers>
+#include "../Eigen/Core"
+#include "../Eigen/Dense"
+#include "../Eigen/Sparse"
+#include "../Eigen/IterativeLinearSolvers"
 //#include <unsupported/Eigen/IterativeSolvers>
 
 typedef Eigen::SparseMatrix<double> SpMat; // declares a column-major sparse matrix type of double

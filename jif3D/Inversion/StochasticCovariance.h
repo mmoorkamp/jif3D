@@ -11,9 +11,9 @@
 #include "../Global/VecMat.h"
 #include "GeneralCovariance.h"
 #include "../ModelBase/ThreeDModelBase.h"
-#include <Eigen/Sparse>
-#include <Eigen/SparseQR>
-#include <Eigen/OrderingMethods>
+#include "../Eigen/Sparse"
+#include "../Eigen/SparseQR"
+#include "../Eigen/OrderingMethods"
 //#include <Eigen/Dense>
 //#include <boost/math/interpolators/cubic_b_spline.hpp>
 

@@ -17,10 +17,10 @@
 #include "DiagonalCovariance.h"
 #include "../MT/X3DModel.h"
 
-#include <Eigen/Core>
-#include <Eigen/Dense>
-#include <Eigen/Sparse>
-#include <Eigen/IterativeLinearSolvers>
+#include "../Eigen/Core"
+#include "../Eigen/Dense"
+#include "../Eigen/Sparse"
+#include "../Eigen/IterativeLinearSolvers"
 //#include <unsupported/Eigen/IterativeSolvers>
 
 class MatrixReplacement;
