@@ -3,9 +3,9 @@ import testing ;
 alias core :  ../DataBase//database ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ..//boost_core ;
 
 lib surfwave :  SurfaceWaveData.cpp SurfaceWaveModel.cpp SurfaceWaveCalculator.cpp SurfaceWaveFunctions.cpp
-                core  ..//Geographic ;
+                core  ../GeographicLib//geographic : <include>.. ;
              
 
-unit-test surfacewave_gradient_test :  test_surfacewave_gradient.cpp surfwave ../Global//global ../ModelBase//modelbase  ../Inversion  ;
+#unit-test surfacewave_gradient_test :  test_surfacewave_gradient.cpp surfwave ../Global//global ../ModelBase//modelbase  ../Inversion  ;
 
 #exe makeseismesh : makeseismesh.cpp tomo  core :  ;
