@@ -25,6 +25,7 @@
 
 #include "mcsrch.h"
 #include <iostream>
+#include <fstream>
 #include "../Global/FatalException.h"
 
 namespace OPTPP
@@ -169,6 +170,11 @@ namespace OPTPP
 
         if (dginit >= zero)
           {
+            std::ofstream gradfile("search.out");
+            for (j = 0; j < n; ++j)
+              {
+                gradfile << j << " " << Grad(j) << " " << s(j) << "\n";
+              }
             throw jif3D::FatalException(
                 "\nmcsrch: Initial search direction not a descent direction", __FILE__, __LINE__);
           }
