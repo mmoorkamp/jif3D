@@ -44,19 +44,28 @@ namespace jif3D
 
     void TipperData::CompleteObject()
       {
-        const size_t nmeas = GetMeasPosX().size();
-        if (nmeas == 0)
-          {
-            throw jif3D::FatalException(
-                "No measurements specified, cannot complete MT Object", __FILE__,
-                __LINE__);
-          }
         const size_t nfreq = GetFrequencies().size();
         if (nfreq == 0)
           {
             throw jif3D::FatalException(
                 "No frequencies specified, cannot complete MT Object", __FILE__,
                 __LINE__);
+          }
+
+        const size_t nmeas =
+            HxIndices.empty() ? GetMeasPosX().size() : HxIndices.size() / nfreq;
+        if (nmeas == 0)
+          {
+            throw jif3D::FatalException(
+                "No measurements specified, cannot complete MT Object", __FILE__,
+                __LINE__);
+          }
+
+        if (GetData().size() != nmeas * nfreq * 4)
+          {
+            throw jif3D::FatalException(
+                      "Data does not match measurement specifications", __FILE__,
+                      __LINE__);
           }
 
         if (HxIndices.size() != nmeas * nfreq)
@@ -79,11 +88,7 @@ namespace jif3D
             std::vector<double> RA(nmeas, 0.0);
             SetRotAngles(RA);
           }
-        if (GetData().size() != nmeas)
-          {
-            std::vector<double> dummy(nmeas, 0.0);
-            SetDataAndErrors(dummy, dummy);
-          }
+
       }
 
     void TipperData::ReadModEM(const std::string &filename)
