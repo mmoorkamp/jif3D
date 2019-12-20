@@ -200,8 +200,8 @@ namespace jif3D
         const double l_c = -4.0 * pow(w, 2) / pow(c, 3);
         const double CHH = (w * c * thck * SH) / pow(vp, 3);
         const double CKK = (w * c * thck * SK) / pow(vs, 3);
-        const double CHC = (-(1.0) * k * thck * SH) / c;
-        const double CKC = (-(1.0) * k * thck * SK) / c;
+        const double CHC = ((-1.0) * k * thck * SH) / c;
+        const double CKC = ((-1.0) * k * thck * SK) / c;
         const double SHC = (-1.0) * ((mhc / mh) + (1 / c)) * SH
             + (k * thck * mhc * CH / mh);
         const double SKC = (-1.0) * ((mkc / mk) + (1 / c)) * SK
@@ -342,7 +342,7 @@ namespace jif3D
             ((-1.0) * iT1214 / c)
                 + ((pow(vs, 2) * (l_c * kv * hv - l * (hv_c * kv + hv * kv_c)))
                     / (4.0 * dens * pow(w, 3) * c * pow(kv * hv, 2))));
-        const double gT1224 = std::real(((-1.0) * hv_c) / (4.0 * dens * pow(hv, 2)));
+        const double gT1224 = std::real(((-1.0) * hv_c) / (4.0 * dens * pow(hv * w, 2)));
         const double gT1234 = std::real(
             (-2.0 * hv * kv + c * (hv_c * kv + hv * kv_c))
                 / (4.0 * pow(dens * w * hv * kv, 2) * pow(c, 3)));
@@ -1005,55 +1005,119 @@ namespace jif3D
         return std::make_tuple(R1212, R1213, iR1214, R1224, R1234);
       }
 
-    std::vector<double> compute_R1212(const double &w, const double &c,
+    double compute_R1212(const double &w, const double &c, const std::vector<double> &vp,
+        const std::vector<double> &vs, const double &mu, const std::vector<double> &depth,
+        const std::vector<double> &dens, const int &nlay)
+      {
+        // Recursive layer stacking from bottom to top to get R1212
+        std::tuple<double, double, double, double, double> R;
+        R = compute_T(w, c, vp[nlay - 1], vs[nlay - 1], mu);
+        for (int n = nlay - 2; n >= 0; n--)
+          {
+            double dn = depth[n + 1] - depth[n];
+            R = compute_R(w, c, vp[n], vs[n], dn, dens[n], R, 0);
+          }
+        return std::get<0>(R);
+      }
+
+    double compute_R1212_vs(const double &w, const double &c,
         const std::vector<double> &vp, const std::vector<double> &vs, const double &mu,
         const std::vector<double> &depth, const std::vector<double> &dens,
-        const int &nlay, const int &param, const int &gradlay)
+        const int &nlay, const int &gradlay)
+      {
+        // Recursive layer stacking from bottom to top to get R1212
+        std::tuple<double, double, double, double, double> R;
+        if (nlay - 1 == gradlay)
+          {
+            R = compute_T_vs(w, c, vp[nlay - 1], vs[nlay - 1], mu);
+          }
+        else
+          {
+            R = compute_T(w, c, vp[nlay - 1], vs[nlay - 1], mu);
+          }
+
+        for (int n = nlay - 2; n >= 0; n--)
+          {
+            double dn = depth[n + 1] - depth[n];
+            if (n == gradlay)
+              R = compute_R(w, c, vp[n], vs[n], dn, dens[n], R, 1);
+            else
+              R = compute_R(w, c, vp[n], vs[n], dn, dens[n], R, 0);
+          }
+        return std::get<0>(R);
+      }
+
+    double compute_R1212_vp(const double &w, const double &c,
+        const std::vector<double> &vp, const std::vector<double> &vs, const double &mu,
+        const std::vector<double> &depth, const std::vector<double> &dens,
+        const int &nlay, const int &gradlay)
+      {
+        // Recursive layer stacking from bottom to top to get R1212
+        std::tuple<double, double, double, double, double> R;
+        if (nlay - 1 == gradlay)
+          {
+            R = compute_T_vp(w, c, vp[nlay - 1], vs[nlay - 1], mu);
+          }
+        else
+          {
+            R = compute_T(w, c, vp[nlay - 1], vs[nlay - 1], mu);
+          }
+
+        for (int n = nlay - 2; n >= 0; n--)
+          {
+            double dn = depth[n + 1] - depth[n];
+            if (n == gradlay)
+              R = compute_R(w, c, vp[n], vs[n], dn, dens[n], R, 2);
+            else
+              R = compute_R(w, c, vp[n], vs[n], dn, dens[n], R, 0);
+          }
+        return std::get<0>(R);
+      }
+
+    double compute_R1212_dens(const double &w, const double &c,
+        const std::vector<double> &vp, const std::vector<double> &vs, const double &mu,
+        const std::vector<double> &depth, const std::vector<double> &dens,
+        const int &nlay, const int &gradlay)
+      {
+        // Recursive layer stacking from bottom to top to get R1212
+        std::tuple<double, double, double, double, double> R;
+        if (nlay - 1 == gradlay)
+          {
+            R = compute_T_rho(w, c, vp[nlay - 1], vs[nlay - 1], mu);
+          }
+        else
+          {
+            R = compute_T(w, c, vp[nlay - 1], vs[nlay - 1], mu);
+          }
+
+        for (int n = nlay - 2; n >= 0; n--)
+          {
+            double dn = depth[n + 1] - depth[n];
+            if (n == gradlay)
+              R = compute_R(w, c, vp[n], vs[n], dn, dens[n], R, 3);
+            else
+              R = compute_R(w, c, vp[n], vs[n], dn, dens[n], R, 0);
+          }
+        return std::get<0>(R);
+      }
+
+    double compute_R1212_c(const double &w, const double &c,
+        const std::vector<double> &vp, const std::vector<double> &vs, const double &mu,
+        const std::vector<double> &depth, const std::vector<double> &dens,
+        const int &nlay)
       {
         // Recursive layer stacking from bottom to top to get R1212
         std::tuple<double, double, double, double, double> R;
         std::vector<double> R_c(5, 0);
-        for (int n = nlay - 1; n >= 0; n--)
+        R = compute_T(w, c, vp[nlay - 1], vs[nlay - 1], mu);
+        R_c = compute_T_c(w, c, vp[nlay - 1], vs[nlay - 1], mu);
+        for (int n = nlay - 2; n >= 0; n--)
           {
-            if (n == nlay - 1)
-              {
-                if (n == gradlay)
-                  {
-                    if (param == 1)
-                      R = compute_T_vs(w, c, vp[n], vs[n], mu);
-                    else if (param == 2)
-                      R = compute_T_vp(w, c, vp[n], vs[n], mu);
-                    else if (param == 3)
-                      R = compute_T_rho(w, c, vp[n], vs[n], mu);
-                    else if (param == 4)
-                      {
-                        R = compute_T(w, c, vp[n], vs[n], mu);
-                        R_c = compute_T_c(w, c, vp[n], vs[n], mu);
-                      }
-                  }
-                else
-                  {
-                    R = compute_T(w, c, vp[n], vs[n], mu);
-                  }
-              }
-            else
-              {
-                double dn = depth[n + 1] - depth[n];
-                if ((param != 4) && (n == gradlay))
-                  R = compute_R(w, c, vp[n], vs[n], dn, dens[n], R, param);
-                else if (param == 4)
-                  {
-                    R_c = compute_R_c(w, c, vp[n], vs[n], dn, dens[n], R, R_c);
-                    R = compute_R(w, c, vp[n], vs[n], dn, dens[n], R, 0);
-                  }
-                else if (param == 0)
-                  R = compute_R(w, c, vp[n], vs[n], dn, dens[n], R, 0);
-              }
+            double dn = depth[n + 1] - depth[n];
+            R_c = compute_R_c(w, c, vp[n], vs[n], dn, dens[n], R, R_c);
+            R = compute_R(w, c, vp[n], vs[n], dn, dens[n], R, 0);
           }
-        std::vector<double> R1212(2);
-        R1212[0] = std::get<0>(R);
-        R1212[1] = R_c[0];
-        return R1212;
+        return R_c[0];
       }
 
     std::vector<std::vector<double>> get_gc_segments(const double &east0,
@@ -1292,24 +1356,30 @@ namespace jif3D
               }
             proj.Reverse(lon_centr, mid_e - false_east, mid_n, mid_lat, mid_lon);
             geod.Inverse(event_lat, event_lon, mid_lat, mid_lon, s12, az1, az2);
-            double ti = (cos((90.0 - az2) * M_PI / 180.0) * dist_segment_e
-                + sin((90.0 - az2) * M_PI / 180.0) * dist_segment_n)
+            double a = 450 - az2;
+            if (a > 360)
+              {
+                a = a - 360;
+              }
+            double ti = (-1.0)
+                * (cos(a * M_PI / 180.0) * dist_segment_e
+                    + sin(a * M_PI / 180.0) * dist_segment_n)
                 / c[ncell0 * ncells_east + ecell0];
-            time = time + (-1.0) * ti;
+            time = time + ti;
 
             for (int n = 0; n < nlay; n++)
               {
                 vsgrad[ncell0 * ncells_east * nlay + ecell0 * nlay + n] = vsgrad[ncell0
                     * ncells_east * nlay + ecell0 * nlay + n]
-                    + dcdvs[ncell0 * ncells_east * nlay + ecell0 * nlay + n]
+                    - dcdvs[ncell0 * ncells_east * nlay + ecell0 * nlay + n]
                         * (ti / c[ncell0 * ncells_east + ecell0]);
                 vpgrad[ncell0 * ncells_east * nlay + ecell0 * nlay + n] = vpgrad[ncell0
                     * ncells_east * nlay + ecell0 * nlay + n]
-                    + dcdvp[ncell0 * ncells_east * nlay + ecell0 * nlay + n]
+                    - dcdvp[ncell0 * ncells_east * nlay + ecell0 * nlay + n]
                         * (ti / c[ncell0 * ncells_east + ecell0]);
                 rhograd[ncell0 * ncells_east * nlay + ecell0 * nlay + n] = rhograd[ncell0
                     * ncells_east * nlay + ecell0 * nlay + n]
-                    + dcdrho[ncell0 * ncells_east * nlay + ecell0 * nlay + n]
+                    - dcdrho[ncell0 * ncells_east * nlay + ecell0 * nlay + n]
                         * (ti / c[ncell0 * ncells_east + ecell0]);
                 ;
               }
@@ -1320,24 +1390,30 @@ namespace jif3D
         mid_n = north0 + dist_segment_n / 2.0;
         proj.Reverse(lon_centr, mid_e - false_east, mid_n, mid_lat, mid_lon);
         geod.Inverse(event_lat, event_lon, mid_lat, mid_lon, s12, az1, az2);
-        double ti = (cos((90.0 - az2) * M_PI / 180.0) * dist_segment_e
-            + sin((90.0 - az2) * M_PI / 180.0) * dist_segment_n)
+        double a = 450 - az2;
+        if (a > 360)
+          {
+            a = a - 360;
+          }
+        double ti = (-1.0)
+            * (cos(a * M_PI / 180.0) * dist_segment_e
+                + sin(a * M_PI / 180.0) * dist_segment_n)
             / c[ncell1 * ncells_east + ecell1];
-        time = time + (-1.0) * ti;
+        time = time + ti;
 
         for (int n = 0; n < nlay; n++)
           {
             vsgrad[ncell1 * ncells_east * nlay + ecell1 * nlay + n] = vsgrad[ncell1
                 * ncells_east * nlay + ecell1 * nlay + n]
-                + dcdvs[ncell1 * ncells_east * nlay + ecell1 * nlay + n]
+                - dcdvs[ncell1 * ncells_east * nlay + ecell1 * nlay + n]
                     * (ti / c[ncell1 * ncells_east + ecell1]);
             vpgrad[ncell1 * ncells_east * nlay + ecell1 * nlay + n] = vpgrad[ncell1
                 * ncells_east * nlay + ecell1 * nlay + n]
-                + dcdvp[ncell1 * ncells_east * nlay + ecell1 * nlay + n]
+                - dcdvp[ncell1 * ncells_east * nlay + ecell1 * nlay + n]
                     * (ti / c[ncell1 * ncells_east + ecell1]);
             rhograd[ncell1 * ncells_east * nlay + ecell1 * nlay + n] = rhograd[ncell1
                 * ncells_east * nlay + ecell1 * nlay + n]
-                + dcdrho[ncell1 * ncells_east * nlay + ecell1 * nlay + n]
+                - dcdrho[ncell1 * ncells_east * nlay + ecell1 * nlay + n]
                     * (ti / c[ncell1 * ncells_east + ecell1]);
           }
 

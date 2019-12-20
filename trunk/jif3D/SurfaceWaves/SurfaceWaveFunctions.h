@@ -60,10 +60,26 @@ namespace jif3D
         const double &c, const double &vp, const double &vs, const double &dn,
         const double &dens, const std::tuple<double, double, double, double, double> &T,
         const int &param);
-    std::vector<double> compute_R1212(const double &w, const double &c,
+    double compute_R1212(const double &w, const double &c,
         const std::vector<double> &vp, const std::vector<double> &vs, const double &mu,
         const std::vector<double> &depth, const std::vector<double> &dens,
-        const int &nlay, const int &param, const int &gradlay);
+        const int &nlay);
+    double compute_R1212_vs(const double &w, const double &c,
+        const std::vector<double> &vp, const std::vector<double> &vs, const double &mu,
+        const std::vector<double> &depth, const std::vector<double> &dens,
+        const int &nlay, const int &gradlay);
+    double compute_R1212_vp(const double &w, const double &c,
+        const std::vector<double> &vp, const std::vector<double> &vs, const double &mu,
+        const std::vector<double> &depth, const std::vector<double> &dens,
+        const int &nlay, const int &gradlay);
+    double compute_R1212_dens(const double &w, const double &c,
+        const std::vector<double> &vp, const std::vector<double> &vs, const double &mu,
+        const std::vector<double> &depth, const std::vector<double> &dens,
+        const int &nlay, const int &gradlay);
+    double compute_R1212_c(const double &w, const double &c,
+        const std::vector<double> &vp, const std::vector<double> &vs, const double &mu,
+        const std::vector<double> &depth, const std::vector<double> &dens,
+        const int &nlay);
     std::vector<std::vector<double>> get_gc_segments(const double &east0,
         const double &north0, const double &east1, const double &north1,
         const double &lon_centr, const double &false_east,
@@ -90,10 +106,9 @@ namespace jif3D
       ;
       double operator()(const double c)
         {
-          std::vector<double> R1212 = compute_R1212(w, c, vp, vs, mu, depth, dens, nlay,
-              0, -999);
+          double R1212 = compute_R1212(w, c, vp, vs, mu, depth, dens, nlay);
           ;
-          return R1212[0];
+          return R1212;
         }
     private:
       const double &w;

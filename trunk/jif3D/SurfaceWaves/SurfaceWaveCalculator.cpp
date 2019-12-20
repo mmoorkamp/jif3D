@@ -22,8 +22,9 @@
 
 namespace jif3D
   {
-    SurfaceWaveCalculator::SurfaceWaveCalculator(): false_east(500000), tolerance(0.01), length_tolerance(1.0),
-    mode_skip_it(2), toms_max_iter(50)
+    SurfaceWaveCalculator::SurfaceWaveCalculator() :
+        false_east(500000), tolerance(0.01), length_tolerance(1.0), mode_skip_it(2), toms_max_iter(
+            50)
       {
       }
 
@@ -145,9 +146,9 @@ namespace jif3D
                         const double mu = pow(vs_1D[NZ - 1], 2) * dens_1D[NZ - 1];
 
                         // Compute initial R1212 polarization for large period below fundamental mode
-                        std::vector<double> R1212 = compute_R1212(w[nperiods - 1] / 10.0,
-                            c_lim[0], vp_1D, vs_1D, mu, depth, dens_1D, NZ, 0, -999);
-                        const bool pol0 = signbit(R1212[0]);
+                        double R1212 = compute_R1212(w[nperiods - 1] / 10.0, c_lim[0],
+                            vp_1D, vs_1D, mu, depth, dens_1D, NZ);
+                        const bool pol0 = signbit(R1212);
 
                         double c_last = c_lim[0]; //initial value for c to start search
 
@@ -169,8 +170,8 @@ namespace jif3D
 
                             // Check polarization of R1212 for the upper bracket
                             R1212 = compute_R1212(w[freq], c1, vp_1D, vs_1D, mu, depth,
-                                dens_1D, NZ, 0, -999);
-                            pol1 = signbit(R1212[0]);
+                                dens_1D, NZ);
+                            pol1 = signbit(R1212);
 
                             // If a sign change is found check for mode skipping
                             if (pol0 != pol1 && (c1 - c0) > (2.0 * tolerance))
@@ -183,8 +184,8 @@ namespace jif3D
                                 while (tolerance < (c2 - c0))
                                   {
                                     R1212 = compute_R1212(w[freq], c2, vp_1D, vs_1D, mu,
-                                        depth, dens_1D, NZ, 0, -999);
-                                    const bool pol2 = signbit(R1212[0]);
+                                        depth, dens_1D, NZ);
+                                    const bool pol2 = signbit(R1212);
                                     // if mode skipping detected increase precision (-> decrease step ratio) and return to bracket search
                                     if (pol2 == pol1)
                                       {
@@ -217,23 +218,23 @@ namespace jif3D
                         // Write output to file
                         //resultfile << "\n" << easting[estep] << "\t" << northing[nstep] << "\t" << (2.0*M_PI)/w[freq] << "\t" << c_last << "\t" << brackets.second-brackets.first << "\t" << max_iter;
 
-                        const std::vector<double> R_c = compute_R1212(w[freq], c_last,
-                            vp_1D, vs_1D, mu, depth, dens_1D, NZ, 4, -999);
+                        const double R_c = compute_R1212_c(w[freq], c_last, vp_1D, vs_1D,
+                            mu, depth, dens_1D, NZ);
                         for (int n = 0; n < NZ; n++)
                           {
                             //Computation of Gradients
-                            std::vector<double> R_tmp = compute_R1212(w[freq], c_last,
-                                vp_1D, vs_1D, mu, depth, dens_1D, NZ, 1, n);
-                            dcdvs[n + NZ * estep + NY * NZ * nstep] = ((-1.0) * R_tmp[0]
-                                / R_c[1]);
-                            R_tmp = compute_R1212(w[freq], c_last, vp_1D, vs_1D, mu,
-                                depth, dens_1D, NZ, 2, n);
-                            dcdvp[n + NZ * estep + NY * NZ * nstep] = ((-1.0) * R_tmp[0]
-                                / R_c[1]);
-                            R_tmp = compute_R1212(w[freq], c_last, vp_1D, vs_1D, mu,
-                                depth, dens_1D, NZ, 3, n);
-                            dcdrho[n + NZ * estep + NY * NZ * nstep] = ((-1.0) * R_tmp[0]
-                                / R_c[1]);
+                            double R_tmp = compute_R1212_vs(w[freq], c_last, vp_1D, vs_1D,
+                                mu, depth, dens_1D, NZ, n);
+                            dcdvs[n + NZ * estep + NY * NZ * nstep] = ((-1.0) * R_tmp
+                                / R_c);
+                            R_tmp = compute_R1212_vp(w[freq], c_last, vp_1D, vs_1D, mu,
+                                depth, dens_1D, NZ, n);
+                            dcdvp[n + NZ * estep + NY * NZ * nstep] = ((-1.0) * R_tmp
+                                / R_c);
+                            R_tmp = compute_R1212_dens(w[freq], c_last, vp_1D, vs_1D, mu,
+                                depth, dens_1D, NZ, n);
+                            dcdrho[n + NZ * estep + NY * NZ * nstep] = ((-1.0) * R_tmp
+                                / R_c);
                           }
                       }
                   } //end loop over northing
