@@ -66,7 +66,7 @@ namespace jif3D
           Write3DModelToVTK(filename + ".dens.vtk", "Density", GetXCoordinates(),
               GetYCoordinates(), GetZCoordinates(), GetDens());
         }
-      virtual void WriteNetCDF(const std::string &filename);
+      virtual void WriteNetCDF(const std::string &filename) const override;
       SurfaceWaveModel& operator=(const ThreeDModelBase &source);
       SurfaceWaveModel& operator=(const SurfaceWaveModel &source);
 

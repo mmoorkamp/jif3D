@@ -89,7 +89,7 @@ namespace jif3D
       {
       }
 
-    void SurfaceWaveModel::WriteNetCDF(const std::string &filename)
+    void SurfaceWaveModel::WriteNetCDF(const std::string &filename) const
       {
 
         netCDF::NcFile NetCDFFile(filename, netCDF::NcFile::replace);
