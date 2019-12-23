@@ -89,6 +89,7 @@ namespace jif3D
 
         if (ForwardExecTime.empty() || ForwardExecTime.size() != ncalcfreq)
           {
+            ForwardExecTime.clear();
             for (size_t i = 0; i < ncalcfreq; ++i)
               {
                 ForwardExecTime.push_back(std::make_pair(0, i));
