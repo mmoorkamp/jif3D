@@ -69,7 +69,7 @@ int main()
       }
     std::string tipfilename = jif3D::AskFilename("Name of data file: ");
     TipperData.ReadNetCDF(tipfilename);
-
+    Tipper = TipperData.GetData();
     std::ofstream indexfile("ind.out");
 
     const size_t nstat = TipperData.GetMeasPosX().size();

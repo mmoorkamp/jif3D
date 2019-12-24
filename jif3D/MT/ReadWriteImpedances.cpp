@@ -530,7 +530,6 @@ namespace jif3D
                     char *buffer;
                     NameVar.getVar(
                       { i }, &buffer);
-                    std::cout << buffer << std::endl;
                     Names.at(i) = buffer;
                   }
               }
