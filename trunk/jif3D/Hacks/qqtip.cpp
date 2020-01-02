@@ -15,6 +15,9 @@
 #include "../MT/MTEquations.h"
 #include "../MT/TipperData.h"
 
+namespace po = boost::program_options;
+
+
 void QQPlot(std::ofstream &outfile, size_t index, std::vector<double> &Misfit)
   {
     const size_t nimp = Misfit.size();
@@ -27,6 +30,12 @@ void QQPlot(std::ofstream &outfile, size_t index, std::vector<double> &Misfit)
         sorted.at(2 * i + 1) = Misfit.at(4 * i + index + 1);
       }
     std::sort(sorted.begin(), sorted.end());
+    std::vector<double> perc(
+      { 0.1, 0.5, 1, 5, 10, 50, 90, 95, 99, 99.5, 99.9 });
+    for (double p : perc)
+      {
+        std::cout << p << " " << sorted.at(std::floor(p / 100.0 * 2*nval)) << std::endl;
+      }
     std::cout << "Writing out " << sorted.size() << " values for qq-plot" << std::endl;
     for (double q : sorted)
       {
@@ -36,8 +45,24 @@ void QQPlot(std::ofstream &outfile, size_t index, std::vector<double> &Misfit)
     //		std::ostream_iterator<double>(outfile, "\n"));
   }
 
-int main()
+int main(int argc, char *argv[])
   {
+    double tiperrval = 10.0;
+    po::options_description desc("General options");
+    desc.add_options()("help", "produce help message")("tiperr",
+        po::value(&tiperrval)->default_value(10.0),
+        "The relative error to assign to bad data");
+
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::notify(vm);
+
+    if (vm.count("help"))
+      {
+        std::cout << desc << "\n";
+        return 1;
+      }
+
     std::string misfitfilename = jif3D::AskFilename("Name of misfit file: ");
     jif3D::TipperData TipperData;
     std::vector<double> Tipper, Errors, Misfit;
@@ -75,7 +100,7 @@ int main()
     const size_t nstat = TipperData.GetMeasPosX().size();
     for (size_t ind : Indices)
       {
-        Errors.at(ind) = 10 * std::abs(Tipper.at(ind));
+        Errors.at(ind) = tiperrval * std::abs(Tipper.at(ind));
         size_t stati = ind % (nstat * 4) / 4;
         size_t freqi = ind / (nstat * 4);
         indexfile << ind << " " << stati << " " << " " << freqi << std::endl;
