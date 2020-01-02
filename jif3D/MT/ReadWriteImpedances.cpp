@@ -356,7 +356,7 @@ namespace jif3D
         try
           {
             NcVar NameVar = DataFile.getVar(SiteNameName);
-            const int nvalues = StatXCoord.size();
+            const size_t nvalues = StatXCoord.size();
             Names.resize(nvalues);
             if (!NameVar.isNull())
               {
@@ -391,7 +391,6 @@ namespace jif3D
       {
         const size_t nfreqs = Frequencies.size();
         const size_t nstats = HxIndices.size() / nfreqs;
-        const size_t nimp = nstats * nfreqs * 4;
 
         assert(Tipper.size() == HxIndices.size() * 4);
         assert(HxIndices.size() == HyIndices.size());
@@ -1206,7 +1205,7 @@ namespace jif3D
     J3DEXPORT void WriteTipperToModEM(const std::string &filename,
         const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
-        const jif3D::rvec &Tip, const jif3D::rvec &Err)
+        const std::vector<double> &Tip, const std::vector<double> &Err)
       {
         std::ofstream outfile(filename.c_str());
         outfile.precision(6);
@@ -1235,11 +1234,11 @@ namespace jif3D
                 double period = 1.0 / Frequencies.at(j);
                 outfile << period << SiteLine.str();
                 outfile << " TX ";
-                WriteModEMLine(outfile, Tip(index), Tip(index + 1), Err(index));
+                WriteModEMLine(outfile, Tip.at(index), Tip.at(index + 1), Err.at(index));
 
                 outfile << period << SiteLine.str();
                 outfile << " TY ";
-                WriteModEMLine(outfile, Tip(index + 2), Tip(index + 3), Err(index + 2));
+                WriteModEMLine(outfile, Tip.at(index + 2), Tip.at(index + 3), Err.at(index + 2));
 
               }
           }

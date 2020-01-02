@@ -426,6 +426,7 @@ int hpx_main(boost::program_options::variables_map& vm)
         else
           {
             DataTip.ReadModEM(TipperName);
+            DataTip.WriteNetCDF(TipperName+".conv.nc");
           }
         size_t ntip = DataTip.GetData().size();
         jif3D::rvec TE(ntip, 0.0);
@@ -462,7 +463,7 @@ int hpx_main(boost::program_options::variables_map& vm)
     Objective->AddObjective(Regularization, ModRegTrans, lambda, "Regularization",
         jif3D::JointObjective::regularization);
 
-    if (DistCorr > 0)
+    if (WantDistCorr)
       {
         size_t nstats = DataMT.GetExIndices().size() / DataMT.GetFrequencies().size();
         jif3D::rvec CRef(nstats * 4);
@@ -495,7 +496,7 @@ int hpx_main(boost::program_options::variables_map& vm)
             jif3D::StochasticCovariance>(Model.GetModelShape()[0],
             Model.GetModelShape()[1], Model.GetModelShape()[2], CovWidth, 1.0, 1.0);
         CovObj->AddSection(0, ngrid, StochCov);
-        if (DistCorr > 0)
+        if (WantDistCorr)
           {
             boost::shared_ptr<jif3D::GeneralCovariance> DistCov = boost::make_shared<
                 jif3D::DiagonalCovariance>();
@@ -514,23 +515,47 @@ int hpx_main(boost::program_options::variables_map& vm)
     if (vm.count("writegrad"))
       {
         jif3D::rvec GM = MTTransform->GeneralizedToPhysical(InvModel);
-        std::cout << " Data Misfit: " << X3DObjective->CalcMisfit(GM) << std::endl;
+        std::cout << " MT Data Misfit: " << X3DObjective->CalcMisfit(GM) << std::endl;
         jif3D::rvec grad = X3DObjective->CalcGradient(GM);
 
-        std::copy(grad.begin(), grad.end(), Model.SetData().origin());
-        Model.WriteVTK(modelfilename + ".datagrad.vtk");
+        const size_t nval = Model.GetNModelElements();
+        std::copy(grad.begin(), grad.begin() + nval, Model.SetData().origin());
+        Model.WriteVTK(modelfilename + ".mtdatagrad.vtk");
         jif3D::rvec covgrad = CovObj->ApplyCovar(grad);
-        std::copy(covgrad.begin(), covgrad.end(), Model.SetData().origin());
-        Model.WriteVTK(modelfilename + ".datacovgrad.vtk");
+        std::copy(covgrad.begin(), covgrad.begin() + nval, Model.SetData().origin());
+        Model.WriteVTK(modelfilename + ".mtdatacovgrad.vtk");
+
+
+        if (vm.count("tipperdata"))
+          {
+            GM = TipperTransform->GeneralizedToPhysical(InvModel);
+            std::cout << " Tipper Data Misfit: " << TipperObjective->CalcMisfit(GM) << std::endl;
+            jif3D::rvec tipgrad = TipperObjective->CalcGradient(GM);
+
+            ublas::subrange(grad,0,nval) = tipgrad;
+            std::copy(tipgrad.begin(), tipgrad.begin() + nval, Model.SetData().origin());
+            Model.WriteVTK(modelfilename + ".tipdatagrad.vtk");
+
+            jif3D::rvec tipcovgrad  = CovObj->ApplyCovar(grad);
+
+            std::copy(tipcovgrad.begin(), tipcovgrad.begin() + nval, Model.SetData().origin());
+            Model.WriteVTK(modelfilename + ".tipdatacovgrad.vtk");
+          }
 
         GM = ModRegTrans->GeneralizedToPhysical(InvModel);
         std::cout << " Regularization: " << Regularization->CalcMisfit(GM) << std::endl;
-        grad = Regularization->CalcGradient(GM);
+        //the full gradient can also contain values for distortion correction
+        //this becomes important when applying the covariance below
+        //for this output we are not interested in the distortion part
+        //so we pad the vector and only look at the conductivity values
+        jif3D::rvec reggrad(grad.size(),0.0);
+        ublas::subrange(grad,0,nval) = Regularization->CalcGradient(GM);
 
-        std::copy(grad.begin(), grad.end(), Model.SetData().origin());
+
+        std::copy(grad.begin(), grad.begin() + nval, Model.SetData().origin());
         Model.WriteVTK(modelfilename + ".reggrad.vtk");
         covgrad = CovObj->ApplyCovar(grad);
-        std::copy(covgrad.begin(), covgrad.end(), Model.SetData().origin());
+        std::copy(covgrad.begin(), covgrad.begin() + nval, Model.SetData().origin());
         Model.WriteVTK(modelfilename + ".regcovgrad.vtk");
 
         return 0;

@@ -682,7 +682,7 @@ GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::TipperData
     const double cell_sizex = Info.Model.GetXCellSizes()[0];
     const double cell_sizey = Info.Model.GetYCellSizes()[0];
     //now we can calculate the gradient for each model cell
-    double Volume, gradinc;
+    double Volume = 0.0;
 #pragma omp taskwait
     for (size_t j = 0; j < nmod; ++j)
       {

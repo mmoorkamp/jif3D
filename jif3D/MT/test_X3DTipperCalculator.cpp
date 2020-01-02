@@ -56,6 +56,8 @@ BOOST_AUTO_TEST_CASE (X3D_forward_hs_test)
         Data.AddMeasurementPoint(Model.GetXCoordinates()[i] + deltax / 2.0,
             Model.GetYCoordinates()[j] + deltay / 2.0, 0.0);
       }
+    std::vector<double> Dummy(Data.GetMeasPosX().size()*4);
+    Data.SetDataAndErrors(Dummy,Dummy);
     Data.CompleteObject();
     jif3D::rvec Tipper = Calculator.Calculate(Model, Data);
     const double prec = 1e-5;
