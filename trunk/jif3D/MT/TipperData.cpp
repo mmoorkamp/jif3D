@@ -63,9 +63,9 @@ namespace jif3D
 
         if (GetData().size() != nmeas * nfreq * 4)
           {
-            throw jif3D::FatalException(
-                      "Data does not match measurement specifications", __FILE__,
-                      __LINE__);
+            throw jif3D::FatalException("Data does not match measurement specifications",
+            __FILE__,
+            __LINE__);
           }
 
         if (HxIndices.size() != nmeas * nfreq)
@@ -93,12 +93,20 @@ namespace jif3D
 
     void TipperData::ReadModEM(const std::string &filename)
       {
-
+        std::vector<double> Freq, StatX, StatY, StatZ, Tip, Err;
+        ReadTipperFromModEM(filename, Freq, StatX, StatY, StatZ, Tip, Err);
+        SetFrequencies(Freq);
+        SetMeasurementPoints(StatX, StatY, StatZ);
+        SetDataAndErrors(Tip, Err);
+        CompleteObject();
       }
+
     void TipperData::WriteModEM(const std::string &filename)
       {
-
+        WriteTipperToModEM(filename, GetFrequencies(), GetMeasPosX(), GetMeasPosY(),
+            GetMeasPosZ(), GetData(), GetErrors());
       }
+
     void TipperData::PlotMeasurementConfiguration(const std::string &filename)
       {
         std::vector<double> FirstFreq(GetMeasPosX().size());
