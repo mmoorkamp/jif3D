@@ -7,7 +7,10 @@
 
 #include "MutualInformationConstraint.h"
 #include <omp.h>
+#if BOOST_VERSION >= 107000
 #include <boost/histogram.hpp>
+#endif
+
 #include <boost/algorithm/minmax_element.hpp>
 #include <boost/math/distributions/normal.hpp>
 #include <algorithm>
@@ -41,6 +44,7 @@ namespace jif3D
     double MIHist(const jif3D::rvec &x, const jif3D::rvec &y, double xmin, double xmax,
         double ymin, double ymax, size_t nbins)
       {
+#if BOOST_VERSION >= 107000
         using namespace boost::histogram;
         using namespace literals;
         auto hxy = make_histogram(axis::regular<>(nbins, xmin, xmax, "x"),
@@ -78,6 +82,7 @@ namespace jif3D
         double H = H_X + H_Y - H_XY;
         //return std::exp(-H);
         return I;
+#endif
       }
 
     double MIGauss(const jif3D::rvec &x, const jif3D::rvec &y, double xmin, double xmax,
