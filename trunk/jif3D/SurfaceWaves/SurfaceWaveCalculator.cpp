@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <netcdf>
 #include <boost/math/tools/roots.hpp>
+#include "../Global/NumUtil.h"
 #include "../SurfaceWaves/SurfaceWaveCalculator.h"
 #include "../SurfaceWaves/SurfaceWaveFunctions.h"
 
@@ -70,6 +71,12 @@ namespace jif3D
             vs_grad.resize(nmod);
             vp_grad.resize(nmod);
           }
+        if (dcdrho.size() != nmod)
+          {
+            dcdrho.resize(nmod);
+            dcdvs.resize(nmod);
+            dcdvp.resize(nmod);
+          }
         if (dtp_mod.size() != dtp.size())
           {
             dtp_mod.resize(dtp.size());
@@ -77,6 +84,9 @@ namespace jif3D
         std::fill(dens_grad.begin(), dens_grad.end(), 0.0);
         std::fill(vs_grad.begin(), vs_grad.end(), 0.0);
         std::fill(vp_grad.begin(), vp_grad.end(), 0.0);
+        std::fill(dcdrho.begin(), dcdrho.end(), 0.0);
+        std::fill(dcdvs.begin(), dcdvs.end(), 0.0);
+        std::fill(dcdvp.begin(), dcdvp.end(), 0.0);
         std::fill(dtp_mod.begin(), dtp_mod.end(), 0.0);
         const std::vector<double> vs = array2vector(vs_all, NX, NY, NZ);
         const std::vector<double> vp = array2vector(vp_all, NX, NY, NZ);
@@ -94,8 +104,7 @@ namespace jif3D
             //cout << "Period: " << periods[freq] << " s.";
             //cout << "\n";
             //Vectors to store gradients, dispersion curves
-            std::vector<double> dcdrho(dens.size()), dcdvs(vs.size()), dcdvp(vp.size()),
-                vph_map(NX * NY);
+            std::vector<double> vph_map(NX * NY);
             for (int nstep = 0; nstep < NX; nstep++)
               {
                 for (int estep = 0; estep < NY; estep++)
@@ -294,11 +303,11 @@ namespace jif3D
                             time_total;
                         //delayfile << "\n" << event_stat_cmb[event*nsrcs+src] << "\t" << src_rcvr_cmb[src] << "\t" << src_rcvr_cmb[src+nsrcs] << "\t" << (2.0*M_PI)/w[freq] << "\t" << time_total;
 
-                        const double residual =
-                            (time_total
-                                - dtp[freq * nsrcs * nevents_per_src + event * nsrcs + src])
-                                / dtp_err[freq * nsrcs * nevents_per_src + event * nsrcs
-                                    + src];
+                        const double residual = (time_total
+                            - dtp[freq * nsrcs * nevents_per_src + event * nsrcs + src])
+                            / jif3D::pow2(
+                                dtp_err[freq * nsrcs * nevents_per_src + event * nsrcs
+                                    + src]);
                         std::transform(vs_grad.begin(), vs_grad.end(), vs_tmpgrd.begin(),
                             vs_grad.begin(), weighted_add(residual));
                         std::transform(vp_grad.begin(), vp_grad.end(), vp_tmpgrd.begin(),
