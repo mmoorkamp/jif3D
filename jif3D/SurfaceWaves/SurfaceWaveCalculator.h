@@ -62,9 +62,22 @@ namespace jif3D
           dtp_err.resize(err.size());
           dtp_err = err;
         }
+      std::vector<double> GetDcdrho() const
+        {
+          return dcdrho;
+        }
+      std::vector<double> GetDcdvs() const
+        {
+          return dcdvs;
+        }
+      std::vector<double> GetDcdvp() const
+        {
+          return dcdvp;
+        }
     private:
       double false_east, tolerance, length_tolerance;
       int mode_skip_it, toms_max_iter;
+      std::vector<double> dcdrho, dcdvs, dcdvp;
       std::vector<double> dens_grad, vs_grad, vp_grad, dtp_mod, dtp_err;
       void forward(const ModelType &Model, const DataType &Data);
       };

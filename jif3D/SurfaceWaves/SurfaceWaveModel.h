@@ -5,8 +5,8 @@
  *      Author: bweise
  */
 
-#ifndef SURFACEWAVES_SURFACEWAVESMODEL_H_
-#define SURFACEWAVES_SURFACEWAVESMODEL_H_
+#ifndef SURFACEWAVES_SURFACEWAVEMODEL_H_
+#define SURFACEWAVES_SURFACEWAVEMODEL_H_
 
 #include "../ModelBase/ThreeDModelBase.h"
 #include "../ModelBase/VTKTools.h"

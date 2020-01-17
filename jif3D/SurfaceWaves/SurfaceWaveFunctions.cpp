@@ -1312,6 +1312,8 @@ namespace jif3D
               }
             double east_dist = abs(east0 - east_intercept);
             double north_dist = abs(east0 - north_intercept);
+            double ncell = ncell0;
+            double ecell = ecell0;
             if (north_dist < east_dist)
               {
                 dist_segment_e = north_intercept - east0;
@@ -1364,23 +1366,23 @@ namespace jif3D
             double ti = (-1.0)
                 * (cos(a * M_PI / 180.0) * dist_segment_e
                     + sin(a * M_PI / 180.0) * dist_segment_n)
-                / c[ncell0 * ncells_east + ecell0];
+                / c[ncell * ncells_east + ecell];
             time = time + ti;
 
             for (int n = 0; n < nlay; n++)
               {
-                vsgrad[ncell0 * ncells_east * nlay + ecell0 * nlay + n] = vsgrad[ncell0
-                    * ncells_east * nlay + ecell0 * nlay + n]
-                    - dcdvs[ncell0 * ncells_east * nlay + ecell0 * nlay + n]
-                        * (ti / c[ncell0 * ncells_east + ecell0]);
-                vpgrad[ncell0 * ncells_east * nlay + ecell0 * nlay + n] = vpgrad[ncell0
-                    * ncells_east * nlay + ecell0 * nlay + n]
-                    - dcdvp[ncell0 * ncells_east * nlay + ecell0 * nlay + n]
-                        * (ti / c[ncell0 * ncells_east + ecell0]);
-                rhograd[ncell0 * ncells_east * nlay + ecell0 * nlay + n] = rhograd[ncell0
-                    * ncells_east * nlay + ecell0 * nlay + n]
-                    - dcdrho[ncell0 * ncells_east * nlay + ecell0 * nlay + n]
-                        * (ti / c[ncell0 * ncells_east + ecell0]);
+                vsgrad[ncell * ncells_east * nlay + ecell * nlay + n] = vsgrad[ncell
+                    * ncells_east * nlay + ecell * nlay + n]
+                    + dcdvs[ncell * ncells_east * nlay + ecell * nlay + n]
+                        * (ti / c[ncell * ncells_east + ecell]);
+                vpgrad[ncell * ncells_east * nlay + ecell * nlay + n] = vpgrad[ncell
+                    * ncells_east * nlay + ecell * nlay + n]
+                    + dcdvp[ncell * ncells_east * nlay + ecell * nlay + n]
+                        * (ti / c[ncell * ncells_east + ecell]);
+                rhograd[ncell * ncells_east * nlay + ecell * nlay + n] = rhograd[ncell
+                    * ncells_east * nlay + ecell * nlay + n]
+                    + dcdrho[ncell * ncells_east * nlay + ecell * nlay + n]
+                        * (ti / c[ncell * ncells_east + ecell]);
                 ;
               }
           }
@@ -1405,15 +1407,15 @@ namespace jif3D
           {
             vsgrad[ncell1 * ncells_east * nlay + ecell1 * nlay + n] = vsgrad[ncell1
                 * ncells_east * nlay + ecell1 * nlay + n]
-                - dcdvs[ncell1 * ncells_east * nlay + ecell1 * nlay + n]
+                + dcdvs[ncell1 * ncells_east * nlay + ecell1 * nlay + n]
                     * (ti / c[ncell1 * ncells_east + ecell1]);
             vpgrad[ncell1 * ncells_east * nlay + ecell1 * nlay + n] = vpgrad[ncell1
                 * ncells_east * nlay + ecell1 * nlay + n]
-                - dcdvp[ncell1 * ncells_east * nlay + ecell1 * nlay + n]
+                + dcdvp[ncell1 * ncells_east * nlay + ecell1 * nlay + n]
                     * (ti / c[ncell1 * ncells_east + ecell1]);
             rhograd[ncell1 * ncells_east * nlay + ecell1 * nlay + n] = rhograd[ncell1
                 * ncells_east * nlay + ecell1 * nlay + n]
-                - dcdrho[ncell1 * ncells_east * nlay + ecell1 * nlay + n]
+                + dcdrho[ncell1 * ncells_east * nlay + ecell1 * nlay + n]
                     * (ti / c[ncell1 * ncells_east + ecell1]);
           }
 
