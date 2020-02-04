@@ -107,7 +107,6 @@ namespace jif3D
       double operator()(const double c)
         {
           double R1212 = compute_R1212(w, c, vp, vs, mu, depth, dens, nlay);
-          ;
           return R1212;
         }
     private:

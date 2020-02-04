@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_SUITE( SW_Gradient_Test_Suite )
 
         jif3D::SurfaceWaveData SWData;
         std::vector<double> xcoords =
-          { 22000, 35000.0 };
+          { 25000, 35000.0 };
         std::vector<double> ycoords =
           { 500000.0 + 25000.0, 500000.0 + 25000.0 };
         std::vector<double> zcoords =

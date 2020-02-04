@@ -95,8 +95,8 @@ namespace jif3D
         netCDF::NcFile NetCDFFile(filename, netCDF::NcFile::replace);
 
         const ThreeDModelBase::t3DModelDim XCellCoords = GetXCoordinates();
-        const ThreeDModelBase::t3DModelDim YCellCoords = GetXCoordinates();
-        const ThreeDModelBase::t3DModelDim ZCellCoords = GetXCoordinates();
+        const ThreeDModelBase::t3DModelDim YCellCoords = GetYCoordinates();
+        const ThreeDModelBase::t3DModelDim ZCellCoords = GetZCoordinates();
         const ThreeDModelBase::t3DModelData Data = GetData();
         const ThreeDModelBase::t3DModelData VpData = GetVp();
         const ThreeDModelBase::t3DModelData DensData = GetDens();
