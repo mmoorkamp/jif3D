@@ -24,7 +24,7 @@
 namespace jif3D
   {
     SurfaceWaveCalculator::SurfaceWaveCalculator() :
-        false_east(500000), tolerance(0.01), length_tolerance(1.0), mode_skip_it(2), toms_max_iter(
+        false_east(500000.0), tolerance(0.01), length_tolerance(1.0), mode_skip_it(2), toms_max_iter(
             50)
       {
       }

@@ -922,7 +922,7 @@ namespace jif3D
         const double T1234 = std::get<4>(T);
 
         std::vector<double> G;
-        if (param == 0)
+        if (param == 0 || param == 4)
           {
             G = compute_G(c, dn, w, vp, vs, dens);
           }
@@ -1115,7 +1115,7 @@ namespace jif3D
           {
             double dn = depth[n + 1] - depth[n];
             R_c = compute_R_c(w, c, vp[n], vs[n], dn, dens[n], R, R_c);
-            R = compute_R(w, c, vp[n], vs[n], dn, dens[n], R, 0);
+            R = compute_R(w, c, vp[n], vs[n], dn, dens[n], R, 4);
           }
         return R_c[0];
       }
@@ -1363,11 +1363,10 @@ namespace jif3D
               {
                 a = a - 360;
               }
-            double ti = (-1.0)
-                * (cos(a * M_PI / 180.0) * dist_segment_e
-                    + sin(a * M_PI / 180.0) * dist_segment_n)
+            double ti = (cos(a * M_PI / 180.0) * dist_segment_e
+                + sin(a * M_PI / 180.0) * dist_segment_n)
                 / c[ncell * ncells_east + ecell];
-            time = time + ti;
+            time = time - ti;
 
             for (int n = 0; n < nlay; n++)
               {
@@ -1397,11 +1396,9 @@ namespace jif3D
           {
             a = a - 360;
           }
-        double ti = (-1.0)
-            * (cos(a * M_PI / 180.0) * dist_segment_e
-                + sin(a * M_PI / 180.0) * dist_segment_n)
-            / c[ncell1 * ncells_east + ecell1];
-        time = time + ti;
+        double ti = (cos(a * M_PI / 180.0) * dist_segment_e
+            + sin(a * M_PI / 180.0) * dist_segment_n) / c[ncell1 * ncells_east + ecell1];
+        time = time - ti;
 
         for (int n = 0; n < nlay; n++)
           {
