@@ -159,8 +159,7 @@ int hpx_main(boost::program_options::variables_map& vm)
     //now we setup the regularization
     jif3D::ThreeDMTModel TearModX, TearModY, TearModZ;
     boost::shared_ptr<jif3D::RegularizationFunction> Regularization =
-        RegSetup.SetupObjective(vm, Model, GridCov, TearModX,
-            TearModY, TearModZ);
+        RegSetup.SetupObjective(vm, Model, GridCov, TearModX, TearModY, TearModZ);
     boost::shared_ptr<jif3D::MultiSectionTransform> ModRegTrans(
         new jif3D::MultiSectionTransform(InvModel.size(), 0, ngrid, Copier));
     if (vm.count("refmodel"))
@@ -361,7 +360,7 @@ int hpx_main(boost::program_options::variables_map& vm)
         CrossTrans->AddSection(OldInv.size(), InvModel.size(), Copier);
 
         boost::shared_ptr<jif3D::CrossGradient> CrossConstr(
-            new jif3D::CrossGradient(Model,TearModX,TearModY,TearModZ));
+            new jif3D::CrossGradient(Model, TearModX, TearModY, TearModZ));
         Objective->AddObjective(CrossConstr, CrossTrans, cgweight, "Cross",
             jif3D::JointObjective::coupling);
       }
@@ -429,7 +428,7 @@ int hpx_main(boost::program_options::variables_map& vm)
         else
           {
             DataTip.ReadModEM(TipperName);
-            DataTip.WriteNetCDF(TipperName+".conv.nc");
+            DataTip.WriteNetCDF(TipperName + ".conv.nc");
           }
         size_t ntip = DataTip.GetData().size();
         jif3D::rvec TE(ntip, 0.0);
@@ -528,20 +527,21 @@ int hpx_main(boost::program_options::variables_map& vm)
         std::copy(covgrad.begin(), covgrad.begin() + nval, Model.SetData().origin());
         Model.WriteVTK(modelfilename + ".mtdatacovgrad.vtk");
 
-
         if (vm.count("tipperdata"))
           {
             GM = TipperTransform->GeneralizedToPhysical(InvModel);
-            std::cout << " Tipper Data Misfit: " << TipperObjective->CalcMisfit(GM) << std::endl;
+            std::cout << " Tipper Data Misfit: " << TipperObjective->CalcMisfit(GM)
+                << std::endl;
             jif3D::rvec tipgrad = TipperObjective->CalcGradient(GM);
 
-            ublas::subrange(grad,0,nval) = tipgrad;
+            ublas::subrange(grad, 0, nval) = tipgrad;
             std::copy(tipgrad.begin(), tipgrad.begin() + nval, Model.SetData().origin());
             Model.WriteVTK(modelfilename + ".tipdatagrad.vtk");
 
-            jif3D::rvec tipcovgrad  = CovObj->ApplyCovar(grad);
+            jif3D::rvec tipcovgrad = CovObj->ApplyCovar(grad);
 
-            std::copy(tipcovgrad.begin(), tipcovgrad.begin() + nval, Model.SetData().origin());
+            std::copy(tipcovgrad.begin(), tipcovgrad.begin() + nval,
+                Model.SetData().origin());
             Model.WriteVTK(modelfilename + ".tipdatacovgrad.vtk");
           }
 
@@ -551,9 +551,8 @@ int hpx_main(boost::program_options::variables_map& vm)
         //this becomes important when applying the covariance below
         //for this output we are not interested in the distortion part
         //so we pad the vector and only look at the conductivity values
-        jif3D::rvec reggrad(grad.size(),0.0);
-        ublas::subrange(grad,0,nval) = Regularization->CalcGradient(GM);
-
+        jif3D::rvec reggrad(grad.size(), 0.0);
+        ublas::subrange(grad, 0, nval) = Regularization->CalcGradient(GM);
 
         std::copy(grad.begin(), grad.begin() + nval, Model.SetData().origin());
         Model.WriteVTK(modelfilename + ".reggrad.vtk");
@@ -630,13 +629,17 @@ int hpx_main(boost::program_options::variables_map& vm)
 
     if (vm.count("crossmodel"))
       {
+        int index = std::distance(Objective->GetObjectiveTypes().begin(),
+            std::find(Objective->GetObjectiveTypes().begin(),
+                Objective->GetObjectiveTypes().end(), jif3D::JointObjective::coupling));
+        std::cout << "Index for CG: " << index << std::endl;
         //write out the reference model, this is mainly for debugging to see
         //if it has been modified at all (which it should not)
         std::copy(InvModel.end() - Model.GetNModelElements(), InvModel.end(),
             Model.SetConductivities().origin());
         Model.WriteVTK("crossref.final.vtk");
         //write out the final cross gradient model
-        jif3D::rvec CG(Objective->GetObjective(2).GetIndividualMisfit());
+        jif3D::rvec CG(Objective->GetObjective(index).GetIndividualMisfit());
         const size_t nx = Model.GetData().shape()[0];
         const size_t ny = Model.GetData().shape()[1];
         const size_t nz = Model.GetData().shape()[2];
@@ -648,8 +651,8 @@ int hpx_main(boost::program_options::variables_map& vm)
         std::copy(CG.begin() + nmod, CG.begin() + 2 * nmod, YGrad.origin());
         std::copy(CG.begin() + 2 * nmod, CG.begin() + 3 * nmod, ZGrad.origin());
         jif3D::Write3DVectorModelToVTK("crossgrad.vtk", "CrossGrad",
-            Model.GetXCoordinates(), Model.GetYCoordinates(), Model.GetZCoordinates(), XGrad,
-            YGrad, ZGrad);
+            Model.GetXCoordinates(), Model.GetYCoordinates(), Model.GetZCoordinates(),
+            XGrad, YGrad, ZGrad);
       }
 
     InvModel = MTTransform->GeneralizedToPhysical(InvModel);
