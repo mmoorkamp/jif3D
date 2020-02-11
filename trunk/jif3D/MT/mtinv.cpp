@@ -361,7 +361,7 @@ int hpx_main(boost::program_options::variables_map& vm)
         CrossTrans->AddSection(OldInv.size(), InvModel.size(), Copier);
 
         boost::shared_ptr<jif3D::CrossGradient> CrossConstr(
-            new jif3D::CrossGradient(Model));
+            new jif3D::CrossGradient(Model,TearModX,TearModY,TearModZ));
         Objective->AddObjective(CrossConstr, CrossTrans, cgweight, "Cross",
             jif3D::JointObjective::coupling);
       }
