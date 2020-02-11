@@ -113,11 +113,11 @@ namespace jif3D
           return IndividualGradNorms;
         }
       //! Return which type of objective function (datafit, coupling regularization) we are dealing with
-      std::vector<ObjectiveType> GetObjectiveTypes() const
+      const std::vector<ObjectiveType> &GetObjectiveTypes() const
         {
           return FunctionType;
         }
-      std::vector<std::string> GetObjectiveNames() const
+      const std::vector<std::string> &GetObjectiveNames() const
         {
           return Names;
         }
