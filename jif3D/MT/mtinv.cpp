@@ -644,8 +644,8 @@ int hpx_main(boost::program_options::variables_map& vm)
         std::copy(CG.begin(), CG.begin() + nmod, XGrad.origin());
         std::copy(CG.begin() + nmod, CG.begin() + 2 * nmod, YGrad.origin());
         std::copy(CG.begin() + 2 * nmod, CG.begin() + 3 * nmod, ZGrad.origin());
-        jif3D::Write3DVectorModelToVTK("crossgrad.vtk", "CroosGrad",
-            Model.GetXCellSizes(), Model.GetYCellSizes(), Model.GetZCellSizes(), XGrad,
+        jif3D::Write3DVectorModelToVTK("crossgrad.vtk", "CrossGrad",
+            Model.GetXCoordinates(), Model.GetYCoordinates(), Model.GetZCoordinates(), XGrad,
             YGrad, ZGrad);
       }
 
