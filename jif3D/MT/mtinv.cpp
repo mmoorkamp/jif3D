@@ -156,8 +156,11 @@ int hpx_main(boost::program_options::variables_map& vm)
         0, ngrid);
     jif3D::rvec GridCov(ngrid, 1.0);
     //std::copy(CovModVec.begin(), CovModVec.begin() + ngrid, GridCov.begin());
+    //now we setup the regularization
+    jif3D::ThreeDMTModel TearModX, TearModY, TearModZ;
     boost::shared_ptr<jif3D::RegularizationFunction> Regularization =
-        RegSetup.SetupObjective(vm, Model, GridCov);
+        RegSetup.SetupObjective(vm, Model, GridCov, TearModX,
+            TearModY, TearModZ);
     boost::shared_ptr<jif3D::MultiSectionTransform> ModRegTrans(
         new jif3D::MultiSectionTransform(InvModel.size(), 0, ngrid, Copier));
     if (vm.count("refmodel"))
