@@ -28,10 +28,8 @@ namespace jif3D
     std::tuple<dcomp, dcomp, double, double, double, double, double, dcomp, dcomp, double,
         double, double> compute_util(const double &w, const double &c, const double &vp,
         const double &vs, const double &dn, const bool &botlay);
-    std::tuple<dcomp, dcomp, double, double, double, double, double, double, double,
-        double, dcomp, dcomp, double, double, double, double, double, double, double,
-        double> compute_util_grads(const double &w, const double &vs, const double &vp,
-        const double &c, const double &thck, const bool &botlay);
+    std::vector<double> compute_util_grads(const double &w, const double &vs,
+        const double &vp, const double &c, const double &thck, const bool &botlay);
     std::tuple<double, double, double, double, double> compute_T(const double &w,
         const double &c, const double &vp, const double &vs, const double &mu);
     std::tuple<double, double, double, double, double> compute_T_vs(const double &w,
@@ -60,10 +58,9 @@ namespace jif3D
         const double &c, const double &vp, const double &vs, const double &dn,
         const double &dens, const std::tuple<double, double, double, double, double> &T,
         const int &param);
-    double compute_R1212(const double &w, const double &c,
-        const std::vector<double> &vp, const std::vector<double> &vs, const double &mu,
-        const std::vector<double> &depth, const std::vector<double> &dens,
-        const int &nlay);
+    double compute_R1212(const double &w, const double &c, const std::vector<double> &vp,
+        const std::vector<double> &vs, const double &mu, const std::vector<double> &depth,
+        const std::vector<double> &dens, const int &nlay);
     double compute_R1212_vs(const double &w, const double &c,
         const std::vector<double> &vp, const std::vector<double> &vs, const double &mu,
         const std::vector<double> &depth, const std::vector<double> &dens,

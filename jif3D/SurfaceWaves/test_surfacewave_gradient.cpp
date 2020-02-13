@@ -90,9 +90,9 @@ BOOST_AUTO_TEST_SUITE( SW_Gradient_Test_Suite )
 
         jif3D::SurfaceWaveData SWData;
         std::vector<double> xcoords =
-          { 25000, 35000.0 };
+          { 25000.0, 25000.0 };
         std::vector<double> ycoords =
-          { 500000.0 + 25000.0, 500000.0 + 25000.0 };
+          { 500000.0 + 35000.0, 500000.0 + 45000.0 };
         std::vector<double> zcoords =
           { 0.0, 0.0 };
         SWData.SetMeasurementPoints(xcoords, ycoords, zcoords);
@@ -101,9 +101,9 @@ BOOST_AUTO_TEST_SUITE( SW_Gradient_Test_Suite )
         SWData.SetDataAndErrors(dtp, err);
 
         std::vector<double> epx =
-          { 15000.0 };
+          { 25000.0 };
         std::vector<double> epy =
-          { 5050000 };
+          { 500000.0 - 100000.0 };
         std::vector<double> epz =
           { 0.0 };
         SWData.SetEventPositions(epx, epy, epz);

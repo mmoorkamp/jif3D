@@ -133,10 +133,8 @@ namespace jif3D
         return std::make_tuple(hv, kv, SH, CH, SK, CK, gam, hvnorm, kvnorm, l, mh, mk);
       }
 
-    std::tuple<dcomp, dcomp, double, double, double, double, double, double, double,
-        double, dcomp, dcomp, double, double, double, double, double, double, double,
-        double> compute_util_grads(const double &w, const double &vs, const double &vp,
-        const double &c, const double &thck, const bool &botlay)
+    std::vector<double> compute_util_grads(const double &w, const double &vs,
+        const double &vp, const double &c, const double &thck, const bool &botlay)
       {
         const auto util = compute_util(w, c, vp, vs, thck, botlay);
 
@@ -147,47 +145,28 @@ namespace jif3D
         const double mh = std::get<10>(util);
         const double mk = std::get<11>(util);
 
-        dcomp hv_h, kv_k, hv_c, kv_c;
         double mkk, mhh, mhc, mkc;
         const double k = w / c;
         if (c < vp)
           {
             mhh = pow(w, 2) / (mh * pow(vp, 3));
-            hv_h = mhh;
             mhc = (-1.0) * (pow(w, 2) / (mh * pow(c, 3)));
-            hv_c = mhc;
           }
         else
           {
             mhh = ((-1.0) * pow(w, 2)) / (mh * pow(vp, 3));
-            hv_h = mhh;
             mhc = pow(w, 2) / (mh * pow(c, 3));
-            hv_c = mhc;
-            if (botlay == 0)
-              {
-                hv_h = i * mhh;
-                hv_c = i * mhc;
-              }
           }
 
         if (c < vs)
           {
             mkk = pow(w, 2) / (mk * pow(vs, 3));
-            kv_k = mkk;
             mkc = (-1.0) * (pow(w, 2) / (mk * pow(c, 3)));
-            kv_c = mkc;
           }
         else
           {
             mkk = ((-1.0) * pow(w, 2)) / (mk * pow(vs, 3));
-            kv_k = mkk;
             mkc = pow(w, 2) / (mk * pow(c, 3));
-            kv_c = mkc;
-            if (botlay == 0)
-              {
-                kv_k = i * mkk;
-                kv_c = i * mkc;
-              }
           }
 
         const double hvnorm_c = (-1.0) * (2.0 * c) / pow(vp, 2);
@@ -209,8 +188,29 @@ namespace jif3D
         const double SHH = (mhh / mh) * (k * thck * CH - SH);
         const double SKK = (mkk / mk) * (k * thck * CK - SK);
 
-        return std::make_tuple(hv_h, kv_k, hvnorm_h, kvnorm_k, gam_k, l_k, CHH, CKK, SHH,
-            SKK, hv_c, kv_c, hvnorm_c, kvnorm_c, gam_c, l_c, CHC, CKC, SHC, SKC);
+        std::vector<double> util_grads(20);
+        util_grads[0] = mhh;
+        util_grads[1] = mkk;
+        util_grads[2] = hvnorm_h;
+        util_grads[3] = kvnorm_k;
+        util_grads[4] = gam_k;
+        util_grads[5] = l_k;
+        util_grads[6] = CHH;
+        util_grads[7] = CKK;
+        util_grads[8] = SHH;
+        util_grads[9] = SKK;
+        util_grads[10] = mhc;
+        util_grads[11] = mkc;
+        util_grads[12] = hvnorm_c;
+        util_grads[13] = kvnorm_c;
+        util_grads[14] = gam_c;
+        util_grads[15] = l_c;
+        util_grads[16] = CHC;
+        util_grads[17] = CKC;
+        util_grads[18] = SHC;
+        util_grads[19] = SKC;
+
+        return util_grads;
       }
 
     std::tuple<double, double, double, double, double> compute_T(const double &w,
@@ -249,9 +249,10 @@ namespace jif3D
         const dcomp kv = std::get<1>(util);
         const double l = std::get<9>(util);
 
-        const auto util_grads = compute_util_grads(w, vs, vp, c, 99999.0, 1);
-        const dcomp kv_k = std::get<1>(util_grads);
-        const double l_k = std::get<5>(util_grads);
+        const std::vector<double> util_grads = compute_util_grads(w, vs, vp, c, 99999.0,
+            1);
+        const double kv_k = util_grads[1];
+        const double l_k = util_grads[5];
 
         const double gT1212 = std::real(
             (4.0 * T1212 / vs)
@@ -279,8 +280,9 @@ namespace jif3D
         const dcomp kv = std::get<1>(util);
         const double l = std::get<9>(util);
 
-        const auto util_grads = compute_util_grads(w, vs, vp, c, 99999.0, 1);
-        const dcomp hv_h = std::get<0>(util_grads);
+        const std::vector<double> util_grads = compute_util_grads(w, vs, vp, c, 99999.0,
+            1);
+        const double hv_h = util_grads[0];
 
         const double gT1212 = std::real(
             (-1.0) * pow(vs, 4) * pow(l, 2) * hv_h / (4.0 * pow(w, 4) * pow(hv, 2) * kv));
@@ -323,10 +325,10 @@ namespace jif3D
         const dcomp kv = std::get<1>(util);
         const double l = std::get<9>(util);
 
-        auto util_g = compute_util_grads(w, vs, vp, c, 99999.0, 1);
-        const dcomp hv_c = std::get<10>(util_g);
-        const dcomp kv_c = std::get<11>(util_g);
-        const double l_c = std::get<15>(util_g);
+        const std::vector<double> util_g = compute_util_grads(w, vs, vp, c, 99999.0, 1);
+        const double hv_c = util_g[10];
+        const double kv_c = util_g[11];
+        const double l_c = util_g[15];
 
         const auto T = compute_T(w, c, vp, vs, mu);
         const double iT1214 = std::get<2>(T);
@@ -444,11 +446,11 @@ namespace jif3D
         const dcomp hvnorm = std::get<7>(kvert);
         const dcomp kvnorm = std::get<8>(kvert);
 
-        const auto util_grads = compute_util_grads(w, vs, vp, c, dn, 0);
-        const double kvnorm_k = std::get<3>(util_grads);
-        const double gam_k = std::get<4>(util_grads);
-        const double CKK = std::get<7>(util_grads);
-        const double SKK = std::get<9>(util_grads);
+        const std::vector<double> util_grads = compute_util_grads(w, vs, vp, c, dn, 0);
+        const double kvnorm_k = util_grads[3];
+        const double gam_k = util_grads[4];
+        const double CKK = util_grads[7];
+        const double SKK = util_grads[9];
 
         const double gG1212 = std::real(
             2.0 * gam_k * (1.0 - 2.0 * gam) * (1.0 - CH * CK)
@@ -567,10 +569,10 @@ namespace jif3D
         const dcomp hvnorm = std::get<7>(kvert);
         const dcomp kvnorm = std::get<8>(kvert);
 
-        const auto util_grads = compute_util_grads(w, vs, vp, c, dn, 0);
-        const double hvnorm_h = std::get<2>(util_grads);
-        const double CHH = std::get<6>(util_grads);
-        const double SHH = std::get<8>(util_grads);
+        const std::vector<double> util_grads = compute_util_grads(w, vs, vp, c, dn, 0);
+        const double hvnorm_h = util_grads[2];
+        const double CHH = util_grads[6];
+        const double SHH = util_grads[8];
 
         const double gG1212 = std::real(
             (2.0 * pow(gam, 2) - 2.0 * gam + 1.0) * CHH * CK
@@ -705,14 +707,14 @@ namespace jif3D
         const dcomp hvnorm = std::get<7>(utils);
         const dcomp kvnorm = std::get<8>(utils);
 
-        const auto utils_c = compute_util_grads(w, vs, vp, c, dn, 0);
-        const double SHC = std::get<18>(utils_c);
-        const double CHC = std::get<16>(utils_c);
-        const double SKC = std::get<19>(utils_c);
-        const double CKC = std::get<17>(utils_c);
-        const double gam_c = std::get<14>(utils_c);
-        const double hvnorm_c = std::get<12>(utils_c);
-        const double kvnorm_c = std::get<13>(utils_c);
+        const std::vector<double> utils_c = compute_util_grads(w, vs, vp, c, dn, 0);
+        const double SHC = utils_c[18];
+        const double CHC = utils_c[16];
+        const double SKC = utils_c[19];
+        const double CKC = utils_c[17];
+        const double gam_c = utils_c[14];
+        const double hvnorm_c = utils_c[12];
+        const double kvnorm_c = utils_c[13];
 
         const double dCC = CHC * CK + CH * CKC;
         const double dSS = SHC * SK + SH * SKC;
@@ -959,7 +961,7 @@ namespace jif3D
             + T1224 * G2412 + T1234 * G3412;
         double R1213 = T1212 * G1213 + T1213 * G1313 - 2.0 * iT1214 * iG1413
             + T1224 * G2413 + T1234 * G2412;
-        double iR1214 = T1212 * iG1214 + T1213 * iG1314 + iT1214 * (2.0 * G1414 - 1.0)
+        double iR1214 = T1212 * iG1214 + T1213 * iG1314 + iT1214 * (2.0 * G1414 - 1)
             + T1224 * iG1413 + T1234 * iG1412;
         double R1224 = T1212 * G1224 + T1213 * G1324 - 2.0 * iT1214 * iG1314
             + T1224 * G1313 + T1234 * G1312;
@@ -1042,7 +1044,7 @@ namespace jif3D
             if (n == gradlay)
               R = compute_R(w, c, vp[n], vs[n], dn, dens[n], R, 1);
             else
-              R = compute_R(w, c, vp[n], vs[n], dn, dens[n], R, 0);
+              R = compute_R(w, c, vp[n], vs[n], dn, dens[n], R, 4);
           }
         return std::get<0>(R);
       }
@@ -1069,7 +1071,7 @@ namespace jif3D
             if (n == gradlay)
               R = compute_R(w, c, vp[n], vs[n], dn, dens[n], R, 2);
             else
-              R = compute_R(w, c, vp[n], vs[n], dn, dens[n], R, 0);
+              R = compute_R(w, c, vp[n], vs[n], dn, dens[n], R, 4);
           }
         return std::get<0>(R);
       }
@@ -1096,7 +1098,7 @@ namespace jif3D
             if (n == gradlay)
               R = compute_R(w, c, vp[n], vs[n], dn, dens[n], R, 3);
             else
-              R = compute_R(w, c, vp[n], vs[n], dn, dens[n], R, 0);
+              R = compute_R(w, c, vp[n], vs[n], dn, dens[n], R, 4);
           }
         return std::get<0>(R);
       }
