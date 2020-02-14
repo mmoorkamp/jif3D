@@ -4,9 +4,9 @@ lib gravity : ThreeDGravityModel.cpp ScalarGravityData.cpp
               DepthWeighting.cpp
               GravityBackground.cpp BasicGravElements.cpp
               ScalarOMPGravityImp.cpp  TensorOMPGravityImp.cpp
-                 ReadWriteGravityData.cpp
-                 ../Global//global  ../ModelBase//modelbase ../Inversion//lininv
-                 ..//boost_core ..//netcdf ..//netcdf_c++ 
+              ReadWriteGravityData.cpp
+              core ../Inversion//lininv
+                  ..//netcdf ..//netcdf_c++ 
               : #<hpx>off:<source>GravityInterface.cpp
                 <gpu>on:<source>TensorCudaGravityImp.cpp 
                 <gpu>on:<source>ScalarCudaGravityImp.cpp

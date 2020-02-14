@@ -495,7 +495,7 @@ int hpx_main(boost::program_options::variables_map& vm)
     if (CovWidth != 0.0)
       {
         boost::shared_ptr<jif3D::GeneralCovariance> StochCov = boost::make_shared<
-            jif3D::StochasticCovariance>(Model.GetModelShape()[0],
+            jif3D::StochasticCovariance>(CovModVec, Model.GetModelShape()[0],
             Model.GetModelShape()[1], Model.GetModelShape()[2], CovWidth, 1.0, 1.0);
         CovObj->AddSection(0, ngrid, StochCov);
         if (WantDistCorr)
