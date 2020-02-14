@@ -41,6 +41,7 @@ namespace jif3D
       //MatrixXd Cm;
       bool HaveInv;
       std::vector<double> values;
+      jif3D::rvec CovDiag;
 
       //Eigen::LDLT<MatrixXd > solver;
       jif3D::cvec Cmv, Cmf;
@@ -63,7 +64,7 @@ namespace jif3D
       //  }
       virtual jif3D::rvec ApplyCovar(const jif3D::rvec &vector) const override;
       virtual jif3D::rvec ApplyInvCovar(const jif3D::rvec &vector) const override;
-      StochasticCovariance(size_t x, size_t y, size_t z, double ma, double mnu,
+      StochasticCovariance(const jif3D::rvec &CD,size_t x, size_t y, size_t z, double ma, double mnu,
           double msigma);
       virtual ~StochasticCovariance();
       };

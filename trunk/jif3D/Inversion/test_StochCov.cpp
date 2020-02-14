@@ -68,8 +68,8 @@ public:
           x.derived());
     }
   // Custom API:
-  MatrixReplacement(size_t x, size_t y, size_t z, double ma, double mnu, double msigma) :
-      Cov(x, y, z, ma, mnu, msigma)
+  MatrixReplacement(const jif3D::rvec &CD,size_t x, size_t y, size_t z, double ma, double mnu, double msigma) :
+      Cov(CD, x, y, z, ma, mnu, msigma)
     {
       nelem = x * y * z;
     }
@@ -124,8 +124,9 @@ BOOST_AUTO_TEST_SUITE( StochCov_Test_Suite )
         double a = 1.0;
         double nu = 1.0;
         double sigma = 1.0;
+        jif3D::rvec CovDiag(nx * ny * nz, 1.0);
 
-        MatrixReplacement A(nx, ny, nz, a, nu, sigma);
+        MatrixReplacement A(CovDiag, nx, ny, nz, a, nu, sigma);
         jif3D::rvec m(nx * ny * nz, 0.0);
         //std::generate(m.begin(), m.end(), drand48);
         //std::iota( m.begin(), m.end(),1);
@@ -170,8 +171,8 @@ BOOST_AUTO_TEST_SUITE( StochCov_Test_Suite )
         double a = 1.0;
         double nu = 1.0;
         double sigma = 1.0;
-
-        jif3D::StochasticCovariance Cov(nx, ny, nz, a, nu, sigma);
+        jif3D::rvec Diag(nx*ny*nz,1.0);
+        jif3D::StochasticCovariance Cov(Diag,nx, ny, nz, a, nu, sigma);
         jif3D::rvec m(nx * ny * nz, 0.0);
         //std::generate(m.begin(), m.end(), drand48);
         //std::iota( m.begin(), m.end(),1);

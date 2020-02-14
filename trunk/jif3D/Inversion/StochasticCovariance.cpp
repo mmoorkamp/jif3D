@@ -69,8 +69,8 @@ public:
           x.derived());
     }
   // Custom API:
-  MatrixReplacement(size_t x, size_t y, size_t z, double ma, double mnu, double msigma) :
-      Cov(x, y, z, ma, mnu, msigma)
+  MatrixReplacement(const jif3D::rvec &CD,size_t x, size_t y, size_t z, double ma, double mnu, double msigma) :
+      Cov(CD,x, y, z, ma, mnu, msigma)
     {
       nelem = x * y * z;
     }
@@ -112,10 +112,10 @@ namespace Eigen
 namespace jif3D
   {
 
-    StochasticCovariance::StochasticCovariance(size_t x, size_t y, size_t z, double ma,
-        double mnu, double msigma) :
-        A(x * y * z, x * y * z), nx(x), ny(y), nz(z), a(ma), nu(mnu), sigma(msigma), HaveInv(
-            false)
+    StochasticCovariance::StochasticCovariance(const jif3D::rvec &CD, size_t x, size_t y,
+        size_t z, double ma, double mnu, double msigma) :
+        CovDiag(CD), A(x * y * z, x * y * z), nx(x), ny(y), nz(z), a(ma), nu(mnu), sigma(
+            msigma), HaveInv(false)
       {
         distindex = 0;
         double factor = sigma * sigma / (std::pow(2, nu - 1) * boost::math::tgamma(nu));
@@ -289,6 +289,9 @@ namespace jif3D
         double max = std::sqrt(jif3D::pow2(nx) + jif3D::pow2(ny) + jif3D::pow2(nz));
         double steps = 1000;
         double delta = (max - min) / steps;
+        jif3D::rvec vec(vector.size());
+        std::transform(vector.begin(), vector.end(), CovDiag.begin(), vec.begin(),
+            std::multiplies<double>());
         if (a > 0.0)
           {
 #pragma omp parallel for default(shared)
@@ -319,7 +322,7 @@ namespace jif3D
                             double inter = values[index];
                             //+ (values[index + 1] - values[index]) / delta
                             //		* (r - index * delta);
-                            previous_result(i) += inter * vector(offset);
+                            previous_result(i) += inter * vec(offset);
                           }
                       }
                   }
@@ -333,7 +336,7 @@ namespace jif3D
             typedef Eigen::Map<const VectorXi> MapTypeConst;
             typedef Eigen::Map<VectorXi> MapType;
 
-            MapTypeConst v(&(vector.data()[0]), vector.size(), 1);
+            MapTypeConst v(&(vec.data()[0]), vec.size(), 1);
             MapType r(&(previous_result.data()[0]), previous_result.size(), 1);
             r = A * v;
 

@@ -39,7 +39,7 @@ int main()
     std::copy(Model2->GetData().origin(), Model2->GetData().origin() + nparam,
         ModelVec.begin() + nparam);
     bool considersize = true;
-    jif3D::CrossGradient CGObjective(*Model1,considersize);
+    jif3D::CrossGradient CGObjective(*Model1, considersize);
 
     double cg = CGObjective.CalcMisfit(ModelVec);
 
@@ -89,7 +89,8 @@ int main()
     double nu = 1.0;
     double sigma = 1.0;
 
-    jif3D::StochasticCovariance Cov(nx, ny, nz, a, nu, sigma);
+    jif3D::rvec CovDiag(nx * ny * nz, 1.0);
+    jif3D::StochasticCovariance Cov(CovDiag, nx, ny, nz, a, nu, sigma);
     jif3D::rvec mCm = Cov.ApplyCovar(ublas::subrange(CGGrad, 0, nmod));
     std::copy(mCm.begin(), mCm.end(), GradMod1.origin());
 
@@ -105,12 +106,11 @@ int main()
     jif3D::rvec m(nx * ny * nz, 0.0);
     //std::generate(m.begin(), m.end(), drand48);
     //std::iota( m.begin(), m.end(),1);
-    m((nx * ny * nz) / 2  + (ny * nz) / 2 + nz / 2) = 1.0;
+    m((nx * ny * nz) / 2 + (ny * nz) / 2 + nz / 2) = 1.0;
     mCm = Cov.ApplyCovar(m);
     std::copy(mCm.begin(), mCm.end(), GradMod1.origin());
-    jif3D::Write3DModelToVTK("covtest.vtk", "Cov",
-        Model1->GetXCoordinates(), Model1->GetYCoordinates(), Model1->GetZCoordinates(),
-        GradMod1);
+    jif3D::Write3DModelToVTK("covtest.vtk", "Cov", Model1->GetXCoordinates(),
+        Model1->GetYCoordinates(), Model1->GetZCoordinates(), GradMod1);
 
   }
 
