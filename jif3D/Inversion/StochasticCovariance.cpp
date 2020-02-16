@@ -344,6 +344,8 @@ namespace jif3D
                 boost::posix_time::microsec_clock::local_time();
             //double time = (endtime - starttime).total_seconds();
           }
+        std::transform(previous_result.begin(), previous_result.end(), CovDiag.begin(), previous_result.begin(),
+            std::multiplies<double>());
         //std::cout << " took " << time << " seconds " << std::endl;
         return previous_result;
         /*const size_t nmod = vector.size() * 2;
