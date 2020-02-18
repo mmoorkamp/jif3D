@@ -59,24 +59,23 @@ namespace jif3D
         const double &dens, const std::tuple<double, double, double, double, double> &T,
         const int &param);
     double compute_R1212(const double &w, const double &c, const std::vector<double> &vp,
-        const std::vector<double> &vs, const double &mu, const std::vector<double> &depth,
-        const std::vector<double> &dens, const int &nlay);
+        const std::vector<double> &vs, const std::vector<double> &depth,
+        const std::vector<double> &dens);
     double compute_R1212_vs(const double &w, const double &c,
-        const std::vector<double> &vp, const std::vector<double> &vs, const double &mu,
+        const std::vector<double> &vp, const std::vector<double> &vs,
         const std::vector<double> &depth, const std::vector<double> &dens,
-        const int &nlay, const int &gradlay);
+        const int &gradlay);
     double compute_R1212_vp(const double &w, const double &c,
-        const std::vector<double> &vp, const std::vector<double> &vs, const double &mu,
+        const std::vector<double> &vp, const std::vector<double> &vs,
         const std::vector<double> &depth, const std::vector<double> &dens,
-        const int &nlay, const int &gradlay);
+        const int &gradlay);
     double compute_R1212_dens(const double &w, const double &c,
-        const std::vector<double> &vp, const std::vector<double> &vs, const double &mu,
+        const std::vector<double> &vp, const std::vector<double> &vs,
         const std::vector<double> &depth, const std::vector<double> &dens,
-        const int &nlay, const int &gradlay);
+        const int &gradlay);
     double compute_R1212_c(const double &w, const double &c,
-        const std::vector<double> &vp, const std::vector<double> &vs, const double &mu,
-        const std::vector<double> &depth, const std::vector<double> &dens,
-        const int &nlay);
+        const std::vector<double> &vp, const std::vector<double> &vs,
+        const std::vector<double> &depth, const std::vector<double> &dens);
     std::vector<std::vector<double>> get_gc_segments(const double &east0,
         const double &north0, const double &east1, const double &north1,
         const double &lon_centr, const double &false_east,
@@ -94,26 +93,23 @@ namespace jif3D
       // Root finding functor for R1212. Keeps all other varibles constants and only changes c (phase velocity) to finds roots. Uses the TOMS algorithm from the boost libraries
     public:
       R1212_root(const double &w_, const std::vector<double> &vp_,
-          const std::vector<double> &vs_, const double &mu_,
-          const std::vector<double> &depth_, const std::vector<double> &dens_,
-          const int &nlay_) :
-          w(w_), vp(vp_), vs(vs_), mu(mu_), depth(depth_), dens(dens_), nlay(nlay_)
+          const std::vector<double> &vs_, const std::vector<double> &depth_,
+          const std::vector<double> &dens_) :
+          w(w_), vp(vp_), vs(vs_), depth(depth_), dens(dens_)
         {
         }
       ;
       double operator()(const double c)
         {
-          double R1212 = compute_R1212(w, c, vp, vs, mu, depth, dens, nlay);
+          double R1212 = compute_R1212(w, c, vp, vs, depth, dens);
           return R1212;
         }
     private:
       const double &w;
       const std::vector<double> &vp;
       const std::vector<double> &vs;
-      const double &mu;
       const std::vector<double> &depth;
       const std::vector<double> &dens;
-      const int &nlay;
       };
 
     struct TerminationCondition

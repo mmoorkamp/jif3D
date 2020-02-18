@@ -151,12 +151,9 @@ namespace jif3D
                         // step ratio for root bracketing
                         const double stepratio = (vsmin - c_lim[0]) / (2.0 * vsmin);
 
-                        // Shear modulus bottom layer
-                        const double mu = pow(vs_1D[NZ - 1], 2) * dens_1D[NZ - 1];
-
                         // Compute initial R1212 polarization for large period below fundamental mode
                         double R1212 = compute_R1212(w[nperiods - 1] / 10.0, c_lim[0],
-                            vp_1D, vs_1D, mu, depth, dens_1D, NZ);
+                            vp_1D, vs_1D, depth, dens_1D);
                         const bool pol0 = signbit(R1212);
 
                         double c_last = c_lim[0]; //initial value for c to start search
@@ -178,8 +175,8 @@ namespace jif3D
                             c1 = c0 + c0 * (stepratio / precision); // increase upper bracket by step ratio
 
                             // Check polarization of R1212 for the upper bracket
-                            R1212 = compute_R1212(w[freq], c1, vp_1D, vs_1D, mu, depth,
-                                dens_1D, NZ);
+                            R1212 = compute_R1212(w[freq], c1, vp_1D, vs_1D, depth,
+                                dens_1D);
                             pol1 = signbit(R1212);
 
                             // If a sign change is found check for mode skipping
@@ -192,8 +189,8 @@ namespace jif3D
                                 // check sign of R1212 between brackets
                                 while (tolerance < (c2 - c0))
                                   {
-                                    R1212 = compute_R1212(w[freq], c2, vp_1D, vs_1D, mu,
-                                        depth, dens_1D, NZ);
+                                    R1212 = compute_R1212(w[freq], c2, vp_1D, vs_1D,
+                                        depth, dens_1D);
                                     const bool pol2 = signbit(R1212);
                                     // if mode skipping detected increase precision (-> decrease step ratio) and return to bracket search
                                     if (pol2 == pol1)
@@ -210,7 +207,7 @@ namespace jif3D
                         // If a sign change is found, brackets c0 & c2 are passed to an instance of R1212_root (-> Boost TOMS root finding algorithm)
                         std::pair<double, double> brackets; // stores refinded root brackets
                         boost::uintmax_t max_iter = toms_max_iter; // Maximum number of TOMS iterations
-                        R1212_root root(w[freq], vp_1D, vs_1D, mu, depth, dens_1D, NZ);
+                        R1212_root root(w[freq], vp_1D, vs_1D, depth, dens_1D);
                         TerminationCondition tc(tolerance);
                         brackets = boost::math::tools::toms748_solve(root, c0, c1, tc,
                             max_iter);
@@ -228,20 +225,20 @@ namespace jif3D
                         //resultfile << "\n" << easting[estep] << "\t" << northing[nstep] << "\t" << (2.0*M_PI)/w[freq] << "\t" << c_last << "\t" << brackets.second-brackets.first << "\t" << max_iter;
 
                         const double R_c = compute_R1212_c(w[freq], c_last, vp_1D, vs_1D,
-                            mu, depth, dens_1D, NZ);
+                            depth, dens_1D);
                         for (int n = 0; n < NZ; n++)
                           {
                             //Computation of Gradients
                             double R_tmp = compute_R1212_vs(w[freq], c_last, vp_1D, vs_1D,
-                                mu, depth, dens_1D, NZ, n);
+                                depth, dens_1D, n);
                             dcdvs[n + NZ * estep + NY * NZ * nstep] = ((-1.0) * R_tmp
                                 / R_c);
-                            R_tmp = compute_R1212_vp(w[freq], c_last, vp_1D, vs_1D, mu,
-                                depth, dens_1D, NZ, n);
+                            R_tmp = compute_R1212_vp(w[freq], c_last, vp_1D, vs_1D, depth,
+                                dens_1D, n);
                             dcdvp[n + NZ * estep + NY * NZ * nstep] = ((-1.0) * R_tmp
                                 / R_c);
-                            R_tmp = compute_R1212_dens(w[freq], c_last, vp_1D, vs_1D, mu,
-                                depth, dens_1D, NZ, n);
+                            R_tmp = compute_R1212_dens(w[freq], c_last, vp_1D, vs_1D,
+                                depth, dens_1D, n);
                             dcdrho[n + NZ * estep + NY * NZ * nstep] = ((-1.0) * R_tmp
                                 / R_c);
                           }

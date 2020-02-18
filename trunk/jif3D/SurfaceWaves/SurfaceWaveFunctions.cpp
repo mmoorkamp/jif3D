@@ -254,20 +254,20 @@ namespace jif3D
         const double kv_k = util_grads[1];
         const double l_k = util_grads[5];
 
+        const double dens = mu / pow(vs, 2);
         const double gT1212 = std::real(
             (4.0 * T1212 / vs)
                 + pow(vs, 4) * (2.0 * l * l_k * kv - pow(l, 2) * kv_k)
                     / (4.0 * pow(w, 4) * hv * pow(kv, 2)));
-        const double gT1213 = std::real(
-            kv_k * pow(vs, 2) / (4.0 * mu * pow(w, 2) * pow(kv, 2)));
+        const double gT1213 = std::real(kv_k / (4.0 * dens * pow(w, 2) * pow(kv, 2)));
         const double igT1214 = std::real(
             (2.0 * iT1214 / vs)
-                + pow(vs, 4) * (l_k * kv - l * kv_k)
-                    / (4.0 * mu * pow(w, 3) * c * hv * pow(kv, 2)));
+                + pow(vs, 2) * (l_k * kv - l * kv_k)
+                    / (4.0 * dens * pow(w, 3) * c * hv * pow(kv, 2)));
         const double gT1224 = 0.0;
         const double gT1234 = std::real(
-            (-1.0) * kv_k * pow(vs, 4)
-                / (4.0 * pow(mu, 2) * pow(w, 2) * pow(c, 2) * hv * pow(kv, 2)));
+            (-1.0) * kv_k
+                / (4.0 * pow(dens, 2) * pow(w, 2) * pow(c, 2) * hv * pow(kv, 2)));
 
         return std::make_tuple(gT1212, gT1213, igT1214, gT1224, gT1234);
       }
@@ -336,7 +336,7 @@ namespace jif3D
         const double dens = mu / pow(vs, 2);
 
         const double gT1212 = std::real(
-            (pow(vs, 4) / 4.0 * pow(w, 4))
+            (pow(vs, 4) / (4.0 * pow(w, 4)))
                 * (((2.0 * l * l_c * hv * kv - pow(l, 2) * (hv_c * kv + hv * kv_c))
                     / (pow(hv * kv, 2))) + (8.0 * pow(w, 2) / pow(c, 3))));
         const double gT1213 = std::real(kv_c / (4.0 * dens * pow(w * kv, 2)));
@@ -475,7 +475,7 @@ namespace jif3D
             (1.0 / (dens * w * c))
                 * (kvnorm_k * CH * SK + pow(kvnorm, 2) * CH * SKK - SH * CKK));
         const double gG1234 = std::real(
-            (1.0 / pow((dens * w * c), 2))
+            (-1.0 / pow((dens * w * c), 2))
                 * (-2.0 * CH * CKK + (1.0 + pow(hvnorm, 2) * pow(kvnorm, 2)) * SH * SKK
                     + pow(hvnorm, 2) * kvnorm_k * SH * SK));
         const double gG1312 = std::real(
@@ -1008,9 +1008,11 @@ namespace jif3D
       }
 
     double compute_R1212(const double &w, const double &c, const std::vector<double> &vp,
-        const std::vector<double> &vs, const double &mu, const std::vector<double> &depth,
-        const std::vector<double> &dens, const int &nlay)
+        const std::vector<double> &vs, const std::vector<double> &depth,
+        const std::vector<double> &dens)
       {
+        const int nlay = vs.size();
+        const double mu = dens[nlay - 1] * pow(vs[nlay - 1], 2);
         // Recursive layer stacking from bottom to top to get R1212
         std::tuple<double, double, double, double, double> R;
         R = compute_T(w, c, vp[nlay - 1], vs[nlay - 1], mu);
@@ -1023,10 +1025,12 @@ namespace jif3D
       }
 
     double compute_R1212_vs(const double &w, const double &c,
-        const std::vector<double> &vp, const std::vector<double> &vs, const double &mu,
+        const std::vector<double> &vp, const std::vector<double> &vs,
         const std::vector<double> &depth, const std::vector<double> &dens,
-        const int &nlay, const int &gradlay)
+        const int &gradlay)
       {
+        const int nlay = vs.size();
+        const double mu = dens[nlay - 1] * pow(vs[nlay - 1], 2);
         // Recursive layer stacking from bottom to top to get R1212
         std::tuple<double, double, double, double, double> R;
         if (nlay - 1 == gradlay)
@@ -1050,10 +1054,12 @@ namespace jif3D
       }
 
     double compute_R1212_vp(const double &w, const double &c,
-        const std::vector<double> &vp, const std::vector<double> &vs, const double &mu,
+        const std::vector<double> &vp, const std::vector<double> &vs,
         const std::vector<double> &depth, const std::vector<double> &dens,
-        const int &nlay, const int &gradlay)
+        const int &gradlay)
       {
+        const int nlay = vs.size();
+        const double mu = dens[nlay - 1] * pow(vs[nlay - 1], 2);
         // Recursive layer stacking from bottom to top to get R1212
         std::tuple<double, double, double, double, double> R;
         if (nlay - 1 == gradlay)
@@ -1077,10 +1083,12 @@ namespace jif3D
       }
 
     double compute_R1212_dens(const double &w, const double &c,
-        const std::vector<double> &vp, const std::vector<double> &vs, const double &mu,
+        const std::vector<double> &vp, const std::vector<double> &vs,
         const std::vector<double> &depth, const std::vector<double> &dens,
-        const int &nlay, const int &gradlay)
+        const int &gradlay)
       {
+        const int nlay = vs.size();
+        const double mu = dens[nlay - 1] * pow(vs[nlay - 1], 2);
         // Recursive layer stacking from bottom to top to get R1212
         std::tuple<double, double, double, double, double> R;
         if (nlay - 1 == gradlay)
@@ -1104,10 +1112,11 @@ namespace jif3D
       }
 
     double compute_R1212_c(const double &w, const double &c,
-        const std::vector<double> &vp, const std::vector<double> &vs, const double &mu,
-        const std::vector<double> &depth, const std::vector<double> &dens,
-        const int &nlay)
+        const std::vector<double> &vp, const std::vector<double> &vs,
+        const std::vector<double> &depth, const std::vector<double> &dens)
       {
+        const int nlay = vs.size();
+        const double mu = dens[nlay - 1] * pow(vs[nlay - 1], 2);
         // Recursive layer stacking from bottom to top to get R1212
         std::tuple<double, double, double, double, double> R;
         std::vector<double> R_c(5, 0);
