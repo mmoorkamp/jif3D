@@ -59,26 +59,36 @@ BOOST_AUTO_TEST_SUITE( SW_Gradient_Test_Suite )
           { 500000.0, 500000.0 + 10000.0, 500000.0 + 20000.0, 500000.0 + 30000.0, 500000.0
               + 40000.0, 500000.0 + 50000.0, 500000.0 + 60000.0 };
         std::vector<double> zcoords_m =
-          { 0.0, 500.0, 1050.0, 1655.0, 2320.5, 3052.55, 3857.805, 4743.5855 };
+          { 0.0, 35000.0, 100000.0};
         const int zsize = zcoords_m.size();
 
         TomoModel.SetCellCoords(xcoords_m, ycoords_m, zcoords_m);
-        const double firstdepth = TomoModel.GetZCoordinates()[0];
-        const double bottomdepth = TomoModel.GetZCoordinates()[zsize - 1];
-        const double topvel = 1000.0;
-        const double bottomvel = 5000.0;
-        const double topdens = 2700;
-        const double bottomdens = 4000;
+        /*const double firstdepth = TomoModel.GetZCoordinates()[0];
+         const double bottomdepth = TomoModel.GetZCoordinates()[zsize - 1];
+         const double topvel = 1000.0;
+         const double bottomvel = 5000.0;
+         const double topdens = 2700;
+         const double bottomdens = 4000;*/
+        std::vector<double> alpha =
+          { 6000.0, 8000.0 };
+        std::vector<double> beta =
+          { 3500.0, 4500.0 };
+        std::vector<double> rho =
+          { 2700.0, 3300.0 };
+
         for (size_t i = 0; i < TomoModel.GetData().num_elements(); ++i)
           {
-            double Depth = TomoModel.GetZCoordinates()[i % (zsize - 1)];
-            double Velocity = topvel
-                + Depth * (bottomvel - topvel) / (bottomdepth - firstdepth);
-            double Density = topdens
-                + Depth * (bottomdens - topdens) / (bottomdepth - firstdepth);
+            /*double Depth = TomoModel.GetZCoordinates()[i % (zsize - 1)];
+             double Velocity = topvel
+             + Depth * (bottomvel - topvel) / (bottomdepth - firstdepth);
+             double Density = topdens
+             + Depth * (bottomdens - topdens) / (bottomdepth - firstdepth);*/
+            double Vs = beta[i % (zsize - 1)];
+            double Vp = alpha[i % (zsize - 1)];
+            double Density = rho[i % (zsize - 1)];
 
-            TomoModel.SetData().origin()[i] = Velocity;
-            TomoModel.SetVp().origin()[i] = Velocity * sqrt(3);
+            TomoModel.SetData().origin()[i] = Vs;
+            TomoModel.SetVp().origin()[i] = Vp;// * sqrt(3);
             TomoModel.SetDens().origin()[i] = Density;
           }
 
@@ -108,7 +118,7 @@ BOOST_AUTO_TEST_SUITE( SW_Gradient_Test_Suite )
           { 0.0 };
         SWData.SetEventPositions(epx, epy, epz);
         std::vector<double> T =
-          { 5.0 };
+          { 40.0 };
         SWData.SetPeriods(T);
         SWData.SetDummy(-999.9);
         SWData.SetLonCentr(-123.0);

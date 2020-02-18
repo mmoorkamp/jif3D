@@ -1018,7 +1018,15 @@ namespace jif3D
         R = compute_T(w, c, vp[nlay - 1], vs[nlay - 1], mu);
         for (int n = nlay - 2; n >= 0; n--)
           {
-            double dn = depth[n + 1] - depth[n];
+            double dn = 0.0;
+            if (n > 0)
+              {
+                dn = depth[n] - depth[n - 1];
+              }
+            else
+              {
+                dn = depth[n];
+              }
             R = compute_R(w, c, vp[n], vs[n], dn, dens[n], R, 0);
           }
         return std::get<0>(R);
@@ -1044,7 +1052,15 @@ namespace jif3D
 
         for (int n = nlay - 2; n >= 0; n--)
           {
-            double dn = depth[n + 1] - depth[n];
+            double dn = 0.0;
+            if (n > 0)
+              {
+                dn = depth[n] - depth[n - 1];
+              }
+            else
+              {
+                dn = depth[n];
+              }
             if (n == gradlay)
               R = compute_R(w, c, vp[n], vs[n], dn, dens[n], R, 1);
             else
@@ -1073,7 +1089,15 @@ namespace jif3D
 
         for (int n = nlay - 2; n >= 0; n--)
           {
-            double dn = depth[n + 1] - depth[n];
+            double dn = 0.0;
+            if (n > 0)
+              {
+                dn = depth[n] - depth[n - 1];
+              }
+            else
+              {
+                dn = depth[n];
+              }
             if (n == gradlay)
               R = compute_R(w, c, vp[n], vs[n], dn, dens[n], R, 2);
             else
@@ -1102,7 +1126,15 @@ namespace jif3D
 
         for (int n = nlay - 2; n >= 0; n--)
           {
-            double dn = depth[n + 1] - depth[n];
+            double dn = 0.0;
+            if (n > 0)
+              {
+                dn = depth[n] - depth[n - 1];
+              }
+            else
+              {
+                dn = depth[n];
+              }
             if (n == gradlay)
               R = compute_R(w, c, vp[n], vs[n], dn, dens[n], R, 3);
             else
@@ -1124,7 +1156,15 @@ namespace jif3D
         R_c = compute_T_c(w, c, vp[nlay - 1], vs[nlay - 1], mu);
         for (int n = nlay - 2; n >= 0; n--)
           {
-            double dn = depth[n + 1] - depth[n];
+            double dn = 0.0;
+            if (n > 0)
+              {
+                dn = depth[n] - depth[n - 1];
+              }
+            else
+              {
+                dn = depth[n];
+              }
             R_c = compute_R_c(w, c, vp[n], vs[n], dn, dens[n], R, R_c);
             R = compute_R(w, c, vp[n], vs[n], dn, dens[n], R, 4);
           }
