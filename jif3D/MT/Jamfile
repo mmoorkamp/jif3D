@@ -29,6 +29,6 @@ unit-test MTCovar_test : test_MTCovar.cpp mt  ../ModelBase//modelbase ../Global/
 
 
 exe mtforward : mtforward.cpp mt linkcommon ;
-exe makemtmesh : makemtmesh.cpp mt linkcommon ;
-exe refinemt : refinemt.cpp mt ../Gravity//gravity ../Magnetics//magnetics ../Tomo//tomo linkcommon ..//netcdf ..//netcdf_c++ ;
+exe makemtmesh : makemtmesh.cpp mt ../Gravity//gravity linkcommon ;
+exe refinemt : refinemt.cpp mt ../Gravity//gravity ../Magnetics//magnetics ../Tomo//tomo linkcommon ;
 exe mtinv : mtinv.cpp  linkcommon mt ../Joint//joint ../Joint//setup ;

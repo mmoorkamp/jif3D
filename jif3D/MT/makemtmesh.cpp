@@ -11,6 +11,9 @@
 
 #include "../Global/Jif3DGlobal.h"
 #include "../Global/FileUtil.h"
+#include "../Gravity/ThreeDGravityModel.h"
+#include "../ModelBase/VTKTools.h"
+#include "../Global/mba.hpp"
 #include "X3DModel.h"
 #include "ReadWriteImpedances.h"
 #include <boost/program_options.hpp>
@@ -35,7 +38,10 @@ int main(int argc, char *argv[])
   {
     int incstart = 0;
     double rounding = 1.0;
+    double dens = 0.0;
+    double aircond = 1e-5;
     std::string DataName;
+    std::string TopoName;
     po::options_description desc("General options");
     desc.add_options()("help", "produce help message")("rounding",
         po::value(&rounding)->default_value(1.0),
@@ -43,7 +49,11 @@ int main(int argc, char *argv[])
         po::value(&incstart)->default_value(0),
         "Index of the layer where to start increasing the cell size in z-direction")(
         "center", po::value(&DataName),
-        "Adjust the origin so the data in the specified file sits in the center of the mesh");
+        "Adjust the origin so the data in the specified file sits in the center of the mesh")(
+        "writegrav", po::value(&dens)->default_value(0.0),
+        "Write a gravity model with the same geometry. Specify the density value in the grid as a parameter")(
+        "topofile", po::value(&TopoName), "File with topography information.")("aircond",
+        po::value(&aircond)->default_value(1e-5), "Conductivity for the air");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -93,6 +103,9 @@ int main(int argc, char *argv[])
         ZCS[i] = thickness;
       }
     Model.SetZCellSizes(ZCS);
+    double originx = 0.0;
+    double originy = 0.0;
+    double centerz = 0.0;
     if (vm.count("center"))
       {
         std::vector<double> Dummy, StatPosX, StatPosY, StatPosZ;
@@ -104,11 +117,11 @@ int main(int argc, char *argv[])
         auto mmz = boost::minmax_element(StatPosZ.begin(), StatPosZ.end());
         double centerx = (*mmx.second + *mmx.first) / 2.0;
         double centery = (*mmy.second + *mmy.first) / 2.0;
-        double centerz = (*mmz.second + *mmz.first) / 2.0;
+        centerz = (*mmz.second + *mmz.first) / 2.0;
         std::cout << "Center X: " << centerx << " Center Y: " << centery << " Center Z:"
             << centerz << std::endl;
-        double originx = centerx - (nx * deltax / 2.0) + deltax / 2.0;
-        double originy = centery - (ny * deltay / 2.0) + deltay / 2.0;
+        originx = centerx - (nx * deltax / 2.0) + deltax / 2.0;
+        originy = centery - (ny * deltay / 2.0) + deltay / 2.0;
         std::cout << "Origin X: " << originx << " Origin  Y: " << originy << " Origin  Z:"
             << centerz << std::endl;
         Model.SetOrigin(originx, originy, centerz);
@@ -132,6 +145,8 @@ int main(int argc, char *argv[])
             std::cout << " Warning, maximum model x: " << originy + ny * deltay
                 << " is smaller than largest y-Coordinate " << *mmy.second << std::endl;
           }
+        jif3D::Write3DDataToVTK(DataName + ".vtk", "MTSites",
+            std::vector<double>(StatPosX.size(), 1.0), StatPosX, StatPosY, StatPosZ);
       }
     //ask for a conductivity to fill the mesh with
     double defaultconductivity = 1.0;
@@ -150,8 +165,103 @@ int main(int argc, char *argv[])
         defaultconductivity);
     Model.SetBackgroundThicknesses(bg_thicknesses);
     Model.SetBackgroundConductivities(bg_conductivities);
+
+    if (vm.count("topofile"))
+      {
+        std::ifstream topofile(TopoName.c_str());
+        std::vector<double> topox, topoy, topoz;
+        std::vector<mba::point<2>> points;
+        while (topofile.good())
+          {
+            double currx, curry, currz;
+            topofile >> currx >> curry >> currz;
+            if (topofile.good())
+              {
+                topox.push_back(currx);
+                topoy.push_back(curry);
+                topoz.push_back(currz);
+                points.push_back(
+                  { currx, curry });
+              }
+          }
+
+        // Bounding box containing the data points.
+        auto mmx = boost::minmax_element(topox.begin(), topox.end());
+        auto mmy = boost::minmax_element(topoy.begin(), topoy.end());
+        auto mmz = boost::minmax_element(topoz.begin(), topoz.end());
+
+        mba::point<2> lo =
+          { *mmx.first - deltax, *mmy.first -deltay};
+        mba::point<2> hi =
+          { *mmx.second + deltax, *mmy.second +deltay};
+
+        mba::index<2> grid =
+          { 32, 32 };
+        double minz = *mmz.first;
+        Model.SetOrigin(originx, originy, minz);
+        mba::MBA<2> interp(lo, hi, grid, points, topoz);
+        jif3D::X3DModel Cov(Model);
+        fill_n(Cov.SetConductivities().origin(), Cov.GetConductivities().num_elements(),
+            1.0);
+
+        for (size_t i = 0; i < nx; ++i)
+          {
+            double currposx = originx + (i + 0.5) * deltax;
+            for (size_t j = 0; j < ny; ++j)
+              {
+                double currposy = originy + (j + 0.5) * deltay;
+                double itopoz = interp(mba::point<2>
+                  { currposx, currposy });
+                std::cout << currposx << " " << currposy << " " << itopoz << std::endl;
+                for (size_t k = 0; k < nz; ++k)
+                  {
+                    double currposz = Model.GetZCoordinates().at(k);
+                    if (currposz <= itopoz)
+                      {
+                        Model.SetConductivities()[i][j][k] = aircond;
+                        Cov.SetConductivities()[i][j][k] = 1e-10;
+                      }
+                  }
+              }
+
+          }
+        jif3D::X3DModel TearX(Cov), TearY(Cov), TearZ(Cov);
+        for (size_t i = 0; i < nx-1; ++i)
+          for (size_t j = 0; j < ny; ++j)
+            for (size_t k = 0; k < nz; ++k)
+              TearX.SetConductivities()[i][j][k] = TearZ.GetConductivities()[i][j][k]
+                  * TearZ.GetConductivities()[i + 1][j][k];
+        for (size_t i = 0; i < nx; ++i)
+          for (size_t j = 0; j < ny-1; ++j)
+            for (size_t k = 0; k < nz; ++k)
+              TearY.SetConductivities()[i][j][k] = TearZ.GetConductivities()[i][j][k]
+                  * TearZ.GetConductivities()[i][j + 1][k];
+        Cov.WriteNetCDF(MeshFilename + ".cov.");
+        Cov.WriteVTK(MeshFilename + ".cov.vtk");
+        TearX.WriteNetCDF(MeshFilename + ".tearx.");
+        TearX.WriteVTK(MeshFilename + ".tearx.vtk");
+        TearY.WriteNetCDF(MeshFilename + ".teary.");
+        TearY.WriteVTK(MeshFilename + ".teary.vtk");
+        TearZ.WriteNetCDF(MeshFilename + ".tearz.");
+        TearZ.WriteVTK(MeshFilename + ".tearz.vtk");
+
+      }
+
     Model.WriteNetCDF(MeshFilename);
     Model.WriteVTK(MeshFilename + ".vtk");
     Model.WriteModEM(MeshFilename + ".dat");
+
+    if (vm.count("writegrav"))
+      {
+        jif3D::ThreeDGravityModel GravModel;
+        GravModel.SetMeshSize(nx, ny, nz);
+        GravModel.SetXCoordinates(Model.GetXCoordinates());
+        GravModel.SetYCoordinates(Model.GetYCoordinates());
+        GravModel.SetZCoordinates(Model.GetZCoordinates());
+        fill_n(GravModel.SetDensities().origin(), GravModel.SetDensities().num_elements(),
+            dens);
+        GravModel.WriteNetCDF(MeshFilename + ".grav");
+        GravModel.WriteVTK(MeshFilename + ".grav.vtk");
+      }
 
   }
