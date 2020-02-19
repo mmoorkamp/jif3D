@@ -105,8 +105,9 @@ namespace jif3D
     J3DEXPORT void WriteTipperToNetCDF(const std::string &filename,
         const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
-        const std::vector<int> &HxIndices, const std::vector<int> &HyIndices, const std::vector<int> &HzIndices,
-        const std::vector<double> &Tipper, const std::vector<double> &Errors, const std::vector<std::string> &Names);
+        const std::vector<int> &HxIndices, const std::vector<int> &HyIndices,
+        const std::vector<int> &HzIndices, const std::vector<double> &Tipper,
+        const std::vector<double> &Errors, const std::vector<std::string> &Names);
 
     //! Read magnetotelluric tipper from a netcdf file
     /*! Read MT tipper for several stations from a netcdf file.
@@ -125,8 +126,9 @@ namespace jif3D
     J3DEXPORT void ReadTipperFromNetCDF(const std::string &filename,
         std::vector<double> &Frequencies, std::vector<double> &StatXCoord,
         std::vector<double> &StatYCoord, std::vector<double> &StatZCoord,
-        std::vector<int> &HxIndices, std::vector<int> &HyIndices, std::vector<int> &HzIndices,
-        std::vector<double> &Tipper, std::vector<double> &Error, std::vector<std::string> &Names);
+        std::vector<int> &HxIndices, std::vector<int> &HyIndices,
+        std::vector<int> &HzIndices, std::vector<double> &Tipper,
+        std::vector<double> &Error, std::vector<std::string> &Names);
 
     //! A very basic routine to read impedances at a single site from a .mtt file in the format used by University of Goettingen
     /*! A very basic routine to read impedances at a single site from a .mtt file in the
@@ -140,8 +142,9 @@ namespace jif3D
      * @param TippErr The error for the tipper
      */
     J3DEXPORT void ReadImpedancesFromMTT(const std::string &filename,
-        std::vector<double> &Frequencies, std::vector<double> &Impedances, std::vector<double> &Errors,
-         std::vector<double> &Tipper,  std::vector<double> &TippErr);
+        std::vector<double> &Frequencies, std::vector<double> &Impedances,
+        std::vector<double> &Errors, std::vector<double> &Tipper,
+        std::vector<double> &TippErr);
 
     //! A very basic routine to write impedances for several sites to  .mtt files in the format used by University of Goettingen.
     /*! A very basic routine to write impedances for several sites to  .mtt files in the format used by University of Goettingen.
@@ -155,7 +158,8 @@ namespace jif3D
      */
     J3DEXPORT void WriteImpedancesToMtt(const std::string &filenamebase,
         const std::vector<double> &Frequencies, const std::vector<double> &Imp,
-        const std::vector<double> &Err, const std::vector<double> &Tipper, const std::vector<double> &TipErr);
+        const std::vector<double> &Err, const std::vector<double> &Tipper,
+        const std::vector<double> &TipErr);
 
     J3DEXPORT void WriteImpedancesToMtt(const std::string &filenamebase,
         const std::vector<double> &Frequencies, const std::vector<double> &Imp,
@@ -195,8 +199,7 @@ namespace jif3D
     void WriteAppResToAscii(const std::string &filename,
         const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
-        const std::vector<double> &Imp, const std::vector<double> &Err)
-;
+        const std::vector<double> &Imp, const std::vector<double> &Err);
 
     //! Reads impedances from an ascii file as written by ModEM
     /*!
@@ -256,10 +259,13 @@ namespace jif3D
      *        all impedances for one frequency and all stations form a contiguous block, the frequencies vary slowest.
      * @param Err Impedance errors with the same number of Elements with Impedances.
      *        As we only have one error estimate per element we write only the components corresponding to the real parts.
+     * @param Tipper The tipper for the same frequencies as the impedances, convention Txr,Txi,Tyr,Tyi,... with same convention as impedances, i.e. frequency varies slowest
+     * @param TippErr The error for the tipper
      */
     J3DEXPORT void ReadImpedancesFromJ(const std::string &filename,
         std::vector<double> &Frequencies, double &StatXCoord, double &StatYCoord,
-        double &StatZCoord, std::vector<double> &Imp, std::vector<double> &Err);
+        double &StatZCoord, std::vector<double> &Imp, std::vector<double> &Err,
+        std::vector<double> &Tipper, std::vector<double> &TippErr);
 
     void WriteImpedancesToJ(const std::string &filenamebase,
         const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
