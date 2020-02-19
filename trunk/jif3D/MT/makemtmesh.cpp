@@ -15,9 +15,15 @@
 #include "../ModelBase/VTKTools.h"
 #include "../Global/mba.hpp"
 #include "X3DModel.h"
+#include "MTData.h"
+#include "TipperData.h"
 #include "ReadWriteImpedances.h"
 #include <boost/program_options.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/algorithm/minmax_element.hpp>
+#include <boost/multi_array.hpp>
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics.hpp>
 #include <iostream>
 #include <string>
 
@@ -106,15 +112,17 @@ int main(int argc, char *argv[])
     double originx = 0.0;
     double originy = 0.0;
     double centerz = 0.0;
+    jif3D::MTData Data;
     if (vm.count("center"))
       {
-        std::vector<double> Dummy, StatPosX, StatPosY, StatPosZ;
-        std::vector<std::string> Names;
-        jif3D::ReadImpedancesFromNetCDF(DataName, Dummy, StatPosX, StatPosY, StatPosZ,
-            Dummy, Dummy, Dummy, Names);
-        auto mmx = boost::minmax_element(StatPosX.begin(), StatPosX.end());
-        auto mmy = boost::minmax_element(StatPosY.begin(), StatPosY.end());
-        auto mmz = boost::minmax_element(StatPosZ.begin(), StatPosZ.end());
+        Data.ReadNetCDF(DataName);
+
+        auto mmx = boost::minmax_element(Data.GetMeasPosX().begin(),
+            Data.GetMeasPosX().end());
+        auto mmy = boost::minmax_element(Data.GetMeasPosY().begin(),
+            Data.GetMeasPosY().end());
+        auto mmz = boost::minmax_element(Data.GetMeasPosZ().begin(),
+            Data.GetMeasPosZ().end());
         double centerx = (*mmx.second + *mmx.first) / 2.0;
         double centery = (*mmy.second + *mmy.first) / 2.0;
         centerz = (*mmz.second + *mmz.first) / 2.0;
@@ -145,8 +153,7 @@ int main(int argc, char *argv[])
             std::cout << " Warning, maximum model x: " << originy + ny * deltay
                 << " is smaller than largest y-Coordinate " << *mmy.second << std::endl;
           }
-        jif3D::Write3DDataToVTK(DataName + ".vtk", "MTSites",
-            std::vector<double>(StatPosX.size(), 1.0), StatPosX, StatPosY, StatPosZ);
+        Data.WriteMeasurementPoints(DataName + ".vtk");
       }
     //ask for a conductivity to fill the mesh with
     double defaultconductivity = 1.0;
@@ -184,16 +191,16 @@ int main(int argc, char *argv[])
                   { currx, curry });
               }
           }
-
+        boost::multi_array<double, 2> CellTopo(boost::extents[nx][ny]);
         // Bounding box containing the data points.
         auto mmx = boost::minmax_element(topox.begin(), topox.end());
         auto mmy = boost::minmax_element(topoy.begin(), topoy.end());
         auto mmz = boost::minmax_element(topoz.begin(), topoz.end());
 
         mba::point<2> lo =
-          { *mmx.first - deltax, *mmy.first -deltay};
+          { *mmx.first - deltax, *mmy.first - deltay };
         mba::point<2> hi =
-          { *mmx.second + deltax, *mmy.second +deltay};
+          { *mmx.second + deltax, *mmy.second + deltay };
 
         mba::index<2> grid =
           { 32, 32 };
@@ -212,38 +219,76 @@ int main(int argc, char *argv[])
                 double currposy = originy + (j + 0.5) * deltay;
                 double itopoz = interp(mba::point<2>
                   { currposx, currposy });
-                std::cout << currposx << " " << currposy << " " << itopoz << std::endl;
-                for (size_t k = 0; k < nz; ++k)
+                //std::cout << currposx << " " << currposy << " " << itopoz << std::endl;
+                int k = 0;
+                double currposz = Model.GetZCoordinates().at(0);
+                while (k < nz && currposz <= itopoz)
                   {
-                    double currposz = Model.GetZCoordinates().at(k);
-                    if (currposz <= itopoz)
-                      {
-                        Model.SetConductivities()[i][j][k] = aircond;
-                        Cov.SetConductivities()[i][j][k] = 1e-10;
-                      }
+                    Model.SetConductivities()[i][j][k] = aircond;
+                    Cov.SetConductivities()[i][j][k] = 1e-10;
+                    ++k;
+                    currposz = Model.GetZCoordinates().at(k);
                   }
+                CellTopo[i][j] = Model.GetZCoordinates().at(k);
               }
-
           }
+
+        std::vector<double> bg_cond(nz);
+        for (size_t k = 0; k < nz; ++k)
+          {
+
+            using namespace boost::accumulators;
+            accumulator_set<double, features<tag::mean, tag::median> > acc;
+            for (size_t i = 0; i < nx; ++i)
+              for (size_t j = 0; j < ny; ++j)
+                {
+                  acc(Model.GetConductivities()[i][j][k]);
+                }
+            bg_cond.at(k) = extract_result<tag::median>(acc);
+          }
+        Model.SetBackgroundConductivities(bg_cond);
         jif3D::X3DModel TearX(Cov), TearY(Cov), TearZ(Cov);
-        for (size_t i = 0; i < nx-1; ++i)
+        for (size_t i = 0; i < nx - 1; ++i)
           for (size_t j = 0; j < ny; ++j)
             for (size_t k = 0; k < nz; ++k)
               TearX.SetConductivities()[i][j][k] = TearZ.GetConductivities()[i][j][k]
                   * TearZ.GetConductivities()[i + 1][j][k];
         for (size_t i = 0; i < nx; ++i)
-          for (size_t j = 0; j < ny-1; ++j)
+          for (size_t j = 0; j < ny - 1; ++j)
             for (size_t k = 0; k < nz; ++k)
               TearY.SetConductivities()[i][j][k] = TearZ.GetConductivities()[i][j][k]
                   * TearZ.GetConductivities()[i][j + 1][k];
-        Cov.WriteNetCDF(MeshFilename + ".cov.");
+        Cov.WriteNetCDF(MeshFilename + ".cov.nc");
         Cov.WriteVTK(MeshFilename + ".cov.vtk");
-        TearX.WriteNetCDF(MeshFilename + ".tearx.");
+        TearX.WriteNetCDF(MeshFilename + ".tearx.nc");
         TearX.WriteVTK(MeshFilename + ".tearx.vtk");
-        TearY.WriteNetCDF(MeshFilename + ".teary.");
+        TearY.WriteNetCDF(MeshFilename + ".teary.nc");
         TearY.WriteVTK(MeshFilename + ".teary.vtk");
-        TearZ.WriteNetCDF(MeshFilename + ".tearz.");
+        TearZ.WriteNetCDF(MeshFilename + ".tearz.nc");
         TearZ.WriteVTK(MeshFilename + ".tearz.vtk");
+        if (vm.count("center"))
+          {
+            size_t ndata = Data.GetMeasPosX().size();
+            std::vector<double> newz(ndata, 0.0);
+            for (size_t i = 0; i < ndata; ++i)
+              {
+                auto indices = Model.FindAssociatedIndices(Data.GetMeasPosX().at(i),
+                    Data.GetMeasPosY().at(i), Data.GetMeasPosZ().at(i));
+                newz.at(i) = CellTopo[indices[0]][indices[1]];
+              }
+            Data.SetMeasurementPoints(Data.GetMeasPosX(), Data.GetMeasPosY(), newz);
+            Data.WriteNetCDF(DataName + ".adjusted.nc");
+            Data.WriteMeasurementPoints(DataName + ".adjusted.vtk");
+            std::string TipperName = DataName + ".tip.nc";
+            if (boost::filesystem::exists(TipperName))
+              {
+                jif3D::TipperData Tipper;
+                Tipper.ReadNetCDF(TipperName);
+                Tipper.SetMeasurementPoints(Data.GetMeasPosX(), Data.GetMeasPosY(), newz);
+                Tipper.WriteNetCDF(TipperName+ ".adjusted.nc");
+              }
+
+          }
 
       }
 
@@ -260,7 +305,7 @@ int main(int argc, char *argv[])
         GravModel.SetZCoordinates(Model.GetZCoordinates());
         fill_n(GravModel.SetDensities().origin(), GravModel.SetDensities().num_elements(),
             dens);
-        GravModel.WriteNetCDF(MeshFilename + ".grav");
+        GravModel.WriteNetCDF(MeshFilename + ".grav.nc");
         GravModel.WriteVTK(MeshFilename + ".grav.vtk");
       }
 

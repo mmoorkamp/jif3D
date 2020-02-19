@@ -83,7 +83,7 @@ int main()
               {
                 double XC, YC, ZC;
                 jif3D::ReadImpedancesFromJ(StationName, Frequencies, XC, YC, ZC,
-                    CurrImpedances, CurrErrors);
+                    CurrImpedances, CurrErrors, CurrTip, CurrTipErr);
               }
           }
         Names.push_back(StationName);
@@ -91,8 +91,8 @@ int main()
         assert(nfreq * 8 == CurrImpedances.size());
         Impedances.resize(nstats * nfreq * 8);
         Errors.resize(nstats * nfreq * 8);
-        Tipper.resize(nstats * nfreq * 4);
-        TipErr.resize(nstats * nfreq * 4);
+        Tipper.resize(nstats * nfreq * 4, 0.0);
+        TipErr.resize(nstats * nfreq * 4, 1.0);
         size_t stationindex = 0;
         std::cout << stationindex << " " << StationName << " " << CurrFrequencies.size()
             << " " << nfreq << std::endl;
@@ -106,10 +106,14 @@ int main()
                 std::copy(CurrErrors.begin() + i * 8, CurrErrors.begin() + (i + 1) * 8,
                     Errors.begin() + i * nstats * 8 + stationindex * 8);
 
-                std::copy(CurrTip.begin() + i * 4, CurrTip.begin() + (i + 1) * 4,
-                    Tipper.begin() + i * nstats * 4 + stationindex * 4);
-                std::copy(CurrTipErr.begin() + i * 4, CurrTipErr.begin() + (i + 1) * 4,
-                    TipErr.begin() + i * nstats * 4 + stationindex * 4);
+                if (!CurrTip.empty())
+                  {
+                    std::copy(CurrTip.begin() + i * 4, CurrTip.begin() + (i + 1) * 4,
+                        Tipper.begin() + i * nstats * 4 + stationindex * 4);
+                    std::copy(CurrTipErr.begin() + i * 4,
+                        CurrTipErr.begin() + (i + 1) * 4,
+                        TipErr.begin() + i * nstats * 4 + stationindex * 4);
+                  }
               }
             double xcoord, ycoord, zcoord;
             StationFile >> xcoord >> ycoord >> zcoord >> StationName;
@@ -130,7 +134,7 @@ int main()
                   {
                     double XC, YC, ZC;
                     jif3D::ReadImpedancesFromJ(StationName, CurrFrequencies, XC, YC, ZC,
-                        CurrImpedances, CurrErrors);
+                        CurrImpedances, CurrErrors, CurrTip, CurrTipErr);
                   }
                 std::cout << stationindex + 1 << " " << StationName << " "
                     << CurrFrequencies.size() << " " << nfreq << std::endl;
@@ -155,7 +159,7 @@ int main()
         TipperData.SetDataAndErrors(Tipper, TipErr);
         TipperData.SetFrequencies(Frequencies);
         TipperData.CompleteObject();
-        TipperData.WriteNetCDF(outfilename+".tip.nc");
+        TipperData.WriteNetCDF(outfilename + ".tip.nc");
 
       }
   }

@@ -1238,7 +1238,8 @@ namespace jif3D
 
                 outfile << period << SiteLine.str();
                 outfile << " TY ";
-                WriteModEMLine(outfile, Tip.at(index + 2), Tip.at(index + 3), Err.at(index + 2));
+                WriteModEMLine(outfile, Tip.at(index + 2), Tip.at(index + 3),
+                    Err.at(index + 2));
 
               }
           }
@@ -1247,7 +1248,8 @@ namespace jif3D
 
     J3DEXPORT void ReadImpedancesFromJ(const std::string &filename,
         std::vector<double> &Frequencies, double &StatXCoord, double &StatYCoord,
-        double &StatZCoord, std::vector<double> &Imp, std::vector<double> &Err)
+        double &StatZCoord, std::vector<double> &Imp, std::vector<double> &Err,
+        std::vector<double> &Tipper, std::vector<double> &TippErr)
       {
         std::ifstream infile;
         infile.open(filename.c_str());
@@ -1268,6 +1270,7 @@ namespace jif3D
         infile.seekg(0);
         bool HasZ = false;
         bool HasRhoPhi = false;
+        bool HasT = false;
         try
           {
             jif3D::FindToken(infile, "RXX");
@@ -1288,9 +1291,19 @@ namespace jif3D
           }
         infile.clear();
         infile.seekg(0);
+        try
+          {
+            jif3D::FindToken(infile, "TZX");
+            HasT = true;
+          } catch (jif3D::FatalException &e)
+          {
+
+          }
+        infile.clear();
+        infile.seekg(0);
+        size_t nfreq = 0;
         if (HasZ)
           {
-            size_t nfreq = 0;
             jif3D::FindToken(infile, "ZXX");
             infile >> nfreq;
             Imp.resize(nfreq * 8);
@@ -1357,6 +1370,36 @@ namespace jif3D
               {
                 throw jif3D::FatalException("No valid MT data in file", __FILE__,
                 __LINE__);
+              }
+          }
+        if (HasT)
+          {
+            std::cout << " Reading Tipper, expecting " << nfreq << " frequencies " << std::endl;
+            double dummy;
+
+            Tipper.resize(nfreq * 4);
+            TippErr.resize(nfreq * 4);
+            jif3D::FindToken(infile, "TZX");
+            infile >> dummy;
+            for (size_t i = 0; i < nfreq; ++i)
+              {
+                infile >> dummy;
+                infile >> Tipper.at(i * 4 + 0);
+                infile >> Tipper.at(i * 4 + 1);
+                infile >> TippErr.at(i * 4 + 0);
+                TippErr.at(i * 4 + 1) = TippErr.at(i * 4 + 0);
+                infile >> dummy;
+              }
+            jif3D::FindToken(infile, "TZY");
+            infile >> dummy;
+            for (size_t i = 0; i < nfreq; ++i)
+              {
+                infile >> dummy;
+                infile >> Tipper.at(i * 4 + 2);
+                infile >> Tipper.at(i * 4 + 3);
+                infile >> TippErr.at(i * 4 + 2);
+                TippErr.at(i * 4 + 3) = TippErr.at(i * 4 + 2);
+                infile >> dummy;
               }
           }
       }
