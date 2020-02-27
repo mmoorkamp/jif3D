@@ -160,6 +160,10 @@ namespace jif3D
         {
           return ForwardDirName.at(freqindex);
         }
+      int GetFrequencyIndex(double freq) const
+        {
+          return FrequencyMap.at(freq);
+        }
       void CalculateFields(const X3DModel &Model, const std::vector<double> &Frequencies,
           const std::vector<double> MeasPosZ);
       X3DFieldCalculator(boost::filesystem::path TDir = boost::filesystem::current_path(),
