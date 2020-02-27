@@ -205,7 +205,9 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const jif3D::MTData &Data,
     jif3D::rvec Misfit(GI.Misfit.size());
     std::copy(GI.Misfit.begin(), GI.Misfit.end(), Misfit.begin());
     fs::path TempDir(Info.TempDirName);
-    fs::path ForwardDirName = Calc->GetForwardDirName(Info.freqindex);
+    double CurrFreq = Data.GetFrequencies().at(Info.freqindex);
+
+    fs::path ForwardDirName = Calc->GetForwardDirName(Calc->GetFrequencyIndex(CurrFreq));
 
     std::vector<std::complex<double> > Ex1_all, Ex2_all, Ey1_all, Ey2_all, Ez1_all,
         Ez2_all;
@@ -234,7 +236,6 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const jif3D::MTData &Data,
         YSourceXIndex(2 * nstats, 0), YSourceYIndex(2 * nstats, 0), HxSourceXIndex(nstats,
             0), HxSourceYIndex(nstats, 0), HySourceXIndex(nstats, 0), HySourceYIndex(
             nstats, 0), ZeroIndex(2 * nstats, 0);
-    double CurrFreq = Data.GetFrequencies().at(Info.freqindex);
 
 
     std::vector<std::complex<double>> Hx1(Calc->GetHx1(CurrFreq)), Hx2(
@@ -519,6 +520,7 @@ GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::TipperData
 
     const size_t nmod = nmodx * nmody * nmodz;
     std::vector<double> ShiftDepth;
+    double CurrFreq = Data.GetFrequencies()[Info.freqindex];
     //for the controlled source calculations we do not actually
     //need any observe layers as we are only interested in the
     //anomalous fields
@@ -529,7 +531,7 @@ GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::TipperData
     jif3D::rvec Gradient(nmod, 0.0);
 
     fs::path TempDir(Info.TempDirName);
-    fs::path ForwardDirName = Calc->GetForwardDirName(Info.freqindex);
+    fs::path ForwardDirName = Calc->GetForwardDirName(Calc->GetFrequencyIndex(CurrFreq));
 
     std::vector<std::complex<double> > Ex1_all, Ex2_all, Ey1_all, Ey2_all, Ez1_all,
         Ez2_all;
@@ -556,9 +558,7 @@ GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::TipperData
         HySourceXIndex(nstats, 0), HySourceYIndex(nstats, 0), HzSourceXIndex(nstats, 0),
         HzSourceYIndex(nstats, 0);
 
-    //we only want to calculate for one frequency
-    //so our vector has just 1 element
-    double CurrFreq = Data.GetFrequencies()[Info.freqindex];
+
     std::vector<std::string> PolExt =
       { "a", "b" };
 
