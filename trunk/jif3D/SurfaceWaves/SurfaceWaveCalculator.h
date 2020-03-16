@@ -77,9 +77,10 @@ namespace jif3D
     private:
       double false_east, tolerance, length_tolerance;
       int mode_skip_it, toms_max_iter;
-      std::vector<double> dcdrho, dcdvs, dcdvp;
+      std::vector<double> dcdrho, dcdvs, dcdvp, vph_map;
       std::vector<double> dens_grad, vs_grad, vp_grad, dtp_mod, dtp_err;
       void forward(const ModelType &Model, const DataType &Data);
+      void WritePhaseVelocityMaps(const std::string filename, const std::vector<double> &vph_map);
       };
   }
 

@@ -24,9 +24,23 @@
 namespace jif3D
   {
     SurfaceWaveCalculator::SurfaceWaveCalculator() :
-        false_east(500000.0), tolerance(0.01), length_tolerance(1.0), mode_skip_it(2), toms_max_iter(
+        false_east(500000.0), tolerance(0.001), length_tolerance(1.0), mode_skip_it(2), toms_max_iter(
             50)
       {
+      }
+
+    void SurfaceWaveCalculator::WritePhaseVelocityMaps(const std::string filename,
+        const std::vector<double> &vph_map)
+      {
+        std::ofstream vphfile;
+        vphfile.open(filename + ".out");
+        vphfile << std::fixed;
+        vphfile << std::setprecision(5);
+        vphfile << "This is a header";
+        for (int ii = 0; ii < vph_map.size(); ii++)
+          {
+            vphfile << "\n" << vph_map[ii];
+          }
       }
 
     void SurfaceWaveCalculator::forward(const SurfaceWaveModel &Model,
@@ -81,6 +95,10 @@ namespace jif3D
           {
             dtp_mod.resize(dtp.size());
           }
+        if (vph_map.size() != NX * NY)
+          {
+            vph_map.resize(NX * NY);
+          }
         std::fill(dens_grad.begin(), dens_grad.end(), 0.0);
         std::fill(vs_grad.begin(), vs_grad.end(), 0.0);
         std::fill(vp_grad.begin(), vp_grad.end(), 0.0);
@@ -104,7 +122,7 @@ namespace jif3D
             //cout << "Period: " << periods[freq] << " s.";
             //cout << "\n";
             //Vectors to store gradients, dispersion curves
-            std::vector<double> vph_map(NX * NY);
+            std::fill(vph_map.begin(), vph_map.end(), 0.0);
             for (int nstep = 0; nstep < NX; nstep++)
               {
                 for (int estep = 0; estep < NY; estep++)
@@ -126,14 +144,7 @@ namespace jif3D
                           }
                       }
 
-                    if (vs_1D[0] <= 0)
-                      {
-                        // This still needs some work. Computation of dispersion curves does not work if top layer has vs=0
-                        vph_map[estep + NY * nstep] = 0.0;
-                        //resultfile << "\n" << easting[estep] << "\t" << northing[nstep] << "\t" << (2.0*M_PI)/w[freq] << "\t" << 0.0 << "\t" << 0.0 << "\t" << 0.0;
-                        continue;
-                      }
-                    else
+                    if (vs_1D[0] > 0)
                       {
                         // Calculation of velocity limits
                         const double vsmin = *std::min_element(vs_1D.begin(),
@@ -221,12 +232,14 @@ namespace jif3D
 
                         vph_map[estep + NY * nstep] = c_last;
 
+                        //R1212 = compute_R1212(w[freq], c_last, vp_1D, vs_1D, depth, dens_1D);
+
                         // Write output to file
                         //resultfile << "\n" << easting[estep] << "\t" << northing[nstep] << "\t" << (2.0*M_PI)/w[freq] << "\t" << c_last << "\t" << brackets.second-brackets.first << "\t" << max_iter;
 
                         const double R_c = compute_R1212_c(w[freq], c_last, vp_1D, vs_1D,
                             depth, dens_1D);
-                        for (int n = 0; n < NZ; n++)
+                        for (int n = NZ - 1; n >= 0; n--)
                           {
                             //Computation of Gradients
                             double R_tmp = compute_R1212_vs(w[freq], c_last, vp_1D, vs_1D,
@@ -245,6 +258,8 @@ namespace jif3D
                       }
                   } //end loop over northing
               } //end loop over easting
+
+            WritePhaseVelocityMaps("vphmap" + std::to_string(freq), vph_map);
 
             // loop over all rays, computes phase delays
             for (int src = 0; src < nsrcs; src++)

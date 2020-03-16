@@ -90,7 +90,7 @@ namespace jif3D
 
     class R1212_root
       {
-      // Root finding functor for R1212. Keeps all other varibles constants and only changes c (phase velocity) to finds roots. Uses the TOMS algorithm from the boost libraries
+      // Root finding functor for R1212. Keeps all other variables constants and only changes c (phase velocity) to finds roots. Uses the TOMS algorithm from the boost libraries
     public:
       R1212_root(const double &w_, const std::vector<double> &vp_,
           const std::vector<double> &vs_, const std::vector<double> &depth_,

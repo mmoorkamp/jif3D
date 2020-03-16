@@ -84,7 +84,7 @@ namespace jif3D
                 SurfaceWaveData.GetData(), SurfaceWaveData.GetErrors(), relerr, minerr);
             jif3D::SurfaceWaveCalculator Calculator;
             Calculator.set_distance_tolerance(1.0);
-            Calculator.set_vel_tolerance(0.01);
+            Calculator.set_vel_tolerance(0.001);
             Calculator.set_false_east(500000.0);
             Calculator.set_root_search_iterations(50);
             Calculator.set_mode_skip_iterations(2);
