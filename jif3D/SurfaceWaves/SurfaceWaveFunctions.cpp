@@ -29,6 +29,7 @@ namespace jif3D
         for (int n = 0; n < nperiods; n++)
           {
             w[n] = 2.0 * M_PI / periods[n];
+            //w[n] = 1.0 / periods[n];
           }
         return w;
       }
@@ -169,9 +170,9 @@ namespace jif3D
             mkc = pow(w, 2) / (mk * pow(c, 3));
           }
 
-        const double hvnorm_c = (-1.0) * (2.0 * c) / pow(vp, 2);
+        const double hvnorm_c = (-2.0 * c) / pow(vp, 2);
         const double hvnorm_h = (2.0 * pow(c, 2)) / pow(vp, 3);
-        const double kvnorm_c = (-1.0) * (2.0 * c) / pow(vs, 2);
+        const double kvnorm_c = (-2.0 * c) / pow(vs, 2);
         const double kvnorm_k = (2.0 * pow(c, 2)) / pow(vs, 3);
         const double gam_k = (4.0 * vs) / pow(c, 2);
         const double gam_c = (-4.0 * pow(vs, 2)) / pow(c, 3);
@@ -291,7 +292,7 @@ namespace jif3D
             (-1.0) * pow(vs, 4) * l * hv_h
                 / (4.0 * mu * pow(w, 3) * c * pow(hv, 2) * kv));
         const double gT1224 = std::real(
-            (-1.0) * hv_h * pow(vs, 2) / (4.0 * mu * pow(hv, 2)));
+            (-1.0) * hv_h * pow(vs, 2) / (4.0 * mu * pow(w, 2) * pow(hv, 2)));
         const double gT1234 = std::real(
             (-1.0) * hv_h * pow(vs, 4)
                 / (4.0 * pow(mu, 2) * pow(w, 2) * pow(c, 2) * pow(hv, 2) * kv));
@@ -791,8 +792,8 @@ namespace jif3D
         const double gG1414 = std::real(
             2.0 * gam * (1.0 - gam) * dCC
                 + 2.0 * gam_c * (2.0 * gam - 1.0) * (1.0 - CH * CK)
-                + (pow(1 - gam, 2) + pow(gam * hvnorm * kvnorm, 2)) * dSS
-                + (2 * gam_c * (gam - 1.0 + gam * pow(hvnorm * kvnorm, 2))
+                + (pow(1.0 - gam, 2) + pow(gam * hvnorm * kvnorm, 2)) * dSS
+                + (2.0 * gam_c * (gam - 1.0 + gam * pow(hvnorm * kvnorm, 2))
                     + pow(gam, 2) * dk) * SH * SK);
         const double gG2412 = std::real(
             (G2412 / c)
