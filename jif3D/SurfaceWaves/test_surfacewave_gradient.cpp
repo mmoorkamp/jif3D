@@ -62,6 +62,7 @@ BOOST_AUTO_TEST_SUITE( SW_Gradient_Test_Suite )
         //{ 0.0, 500.0, 1050.0, 1655.0, 2320.5, 3052.55, 3857.805, 4743.5855 };
         //{ 0.0, 2.0, 4.3, 6.8, 9.6, 12.8, 20.0 };
         { 0.0, 35000.0, 100000.0};
+        //{ 0.0, 5000.0 };
         const int zsize = zcoords_m.size();
 
         TomoModel.SetCellCoords(xcoords_m, ycoords_m, zcoords_m);
@@ -83,6 +84,9 @@ BOOST_AUTO_TEST_SUITE( SW_Gradient_Test_Suite )
           { 194.0, 270.0, 367.0, 485.0, 603.0, 740.0 };
         std::vector<double> rho =
           { 1820.0, 1860.0, 1910.0, 1960.0, 2020.0, 2090.0 };*/
+        /*std::vector<double> alpha = {5000.0};
+        std::vector<double> beta = {3000.0};
+        std::vector<double> rho = {2700.0};*/
         for (size_t i = 0; i < TomoModel.GetData().num_elements(); ++i)
           {
             /*double Depth = TomoModel.GetZCoordinates()[i % (zsize - 1)];
