@@ -237,6 +237,7 @@ namespace jif3D
                         // Write output to file
                         //resultfile << "\n" << easting[estep] << "\t" << northing[nstep] << "\t" << (2.0*M_PI)/w[freq] << "\t" << c_last << "\t" << brackets.second-brackets.first << "\t" << max_iter;
 
+                        //double test = compute_R1212(w[freq], c_last, vp_1D, vs_1D, depth, dens_1D);
                         const double R_c = compute_R1212_c(w[freq], c_last, vp_1D, vs_1D,
                             depth, dens_1D);
                         for (int n = NZ - 1; n >= 0; n--)

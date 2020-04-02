@@ -19,45 +19,112 @@
 
 namespace jif3D
   {
+
     typedef std::complex<double> dcomp;
     const std::complex<double> i(0, 1.0);
+
+    struct PropagatorSubdeterminants
+      {
+      double G1212;
+      double G1213;
+      double iG1214;
+      double G1224;
+      double G1234;
+      double G1312;
+      double G1313;
+      double iG1314;
+      double G1324;
+      double iG1412;
+      double iG1413;
+      double G1414;
+      double G2412;
+      double G2413;
+      double G3412;
+      };
+
+    struct LayerSubdeterminants
+      {
+      double R1212;
+      double R1213;
+      double iR1214;
+      double R1224;
+      double R1234;
+      };
+
+    struct SWUtilities
+      {
+      dcomp nu_a;
+      dcomp nu_b;
+      double SA;
+      double CA;
+      double SB;
+      double CB;
+      double gam;
+      dcomp nu_a_nrm;
+      dcomp nu_b_nrm;
+      double l;
+      double ma;
+      double mb;
+      };
+
+    struct GradientUtilities
+      {
+      double maa;
+      double mbb;
+      double nu_a_nrm_a;
+      double nu_b_nrm_b;
+      double gam_b;
+      double l_b;
+      double CAA;
+      double CBB;
+      double SAA;
+      double SBB;
+      double mac;
+      double mbc;
+      double nu_a_nrm_c;
+      double nu_b_nrm_c;
+      double gam_c;
+      double l_c;
+      double CAC;
+      double CBC;
+      double SAC;
+      double SBC;
+      };
+
     std::vector<double> T2w(const std::vector<double> &periods);
     std::vector<double> array2vector(const ThreeDModelBase::t3DModelData &array,
         const int &NX, const int &NY, const int &NZ);
     double newton_vr(const double &vp, const double &vs, const double &tolerance);
-    std::tuple<dcomp, dcomp, double, double, double, double, double, dcomp, dcomp, double,
-        double, double> compute_util(const double &w, const double &c, const double &vp,
+    SWUtilities compute_util(const double &w, const double &c, const double &vp,
         const double &vs, const double &dn, const bool &botlay);
-    std::vector<double> compute_util_grads(const double &w, const double &vs,
+    GradientUtilities compute_util_grads(const double &w, const double &vs,
         const double &vp, const double &c, const double &thck, const bool &botlay);
-    std::tuple<double, double, double, double, double> compute_T(const double &w,
-        const double &c, const double &vp, const double &vs, const double &mu);
-    std::tuple<double, double, double, double, double> compute_T_vs(const double &w,
-        const double &c, const double &vp, const double &vs, const double &mu);
-    std::tuple<double, double, double, double, double> compute_T_vp(const double &w,
-        const double &c, const double &vp, const double &vs, const double &mu);
-    std::tuple<double, double, double, double, double> compute_T_rho(const double &w,
-        const double &c, const double &vp, const double &vs, const double &mu);
-    std::vector<double> compute_T_c(const double &w, const double &c, const double &vp,
+    LayerSubdeterminants compute_T(const double &w, const double &c, const double &vp,
         const double &vs, const double &mu);
-    std::vector<double> compute_G(const double &c, const double &dn, const double &w,
-        const double &vp, const double &vs, const double &dens);
-    std::vector<double> compute_G_vs(const double &c, const double &dn, const double &w,
-        const double &vp, const double &vs, const double &dens);
-    std::vector<double> compute_G_vp(const double &c, const double &dn, const double &w,
-        const double &vp, const double &vs, const double &dens);
-    std::vector<double> compute_G_rho(const double &c, const double &dn, const double &w,
-        const double &vp, const double &vs, const double &dens);
-    std::vector<double> compute_G_c(const double &c, const double &dn, const double &w,
-        const double &vp, const double &vs, const double &dens);
-    std::vector<double> compute_R_c(const double &w, const double &c, const double &vp,
+    LayerSubdeterminants compute_T_vs(const double &w, const double &c, const double &vp,
+        const double &vs, const double &mu);
+    LayerSubdeterminants compute_T_vp(const double &w, const double &c, const double &vp,
+        const double &vs, const double &mu);
+    LayerSubdeterminants compute_T_rho(const double &w, const double &c, const double &vp,
+        const double &vs, const double &mu);
+    LayerSubdeterminants compute_T_c(const double &w, const double &c, const double &vp,
+        const double &vs, const double &mu);
+    PropagatorSubdeterminants compute_G(const double &c, const double &dn,
+        const double &w, const double &vp, const double &vs, const double &dens);
+    PropagatorSubdeterminants compute_G_vs(const double &c, const double &dn,
+        const double &w, const double &vp, const double &vs, const double &dens);
+    PropagatorSubdeterminants compute_G_vp(const double &c, const double &dn,
+        const double &w, const double &vp, const double &vs, const double &dens);
+    PropagatorSubdeterminants compute_G_rho(const double &c, const double &dn,
+        const double &w, const double &vp, const double &vs, const double &dens);
+    PropagatorSubdeterminants compute_G_c(const double &c, const double &dn,
+        const double &w, const double &vp, const double &vs, const double &dens);
+    LayerSubdeterminants compute_R_c(const double &w, const double &c, const double &vp,
         const double &vs, const double &dn, const double &dens,
-        const std::tuple<double, double, double, double, double> &T,
-        const std::vector<double> &T_c);
-    std::tuple<double, double, double, double, double> compute_R(const double &w,
-        const double &c, const double &vp, const double &vs, const double &dn,
-        const double &dens, const std::tuple<double, double, double, double, double> &T,
-        const int &param);
+        const LayerSubdeterminants &T, const LayerSubdeterminants &T_c);
+    LayerSubdeterminants compute_R(const double &w, const double &c, const double &vp,
+        const double &vs, const double &dn, const double &dens,
+        const LayerSubdeterminants &T, const int &param);
     double compute_R1212(const double &w, const double &c, const std::vector<double> &vp,
         const std::vector<double> &vs, const std::vector<double> &depth,
         const std::vector<double> &dens);
@@ -139,6 +206,7 @@ namespace jif3D
         {
         }
       };
+
   }
 
 #endif /* SURFACEWAVES_SURFACEWAVEFUNCTIONS_H_ */
