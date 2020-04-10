@@ -29,20 +29,6 @@ namespace jif3D
       {
       }
 
-    void SurfaceWaveCalculator::WritePhaseVelocityMaps(const std::string filename,
-        const std::vector<double> &vph_map)
-      {
-        std::ofstream vphfile;
-        vphfile.open(filename + ".out");
-        vphfile << std::fixed;
-        vphfile << std::setprecision(5);
-        vphfile << "This is a header";
-        for (int ii = 0; ii < vph_map.size(); ii++)
-          {
-            vphfile << "\n" << vph_map[ii];
-          }
-      }
-
     void SurfaceWaveCalculator::forward(const SurfaceWaveModel &Model,
         const SurfaceWaveData &Data)
       {
@@ -259,8 +245,6 @@ namespace jif3D
                       }
                   } //end loop over northing
               } //end loop over easting
-
-            WritePhaseVelocityMaps("vphmap" + std::to_string(freq), vph_map);
 
             // loop over all rays, computes phase delays
             for (int src = 0; src < nsrcs; src++)

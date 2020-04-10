@@ -127,6 +127,15 @@ namespace jif3D
         u.nu_b_nrm = u.nu_b / k;
         u.l = 2.0 * pow(k, 2) - pow(w / vs, 2);
 
+        if (botlay == 1)
+          {
+            u.PrintSWUtilities("BottomLayerUtilities");
+          }
+        else
+          {
+            u.PrintSWUtilities("TopLayerUtilities");
+          }
+
         return u;
       }
 
@@ -161,9 +170,9 @@ namespace jif3D
             gu.mbc = pow(w, 2) / (u.mb * pow(c, 3));
           }
 
-        gu.nu_a_nrm_c = (-2.0 * c) / pow(vp, 2);
+        gu.nu_a_nrm2_c = (-2.0 * c) / pow(vp, 2);
         gu.nu_a_nrm_a = (2.0 * pow(c, 2)) / pow(vp, 3);
-        gu.nu_b_nrm_c = (-2.0 * c) / pow(vs, 2);
+        gu.nu_b_nrm2_c = (-2.0 * c) / pow(vs, 2);
         gu.nu_b_nrm_b = (2.0 * pow(c, 2)) / pow(vs, 3);
         gu.gam_b = (4.0 * vs) / pow(c, 2);
         gu.gam_c = (-4.0 * pow(vs, 2)) / pow(c, 3);
@@ -179,6 +188,15 @@ namespace jif3D
             + (k * thck * gu.mbc * u.CB / u.mb);
         gu.SAA = (gu.maa / u.ma) * (k * thck * u.CA - u.SA);
         gu.SBB = (gu.mbb / u.mb) * (k * thck * u.CB - u.SB);
+
+        if (botlay == 1)
+          {
+            gu.PrintGradientUtilities("BottomLayerGradientUtilities");
+          }
+        else
+          {
+            gu.PrintGradientUtilities("TopLayerGradientUtilities");
+          }
 
         return gu;
       }
@@ -205,6 +223,8 @@ namespace jif3D
         T.R1224 = std::real(
             mu * u.nu_a * pow(u.nu_b, 2) * (2.0 * pow(k, 2) - u.l) * fact);
         T.R1234 = std::real(u.nu_a * u.nu_b * (pow(k, 2) - u.nu_a * u.nu_b) * fact);
+
+        T.PrintLayerSubdeterminants("BottomLayerSubdeterminants");
 
         return T;
       }
@@ -236,6 +256,8 @@ namespace jif3D
             (-1.0) * ug.mbb
                 / (4.0 * pow(dens, 2) * pow(w, 2) * pow(c, 2) * u.nu_a * pow(u.nu_b, 2)));
 
+        Tvs.PrintLayerSubdeterminants("BottomLayerSubdeterminants_vs");
+
         return Tvs;
       }
 
@@ -261,6 +283,8 @@ namespace jif3D
             (-1.0) * ug.maa * pow(vs, 4)
                 / (4.0 * pow(mu, 2) * pow(w, 2) * pow(c, 2) * pow(u.nu_a, 2) * u.nu_b));
 
+        Tvp.PrintLayerSubdeterminants("BottomLayerSubdeterminants_vp");
+
         return Tvp;
       }
 
@@ -278,6 +302,8 @@ namespace jif3D
         Tdens.iR1214 = (-1.0) * T.iR1214 / dens;
         Tdens.R1224 = (-1.0) * T.R1224 / dens;
         Tdens.R1234 = (-2.0) * T.R1234 / dens;
+
+        Tdens.PrintLayerSubdeterminants("BottomLayerSubdeterminants_dens");
 
         return Tdens;
       }
@@ -311,6 +337,8 @@ namespace jif3D
         Tc.R1234 = std::real(
             (-2.0 * u.nu_a * u.nu_b + c * (ug.mac * u.nu_b + u.nu_a * ug.mbc))
                 / (4.0 * pow(dens * w * u.nu_a * u.nu_b, 2) * pow(c, 3)));
+
+        Tc.PrintLayerSubdeterminants("BottomLayerSubdeterminants_c");
 
         return Tc;
       }
@@ -378,6 +406,8 @@ namespace jif3D
                     + (pow(1.0 - u.gam, 4)
                         + pow(u.gam, 4) * pow(u.nu_a_nrm, 2) * pow(u.nu_b_nrm, 2)) * u.SA
                         * u.SB));
+
+        G.PrintPropagatorSubdeterminants("PropagatorSubdeterminants");
 
         return G;
       }
@@ -490,6 +520,8 @@ namespace jif3D
                         + pow(u.gam, 4) * pow(u.nu_a_nrm, 2) * ug.nu_b_nrm_b) * u.SA
                         * u.SB));
 
+        G.PrintPropagatorSubdeterminants("PropagatorSubdeterminants_vs");
+
         return G;
       }
 
@@ -569,6 +601,8 @@ namespace jif3D
                             + pow(u.gam, 4) * ug.nu_a_nrm_a * pow(u.nu_b_nrm, 2) * u.SA
                                 * u.SB));
 
+        G.PrintPropagatorSubdeterminants("PropagatorSubdeterminants_vp");
+
         return G;
       }
 
@@ -595,6 +629,8 @@ namespace jif3D
         Gout.G2413 = 0.0;
         Gout.G3412 = 2.0 * G.G3412 / dens;
 
+        Gout.PrintPropagatorSubdeterminants("PropagatorSubdeterminants_dens");
+
         return Gout;
       }
 
@@ -610,7 +646,7 @@ namespace jif3D
         const double dCS = ug.CAC * u.SB + u.CA * ug.SBC;
         const double dSC = ug.SAC * u.CB + u.SA * ug.CBC;
         const double dk = std::real(
-            ug.nu_a_nrm_c * pow(u.nu_b_nrm, 2) + pow(u.nu_a_nrm, 2) * ug.nu_b_nrm_c);
+            ug.nu_a_nrm2_c * pow(u.nu_b_nrm, 2) + pow(u.nu_a_nrm, 2) * ug.nu_b_nrm2_c);
 
         const PropagatorSubdeterminants G = compute_G(c, dn, w, vp, vs, dens);
 
@@ -626,7 +662,7 @@ namespace jif3D
         Gout.G1213 = std::real(
             ((-1.0) * G.G1213 / c)
                 + (1.0 / (dens * w * c))
-                    * (dCS - ug.nu_a_nrm_c * u.SA * u.CB - pow(u.nu_a_nrm, 2) * dSC));
+                    * (dCS - ug.nu_a_nrm2_c * u.SA * u.CB - pow(u.nu_a_nrm, 2) * dSC));
         Gout.iG1214 = std::real(
             ((-1.0) * G.iG1214 / c)
                 + (1.0 / (dens * w * c))
@@ -638,7 +674,7 @@ namespace jif3D
         Gout.G1224 = std::real(
             ((-1.0) * G.G1224 / c)
                 + (1.0 / (dens * w * c))
-                    * (ug.nu_b_nrm_c * u.CA * u.SB + pow(u.nu_b_nrm, 2) * dCS - dSC));
+                    * (ug.nu_b_nrm2_c * u.CA * u.SB + pow(u.nu_b_nrm, 2) * dCS - dSC));
         Gout.G1234 = std::real(
             ((-2.0) * G.G1234 / c)
                 + pow((1.0 / (dens * w * c)), 2)
@@ -648,7 +684,7 @@ namespace jif3D
             (G.G1312 / c)
                 + dens * w * c
                     * (2.0 * u.gam * ug.gam_c * pow(u.nu_b_nrm, 2) * u.CA * u.SB
-                        + pow(u.gam, 2) * ug.nu_b_nrm_c * u.CA * u.SB
+                        + pow(u.gam, 2) * ug.nu_b_nrm2_c * u.CA * u.SB
                         + pow(u.gam * u.nu_b_nrm, 2) * dCS)
                 + dens * w * c
                     * (2.0 * ug.gam_c * (1.0 - u.gam) * u.SA * u.CB
@@ -656,10 +692,10 @@ namespace jif3D
         Gout.G1313 = std::real(dCC);
         Gout.iG1314 = std::real(
             (-1.0) * ug.gam_c * u.SA * u.CB + (1.0 - u.gam) * dSC
-                + (ug.gam_c * pow(u.nu_b_nrm, 2) + u.gam * ug.nu_b_nrm_c) * u.CA * u.SB
+                + (ug.gam_c * pow(u.nu_b_nrm, 2) + u.gam * ug.nu_b_nrm2_c) * u.CA * u.SB
                 + u.gam * pow(u.nu_b_nrm, 2) * dCS);
         Gout.G1324 = std::real(
-            (-1.0) * (ug.nu_b_nrm_c * u.SA * u.SB + pow(u.nu_b_nrm, 2) * dSS));
+            (-1.0) * (ug.nu_b_nrm2_c * u.SA * u.SB + pow(u.nu_b_nrm, 2) * dSS));
         Gout.iG1412 = std::real(
             (G.iG1412 / c)
                 + dens * w * c
@@ -675,7 +711,7 @@ namespace jif3D
                             * u.SA * u.SB));
         Gout.iG1413 = std::real(
             ug.gam_c * u.CA * u.SB - (1.0 - u.gam) * dCS
-                - (ug.gam_c * pow(u.nu_a_nrm, 2) + u.gam * ug.nu_a_nrm_c) * u.SA * u.CB
+                - (ug.gam_c * pow(u.nu_a_nrm, 2) + u.gam * ug.nu_a_nrm2_c) * u.SA * u.CB
                 - u.gam * pow(u.nu_a_nrm, 2) * dSC);
         Gout.G1414 = std::real(
             2.0 * u.gam * (1.0 - u.gam) * dCC
@@ -692,10 +728,10 @@ namespace jif3D
                 + dens * w * c
                     * (-1.0
                         * (2.0 * u.gam * ug.gam_c * pow(u.nu_a_nrm, 2)
-                            + pow(u.gam, 2) * ug.nu_a_nrm_c) * u.SA * u.CB
+                            + pow(u.gam, 2) * ug.nu_a_nrm2_c) * u.SA * u.CB
                         - pow(u.gam * u.nu_a_nrm, 2) * dSC));
         Gout.G2413 = std::real(
-            (-1.0) * (ug.nu_a_nrm_c * u.SA * u.SB + pow(u.nu_a_nrm, 2) * dSS));
+            (-1.0) * (ug.nu_a_nrm2_c * u.SA * u.SB + pow(u.nu_a_nrm, 2) * dSS));
         Gout.G3412 = std::real(
             (2.0 * G.G3412 / c)
                 - pow(dens * c * w, 2)
@@ -709,6 +745,8 @@ namespace jif3D
                             + 4.0 * pow(u.gam, 3) * ug.gam_c
                                 * pow(u.nu_a_nrm * u.nu_b_nrm, 2) + pow(u.gam, 4) * dk)
                             * u.SA * u.SB));
+
+        Gout.PrintPropagatorSubdeterminants("PropagatorSubdeterminants_c");
 
         return Gout;
       }
@@ -742,6 +780,8 @@ namespace jif3D
             + T.R1213 * G_c.G1224 - 2.0 * Tc.iR1214 * G.iG1214
             - 2.0 * T.iR1214 * G_c.iG1214 + Tc.R1224 * G.G1213 + T.R1224 * G_c.G1213
             + Tc.R1234 * G.G1212 + T.R1234 * G_c.G1212;
+
+        Rc.PrintLayerSubdeterminants("TopLayerSubdeterminants_c");
 
         return Rc;
       }
@@ -819,6 +859,28 @@ namespace jif3D
                 R.R1234 = maxR * R.R1234;
               }
           }
+
+        if (param == 0)
+          {
+            R.PrintLayerSubdeterminants("TopLayerSubdeterminants_normalized");
+          }
+        else if (param == 1)
+          {
+            R.PrintLayerSubdeterminants("TopLayerSubdeterminants_vs");
+          }
+        else if (param == 2)
+          {
+            R.PrintLayerSubdeterminants("TopLayerSubdeterminants_vp");
+          }
+        else if (param == 3)
+          {
+            R.PrintLayerSubdeterminants("TopLayerSubdeterminants_dens");
+          }
+        else if (param == 4)
+          {
+            R.PrintLayerSubdeterminants("TopLayerSubdeterminants");
+          }
+
         return R;
       }
 
