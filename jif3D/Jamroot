@@ -117,4 +117,4 @@ build-project Hacks ;
 build-project Joint ;
 build-project ModelTransforms ;
 build-project DCResistivity ;
-#build-project SurfaceWaves ;
+build-project SurfaceWaves ;

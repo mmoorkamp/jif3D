@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_SUITE( SW_Gradient_Test_Suite )
           { 0.0 };
         SWData.SetEventPositions(epx, epy, epz);
         std::vector<double> T =
-          { 40.0 };
+          { 20.0 };
         SWData.SetPeriods(T);
         SWData.SetDummy(-999.9);
         SWData.SetLonCentr(-123.0);

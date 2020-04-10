@@ -80,7 +80,6 @@ namespace jif3D
       std::vector<double> dcdrho, dcdvs, dcdvp, vph_map;
       std::vector<double> dens_grad, vs_grad, vp_grad, dtp_mod, dtp_err;
       void forward(const ModelType &Model, const DataType &Data);
-      void WritePhaseVelocityMaps(const std::string filename, const std::vector<double> &vph_map);
       };
   }
 
