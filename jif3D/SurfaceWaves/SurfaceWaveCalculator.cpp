@@ -18,6 +18,7 @@
 #include <netcdf>
 #include <boost/math/tools/roots.hpp>
 #include "../Global/NumUtil.h"
+#include "../Global/FatalException.h"
 #include "../SurfaceWaves/SurfaceWaveCalculator.h"
 #include "../SurfaceWaves/SurfaceWaveFunctions.h"
 
@@ -27,6 +28,143 @@ namespace jif3D
         false_east(500000.0), tolerance(0.001), length_tolerance(1.0), mode_skip_it(2), toms_max_iter(
             50)
       {
+      }
+
+    SurfaceWaveCalculator::Surf1DResult SurfaceWaveCalculator::CalcSurf1D(
+        const std::vector<double> &w, size_t freqindex,
+        const std::vector<double> &dens_1D, const std::vector<double> &vs_1D,
+        const std::vector<double> &vp_1D, const std::vector<double> &depth)
+      {
+        bool lvz = 0;
+        const size_t NZ = dens_1D.size();
+        if (vs_1D.size() != NZ)
+          {
+            jif3D::FatalException(
+                "1D models in surface wave calculation do not have the same size",
+                __FILE__,
+                __LINE__);
+          }
+        if (vp_1D.size() != NZ)
+          {
+            jif3D::FatalException(
+                "1D models in surface wave calculation do not have the same size",
+                __FILE__,
+                __LINE__);
+          }
+        for (int n = 0; n < NZ; n++)
+          {
+            if (n > 0 && vs_1D[n] < vs_1D[n - 1])
+              {
+                lvz = 1;
+              }
+          }
+
+        Surf1DResult Result;
+
+        // Calculation of velocity limits
+        const double vsmin = *std::min_element(vs_1D.begin(), vs_1D.end());
+        const double vsmax = *std::max_element(vs_1D.begin(), vs_1D.end());
+        const double vpmin = *std::min_element(vp_1D.begin(), vp_1D.end());
+        const double vpmax = *std::max_element(vp_1D.begin(), vp_1D.end());
+        const std::vector<double> c_lim
+          { newton_vr(vpmin, vsmin, tolerance) / 1.05, newton_vr(vpmax, vsmax, tolerance)
+              * 1.05 };
+
+        // step ratio for root bracketing
+        const double stepratio = (vsmin - c_lim[0]) / (2.0 * vsmin);
+
+        // Compute initial R1212 polarization for large period below fundamental mode
+        double R1212 = compute_R1212(w.back() / 10.0, c_lim[0], vp_1D, vs_1D, depth,
+            dens_1D);
+        const bool pol0 = signbit(R1212);
+
+        double c_last = c_lim[0]; //initial value for c to start search
+
+        double c0, c1 = c_last; // stores brackets
+        bool pol1 = pol0; // initial polarization of R1212
+        double precision = 1;
+
+        if (lvz == 1) // If there is a LVZ, we have to start at the lowest possible velocity
+          c1 = c_lim[0];
+
+        // Loop to find root brackets, breaks when sign of R1212 changes
+        while (pol0 == pol1)
+          {
+            cnt: ;
+            c0 = c1; // set lower bracket to value of last iteration's upper bracket
+            c1 = c0 + c0 * (stepratio / precision); // increase upper bracket by step ratio
+
+            // Check polarization of R1212 for the upper bracket
+            R1212 = compute_R1212(w[freqindex], c1, vp_1D, vs_1D, depth, dens_1D);
+            pol1 = signbit(R1212);
+
+            // If a sign change is found check for mode skipping
+            if (pol0 != pol1 && (c1 - c0) > (2.0 * tolerance))
+              {
+                double c2 = (c1 + c0) / 2.0; // set new speed between brackets
+                double delta = (c2 - c0) / mode_skip_it;
+                if (delta < (mode_skip_it * tolerance))
+                  delta = tolerance;
+                // check sign of R1212 between brackets
+                while (tolerance < (c2 - c0))
+                  {
+                    R1212 = compute_R1212(w[freqindex], c2, vp_1D, vs_1D, depth, dens_1D);
+                    const bool pol2 = signbit(R1212);
+                    // if mode skipping detected increase precision (-> decrease step ratio) and return to bracket search
+                    if (pol2 == pol1)
+                      {
+                        precision = precision * mode_skip_it;
+                        c1 = c0;
+                        goto cnt;
+                      }
+                    // "Downward" search along c-axis for mode skipping (2 runs per default)
+                    c2 = c2 - delta;
+                  }
+              }
+          }
+        // If a sign change is found, brackets c0 & c2 are passed to an instance of R1212_root (-> Boost TOMS root finding algorithm)
+        std::pair<double, double> brackets; // stores refinded root brackets
+        boost::uintmax_t max_iter = toms_max_iter; // Maximum number of TOMS iterations
+        R1212_root root(w[freqindex], vp_1D, vs_1D, depth, dens_1D);
+        TerminationCondition tc(tolerance);
+        brackets = boost::math::tools::toms748_solve(root, c0, c1, tc, max_iter);
+        if (lvz == 0 && (brackets.first + brackets.second) / 2.0 < c_last)
+          {
+            c1 = c_lim[0];
+            precision = precision * mode_skip_it;
+            goto cnt;
+          }
+        c_last = (brackets.first + brackets.second) / 2.0;
+        Result.c = c_last;
+        //R1212 = compute_R1212(w[freq], c_last, vp_1D, vs_1D, depth, dens_1D);
+
+        // Write output to file
+        //resultfile << "\n" << easting[estep] << "\t" << northing[nstep] << "\t" << (2.0*M_PI)/w[freq] << "\t" << c_last << "\t" << brackets.second-brackets.first << "\t" << max_iter;
+
+        //double test = compute_R1212(w[freq], c_last, vp_1D, vs_1D, depth, dens_1D);
+        const double R_c = compute_R1212_c(w[freqindex], c_last, vp_1D, vs_1D, depth,
+            dens_1D);
+        Result.dcdvp.resize(NZ);
+        Result.dcdvs.resize(NZ);
+        Result.dcdrho.resize(NZ);
+        Result.rc = R_c;
+        std::cout << 2.0 * M_PI/w[freqindex] << " " << Result.c <<  " " <<  R_c << " ";
+        double R_vs, R_vp, R_rho;
+        for (int n = NZ - 1; n >= 0; n--)
+          {
+            //Computation of Gradients
+            R_vs = compute_R1212_vs(w[freqindex], c_last, vp_1D, vs_1D, depth,
+                dens_1D, n);
+            Result.dcdvs[n] = ((-1.0) * R_vs / R_c);
+            R_vp = compute_R1212_vp(w[freqindex], c_last, vp_1D, vs_1D, depth, dens_1D,
+                n);
+            Result.dcdvp[n] = ((-1.0) * R_vp / R_c);
+            R_rho = compute_R1212_dens(w[freqindex], c_last, vp_1D, vs_1D, depth, dens_1D,
+                n);
+            Result.dcdrho[n] = ((-1.0) * R_rho / R_c);
+          }
+         std::cout << R_vs << " " << R_vp << " " << R_rho << std::endl;
+        return Result;
       }
 
     void SurfaceWaveCalculator::forward(const SurfaceWaveModel &Model,
@@ -116,7 +254,7 @@ namespace jif3D
                     std::vector<double> dens_1D(NZ);
                     std::vector<double> vs_1D(NZ);
                     std::vector<double> vp_1D(NZ);
-                    bool lvz = 0;
+
                     for (int n = 0; n < NZ; n++)
                       {
                         // sort velocities, densities into 1D models
@@ -124,123 +262,17 @@ namespace jif3D
                         vp_1D[n] = vp[n + NZ * estep + NY * NZ * nstep];
                         vs_1D[n] = vs[n + NZ * estep + NY * NZ * nstep];
                         // check if there's a low velocity zone
-                        if (n > 0 && vs_1D[n] < vs_1D[n - 1])
-                          {
-                            lvz = 1;
-                          }
                       }
-
                     if (vs_1D[0] > 0)
                       {
-                        // Calculation of velocity limits
-                        const double vsmin = *std::min_element(vs_1D.begin(),
-                            vs_1D.end());
-                        const double vsmax = *std::max_element(vs_1D.begin(),
-                            vs_1D.end());
-                        const double vpmin = *std::min_element(vp_1D.begin(),
-                            vp_1D.end());
-                        const double vpmax = *std::max_element(vp_1D.begin(),
-                            vp_1D.end());
-                        const std::vector<double> c_lim
-                          { newton_vr(vpmin, vsmin, tolerance) / 1.05, newton_vr(vpmax,
-                              vsmax, tolerance) * 1.05 };
-
-                        // step ratio for root bracketing
-                        const double stepratio = (vsmin - c_lim[0]) / (2.0 * vsmin);
-
-                        // Compute initial R1212 polarization for large period below fundamental mode
-                        double R1212 = compute_R1212(w[nperiods - 1] / 10.0, c_lim[0],
-                            vp_1D, vs_1D, depth, dens_1D);
-                        const bool pol0 = signbit(R1212);
-
-                        double c_last = c_lim[0]; //initial value for c to start search
-
-                        // Loop over all periods/frequencies
-                        //for(int freq=0; freq<nperiods; freq++){
-                        double c0, c1 = c_last; // stores brackets
-                        bool pol1 = pol0; // initial polarization of R1212
-                        double precision = 1;
-
-                        if (lvz == 1) // If there is a LVZ, we have to start at the lowest possible velocity
-                          c1 = c_lim[0];
-
-                        // Loop to find root brackets, breaks when sign of R1212 changes
-                        while (pol0 == pol1)
+                        SurfaceWaveCalculator::Surf1DResult Result = CalcSurf1D(w, freq,
+                            dens_1D, vs_1D, vp_1D, depth);
+                        vph_map[estep + NY * nstep] = Result.c;
+                        for (int n = 0; n < NZ; n++)
                           {
-                            cnt: ;
-                            c0 = c1; // set lower bracket to value of last iteration's upper bracket
-                            c1 = c0 + c0 * (stepratio / precision); // increase upper bracket by step ratio
-
-                            // Check polarization of R1212 for the upper bracket
-                            R1212 = compute_R1212(w[freq], c1, vp_1D, vs_1D, depth,
-                                dens_1D);
-                            pol1 = signbit(R1212);
-
-                            // If a sign change is found check for mode skipping
-                            if (pol0 != pol1 && (c1 - c0) > (2.0 * tolerance))
-                              {
-                                double c2 = (c1 + c0) / 2.0; // set new speed between brackets
-                                double delta = (c2 - c0) / mode_skip_it;
-                                if (delta < (mode_skip_it * tolerance))
-                                  delta = tolerance;
-                                // check sign of R1212 between brackets
-                                while (tolerance < (c2 - c0))
-                                  {
-                                    R1212 = compute_R1212(w[freq], c2, vp_1D, vs_1D,
-                                        depth, dens_1D);
-                                    const bool pol2 = signbit(R1212);
-                                    // if mode skipping detected increase precision (-> decrease step ratio) and return to bracket search
-                                    if (pol2 == pol1)
-                                      {
-                                        precision = precision * mode_skip_it;
-                                        c1 = c0;
-                                        goto cnt;
-                                      }
-                                    // "Downward" search along c-axis for mode skipping (2 runs per default)
-                                    c2 = c2 - delta;
-                                  }
-                              }
-                          }
-                        // If a sign change is found, brackets c0 & c2 are passed to an instance of R1212_root (-> Boost TOMS root finding algorithm)
-                        std::pair<double, double> brackets; // stores refinded root brackets
-                        boost::uintmax_t max_iter = toms_max_iter; // Maximum number of TOMS iterations
-                        R1212_root root(w[freq], vp_1D, vs_1D, depth, dens_1D);
-                        TerminationCondition tc(tolerance);
-                        brackets = boost::math::tools::toms748_solve(root, c0, c1, tc,
-                            max_iter);
-                        if (lvz == 0 && (brackets.first + brackets.second) / 2.0 < c_last)
-                          {
-                            c1 = c_lim[0];
-                            precision = precision * mode_skip_it;
-                            goto cnt;
-                          }
-                        c_last = (brackets.first + brackets.second) / 2.0;
-
-                        vph_map[estep + NY * nstep] = c_last;
-
-                        //R1212 = compute_R1212(w[freq], c_last, vp_1D, vs_1D, depth, dens_1D);
-
-                        // Write output to file
-                        //resultfile << "\n" << easting[estep] << "\t" << northing[nstep] << "\t" << (2.0*M_PI)/w[freq] << "\t" << c_last << "\t" << brackets.second-brackets.first << "\t" << max_iter;
-
-                        //double test = compute_R1212(w[freq], c_last, vp_1D, vs_1D, depth, dens_1D);
-                        const double R_c = compute_R1212_c(w[freq], c_last, vp_1D, vs_1D,
-                            depth, dens_1D);
-                        for (int n = NZ - 1; n >= 0; n--)
-                          {
-                            //Computation of Gradients
-                            double R_tmp = compute_R1212_vs(w[freq], c_last, vp_1D, vs_1D,
-                                depth, dens_1D, n);
-                            dcdvs[n + NZ * estep + NY * NZ * nstep] = ((-1.0) * R_tmp
-                                / R_c);
-                            R_tmp = compute_R1212_vp(w[freq], c_last, vp_1D, vs_1D, depth,
-                                dens_1D, n);
-                            dcdvp[n + NZ * estep + NY * NZ * nstep] = ((-1.0) * R_tmp
-                                / R_c);
-                            R_tmp = compute_R1212_dens(w[freq], c_last, vp_1D, vs_1D,
-                                depth, dens_1D, n);
-                            dcdrho[n + NZ * estep + NY * NZ * nstep] = ((-1.0) * R_tmp
-                                / R_c);
+                            dcdvs[n + NZ * estep + NY * NZ * nstep] = Result.dcdvs[n];
+                            dcdvp[n + NZ * estep + NY * NZ * nstep] = Result.dcdvp[n];
+                            dcdrho[n + NZ * estep + NY * NZ * nstep] = Result.dcdrho[n];
                           }
                       }
                   } //end loop over northing
