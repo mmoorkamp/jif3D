@@ -74,12 +74,24 @@ namespace jif3D
         {
           return dcdvp;
         }
+      void forward(const ModelType &Model, const DataType &Data);
+      struct Surf1DResult
+        {
+        double c;
+        double rc;
+        std::vector<double> dcdvs;
+        std::vector<double> dcdvp;
+        std::vector<double> dcdrho;
+        };
+      Surf1DResult CalcSurf1D(const std::vector<double> &w, size_t freqindex,
+          const std::vector<double> &dens_1D, const std::vector<double> &vs_1D,
+          const std::vector<double> &vp_1D, const std::vector<double> &depth);
     private:
       double false_east, tolerance, length_tolerance;
       int mode_skip_it, toms_max_iter;
       std::vector<double> dcdrho, dcdvs, dcdvp, vph_map;
       std::vector<double> dens_grad, vs_grad, vp_grad, dtp_mod, dtp_err;
-      void forward(const ModelType &Model, const DataType &Data);
+
       };
   }
 
