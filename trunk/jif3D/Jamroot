@@ -100,6 +100,7 @@ lib Geographic : : <name>Geographic <search>/media/bmw/Grimsel/geographiclib/lib
 lib gfortran : :  <name>gfortran ;
 lib cudart : : <name>cudart <search>$(CUDA_LIB_PATH) ;
 lib cublas : : <name>cublas <search>$(CUDA_LIB_PATH) ;
+lib quadmath : : <name>quadmath ;
 alias vecopt : lapack cblas atlas gfortran ;
 alias boost_core : boost_program_options boost_filesystem  boost_system ;
 

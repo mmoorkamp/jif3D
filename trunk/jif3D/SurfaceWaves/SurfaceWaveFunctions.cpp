@@ -243,12 +243,12 @@ namespace jif3D
         const double dens = mu / pow(vs, 2);
 
         Tvs.R1212 = std::real(
-            (4.0 * T.R1212 / vs)
+            (4.0 * T.R1212.convert_to<double>() / vs)
                 + pow(vs, 4) * (2.0 * u.l * ug.l_b * u.nu_b - pow(u.l, 2) * ug.mbb)
                     / (4.0 * pow(w, 4) * u.nu_a * pow(u.nu_b, 2)));
         Tvs.R1213 = std::real(ug.mbb / (4.0 * dens * pow(w, 2) * pow(u.nu_b, 2)));
         Tvs.iR1214 = std::real(
-            (2.0 * T.iR1214 / vs)
+            (2.0 * T.iR1214.convert_to<double>() / vs)
                 + pow(vs, 2) * (ug.l_b * u.nu_b - u.l * ug.mbb)
                     / (4.0 * dens * pow(w, 3) * c * u.nu_a * pow(u.nu_b, 2)));
         Tvs.R1224 = 0.0;
@@ -328,7 +328,7 @@ namespace jif3D
                     / (pow(u.nu_a * u.nu_b, 2))) + (8.0 * pow(w, 2) / pow(c, 3))));
         Tc.R1213 = std::real(ug.mbc / (4.0 * dens * pow(w * u.nu_b, 2)));
         Tc.iR1214 = std::real(
-            ((-1.0) * T.iR1214 / c)
+            ((-1.0) * T.iR1214.convert_to<double>() / c)
                 + ((pow(vs, 2)
                     * (ug.l_c * u.nu_b * u.nu_a
                         - u.l * (ug.mac * u.nu_b + u.nu_a * ug.mbc)))
@@ -660,11 +660,11 @@ namespace jif3D
                     + pow(u.gam, 2) * dk) * u.SA * u.SB
                 - (pow(1.0 - u.gam, 2) + pow(u.gam * u.nu_a_nrm * u.nu_b_nrm, 2)) * dSS);
         Gout.G1213 = std::real(
-            ((-1.0) * G.G1213 / c)
+            ((-1.0) * G.G1213.convert_to<double>() / c)
                 + (1.0 / (dens * w * c))
                     * (dCS - ug.nu_a_nrm2_c * u.SA * u.CB - pow(u.nu_a_nrm, 2) * dSC));
         Gout.iG1214 = std::real(
-            ((-1.0) * G.iG1214 / c)
+            ((-1.0) * G.iG1214.convert_to<double>() / c)
                 + (1.0 / (dens * w * c))
                     * ((2.0 * u.gam - 1.0) * dCC - 2.0 * ug.gam_c * (1.0 - u.CA * u.CB))
                 + (1.0 / (dens * w * c))
@@ -672,16 +672,16 @@ namespace jif3D
                         - (ug.gam_c + ug.gam_c * pow(u.nu_a_nrm * u.nu_b_nrm, 2)
                             + u.gam * dk) * u.SA * u.SB));
         Gout.G1224 = std::real(
-            ((-1.0) * G.G1224 / c)
+            ((-1.0) * G.G1224.convert_to<double>() / c)
                 + (1.0 / (dens * w * c))
                     * (ug.nu_b_nrm2_c * u.CA * u.SB + pow(u.nu_b_nrm, 2) * dCS - dSC));
         Gout.G1234 = std::real(
-            ((-2.0) * G.G1234 / c)
+            ((-2.0) * G.G1234.convert_to<double>() / c)
                 + pow((1.0 / (dens * w * c)), 2)
                     * (2.0 * dCC - dk * u.SA * u.SB
                         - (1.0 + pow(u.nu_a_nrm * u.nu_b_nrm, 2)) * dSS));
         Gout.G1312 = std::real(
-            (G.G1312 / c)
+            (G.G1312.convert_to<double>() / c)
                 + dens * w * c
                     * (2.0 * u.gam * ug.gam_c * pow(u.nu_b_nrm, 2) * u.CA * u.SB
                         + pow(u.gam, 2) * ug.nu_b_nrm2_c * u.CA * u.SB
@@ -697,7 +697,7 @@ namespace jif3D
         Gout.G1324 = std::real(
             (-1.0) * (ug.nu_b_nrm2_c * u.SA * u.SB + pow(u.nu_b_nrm, 2) * dSS));
         Gout.iG1412 = std::real(
-            (G.iG1412 / c)
+            (G.iG1412.convert_to<double>() / c)
                 + dens * w * c
                     * (ug.gam_c * (-6.0 * pow(u.gam, 2) + 6.0 * u.gam - 1.0)
                         * (1.0 - u.CA * u.CB)
@@ -721,7 +721,7 @@ namespace jif3D
                     * (u.gam - 1.0 + u.gam * pow(u.nu_a_nrm * u.nu_b_nrm, 2))
                     + pow(u.gam, 2) * dk) * u.SA * u.SB);
         Gout.G2412 = std::real(
-            (G.G2412 / c)
+            (G.G2412.convert_to<double>() / c)
                 + dens * w * c
                     * (-2.0 * (1.0 - u.gam) * ug.gam_c * u.CA * u.SB
                         + pow(1.0 - u.gam, 2) * dCS)
@@ -733,7 +733,7 @@ namespace jif3D
         Gout.G2413 = std::real(
             (-1.0) * (ug.nu_a_nrm2_c * u.SA * u.SB + pow(u.nu_a_nrm, 2) * dSS));
         Gout.G3412 = std::real(
-            (2.0 * G.G3412 / c)
+            (2.0 * G.G3412.convert_to<double>() / c)
                 - pow(dens * c * w, 2)
                     * (4.0 * u.gam * ug.gam_c * (u.gam - 1.0) * (2.0 * u.gam - 1.0)
                         * (1.0 - u.CA * u.CB)
@@ -764,9 +764,9 @@ namespace jif3D
             + T.R1213 * G_c.G1312 - 2.0 * Tc.iR1214 * G.iG1412
             - 2.0 * T.iR1214 * G_c.iG1412 + Tc.R1224 * G.G2412 + T.R1224 * G_c.G2412
             + Tc.R1234 * G.G3412 + T.R1234 * G_c.G3412;
-  //      std::cout << Tc.R1212 * G.G1212 << " " << T.R1212 * G_c.G1212 << " " << Tc.R1213 * G.G1312 << " " <<
-  //          T.R1213 * G_c.G1312 << " " << - 2.0 * Tc.iR1214 * G.iG1412 << " " << - 2.0 * T.iR1214 * G_c.iG1412
-  //          << " " << Tc.R1224 * G.G2412 << " " << T.R1224 * G_c.G2412 << " " << Tc.R1234 * G.G3412 << " " << T.R1234 * G_c.G3412 << std::endl;
+        //      std::cout << Tc.R1212 * G.G1212 << " " << T.R1212 * G_c.G1212 << " " << Tc.R1213 * G.G1312 << " " <<
+        //          T.R1213 * G_c.G1312 << " " << - 2.0 * Tc.iR1214 * G.iG1412 << " " << - 2.0 * T.iR1214 * G_c.iG1412
+        //          << " " << Tc.R1224 * G.G2412 << " " << T.R1224 * G_c.G2412 << " " << Tc.R1234 * G.G3412 << " " << T.R1234 * G_c.G3412 << std::endl;
         Rc.R1213 = Tc.R1212 * G.G1213 + T.R1212 * G_c.G1213 + Tc.R1213 * G.G1313
             + T.R1213 * G_c.G1313 - 2.0 * Tc.iR1214 * G.iG1413
             - 2.0 * T.iR1214 * G_c.iG1413 + Tc.R1224 * G.G2413 + T.R1224 * G_c.G2413
@@ -829,7 +829,7 @@ namespace jif3D
         if (param == 0)
           {
             // Normalize R matrix components to +-100000
-            double tmpmax, maxR = R.R1212;
+            float128 tmpmax, maxR = R.R1212;
             if (maxR < 0)
               maxR = (-1.0) * maxR;
             tmpmax = R.R1213;
@@ -909,7 +909,7 @@ namespace jif3D
               }
             R = compute_R(w, c, vp[n], vs[n], dn, dens[n], R, 0);
           }
-        return R.R1212;
+        return R.R1212.convert_to<double>();
       }
 
     double compute_R1212_vs(const double &w, const double &c,
@@ -950,7 +950,7 @@ namespace jif3D
                 R = compute_R(w, c, vp[n], vs[n], dn, dens[n], R, 4);
               }
           }
-        return R.R1212;
+        return R.R1212.convert_to<double>();
       }
 
     double compute_R1212_vp(const double &w, const double &c,
@@ -991,7 +991,7 @@ namespace jif3D
                 R = compute_R(w, c, vp[n], vs[n], dn, dens[n], R, 4);
               }
           }
-        return R.R1212;
+        return R.R1212.convert_to<double>();
       }
 
     double compute_R1212_dens(const double &w, const double &c,
@@ -1032,7 +1032,7 @@ namespace jif3D
                 R = compute_R(w, c, vp[n], vs[n], dn, dens[n], R, 4);
               }
           }
-        return R.R1212;
+        return R.R1212.convert_to<double>();
       }
 
     double compute_R1212_c(const double &w, const double &c,
@@ -1060,7 +1060,7 @@ namespace jif3D
             R_c = compute_R_c(w, c, vp[n], vs[n], dn, dens[n], R, R_c);
             R = compute_R(w, c, vp[n], vs[n], dn, dens[n], R, 4);
           }
-        return R_c.R1212;
+        return R_c.R1212.convert_to<double>();
       }
 
     std::vector<std::vector<double>> get_gc_segments(const double &east0,

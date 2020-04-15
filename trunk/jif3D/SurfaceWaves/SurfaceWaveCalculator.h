@@ -10,6 +10,7 @@
 
 #include "../SurfaceWaves/SurfaceWaveModel.h"
 #include "../SurfaceWaves/SurfaceWaveData.h"
+#include "../SurfaceWaves/SurfaceWaveFunctions.h"
 #include <boost/math/tools/roots.hpp>
 
 namespace jif3D

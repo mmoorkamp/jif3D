@@ -50,7 +50,7 @@ int main()
     std::vector<double> PhaseTravelTimes(1, 1.0);
     std::vector<double> PhaseTravelTimesErrors(1, 1.0);
     std::vector<double> Period =
-      { 20.0 };
+      { 47.0 };
 
     std::vector<double> EventPosX =
       { 0.0 };
@@ -74,20 +74,21 @@ int main()
 
     jif3D::SurfaceWaveCalculator TstCalc;
     TstCalc.set_data_err(PhaseTravelTimesErrors);
-    jif3D::rvec ModTravelTime(TstCalc.Calculate(TstMod, TstDat));
+    //jif3D::rvec ModTravelTime(TstCalc.Calculate(TstMod, TstDat));
 
-   std::ofstream outfile("surf.out");
-    const size_t nfreqs = 1;
+    std::ofstream outfile("surf.out");
+    const size_t nfreqs = Period.size();
     std::vector<double> w(nfreqs);
     for (size_t i = 0; i < nfreqs; ++i)
-      w[i] = 2 * M_PI /(47.0);
+      w[i] = 2 * M_PI / (Period[i]);
 
     std::vector<double> depth(zcoords_m.begin() + 1, zcoords_m.end());
     for (size_t i = 0; i < nfreqs; ++i)
       {
-        jif3D::SurfaceWaveCalculator::Surf1DResult Result = TstCalc.CalcSurf1D(w, i,
-            rho, beta, alpha, depth);
-        outfile << 2 * M_PI/w[i] << " " << Result.c << " " << Result.rc << " " << Result.dcdvp[0] << " " << Result.dcdvp[1] << std::endl;
+        jif3D::SurfaceWaveCalculator::Surf1DResult Result = TstCalc.CalcSurf1D(w, i, rho,
+            beta, alpha, depth);
+        outfile << 2 * M_PI / w[i] << " " << Result.c << " " << Result.rc << " "
+            << Result.dcdvp[0] << " " << Result.dcdvp[1] << std::endl;
       }
 
     return 0;
