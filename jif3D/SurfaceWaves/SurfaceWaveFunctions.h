@@ -18,30 +18,33 @@
 #include <GeographicLib/GeodesicLine.hpp>
 #include <GeographicLib/Rhumb.hpp>
 #include <GeographicLib/Constants.hpp>
+#include <boost/multiprecision/float128.hpp>
 
 namespace jif3D
   {
+
+    typedef boost::multiprecision::float128 float128;
 
     typedef std::complex<double> dcomp;
     const std::complex<double> i(0, 1.0);
 
     struct PropagatorSubdeterminants
       {
-      double G1212;
-      double G1213;
-      double iG1214;
-      double G1224;
-      double G1234;
-      double G1312;
-      double G1313;
-      double iG1314;
-      double G1324;
-      double iG1412;
-      double iG1413;
-      double G1414;
-      double G2412;
-      double G2413;
-      double G3412;
+      float128 G1212;
+      float128 G1213;
+      float128 iG1214;
+      float128 G1224;
+      float128 G1234;
+      float128 G1312;
+      float128 G1313;
+      float128 iG1314;
+      float128 G1324;
+      float128 iG1412;
+      float128 iG1413;
+      float128 G1414;
+      float128 G2412;
+      float128 G2413;
+      float128 G3412;
       PropagatorSubdeterminants() :
           G1212(0.0), G1213(0.0), iG1214(0.0), G1224(0.0), G1234(0.0), G1312(0.0), G1313(
               0.0), iG1314(0.0), G1324(0.0), iG1412(0.0), iG1413(0.0), G1414(0.0), G2412(
@@ -74,11 +77,11 @@ namespace jif3D
 
     struct LayerSubdeterminants
       {
-      double R1212;
-      double R1213;
-      double iR1214;
-      double R1224;
-      double R1234;
+      float128 R1212;
+      float128 R1213;
+      float128 iR1214;
+      float128 R1224;
+      float128 R1234;
       LayerSubdeterminants() :
           R1212(0.0), R1213(0.0), iR1214(0.0), R1224(0.0), R1234(0.0)
         {
