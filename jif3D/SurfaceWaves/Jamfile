@@ -1,6 +1,6 @@
 import testing ; 
 
-alias core :  ../DataBase//database ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ..//boost_core ..//quadmath ;
+alias core :  ../DataBase//database ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ..//boost_core ;
 
 lib surfwave :  SurfaceWaveData.cpp SurfaceWaveModel.cpp SurfaceWaveCalculator.cpp SurfaceWaveFunctions.cpp
                 core  ../GeographicLib//geographic : <include>.. ;
