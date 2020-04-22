@@ -8,6 +8,7 @@
 #include <vector>
 #include <complex>
 #include <tuple>
+#include <string>
 #include <GeographicLib/TransverseMercatorExact.hpp>
 #include <GeographicLib/Geodesic.hpp>
 #include <GeographicLib/GeodesicLine.hpp>
@@ -127,14 +128,16 @@ namespace jif3D
         u.nu_b_nrm = u.nu_b / k;
         u.l = 2.0 * pow(k, 2) - pow(w / vs, 2);
 
-        if (botlay == 1)
+        /*if (botlay == 1)
           {
-            u.PrintSWUtilities("BottomLayerUtilities");
+            u.PrintSWUtilities("BottomLayerUtilities_" + std::to_string(w));
           }
         else
           {
-            u.PrintSWUtilities("TopLayerUtilities");
-          }
+            u.PrintSWUtilities(
+                "Utilities_" + std::to_string(w) + "_" + std::to_string(vs) + "_"
+                    + std::to_string(vp));
+          }*/
 
         return u;
       }
@@ -171,9 +174,9 @@ namespace jif3D
           }
 
         gu.nu_a_nrm2_c = (-2.0 * c) / pow(vp, 2);
-        gu.nu_a_nrm_a = (2.0 * pow(c, 2)) / pow(vp, 3);
+        gu.nu_a_nrm2_a = (2.0 * pow(c, 2)) / pow(vp, 3);
         gu.nu_b_nrm2_c = (-2.0 * c) / pow(vs, 2);
-        gu.nu_b_nrm_b = (2.0 * pow(c, 2)) / pow(vs, 3);
+        gu.nu_b_nrm2_b = (2.0 * pow(c, 2)) / pow(vs, 3);
         gu.gam_b = (4.0 * vs) / pow(c, 2);
         gu.gam_c = (-4.0 * pow(vs, 2)) / pow(c, 3);
         gu.l_b = 2.0 * pow(w, 2) / pow(vs, 3);
@@ -189,14 +192,17 @@ namespace jif3D
         gu.SAA = (gu.maa / u.ma) * (k * thck * u.CA - u.SA);
         gu.SBB = (gu.mbb / u.mb) * (k * thck * u.CB - u.SB);
 
-        if (botlay == 1)
+        /*if (botlay == 1)
           {
-            gu.PrintGradientUtilities("BottomLayerGradientUtilities");
+            gu.PrintGradientUtilities(
+                "BottomLayerGradientUtilities_" + std::to_string(w));
           }
         else
           {
-            gu.PrintGradientUtilities("TopLayerGradientUtilities");
-          }
+            gu.PrintGradientUtilities(
+                "GradientUtilities_" + std::to_string(w) + "_" + std::to_string(vs) + "_"
+                    + std::to_string(vp));
+          }*/
 
         return gu;
       }
@@ -224,7 +230,7 @@ namespace jif3D
             mu * u.nu_a * pow(u.nu_b, 2) * (2.0 * pow(k, 2) - u.l) * fact);
         T.R1234 = std::real(u.nu_a * u.nu_b * (pow(k, 2) - u.nu_a * u.nu_b) * fact);
 
-        T.PrintLayerSubdeterminants("BottomLayerSubdeterminants");
+        //T.PrintLayerSubdeterminants("BottomLayerSubdeterminants_" + std::to_string(w));
 
         return T;
       }
@@ -256,7 +262,8 @@ namespace jif3D
             (-1.0) * ug.mbb
                 / (4.0 * pow(dens, 2) * pow(w, 2) * pow(c, 2) * u.nu_a * pow(u.nu_b, 2)));
 
-        Tvs.PrintLayerSubdeterminants("BottomLayerSubdeterminants_vs");
+        /*Tvs.PrintLayerSubdeterminants(
+            "BottomLayerSubdeterminants_vs_" + std::to_string(w));*/
 
         return Tvs;
       }
@@ -283,7 +290,8 @@ namespace jif3D
             (-1.0) * ug.maa * pow(vs, 4)
                 / (4.0 * pow(mu, 2) * pow(w, 2) * pow(c, 2) * pow(u.nu_a, 2) * u.nu_b));
 
-        Tvp.PrintLayerSubdeterminants("BottomLayerSubdeterminants_vp");
+        /*Tvp.PrintLayerSubdeterminants(
+            "BottomLayerSubdeterminants_vp_" + std::to_string(w));*/
 
         return Tvp;
       }
@@ -303,7 +311,8 @@ namespace jif3D
         Tdens.R1224 = (-1.0) * T.R1224 / dens;
         Tdens.R1234 = (-2.0) * T.R1234 / dens;
 
-        Tdens.PrintLayerSubdeterminants("BottomLayerSubdeterminants_dens");
+        /*Tdens.PrintLayerSubdeterminants(
+            "BottomLayerSubdeterminants_dens_" + std::to_string(w));*/
 
         return Tdens;
       }
@@ -335,10 +344,10 @@ namespace jif3D
                     / (4.0 * dens * pow(w, 3) * c * pow(u.nu_b * u.nu_a, 2))));
         Tc.R1224 = std::real(((-1.0) * ug.mac) / (4.0 * dens * pow(u.nu_a * w, 2)));
         Tc.R1234 = std::real(
-            (-1.0)*(2.0 * u.nu_a * u.nu_b + c * (ug.mac * u.nu_b + u.nu_a * ug.mbc))
+            (-1.0) * (2.0 * u.nu_a * u.nu_b + c * (ug.mac * u.nu_b + u.nu_a * ug.mbc))
                 / (4.0 * pow(dens * w * u.nu_a * u.nu_b, 2) * pow(c, 3)));
 
-        Tc.PrintLayerSubdeterminants("BottomLayerSubdeterminants_c");
+        //Tc.PrintLayerSubdeterminants("BottomLayerSubdeterminants_c_" + std::to_string(w));
 
         return Tc;
       }
@@ -407,7 +416,9 @@ namespace jif3D
                         + pow(u.gam, 4) * pow(u.nu_a_nrm, 2) * pow(u.nu_b_nrm, 2)) * u.SA
                         * u.SB));
 
-        G.PrintPropagatorSubdeterminants("PropagatorSubdeterminants");
+        /*G.PrintPropagatorSubdeterminants(
+            "PropagatorSubdeterminants_" + std::to_string(w) + "_" + std::to_string(vs)
+                + "_" + std::to_string(vp) + "_" + std::to_string(dens));*/
 
         return G;
       }
@@ -426,7 +437,7 @@ namespace jif3D
                 + (2.0 * pow(u.gam, 2) - 2.0 * u.gam + 1.0) * u.CA * ug.CBB
                 - (2.0 * ug.gam_b * (u.gam - 1.0)
                     + 2.0 * u.gam * ug.gam_b * pow(u.nu_a_nrm, 2) * pow(u.nu_b_nrm, 2)
-                    + pow(u.gam, 2) * pow(u.nu_a_nrm, 2) * ug.nu_b_nrm_b) * u.SA * u.SB
+                    + pow(u.gam, 2) * pow(u.nu_a_nrm, 2) * ug.nu_b_nrm2_b) * u.SA * u.SB
                 - (pow((1.0 - u.gam), 2)
                     + pow(u.gam, 2) * pow(u.nu_a_nrm, 2) * pow(u.nu_b_nrm, 2)) * u.SA
                     * ug.SBB);
@@ -440,22 +451,22 @@ namespace jif3D
                 + (1.0 / (dens * w * c))
                     * (((-1.0) * ug.gam_b
                         - ug.gam_b * pow(u.nu_a_nrm, 2) * pow(u.nu_b_nrm, 2)
-                        - u.gam * pow(u.nu_a_nrm, 2) * ug.nu_b_nrm_b) * u.SA * u.SB
+                        - u.gam * pow(u.nu_a_nrm, 2) * ug.nu_b_nrm2_b) * u.SA * u.SB
                         + (1.0 - u.gam - u.gam * pow(u.nu_a_nrm, 2) * pow(u.nu_b_nrm, 2))
                             * u.SA * ug.SBB));
         G.G1224 = std::real(
             (1.0 / (dens * w * c))
-                * (ug.nu_b_nrm_b * u.CA * u.SB + pow(u.nu_b_nrm, 2) * u.CA * ug.SBB
+                * (ug.nu_b_nrm2_b * u.CA * u.SB + pow(u.nu_b_nrm, 2) * u.CA * ug.SBB
                     - u.SA * ug.CBB));
         G.G1234 = std::real(
             (-1.0 / pow((dens * w * c), 2))
                 * (-2.0 * u.CA * ug.CBB
                     + (1.0 + pow(u.nu_a_nrm, 2) * pow(u.nu_b_nrm, 2)) * u.SA * ug.SBB
-                    + pow(u.nu_a_nrm, 2) * ug.nu_b_nrm_b * u.SA * u.SB));
+                    + pow(u.nu_a_nrm, 2) * ug.nu_b_nrm2_b * u.SA * u.SB));
         G.G1312 = std::real(
             dens * w * c
                 * (2.0 * u.gam * ug.gam_b * pow(u.nu_b_nrm, 2) * u.CA * u.SB
-                    + pow(u.gam, 2) * ug.nu_b_nrm_b * u.CA * u.SB
+                    + pow(u.gam, 2) * ug.nu_b_nrm2_b * u.CA * u.SB
                     + pow(u.gam, 2) * pow(u.nu_b_nrm, 2) * u.CA * ug.SBB)
                 + dens * w * c
                     * (2.0 * ug.gam_b * (1.0 - u.gam) * u.SA * u.CB
@@ -464,10 +475,10 @@ namespace jif3D
         G.iG1314 = std::real(
             (-1.0) * ug.gam_b * u.SA * u.CB + (1.0 - u.gam) * u.SA * ug.CBB
                 + ug.gam_b * pow(u.nu_b_nrm, 2) * u.CA * u.SB
-                + u.gam * ug.nu_b_nrm_b * u.CA * u.SB
+                + u.gam * ug.nu_b_nrm2_b * u.CA * u.SB
                 + u.gam * pow(u.nu_b_nrm, 2) * u.CA * ug.SBB);
         G.G1324 = std::real(
-            (-1.0) * ug.nu_b_nrm_b * u.SA * u.SB - pow(u.nu_b_nrm, 2) * u.SA * ug.SBB);
+            (-1.0) * ug.nu_b_nrm2_b * u.SA * u.SB - pow(u.nu_b_nrm, 2) * u.SA * ug.SBB);
         G.iG1412 = std::real(
             dens * w * c
                 * (ug.gam_b * (-6.0 * pow(u.gam, 2) + 6.0 * u.gam - 1.0)
@@ -477,7 +488,7 @@ namespace jif3D
                     * (-3.0 * pow((1.0 - u.gam), 2) * ug.gam_b
                         - 3.0 * pow(u.gam, 2) * ug.gam_b * pow(u.nu_a_nrm, 2)
                             * pow(u.nu_b_nrm, 2)
-                        - pow(u.gam, 3) * pow(u.nu_a_nrm, 2) * ug.nu_b_nrm_b) * u.SA
+                        - pow(u.gam, 3) * pow(u.nu_a_nrm, 2) * ug.nu_b_nrm2_b) * u.SA
                     * u.SB
                 + dens * w * c
                     * (pow((1.0 - u.gam), 3)
@@ -491,10 +502,10 @@ namespace jif3D
         G.G1414 = std::real(
             2.0 * ug.gam_b * (2.0 * u.gam - 1.0) * (1.0 - u.CA * u.CB)
                 - 2.0 * (pow(u.gam, 2) - u.gam) * u.CA * ug.CBB
-                + (2.0 * (u.gam - 1) * ug.gam_b
+                + (2.0 * (u.gam - 1.0) * ug.gam_b
                     + 2.0 * u.gam * ug.gam_b * pow(u.nu_a_nrm, 2) * pow(u.nu_b_nrm, 2)
-                    + pow(u.gam, 2) * pow(u.nu_a_nrm, 2) * ug.nu_b_nrm_b) * u.SA * u.SB
-                + (pow((1.0 - u.gam), 2)
+                    + pow(u.gam, 2) * pow(u.nu_a_nrm, 2) * ug.nu_b_nrm2_b) * u.SA * u.SB
+                + (pow(1.0 - u.gam, 2)
                     + pow(u.gam, 2) * pow(u.nu_a_nrm, 2) * pow(u.nu_b_nrm, 2)) * u.SA
                     * ug.SBB);
         G.G2412 = std::real(
@@ -517,10 +528,12 @@ namespace jif3D
                     * ((-4.0 * ug.gam_b * pow((1.0 - u.gam), 3)
                         + 4.0 * pow(u.gam, 3) * ug.gam_b * pow(u.nu_a_nrm, 2)
                             * pow(u.nu_b_nrm, 2)
-                        + pow(u.gam, 4) * pow(u.nu_a_nrm, 2) * ug.nu_b_nrm_b) * u.SA
+                        + pow(u.gam, 4) * pow(u.nu_a_nrm, 2) * ug.nu_b_nrm2_b) * u.SA
                         * u.SB));
 
-        G.PrintPropagatorSubdeterminants("PropagatorSubdeterminants_vs");
+        /*G.PrintPropagatorSubdeterminants(
+            "PropagatorSubdeterminants_vs_" + std::to_string(w) + "_" + std::to_string(vs)
+                + "_" + std::to_string(vp) + "_" + std::to_string(dens));*/
 
         return G;
       }
@@ -536,28 +549,28 @@ namespace jif3D
 
         G.G1212 = std::real(
             (2.0 * pow(u.gam, 2) - 2.0 * u.gam + 1.0) * ug.CAA * u.CB
-                - pow(u.gam, 2) * ug.nu_a_nrm_a * pow(u.nu_b_nrm, 2) * u.SA * u.SB
+                - pow(u.gam, 2) * ug.nu_a_nrm2_a * pow(u.nu_b_nrm, 2) * u.SA * u.SB
                 - (pow((1.0 - u.gam), 2)
                     + pow(u.gam, 2) * pow(u.nu_a_nrm, 2) * pow(u.nu_b_nrm, 2)) * ug.SAA
                     * u.SB);
         G.G1213 = std::real(
             (1.0 / (dens * w * c))
-                * (ug.CAA * u.SB - ug.nu_a_nrm_a * u.SA * u.CB
+                * (ug.CAA * u.SB - ug.nu_a_nrm2_a * u.SA * u.CB
                     - pow(u.nu_a_nrm, 2) * ug.SAA * u.CB));
         G.iG1214 = std::real(
             (1.0 / (dens * w * c))
                 * ((2.0 * u.gam - 1.0) * ug.CAA * u.CB
                     + (1.0 - u.gam - u.gam * pow(u.nu_a_nrm, 2) * pow(u.nu_b_nrm, 2))
                         * ug.SAA * u.SB
-                    - u.gam * ug.nu_a_nrm_a * pow(u.nu_b_nrm, 2) * u.SA * u.SB));
+                    - u.gam * ug.nu_a_nrm2_a * pow(u.nu_b_nrm, 2) * u.SA * u.SB));
         G.G1224 = std::real(
             (1.0 / (dens * w * c))
                 * (pow(u.nu_b_nrm, 2) * ug.CAA * u.SB - ug.SAA * u.CB));
         G.G1234 = std::real(
-            ((-1.0) / pow((w * dens * c), 2))
+            ((-1.0) / pow(w * dens * c, 2))
                 * (-2.0 * ug.CAA * u.CB
                     + (1.0 + pow(u.nu_b_nrm, 2) * pow(u.nu_a_nrm, 2)) * ug.SAA * u.SB
-                    + ug.nu_a_nrm_a * pow(u.nu_b_nrm, 2) * u.SA * u.SB));
+                    + ug.nu_a_nrm2_a * pow(u.nu_b_nrm, 2) * u.SA * u.SB));
         G.G1312 = std::real(
             dens * w * c
                 * (pow(u.gam, 2) * pow(u.nu_b_nrm, 2) * ug.CAA * u.SB
@@ -569,39 +582,40 @@ namespace jif3D
         G.iG1412 = std::real(
             dens * w * c
                 * (-1.0 * u.gam * (u.gam - 1.0) * (1.0 - 2.0 * u.gam) * ug.CAA * u.CB
-                    - pow(u.gam, 3) * ug.nu_a_nrm_a * pow(u.nu_b_nrm, 2) * u.SA * u.SB)
+                    - pow(u.gam, 3) * ug.nu_a_nrm2_a * pow(u.nu_b_nrm, 2) * u.SA * u.SB)
                 + dens * w * c
                     * ((pow((1.0 - u.gam), 3)
                         - pow(u.gam, 3) * pow(u.nu_a_nrm, 2) * pow(u.nu_b_nrm, 2))
                         * ug.SAA * u.SB));
         G.iG1413 = std::real(
-            (u.gam - 1.0) * ug.CAA * u.SB - u.gam * ug.nu_a_nrm_a * u.SA * u.CB
+            (u.gam - 1.0) * ug.CAA * u.SB - u.gam * ug.nu_a_nrm2_a * u.SA * u.CB
                 - u.gam * pow(u.nu_a_nrm, 2) * ug.SAA * u.CB);
         G.G1414 = std::real(
             2.0 * u.gam * (1.0 - u.gam) * ug.CAA * u.CB
                 + (pow((1.0 - u.gam), 2)
                     + pow(u.gam, 2) * pow(u.nu_a_nrm, 2) * pow(u.nu_b_nrm, 2)) * ug.SAA
                     * u.SB
-                + pow(u.gam, 2) * ug.nu_a_nrm_a * pow(u.nu_b_nrm, 2) * u.SA * u.SB);
+                + pow(u.gam, 2) * ug.nu_a_nrm2_a * pow(u.nu_b_nrm, 2) * u.SA * u.SB);
         G.G2412 = std::real(
             dens * w * c
                 * (pow((1.0 - u.gam), 2) * ug.CAA * u.SB
-                    - pow(u.gam, 2) * ug.nu_a_nrm_a * u.SA * u.CB
+                    - pow(u.gam, 2) * ug.nu_a_nrm2_a * u.SA * u.CB
                     - pow(u.gam, 2) * pow(u.nu_a_nrm, 2) * ug.SAA * u.CB));
         G.G2413 = std::real(
-            (-1.0) * (ug.nu_a_nrm_a * u.SA + pow(u.nu_a_nrm, 2) * ug.SAA) * u.SB);
-        G.G3412 =
-            std::real(
-                (-1.0) * pow((dens * c * w), 2)
-                    * (-2.0 * pow(u.gam, 2) * pow((1 - u.gam), 2) * ug.CAA * u.CB)
-                    - pow((dens * c * w), 2)
-                        * ((pow((1 - u.gam), 4)
-                            + pow(u.gam, 4) * pow(u.nu_a_nrm, 2) * pow(u.nu_b_nrm, 2))
-                            * ug.SAA * u.SB
-                            + pow(u.gam, 4) * ug.nu_a_nrm_a * pow(u.nu_b_nrm, 2) * u.SA
-                                * u.SB));
+            (-1.0) * (ug.nu_a_nrm2_a * u.SA + pow(u.nu_a_nrm, 2) * ug.SAA) * u.SB);
+        G.G3412 = std::real(
+            (-1.0) * pow((dens * c * w), 2)
+                * (-2.0 * pow(u.gam, 2) * pow((1 - u.gam), 2) * ug.CAA * u.CB)
+                - pow((dens * c * w), 2)
+                    * ((pow((1 - u.gam), 4)
+                        + pow(u.gam, 4) * pow(u.nu_a_nrm, 2) * pow(u.nu_b_nrm, 2))
+                        * ug.SAA * u.SB
+                        + pow(u.gam, 4) * ug.nu_a_nrm2_a * pow(u.nu_b_nrm, 2) * u.SA
+                            * u.SB));
 
-        G.PrintPropagatorSubdeterminants("PropagatorSubdeterminants_vp");
+        /*G.PrintPropagatorSubdeterminants(
+            "PropagatorSubdeterminants_vp_" + std::to_string(w) + "_" + std::to_string(vs)
+                + "_" + std::to_string(vp) + "_" + std::to_string(dens));*/
 
         return G;
       }
@@ -618,7 +632,7 @@ namespace jif3D
         Gout.iG1214 = (-1.0) * G.iG1214 / dens;
         Gout.G1224 = (-1.0) * G.G1224 / dens;
         Gout.G1234 = (-2.0) * G.G1234 / dens;
-        Gout.G1312 = G.G1312 / dens;
+        Gout.G1312 = G.G1312 / dens; // Check this out!!
         Gout.G1313 = 0.0;
         Gout.iG1314 = 0.0;
         Gout.G1324 = 0.0;
@@ -629,7 +643,10 @@ namespace jif3D
         Gout.G2413 = 0.0;
         Gout.G3412 = 2.0 * G.G3412 / dens;
 
-        Gout.PrintPropagatorSubdeterminants("PropagatorSubdeterminants_dens");
+        /*Gout.PrintPropagatorSubdeterminants(
+            "PropagatorSubdeterminants_dens_" + std::to_string(w) + "_"
+                + std::to_string(vs) + "_" + std::to_string(vp) + "_"
+                + std::to_string(dens));*/
 
         return Gout;
       }
@@ -746,7 +763,9 @@ namespace jif3D
                                 * pow(u.nu_a_nrm * u.nu_b_nrm, 2) + pow(u.gam, 4) * dk)
                             * u.SA * u.SB));
 
-        Gout.PrintPropagatorSubdeterminants("PropagatorSubdeterminants_c");
+        /*Gout.PrintPropagatorSubdeterminants(
+            "PropagatorSubdeterminants_c_" + std::to_string(w) + "_" + std::to_string(vs)
+                + "_" + std::to_string(vp) + "_" + std::to_string(dens));*/
 
         return Gout;
       }
@@ -784,7 +803,9 @@ namespace jif3D
             - 2.0 * T.iR1214 * G_c.iG1214 + Tc.R1224 * G.G1213 + T.R1224 * G_c.G1213
             + Tc.R1234 * G.G1212 + T.R1234 * G_c.G1212;
 
-        Rc.PrintLayerSubdeterminants("TopLayerSubdeterminants_c");
+        /*Rc.PrintLayerSubdeterminants(
+            "LayerSubdeterminants_c_" + std::to_string(w) + "_" + std::to_string(vs) + "_"
+                + std::to_string(vp) + "_" + std::to_string(dens));*/
 
         return Rc;
       }
@@ -815,16 +836,33 @@ namespace jif3D
 
         LayerSubdeterminants R;
 
-        R.R1212 = T.R1212 * G.G1212 + T.R1213 * G.G1312 - 2.0 * T.iR1214 * G.iG1412
-            + T.R1224 * G.G2412 + T.R1234 * G.G3412;
-        R.R1213 = T.R1212 * G.G1213 + T.R1213 * G.G1313 - 2.0 * T.iR1214 * G.iG1413
-            + T.R1224 * G.G2413 + T.R1234 * G.G2412;
-        R.iR1214 = T.R1212 * G.iG1214 + T.R1213 * G.iG1314
-            + T.iR1214 * (2.0 * G.G1414 - 1.0) + T.R1224 * G.iG1413 + T.R1234 * G.iG1412;
-        R.R1224 = T.R1212 * G.G1224 + T.R1213 * G.G1324 - 2.0 * T.iR1214 * G.iG1314
-            + T.R1224 * G.G1313 + T.R1234 * G.G1312;
-        R.R1234 = T.R1212 * G.G1234 + T.R1213 * G.G1224 - 2.0 * T.iR1214 * G.iG1214
-            + T.R1224 * G.G1213 + T.R1234 * G.G1212;
+        if (param == 0 || param == 4)
+          {
+            R.R1212 = T.R1212 * G.G1212 + T.R1213 * G.G1312 - 2.0 * T.iR1214 * G.iG1412
+                + T.R1224 * G.G2412 + T.R1234 * G.G3412;
+            R.R1213 = T.R1212 * G.G1213 + T.R1213 * G.G1313 - 2.0 * T.iR1214 * G.iG1413
+                + T.R1224 * G.G2413 + T.R1234 * G.G2412;
+            R.iR1214 = T.R1212 * G.iG1214 + T.R1213 * G.iG1314
+                + T.iR1214 * (2.0 * G.G1414 - 1.0) + T.R1224 * G.iG1413
+                + T.R1234 * G.iG1412;
+            R.R1224 = T.R1212 * G.G1224 + T.R1213 * G.G1324 - 2.0 * T.iR1214 * G.iG1314
+                + T.R1224 * G.G1313 + T.R1234 * G.G1312;
+            R.R1234 = T.R1212 * G.G1234 + T.R1213 * G.G1224 - 2.0 * T.iR1214 * G.iG1214
+                + T.R1224 * G.G1213 + T.R1234 * G.G1212;
+          }
+        else
+          {
+            R.R1212 = T.R1212 * G.G1212 + T.R1213 * G.G1312 - 2.0 * T.iR1214 * G.iG1412
+                + T.R1224 * G.G2412 + T.R1234 * G.G3412;
+            R.R1213 = T.R1212 * G.G1213 + T.R1213 * G.G1313 - 2.0 * T.iR1214 * G.iG1413
+                + T.R1224 * G.G2413 + T.R1234 * G.G2412;
+            R.iR1214 = T.R1212 * G.iG1214 + T.R1213 * G.iG1314 + 2.0 * T.iR1214 * G.G1414
+                + T.R1224 * G.iG1413 + T.R1234 * G.iG1412;
+            R.R1224 = T.R1212 * G.G1224 + T.R1213 * G.G1324 - 2.0 * T.iR1214 * G.iG1314
+                + T.R1224 * G.G1313 + T.R1234 * G.G1312;
+            R.R1234 = T.R1212 * G.G1234 + T.R1213 * G.G1224 - 2.0 * T.iR1214 * G.iG1214
+                + T.R1224 * G.G1213 + T.R1234 * G.G1212;
+          }
 
         if (param == 0)
           {
@@ -863,26 +901,38 @@ namespace jif3D
               }
           }
 
-        if (param == 0)
+        /*if (param == 0)
           {
-            R.PrintLayerSubdeterminants("TopLayerSubdeterminants_normalized");
+            R.PrintLayerSubdeterminants(
+                "LayerSubdeterminants_normalized_" + std::to_string(w) + "_"
+                    + std::to_string(vs) + "_" + std::to_string(vp) + "_"
+                    + std::to_string(dens));
           }
         else if (param == 1)
           {
-            R.PrintLayerSubdeterminants("TopLayerSubdeterminants_vs");
+            R.PrintLayerSubdeterminants(
+                "LayerSubdeterminants_vs_" + std::to_string(w) + "_" + std::to_string(vs)
+                    + "_" + std::to_string(vp) + "_" + std::to_string(dens));
           }
         else if (param == 2)
           {
-            R.PrintLayerSubdeterminants("TopLayerSubdeterminants_vp");
+            R.PrintLayerSubdeterminants(
+                "LayerSubdeterminants_vp_" + std::to_string(w) + "_" + std::to_string(vs)
+                    + "_" + std::to_string(vp) + "_" + std::to_string(dens));
           }
         else if (param == 3)
           {
-            R.PrintLayerSubdeterminants("TopLayerSubdeterminants_dens");
+            R.PrintLayerSubdeterminants(
+                "LayerSubdeterminants_dens_" + std::to_string(w) + "_"
+                    + std::to_string(vs) + "_" + std::to_string(vp) + "_"
+                    + std::to_string(dens));
           }
         else if (param == 4)
           {
-            R.PrintLayerSubdeterminants("TopLayerSubdeterminants");
-          }
+            R.PrintLayerSubdeterminants(
+                "LayerSubdeterminants_" + std::to_string(w) + "_" + std::to_string(vs)
+                    + "_" + std::to_string(vp) + "_" + std::to_string(dens));
+          }*/
 
         return R;
       }

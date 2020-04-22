@@ -148,13 +148,13 @@ namespace jif3D
         Result.dcdvs.resize(NZ);
         Result.dcdrho.resize(NZ);
         Result.rc = R_c;
-        std::cout << 2.0 * M_PI/w[freqindex] << " " << Result.c <<  " " <<  R_c << " ";
+        //std::cout << 2.0 * M_PI/w[freqindex] << " " << Result.c <<  " " <<  R_c << " ";
         double R_vs, R_vp, R_rho;
         for (int n = NZ - 1; n >= 0; n--)
           {
             //Computation of Gradients
-            R_vs = compute_R1212_vs(w[freqindex], c_last, vp_1D, vs_1D, depth,
-                dens_1D, n);
+            R_vs = compute_R1212_vs(w[freqindex], c_last, vp_1D, vs_1D, depth, dens_1D,
+                n);
             Result.dcdvs[n] = ((-1.0) * R_vs / R_c);
             R_vp = compute_R1212_vp(w[freqindex], c_last, vp_1D, vs_1D, depth, dens_1D,
                 n);
@@ -163,7 +163,7 @@ namespace jif3D
                 n);
             Result.dcdrho[n] = ((-1.0) * R_rho / R_c);
           }
-         std::cout << R_vs << " " << R_vp << " " << R_rho << std::endl;
+        //std::cout << R_vs << " " << R_vp << " " << R_rho << std::endl;
         return Result;
       }
 

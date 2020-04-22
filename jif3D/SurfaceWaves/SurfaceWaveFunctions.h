@@ -141,8 +141,8 @@ namespace jif3D
       {
       double maa;
       double mbb;
-      double nu_a_nrm_a;
-      double nu_b_nrm_b;
+      double nu_a_nrm2_a;
+      double nu_b_nrm2_b;
       double gam_b;
       double l_b;
       double CAA;
@@ -160,7 +160,7 @@ namespace jif3D
       double SAC;
       double SBC;
       GradientUtilities() :
-          maa(0.0), mbb(0.0), nu_a_nrm_a(0.0), nu_b_nrm_b(0.0), gam_b(0.0), l_b(0.0), CAA(
+          maa(0.0), mbb(0.0), nu_a_nrm2_a(0.0), nu_b_nrm2_b(0.0), gam_b(0.0), l_b(0.0), CAA(
               0.0), CBB(0.0), SAA(0.0), SBB(0.0), mac(0.0), mbc(0.0), nu_a_nrm2_c(0.0), nu_b_nrm2_c(
               0.0), gam_c(0.0), l_c(0.0), CAC(0.0), CBC(0.0), SAC(0.0), SBC(0.0)
         {
@@ -176,8 +176,8 @@ namespace jif3D
           GradUtilFile << "ma_c: \t" << mac << "\n";
           GradUtilFile << "mb_c: \t" << mbc << "\n";
 
-          GradUtilFile << "nu_a_nrm_a: \t" << nu_a_nrm_a << "\n";
-          GradUtilFile << "nu_b_nrm_b: \t" << nu_b_nrm_b << "\n";
+          GradUtilFile << "nu_a_nrm_a: \t" << nu_a_nrm2_a << "\n";
+          GradUtilFile << "nu_b_nrm_b: \t" << nu_b_nrm2_b << "\n";
           GradUtilFile << "nu_a_nrm2_c: \t" << nu_a_nrm2_c << "\n";
           GradUtilFile << "nu_b_nrm2_c: \t" << nu_b_nrm2_c << "\n";
 
