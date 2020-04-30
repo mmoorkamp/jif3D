@@ -1365,15 +1365,15 @@ namespace jif3D
               {
                 vsgrad[ncell * ncells_east * nlay + ecell * nlay + n] = vsgrad[ncell
                     * ncells_east * nlay + ecell * nlay + n]
-                    + dcdvs[ncell * ncells_east * nlay + ecell * nlay + n]
+                    + 2.0 * dcdvs[ncell * ncells_east * nlay + ecell * nlay + n]
                         * (ti / c[ncell * ncells_east + ecell]);
                 vpgrad[ncell * ncells_east * nlay + ecell * nlay + n] = vpgrad[ncell
                     * ncells_east * nlay + ecell * nlay + n]
-                    + dcdvp[ncell * ncells_east * nlay + ecell * nlay + n]
+                    + 2.0 * dcdvp[ncell * ncells_east * nlay + ecell * nlay + n]
                         * (ti / c[ncell * ncells_east + ecell]);
                 rhograd[ncell * ncells_east * nlay + ecell * nlay + n] = rhograd[ncell
                     * ncells_east * nlay + ecell * nlay + n]
-                    + dcdrho[ncell * ncells_east * nlay + ecell * nlay + n]
+                    + 2.0 * dcdrho[ncell * ncells_east * nlay + ecell * nlay + n]
                         * (ti / c[ncell * ncells_east + ecell]);
                 ;
               }
@@ -1397,15 +1397,15 @@ namespace jif3D
           {
             vsgrad[ncell1 * ncells_east * nlay + ecell1 * nlay + n] = vsgrad[ncell1
                 * ncells_east * nlay + ecell1 * nlay + n]
-                + dcdvs[ncell1 * ncells_east * nlay + ecell1 * nlay + n]
+                + 2.0 * dcdvs[ncell1 * ncells_east * nlay + ecell1 * nlay + n]
                     * (ti / c[ncell1 * ncells_east + ecell1]);
             vpgrad[ncell1 * ncells_east * nlay + ecell1 * nlay + n] = vpgrad[ncell1
                 * ncells_east * nlay + ecell1 * nlay + n]
-                + dcdvp[ncell1 * ncells_east * nlay + ecell1 * nlay + n]
+                + 2.0 * dcdvp[ncell1 * ncells_east * nlay + ecell1 * nlay + n]
                     * (ti / c[ncell1 * ncells_east + ecell1]);
             rhograd[ncell1 * ncells_east * nlay + ecell1 * nlay + n] = rhograd[ncell1
                 * ncells_east * nlay + ecell1 * nlay + n]
-                + dcdrho[ncell1 * ncells_east * nlay + ecell1 * nlay + n]
+                + 2.0 * dcdrho[ncell1 * ncells_east * nlay + ecell1 * nlay + n]
                     * (ti / c[ncell1 * ncells_east + ecell1]);
           }
 

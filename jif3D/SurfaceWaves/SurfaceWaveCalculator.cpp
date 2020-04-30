@@ -209,26 +209,13 @@ namespace jif3D
             vs_grad.resize(nmod);
             vp_grad.resize(nmod);
           }
-        if (dcdrho.size() != nmod)
-          {
-            dcdrho.resize(nmod);
-            dcdvs.resize(nmod);
-            dcdvp.resize(nmod);
-          }
         if (dtp_mod.size() != dtp.size())
           {
             dtp_mod.resize(dtp.size());
           }
-        if (vph_map.size() != NX * NY)
-          {
-            vph_map.resize(NX * NY);
-          }
         std::fill(dens_grad.begin(), dens_grad.end(), 0.0);
         std::fill(vs_grad.begin(), vs_grad.end(), 0.0);
         std::fill(vp_grad.begin(), vp_grad.end(), 0.0);
-        std::fill(dcdrho.begin(), dcdrho.end(), 0.0);
-        std::fill(dcdvs.begin(), dcdvs.end(), 0.0);
-        std::fill(dcdvp.begin(), dcdvp.end(), 0.0);
         std::fill(dtp_mod.begin(), dtp_mod.end(), 0.0);
         const std::vector<double> vs = array2vector(vs_all, NX, NY, NZ);
         const std::vector<double> vp = array2vector(vp_all, NX, NY, NZ);
@@ -246,7 +233,8 @@ namespace jif3D
             //cout << "Period: " << periods[freq] << " s.";
             //cout << "\n";
             //Vectors to store gradients, dispersion curves
-            std::fill(vph_map.begin(), vph_map.end(), 0.0);
+            std::vector<double> vph_map(NX * NY, 0.0);
+            std::vector<double> dcdrho(nmod, 0.0), dcdvs(nmod, 0.0), dcdvp(nmod, 0.0);
             for (int nstep = 0; nstep < NX; nstep++)
               {
                 for (int estep = 0; estep < NY; estep++)

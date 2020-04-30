@@ -59,9 +59,8 @@ BOOST_AUTO_TEST_SUITE( SW_Gradient_Test_Suite )
           { 500000.0, 500000.0 + 10000.0, 500000.0 + 20000.0, 500000.0 + 30000.0, 500000.0
               + 40000.0, 500000.0 + 50000.0, 500000.0 + 60000.0 };
         std::vector<double> zcoords_m =
-        //{ 0.0, 500.0, 1050.0, 1655.0, 2320.5, 3052.55, 3857.805, 4743.5855 };
-        //{ 0.0, 2.0, 4.3, 6.8, 9.6, 12.8, 20.0 };
-        { 0.0, 35000.0, 100000.0};
+        { 0.0, 2.0, 4.3, 6.8, 9.6, 12.8, 20.0 };
+        //{ 0.0, 35000.0, 100000.0};
         //{ 0.0, 5000.0 };
         const int zsize = zcoords_m.size();
 
@@ -72,18 +71,18 @@ BOOST_AUTO_TEST_SUITE( SW_Gradient_Test_Suite )
          const double bottomvel = 5000.0;
          const double topdens = 2700;
          const double bottomdens = 4000;*/
-        std::vector<double> alpha =
+        /*std::vector<double> alpha =
          { 6000.0, 8000.0 };
          std::vector<double> beta =
          { 3500.0, 4500.0 };
          std::vector<double> rho =
-         { 2700.0, 3300.0 };
-        /*std::vector<double> alpha =
+         { 2700.0, 3300.0 };*/
+        std::vector<double> alpha =
           { 650.0, 750.0, 1400.0, 1800.0, 2150.0, 2800.0 };
         std::vector<double> beta =
           { 194.0, 270.0, 367.0, 485.0, 603.0, 740.0 };
         std::vector<double> rho =
-          { 1820.0, 1860.0, 1910.0, 1960.0, 2020.0, 2090.0 };*/
+          { 1820.0, 1860.0, 1910.0, 1960.0, 2020.0, 2090.0 };
         /*std::vector<double> alpha = {5000.0};
         std::vector<double> beta = {3000.0};
         std::vector<double> rho = {2700.0};*/
@@ -94,9 +93,9 @@ BOOST_AUTO_TEST_SUITE( SW_Gradient_Test_Suite )
              + Depth * (bottomvel - topvel) / (bottomdepth - firstdepth);
              double Density = topdens
              + Depth * (bottomdens - topdens) / (bottomdepth - firstdepth);*/
-            double Velocity = beta[i % (zsize - 1)];
-            double Vp = alpha[i % (zsize - 1)];
-            double Density = rho[i % (zsize - 1)];
+            double Velocity = beta[i % (zsize - 1)] * (i + 1.0);
+            double Vp = alpha[i % (zsize - 1)] * (i + 2.0);
+            double Density = rho[i % (zsize - 1)] * (i + 5.0);
 
             TomoModel.SetData().origin()[i] = Velocity;
             TomoModel.SetVp().origin()[i] = /*Velocity * sqrt(3);*/Vp;
@@ -111,9 +110,9 @@ BOOST_AUTO_TEST_SUITE( SW_Gradient_Test_Suite )
 
         jif3D::SurfaceWaveData SWData;
         std::vector<double> xcoords =
-          { 25000.0, 25000.0 };
+          { 21000.0, 43210.0 };
         std::vector<double> ycoords =
-          { 500000.0 + 35000.0, 500000.0 + 45000.0 };
+          { 500000.0 + 25000.0, 500000.0 + 42000.0 };
         std::vector<double> zcoords =
           { 0.0, 0.0 };
         SWData.SetMeasurementPoints(xcoords, ycoords, zcoords);
@@ -129,7 +128,7 @@ BOOST_AUTO_TEST_SUITE( SW_Gradient_Test_Suite )
           { 0.0 };
         SWData.SetEventPositions(epx, epy, epz);
         std::vector<double> T =
-          { 20.0 };
+          { 1/20.0 };
         SWData.SetPeriods(T);
         SWData.SetDummy(-999.9);
         SWData.SetLonCentr(-123.0);
@@ -183,7 +182,7 @@ BOOST_AUTO_TEST_SUITE( SW_Gradient_Test_Suite )
             TomoModel.SetData().origin());
         TomoModel.WriteVTK("SWfd.vtk");
 
-        std::vector<double> dcdvs = Calculator.GetDcdvs();
+        /*std::vector<double> dcdvs = Calculator.GetDcdvs();
         std::copy(dcdvs.begin(), dcdvs.begin() + TomoModel.GetNModelElements(),
             TomoModel.SetData().origin());
         TomoModel.WriteVTK("dcdvs.vtk");
@@ -194,7 +193,7 @@ BOOST_AUTO_TEST_SUITE( SW_Gradient_Test_Suite )
         std::vector<double> dcdrho = Calculator.GetDcdrho();
         std::copy(dcdrho.begin(), dcdrho.begin() + TomoModel.GetNModelElements(),
             TomoModel.SetData().origin());
-        TomoModel.WriteVTK("dcdrho.vtk");
+        TomoModel.WriteVTK("dcdrho.vtk");*/
 
       }
 
