@@ -153,6 +153,7 @@ int main()
         MTData.SetNames(Names);
         MTData.CompleteObject();
         MTData.WriteNetCDF(outfilename);
+        MTData.WriteMeasurementPoints(outfilename+".vtk");
 
         jif3D::TipperData TipperData;
         TipperData.SetMeasurementPoints(StatXCoord, StatYCoord, StatZCoord);
