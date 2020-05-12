@@ -115,6 +115,7 @@ int hpx_main(boost::program_options::variables_map& vm)
         Model.WriteModEM(modelfilename + ".dat");
       }
 
+    Model.WriteUBC(modelfilename + ".ubc");
     for (size_t i = 0; i < Model.GetConductivities().shape()[2]; ++i)
       {
         Model.SetConductivities()[0][0][i] *= (1 + conddelta * (i + 1));
@@ -699,7 +700,7 @@ int hpx_main(boost::program_options::variables_map& vm)
     Model.WriteVTK(modelfilename + ".inv.vtk");
     Model.WriteNetCDF(modelfilename + ".inv.nc");
     Model.WriteXYZ(modelfilename + ".inv.xyz");
-
+    Model.WriteUBC(modelfilename + ".inv.ubc");
     std::cout << std::endl;
 #ifdef HAVEHPX
     return hpx::finalize();
