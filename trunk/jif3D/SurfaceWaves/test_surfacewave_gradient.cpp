@@ -47,6 +47,7 @@ BOOST_AUTO_TEST_SUITE( SW_Gradient_Test_Suite )
           }
         return FDGrad;
       }
+
     BOOST_AUTO_TEST_CASE (derivative_test)
       {
         jif3D::SurfaceWaveModel TomoModel;
@@ -59,7 +60,7 @@ BOOST_AUTO_TEST_SUITE( SW_Gradient_Test_Suite )
           { 500000.0, 500000.0 + 10000.0, 500000.0 + 20000.0, 500000.0 + 30000.0, 500000.0
               + 40000.0, 500000.0 + 50000.0, 500000.0 + 60000.0 };
         std::vector<double> zcoords_m =
-        { 0.0, 2.0, 4.3, 6.8, 9.6, 12.8, 20.0 };
+        { 0.0, 2.0, 4.3, 6.8, 9.6, 12.8, 20.0};
         //{ 0.0, 35000.0, 100000.0};
         //{ 0.0, 5000.0 };
         const int zsize = zcoords_m.size();
@@ -108,17 +109,13 @@ BOOST_AUTO_TEST_SUITE( SW_Gradient_Test_Suite )
             InvModel.begin());
         TomoModel.WriteVTK("SWgradtest.vtk");
 
+
+        std::vector<double> ycoords{ 525000.0, 542000.0};
+        std::vector<double> zcoords{ 0.0, 0.0 };
+        std::vector<double> xcoords{ 21000.0, 43210.0 };
+
         jif3D::SurfaceWaveData SWData;
-        std::vector<double> xcoords =
-          { 21000.0, 43210.0 };
-        std::vector<double> ycoords =
-          { 500000.0 + 25000.0, 500000.0 + 42000.0 };
-        std::vector<double> zcoords =
-          { 0.0, 0.0 };
         SWData.SetMeasurementPoints(xcoords, ycoords, zcoords);
-        std::vector<double> dtp(1, 1.0);
-        std::vector<double> err(1, 1.0);
-        SWData.SetDataAndErrors(dtp, err);
 
         std::vector<double> epx =
           { 25000.0 };
@@ -128,7 +125,11 @@ BOOST_AUTO_TEST_SUITE( SW_Gradient_Test_Suite )
           { 0.0 };
         SWData.SetEventPositions(epx, epy, epz);
         std::vector<double> T =
-          { 1/20.0 };
+          { 1.0/20.0,  1.0/10.0, 1.0/5.0, 1.0};
+
+
+
+
         SWData.SetPeriods(T);
         SWData.SetDummy(-999.9);
         SWData.SetLonCentr(-123.0);
@@ -138,6 +139,9 @@ BOOST_AUTO_TEST_SUITE( SW_Gradient_Test_Suite )
           { 0, 1 };
         SWData.SetEventStatCmb(esc);
         SWData.SetStatComb(sc);
+        std::vector<double> dtp(T.size() * esc.size(), 1.0);
+        std::vector<double> err(dtp.size(), 1.0);
+        SWData.SetDataAndErrors(dtp, err);
 
         jif3D::SurfaceWaveCalculator Calculator;
         Calculator.set_data_err(err);

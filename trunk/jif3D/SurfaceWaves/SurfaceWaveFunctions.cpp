@@ -32,15 +32,17 @@ namespace jif3D
         return w;
       }
 
-    std::vector<double> array2vector(const ThreeDModelBase::t3DModelData &array,
-        const int &NX, const int &NY, const int &NZ)
+    std::vector<double> array2vector(const ThreeDModelBase::t3DModelData &array)
       {
+        const size_t NX = array.shape()[0];
+        const size_t NY = array.shape()[1];
+        const size_t NZ = array.shape()[2];
         std::vector<double> tmp(NX * NY * NZ);
-        for (int i = 0; i < NZ; ++i)
+        for (size_t i = 0; i < NZ; ++i)
           {
-            for (int j = 0; j < NY; ++j)
+            for (size_t j = 0; j < NY; ++j)
               {
-                for (int k = 0; k < NX; ++k)
+                for (size_t k = 0; k < NX; ++k)
                   {
                     //DataVp[k][j][i] = tmp_data[k + j * NX + i * (NX * NY)];
                     tmp[i + j * NZ + k * (NZ * NY)] = array[k][j][i];

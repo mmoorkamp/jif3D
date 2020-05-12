@@ -16,6 +16,7 @@
 #include <fstream>
 #include <stdlib.h>
 #include <netcdf>
+#include <omp.h>
 #include <boost/math/tools/roots.hpp>
 #include "../Global/NumUtil.h"
 #include "../Global/FatalException.h"
@@ -51,7 +52,7 @@ namespace jif3D
                 __FILE__,
                 __LINE__);
           }
-        for (int n = 0; n < NZ; n++)
+        for (size_t n = 0; n < NZ; n++)
           {
             if (n > 0 && vs_1D[n] < vs_1D[n - 1])
               {
@@ -182,15 +183,12 @@ namespace jif3D
         const double lon_centr = Data.GetCentrLon();
         const double dtp_dummy = Data.GetDummy();
 
-        std::vector<double> depth(Model.GetZCoordinates().size() - 1);
-        std::vector<double> easting(Model.GetYCoordinates().size() - 1);
-        std::vector<double> northing(Model.GetXCoordinates().size() - 1);
-        std::copy(Model.GetXCoordinates().begin() + 1, Model.GetXCoordinates().end(),
-            northing.begin());
-        std::copy(Model.GetYCoordinates().begin() + 1, Model.GetYCoordinates().end(),
-            easting.begin());
-        std::copy(Model.GetZCoordinates().begin() + 1, Model.GetZCoordinates().end(),
-            depth.begin());
+        const std::vector<double> depth(Model.GetZCoordinates().begin() + 1,
+            Model.GetZCoordinates().end());
+        const std::vector<double> easting(Model.GetYCoordinates().begin() + 1,
+            Model.GetYCoordinates().end());
+        const std::vector<double> northing(Model.GetXCoordinates().begin() + 1,
+            Model.GetXCoordinates().end());
 
         ThreeDModelBase::t3DModelData vp_all = Model.GetVp();
         ThreeDModelBase::t3DModelData vs_all = Model.GetData();
@@ -199,10 +197,10 @@ namespace jif3D
         const int nperiods = periods.size();
         const int nsrcs = src_rcvr_cmb.size() / 2;
         const int nevents_per_src = dtp.size() / (nsrcs * nperiods);
-        const int NX = northing.size();
-        const int NY = easting.size();
-        const int NZ = depth.size();
-        const int nmod = NX * NY * NZ;
+        const size_t NX = northing.size();
+        const size_t NY = easting.size();
+        const size_t NZ = depth.size();
+        const size_t nmod = NX * NY * NZ;
         if (dens_grad.size() != nmod)
           {
             dens_grad.resize(nmod);
@@ -217,9 +215,9 @@ namespace jif3D
         std::fill(vs_grad.begin(), vs_grad.end(), 0.0);
         std::fill(vp_grad.begin(), vp_grad.end(), 0.0);
         std::fill(dtp_mod.begin(), dtp_mod.end(), 0.0);
-        const std::vector<double> vs = array2vector(vs_all, NX, NY, NZ);
-        const std::vector<double> vp = array2vector(vp_all, NX, NY, NZ);
-        const std::vector<double> dens = array2vector(dens_all, NX, NY, NZ);
+        const std::vector<double> vs = array2vector(vs_all);
+        const std::vector<double> vp = array2vector(vp_all);
+        const std::vector<double> dens = array2vector(dens_all);
 
         const double deast = easting[1] - easting[0];
         const double dnorth = northing[1] - northing[0];
@@ -227,7 +225,9 @@ namespace jif3D
           { easting[0] - deast, northing[0] - dnorth };
 
         const std::vector<double> w = T2w(periods);
-
+        omp_lock_t lck;
+        omp_init_lock(&lck);
+#pragma omp parallel for default(shared)
         for (int freq = 0; freq < nperiods; freq++)
           {
             //cout << "Period: " << periods[freq] << " s.";
@@ -235,15 +235,16 @@ namespace jif3D
             //Vectors to store gradients, dispersion curves
             std::vector<double> vph_map(NX * NY, 0.0);
             std::vector<double> dcdrho(nmod, 0.0), dcdvs(nmod, 0.0), dcdvp(nmod, 0.0);
-            for (int nstep = 0; nstep < NX; nstep++)
+            std::vector<double> dens_1D(NZ);
+            std::vector<double> vs_1D(NZ);
+            std::vector<double> vp_1D(NZ);
+
+            for (size_t nstep = 0; nstep < NX; nstep++)
               {
                 for (int estep = 0; estep < NY; estep++)
                   {
-                    std::vector<double> dens_1D(NZ);
-                    std::vector<double> vs_1D(NZ);
-                    std::vector<double> vp_1D(NZ);
 
-                    for (int n = 0; n < NZ; n++)
+                    for (size_t n = 0; n < NZ; n++)
                       {
                         // sort velocities, densities into 1D models
                         dens_1D[n] = dens[n + NZ * estep + NY * NZ * nstep];
@@ -279,12 +280,13 @@ namespace jif3D
                 std::vector<std::vector<double>>().swap(segments);
                 for (int event = 0; event < nevents_per_src; event++)
                   { //loop over events for each station pair
-                    if (dtp[freq * nsrcs * nevents_per_src + event * nsrcs + src]
-                        == dtp_dummy || event_stat_cmb[event * nsrcs + src] == dtp_dummy)
+                    const size_t dataindex = src + nsrcs * event
+                        + freq * nsrcs * nevents_per_src;
+                    if (dtp[dataindex] == dtp_dummy
+                        || event_stat_cmb[event * nsrcs + src] == dtp_dummy)
                       {
                         // if there is only a dummy value we can skip this period
-                        dtp_mod[src + nsrcs * event + freq * nsrcs * nevents_per_src] =
-                            dtp_dummy;
+                        dtp_mod[dataindex] = dtp_dummy;
                         //delayfile << "\n" << event_stat_cmb[event*nsrcs+src] << "\t" << src_rcvr_cmb[src] << "\t" << src_rcvr_cmb[src+nsrcs] << "\t" << (2.0*M_PI)/w[freq] << "\t" << dtp_dummy;
                         continue;
                       }
@@ -316,15 +318,13 @@ namespace jif3D
                             std::transform(dens_tmpgrd.begin(), dens_tmpgrd.end(),
                                 tmp.begin(), dens_tmpgrd.begin(), std::plus<double>());
                           } //end loop ever path segments
-                        dtp_mod[src + nsrcs * event + freq * nsrcs * nevents_per_src] =
-                            time_total;
+                        omp_set_lock(&lck);
+                        dtp_mod[dataindex] = time_total;
                         //delayfile << "\n" << event_stat_cmb[event*nsrcs+src] << "\t" << src_rcvr_cmb[src] << "\t" << src_rcvr_cmb[src+nsrcs] << "\t" << (2.0*M_PI)/w[freq] << "\t" << time_total;
 
-                        const double residual = (time_total
-                            - dtp[freq * nsrcs * nevents_per_src + event * nsrcs + src])
-                            / jif3D::pow2(
-                                dtp_err[freq * nsrcs * nevents_per_src + event * nsrcs
-                                    + src]);
+                        const double residual = (time_total - dtp[dataindex])
+                            / jif3D::pow2(dtp_err[dataindex]);
+
                         std::transform(vs_grad.begin(), vs_grad.end(), vs_tmpgrd.begin(),
                             vs_grad.begin(), weighted_add(residual));
                         std::transform(vp_grad.begin(), vp_grad.end(), vp_tmpgrd.begin(),
@@ -332,6 +332,7 @@ namespace jif3D
                         std::transform(dens_grad.begin(), dens_grad.end(),
                             dens_tmpgrd.begin(), dens_grad.begin(),
                             weighted_add(residual));
+                        omp_unset_lock(&lck);
                       }
                   } //end loop over events
               } // end loop rays

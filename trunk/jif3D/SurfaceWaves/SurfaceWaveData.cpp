@@ -25,27 +25,28 @@ namespace jif3D
         // Read phase delay time observations
         NcFile dtpFile(datafile, NcFile::read);
 
-        ReadVec(dtpFile,"Periods",periods);
+        ReadVec(dtpFile, "Periods", periods);
         std::vector<double> MPX, MPY, MPZ;
-        ReadVec(dtpFile,"MeasPosX",MPX);
-        ReadVec(dtpFile,"MeasPosY",MPY);
-        ReadVec(dtpFile,"MeasPosZ",MPZ);
+        ReadVec(dtpFile, "MeasPosX", MPX);
+        ReadVec(dtpFile, "MeasPosY", MPY);
+        ReadVec(dtpFile, "MeasPosZ", MPZ);
         SetMeasurementPoints(MPX, MPY, MPZ);
 
         NcDim nsrcsIn = dtpFile.getDim("NumberOfRays");
         NcDim SRIn = dtpFile.getDim("SR");
         stat_comb.resize(nsrcsIn.getSize() * SRIn.getSize());
-        NcVar src_rcvr_cmbIn=dtpFile.getVar("StatComb");
+        NcVar src_rcvr_cmbIn = dtpFile.getVar("StatComb");
         src_rcvr_cmbIn.getVar(stat_comb.data());
 
         NcDim nperiodsIn = dtpFile.getDim("NumberOfPeriods");
         NcDim nevents_per_srcIn = dtpFile.getDim("EventsPerSRC");
-        std::vector<double> dtp(nperiodsIn.getSize() * nevents_per_srcIn.getSize() * nsrcsIn.getSize()), err;
+        std::vector<double> dtp(
+            nperiodsIn.getSize() * nevents_per_srcIn.getSize() * nsrcsIn.getSize()), err;
         NcVar dtpIn = dtpFile.getVar("dtp");
         dtpIn.getVar(dtp.data());
 
         std::string errname = "dtau";
-        err.resize(dtp.size(),0.0);
+        err.resize(dtp.size(), 0.0);
         // check if there is an error in the data file, set to zero if not.
         try
           {
@@ -61,21 +62,22 @@ namespace jif3D
         SetDataAndErrors(dtp, err);
 
         event_stat_comb.resize(nevents_per_srcIn.getSize() * nsrcsIn.getSize());
-        NcVar event_stat_cmbIn=dtpFile.getVar("EventStatComb");
+        NcVar event_stat_cmbIn = dtpFile.getVar("EventStatComb");
         event_stat_cmbIn.getVar(event_stat_comb.data());
 
-        ReadVec(dtpFile,"EventPosX",EventPosX);
-        ReadVec(dtpFile,"EventPosY",EventPosY);
+        ReadVec(dtpFile, "EventPosX", EventPosX);
+        ReadVec(dtpFile, "EventPosY", EventPosY);
 
         NcVarAtt dummyIn = dtpIn.getAtt("_FillValue");
         dummyIn.getValues(&dummy);
-        
-        NcVar mpnIn = dtpFile.getVar("MeasPosX");        
+
+        NcVar mpnIn = dtpFile.getVar("MeasPosX");
         NcVarAtt lonc = mpnIn.getAtt("Central_meridian");
         lonc.getValues(&lon_centr);
       }
 
-    SurfaceWaveData::SurfaceWaveData()
+    SurfaceWaveData::SurfaceWaveData() :
+        EventPosX(), EventPosY(), EventPosZ(), periods(), stat_comb(), event_stat_comb(), lon_centr(), dummy()
       {
       }
 
@@ -123,10 +125,10 @@ namespace jif3D
         std::vector<NcDim> dimVec_esc;
         dimVec_esc.push_back(NumberOfRays);
         dimVec_esc.push_back(EventsPerSRC);
-        NcVar EvStaCoVar = DataFile.addVar("EventStatComb", netCDF::ncDouble,
-            dimVec_esc);
+        NcVar EvStaCoVar = DataFile.addVar("EventStatComb", netCDF::ncDouble, dimVec_esc);
         EvStaCoVar.putAtt(dummy, NC_DOUBLE, GetDummy());
-        cxxport::put_legacy_ncvar(EvStaCoVar, GetEventStatComb().data(), nrays, events_per_src);
+        cxxport::put_legacy_ncvar(EvStaCoVar, GetEventStatComb().data(), nrays,
+            events_per_src);
 
         std::vector<NcDim> dimVec_sc;
         dimVec_sc.push_back(NumberOfRays);
@@ -140,7 +142,8 @@ namespace jif3D
         dimVec_dtp.push_back(NumberOfPeriods);
         NcVar DTPVar = DataFile.addVar("dtp", netCDF::ncDouble, dimVec_dtp);
         DTPVar.putAtt(dummy, NC_DOUBLE, GetDummy());
-        cxxport::put_legacy_ncvar(DTPVar, GetData().data(), nrays, events_per_src, nperiods);
+        cxxport::put_legacy_ncvar(DTPVar, GetData().data(), nrays, events_per_src,
+            nperiods);
       }
 
     void SurfaceWaveData::WriteStationLocations(const std::string &filename)
