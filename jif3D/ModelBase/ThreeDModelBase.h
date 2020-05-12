@@ -234,6 +234,8 @@ namespace jif3D
         }
       //! Write model in the format x, y, z, value, where x/y/z are the centres of the cells
       void WriteXYZ(const std::string &filename) const;
+      //! Write model in the format used by UBC and Geoscience Analyst
+      void WriteUBC(const std::string &filename) const;
       //! Provide serialization to be able to store objects
       template<class Archive>
       void save(Archive & ar, const unsigned int version) const

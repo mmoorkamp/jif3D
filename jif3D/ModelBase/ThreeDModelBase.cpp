@@ -231,4 +231,41 @@ namespace jif3D
           }
       }
 
+    void ThreeDModelBase::WriteUBC(const std::string &filename) const
+      {
+        std::ofstream meshfile((filename + ".mesh").c_str());
+        meshfile << GetYCellSizes().size() << " ";
+        meshfile << GetXCellSizes().size() << " ";
+        meshfile << GetZCellSizes().size() << "\n";
+        meshfile << GetYOrigin() << " " << GetXOrigin() << " " << GetZOrigin() << "\n";
+        //so we have to swap x and y in the grid coordinate system
+        std::copy(GetYCellSizes().begin(), GetYCellSizes().end(),
+            std::ostream_iterator<double>(meshfile, " "));
+        meshfile << "\n";
+        std::copy(GetXCellSizes().begin(), GetXCellSizes().end(),
+            std::ostream_iterator<double>(meshfile, " "));
+        meshfile << "\n";
+        std::transform(GetZCellSizes().begin(), GetZCellSizes().end(),
+            std::ostream_iterator<double>(meshfile, " "), [](double val)
+              { return -val;});
+        meshfile << "\n" << std::flush;
+
+        std::ofstream valfile((filename + ".val").c_str());
+        const size_t nx = GetXCellSizes().size();
+        const size_t ny = GetYCellSizes().size();
+        const size_t nz = GetZCellSizes().size();
+        for (size_t i = 0; i < nx; ++i)
+          {
+            for (size_t j = 0; j < ny; ++j)
+              {
+                for (size_t k = 0; k < nz; ++k)
+                  {
+                    valfile << Data[i][ny-j-1][k] << "\n";
+                  }
+              }
+          }
+        valfile << std::flush;
+
+      }
+
   }
