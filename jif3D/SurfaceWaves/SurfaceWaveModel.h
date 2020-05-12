@@ -33,21 +33,13 @@ namespace jif3D
       void SetCellCoords(const std::vector<double> &nx, const std::vector<double> &ny,
           const std::vector<double> &nz)
         {
-          ThreeDModelBase::t3DModelDim XCS(nx.size());
-          ThreeDModelBase::t3DModelDim YCS(ny.size());
-          ThreeDModelBase::t3DModelDim ZCS(nz.size());
-          std::copy(nx.begin(), nx.end(), XCS.begin());
-          std::copy(ny.begin(), ny.end(), YCS.begin());
-          std::copy(nz.begin(), nz.end(), ZCS.begin());
-          SetXCoordinates(XCS);
-          SetYCoordinates(YCS);
-          SetZCoordinates(ZCS);
+          SetXCoordinates(nx);
+          SetYCoordinates(ny);
+          SetZCoordinates(nz);
           ThreeDModelBase::SetData().resize(
-              boost::extents[nx.size()-1][ny.size()-1][nz.size()-1]);
-          DataVp.resize(
-              boost::extents[nx.size()-1][ny.size()-1][nz.size()-1]);
-          DataDens.resize(
-              boost::extents[nx.size()-1][ny.size()-1][nz.size()-1]);
+              boost::extents[nx.size() - 1][ny.size() - 1][nz.size() - 1]);
+          DataVp.resize(boost::extents[nx.size() - 1][ny.size() - 1][nz.size() - 1]);
+          DataDens.resize(boost::extents[nx.size() - 1][ny.size() - 1][nz.size() - 1]);
 
         }
       t3DModelData& SetVp()
@@ -78,10 +70,25 @@ namespace jif3D
       {
     public:
       void operator()(SurfaceWaveModel &Model, SurfaceWaveData &Data,
-          const std::vector<double> &vel)
+          const std::vector<double> &denspvel)
         {
-          throw jif3D::FatalException(
-              "Tomography class does not support extra parameters !", __FILE__, __LINE__);
+          const size_t ncells = Model.GetNModelElements();
+          if (denspvel.size() != 2 * ncells)
+            {
+              throw jif3D::FatalException(
+                  "Number of P-velocities and densities does not match grid size",
+                  __FILE__,
+                  __LINE__);
+            }
+          SurfaceWaveModel::t3DModelData dens(Model.GetData());
+          std::copy(denspvel.begin(), denspvel.begin() + ncells, dens.origin());
+          Model.SetDens() = dens;
+
+          SurfaceWaveModel::t3DModelData vp(Model.GetData());
+          std::copy(denspvel.begin() + ncells, denspvel.begin() + 2 * ncells,
+              vp.origin());
+          Model.SetVp() = vp;
+
         }
       };
 

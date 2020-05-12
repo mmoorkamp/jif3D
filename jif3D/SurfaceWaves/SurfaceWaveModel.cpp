@@ -85,7 +85,8 @@ namespace jif3D
           }
       }
 
-    SurfaceWaveModel::SurfaceWaveModel()
+    SurfaceWaveModel::SurfaceWaveModel():
+        DataVp(), DataDens()
       {
       }
 

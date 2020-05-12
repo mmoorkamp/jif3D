@@ -200,8 +200,7 @@ namespace jif3D
       };
 
     std::vector<double> T2w(const std::vector<double> &periods);
-    std::vector<double> array2vector(const ThreeDModelBase::t3DModelData &array,
-        const int &NX, const int &NY, const int &NZ);
+    std::vector<double> array2vector(const ThreeDModelBase::t3DModelData &array);
     double newton_vr(const double &vp, const double &vs, const double &tolerance);
     SWUtilities compute_util(const double &w, const double &c, const double &vp,
         const double &vs, const double &dn, const bool &botlay);
