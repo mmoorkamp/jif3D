@@ -11,7 +11,7 @@
 #include <hpx/hpx.hpp>
 #endif
 #include <boost/test/included/unit_test.hpp>
-#include <boost/test/floating_point_comparison.hpp>
+#include <boost/test/tools/floating_point_comparison.hpp>
 #include "ReadWriteDCResistivityData.h"
 #include "ThreeDDCResistivityModel.h"
 

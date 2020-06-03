@@ -13,7 +13,7 @@
 #include "kissfft.hh"
 #include "Jif3DPlatformHelper.h"
 #include "Jif3DTesting.h"
-//#include <boost/test/floating_point_comparison.hpp>
+//#include <boost/test/tools/floating_point_comparison.hpp>
 
 
 

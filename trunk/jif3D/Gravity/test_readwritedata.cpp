@@ -12,10 +12,7 @@
 #include "ScalarGravityData.h"
 #include "TensorGravityData.h"
 #include <boost/test/included/unit_test.hpp>
-#include <boost/test/included/unit_test_framework.hpp>
-
-#include <boost/test/floating_point_comparison.hpp>
-#include <stdlib.h>
+#include <boost/test/tools/floating_point_comparison.hpp>
 
 BOOST_AUTO_TEST_SUITE (GravityReadWrite_Test_Suite)
 

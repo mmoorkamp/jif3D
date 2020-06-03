@@ -145,13 +145,13 @@ namespace jif3D
                 bg_conductivities.assign(nbglayers, 0.0);
 
                 //and read in from the file
-                NcVar bgDensVar = DataFile.getVar("bg_conductivities");
+                NcVar bgCondVar = DataFile.getVar("bg_conductivities");
                 NcVar bgThickVar = DataFile.getVar("bg_thicknesses");
 
 //              bgDensVar.get(&bg_conductivities[0], nbglayers);
 //              bgThickVar.get(&bg_thicknesses[0], nbglayers);
 
-                cxxport::get_legacy_ncvar(bgDensVar, bg_conductivities.data(), nbglayers);
+                cxxport::get_legacy_ncvar(bgCondVar, bg_conductivities.data(), nbglayers);
                 cxxport::get_legacy_ncvar(bgThickVar, bg_thicknesses.data(), nbglayers);
               }
           } catch (const netCDF::exceptions::NcException &ex)

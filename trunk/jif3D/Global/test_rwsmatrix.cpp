@@ -10,7 +10,7 @@
 #define BOOST_TEST_MAIN ...
 
 #include "Jif3DTesting.h"
-#include <boost/test/floating_point_comparison.hpp>
+#include <boost/test/tools/floating_point_comparison.hpp>
 #include <cstdlib>
 #include "ReadWriteSparseMatrix.h"
 #include "Jif3DPlatformHelper.h"

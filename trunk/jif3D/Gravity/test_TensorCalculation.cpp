@@ -9,8 +9,7 @@
 #define BOOST_TEST_MAIN ...
 #include "../Global/Jif3DTesting.h"
 #include <boost/test/included/unit_test.hpp>
-#include <boost/test/floating_point_comparison.hpp>
-#include <boost/assign/std/vector.hpp>
+#include <boost/test/tools/floating_point_comparison.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/math/constants/constants.hpp>
