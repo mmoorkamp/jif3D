@@ -11,7 +11,7 @@
 #include "Jif3DTesting.h"
 #include <stdlib.h>
 #include "Interpolate.h"
-#include <boost/test/floating_point_comparison.hpp>
+#include <boost/test/tools/floating_point_comparison.hpp>
 #include "Jif3DPlatformHelper.h"
 
 BOOST_AUTO_TEST_SUITE( Interpolation_Test_Suite )

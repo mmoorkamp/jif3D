@@ -6,7 +6,7 @@
 #include <complex>
 #include "Tarits2DMT.h"
 #include "MT2DForward.h"
-#include <boost/test/floating_point_comparison.hpp>
+#include <boost/test/tools/floating_point_comparison.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <boost/math/constants/constants.hpp>
 

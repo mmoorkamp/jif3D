@@ -10,7 +10,7 @@
 #include "DCResistivityCalculator.h"
 #include "../Inversion/ModelTransforms.h"
 #include "../Inversion/ThreeDModelObjective.h"
-#include <boost/test/floating_point_comparison.hpp>
+#include <boost/test/tools/floating_point_comparison.hpp>
 #include <boost/random/linear_congruential.hpp>
 #include <boost/random/uniform_real.hpp>
 #include <boost/random/variate_generator.hpp>

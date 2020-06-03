@@ -9,7 +9,7 @@
 #define BOOST_TEST_MAIN ...
 #include "../Global/Jif3DTesting.h"
 #include <boost/test/included/unit_test.hpp>
-#include <boost/test/floating_point_comparison.hpp>
+#include <boost/test/tools/floating_point_comparison.hpp>
 
 #include "../Global/NumUtil.h"
 #include "X3DMTCalculator.h"

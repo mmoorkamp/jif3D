@@ -14,7 +14,7 @@
 #include <stdlib.h>
 #include <boost/multi_array.hpp>
 #include "Jif3DTesting.h"
-#include <boost/test/floating_point_comparison.hpp>
+#include <boost/test/tools/floating_point_comparison.hpp>
 
 BOOST_AUTO_TEST_SUITE( Wavelet_Test_Suite )
 

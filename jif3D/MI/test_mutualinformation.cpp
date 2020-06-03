@@ -13,7 +13,7 @@
 #include <algorithm>
 #include <numeric>
 #include "MutualInformationConstraint.h"
-#include <boost/test/floating_point_comparison.hpp>
+#include <boost/test/tools/floating_point_comparison.hpp>
 
 BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
 
