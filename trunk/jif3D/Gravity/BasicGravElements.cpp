@@ -65,7 +65,7 @@ namespace jif3D
      * in the three directions (x_size, y_size and z_size) and the density, we calculate
      * the geometric part caused by a prism with these parameters. All dimensions are in meters.
      * If we multiply the result of this function with density
-     * in \f$ g/cm^3 \f$ we get the acceleration in \f$m/s^2\f$.
+     * in \f$ kg/m^3 \f$ we get the acceleration in \f$m/s^2\f$.
      *
      * This equation works as long as the measurement point is not on one of the corners of the box.
      * @param meas_x x-coordinate of the measurement in m
@@ -247,7 +247,7 @@ namespace jif3D
      * @param hor_dist Horizontal distance of the sheet from the measurement site in m
      * @param ver_dist Vertical distance of the sheet from the measurement site in m
      * @param thick Thickness of the sheet in m
-     * @param density Density of the sheet in g/cm^3
+     * @param density Density of the sheet in kg/m^3
      * @return Gravitational acceleration in m/s^2
      */
     double CalcGravSemiInfSheet(const double hor_dist, const double ver_dist,
