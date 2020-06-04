@@ -47,7 +47,7 @@ namespace jif3D
 #if BOOST_VERSION >= 107000
         using namespace boost::histogram;
         using namespace literals;
-        auto hxy = make_histogram(axis::regular<>(nbins, xmin, xmax, "x"),
+      /*  auto hxy = make_histogram(axis::regular<>(nbins, xmin, xmax, "x"),
             axis::regular<>(nbins, ymin, ymax, "y"));
         const size_t nparm = x.size();
         assert(y.size() == nparm);
@@ -81,7 +81,7 @@ namespace jif3D
         double I = 2.0 * H_XY - H_X - H_Y;
         double H = H_X + H_Y - H_XY;
         //return std::exp(-H);
-        return I;
+        return I;*/
 #endif
       }
 

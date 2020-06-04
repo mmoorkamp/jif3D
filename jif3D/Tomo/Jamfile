@@ -8,7 +8,7 @@ lib tomo :  modeling_seismic.cpp ThreeDSeismicModel.cpp TomographyData.cpp Tomog
             core  ;
              
 
-unit-test seismic_test :  test_modeling_seismic.cpp tomo ../ModelBase//modelbase ../Global//global  ;
+unit-test seismic_test :  test_modeling_seismic.cpp tomo ..//boost_serialization ..//boost_system ../ModelBase//modelbase ../Global//global  ;
 unit-test tomo_types_test :  test_tomo_types.cpp  ..//boost_serialization ..//boost_system ../Global//global ;
 #unit-test tomo_objective_test :  test_tomo_objective.cpp tomo ../Global//global ../ModelBase//modelbase  ../Inversion  ;
 
