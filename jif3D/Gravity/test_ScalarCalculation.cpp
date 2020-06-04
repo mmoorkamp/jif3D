@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE (box_gravity_calc_test)
     //compare with the reported value of li and chouteau within a precision of 0.1%
     double topofcube = jif3D::CalcGravBoxTerm(0.0, 0.0, -10.0, -10.0, -10.0, -10.0, 20.0,
         20.0, 20.0);
-    BOOST_CHECK_CLOSE(topofcube, 3.46426e-6, 0.1);
+    BOOST_CHECK_CLOSE(topofcube, 3.46426e-9, 0.1);
     double bottomofcube = jif3D::CalcGravBoxTerm(0.0, 0.0, 10.0, -10.0, -10.0, -10.0,
         20.0, 20.0, 20.0);
     //check symmetry of results
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE (box_gravity_calc_test)
     BOOST_CHECK(away1 < std::numeric_limits<double>::epsilon());
     double away2 = jif3D::CalcGravBoxTerm(100.0, 100.0, 10.0, -10.0, -10.0, -10.0, 20.0,
         20.0, 20.0);
-    BOOST_CHECK_CLOSE(away2, -1.873178e-9, 0.1);
+    BOOST_CHECK_CLOSE(away2, -1.873178e-12, 0.1);
     //check also for a very large cube
     BOOST_CHECK(
         fabs(jif3D::CalcGravBoxTerm(0.0, 0.0, 0.0, -1e6, -1e6, -1e6, 2e6, 2e6, 2e6))

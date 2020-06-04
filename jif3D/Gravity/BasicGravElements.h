@@ -18,8 +18,8 @@ namespace jif3D
   {
     /** \addtogroup gravity Gravity forward modeling, display and inversion */
     /* @{ */
-    //! The constant of gravity  in units cm^3/g s
-    static const double Grav_const = 6.67428e-8; // in units cm^3/g s
+    //! The constant of gravity  in units m^3/kg s
+    static const double Grav_const = 6.67428e-11; // in units m^3/kg s
 
     //! Calculate the geometric term for scalar gravity for a rectangular prism
     J3DEXPORT double CalcGravBoxTerm(const double meas_x, const double meas_y,
