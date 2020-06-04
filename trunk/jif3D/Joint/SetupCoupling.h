@@ -63,10 +63,14 @@ namespace jif3D
       double minslow;
       //! The maximum slowness in s/m
       double maxslow;
-      //! The minimum density in g/cm3
+      //! The minimum density in kg/m3
       double mindens;
-      //! The maximum density in g/cm3
+      //! The maximum density in kg/m3
       double maxdens;
+      //! The minimum S-wave velocity in m/s
+      double minvel;
+      //! The maximum S-wave velocity in m/s
+      double maxvel;
       //! The a coefficient for the slowness-density transform
       double density_a;
       //! The b coefficient for the slowness-density transform
@@ -77,6 +81,7 @@ namespace jif3D
       double cond_b;
       //! The c coefficient for the slowness-conductivity transform
       double cond_c;
+      double vpvs;
       //! The name for model file containing information where the parameter relationship should be applied
       std::string RelModelName;
       //! The replacement value for density where the parameter relationship is not valid
@@ -92,8 +97,7 @@ namespace jif3D
           boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart,
           const jif3D::ThreeDModelBase &TearModelX,
           const jif3D::ThreeDModelBase &TearModelY,
-          const jif3D::ThreeDModelBase &TearModelZ,
-          const jif3D::rvec &CovVec);
+          const jif3D::ThreeDModelBase &TearModelZ, const jif3D::rvec &CovVec);
       void SetupMIModel(jif3D::rvec &InvModel,
           const jif3D::ThreeDModelBase &ModelGeometry,
           const jif3D::SurfaceWaveModel &SeisMod,
@@ -161,8 +165,7 @@ namespace jif3D
           boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart,
           const jif3D::ThreeDModelBase &TearModelX,
           const jif3D::ThreeDModelBase &TearModelY,
-          const jif3D::ThreeDModelBase &TearModelZ,
-          const jif3D::rvec CovVec);
+          const jif3D::ThreeDModelBase &TearModelZ, const jif3D::rvec CovVec);
 
       SetupCoupling();
       virtual ~SetupCoupling();

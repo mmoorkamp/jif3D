@@ -241,15 +241,16 @@ namespace jif3D
 
             for (size_t nstep = 0; nstep < NX; nstep++)
               {
-                for (int estep = 0; estep < NY; estep++)
+                for (size_t estep = 0; estep < NY; estep++)
                   {
 
                     for (size_t n = 0; n < NZ; n++)
                       {
+                        const size_t offset = n + NZ * estep + NY * NZ * nstep;
                         // sort velocities, densities into 1D models
-                        dens_1D[n] = dens[n + NZ * estep + NY * NZ * nstep];
-                        vp_1D[n] = vp[n + NZ * estep + NY * NZ * nstep];
-                        vs_1D[n] = vs[n + NZ * estep + NY * NZ * nstep];
+                        dens_1D[n] = dens[offset];
+                        vp_1D[n] = vp[offset];
+                        vs_1D[n] = vs[offset];
                         // check if there's a low velocity zone
                       }
                     if (vs_1D[0] > 0)
@@ -257,11 +258,13 @@ namespace jif3D
                         SurfaceWaveCalculator::Surf1DResult Result = CalcSurf1D(w, freq,
                             dens_1D, vs_1D, vp_1D, depth);
                         vph_map[estep + NY * nstep] = Result.c;
-                        for (int n = 0; n < NZ; n++)
+                        for (size_t n = 0; n < NZ; n++)
                           {
-                            dcdvs[n + NZ * estep + NY * NZ * nstep] = Result.dcdvs[n];
-                            dcdvp[n + NZ * estep + NY * NZ * nstep] = Result.dcdvp[n];
-                            dcdrho[n + NZ * estep + NY * NZ * nstep] = Result.dcdrho[n];
+                            const size_t offset = n + NZ * estep + NY * NZ * nstep;
+
+                            dcdvs[offset] = Result.dcdvs[n];
+                            dcdvp[offset] = Result.dcdvp[n];
+                            dcdrho[offset] = Result.dcdrho[n];
                           }
                       }
                   } //end loop over northing

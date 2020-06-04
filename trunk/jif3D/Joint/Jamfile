@@ -1,8 +1,9 @@
 import testing ; 
 
 
-alias joint : ../Tomo//tomo ../Gravity//gravity ../Magnetics//magnetics ../MT//mt 
-              ../Inversion//inversion ../Global//global ../Regularization//regularization 
+alias joint : ../Regularization//regularization
+               ../Tomo//tomo ../Gravity//gravity ../Magnetics//magnetics ../MT//mt 
+              ../Inversion//inversion ../Global//global  
               ../ModelBase//modelbase ../DataBase//database ../SurfaceWaves//surfwave
               ..//netcdf ..//netcdf_c++ ../ModelBase//anymodel ../MI//mi ..//boost_core ;
 	

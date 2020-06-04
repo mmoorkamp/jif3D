@@ -8,6 +8,7 @@
 #include "../SurfaceWaves/SurfaceWaveData.h"
 #include "../Global/FileUtil.h"
 #include "../Global/Noise.h"
+#include "../ModelTransforms/DensPVelTransform.h"
 #include "SetupSW.h"
 #include <iostream>
 #include <vector>
@@ -79,7 +80,8 @@ namespace jif3D
               {
                 SWModel.SetOrigin(xorigin, yorigin, 0.0);
               }
-
+            //dynamic_cast<jif3D::DensPVelTransform*>(Transform.get())->SetBGDens(
+            //    SWModel.GetBGDens());
             std::vector<double> SurfaceWaveError = ConstructError(
                 SurfaceWaveData.GetData(), SurfaceWaveData.GetErrors(), relerr, minerr);
             jif3D::SurfaceWaveCalculator Calculator;

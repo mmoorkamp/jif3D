@@ -62,9 +62,9 @@ namespace jif3D
       double minslow;
       //! The maximum slowness in s/m
       double maxslow;
-      //! The minimum density in g/cm3
+      //! The minimum density in kg/m3
       double minres;
-      //! The maximum density in g/cm3
+      //! The maximum density in kg/m3
       double maxres;
       //! The a coefficient for the slowness-density transform
       double res_a;
