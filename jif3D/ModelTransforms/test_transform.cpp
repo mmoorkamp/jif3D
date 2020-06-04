@@ -9,7 +9,7 @@
 #define BOOST_TEST_MAIN ...
 #include "../Global/Jif3DTesting.h"
 #include <boost/test/included/unit_test.hpp>
-#include <boost/test/floating_point_comparison.hpp>
+#include <boost/test/tools/floating_point_comparison.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
 #include <stdlib.h>
@@ -158,6 +158,15 @@ BOOST_AUTO_TEST_SUITE (Transform_Test_Suite)
       {
         const size_t nelements = 5 + rand() % 100;
         TestTransform(jif3D::LogLimTransform(0.01, 1000), nelements);
+      }
+
+    BOOST_AUTO_TEST_CASE (DensPVel_transform_test)
+      {
+        const size_t nelements = (5 + rand() % 100) * 3;
+        std::vector<double> bg_dens(nelements/3);
+        std::generate(bg_dens.begin(),bg_dens.end(),[](){return drand48();});
+        //current testing is not made for this transform that does not preserve number of elements
+       // TestTransform(jif3D::DensPVelTransform(bg_dens), nelements);
       }
 
     BOOST_AUTO_TEST_CASE (Density_transform_test)

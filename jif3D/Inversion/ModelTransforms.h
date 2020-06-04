@@ -18,6 +18,8 @@
 #include "../ModelTransforms/TanhTransform.h"
 #include "../ModelTransforms/WaveletModelTransform.h"
 #include "../ModelTransforms/LogLimTransform.h"
+#include "../ModelTransforms/DensPVelTransform.h"
+
 
 #include "ModelDistributor.h"
 

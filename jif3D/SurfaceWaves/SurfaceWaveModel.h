@@ -22,11 +22,11 @@ namespace jif3D
       typedef SWExtraParameterSetter ExtraParameterSetter;
       SurfaceWaveModel();
       virtual void ReadNetCDF(const std::string &model_file) override;
-      t3DModelData GetVp() const
+      const t3DModelData &GetVp() const
         {
           return DataVp;
         }
-      t3DModelData GetDens() const
+      const t3DModelData &GetDens() const
         {
           return DataDens;
         }
@@ -40,16 +40,33 @@ namespace jif3D
               boost::extents[nx.size() - 1][ny.size() - 1][nz.size() - 1]);
           DataVp.resize(boost::extents[nx.size() - 1][ny.size() - 1][nz.size() - 1]);
           DataDens.resize(boost::extents[nx.size() - 1][ny.size() - 1][nz.size() - 1]);
+          BGDens.resize(boost::extents[nx.size() - 1][ny.size() - 1][nz.size() - 1]);
+        }
+      void SetVp(const t3DModelData &vp)
+        {
+          DataVp.resize(boost::extents[vp.shape()[0]][vp.shape()[1]][vp.shape()[2]]);
+          DataVp = vp;
 
         }
-      t3DModelData& SetVp()
+      void SetDens(const t3DModelData& dens)
         {
-          return DataVp;
+          DataDens.resize(
+              boost::extents[dens.shape()[0]][dens.shape()[1]][dens.shape()[2]]);
+          DataDens = dens;
+          BGDens.resize(
+              boost::extents[dens.shape()[0]][dens.shape()[1]][dens.shape()[2]]);
+          BGDens = dens;
         }
-      t3DModelData& SetDens()
+      void SetDensAnomaly(const t3DModelData& densan)
         {
-          return DataDens;
+          if (densan.num_elements() != BGDens.num_elements())
+            throw jif3D::FatalException(
+                "Not the right amount of elements to set background density", __FILE__,
+                __LINE__);
+          std::transform(densan.origin(), densan.origin() + densan.num_elements(),
+              BGDens.origin(), DataDens.origin(), std::plus<double>());
         }
+
       virtual void WriteVTK(const std::string filename) const
         {
           ThreeDModelBase::WriteVTK(filename + ".vs.vtk", "Vs");
@@ -63,7 +80,7 @@ namespace jif3D
       SurfaceWaveModel& operator=(const SurfaceWaveModel &source);
 
     private:
-      t3DModelData DataVp, DataDens;
+      t3DModelData DataVp, DataDens, BGDens;
       };
 
     class SWExtraParameterSetter
@@ -80,14 +97,13 @@ namespace jif3D
                   __FILE__,
                   __LINE__);
             }
-          SurfaceWaveModel::t3DModelData dens(Model.GetData());
-          std::copy(denspvel.begin(), denspvel.begin() + ncells, dens.origin());
-          Model.SetDens() = dens;
 
-          SurfaceWaveModel::t3DModelData vp(Model.GetData());
+          SurfaceWaveModel::t3DModelData values(Model.GetVp());
+          std::copy(denspvel.begin(), denspvel.begin() + ncells, values.origin());
+          Model.SetVp(values);
           std::copy(denspvel.begin() + ncells, denspvel.begin() + 2 * ncells,
-              vp.origin());
-          Model.SetVp() = vp;
+              values.origin());
+          Model.SetDensAnomaly(values);
 
         }
       };

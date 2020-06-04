@@ -31,6 +31,7 @@ namespace jif3D
         std::copy(TransModel.begin(),
             TransModel.begin() + ModelObject.GetNModelElements(),
             ModelObject.SetData().origin());
+        typedef typename ModelType::ExtraParameterSetter ExtraParameterSetter;
         ModelObject.WriteVTK(filename + ".vtk");
         ModelObject.WriteNetCDF(filename + ".nc");
       }

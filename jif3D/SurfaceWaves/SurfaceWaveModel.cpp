@@ -40,6 +40,9 @@ namespace jif3D
         DataDens.resize(
             boost::extents[source.DataDens.shape()[0]][source.DataDens.shape()[1]][source.DataDens.shape()[2]]);
         DataDens = source.DataDens;
+        BGDens.resize(
+            boost::extents[source.BGDens.shape()[0]][source.BGDens.shape()[1]][source.BGDens.shape()[2]]);
+        BGDens = source.BGDens;
         return *this;
       }
 
@@ -64,6 +67,7 @@ namespace jif3D
 
         DataVp.resize(boost::extents[NX][NY][NZ]);
         DataDens.resize(boost::extents[NX][NY][NZ]);
+        BGDens.resize(boost::extents[NX][NY][NZ]);
 
         // Read model from nc file
         std::vector<double> tmp_data_dns(NX * NY * NZ), tmp_data_vp(NX * NY * NZ);
@@ -83,9 +87,10 @@ namespace jif3D
                   }
               }
           }
+        BGDens = DataDens;
       }
 
-    SurfaceWaveModel::SurfaceWaveModel():
+    SurfaceWaveModel::SurfaceWaveModel() :
         DataVp(), DataDens()
       {
       }
@@ -157,9 +162,10 @@ namespace jif3D
           for (size_t j = 0; j < ysize; ++j)
             for (size_t k = 0; k < xsize; ++k)
               {
-                databuffer[k + j * xsize + i * (xsize * ysize)] = Data[k][j][i];
-                databuffer_vp[k + j * xsize + i * (xsize * ysize)] = VpData[k][j][i];
-                databuffer_dens[k + j * xsize + i * (xsize * ysize)] = DensData[k][j][i];
+                const size_t index = k + j * xsize + i * (xsize * ysize);
+                databuffer[index] = Data[k][j][i];
+                databuffer_vp[index] = VpData[k][j][i];
+                databuffer_dens[index] = DensData[k][j][i];
               }
         //write the buffer to the file
         //        DataVar.put(databuffer, zsize, ysize, xsize);
