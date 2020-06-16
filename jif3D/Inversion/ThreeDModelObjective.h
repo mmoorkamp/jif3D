@@ -247,7 +247,10 @@ namespace jif3D
           {
             std::vector<double> Extra(Model.begin() + ngrid, Model.end());
             ExtraParameterSetter()(CoarseModel, ObservedData, Extra);
-            ExtraParameterSetter()(FineModel, ObservedData, Extra);
+            if (wantrefinement)
+              {
+                ExtraParameterSetter()(FineModel, ObservedData, Extra);
+              }
           }
 
         //depending on whether we want to refine the inversion model
