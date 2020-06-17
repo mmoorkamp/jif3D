@@ -231,7 +231,6 @@ namespace jif3D
         const std::vector<double> w = T2w(periods);
         omp_lock_t lck;
         omp_init_lock(&lck);
-
         for (int freq = 0; freq < nperiods; freq++)
           {
             std::cout << "Period: " << periods[freq] << " s.";
@@ -242,7 +241,7 @@ namespace jif3D
             std::vector<double> dens_1D(NZ);
             std::vector<double> vs_1D(NZ);
             std::vector<double> vp_1D(NZ);
-#pragma omp parallel for default(shared)
+
             for (size_t nstep = 0; nstep < NX; nstep++)
               {
                 for (size_t estep = 0; estep < NY; estep++)
@@ -327,7 +326,7 @@ namespace jif3D
                                     lon_centr, model_origin, deast, dnorth, vph_map, NY,
                                     dcdvs, dcdvp, dcdrho, NZ, false_east);
                             std::vector<double> tmp = time_segment[0];
-                            time_total = time_total + tmp[0];
+                            time_total += tmp[0];
 
                             tmp = time_segment[1];
                             std::transform(vs_tmpgrd.begin(), vs_tmpgrd.end(),
