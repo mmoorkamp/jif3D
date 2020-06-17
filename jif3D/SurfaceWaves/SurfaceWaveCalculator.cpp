@@ -18,6 +18,8 @@
 #include <netcdf>
 #include <omp.h>
 #include <boost/math/tools/roots.hpp>
+#include <boost/format.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include "../Global/NumUtil.h"
 #include "../Global/FatalException.h"
 #include "../SurfaceWaves/SurfaceWaveCalculator.h"
@@ -223,15 +225,17 @@ namespace jif3D
         const double dnorth = northing[1] - northing[0];
         const std::vector<double> model_origin =
           { easting[0] - deast, northing[0] - dnorth };
-
+        boost::posix_time::ptime starttime =
+            boost::posix_time::microsec_clock::local_time();
+        std::cout << "Starting calculation " << starttime << std::endl;
         const std::vector<double> w = T2w(periods);
         omp_lock_t lck;
         omp_init_lock(&lck);
 #pragma omp parallel for default(shared)
         for (int freq = 0; freq < nperiods; freq++)
           {
-            //cout << "Period: " << periods[freq] << " s.";
-            //cout << "\n";
+            std::cout << "Period: " << periods[freq] << " s.";
+            std::cout << "\n";
             //Vectors to store gradients, dispersion curves
             std::vector<double> vph_map(NX * NY, 0.0);
             std::vector<double> dcdrho(nmod, 0.0), dcdvs(nmod, 0.0), dcdvp(nmod, 0.0);
@@ -267,9 +271,20 @@ namespace jif3D
                             dcdrho[offset] = Result.dcdrho[n];
                           }
                       }
-                  } //end loop over northing
-              } //end loop over easting
+                  } //end loop over easting
+                if (nstep % 10 == 0)
+                  {
 
+                    std::cout << " Finished " << nstep << " cells, took "
+                        << (currtime - boost::posix_time::microsec_clock::local_time()).total_seconds()
+                        << " s" << std::endl;
+                    currtime = boost::posix_time::microsec_clock::local_time();
+                  }
+              } //end loop over northing
+            boost::posix_time::ptime currtime =
+                boost::posix_time::microsec_clock::local_time();
+            std::cout << " Finished 1D calculation took "
+                << (currtime - starttime).total_seconds() << " s" << std::endl;
             // loop over all rays, computes phase delays
             for (int src = 0; src < nsrcs; src++)
               {
@@ -337,7 +352,23 @@ namespace jif3D
                             weighted_add(residual));
                         omp_unset_lock(&lck);
                       }
+                    if (event % 10 == 0)
+                      {
+
+                        std::cout << " Finished " << event << " events, took "
+                            << (currtime - boost::posix_time::microsec_clock::local_time()).total_seconds()
+                            << " s" << std::endl;
+                        currtime = boost::posix_time::microsec_clock::local_time();
+                      }
                   } //end loop over events
+                if (src % 10 == 0)
+                  {
+
+                    std::cout << " Finished " << src << " sources, took "
+                        << (currtime - boost::posix_time::microsec_clock::local_time()).total_seconds()
+                        << " s" << std::endl;
+                    currtime = boost::posix_time::microsec_clock::local_time();
+                  }
               } // end loop rays
           } //end loop over periods
         /*resultfile << "\n";
