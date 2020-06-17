@@ -216,7 +216,7 @@ namespace jif3D
         std::fill(dens_grad.begin(), dens_grad.end(), 0.0);
         std::fill(vs_grad.begin(), vs_grad.end(), 0.0);
         std::fill(vp_grad.begin(), vp_grad.end(), 0.0);
-        std::fill(dtp_mod.begin(), dtp_mod.end(), 0.0);
+        std::fill(dtp_mod.begin(), dtp_mod.end(), dtp_dummy);
         const std::vector<double> vs = array2vector(vs_all);
         const std::vector<double> vp = array2vector(vp_all);
         const std::vector<double> dens = array2vector(dens_all);
@@ -295,16 +295,20 @@ namespace jif3D
                 std::vector<double> seg_north = segments[1];
                 int seg_east_size = seg_east.size();
                 std::vector<std::vector<double>>().swap(segments);
-                for (int event = 0; event < nevents_per_src; event++)
+                int event = 0;
+                bool isdummy = false;
+                while (event < nevents_per_src && isdummy == false)
                   { //loop over events for each station pair
                     const size_t dataindex = src + nsrcs * event
                         + freq * nsrcs * nevents_per_src;
-                    if (dtp[dataindex] == dtp_dummy
-                        || event_stat_cmb[event * nsrcs + src] == dtp_dummy)
+                    if (dtp[dataindex] == dtp_dummy)
                       {
                         // if there is only a dummy value we can skip this period
-                        dtp_mod[dataindex] = dtp_dummy;
                         //delayfile << "\n" << event_stat_cmb[event*nsrcs+src] << "\t" << src_rcvr_cmb[src] << "\t" << src_rcvr_cmb[src+nsrcs] << "\t" << (2.0*M_PI)/w[freq] << "\t" << dtp_dummy;
+                      }
+                    else if (event_stat_cmb[event * nsrcs + src] == dtp_dummy)
+                      {
+                        isdummy = true;
                       }
                     else
                       {
@@ -351,11 +355,13 @@ namespace jif3D
                         omp_unset_lock(&lck);
                       }
 
+                    event++;
                   } //end loop over events
                 if (src % 10 == 0)
                   {
 
-                    std::cout << " Finished " << src << " out of " << nsrcs <<  " sources, took "
+                    std::cout << " Finished " << src << " out of " << nsrcs
+                        << " sources, took "
                         << (boost::posix_time::microsec_clock::local_time() - starttime).total_seconds()
                         << " s" << std::endl;
                   }
