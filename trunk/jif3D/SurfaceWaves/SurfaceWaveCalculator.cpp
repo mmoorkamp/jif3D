@@ -231,7 +231,7 @@ namespace jif3D
         const std::vector<double> w = T2w(periods);
         omp_lock_t lck;
         omp_init_lock(&lck);
-#pragma omp parallel for default(shared)
+
         for (int freq = 0; freq < nperiods; freq++)
           {
             std::cout << "Period: " << periods[freq] << " s.";
@@ -242,7 +242,7 @@ namespace jif3D
             std::vector<double> dens_1D(NZ);
             std::vector<double> vs_1D(NZ);
             std::vector<double> vp_1D(NZ);
-
+#pragma omp parallel for default(shared)
             for (size_t nstep = 0; nstep < NX; nstep++)
               {
                 for (size_t estep = 0; estep < NY; estep++)
@@ -285,6 +285,7 @@ namespace jif3D
             std::cout << " Finished 1D calculation took "
                 << (currtime - starttime).total_seconds() << " s" << std::endl;
             // loop over all rays, computes phase delays
+#pragma omp parallel for default(shared)
             for (int src = 0; src < nsrcs; src++)
               {
                 std::vector<std::vector<double>> segments = get_gc_segments(
