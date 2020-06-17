@@ -305,7 +305,6 @@ namespace jif3D
                         // if there is only a dummy value we can skip this period
                         dtp_mod[dataindex] = dtp_dummy;
                         //delayfile << "\n" << event_stat_cmb[event*nsrcs+src] << "\t" << src_rcvr_cmb[src] << "\t" << src_rcvr_cmb[src+nsrcs] << "\t" << (2.0*M_PI)/w[freq] << "\t" << dtp_dummy;
-                        continue;
                       }
                     else
                       {
@@ -351,13 +350,7 @@ namespace jif3D
                             weighted_add(residual));
                         omp_unset_lock(&lck);
                       }
-                    if (event % 10 == 0)
-                      {
 
-                        std::cout << "           Finished " << event << " ouf of " << nevents_per_src <<" events, took "
-                            << (boost::posix_time::microsec_clock::local_time() -starttime).total_seconds()
-                            << " s" << std::endl;
-                      }
                   } //end loop over events
                 if (src % 10 == 0)
                   {
