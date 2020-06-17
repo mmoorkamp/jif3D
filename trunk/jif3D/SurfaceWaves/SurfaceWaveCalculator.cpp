@@ -276,9 +276,8 @@ namespace jif3D
                   {
 
                     std::cout << " Finished " << nstep << " cells, took "
-                        << (starttime - boost::posix_time::microsec_clock::local_time()).total_seconds()
+                        << (boost::posix_time::microsec_clock::local_time() - starttime).total_seconds()
                         << " s" << std::endl;
-                    currtime = boost::posix_time::microsec_clock::local_time();
                   }
               } //end loop over northing
             boost::posix_time::ptime currtime =
@@ -355,19 +354,17 @@ namespace jif3D
                     if (event % 10 == 0)
                       {
 
-                        std::cout << " Finished " << event << " events, took "
-                            << (currtime - boost::posix_time::microsec_clock::local_time()).total_seconds()
+                        std::cout << "           Finished " << event << " ouf of " << nevents_per_src <<" events, took "
+                            << (boost::posix_time::microsec_clock::local_time() -starttime).total_seconds()
                             << " s" << std::endl;
-                        currtime = boost::posix_time::microsec_clock::local_time();
                       }
                   } //end loop over events
                 if (src % 10 == 0)
                   {
 
-                    std::cout << " Finished " << src << " sources, took "
-                        << (currtime - boost::posix_time::microsec_clock::local_time()).total_seconds()
+                    std::cout << " Finished " << src << " out of " << nsrcs <<  " sources, took "
+                        << (boost::posix_time::microsec_clock::local_time() - starttime).total_seconds()
                         << " s" << std::endl;
-                    currtime = boost::posix_time::microsec_clock::local_time();
                   }
               } // end loop rays
           } //end loop over periods
