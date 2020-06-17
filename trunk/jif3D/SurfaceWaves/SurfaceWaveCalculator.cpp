@@ -276,7 +276,7 @@ namespace jif3D
                   {
 
                     std::cout << " Finished " << nstep << " cells, took "
-                        << (currtime - boost::posix_time::microsec_clock::local_time()).total_seconds()
+                        << (starttime - boost::posix_time::microsec_clock::local_time()).total_seconds()
                         << " s" << std::endl;
                     currtime = boost::posix_time::microsec_clock::local_time();
                   }
