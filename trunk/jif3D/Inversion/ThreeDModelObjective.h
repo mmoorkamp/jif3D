@@ -285,6 +285,7 @@ namespace jif3D
             else
               {
                 Diff(i) = 0.0;
+                std::cout << i << " " << ObservedData.GetData().at(i) << " " << SynthData(i) << " " << Err.at(i) << std::endl;
               }
           }
       }
