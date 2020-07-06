@@ -273,11 +273,12 @@ namespace jif3D
               " ThreeDModelObjective: Forward calculation does not give same amount of data !",
               __FILE__, __LINE__);
         Diff.resize(ndata);
-        //calculate the difference between observed and synthetic
 
+        std::vector<double> Err(GetDataError());
+        //calculate the difference between observed and synthetic
         for (size_t i = 0; i < ndata; ++i)
           {
-            if (std::abs(ObservedData.GetData().at(i)) < ObservedData.GetErrors().at(i))
+            if (std::abs(ObservedData.GetData().at(i)) < Err.at(i))
               {
                 Diff(i) = SynthData(i) - ObservedData.GetData().at(i);
               }
