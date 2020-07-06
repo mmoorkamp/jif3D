@@ -267,14 +267,25 @@ namespace jif3D
           {
             SynthData = Calculator.Calculate(CoarseModel, ObservedData);
           }
-        if (SynthData.size() != ObservedData.GetData().size())
+        const size_t ndata = SynthData.size();
+        if (ndata != ObservedData.GetData().size())
           throw jif3D::FatalException(
               " ThreeDModelObjective: Forward calculation does not give same amount of data !",
               __FILE__, __LINE__);
-        Diff.resize(ObservedData.GetData().size());
+        Diff.resize(ndata);
         //calculate the difference between observed and synthetic
-        std::transform(SynthData.begin(), SynthData.end(), ObservedData.GetData().begin(),
-            Diff.begin(), std::minus<double>());
+
+        for (size_t i = 0; i < ndata; ++i)
+          {
+            if (std::abs(ObservedData.GetData().at(i)) < ObservedData.GetErrors().at(i))
+              {
+                Diff(i) = SynthData(i) - ObservedData.GetData().at(i);
+              }
+            else
+              {
+                Diff(i) = 0.0;
+              }
+          }
       }
 
     //The implementation of the gradient calculation
