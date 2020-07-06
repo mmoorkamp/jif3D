@@ -278,14 +278,13 @@ namespace jif3D
         //calculate the difference between observed and synthetic
         for (size_t i = 0; i < ndata; ++i)
           {
-            if (std::abs(ObservedData.GetData().at(i)) < Err.at(i))
+            if (std::abs(ObservedData.GetData().at(i)) > Err.at(i))
               {
                 Diff(i) = SynthData(i) - ObservedData.GetData().at(i);
               }
             else
               {
                 Diff(i) = 0.0;
-                std::cout << i << " " << ObservedData.GetData().at(i) << " " << SynthData(i) << " " << Err.at(i) << std::endl;
               }
           }
       }
