@@ -24,6 +24,14 @@ namespace jif3D
       jif3D::rvec Calculate(const ModelType &Model, const DataType &Data)
         {
           forward(Model, Data);
+          std::vector<double> dtp_mod;
+          std::multimap<int, std::tuple<int, int, double, double>>::iterator it;
+          for (it = datamap_mod.begin(); it != datamap_mod.end(); ++it)
+            {
+              auto tmptple = (*it).second;
+              double tmpdat = std::get<2>(tmptple);
+              dtp_mod.push_back(tmpdat);
+            }
           jif3D::rvec result(dtp_mod.size());
           std::copy(dtp_mod.begin(), dtp_mod.end(), result.begin());
           return result;
@@ -58,11 +66,6 @@ namespace jif3D
         {
           mode_skip_it = mskip_it;
         }
-      void set_data_err(const std::vector<double> &err)
-        {
-          dtp_err.resize(err.size());
-          dtp_err = err;
-        }
       void forward(const ModelType &Model, const DataType &Data);
       struct Surf1DResult
         {
@@ -78,8 +81,8 @@ namespace jif3D
     private:
       double false_east, tolerance, length_tolerance;
       int mode_skip_it, toms_max_iter;
-      std::vector<double> dens_grad, vs_grad, vp_grad, dtp_mod, dtp_err;
-
+      std::vector<double> dens_grad, vs_grad, vp_grad;
+      std::multimap<int, std::tuple<int, int, double, double>> datamap_mod;
       };
   }
 

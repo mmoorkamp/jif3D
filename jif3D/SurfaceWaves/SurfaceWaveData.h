@@ -8,6 +8,8 @@
 #ifndef SURFACEWAVES_SURFACEWAVEDATA_H_
 #define SURFACEWAVES_SURFACEWAVEDATA_H_
 
+#include <map>
+#include <tuple>
 #include "../DataBase/GeneralData.h"
 namespace jif3D
   {
@@ -32,17 +34,17 @@ namespace jif3D
         {
           return periods;
         }
-      std::vector<double> GetStatComb() const
+      std::vector<int> GetStatPairs() const
         {
-          return stat_comb;
+          return StationPairs;
         }
-      std::vector<double> GetEventStatComb() const
+      std::multimap<int, std::tuple<int, int, double, double>> GetDataMap() const
         {
-          return event_stat_comb;
+          return datamap;
         }
-      double GetDummy() const
+      std::vector<int> GetDataPerT() const
         {
-          return dummy;
+          return NDataPerT;
         }
       double GetCentrLon() const
         {
@@ -63,23 +65,9 @@ namespace jif3D
           periods.resize(T.size());
           std::copy(T.begin(), T.end(), periods.begin());
         }
-      void SetStatComb(const std::vector<double> &SC)
-        {
-          stat_comb.resize(SC.size());
-          std::copy(SC.begin(), SC.end(), stat_comb.begin());
-        }
-      void SetEventStatCmb(const std::vector<double> &ESC)
-        {
-          event_stat_comb.resize(ESC.size());
-          std::copy(ESC.begin(), ESC.end(), event_stat_comb.begin());
-        }
       void SetLonCentr(const double &lc)
         {
           lon_centr = lc;
-        }
-      void SetDummy(const double &d)
-        {
-          dummy = d;
         }
       virtual void WriteNetCDF(const std::string &filename) override;
       void WriteStationLocations(const std::string &filename);
@@ -87,10 +75,11 @@ namespace jif3D
       // Earthquake locations
       std::vector<double> EventPosX, EventPosY, EventPosZ;
       // Periods
-      std::vector<double> periods;
+      std::vector<double> periods, NDataPerT;
       // Event-station-combinations
-      std::vector<double> stat_comb, event_stat_comb;
-      double lon_centr, dummy;
+      std::vector<int> StationPairs;
+      std::multimap<int, std::tuple<int, int, double, double>> datamap;;
+      double lon_centr;
       };
   }
 
