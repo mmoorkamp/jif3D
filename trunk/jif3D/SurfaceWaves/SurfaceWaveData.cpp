@@ -11,6 +11,8 @@
 #include "../Global/NetCDFTools.h"
 #include <netcdf>
 #include <vector>
+#include <tuple>
+#include <map>
 using netCDF::NcFile;
 using netCDF::NcVar;
 using netCDF::NcVarAtt;
@@ -26,26 +28,34 @@ namespace jif3D
         NcFile dtpFile(datafile, NcFile::read);
 
         ReadVec(dtpFile, "Periods", periods);
+
         std::vector<double> MPX, MPY, MPZ;
         ReadVec(dtpFile, "MeasPosX", MPX);
         ReadVec(dtpFile, "MeasPosY", MPY);
         ReadVec(dtpFile, "MeasPosZ", MPZ);
         SetMeasurementPoints(MPX, MPY, MPZ);
 
-        NcDim nsrcsIn = dtpFile.getDim("NumberOfRays");
+        ReadVec(dtpFile, "EventPosX", EventPosX);
+        ReadVec(dtpFile, "EventPosY", EventPosY);
+        ReadVec(dtpFile, "EventPosY", EventPosZ);
+        ReadVec(dtpFile, "TraveltimesPerPeriod", NDataPerT);
+
+        NcDim nsrcsIn = dtpFile.getDim("NumberOfPairs");
         NcDim SRIn = dtpFile.getDim("SR");
-        stat_comb.resize(nsrcsIn.getSize() * SRIn.getSize());
-        NcVar src_rcvr_cmbIn = dtpFile.getVar("StatComb");
-        src_rcvr_cmbIn.getVar(stat_comb.data());
+        StationPairs.resize(nsrcsIn.getSize() * SRIn.getSize());
+        NcVar src_rcvr_cmbIn = dtpFile.getVar("StationPairs");
+        src_rcvr_cmbIn.getVar(StationPairs.data());
 
-        NcDim nperiodsIn = dtpFile.getDim("NumberOfPeriods");
-        NcDim nevents_per_srcIn = dtpFile.getDim("EventsPerSRC");
-        std::vector<double> dtp(
-            nperiodsIn.getSize() * nevents_per_srcIn.getSize() * nsrcsIn.getSize()), err;
-        NcVar dtpIn = dtpFile.getVar("dtp");
-        dtpIn.getVar(dtp.data());
+        std::vector<int> PairInd, TInd, EventInd;
+        ReadVec(dtpFile, "PairIndex", PairInd);
+        ReadVec(dtpFile, "PeriodIndex", TInd);
+        ReadVec(dtpFile, "EventIndex", EventInd);
 
-        std::string errname = "dtau";
+        std::vector<double> dtp;
+        ReadVec(dtpFile, "dtp", dtp);
+
+        std::vector<double> err;
+        std::string errname = "dtp_error";
         err.resize(dtp.size(), 0.0);
         // check if there is an error in the data file, set to zero if not.
         try
@@ -59,17 +69,28 @@ namespace jif3D
           {
             // ignore
           }
-        SetDataAndErrors(dtp, err);
 
-        event_stat_comb.resize(nevents_per_srcIn.getSize() * nsrcsIn.getSize());
-        NcVar event_stat_cmbIn = dtpFile.getVar("EventStatComb");
-        event_stat_cmbIn.getVar(event_stat_comb.data());
+        // Organize data in multimap
+        for (int ndata = 0; ndata < dtp.size(); ndata++)
+          {
+            datamap.insert(
+                std::pair<int, std::tuple<int, int, double, double>>(PairInd[ndata],
+                    std::make_tuple(EventInd[ndata], TInd[ndata], dtp[ndata],
+                        err[ndata])));
+          }
 
-        ReadVec(dtpFile, "EventPosX", EventPosX);
-        ReadVec(dtpFile, "EventPosY", EventPosY);
+        std::vector<double> dtp_sorted(dtp.size()), err_sorted(dtp.size());
+        std::multimap<int, std::tuple<int, int, double, double>>::iterator it;
+        for (it = datamap.begin(); it != datamap.end(); ++it)
+          {
+            auto datatuple = (*it).second;
+            double tmpdat = std::get<2>(datatuple);
+            double tmperr = std::get<3>(datatuple);
+            dtp_sorted.push_back(tmpdat);
+            err_sorted.push_back(tmperr);
+          }
 
-        NcVarAtt dummyIn = dtpIn.getAtt("_FillValue");
-        dummyIn.getValues(&dummy);
+        SetDataAndErrors(dtp_sorted, err_sorted);
 
         NcVar mpnIn = dtpFile.getVar("MeasPosX");
         NcVarAtt lonc = mpnIn.getAtt("Central_meridian");
@@ -77,7 +98,7 @@ namespace jif3D
       }
 
     SurfaceWaveData::SurfaceWaveData() :
-        EventPosX(), EventPosY(), EventPosZ(), periods(), stat_comb(), event_stat_comb(), lon_centr(), dummy()
+        EventPosX(), EventPosY(), EventPosZ(), periods(), lon_centr(), NDataPerT(), StationPairs(), PairInd(), TInd(), EventInd()
       {
       }
 
@@ -86,18 +107,17 @@ namespace jif3D
         const size_t sr = 2;
         const size_t nevents = GetEventPosX().size();
         const size_t nperiods = GetPeriods().size();
-        const size_t nrays = GetStatComb().size() / sr;
         const size_t nstats = GetMeasPosX().size();
-        const size_t events_per_src = GetEventStatComb().size() / nrays;
-        const std::string dummy = "_FillValue";
+        const size_t npairs = GetStatPairs().size();
+        const size_t ntimes = GetData().size();
         const std::string lon_centr = "Central_meridian";
 
         //create a netcdf file
         NcFile DataFile(filename, NcFile::replace);
         //we use the station number as a dimension
         NcDim NumberOfEvents = DataFile.addDim("NumberOfEvents", nevents);
-        NcDim EventsPerSRC = DataFile.addDim("EventsPerSRC", events_per_src);
-        NcDim NumberOfRays = DataFile.addDim("NumberOfRays", nrays);
+        NcDim NumberOfPairs = DataFile.addDim("NumberOfPairs", npairs);
+        NcDim NumberOfTraveltimes = DataFile.addDim("NumberOfTraveltimes", ntimes);
         NcDim NumberOfStations = DataFile.addDim("NumberOfStations", nstats);
         NcDim NumberOfPeriods = DataFile.addDim("NumberOfPeriods", nperiods);
         NcDim SR = DataFile.addDim("SR", sr);
@@ -105,6 +125,7 @@ namespace jif3D
         //write out the event coordinates
         WriteVec(DataFile, "EventPosX", GetEventPosX(), NumberOfEvents, "m");
         WriteVec(DataFile, "EventPosY", GetEventPosY(), NumberOfEvents, "m");
+        WriteVec(DataFile, "EventPosZ", GetEventPosZ(), NumberOfEvents, "m");
         //write out the positions of the stations, i.e. measurement positions
         NcVar MeasPosXVar = DataFile.addVar("MeasPosX", netCDF::ncDouble,
             NumberOfStations);
@@ -121,29 +142,30 @@ namespace jif3D
         WriteVec(DataFile, "MeasPosZ", GetMeasPosZ(), NumberOfStations, "m");
         // write out periods
         WriteVec(DataFile, "Periods", GetPeriods(), NumberOfPeriods, "s");
+        WriteVec(DataFile, "StationPairs", GetStatPairs(), NumberOfPairs, "");
+        WriteVec(DataFile, "TraveltimesPerPeriod", GetDataPerT(), NumberOfPeriods, "");
+        WriteVec(DataFile, "dtp", GetData(), NumberOfTraveltimes, "s");
+        WriteVec(DataFile, "dtp_error", GetErrors(), NumberOfTraveltimes, "s");
 
-        std::vector<NcDim> dimVec_esc;
-        dimVec_esc.push_back(NumberOfRays);
-        dimVec_esc.push_back(EventsPerSRC);
-        NcVar EvStaCoVar = DataFile.addVar("EventStatComb", netCDF::ncDouble, dimVec_esc);
-        EvStaCoVar.putAtt(dummy, NC_DOUBLE, GetDummy());
-        cxxport::put_legacy_ncvar(EvStaCoVar, GetEventStatComb().data(), nrays,
-            events_per_src);
+        datamap = GetDataMap();
+        std::vector<int> EInd(GetData().size()), PInd(GetData().size()), TInd(
+            GetData().size());
+        std::multimap<int, std::tuple<int, int, double, double>>::iterator it;
+        for (it = datamap.begin(); it != datamap.end(); ++it)
+          {
+            int ptmp = (*it).first;
+            auto datatuple = (*it).second;
+            int etmp = std::get<0>(datatuple);
+            int ttmp = std::get<1>(datatuple);
+            PInd.push_back(ptmp);
+            EInd.push_back(etmp);
+            TInd.push_back(ttmp);
+          }
 
-        std::vector<NcDim> dimVec_sc;
-        dimVec_sc.push_back(NumberOfRays);
-        dimVec_sc.push_back(SR);
-        NcVar StaCoVar = DataFile.addVar("StatComb", netCDF::ncDouble, dimVec_sc);
-        cxxport::put_legacy_ncvar(StaCoVar, GetStatComb().data(), nrays, sr);
+        WriteVec(DataFile, "EventIndex", EInd, NumberOfTraveltimes, "");
+        WriteVec(DataFile, "PairIndex", PInd, NumberOfTraveltimes, "");
+        WriteVec(DataFile, "PeriodIndex", TInd, NumberOfTraveltimes, "");
 
-        std::vector<NcDim> dimVec_dtp;
-        dimVec_dtp.push_back(NumberOfRays);
-        dimVec_dtp.push_back(EventsPerSRC);
-        dimVec_dtp.push_back(NumberOfPeriods);
-        NcVar DTPVar = DataFile.addVar("dtp", netCDF::ncDouble, dimVec_dtp);
-        DTPVar.putAtt(dummy, NC_DOUBLE, GetDummy());
-        cxxport::put_legacy_ncvar(DTPVar, GetData().data(), nrays, events_per_src,
-            nperiods);
       }
 
     void SurfaceWaveData::WriteStationLocations(const std::string &filename)
