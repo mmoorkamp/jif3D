@@ -55,6 +55,8 @@ namespace jif3D
             //insert is only successful when the frequency does not already exist
             auto HasInserted = FrequencyMap.insert(
                 std::pair<double, int>(Frequencies.at(i), nmap));
+            //insert returns a pair, the second value is a bool
+            //which is true when successfull
             if (HasInserted.second)
               {
                 HaveCurrentFields.push_back(false);
@@ -85,6 +87,12 @@ namespace jif3D
             Hy2.resize(ncalcfreq);
             Hz1.resize(ncalcfreq);
             Hz2.resize(ncalcfreq);
+            Ex1_all.resize(ncalcfreq);
+            Ex2_all.resize(ncalcfreq);
+            Ey1_all.resize(ncalcfreq);
+            Ey2_all.resize(ncalcfreq);
+            Ez1_all.resize(ncalcfreq);
+            Ez2_all.resize(ncalcfreq);
           }
 
         if (ForwardExecTime.empty() || ForwardExecTime.size() != ncalcfreq)
@@ -146,6 +154,7 @@ namespace jif3D
 
         const size_t nmodx = Model.GetData().shape()[0];
         const size_t nmody = Model.GetData().shape()[1];
+        const size_t nmodz = Model.GetData().shape()[2];
 
         fs::path RootName = TempDir / MakeUniqueName(NameRoot, X3DModel::MT, freqindex);
         fs::path DirName = RootName.string() + dirext;
@@ -178,6 +187,12 @@ namespace jif3D
             Hy2.at(freqindex).clear();
             Hz1.at(freqindex).clear();
             Hz2.at(freqindex).clear();
+            Ex1_all.at(freqindex).clear();
+            Ex2_all.at(freqindex).clear();
+            Ey1_all.at(freqindex).clear();
+            Ey2_all.at(freqindex).clear();
+            Ez1_all.at(freqindex).clear();
+            Ez2_all.at(freqindex).clear();
           }
         //writing out files causes problems in parallel
         // so we make sure it is done one at a time
@@ -202,6 +217,13 @@ namespace jif3D
                 Hx2.at(freqindex), Hy2.at(freqindex), Hz2.at(freqindex));
           }
 
+#pragma omp critical(gradient_readema)
+          {
+            ReadEMA((DirName / emaAname).string(), Ex1_all.at(freqindex),
+                Ey1_all.at(freqindex), Ez1_all.at(freqindex), nmodx, nmody, nmodz);
+            ReadEMA((DirName / emaBname).string(), Ex2_all.at(freqindex),
+                Ey2_all.at(freqindex), Ez2_all.at(freqindex), nmodx, nmody, nmodz);
+          }
         CheckField(Ex1.at(freqindex), nval);
         CheckField(Ex2.at(freqindex), nval);
         CheckField(Ey1.at(freqindex), nval);
