@@ -207,20 +207,6 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const jif3D::MTData &Data,
     fs::path TempDir(Info.TempDirName);
     double CurrFreq = Data.GetFrequencies().at(Info.freqindex);
 
-    fs::path ForwardDirName = Calc->GetForwardDirName(Calc->GetFrequencyIndex(CurrFreq));
-
-    std::vector<std::complex<double> > Ex1_all, Ex2_all, Ey1_all, Ey2_all, Ez1_all,
-        Ez2_all;
-    //for the gradient calculation we also need the electric fields
-    //at all cells in the model for the two source polarizations of
-    //the forward calculations
-#pragma omp critical(gradient_readema)
-      {
-        ReadEMA((ForwardDirName / emaAname).string(), Ex1_all, Ey1_all, Ez1_all, nmodx,
-            nmody, nmodz);
-        ReadEMA((ForwardDirName / emaBname).string(), Ex2_all, Ey2_all, Ez2_all, nmodx,
-            nmody, nmodz);
-      }
     //create variables for the adjoint field calculation
     const size_t freq_start_index = nstats * Info.freqindex * 8;
     const size_t ind_shift = nstats * Info.freqindex;
@@ -236,7 +222,6 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const jif3D::MTData &Data,
         YSourceXIndex(2 * nstats, 0), YSourceYIndex(2 * nstats, 0), HxSourceXIndex(nstats,
             0), HxSourceYIndex(nstats, 0), HySourceXIndex(nstats, 0), HySourceYIndex(
             nstats, 0), ZeroIndex(2 * nstats, 0);
-
 
     std::vector<std::complex<double>> Hx1(Calc->GetHx1(CurrFreq)), Hx2(
         Calc->GetHx2(CurrFreq));
@@ -488,6 +473,13 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const jif3D::MTData &Data,
     const double cell_sizey = Info.Model.GetYCellSizes()[0];
     //now we can calculate the gradient for each model cell
     double Volume, gradinc;
+    //for the gradient calculation we also need the electric fields
+    //at all cells in the model for the two source polarizations of
+    //the forward calculations
+    std::vector<std::complex<double> > Ex1_all(Calc->GetEx1_all(CurrFreq)), Ex2_all(
+        Calc->GetEx2_all(CurrFreq)), Ey1_all(Calc->GetEy1_all(CurrFreq)), Ey2_all(
+        Calc->GetEy2_all(CurrFreq)), Ez1_all(Calc->GetEz1_all(CurrFreq)), Ez2_all(
+        Calc->GetEz2_all(CurrFreq));
 #pragma omp taskwait
     for (size_t j = 0; j < nmod; ++j)
       {
@@ -531,20 +523,7 @@ GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::TipperData
     jif3D::rvec Gradient(nmod, 0.0);
 
     fs::path TempDir(Info.TempDirName);
-    fs::path ForwardDirName = Calc->GetForwardDirName(Calc->GetFrequencyIndex(CurrFreq));
 
-    std::vector<std::complex<double> > Ex1_all, Ex2_all, Ey1_all, Ey2_all, Ez1_all,
-        Ez2_all;
-    //for the gradient calculation we also need the electric fields
-    //at all cells in the model for the two source polarizations of
-    //the forward calculations
-#pragma omp critical(gradient_readema)
-      {
-        ReadEMA((ForwardDirName / emaAname).string(), Ex1_all, Ey1_all, Ez1_all, nmodx,
-            nmody, nmodz);
-        ReadEMA((ForwardDirName / emaBname).string(), Ex2_all, Ey2_all, Ez2_all, nmodx,
-            nmody, nmodz);
-      }
     //create variables for the adjoint field calculation
     const size_t freq_start_index = nstats * Info.freqindex * 4;
     const size_t ind_shift = nstats * Info.freqindex;
@@ -557,7 +536,6 @@ GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::TipperData
     std::vector<size_t> HxSourceXIndex(nstats, 0), HxSourceYIndex(nstats, 0),
         HySourceXIndex(nstats, 0), HySourceYIndex(nstats, 0), HzSourceXIndex(nstats, 0),
         HzSourceYIndex(nstats, 0);
-
 
     std::vector<std::string> PolExt =
       { "a", "b" };
@@ -683,6 +661,13 @@ GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::TipperData
     const double cell_sizey = Info.Model.GetYCellSizes()[0];
     //now we can calculate the gradient for each model cell
     double Volume = 0.0;
+    //for the gradient calculation we also need the electric fields
+    //at all cells in the model for the two source polarizations of
+    //the forward calculations
+    std::vector<std::complex<double> > Ex1_all(Calc->GetEx1_all(CurrFreq)), Ex2_all(
+        Calc->GetEx2_all(CurrFreq)), Ey1_all(Calc->GetEy1_all(CurrFreq)), Ey2_all(
+        Calc->GetEy2_all(CurrFreq)), Ez1_all(Calc->GetEz1_all(CurrFreq)), Ez2_all(
+        Calc->GetEz2_all(CurrFreq));
 #pragma omp taskwait
     for (size_t j = 0; j < nmod; ++j)
       {

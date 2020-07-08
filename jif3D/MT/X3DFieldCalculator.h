@@ -37,6 +37,8 @@ namespace jif3D
       void CleanUp();
       std::vector<std::vector<std::complex<double>>> Ex1, Ex2, Ey1, Ey2, Hx1, Hx2, Hy1,
           Hy2, Hz1, Hz2;
+      std::vector<std::vector<std::complex<double>>> Ex1_all, Ex2_all, Ey1_all, Ey2_all,
+          Ez1_all, Ez2_all;
       std::vector<bool> HaveCurrentFields;
       std::map<double, int> FrequencyMap;
       boost::filesystem::path TempDir;
@@ -79,6 +81,12 @@ namespace jif3D
           ar & Hy2;
           ar & Hz1;
           ar & Hz2;
+          ar & Ex1_all;
+          ar & Ex2_all;
+          ar & Ey1_all;
+          ar & Ey2_all;
+          ar & Ez1_all;
+          ar & Ez2_all;
           std::string DirName(TempDir.string());
           ar & DirName;
           ar & X3DName;
@@ -101,6 +109,12 @@ namespace jif3D
           ar & Hy2;
           ar & Hz1;
           ar & Hz2;
+          ar & Ex1_all;
+          ar & Ex2_all;
+          ar & Ey1_all;
+          ar & Ey2_all;
+          ar & Ez1_all;
+          ar & Ez2_all;
           std::string DirName;
           TempDir = DirName;
           ar & DirName;
@@ -116,63 +130,84 @@ namespace jif3D
 #else
       BOOST_SERIALIZATION_SPLIT_MEMBER()
 #endif
-      const std::vector<std::complex<double> > &GetEx1(double Freq) const
-        {
-          return ReturnField(Freq,Ex1);
-        }
-      const std::vector<std::complex<double> > &GetEx2(double Freq) const
-        {
-          return ReturnField(Freq,Ex2);
-        }
-      const std::vector<std::complex<double> > &GetEy1(double Freq) const
-        {
-          return ReturnField(Freq,Ey1);
-        }
-      const std::vector<std::complex<double> > &GetEy2(double Freq) const
-        {
-          return ReturnField(Freq,Ey2);
-        }
-      const std::vector<std::complex<double> > &GetHx1(double Freq) const
-        {
-          return ReturnField(Freq,Hx1);
-        }
-      const std::vector<std::complex<double> > &GetHx2(double Freq) const
-        {
-          return ReturnField(Freq,Hx2);
-        }
-      const std::vector<std::complex<double> > &GetHy1(double Freq) const
-        {
-          return ReturnField(Freq,Hy1);
-        }
-      const std::vector<std::complex<double> > &GetHy2(double Freq) const
-        {
-          return ReturnField(Freq,Hy2);
-        }
-      const std::vector<std::complex<double> > &GetHz1(double Freq) const
-        {
-          return ReturnField(Freq,Hz1);
-        }
-      const std::vector<std::complex<double> > &GetHz2(double Freq) const
-        {
-          return ReturnField(Freq,Hz2);
-        }
-      std::string GetForwardDirName(size_t freqindex) const
-        {
-          return ForwardDirName.at(freqindex);
-        }
-      int GetFrequencyIndex(double freq) const
-        {
-          return FrequencyMap.at(freq);
-        }
-      void CalculateFields(const X3DModel &Model, const std::vector<double> &Frequencies,
-          const std::vector<double> MeasPosZ);
-      X3DFieldCalculator(boost::filesystem::path TDir = boost::filesystem::current_path(),
-          std::string x3d = "x3d", bool Clean = true, jif3D::GreenCalcType GS1 = hst,
-          jif3D::GreenCalcType GS4 = hst);
-      virtual ~X3DFieldCalculator();
-      };
+const  std::vector<std::complex<double> > &GetEx1(double Freq) const
+    {
+      return ReturnField(Freq,Ex1);
+    }
+  const std::vector<std::complex<double> > &GetEx2(double Freq) const
+    {
+      return ReturnField(Freq,Ex2);
+    }
+  const std::vector<std::complex<double> > &GetEy1(double Freq) const
+    {
+      return ReturnField(Freq,Ey1);
+    }
+  const std::vector<std::complex<double> > &GetEy2(double Freq) const
+    {
+      return ReturnField(Freq,Ey2);
+    }
+  const std::vector<std::complex<double> > &GetHx1(double Freq) const
+    {
+      return ReturnField(Freq,Hx1);
+    }
+  const std::vector<std::complex<double> > &GetHx2(double Freq) const
+    {
+      return ReturnField(Freq,Hx2);
+    }
+  const std::vector<std::complex<double> > &GetHy1(double Freq) const
+    {
+      return ReturnField(Freq,Hy1);
+    }
+  const std::vector<std::complex<double> > &GetHy2(double Freq) const
+    {
+      return ReturnField(Freq,Hy2);
+    }
+  const std::vector<std::complex<double> > &GetHz1(double Freq) const
+    {
+      return ReturnField(Freq,Hz1);
+    }
+  const std::vector<std::complex<double> > &GetHz2(double Freq) const
+    {
+      return ReturnField(Freq,Hz2);
+    }
+  const std::vector<std::complex<double> > &GetEx1_all(double Freq) const
+    {
+      return ReturnField(Freq,Ex1_all);
+    }
+  const std::vector<std::complex<double> > &GetEx2_all(double Freq) const
+    {
+      return ReturnField(Freq,Ex2_all);
+    }
+  const std::vector<std::complex<double> > &GetEy1_all(double Freq) const
+    {
+      return ReturnField(Freq,Ey1_all);
+    }
+  const std::vector<std::complex<double> > &GetEy2_all(double Freq) const
+    {
+      return ReturnField(Freq,Ey2_all);
+    }
+  const std::vector<std::complex<double> > &GetEz1_all(double Freq) const
+    {
+      return ReturnField(Freq,Ez1_all);
+    }
+  const std::vector<std::complex<double> > &GetEz2_all(double Freq) const
+    {
+      return ReturnField(Freq,Ez2_all);
+    }
+  std::string GetForwardDirName(double freq) const
+    {
+      size_t freqindex = FrequencyMap.at(freq);
+      return ForwardDirName.at(freqindex);
+    }
+  void CalculateFields(const X3DModel &Model, const std::vector<double> &Frequencies,
+      const std::vector<double> MeasPosZ);
+  X3DFieldCalculator(boost::filesystem::path TDir = boost::filesystem::current_path(),
+      std::string x3d = "x3d", bool Clean = true, jif3D::GreenCalcType GS1 = hst,
+      jif3D::GreenCalcType GS4 = hst);
+  virtual ~X3DFieldCalculator();
+};
 
-  }
+}
 /* namespace jif3D */
 
 #endif /* MT_X3DFIELDCALCULATOR_H_ */
