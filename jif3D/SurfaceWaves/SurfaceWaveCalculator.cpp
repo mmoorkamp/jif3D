@@ -8,6 +8,7 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <iterator>
 #include <complex>
 #include <cmath>
 #include <tuple>
@@ -183,8 +184,7 @@ namespace jif3D
         //const std::vector<double> mpz = Data.GetMeasPosZ();
         const std::vector<int> NDataPerT = Data.GetDataPerT();
         const std::vector<int> StatPairs = Data.GetStatPairs();
-        const std::multimap<int, std::tuple<int, int, double, double>> datamap =
-            Data.GetDataMap;
+        auto datamap = Data.GetDataMap();
         const double lon_centr = Data.GetCentrLon();
 
         const std::vector<double> depth(Model.GetZCoordinates().begin() + 1,
@@ -285,96 +285,92 @@ namespace jif3D
             boost::posix_time::microsec_clock::local_time();
         std::cout << " Finished 1D calculation took "
             << (currtime - starttime).total_seconds() << " s" << std::endl;
-        // loop over all rays, computes phase delays
+        // loop over all station pairs, computes phase delays
+        std::vector<std::vector<double>> segments;
+        std::vector<double> seg_east, seg_north;
+        int LastPair = -1, seg_east_size;
 #pragma omp parallel for default(shared)
-        std::multimap<int, std::tuple<int, int, double, double>>::iterator it;
-        it = datamap.begin();
-        int LastStatPair = (*it).first;
-        while (it != datamap.end())
+        for (auto data_it = datamap.begin(); data_it != datamap.end(); ++data_it)
           {
-            std::vector<std::vector<double>> segments = get_gc_segments(
-                mpe[StatPairs[(*it).first]], mpn[StatPairs[(*it).first]],
-                mpe[StatPairs[(*it).first + npairs]],
-                mpn[StatPairs[(*it).first + npairs]], lon_centr, false_east,
-                length_tolerance);
-            std::vector<double> seg_east = segments[0];
-            std::vector<double> seg_north = segments[1];
-            int seg_east_size = seg_east.size();
-            std::vector<std::vector<double>>().swap(segments);
-
-            while (LastStatPair == (*it).first)
-              { //loop over events for each station pair
-                std::vector<double> vs_tmpgrd(NX * NY * NZ, 0.0), vp_tmpgrd(NX * NY * NZ,
-                    0.0), dens_tmpgrd(NX * NY * NZ, 0.0);
-                double time_total = 0.0;
-                auto IndicesData = (*it).second;
-                int eventid = std::get<0>(IndicesData);
-                int periodid = std::get<1>(IndicesData);
-                double dtp = std::get<2>(IndicesData);
-                double err = std::get<3>(IndicesData);
-                for (int seg = 0; seg < seg_east_size - 1; seg++)
-                  { //loop over great circle segments
-                    std::vector<double> vph_map_T(NX * NY), dcdvs_T(NX * NY * NZ),
-                        dcdvp_T(NX * NY * NZ), dcdrho_T(NX * NY * NZ);
-                    std::copy(vph_map.begin() + periodid * NX * NY,
-                        vph_map.begin() + (periodid + 1) * NX * NY, vph_map_T.begin());
-                    std::copy(dcdvs.begin() + periodid * NX * NY * NZ,
-                        dcdvs.begin() + (periodid + 1) * NX * NY * NZ, dcdvs_T.begin());
-                    std::copy(dcdvp.begin() + periodid * NX * NY * NZ,
-                        dcdvp.begin() + (periodid + 1) * NX * NY * NZ, dcdvp_T.begin());
-                    std::copy(dcdrho.begin() + periodid * NX * NY * NZ,
-                        dcdrho.begin() + (periodid + 1) * NX * NY * NZ, dcdrho_T.begin());
-
-                    std::vector<std::vector<double>> time_segment = get_t_segments(
-                        seg_east[seg], seg_north[seg], seg_east[seg + 1],
-                        seg_north[seg + 1], eventy[eventid], eventx[eventid], lon_centr,
-                        model_origin, deast, dnorth, vph_map_T, NY, dcdvs_T, dcdvp_T,
-                        dcdrho_T, NZ, false_east);
-                    std::vector<double> tmp = time_segment[0];
-                    time_total += tmp[0];
-
-                    tmp = time_segment[1];
-                    std::transform(vs_tmpgrd.begin(), vs_tmpgrd.end(), tmp.begin(),
-                        vs_tmpgrd.begin(), std::plus<double>());
-                    tmp = time_segment[2];
-                    std::transform(vp_tmpgrd.begin(), vp_tmpgrd.end(), tmp.begin(),
-                        vp_tmpgrd.begin(), std::plus<double>());
-                    tmp = time_segment[3];
-                    std::transform(dens_tmpgrd.begin(), dens_tmpgrd.end(), tmp.begin(),
-                        dens_tmpgrd.begin(), std::plus<double>());
-                  } //end loop ever path segments
-                omp_set_lock(&lck);
-                datamap_mod.insert(
-                    std::pair<int, std::tuple<int, int, double, double>>((*it).first,
-                        std::make_tuple(eventid, periodid, dtp, err)));
-                //delayfile << "\n" << event_stat_cmb[event*nsrcs+src] << "\t" << src_rcvr_cmb[src] << "\t" << src_rcvr_cmb[src+nsrcs] << "\t" << (2.0*M_PI)/w[freq] << "\t" << time_total;
-
-                const double residual = (time_total - dtp) / jif3D::pow2(err);
-
-                std::transform(vs_grad.begin(), vs_grad.end(), vs_tmpgrd.begin(),
-                    vs_grad.begin(), weighted_add(residual));
-                std::transform(vp_grad.begin(), vp_grad.end(), vp_tmpgrd.begin(),
-                    vp_grad.begin(), weighted_add(residual));
-                std::transform(dens_grad.begin(), dens_grad.end(), dens_tmpgrd.begin(),
-                    dens_grad.begin(), weighted_add(residual));
-                omp_unset_lock(&lck);
-
-                it++;
-              } //end loop over events
-            if (src % 10 == 0)
+            if (LastPair != (*data_it).first)
               {
-
-                std::cout << " Finished " << src << " out of " << nsrcs
-                    << " station pairs, took "
-                    << (boost::posix_time::microsec_clock::local_time() - starttime).total_seconds()
-                    << " s" << std::endl;
+                segments = get_gc_segments(mpe[StatPairs[(*data_it).first]],
+                    mpn[StatPairs[(*data_it).first]],
+                    mpe[StatPairs[(*data_it).first + npairs]],
+                    mpn[StatPairs[(*data_it).first + npairs]], lon_centr, false_east,
+                    length_tolerance);
+                std::vector<double> seg_east = segments[0];
+                std::vector<double> seg_north = segments[1];
+                seg_east_size = seg_east.size();
+                std::vector<std::vector<double>>().swap(segments);
+                LastPair = (*data_it).first;
               }
-          } // end loop rays
-        /*resultfile << "\n";
-         resultfile.close();
 
-         delayfile << "\n";
-         delayfile.close();*/
+            std::vector<double> vs_tmpgrd(NX * NY * NZ, 0.0), vp_tmpgrd(NX * NY * NZ,
+                0.0), dens_tmpgrd(NX * NY * NZ, 0.0);
+            double time_total = 0.0;
+            auto IndicesData = (*data_it).second;
+            int eventid = std::get<0>(IndicesData);
+            int periodid = std::get<1>(IndicesData);
+            double dtp = std::get<2>(IndicesData);
+            double err = std::get<3>(IndicesData);
+
+            for (int seg = 0; seg < seg_east_size - 1; seg++)
+              { //loop over great circle segments
+                std::vector<double> vph_map_T(NX * NY), dcdvs_T(NX * NY * NZ), dcdvp_T(
+                    NX * NY * NZ), dcdrho_T(NX * NY * NZ);
+                std::copy(vph_map.begin() + periodid * NX * NY,
+                    vph_map.begin() + (periodid + 1) * NX * NY, vph_map_T.begin());
+                std::copy(dcdvs.begin() + periodid * NX * NY * NZ,
+                    dcdvs.begin() + (periodid + 1) * NX * NY * NZ, dcdvs_T.begin());
+                std::copy(dcdvp.begin() + periodid * NX * NY * NZ,
+                    dcdvp.begin() + (periodid + 1) * NX * NY * NZ, dcdvp_T.begin());
+                std::copy(dcdrho.begin() + periodid * NX * NY * NZ,
+                    dcdrho.begin() + (periodid + 1) * NX * NY * NZ, dcdrho_T.begin());
+
+                std::vector<std::vector<double>> time_segment = get_t_segments(
+                    seg_east[seg], seg_north[seg], seg_east[seg + 1], seg_north[seg + 1],
+                    eventy[eventid], eventx[eventid], lon_centr, model_origin, deast,
+                    dnorth, vph_map_T, NY, dcdvs_T, dcdvp_T, dcdrho_T, NZ, false_east);
+                std::vector<double> tmp = time_segment[0];
+                time_total += tmp[0];
+
+                tmp = time_segment[1];
+                std::transform(vs_tmpgrd.begin(), vs_tmpgrd.end(), tmp.begin(),
+                    vs_tmpgrd.begin(), std::plus<double>());
+                tmp = time_segment[2];
+                std::transform(vp_tmpgrd.begin(), vp_tmpgrd.end(), tmp.begin(),
+                    vp_tmpgrd.begin(), std::plus<double>());
+                tmp = time_segment[3];
+                std::transform(dens_tmpgrd.begin(), dens_tmpgrd.end(), tmp.begin(),
+                    dens_tmpgrd.begin(), std::plus<double>());
+              } //end loop ever path segments
+
+            omp_set_lock(&lck);
+            datamap_mod.insert(
+                std::pair<int, std::tuple<int, int, double, double>>((*data_it).first,
+                    std::make_tuple(eventid, periodid, dtp, err)));
+            //delayfile << "\n" << event_stat_cmb[event*nsrcs+src] << "\t" << src_rcvr_cmb[src] << "\t" << src_rcvr_cmb[src+nsrcs] << "\t" << (2.0*M_PI)/w[freq] << "\t" << time_total;
+
+            const double residual = (time_total - dtp) / jif3D::pow2(err);
+
+            std::transform(vs_grad.begin(), vs_grad.end(), vs_tmpgrd.begin(),
+                vs_grad.begin(), weighted_add(residual));
+            std::transform(vp_grad.begin(), vp_grad.end(), vp_tmpgrd.begin(),
+                vp_grad.begin(), weighted_add(residual));
+            std::transform(dens_grad.begin(), dens_grad.end(), dens_tmpgrd.begin(),
+                dens_grad.begin(), weighted_add(residual));
+            omp_unset_lock(&lck);
+
+            /*if (std::distance(datamap.cbegin(), it) % 10 == 0)
+             {
+
+             std::cout << " Finished " << std::distance(datamap.begin(), it)
+             << " out of " << datamap.size() << " station pairs, took "
+             << (boost::posix_time::microsec_clock::local_time() - starttime).total_seconds()
+             << " s" << std::endl;
+             }*/
+          } // end loop over station pairs
       }
   }
 
