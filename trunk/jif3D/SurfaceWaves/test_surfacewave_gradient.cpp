@@ -132,14 +132,7 @@ BOOST_AUTO_TEST_CASE (derivative_test)
       { 1.0 / 20.0, 1.0 / 10.0, 1.0 / 5.0, 1.0 };
 
     SWData.SetPeriods(T);
-    SWData.SetDummy(-999.9);
     SWData.SetLonCentr(-123.0);
-    std::vector<double> esc =
-      { 0 };
-    std::vector<double> sc =
-      { 0, 1 };
-    SWData.SetEventStatCmb(esc);
-    SWData.SetStatComb(sc);
     std::vector<double> dtp(T.size() * esc.size(), 1.0);
     std::vector<double> err(dtp.size(), 1.0);
     SWData.SetDataAndErrors(dtp, err);

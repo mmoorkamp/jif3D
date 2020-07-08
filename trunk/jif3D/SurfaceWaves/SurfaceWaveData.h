@@ -75,10 +75,10 @@ namespace jif3D
       // Earthquake locations
       std::vector<double> EventPosX, EventPosY, EventPosZ;
       // Periods
-      std::vector<double> periods, NDataPerT;
+      std::vector<double> periods;
       // Event-station-combinations
-      std::vector<int> StationPairs;
-      std::multimap<int, std::tuple<int, int, double, double>> datamap;;
+      std::vector<int> StationPairs, NDataPerT;
+      std::multimap<int, std::tuple<int, int, double, double>> datamap;
       double lon_centr;
       };
   }

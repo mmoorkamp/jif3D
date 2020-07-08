@@ -98,7 +98,7 @@ namespace jif3D
       }
 
     SurfaceWaveData::SurfaceWaveData() :
-        EventPosX(), EventPosY(), EventPosZ(), periods(), lon_centr(), NDataPerT(), StationPairs(), PairInd(), TInd(), EventInd()
+        EventPosX(), EventPosY(), EventPosZ(), periods(), lon_centr(), NDataPerT(), StationPairs()
       {
       }
 
