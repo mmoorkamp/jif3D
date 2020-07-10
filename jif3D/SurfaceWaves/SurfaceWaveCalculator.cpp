@@ -199,7 +199,7 @@ namespace jif3D
         ThreeDModelBase::t3DModelData dens_all = Model.GetDens();
 
         const int nperiods = periods.size();
-        const int npairs = StatPairs.size();
+        const int npairs = StatPairs.size() / 2;
         const int ndata = Data.GetData().size();
         const size_t NX = northing.size();
         const size_t NY = easting.size();
@@ -214,6 +214,10 @@ namespace jif3D
         std::fill(dens_grad.begin(), dens_grad.end(), 0.0);
         std::fill(vs_grad.begin(), vs_grad.end(), 0.0);
         std::fill(vp_grad.begin(), vp_grad.end(), 0.0);
+        if (datamap_mod.size() !=0)
+          {
+            datamap_mod.clear();
+          }
         const std::vector<double> vs = array2vector(vs_all);
         const std::vector<double> vp = array2vector(vp_all);
         const std::vector<double> dens = array2vector(dens_all);
@@ -231,8 +235,8 @@ namespace jif3D
         std::vector<double> dcdrho(nmod * nperiods, 0.0), dcdvs(nmod * nperiods, 0.0),
             dcdvp(nmod * nperiods, 0.0);
 
-        omp_lock_t lck;
-        omp_init_lock(&lck);
+        //omp_lock_t lck;
+        //omp_init_lock(&lck);
         for (int freq = 0; freq < nperiods; freq++)
           {
             std::cout << "Period: " << periods[freq] << " s.";
@@ -289,8 +293,9 @@ namespace jif3D
         std::vector<std::vector<double>> segments;
         std::vector<double> seg_east, seg_north;
         int LastPair = -1, seg_east_size;
-#pragma omp parallel for default(shared)
-        for (auto data_it = datamap.begin(); data_it != datamap.end(); ++data_it)
+        auto data_it = datamap.begin();
+//#pragma omp parallel for default(shared)
+        for (int datacounter = 0; datacounter < ndata; datacounter++)
           {
             if (LastPair != (*data_it).first)
               {
@@ -299,8 +304,8 @@ namespace jif3D
                     mpe[StatPairs[(*data_it).first + npairs]],
                     mpn[StatPairs[(*data_it).first + npairs]], lon_centr, false_east,
                     length_tolerance);
-                std::vector<double> seg_east = segments[0];
-                std::vector<double> seg_north = segments[1];
+                seg_east = segments[0];
+                seg_north = segments[1];
                 seg_east_size = seg_east.size();
                 std::vector<std::vector<double>>().swap(segments);
                 LastPair = (*data_it).first;
@@ -321,12 +326,12 @@ namespace jif3D
                     NX * NY * NZ), dcdrho_T(NX * NY * NZ);
                 std::copy(vph_map.begin() + periodid * NX * NY,
                     vph_map.begin() + (periodid + 1) * NX * NY, vph_map_T.begin());
-                std::copy(dcdvs.begin() + periodid * NX * NY * NZ,
-                    dcdvs.begin() + (periodid + 1) * NX * NY * NZ, dcdvs_T.begin());
-                std::copy(dcdvp.begin() + periodid * NX * NY * NZ,
-                    dcdvp.begin() + (periodid + 1) * NX * NY * NZ, dcdvp_T.begin());
-                std::copy(dcdrho.begin() + periodid * NX * NY * NZ,
-                    dcdrho.begin() + (periodid + 1) * NX * NY * NZ, dcdrho_T.begin());
+                std::copy(dcdvs.begin() + periodid * nmod,
+                    dcdvs.begin() + (periodid + 1) * nmod, dcdvs_T.begin());
+                std::copy(dcdvp.begin() + periodid * nmod,
+                    dcdvp.begin() + (periodid + 1) * nmod, dcdvp_T.begin());
+                std::copy(dcdrho.begin() + periodid * nmod,
+                    dcdrho.begin() + (periodid + 1) * nmod, dcdrho_T.begin());
 
                 std::vector<std::vector<double>> time_segment = get_t_segments(
                     seg_east[seg], seg_north[seg], seg_east[seg + 1], seg_north[seg + 1],
@@ -346,10 +351,10 @@ namespace jif3D
                     dens_tmpgrd.begin(), std::plus<double>());
               } //end loop ever path segments
 
-            omp_set_lock(&lck);
+            //omp_set_lock(&lck);
             datamap_mod.insert(
                 std::pair<int, std::tuple<int, int, double, double>>((*data_it).first,
-                    std::make_tuple(eventid, periodid, dtp, err)));
+                    std::make_tuple(eventid, periodid, time_total, err)));
             //delayfile << "\n" << event_stat_cmb[event*nsrcs+src] << "\t" << src_rcvr_cmb[src] << "\t" << src_rcvr_cmb[src+nsrcs] << "\t" << (2.0*M_PI)/w[freq] << "\t" << time_total;
 
             const double residual = (time_total - dtp) / jif3D::pow2(err);
@@ -360,7 +365,7 @@ namespace jif3D
                 vp_grad.begin(), weighted_add(residual));
             std::transform(dens_grad.begin(), dens_grad.end(), dens_tmpgrd.begin(),
                 dens_grad.begin(), weighted_add(residual));
-            omp_unset_lock(&lck);
+            //omp_unset_lock(&lck);
 
             /*if (std::distance(datamap.cbegin(), it) % 10 == 0)
              {
@@ -370,6 +375,7 @@ namespace jif3D
              << (boost::posix_time::microsec_clock::local_time() - starttime).total_seconds()
              << " s" << std::endl;
              }*/
+            data_it++;
           } // end loop over station pairs
       }
   }

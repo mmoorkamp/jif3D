@@ -69,6 +69,43 @@ namespace jif3D
         {
           lon_centr = lc;
         }
+      void SetStationPairs(const std::vector<int> &station1,
+          const std::vector<int> &station2)
+        {
+          StationPairs.resize(station1.size() * 2);
+          std::copy(station1.begin(), station1.end(), StationPairs.begin());
+          std::copy(station2.begin(), station2.end(),
+              StationPairs.begin() + station1.size());
+        }
+      void SetNDataPerT(const std::vector<int> &ndata)
+        {
+          NDataPerT.resize(ndata.size());
+          std::copy(ndata.begin(), ndata.end(), NDataPerT.begin());
+        }
+      void SetDataMap(const std::vector<int> &PairInd, const std::vector<int> &EventInd,
+          const std::vector<int> &PeriodInd, const std::vector<double> &dtp,
+          const std::vector<double> &error)
+        {
+          for (int ndata = 0; ndata < PairInd.size(); ndata++)
+            {
+              datamap.insert(
+                  std::pair<int, std::tuple<int, int, double, double>>(PairInd[ndata],
+                      std::make_tuple(EventInd[ndata], PeriodInd[ndata], dtp[ndata],
+                          error[ndata])));
+            }
+          std::vector<double> dtp_sorted, err_sorted;
+          std::multimap<int, std::tuple<int, int, double, double>>::iterator it;
+          for (it = datamap.begin(); it != datamap.end(); ++it)
+            {
+              auto datatuple = (*it).second;
+              double tmpdat = std::get<2>(datatuple);
+              double tmperr = std::get<3>(datatuple);
+              dtp_sorted.push_back(tmpdat);
+              err_sorted.push_back(tmperr);
+            }
+
+          SetDataAndErrors(dtp_sorted, err_sorted);
+        }
       virtual void WriteNetCDF(const std::string &filename) override;
       void WriteStationLocations(const std::string &filename);
     private:

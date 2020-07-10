@@ -79,7 +79,7 @@ namespace jif3D
                         err[ndata])));
           }
 
-        std::vector<double> dtp_sorted(dtp.size()), err_sorted(dtp.size());
+        std::vector<double> dtp_sorted, err_sorted;
         std::multimap<int, std::tuple<int, int, double, double>>::iterator it;
         for (it = datamap.begin(); it != datamap.end(); ++it)
           {
@@ -148,8 +148,7 @@ namespace jif3D
         WriteVec(DataFile, "dtp_error", GetErrors(), NumberOfTraveltimes, "s");
 
         datamap = GetDataMap();
-        std::vector<int> EInd(GetData().size()), PInd(GetData().size()), TInd(
-            GetData().size());
+        std::vector<int> EInd, PInd, TInd;
         std::multimap<int, std::tuple<int, int, double, double>>::iterator it;
         for (it = datamap.begin(); it != datamap.end(); ++it)
           {
