@@ -214,7 +214,7 @@ namespace jif3D
         std::fill(dens_grad.begin(), dens_grad.end(), 0.0);
         std::fill(vs_grad.begin(), vs_grad.end(), 0.0);
         std::fill(vp_grad.begin(), vp_grad.end(), 0.0);
-        if (datamap_mod.size() !=0)
+        if (datamap_mod.size() != 0)
           {
             datamap_mod.clear();
           }
@@ -226,9 +226,9 @@ namespace jif3D
         const double dnorth = northing[1] - northing[0];
         const std::vector<double> model_origin =
           { easting[0] - deast, northing[0] - dnorth };
-        boost::posix_time::ptime starttime =
-            boost::posix_time::microsec_clock::local_time();
-        std::cout << "Starting calculation " << starttime << std::endl;
+        /*boost::posix_time::ptime starttime =
+         boost::posix_time::microsec_clock::local_time();
+         std::cout << "Starting calculation " << starttime << std::endl;*/
         const std::vector<double> w = T2w(periods);
 
         std::vector<double> vph_map(NX * NY * nperiods, 0.0);
@@ -239,8 +239,8 @@ namespace jif3D
         //omp_init_lock(&lck);
         for (int freq = 0; freq < nperiods; freq++)
           {
-            std::cout << "Period: " << periods[freq] << " s.";
-            std::cout << "\n";
+            /*std::cout << "Period: " << periods[freq] << " s.";
+             std::cout << "\n";*/
             //Vectors to store gradients, dispersion curves
             std::vector<double> dens_1D(NZ);
             std::vector<double> vs_1D(NZ);
@@ -279,36 +279,36 @@ namespace jif3D
                 if (nstep % 10 == 0)
                   {
 
-                    std::cout << " Finished " << nstep << " cells, took "
-                        << (boost::posix_time::microsec_clock::local_time() - starttime).total_seconds()
-                        << " s" << std::endl;
+                    /*std::cout << " Finished " << nstep << " cells, took "
+                     << (boost::posix_time::microsec_clock::local_time() - starttime).total_seconds()
+                     << " s" << std::endl;*/
                   }
               } //end loop over northing
           } // end frequency loop
-        boost::posix_time::ptime currtime =
-            boost::posix_time::microsec_clock::local_time();
-        std::cout << " Finished 1D calculation took "
-            << (currtime - starttime).total_seconds() << " s" << std::endl;
+        /*boost::posix_time::ptime currtime =
+         boost::posix_time::microsec_clock::local_time();
+         std::cout << " Finished 1D calculation took "
+         << (currtime - starttime).total_seconds() << " s" << std::endl;*/
         // loop over all station pairs, computes phase delays
         std::vector<std::vector<double>> segments;
         std::vector<double> seg_east, seg_north;
         int LastPair = -1, seg_east_size;
-        auto data_it = datamap.begin();
 //#pragma omp parallel for default(shared)
         for (int datacounter = 0; datacounter < ndata; datacounter++)
           {
-            if (LastPair != (*data_it).first)
+            auto data_it = datamap.begin();
+            std::advance(data_it, datacounter);
+            int pairindex = (*data_it).first;
+            if (LastPair != pairindex)
               {
-                segments = get_gc_segments(mpe[StatPairs[(*data_it).first]],
-                    mpn[StatPairs[(*data_it).first]],
-                    mpe[StatPairs[(*data_it).first + npairs]],
-                    mpn[StatPairs[(*data_it).first + npairs]], lon_centr, false_east,
+                segments = get_gc_segments(mpe[StatPairs[pairindex]],
+                    mpn[StatPairs[pairindex]], mpe[StatPairs[pairindex + npairs]],
+                    mpn[StatPairs[pairindex + npairs]], lon_centr, false_east,
                     length_tolerance);
                 seg_east = segments[0];
                 seg_north = segments[1];
                 seg_east_size = seg_east.size();
-                std::vector<std::vector<double>>().swap(segments);
-                LastPair = (*data_it).first;
+                LastPair = pairindex;
               }
 
             std::vector<double> vs_tmpgrd(NX * NY * NZ, 0.0), vp_tmpgrd(NX * NY * NZ,
@@ -353,7 +353,7 @@ namespace jif3D
 
             //omp_set_lock(&lck);
             datamap_mod.insert(
-                std::pair<int, std::tuple<int, int, double, double>>((*data_it).first,
+                std::pair<int, std::tuple<int, int, double, double>>(pairindex,
                     std::make_tuple(eventid, periodid, time_total, err)));
             //delayfile << "\n" << event_stat_cmb[event*nsrcs+src] << "\t" << src_rcvr_cmb[src] << "\t" << src_rcvr_cmb[src+nsrcs] << "\t" << (2.0*M_PI)/w[freq] << "\t" << time_total;
 
@@ -367,15 +367,14 @@ namespace jif3D
                 dens_grad.begin(), weighted_add(residual));
             //omp_unset_lock(&lck);
 
-            /*if (std::distance(datamap.cbegin(), it) % 10 == 0)
+            /*if (std::distance(datamap.begin(), data_it) % 10 == 0)
              {
 
-             std::cout << " Finished " << std::distance(datamap.begin(), it)
+             std::cout << " Finished " << std::distance(datamap.begin(), data_it)
              << " out of " << datamap.size() << " station pairs, took "
              << (boost::posix_time::microsec_clock::local_time() - starttime).total_seconds()
              << " s" << std::endl;
              }*/
-            data_it++;
           } // end loop over station pairs
       }
   }

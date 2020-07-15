@@ -1208,7 +1208,7 @@ namespace jif3D
         return pts;
       }
 
-    std::vector<std::vector<double>> get_t_segments(double &east0, double &north0,
+    std::vector<std::vector<double>> get_t_segments(const double &east0_in, const double &north0_in,
         const double &east1, const double &north1, const double &event_e,
         const double &event_n, const double &lon_centr, const std::vector<double> &origin,
         const double &deast, const double &dnorth, const std::vector<double> &c,
@@ -1229,6 +1229,7 @@ namespace jif3D
         // Path segment is interpreted as line segment (not loxodrome)
         // because we don't care about its length (only orientation).
         // Check which model cells are crossed by inter-station path segment.
+        double north0 = north0_in, east0 = east0_in;
         const double slope = (north1 - north0) / (east1 - east0);
         const double intercept = north0 - slope * east0;
         double ecell0 = floor((east0 - origin[0]) / deast);

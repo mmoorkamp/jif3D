@@ -254,7 +254,7 @@ namespace jif3D
         const double &north0, const double &east1, const double &north1,
         const double &lon_centr, const double &false_east,
         const double &length_tolerance);
-    std::vector<std::vector<double>> get_t_segments(double &east0, double &north0,
+    std::vector<std::vector<double>> get_t_segments(const double &east0, const double &north0,
         const double &east1, const double &north1, const double &event_e,
         const double &event_n, const double &lon_centr, const std::vector<double> &origin,
         const double &deast, const double &dnorth, const std::vector<double> &c,
