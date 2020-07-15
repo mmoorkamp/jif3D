@@ -90,7 +90,7 @@ namespace jif3D
             Calculator.set_false_east(500000.0);
             Calculator.set_root_search_iterations(50);
             Calculator.set_mode_skip_iterations(2);
-            Calculator.set_data_err(SurfaceWaveError);
+            SurfaceWaveData.SetDataAndErrors(SurfaceWaveData.GetData(), SurfaceWaveError);
 
             SurfaceWaveObjective = boost::make_shared<
                 jif3D::ThreeDModelObjective<jif3D::SurfaceWaveCalculator>>(Calculator);

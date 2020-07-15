@@ -182,9 +182,11 @@ namespace jif3D
         const std::vector<double> mpn = Data.GetMeasPosX();
         const std::vector<double> mpe = Data.GetMeasPosY();
         //const std::vector<double> mpz = Data.GetMeasPosZ();
-        const std::vector<int> NDataPerT = Data.GetDataPerT();
+        //const std::vector<int> NDataPerT = Data.GetDataPerT();
         const std::vector<int> StatPairs = Data.GetStatPairs();
-        auto datamap = Data.GetDataMap();
+        const std::vector<double> dtp_obs = Data.GetData();
+        const std::vector<double> err_obs = Data.GetErrors();
+        auto indexmap = Data.GetIndexMap();
         const double lon_centr = Data.GetCentrLon();
 
         const std::vector<double> depth(Model.GetZCoordinates().begin() + 1,
@@ -200,7 +202,7 @@ namespace jif3D
 
         const int nperiods = periods.size();
         const int npairs = StatPairs.size() / 2;
-        const int ndata = Data.GetData().size();
+        const int ndata = dtp_obs.size();
         const size_t NX = northing.size();
         const size_t NY = easting.size();
         const size_t NZ = depth.size();
@@ -214,10 +216,11 @@ namespace jif3D
         std::fill(dens_grad.begin(), dens_grad.end(), 0.0);
         std::fill(vs_grad.begin(), vs_grad.end(), 0.0);
         std::fill(vp_grad.begin(), vp_grad.end(), 0.0);
-        if (datamap_mod.size() != 0)
+        if (dtp_mod.size() != ndata)
           {
-            datamap_mod.clear();
+            dtp_mod.resize(ndata);
           }
+        std::fill(dtp_mod.begin(), dtp_mod.end(), 0.0);
         const std::vector<double> vs = array2vector(vs_all);
         const std::vector<double> vp = array2vector(vp_all);
         const std::vector<double> dens = array2vector(dens_all);
@@ -231,17 +234,18 @@ namespace jif3D
          std::cout << "Starting calculation " << starttime << std::endl;*/
         const std::vector<double> w = T2w(periods);
 
+        //Vectors to store gradients, dispersion curves
         std::vector<double> vph_map(NX * NY * nperiods, 0.0);
         std::vector<double> dcdrho(nmod * nperiods, 0.0), dcdvs(nmod * nperiods, 0.0),
             dcdvp(nmod * nperiods, 0.0);
 
-        //omp_lock_t lck;
-        //omp_init_lock(&lck);
+        omp_lock_t lck;
+        omp_init_lock(&lck);
         for (int freq = 0; freq < nperiods; freq++)
           {
             /*std::cout << "Period: " << periods[freq] << " s.";
              std::cout << "\n";*/
-            //Vectors to store gradients, dispersion curves
+
             std::vector<double> dens_1D(NZ);
             std::vector<double> vs_1D(NZ);
             std::vector<double> vp_1D(NZ);
@@ -276,13 +280,13 @@ namespace jif3D
                           }
                       }
                   } //end loop over easting
-                if (nstep % 10 == 0)
+                /*if (nstep % 10 == 0)
                   {
 
-                    /*std::cout << " Finished " << nstep << " cells, took "
+                    std::cout << " Finished " << nstep << " cells, took "
                      << (boost::posix_time::microsec_clock::local_time() - starttime).total_seconds()
-                     << " s" << std::endl;*/
-                  }
+                     << " s" << std::endl;
+                  }*/
               } //end loop over northing
           } // end frequency loop
         /*boost::posix_time::ptime currtime =
@@ -293,10 +297,10 @@ namespace jif3D
         std::vector<std::vector<double>> segments;
         std::vector<double> seg_east, seg_north;
         int LastPair = -1, seg_east_size;
-//#pragma omp parallel for default(shared)
+#pragma omp parallel for default(shared)
         for (int datacounter = 0; datacounter < ndata; datacounter++)
           {
-            auto data_it = datamap.begin();
+            auto data_it = indexmap.begin();
             std::advance(data_it, datacounter);
             int pairindex = (*data_it).first;
             if (LastPair != pairindex)
@@ -317,8 +321,6 @@ namespace jif3D
             auto IndicesData = (*data_it).second;
             int eventid = std::get<0>(IndicesData);
             int periodid = std::get<1>(IndicesData);
-            double dtp = std::get<2>(IndicesData);
-            double err = std::get<3>(IndicesData);
 
             for (int seg = 0; seg < seg_east_size - 1; seg++)
               { //loop over great circle segments
@@ -351,13 +353,12 @@ namespace jif3D
                     dens_tmpgrd.begin(), std::plus<double>());
               } //end loop ever path segments
 
-            //omp_set_lock(&lck);
-            datamap_mod.insert(
-                std::pair<int, std::tuple<int, int, double, double>>(pairindex,
-                    std::make_tuple(eventid, periodid, time_total, err)));
+            omp_set_lock(&lck);
+            dtp_mod[datacounter] = time_total;
             //delayfile << "\n" << event_stat_cmb[event*nsrcs+src] << "\t" << src_rcvr_cmb[src] << "\t" << src_rcvr_cmb[src+nsrcs] << "\t" << (2.0*M_PI)/w[freq] << "\t" << time_total;
 
-            const double residual = (time_total - dtp) / jif3D::pow2(err);
+            const double residual = (time_total - dtp_obs[datacounter])
+                / jif3D::pow2(err_obs[datacounter]);
 
             std::transform(vs_grad.begin(), vs_grad.end(), vs_tmpgrd.begin(),
                 vs_grad.begin(), weighted_add(residual));
@@ -365,7 +366,7 @@ namespace jif3D
                 vp_grad.begin(), weighted_add(residual));
             std::transform(dens_grad.begin(), dens_grad.end(), dens_tmpgrd.begin(),
                 dens_grad.begin(), weighted_add(residual));
-            //omp_unset_lock(&lck);
+            omp_unset_lock(&lck);
 
             /*if (std::distance(datamap.begin(), data_it) % 10 == 0)
              {

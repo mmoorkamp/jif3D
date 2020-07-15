@@ -70,6 +70,7 @@ namespace jif3D
             // ignore
           }
 
+        std::multimap<int, std::tuple<int, int, double, double>> datamap;
         // Organize data in multimap
         for (int ndata = 0; ndata < dtp.size(); ndata++)
           {
@@ -77,6 +78,9 @@ namespace jif3D
                 std::pair<int, std::tuple<int, int, double, double>>(PairInd[ndata],
                     std::make_tuple(EventInd[ndata], TInd[ndata], dtp[ndata],
                         err[ndata])));
+            indexmap.insert(
+                std::pair<int, std::tuple<int, int>>(PairInd[ndata],
+                    std::make_tuple(EventInd[ndata], TInd[ndata])));
           }
 
         std::vector<double> dtp_sorted, err_sorted;
@@ -147,10 +151,9 @@ namespace jif3D
         WriteVec(DataFile, "dtp", GetData(), NumberOfTraveltimes, "s");
         WriteVec(DataFile, "dtp_error", GetErrors(), NumberOfTraveltimes, "s");
 
-        datamap = GetDataMap();
         std::vector<int> EInd, PInd, TInd;
-        std::multimap<int, std::tuple<int, int, double, double>>::iterator it;
-        for (it = datamap.begin(); it != datamap.end(); ++it)
+        std::multimap<int, std::tuple<int, int>>::iterator it;
+        for (it = GetIndexMap().begin(); it != GetIndexMap().end(); ++it)
           {
             int ptmp = (*it).first;
             auto datatuple = (*it).second;
