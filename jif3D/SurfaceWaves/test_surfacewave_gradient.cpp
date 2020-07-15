@@ -60,9 +60,9 @@ BOOST_AUTO_TEST_SUITE (SW_Gradient_Test_Suite)
           { 500000.0, 500000.0 + 10000.0, 500000.0 + 20000.0, 500000.0 + 30000.0, 500000.0
               + 40000.0, 500000.0 + 50000.0, 500000.0 + 60000.0 };
         std::vector<double> zcoords_m =
-          { 0.0, 2.0, 4.3, 6.8, 9.6, 12.8, 20.0 };
-        //{ 0.0, 35000.0, 100000.0};
-        //{ 0.0, 5000.0 };
+        { 0.0, 2.0, 4.3, 6.8, 9.6, 12.8, 20.0 };
+            //{ 0.0, 35000.0, 100000.0};
+              //{ 0.0, 5000.0 };
         const int zsize = zcoords_m.size();
 
         TomoModel.SetCellCoords(xcoords_m, ycoords_m, zcoords_m);
@@ -79,14 +79,17 @@ BOOST_AUTO_TEST_SUITE (SW_Gradient_Test_Suite)
          std::vector<double> rho =
          { 2700.0, 3300.0 };*/
         std::vector<double> alpha =
-          { 650.0, 750.0, 1400.0, 1800.0, 2150.0, 2800.0 };
+         { 650.0, 750.0, 1400.0, 1800.0, 2150.0, 2800.0 };
+         std::vector<double> beta =
+         { 194.0, 270.0, 367.0, 485.0, 603.0, 740.0 };
+         std::vector<double> rho =
+         { 1820.0, 1860.0, 1910.0, 1960.0, 2020.0, 2090.0 };
+        /*std::vector<double> alpha =
+          { 5000.0 };
         std::vector<double> beta =
-          { 194.0, 270.0, 367.0, 485.0, 603.0, 740.0 };
+          { 3000.0 };
         std::vector<double> rho =
-          { 1820.0, 1860.0, 1910.0, 1960.0, 2020.0, 2090.0 };
-        /*std::vector<double> alpha = {5000.0};
-         std::vector<double> beta = {3000.0};
-         std::vector<double> rho = {2700.0};*/
+          { 2700.0 };*/
         auto exten =
             boost::extents[xcoords_m.size() - 1][ycoords_m.size() - 1][zcoords_m.size()
                 - 1];
@@ -131,7 +134,7 @@ BOOST_AUTO_TEST_SUITE (SW_Gradient_Test_Suite)
           { 0.0 };
         SWData.SetEventPositions(epx, epy, epz);
         std::vector<double> T =
-          { 1.0 / 20.0, 1.0 / 10.0, 1.0 / 5.0, 1.0 };
+          { 1.0/20, 1.0/10.0, 1.0/5.0, 1.0 };
 
         SWData.SetPeriods(T);
         SWData.SetLonCentr(-123.0);
@@ -143,9 +146,12 @@ BOOST_AUTO_TEST_SUITE (SW_Gradient_Test_Suite)
         std::vector<int> NDataPerT =
           { 1, 1, 1, 1 };
         SWData.SetNDataPerT(NDataPerT);
-        std::vector<int> PairIndex = {0, 0, 0, 0};
-        std::vector<int> EventIndex = {0, 0, 0, 0};
-        std::vector<int> PeriodIndex = {0, 1, 2, 3};
+        std::vector<int> PairIndex =
+          { 0, 0, 0, 0 };
+        std::vector<int> EventIndex =
+          { 0, 0, 0, 0 };
+        std::vector<int> PeriodIndex =
+          { 0, 1, 2, 3 };
         std::vector<double> dtp(PairIndex.size(), 1.0);
         std::vector<double> err(dtp.size(), 1.0);
         SWData.SetDataMap(PairIndex, EventIndex, PeriodIndex, dtp, err);
