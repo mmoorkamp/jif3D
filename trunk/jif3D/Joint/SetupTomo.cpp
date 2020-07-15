@@ -95,12 +95,9 @@ namespace jif3D
 
             if (vm.count("tomofine") && CellSize > 0.0)
               {
-                const double xmax = TomoModel.GetXCoordinates().back()
-                    + TomoModel.GetXCellSizes().back();
-                const double ymax = TomoModel.GetYCoordinates().back()
-                    + TomoModel.GetYCellSizes().back();
-                const double zmax = TomoModel.GetZCoordinates().back()
-                    + TomoModel.GetZCellSizes().back();
+                const double xmax = TomoModel.GetXCoordinates().back();
+                const double ymax = TomoModel.GetYCoordinates().back();
+                const double zmax = TomoModel.GetZCoordinates().back();
                 const double xextent = xmax - TomoModel.GetXCoordinates().front();
                 const double yextent = ymax - TomoModel.GetYCoordinates().front();
                 const double zextent = zmax - TomoModel.GetZCoordinates().front();
