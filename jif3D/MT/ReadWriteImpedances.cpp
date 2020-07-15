@@ -193,7 +193,7 @@ namespace jif3D
             if (MustExist)
               {
                 throw std::runtime_error(
-                    "Call to ReadImpedanceComp with MustExist failed.");
+                    "Call to ReadTipperComp with MustExist failed.");
               }
           }
       }
