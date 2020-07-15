@@ -16,13 +16,24 @@
 namespace jif3D
   {
 
+    double shan_entropy(const jif3D::rvec &x);
+    jif3D::rvec diff_shan_entropy(const jif3D::rvec &x);
+
     class MutualInformationConstraint: public ObjectiveFunction
       {
-      private:
+    public:
+      enum MICalcType { hist, gauss};
+    private:
+      jif3D::rvec CountsXY;
+      jif3D::rvec CountsX;
+      jif3D::rvec CountsY;
       double xmin;
       double xmax;
       double ymin;
       double ymax;
+      size_t nbins;
+      size_t eval;
+      MICalcType Calc;
       //boost::shared_ptr<MINE> mine;
     public:
       //! The clone function provides a virtual constructor
@@ -36,7 +47,7 @@ namespace jif3D
       //! The gradient of the cross-gradient objective function with respect to the model parameters
       virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model, const jif3D::rvec &Diff)
           override;
-      MutualInformationConstraint(double min1, double max1, double min2, double max2);
+      MutualInformationConstraint(double min1, double max1, double min2, double max2, size_t nb, MICalcType C = gauss);
       virtual ~MutualInformationConstraint();
       };
 
