@@ -90,7 +90,7 @@ int main()
     const size_t nstat = StatX.size();
     for (size_t ind : Indices)
       {
-        Errors.at(ind) = std::abs(Impedances.at(ind));
+        Errors.at(ind) = 10.0 * std::abs(Impedances.at(ind));
         size_t stati = ind % (nstat * 8) / 8;
         size_t freqi = ind / (nstat * 8);
         indexfile << ind << " " << stati << " " << " " << freqi << std::endl;

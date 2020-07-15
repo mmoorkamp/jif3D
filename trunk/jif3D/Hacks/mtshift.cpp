@@ -38,10 +38,12 @@ int main()
     for (size_t i = 0; i < Errors.size() - 1; i += 2)
       {
         if (Errors.at(i)
-            > 0.5 * sqrt(jif3D::pow2(Impedances.at(i)) + jif3D::pow2(Impedances.at(i + 1))))
+            > 1.0 * sqrt(jif3D::pow2(Impedances.at(i)) + jif3D::pow2(Impedances.at(i + 1))))
           {
             Impedances.at(i) = SynthImpedances.at(i);
             Impedances.at(i + 1) = SynthImpedances.at(i + 1);
+            Errors.at(i) = 10.0 * SynthImpedances.at(i);
+            Errors.at(i+1) = 10.0 * SynthImpedances.at(i+1);
             ++nshift;
           }
 
