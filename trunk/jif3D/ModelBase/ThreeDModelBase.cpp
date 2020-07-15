@@ -245,9 +245,8 @@ namespace jif3D
         std::copy(GetXCellSizes().begin(), GetXCellSizes().end(),
             std::ostream_iterator<double>(meshfile, " "));
         meshfile << "\n";
-        std::transform(GetZCellSizes().begin(), GetZCellSizes().end(),
-            std::ostream_iterator<double>(meshfile, " "), [](double val)
-              { return -val;});
+        std::copy(GetZCellSizes().begin(), GetZCellSizes().end(),
+            std::ostream_iterator<double>(meshfile, " "));
         meshfile << "\n" << std::flush;
 
         std::ofstream valfile((filename + ".val").c_str());
@@ -260,7 +259,7 @@ namespace jif3D
               {
                 for (size_t k = 0; k < nz; ++k)
                   {
-                    valfile << Data[i][ny-j-1][k] << "\n";
+                    valfile << Data[i][j][k] << "\n";
                   }
               }
           }
