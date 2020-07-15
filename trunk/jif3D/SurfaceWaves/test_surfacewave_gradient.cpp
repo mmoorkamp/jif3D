@@ -154,7 +154,8 @@ BOOST_AUTO_TEST_SUITE (SW_Gradient_Test_Suite)
           { 0, 1, 2, 3 };
         std::vector<double> dtp(PairIndex.size(), 1.0);
         std::vector<double> err(dtp.size(), 1.0);
-        SWData.SetDataMap(PairIndex, EventIndex, PeriodIndex, dtp, err);
+        SWData.SetIndexMap(PairIndex, EventIndex, PeriodIndex);
+        SWData.SetDataAndErrors(dtp, err);
 
         jif3D::SurfaceWaveCalculator Calculator;
 //Calculator.set_data_err(err);
