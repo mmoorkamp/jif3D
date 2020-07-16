@@ -45,6 +45,7 @@ namespace jif3D
       std::string X3DName;
       std::string NameRoot;
       bool CleanFiles;
+      double zshift;
       jif3D::GreenCalcType GreenStage1;
       jif3D::GreenCalcType GreenStage4;
       jif3D::X3DModel OldModel;
@@ -202,7 +203,7 @@ const  std::vector<std::complex<double> > &GetEx1(double Freq) const
   void CalculateFields(const X3DModel &Model, const std::vector<double> &Frequencies,
       const std::vector<double> MeasPosZ);
   X3DFieldCalculator(boost::filesystem::path TDir = boost::filesystem::current_path(),
-      std::string x3d = "x3d", bool Clean = true, jif3D::GreenCalcType GS1 = hst,
+      std::string x3d = "x3d", double zs = 0.0, bool Clean = true, jif3D::GreenCalcType GS1 = hst,
       jif3D::GreenCalcType GS4 = hst);
   virtual ~X3DFieldCalculator();
 };

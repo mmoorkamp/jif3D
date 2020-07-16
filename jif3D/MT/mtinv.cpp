@@ -68,6 +68,8 @@ double tipperr, tiprelerr;
 double DistCorr = 0;
 bool CleanFiles = true;
 double CovWidth = 3.0;
+double zshift = 0.0;
+
 int hpx_main(boost::program_options::variables_map& vm)
   {
 
@@ -375,7 +377,7 @@ int hpx_main(boost::program_options::variables_map& vm)
       }
 
     boost::shared_ptr<jif3D::X3DFieldCalculator> FC = boost::make_shared<
-        jif3D::X3DFieldCalculator>(TempDir, X3DName);
+        jif3D::X3DFieldCalculator>(TempDir, X3DName, zshift);
 
     jif3D::X3DMTCalculator Calculator(TempDir, X3DName, WantDistCorr, CleanFiles, FC);
     if (vm.count("opt"))
@@ -739,7 +741,9 @@ int main(int argc, char* argv[])
         po::value(&coolingfactor)->default_value(1.0),
         "The factor to multiply the weight for the regularization at each iteration EXPERIMENTAL")(
         "debug", "Show debugging output.")("opt",
-        "Use opt for Green's function calculation in x3d.")("refmodel",
+        "Use opt for Green's function calculation in x3d.")("zshift",
+        po::value(&zshift)->default_value(0.0),
+        "Shift the depth of all sites by this distance in m, EXPERIMENTAL")("refmodel",
         po::value(&RefModelName),
         "The name of the reference model to substract before calculating smoothness")(
         "crossmodel", po::value(&CrossModelName),
