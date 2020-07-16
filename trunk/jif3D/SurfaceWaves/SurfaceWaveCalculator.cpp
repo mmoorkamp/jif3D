@@ -239,8 +239,8 @@ namespace jif3D
         std::vector<double> dcdrho(nmod * nperiods, 0.0), dcdvs(nmod * nperiods, 0.0),
             dcdvp(nmod * nperiods, 0.0);
 
-        //omp_lock_t lck;
-        //omp_init_lock(&lck);
+        omp_lock_t lck;
+        omp_init_lock(&lck);
         for (int freq = 0; freq < nperiods; freq++)
           {
             /*std::cout << "Period: " << periods[freq] << " s.";
@@ -297,7 +297,7 @@ namespace jif3D
         std::vector<std::vector<double>> segments;
         std::vector<double> seg_east, seg_north;
         int LastPair = -1, seg_east_size;
-//#pragma omp parallel for default(shared)
+#pragma omp parallel for default(shared), firstprivate(segments,seg_east,seg_north, LastPair, seg_east_size), schedule(static)
         for (int datacounter = 0; datacounter < ndata; datacounter++)
           {
             auto data_it = indexmap.begin();
@@ -353,7 +353,7 @@ namespace jif3D
                     dens_tmpgrd.begin(), std::plus<double>());
               } //end loop ever path segments
 
-            //omp_set_lock(&lck);
+            omp_set_lock(&lck);
             dtp_mod[datacounter] = time_total;
             //delayfile << "\n" << event_stat_cmb[event*nsrcs+src] << "\t" << src_rcvr_cmb[src] << "\t" << src_rcvr_cmb[src+nsrcs] << "\t" << (2.0*M_PI)/w[freq] << "\t" << time_total;
 
@@ -366,7 +366,7 @@ namespace jif3D
                 vp_grad.begin(), weighted_add(residual));
             std::transform(dens_grad.begin(), dens_grad.end(), dens_tmpgrd.begin(),
                 dens_grad.begin(), weighted_add(residual));
-            //omp_unset_lock(&lck);
+            omp_unset_lock(&lck);
 
             /*if (std::distance(datamap.begin(), data_it) % 10 == 0)
              {
