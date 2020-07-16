@@ -127,6 +127,9 @@ namespace jif3D
         SetTearModel(vm, "tearmodx", StartModel, TearModX);
         SetTearModel(vm, "tearmody", StartModel, TearModY);
         SetTearModel(vm, "tearmodz", StartModel, TearModZ);
+        TearModX.WriteVTK("tearmodx.vtk");
+        TearModY.WriteVTK("tearmody.vtk");
+        TearModZ.WriteVTK("tearmodz.vtk");
 
         if (vm.count("mingradsupp"))
           {

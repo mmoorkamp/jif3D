@@ -55,6 +55,8 @@ namespace jif3D
       boost::shared_ptr<jif3D::ChainedTransform> CondRegTrans;
       //! The transformation between generalized model parameters and density for the regularization functional
       boost::shared_ptr<jif3D::ChainedTransform> DensRegTrans;
+            //! The number of bins used for histogram construction in mutual information
+      size_t mibins;
       //! The minimal conductivity in S/m
       double mincond;
       //! The maximum conductivity in S/m
