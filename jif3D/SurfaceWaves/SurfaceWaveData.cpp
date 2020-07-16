@@ -37,7 +37,7 @@ namespace jif3D
 
         ReadVec(dtpFile, "EventPosX", EventPosX);
         ReadVec(dtpFile, "EventPosY", EventPosY);
-        ReadVec(dtpFile, "EventPosY", EventPosZ);
+        ReadVec(dtpFile, "EventPosZ", EventPosZ);
         ReadVec(dtpFile, "TraveltimesPerPeriod", NDataPerT);
 
         NcDim nsrcsIn = dtpFile.getDim("NumberOfPairs");
@@ -112,7 +112,7 @@ namespace jif3D
         const size_t nevents = GetEventPosX().size();
         const size_t nperiods = GetPeriods().size();
         const size_t nstats = GetMeasPosX().size();
-        const size_t npairs = GetStatPairs().size();
+        const size_t npairs = GetStatPairs().size() / 2;
         const size_t ntimes = GetData().size();
         const std::string lon_centr = "Central_meridian";
 
@@ -146,14 +146,29 @@ namespace jif3D
         WriteVec(DataFile, "MeasPosZ", GetMeasPosZ(), NumberOfStations, "m");
         // write out periods
         WriteVec(DataFile, "Periods", GetPeriods(), NumberOfPeriods, "s");
-        WriteVec(DataFile, "StationPairs", GetStatPairs(), NumberOfPairs, "");
-        WriteVec(DataFile, "TraveltimesPerPeriod", GetDataPerT(), NumberOfPeriods, "");
+        //WriteVec(DataFile, "StationPairs", GetStatPairs(), NumberOfPairs, "");
+
+        std::vector<NcDim> dimVec_DataPerT;
+        dimVec_DataPerT.push_back(NumberOfPeriods);
+        NcVar NDataPerT = DataFile.addVar("TraveltimesPerPeriod", netCDF::ncInt,
+            dimVec_DataPerT);
+        cxxport::put_legacy_ncvar(NDataPerT, GetDataPerT().data(), nperiods);
+
+        std::vector<NcDim> dimVec_StatPairs;
+        dimVec_StatPairs.push_back(NumberOfPairs);
+        dimVec_StatPairs.push_back(SR);
+        NcVar StatPairs = DataFile.addVar("StationPairs", netCDF::ncInt,
+            dimVec_StatPairs);
+        cxxport::put_legacy_ncvar(StatPairs, GetStatPairs().data(), npairs, sr);
+
+        //WriteVec(DataFile, "TraveltimesPerPeriod", GetDataPerT(), NumberOfPeriods, "");
         WriteVec(DataFile, "dtp", GetData(), NumberOfTraveltimes, "s");
         WriteVec(DataFile, "dtp_error", GetErrors(), NumberOfTraveltimes, "s");
 
         std::vector<int> EInd, PInd, TInd;
         std::multimap<int, std::tuple<int, int>>::iterator it;
-        for (it = GetIndexMap().begin(); it != GetIndexMap().end(); ++it)
+        auto indexmap = GetIndexMap();
+        for (it = indexmap.begin(); it != indexmap.end(); ++it)
           {
             int ptmp = (*it).first;
             auto datatuple = (*it).second;
@@ -164,9 +179,24 @@ namespace jif3D
             TInd.push_back(ttmp);
           }
 
-        WriteVec(DataFile, "EventIndex", EInd, NumberOfTraveltimes, "");
+        /*WriteVec(DataFile, "EventIndex", EInd, NumberOfTraveltimes, "");
         WriteVec(DataFile, "PairIndex", PInd, NumberOfTraveltimes, "");
-        WriteVec(DataFile, "PeriodIndex", TInd, NumberOfTraveltimes, "");
+        WriteVec(DataFile, "PeriodIndex", TInd, NumberOfTraveltimes, "");*/
+
+        std::vector<NcDim> dimVec_PInd;
+        dimVec_PInd.push_back(NumberOfTraveltimes);
+        NcVar PairInd = DataFile.addVar("PairIndex", netCDF::ncInt, dimVec_PInd);
+        cxxport::put_legacy_ncvar(PairInd, PInd.data(), ntimes);
+
+        std::vector<NcDim> dimVec_TInd;
+        dimVec_TInd.push_back(NumberOfTraveltimes);
+        NcVar PeriodInd = DataFile.addVar("PeriodIndex", netCDF::ncInt, dimVec_TInd);
+        cxxport::put_legacy_ncvar(PeriodInd, TInd.data(), ntimes);
+
+        std::vector<NcDim> dimVec_EInd;
+        dimVec_EInd.push_back(NumberOfTraveltimes);
+        NcVar EvInd = DataFile.addVar("EventIndex", netCDF::ncInt, dimVec_EInd);
+        cxxport::put_legacy_ncvar(EvInd, EInd.data(), ntimes);
 
       }
 
