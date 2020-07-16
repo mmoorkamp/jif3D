@@ -56,7 +56,7 @@ namespace jif3D
         po::options_description desc("Coupling options");
         desc.add_options()("crossgrad", "Use cross-gradient coupling")("saltrel",
             "Use a parameter constraint designed for salt")("mutual_information",
-            "Use a MI based coupling constraint")("minslow",
+            po::value(&mibins)->default_value(50), "Use a MI based coupling constraint")("minslow",
             po::value(&minslow)->default_value(1e-4))("maxslow",
             po::value(&maxslow)->default_value(0.005))("minvel",
             po::value(&minvel)->default_value(1000))("maxvel",
@@ -499,7 +499,7 @@ namespace jif3D
         //the double section transform takes two sections of the model
         //and feeds them to the objective function
         boost::shared_ptr<jif3D::MutualInformationConstraint> SeisGravMI =
-            boost::make_shared<jif3D::MutualInformationConstraint>(-2.5, -1.0, -2.0, 2.0);
+            boost::make_shared<jif3D::MutualInformationConstraint>(-2.0, 2.0, -2.0, 2.0, mibins);
         boost::shared_ptr<jif3D::MultiSectionTransform> SeisGravTrans(
             new jif3D::MultiSectionTransform(3 * ngrid));
         SeisGravTrans->AddSection(0, ngrid, Copier);
@@ -515,7 +515,8 @@ namespace jif3D
                 JointObjective::coupling);
           }
         boost::shared_ptr<jif3D::MutualInformationConstraint> SeisMTMI =
-            boost::make_shared<jif3D::MutualInformationConstraint>(-2.5, -1.0, 0.0, 1.5);
+            boost::make_shared<jif3D::MutualInformationConstraint>(-2.0, 2.0, -2.0, 2.0, mibins);
+
         boost::shared_ptr<jif3D::MultiSectionTransform> SeisMTTrans(
             new jif3D::MultiSectionTransform(3 * ngrid));
         SeisMTTrans->AddSection(0, ngrid, Copier);
@@ -530,7 +531,7 @@ namespace jif3D
                 JointObjective::coupling);
           }
         boost::shared_ptr<jif3D::MutualInformationConstraint> GravMTMI =
-            boost::make_shared<jif3D::MutualInformationConstraint>(-2.0, 2.0, -2.0, 2.0);
+            boost::make_shared<jif3D::MutualInformationConstraint>(-2.0, 2.0, -2.0, 2.0, mibins);
         boost::shared_ptr<jif3D::MultiSectionTransform> GravMTTrans(
             new jif3D::MultiSectionTransform(3 * ngrid));
         GravMTTrans->AddSection(ngrid, 2 * ngrid, Copier);
