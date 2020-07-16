@@ -126,8 +126,8 @@ namespace jif3D
                 HaveCurrentFields.at(calcindex) = true;
                 std::chrono::system_clock::time_point end =
                     std::chrono::system_clock::now();
-                size_t duration = std::chrono::duration_cast<std::chrono::seconds>(
-                    end - start).count();
+                size_t duration = std::chrono::duration_cast < std::chrono::seconds
+                    > (end - start).count();
 
                 omp_set_lock(&lck);
                 NewExecTime.push_back(std::make_pair(duration, calcindex));
@@ -165,6 +165,9 @@ namespace jif3D
         //construct a vector of indices of unique station depths
         size_t nlevels = ConstructDepthIndices(MeasDepthIndices, ShiftDepth, Model,
             MeasPosZ);
+        std::transform(ShiftDepth.begin(), ShiftDepth.end(), ShiftDepth.begin(),
+            [this](double val)
+              { return val + zshift;});
         const size_t nval = (nmodx * nmody * nlevels);
         //std::cout << "CurrFreq: " << CurrFreq.at(0) << " Freqindex: " << freqindex << std::endl;
         if (Ex1.at(freqindex).size() == nval && OldModel == Model)
@@ -237,8 +240,9 @@ namespace jif3D
       }
 
     X3DFieldCalculator::X3DFieldCalculator(boost::filesystem::path TDir, std::string x3d,
-        bool Clean, jif3D::GreenCalcType GS1, jif3D::GreenCalcType GS4) :
-        TempDir(TDir), X3DName(x3d), CleanFiles(Clean), GreenStage1(GS1), GreenStage4(GS4)
+        double zs, bool Clean, jif3D::GreenCalcType GS1, jif3D::GreenCalcType GS4) :
+        TempDir(TDir), X3DName(x3d), CleanFiles(Clean), zshift(zs), GreenStage1(GS1), GreenStage4(
+            GS4)
       {
         NameRoot = ObjectID();
         ForwardTimesFile.open("mtforward" + NameRoot + ".out");
