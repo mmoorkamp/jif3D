@@ -281,12 +281,12 @@ namespace jif3D
                       }
                   } //end loop over easting
                 /*if (nstep % 10 == 0)
-                  {
+                 {
 
-                    std::cout << " Finished " << nstep << " cells, took "
-                     << (boost::posix_time::microsec_clock::local_time() - starttime).total_seconds()
-                     << " s" << std::endl;
-                  }*/
+                 std::cout << " Finished " << nstep << " cells, took "
+                 << (boost::posix_time::microsec_clock::local_time() - starttime).total_seconds()
+                 << " s" << std::endl;
+                 }*/
               } //end loop over northing
           } // end frequency loop
         /*boost::posix_time::ptime currtime =
@@ -305,9 +305,9 @@ namespace jif3D
             int pairindex = (*data_it).first;
             if (LastPair != pairindex)
               {
-                segments = get_gc_segments(mpe[StatPairs[pairindex]],
-                    mpn[StatPairs[pairindex]], mpe[StatPairs[pairindex + npairs]],
-                    mpn[StatPairs[pairindex + npairs]], lon_centr, false_east,
+                segments = get_gc_segments(mpe[StatPairs[2 * pairindex]],
+                    mpn[StatPairs[2 * pairindex]], mpe[StatPairs[2 * pairindex + 1]],
+                    mpn[StatPairs[2 * pairindex + 1]], lon_centr, false_east,
                     length_tolerance);
                 seg_east = segments[0];
                 seg_north = segments[1];
