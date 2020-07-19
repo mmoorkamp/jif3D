@@ -173,7 +173,10 @@ int hpx_main(boost::program_options::variables_map& vm)
         std::copy(RefModel.GetConductivities().origin(),
             RefModel.GetConductivities().origin() + RefModel.GetNModelElements(),
             RefVec.begin());
-        Regularization->SetReferenceModel(ModRegTrans->PhysicalToGeneralized(RefVec));
+        //we regularize in generalized model parameters, so we have to
+        //apply the same transformation to the reference model vector as
+        //to the inversion vector
+        Regularization->SetReferenceModel(MTTransform->PhysicalToGeneralized(RefVec));
       }
 
     if (vm.count("regcheck"))
