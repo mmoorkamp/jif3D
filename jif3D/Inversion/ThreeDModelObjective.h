@@ -75,7 +75,8 @@ namespace jif3D
       DataType ObservedData;
       //! A transformation for the observed data, for example to invert apparent resistivity and phase instead of impedance for MT data
       boost::shared_ptr<jif3D::VectorTransform> DataTransform;
-      //! Calculate the difference between observed and synthetic data for a given model
+      //! In some cases (e.g. MT impedances) we might want to ignore data with large errorbars completely, this is the minimum relative error above which data are ignored
+      double ignorelargeerror;
       friend class access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
@@ -89,6 +90,7 @@ namespace jif3D
           ar & Refiner;
           ar & ObservedData;
           ar & DataTransform;
+          ar & ignorelargeerror;
         }
     protected:
       ThreeDModelObjective()
@@ -214,14 +216,14 @@ namespace jif3D
        * this class for requirements on the forward calculation object.
        * @param Calc The forward calculation object
        */
-      explicit ThreeDModelObjective(const ThreeDCalculatorType &Calc);
+      explicit ThreeDModelObjective(const ThreeDCalculatorType &Calc, double ethresh = 0.0);
       virtual ~ThreeDModelObjective();
       };
 
     template<class ThreeDCalculatorType>
     ThreeDModelObjective<ThreeDCalculatorType>::ThreeDModelObjective(
-        const ThreeDCalculatorType &Calc) :
-        Calculator(Calc), wantrefinement(false)
+        const ThreeDCalculatorType &Calc, double ethresh) :
+        Calculator(Calc), wantrefinement(false), ignorelargeerror(ethresh)
       {
       }
 
@@ -278,7 +280,7 @@ namespace jif3D
         //calculate the difference between observed and synthetic
         for (size_t i = 0; i < ndata; ++i)
           {
-            if (std::abs(ObservedData.GetData().at(i)) > Err.at(i))
+            if (std::abs(ObservedData.GetData().at(i)) > ignorelargeerror * Err.at(i))
               {
                 Diff(i) = SynthData(i) - ObservedData.GetData().at(i);
               }
