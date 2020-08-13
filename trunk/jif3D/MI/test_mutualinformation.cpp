@@ -24,14 +24,14 @@ void CheckGradient(jif3D::ObjectiveFunction &Objective, const jif3D::rvec &Model
     std::ofstream gradfile("migrad.out");
     for (size_t i = 0; i < Gradient.size(); ++i)
       {
-        double delta = 0.001;
+        double delta = 0.0001;
         jif3D::rvec Forward(Model);
         jif3D::rvec Backward(Model);
         Forward(i) += delta;
         Backward(i) -= delta;
         double FDGrad = (Objective.CalcMisfit(Forward) - Objective.CalcMisfit(Backward))
             / (2 * delta);
-        BOOST_CHECK_CLOSE(FDGrad, Gradient(i), 0.5);
+        BOOST_CHECK_CLOSE(FDGrad, Gradient(i), 1.0);
         gradfile << i << " " << Gradient(i) << " " << FDGrad << " " << Model(i)
             << std::endl;
 
