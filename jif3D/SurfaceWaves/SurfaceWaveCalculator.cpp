@@ -176,8 +176,8 @@ namespace jif3D
     void SurfaceWaveCalculator::forward(const SurfaceWaveModel &Model,
         const SurfaceWaveData &Data)
       {
-        const std::vector<double> eventx = Data.GetEventPosX();
-        const std::vector<double> eventy = Data.GetEventPosY();
+        const std::vector<double> eventlat = Data.GetEventPosLat();
+        const std::vector<double> eventlon = Data.GetEventPosLon();
         const std::vector<double> periods = Data.GetPeriods();
         const std::vector<double> mpn = Data.GetMeasPosX();
         const std::vector<double> mpe = Data.GetMeasPosY();
@@ -337,7 +337,7 @@ namespace jif3D
 
                 std::vector<std::vector<double>> time_segment = get_t_segments(
                     seg_east[seg], seg_north[seg], seg_east[seg + 1], seg_north[seg + 1],
-                    eventy[eventid], eventx[eventid], lon_centr, model_origin, deast,
+                    eventlat[eventid], eventlon[eventid], lon_centr, model_origin, deast,
                     dnorth, vph_map_T, NY, dcdvs_T, dcdvp_T, dcdrho_T, NZ, false_east);
                 std::vector<double> tmp = time_segment[0];
                 time_total += tmp[0];

@@ -18,13 +18,13 @@ namespace jif3D
     public:
       SurfaceWaveData();
       virtual void ReadNetCDF(const std::string &datafile) override;
-      std::vector<double> GetEventPosX() const
+      std::vector<double> GetEventPosLat() const
         {
-          return EventPosX;
+          return EventPosLat;
         }
-      std::vector<double> GetEventPosY() const
+      std::vector<double> GetEventPosLon() const
         {
-          return EventPosY;
+          return EventPosLon;
         }
       std::vector<double> GetEventPosZ() const
         {
@@ -50,14 +50,14 @@ namespace jif3D
         {
           return lon_centr;
         }
-      void SetEventPositions(const std::vector<double> &epx,
-          const std::vector<double> &epy, const std::vector<double> &epz)
+      void SetEventPositions(const std::vector<double> &elat,
+          const std::vector<double> &elon, const std::vector<double> &epz)
         {
-          EventPosX.resize(epx.size());
-          EventPosY.resize(epy.size());
+          EventPosLat.resize(elat.size());
+          EventPosLon.resize(elon.size());
           EventPosZ.resize(epz.size());
-          std::copy(epx.begin(), epx.end(), EventPosX.begin());
-          std::copy(epy.begin(), epy.end(), EventPosY.begin());
+          std::copy(elat.begin(), elat.end(), EventPosLat.begin());
+          std::copy(elon.begin(), elon.end(), EventPosLon.begin());
           std::copy(epz.begin(), epz.end(), EventPosZ.begin());
         }
       void SetPeriods(const std::vector<double> &T)
@@ -97,7 +97,7 @@ namespace jif3D
       void WriteStationLocations(const std::string &filename);
     private:
       // Earthquake locations
-      std::vector<double> EventPosX, EventPosY, EventPosZ;
+      std::vector<double> EventPosLat, EventPosLon, EventPosZ;
       // Periods
       std::vector<double> periods;
       // Event-station-combinations
