@@ -84,7 +84,7 @@ namespace jif3D
         assert(minfreqindex <= maxfreqindex);
         maxfreqindex = std::min(maxfreqindex, Data.GetFrequencies().size());
 
-        const int nfreq = maxfreqindex - minfreqindex;
+        const size_t nfreq = maxfreqindex - minfreqindex;
 
         const size_t nmeas = Data.GetMeasPosX().size();
         if (ForwardExecTime.empty() || ForwardExecTime.size() != nfreq)
@@ -126,7 +126,7 @@ namespace jif3D
         FieldCalculator->CalculateFields(Model, Data.GetFrequencies(),
             Data.GetMeasPosZ());
 #pragma omp parallel for shared(result,NewExecTime) schedule(dynamic,1)
-        for (int i = 0; i < nfreq; ++i)
+        for (size_t i = 0; i < nfreq; ++i)
           {
             //the openmp standard specifies that we cannot leave a parallel construct
             //by throwing an exception, so we catch all exceptions and just
