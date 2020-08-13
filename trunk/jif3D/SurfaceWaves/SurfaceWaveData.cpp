@@ -35,8 +35,8 @@ namespace jif3D
         ReadVec(dtpFile, "MeasPosZ", MPZ);
         SetMeasurementPoints(MPX, MPY, MPZ);
 
-        ReadVec(dtpFile, "EventPosX", EventPosX);
-        ReadVec(dtpFile, "EventPosY", EventPosY);
+        ReadVec(dtpFile, "EventPosLat", EventPosLat);
+        ReadVec(dtpFile, "EventPosLon", EventPosLon);
         ReadVec(dtpFile, "EventPosZ", EventPosZ);
         ReadVec(dtpFile, "TraveltimesPerPeriod", NDataPerT);
 
@@ -102,14 +102,14 @@ namespace jif3D
       }
 
     SurfaceWaveData::SurfaceWaveData() :
-        EventPosX(), EventPosY(), EventPosZ(), periods(), lon_centr(), NDataPerT(), StationPairs()
+        EventPosLat(), EventPosLon(), EventPosZ(), periods(), lon_centr(), NDataPerT(), StationPairs()
       {
       }
 
     void SurfaceWaveData::WriteNetCDF(const std::string &filename)
       {
         const size_t sr = 2;
-        const size_t nevents = GetEventPosX().size();
+        const size_t nevents = GetEventPosLat().size();
         const size_t nperiods = GetPeriods().size();
         const size_t nstats = GetMeasPosX().size();
         const size_t npairs = GetStatPairs().size() / 2;
@@ -127,8 +127,8 @@ namespace jif3D
         NcDim SR = DataFile.addDim("SR", sr);
 
         //write out the event coordinates
-        WriteVec(DataFile, "EventPosX", GetEventPosX(), NumberOfEvents, "m");
-        WriteVec(DataFile, "EventPosY", GetEventPosY(), NumberOfEvents, "m");
+        WriteVec(DataFile, "EventPosLat", GetEventPosLat(), NumberOfEvents, "degree");
+        WriteVec(DataFile, "EventPosLon", GetEventPosLon(), NumberOfEvents, "degree");
         WriteVec(DataFile, "EventPosZ", GetEventPosZ(), NumberOfEvents, "m");
         //write out the positions of the stations, i.e. measurement positions
         NcVar MeasPosXVar = DataFile.addVar("MeasPosX", netCDF::ncDouble,

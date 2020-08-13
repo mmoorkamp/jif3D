@@ -1209,8 +1209,8 @@ namespace jif3D
       }
 
     std::vector<std::vector<double>> get_t_segments(const double &east0_in, const double &north0_in,
-        const double &east1, const double &north1, const double &event_e,
-        const double &event_n, const double &lon_centr, const std::vector<double> &origin,
+        const double &east1, const double &north1, const double &event_lat,
+        const double &event_lon, const double &lon_centr, const std::vector<double> &origin,
         const double &deast, const double &dnorth, const std::vector<double> &c,
         const int &ncells_east, const std::vector<double> &dcdvs,
         const std::vector<double> &dcdvp, const std::vector<double> &dcdrho,
@@ -1223,8 +1223,8 @@ namespace jif3D
             GeographicLib::Constants::WGS84_f());
         GeographicLib::TransverseMercatorExact proj(GeographicLib::Constants::WGS84_a(),
             GeographicLib::Constants::WGS84_f(), GeographicLib::Constants::UTM_k0());
-        double event_lat, event_lon;
-        proj.Reverse(lon_centr, event_e - false_east, event_n, event_lat, event_lon);
+        //double event_lat, event_lon;
+        //proj.Reverse(lon_centr, event_e - false_east, event_n, event_lat, event_lon);
 
         // Path segment is interpreted as line segment (not loxodrome)
         // because we don't care about its length (only orientation).
