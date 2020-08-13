@@ -72,6 +72,7 @@ namespace jif3D
         double H = 0;
         const size_t nx = x.size();
         const double sum = ublas::sum(x);
+#pragma omp parallel for reduction(-:H)
         for (size_t i = 0; i < nx; ++i)
           {
             // lim x->0 of x log(x) = 0 however for small values of x
@@ -195,6 +196,7 @@ namespace jif3D
             //outfile << x(i) << " " << y(i) << std::endl;
             //int xc = std::floor(std::min((x(i) - xmin) / xw, nbins - 1));
             //int yc = std::floor(std::min((y(i) - ymin) / yw, nbins - 1));
+#pragma omp parallel for
             for (size_t j = 0; j < nbins; ++j)
               {
                 const double distx = x(i) - (xmin + (j + 0.5) * xw);
@@ -205,6 +207,7 @@ namespace jif3D
                         std::sqrt(distx * distx + disty * disty) / binwidth);
                     CountsXY(j * nbins + k) += val;
                     CountsX(j) += val;
+#pragma omp atomic
                     CountsY(k) += val;
                   }
               }
@@ -225,6 +228,7 @@ namespace jif3D
         jif3D::rvec dsx = diff_shan_entropy(CountsX);
         jif3D::rvec dsy = diff_shan_entropy(CountsY);
         jif3D::rvec dsxy = diff_shan_entropy(CountsXY);
+#pragma omp parallel for
         for (size_t i = 0; i < nparm; ++i)
           {
             //int xc = std::floor(std::min((x(i) - xmin) / xw, nbins - 1));
