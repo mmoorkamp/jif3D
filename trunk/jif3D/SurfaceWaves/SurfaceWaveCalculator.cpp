@@ -27,6 +27,7 @@
 #include "../Global/FatalException.h"
 #include "../SurfaceWaves/SurfaceWaveCalculator.h"
 #include "../SurfaceWaves/SurfaceWaveFunctions.h"
+#include "../ModelBase/VTKTools.h"
 
 namespace jif3D
   {
@@ -34,6 +35,31 @@ namespace jif3D
         false_east(500000.0), tolerance(0.001), length_tolerance(1.0), mode_skip_it(2), toms_max_iter(
             50)
       {
+      }
+
+    void SurfaceWaveCalculator::WriteGradient(const int &NX, const int &NY, const int &NZ,
+        const std::vector<double> &vs_grad,
+        const ThreeDModelBase::t3DModelDim &XCellCoords,
+        const ThreeDModelBase::t3DModelDim &YCellCoords,
+        const ThreeDModelBase::t3DModelDim &ZCellCoords, const std::string &filename,
+        const std::string &dataname)
+      {
+        ThreeDModelBase::t3DModelData dtdvs;
+        dtdvs.resize(boost::extents[NX][NY][NZ]);
+        for (int i = 0; i < NZ; ++i)
+          {
+            for (int j = 0; j < NY; ++j)
+              {
+                for (int k = 0; k < NX; ++k)
+                  {
+                    const size_t offset = i + NZ * j + NY * NZ * k;
+                    dtdvs[k][j][i] = vs_grad[offset];
+                  }
+              }
+          }
+
+        Write3DModelToVTK(filename, dataname, XCellCoords, YCellCoords, ZCellCoords,
+            dtdvs);
       }
 
     SurfaceWaveCalculator::Surf1DResult SurfaceWaveCalculator::CalcSurf1D(
@@ -297,7 +323,7 @@ namespace jif3D
         std::vector<std::vector<double>> segments;
         std::vector<double> seg_east, seg_north;
         int LastPair = -1, seg_east_size;
-#pragma omp parallel for default(shared), firstprivate(segments,seg_east,seg_north, LastPair, seg_east_size), schedule(static)
+//#pragma omp parallel for default(shared), firstprivate(segments,seg_east,seg_north, LastPair, seg_east_size), schedule(static)
         for (int datacounter = 0; datacounter < ndata; datacounter++)
           {
             auto data_it = indexmap.begin();
@@ -360,6 +386,10 @@ namespace jif3D
             const double residual = (time_total - dtp_obs[datacounter])
                 / jif3D::pow2(err_obs[datacounter]);
 
+            /*WriteGradient(NX, NY, NZ, vs_tmpgrd, Model.GetXCoordinates(),
+                Model.GetYCoordinates(), Model.GetZCoordinates(),
+                "dtdvs" + std::to_string(datacounter) + ".vtk", "dtdvs");*/
+
             std::transform(vs_grad.begin(), vs_grad.end(), vs_tmpgrd.begin(),
                 vs_grad.begin(), weighted_add(residual));
             std::transform(vp_grad.begin(), vp_grad.end(), vp_tmpgrd.begin(),
@@ -367,6 +397,13 @@ namespace jif3D
             std::transform(dens_grad.begin(), dens_grad.end(), dens_tmpgrd.begin(),
                 dens_grad.begin(), weighted_add(residual));
             omp_unset_lock(&lck);
+
+            std::vector<double> vs_weighted(NX*NY*NZ);
+            std::transform(vs_tmpgrd.begin(), vs_tmpgrd.end(), vs_weighted.begin(),[residual](double val){return residual *val;});
+
+            /*WriteGradient(NX, NY, NZ, vs_weighted, Model.GetXCoordinates(),
+                Model.GetYCoordinates(), Model.GetZCoordinates(),
+                "dtdvs_total" + std::to_string(datacounter) + ".vtk", "dtdvs_weighted");*/
 
             /*if (std::distance(datamap.begin(), data_it) % 10 == 0)
              {
