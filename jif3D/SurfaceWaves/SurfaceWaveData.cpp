@@ -62,7 +62,7 @@ namespace jif3D
           {
             if (!dtpFile.getVar(errname.c_str()).isNull())
               {
-                NcVar errIn = dtpFile.getVar("dtau");
+                NcVar errIn = dtpFile.getVar("dtp_error");
                 errIn.getVar(err.data());
               }
           } catch (netCDF::exceptions::NcException &ex)

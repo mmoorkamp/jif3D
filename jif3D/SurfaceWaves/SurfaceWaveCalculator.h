@@ -58,11 +58,17 @@ namespace jif3D
         {
           mode_skip_it = mskip_it;
         }
+      void WriteGradient(const int &NX, const int &NY, const int &NZ,
+          const std::vector<double> &vs_grad,
+          const ThreeDModelBase::t3DModelDim &XCellCoords,
+          const ThreeDModelBase::t3DModelDim &YCellCoords,
+          const ThreeDModelBase::t3DModelDim &ZCellCoords, const std::string &filename,
+          const std::string &dataname);
       /*void set_data_err(const std::vector<double> &err)
-        {
-          dtp_err.resize(err.size());
-          dtp_err = err;
-        }*/
+       {
+       dtp_err.resize(err.size());
+       dtp_err = err;
+       }*/
       void forward(const ModelType &Model, const DataType &Data);
       struct Surf1DResult
         {
