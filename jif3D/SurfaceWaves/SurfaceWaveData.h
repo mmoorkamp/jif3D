@@ -86,7 +86,7 @@ namespace jif3D
           const std::vector<int> &PeriodInd)
         {
           indexmap.clear();
-          for (int ndata = 0; ndata < PairInd.size(); ndata++)
+          for (size_t ndata = 0; ndata < PairInd.size(); ndata++)
             {
               indexmap.insert(
                   std::pair<int, std::tuple<int, int>>(PairInd[ndata],

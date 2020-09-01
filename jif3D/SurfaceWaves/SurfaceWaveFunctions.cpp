@@ -131,15 +131,15 @@ namespace jif3D
         u.l = 2.0 * pow(k, 2) - pow(w / vs, 2);
 
         /*if (botlay == 1)
-          {
-            u.PrintSWUtilities("BottomLayerUtilities_" + std::to_string(w));
-          }
-        else
-          {
-            u.PrintSWUtilities(
-                "Utilities_" + std::to_string(w) + "_" + std::to_string(vs) + "_"
-                    + std::to_string(vp));
-          }*/
+         {
+         u.PrintSWUtilities("BottomLayerUtilities_" + std::to_string(w));
+         }
+         else
+         {
+         u.PrintSWUtilities(
+         "Utilities_" + std::to_string(w) + "_" + std::to_string(vs) + "_"
+         + std::to_string(vp));
+         }*/
 
         return u;
       }
@@ -195,16 +195,16 @@ namespace jif3D
         gu.SBB = (gu.mbb / u.mb) * (k * thck * u.CB - u.SB);
 
         /*if (botlay == 1)
-          {
-            gu.PrintGradientUtilities(
-                "BottomLayerGradientUtilities_" + std::to_string(w));
-          }
-        else
-          {
-            gu.PrintGradientUtilities(
-                "GradientUtilities_" + std::to_string(w) + "_" + std::to_string(vs) + "_"
-                    + std::to_string(vp));
-          }*/
+         {
+         gu.PrintGradientUtilities(
+         "BottomLayerGradientUtilities_" + std::to_string(w));
+         }
+         else
+         {
+         gu.PrintGradientUtilities(
+         "GradientUtilities_" + std::to_string(w) + "_" + std::to_string(vs) + "_"
+         + std::to_string(vp));
+         }*/
 
         return gu;
       }
@@ -265,7 +265,7 @@ namespace jif3D
                 / (4.0 * pow(dens, 2) * pow(w, 2) * pow(c, 2) * u.nu_a * pow(u.nu_b, 2)));
 
         /*Tvs.PrintLayerSubdeterminants(
-            "BottomLayerSubdeterminants_vs_" + std::to_string(w));*/
+         "BottomLayerSubdeterminants_vs_" + std::to_string(w));*/
 
         return Tvs;
       }
@@ -293,7 +293,7 @@ namespace jif3D
                 / (4.0 * pow(mu, 2) * pow(w, 2) * pow(c, 2) * pow(u.nu_a, 2) * u.nu_b));
 
         /*Tvp.PrintLayerSubdeterminants(
-            "BottomLayerSubdeterminants_vp_" + std::to_string(w));*/
+         "BottomLayerSubdeterminants_vp_" + std::to_string(w));*/
 
         return Tvp;
       }
@@ -314,7 +314,7 @@ namespace jif3D
         Tdens.R1234 = (-2.0) * T.R1234 / dens;
 
         /*Tdens.PrintLayerSubdeterminants(
-            "BottomLayerSubdeterminants_dens_" + std::to_string(w));*/
+         "BottomLayerSubdeterminants_dens_" + std::to_string(w));*/
 
         return Tdens;
       }
@@ -419,8 +419,8 @@ namespace jif3D
                         * u.SB));
 
         /*G.PrintPropagatorSubdeterminants(
-            "PropagatorSubdeterminants_" + std::to_string(w) + "_" + std::to_string(vs)
-                + "_" + std::to_string(vp) + "_" + std::to_string(dens));*/
+         "PropagatorSubdeterminants_" + std::to_string(w) + "_" + std::to_string(vs)
+         + "_" + std::to_string(vp) + "_" + std::to_string(dens));*/
 
         return G;
       }
@@ -534,8 +534,8 @@ namespace jif3D
                         * u.SB));
 
         /*G.PrintPropagatorSubdeterminants(
-            "PropagatorSubdeterminants_vs_" + std::to_string(w) + "_" + std::to_string(vs)
-                + "_" + std::to_string(vp) + "_" + std::to_string(dens));*/
+         "PropagatorSubdeterminants_vs_" + std::to_string(w) + "_" + std::to_string(vs)
+         + "_" + std::to_string(vp) + "_" + std::to_string(dens));*/
 
         return G;
       }
@@ -616,8 +616,8 @@ namespace jif3D
                             * u.SB));
 
         /*G.PrintPropagatorSubdeterminants(
-            "PropagatorSubdeterminants_vp_" + std::to_string(w) + "_" + std::to_string(vs)
-                + "_" + std::to_string(vp) + "_" + std::to_string(dens));*/
+         "PropagatorSubdeterminants_vp_" + std::to_string(w) + "_" + std::to_string(vs)
+         + "_" + std::to_string(vp) + "_" + std::to_string(dens));*/
 
         return G;
       }
@@ -646,9 +646,9 @@ namespace jif3D
         Gout.G3412 = 2.0 * G.G3412 / dens;
 
         /*Gout.PrintPropagatorSubdeterminants(
-            "PropagatorSubdeterminants_dens_" + std::to_string(w) + "_"
-                + std::to_string(vs) + "_" + std::to_string(vp) + "_"
-                + std::to_string(dens));*/
+         "PropagatorSubdeterminants_dens_" + std::to_string(w) + "_"
+         + std::to_string(vs) + "_" + std::to_string(vp) + "_"
+         + std::to_string(dens));*/
 
         return Gout;
       }
@@ -766,8 +766,8 @@ namespace jif3D
                             * u.SA * u.SB));
 
         /*Gout.PrintPropagatorSubdeterminants(
-            "PropagatorSubdeterminants_c_" + std::to_string(w) + "_" + std::to_string(vs)
-                + "_" + std::to_string(vp) + "_" + std::to_string(dens));*/
+         "PropagatorSubdeterminants_c_" + std::to_string(w) + "_" + std::to_string(vs)
+         + "_" + std::to_string(vp) + "_" + std::to_string(dens));*/
 
         return Gout;
       }
@@ -806,8 +806,8 @@ namespace jif3D
             + Tc.R1234 * G.G1212 + T.R1234 * G_c.G1212;
 
         /*Rc.PrintLayerSubdeterminants(
-            "LayerSubdeterminants_c_" + std::to_string(w) + "_" + std::to_string(vs) + "_"
-                + std::to_string(vp) + "_" + std::to_string(dens));*/
+         "LayerSubdeterminants_c_" + std::to_string(w) + "_" + std::to_string(vs) + "_"
+         + std::to_string(vp) + "_" + std::to_string(dens));*/
 
         return Rc;
       }
@@ -904,37 +904,37 @@ namespace jif3D
           }
 
         /*if (param == 0)
-          {
-            R.PrintLayerSubdeterminants(
-                "LayerSubdeterminants_normalized_" + std::to_string(w) + "_"
-                    + std::to_string(vs) + "_" + std::to_string(vp) + "_"
-                    + std::to_string(dens));
-          }
-        else if (param == 1)
-          {
-            R.PrintLayerSubdeterminants(
-                "LayerSubdeterminants_vs_" + std::to_string(w) + "_" + std::to_string(vs)
-                    + "_" + std::to_string(vp) + "_" + std::to_string(dens));
-          }
-        else if (param == 2)
-          {
-            R.PrintLayerSubdeterminants(
-                "LayerSubdeterminants_vp_" + std::to_string(w) + "_" + std::to_string(vs)
-                    + "_" + std::to_string(vp) + "_" + std::to_string(dens));
-          }
-        else if (param == 3)
-          {
-            R.PrintLayerSubdeterminants(
-                "LayerSubdeterminants_dens_" + std::to_string(w) + "_"
-                    + std::to_string(vs) + "_" + std::to_string(vp) + "_"
-                    + std::to_string(dens));
-          }
-        else if (param == 4)
-          {
-            R.PrintLayerSubdeterminants(
-                "LayerSubdeterminants_" + std::to_string(w) + "_" + std::to_string(vs)
-                    + "_" + std::to_string(vp) + "_" + std::to_string(dens));
-          }*/
+         {
+         R.PrintLayerSubdeterminants(
+         "LayerSubdeterminants_normalized_" + std::to_string(w) + "_"
+         + std::to_string(vs) + "_" + std::to_string(vp) + "_"
+         + std::to_string(dens));
+         }
+         else if (param == 1)
+         {
+         R.PrintLayerSubdeterminants(
+         "LayerSubdeterminants_vs_" + std::to_string(w) + "_" + std::to_string(vs)
+         + "_" + std::to_string(vp) + "_" + std::to_string(dens));
+         }
+         else if (param == 2)
+         {
+         R.PrintLayerSubdeterminants(
+         "LayerSubdeterminants_vp_" + std::to_string(w) + "_" + std::to_string(vs)
+         + "_" + std::to_string(vp) + "_" + std::to_string(dens));
+         }
+         else if (param == 3)
+         {
+         R.PrintLayerSubdeterminants(
+         "LayerSubdeterminants_dens_" + std::to_string(w) + "_"
+         + std::to_string(vs) + "_" + std::to_string(vp) + "_"
+         + std::to_string(dens));
+         }
+         else if (param == 4)
+         {
+         R.PrintLayerSubdeterminants(
+         "LayerSubdeterminants_" + std::to_string(w) + "_" + std::to_string(vs)
+         + "_" + std::to_string(vp) + "_" + std::to_string(dens));
+         }*/
 
         return R;
       }
@@ -1208,13 +1208,13 @@ namespace jif3D
         return pts;
       }
 
-    std::vector<std::vector<double>> get_t_segments(const double &east0_in, const double &north0_in,
-        const double &east1, const double &north1, const double &event_lat,
-        const double &event_lon, const double &lon_centr, const std::vector<double> &origin,
-        const double &deast, const double &dnorth, const std::vector<double> &c,
-        const int &ncells_east, const std::vector<double> &dcdvs,
-        const std::vector<double> &dcdvp, const std::vector<double> &dcdrho,
-        const int &nlay, const double &false_east)
+    std::vector<std::vector<double>> get_t_segments(const double &east0_in,
+        const double &north0_in, const double &east1, const double &north1,
+        const double &event_lat, const double &event_lon, const double &lon_centr,
+        const std::vector<double> &origin, const double &deast, const double &dnorth,
+        const std::vector<double> &c, const int &ncells_east,
+        const std::vector<double> &dcdvs, const std::vector<double> &dcdvp,
+        const std::vector<double> &dcdrho, const int &nlay, const double &false_east)
       {
         // Computes relative phase delay for a station pair and a given earthquake
 
@@ -1363,22 +1363,13 @@ namespace jif3D
                 + sin(a * M_PI / 180.0) * dist_segment_n)
                 / c[ncell * ncells_east + ecell];
             time = time - ti;
-
+            const double tic = ti / c[ncell * ncells_east + ecell];
             for (int n = 0; n < nlay; n++)
               {
-                vsgrad[ncell * ncells_east * nlay + ecell * nlay + n] = vsgrad[ncell
-                    * ncells_east * nlay + ecell * nlay + n]
-                    + 2.0 * dcdvs[ncell * ncells_east * nlay + ecell * nlay + n]
-                        * (ti / c[ncell * ncells_east + ecell]);
-                vpgrad[ncell * ncells_east * nlay + ecell * nlay + n] = vpgrad[ncell
-                    * ncells_east * nlay + ecell * nlay + n]
-                    + 2.0 * dcdvp[ncell * ncells_east * nlay + ecell * nlay + n]
-                        * (ti / c[ncell * ncells_east + ecell]);
-                rhograd[ncell * ncells_east * nlay + ecell * nlay + n] = rhograd[ncell
-                    * ncells_east * nlay + ecell * nlay + n]
-                    + 2.0 * dcdrho[ncell * ncells_east * nlay + ecell * nlay + n]
-                        * (ti / c[ncell * ncells_east + ecell]);
-                ;
+                const size_t index = ncell * ncells_east * nlay + ecell * nlay + n;
+                vsgrad[index] += 2.0 * dcdvs[index] * tic;
+                vpgrad[index] += 2.0 * dcdvp[index] * tic;
+                rhograd[index] += 2.0 * dcdrho[index] * tic;
               }
           }
         dist_segment_e = east1 - east0;
@@ -1396,20 +1387,13 @@ namespace jif3D
             + sin(a * M_PI / 180.0) * dist_segment_n) / c[ncell1 * ncells_east + ecell1];
         time = time - ti;
 
+        const double tic = (ti / c[ncell1 * ncells_east + ecell1]);
         for (int n = 0; n < nlay; n++)
           {
-            vsgrad[ncell1 * ncells_east * nlay + ecell1 * nlay + n] = vsgrad[ncell1
-                * ncells_east * nlay + ecell1 * nlay + n]
-                + 2.0 * dcdvs[ncell1 * ncells_east * nlay + ecell1 * nlay + n]
-                    * (ti / c[ncell1 * ncells_east + ecell1]);
-            vpgrad[ncell1 * ncells_east * nlay + ecell1 * nlay + n] = vpgrad[ncell1
-                * ncells_east * nlay + ecell1 * nlay + n]
-                + 2.0 * dcdvp[ncell1 * ncells_east * nlay + ecell1 * nlay + n]
-                    * (ti / c[ncell1 * ncells_east + ecell1]);
-            rhograd[ncell1 * ncells_east * nlay + ecell1 * nlay + n] = rhograd[ncell1
-                * ncells_east * nlay + ecell1 * nlay + n]
-                + 2.0 * dcdrho[ncell1 * ncells_east * nlay + ecell1 * nlay + n]
-                    * (ti / c[ncell1 * ncells_east + ecell1]);
+            const size_t index = ncell1 * ncells_east * nlay + ecell1 * nlay + n;
+            vsgrad[index] += 2.0 * dcdvs[index] * tic;
+            vpgrad[index] += 2.0 * dcdvp[index] * tic;
+            rhograd[index] += 2.0 * dcdrho[index] * tic;
           }
 
         times[0] = time;

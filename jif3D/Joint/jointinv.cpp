@@ -610,8 +610,19 @@ int hpx_main(boost::program_options::variables_map& vm)
                   {
                     if (havetomo)
                       {
-                        SaveModel(InvModel, *TomoTransform.get(), SWModel,
-                            modelfilename + jif3D::stringify(iteration) + ".tomo.inv");
+                        jif3D::rvec TransModel = TomoTransform->GeneralizedToPhysical(InvModel);
+                        const size_t ncells = SWModel.GetNModelElements();
+                        std::copy(TransModel.begin(),
+                            TransModel.begin() + ncells,
+                            SWModel.SetData().origin());
+                        jif3D::SurfaceWaveModel::t3DModelData values(SWModel.GetVp());
+                        std::copy(TransModel.begin() + ncells, TransModel.begin() + 2 * ncells, values.origin());
+                        SWModel.SetVp(values);
+                        std::copy(TransModel.begin() + 2* ncells, TransModel.end(),
+                            values.origin());
+                        SWModel.SetDensAnomaly(values);
+                        SWModel.WriteVTK(modelfilename + ".tomo.inv.vtk");
+                        SWModel.WriteNetCDF(modelfilename + ".tomo.inv.nc");
                       }
                     if (havemt)
                       {
@@ -647,7 +658,19 @@ int hpx_main(boost::program_options::variables_map& vm)
       }
     if (havetomo)
       {
-        SaveModel(InvModel, *TomoTransform.get(), SWModel, modelfilename + ".tomo.inv");
+        jif3D::rvec TransModel = TomoTransform->GeneralizedToPhysical(InvModel);
+        const size_t ncells = SWModel.GetNModelElements();
+        std::copy(TransModel.begin(),
+            TransModel.begin() + ncells,
+            SWModel.SetData().origin());
+        jif3D::SurfaceWaveModel::t3DModelData values(SWModel.GetVp());
+        std::copy(TransModel.begin() + ncells, TransModel.begin() + 2 * ncells, values.origin());
+        SWModel.SetVp(values);
+        std::copy(TransModel.begin() + 2* ncells, TransModel.end(),
+            values.origin());
+        SWModel.SetDensAnomaly(values);
+        SWModel.WriteVTK(modelfilename + ".tomo.inv.vtk");
+        SWModel.WriteNetCDF(modelfilename + ".tomo.inv.nc");
       }
     if (havemt)
       {
