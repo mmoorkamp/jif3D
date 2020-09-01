@@ -298,7 +298,7 @@ namespace jif3D
                         for (size_t n = 0; n < NZ; n++)
                           {
                             const size_t offset = n + NZ * estep + NY * NZ * nstep
-                                + NY * NZ * NX * freq;
+                                + nmod * freq;
 
                             dcdvs[offset] = Result.dcdvs[n];
                             dcdvp[offset] = Result.dcdvp[n];
@@ -350,8 +350,8 @@ namespace jif3D
 
             for (int seg = 0; seg < seg_east_size - 1; seg++)
               { //loop over great circle segments
-                std::vector<double> vph_map_T(NX * NY), dcdvs_T(NX * NY * NZ), dcdvp_T(
-                    NX * NY * NZ), dcdrho_T(NX * NY * NZ);
+                std::vector<double> vph_map_T(NX * NY), dcdvs_T(nmod), dcdvp_T(nmod),
+                    dcdrho_T(nmod);
                 std::copy(vph_map.begin() + periodid * NX * NY,
                     vph_map.begin() + (periodid + 1) * NX * NY, vph_map_T.begin());
                 std::copy(dcdvs.begin() + periodid * nmod,
@@ -387,8 +387,8 @@ namespace jif3D
                 / jif3D::pow2(err_obs[datacounter]);
 
             /*WriteGradient(NX, NY, NZ, vs_tmpgrd, Model.GetXCoordinates(),
-                Model.GetYCoordinates(), Model.GetZCoordinates(),
-                "dtdvs" + std::to_string(datacounter) + ".vtk", "dtdvs");*/
+             Model.GetYCoordinates(), Model.GetZCoordinates(),
+             "dtdvs" + std::to_string(datacounter) + ".vtk", "dtdvs");*/
 
             std::transform(vs_grad.begin(), vs_grad.end(), vs_tmpgrd.begin(),
                 vs_grad.begin(), weighted_add(residual));
@@ -398,12 +398,14 @@ namespace jif3D
                 dens_grad.begin(), weighted_add(residual));
             omp_unset_lock(&lck);
 
-            std::vector<double> vs_weighted(NX*NY*NZ);
-            std::transform(vs_tmpgrd.begin(), vs_tmpgrd.end(), vs_weighted.begin(),[residual](double val){return residual *val;});
+            std::vector<double> vs_weighted(nmod);
+            std::transform(vs_tmpgrd.begin(), vs_tmpgrd.end(), vs_weighted.begin(),
+                [residual](double val)
+                  { return residual *val;});
 
             /*WriteGradient(NX, NY, NZ, vs_weighted, Model.GetXCoordinates(),
-                Model.GetYCoordinates(), Model.GetZCoordinates(),
-                "dtdvs_total" + std::to_string(datacounter) + ".vtk", "dtdvs_weighted");*/
+             Model.GetYCoordinates(), Model.GetZCoordinates(),
+             "dtdvs_total" + std::to_string(datacounter) + ".vtk", "dtdvs_weighted");*/
 
             /*if (std::distance(datamap.begin(), data_it) % 10 == 0)
              {

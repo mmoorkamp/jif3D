@@ -72,7 +72,7 @@ namespace jif3D
 
         std::multimap<int, std::tuple<int, int, double, double>> datamap;
         // Organize data in multimap
-        for (int ndata = 0; ndata < dtp.size(); ndata++)
+        for (size_t ndata = 0; ndata < dtp.size(); ndata++)
           {
             datamap.insert(
                 std::pair<int, std::tuple<int, int, double, double>>(PairInd[ndata],
@@ -102,7 +102,7 @@ namespace jif3D
       }
 
     SurfaceWaveData::SurfaceWaveData() :
-        EventPosLat(), EventPosLon(), EventPosZ(), periods(), lon_centr(), NDataPerT(), StationPairs()
+        EventPosLat(), EventPosLon(), EventPosZ(), periods(),  StationPairs(), NDataPerT(), indexmap(), lon_centr()
       {
       }
 
@@ -180,8 +180,8 @@ namespace jif3D
           }
 
         /*WriteVec(DataFile, "EventIndex", EInd, NumberOfTraveltimes, "");
-        WriteVec(DataFile, "PairIndex", PInd, NumberOfTraveltimes, "");
-        WriteVec(DataFile, "PeriodIndex", TInd, NumberOfTraveltimes, "");*/
+         WriteVec(DataFile, "PairIndex", PInd, NumberOfTraveltimes, "");
+         WriteVec(DataFile, "PeriodIndex", TInd, NumberOfTraveltimes, "");*/
 
         std::vector<NcDim> dimVec_PInd;
         dimVec_PInd.push_back(NumberOfTraveltimes);
