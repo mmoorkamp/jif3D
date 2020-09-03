@@ -621,8 +621,8 @@ int hpx_main(boost::program_options::variables_map& vm)
                         std::copy(TransModel.begin() + 2* ncells, TransModel.end(),
                             values.origin());
                         SWModel.SetDensAnomaly(values);
-                        SWModel.WriteVTK(modelfilename + ".tomo.inv.vtk");
-                        SWModel.WriteNetCDF(modelfilename + ".tomo.inv.nc");
+                        SWModel.WriteVTK(modelfilename+ jif3D::stringify(iteration) + ".tomo.inv.vtk");
+                        SWModel.WriteNetCDF(modelfilename+ jif3D::stringify(iteration) + ".tomo.inv.nc");
                       }
                     if (havemt)
                       {

@@ -323,7 +323,7 @@ namespace jif3D
         std::vector<std::vector<double>> segments;
         std::vector<double> seg_east, seg_north;
         int LastPair = -1, seg_east_size;
-//#pragma omp parallel for default(shared), firstprivate(segments,seg_east,seg_north, LastPair, seg_east_size), schedule(static)
+#pragma omp parallel for default(shared), firstprivate(segments,seg_east,seg_north, LastPair, seg_east_size), schedule(static)
         for (int datacounter = 0; datacounter < ndata; datacounter++)
           {
             auto data_it = indexmap.begin();
