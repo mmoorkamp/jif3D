@@ -95,6 +95,8 @@ namespace jif3D
         }
       virtual void WriteNetCDF(const std::string &filename) override;
       void WriteStationLocations(const std::string &filename);
+      void WriteRayPaths(const std::vector<std::vector<double>> &pathmap_e,
+          const std::vector<std::vector<double>> &pathmap_n) const;
     private:
       // Earthquake locations
       std::vector<double> EventPosLat, EventPosLon, EventPosZ;

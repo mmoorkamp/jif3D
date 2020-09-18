@@ -320,25 +320,34 @@ namespace jif3D
          std::cout << " Finished 1D calculation took "
          << (currtime - starttime).total_seconds() << " s" << std::endl;*/
         // loop over all station pairs, computes phase delays
-        std::vector<std::vector<double>> segments;
-        std::vector<double> seg_east, seg_north;
-        int LastPair = -1, seg_east_size;
-#pragma omp parallel for default(shared), firstprivate(segments,seg_east,seg_north, LastPair, seg_east_size), schedule(static)
+        int LastPair = -1;
+        //std::multimap<int, std::vector<std::vector<double>>> pathmap;
+
+        pathmap_n.resize(npairs);
+        pathmap_e.resize(npairs);
+#pragma omp parallel for default(shared), firstprivate(LastPair), schedule(static)
         for (int datacounter = 0; datacounter < ndata; datacounter++)
           {
             auto data_it = indexmap.begin();
             std::advance(data_it, datacounter);
             int pairindex = (*data_it).first;
-            if (LastPair != pairindex)
+            if (LastPair != pairindex && firstit == true)
               {
-                segments = get_gc_segments(mpe[StatPairs[2 * pairindex]],
-                    mpn[StatPairs[2 * pairindex]], mpe[StatPairs[2 * pairindex + 1]],
-                    mpn[StatPairs[2 * pairindex + 1]], lon_centr, false_east,
-                    length_tolerance);
-                seg_east = segments[0];
-                seg_north = segments[1];
-                seg_east_size = seg_east.size();
+                std::vector<std::vector<double>> segments = get_gc_segments(
+                    mpe[StatPairs[2 * pairindex]], mpn[StatPairs[2 * pairindex]],
+                    mpe[StatPairs[2 * pairindex + 1]], mpn[StatPairs[2 * pairindex + 1]],
+                    lon_centr, false_east, length_tolerance);
+                std::vector<double> seg_east = segments[0];
+                std::vector<double> seg_north = segments[1];
+                int seg_east_size = seg_east.size();
                 LastPair = pairindex;
+                /*pathmap.insert(
+                 std::pair<int, std::vector<std::vector<double>>>(pairindex,
+                 segments));*/
+                pathmap_n[pairindex].resize(seg_east_size);
+                pathmap_n[pairindex] = seg_north;
+                pathmap_e[pairindex].resize(seg_east_size);
+                pathmap_e[pairindex] = seg_east;
               }
 
             std::vector<double> vs_tmpgrd(NX * NY * NZ, 0.0), vp_tmpgrd(NX * NY * NZ,
@@ -348,6 +357,7 @@ namespace jif3D
             int eventid = std::get<0>(IndicesData);
             int periodid = std::get<1>(IndicesData);
 
+            int seg_east_size = pathmap_e[pairindex].size();
             for (int seg = 0; seg < seg_east_size - 1; seg++)
               { //loop over great circle segments
                 std::vector<double> vph_map_T(NX * NY), dcdvs_T(nmod), dcdvp_T(nmod),
@@ -360,6 +370,9 @@ namespace jif3D
                     dcdvp.begin() + (periodid + 1) * nmod, dcdvp_T.begin());
                 std::copy(dcdrho.begin() + periodid * nmod,
                     dcdrho.begin() + (periodid + 1) * nmod, dcdrho_T.begin());
+
+                std::vector<double> seg_east = pathmap_e[pairindex];
+                std::vector<double> seg_north = pathmap_n[pairindex];
 
                 std::vector<std::vector<double>> time_segment = get_t_segments(
                     seg_east[seg], seg_north[seg], seg_east[seg + 1], seg_north[seg + 1],
@@ -398,10 +411,10 @@ namespace jif3D
                 dens_grad.begin(), weighted_add(residual));
             omp_unset_lock(&lck);
 
-            std::vector<double> vs_weighted(nmod);
-            std::transform(vs_tmpgrd.begin(), vs_tmpgrd.end(), vs_weighted.begin(),
-                [residual](double val)
-                  { return residual *val;});
+            /*std::vector<double> vs_weighted(nmod);
+             std::transform(vs_tmpgrd.begin(), vs_tmpgrd.end(), vs_weighted.begin(),
+             [residual](double val)
+             { return residual *val;});*/
 
             /*WriteGradient(NX, NY, NZ, vs_weighted, Model.GetXCoordinates(),
              Model.GetYCoordinates(), Model.GetZCoordinates(),
@@ -416,6 +429,11 @@ namespace jif3D
              << " s" << std::endl;
              }*/
           } // end loop over station pairs
+        if (firstit == true)
+          {
+            Data.WriteRayPaths(pathmap_e, pathmap_n);
+            firstit = false;
+          }
       }
   }
 
