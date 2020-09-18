@@ -13,6 +13,7 @@
 #include <vector>
 #include <tuple>
 #include <map>
+#include <fstream>
 using netCDF::NcFile;
 using netCDF::NcVar;
 using netCDF::NcVarAtt;
@@ -99,10 +100,12 @@ namespace jif3D
         NcVar mpnIn = dtpFile.getVar("MeasPosX");
         NcVarAtt lonc = mpnIn.getAtt("Central_meridian");
         lonc.getValues(&lon_centr);
+
+        WriteNetCDF("SWDataSorted.nc");
       }
 
     SurfaceWaveData::SurfaceWaveData() :
-        EventPosLat(), EventPosLon(), EventPosZ(), periods(),  StationPairs(), NDataPerT(), indexmap(), lon_centr()
+        EventPosLat(), EventPosLon(), EventPosZ(), periods(), StationPairs(), NDataPerT(), indexmap(), lon_centr()
       {
       }
 
@@ -206,5 +209,51 @@ namespace jif3D
         std::iota(SourceNum.begin(), SourceNum.end(), 1);
         jif3D::Write3DDataToVTK(filename, "Stations", SourceNum, GetMeasPosX(),
             GetMeasPosY(), GetMeasPosZ());
+      }
+
+    void SurfaceWaveData::WriteRayPaths(const std::vector<std::vector<double>> &pathmap_e,
+        const std::vector<std::vector<double>> &pathmap_n) const
+      {
+        std::ofstream outfile("Raypaths.vtk");
+        outfile << "# vtk DataFile Version 3.0\n";
+        outfile << "SurfaceWaveRaypaths\n";
+        outfile << "ASCII\n";
+        outfile << "DATASET POLYDATA\n";
+
+        int npoints = 0;
+        std::vector<double> seg_east, seg_north;
+        int nlines = pathmap_e.size();
+        //std::multimap<int, std::vector<std::vector<double>>>::iterator it;
+        for (int it = 0; it < nlines; ++it)
+          {
+            std::vector<double> seg_east_tmp = pathmap_e[it];
+            std::vector<double> seg_north_tmp = pathmap_n[it];
+            for (int ip = 0; ip < seg_east_tmp.size(); ip++)
+              {
+                seg_east.push_back(seg_east_tmp[ip]);
+                seg_north.push_back(seg_north_tmp[ip]);
+              }
+            npoints = npoints + seg_east_tmp.size();
+          }
+
+        outfile << "POINTS " << npoints << " double\n";
+        for (int ip = 0; ip < npoints; ip++)
+          {
+            outfile << seg_north[ip] << " " << seg_east[ip] << " 0.0\n";
+          }
+
+        outfile << "LINES " << nlines << " " << nlines + npoints << "\n";
+        int index = 0;
+        for (int it = 0; it < nlines; ++it)
+          {
+            std::vector<double> seg_east_tmp = pathmap_e[it];
+            outfile << seg_east_tmp.size();
+            for (int ip = 0; ip < seg_east_tmp.size(); ip++)
+              {
+                outfile << " " << index;
+                index = index + 1;
+              }
+            outfile << " \n";
+          }
       }
   }

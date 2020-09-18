@@ -86,6 +86,9 @@ namespace jif3D
       int mode_skip_it, toms_max_iter;
       std::vector<double> dens_grad, vs_grad, vp_grad;
       std::vector<double> dtp_mod;
+      std::vector<std::vector<double>> pathmap_n;
+      std::vector<std::vector<double>> pathmap_e;
+      bool firstit = true;
       };
   }
 
