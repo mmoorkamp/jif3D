@@ -323,8 +323,11 @@ namespace jif3D
         int LastPair = -1;
         //std::multimap<int, std::vector<std::vector<double>>> pathmap;
 
-        pathmap_n.resize(npairs);
-        pathmap_e.resize(npairs);
+        if (firstit == true)
+          {
+            pathmap_n.resize(npairs);
+            pathmap_e.resize(npairs);
+          }
 #pragma omp parallel for default(shared), firstprivate(LastPair), schedule(static)
         for (int datacounter = 0; datacounter < ndata; datacounter++)
           {
