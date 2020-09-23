@@ -11,6 +11,7 @@
 #include "VTKTools.h"
 #include <cassert>
 #include <fstream>
+#include <iomanip>
 #include <boost/math/special_functions/relative_difference.hpp>
 
 using netCDF::NcFile;
@@ -226,8 +227,10 @@ namespace jif3D
           {
             int xi, yi, zi;
             OffsetToIndex(i, xi, yi, zi);
-            outfile << XCenter[xi + 1] << " " << YCenter[yi + 1] << " " << ZCenter[zi + 1]
-                << " " << Data[xi][yi][zi] << "\n";
+            outfile << std::setw(15) << std::setprecision(9) << XCenter[xi + 1] << " "
+                << std::setw(15) << std::setprecision(9) << YCenter[yi + 1] << " "
+                << std::setw(15) << std::setprecision(9) << ZCenter[zi + 1] << " "
+                << Data[xi][yi][zi] << "\n";
           }
       }
 
