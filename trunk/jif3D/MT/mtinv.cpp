@@ -118,6 +118,8 @@ int hpx_main(boost::program_options::variables_map& vm)
       }
 
     Model.WriteUBC(modelfilename + ".ubc");
+    Model.WriteXYZ(modelfilename + ".xyz");
+
     for (size_t i = 0; i < Model.GetConductivities().shape()[2]; ++i)
       {
         Model.SetConductivities()[0][0][i] *= (1 + conddelta * (i + 1));
