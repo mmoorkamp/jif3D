@@ -82,13 +82,15 @@ namespace jif3D
           const std::vector<double> &dens_1D, const std::vector<double> &vs_1D,
           const std::vector<double> &vp_1D, const std::vector<double> &depth);
     private:
+      DataType PreviousData;
+      std::vector<std::vector<int>> CellIndices;
+      std::vector<std::vector<double>> SegLengths;
       double false_east, tolerance, length_tolerance;
       int mode_skip_it, toms_max_iter;
       std::vector<double> dens_grad, vs_grad, vp_grad;
       std::vector<double> dtp_mod;
       std::vector<std::vector<double>> pathmap_n;
       std::vector<std::vector<double>> pathmap_e;
-      bool firstit = true;
       };
   }
 

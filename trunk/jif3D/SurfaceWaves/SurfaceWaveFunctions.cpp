@@ -14,6 +14,7 @@
 #include <GeographicLib/GeodesicLine.hpp>
 #include <GeographicLib/Rhumb.hpp>
 #include <GeographicLib/Constants.hpp>
+#include <boost/math/special_functions/sign.hpp>
 #include "../SurfaceWaves/SurfaceWaveFunctions.h"
 #include "../ModelBase/ThreeDModelBase.h"
 
@@ -1208,13 +1209,11 @@ namespace jif3D
         return pts;
       }
 
-    std::vector<std::vector<double>> get_t_segments(const double &east0_in,
-        const double &north0_in, const double &east1, const double &north1,
-        const double &event_lat, const double &event_lon, const double &lon_centr,
+    t_segments get_t_segments(const double &east0_in, const double &north0_in,
+        const double &east1, const double &north1, const double &event_lat,
+        const double &event_lon, const double &lon_centr,
         const std::vector<double> &origin, const double &deast, const double &dnorth,
-        const std::vector<double> &c, const int &ncells_east,
-        const std::vector<double> &dcdvs, const std::vector<double> &dcdvp,
-        const std::vector<double> &dcdrho, const int &nlay, const double &false_east)
+        const int &ncells_east, const double &false_east)
       {
         // Computes relative phase delay for a station pair and a given earthquake
 
@@ -1236,14 +1235,11 @@ namespace jif3D
         double ncell0 = floor((north0 - origin[1]) / dnorth);
         const double ecell1 = floor((east1 - origin[0]) / deast);
         const double ncell1 = floor((north1 - origin[1]) / dnorth);
-        std::vector<std::vector<double>> times_grads(4);
-        std::vector<double> times(1);
-        double time = 0.0;
+
         double mid_e, mid_n, mid_lon, mid_lat, s12, az1, az2, dist_segment_e,
             dist_segment_n;
-        std::vector<double> rhograd(dcdrho.size(), 0.0), vsgrad(dcdvs.size(), 0.0),
-            vpgrad(dcdvp.size(), 0.0);
 
+        t_segments result;
         while ((abs(ecell0 - ecell1) > 0.0) || (abs(ncell0 - ncell1) > 0.0))
           {
             double north_intercept, east_intercept, estep, nstep;
@@ -1359,18 +1355,22 @@ namespace jif3D
               {
                 a = a - 360;
               }
+            //  std::cout << dist_segment_n << " " << dist_segment_e << " "
+            //      << std::sqrt(
+            //          dist_segment_n * dist_segment_n + dist_segment_e * dist_segment_e)
+            //      << std::endl;
             double ti = (cos(a * M_PI / 180.0) * dist_segment_e
-                + sin(a * M_PI / 180.0) * dist_segment_n)
-                / c[ncell * ncells_east + ecell];
-            time = time - ti;
-            const double tic = ti / c[ncell * ncells_east + ecell];
-            for (int n = 0; n < nlay; n++)
-              {
-                const size_t index = ncell * ncells_east * nlay + ecell * nlay + n;
-                vsgrad[index] += 2.0 * dcdvs[index] * tic;
-                vpgrad[index] += 2.0 * dcdvp[index] * tic;
-                rhograd[index] += 2.0 * dcdrho[index] * tic;
-              }
+                + sin(a * M_PI / 180.0) * dist_segment_n);
+            result.seglength.push_back(ti);
+            result.cellindices.push_back(ncell * ncells_east + ecell);
+            /*const double tic = ti / c[ncell * ncells_east + ecell];
+             for (int n = 0; n < nlay; n++)
+             {
+             const size_t index = ncell * ncells_east * nlay + ecell * nlay + n;
+             vsgrad[index] += 2.0 * dcdvs[index] * tic;
+             vpgrad[index] += 2.0 * dcdvp[index] * tic;
+             rhograd[index] += 2.0 * dcdrho[index] * tic;
+             }*/
           }
         dist_segment_e = east1 - east0;
         dist_segment_n = north1 - north0;
@@ -1383,24 +1383,28 @@ namespace jif3D
           {
             a = a - 360;
           }
+        // std::cout << dist_segment_n << " " << dist_segment_e << " "
+//            << std::sqrt(
+        //       dist_segment_n * dist_segment_n + dist_segment_e * dist_segment_e)
+        //  << std::endl;
+
         double ti = (cos(a * M_PI / 180.0) * dist_segment_e
-            + sin(a * M_PI / 180.0) * dist_segment_n) / c[ncell1 * ncells_east + ecell1];
-        time = time - ti;
+            + sin(a * M_PI / 180.0) * dist_segment_n);
+        result.seglength.push_back(ti);
+        result.cellindices.push_back(ncell1 * ncells_east + ecell1);
+        /*double ti = (cos(a * M_PI / 180.0) * dist_segment_e
+         + sin(a * M_PI / 180.0) * dist_segment_n) / c[ncell1 * ncells_east + ecell1];
+         time = time - ti;
 
-        const double tic = (ti / c[ncell1 * ncells_east + ecell1]);
-        for (int n = 0; n < nlay; n++)
-          {
-            const size_t index = ncell1 * ncells_east * nlay + ecell1 * nlay + n;
-            vsgrad[index] += 2.0 * dcdvs[index] * tic;
-            vpgrad[index] += 2.0 * dcdvp[index] * tic;
-            rhograd[index] += 2.0 * dcdrho[index] * tic;
-          }
+         const double tic = (ti / c[ncell1 * ncells_east + ecell1]);
+         for (int n = 0; n < nlay; n++)
+         {
+         const size_t index = ncell1 * ncells_east * nlay + ecell1 * nlay + n;
+         vsgrad[index] += 2.0 * dcdvs[index] * tic;
+         vpgrad[index] += 2.0 * dcdvp[index] * tic;
+         rhograd[index] += 2.0 * dcdrho[index] * tic;
+         }*/
 
-        times[0] = time;
-        times_grads[0] = times;
-        times_grads[1] = vsgrad;
-        times_grads[2] = vpgrad;
-        times_grads[3] = rhograd;
-        return times_grads;
+        return result;
       }
   }
