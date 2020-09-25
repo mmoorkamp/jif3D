@@ -55,13 +55,13 @@ BOOST_AUTO_TEST_SUITE (SW_Gradient_Test_Suite)
         //const size_t ysize = 6;
         //const size_t zsize = 7;
         std::vector<double> xcoords_m =
-          { 0.0, 10000.0, 20000.0, 30000.0, 40000.0, 50000.0 };
+          { 0.0, 10000.0, 20000.0, 30000.0, };
         std::vector<double> ycoords_m =
           { 500000.0, 500000.0 + 10000.0, 500000.0 + 20000.0, 500000.0 + 30000.0, 500000.0
-              + 40000.0, 500000.0 + 50000.0, 500000.0 + 60000.0 };
+              + 40000.0};
         std::vector<double> zcoords_m =
         //{ 0.0, 2.0, 4.3, 6.8, 9.6, 12.8, 20.0 };
-            { 0.0, 35000.0, 100000.0};
+            { 0.0, 5000.0, 10000.0, 15000.0};
               //{ 0.0, 5000.0 };
         const int zsize = zcoords_m.size();
 
@@ -73,11 +73,11 @@ BOOST_AUTO_TEST_SUITE (SW_Gradient_Test_Suite)
          const double topdens = 2700;
          const double bottomdens = 4000;*/
         std::vector<double> alpha =
-         { 6000.0, 8000.0 };
+         { 6000.0, 8000.0, 8000.0 };
          std::vector<double> beta =
-         { 3500.0, 4500.0 };
+         { 3500.0, 4500.0, 4500.0 };
          std::vector<double> rho =
-         { 2700.0, 3300.0 };
+         { 2700.0, 3300.0, 3300.0 };
         /*std::vector<double> alpha =
          { 650.0, 750.0, 1400.0, 1800.0, 2150.0, 2800.0 };
          std::vector<double> beta =
@@ -117,21 +117,21 @@ BOOST_AUTO_TEST_SUITE (SW_Gradient_Test_Suite)
         TomoModel.WriteVTK("SWgradtest.vtk");
 
         std::vector<double> ycoords
-          { 525000.0, 545000.0 };
+          { 517000.0, 535000.0 };
         std::vector<double> zcoords
           { 0.0, 0.0 };
         std::vector<double> xcoords
-          { 25000.0, 25000.0 };
+          { 25000.0, 15000.0 };
 
         jif3D::SurfaceWaveData SWData;
         SWData.SetMeasurementPoints(xcoords, ycoords, zcoords);
 
         std::vector<double> eventlat =
-          { 49.0 };
+          { 49.0, 49.0 };
         std::vector<double> eventlon =
-          { 150.0 };
+          { 150.0, 330.0 };
         std::vector<double> epz =
-          { 0.0 };
+          { 0.0, 0.0 };
         SWData.SetEventPositions(eventlat, eventlon, epz);
         std::vector<double> T =
           { 1, 10, 20, 30, 40, 50, 60, 70, 80 };
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_SUITE (SW_Gradient_Test_Suite)
         std::vector<int> PairIndex =
           { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
         std::vector<int> EventIndex =
-          { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+          { 1, 1, 1, 1, 1, 1, 1, 1, 1 };
         std::vector<int> PeriodIndex =
           { 0, 1, 2, 3, 4, 5, 6, 7, 8 };
         std::vector<double> dtp(PairIndex.size(), 1.0);
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_SUITE (SW_Gradient_Test_Suite)
         jif3D::SurfaceWaveCalculator Calculator;
 //Calculator.set_data_err(err);
         jif3D::rvec ObservedTimes(Calculator.Calculate(TomoModel, SWData));
-
+        std::copy(ObservedTimes.begin(),ObservedTimes.end(),std::ostream_iterator<double>(std::cout," "));
         jif3D::ThreeDModelObjective<jif3D::SurfaceWaveCalculator> TomoObjective(
             Calculator);
         std::copy(ObservedTimes.begin(), ObservedTimes.end(), dtp.begin());

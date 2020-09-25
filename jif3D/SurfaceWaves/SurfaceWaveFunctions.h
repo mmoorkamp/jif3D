@@ -25,6 +25,13 @@ namespace jif3D
     typedef std::complex<double> dcomp;
     const std::complex<double> i(0, 1.0);
 
+
+    struct t_segments {
+      std::vector<int> cellindices;
+      std::vector<double> seglength;
+    };
+
+
     struct PropagatorSubdeterminants
       {
       double G1212;
@@ -254,13 +261,11 @@ namespace jif3D
         const double &north0, const double &east1, const double &north1,
         const double &lon_centr, const double &false_east,
         const double &length_tolerance);
-    std::vector<std::vector<double>> get_t_segments(const double &east0, const double &north0,
-        const double &east1, const double &north1, const double &event_lat,
-        const double &event_lon, const double &lon_centr, const std::vector<double> &origin,
-        const double &deast, const double &dnorth, const std::vector<double> &c,
-        const int &ncells_east, const std::vector<double> &dsdvs,
-        const std::vector<double> &dsdvp, const std::vector<double> &dsdrho,
-        const int &nlay, const double &false_east);
+    t_segments get_t_segments(const double &east0_in,
+        const double &north0_in, const double &east1, const double &north1,
+        const double &event_lat, const double &event_lon, const double &lon_centr,
+        const std::vector<double> &origin, const double &deast, const double &dnorth,
+        const int &ncells_east, const double &false_east);
 
     class R1212_root
       {

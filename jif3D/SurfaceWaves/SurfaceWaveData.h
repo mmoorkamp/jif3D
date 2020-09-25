@@ -18,31 +18,31 @@ namespace jif3D
     public:
       SurfaceWaveData();
       virtual void ReadNetCDF(const std::string &datafile) override;
-      std::vector<double> GetEventPosLat() const
+      const std::vector<double> &GetEventPosLat() const
         {
           return EventPosLat;
         }
-      std::vector<double> GetEventPosLon() const
+      const std::vector<double> &GetEventPosLon() const
         {
           return EventPosLon;
         }
-      std::vector<double> GetEventPosZ() const
+      const std::vector<double> &GetEventPosZ() const
         {
           return EventPosZ;
         }
-      std::vector<double> GetPeriods() const
+      const std::vector<double> &GetPeriods() const
         {
           return periods;
         }
-      std::vector<int> GetStatPairs() const
+      const std::vector<int> &GetStatPairs() const
         {
           return StationPairs;
         }
-      std::multimap<int, std::tuple<int, int>> GetIndexMap() const
+      const std::multimap<int, std::tuple<int, int>> &GetIndexMap() const
         {
           return indexmap;
         }
-      std::vector<int> GetDataPerT() const
+      const std::vector<int> &GetDataPerT() const
         {
           return NDataPerT;
         }
@@ -97,6 +97,7 @@ namespace jif3D
       void WriteStationLocations(const std::string &filename);
       void WriteRayPaths(const std::vector<std::vector<double>> &pathmap_e,
           const std::vector<std::vector<double>> &pathmap_n) const;
+      bool CompareGeometry(const SurfaceWaveData &b) const;
     private:
       // Earthquake locations
       std::vector<double> EventPosLat, EventPosLon, EventPosZ;

@@ -222,10 +222,6 @@ namespace jif3D
         const std::vector<double> northing(Model.GetXCoordinates().begin() + 1,
             Model.GetXCoordinates().end());
 
-        ThreeDModelBase::t3DModelData vp_all = Model.GetVp();
-        ThreeDModelBase::t3DModelData vs_all = Model.GetData();
-        ThreeDModelBase::t3DModelData dens_all = Model.GetDens();
-
         const int nperiods = periods.size();
         const int npairs = StatPairs.size() / 2;
         const int ndata = dtp_obs.size();
@@ -247,9 +243,9 @@ namespace jif3D
             dtp_mod.resize(ndata);
           }
         std::fill(dtp_mod.begin(), dtp_mod.end(), 0.0);
-        const std::vector<double> vs = array2vector(vs_all);
-        const std::vector<double> vp = array2vector(vp_all);
-        const std::vector<double> dens = array2vector(dens_all);
+        const std::vector<double> vs = array2vector(Model.GetData());
+        const std::vector<double> vp = array2vector(Model.GetVp());
+        const std::vector<double> dens = array2vector(Model.GetDens());
 
         const double deast = easting[1] - easting[0];
         const double dnorth = northing[1] - northing[0];
@@ -267,6 +263,8 @@ namespace jif3D
 
         omp_lock_t lck;
         omp_init_lock(&lck);
+
+#pragma omp parallel for default(shared)
         for (int freq = 0; freq < nperiods; freq++)
           {
             /*std::cout << "Period: " << periods[freq] << " s.";
@@ -323,89 +321,111 @@ namespace jif3D
         int LastPair = -1;
         //std::multimap<int, std::vector<std::vector<double>>> pathmap;
 
-        if (firstit == true)
+        bool NewGeo = !Data.CompareGeometry(PreviousData);
+
+        if (NewGeo)
           {
+            std::cout << "Creating geometry" << std::endl;
             pathmap_n.resize(npairs);
             pathmap_e.resize(npairs);
+            SegLengths.resize(ndata);
+            CellIndices.resize(ndata);
+//#pragma omp parallel for default(shared), firstprivate(LastPair), schedule(static)
+            for (int datacounter = 0; datacounter < ndata; datacounter++)
+              {
+                auto data_it = indexmap.begin();
+                std::advance(data_it, datacounter);
+                int pairindex = (*data_it).first;
+                if (LastPair != pairindex)
+                  {
+                    std::vector<std::vector<double>> segments = get_gc_segments(
+                        mpe[StatPairs[2 * pairindex]], mpn[StatPairs[2 * pairindex]],
+                        mpe[StatPairs[2 * pairindex + 1]],
+                        mpn[StatPairs[2 * pairindex + 1]], lon_centr, false_east,
+                        length_tolerance);
+                    std::vector<double> seg_east = segments[0];
+                    std::vector<double> seg_north = segments[1];
+                    int seg_east_size = seg_east.size();
+                    LastPair = pairindex;
+                    /*pathmap.insert(
+                     std::pair<int, std::vector<std::vector<double>>>(pairindex,
+                     segments));*/
+                    pathmap_n[pairindex] = seg_north;
+                    pathmap_e[pairindex] = seg_east;
+                  }
+                double time_total = 0.0;
+                auto IndicesData = (*data_it).second;
+                int eventid = std::get<0>(IndicesData);
+                int periodid = std::get<1>(IndicesData);
+
+                int seg_east_size = pathmap_e[pairindex].size();
+                //std::cout << "Data: " << datacounter << std::endl;
+                std::vector<double> CurrLengths;
+                std::vector<int> CurrIndices;
+                for (int seg = 0; seg < seg_east_size - 1; seg++)
+                  { //loop over great circle segments
+                    //std::cout << "Seg: " << seg << std::endl;
+
+                    std::vector<double> seg_east = pathmap_e[pairindex];
+                    std::vector<double> seg_north = pathmap_n[pairindex];
+
+                    t_segments time_segment = get_t_segments(seg_east[seg],
+                        seg_north[seg], seg_east[seg + 1], seg_north[seg + 1],
+                        eventlat[eventid], eventlon[eventid], lon_centr, model_origin,
+                        deast, dnorth, NY, false_east);
+                    std::copy(time_segment.cellindices.begin(),
+                        time_segment.cellindices.end(), std::back_inserter(CurrIndices));
+                    std::copy(time_segment.seglength.begin(),
+                        time_segment.seglength.end(), std::back_inserter(CurrLengths));
+                  }
+                SegLengths.at(datacounter) = CurrLengths;
+                CellIndices.at(datacounter) = CurrIndices;
+              }
+            PreviousData = Data;
+            Data.WriteRayPaths(pathmap_e, pathmap_n);
           }
-#pragma omp parallel for default(shared), firstprivate(LastPair), schedule(static)
+
+#pragma omp parallel for default(shared)
         for (int datacounter = 0; datacounter < ndata; datacounter++)
           {
-            auto data_it = indexmap.begin();
-            std::advance(data_it, datacounter);
-            int pairindex = (*data_it).first;
-            if (LastPair != pairindex && firstit == true)
-              {
-                std::vector<std::vector<double>> segments = get_gc_segments(
-                    mpe[StatPairs[2 * pairindex]], mpn[StatPairs[2 * pairindex]],
-                    mpe[StatPairs[2 * pairindex + 1]], mpn[StatPairs[2 * pairindex + 1]],
-                    lon_centr, false_east, length_tolerance);
-                std::vector<double> seg_east = segments[0];
-                std::vector<double> seg_north = segments[1];
-                int seg_east_size = seg_east.size();
-                LastPair = pairindex;
-                /*pathmap.insert(
-                 std::pair<int, std::vector<std::vector<double>>>(pairindex,
-                 segments));*/
-                pathmap_n[pairindex].resize(seg_east_size);
-                pathmap_n[pairindex] = seg_north;
-                pathmap_e[pairindex].resize(seg_east_size);
-                pathmap_e[pairindex] = seg_east;
-              }
-
             std::vector<double> vs_tmpgrd(NX * NY * NZ, 0.0), vp_tmpgrd(NX * NY * NZ,
                 0.0), dens_tmpgrd(NX * NY * NZ, 0.0);
-            double time_total = 0.0;
+
+            auto data_it = indexmap.begin();
+            std::advance(data_it, datacounter);
             auto IndicesData = (*data_it).second;
-            int eventid = std::get<0>(IndicesData);
             int periodid = std::get<1>(IndicesData);
 
-            int seg_east_size = pathmap_e[pairindex].size();
-            for (int seg = 0; seg < seg_east_size - 1; seg++)
-              { //loop over great circle segments
-                std::vector<double> vph_map_T(NX * NY), dcdvs_T(nmod), dcdvp_T(nmod),
-                    dcdrho_T(nmod);
-                std::copy(vph_map.begin() + periodid * NX * NY,
-                    vph_map.begin() + (periodid + 1) * NX * NY, vph_map_T.begin());
-                std::copy(dcdvs.begin() + periodid * nmod,
-                    dcdvs.begin() + (periodid + 1) * nmod, dcdvs_T.begin());
-                std::copy(dcdvp.begin() + periodid * nmod,
-                    dcdvp.begin() + (periodid + 1) * nmod, dcdvp_T.begin());
-                std::copy(dcdrho.begin() + periodid * nmod,
-                    dcdrho.begin() + (periodid + 1) * nmod, dcdrho_T.begin());
+            double time = 0;
+            std::vector<double> rhograd(nmod, 0.0), vsgrad(nmod, 0.0), vpgrad(nmod, 0.0);
+            for (size_t i = 0; i < SegLengths.at(datacounter).size(); ++i)
+              {
+                double ti = SegLengths.at(datacounter)[i]
+                    / vph_map[CellIndices.at(datacounter)[i] + periodid * NX * NY];
+                time = time - ti;
 
-                std::vector<double> seg_east = pathmap_e[pairindex];
-                std::vector<double> seg_north = pathmap_n[pairindex];
+                const double tic = (ti
+                    / vph_map[CellIndices.at(datacounter)[i] + periodid * NX * NY]);
+                for (int n = 0; n < NZ; n++)
+                  {
+                    const size_t index = CellIndices.at(datacounter)[i] * NZ + n;
+                    const size_t index2 = index + periodid * nmod;
+                    vs_tmpgrd[index] += 2.0 * dcdvs[index2] * tic;
+                    vp_tmpgrd[index] += 2.0 * dcdvp[index2] * tic;
+                    dens_tmpgrd[index] += 2.0 * dcdrho[index2] * tic;
+                  }
+              }
 
-                std::vector<std::vector<double>> time_segment = get_t_segments(
-                    seg_east[seg], seg_north[seg], seg_east[seg + 1], seg_north[seg + 1],
-                    eventlat[eventid], eventlon[eventid], lon_centr, model_origin, deast,
-                    dnorth, vph_map_T, NY, dcdvs_T, dcdvp_T, dcdrho_T, NZ, false_east);
-                std::vector<double> tmp = time_segment[0];
-                time_total += tmp[0];
-
-                tmp = time_segment[1];
-                std::transform(vs_tmpgrd.begin(), vs_tmpgrd.end(), tmp.begin(),
-                    vs_tmpgrd.begin(), std::plus<double>());
-                tmp = time_segment[2];
-                std::transform(vp_tmpgrd.begin(), vp_tmpgrd.end(), tmp.begin(),
-                    vp_tmpgrd.begin(), std::plus<double>());
-                tmp = time_segment[3];
-                std::transform(dens_tmpgrd.begin(), dens_tmpgrd.end(), tmp.begin(),
-                    dens_tmpgrd.begin(), std::plus<double>());
-              } //end loop ever path segments
-
-            omp_set_lock(&lck);
-            dtp_mod[datacounter] = time_total;
+            dtp_mod[datacounter] = time;
             //delayfile << "\n" << event_stat_cmb[event*nsrcs+src] << "\t" << src_rcvr_cmb[src] << "\t" << src_rcvr_cmb[src+nsrcs] << "\t" << (2.0*M_PI)/w[freq] << "\t" << time_total;
 
-            const double residual = (time_total - dtp_obs[datacounter])
+            const double residual = (time - dtp_obs[datacounter])
                 / jif3D::pow2(err_obs[datacounter]);
 
             /*WriteGradient(NX, NY, NZ, vs_tmpgrd, Model.GetXCoordinates(),
              Model.GetYCoordinates(), Model.GetZCoordinates(),
              "dtdvs" + std::to_string(datacounter) + ".vtk", "dtdvs");*/
-
+            omp_set_lock(&lck);
             std::transform(vs_grad.begin(), vs_grad.end(), vs_tmpgrd.begin(),
                 vs_grad.begin(), weighted_add(residual));
             std::transform(vp_grad.begin(), vp_grad.end(), vp_tmpgrd.begin(),
@@ -431,12 +451,8 @@ namespace jif3D
              << (boost::posix_time::microsec_clock::local_time() - starttime).total_seconds()
              << " s" << std::endl;
              }*/
-          } // end loop over station pairs
-        if (firstit == true)
-          {
-            Data.WriteRayPaths(pathmap_e, pathmap_n);
-            firstit = false;
-          }
+          } // end loop over data
+
       }
   }
 

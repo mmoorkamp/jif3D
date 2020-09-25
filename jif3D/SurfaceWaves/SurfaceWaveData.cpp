@@ -22,6 +22,52 @@ using netCDF::NcDim;
 namespace jif3D
   {
 
+    bool SurfaceWaveData::CompareGeometry(const SurfaceWaveData &b) const
+      {
+
+        if (GetMeasPosX().size() != b.GetMeasPosX().size())
+          return false;
+        if (GetMeasPosY().size() != b.GetMeasPosY().size())
+          return false;
+        if (GetMeasPosZ().size() != b.GetMeasPosZ().size())
+          return false;
+        if (GetEventPosLat().size() != b.GetEventPosLat().size())
+          return false;
+        if (GetEventPosLon().size() != b.GetEventPosLon().size())
+          return false;
+        if (GetEventPosZ().size() != b.GetEventPosZ().size())
+          return false;
+        if (GetStatPairs().size() != b.GetStatPairs().size())
+          return false;
+        if (GetIndexMap().size() != b.GetIndexMap().size())
+          return false;
+        if (!std::equal(GetMeasPosX().begin(), GetMeasPosX().end(),
+            b.GetMeasPosX().begin()))
+          return false;
+        if (!std::equal(GetMeasPosY().begin(), GetMeasPosY().end(),
+            b.GetMeasPosY().begin()))
+          return false;
+        if (!std::equal(GetMeasPosZ().begin(), GetMeasPosZ().end(),
+            b.GetMeasPosZ().begin()))
+          return false;
+        if (!std::equal(GetEventPosLat().begin(), GetEventPosLat().end(),
+            b.GetEventPosLat().begin()))
+          return false;
+        if (!std::equal(GetEventPosLon().begin(), GetEventPosLon().end(),
+            b.GetEventPosLon().begin()))
+          return false;
+        if (!std::equal(GetEventPosZ().begin(), GetEventPosZ().end(),
+            b.GetEventPosZ().begin()))
+          return false;
+        if (!std::equal(GetStatPairs().begin(), GetStatPairs().end(),
+            b.GetStatPairs().begin()))
+          return false;
+        if (!std::equal(GetIndexMap().begin(), GetIndexMap().end(),
+            b.GetIndexMap().begin()))
+          return false;
+        return true;
+      }
+
     void SurfaceWaveData::ReadNetCDF(const std::string &datafile)
       {
 
