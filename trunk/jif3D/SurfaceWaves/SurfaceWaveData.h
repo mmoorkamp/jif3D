@@ -72,10 +72,16 @@ namespace jif3D
       void SetStationPairs(const std::vector<int> &station1,
           const std::vector<int> &station2)
         {
+          if (station1.size() != station2.size())
+            {
+              throw jif3D::FatalException("Station pair indices do not have the same size.",__FILE__,__LINE__);
+            }
           StationPairs.resize(station1.size() * 2);
-          std::copy(station1.begin(), station1.end(), StationPairs.begin());
-          std::copy(station2.begin(), station2.end(),
-              StationPairs.begin() + station1.size());
+          for (size_t i = 0; i < station1.size(); ++i)
+            {
+              StationPairs.at(2*i) = station1.at(i);
+              StationPairs.at(2*i+1) = station2.at(i);
+            }
         }
       void SetNDataPerT(const std::vector<int> &ndata)
         {
