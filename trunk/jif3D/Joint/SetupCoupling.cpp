@@ -5,6 +5,8 @@
 // Copyright   : 2010, mmoorkamp
 //============================================================================
 
+#include <boost/make_shared.hpp>
+
 #include "SetupCoupling.h"
 #include "../Global/FileUtil.h"
 #include "../Regularization/CrossGradient.h"
@@ -455,7 +457,7 @@ namespace jif3D
         const size_t ngrid = ModelGeometry.GetNModelElements();
         InvModel.resize(3 * ngrid, 0.0);
 
-        jif3D::rvec SeisModel(ngrid, 0.0);
+        jif3D::rvec SeisModel(3 * ngrid, 0.0);
         if (SeisMod.GetNModelElements() == ngrid)
           {
             std::copy(SeisMod.GetData().origin(), SeisMod.GetData().origin() + ngrid,
