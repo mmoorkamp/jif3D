@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_SUITE (SW_Gradient_Test_Suite)
         std::vector<double> ycoords
           { 517000.0, 535000.0 };
         std::vector<double> zcoords
-          { 0.0, 0.0 };
+          { 0.0, 0.0, 0.0 };
         std::vector<double> xcoords
           { 25000.0, 15000.0 };
 
@@ -139,15 +139,15 @@ BOOST_AUTO_TEST_SUITE (SW_Gradient_Test_Suite)
         SWData.SetPeriods(T);
         SWData.SetLonCentr(-123.0);
         std::vector<int> stat1 =
-          { 0 };
+          { 0, 0 };
         std::vector<int> stat2 =
-          { 1 };
+          { 1, 2 };
         SWData.SetStationPairs(stat1, stat2);
         std::vector<int> NDataPerT =
           { 1, 1, 1, 1, 1, 1, 1, 1, 1 };
         SWData.SetNDataPerT(NDataPerT);
         std::vector<int> PairIndex =
-          { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+          { 1, 0, 1, 0, 0, 0, 0, 0, 0 };
         std::vector<int> EventIndex =
           { 1, 1, 1, 1, 1, 1, 1, 1, 1 };
         std::vector<int> PeriodIndex =
