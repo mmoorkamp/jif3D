@@ -7,6 +7,7 @@
 
 #include "VTKTools.h"
 #include <fstream>
+#include <iomanip>
 #include "../Global/FatalException.h"
 
 #pragma GCC diagnostic ignored "-Wuninitialized"
@@ -20,7 +21,11 @@ namespace jif3D
       {
         //write the coordinate name, the number of cell boundary values and its type
         file << name << " " << CellCoords.size() << " double" << std::endl;
-        std::copy(CellCoords.begin(),CellCoords.end(),std::ostream_iterator<double>(file," "));
+        for (double coord : CellCoords)
+          {
+            file << std::setw(15) << std::setprecision(9) << coord << " ";
+          }
+        //std::copy(CellCoords.begin(),CellCoords.end(),std::ostream_iterator<double>(file," "));
         file << "\n";
       }
 
