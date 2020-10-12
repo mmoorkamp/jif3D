@@ -14,6 +14,8 @@
 #include "MTEquations.h"
 #include <iostream>
 #include <boost/math/constants/constants.hpp>
+#include <boost/make_shared.hpp>
+
 namespace fs = boost::filesystem;
 
 using namespace jif3D;

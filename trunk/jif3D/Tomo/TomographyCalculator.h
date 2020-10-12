@@ -15,6 +15,7 @@
 #include "../Global/VecMat.h"
 #include "../Global/Jif3DGlobal.h"
 #include "../Global/VectorTransform.h"
+#include <boost/shared_ptr.hpp>
 
 namespace jif3D
   {

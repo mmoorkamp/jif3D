@@ -10,6 +10,8 @@
 #include "../Gravity/TensorGravityData.h"
 #include "../Global/FileUtil.h"
 #include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
+
 #include <iostream>
 
 int main()

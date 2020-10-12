@@ -23,6 +23,7 @@
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
+#include <boost/shared_ptr.hpp>
 #include "X3DModel.h"
 #include "MTData.h"
 #include "ReadWriteX3D.h"
