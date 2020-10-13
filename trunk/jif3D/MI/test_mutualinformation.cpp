@@ -9,11 +9,12 @@
 #define BOOST_TEST_MAIN ...
 #include "../Global/Jif3DTesting.h"
 #include <boost/test/included/unit_test.hpp>
+#include <boost/test/tools/floating_point_comparison.hpp>
+
 #include <stdlib.h>
 #include <algorithm>
 #include <numeric>
 #include "MutualInformationConstraint.h"
-#include <boost/test/tools/floating_point_comparison.hpp>
 
 BOOST_AUTO_TEST_SUITE (MutualInformation_Test_Suite)
 
@@ -80,7 +81,7 @@ BOOST_AUTO_TEST_CASE (random_test)
     jif3D::rvec StartModel(msize);
     std::generate(StartModel.begin(), StartModel.end(), drand48);
 
-    jif3D::MutualInformationConstraint MI(0.0, 1.0, 0.0, 1.0, 50,jif3D::MutualInformationConstraint::gauss);
+    jif3D::MutualInformationConstraint MI(0.0, 1.0, 0.0, 1.0, 50);
 
     double mi = MI.CalcMisfit(StartModel);
     std::cout << "Random MI: " << mi << std::endl;
@@ -104,7 +105,7 @@ BOOST_AUTO_TEST_CASE (depend_test)
         StartModel(i) = StartModel(i-msize/2);
       }
 
-    jif3D::MutualInformationConstraint MI(0.0, 1.0, 0.0, 1.0, 50,jif3D::MutualInformationConstraint::gauss);
+    jif3D::MutualInformationConstraint MI(0.0, 1.0, 0.0, 1.0, 50);
     double mi = MI.CalcMisfit(StartModel);
     std::cout << "Depend MI: " << mi << std::endl;
 
@@ -126,7 +127,7 @@ BOOST_AUTO_TEST_CASE (depend_noise_test)
         StartModel(i) = StartModel(i-msize/2) + 0.1 * drand48();
       }
 
-    jif3D::MutualInformationConstraint MI(0.0, 1.0, 0.0, 2.0, 50,jif3D::MutualInformationConstraint::gauss);
+    jif3D::MutualInformationConstraint MI(0.0, 1.0, 0.0, 2.0, 50);
     double mi = MI.CalcMisfit(StartModel);
     std::cout << "Noise MI: " << mi << std::endl;
 

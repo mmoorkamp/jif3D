@@ -63,14 +63,15 @@ public:
     }
   template<typename Rhs>
   Eigen::Product<MatrixReplacement, Rhs, Eigen::AliasFreeProduct> operator*(
-      const Eigen::MatrixBase<Rhs>& x) const
+      const Eigen::MatrixBase<Rhs> &x) const
     {
       return Eigen::Product<MatrixReplacement, Rhs, Eigen::AliasFreeProduct>(*this,
           x.derived());
     }
   // Custom API:
-  MatrixReplacement(const jif3D::rvec &CD,size_t x, size_t y, size_t z, double ma, double mnu, double msigma) :
-      Cov(CD,x, y, z, ma, mnu, msigma)
+  MatrixReplacement(const jif3D::rvec &CD, size_t x, size_t y, size_t z, double ma,
+      double mnu, double msigma) :
+      Cov(CD, x, y, z, ma, mnu, msigma)
     {
       nelem = x * y * z;
     }
@@ -93,8 +94,8 @@ namespace Eigen
           {
           typedef typename Product<MatrixReplacement, Rhs>::Scalar Scalar;
           template<typename Dest>
-          static void scaleAndAddTo(Dest& dst, const MatrixReplacement& lhs,
-              const Rhs& rhs, const Scalar& alpha)
+          static void scaleAndAddTo(Dest &dst, const MatrixReplacement &lhs,
+              const Rhs &rhs, const Scalar &alpha)
             {
               // This method should implement "dst += alpha * lhs * rhs" inplace,
               // however, for iterative solvers, alpha is always equal to 1, so let's not bother about it.
@@ -114,8 +115,8 @@ namespace jif3D
 
     StochasticCovariance::StochasticCovariance(const jif3D::rvec &CD, size_t x, size_t y,
         size_t z, double ma, double mnu, double msigma) :
-        CovDiag(CD), A(x * y * z, x * y * z), nx(x), ny(y), nz(z), a(ma), nu(mnu), sigma(
-            msigma), HaveInv(false)
+        A(x * y * z, x * y * z), nx(x), ny(y), nz(z), a(ma), nu(mnu), sigma(msigma), HaveInv(
+            false), CovDiag(CD)
       {
         distindex = 0;
         double factor = sigma * sigma / (std::pow(2, nu - 1) * boost::math::tgamma(nu));
@@ -129,6 +130,7 @@ namespace jif3D
         double steps = 1000;
         double delta = (max - min) / steps;
         double aa = std::abs(a);
+
         for (double currval = 0; currval <= max; currval += delta)
           {
             double res =
@@ -150,47 +152,46 @@ namespace jif3D
         boost::posix_time::ptime starttime =
             boost::posix_time::microsec_clock::local_time();
         std::vector<T> coefficients; // list of non-zeros coefficients
-
-//#pragma omp parallel for default(shared)
-        for (size_t i = 0; i < nmod; ++i)
-          {
-            int xi, yi, zi;
-            OffsetToIndex(i, xi, yi, zi);
-            //double currx = Model.GetXCoordinates()[xi] + Model.GetXCellSizes()[xi] / 2.0;
-            //double curry = Model.GetYCoordinates()[yi] + Model.GetYCellSizes()[yi] / 2.0;
-            //double currz = Model.GetZCoordinates()[zi] + Model.GetZCellSizes()[zi] / 2.0;
-            int startx = std::max(0, xi - distindex);
-            int endx = std::min(nx, xi + distindex);
-            int starty = std::max(0, yi - distindex);
-            int endy = std::min(ny, yi + distindex);
-            int startz = std::max(0, zi - distindex);
-            int endz = std::min(nz, zi + distindex);
-            for (size_t j = startx; j < endx; ++j)
-              {
-                for (size_t k = starty; k < endy; ++k)
-                  {
-                    for (size_t l = startz; l < endz; ++l)
-                      {
-                        int offset = IndexToOffset(j, k, l);
-                        double r = std::sqrt(
-                            jif3D::pow2(xi - j) + jif3D::pow2(yi - k)
-                                + jif3D::pow2(zi - l));
-                        int index = std::round((r - min) / delta);
-                        double inter = values[index];
-                        //+ (values[index + 1] - values[index]) / delta
-                        //		* (r - index * delta);
-                        if (a < 0.0)
-                          {
-                            coefficients.push_back(T(i, offset, inter));
-                          }
-                        //previous_result(i) += inter * vector(offset);
-                      }
-                  }
-              }
-
-          }
         if (a < 0.0)
           {
+//#pragma omp parallel for default(shared)
+            for (size_t i = 0; i < nmod; ++i)
+              {
+                int xi, yi, zi;
+                OffsetToIndex(i, xi, yi, zi);
+                //double currx = Model.GetXCoordinates()[xi] + Model.GetXCellSizes()[xi] / 2.0;
+                //double curry = Model.GetYCoordinates()[yi] + Model.GetYCellSizes()[yi] / 2.0;
+                //double currz = Model.GetZCoordinates()[zi] + Model.GetZCellSizes()[zi] / 2.0;
+                int startx = std::max(0, xi - distindex);
+                int endx = std::min(nx, xi + distindex);
+                int starty = std::max(0, yi - distindex);
+                int endy = std::min(ny, yi + distindex);
+                int startz = std::max(0, zi - distindex);
+                int endz = std::min(nz, zi + distindex);
+                for (size_t j = startx; j < endx; ++j)
+                  {
+                    for (size_t k = starty; k < endy; ++k)
+                      {
+                        for (size_t l = startz; l < endz; ++l)
+                          {
+                            int offset = IndexToOffset(j, k, l);
+                            double r = std::sqrt(
+                                jif3D::pow2(xi - j) + jif3D::pow2(yi - k)
+                                    + jif3D::pow2(zi - l));
+                            int index = std::round((r - min) / delta);
+                            double inter = values[index];
+                            //+ (values[index + 1] - values[index]) / delta
+                            //		* (r - index * delta);
+
+                            coefficients.push_back(T(i, offset, inter));
+
+                            //previous_result(i) += inter * vector(offset);
+                          }
+                      }
+                  }
+
+              }
+
             std::cout << "Preparing inverse covariance " << std::endl;
             A.setFromTriplets(coefficients.begin(), coefficients.end());
             A.makeCompressed();
@@ -344,8 +345,8 @@ namespace jif3D
                 boost::posix_time::microsec_clock::local_time();
             //double time = (endtime - starttime).total_seconds();
           }
-        std::transform(previous_result.begin(), previous_result.end(), CovDiag.begin(), previous_result.begin(),
-            std::multiplies<double>());
+        std::transform(previous_result.begin(), previous_result.end(), CovDiag.begin(),
+            previous_result.begin(), std::multiplies<double>());
         //std::cout << " took " << time << " seconds " << std::endl;
         return previous_result;
         /*const size_t nmod = vector.size() * 2;

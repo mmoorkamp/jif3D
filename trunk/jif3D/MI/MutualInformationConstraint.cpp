@@ -7,9 +7,6 @@
 
 #include "MutualInformationConstraint.h"
 #include <omp.h>
-#if BOOST_VERSION >= 107000
-#include <boost/histogram.hpp>
-#endif
 
 #include <boost/algorithm/minmax_element.hpp>
 #include <boost/math/distributions/normal.hpp>
@@ -120,57 +117,6 @@ namespace jif3D
         return result;
       }
 
-    double MIHist(const jif3D::rvec &x, const jif3D::rvec &y, double xmin, double xmax,
-        double ymin, double ymax, size_t nbins, jif3D::rvec &CountsX,
-        jif3D::rvec &CountsY, jif3D::rvec &CountsXY)
-      {
-#if BOOST_VERSION >= 107000
-        using namespace boost::histogram;
-        using namespace literals;
-        auto hxy = make_histogram(axis::regular<>(nbins, xmin, xmax, "x"),
-            axis::regular<>(nbins, ymin, ymax, "y"));
-        const size_t nparm = x.size();
-        assert(y.size() == nparm);
-        for (size_t i = 0; i < nparm; ++i)
-          {
-            hxy(x(i), y(i));
-          }
-        auto hx = algorithm::project(hxy, 0_c);
-        auto hy = algorithm::project(hxy, 1_c);
-
-        CountsX.resize(nbins);
-        CountsY.resize(nbins);
-        CountsXY.resize(nbins * nbins);
-        std::fill(CountsX.begin(), CountsX.end(), 0.0);
-        std::fill(CountsY.begin(), CountsY.end(), 0.0);
-        std::fill(CountsXY.begin(), CountsXY.end(), 0.0);
-        for (auto&& xb : indexed(hx))
-          {
-            CountsX(xb.index()) = *xb;
-          }
-        for (auto&& yb : indexed(hy))
-          {
-            CountsY(yb.index()) = *yb;
-          }
-        for (auto&& xyb : indexed(hxy))
-          {
-            CountsXY(xyb.index(0) * nbins + xyb.index(1)) = *xyb;
-          }
-
-        double H_X = shan_entropy(CountsX);
-        double H_Y = shan_entropy(CountsY);
-        double H_XY = shan_entropy(CountsXY);
-        //std::cout << "Hist: "<< H_X << " " << H_Y << " "<< H_XY << std::endl;
-        //std::ofstream outfile("hist.out");
-        //std::copy(xycount.begin(),xycount.end(),std::ostream_iterator<double>(outfile,"\n"));
-
-        double I = 2.0 * H_XY - H_X - H_Y;
-        double H = H_X + H_Y - H_XY;
-        //return std::exp(-H);
-        return std::sqrt(I);
-#endif
-      }
-
     void GaussHist(const jif3D::rvec &x, const jif3D::rvec &y, double xmin, double xmax,
         double ymin, double ymax, size_t nbins, jif3D::rvec &CountsX,
         jif3D::rvec &CountsY, jif3D::rvec &CountsXY)
@@ -189,11 +135,9 @@ namespace jif3D
         std::fill(CountsX.begin(), CountsX.end(), 0.0);
         std::fill(CountsY.begin(), CountsY.end(), 0.0);
         std::fill(CountsXY.begin(), CountsXY.end(), 0.0);
-        //std::ofstream outfile("data.out");
 
         for (size_t i = 0; i < nparm; ++i)
           {
-            //outfile << x(i) << " " << y(i) << std::endl;
             //int xc = std::floor(std::min((x(i) - xmin) / xw, nbins - 1));
             //int yc = std::floor(std::min((y(i) - ymin) / yw, nbins - 1));
 #pragma omp parallel for
@@ -266,12 +210,9 @@ namespace jif3D
         double H_X = shan_entropy(CountsX);
         double H_Y = shan_entropy(CountsY);
         double H_XY = shan_entropy(CountsXY);
-        //std::cout << "Gauss: " << H_X << " " << H_Y << " " << H_XY << std::endl;
-        //std::ofstream outfile("gauss.out");
-        //std::copy(CountsXY.begin(), CountsXY.end(),
-        //    std::ostream_iterator<double>(outfile, "\n"));
+
         double I = 2.0 * H_XY - H_X - H_Y;
-        double H = H_X + H_Y - H_XY;
+        //double H = H_X + H_Y - H_XY;
 
         return std::sqrt(I);
 
@@ -287,18 +228,11 @@ namespace jif3D
         jif3D::rvec x = ublas::subrange(Model, 0, nparm);
         jif3D::rvec y = ublas::subrange(Model, nparm, 2 * nparm);
         double H = 0;
-        if (Calc == gauss)
-          {
-            H = MIGauss(x, y, xmin, xmax, ymin, ymax, nbins, CountsX, CountsY, CountsXY);
-          }
-        else
-          {
-            H = MIHist(x, y, xmin, xmax, ymin, ymax, nbins, CountsX, CountsY, CountsXY);
-          }
-        std::string name = "mi" + std::to_string(++eval) + ".nc";
-        plothist(name, xmin, xmax, ymin, ymax, nbins, CountsXY);
-        //double H2 = MIHist(x, y, xmin, xmax, ymin, ymax, nbins);
-        //std::cout << "Gauss: " << H << " Hist: " << H2 << std::endl;
+
+        H = MIGauss(x, y, xmin, xmax, ymin, ymax, nbins, CountsX, CountsY, CountsXY);
+        //std::string name = "mi" + std::to_string(++eval) + ".nc";
+        //plothist(name, xmin, xmax, ymin, ymax, nbins, CountsXY);
+
         Diff(0) = H;
       }
 
@@ -309,17 +243,15 @@ namespace jif3D
         const size_t nparm = Model.size() / 2;
         jif3D::rvec x = ublas::subrange(Model, 0, nparm);
         jif3D::rvec y = ublas::subrange(Model, nparm, 2 * nparm);
-
-        const size_t nmodel = Model.size();
         jif3D::rvec result = diff_MIGauss(x, y, xmin, xmax, ymin, ymax, nbins, CountsX,
             CountsY, CountsXY);
         return result;
       }
 
     MutualInformationConstraint::MutualInformationConstraint(double min1, double max1,
-        double min2, double max2, size_t nb, MICalcType C) :
+        double min2, double max2, size_t nb) :
         CountsXY(), CountsX(), CountsY(), xmin(min1), xmax(max1), ymin(min2), ymax(max2), nbins(
-            nb), eval(0), Calc(C)
+            nb)
       {
         // TODO Auto-generated constructor stub
         //mine = boost::make_shared<MINE>(0.6, 15, EST_MIC_APPROX);
