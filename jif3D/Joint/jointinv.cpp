@@ -30,7 +30,7 @@
 #include "../Regularization/MinDiffRegularization.h"
 #include "../Inversion/ModelTransforms.h"
 #include "../SurfaceWaves/SurfaceWaveModel.h"
-//#include "../Tomo/ReadWriteTomographyData.h"
+#include "../Tomo/ReadWriteTomographyData.h"
 #include "../SurfaceWaves/SurfaceWaveCalculator.h"
 #include "../Gravity/ReadWriteGravityData.h"
 #include "../Gravity/ThreeDGravityFactory.h"
@@ -38,6 +38,7 @@
 #include "../MT/X3DMTCalculator.h"
 #include "../MT/ReadWriteImpedances.h"
 #include "SetupSW.h"
+#include "SetupTomo.h"
 #include "SetupGravity.h"
 #include "SetupMT.h"
 #include "SetupInversion.h"
@@ -60,26 +61,26 @@ namespace po = boost::program_options;
 //first we create objects that manage the setup of individual parts
 //that way we can reuse these objects so that other programs use
 //exactly the same options
+#ifdef HAVETRAVELTIME
+jif3D::SetupTomo TomoSetup;
+#else
 jif3D::SetupSW TomoSetup;
+#endif
+
 jif3D::SetupGravity GravitySetup;
 jif3D::SetupMT MTSetup;
 jif3D::SetupInversion InversionSetup;
 jif3D::SetupRegularization RegSetup;
 jif3D::SetupCoupling CouplingSetup;
 bool WaveletParm = false;
-bool WantSequential = false;
 double xorigin, yorigin;
 double coolingfactor = 1.0;
 int saveinterval = 1;
 double CovWidth = 3.0;
 
-int hpx_main(boost::program_options::variables_map& vm)
+int hpx_main(boost::program_options::variables_map &vm)
   {
 
-    if (vm.count("sequential"))
-      {
-        WantSequential = true;
-      }
     if (vm.count("wavelet"))
       {
         WaveletParm = true;
@@ -155,7 +156,7 @@ int hpx_main(boost::program_options::variables_map& vm)
     if (vm.count("tomocov") || vm.count("gravcov") || vm.count("mtcov"))
       {
         std::cout
-            << "Setting individual covariances currently only works with cross-gradient coupling !"
+            << "Setting individual covariances currently only works with cross-gradient or mutual information coupling !"
             << std::endl;
         CovModVec.resize(3 * ngrid);
         std::fill(CovModVec.begin(), CovModVec.end(), 1.0);
@@ -281,7 +282,11 @@ int hpx_main(boost::program_options::variables_map& vm)
     //and general quality control
     if (havetomo)
       {
+#ifdef HAVETRAVELTIME
+        auto TomoData(TomoSetup.GetTomoObjective().GetObservedData());
+#else
         auto TomoData(TomoSetup.GetSurfaceWaveObjective().GetObservedData());
+#endif
         TomoData.WriteMeasurementPoints(modelfilename + ".rec.vtk");
         //TomoData.WriteSourcePoints(modelfilename + ".sor.vtk");
       }
@@ -362,10 +367,10 @@ int hpx_main(boost::program_options::variables_map& vm)
                 new jif3D::MinDiffRegularization(DistModel));
             DistReg->SetReferenceModel(CRef);
 
-            dynamic_cast<jif3D::MultiSectionTransform *>(MTTransform.get())->SetLength(
+            dynamic_cast<jif3D::MultiSectionTransform*>(MTTransform.get())->SetLength(
                 InvModel.size());
             //DistRegTrans->SetLength(InvModel.size());
-            dynamic_cast<jif3D::MultiSectionTransform *>(MTTransform.get())->AddSection(
+            dynamic_cast<jif3D::MultiSectionTransform*>(MTTransform.get())->AddSection(
                 Grid.size(), InvModel.size(), Copier);
             Objective->AddObjective(DistReg, DistRegTrans, MTSetup.GetDistCorr(),
                 "DistReg", jif3D::JointObjective::regularization);
@@ -384,7 +389,7 @@ int hpx_main(boost::program_options::variables_map& vm)
     StoreWeights(weightfile, 0, *Objective);
     jif3D::ThreeDGravityModel GravModel(GravitySetup.GetScalModel());
     jif3D::X3DModel MTModel(MTSetup.GetModel());
-    jif3D::SurfaceWaveModel SWModel(TomoSetup.GetModel());
+    auto SWModel(TomoSetup.GetModel());
 
     if (!havetomo)
       SWModel = *StartModel;
@@ -394,292 +399,117 @@ int hpx_main(boost::program_options::variables_map& vm)
       GravModel = *StartModel;
 
     std::cout << "Performing inversion." << std::endl;
-    if (WantSequential)
+
+    boost::shared_ptr<jif3D::MultiSectionCovariance> CovObj = boost::make_shared<
+        jif3D::MultiSectionCovariance>(InvModel.size());
+    if (CovWidth != 0.0)
       {
-        boost::shared_ptr<jif3D::JointObjective> TomoObjective(Objective->clone());
-        boost::shared_ptr<jif3D::JointObjective> MTObjective(Objective->clone());
-        boost::shared_ptr<jif3D::JointObjective> GravObjective(Objective->clone());
 
-        std::ofstream tomomisfitfile("tomo_misfit.out");
-        std::ofstream mtmisfitfile("mt_misfit.out");
-        std::ofstream gravmisfitfile("grav_misfit.out");
-        std::vector<double> Weights = Objective->GetWeights();
-        std::vector<double> TomoWeights(Weights);
-        std::vector<double> MTWeights(Weights);
-        std::vector<double> GravWeights(Weights);
-        TomoWeights.at(1) = 0.0;
-        TomoWeights.at(2) = 0.0;
-        TomoWeights.at(3) = 0.0;
-        TomoWeights.at(6) = 0.0;
-        TomoWeights.at(8) = 0.0;
-        TomoWeights.at(9) = 0.0;
-        MTWeights.at(0) = 0.0;
-        MTWeights.at(1) = 0.0;
-        MTWeights.at(2) = 0.0;
-        MTWeights.at(4) = 0.0;
-        MTWeights.at(7) = 0.0;
-        MTWeights.at(8) = 0.0;
-        GravWeights.at(0) = 0.0;
-        GravWeights.at(3) = 0.0;
-        GravWeights.at(5) = 0.0;
-        GravWeights.at(7) = 0.0;
-        GravWeights.at(9) = 0.0;
-
-        TomoObjective->SetWeights(TomoWeights);
-        MTObjective->SetWeights(MTWeights);
-        GravObjective->SetWeights(GravWeights);
-
-        jif3D::rvec TomoInvModel = InvModel;
-        jif3D::rvec MTInvModel = InvModel;
-        jif3D::rvec GravInvModel = InvModel;
-
-        jif3D::rvec TomoCovMod(3 * ngrid, 1e-15);
-        std::fill_n(TomoCovMod.begin(), ngrid, 1.0);
-
-        jif3D::rvec MTCovMod(3 * ngrid, 1e-15);
-        std::fill_n(MTCovMod.begin() + 2 * ngrid, ngrid, 1.0);
-
-        jif3D::rvec GravCovMod(3 * ngrid, 1e-15);
-        std::fill_n(GravCovMod.begin() + ngrid, ngrid, 1.0);
-
-        auto TomoCovObj = boost::make_shared<jif3D::DiagonalCovariance>(TomoCovMod);
-        boost::shared_ptr<jif3D::GradientBasedOptimization> TomoOptimizer =
-            InversionSetup.ConfigureInversion(vm, TomoObjective, TomoInvModel,
-                TomoCovObj);
-
-        auto MTCovObj = boost::make_shared<jif3D::DiagonalCovariance>(MTCovMod);
-        boost::shared_ptr<jif3D::GradientBasedOptimization> MTOptimizer =
-            InversionSetup.ConfigureInversion(vm, MTObjective, MTInvModel, MTCovObj);
-
-        auto GravCovObj = boost::make_shared<jif3D::DiagonalCovariance>(GravCovMod);
-        boost::shared_ptr<jif3D::GradientBasedOptimization> GravOptimizer =
-            InversionSetup.ConfigureInversion(vm, GravObjective, GravInvModel,
-                GravCovObj);
-
-        bool terminate = false;
-        jif3D::rvec OldModel(InvModel);
-        //this is the core inversion loop, we make optimization steps
-        //until either we reach the maximum number of iterations
-        //or fulfill a termination criterion
-        while (iteration < maxiter && !terminate)
+        boost::shared_ptr<jif3D::GeneralCovariance> StochCov = boost::make_shared<
+            jif3D::StochasticCovariance>(CovModVec, StartModel->GetModelShape()[0],
+            StartModel->GetModelShape()[1], StartModel->GetModelShape()[2], CovWidth, 1.0,
+            1.0);
+        CovObj->AddSection(0, ngrid, StochCov);
+        CovObj->AddSection(ngrid, 2 * ngrid, StochCov);
+        CovObj->AddSection(2 * ngrid, 3 * ngrid, StochCov);
+        if (MTSetup.GetDistCorr() > 0)
           {
-            terminate = true;
-            jif3D::rvec OldTomo = TomoInvModel;
-            jif3D::rvec OldGrav = GravInvModel;
-            jif3D::rvec OldMT = MTInvModel;
-
-            //we catch all jif3D internal exceptions so that we can graciously
-            //exit and write out some final information before stopping the program
-
-            std::cout << "\n\n Iteration: " << iteration << std::endl;
-
-            //update the inversion model
-            try
-              {
-                TomoOptimizer->MakeStep(TomoInvModel);
-              } catch (jif3D::FatalException &e)
-              {
-                TomoInvModel = OldTomo;
-                std::cerr << "In tomography: " << e.what() << std::endl;
-              }
-            try
-              {
-                MTOptimizer->MakeStep(MTInvModel);
-              } catch (jif3D::FatalException &e)
-              {
-                MTInvModel = OldMT;
-                std::cerr << "In MT: " << e.what() << std::endl;
-              }
-            try
-              {
-                GravOptimizer->MakeStep(GravInvModel);
-              } catch (jif3D::FatalException &e)
-              {
-                GravInvModel = OldGrav;
-                std::cerr << "In gravity: " << e.what() << std::endl;
-              }
-
-            ublas::subrange(MTInvModel, 0, ngrid) = ublas::subrange(TomoInvModel, 0,
-                ngrid);
-            ublas::subrange(GravInvModel, 0, ngrid) = ublas::subrange(TomoInvModel, 0,
-                ngrid);
-
-            ublas::subrange(TomoInvModel, ngrid, 2 * ngrid) = ublas::subrange(
-                GravInvModel, ngrid, 2 * ngrid);
-            ublas::subrange(MTInvModel, ngrid, 2 * ngrid) = ublas::subrange(GravInvModel,
-                ngrid, 2 * ngrid);
-
-            ublas::subrange(TomoInvModel, 2 * ngrid, 3 * ngrid) = ublas::subrange(
-                MTInvModel, 2 * ngrid, 3 * ngrid);
-            ublas::subrange(GravInvModel, 2 * ngrid, 3 * ngrid) = ublas::subrange(
-                MTInvModel, 2 * ngrid, 3 * ngrid);
-            //Objective->MultiplyWeights(jif3D::JointObjective::regularization,
-            //    coolingfactor);
-            ++iteration;
-            //we save all models at each iteration, so we can look at the development
-            // and use intermediate models in case something goes wrong
-            SaveModel(TomoInvModel, *TomoTransform.get(), SWModel,
-                modelfilename + jif3D::stringify(iteration) + ".tomo.inv");
-            SaveModel(MTInvModel, *MTTransform.get(), MTModel,
-                modelfilename + jif3D::stringify(iteration) + ".mt.inv");
-            SaveModel(GravInvModel, *GravityTransform.get(), GravModel,
-                modelfilename + jif3D::stringify(iteration) + ".grav.inv");
-
-            //and write the current misfit for all objectives to a misfit file
-            StoreMisfit(tomomisfitfile, iteration, TomoOptimizer->GetMisfit(),
-                *TomoObjective);
-            StoreMisfit(mtmisfitfile, iteration, MTOptimizer->GetMisfit(), *MTObjective);
-            StoreMisfit(gravmisfitfile, iteration, GravOptimizer->GetMisfit(),
-                *GravObjective);
-
-            //StoreRMS(rmsfile, iteration, *Objective);
-            //StoreWeights(weightfile, iteration, *Objective);
-            std::cout << "\n\n";
-            //we stop when either we do not make any improvement any more
-            terminate = CheckConvergence(*Objective);
-            //or the file abort exists in the current directory
-            terminate = terminate || jif3D::WantAbort();
+            boost::shared_ptr<jif3D::GeneralCovariance> DistCov = boost::make_shared<
+                jif3D::DiagonalCovariance>();
+            CovObj->AddSection(3 * ngrid, InvModel.size(), DistCov);
           }
-
-        ublas::subrange(InvModel, 0, ngrid) = ublas::subrange(TomoInvModel, 0, ngrid);
-        ublas::subrange(InvModel, ngrid, 2 * ngrid) = ublas::subrange(GravInvModel, ngrid,
-            2 * ngrid);
-        ublas::subrange(InvModel, 2 * ngrid, 3 * ngrid) = ublas::subrange(MTInvModel,
-            2 * ngrid, 3 * ngrid);
       }
     else
       {
+        CovObj->AddSection(0, InvModel.size(),
+            boost::make_shared<jif3D::DiagonalCovariance>(CovModVec));
+      }
 
-        boost::shared_ptr<jif3D::MultiSectionCovariance> CovObj = boost::make_shared<
-            jif3D::MultiSectionCovariance>(InvModel.size());
-        if (CovWidth != 0.0)
+    //auto CovObj = boost::make_shared<jif3D::DiagonalCovariance>(CovVec);
+
+    boost::shared_ptr<jif3D::GradientBasedOptimization> Optimizer =
+        InversionSetup.ConfigureInversion(vm, Objective, InvModel, CovObj);
+
+    bool terminate = false;
+    jif3D::rvec OldModel(InvModel);
+    //this is the core inversion loop, we make optimization steps
+    //until either we reach the maximum number of iterations
+    //or fulfill a termination criterion
+    while (iteration < maxiter && !terminate)
+      {
+        terminate = true;
+        //we catch all jif3D internal exceptions so that we can graciously
+        //exit and write out some final information before stopping the program
+        try
           {
+            std::cout << "\n\n Iteration: " << iteration << std::endl;
+            //we save the current model so we can go back to it
+            //in case the optimization step fails
+            OldModel = InvModel;
+            //update the inversion model
+            Optimizer->MakeStep(InvModel);
 
-            boost::shared_ptr<jif3D::GeneralCovariance> StochCov = boost::make_shared<
-                jif3D::StochasticCovariance>(CovModVec, StartModel->GetModelShape()[0],
-                StartModel->GetModelShape()[1], StartModel->GetModelShape()[2], CovWidth,
-                1.0, 1.0);
-            CovObj->AddSection(0, ngrid, StochCov);
-            CovObj->AddSection(ngrid, 2 * ngrid, StochCov);
-            CovObj->AddSection(2 * ngrid, 3 * ngrid, StochCov);
-            if (MTSetup.GetDistCorr() > 0)
+            Objective->MultiplyWeights(jif3D::JointObjective::regularization,
+                coolingfactor);
+            ++iteration;
+            //we save all models at the iterations the user has selected (default is every iteration)
+            //this way  we can look at the development
+            // and use intermediate models in case something goes wrong
+            if (iteration % saveinterval == 0)
               {
-                boost::shared_ptr<jif3D::GeneralCovariance> DistCov = boost::make_shared<
-                    jif3D::DiagonalCovariance>();
-                CovObj->AddSection(3 * ngrid, InvModel.size(), DistCov);
-              }
-          }
-        else
-          {
-            CovObj->AddSection(0, InvModel.size(),
-                boost::make_shared<jif3D::DiagonalCovariance>(CovModVec));
-
-          }
-
-        //auto CovObj = boost::make_shared<jif3D::DiagonalCovariance>(CovVec);
-
-        boost::shared_ptr<jif3D::GradientBasedOptimization> Optimizer =
-            InversionSetup.ConfigureInversion(vm, Objective, InvModel, CovObj);
-
-        bool terminate = false;
-        jif3D::rvec OldModel(InvModel);
-        //this is the core inversion loop, we make optimization steps
-        //until either we reach the maximum number of iterations
-        //or fulfill a termination criterion
-        while (iteration < maxiter && !terminate)
-          {
-            terminate = true;
-            //we catch all jif3D internal exceptions so that we can graciously
-            //exit and write out some final information before stopping the program
-            try
-              {
-                std::cout << "\n\n Iteration: " << iteration << std::endl;
-                //we save the current model so we can go back to it
-                //in case the optimization step fails
-                OldModel = InvModel;
-                //update the inversion model
-                Optimizer->MakeStep(InvModel);
-
-                Objective->MultiplyWeights(jif3D::JointObjective::regularization,
-                    coolingfactor);
-                ++iteration;
-                //we save all models at the iterations the user has selected (default is every iteration)
-                //this way  we can look at the development
-                // and use intermediate models in case something goes wrong
-                if (iteration % saveinterval == 0)
+                if (havetomo)
                   {
-                    if (havetomo)
-                      {
-                        jif3D::rvec TransModel = TomoTransform->GeneralizedToPhysical(InvModel);
-                        const size_t ncells = SWModel.GetNModelElements();
-                        std::copy(TransModel.begin(),
-                            TransModel.begin() + ncells,
-                            SWModel.SetData().origin());
-                        jif3D::SurfaceWaveModel::t3DModelData values(SWModel.GetVp());
-                        std::copy(TransModel.begin() + ncells, TransModel.begin() + 2 * ncells, values.origin());
-                        SWModel.SetVp(values);
-                        std::copy(TransModel.begin() + 2* ncells, TransModel.end(),
-                            values.origin());
-                        SWModel.SetDensAnomaly(values);
-                        SWModel.WriteVTK(modelfilename+ jif3D::stringify(iteration) + ".tomo.inv.vtk");
-                        SWModel.WriteNetCDF(modelfilename+ jif3D::stringify(iteration) + ".tomo.inv.nc");
-                      }
-                    if (havemt)
-                      {
-                        SaveModel(InvModel, *MTTransform.get(), MTModel,
-                            modelfilename + jif3D::stringify(iteration) + ".mt.inv");
-                      }
-                    if (havegrav)
-                      {
-                        SaveModel(InvModel, *GravityTransform.get(), GravModel,
-                            modelfilename + jif3D::stringify(iteration) + ".grav.inv");
-                      }
+#ifdef HAVETRAVELTIME
+                    SaveModel(InvModel, *TomoTransform.get(), SWModel,
+                        modelfilename + jif3D::stringify(iteration) + ".tomo.inv");
+#else
+                    jif3D::rvec TransModel = TomoTransform->GeneralizedToPhysical(
+                        InvModel);
+                    const size_t ncells = SWModel.GetNModelElements();
+                    std::copy(TransModel.begin(), TransModel.begin() + ncells,
+                        SWModel.SetData().origin());
+                    jif3D::SurfaceWaveModel::t3DModelData values(SWModel.GetVp());
+                    std::copy(TransModel.begin() + ncells,
+                        TransModel.begin() + 2 * ncells, values.origin());
+                    SWModel.SetVp(values);
+                    std::copy(TransModel.begin() + 2 * ncells, TransModel.end(),
+                        values.origin());
+                    SWModel.SetDensAnomaly(values);
+                    SWModel.WriteVTK(
+                        modelfilename + jif3D::stringify(iteration) + ".tomo.inv.vtk");
+                    SWModel.WriteNetCDF(
+                        modelfilename + jif3D::stringify(iteration) + ".tomo.inv.nc");
+#endif
                   }
-                //write out some information about misfit to the screen
-                std::cout << "Currrent Misfit: " << Optimizer->GetMisfit() << std::endl;
-                std::cout << "Currrent Gradient: " << Optimizer->GetGradNorm()
-                    << std::endl;
-                //and write the current misfit for all objectives to a misfit file
-                StoreMisfit(misfitfile, iteration, Optimizer->GetMisfit(), *Objective);
-                StoreRMS(rmsfile, iteration, *Objective);
-                StoreWeights(weightfile, iteration, *Objective);
-                std::cout << "\n\n";
-              } catch (jif3D::FatalException &e)
-              {
-                std::cerr << e.what() << std::endl;
-                InvModel = OldModel;
-                iteration = maxiter;
+                if (havemt)
+                  {
+                    SaveModel(InvModel, *MTTransform.get(), MTModel,
+                        modelfilename + jif3D::stringify(iteration) + ".mt.inv");
+                  }
+                if (havegrav)
+                  {
+                    SaveModel(InvModel, *GravityTransform.get(), GravModel,
+                        modelfilename + jif3D::stringify(iteration) + ".grav.inv");
+                  }
               }
-            //we stop when either we do not make any improvement any more
-            terminate = CheckConvergence(*Objective);
-            //or the file abort exists in the current directory
-            terminate = terminate || jif3D::WantAbort();
+            //write out some information about misfit to the screen
+            std::cout << "Currrent Misfit: " << Optimizer->GetMisfit() << std::endl;
+            std::cout << "Currrent Gradient: " << Optimizer->GetGradNorm() << std::endl;
+            //and write the current misfit for all objectives to a misfit file
+            StoreMisfit(misfitfile, iteration, Optimizer->GetMisfit(), *Objective);
+            StoreRMS(rmsfile, iteration, *Objective);
+            StoreWeights(weightfile, iteration, *Objective);
+            std::cout << "\n\n";
+          } catch (jif3D::FatalException &e)
+          {
+            std::cerr << e.what() << std::endl;
+            InvModel = OldModel;
+            iteration = maxiter;
           }
-      }
-    if (havetomo)
-      {
-        jif3D::rvec TransModel = TomoTransform->GeneralizedToPhysical(InvModel);
-        const size_t ncells = SWModel.GetNModelElements();
-        std::copy(TransModel.begin(),
-            TransModel.begin() + ncells,
-            SWModel.SetData().origin());
-        jif3D::SurfaceWaveModel::t3DModelData values(SWModel.GetVp());
-        std::copy(TransModel.begin() + ncells, TransModel.begin() + 2 * ncells, values.origin());
-        SWModel.SetVp(values);
-        std::copy(TransModel.begin() + 2* ncells, TransModel.end(),
-            values.origin());
-        SWModel.SetDensAnomaly(values);
-        SWModel.WriteVTK(modelfilename + ".tomo.inv.vtk");
-        SWModel.WriteNetCDF(modelfilename + ".tomo.inv.nc");
-      }
-    if (havemt)
-      {
-        SaveModel(InvModel, *MTTransform.get(), MTModel, modelfilename + ".mt.inv");
-      }
-    if (havegrav)
-      {
-        SaveModel(InvModel, *GravityTransform.get(), GravModel,
-            modelfilename + ".grav.inv");
+        //we stop when either we do not make any improvement any more
+        terminate = CheckConvergence(*Objective);
+        //or the file abort exists in the current directory
+        terminate = terminate || jif3D::WantAbort();
       }
 
     //calculate the predicted refraction data
@@ -693,6 +523,23 @@ int hpx_main(boost::program_options::variables_map& vm)
       }
     if (havetomo)
       {
+#ifdef HAVETRAVELTIME
+                    SaveModel(InvModel, *TomoTransform.get(), SWModel,
+                        modelfilename + jif3D::stringify(iteration) + ".tomo.inv");
+#else
+        jif3D::rvec TransModel = TomoTransform->GeneralizedToPhysical(InvModel);
+        const size_t ncells = SWModel.GetNModelElements();
+        std::copy(TransModel.begin(), TransModel.begin() + ncells,
+            SWModel.SetData().origin());
+        jif3D::SurfaceWaveModel::t3DModelData values(SWModel.GetVp());
+        std::copy(TransModel.begin() + ncells, TransModel.begin() + 2 * ncells,
+            values.origin());
+        SWModel.SetVp(values);
+        std::copy(TransModel.begin() + 2 * ncells, TransModel.end(), values.origin());
+        SWModel.SetDensAnomaly(values);
+        SWModel.WriteVTK(modelfilename + ".tomo.inv.vtk");
+        SWModel.WriteNetCDF(modelfilename + ".tomo.inv.nc");
+
         auto TomoData = TomoSetup.GetSurfaceWaveObjective().GetObservedData();
         jif3D::rvec TomoInvData(TomoSetup.GetSurfaceWaveObjective().GetSyntheticData());
         std::vector<double> TomoError(TomoSetup.GetSurfaceWaveObjective().GetDataError());
@@ -703,14 +550,18 @@ int hpx_main(boost::program_options::variables_map& vm)
         TomoData.SetDataAndErrors(std::vector<double>(TomoDiff.begin(), TomoDiff.end()),
             TomoError);
         TomoData.WriteNetCDF(modelfilename + ".diff_tt.nc");
+#endif
         /*if (vm.count("writerays"))
-          {
-            TomoSetup.GetSurfaceWaveObjective().GetCalculator().WriteRays("rays.vtk");
-          }*/
+         {
+         TomoSetup.GetSurfaceWaveObjective().GetCalculator().WriteRays("rays.vtk");
+         }*/
       }
     //if we are inverting gravity data and have specified site locations
     if (havegrav)
       {
+
+        SaveModel(InvModel, *GravityTransform.get(), GravModel,
+            modelfilename + ".grav.inv");
         //and write out the data and model
         //here we have to distinguish again between scalar and ftg data
         if (GravitySetup.GetHaveScal())
@@ -760,6 +611,8 @@ int hpx_main(boost::program_options::variables_map& vm)
     //if we are inverting MT data and have specified site locations
     if (havemt)
       {
+        SaveModel(InvModel, *MTTransform.get(), MTModel, modelfilename + ".mt.inv");
+
         std::vector<double> C;
         if (MTSetup.GetDistCorr() > 0.0)
           {
@@ -833,7 +686,7 @@ int hpx_main(boost::program_options::variables_map& vm)
     return 0;
   }
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
   {
     //we also create a number of options that are specific to our joint inversion
     //or act globally so that they cannot be associated with one subsystem

@@ -12,8 +12,8 @@ feature.compose <optpp>on : <define>HAVEOPTPP ;
 feature.feature hpx : off on : composite incidental ;
 feature.compose <hpx>on : <define>HAVEHPX ; 
 
-feature.feature eigen : off on : composite incidental ;
-feature.compose <eigen>on : <define>HAVEEIGEN ; 
+feature.feature seismic : surface traveltime  : composite propagated symmetric ;
+feature.compose <seismic>traveltime : <define>HAVETRAVELTIME  ;
 
 feature.feature parallelization : openmp hpx  : composite propagated symmetric ;
 feature.compose <parallelization>openmp : <define>HAVEOPENMP <cflags>" -fopenmp  " <linkflags>" -fopenmp  " ;
@@ -22,23 +22,24 @@ feature.compose <parallelization>hpx : <define>HAVEHPX <hpx>on <cflags>"-fopenmp
 constant BOOST_LIB_PATH : /media/bweise/Grimsel/boost_1_71_0/stage/lib ;
 constant NETCDF_LIB_PATH : /media/bweise/Grimsel/netcdf/lib ;
 constant CUDA_LIB_PATH : /usr/local/cuda/lib64 ;
+path-constant TOP : . ;
+
 #constant NETCDF_CXX_DIR : /usr/lib ;
 #constant NETCDF_CXX_DIR : C:/Program Files/NCXX/lib ;
 
 
 project 
     : requirements
-    	<include>/media/bweise/Grimsel/geographiclib/include
-        <include>/media/bweise/Grimsel/boost_1_71_0
-		<include>/media/bweise/Grimsel/netcdf/include
-        <include>/media/bweise/Grimsel/eigen-eigen-323c052e1731
+    	<include>$(TOP)
+        <include>/media/bmw/Grimsel/boost_1_71_0
+		<include>/media/bmw/Grimsel/netcdf/include
+        <include>/media/bmw/Grimsel/eigen-eigen-323c052e1731
         <include>/usr/local/cuda/include
         <threading>multi 
         <define>BIND_FORTRAN_LOWERCASE_UNDERSCORE
         <gpu>off
         <lapack>off
         <optpp>off
-        <eigen>on
     	<variant>release:<define>NDEBUG
     	<variant>profile:<define>NDEBUG  
     	<variant>debug:<define>BOOST_TEST_TOOLS_UNDER_DEBUGGER
@@ -69,7 +70,7 @@ project
 # 4305 = truncation from double to float (quite common, esp. Tomo/PodvinTime3D.cpp)
 # 4267 = conversion from size_t to "const long", possible loss of data
 
-path-constant TOP : . ;
+
 
 import cuda ;
 
@@ -119,6 +120,7 @@ build-project Profiling ;
 build-project Hacks ;
 build-project Joint ;
 build-project ModelTransforms ;
+build-project MI ;
 #build-project DCResistivity ;
 build-project SurfaceWaves ;
 #build-project hpx_simer ;

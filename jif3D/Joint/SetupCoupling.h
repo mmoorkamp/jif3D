@@ -36,6 +36,12 @@ namespace jif3D
      */
     class J3DEXPORT SetupCoupling
       {
+    public:
+#ifdef HAVETRAVELTIME
+        typedef jif3D::ThreeDSeismicModel SeisModel;
+#else
+        typedef jif3D::SurfaceWaveModel SeisModel;
+#endif
     private:
       //! The transformation between generalized model parameters and slowness including selecting the right range from the model vector
       boost::shared_ptr<jif3D::GeneralModelTransform> SlowTrans;
@@ -93,7 +99,7 @@ namespace jif3D
       //! Internal function to setup coupling and regularization when using the cross-gradient approach
       void SetupCrossGradModel(jif3D::rvec &InvModel,
           const jif3D::ThreeDModelBase &ModelGeometry,
-          const jif3D::SurfaceWaveModel &SeisMod,
+          const SeisModel &SeisMod,
           const jif3D::ThreeDGravityModel &GravMod, const jif3D::ThreeDMTModel &MTMod,
           jif3D::JointObjective &Objective,
           boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart,
@@ -102,21 +108,21 @@ namespace jif3D
           const jif3D::ThreeDModelBase &TearModelZ, const jif3D::rvec &CovVec);
       void SetupMIModel(jif3D::rvec &InvModel,
           const jif3D::ThreeDModelBase &ModelGeometry,
-          const jif3D::SurfaceWaveModel &SeisMod,
+          const SeisModel &SeisMod,
           const jif3D::ThreeDGravityModel &GravMod, const jif3D::ThreeDMTModel &MTMod,
           jif3D::JointObjective &Objective,
           boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart);
       //! Internal function to setup coupling and regularization when using a fixed parameter relationship
       void SetupFixedCouplingModel(jif3D::rvec &InvModel,
           const jif3D::ThreeDModelBase &ModelGeometry,
-          const jif3D::SurfaceWaveModel &SeisMod,
+          const SeisModel &SeisMod,
           const jif3D::ThreeDGravityModel &GravMod, const jif3D::ThreeDMTModel &MTMod,
           jif3D::JointObjective &Objective,
           boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart);
       //! Internal function to setup coupling and regularization when using a parameter relationship designed for salt (unstable at the moment)
       void SetupSaltModel(const po::variables_map &vm, jif3D::rvec &InvModel,
           const jif3D::ThreeDModelBase &ModelGeometry,
-          const jif3D::SurfaceWaveModel &SeisMod,
+          const SeisModel &SeisMod,
           const jif3D::ThreeDGravityModel &GravMod, const jif3D::ThreeDMTModel &MTMod,
           jif3D::JointObjective &Objective,
           boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart);
@@ -161,7 +167,7 @@ namespace jif3D
        */
       void SetupModelVector(const po::variables_map &vm, jif3D::rvec &InvModel,
           const jif3D::ThreeDModelBase &ModelGeometry,
-          const jif3D::SurfaceWaveModel &SeisMod,
+          const SeisModel &SeisMod,
           const jif3D::ThreeDGravityModel &GravMod, const jif3D::ThreeDMTModel &MTMod,
           jif3D::JointObjective &Objective,
           boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart,

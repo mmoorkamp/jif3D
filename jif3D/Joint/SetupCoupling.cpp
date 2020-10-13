@@ -58,8 +58,8 @@ namespace jif3D
         po::options_description desc("Coupling options");
         desc.add_options()("crossgrad", "Use cross-gradient coupling")("saltrel",
             "Use a parameter constraint designed for salt")("mutual_information",
-            po::value(&mibins)->default_value(50), "Use a MI based coupling constraint")("minslow",
-            po::value(&minslow)->default_value(1e-4))("maxslow",
+            po::value(&mibins)->default_value(50), "Use a MI based coupling constraint")(
+            "minslow", po::value(&minslow)->default_value(1e-4))("maxslow",
             po::value(&maxslow)->default_value(0.005))("minvel",
             po::value(&minvel)->default_value(1000))("maxvel",
             po::value(&maxvel)->default_value(8000))("mincond",
@@ -157,15 +157,14 @@ namespace jif3D
             SDensTrans->AddSection(ngrid, 2 * ngrid, DensityTransform);
             SurfTrans->AppendTransform(SDensTrans);
             boost::shared_ptr<jif3D::DensPVelTransform> DensPVel = boost::make_shared<
-                jif3D::DensPVelTransform>(std::vector<double>(),vpvs);
+                jif3D::DensPVelTransform>(std::vector<double>(), vpvs);
             SurfTrans->AppendTransform(DensPVel);
-            TomoTransform = SurfTrans;
 
-            //boost::shared_ptr<jif3D::ChainedTransform> SlownessTransform(
-            //    new jif3D::ChainedTransform);
-            //SlownessTransform->AppendTransform(
-            //    boost::shared_ptr<jif3D::GeneralModelTransform>(
-            //        new jif3D::TanhTransform(minslow, maxslow)));
+            boost::shared_ptr<jif3D::ChainedTransform> SlownessTransform(
+                new jif3D::ChainedTransform);
+            SlownessTransform->AppendTransform(
+                boost::shared_ptr<jif3D::GeneralModelTransform>(
+                    new jif3D::TanhTransform(minslow, maxslow)));
             SlowCrossTrans = Copier;
             //TomoTransform = boost::shared_ptr<jif3D::GeneralModelTransform>(
             //    new jif3D::MultiSectionTransform(3 * ngrid, 0, ngrid, SlownessTransform));
@@ -175,7 +174,13 @@ namespace jif3D
             SlowRegTrans->AppendTransform(
                 boost::shared_ptr<jif3D::GeneralModelTransform>(
                     new jif3D::MultiSectionTransform(3 * ngrid, 0, ngrid, Copier)));
+#ifdef HAVETRAVELTIME
+            TomoTransform = boost::shared_ptr<jif3D::GeneralModelTransform>(
+                            new jif3D::MultiSectionTransform(3 * ngrid, 0, ngrid, SlownessTransform));
+#else
+            TomoTransform = SurfTrans;
 
+#endif
             //and then conductivity, conductivity has a LogTransform in addition
             //to reduce the range of inversion parameters
             boost::shared_ptr<jif3D::ChainedTransform> ConductivityTransform(
@@ -258,7 +263,7 @@ namespace jif3D
 
     void SetupCoupling::SetupCrossGradModel(jif3D::rvec &InvModel,
         const jif3D::ThreeDModelBase &ModelGeometry,
-        const jif3D::SurfaceWaveModel &SeisMod, const jif3D::ThreeDGravityModel &GravMod,
+        const SeisModel &SeisMod, const jif3D::ThreeDGravityModel &GravMod,
         const jif3D::ThreeDMTModel &MTMod, jif3D::JointObjective &Objective,
         boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart,
         const jif3D::ThreeDModelBase &TearModelX,
@@ -267,8 +272,12 @@ namespace jif3D
       {
         const size_t ngrid = ModelGeometry.GetNModelElements();
         InvModel.resize(3 * ngrid, 0.0);
-
+#ifdef HAVETRAVELTIME
         jif3D::rvec SeisModel(3 * ngrid, 0.0);
+#else
+        jif3D::rvec SeisModel(3 * ngrid, 0.0);
+#endif
+
         if (SeisMod.GetNModelElements() == ngrid)
           {
             std::copy(SeisMod.GetData().origin(), SeisMod.GetData().origin() + ngrid,
@@ -450,7 +459,7 @@ namespace jif3D
 
     void SetupCoupling::SetupMIModel(jif3D::rvec &InvModel,
         const jif3D::ThreeDModelBase &ModelGeometry,
-        const jif3D::SurfaceWaveModel &SeisMod, const jif3D::ThreeDGravityModel &GravMod,
+        const SeisModel &SeisMod, const jif3D::ThreeDGravityModel &GravMod,
         const jif3D::ThreeDMTModel &MTMod, jif3D::JointObjective &Objective,
         boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart)
       {
@@ -501,7 +510,8 @@ namespace jif3D
         //the double section transform takes two sections of the model
         //and feeds them to the objective function
         boost::shared_ptr<jif3D::MutualInformationConstraint> SeisGravMI =
-            boost::make_shared<jif3D::MutualInformationConstraint>(-2.0, 2.0, -2.0, 2.0, mibins);
+            boost::make_shared<jif3D::MutualInformationConstraint>(-2.0, 2.0, -2.0, 2.0,
+                mibins);
         boost::shared_ptr<jif3D::MultiSectionTransform> SeisGravTrans(
             new jif3D::MultiSectionTransform(3 * ngrid));
         SeisGravTrans->AddSection(0, ngrid, Copier);
@@ -517,7 +527,8 @@ namespace jif3D
                 JointObjective::coupling);
           }
         boost::shared_ptr<jif3D::MutualInformationConstraint> SeisMTMI =
-            boost::make_shared<jif3D::MutualInformationConstraint>(-2.0, 2.0, -2.0, 2.0, mibins);
+            boost::make_shared<jif3D::MutualInformationConstraint>(-2.0, 2.0, -2.0, 2.0,
+                mibins);
 
         boost::shared_ptr<jif3D::MultiSectionTransform> SeisMTTrans(
             new jif3D::MultiSectionTransform(3 * ngrid));
@@ -533,7 +544,8 @@ namespace jif3D
                 JointObjective::coupling);
           }
         boost::shared_ptr<jif3D::MutualInformationConstraint> GravMTMI =
-            boost::make_shared<jif3D::MutualInformationConstraint>(-2.0, 2.0, -2.0, 2.0, mibins);
+            boost::make_shared<jif3D::MutualInformationConstraint>(-2.0, 2.0, -2.0, 2.0,
+                mibins);
         boost::shared_ptr<jif3D::MultiSectionTransform> GravMTTrans(
             new jif3D::MultiSectionTransform(3 * ngrid));
         GravMTTrans->AddSection(ngrid, 2 * ngrid, Copier);
@@ -601,7 +613,7 @@ namespace jif3D
 
     void SetupCoupling::SetupSaltModel(const po::variables_map &vm, jif3D::rvec &InvModel,
         const jif3D::ThreeDModelBase &ModelGeometry,
-        const jif3D::SurfaceWaveModel &SeisMod, const jif3D::ThreeDGravityModel &GravMod,
+        const SeisModel &SeisMod, const jif3D::ThreeDGravityModel &GravMod,
         const jif3D::ThreeDMTModel &MTMod, jif3D::JointObjective &Objective,
         boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart)
       {
@@ -759,7 +771,7 @@ namespace jif3D
 
     void SetupCoupling::SetupFixedCouplingModel(jif3D::rvec &InvModel,
         const jif3D::ThreeDModelBase &ModelGeometry,
-        const jif3D::SurfaceWaveModel &SeisMod, const jif3D::ThreeDGravityModel &GravMod,
+        const SeisModel &SeisMod, const jif3D::ThreeDGravityModel &GravMod,
         const jif3D::ThreeDMTModel &MTMod, jif3D::JointObjective &Objective,
         boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart)
       {
@@ -801,7 +813,7 @@ namespace jif3D
 
     void SetupCoupling::SetupModelVector(const po::variables_map &vm,
         jif3D::rvec &InvModel, const jif3D::ThreeDModelBase &ModelGeometry,
-        const jif3D::SurfaceWaveModel &SeisMod, const jif3D::ThreeDGravityModel &GravMod,
+        const SeisModel &SeisMod, const jif3D::ThreeDGravityModel &GravMod,
         const jif3D::ThreeDMTModel &MTMod, jif3D::JointObjective &Objective,
         boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart,
         const jif3D::ThreeDModelBase &TearModelX,
