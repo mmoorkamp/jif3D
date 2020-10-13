@@ -10,7 +10,6 @@
 
 #include "../Global/Serialization.h"
 #include "../Inversion/ObjectiveFunction.h"
-#include "cppmine.h"
 #include <boost/shared_ptr.hpp>
 
 namespace jif3D
@@ -21,8 +20,6 @@ namespace jif3D
 
     class MutualInformationConstraint: public ObjectiveFunction
       {
-    public:
-      enum MICalcType { hist, gauss};
     private:
       jif3D::rvec CountsXY;
       jif3D::rvec CountsX;
@@ -32,9 +29,6 @@ namespace jif3D
       double ymin;
       double ymax;
       size_t nbins;
-      size_t eval;
-      MICalcType Calc;
-      //boost::shared_ptr<MINE> mine;
     public:
       //! The clone function provides a virtual constructor
       virtual MutualInformationConstraint *clone() const override
@@ -47,7 +41,7 @@ namespace jif3D
       //! The gradient of the cross-gradient objective function with respect to the model parameters
       virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model, const jif3D::rvec &Diff)
           override;
-      MutualInformationConstraint(double min1, double max1, double min2, double max2, size_t nb, MICalcType C = gauss);
+      MutualInformationConstraint(double min1, double max1, double min2, double max2, size_t nb);
       virtual ~MutualInformationConstraint();
       };
 
