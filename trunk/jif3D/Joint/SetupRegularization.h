@@ -43,6 +43,8 @@ namespace jif3D
       double zweight;
       //! The smallness parameter b for minimum support regularization
       double minsuppb;
+      //! Number of bins for histogram in entropy regularization
+      size_t nbins;
     public:
       //! Do we want to substract the starting model from the current model to calculate the roughness
       bool GetSubStart()

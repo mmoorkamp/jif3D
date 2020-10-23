@@ -12,6 +12,7 @@
 #include "../Regularization/CurvatureRegularization.h"
 #include "../Regularization/MinDiffRegularization.h"
 #include "../Regularization/MinimumSupport.h"
+#include "../Regularization/EntropyRegularization.h"
 #include "../Tomo/ThreeDSeismicModel.h"
 #include "../ModelBase/ReadAnyModel.h"
 
@@ -60,7 +61,7 @@ namespace jif3D
 
     SetupRegularization::SetupRegularization() :
         beta(0.0), substart(false), xweight(1.0), yweight(1.0), zweight(1.0), minsuppb(
-            1.0)
+            1.0), nbins(0)
       {
       }
 
@@ -96,7 +97,9 @@ namespace jif3D
             "Substract the starting model when calculating the roughness")("minsupp",
             po::value(&minsuppb), "Use minimum support regularization (EXPERIMENTAL)")(
             "mingradsupp", po::value(&minsuppb),
-            "Use minimum gradient support regularization (EXPERIMENTAL)")("considersize",
+            "Use minimum gradient support regularization (EXPERIMENTAL)")("entropy",
+            po::value(&nbins)->default_value(0),
+            "Use entropy regularization (EXPERIMENTAL)")("considersize",
             "Consider the size of the cells when calculating regularization");
 
         return desc;
@@ -120,6 +123,10 @@ namespace jif3D
                 new jif3D::MinimumSupport(
                     boost::shared_ptr<jif3D::MinDiffRegularization>(
                         new jif3D::MinDiffRegularization(StartModel)), minsuppb));
+          }
+        if (vm.count("entropy") && nbins > 0.0)
+          {
+            return boost::make_shared<jif3D::EntropyRegularization>(-2.0, 2.0, nbins);
           }
 
         //setup possible tearing for the regularization for the three directions
@@ -185,7 +192,7 @@ namespace jif3D
             ublas::subrange(Cov, 0, ngrid) = CovModVec;
             ublas::subrange(Cov, ngrid, 2 * ngrid) = CovModVec;
             ublas::subrange(Cov, 2 * ngrid, 3 * ngrid) = CovModVec;
-            Regularization->SetDataError(std::vector<double>(Cov.begin(),Cov.end()));
+            Regularization->SetDataError(std::vector<double>(Cov.begin(), Cov.end()));
           }
 
         //we can directly use the values for the weights without checking

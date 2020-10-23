@@ -23,6 +23,7 @@
 #include "MinimumSupport.h"
 #include "CrossGradient.h"
 #include "DotStructureConstraint.h"
+#include "EntropyRegularization.h"
 #include <boost/test/tools/floating_point_comparison.hpp>
 
 BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
@@ -42,7 +43,7 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
                 - Objective.CalcMisfit(Backward)) / (2 * delta);
             if (std::abs(FDGrad) > 1e-10)
               {
-                BOOST_CHECK_CLOSE(FDGrad, Gradient(i), 0.01);
+                BOOST_CHECK_CLOSE(FDGrad, Gradient(i), 0.1);
               }
             else
               {
@@ -150,6 +151,25 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
         /*double Misfit = */MinSupp.CalcMisfit(PertModel);
 
         CheckGradient(MinSupp, PertModel);
+      }
+
+    BOOST_AUTO_TEST_CASE (entropy_test)
+      {
+        srand((unsigned int) time(nullptr));
+        jif3D::ThreeDGravityModel GravModel;
+        const size_t nx = 5;
+        const size_t ny = 4;
+        const size_t nz = 3;
+        GravModel.SetMeshSize(nx, ny, nz);
+
+        const size_t msize = nx * ny * nz;
+        jif3D::rvec PertModel(msize);
+        std::generate(PertModel.begin(), PertModel.end(), drand48);
+
+        jif3D::EntropyRegularization Regularization(-1.0,1.0,100);
+
+        double Misfit = Regularization.CalcMisfit(PertModel);
+        CheckGradient(Regularization, PertModel);
       }
 
 //this needs to be extended and refined
