@@ -17,6 +17,7 @@
 #include <boost/math/special_functions/sign.hpp>
 #include "../SurfaceWaves/SurfaceWaveFunctions.h"
 #include "../ModelBase/ThreeDModelBase.h"
+#include "../Global/NumUtil.h"
 
 namespace jif3D
   {
@@ -86,7 +87,7 @@ namespace jif3D
         const double k = w / c;
         if (c < vp)
           {
-            u.ma = sqrt(pow(w / c, 2) - pow(w / vp, 2));
+            u.ma = sqrt(jif3D::pow2(w / c) - jif3D::pow2(w / vp));
             u.nu_a = u.ma;
             if (botlay == 0)
               {
@@ -96,7 +97,7 @@ namespace jif3D
           }
         else
           {
-            u.ma = sqrt(pow(w / vp, 2) - pow(w / c, 2));
+            u.ma = sqrt(jif3D::pow2(w / vp) - jif3D::pow2(w / c));
             u.nu_a = u.ma;
             if (botlay == 0)
               {
@@ -107,7 +108,7 @@ namespace jif3D
           }
         if (c < vs)
           {
-            u.mb = sqrt(pow(w / c, 2) - pow(w / vs, 2));
+            u.mb = sqrt(jif3D::pow2(w / c) - jif3D::pow2(w / vs));
             u.nu_b = u.mb;
             if (botlay == 0)
               {
@@ -117,7 +118,7 @@ namespace jif3D
           }
         else
           {
-            u.mb = sqrt(pow(w / vs, 2) - pow(w / c, 2));
+            u.mb = sqrt(jif3D::pow2(w / vs) - jif3D::pow2(w / c));
             u.nu_b = u.mb;
             if (botlay == 0)
               {
@@ -126,10 +127,10 @@ namespace jif3D
                 u.CB = cos(u.mb * dn);
               }
           }
-        u.gam = 2.0 * pow(vs, 2) / pow(c, 2);
+        u.gam = 2.0 * jif3D::pow2(vs) / jif3D::pow2(c);
         u.nu_a_nrm = u.nu_a / k;
         u.nu_b_nrm = u.nu_b / k;
-        u.l = 2.0 * pow(k, 2) - pow(w / vs, 2);
+        u.l = 2.0 * jif3D::pow2(k) - jif3D::pow2(w / vs);
 
         /*if (botlay == 1)
          {
@@ -1350,17 +1351,24 @@ namespace jif3D
               }
             proj.Reverse(lon_centr, mid_e - false_east, mid_n, mid_lat, mid_lon);
             geod.Inverse(event_lat, event_lon, mid_lat, mid_lon, s12, az1, az2);
+
             double a = 450 - az2;
             if (a > 360)
               {
                 a = a - 360;
               }
+
             //  std::cout << dist_segment_n << " " << dist_segment_e << " "
             //      << std::sqrt(
             //          dist_segment_n * dist_segment_n + dist_segment_e * dist_segment_e)
             //      << std::endl;
             double ti = (cos(a * M_PI / 180.0) * dist_segment_e
                 + sin(a * M_PI / 180.0) * dist_segment_n);
+
+            //std::cout << "Mid lat: " << mid_lat << " Mid lon: " << mid_lon << " Az1: "
+            //                << az1 << " Az2: " << az2 << " a: " << a << " ti: " << ti << std::endl;
+            //            std::cout << "Ev lat: " << event_lat << " Ev lon: " << event_lon << " N Cell: " << ncell  << " ECell: " << ecell<< std::endl;
+
             result.seglength.push_back(ti);
             result.cellindices.push_back(ncell * ncells_east + ecell);
             /*const double tic = ti / c[ncell * ncells_east + ecell];
@@ -1378,6 +1386,8 @@ namespace jif3D
         mid_n = north0 + dist_segment_n / 2.0;
         proj.Reverse(lon_centr, mid_e - false_east, mid_n, mid_lat, mid_lon);
         geod.Inverse(event_lat, event_lon, mid_lat, mid_lon, s12, az1, az2);
+        //std::cout << "Mid lat: " << mid_lat << " Mid lon: " << mid_lon << " Az1: " << az1
+        //    << " Az2: " << az2 << std::endl;
         double a = 450 - az2;
         if (a > 360)
           {

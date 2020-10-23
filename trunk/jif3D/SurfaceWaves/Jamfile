@@ -7,5 +7,6 @@ lib surfwave :  SurfaceWaveData.cpp SurfaceWaveModel.cpp SurfaceWaveCalculator.c
              
 
 unit-test surfacewave_gradient_test :  test_surfacewave_gradient.cpp surfwave ../GeographicLib//geographic core ../Global//global ../ModelBase//modelbase  ../Inversion//inversion  ;
+unit-test surfacewave_disp_test :  test_surfacewave_disp.cpp surfwave ../GeographicLib//geographic core ../Global//global ../ModelBase//modelbase  ../Inversion//inversion  ;
 
 # exe SW2LayerTest : SW2LayerTest.cpp surfwave  core ../GeographicLib//geographic :  ;

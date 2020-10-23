@@ -325,7 +325,7 @@ namespace jif3D
 
         if (NewGeo)
           {
-            std::cout << "Creating geometry" << std::endl;
+            //std::cout << "Creating geometry" << std::endl;
             pathmap_n.resize(npairs);
             pathmap_e.resize(npairs);
             SegLengths.resize(ndata);

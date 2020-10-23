@@ -36,7 +36,13 @@ namespace jif3D
     template<class N1>
     N1 pow2(N1 x)
       {
-      return x*x;
+        return x * x;
+      }
+    //! Convenience function for squaring numbers, more efficient than std::pow(x,2)
+    template<class N1>
+    N1 pow3(N1 x)
+      {
+        return x * x * x;
       }
     //! Compare number1 and number2 and return true if the absolute value of number1 is smaller than the absolute value of number2, otherwise return false.
     /*! This template is useful in conjunction with the standard library. For example we can write
@@ -66,7 +72,7 @@ namespace jif3D
         {
           return std::abs(number1 - number2) < epsilon;
         }
-      roughlyEqual(N1 tol = std::numeric_limits<N1>::epsilon()) :
+      roughlyEqual(N1 tol = std::numeric_limits < N1 > ::epsilon()) :
           epsilon(tol)
         {
 
