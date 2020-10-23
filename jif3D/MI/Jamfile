@@ -1,5 +1,5 @@
 import testing ; 
 
-lib mi : MutualInformationConstraint.cpp cppmine.cpp mine.c ..//netcdf ..//netcdf_c++ ;
+lib mi : MutualInformationConstraint.cpp cppmine.cpp mine.c Entropy.cpp ..//netcdf ..//netcdf_c++ ;
            
 unit-test mutualinformation_test : test_mutualinformation.cpp ../Inversion//inversion mi ; 
