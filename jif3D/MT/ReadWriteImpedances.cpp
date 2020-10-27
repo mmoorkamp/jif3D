@@ -192,8 +192,7 @@ namespace jif3D
           {
             if (MustExist)
               {
-                throw std::runtime_error(
-                    "Call to ReadTipperComp with MustExist failed.");
+                throw std::runtime_error("Call to ReadTipperComp with MustExist failed.");
               }
           }
       }
@@ -616,10 +615,12 @@ namespace jif3D
             //we have to copy that error to the components corresponding to the imaginary part
             for (size_t i = 0; i < Errors.size() - 1; i += 2)
               {
+                Errors.at(i) = std::abs(Errors.at(i));
                 Errors.at(i + 1) = Errors.at(i);
               }
             for (size_t i = 0; i < TippErr.size() - 1; i += 2)
               {
+                TippErr.at(i) = std::abs(TippErr.at(i));
                 TippErr.at(i + 1) = TippErr.at(i);
               }
 
@@ -1374,7 +1375,8 @@ namespace jif3D
           }
         if (HasT)
           {
-            std::cout << " Reading Tipper, expecting " << nfreq << " frequencies " << std::endl;
+            std::cout << " Reading Tipper, expecting " << nfreq << " frequencies "
+                << std::endl;
             double dummy;
 
             Tipper.resize(nfreq * 4);
