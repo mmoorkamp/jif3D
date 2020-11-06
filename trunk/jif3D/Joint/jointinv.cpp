@@ -525,7 +525,11 @@ int hpx_main(boost::program_options::variables_map &vm)
       {
 #ifdef HAVETRAVELTIME
                     SaveModel(InvModel, *TomoTransform.get(), SWModel,
-                        modelfilename + jif3D::stringify(iteration) + ".tomo.inv");
+                        modelfilename + ".tomo.inv");
+                    if (vm.count("writerays"))
+                     {
+                     TomoSetup.GetTomoObjective().GetCalculator().WriteRays("rays.vtk");
+                     }
 #else
         jif3D::rvec TransModel = TomoTransform->GeneralizedToPhysical(InvModel);
         const size_t ncells = SWModel.GetNModelElements();
@@ -551,10 +555,7 @@ int hpx_main(boost::program_options::variables_map &vm)
             TomoError);
         TomoData.WriteNetCDF(modelfilename + ".diff_tt.nc");
 #endif
-        /*if (vm.count("writerays"))
-         {
-         TomoSetup.GetSurfaceWaveObjective().GetCalculator().WriteRays("rays.vtk");
-         }*/
+
       }
     //if we are inverting gravity data and have specified site locations
     if (havegrav)

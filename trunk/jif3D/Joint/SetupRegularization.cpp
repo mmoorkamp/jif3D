@@ -15,7 +15,7 @@
 #include "../Regularization/EntropyRegularization.h"
 #include "../Tomo/ThreeDSeismicModel.h"
 #include "../ModelBase/ReadAnyModel.h"
-
+#include <boost/make_shared.hpp>
 #include <algorithm>
 
 namespace jif3D
