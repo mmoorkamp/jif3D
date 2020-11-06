@@ -5,7 +5,6 @@
 // Copyright   : 2010, mmoorkamp
 //============================================================================
 
-#include <boost/make_shared.hpp>
 
 #include "SetupCoupling.h"
 #include "../Global/FileUtil.h"
@@ -13,6 +12,7 @@
 #include "../Inversion/ModelTransforms.h"
 #include "../MI/MutualInformationConstraint.h"
 #include "SaltRelConstraint.h"
+#include <boost/make_shared.hpp>
 
 namespace ublas = boost::numeric::ublas;
 
@@ -262,9 +262,9 @@ namespace jif3D
       }
 
     void SetupCoupling::SetupCrossGradModel(jif3D::rvec &InvModel,
-        const jif3D::ThreeDModelBase &ModelGeometry,
-        const SeisModel &SeisMod, const jif3D::ThreeDGravityModel &GravMod,
-        const jif3D::ThreeDMTModel &MTMod, jif3D::JointObjective &Objective,
+        const jif3D::ThreeDModelBase &ModelGeometry, const SeisModel &SeisMod,
+        const jif3D::ThreeDGravityModel &GravMod, const jif3D::ThreeDMTModel &MTMod,
+        jif3D::JointObjective &Objective,
         boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart,
         const jif3D::ThreeDModelBase &TearModelX,
         const jif3D::ThreeDModelBase &TearModelY,
@@ -458,9 +458,9 @@ namespace jif3D
       }
 
     void SetupCoupling::SetupMIModel(jif3D::rvec &InvModel,
-        const jif3D::ThreeDModelBase &ModelGeometry,
-        const SeisModel &SeisMod, const jif3D::ThreeDGravityModel &GravMod,
-        const jif3D::ThreeDMTModel &MTMod, jif3D::JointObjective &Objective,
+        const jif3D::ThreeDModelBase &ModelGeometry, const SeisModel &SeisMod,
+        const jif3D::ThreeDGravityModel &GravMod, const jif3D::ThreeDMTModel &MTMod,
+        jif3D::JointObjective &Objective,
         boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart)
       {
         const size_t ngrid = ModelGeometry.GetNModelElements();
@@ -612,9 +612,9 @@ namespace jif3D
       }
 
     void SetupCoupling::SetupSaltModel(const po::variables_map &vm, jif3D::rvec &InvModel,
-        const jif3D::ThreeDModelBase &ModelGeometry,
-        const SeisModel &SeisMod, const jif3D::ThreeDGravityModel &GravMod,
-        const jif3D::ThreeDMTModel &MTMod, jif3D::JointObjective &Objective,
+        const jif3D::ThreeDModelBase &ModelGeometry, const SeisModel &SeisMod,
+        const jif3D::ThreeDGravityModel &GravMod, const jif3D::ThreeDMTModel &MTMod,
+        jif3D::JointObjective &Objective,
         boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart)
       {
         const size_t ngrid = ModelGeometry.GetNModelElements();
@@ -770,9 +770,9 @@ namespace jif3D
       }
 
     void SetupCoupling::SetupFixedCouplingModel(jif3D::rvec &InvModel,
-        const jif3D::ThreeDModelBase &ModelGeometry,
-        const SeisModel &SeisMod, const jif3D::ThreeDGravityModel &GravMod,
-        const jif3D::ThreeDMTModel &MTMod, jif3D::JointObjective &Objective,
+        const jif3D::ThreeDModelBase &ModelGeometry, const SeisModel &SeisMod,
+        const jif3D::ThreeDGravityModel &GravMod, const jif3D::ThreeDMTModel &MTMod,
+        jif3D::JointObjective &Objective,
         boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart)
       {
         const size_t ngrid = ModelGeometry.GetNModelElements();
@@ -811,6 +811,7 @@ namespace jif3D
         InvModel = SlowTrans->PhysicalToGeneralized(InvModel);
       }
 
+
     void SetupCoupling::SetupModelVector(const po::variables_map &vm,
         jif3D::rvec &InvModel, const jif3D::ThreeDModelBase &ModelGeometry,
         const SeisModel &SeisMod, const jif3D::ThreeDGravityModel &GravMod,
@@ -818,7 +819,7 @@ namespace jif3D
         boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart,
         const jif3D::ThreeDModelBase &TearModelX,
         const jif3D::ThreeDModelBase &TearModelY,
-        const jif3D::ThreeDModelBase &TearModelZ, const jif3D::rvec CovVec)
+        const jif3D::ThreeDModelBase &TearModelZ, const jif3D::rvec &CovVec)
       {
         //depending on the type of coupling the model vector looks quite different
         //and we have to setup a number of different things
