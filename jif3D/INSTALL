@@ -16,32 +16,51 @@ with the availability of libraries. So at the moment you have to install all dep
 even if you do not plan to use the features (e.g. GPU computing) or work through compiler error
 messages.
 
-* Boost 1.52 or later from www.boost.org
+* Boost 1.65 or later from www.boost.org, in case of doubt use the latest version
 * netcdf from http://www.unidata.ucar.edu/software/netcdf/
+* netcdf-4 C++ from https://www.unidata.ucar.edu/downloads/netcdf/
+
+You can either download these packages from source and follow the compilation instructions or on
+Ubuntu these packages are part of the distribution. Just make sure you install the -dev versions as
+well, as these contain the necessary header files. 
+
+Optional libraries include 
 * The boost bindings for Lapack and Atlas from 
-      news.tiker.net/filebrowser/software/boost-bindings
-* Nvidia's CUDA version 4.0 or higher from https://developer.nvidia.com/what-cuda
+  news.tiker.net/filebrowser/software/boost-bindings (rarely used now)
+* Nvidia's CUDA version 4.0 or higher from https://developer.nvidia.com/what-cuda, for
+gravity gpu computations
 
 
-We are using boost-build as a build system. It is included in any distribution of boost 
-or can be obtained separately from http://www.boost.org/boost-build2/ where 
+We are using boost-build as a build system. It is included in any distribution of boost, can be
+installed through the package manager on ubuntu or can be obtained separately 
+from http://www.boost.org/boost-build2/ where 
 you also find some instructions.
 
 
 
 LOCATING LIBRARIES AND INCLUDES
 
-You will have to edit the files Jamroot and cuda.jam to reflect the location of libraries
+You will have to edit the file Jamroot in the jif3D root directory to reflect the location of libraries
 on your system. Under certain circumstance you might have to edit the compiler flags,
 however this should usually not be necessary.
 In the future we will hopefully be able to make this more convenient.
 
+The main things to look out for are setting
+
+BOOST_LIB_PATH, NETCDF_LIB_PATH, CUDA_LIB_PATH
+
+to the paths where these libraries are located (CUDA is optional). You might also have to add lines similar to
+	<include>/media/bmw/Grimsel/netcdf/include
+to show where the header files are located if they are not in a standard location. You can just add as many as needed in the project section.
+
 COMPILATION
 
-If all goes well, you simply have to type b2 or bjam (on older systems) and the compilation 
-will start (it works for me :-) ). We have successfully compiled this library and the programs 
-with g++ 4.4/4.6 and intel c++ 12 on linux. 
-clang version 3.2 (trunk 128812) also compiles the library and all programs.
+If all goes well, you simply have to type "b2 release" or "bjam release" (on older systems) if you have installed boost
+build through the package manager or something like "/usr/local/bin/b2 release" if you are using a custom installation
+and the compilation will start (it works for me :-) ). We have successfully compiled this library and the programs 
+with g++, clang and intel c++ on linux. Note that compiling without the release option will create debug program
+which are good for finding problems but can be orders of magnitude slower.
+
 Each compilation run executes a number of automatic tests that check for correctness
 of program behaviour. A few tests occassionally fail randomly as I have not checked for
 some rare pathological cases. Usually running the compilation again should fix this.
