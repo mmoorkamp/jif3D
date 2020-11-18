@@ -1,13 +1,21 @@
-//============================================================================
-// Name        : ThreeDDCResistivityModel.cpp
-// Author      : Zhanjie Shi and Richard.W Hobbs
-// Version     : April 2014
-// Copyright   : 2014, Zhanjie Shi and Richard.W Hobbs
-//============================================================================
+/*
+ * ThreeDDCResistivityModel.cpp
+ *
+ *  Created on: Nov 13, 2020
+ *      Author: zhanjie
+ */
 
-#include "ThreeDDCResistivityModel.h"
+#include "../DCResistivity/ThreeDDCResistivityModel.h"
+
 #include "../Global/FatalException.h"
+#include <boost/numeric/conversion/cast.hpp>
+#include <cassert>
 #include <algorithm>
+#include <netcdf>
+
+using netCDF::NcFile; // @suppress("Symbol is not resolved")
+using netCDF::NcVar; // @suppress("Symbol is not resolved")
+using netCDF::NcDim; // @suppress("Symbol is not resolved")
 
 namespace jif3D
   {
@@ -15,8 +23,7 @@ namespace jif3D
     static const std::string ResistivityName = "Resistivity";
     static const std::string ResistivityUnit = "ohm.m";
 
-    ThreeDDCResistivityModel::ThreeDDCResistivityModel() :
-        SourcePosPosX(), SourcePosPosY(), SourcePosPosZ(), SourceNegPosX(), SourceNegPosY(), SourceNegPosZ(), MeasSecPosX(), MeasSecPosY(), MeasSecPosZ(), SourceIndices()
+    ThreeDDCResistivityModel::ThreeDDCResistivityModel()
       {
       }
 
@@ -24,60 +31,28 @@ namespace jif3D
       {
       }
 
-    ThreeDDCResistivityModel::ThreeDDCResistivityModel(
-        const ThreeDDCResistivityModel &source) :
-        ThreeDModelBase(source), SourcePosPosX(source.SourcePosPosX), SourcePosPosY(
-            source.SourcePosPosY), SourcePosPosZ(source.SourcePosPosZ), SourceNegPosX(
-            source.SourceNegPosX), SourceNegPosY(source.SourceNegPosY), SourceNegPosZ(
-            source.SourceNegPosZ), MeasSecPosX(source.MeasSecPosX), MeasSecPosY(
-            source.MeasSecPosY), MeasSecPosZ(source.MeasSecPosZ), SourceIndices(
-            source.SourceIndices)
-      {
-
-      }
-
     ThreeDDCResistivityModel& ThreeDDCResistivityModel::operator=(const ThreeDModelBase& source)
-      {
-        if (&source != this)
-          {
-            ThreeDModelBase::operator=(source);
-          }
-        return *this;
-      }
-
-    ThreeDDCResistivityModel& ThreeDDCResistivityModel::operator=(
-        const ThreeDDCResistivityModel& source)
       {
         if (this == &source)
           return *this;
         ThreeDModelBase::operator =(source);
-        SourcePosPosX = source.SourcePosPosX;
-        SourcePosPosY = source.SourcePosPosY;
-        SourcePosPosZ = source.SourcePosPosZ;
-        SourceNegPosX = source.SourceNegPosX;
-        SourceNegPosY = source.SourceNegPosY;
-        SourceNegPosZ = source.SourceNegPosZ;
-        MeasSecPosX = source.MeasSecPosX;
-        MeasSecPosY = source.MeasSecPosY;
-        MeasSecPosZ = source.MeasSecPosZ;
-        SourceIndices = source.SourceIndices;
+
         return *this;
       }
 
 
-
     void ThreeDDCResistivityModel::WriteNetCDF(const std::string &filename) const
       {
-        netCDF::NcFile DataFile(filename.c_str(), netCDF::NcFile::replace);
+        NcFile DataFile(filename.c_str(), NcFile::replace); // @suppress("Type cannot be resolved") // @suppress("Symbol is not resolved")
         //write the 3D discretized part
-        WriteDataToNetCDF(DataFile, ResistivityName, ResistivityUnit);
+        WriteDataToNetCDF(DataFile, ResistivityName, ResistivityUnit); // @suppress("Invalid arguments")
       }
 
     void ThreeDDCResistivityModel::ReadNetCDF(const std::string &filename)
       {
         //create the netcdf file object
-        netCDF::NcFile DataFile(filename.c_str(), netCDF::NcFile::read);
+        NcFile DataFile(filename.c_str(), NcFile::read); // @suppress("Type cannot be resolved") // @suppress("Symbol is not resolved")
         //read in the 3D gridded data
-        ReadDataFromNetCDF(DataFile, ResistivityName, ResistivityUnit);
+        ReadDataFromNetCDF(DataFile, ResistivityName, ResistivityUnit); // @suppress("Invalid arguments")
       }
   }
