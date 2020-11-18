@@ -8,14 +8,11 @@
 #ifndef DCRESFORWARDBASE_H_
 #define DCRESFORWARDBASE_H_
 
-#include <cstdlib>
-
 #include <vector>
+#include <cstdlib>
 #include <iostream>
-
-#include "../Global/Serialization.h"
 #include "../Global/VecMat.h"
-#include "../Global/Jif3DGlobal.h"
+#include <boost/serialization/serialization.hpp>
 
 namespace jif3D
   {
@@ -36,10 +33,10 @@ namespace jif3D
     /* @{ */
 
     //! Parameters of the grid structure:
-    class J3DEXPORT GRID_STRUCT_RES
+    class GRID_STRUCT_RES
       {
     private:
-      friend class access;
+      friend class boost::serialization::access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
@@ -51,6 +48,7 @@ namespace jif3D
           ar & ny;
           ar & nz;
           ar & rho;
+          ar & avg_cond;
         }
     public:
       double dx; /*!< Cell width vector in m in x-direction*/
@@ -61,6 +59,7 @@ namespace jif3D
       size_t nz; /*!< The number of cells in z-direction*/
       /*!< Resistivity parameters*/
       std::vector<double> rho; /*!< resistivity model used for the forward model*/
+      double avg_cond; /*!< conductivity from reference model for boundary correction*/
       GRID_STRUCT_RES() :
           dx(0), dy(0), dz(), nx(0), ny(0), nz(0), rho()
         {
@@ -71,7 +70,7 @@ namespace jif3D
       };
 
     //! Geometry of the  the Sources.
-    class J3DEXPORT GEOMETRY_RES
+    class GEOMETRY_RES
       {
     public:
       //! Read and store independent source position only
@@ -90,7 +89,7 @@ namespace jif3D
       std::vector<double> ry2; /*!< y-coordinates of the locations of the second receiver electrode for each data in m*/
       std::vector<double> rz2; /*!< z-coordinates of the locations of the second receiver electrode for each data in m*/
       std::vector<size_t> sno; /*!< Source index corresponding to each receiver electrodes*/
-      friend class access;
+      friend class boost::serialization::access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
