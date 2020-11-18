@@ -5,7 +5,6 @@
 // Copyright   : 2014, Zhanjie Shi and Richard.W Hobbs
 //============================================================================
 
-#include "DCResForwardBase.h"
 #include "../Global/FatalException.h"
 #include "../Global/convert.h"
 #include <cmath>
@@ -24,6 +23,9 @@
 #include <boost/numeric/ublas/operation_sparse.hpp>
 #include <boost/multi_array.hpp>
 #include <omp.h>
+#include <limits>
+#include "DCResForwardBase.h"
+
 using namespace Eigen;
 
 namespace jif3D
@@ -633,7 +635,7 @@ namespace jif3D
          * When implementing Cuthill-Mckee Ordering using Boost, the forward operator A which is Eigen SparseMatrix need to be input into a Boost SparseMatrix firstly. We use a loop to
          * input the non-zero element of A one by one, so this probably can cause program running slower. But it is difficult to generate forward operator A using Boost C++ library due
          * to no proper multiplication function of sparse matrix can be used. So we use Eigen to generate forward operator A from D*S*G as above. In the future, if there is a new function
-         *  which can be used to implement sparse matrix product in Boost uBlas library, it is a probably better method to directly use Boost to generate forward operator A from D*S*G.
+         *  which can be used to implement sparse matrix product in Boost uBlas library, it is a better method to directly use Boost to generate forward operator A from D*S*G.
          */
         typedef boost::numeric::ublas::compressed_matrix<double> MatType;
         typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS,
@@ -712,9 +714,132 @@ namespace jif3D
         Eigen::BiCGSTAB<SparseMatrix<double>, Eigen::IncompleteLUT<double> > pFORBCGST;
         pFORBCGST.preconditioner().setDroptol(0.00001);
         pFORBCGST.compute(pFOR);
+        //A permutation of the forward operator has been finished.
 
-        //*****Calculate forward response data*********************************//
-        /* Firstly, calculate centercell's coordinate used in interpolation operation to interpolate source/receiver's into cell's centre.
+
+
+
+        //********************************Boundary correction and source term improvement*********************************//
+        /* In order to improve the BCs and have an accurate solution near a source electrode, we apply a correction to the source
+         * term q that both improves the BCs and reduces errors near the source locations. The method is as follows,
+         * Firstly, define a homogeneous conductivity field Con_H that is the best initial guess of the average conductivity in the model space.
+         * Secondly, calculate the analytical solution for the half-space potential field U_H resulting from the conductivity structure Con_H from a source term q.
+         * Note, the analytical solution considers a half space that goes to infinity and therefore has the "correct" boundary conditions for our problem.
+         * Then, construct the forward operator A(Con_H).
+         * Evaluate q_corr = A(Con_H)*U_H.
+         * Once we have the vector q_corr, we substitute it for the source term q and solve the system,
+         * U_true = A(Con_true)-1*q_corr.
+         * Where U_true is the potential field everywhere in our model space and Con_true is the true conductivity field.
+         *
+         */
+        /*Because U_H is calculated for each source pair, we implement it in the loop of calculation potential for true model.
+         * Now, we firstly construct the forward operator A(Con_H).
+         */
+        //*******Generate index and value of non-zero elements of the diagonal matrix S(1/avg_cond) which is a sparse matrix.
+        //***We add "_BC" after the similar variable name with that used during constructing Sparse matrix "S" in the above code.
+        std::vector<size_t> lxs_BC, lys_BC, lzs_BC, jxs_BC, jys_BC, jzs_BC; //the index of non-zero elements in sparse matrix S(1/avg_cond).
+        std::vector<double> kxs_BC, kys_BC, kzs_BC; //the value of non-zero elements in sparse matrix S(1/avg_cond).
+
+        /*****Diagonal matrix S[nax+nay+naz][nax+nay+naz], nax=(grid.nx-1)*grid.ny*grid.nz,
+         * nay=grid.nx*(grid.ny-1)*grid.nz, naz=grid.nx*grid.ny*(grid.nz-1).
+         *for (size_t i=0; i<nax; i++), S[lxs[i]][jxs[i]]=kxs[i];
+         *for (size_t i=0; i<nay; i++), S[lys[i]+nax][jys[i]+nax]=kys[i]
+         *for (size_t i=0; i<naz; i++), S[lzs[i]+nax+nay][jzs[i]+nax+nay]=kzs[i]
+         *****/
+
+        std::vector<double> rhof_x_BC, rhof_y_BC, rhof_z_BC;
+        //***generate x coefficients
+        //*Average rho on x face
+        for (size_t i = 0; i < grid.nz; i++)
+          for (size_t j = 0; j < grid.ny; j++)
+            for (size_t k = 1; k < grid.nx; k++)
+              {
+                rhof_x_BC.push_back(
+                    (cellwidth_x[k] * cellwidth_y[j] * cellwidth_z[i]
+                        * (1.0/grid.avg_cond)
+                        + cellwidth_x[k - 1] * cellwidth_y[j] * cellwidth_z[i]
+                            * (1.0/grid.avg_cond))
+                        / (cellwidth_x[k] * cellwidth_y[j] * cellwidth_z[i]
+                            + cellwidth_x[k - 1] * cellwidth_y[j] * cellwidth_z[i]));
+              }
+        for (size_t i = 0; i < (grid.nx - 1) * grid.ny * grid.nz; i++)
+          {
+            lxs_BC.push_back(i);
+            jxs_BC.push_back(i);
+            kxs_BC.push_back(rhof_x_BC[i]);
+          }
+        //***generate y coefficients
+        //*Average rho on y face
+        for (size_t i = 0; i < grid.nz; i++)
+          for (size_t j = 1; j < grid.ny; j++)
+            for (size_t k = 0; k < grid.nx; k++)
+              {
+                rhof_y_BC.push_back(
+                    (cellwidth_x[k] * cellwidth_y[j] * cellwidth_z[i]
+                        * (1.0/grid.avg_cond)
+                        + cellwidth_x[k] * cellwidth_y[j - 1] * cellwidth_z[i]
+                            * (1.0/grid.avg_cond))
+                        / (cellwidth_x[k] * cellwidth_y[j] * cellwidth_z[i]
+                            + cellwidth_x[k] * cellwidth_y[j - 1] * cellwidth_z[i]));
+              }
+        for (size_t i = 0; i < grid.nx * (grid.ny - 1) * grid.nz; i++)
+          {
+            lys_BC.push_back(i);
+            jys_BC.push_back(i);
+            kys_BC.push_back(rhof_y_BC[i]);
+          }
+        //***generate z coefficients
+        //*Average rho on z face
+        for (size_t i = 1; i < grid.nz; i++)
+          for (size_t j = 0; j < grid.ny; j++)
+            for (size_t k = 0; k < grid.nx; k++)
+              {
+                rhof_z_BC.push_back(
+                    (cellwidth_x[k] * cellwidth_y[j] * cellwidth_z[i]
+                        * (1.0/grid.avg_cond)
+                        + cellwidth_x[k] * cellwidth_y[j] * cellwidth_z[i - 1]
+                            * (1.0/grid.avg_cond))
+                        / (cellwidth_x[k] * cellwidth_y[j] * cellwidth_z[i]
+                            + cellwidth_x[k] * cellwidth_y[j] * cellwidth_z[i - 1]));
+              }
+        for (size_t i = 0; i < grid.nx * grid.ny * (grid.nz - 1); i++)
+          {
+            lzs_BC.push_back(i);
+            jzs_BC.push_back(i);
+            kzs_BC.push_back(rhof_z_BC[i]);
+          }
+
+        //*******construct the forward operator A(Con_H) = D*S(1/avg_cond)*G.
+        //generate sparse matrix S(1/avg_cond),
+        typedef Eigen::Triplet<double> ST_BC;
+        std::vector<ST_BC> SV_BC;
+        SV_BC.reserve(nax + nay + naz);
+        for (size_t i = 0; i < nax; i++)
+          {
+            SV_BC.push_back(ST_BC(lxs_BC[i], jxs_BC[i], 1.0 / kxs_BC[i]));
+          }
+        for (size_t i = 0; i < nay; i++)
+          {
+            SV_BC.push_back(ST_BC(lys_BC[i] + nax, jys_BC[i] + nax, 1.0 / kys_BC[i]));
+          }
+        for (size_t i = 0; i < naz; i++)
+          {
+            SV_BC.push_back(ST_BC(lzs_BC[i] + nax + nay, jzs_BC[i] + nax + nay, 1.0 / kzs_BC[i]));
+          }
+        Eigen::SparseMatrix<double> S_BC(nax + nay + naz, nax + nay + naz);
+        S_BC.setFromTriplets(SV_BC.begin(), SV_BC.end());
+        //generate sparse matrix, forward operator A(Con_H) = D*S(1/avg_cond)*G.
+        Eigen::SparseMatrix<double> A1_BC(np, nax + nay + naz), A_BC(np, np);
+        A1_BC = D * S_BC;
+        A_BC = A1_BC * G;
+        A_BC.coeffRef(0, 0) = 1.0 / (cellwidth_x[0] * cellwidth_y[0] * cellwidth_z[0]);
+
+
+
+
+
+        //*****Generate source correction operator q_corr, substitute source term q using q_corr and calculate forward response data*********************************//
+        /* Firstly, calculate each cell center's coordinate used in interpolation operation to interpolate source/receiver's into cell's centre.
          */
         std::vector<double> zpos(grid.nz + 1, 0), xpos(grid.nx + 1, 0), ypos(grid.ny + 1,
             0);
@@ -773,32 +898,84 @@ namespace jif3D
 
         /* The follows are the main loop for calculating forward response for a model and corresponding geometry of sources/receivers.
          */
-	    jif3D::rvec result(ndata);
+        jif3D::rvec result(ndata);
 
 #pragma omp parallel for default(shared)
         for (size_t i = 0; i < geo.nsource; i++)
           {
-            std::vector<double> q1(np, 0), q2(np, 0), q, Q1(np, 0), Q2(np, 0), Q;
-            Eigen::VectorXd permutationeq(np), permutationeu, eu(np), eforwarddata;
+            std::vector<double> pvel(np, 0), nvel(np, 0), pveimagl(np, 0), nveimagl(np, 0), U_H(np, 0), q_corr(np, 0), Q1(np, 0), Q2(np, 0), Q;
+            Eigen::VectorXd permutationeq(np), permutationeu, eu(np), eforwarddata, eU_H(np), eq_corr(np);
+
             //generate source term q,
-            q1 = Linint(cellcenterxpos, cellcenterypos, cellcenterzpos, geo.PosSx[i],
-                geo.PosSy[i], geo.PosSz[i]);
-            q2 = Linint(cellcenterxpos, cellcenterypos, cellcenterzpos, geo.NegSx[i],
-                geo.NegSy[i], geo.NegSz[i]);
-            q.reserve(np);
-            for (size_t j = 0; j < grid.nz; j++)
-              for (size_t k = 0; k < grid.ny; k++)
-                for (size_t l = 0; l < grid.nx; l++)
-                  {
-                    q.push_back(
-                        (q1[l + k * grid.nx + j * grid.nx * grid.ny]
-                            - q2[l + k * grid.nx + j * grid.nx * grid.ny])
-                            / (cellwidth_x[l] * cellwidth_y[k] * cellwidth_z[j]));
-                  }
-            //calculate potential volume corresponding to i source,
+            //q1 = Linint(cellcenterxpos, cellcenterypos, cellcenterzpos, geo.PosSx[i],
+                //geo.PosSy[i], geo.PosSz[i]);
+            //q2 = Linint(cellcenterxpos, cellcenterypos, cellcenterzpos, geo.NegSx[i],
+                //geo.NegSy[i], geo.NegSz[i]);
+            //q.reserve(np);
+            //for (size_t j = 0; j < grid.nz; j++)
+              //for (size_t k = 0; k < grid.ny; k++)
+                //for (size_t l = 0; l < grid.nx; l++)
+                  //{
+                    //q.push_back(
+                        //(q1[l + k * grid.nx + j * grid.nx * grid.ny]
+                            //- q2[l + k * grid.nx + j * grid.nx * grid.ny])
+                           /// (cellwidth_x[l] * cellwidth_y[k] * cellwidth_z[j]));
+                  //}
+
+            //norm of current electrode and 1st potential electrode and generate potential of homogeneous model, U_H
+            for (size_t l=0; l<grid.nz; l++)
+            	for (size_t m=0; m<grid.ny; m++)
+            		for (size_t n=0; n<grid.nx; n++)
+            		{
+            			//norm of current electrode and 1st potential electrode
+            			pvel[n+m*grid.nx+l*grid.nx*grid.ny] = std::sqrt((cellcenterxpos[n]-geo.PosSx[i])*(cellcenterxpos[n]-geo.PosSx[i])
+            					+(cellcenterypos[m]-geo.PosSy[i])*(cellcenterypos[m]-geo.PosSy[i])+(cellcenterzpos[l]-geo.PosSz[i])*(cellcenterzpos[l]-geo.PosSz[i]));
+            			nvel[n+m*grid.nx+l*grid.nx*grid.ny] = std::sqrt((cellcenterxpos[n]-geo.NegSx[i])*(cellcenterxpos[n]-geo.NegSx[i])
+            					+(cellcenterypos[m]-geo.NegSy[i])*(cellcenterypos[m]-geo.NegSy[i])+(cellcenterzpos[l]-geo.NegSz[i])*(cellcenterzpos[l]-geo.NegSz[i]));
+            			//norm of imaginary current electrode and 1st potential electrode
+            			pveimagl[n+m*grid.nx+l*grid.nx*grid.ny] = std::sqrt((cellcenterxpos[n]-geo.PosSx[i])*(cellcenterxpos[n]-geo.PosSx[i])
+            					+(cellcenterypos[m]-geo.PosSy[i])*(cellcenterypos[m]-geo.PosSy[i])+(cellcenterzpos[l]+geo.PosSz[i])*(cellcenterzpos[l]+geo.PosSz[i]));
+            			nveimagl[n+m*grid.nx+l*grid.nx*grid.ny] = std::sqrt((cellcenterxpos[n]-geo.NegSx[i])*(cellcenterxpos[n]-geo.NegSx[i])
+            					+(cellcenterypos[m]-geo.NegSy[i])*(cellcenterypos[m]-geo.NegSy[i])+(cellcenterzpos[l]+geo.NegSz[i])*(cellcenterzpos[l]+geo.NegSz[i]));
+            			//generate potential of homogeneous model, U_H
+            			U_H[n+m*grid.nx+l*grid.nx*grid.ny] = (1.0/(grid.avg_cond*4.0*3.1415926))*(1.0/pvel[n+m*grid.nx+l*grid.nx*grid.ny]-1.0/nvel[n+m*grid.nx+l*grid.nx*grid.ny]
+            					                              +1.0/pveimagl[n+m*grid.nx+l*grid.nx*grid.ny]-1.0/nveimagl[n+m*grid.nx+l*grid.nx*grid.ny]);
+            		}
+            //now check for singularities due to the source being on a node
+            double singularityvalue = std::numeric_limits<double>::infinity();
+            for (size_t Uid=0; Uid<np; Uid++)
+            {
+            	if (U_H[Uid]==singularityvalue||U_H[Uid]==-singularityvalue)
+            	{
+            		size_t idx, idy, idz;
+            		idx = Uid % grid.nx;
+            		idz = (Uid - idx) / grid.nx;
+            		idy = idz % grid.ny;
+            		idz = (idz - idy) / grid.ny;
+            		if (idz==0)
+            			U_H[Uid] = (U_H[idx+1+idy*grid.nx+idz*grid.nx*grid.ny]+U_H[idx+(idy+1)*grid.nx+idz*grid.nx*grid.ny]
+            			               +U_H[idx+idy*grid.nx+(idz+1)*grid.nx*grid.ny]+U_H[idx-1+idy*grid.nx+idz*grid.nx*grid.ny]
+            			                   +U_H[idx+(idy-1)*grid.nx+idz*grid.nx*grid.ny])/5.0;
+            		else
+            			U_H[Uid] = (U_H[idx+1+idy*grid.nx+idz*grid.nx*grid.ny]+U_H[idx+(idy+1)*grid.nx+idz*grid.nx*grid.ny]
+            			               +U_H[idx+idy*grid.nx+(idz+1)*grid.nx*grid.ny]+U_H[idx-1+idy*grid.nx+idz*grid.nx*grid.ny]
+            			                   +U_H[idx+(idy-1)*grid.nx+idz*grid.nx*grid.ny]+U_H[idx+idy*grid.nx+(idz-1)*grid.nx*grid.ny])/6.0;
+            	}
+            }
+            //calculate correction operator q_corr
+            for (size_t cid=0; cid<np; cid++)
+            {
+            	eU_H(cid) = U_H[cid];
+            }
+            eq_corr=A_BC*eU_H;//source term correction operator q_corr expressed as sparse vector eq_corr using multiplication of sparse matrix A_BC and sparse vector eU_H.
+            for (size_t cid=0; cid<np; cid++)
+            {
+            	q_corr[cid] = eq_corr(cid);
+            }
+            //substitute source term q using correction operator q_corr and calculate potential volume corresponding to i source
             for (size_t m = 0; m < np; m++)
               {
-                permutationeq(m) = q[order[m]];
+                permutationeq(m) = q_corr[order[m]];
               }
             permutationeu = pFORBCGST.solve(permutationeq);
             for (size_t n = 0; n < np; n++)
@@ -807,7 +984,7 @@ namespace jif3D
               }
             //select related receivers of i source and calculate forward response,
             size_t count = 0;
-
+            std::vector<double> GeometryFactor;//geometry factor for each electrode pair
             for (size_t Qi = 0; Qi < ndata_res; Qi++)
               {
                 if (i == geo.sno[Qi])
@@ -826,6 +1003,13 @@ namespace jif3D
                                     - Q2[l + k * grid.nx + j * grid.nx * grid.ny]);
                           }
                     count++;
+
+                    double R1S1 = std::sqrt((geo.rx1[Qi]-geo.PosSx[i])*(geo.rx1[Qi]-geo.PosSx[i])+(geo.ry1[Qi]-geo.PosSy[i])*(geo.ry1[Qi]-geo.PosSy[i]));
+                    double R2S1 = std::sqrt((geo.rx2[Qi]-geo.PosSx[i])*(geo.rx2[Qi]-geo.PosSx[i])+(geo.ry2[Qi]-geo.PosSy[i])*(geo.ry2[Qi]-geo.PosSy[i]));
+                    double R1S2 = std::sqrt((geo.rx1[Qi]-geo.NegSx[i])*(geo.rx1[Qi]-geo.NegSx[i])+(geo.ry1[Qi]-geo.NegSy[i])*(geo.ry1[Qi]-geo.NegSy[i]));
+                    double R2S2 = std::sqrt((geo.rx2[Qi]-geo.NegSx[i])*(geo.rx2[Qi]-geo.NegSx[i])+(geo.ry2[Qi]-geo.NegSy[i])*(geo.ry2[Qi]-geo.NegSy[i]));
+                    GeometryFactor.push_back(2*3.1415926/(1/R1S1-1/R2S1+1/R2S2-1/R1S2));
+
                   }
               }
 
@@ -840,8 +1024,20 @@ namespace jif3D
 
             for (size_t ndatatemp = 0; ndatatemp < count; ndatatemp++)
               {
-                result(startindices.at(i) + ndatatemp) = eforwarddata(ndatatemp);
+            	if (GeometryFactor[ndatatemp]==singularityvalue||GeometryFactor[ndatatemp]==-singularityvalue)
+            	{
+            		result(startindices.at(i) + ndatatemp) = 1/grid.avg_cond;
+            		//datatemp.push_back(1/grid.avg_cond);
+            	}
+            	else
+            	{
+            		//result(startindices.at(i) + ndatatemp) = eforwarddata(ndatatemp);
+            		result(startindices.at(i) + ndatatemp) = eforwarddata(ndatatemp)*GeometryFactor[ndatatemp];
+            		//datatemp.push_back(eforwarddata(ndatatemp)*GeometryFactor[ndatatemp]);
+                	//datatemp.push_back(eforwarddata(ndatatemp));
+            	}
               }
+            //GeometryFactor.clear();
           }
 
 
@@ -1419,6 +1615,126 @@ namespace jif3D
         pFORBCGST.preconditioner().setDroptol(0.00001);
         pFORBCGST.compute(pFOR);
 
+
+        //********************************Boundary correction and source term improvement*********************************//
+        /* In order to improve the BCs and have an accurate solution near a source electrode, we apply a correction to the source
+         * term q that both improves the BCs and reduces errors near the source locations. The method is as follows,
+         * Firstly, define a homogeneous conductivity field Con_H that is the best initial guess of the average conductivity in the model space.
+         * Secondly, calculate the analytical solution for the half-space potential field U_H resulting from the conductivity structure Con_H from a source term q.
+         * Note, the analytical solution considers a half space that goes to infinity and therefore has the "correct" boundary conditions for our problem.
+         * Then, construct the forward operator A(Con_H).
+         * Evaluate q_corr = A(Con_H)*U_H.
+         * Once we have the vector q_corr, we substitute it for the source term q and solve the system,
+         * U_true = A(Con_true)-1*q_corr.
+         * Where U_true is the potential field everywhere in our model space and Con_true is the true conductivity field.
+         *
+         */
+        /*Because U_H is calculated for each source pair, we implement it in the loop of calculation potential for true model.
+         * Now, we firstly construct the forward operator A(Con_H).
+         */
+        //*******Generate index and value of non-zero elements of the diagonal matrix S(1/avg_cond) which is a sparse matrix.
+        //***We add "_BC" after the similar variable name with that used during constructing Sparse matrix "S" in the above code.
+        std::vector<size_t> lxs_BC, lys_BC, lzs_BC, jxs_BC, jys_BC, jzs_BC; //the index of non-zero elements in sparse matrix S(1/avg_cond).
+        std::vector<double> kxs_BC, kys_BC, kzs_BC; //the value of non-zero elements in sparse matrix S(1/avg_cond).
+
+        /*****Diagonal matrix S[nax+nay+naz][nax+nay+naz], nax=(grid.nx-1)*grid.ny*grid.nz,
+         * nay=grid.nx*(grid.ny-1)*grid.nz, naz=grid.nx*grid.ny*(grid.nz-1).
+         *for (size_t i=0; i<nax; i++), S[lxs[i]][jxs[i]]=kxs[i];
+         *for (size_t i=0; i<nay; i++), S[lys[i]+nax][jys[i]+nax]=kys[i]
+         *for (size_t i=0; i<naz; i++), S[lzs[i]+nax+nay][jzs[i]+nax+nay]=kzs[i]
+         *****/
+
+        std::vector<double> rhof_x_BC, rhof_y_BC, rhof_z_BC;
+        //***generate x coefficients
+        //*Average rho on x face
+        for (size_t i = 0; i < grid.nz; i++)
+          for (size_t j = 0; j < grid.ny; j++)
+            for (size_t k = 1; k < grid.nx; k++)
+              {
+                rhof_x_BC.push_back(
+                    (cellwidth_x[k] * cellwidth_y[j] * cellwidth_z[i]
+                        * (1.0/grid.avg_cond)
+                        + cellwidth_x[k - 1] * cellwidth_y[j] * cellwidth_z[i]
+                            * (1.0/grid.avg_cond))
+                        / (cellwidth_x[k] * cellwidth_y[j] * cellwidth_z[i]
+                            + cellwidth_x[k - 1] * cellwidth_y[j] * cellwidth_z[i]));
+              }
+        for (size_t i = 0; i < (grid.nx - 1) * grid.ny * grid.nz; i++)
+          {
+            lxs_BC.push_back(i);
+            jxs_BC.push_back(i);
+            kxs_BC.push_back(rhof_x_BC[i]);
+          }
+        //***generate y coefficients
+        //*Average rho on y face
+        for (size_t i = 0; i < grid.nz; i++)
+          for (size_t j = 1; j < grid.ny; j++)
+            for (size_t k = 0; k < grid.nx; k++)
+              {
+                rhof_y_BC.push_back(
+                    (cellwidth_x[k] * cellwidth_y[j] * cellwidth_z[i]
+                        * (1.0/grid.avg_cond)
+                        + cellwidth_x[k] * cellwidth_y[j - 1] * cellwidth_z[i]
+                            * (1.0/grid.avg_cond))
+                        / (cellwidth_x[k] * cellwidth_y[j] * cellwidth_z[i]
+                            + cellwidth_x[k] * cellwidth_y[j - 1] * cellwidth_z[i]));
+              }
+        for (size_t i = 0; i < grid.nx * (grid.ny - 1) * grid.nz; i++)
+          {
+            lys_BC.push_back(i);
+            jys_BC.push_back(i);
+            kys_BC.push_back(rhof_y_BC[i]);
+          }
+        //***generate z coefficients
+        //*Average rho on z face
+        for (size_t i = 1; i < grid.nz; i++)
+          for (size_t j = 0; j < grid.ny; j++)
+            for (size_t k = 0; k < grid.nx; k++)
+              {
+                rhof_z_BC.push_back(
+                    (cellwidth_x[k] * cellwidth_y[j] * cellwidth_z[i]
+                        * (1.0/grid.avg_cond)
+                        + cellwidth_x[k] * cellwidth_y[j] * cellwidth_z[i - 1]
+                            * (1.0/grid.avg_cond))
+                        / (cellwidth_x[k] * cellwidth_y[j] * cellwidth_z[i]
+                            + cellwidth_x[k] * cellwidth_y[j] * cellwidth_z[i - 1]));
+              }
+        for (size_t i = 0; i < grid.nx * grid.ny * (grid.nz - 1); i++)
+          {
+            lzs_BC.push_back(i);
+            jzs_BC.push_back(i);
+            kzs_BC.push_back(rhof_z_BC[i]);
+          }
+
+        //*******construct the forward operator A(Con_H) = D*S(1/avg_cond)*G.
+        //generate sparse matrix S(1/avg_cond),
+        typedef Eigen::Triplet<double> ST_BC;
+        std::vector<ST_BC> SV_BC;
+        SV_BC.reserve(nax + nay + naz);
+        for (size_t i = 0; i < nax; i++)
+          {
+            SV_BC.push_back(ST_BC(lxs_BC[i], jxs_BC[i], 1.0 / kxs_BC[i]));
+          }
+        for (size_t i = 0; i < nay; i++)
+          {
+            SV_BC.push_back(ST_BC(lys_BC[i] + nax, jys_BC[i] + nax, 1.0 / kys_BC[i]));
+          }
+        for (size_t i = 0; i < naz; i++)
+          {
+            SV_BC.push_back(ST_BC(lzs_BC[i] + nax + nay, jzs_BC[i] + nax + nay, 1.0 / kzs_BC[i]));
+          }
+        Eigen::SparseMatrix<double> S_BC(nax + nay + naz, nax + nay + naz);
+        S_BC.setFromTriplets(SV_BC.begin(), SV_BC.end());
+        //generate sparse matrix, forward operator A(Con_H) = D*S(1/avg_cond)*G.
+        Eigen::SparseMatrix<double> A1_BC(np, nax + nay + naz), A_BC(np, np);
+        A1_BC = D * S_BC;
+        A_BC = A1_BC * G;
+        A_BC.coeffRef(0, 0) = 1.0 / (cellwidth_x[0] * cellwidth_y[0] * cellwidth_z[0]);
+
+
+
+
+
         //Convert model vector grid.rho into a diagonal sparse matrix Dm
         typedef Eigen::Triplet<double> DmT;
         std::vector<DmT> DmV;
@@ -1429,6 +1745,10 @@ namespace jif3D
           }
         Eigen::SparseMatrix<double> Dm(grid.rho.size(), grid.rho.size());
         Dm.setFromTriplets(DmV.begin(), DmV.end());
+
+
+
+
 
         //*****Calculate gradient of objective function*********************************//
         /* Firstly, calculate centercell's coordinate used in interpolation operation to interpolate source/receiver's into cell's centre.
@@ -1484,8 +1804,8 @@ namespace jif3D
 #pragma omp parallel for default(shared)
         for (size_t i = 0; i < geo.nsource; i++)
           {
-            std::vector<double> q1(np, 0), q2(np, 0), q, Q1(np, 0), Q2(np, 0), Q;
-            Eigen::VectorXd permutationeq(np), permutationeu, eu(np);
+            std::vector<double> pvel(np, 0), nvel(np, 0), pveimagl(np, 0), nveimagl(np, 0), U_H(np, 0), q_corr(np, 0), Q1(np, 0), Q2(np, 0), Q;
+            Eigen::VectorXd permutationeq(np), permutationeu, eu(np), eU_H(np), eq_corr(np);
 
             Eigen::VectorXd eGu(nax + nay + naz);
             std::vector<double> Gux(nax), Guy(nay), Guz(naz);
@@ -1507,23 +1827,73 @@ namespace jif3D
             pFORBCGSTtrans.compute(pFORtrans);
             Eigen::VectorXd eGui(np);
             //generate source term q,
-            q1 = Linint(cellcenterxpos, cellcenterypos, cellcenterzpos, geo.PosSx[i],
-                geo.PosSy[i], geo.PosSz[i]);
-            q2 = Linint(cellcenterxpos, cellcenterypos, cellcenterzpos, geo.NegSx[i],
-                geo.NegSy[i], geo.NegSz[i]);
-            for (size_t j = 0; j < grid.nz; j++)
-              for (size_t k = 0; k < grid.ny; k++)
-                for (size_t l = 0; l < grid.nx; l++)
-                  {
-                    q.push_back(
-                        (q1[l + k * grid.nx + j * grid.nx * grid.ny]
-                            - q2[l + k * grid.nx + j * grid.nx * grid.ny])
-                            / (cellwidth_x[l] * cellwidth_y[k] * cellwidth_z[j]));
-                  }
-            //calculate potential volume corresponding to i source,
+            //q1 = Linint(cellcenterxpos, cellcenterypos, cellcenterzpos, geo.PosSx[i],
+                //geo.PosSy[i], geo.PosSz[i]);
+            //q2 = Linint(cellcenterxpos, cellcenterypos, cellcenterzpos, geo.NegSx[i],
+                //geo.NegSy[i], geo.NegSz[i]);
+            //for (size_t j = 0; j < grid.nz; j++)
+              //for (size_t k = 0; k < grid.ny; k++)
+                //for (size_t l = 0; l < grid.nx; l++)
+                  //{
+                    //q.push_back(
+                        //(q1[l + k * grid.nx + j * grid.nx * grid.ny]
+                            //- q2[l + k * grid.nx + j * grid.nx * grid.ny])
+                            /// (cellwidth_x[l] * cellwidth_y[k] * cellwidth_z[j]));
+                  //}
+            //norm of current electrode and 1st potential electrode and generate potential of homogeneous model, U_H
+            for (size_t l=0; l<grid.nz; l++)
+            	for (size_t m=0; m<grid.ny; m++)
+            		for (size_t n=0; n<grid.nx; n++)
+            		{
+            			//norm of current electrode and 1st potential electrode
+            			pvel[n+m*grid.nx+l*grid.nx*grid.ny] = std::sqrt((cellcenterxpos[n]-geo.PosSx[i])*(cellcenterxpos[n]-geo.PosSx[i])
+            					+(cellcenterypos[m]-geo.PosSy[i])*(cellcenterypos[m]-geo.PosSy[i])+(cellcenterzpos[l]-geo.PosSz[i])*(cellcenterzpos[l]-geo.PosSz[i]));
+            			nvel[n+m*grid.nx+l*grid.nx*grid.ny] = std::sqrt((cellcenterxpos[n]-geo.NegSx[i])*(cellcenterxpos[n]-geo.NegSx[i])
+            					+(cellcenterypos[m]-geo.NegSy[i])*(cellcenterypos[m]-geo.NegSy[i])+(cellcenterzpos[l]-geo.NegSz[i])*(cellcenterzpos[l]-geo.NegSz[i]));
+            			//norm of imaginary current electrode and 1st potential electrode
+            			pveimagl[n+m*grid.nx+l*grid.nx*grid.ny] = std::sqrt((cellcenterxpos[n]-geo.PosSx[i])*(cellcenterxpos[n]-geo.PosSx[i])
+            					+(cellcenterypos[m]-geo.PosSy[i])*(cellcenterypos[m]-geo.PosSy[i])+(cellcenterzpos[l]+geo.PosSz[i])*(cellcenterzpos[l]+geo.PosSz[i]));
+            			nveimagl[n+m*grid.nx+l*grid.nx*grid.ny] = std::sqrt((cellcenterxpos[n]-geo.NegSx[i])*(cellcenterxpos[n]-geo.NegSx[i])
+            					+(cellcenterypos[m]-geo.NegSy[i])*(cellcenterypos[m]-geo.NegSy[i])+(cellcenterzpos[l]+geo.NegSz[i])*(cellcenterzpos[l]+geo.NegSz[i]));
+            			//generate potential of homogeneous model, U_H
+            			U_H[n+m*grid.nx+l*grid.nx*grid.ny] = (1.0/(grid.avg_cond*4.0*3.1415926))*(1.0/pvel[n+m*grid.nx+l*grid.nx*grid.ny]-1.0/nvel[n+m*grid.nx+l*grid.nx*grid.ny]
+            					                              +1.0/pveimagl[n+m*grid.nx+l*grid.nx*grid.ny]-1.0/nveimagl[n+m*grid.nx+l*grid.nx*grid.ny]);
+            		}
+            //now check for singularities due to the source being on a node
+            double singularityvalue = std::numeric_limits<double>::infinity();
+            for (size_t Uid=0; Uid<np; Uid++)
+            {
+            	if (U_H[Uid]==singularityvalue||U_H[Uid]==-singularityvalue)
+            	{
+            		size_t idx, idy, idz;
+            		idx = Uid % grid.nx;
+            		idz = (Uid - idx) / grid.nx;
+            		idy = idz % grid.ny;
+            		idz = (idz - idy) / grid.ny;
+            		if (idz==0)
+            			U_H[Uid] = (U_H[idx+1+idy*grid.nx+idz*grid.nx*grid.ny]+U_H[idx+(idy+1)*grid.nx+idz*grid.nx*grid.ny]
+            			               +U_H[idx+idy*grid.nx+(idz+1)*grid.nx*grid.ny]+U_H[idx-1+idy*grid.nx+idz*grid.nx*grid.ny]
+            			                   +U_H[idx+(idy-1)*grid.nx+idz*grid.nx*grid.ny])/5.0;
+            		else
+            			U_H[Uid] = (U_H[idx+1+idy*grid.nx+idz*grid.nx*grid.ny]+U_H[idx+(idy+1)*grid.nx+idz*grid.nx*grid.ny]
+            			               +U_H[idx+idy*grid.nx+(idz+1)*grid.nx*grid.ny]+U_H[idx-1+idy*grid.nx+idz*grid.nx*grid.ny]
+            			                   +U_H[idx+(idy-1)*grid.nx+idz*grid.nx*grid.ny]+U_H[idx+idy*grid.nx+(idz-1)*grid.nx*grid.ny])/6.0;
+            	}
+            }
+            //calculate correction operator q_corr
+            for (size_t cid=0; cid<np; cid++)
+            {
+            	eU_H(cid) = U_H[cid];
+            }
+            eq_corr=A_BC*eU_H;//source term correction operator q_corr expressed as sparse vector eq_corr using multiplication of sparse matrix A_BC and sparse vector eU_H.
+            for (size_t cid=0; cid<np; cid++)
+            {
+            	q_corr[cid] = eq_corr(cid);
+            }
+            //substitute source term q using correction operator q_corr and calculate potential volume corresponding to i source
             for (size_t m = 0; m < np; m++)
               {
-                permutationeq(m) = q[order[m]];
+                permutationeq(m) = q_corr[order[m]];
               }
             permutationeu = pFORBCGST.solve(permutationeq);
             for (size_t n = 0; n < np; n++)
@@ -1698,6 +2068,7 @@ namespace jif3D
             //Generate a vector lm() related with data misfit and transpose of forward operator A
             //select related receivers of i source and calculate projection matrix from weighted data difference vector,
             size_t count = 0;
+            double GeometryFactor;
             for (size_t Qi = 0; Qi < wdwmisfit.size(); Qi++)
               {
                 if (i == geo.sno[Qi])
@@ -1714,8 +2085,25 @@ namespace jif3D
                                 Q1[l + k * grid.nx + j * grid.nx * grid.ny]
                                     - Q2[l + k * grid.nx + j * grid.nx * grid.ny]);
                           }
-                    wdwmisfitforproj.push_back(wdwmisfit(Qi));
+
+                    double R1S1 = std::sqrt((geo.rx1[Qi]-geo.PosSx[i])*(geo.rx1[Qi]-geo.PosSx[i])+(geo.ry1[Qi]-geo.PosSy[i])*(geo.ry1[Qi]-geo.PosSy[i]));
+                    double R2S1 = std::sqrt((geo.rx2[Qi]-geo.PosSx[i])*(geo.rx2[Qi]-geo.PosSx[i])+(geo.ry2[Qi]-geo.PosSy[i])*(geo.ry2[Qi]-geo.PosSy[i]));
+                    double R1S2 = std::sqrt((geo.rx1[Qi]-geo.NegSx[i])*(geo.rx1[Qi]-geo.NegSx[i])+(geo.ry1[Qi]-geo.NegSy[i])*(geo.ry1[Qi]-geo.NegSy[i]));
+                    double R2S2 = std::sqrt((geo.rx2[Qi]-geo.NegSx[i])*(geo.rx2[Qi]-geo.NegSx[i])+(geo.ry2[Qi]-geo.NegSy[i])*(geo.ry2[Qi]-geo.NegSy[i]));
+                    GeometryFactor = 2*3.1415926/(1/R1S1-1/R2S1+1/R2S2-1/R1S2);
+
+                    if (GeometryFactor==singularityvalue||GeometryFactor==-singularityvalue)
+                    {
+                    	wdwmisfitforproj.push_back(wdwmisfit(Qi));
+                    }
+                    else
+                    {
+                        wdwmisfitforproj.push_back(wdwmisfit(Qi)*GeometryFactor);
+                        //wdwmisfitforproj.push_back(wdwmisfit(Qi));
+                    }
+
                     count++;
+
                   }
               }
             Eigen::MatrixXd eQ(count, np);
@@ -1773,7 +2161,7 @@ namespace jif3D
               {
                 const size_t index1 = i * grid.nx * grid.ny + j * grid.nx + k;
                 const size_t index2 = k * grid.nz * grid.ny + j * grid.nz + i;
-                gradientfinal[index2] = -(2 * gradient[index1]) / grid.rho[index1];
+                gradientfinal[index2] = -2*gradient[index1]/grid.rho[index1];
               }
 
         return gradientfinal;
