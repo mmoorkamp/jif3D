@@ -1,17 +1,20 @@
 //============================================================================
 // Name        : DCResistivityCalculator.h
-// Author      : Zhanjie Shi and Richard.W Hobbs
+// Author      : Zhanjie Shi ,Max Moorkamp and Richard.W Hobbs
 // Version     : April 2014
-// Copyright   : 2014, Zhanjie Shi and Richard.W Hobbs
+// Copyright   : 2014, Zhanjie Shi ,Max Moorkamp and Richard.W Hobbs
 //============================================================================
 
 #ifndef DCRESISTIVITYCALCULATOR_H_
 #define DCRESISTIVITYCALCULATOR_H_
 
+#include "../DCResistivity/ThreeDDCResistivityModel.h"
+#include "../DCResistivity/DCResistivityData.h"
 #include "../Global/Serialization.h"
 #include "../Global/VecMat.h"
 #include "../Global/Jif3DGlobal.h"
-#include "ThreeDDCResistivityModel.h"
+#include "../Global/VectorTransform.h"
+#include <boost/shared_ptr.hpp>
 #include "DCResForwardBase.h"
 
 namespace jif3D
@@ -26,6 +29,8 @@ namespace jif3D
     public:
       //! This type definition is necessary so that ThreeDModelObjective can correctly deduce the native type for a model object for this class
       typedef ThreeDDCResistivityModel ModelType;
+      typedef DCResistivityData DataType;
+
     private:
       //! Information about the source receiver geometry in the format of Bjoern's code
       jif3D::GEOMETRY_RES geo;
@@ -34,7 +39,7 @@ namespace jif3D
       //! Perform the dynamic allocation for the c-structures above
       void Allocate(const size_t ngrid, const size_t ndata, const size_t nshot, const size_t nmeaspoint);
       //! Translate a 3D model object to structures used for forward calculation
-      void ModelToStruct(const ThreeDDCResistivityModel &Model, jif3D::GEOMETRY_RES &geo,
+      void ModelToStruct(const ThreeDDCResistivityModel &Model, const DCResistivityData &Data, jif3D::GEOMETRY_RES &geo,
                 jif3D::GRID_STRUCT_RES &grid);
       friend class access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
@@ -52,7 +57,7 @@ namespace jif3D
        * @param Model The object containing the resistivity distribution and measurement setup
        * @return The calculated DC Resistivity Forward Response
        */
-      rvec Calculate(const ModelType &Model);
+      rvec Calculate(const ModelType &Model, const DataType &Data);
       //! Calculate the least-square derivative for the given model and data difference
       /*! For inversion we need the derivative of a least-squares objective function
        * with respect to the model parameters.
@@ -60,7 +65,7 @@ namespace jif3D
        * @param Misfit The difference between observed and calculated data
        * @return The partial derivatives with respect to each model parameter
        */
-      rvec LQDerivative(const ModelType &Model, const rvec &Misfit);
+      rvec LQDerivative(const ModelType &Model, const DataType &Data, const rvec &Misfit);
       };
   /* @} */
   }
