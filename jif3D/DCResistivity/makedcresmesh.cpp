@@ -13,6 +13,7 @@
 #include <string>
 #include "../Global/FileUtil.h"
 #include "ThreeDDCResistivityModel.h"
+#include "../DCResistivity/DCResistivityData.h"
 
 using namespace std;
 
