@@ -1,20 +1,20 @@
 import testing ; 
 
-alias core :  ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ..//boost_core ;
+alias core :  ../DataBase//database ../ModelBase//modelbase ..//netcdf_c++ ..//netcdf ..//boost_core ;
 
-lib dcresistivity :   ThreeDDCResistivityModel.cpp DCResistivityCalculator.cpp  DCResForwardBase.cpp ReadWriteDCResistivityData.cpp core  ;             
+lib dcresistivity :   ThreeDDCResistivityModel.cpp DCResistivityData.cpp DCResistivityCalculator.cpp DCResForwardBase.cpp core  ;             
 
 
-unit-test readwrite_test :  test_ReadWriteDCResistivity.cpp dcresistivity  core ;
-unit-test objective_test :  test_dc_objective.cpp dcresistivity  core ../Inversion//inversion  ;
+unit-test readwrite_test :  test_DCResistivityData.cpp dcresistivity  core ;
+# unit-test objective_test :  test_dc_objective.cpp dcresistivity  core ../Inversion//inversion  ;
 
 exe makedcresmesh : makedcresmesh.cpp dcresistivity  core   ;
 exe calculateresponseandgradient : calculateresponseandgradient.cpp dcresistivity  core  ;
 exe DCResForward : DCResForward.cpp dcresistivity  core   ;
 exe dcjoint : dcjoint.cpp dcresistivity  ../Joint//setup ../Inversion//inversion ../Regularization//regularization ../Tomo//tomo core 
        ..//boost_program_options  ;
-exe TomoDcMagJoint : TomoDcMagJoint.cpp dcresistivity  ../Joint//setup ../Inversion//inversion ../Regularization//regularization ../Tomo//tomo ../Magnetics//magnetics core 
-       ..//boost_program_options  ;
+# exe TomoDcMagJoint : TomoDcMagJoint.cpp dcresistivity  ../Joint//setup ../Inversion//inversion ../Regularization//regularization ../Tomo//tomo ../Magnetics//magnetics core 
+#       ..//boost_program_options  ;
 
 
 
