@@ -5,17 +5,20 @@
 // Copyright   : 2014, Zhanjie Shi and Richard.W Hobbs
 //============================================================================
 
-#include "DCResistivityCalculator.h"
+#include "../DCResistivity/DCResistivityCalculator.h"
+
+#include <boost/numeric/conversion/cast.hpp>
+#include <algorithm>
 
 namespace jif3D
   {
 
     void DCResistivityCalculator::ModelToStruct(const ThreeDDCResistivityModel &Model,
-        jif3D::GEOMETRY_RES &geo, jif3D::GRID_STRUCT_RES &grid)
+    		const DCResistivityData &Data, jif3D::GEOMETRY_RES &geo, jif3D::GRID_STRUCT_RES &grid)
       {
-        const size_t ndata = Model.GetSourceIndices().size();
-        const size_t nmeaspoint = Model.GetMeasPosX().size();
-        const size_t nshot = Model.GetSourcePosPosX().size();
+        const size_t ndata = Data.GetSourceIndices().size();
+        const size_t nmeaspoint = Data.GetMeasPosX().size();
+        const size_t nshot = Data.GetSourcePosPosX().size();
 
         grid.nx = Model.GetModelShape()[0];
         grid.ny = Model.GetModelShape()[1];
@@ -45,26 +48,26 @@ namespace jif3D
                 const size_t layerindex = i * grid.nx * grid.ny + j * grid.nx + k;
                 grid.rho[layerindex] = Model.GetResistivities()[k][j][i];
               }
-        //grid.avg_cond = 1/grid.rho[0];
+        grid.avg_cond = 1/grid.rho[0];
         //fill the geometry
         //In DCResForwardBase code, the coordinate system is base on zero-centred in x and y direction, but actual data's coordinate is not so,
         //we have to adjust source and receiver's coordinate to accord with coordinate system in DCResForwardBase.
-        auto xmeasrange1 = std::minmax_element(Model.GetMeasPosX().begin(),
-            Model.GetMeasPosX().end());
-        auto xmeasrange2 = std::minmax_element(Model.GetMeasSecPosX().begin(),
-            Model.GetMeasSecPosX().end());
-        auto xpossourcerange = std::minmax_element(Model.GetSourcePosPosX().begin(),
-            Model.GetSourcePosPosX().end());
-        auto xnegsourcerange = std::minmax_element(Model.GetSourceNegPosX().begin(),
-            Model.GetSourceNegPosX().end());
-        auto ymeasrange1 = std::minmax_element(Model.GetMeasPosY().begin(),
-            Model.GetMeasPosY().end());
-        auto ymeasrange2 = std::minmax_element(Model.GetMeasSecPosY().begin(),
-            Model.GetMeasSecPosY().end());
-        auto ypossourcerange = std::minmax_element(Model.GetSourcePosPosY().begin(),
-            Model.GetSourcePosPosY().end());
-        auto ynegsourcerange = std::minmax_element(Model.GetSourceNegPosY().begin(),
-            Model.GetSourceNegPosY().end());
+        auto xmeasrange1 = std::minmax_element(Data.GetMeasPosX().begin(),
+        		Data.GetMeasPosX().end());
+        auto xmeasrange2 = std::minmax_element(Data.GetMeasSecPosX().begin(),
+        		Data.GetMeasSecPosX().end());
+        auto xpossourcerange = std::minmax_element(Data.GetSourcePosPosX().begin(),
+        		Data.GetSourcePosPosX().end());
+        auto xnegsourcerange = std::minmax_element(Data.GetSourceNegPosX().begin(),
+        		Data.GetSourceNegPosX().end());
+        auto ymeasrange1 = std::minmax_element(Data.GetMeasPosY().begin(),
+        		Data.GetMeasPosY().end());
+        auto ymeasrange2 = std::minmax_element(Data.GetMeasSecPosY().begin(),
+        		Data.GetMeasSecPosY().end());
+        auto ypossourcerange = std::minmax_element(Data.GetSourcePosPosY().begin(),
+        		Data.GetSourcePosPosY().end());
+        auto ynegsourcerange = std::minmax_element(Data.GetSourceNegPosY().begin(),
+        		Data.GetSourceNegPosY().end());
 
         double minxmeas = std::min(*xmeasrange1.first, *xmeasrange2.first);
         double minxsource = std::min(*xpossourcerange.first, *xnegsourcerange.first);
@@ -81,57 +84,57 @@ namespace jif3D
 
         const double xshift = -minx - (maxx - minx) / 2.0;
         const double yshift = -miny - (maxy - miny) / 2.0;
-        std::transform(Model.GetSourcePosPosX().begin(), Model.GetSourcePosPosX().end(),
+        std::transform(Data.GetSourcePosPosX().begin(), Data.GetSourcePosPosX().end(),
             geo.PosSx.begin(), [xshift](double pos)
               { return pos+xshift;});
-        std::transform(Model.GetSourcePosPosY().begin(), Model.GetSourcePosPosY().end(),
+        std::transform(Data.GetSourcePosPosY().begin(), Data.GetSourcePosPosY().end(),
             geo.PosSy.begin(), [yshift](double pos)
               { return pos+yshift;});
-        std::transform(Model.GetSourceNegPosX().begin(), Model.GetSourceNegPosX().end(),
+        std::transform(Data.GetSourceNegPosX().begin(), Data.GetSourceNegPosX().end(),
             geo.NegSx.begin(), [xshift](double pos)
               { return pos+xshift;});
-        std::transform(Model.GetSourceNegPosY().begin(), Model.GetSourceNegPosY().end(),
+        std::transform(Data.GetSourceNegPosY().begin(), Data.GetSourceNegPosY().end(),
             geo.NegSy.begin(), [yshift](double pos)
               { return pos+yshift;});
-        std::transform(Model.GetMeasPosX().begin(), Model.GetMeasPosX().end(),
+        std::transform(Data.GetMeasPosX().begin(), Data.GetMeasPosX().end(),
             geo.rx1.begin(), [xshift](double pos)
               { return pos+xshift;});
-        std::transform(Model.GetMeasPosY().begin(), Model.GetMeasPosY().end(),
+        std::transform(Data.GetMeasPosY().begin(), Data.GetMeasPosY().end(),
             geo.ry1.begin(), [yshift](double pos)
               { return pos+yshift;});
-        std::transform(Model.GetMeasSecPosX().begin(), Model.GetMeasSecPosX().end(),
+        std::transform(Data.GetMeasSecPosX().begin(), Data.GetMeasSecPosX().end(),
             geo.rx2.begin(), [xshift](double pos)
               { return pos+xshift;});
-        std::transform(Model.GetMeasSecPosY().begin(), Model.GetMeasSecPosY().end(),
+        std::transform(Data.GetMeasSecPosY().begin(), Data.GetMeasSecPosY().end(),
             geo.ry2.begin(), [yshift](double pos)
               { return pos+yshift;});
         //we also need to change Z coordinate to the cell centre of the first layer
         const double zshift = grid.dz[0] / 2.0;
-        if (Model.GetSourcePosPosZ()[0] == 0.0)
+        if (Data.GetSourcePosPosZ()[0] == 0.0)
           {
-            std::transform(Model.GetSourcePosPosZ().begin(),
-                Model.GetSourcePosPosZ().end(), geo.PosSz.begin(), [zshift](double pos)
+            std::transform(Data.GetSourcePosPosZ().begin(),
+            		Data.GetSourcePosPosZ().end(), geo.PosSz.begin(), [zshift](double pos)
                   { return pos+zshift;});
-            std::transform(Model.GetSourceNegPosZ().begin(),
-                Model.GetSourceNegPosZ().end(), geo.NegSz.begin(), [zshift](double pos)
+            std::transform(Data.GetSourceNegPosZ().begin(),
+            		Data.GetSourceNegPosZ().end(), geo.NegSz.begin(), [zshift](double pos)
                   { return pos+zshift;});
-            std::transform(Model.GetMeasPosZ().begin(), Model.GetMeasPosZ().end(),
+            std::transform(Data.GetMeasPosZ().begin(), Data.GetMeasPosZ().end(),
                 geo.rz1.begin(), [zshift](double pos)
                   { return pos+zshift;});
-            std::transform(Model.GetMeasSecPosZ().begin(), Model.GetMeasSecPosZ().end(),
+            std::transform(Data.GetMeasSecPosZ().begin(), Data.GetMeasSecPosZ().end(),
                 geo.rz2.begin(), [zshift](double pos)
                   { return pos+zshift;});
           }
         else
           {
-            geo.PosSz = Model.GetSourcePosPosZ();
-            geo.NegSz = Model.GetSourceNegPosZ();
-            geo.rz1 = Model.GetMeasPosZ();
-            geo.rz2 = Model.GetMeasPosZ();
+            geo.PosSz = Data.GetSourcePosPosZ();
+            geo.NegSz = Data.GetSourceNegPosZ();
+            geo.rz1 = Data.GetMeasPosZ();
+            geo.rz2 = Data.GetMeasPosZ();
 
           }
         geo.nsource = nshot;
-        std::copy(Model.GetSourceIndices().begin(), Model.GetSourceIndices().end(),
+        std::copy(Data.GetSourceIndices().begin(), Data.GetSourceIndices().end(),
             geo.sno.begin());
 
       }
@@ -179,10 +182,11 @@ namespace jif3D
 
       }
 
-    rvec DCResistivityCalculator::Calculate(const ModelType &Model)
+    rvec DCResistivityCalculator::Calculate(const ThreeDDCResistivityModel &Model,
+            const jif3D::DCResistivityData &Data)
       {
-        const size_t ndata = Model.GetSourceIndices().size();
-        ModelToStruct(Model, geo, grid);
+        const size_t ndata = Data.GetSourceIndices().size();
+        ModelToStruct(Model, Data, geo, grid);
         //now we can do the forward modeling
         jif3D::rvec result = ResForward(geo, grid, ndata);
         //return the result as a vector
@@ -191,10 +195,11 @@ namespace jif3D
 
       }
 
-    rvec DCResistivityCalculator::LQDerivative(const ModelType &Model, const rvec &Misfit)
+    rvec DCResistivityCalculator::LQDerivative(const ThreeDDCResistivityModel &Model,
+    		const jif3D::DCResistivityData &Data, const rvec &Misfit)
       {
 
-        ModelToStruct(Model, geo, grid);
+        ModelToStruct(Model, Data, geo, grid);
         jif3D::rvec result = ResGradient(geo, grid, Misfit);
 
         return result;
