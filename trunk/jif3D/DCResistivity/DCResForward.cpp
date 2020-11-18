@@ -4,14 +4,15 @@
 #include "../Global/Noise.h"
 #include "ThreeDDCResistivityModel.h"
 #include "DCResistivityCalculator.h"
-#include "ReadWriteDCResistivityData.h"
+#include "../DCResistivity/DCResistivityData.h"
 
 int main()
   {
     std::string ModelFilename = jif3D::AskFilename("DCResistivity Model File: ", true);
 
-    jif3D::ThreeDDCResistivityModel Model;
-    Model.ReadNetCDF(ModelFilename);
+    jif3D::ThreeDDCResistivityModel DCModel;
+    jif3D::DCResistivityData DCData;
+    DCModel.ReadNetCDF(ModelFilename);
 
     std::string insourcefilename = jif3D::AskFilename("Source ASCII file: ", false);
     std::ifstream insourcefile(insourcefilename.c_str());
@@ -27,33 +28,33 @@ int main()
             >> snegposz;
         if (insourcefile.good())
           {
-            Model.AddSource(sposposx, sposposy, sposposz, snegposx, snegposy, snegposz);
+        	DCData.AddSource(sposposx, sposposy, sposposz, snegposx, snegposy, snegposz);
           }
       }
-    assert(Model.GetSourcePosPosX().size() == Model.GetSourcePosPosY().size());
-    assert(Model.GetSourcePosPosX().size() == Model.GetSourcePosPosZ().size());
-    assert(Model.GetSourceNegPosX().size() == Model.GetSourceNegPosY().size());
-    assert(Model.GetSourceNegPosX().size() == Model.GetSourceNegPosZ().size());
-    assert(Model.GetSourcePosPosX().size() == Model.GetSourceNegPosX().size());
+    assert(DCData.GetSourcePosPosX().size() == DCData.GetSourcePosPosY().size());
+    assert(DCData.GetSourcePosPosX().size() == DCData.GetSourcePosPosZ().size());
+    assert(DCData.GetSourceNegPosX().size() == DCData.GetSourceNegPosY().size());
+    assert(DCData.GetSourceNegPosX().size() == DCData.GetSourceNegPosZ().size());
+    assert(DCData.GetSourcePosPosX().size() == DCData.GetSourceNegPosX().size());
     while (inreceiverfile.good())
       {
         inreceiverfile >> receiverposx1 >> receiverposy1 >> receiverposz1 >> receiverposx2
             >> receiverposy2 >> receiverposz2 >> sourceindics;
         if (inreceiverfile.good())
           {
-            Model.AddMeasurementPoint(receiverposx1, receiverposy1, receiverposz1,
+        	DCData.AddMeasurementPoint(receiverposx1, receiverposy1, receiverposz1,
                 receiverposx2, receiverposy2, receiverposz2, sourceindics);
           }
       }
-    assert(Model.GetMeasPosX().size() == Model.GetMeasPosY().size());
-    assert(Model.GetMeasPosX().size() == Model.GetMeasPosZ().size());
-    assert(Model.GetMeasSecPosX().size() == Model.GetMeasSecPosY().size());
-    assert(Model.GetMeasSecPosX().size() == Model.GetMeasSecPosZ().size());
-    assert(Model.GetMeasPosX().size() == Model.GetMeasSecPosX().size());
-    assert(Model.GetMeasPosX().size() == Model.GetSourceIndices().size());
+    assert(DCData.GetMeasPosX().size() == DCData.GetMeasPosY().size());
+    assert(DCData.GetMeasPosX().size() == DCData.GetMeasPosZ().size());
+    assert(DCData.GetMeasSecPosX().size() == DCData.GetMeasSecPosY().size());
+    assert(DCData.GetMeasSecPosX().size() == DCData.GetMeasSecPosZ().size());
+    assert(DCData.GetMeasPosX().size() == DCData.GetMeasSecPosX().size());
+    assert(DCData.GetMeasPosX().size() == DCData.GetSourceIndices().size());
 
     jif3D::DCResistivityCalculator Calculator;
-    jif3D::rvec SynthData = Calculator.Calculate(Model);
+    jif3D::rvec SynthData = Calculator.Calculate(DCModel, DCData);
     double error = 0.0;
     std::cout << "DC Apparent Resistivity error (s): ";
     std::cin >> error;
@@ -65,8 +66,11 @@ int main()
         std::fill(Errors.begin(), Errors.end(), error);
       }
     //std::string DataFilename = jif3D::AskFilename("Output file: ", false);
-    jif3D::SaveApparentResistivity(ModelFilename + ".dcdata.nc", SynthData, Errors,
-        Model);
-    Model.WriteVTK(ModelFilename + ".vtk");
+    DCData.SetDataAndErrors(std::vector<double>(SynthData.begin(), SynthData.end()),
+        std::vector<double>(Errors.begin(), Errors.end()));
+    DCData.WriteNetCDF(ModelFilename + ".dcdata.nc");
+
+
+    DCModel.WriteVTK(ModelFilename + ".vtk");
 
   }
