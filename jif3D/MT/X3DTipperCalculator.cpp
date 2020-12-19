@@ -113,6 +113,9 @@ namespace jif3D
         std::vector<double> BGDepths(Model.GetBackgroundThicknesses().size(), 0.0);
         std::partial_sum(Model.GetBackgroundThicknesses().begin(),
             Model.GetBackgroundThicknesses().end(), BGDepths.begin());
+        double ZOrigin = Model.GetZCoordinates()[0];
+        std::for_each(BGDepths.begin(), BGDepths.end(), [ZOrigin](double& d)
+          { d+=ZOrigin;});
         CompareDepths(BGDepths, Model.GetZCoordinates());
         std::vector<std::pair<size_t, size_t>> NewExecTime;
 #ifdef HAVEOPENMP

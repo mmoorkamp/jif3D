@@ -197,16 +197,16 @@ BOOST_AUTO_TEST_SUITE (ReadWriteImpedances_Suite)
         const std::string filename("imp.modem");
         std::vector<std::string> Names(nstat);
         std::generate(Names.begin(), Names.end(), []()
-          { return random_string(8)});
+          { return random_string(8);});
         jif3D::WriteImpedancesToModEM(filename, Frequencies, XCoord, YCoord, ZCoord,
             Impedances, Error, Names);
 
         std::vector<double> ReadFrequencies;
         std::vector<double> ReadXCoord, ReadYCoord, ReadZCoord;
         std::vector<double> ReadImpedances, ReadError;
-        std::vector < string > Names;
+        std::vector < std::string > ReadNames;
         jif3D::ReadImpedancesFromModEM(filename, ReadFrequencies, ReadXCoord, ReadYCoord,
-            ReadZCoord, ReadImpedances, ReadError, Names);
+            ReadZCoord, ReadImpedances, ReadError, ReadNames);
         for (size_t i = 0; i < nfreq; ++i)
           {
             BOOST_CHECK_CLOSE(Frequencies[i], ReadFrequencies[i], 0.001);
