@@ -69,22 +69,29 @@ int main()
         std::vector<double> CurrFrequencies;
         std::vector<double> CurrImpedances, CurrErrors, CurrTip, CurrTipErr;
         std::string StationName;
-        StationFile >> StatXCoord.front() >> StatYCoord.front() >> StatZCoord.front()
-            >> StationName;
+        double XC, YC, ZC;
+        StationFile >> XC >> YC >> ZC >> StationName;
         if (StationFile.good())
           {
+            std::cout << "Station:  " << StationName << std::endl;
             std::string extension = jif3D::GetFileExtension(StationName);
+
             if (extension == ".mtt")
               {
+
                 jif3D::ReadImpedancesFromMTT(StationName, Frequencies, CurrImpedances,
                     CurrErrors, CurrTip, CurrTipErr);
               }
             else
               {
-                double XC, YC, ZC;
+
                 jif3D::ReadImpedancesFromJ(StationName, Frequencies, XC, YC, ZC,
                     CurrImpedances, CurrErrors, CurrTip, CurrTipErr);
+
               }
+            StatXCoord.front() = XC;
+            StatYCoord.front() = YC;
+            StatZCoord.front() = ZC;
           }
         Names.push_back(StationName);
         const size_t nfreq = Frequencies.size();
@@ -115,14 +122,11 @@ int main()
                         TipErr.begin() + i * nstats * 4 + stationindex * 4);
                   }
               }
-            double xcoord, ycoord, zcoord;
-            StationFile >> xcoord >> ycoord >> zcoord >> StationName;
+            StationFile >> XC >> YC >> ZC >> StationName;
 
             if (StationFile.good())
               {
-                StatXCoord.at(stationindex + 1) = xcoord;
-                StatYCoord.at(stationindex + 1) = ycoord;
-                StatZCoord.at(stationindex + 1) = zcoord;
+
                 Names.push_back(StationName);
                 std::string extension = jif3D::GetFileExtension(StationName);
                 if (extension == ".mtt")
@@ -132,10 +136,12 @@ int main()
                   }
                 else
                   {
-                    double XC, YC, ZC;
                     jif3D::ReadImpedancesFromJ(StationName, CurrFrequencies, XC, YC, ZC,
                         CurrImpedances, CurrErrors, CurrTip, CurrTipErr);
                   }
+                StatXCoord.at(stationindex + 1) = XC;
+                StatYCoord.at(stationindex + 1) = YC;
+                StatZCoord.at(stationindex + 1) = ZC;
                 std::cout << stationindex + 1 << " " << StationName << " "
                     << CurrFrequencies.size() << " " << nfreq << std::endl;
                 if (CurrFrequencies.size() != nfreq)
@@ -153,7 +159,7 @@ int main()
         MTData.SetNames(Names);
         MTData.CompleteObject();
         MTData.WriteNetCDF(outfilename);
-        MTData.WriteMeasurementPoints(outfilename+".vtk");
+        MTData.WriteMeasurementPoints(outfilename + ".vtk");
 
         jif3D::TipperData TipperData;
         TipperData.SetMeasurementPoints(StatXCoord, StatYCoord, StatZCoord);
