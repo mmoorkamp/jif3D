@@ -234,7 +234,7 @@ int main(int argc, char *argv[])
     jif3D::WriteImpedancesToModEM(outfilename + ".dat", DataMT.GetFrequencies(),
         DataMT.GetMeasPosX(), DataMT.GetMeasPosY(), DataMT.GetMeasPosZ(),
         std::vector<double>(Impedances.begin(), Impedances.end()),
-        std::vector<double>(Errors.begin(), Errors.end()));
+        std::vector<double>(Errors.begin(), Errors.end()),Names);
 
     jif3D::X3DTipperCalculator TipCalc(TempDir, X3DName);
     jif3D::rvec Tipper = TipCalc.Calculate(MTModel, DataTipper);

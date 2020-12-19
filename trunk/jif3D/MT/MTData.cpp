@@ -98,7 +98,9 @@ namespace jif3D
     void MTData::ReadModEM(const std::string &filename)
       {
         std::vector<double> PosX, PosY, PosZ, Freqs, Imp, Err;
-        ReadImpedancesFromModEM(filename, Freqs, PosX, PosY, PosZ,  Imp, Err);
+        std::vector<std::string> StatNames;
+        ReadImpedancesFromModEM(filename, Freqs, PosX, PosY, PosZ,  Imp, Err, StatNames);
+        SetNames(StatNames);
         SetFrequencies(Freqs);
         SetMeasurementPoints(PosX, PosY, PosZ);
         SetDataAndErrors(Imp, Err);
