@@ -213,11 +213,13 @@ namespace jif3D
      *        all impedances for one frequency and all stations form a contiguous block, the frequencies vary slowest.
      * @param Err Impedance errors with the same number of Elements with Impedances.
      *        As we only have one error estimate per element we write only the components corresponding to the real parts.
+     * @param StatNames The name of each station
      */
     J3DEXPORT void ReadImpedancesFromModEM(const std::string &filename,
         std::vector<double> &Frequencies, std::vector<double> &StatXCoord,
         std::vector<double> &StatYCoord, std::vector<double> &StatZCoord,
-        std::vector<double> &Imp, std::vector<double> &Err);
+        std::vector<double> &Imp, std::vector<double> &Err,
+        std::vector<std::string> &StatNames);
 
     //! Write impedances to an ascii file as written by ModEM
     /*!
@@ -235,7 +237,7 @@ namespace jif3D
     J3DEXPORT void WriteImpedancesToModEM(const std::string &filename,
         const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
-        const std::vector<double> &Imp, const std::vector<double> &Err);
+        const std::vector<double> &Imp, const std::vector<double> &Err, const std::vector<std::string> &Names);
 
     J3DEXPORT void ReadTipperFromModEM(const std::string &filename,
         std::vector<double> &Frequencies, std::vector<double> &StatXCoord,

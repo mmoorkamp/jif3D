@@ -955,7 +955,8 @@ namespace jif3D
     void ReadImpedancesFromModEM(const std::string &filename,
         std::vector<double> &Frequencies, std::vector<double> &StatXCoord,
         std::vector<double> &StatYCoord, std::vector<double> &StatZCoord,
-        std::vector<double> &Imp, std::vector<double> &Err)
+        std::vector<double> &Imp, std::vector<double> &Err,
+        std::vector<std::string> &StatNames)
       {
         const double convfactor = 4.0 * 1e-4 * acos(-1.0);
         std::ifstream infile(filename.c_str());
@@ -1028,6 +1029,7 @@ namespace jif3D
         std::vector<std::string> Comps =
           { "ZXX", "ZXY", "ZYX", "ZYY" };
         size_t ndata = AllFreq.size();
+        StatNames.resize(nsites);
         for (size_t i = 0; i < ndata; ++i)
           {
             auto FreqIter = std::find(Frequencies.begin(), Frequencies.end(), AllFreq[i]);
@@ -1039,6 +1041,7 @@ namespace jif3D
             StatXCoord[StatIndex] = AllX[i];
             StatYCoord[StatIndex] = AllY[i];
             StatZCoord[StatIndex] = AllZ[i];
+            StatNames[StatIndex] = *StatIter;
             size_t ImpIndex = 2 * CompIndex + 8 * StatIndex + 8 * nsites * FreqIndex;
             Imp[ImpIndex] = convfactor * AllImpReal[i];
             Imp[ImpIndex + 1] = convfactor * AllImpImag[i];
@@ -1152,7 +1155,7 @@ namespace jif3D
     void WriteImpedancesToModEM(const std::string &filename,
         const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
-        const std::vector<double> &Imp, const std::vector<double> &Err)
+        const std::vector<double> &Imp, const std::vector<double> &Err, const std::vector<std::string> &Names)
       {
         std::ofstream outfile(filename.c_str());
         outfile.precision(6);
@@ -1172,9 +1175,8 @@ namespace jif3D
         const double convfactor = 4.0 * 1e-4 * acos(-1.0);
         for (size_t i = 0; i < nsites; ++i)
           {
-            std::string SiteName = "Site" + std::to_string(i);
             std::ostringstream SiteLine;
-            SiteLine << " " << SiteName << "  0.0  0.0 " << StatXCoord.at(i) << " "
+            SiteLine << " " << Names.at(i) << "  0.0  0.0 " << StatXCoord.at(i) << " "
                 << StatYCoord.at(i) << " " << StatZCoord.at(i) << " ";
             for (size_t j = 0; j < nfreqs; ++j)
               {
@@ -1268,7 +1270,6 @@ namespace jif3D
         line = jif3D::FindToken(infile, ">LATITUDE");
         split(SplitVec, line, boost::is_any_of("="), boost::token_compress_on);
         StatZCoord = std::stod(SplitVec.at(1));
-        infile.seekg(0);
         bool HasZ = false;
         bool HasRhoPhi = false;
         bool HasT = false;
@@ -1280,8 +1281,7 @@ namespace jif3D
           {
 
           }
-        infile.clear();
-        infile.seekg(0);
+
         try
           {
             jif3D::FindToken(infile, "ZXX");
@@ -1290,8 +1290,7 @@ namespace jif3D
           {
 
           }
-        infile.clear();
-        infile.seekg(0);
+
         try
           {
             jif3D::FindToken(infile, "TZX");
@@ -1300,8 +1299,7 @@ namespace jif3D
           {
 
           }
-        infile.clear();
-        infile.seekg(0);
+
         size_t nfreq = 0;
         if (HasZ)
           {
