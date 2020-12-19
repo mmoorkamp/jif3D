@@ -99,7 +99,7 @@ namespace jif3D
               {
                 ++mindex;
               }
-            if (mindex < ModelDepths.size() && !jif3D::roughlyEqual<float,float>()(round(ModelDepths[mindex]) * rounding,rd))
+            if (mindex < ModelDepths.size() && !jif3D::roughlyEqual<float,float>()(round(ModelDepths[mindex]),rd))
               {
                 throw jif3D::FatalException(
                     "Depth to background layer: " + jif3D::stringify(BGDepths[i])

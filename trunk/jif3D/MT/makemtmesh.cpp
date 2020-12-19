@@ -204,7 +204,7 @@ int main(int argc, char *argv[])
 
         mba::index<2> grid =
           { 32, 32 };
-        double minz = *mmz.first;
+        double minz = floor(*mmz.first / rounding) * rounding;
         Model.SetOrigin(originx, originy, minz);
         mba::MBA<2> interp(lo, hi, grid, points, topoz);
         jif3D::X3DModel Cov(Model);
