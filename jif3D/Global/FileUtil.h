@@ -55,7 +55,8 @@ namespace jif3D
         bool critical = true)
       {
         bool found = false;
-
+        filestream.clear();
+        filestream.seekg(0);
         std::string line;
         while (!found && std::getline(filestream, line))
           {
