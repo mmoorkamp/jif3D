@@ -11,8 +11,11 @@
 #include <string>
 #include <fstream>
 #include <iostream>
-
+#include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/trim.hpp>
+
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/convenience.hpp>
 
@@ -75,6 +78,28 @@ namespace jif3D
               }
           }
         return std::string();
+      }
+
+    //! Robustly extract numbers from a file stream without choking on NaN, Inf, etc.
+    /*! The standard procedure of reading numbers from a file chokes when NaN or Inf
+     * values are encountered. This is an attempt to make reading lines of just numbers more
+     * robust at least when these are present
+     * @param An opened filestream on a current line with only numbers
+     * @return A vector with the numerical values in this line including nan or inf
+     */
+    inline std::vector<double> ExtractNumbers(std::ifstream &infile)
+      {
+        std::string line;
+        std::vector<std::string> SplitVec; // #2: Search for tokens
+        std::getline(infile, line);
+        boost::algorithm::trim(line);
+        boost::algorithm::split(SplitVec, line, boost::is_any_of(" "),
+            boost::token_compress_on);
+        std::vector<double> NumVec(SplitVec.size());
+        std::transform(SplitVec.begin(), SplitVec.end(), NumVec.begin(),
+            [](std::string &s)
+                { return std::stod(s);});
+        return NumVec;
       }
 
     //! Instead of always writing the same things in the main program, we can use this function to ask the use for a filename
