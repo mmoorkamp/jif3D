@@ -1155,7 +1155,8 @@ namespace jif3D
     void WriteImpedancesToModEM(const std::string &filename,
         const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
-        const std::vector<double> &Imp, const std::vector<double> &Err, const std::vector<std::string> &Names)
+        const std::vector<double> &Imp, const std::vector<double> &Err,
+        const std::vector<std::string> &Names)
       {
         std::ofstream outfile(filename.c_str());
         outfile.precision(6);
@@ -1267,7 +1268,7 @@ namespace jif3D
         split(SplitVec, line, boost::is_any_of("="), boost::token_compress_on);
         StatYCoord = std::stod(SplitVec.at(1));
         infile.seekg(0);
-        line = jif3D::FindToken(infile, ">LATITUDE");
+        line = jif3D::FindToken(infile, ">ELEVATION");
         split(SplitVec, line, boost::is_any_of("="), boost::token_compress_on);
         StatZCoord = std::stod(SplitVec.at(1));
         bool HasZ = false;
@@ -1301,58 +1302,67 @@ namespace jif3D
           }
 
         size_t nfreq = 0;
+        std::vector<double> NumVec; // #2: Search for tokens
+
         if (HasZ)
           {
+
             jif3D::FindToken(infile, "ZXX");
             infile >> nfreq;
             Imp.resize(nfreq * 8);
             Err.resize(nfreq * 8);
             double dummy;
             Frequencies.resize(nfreq);
+            std::getline(infile, line);
             for (size_t i = 0; i < nfreq; ++i)
               {
-                infile >> Frequencies.at(i);
+                NumVec = ExtractNumbers(infile);
+
+                Frequencies.at(i) = NumVec.at(0);
                 Frequencies.at(i) =
                     Frequencies.at(i) > 0.0 ?
                         1.0 / Frequencies.at(i) : std::abs(Frequencies.at(i));
-                infile >> Imp.at(i * 8);
-                infile >> Imp.at(i * 8 + 1);
-                infile >> Err.at(i * 8);
+                Imp.at(i * 8) = NumVec.at(1);
+                Imp.at(i * 8 + 1) = NumVec.at(2);
+                Err.at(i * 8) = NumVec.at(3);
                 Err.at(i * 8 + 1) = Err.at(i * 8);
-                infile >> dummy;
               }
             jif3D::FindToken(infile, "ZXY");
             infile >> dummy;
+            std::getline(infile, line);
+
             for (size_t i = 0; i < nfreq; ++i)
               {
-                infile >> dummy;
-                infile >> Imp.at(i * 8 + 2);
-                infile >> Imp.at(i * 8 + 3);
-                infile >> Err.at(i * 8 + 2);
+                NumVec = ExtractNumbers(infile);
+
+                Imp.at(i * 8 + 2) = NumVec.at(1);
+                Imp.at(i * 8 + 3) = NumVec.at(2);
+                Err.at(i * 8 + 2) = NumVec.at(3);
                 Err.at(i * 8 + 3) = Err.at(i * 8 + 2);
-                infile >> dummy;
+
               }
             jif3D::FindToken(infile, "ZYX");
             infile >> dummy;
+            std::getline(infile, line);
+
             for (size_t i = 0; i < nfreq; ++i)
               {
-                infile >> dummy;
-                infile >> Imp.at(i * 8 + 4);
-                infile >> Imp.at(i * 8 + 5);
-                infile >> Err.at(i * 8 + 4);
+                NumVec = ExtractNumbers(infile);
+                Imp.at(i * 8 + 4) = NumVec.at(1);
+                Imp.at(i * 8 + 5) = NumVec.at(2);
+                Err.at(i * 8 + 4) = NumVec.at(3);
                 Err.at(i * 8 + 5) = Err.at(i * 8 + 4);
-                infile >> dummy;
               }
             jif3D::FindToken(infile, "ZYY");
             infile >> dummy;
+            std::getline(infile, line);
             for (size_t i = 0; i < nfreq; ++i)
               {
-                infile >> dummy;
-                infile >> Imp.at(i * 8 + 6);
-                infile >> Imp.at(i * 8 + 7);
-                infile >> Err.at(i * 8 + 6);
+                NumVec = ExtractNumbers(infile);
+                Imp.at(i * 8 + 6) = NumVec.at(1);
+                Imp.at(i * 8 + 7) = NumVec.at(2);
+                Err.at(i * 8 + 6) = NumVec.at(3);
                 Err.at(i * 8 + 7) = Err.at(i * 8 + 6);
-                infile >> dummy;
               }
             //std::transform(Imp.begin(), Imp.end(), Imp.begin(), [convfactor](double val)
             //  { return val/convfactor;});
@@ -1363,6 +1373,9 @@ namespace jif3D
           {
             if (HasRhoPhi)
               {
+                throw jif3D::FatalException(
+                    "Only rho-phi based reading has not been implemented", __FILE__,
+                    __LINE__);
 
               }
             else
@@ -1381,25 +1394,28 @@ namespace jif3D
             TippErr.resize(nfreq * 4);
             jif3D::FindToken(infile, "TZX");
             infile >> dummy;
+            std::string line;
+            std::getline(infile, line);
+
             for (size_t i = 0; i < nfreq; ++i)
               {
-                infile >> dummy;
-                infile >> Tipper.at(i * 4 + 0);
-                infile >> Tipper.at(i * 4 + 1);
-                infile >> TippErr.at(i * 4 + 0);
+                NumVec = ExtractNumbers(infile);
+                Tipper.at(i * 4 + 0) = NumVec.at(1);
+                Tipper.at(i * 4 + 1) = NumVec.at(2);
+                TippErr.at(i * 4 + 0) = std::isnan(NumVec.at(3)) ? 1e2 : NumVec.at(3);
                 TippErr.at(i * 4 + 1) = TippErr.at(i * 4 + 0);
-                infile >> dummy;
               }
             jif3D::FindToken(infile, "TZY");
             infile >> dummy;
+            std::getline(infile, line);
+
             for (size_t i = 0; i < nfreq; ++i)
               {
-                infile >> dummy;
-                infile >> Tipper.at(i * 4 + 2);
-                infile >> Tipper.at(i * 4 + 3);
-                infile >> TippErr.at(i * 4 + 2);
+                NumVec = ExtractNumbers(infile);
+                Tipper.at(i * 4 + 2) = NumVec.at(1);
+                Tipper.at(i * 4 + 3) = NumVec.at(2);
+                TippErr.at(i * 4 + 2) = std::isnan(NumVec.at(3)) ? 1e2 : NumVec.at(3);
                 TippErr.at(i * 4 + 3) = TippErr.at(i * 4 + 2);
-                infile >> dummy;
               }
           }
       }

@@ -40,7 +40,7 @@ namespace jif3D
         const size_t nstats =
             ExIndices.empty() ?
                 GetMeasPosX().size() : ExIndices.size() / GetFrequencies().size();
-        Distortion.resize(nstats *4);
+        Distortion.resize(nstats * 4);
         for (size_t i = 0; i < nstats; ++i)
           {
             Distortion[i * 4] = 1.0;
@@ -60,7 +60,8 @@ namespace jif3D
                 __LINE__);
           }
 
-        const size_t nmeas = ExIndices.empty() ? GetMeasPosX().size() : ExIndices.size() / nfreq;
+        const size_t nmeas =
+            ExIndices.empty() ? GetMeasPosX().size() : ExIndices.size() / nfreq;
         if (nmeas == 0)
           {
             throw jif3D::FatalException(
@@ -99,7 +100,7 @@ namespace jif3D
       {
         std::vector<double> PosX, PosY, PosZ, Freqs, Imp, Err;
         std::vector<std::string> StatNames;
-        ReadImpedancesFromModEM(filename, Freqs, PosX, PosY, PosZ,  Imp, Err, StatNames);
+        ReadImpedancesFromModEM(filename, Freqs, PosX, PosY, PosZ, Imp, Err, StatNames);
         SetNames(StatNames);
         SetFrequencies(Freqs);
         SetMeasurementPoints(PosX, PosY, PosZ);
@@ -109,7 +110,8 @@ namespace jif3D
 
     void MTData::WriteModEM(const std::string &filename)
       {
-
+        WriteImpedancesToModEM(filename, GetFrequencies(), GetMeasPosX(), GetMeasPosY(),
+            GetMeasPosZ(), GetData(), GetErrors(), GetNames());
       }
 
     void MTData::PlotMeasurementConfiguration(const std::string &filename)
