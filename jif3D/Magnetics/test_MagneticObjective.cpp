@@ -75,9 +75,8 @@ BOOST_AUTO_TEST_SUITE( MagneticObjective_Test_Suite )
 
         Observed *= 1.1;
         std::vector<double> d(Observed.size()), e(Observed.size(), 1.0);
-        std::copy(Observed.begin(),Observed.end(),d.begin());
-        Data.SetDataAndErrors(d,e);
-
+        std::copy(Observed.begin(), Observed.end(), d.begin());
+        Data.SetDataAndErrors(d, e);
 
         jif3D::ThreeDModelObjective<CalculatorType> Objective(*Calculator.get());
         Objective.SetObservedData(Data);
@@ -107,13 +106,13 @@ BOOST_AUTO_TEST_SUITE( MagneticObjective_Test_Suite )
             new jif3D::OMPMagneticImp(inclination, declination, fieldstrength));
 
         boost::shared_ptr<CalculatorType> Calculator(new CalculatorType(Implementation));
+        Calculator->SetDataTransform(boost::make_shared<jif3D::TotalField>());
         jif3D::rvec Observed(Calculator->Calculate(MagTest, Data));
-
 
         Observed *= 1.1;
         std::vector<double> d(Observed.size()), e(Observed.size(), 1.0);
-        std::copy(Observed.begin(),Observed.end(),d.begin());
-        Data.SetDataAndErrors(d,e);
+        std::copy(Observed.begin(), Observed.end(), d.begin());
+        Data.SetDataAndErrors(d, e);
 
         jif3D::ThreeDModelObjective<CalculatorType> Objective(*Calculator.get());
         Objective.SetDataTransform(boost::make_shared<jif3D::TotalField>());
@@ -144,13 +143,16 @@ BOOST_AUTO_TEST_SUITE( MagneticObjective_Test_Suite )
             new jif3D::OMPMagneticImp(inclination, declination, fieldstrength));
 
         boost::shared_ptr<CalculatorType> Calculator(new CalculatorType(Implementation));
+        Calculator->SetDataTransform(
+            boost::make_shared<jif3D::TotalFieldAnomaly>(inclination, declination,
+                fieldstrength));
 
-        jif3D::rvec Observed(Calculator->Calculate(MagTest,Data));
+        jif3D::rvec Observed(Calculator->Calculate(MagTest, Data));
 
         Observed *= 1.1;
         std::vector<double> d(Observed.size()), e(Observed.size(), 1.0);
-        std::copy(Observed.begin(),Observed.end(),d.begin());
-        Data.SetDataAndErrors(d,e);
+        std::copy(Observed.begin(), Observed.end(), d.begin());
+        Data.SetDataAndErrors(d, e);
 
         jif3D::ThreeDModelObjective<CalculatorType> Objective(*Calculator.get());
         Objective.SetDataTransform(
