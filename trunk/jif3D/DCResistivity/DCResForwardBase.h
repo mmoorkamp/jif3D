@@ -61,7 +61,7 @@ namespace jif3D
       std::vector<double> rho; /*!< resistivity model used for the forward model*/
       double avg_cond; /*!< conductivity from reference model for boundary correction*/
       GRID_STRUCT_RES() :
-          dx(0), dy(0), dz(), nx(0), ny(0), nz(0), rho()
+          dx(0), dy(0), dz(), nx(0), ny(0), nz(0), rho(), avg_cond()
         {
         }
       virtual ~GRID_STRUCT_RES()
@@ -88,7 +88,7 @@ namespace jif3D
       std::vector<double> rx2; /*!< x-coordinates of the locations of the second receiver electrode for each data in m*/
       std::vector<double> ry2; /*!< y-coordinates of the locations of the second receiver electrode for each data in m*/
       std::vector<double> rz2; /*!< z-coordinates of the locations of the second receiver electrode for each data in m*/
-      std::vector<size_t> sno; /*!< Source index corresponding to each receiver electrodes*/
+      std::vector<int> sno; /*!< Source index corresponding to each receiver electrodes*/
       friend class boost::serialization::access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>

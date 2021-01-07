@@ -31,9 +31,6 @@ path-constant TOP : . ;
 project 
     : requirements
     	<include>$(TOP)
-        <include>/media/bmw/Grimsel/boost_1_71_0
-		<include>/media/bmw/Grimsel/netcdf/include
-        <include>/media/bmw/Grimsel/eigen-eigen-323c052e1731
         <include>/usr/local/cuda/include
         <threading>multi 
         <define>BIND_FORTRAN_LOWERCASE_UNDERSCORE
@@ -121,7 +118,7 @@ build-project Hacks ;
 build-project Joint ;
 build-project ModelTransforms ;
 build-project MI ;
-#build-project DCResistivity ;
+build-project DCResistivity ;
 build-project SurfaceWaves ;
 #build-project hpx_simer ;
 

@@ -887,8 +887,10 @@ namespace jif3D
 	size_t ndata = 0;
 	std::vector<int> startindices;
 	startindices.push_back(0);
-	for (size_t i = 0; i < geo.nsource; i++) {
-		for (size_t Qi = 0; Qi < ndata_res; Qi++) {
+	for (size_t i = 0; i < geo.nsource; i++)
+	{
+		for (size_t Qi = 0; Qi < ndata_res; Qi++)
+		{
 			if (i == geo.sno[Qi]) {
 				ndata++;
 			}
