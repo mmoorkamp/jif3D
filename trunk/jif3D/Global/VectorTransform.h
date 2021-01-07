@@ -44,7 +44,7 @@ namespace jif3D
     public:
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
-      void serialize(Archive & ar, const unsigned int version)
+      void serialize(Archive &ar, const unsigned int version)
         {
         }
       //! How many consecutive elements in the input vector form a logical block of data that this transform works on
@@ -86,7 +86,7 @@ namespace jif3D
     public:
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
-      void serialize(Archive & ar, const unsigned int version)
+      void serialize(Archive &ar, const unsigned int version)
         {
           ar & ntrans;
         }
@@ -128,7 +128,8 @@ namespace jif3D
      * @return A vector that contains the transformed data
      */
     template<class VectorTransform> J3DEXPORT
-    jif3D::rvec ApplyTransform(const jif3D::rvec &InputVector, VectorTransform &Transform)
+    std::vector<double> ApplyTransform(const std::vector<double> &InputVector,
+        VectorTransform &Transform)
       {
         const size_t insize = InputVector.size();
         const size_t step = Transform.GetInputSize();
@@ -137,13 +138,16 @@ namespace jif3D
           throw jif3D::FatalException(
               "Transformation size needs to be integer multiple of input data size",
               __FILE__, __LINE__);
-        jif3D::rvec Output(insize / step * nout);
+        std::vector<double> Output(insize / step * nout);
+
+        jif3D::rvec curr(nout), in(step);
         for (size_t i = 0; i < insize; i += step)
           {
             const size_t start = i / step * nout;
-            ublas::subrange(Output, start, start + nout) = Transform.Transform(
-                ublas::subrange(InputVector, i, i + step));
-
+            std::copy(InputVector.begin() + i, InputVector.begin() + i + step,
+                in.begin());
+            curr = Transform.Transform(in);
+            std::copy(curr.begin(), curr.end(), Output.begin() + start);
           }
         return Output;
       }

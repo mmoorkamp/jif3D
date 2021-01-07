@@ -80,7 +80,7 @@ namespace jif3D
       friend class access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
-      void serialize(Archive & ar, const unsigned int version)
+      void serialize(Archive &ar, const unsigned int version)
         {
           ar & base_object<ObjectiveFunction>(*this);
           ar & Calculator;
@@ -107,12 +107,12 @@ namespace jif3D
       virtual jif3D::rvec ImplGradient(const jif3D::rvec &Model, const jif3D::rvec &Diff)
           override;
     public:
-      const ThreeDCalculatorType &GetCalculator() const
+      const ThreeDCalculatorType& GetCalculator() const
         {
           return Calculator;
         }
       //! The clone function provides a virtual constructor
-      virtual ThreeDModelObjective<ThreeDCalculatorType> *clone() const override
+      virtual ThreeDModelObjective<ThreeDCalculatorType>* clone() const override
         {
           return new ThreeDModelObjective<ThreeDCalculatorType>(*this);
         }
@@ -140,21 +140,13 @@ namespace jif3D
             throw jif3D::FatalException(
                 "Cannot have empty observations in objective function. ", __FILE__,
                 __LINE__);
-          if (DataTransform)
-            {
-              throw jif3D::FatalException("Implementation currently disabled", __FILE__,
-              __LINE__);
-              //ObservedData = jif3D::ApplyTransform(Data, *DataTransform);
-            }
-          else
-            {
-              ObservedData = Data;
-              SetDataError(Data.GetErrors());
-            }
+
+          ObservedData = Data;
+          SetDataError(Data.GetErrors());
 
         }
       //! Return a read only version of the observed data
-      const DataType &GetObservedData() const
+      const DataType& GetObservedData() const
         {
           return ObservedData;
         }
@@ -164,7 +156,7 @@ namespace jif3D
        * are small enough that this does not pose a serious limitation.
        * @return A real vector containing the synthetic data in the same order as the observed data
        */
-      const jif3D::rvec &GetSyntheticData() const
+      const jif3D::rvec& GetSyntheticData() const
         {
           return SynthData;
         }
@@ -216,7 +208,8 @@ namespace jif3D
        * this class for requirements on the forward calculation object.
        * @param Calc The forward calculation object
        */
-      explicit ThreeDModelObjective(const ThreeDCalculatorType &Calc, double ethresh = 0.0);
+      explicit ThreeDModelObjective(const ThreeDCalculatorType &Calc,
+          double ethresh = 0.0);
       virtual ~ThreeDModelObjective();
       };
 
