@@ -74,11 +74,8 @@ namespace jif3D
 //        SizeVar.get(&CellCoordinates[0], nvalues);
         //check whether the cell coordinates are sorted
         //otherwise we will have a problem
-        ThreeDModelBase::t3DModelDim::iterator pos = std::adjacent_find(CellCoord.begin(),
-            CellCoord.end(), // range
-            std::greater<int>());
-
-        if (pos != CellCoord.end())
+        if (!std::is_sorted(CellCoord.begin(),
+            CellCoord.end()))
           {
             throw jif3D::FatalException(
                 "Cell coordinates in netcdf file are not in increasing order.", __FILE__,

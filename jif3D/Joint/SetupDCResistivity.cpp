@@ -8,20 +8,33 @@
 #include "SetupDCResistivity.h"
 #include "../Global/FileUtil.h"
 #include "../Global/Noise.h"
-#include "../DCResistivity/ReadWriteDCResistivityData.h"
+#include "../DCResistivity/DCResistivityData.h"
+#include <iostream>
+#include <boost/make_shared.hpp>
 
 namespace jif3D
   {
+    SetupDCResistivity::SetupDCResistivity() :
+		relerr(0.02), minerr(1e-3), CellSize(), dclambda(0.0)
+      {
+      }
+
+    SetupDCResistivity::~SetupDCResistivity()
+      {
+      }
 
     po::options_description SetupDCResistivity::SetupOptions()
       {
         po::options_description desc("DC resistivity options");
 
-        desc.add_options()("dcrelerr", po::value(&relerr)->default_value(0.02),
+        desc.add_options()("dcmodel", po::value(&dcmodelfilename),
+                "The name of the starting model for the DCResistivity")("dcdata",
+                po::value(&dcdatafilename), "The name of the data for the DCResistivity")
+				("dcrelerr", po::value(&relerr)->default_value(0.02),
             "The relative error for the DC resistivity data")("dcminerr",
-            po::value(&minerr)->default_value(1e-3))("dcfine",
-            po::value(&DCFineModelName),
-            "The name for the model with the DC forward geometry");
+            po::value(&minerr)->default_value(1e-3))("dclambda", po::value(&dclambda),
+                    "The weight for the DCResistivity data")("dcfine",
+            po::value(&CellSize), "The cell size in m for the refined DC model");
 
         return desc;
       }
@@ -29,69 +42,106 @@ namespace jif3D
     bool SetupDCResistivity::SetupObjective(const po::variables_map &vm,
         jif3D::JointObjective &Objective,
         boost::shared_ptr<jif3D::GeneralModelTransform> &Transform, double xorigin,
-        double yorigin)
+        double yorigin, boost::filesystem::path TempDir)
       {
+    	jif3D::DCResistivityData DCData;
 
-        jif3D::rvec DCData, DCError;
-        double dclambda = 1.0;
-
-        std::cout << "DC Resistivity Lambda: ";
-        std::cin >> dclambda;
-
+        dclambda = 1.0;
+        if (!vm.count("dclambda"))
+          {
+            std::cout << "DCResistivity Lambda: ";
+            std::cin >> dclambda;
+          }
         //if the weight is different from zero
-        //we have to read in scalar Magnetics data
+        //we have to read in DC data
         if (dclambda > 0.0)
           {
-            std::string dcdatafilename = jif3D::AskFilename(
-                "DC Resistivity Data Filename: ");
+            if (!vm.count("dcdata"))
+              {
+                //get the name of the file containing the data and read it in
+            	dcdatafilename = jif3D::AskFilename("DC Resistivity Data Filename: ");
+              }
+            //read in data
+            DCData.ReadNetCDF(dcdatafilename);
 
-            jif3D::ReadApparentResistivity(dcdatafilename, DCData, DCError, Model);
 
-            std::string dcmodelfilename = jif3D::AskFilename(
-                "DC Resistivity Model Filename: ");
-            Model.ReadNetCDF(dcmodelfilename);
+            if (!vm.count("dcmodelfilename"))
+              {
+                //we read in the starting model
+            	dcmodelfilename = jif3D::AskFilename(
+                    "DC Resistivity Model Filename: ");
+              }
+            //we read in the starting modelfile
+            //we can fix this with a grid refinement model
+            DCModel.ReadNetCDF(dcmodelfilename);
+            //write out the starting model as a .vtk file for plotting
+            DCModel.WriteVTK(dcmodelfilename + ".vtk");
+
+
             if (xorigin != 0.0 || yorigin != 0.0)
               {
-                Model.SetOrigin(xorigin, yorigin, 0.0);
+            	DCModel.SetOrigin(xorigin, yorigin, 0.0);
               }
-            Calculator = boost::shared_ptr<DCResistivityCalculator>(
-                new DCResistivityCalculator);
-            DCObjective = boost::shared_ptr<
-                jif3D::ThreeDModelObjective<DCResistivityCalculator> >(
-                new jif3D::ThreeDModelObjective<DCResistivityCalculator>(*Calculator));
-            DCObjective->SetObservedData(DCData);
-            DCObjective->SetCoarseModelGeometry(Model);
-            jif3D::rvec Error(jif3D::ConstructError(DCData, DCError, relerr, minerr));
-            DCObjective->SetDataError(Error);
 
-            if (vm.count("dcfine"))
+
+            jif3D::DCResistivityCalculator DCCalculator;
+            DCObjective = boost::make_shared<
+                jif3D::ThreeDModelObjective<jif3D::DCResistivityCalculator>>(DCCalculator);
+
+            DCObjective->SetObservedData(DCData);
+            DCObjective->SetCoarseModelGeometry(DCModel);
+            //we assume the same error for all measurements
+            //this is either the default value set in the constructor
+            //or set by the user
+            std::vector<double> DCError = ConstructError(DCData.GetData(), DCData.GetErrors(), relerr, minerr);
+            DCObjective->SetDataError(DCError);
+
+            if (vm.count("dcfine") && CellSize > 0.0)
               {
+                const double xmax = DCModel.GetXCoordinates().back();
+                const double ymax = DCModel.GetYCoordinates().back();
+                const double zmax = DCModel.GetZCoordinates().back();
+                const double xextent = xmax - DCModel.GetXCoordinates().front();
+                const double yextent = ymax - DCModel.GetYCoordinates().front();
+                const double zextent = zmax - DCModel.GetZCoordinates().front();
+                const int nx = round(xextent / CellSize);
+                const int ny = round(yextent / CellSize);
+                const int nz = round(zextent / CellSize);
+                //if the finely discretized grid does not fit into the inversion grid
+                //with a tolerance of more than 10cm
+                if (std::abs(nx * CellSize - xmax) > 0.1)
+                  {
+                    throw jif3D::FatalException(
+                        "Refined grid does not fit in x-direction", __FILE__, __LINE__);
+                  }
+                if (std::abs(ny * CellSize - ymax) > 0.1)
+                  {
+                    throw jif3D::FatalException(
+                        "Refined grid does not fit in y-direction", __FILE__, __LINE__);
+                  }
+                if (std::abs(nz * CellSize - zmax) > 0.1)
+                  {
+                    throw jif3D::FatalException(
+                        "Refined grid does not fit in x-direction", __FILE__, __LINE__);
+                  }
+
                 jif3D::ThreeDDCResistivityModel DCFineGeometry;
-                DCFineGeometry.ReadNetCDF(DCFineModelName);
+                DCFineGeometry.SetCellSize(CellSize, nx, ny, nz);
+                std::cout << "Refined Model has " << nx << " * " << ny << " * " << nz
+                    << "cells\n";
                 //copy measurement configuration to refined model
-                DCFineGeometry.CopyMeasurementConfigurations(Model);
                 DCObjective->SetFineModelGeometry(DCFineGeometry);
               }
             Objective.AddObjective(DCObjective, Transform, dclambda, "DC Resistivity",
                 JointObjective::datafit);
-            std::cout << " Resistivity ndata: " << DCData.size() << std::endl;
-            std::cout << " Resistivity lambda: " << dclambda << std::endl;
+            std::cout << "Resistivity ndata: " << DCData.GetData().size() << std::endl;
+            std::cout << "Resistivity lambda: " << dclambda << std::endl;
+
           }
 
         //indicate whether we added a Magnetics objective function
         //this way the caller can do additional consistency checks
         return (dclambda > 0.0);
-      }
-
-    SetupDCResistivity::SetupDCResistivity()
-      {
-        // TODO Auto-generated constructor stub
-
-      }
-
-    SetupDCResistivity::~SetupDCResistivity()
-      {
-        // TODO Auto-generated destructor stub
       }
 
   } /* namespace jif3D */

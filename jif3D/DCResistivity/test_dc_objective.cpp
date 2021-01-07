@@ -43,21 +43,22 @@ BOOST_AUTO_TEST_SUITE( DC_Objective_Test_Suite )
 
     BOOST_AUTO_TEST_CASE (derivative_test)
       {
-        jif3D::ThreeDDCResistivityModel Model;
+        jif3D::ThreeDDCResistivityModel DCModel;
+        jif3D::DCResistivityData DCData;
         const size_t xsize = 7;
         const size_t ysize = 8;
         const size_t zsize = 7;
 
         jif3D::ThreeDModelBase::t3DModelDim ZCS(zsize,1.0);
 
-        Model.SetMeshSize(xsize, ysize, zsize);
-        Model.SetHorizontalCellSize(1, 1, xsize, ysize);
-        Model.SetZCellSizes(ZCS);
+        DCModel.SetMeshSize(xsize, ysize, zsize);
+        DCModel.SetHorizontalCellSize(1, 1, xsize, ysize);
+        DCModel.SetZCellSizes(ZCS);
 
         const size_t ngrid = xsize * ysize * zsize;
         //generate a random mesh resistivity between 1 and 3000 Ohmm
         const double rho = exp((1.0 + drand48()) * 4);
-        std::fill_n(Model.SetResistivities().origin(), ngrid, rho);
+        std::fill_n(DCModel.SetResistivities().origin(), ngrid, rho);
 
         const double minx = 2.5;
         const double miny = 2.5;
@@ -76,25 +77,25 @@ BOOST_AUTO_TEST_SUITE( DC_Objective_Test_Suite )
                 double sourcex = minx + i * deltax;
                 double sourcey = miny + j * deltay;
                 int sourceindex = lrand48() % (nmeasx * nmeasy);
-                Model.AddSource(sourcex, sourcey, sourcez, sourcex + 0.1, sourcey + 0.1,
+                DCData.AddSource(sourcex, sourcey, sourcez, sourcex + 0.1, sourcey + 0.1,
                     sourcez);
-                Model.AddMeasurementPoint(sourcex + 0.2, sourcey, sourcez, sourcex + 0.2,
+                DCData.AddMeasurementPoint(sourcex + 0.2, sourcey, sourcez, sourcex + 0.2,
                     sourcey + 0.2, sourcez, sourceindex);
               }
           }
 
-        jif3D::rvec InvModel(Model.GetResistivities().num_elements());
-        std::copy(Model.GetResistivities().origin(),
-            Model.GetResistivities().origin() + ngrid, InvModel.begin());
+        jif3D::rvec InvModel(DCModel.GetResistivities().num_elements());
+        std::copy(DCModel.GetResistivities().origin(),
+        		DCModel.GetResistivities().origin() + ngrid, InvModel.begin());
 
         jif3D::DCResistivityCalculator Calculator;
-        jif3D::rvec AppRes(Calculator.Calculate(Model));
+        jif3D::rvec AppRes(Calculator.Calculate(DCModel, DCData));
 
         jif3D::ThreeDModelObjective<jif3D::DCResistivityCalculator> DCObjective(
             Calculator);
         DCObjective.SetObservedData(AppRes);
-        DCObjective.SetCoarseModelGeometry(Model);
-        Model.WriteVTK("DCtest.vtk");
+        DCObjective.SetCoarseModelGeometry(DCModel);
+        DCModel.WriteVTK("DCtest.vtk");
         jif3D::rvec DCCovar(AppRes.size());
 
         std::fill(DCCovar.begin(), DCCovar.end(), 0.5);
@@ -115,12 +116,12 @@ BOOST_AUTO_TEST_SUITE( DC_Objective_Test_Suite )
         BOOST_CHECK(Misfit > 0.0);
 
         jif3D::rvec Gradient = DCObjective.CalcGradient(InvModel);
-        std::copy(Gradient.begin(), Gradient.end(), Model.SetResistivities().origin());
-        Model.WriteVTK("dcgrad.vtk");
+        std::copy(Gradient.begin(), Gradient.end(), DCModel.SetResistivities().origin());
+        DCModel.WriteVTK("dcgrad.vtk");
 
         jif3D::rvec FDGrad = CheckGradient(DCObjective, InvModel);
-        std::copy(FDGrad.begin(), FDGrad.end(), Model.SetResistivities().origin());
-        Model.WriteVTK("dcfd.vtk");
+        std::copy(FDGrad.begin(), FDGrad.end(), DCModel.SetResistivities().origin());
+        DCModel.WriteVTK("dcfd.vtk");
 
       }
 

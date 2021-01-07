@@ -17,6 +17,11 @@
 #include <boost/shared_ptr.hpp>
 #include "DCResForwardBase.h"
 
+#include <boost/serialization/export.hpp>
+
+
+
+
 namespace jif3D
   {
     /** \addtogroup DC Resistivity classes and functions */
@@ -37,7 +42,7 @@ namespace jif3D
       //! Information about the model grid in the format of Bjoern's code
       jif3D::GRID_STRUCT_RES grid;
       //! Perform the dynamic allocation for the c-structures above
-      void Allocate(const size_t ngrid, const size_t ndata, const size_t nshot, const size_t nmeaspoint);
+      void Allocate(const size_t ngrid, const size_t nshot, const size_t nmeaspoint, const size_t ndata);
       //! Translate a 3D model object to structures used for forward calculation
       void ModelToStruct(const ThreeDDCResistivityModel &Model, const DCResistivityData &Data, jif3D::GEOMETRY_RES &geo,
                 jif3D::GRID_STRUCT_RES &grid);
@@ -70,5 +75,6 @@ namespace jif3D
   /* @} */
   }
 
+BOOST_CLASS_EXPORT_KEY(jif3D::DCResistivityCalculator)
 
 #endif /* DCRESISTIVITYCALCULATOR_H_ */

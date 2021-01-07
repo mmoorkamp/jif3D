@@ -14,31 +14,44 @@
 #include "../DCResistivity/ThreeDDCResistivityModel.h"
 #include "../DCResistivity/DCResistivityCalculator.h"
 #include <boost/program_options.hpp>
+#include <boost/filesystem.hpp>
 
 namespace jif3D
   {
-
     namespace po = boost::program_options;
 
+    /** \addtogroup joint Joint inversion routines */
+    /* @{ */
+
+    //! Setup the dcresistivity part of the joint inversion
+    /*!This class reads the information about grid sizes, measurement configuration, data etc.
+     * from the command line and through interactive input. It configures the objective
+     * function for dc data and adds it to the joint objective.
+     * Also for the joint inversion the DC model is always considered the starting model in
+     * terms of geometry.
+     */
     class J3DEXPORT SetupDCResistivity
       {
     private:
-      double relerr;
-      double minerr;
-      boost::shared_ptr<DCResistivityCalculator> Calculator;
+      //! A shared pointer to the objective function object for DC data
+      boost::shared_ptr<jif3D::ThreeDModelObjective<jif3D::DCResistivityCalculator> > DCObjective;
+      //! The data error in ohm.m to assume for construction of the data variance
+      double relerr, minerr;
+      //! Cell size in m for  the refinement model, can optionally be set on the command line
+      double CellSize;
+      //! The name of the file with the dc resistivity data
+      std::string dcdatafilename;
+      //! The name of the starting model
+      std::string dcmodelfilename;
+      //! The weight for the DC data in the joint inversion
+      double dclambda;
       //! Stores the grid for the DC resistivity model and the starting model
-      jif3D::ThreeDDCResistivityModel Model;
-      //! Storage for the name of the refinement model, can optionally be set on the command line
-      std::string DCFineModelName;
-      //! Possible pointer to the scalar Magnetics objective function, gets assigned below depending on user input
-      boost::shared_ptr<jif3D::ThreeDModelObjective<DCResistivityCalculator> > DCObjective;
+      jif3D::ThreeDDCResistivityModel DCModel;
+
     public:
-      boost::shared_ptr<DCResistivityCalculator> GetCalculator()
-        {
-          return Calculator;
-        }
+
       //! read-only access to the objective function for DC resistivity
-      const jif3D::ThreeDModelObjective<DCResistivityCalculator> &GetObjective()
+      const jif3D::ThreeDModelObjective<DCResistivityCalculator> &GetDCObjective()
         {
           return *DCObjective;
         }
@@ -49,7 +62,7 @@ namespace jif3D
        */
       const jif3D::ThreeDDCResistivityModel &GetModel() const
         {
-          return Model;
+          return DCModel;
         }
 
       //! Return an options descriptions object for boost::program_options that contains information about Magnetics options
@@ -68,7 +81,8 @@ namespace jif3D
       bool
       SetupObjective(const po::variables_map &vm, jif3D::JointObjective &Objective,
           boost::shared_ptr<jif3D::GeneralModelTransform> &Transform,
-          double xorigin = 0.0, double yorigin = 0.0);
+          double xorigin = 0.0, double yorigin = 0.0, boost::filesystem::path TempDir =
+                  boost::filesystem::current_path());
       SetupDCResistivity();
       virtual ~SetupDCResistivity();
       };

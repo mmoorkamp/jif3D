@@ -19,6 +19,7 @@
 #include "../ModelTransforms/WaveletModelTransform.h"
 #include "../ModelTransforms/LogLimTransform.h"
 #include "../ModelTransforms/DensPVelTransform.h"
+#include "../ModelTransforms/ResistivityTransform.h"
 
 
 #include "ModelDistributor.h"
