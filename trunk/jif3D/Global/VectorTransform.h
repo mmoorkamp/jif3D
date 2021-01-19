@@ -151,6 +151,32 @@ namespace jif3D
           }
         return Output;
       }
+
+    template<class VectorTransform> J3DEXPORT
+    jif3D::rvec ApplyTransform(const jif3D::rvec &InputVector,
+        VectorTransform &Transform)
+      {
+        const size_t insize = InputVector.size();
+        const size_t step = Transform.GetInputSize();
+        const size_t nout = Transform.GetOutputSize();
+        if (insize % step != 0)
+          throw jif3D::FatalException(
+              "Transformation size needs to be integer multiple of input data size",
+              __FILE__, __LINE__);
+        jif3D::rvec Output(insize / step * nout);
+
+        jif3D::rvec curr(nout), in(step);
+        for (size_t i = 0; i < insize; i += step)
+          {
+            const size_t start = i / step * nout;
+            std::copy(InputVector.begin() + i, InputVector.begin() + i + step,
+                in.begin());
+            curr = Transform.Transform(in);
+            std::copy(curr.begin(), curr.end(), Output.begin() + start);
+          }
+        return Output;
+      }
+
   /* @} */
   }
 
