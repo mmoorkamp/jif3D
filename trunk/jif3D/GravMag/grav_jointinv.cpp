@@ -12,6 +12,7 @@
 #include "../Global/VectorTransform.h"
 #include "../Global/FileUtil.h"
 #include "../Global/Noise.h"
+#include "../ModelBase/ReadAnyModel.h"
 #include "../ModelBase/VTKTools.h"
 #include "../ModelBase/NetCDFModelTools.h"
 #include "../Inversion/LimitedMemoryQuasiNewton.h"
@@ -83,9 +84,12 @@ int main(int argc, char *argv[])
 #endif
 
     std::string meshfilename = jif3D::AskFilename("Mesh filename: ");
-    jif3D::ThreeDGravityModel Mesh;
-    Mesh.ReadNetCDF(meshfilename);
-    const size_t ngrid = Mesh.GetNModelElements();
+    boost::shared_ptr<jif3D::ThreeDModelBase> Mesh = jif3D::ReadAnyModel(
+        meshfilename);
+
+    //jif3D::ThreeDGravityModel Mesh;
+    Mesh->ReadNetCDF(meshfilename);
+    const size_t ngrid = Mesh->GetNModelElements();
 
     jif3D::rvec CovModVec;
     if (vm.count("dens_covmod"))
@@ -124,7 +128,7 @@ int main(int argc, char *argv[])
           }
       }
 
-    boost::shared_ptr<jif3D::CrossGradient> GravMagCross(new jif3D::CrossGradient(Mesh));
+    boost::shared_ptr<jif3D::CrossGradient> GravMagCross(new jif3D::CrossGradient(*Mesh));
     boost::shared_ptr<jif3D::MultiSectionTransform> GravMagTrans(
         new jif3D::MultiSectionTransform(2 * ngrid));
     GravMagTrans->AddSection(0, ngrid, Trans);
@@ -153,7 +157,7 @@ int main(int argc, char *argv[])
       }
 
     boost::shared_ptr<jif3D::ObjectiveFunction> Regularization = RegSetup.SetupObjective(
-        vm, Mesh, CovModVec);
+        vm, *Mesh, CovModVec);
 
     CovModVec.resize(2 * ngrid, true);
     std::fill(CovModVec.begin(), CovModVec.end(), 1.0);
