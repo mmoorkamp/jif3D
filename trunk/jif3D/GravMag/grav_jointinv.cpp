@@ -86,9 +86,6 @@ int main(int argc, char *argv[])
     std::string meshfilename = jif3D::AskFilename("Mesh filename: ");
     boost::shared_ptr<jif3D::ThreeDModelBase> Mesh = jif3D::ReadAnyModel(
         meshfilename);
-
-    //jif3D::ThreeDGravityModel Mesh;
-    Mesh->ReadNetCDF(meshfilename);
     const size_t ngrid = Mesh->GetNModelElements();
 
     jif3D::rvec CovModVec;
@@ -371,6 +368,13 @@ int main(int argc, char *argv[])
         jif3D::Write3DDataToVTK(modelfilename + ".inv_sgd.vtk", "grav_accel",
             std::vector<double>(GravInvData.begin(), GravInvData.end()),
             ObsData.GetMeasPosX(), ObsData.GetMeasPosY(), ObsData.GetMeasPosZ());
+        jif3D::rvec ScalDiff(
+            GravitySetup.GetScalGravObjective().GetIndividualMisfit());
+        jif3D::SaveScalarGravityMeasurements(modelfilename + ".diff_sgd.nc",
+            std::vector<double>(ScalDiff.begin(), ScalDiff.end()),
+            ObsData.GetMeasPosX(), ObsData.GetMeasPosY(),
+            ObsData.GetMeasPosZ(),
+            GravitySetup.GetScalGravObjective().GetDataError());
       }
     if (GravitySetup.GetHaveFTG())
       {
