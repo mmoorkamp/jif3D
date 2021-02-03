@@ -13,7 +13,6 @@
 #include "ThreeDGravityModel.h"
 #include "../Global/Jif3DPlatformHelper.h"
 #include <boost/numeric/conversion/cast.hpp>
-#include <boost/lambda/lambda.hpp>
 
 //a helper function to create a model dimension of random size
 jif3D::ThreeDModelBase::t3DModelDim GenerateDimension(const size_t maxcells)
@@ -55,8 +54,8 @@ void MakeRandomModel(ModelType &Model, DataType &Data, const size_t maxcells,
     //allocate the grid
     Model.SetData().resize(boost::extents[xsize][ysize][zsize]);
     //and fill the grid with random values
-    std::generate_n(Model.SetData().origin(), xsize * ysize * zsize,
-        jif3D::platform::drand48() * boost::lambda::constant(10) + 1.0);
+    std::generate_n(Model.SetData().origin(), xsize * ysize * zsize,[](){
+        return jif3D::platform::drand48() * 10 + 1.0;});
     //generate measurement  points
     //the z-axis is positive down, so we choose negative z-coordinates
     // => we are measuring above the surface
