@@ -39,7 +39,7 @@ exe calccross : calccross.cpp  joint ../ModelBase//anymodel ;
 exe crossthreshold : crossthreshold.cpp  joint ../ModelBase//anymodel ;
 
 exe convertmtascii : convertmtascii.cpp  common ../MT//mt  ;
-exe convertmtt : convertmtt.cpp ../MT//mt   common  ;
+exe convertmtt : convertmtt.cpp ../MT//mt   common  ../GeographicLib//geographic ;
 exe onedmtinv : onedmtinv.cpp   common ../MT//mt  ;
 exe nnmtinv : nnmtinv.cpp   common ../MT//mt  ;
 exe mergemodels : mergemodels.cpp   common ../MT//mt  ;
