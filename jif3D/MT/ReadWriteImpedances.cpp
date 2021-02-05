@@ -15,6 +15,7 @@
 #include "../Global/NetCDFPortHelper.h"
 
 #include <fstream>
+#include <map>
 #include <iomanip>
 #include <algorithm>
 #include <iostream>
@@ -1250,10 +1251,35 @@ namespace jif3D
 
       }
 
+    void ReadImpComp(std::ifstream &infile, const std::string &Name, const int baseindex,
+        const std::map<double, int, std::greater<double> > &FreqMap,
+        std::vector<double> &Imp, std::vector<double> &Err)
+      {
+        jif3D::FindToken(infile, Name);
+        int nfreq;
+        infile >> nfreq;
+        std::string line;
+        std::vector<double> NumVec;
+        std::getline(infile, line);
+        for (int i = 0; i < nfreq; ++i)
+          {
+            NumVec = ExtractNumbers(infile);
+            double freq = NumVec.at(0);
+            freq = freq > 0.0 ? 1.0 / freq : std::abs(freq);
+
+            int freqindex = std::distance(FreqMap.begin(), FreqMap.find(freq));
+
+            Imp.at(freqindex * 8 + baseindex) = NumVec.at(1);
+            Imp.at(freqindex * 8 + baseindex + 1) = NumVec.at(2);
+            Err.at(freqindex * 8 + baseindex) = NumVec.at(3);
+            Err.at(freqindex * 8 + baseindex + 1) = NumVec.at(3);
+          }
+
+      }
+
     J3DEXPORT void ReadImpedancesFromJ(const std::string &filename,
         std::vector<double> &Frequencies, double &StatXCoord, double &StatYCoord,
-        double &StatZCoord, std::vector<double> &Imp, std::vector<double> &Err,
-        std::vector<double> &Tipper, std::vector<double> &TippErr)
+        double &StatZCoord, std::vector<double> &Imp, std::vector<double> &Err)
       {
         std::ifstream infile;
         infile.open(filename.c_str());
@@ -1273,7 +1299,6 @@ namespace jif3D
         StatZCoord = std::stod(SplitVec.at(1));
         bool HasZ = false;
         bool HasRhoPhi = false;
-        bool HasT = false;
         try
           {
             jif3D::FindToken(infile, "RXX");
@@ -1292,78 +1317,39 @@ namespace jif3D
 
           }
 
-        try
-          {
-            jif3D::FindToken(infile, "TZX");
-            HasT = true;
-          } catch (jif3D::FatalException &e)
-          {
-
-          }
-
         size_t nfreq = 0;
         std::vector<double> NumVec; // #2: Search for tokens
-
+        std::map<double, int, std::greater<double> > FreqMap;
         if (HasZ)
           {
-
+            //we look for Zxx but we are actually just interested in the frequencies
             jif3D::FindToken(infile, "ZXX");
             infile >> nfreq;
+            std::getline(infile, line);
+
             Imp.resize(nfreq * 8);
             Err.resize(nfreq * 8);
-            double dummy;
+            for (int i = 0; i < nfreq; ++i)
+              {
+                NumVec = ExtractNumbers(infile);
+                double freq = NumVec.at(0);
+                freq = freq > 0.0 ? 1.0 / freq : std::abs(freq);
+                FreqMap.insert(std::pair<double, int>(freq, i));
+              }
+            std::cout << "Reading Impedances, ";
+            std::cout << "found " << nfreq << " frequencies ";
+            std::cout << std::endl;
+
+            std::cout << std::endl;
             Frequencies.resize(nfreq);
-            std::getline(infile, line);
-            for (size_t i = 0; i < nfreq; ++i)
-              {
-                NumVec = ExtractNumbers(infile);
-
-                Frequencies.at(i) = NumVec.at(0);
-                Frequencies.at(i) =
-                    Frequencies.at(i) > 0.0 ?
-                        1.0 / Frequencies.at(i) : std::abs(Frequencies.at(i));
-                Imp.at(i * 8) = NumVec.at(1);
-                Imp.at(i * 8 + 1) = NumVec.at(2);
-                Err.at(i * 8) = NumVec.at(3);
-                Err.at(i * 8 + 1) = Err.at(i * 8);
-              }
-            jif3D::FindToken(infile, "ZXY");
-            infile >> dummy;
-            std::getline(infile, line);
-
-            for (size_t i = 0; i < nfreq; ++i)
-              {
-                NumVec = ExtractNumbers(infile);
-
-                Imp.at(i * 8 + 2) = NumVec.at(1);
-                Imp.at(i * 8 + 3) = NumVec.at(2);
-                Err.at(i * 8 + 2) = NumVec.at(3);
-                Err.at(i * 8 + 3) = Err.at(i * 8 + 2);
-
-              }
-            jif3D::FindToken(infile, "ZYX");
-            infile >> dummy;
-            std::getline(infile, line);
-
-            for (size_t i = 0; i < nfreq; ++i)
-              {
-                NumVec = ExtractNumbers(infile);
-                Imp.at(i * 8 + 4) = NumVec.at(1);
-                Imp.at(i * 8 + 5) = NumVec.at(2);
-                Err.at(i * 8 + 4) = NumVec.at(3);
-                Err.at(i * 8 + 5) = Err.at(i * 8 + 4);
-              }
-            jif3D::FindToken(infile, "ZYY");
-            infile >> dummy;
-            std::getline(infile, line);
-            for (size_t i = 0; i < nfreq; ++i)
-              {
-                NumVec = ExtractNumbers(infile);
-                Imp.at(i * 8 + 6) = NumVec.at(1);
-                Imp.at(i * 8 + 7) = NumVec.at(2);
-                Err.at(i * 8 + 6) = NumVec.at(3);
-                Err.at(i * 8 + 7) = Err.at(i * 8 + 6);
-              }
+            std::transform(FreqMap.begin(), FreqMap.end(), Frequencies.begin(),
+                [](auto it)
+                  { return it.first;});
+            //now we actually read ZXX
+            ReadImpComp(infile, "ZXX", 0, FreqMap, Imp, Err);
+            ReadImpComp(infile, "ZXY", 2, FreqMap, Imp, Err);
+            ReadImpComp(infile, "ZYX", 4, FreqMap, Imp, Err);
+            ReadImpComp(infile, "ZYY", 6, FreqMap, Imp, Err);
             //std::transform(Imp.begin(), Imp.end(), Imp.begin(), [convfactor](double val)
             //  { return val/convfactor;});
             //std::transform(Err.begin(), Err.end(), Err.begin(), [convfactor](double val)
@@ -1384,14 +1370,66 @@ namespace jif3D
                 __LINE__);
               }
           }
+      }
+
+    J3DEXPORT void ReadTipperFromJ(const std::string &filename,
+        std::vector<double> &Frequencies, double &StatXCoord, double &StatYCoord,
+        double &StatZCoord, std::vector<double> &Tipper, std::vector<double> &TippErr)
+      {
+        std::ifstream infile;
+        infile.open(filename.c_str());
+        std::string line;
+        std::vector<std::string> SplitVec; // #2: Search for tokens
+
+        line = jif3D::FindToken(infile, ">LATITUDE");
+        split(SplitVec, line, boost::is_any_of("="), boost::token_compress_on);
+        StatXCoord = std::stod(SplitVec.at(1));
+        infile.seekg(0);
+        line = jif3D::FindToken(infile, ">LONGITUDE");
+        split(SplitVec, line, boost::is_any_of("="), boost::token_compress_on);
+        StatYCoord = std::stod(SplitVec.at(1));
+        infile.seekg(0);
+        line = jif3D::FindToken(infile, ">ELEVATION");
+        split(SplitVec, line, boost::is_any_of("="), boost::token_compress_on);
+        StatZCoord = std::stod(SplitVec.at(1));
+        bool HasT = false;
+        double dummy;
+        try
+          {
+            jif3D::FindToken(infile, "TZX");
+            HasT = true;
+          } catch (jif3D::FatalException &e)
+          {
+
+          }
+        size_t nfreq = 0;
+        std::vector<double> NumVec; // #2: Search for tokens
+        std::map<double, int, std::greater<double> > FreqMap;
+
         if (HasT)
           {
-            std::cout << " Reading Tipper, expecting " << nfreq << " frequencies "
-                << std::endl;
-            double dummy;
+            //we look for Zxx but we are actually just interested in the frequencies
+            jif3D::FindToken(infile, "TZX");
+            infile >> nfreq;
+            std::getline(infile, line);
 
             Tipper.resize(nfreq * 4);
             TippErr.resize(nfreq * 4);
+            for (int i = 0; i < nfreq; ++i)
+              {
+                NumVec = ExtractNumbers(infile);
+                double freq = NumVec.at(0);
+                freq = freq > 0.0 ? 1.0 / freq : std::abs(freq);
+                FreqMap.insert(std::pair<double, int>(freq, i));
+              }
+            std::cout << "Reading Tipper, ";
+            std::cout << "found " << nfreq << " frequencies ";
+            std::cout << std::endl;
+            Frequencies.resize(nfreq);
+            std::transform(FreqMap.begin(), FreqMap.end(), Frequencies.begin(),
+                [](auto it)
+                  { return it.first;});
+
             jif3D::FindToken(infile, "TZX");
             infile >> dummy;
             std::string line;
@@ -1400,10 +1438,15 @@ namespace jif3D
             for (size_t i = 0; i < nfreq; ++i)
               {
                 NumVec = ExtractNumbers(infile);
-                Tipper.at(i * 4 + 0) = NumVec.at(1);
-                Tipper.at(i * 4 + 1) = NumVec.at(2);
-                TippErr.at(i * 4 + 0) = std::isnan(NumVec.at(3)) ? 1e2 : NumVec.at(3);
-                TippErr.at(i * 4 + 1) = TippErr.at(i * 4 + 0);
+                double freq = NumVec.at(0);
+                freq = freq > 0.0 ? 1.0 / freq : std::abs(freq);
+
+                int freqindex = std::distance(FreqMap.begin(), FreqMap.find(freq));
+                Tipper.at(freqindex * 4 + 0) = NumVec.at(1);
+                Tipper.at(freqindex * 4 + 1) = NumVec.at(2);
+                TippErr.at(freqindex * 4 + 0) =
+                    std::isnan(NumVec.at(3)) ? 1e2 : NumVec.at(3);
+                TippErr.at(freqindex * 4 + 1) = TippErr.at(i * 4 + 0);
               }
             jif3D::FindToken(infile, "TZY");
             infile >> dummy;
@@ -1412,10 +1455,15 @@ namespace jif3D
             for (size_t i = 0; i < nfreq; ++i)
               {
                 NumVec = ExtractNumbers(infile);
-                Tipper.at(i * 4 + 2) = NumVec.at(1);
-                Tipper.at(i * 4 + 3) = NumVec.at(2);
-                TippErr.at(i * 4 + 2) = std::isnan(NumVec.at(3)) ? 1e2 : NumVec.at(3);
-                TippErr.at(i * 4 + 3) = TippErr.at(i * 4 + 2);
+                double freq = NumVec.at(0);
+                freq = freq > 0.0 ? 1.0 / freq : std::abs(freq);
+
+                int freqindex = std::distance(FreqMap.begin(), FreqMap.find(freq));
+                Tipper.at(freqindex * 4 + 2) = NumVec.at(1);
+                Tipper.at(freqindex * 4 + 3) = NumVec.at(2);
+                TippErr.at(freqindex * 4 + 2) =
+                    std::isnan(NumVec.at(3)) ? 1e2 : NumVec.at(3);
+                TippErr.at(freqindex * 4 + 3) = TippErr.at(i * 4 + 2);
               }
           }
       }
