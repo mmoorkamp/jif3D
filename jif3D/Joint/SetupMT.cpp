@@ -7,6 +7,8 @@
 
 #include "../MT/ReadWriteImpedances.h"
 #include "../MT/MTData.h"
+#include "../MT/TipperData.h"
+#include "../MT/X3DFieldCalculator.h"
 #include "../Global/FileUtil.h"
 #include "../Global/Noise.h"
 #include "../Global/ReadWriteSparseMatrix.h"
@@ -42,7 +44,11 @@ namespace jif3D
             "The name of the executable for x3d")("opt",
             "Use opt for Green's function calculation in x3d.")("distcorr",
             po::value(&DistCorr)->default_value(0),
-            "Correct for distortion within inversion, value is regularization factor");
+            "Correct for distortion within inversion, value is regularization factor")(
+            "tiprelerr", po::value(&tiprelerr)->default_value(0.02),
+            "The relative error for the Tipper data")("tiperr",
+            po::value(&tipperr)->default_value(0.01),
+            "The absolute minimum error for the Tipper data");
         return desc;
       }
 
@@ -107,7 +113,9 @@ namespace jif3D
               }
             bool WantDistCorr = (DistCorr > 0.0);
             //setup the objective function for the MT data
-            jif3D::X3DMTCalculator Calculator(TempDir, X3DName, WantDistCorr);
+            boost::shared_ptr<jif3D::X3DFieldCalculator> FC = boost::make_shared<
+                jif3D::X3DFieldCalculator>(TempDir, X3DName);
+            jif3D::X3DMTCalculator Calculator(TempDir, X3DName, WantDistCorr, true, FC);
 
             if (vm.count("opt"))
               {
@@ -142,7 +150,8 @@ namespace jif3D
                 if (vm.count("inderrors"))
                   {
                     //use a relative value for each impedance element separately
-                    MinErr = jif3D::ConstructError(MTData.GetData(), MTData.GetErrors(), relerr);
+                    MinErr = jif3D::ConstructError(MTData.GetData(), MTData.GetErrors(),
+                        relerr);
                   }
                 else
                   {
@@ -151,8 +160,8 @@ namespace jif3D
                   }
                 //the error used in the inversion is the maximum of the error floor
                 //and the actual data error.
-                std::transform(MTData.GetErrors().begin(),MTData.GetErrors().end(), MinErr.begin(),
-                    MinErr.begin(), [](double a, double b)
+                std::transform(MTData.GetErrors().begin(), MTData.GetErrors().end(),
+                    MinErr.begin(), MinErr.begin(), [](double a, double b)
                       { return std::max(a,b);});
                 MTObjective->SetDataError(MinErr);
               }
@@ -164,6 +173,56 @@ namespace jif3D
             //to signal that we added the MT data
             std::cout << "MT ndata: " << ndata << std::endl;
             std::cout << "MT lambda: " << mtlambda << std::endl;
+
+            //ask for Tipper, currently it only works in conjunction with MT
+            //otherwise we would need to check for x3d and conductivity models
+
+            std::cout << "MT Lambda: ";
+            std::cin >> tiplambda;
+            if (tiplambda > 0)
+              {
+                jif3D::TipperData DataTip;
+                std::string tipdatafilename = jif3D::AskFilename(
+                    "Tipper data filename: ");
+                std::string extension = jif3D::GetFileExtension(tipdatafilename);
+                DataTip.ReadNetCDF(tipdatafilename);
+
+                jif3D::X3DTipperCalculator TipCalc(TempDir, X3DName, true, FC);
+                TipObjective = boost::make_shared<
+                    jif3D::ThreeDModelObjective<jif3D::X3DTipperCalculator>>(TipCalc);
+                TipObjective->SetCoarseModelGeometry(MTModel);
+                TipObjective->SetObservedData(DataTip);
+
+                size_t ntip = DataTip.GetData().size();
+                jif3D::rvec TE(ntip, 0.0);
+                std::vector<double> TError = DataTip.GetErrors();
+                for (size_t i = 0; i < ntip / 4; ++i)
+                  {
+                    double abs_re = std::sqrt(
+                        std::pow(DataTip.GetData().at(4 * i), 2)
+                            + std::pow(DataTip.GetData().at(4 * i + 2), 2));
+                    double abs_im = std::sqrt(
+                        std::pow(DataTip.GetData().at(4 * i + 1), 2)
+                            + std::pow(DataTip.GetData().at(4 * i + 3), 2));
+                    TE(4 * i) = std::max(std::max(abs_re * tiprelerr, TError.at(4 * i)),
+                        TError.at(4 * i + 2));
+                    TE(4 * i + 2) = TE(4 * i);
+                    TE(4 * i + 1) = std::max(
+                        std::max(abs_im * tiprelerr, TError.at(4 * i)),
+                        TError.at(4 * i + 2));
+                    TE(4 * i + 3) = TE(4 * i + 1);
+                  }
+                std::copy(TE.begin(), TE.end(), TError.begin());
+
+                std::transform(TError.begin(), TError.end(), TError.begin(),
+                    [this](double a)
+                      { return std::max(a,tipperr);});
+
+                TipObjective->SetDataError(TError);
+                Objective.AddObjective(TipObjective, Transform, tiplambda, "Tipper",
+                    jif3D::JointObjective::datafit);
+
+              }
           }
         //return true if we added an MT objective function
         return (mtlambda > 0.0);
