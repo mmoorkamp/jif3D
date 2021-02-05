@@ -633,6 +633,20 @@ int hpx_main(boost::program_options::variables_map &vm)
             MTSetup.GetMTObjective().GetDataError());
         MTData.WriteNetCDF(modelfilename + ".diff_imp.nc");
 
+        if (MTSetup.GetTipLambda() > 0)
+          {
+            auto TipData = MTSetup.GetTipObjective().GetObservedData();
+            jif3D::rvec TipInvData(MTSetup.GetTipObjective().GetSyntheticData());
+            TipData.SetDataAndErrors(
+                std::vector<double>(TipInvData.begin(), TipInvData.end()),
+                MTSetup.GetTipObjective().GetDataError());
+            TipData.WriteNetCDF(modelfilename + ".inv_tip.nc");
+            jif3D::rvec TipDiff(MTSetup.GetTipObjective().GetIndividualMisfit());
+            TipData.SetDataAndErrors(std::vector<double>(TipDiff.begin(), TipDiff.end()),
+                MTSetup.GetTipObjective().GetDataError());
+            TipData.WriteNetCDF(modelfilename + ".diff_tip.nc");
+          }
+
       }
     //if we are using cross gradient coupling, we want to output the final
     //values of the cross-gradient

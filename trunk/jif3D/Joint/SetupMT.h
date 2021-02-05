@@ -11,6 +11,7 @@
 #include "../Global/Jif3DGlobal.h"
 #include "../MT/X3DModel.h"
 #include "../MT/X3DMTCalculator.h"
+#include "../MT/X3DTipperCalculator.h"
 #include "../Inversion/ThreeDModelObjective.h"
 #include "../Inversion/JointObjective.h"
 #include <boost/program_options.hpp>
@@ -33,8 +34,14 @@ namespace jif3D
     private:
       //! The objective function object for magnetotelluric data using X3D as a forward engine
       boost::shared_ptr<jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator> > MTObjective;
+      boost::shared_ptr<jif3D::ThreeDModelObjective<jif3D::X3DTipperCalculator> > TipObjective;
+
       //! The relative data error to assume for construction of the data variance
       double relerr;
+      //! The relative error for the tipper
+      double tiprelerr;
+      //! The absolute minimum error for tipper
+      double tipperr;
       //! The file name for a model with cell refinements
       std::string FineModelName;
       //! The object containing the geometry of the MT inversion model, has to match the geometry of the starting model
@@ -44,12 +51,21 @@ namespace jif3D
       //! The name of the executable for x3d
       std::string X3DName;
       double DistCorr;
-
+      //! Weight for tipper data
+      double tiplambda;
     public:
       //! Get read-only access to the objective function object, for example to output misfit information
       const jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator> &GetMTObjective()
         {
           return *MTObjective;
+        }
+      const jif3D::ThreeDModelObjective<jif3D::X3DTipperCalculator> &GetTipObjective()
+        {
+          return *TipObjective;
+        }
+      double GetTipLambda() const
+        {
+          return tiplambda;
         }
       //! Setup the program options for the MT part of the inversion
       po::options_description SetupOptions();

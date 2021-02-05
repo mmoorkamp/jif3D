@@ -84,18 +84,11 @@ namespace jif3D
               {
                 Model.SetOrigin(xorigin, yorigin, 0.0);
               }
-            if (Transform.get() == NULL)
-              {
-                jif3D::rvec RefVec(Model.GetSusceptibilities().num_elements(), 1.0);
-                Transform = boost::shared_ptr<jif3D::GeneralModelTransform>(
-                    new jif3D::NormalizeTransform(RefVec));
-              }
 
             //we want to set the path for temporary file storage
             //the factory function cannot perform this, so we
             //have to assemble the calculator object ourselves
-            boost::shared_ptr<
-                jif3D::ThreeDGravMagImplementation<jif3D::MagneticData> > Implementation;
+            boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::MagneticData> > Implementation;
             if (wantcuda)
               {
                 throw jif3D::FatalException("No GPU support, yet !", __FILE__, __LINE__);
@@ -119,7 +112,9 @@ namespace jif3D
                     new jif3D::ThreeDModelObjective<CalculatorType>(*Calculator));
             MagObjective->SetObservedData(MagData);
             MagObjective->SetCoarseModelGeometry(Model);
-            std::vector<double> Error(jif3D::ConstructError(MagData.GetData(), MagData.GetErrors(), relerr, minerr));
+            std::vector<double> Error(
+                jif3D::ConstructError(MagData.GetData(), MagData.GetErrors(), relerr,
+                    minerr));
             MagObjective->SetDataError(Error);
 
             Objective.AddObjective(MagObjective, Transform, maglambda, "Magnetics",
