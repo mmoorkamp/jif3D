@@ -52,12 +52,17 @@ namespace po = boost::program_options;
 int main(int argc, char *argv[])
   {
 
+    double mindens, maxdens, minsus, maxsus;
     po::options_description desc("General options");
     desc.add_options()("help", "produce help message")("threads", po::value<int>(),
         "The number of openmp threads")("dens_covmod", po::value<std::string>(),
         "A file containing the model covariance")("magdepth",
         "Counteract the decay in sensitivities of magnetic data with depth")("gravdepth",
-        "Counteract the decay in sensitivities of gravity data with depth");
+        "Counteract the decay in sensitivities of gravity data with depth")("mindens",
+        po::value(&mindens)->default_value(-1000.0))("maxdens",
+        po::value(&maxdens)->default_value(1000.0))("minsus",
+        po::value(&minsus)->default_value(-1.0))("maxsus",
+        po::value(&maxsus)->default_value(1.0));
 
     jif3D::SetupRegularization RegSetup;
     jif3D::SetupInversion InversionSetup;
@@ -84,8 +89,7 @@ int main(int argc, char *argv[])
 #endif
 
     std::string meshfilename = jif3D::AskFilename("Mesh filename: ");
-    boost::shared_ptr<jif3D::ThreeDModelBase> Mesh = jif3D::ReadAnyModel(
-        meshfilename);
+    boost::shared_ptr<jif3D::ThreeDModelBase> Mesh = jif3D::ReadAnyModel(meshfilename);
     const size_t ngrid = Mesh->GetNModelElements();
 
     jif3D::rvec CovModVec;
@@ -101,16 +105,28 @@ int main(int argc, char *argv[])
     jif3D::rvec RefVec(ngrid);
     std::fill(RefVec.begin(), RefVec.end(), 1.0);
 
-    boost::shared_ptr<jif3D::GeneralModelTransform> Trans = boost::shared_ptr<
-        jif3D::GeneralModelTransform>(new jif3D::NormalizeTransform(RefVec));
+    boost::shared_ptr<jif3D::GeneralModelTransform> Copy = boost::make_shared<
+        jif3D::ModelCopyTransform>();
+
     jif3D::rvec InvModel(2 * ngrid);
 
-    boost::shared_ptr<jif3D::GeneralModelTransform> GravityTransform(
-        new jif3D::MultiSectionTransform(2 * ngrid, 0, ngrid, Trans));
-    boost::shared_ptr<jif3D::GeneralModelTransform> MagneticsTransform(
-        new jif3D::MultiSectionTransform(2 * ngrid, ngrid, 2 * ngrid, Trans));
+    boost::shared_ptr<jif3D::GeneralModelTransform> GravityRegTransform =
+        boost::make_shared<jif3D::MultiSectionTransform>(2 * ngrid, 0, ngrid, Copy);
+    boost::shared_ptr<jif3D::GeneralModelTransform> MagneticsRegTransform =
+        boost::make_shared<jif3D::MultiSectionTransform>(2 * ngrid, ngrid, 2 * ngrid,
+            Copy);
 
-    boost::shared_ptr<jif3D::JointObjective> Objective(new jif3D::JointObjective(true));
+    boost::shared_ptr<jif3D::GeneralModelTransform> DensTrans = boost::make_shared<
+        jif3D::TanhTransform>(mindens, maxdens);
+    boost::shared_ptr<jif3D::GeneralModelTransform> SusTrans = boost::make_shared<
+        jif3D::TanhTransform>(minsus, maxsus);
+    boost::shared_ptr<jif3D::GeneralModelTransform> GravityTransform = boost::make_shared<
+        jif3D::MultiSectionTransform>(2 * ngrid, 0, ngrid, DensTrans);
+    boost::shared_ptr<jif3D::GeneralModelTransform> MagneticsTransform =
+        boost::make_shared<jif3D::MultiSectionTransform>(2 * ngrid, ngrid, 2 * ngrid,
+            SusTrans);
+
+    auto Objective = boost::make_shared<jif3D::JointObjective>(true);
     bool HaveGrav = GravitySetup.SetupObjective(vm, *Objective.get(), GravityTransform);
     bool HaveMag = MagneticsSetup.SetupObjective(vm, *Objective.get(),
         MagneticsTransform);
@@ -128,14 +144,16 @@ int main(int argc, char *argv[])
     boost::shared_ptr<jif3D::CrossGradient> GravMagCross(new jif3D::CrossGradient(*Mesh));
     boost::shared_ptr<jif3D::MultiSectionTransform> GravMagTrans(
         new jif3D::MultiSectionTransform(2 * ngrid));
-    GravMagTrans->AddSection(0, ngrid, Trans);
-    GravMagTrans->AddSection(ngrid, 2 * ngrid, Trans);
+    GravMagTrans->AddSection(0, ngrid, Copy);
+    GravMagTrans->AddSection(ngrid, 2 * ngrid, Copy);
 
     if (HaveGrav)
       {
+        jif3D::rvec GravMod(GravitySetup.GetScalModel().GetDensities().num_elements());
         std::copy(GravitySetup.GetScalModel().GetDensities().origin(),
-            GravitySetup.GetScalModel().GetDensities().origin() + ngrid,
-            InvModel.begin());
+            GravitySetup.GetScalModel().GetDensities().origin() + ngrid, GravMod.begin());
+        jif3D::rvec GravGen = DensTrans->PhysicalToGeneralized(GravMod);
+        std::copy(GravGen.begin(), GravGen.end(), InvModel.begin());
       }
     else
       {
@@ -144,9 +162,13 @@ int main(int argc, char *argv[])
 
     if (HaveMag)
       {
+        jif3D::rvec MagMod(MagneticsSetup.GetModel().GetSusceptibilities().num_elements());
         std::copy(MagneticsSetup.GetModel().GetSusceptibilities().origin(),
             MagneticsSetup.GetModel().GetSusceptibilities().origin() + ngrid,
-            InvModel.begin() + ngrid);
+            MagMod.begin());
+        jif3D::rvec MagGen = SusTrans->PhysicalToGeneralized(MagMod);
+        std::copy(MagGen.begin(), MagGen.end(), InvModel.begin() +ngrid);
+
       }
     else
       {
@@ -247,7 +269,7 @@ int main(int argc, char *argv[])
     std::cin >> gravreglambda;
     if (gravreglambda > 0.0)
       {
-        Objective->AddObjective(Regularization, GravityTransform, gravreglambda,
+        Objective->AddObjective(Regularization, GravityRegTransform, gravreglambda,
             "GravReg", jif3D::JointObjective::regularization);
       }
     double magreglambda = 1.0;
@@ -255,7 +277,7 @@ int main(int argc, char *argv[])
     std::cin >> magreglambda;
     if (magreglambda > 0.0)
       {
-        Objective->AddObjective(Regularization, MagneticsTransform, magreglambda,
+        Objective->AddObjective(Regularization, MagneticsRegTransform, magreglambda,
             "MagReg", jif3D::JointObjective::regularization);
       }
 
@@ -282,6 +304,7 @@ int main(int argc, char *argv[])
     std::cin >> maxiter;
     std::string modelfilename("result");
     std::ofstream misfitfile("misfit.out");
+    std::ofstream rmsfile("rms.out");
 
     double InitialMisfit = Objective->CalcMisfit(InvModel);
     StoreMisfit(misfitfile, 0, InitialMisfit, *Objective);
@@ -289,7 +312,7 @@ int main(int argc, char *argv[])
     jif3D::ThreeDGravityModel GravModel(GravitySetup.GetScalModel());
     jif3D::ThreeDMagneticModel MagModel(MagneticsSetup.GetModel());
     bool terminate = false;
-    do
+    while (iteration < maxiter && !terminate)
       {
         try
           {
@@ -319,19 +342,10 @@ int main(int argc, char *argv[])
                     modelfilename + jif3D::stringify(iteration) + ".mag.inv.nc");
               }
             ++iteration;
-            std::cout << "Gradient Norm: " << Optimizer->GetGradNorm() << std::endl;
-            std::cout << "Currrent Misfit: " << Optimizer->GetMisfit() << std::endl;
-            std::cout << "Currrent Gradient: " << Optimizer->GetGradNorm() << std::endl;
-            misfitfile << std::setw(5) << iteration << " " << std::setw(15)
-                << Optimizer->GetMisfit() << " ";
-            for (size_t i = 0; i < Objective->GetIndividualFits().size(); ++i)
-              {
-                misfitfile << std::setw(15) << Objective->GetIndividualFits().at(i)
-                    << " ";
-              }
 
-            misfitfile << " " << Objective->GetNEval();
-            misfitfile << std::endl;
+            StoreMisfit(misfitfile, iteration, Optimizer->GetMisfit(), *Objective);
+            StoreRMS(rmsfile, iteration, *Objective);
+            std::cout << "\n\n";
           } catch (jif3D::FatalException &e)
           {
             std::cerr << e.what() << std::endl;
@@ -341,7 +355,7 @@ int main(int argc, char *argv[])
         terminate = CheckConvergence(*Objective);
         //or the file abort exists in the current directory
         terminate = terminate || jif3D::WantAbort();
-      } while (iteration < maxiter && !terminate);
+      }
 
     jif3D::rvec DensInvModel(GravityTransform->GeneralizedToPhysical(InvModel));
     jif3D::rvec MagInvModel(MagneticsTransform->GeneralizedToPhysical(InvModel));
@@ -354,26 +368,20 @@ int main(int argc, char *argv[])
     if (GravitySetup.GetHaveScal())
       {
         auto ObsData = GravitySetup.GetScalGravObjective().GetObservedData();
-        std::copy(DensInvModel.begin(), DensInvModel.begin() + ngrid,
-            GravModel.SetDensities().origin());
-        boost::shared_ptr<ScalGravCalculatorType> ScalGravityCalculator =
-            boost::shared_ptr<ScalGravCalculatorType>(
-                jif3D::CreateGravityCalculator<ScalGravCalculatorType>::MakeScalar());
-        jif3D::rvec GravInvData(ScalGravityCalculator->Calculate(GravModel, ObsData));
+        jif3D::rvec ScalGravInvData(
+            GravitySetup.GetScalGravObjective().GetSyntheticData());
 
         jif3D::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc",
-            std::vector<double>(GravInvData.begin(), GravInvData.end()),
+            std::vector<double>(ScalGravInvData.begin(), ScalGravInvData.end()),
             ObsData.GetMeasPosX(), ObsData.GetMeasPosY(), ObsData.GetMeasPosZ(),
             GravitySetup.GetScalGravObjective().GetDataError());
         jif3D::Write3DDataToVTK(modelfilename + ".inv_sgd.vtk", "grav_accel",
-            std::vector<double>(GravInvData.begin(), GravInvData.end()),
+            std::vector<double>(ScalGravInvData.begin(), ScalGravInvData.end()),
             ObsData.GetMeasPosX(), ObsData.GetMeasPosY(), ObsData.GetMeasPosZ());
-        jif3D::rvec ScalDiff(
-            GravitySetup.GetScalGravObjective().GetIndividualMisfit());
+        jif3D::rvec ScalDiff(GravitySetup.GetScalGravObjective().GetIndividualMisfit());
         jif3D::SaveScalarGravityMeasurements(modelfilename + ".diff_sgd.nc",
-            std::vector<double>(ScalDiff.begin(), ScalDiff.end()),
-            ObsData.GetMeasPosX(), ObsData.GetMeasPosY(),
-            ObsData.GetMeasPosZ(),
+            std::vector<double>(ScalDiff.begin(), ScalDiff.end()), ObsData.GetMeasPosX(),
+            ObsData.GetMeasPosY(), ObsData.GetMeasPosZ(),
             GravitySetup.GetScalGravObjective().GetDataError());
       }
     if (GravitySetup.GetHaveFTG())
@@ -381,10 +389,7 @@ int main(int argc, char *argv[])
         std::copy(DensInvModel.begin(), DensInvModel.begin() + ngrid,
             GravModel.SetDensities().origin());
         auto ObsData = GravitySetup.GetFTGObjective().GetObservedData();
-        boost::shared_ptr<TensGravCalculatorType> FTGGravityCalculator =
-            boost::shared_ptr<TensGravCalculatorType>(
-                jif3D::CreateGravityCalculator<TensGravCalculatorType>::MakeTensor());
-        jif3D::rvec FTGInvData(FTGGravityCalculator->Calculate(GravModel, ObsData));
+        jif3D::rvec FTGInvData(GravitySetup.GetFTGObjective().GetSyntheticData());
         jif3D::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc",
             std::vector<double>(FTGInvData.begin(), FTGInvData.end()),
             ObsData.GetMeasPosX(), ObsData.GetMeasPosY(), ObsData.GetMeasPosZ(),
@@ -399,8 +404,7 @@ int main(int argc, char *argv[])
         std::copy(MagInvModel.begin(), MagInvModel.begin() + ngrid,
             MagModel.SetSusceptibilities().origin());
         auto ObservedData = MagneticsSetup.GetObjective().GetObservedData();
-        jif3D::rvec MagInvData(
-            MagneticsSetup.GetCalculator()->Calculate(MagModel, ObservedData));
+        jif3D::rvec MagInvData = MagneticsSetup.GetObjective().GetSyntheticData();
         jif3D::SaveTotalFieldMagneticMeasurements(modelfilename + ".inv_mag.nc",
             std::vector<double>(MagInvData.begin(), MagInvData.end()),
             ObservedData.GetMeasPosX(), ObservedData.GetMeasPosY(),
@@ -409,6 +413,11 @@ int main(int argc, char *argv[])
             std::vector<double>(MagInvData.begin(), MagInvData.end()),
             ObservedData.GetMeasPosX(), ObservedData.GetMeasPosY(),
             ObservedData.GetMeasPosZ());
+        jif3D::rvec MagDiff(MagneticsSetup.GetObjective().GetIndividualMisfit());
+        jif3D::SaveTotalFieldMagneticMeasurements(modelfilename + ".diff_mag.nc",
+            std::vector<double>(MagDiff.begin(), MagDiff.end()),
+            ObservedData.GetMeasPosX(), ObservedData.GetMeasPosY(),
+            ObservedData.GetMeasPosZ(), MagneticsSetup.GetObjective().GetDataError());
         MagModel.WriteVTK(modelfilename + ".mag.inv.vtk");
         MagModel.WriteNetCDF(modelfilename + ".mag.inv.nc");
       }
