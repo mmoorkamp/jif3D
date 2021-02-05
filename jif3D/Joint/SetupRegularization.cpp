@@ -33,19 +33,19 @@ namespace jif3D
             if (TearModel.GetModelShape()[0] != StartModel.GetModelShape()[0])
               {
                 throw jif3D::FatalException(
-                    "X-dimensions of TearModel do not match x-dimensions of starting model ",
+                    Filename + ": X-dimensions of TearModel do not match x-dimensions of starting model ",
                     __FILE__, __LINE__);
               }
             if (TearModel.GetModelShape()[1] != StartModel.GetModelShape()[1])
               {
                 throw jif3D::FatalException(
-                    "Y-dimensions of TearModel do not match x-dimensions of starting model ",
+                    Filename + ": Y-dimensions of TearModel do not match y-dimensions of starting model ",
                     __FILE__, __LINE__);
               }
             if (TearModel.GetModelShape()[2] != StartModel.GetModelShape()[2])
               {
                 throw jif3D::FatalException(
-                    "Z-dimensions of TearModel do not match x-dimensions of starting model ",
+                    Filename + ": Z-dimensions of TearModel do not match z-dimensions of starting model ",
                     __FILE__, __LINE__);
               }
           }
