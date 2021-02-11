@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_SUITE( MagneticObjective_Test_Suite )
             Backward(i) -= delta;
             double FDGrad = (Objective.CalcMisfit(Forward)
                 - Objective.CalcMisfit(Backward)) / (2 * delta);
-            if (std::abs(FDGrad) > 1e-10)
+            if (std::abs(FDGrad) > 1e-20)
               {
                 BOOST_CHECK_CLOSE(FDGrad, Gradient(i), 0.01);
               }
@@ -144,8 +144,7 @@ BOOST_AUTO_TEST_SUITE( MagneticObjective_Test_Suite )
 
         boost::shared_ptr<CalculatorType> Calculator(new CalculatorType(Implementation));
         Calculator->SetDataTransform(
-            boost::make_shared<jif3D::TotalFieldAnomaly>(inclination, declination,
-                fieldstrength));
+            boost::make_shared<jif3D::TotalFieldAnomaly>(inclination, declination));
 
         jif3D::rvec Observed(Calculator->Calculate(MagTest, Data));
 
@@ -156,8 +155,7 @@ BOOST_AUTO_TEST_SUITE( MagneticObjective_Test_Suite )
 
         jif3D::ThreeDModelObjective<CalculatorType> Objective(*Calculator.get());
         Objective.SetDataTransform(
-            boost::make_shared<jif3D::TotalFieldAnomaly>(inclination, declination,
-                fieldstrength));
+            boost::make_shared<jif3D::TotalFieldAnomaly>(inclination, declination));
         Objective.SetObservedData(Data);
         Objective.SetCoarseModelGeometry(MagTest);
         jif3D::rvec InvModel(MagTest.GetSusceptibilities().num_elements());

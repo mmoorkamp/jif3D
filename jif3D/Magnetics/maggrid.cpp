@@ -94,9 +94,16 @@ int main(int argc, char *argv[])
 
     boost::shared_ptr<CalculatorType> Calculator(new CalculatorType(Implementation));
 
+    jif3D::rvec VecResults(Calculator->Calculate(MagModel, Data));
+
+    jif3D::Write3DVectorDataToVTK(ModelFilename + ".mag.vtk", "B",
+            std::vector<double>(VecResults.begin(), VecResults.end()), Data.GetMeasPosX(),
+            Data.GetMeasPosY(), Data.GetMeasPosZ());
+
+
     Calculator->SetDataTransform(
         boost::shared_ptr<jif3D::TotalFieldAnomaly>(
-            new jif3D::TotalFieldAnomaly(inclination, declination, fieldstrength)));
+            new jif3D::TotalFieldAnomaly(inclination, declination)));
 
     jif3D::rvec Results(Calculator->Calculate(MagModel, Data));
     std::vector<double> Err(Results.size());

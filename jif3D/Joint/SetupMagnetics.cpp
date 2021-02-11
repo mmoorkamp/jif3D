@@ -104,8 +104,7 @@ namespace jif3D
 
             Calculator->SetDataTransform(
                 boost::shared_ptr<jif3D::TotalFieldAnomaly>(
-                    new jif3D::TotalFieldAnomaly(inclination, declination,
-                        fieldstrength)));
+                    new jif3D::TotalFieldAnomaly(inclination, declination)));
 
             MagObjective =
                 boost::shared_ptr<jif3D::ThreeDModelObjective<CalculatorType> >(

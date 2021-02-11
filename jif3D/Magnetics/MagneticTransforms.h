@@ -80,7 +80,6 @@ namespace jif3D
     private:
       const double inclination;
       const double declination;
-      const double strength;
       double BxComp;
       double ByComp;
       double BzComp;
@@ -99,21 +98,21 @@ namespace jif3D
         {
           return noutput;
         }
-      //! Take a vector of 9 tensor elements and calculate the invariant
-      /*! This function performs the transformation of a single tensor.
-       * @param InputVector The tensor elements as a vector in c-storage order, has to have 9 elements
-       * @return A vector with a single element, the calculated invariant.
+      //! Take a vector of 3 tensor elements and calculate the total field anomaly
+      /*! This function performs the transformation of a single magnetic field vector.
+       * @param InputVector The 3 magnetic field components as a vector in c-storage order, has to have 3 elements
+       * @return A vector with a single element, the calculated total field anomaly.
        */
       virtual jif3D::rvec Transform(const jif3D::rvec &InputVector) const override
         {
           assert(InputVector.size() == ninput);
           jif3D::rvec result(1);
-          result(0) = BxComp * InputVector(0) + ByComp * InputVector(1)
-              + BzComp * InputVector(2);
+          result(0) = (BxComp * InputVector(0) + ByComp * InputVector(1)
+              + BzComp * InputVector(2));
           return result;
         }
-      //! Calculate the partial derivative of the invariant with respect to the magnetic field
-      /*! For a magnetic field measurement this function calculates the partial derivatives of the invariant with respect
+      //! Calculate the partial derivative of the total field anomaly with respect to the magnetic field
+      /*! For a magnetic field measurement this function calculates the partial derivatives of the total field with respect
        * to the magnetic field elements
        * @param InputVector The magnetic field elements as a vector in c-storage order, has to have 3 elements
        * @return A 1x3 matrix of partial derivatives
@@ -128,12 +127,12 @@ namespace jif3D
           InvarSens(0, 2) = BzComp;
           return InvarSens;
         }
-      TotalFieldAnomaly(double inc = 0.0, double dec = 0.0, double f = 1.0) :
-          inclination(inc), declination(dec), strength(f)
+      TotalFieldAnomaly(double inc = 0.0, double dec = 0.0) :
+          inclination(inc), declination(dec)
         {
-          BxComp = cos(inclination) * cos(declination) * strength;
-          ByComp = cos(inclination) * sin(declination) * strength;
-          BzComp = sin(inclination)  * strength;
+          BxComp = cos(inclination) * cos(declination);
+          ByComp = cos(inclination) * sin(declination);
+          BzComp = sin(inclination);
         }
       virtual ~TotalFieldAnomaly()
         {
