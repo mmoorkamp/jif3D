@@ -399,8 +399,8 @@ namespace jif3D
         //and each tensor separated by two line breaks
         for (size_t i = 0; i < nmeas; ++i)
           {
-            outfile << Data.at(i * 9) << " " << Data.at(i * 9 + nmeas) << " "
-                << Data.at(i * 9 + 2 * nmeas) << "\n";
+            outfile << Data.at(i * 3) << " " << Data.at(i * 3 + 1) << " "
+                << Data.at(i * 3 + 2) << "\n";
           }
         outfile << "\n";
         if (outfile.fail())

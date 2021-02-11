@@ -162,12 +162,13 @@ int main(int argc, char *argv[])
 
     if (HaveMag)
       {
-        jif3D::rvec MagMod(MagneticsSetup.GetModel().GetSusceptibilities().num_elements());
+        jif3D::rvec MagMod(
+            MagneticsSetup.GetModel().GetSusceptibilities().num_elements());
         std::copy(MagneticsSetup.GetModel().GetSusceptibilities().origin(),
             MagneticsSetup.GetModel().GetSusceptibilities().origin() + ngrid,
             MagMod.begin());
         jif3D::rvec MagGen = SusTrans->PhysicalToGeneralized(MagMod);
-        std::copy(MagGen.begin(), MagGen.end(), InvModel.begin() +ngrid);
+        std::copy(MagGen.begin(), MagGen.end(), InvModel.begin() + ngrid);
 
       }
     else
@@ -191,7 +192,7 @@ int main(int argc, char *argv[])
         FullCalc.SetDataTransform(
             boost::shared_ptr<jif3D::TotalFieldAnomaly>(
                 new jif3D::TotalFieldAnomaly(MagneticsSetup.GetInclination(),
-                    MagneticsSetup.GetDeclination(), MagneticsSetup.GetFielStrength())));
+                    MagneticsSetup.GetDeclination())));
         std::cout << "Calculating depth weighting." << std::endl;
         //now we perform the depth weighting for the sensitivities
         jif3D::rvec SensProfile, WeightVector;

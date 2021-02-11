@@ -7,6 +7,7 @@
 
 #include "OMPMagneticImp.h"
 #include "../Gravity/BasicGravElements.h"
+#include <boost/math/constants/constants.hpp>
 
 namespace jif3D
   {
@@ -39,7 +40,7 @@ namespace jif3D
 #pragma omp parallel default(shared) private(currvalue) reduction(+:Bx,By,Bz)
           {
             //instead of nested loops over each dimension, we have one big
-            //loop over all elements, this allows for a nearly infinite number
+            //loop over all elements, this allows for a large number
             //of parallel processors
 #pragma omp for
             for (int offset = 0; offset < nmod; ++offset)
@@ -59,8 +60,8 @@ namespace jif3D
                 const double Susceptibility =
                     Model.GetSusceptibilities()[xindex][yindex][zindex];
                 // we have to convert the units of the FTG calculation to magnetics
-                //using poisson's relation ship mu_0/4 pi = 1e-7
-                const double factor = 1e-7 / jif3D::Grav_const;
+                //using poisson's relationship 1/(4 pi) gamma
+                const double factor = 1.0 / ( 4 * boost::math::constants::pi<double>()   * jif3D::Grav_const);
                 //the sensitivity element for the current grid cell and the x-component
                 //of the magnetic field is the vector product of the FTG geometric terms
                 //with the direction of the inducing magnetic field and the field strength

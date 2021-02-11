@@ -177,7 +177,7 @@ namespace jif3D
             //ask for Tipper, currently it only works in conjunction with MT
             //otherwise we would need to check for x3d and conductivity models
 
-            std::cout << "MT Lambda: ";
+            std::cout << "Tipper Lambda: ";
             std::cin >> tiplambda;
             if (tiplambda > 0)
               {
