@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_SUITE (SW_Dispersion_Test_Suite)
             statlat.size());
         double lon_centr = -123.0;
         double false_east = 500000.0;
-        for (int i = 0; i < statlat.size(); ++i)
+        for (size_t i = 0; i < statlat.size(); ++i)
           {
             double x, y;
             proj.Forward(lon_centr, statlat.at(i), statlon.at(i), y, x);
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_SUITE (SW_Dispersion_Test_Suite)
                 + std::pow(ycoords.at(0) - ycoords.at(1), 2));
         std::cout << "Dist: " << dist << std::endl;
         std::ofstream dispfile("disp.out");
-        for (int index = 0; index < T.size(); ++index)
+        for (size_t index = 0; index < T.size(); ++index)
           {
             jif3D::SurfaceWaveCalculator::Surf1DResult Result = Calculator.CalcSurf1D(w,
                 index, rho, beta, alpha, depth);

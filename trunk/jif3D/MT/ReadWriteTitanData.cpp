@@ -338,7 +338,7 @@ namespace jif3D
         try
           {
             NcVar NameVar = DataFile.getVar(SiteNameName);
-            const int nvalues = MeasXCoord.size();
+            const size_t nvalues = MeasXCoord.size();
             Names.resize(nvalues);
             if (!NameVar.isNull())
               {

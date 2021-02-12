@@ -31,7 +31,7 @@ double MinDist(double centerx, double centery, const std::vector<double> &XPos,
     return MinDist;
   }
 
-std::tuple<double, double> FindIndex(double centerx, double centery,
+std::tuple<size_t, size_t> FindIndex(double centerx, double centery,
     const std::vector<double> &XCoord, const std::vector<double> &YCoord)
   {
     double xorigin = XCoord.front();
@@ -46,8 +46,8 @@ std::tuple<double, double> FindIndex(double centerx, double centery,
         return
           { -2,-2};
       }
-    int xindex = 0;
-    int yindex = 0;
+    size_t xindex = 0;
+    size_t yindex = 0;
     while (XCoord.at(xindex + 1) < centerx && xindex < XCoord.size() - 1)
       ++xindex;
     while (YCoord.at(yindex + 1) < centery && yindex < YCoord.size() - 1)
@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
             double centery = MergeModel.GetYCoordinates().at(j)
                 + MergeModel.GetYCellSizes().at(j) / 2.0;
             std::vector<double> Distances(nregions);
-            std::vector<int> XIndices(nregions), YIndices(nregions);
+            std::vector<size_t> XIndices(nregions), YIndices(nregions);
             for (size_t k = 0; k < nregions; ++k)
               {
                 Distances.at(k) = MinDist(centerx, centery, Data.at(k).GetMeasPosX(),

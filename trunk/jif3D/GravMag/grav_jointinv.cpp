@@ -363,10 +363,7 @@ int main(int argc, char *argv[])
 
     //calculate the predicted data
     std::cout << "Calculating response of inversion model." << std::endl;
-    typedef typename jif3D::MinMemGravMagCalculator<jif3D::ScalarGravityData> ScalGravCalculatorType;
-    typedef typename jif3D::MinMemGravMagCalculator<jif3D::TensorGravityData> TensGravCalculatorType;
-    typedef typename jif3D::MinMemGravMagCalculator<jif3D::MagneticData> MagCalculatorType;
-    if (GravitySetup.GetHaveScal())
+       if (GravitySetup.GetHaveScal())
       {
         auto ObsData = GravitySetup.GetScalGravObjective().GetObservedData();
         jif3D::rvec ScalGravInvData(

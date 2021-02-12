@@ -58,11 +58,11 @@ BOOST_AUTO_TEST_SUITE (SW_Gradient_Test_Suite)
           { 0.0, 10000.0, 20000.0, 30000.0, };
         std::vector<double> ycoords_m =
           { 500000.0, 500000.0 + 10000.0, 500000.0 + 20000.0, 500000.0 + 30000.0, 500000.0
-              + 40000.0};
+              + 40000.0 };
         std::vector<double> zcoords_m =
         //{ 0.0, 2.0, 4.3, 6.8, 9.6, 12.8, 20.0 };
-            { 0.0, 5000.0, 10000.0, 15000.0};
-              //{ 0.0, 5000.0 };
+              { 0.0, 5000.0, 10000.0, 15000.0 };
+        //{ 0.0, 5000.0 };
         const int zsize = zcoords_m.size();
 
         TomoModel.SetCellCoords(xcoords_m, ycoords_m, zcoords_m);
@@ -73,11 +73,11 @@ BOOST_AUTO_TEST_SUITE (SW_Gradient_Test_Suite)
          const double topdens = 2700;
          const double bottomdens = 4000;*/
         std::vector<double> alpha =
-         { 6000.0, 8000.0, 8000.0 };
-         std::vector<double> beta =
-         { 3500.0, 4500.0, 4500.0 };
-         std::vector<double> rho =
-         { 2700.0, 3300.0, 3300.0 };
+          { 6000.0, 8000.0, 8000.0 };
+        std::vector<double> beta =
+          { 3500.0, 4500.0, 4500.0 };
+        std::vector<double> rho =
+          { 2700.0, 3300.0, 3300.0 };
         /*std::vector<double> alpha =
          { 650.0, 750.0, 1400.0, 1800.0, 2150.0, 2800.0 };
          std::vector<double> beta =
@@ -85,11 +85,11 @@ BOOST_AUTO_TEST_SUITE (SW_Gradient_Test_Suite)
          std::vector<double> rho =
          { 1820.0, 1860.0, 1910.0, 1960.0, 2020.0, 2090.0 };*/
         /*std::vector<double> alpha =
-          { 5000.0 };
-        std::vector<double> beta =
-          { 3000.0 };
-        std::vector<double> rho =
-          { 2700.0 };*/
+         { 5000.0 };
+         std::vector<double> beta =
+         { 3000.0 };
+         std::vector<double> rho =
+         { 2700.0 };*/
         auto exten =
             boost::extents[xcoords_m.size() - 1][ycoords_m.size() - 1][zcoords_m.size()
                 - 1];
@@ -105,11 +105,11 @@ BOOST_AUTO_TEST_SUITE (SW_Gradient_Test_Suite)
             Vp.origin()[i] = alpha[i % (zsize - 1)];
             Density.origin()[i] = rho[i % (zsize - 1)];
 
-            TomoModel.SetData() = Velocity;
-            TomoModel.SetVp(Vp);
-            TomoModel.SetDens(Density);
           }
 
+        TomoModel.SetData() = Velocity;
+        TomoModel.SetVp(Vp);
+        TomoModel.SetDens(Density);
         jif3D::rvec InvModel(TomoModel.GetData().num_elements());
         std::copy(TomoModel.GetData().origin(),
             TomoModel.GetData().origin() + TomoModel.GetData().num_elements(),
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_SUITE (SW_Gradient_Test_Suite)
         std::vector<double> ycoords
           { 517000.0, 535000.0 };
         std::vector<double> zcoords
-          { 0.0, 0.0, 0.0 };
+          { 0.0, 0.0};
         std::vector<double> xcoords
           { 25000.0, 15000.0 };
 
@@ -160,7 +160,8 @@ BOOST_AUTO_TEST_SUITE (SW_Gradient_Test_Suite)
         jif3D::SurfaceWaveCalculator Calculator;
 //Calculator.set_data_err(err);
         jif3D::rvec ObservedTimes(Calculator.Calculate(TomoModel, SWData));
-        std::copy(ObservedTimes.begin(),ObservedTimes.end(),std::ostream_iterator<double>(std::cout," "));
+        std::copy(ObservedTimes.begin(), ObservedTimes.end(),
+            std::ostream_iterator<double>(std::cout, " "));
         jif3D::ThreeDModelObjective<jif3D::SurfaceWaveCalculator> TomoObjective(
             Calculator);
         std::copy(ObservedTimes.begin(), ObservedTimes.end(), dtp.begin());

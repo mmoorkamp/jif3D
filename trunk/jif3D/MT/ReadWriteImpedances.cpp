@@ -513,7 +513,7 @@ namespace jif3D
         try
           {
             NcVar NameVar = DataFile.getVar(SiteNameName);
-            const int nvalues = StatXCoord.size();
+            const size_t nvalues = StatXCoord.size();
             Names.resize(nvalues);
             if (!NameVar.isNull())
               {
@@ -1329,7 +1329,7 @@ namespace jif3D
 
             Imp.resize(nfreq * 8);
             Err.resize(nfreq * 8);
-            for (int i = 0; i < nfreq; ++i)
+            for (size_t i = 0; i < nfreq; ++i)
               {
                 NumVec = ExtractNumbers(infile);
                 double freq = NumVec.at(0);
@@ -1415,7 +1415,7 @@ namespace jif3D
 
             Tipper.resize(nfreq * 4);
             TippErr.resize(nfreq * 4);
-            for (int i = 0; i < nfreq; ++i)
+            for (size_t i = 0; i < nfreq; ++i)
               {
                 NumVec = ExtractNumbers(infile);
                 double freq = NumVec.at(0);

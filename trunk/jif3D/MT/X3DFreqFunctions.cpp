@@ -7,6 +7,7 @@
 #include "X3DFreqFunctions.h"
 #include "../Global/FatalException.h"
 #include "../Global/NumUtil.h"
+#include "../Global/ignore.h"
 #include "../ModelBase/CellBoundaries.h"
 
 #include "ReadWriteX3D.h"
@@ -41,7 +42,9 @@ ForwardResult CalculateFrequency(const ForwardInfo &Info, const jif3D::MTData &D
     //construct a vector of indices of unique station depths
     size_t nlevels = ConstructDepthIndices(MeasDepthIndices, ShiftDepth, Info.Model,
         Data.GetMeasPosZ());
-
+    //we need to call the function but want to ignore compiler warnings
+    //about unused variables and return
+    ignore(nlevels);
     //for Titan24 and other DAS we might have different impedances at the
     //different electric field measurement positions and we need all four of them
     //for MT ZxxEx = ZxxEy and so on, it makes it easier to consider both cases
@@ -187,10 +190,7 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const jif3D::MTData &Data,
     const size_t nmodx = Info.Model.GetConductivities().shape()[0];
     const size_t nmody = Info.Model.GetConductivities().shape()[1];
     const size_t nmodz = Info.Model.GetConductivities().shape()[2];
-    //the number of observations in the fields files, one for each cell in the layer
-    const size_t nobs = nmodx * nmody;
-    //the number of measurement sites
-    const size_t nmeas = Data.GetMeasPosX().size();
+
     //the number of transfer functions
     const size_t nstats = Data.GetExIndices().size() / Data.GetFrequencies().size();
 
@@ -203,6 +203,8 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const jif3D::MTData &Data,
     std::vector<size_t> MeasDepthIndices;
     size_t nlevels = ConstructDepthIndices(MeasDepthIndices, ShiftDepth, Info.Model,
         Data.GetMeasPosZ());
+    //suppress compiler warnings about unused variables
+    ignore(nlevels);
     jif3D::rvec Gradient(nmod, 0.0);
     jif3D::rvec Misfit(GI.Misfit.size());
     std::copy(GI.Misfit.begin(), GI.Misfit.end(), Misfit.begin());
@@ -429,8 +431,6 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const jif3D::MTData &Data,
             Hx1[offset_Hx], Hx2[offset_Hx], Hy1[offset_Hy], Hy2[offset_Hy], ZxxEy, ZxyEy,
             ZyxEy, ZyyEy);
 
-        size_t offset = freq_start_index + j * 8;
-
         //project the electric dipole to magnetic dipole moments using the undistorted impedance
         HXPolMoments1[j] = omega_mu
             * (ZxxEx * EXPolMoments1[2 * j] + ZyxEx * EYPolMoments1[2 * j]
@@ -505,10 +505,7 @@ GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::TipperData
     const size_t nmodx = Info.Model.GetConductivities().shape()[0];
     const size_t nmody = Info.Model.GetConductivities().shape()[1];
     const size_t nmodz = Info.Model.GetConductivities().shape()[2];
-    //the number of observations in the fields files, one for each cell in the layer
-    const size_t nobs = nmodx * nmody;
-    //the number of measurement sites
-    const size_t nmeas = Data.GetMeasPosX().size();
+
     //the number of transfer functions
     const size_t nstats = Data.GetHxIndices().size() / Data.GetFrequencies().size();
 
@@ -522,6 +519,8 @@ GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::TipperData
     std::vector<size_t> MeasDepthIndices;
     size_t nlevels = ConstructDepthIndices(MeasDepthIndices, ShiftDepth, Info.Model,
         Data.GetMeasPosZ());
+    //suppress compiler warnings about unused variables
+    ignore(nlevels);
     jif3D::rvec Gradient(nmod, 0.0);
 
     fs::path TempDir(Info.TempDirName);

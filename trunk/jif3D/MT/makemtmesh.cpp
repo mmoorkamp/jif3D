@@ -42,7 +42,7 @@ namespace po = boost::program_options;
 
 int main(int argc, char *argv[])
   {
-    int incstart = 0;
+    size_t incstart = 0;
     double rounding = 1.0;
     double dens = 0.0;
     double aircond = 1e-5;
@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
       }
 
     jif3D::X3DModel Model;
-    int nx, ny, nz;
+    size_t nx, ny, nz;
     double deltax, deltay, deltaz;
     //first find out the basic mesh parameters
     //the number of cells in each coordinate direction
@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
     Model.SetHorizontalCellSize(deltax, deltay, nx, ny);
     jif3D::ThreeDModelBase::t3DModelDim ZCS(nz, deltaz);
     //the size of each cell in z-direction increases by the specified factor for each layer
-    for (int i = 0; i < nz; ++i)
+    for (size_t i = 0; i < nz; ++i)
       {
         double thickness = deltaz;
         if (i >= incstart)
@@ -220,7 +220,7 @@ int main(int argc, char *argv[])
                 double itopoz = interp(mba::point<2>
                   { currposx, currposy });
                 //std::cout << currposx << " " << currposy << " " << itopoz << std::endl;
-                int k = 0;
+                size_t k = 0;
                 double currposz = Model.GetZCoordinates().at(0);
                 while (k < nz && currposz <= itopoz)
                   {
