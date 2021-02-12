@@ -8,6 +8,7 @@
 #define BOOST_TEST_MODULE Regularization test
 #define BOOST_TEST_MAIN ...
 #include "../Global/Jif3DTesting.h"
+#include "../Global/ignore.h"
 #include <boost/test/included/unit_test.hpp>
 #include <stdlib.h>
 #include <algorithm>
@@ -43,7 +44,7 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
                 - Objective.CalcMisfit(Backward)) / (2 * delta);
             if (std::abs(FDGrad) > 1e-10)
               {
-                BOOST_CHECK_CLOSE(FDGrad, Gradient(i), 0.1);
+                BOOST_CHECK_CLOSE(FDGrad, Gradient(i), 0.2);
               }
             else
               {
@@ -169,6 +170,7 @@ BOOST_AUTO_TEST_SUITE( Regularization_Test_Suite )
         jif3D::EntropyRegularization Regularization(-1.0,1.0,100);
 
         double Misfit = Regularization.CalcMisfit(PertModel);
+        ignore(Misfit);
         CheckGradient(Regularization, PertModel);
       }
 

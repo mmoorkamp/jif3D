@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_SUITE (SW_Gradient_Test_Suite)
         std::vector<int> stat1 =
           { 0, 0 };
         std::vector<int> stat2 =
-          { 1, 2 };
+          { 1, 1 };
         SWData.SetStationPairs(stat1, stat2);
         std::vector<int> NDataPerT =
           { 1, 1, 1, 1, 1, 1, 1, 1, 1 };

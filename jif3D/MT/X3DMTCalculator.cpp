@@ -123,7 +123,6 @@ namespace jif3D
                 __LINE__);
           }
 
-        const size_t nmeas = Data.GetMeasPosX().size();
         const size_t nstats = Data.GetExIndices().size() / nfreq;
         std::vector<double> RotAngles(Data.GetRotAngles());
 

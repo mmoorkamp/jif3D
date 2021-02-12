@@ -222,9 +222,9 @@ namespace jif3D
         const std::vector<double> northing(Model.GetXCoordinates().begin() + 1,
             Model.GetXCoordinates().end());
 
-        const int nperiods = periods.size();
-        const int npairs = StatPairs.size() / 2;
-        const int ndata = dtp_obs.size();
+        const size_t nperiods = periods.size();
+        const size_t npairs = StatPairs.size() / 2;
+        const size_t ndata = dtp_obs.size();
         const size_t NX = northing.size();
         const size_t NY = easting.size();
         const size_t NZ = depth.size();
@@ -331,7 +331,7 @@ namespace jif3D
             SegLengths.resize(ndata);
             CellIndices.resize(ndata);
 //#pragma omp parallel for default(shared), firstprivate(LastPair), schedule(static)
-            for (int datacounter = 0; datacounter < ndata; datacounter++)
+            for (size_t datacounter = 0; datacounter < ndata; datacounter++)
               {
                 auto data_it = indexmap.begin();
                 std::advance(data_it, datacounter);
@@ -345,7 +345,6 @@ namespace jif3D
                         length_tolerance);
                     std::vector<double> seg_east = segments[0];
                     std::vector<double> seg_north = segments[1];
-                    int seg_east_size = seg_east.size();
                     LastPair = pairindex;
                     /*pathmap.insert(
                      std::pair<int, std::vector<std::vector<double>>>(pairindex,
@@ -353,10 +352,8 @@ namespace jif3D
                     pathmap_n[pairindex] = seg_north;
                     pathmap_e[pairindex] = seg_east;
                   }
-                double time_total = 0.0;
                 auto IndicesData = (*data_it).second;
                 int eventid = std::get<0>(IndicesData);
-                int periodid = std::get<1>(IndicesData);
 
                 int seg_east_size = pathmap_e[pairindex].size();
                 //std::cout << "Data: " << datacounter << std::endl;
@@ -406,7 +403,7 @@ namespace jif3D
 
                 const double tic = (ti
                     / vph_map[CellIndices.at(datacounter)[i] + periodid * NX * NY]);
-                for (int n = 0; n < NZ; n++)
+                for (size_t n = 0; n < NZ; n++)
                   {
                     const size_t index = CellIndices.at(datacounter)[i] * NZ + n;
                     const size_t index2 = index + periodid * nmod;

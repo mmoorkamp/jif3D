@@ -361,7 +361,7 @@ namespace jif3D
             if (!NameVar.isNull())
               {
                 const std::vector<long> edges = cxxport::get_legacy_var_edges(NameVar);
-                if (nvalues != edges[0])
+                if (nvalues != size_t(edges[0]))
                   {
                     throw jif3D::FatalException(
                         "Number of Names does not match number of stations !",
@@ -518,7 +518,7 @@ namespace jif3D
             if (!NameVar.isNull())
               {
                 const std::vector<long> edges = cxxport::get_legacy_var_edges(NameVar);
-                if (nvalues != edges[0])
+                if (nvalues != size_t(edges[0]))
                   {
                     throw jif3D::FatalException(
                         "Number of Names does not match number of stations !",

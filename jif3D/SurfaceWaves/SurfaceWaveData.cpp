@@ -266,15 +266,15 @@ namespace jif3D
         outfile << "ASCII\n";
         outfile << "DATASET POLYDATA\n";
 
-        int npoints = 0;
+        size_t npoints = 0;
         std::vector<double> seg_east, seg_north;
-        int nlines = pathmap_e.size();
+        size_t nlines = pathmap_e.size();
         //std::multimap<int, std::vector<std::vector<double>>>::iterator it;
-        for (int it = 0; it < nlines; ++it)
+        for (size_t it = 0; it < nlines; ++it)
           {
             std::vector<double> seg_east_tmp = pathmap_e[it];
             std::vector<double> seg_north_tmp = pathmap_n[it];
-            for (int ip = 0; ip < seg_east_tmp.size(); ip++)
+            for (size_t ip = 0; ip < seg_east_tmp.size(); ip++)
               {
                 seg_east.push_back(seg_east_tmp[ip]);
                 seg_north.push_back(seg_north_tmp[ip]);
@@ -283,18 +283,18 @@ namespace jif3D
           }
 
         outfile << "POINTS " << npoints << " double\n";
-        for (int ip = 0; ip < npoints; ip++)
+        for (size_t ip = 0; ip < npoints; ip++)
           {
             outfile << seg_north[ip] << " " << seg_east[ip] << " 0.0\n";
           }
 
         outfile << "LINES " << nlines << " " << nlines + npoints << "\n";
         int index = 0;
-        for (int it = 0; it < nlines; ++it)
+        for (size_t it = 0; it < nlines; ++it)
           {
             std::vector<double> seg_east_tmp = pathmap_e[it];
             outfile << seg_east_tmp.size();
-            for (int ip = 0; ip < seg_east_tmp.size(); ip++)
+            for (size_t ip = 0; ip < seg_east_tmp.size(); ip++)
               {
                 outfile << " " << index;
                 index = index + 1;
