@@ -113,10 +113,10 @@ int main(int argc, char *argv[])
           }
 
         std::vector<double> AvgImp(OneDImp.size());
-        for (size_t i = 0; i < nfreq; ++i)
+        for (size_t j = 0; j < nfreq; ++j)
           {
-            AvgImp.at(2 * i) = (OneDImp.at(2 * i) + OneDImp.at(2 * i + 1)) / 2.0;
-            AvgImp.at(2 * i + 1) = AvgImp.at(2 * i);
+            AvgImp.at(2 * j) = (OneDImp.at(2 * j) + OneDImp.at(2 * j + 1)) / 2.0;
+            AvgImp.at(2 * j + 1) = AvgImp.at(2 * j);
           }
         jif3D::MTData ObsData(Data);
 
