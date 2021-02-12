@@ -42,8 +42,6 @@ namespace jif3D
         std::complex<double> omegamu;
         std::complex<double> kcurr, klow;
         std::complex<double> xi;
-
-        std::complex<double> adm;
         double d;
         double sigmacurr, sigmalow;
 

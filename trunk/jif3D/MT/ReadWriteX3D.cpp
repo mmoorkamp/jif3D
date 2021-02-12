@@ -368,7 +368,6 @@ namespace jif3D
         FindToken(infile, "#        x (m)");
         //we have a few values in the file that we do not care about right now
         double dummy, real, imag;
-        const std::complex<double> I(0.0, 1.0);
         char restline[maxlength];
         //read in numbers as long as we can, this will be the E-field
         while (infile.good())
