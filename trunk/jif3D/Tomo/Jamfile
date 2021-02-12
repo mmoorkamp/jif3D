@@ -16,3 +16,8 @@ exe makeseismesh : makeseismesh.cpp tomo  core :  ;
 exe tomogrid : tomogrid.cpp tomo  core :  ;
 exe refinemodel : refinemodel.cpp tomo  core :  ;
 exe reldiff : reldiff.cpp tomo  core :  ;
+
+install $(TOP)/bin : makeseismesh tomogrid :
+    <install-dependencies>on <install-type>EXE
+    <install-type>LIB <dll-path>$(TOP)/bin
+    ;

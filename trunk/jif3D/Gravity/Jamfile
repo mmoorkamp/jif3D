@@ -33,3 +33,9 @@ exe gravsens : gravsens.cpp gravity  core ../Inversion//inversion ../Inversion//
 exe gravnoise : gravnoise.cpp gravity   core ;
 
 exe makegravmesh : makegravmesh.cpp gravity  core  ;
+
+
+install $(TOP)/bin : makegravmesh gravgrid :
+    <install-dependencies>on <install-type>EXE
+    <install-type>LIB <dll-path>$(TOP)/bin
+    ;

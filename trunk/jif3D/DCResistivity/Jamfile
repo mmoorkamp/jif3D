@@ -15,5 +15,8 @@ exe dcjoint : dcjoint.cpp dcresistivity ../Joint//joint  ../Joint//setup ;
 # exe TomoDcMagJoint : TomoDcMagJoint.cpp dcresistivity  ../Joint//setup ../Inversion//inversion ../Regularization//regularization ../Tomo//tomo ../Magnetics//magnetics core 
 #       ..//boost_program_options  ;
 
-
+install $(TOP)/bin : makedcresmesh dcjoint :
+    <install-dependencies>on <install-type>EXE
+    <install-type>LIB <dll-path>$(TOP)/bin
+    ;
 

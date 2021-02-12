@@ -60,3 +60,7 @@ exe modelwave : modelwave.cpp  ../Tomo//tomo  ../Global//global ../ModelBase//mo
 exe opttest : opttest.cpp  ../Joint//joint ../Joint//setup ../MT//mt ..//optpp ..//newmat joint ..//boost_program_options : 
               <include>/usr/local/include/opt++ <define>use_namespace <define>HAVE_STD <optpp>off:<build>no  ;
 
+install $(TOP)/bin : qqfit qqtip convertmtt text2grav :
+    <install-dependencies>on <install-type>EXE
+    <install-type>LIB <dll-path>$(TOP)/bin
+    ;
