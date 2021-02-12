@@ -14,6 +14,7 @@
 #include "../Global/convert.h"
 #include "../Global/Noise.h"
 #include "../Global/VecMat.h"
+#include "../Global/ignore.h"
 #include "../MT/X3DModel.h"
 #include "../MT/ReadWriteImpedances.h"
 #include "../MT/OneDMTObjective.h"
@@ -188,11 +189,12 @@ int main(int argc, char *argv[])
           }
 
         double misfit = Objective->CalcMisfit(InvModel);
+        ignore(misfit);
         InvModel = ConductivityTransform->GeneralizedToPhysical(InvModel);
         Model.SetBackgroundConductivities(
             std::vector<double>(InvModel.begin(), InvModel.end()));
 
-        std::vector<double> currdata(jif3D::OneDMTCalculator().Calculate(Model,Data));
+        std::vector<double> currdata(jif3D::OneDMTCalculator().Calculate(Model, Data));
 
         RMS.at(i) = Objective->GetRMS()[0];
         omp_set_lock(&lck);

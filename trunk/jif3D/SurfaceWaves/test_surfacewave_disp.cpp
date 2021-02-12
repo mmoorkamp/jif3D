@@ -34,11 +34,8 @@ BOOST_AUTO_TEST_SUITE (SW_Dispersion_Test_Suite)
           { 3500.0, 4500.0, 4500.0 };
         std::vector<double> rho =
           { 2700.0, 3300.0, 3300.0 };
-        //std::vector<double> T =
-        //  { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 120, 140,
-        //      160, 180, 200 };
         std::vector<double> T =
-          { 1 };
+          { 1, 2, 3 };
         std::vector<double> w = jif3D::T2w(T);
 
         std::vector<double> zcoords_m =

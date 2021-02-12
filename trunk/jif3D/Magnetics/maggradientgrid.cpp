@@ -31,7 +31,6 @@ namespace po = boost::program_options;
 
 int main(int argc, char *argv[])
   {
-    bool wantcuda = false;
     po::options_description desc("General options");
     desc.add_options()("help", "produce help message");
 

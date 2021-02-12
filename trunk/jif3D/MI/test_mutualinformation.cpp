@@ -53,8 +53,6 @@ BOOST_AUTO_TEST_CASE (se_diff_test)
     const size_t nx = 20;
     jif3D::rvec x(nx);
     std::generate(x.begin(),x.end(),drand48);
-
-    double H = jif3D::shan_entropy(x);
     jif3D::rvec dx = jif3D::diff_shan_entropy(x);
     const double delta = 0.001;
     for (size_t i = 0; i < nx; ++i)
