@@ -24,9 +24,6 @@ constant NETCDF_LIB_PATH : /media/bweise/Grimsel/netcdf/lib ;
 constant CUDA_LIB_PATH : /usr/local/cuda/lib64 ;
 path-constant TOP : . ;
 
-#constant NETCDF_CXX_DIR : /usr/lib ;
-#constant NETCDF_CXX_DIR : C:/Program Files/NCXX/lib ;
-
 
 project 
     : requirements

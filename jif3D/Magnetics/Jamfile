@@ -14,3 +14,8 @@ unit-test Grad_Objective_test : test_MagneticGradObjective.cpp magnetics core ..
 exe maggrid : maggrid.cpp magnetics  core ;
 exe maggradientgrid : maggradientgrid.cpp magnetics core ;
 exe makemagmesh : makemagmesh.cpp magnetics core ;
+
+install $(TOP)/bin : makemagmesh maggrid :
+    <install-dependencies>on <install-type>EXE
+    <install-type>LIB <dll-path>$(TOP)/bin
+    ;
