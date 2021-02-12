@@ -52,14 +52,18 @@ namespace jif3D
      * @param filestream An open infile stream, will be pointing to the next line after finding the token
      * @param token The token to search for
      * @param critical When true the token has to be present in the file and an exception is thrown
+     * @param Do we want to reset the file, i.e. search from the very beginning?
      * @return The line in the file that contains the token
      */
     inline std::string FindToken(std::ifstream &filestream, const std::string &token,
-        bool critical = true)
+        bool critical = true, bool reset = true)
       {
         bool found = false;
-        filestream.clear();
-        filestream.seekg(0);
+        if (reset)
+          {
+            filestream.clear();
+            filestream.seekg(0);
+          }
         std::string line;
         while (!found && std::getline(filestream, line))
           {
@@ -98,7 +102,7 @@ namespace jif3D
         std::vector<double> NumVec(SplitVec.size());
         std::transform(SplitVec.begin(), SplitVec.end(), NumVec.begin(),
             [](std::string &s)
-                { return std::stod(s);});
+              { return std::stod(s);});
         return NumVec;
       }
 

@@ -142,7 +142,9 @@ namespace jif3D
           }
         const double threshold = 0.001;
         double currval = 1.0;
-        while (currval > threshold && distindex < values.size())
+        //we know distindex will be positive, but has to be int for save subtractions below
+        //so we cast here to avoid compiler warning
+        while (currval > threshold && size_t(distindex) < values.size())
           {
             currval = values.at(distindex);
             distindex++;
@@ -163,11 +165,11 @@ namespace jif3D
                 //double curry = Model.GetYCoordinates()[yi] + Model.GetYCellSizes()[yi] / 2.0;
                 //double currz = Model.GetZCoordinates()[zi] + Model.GetZCellSizes()[zi] / 2.0;
                 int startx = std::max(0, xi - distindex);
-                int endx = std::min(nx, xi + distindex);
+                size_t endx = std::min(nx, xi + distindex);
                 int starty = std::max(0, yi - distindex);
-                int endy = std::min(ny, yi + distindex);
+                size_t endy = std::min(ny, yi + distindex);
                 int startz = std::max(0, zi - distindex);
-                int endz = std::min(nz, zi + distindex);
+                size_t endz = std::min(nz, zi + distindex);
                 for (size_t j = startx; j < endx; ++j)
                   {
                     for (size_t k = starty; k < endy; ++k)
@@ -281,9 +283,9 @@ namespace jif3D
           }
         std::fill(previous_result.begin(), previous_result.end(), 0.0);
         //std::cout << " Applying covariance ";
-        double factor = sigma * sigma / (std::pow(2, nu - 1) * boost::math::tgamma(nu));
-        boost::posix_time::ptime starttime =
-            boost::posix_time::microsec_clock::local_time();
+        //double factor = sigma * sigma / (std::pow(2, nu - 1) * boost::math::tgamma(nu));
+        //boost::posix_time::ptime starttime =
+        //    boost::posix_time::microsec_clock::local_time();
         const size_t nmod = nx * ny * nz;
 
         double min = 0.0;
@@ -304,11 +306,11 @@ namespace jif3D
                 //double curry = Model.GetYCoordinates()[yi] + Model.GetYCellSizes()[yi] / 2.0;
                 //double currz = Model.GetZCoordinates()[zi] + Model.GetZCellSizes()[zi] / 2.0;
                 int startx = std::max(0, xi - distindex);
-                int endx = std::min(nx, xi + distindex);
+                size_t endx = std::min(nx, xi + distindex);
                 int starty = std::max(0, yi - distindex);
-                int endy = std::min(ny, yi + distindex);
+                size_t endy = std::min(ny, yi + distindex);
                 int startz = std::max(0, zi - distindex);
-                int endz = std::min(nz, zi + distindex);
+                size_t endz = std::min(nz, zi + distindex);
                 for (size_t j = startx; j < endx; ++j)
                   {
                     for (size_t k = starty; k < endy; ++k)
@@ -341,8 +343,8 @@ namespace jif3D
             MapType r(&(previous_result.data()[0]), previous_result.size(), 1);
             r = A * v;
 
-            boost::posix_time::ptime endtime =
-                boost::posix_time::microsec_clock::local_time();
+            //boost::posix_time::ptime endtime =
+             //   boost::posix_time::microsec_clock::local_time();
             //double time = (endtime - starttime).total_seconds();
           }
         std::transform(previous_result.begin(), previous_result.end(), CovDiag.begin(),

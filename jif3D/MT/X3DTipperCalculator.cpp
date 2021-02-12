@@ -13,7 +13,7 @@
 #endif
 #include <boost/make_shared.hpp>
 #include <boost/algorithm/string.hpp>
-
+#include "../Global/ignore.h"
 #include "../ModelBase/CellBoundaries.h"
 #include "X3DMTCalculator.h"
 #include "X3DFreqFunctions.h"
@@ -22,6 +22,7 @@
 #include "MTEquations.h"
 #include "InterpolateField.h"
 #include "MTUtils.h"
+
 
 namespace fs = boost::filesystem;
 
@@ -85,11 +86,9 @@ namespace jif3D
         maxfreqindex = std::min(maxfreqindex, Data.GetFrequencies().size());
 
         const size_t nfreq = maxfreqindex - minfreqindex;
-
-        const size_t nmeas = Data.GetMeasPosX().size();
         if (ForwardExecTime.empty() || ForwardExecTime.size() != nfreq)
           {
-            for (int i = 0; i < nfreq; ++i)
+            for (size_t i = 0; i < nfreq; ++i)
               {
                 ForwardExecTime.push_back(std::make_pair(0, minfreqindex + i));
               }
@@ -98,7 +97,7 @@ namespace jif3D
         const size_t nstats = Data.GetHxIndices().size() / nfreq;
         const size_t nmodx = Model.GetConductivities().shape()[0];
         const size_t nmody = Model.GetConductivities().shape()[1];
-        const size_t nmodz = Model.GetConductivities().shape()[2];
+
 
         std::string ErrorMsg;
         //result will hold the final impedance values with
@@ -152,7 +151,9 @@ namespace jif3D
                 //construct a vector of indices of unique station depths
                 size_t nlevels = ConstructDepthIndices(MeasDepthIndices, ShiftDepth,
                     Model, Data.GetMeasPosZ());
-
+                //we need to call the previous function and take the retun type
+                //but we want to suppress compiler warnings about unusued variables
+                ignore(nlevels);
                 std::complex<double> Tx, Ty;
                 double Frequency = Data.GetFrequencies().at(calcindex);
                 std::vector<std::complex<double>> Hx1(FieldCalculator->GetHx1(Frequency)),

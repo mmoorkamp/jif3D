@@ -42,12 +42,14 @@ namespace jif3D
         std::ifstream infile(filename.c_str());
         //find the line in the file that describes the cell size in the horizontal directions
         //all cells have the same size
-        std::string line = FindToken(infile, "Dx");
+        bool critical = true;
+        bool reset = false;
+        std::string line = FindToken(infile, "Dx", critical, reset);
         double dx = 2.1, dy = 3.4;
         infile >> dx >> dy;
 
         //find the information about the background
-        line = FindToken(infile, "Thickness");
+        line = FindToken(infile, "Thickness", critical, reset);
         double currvalue;
         //swallow the line with 0 thickness and conductivity
         char dummy[maxlength];
@@ -86,7 +88,7 @@ namespace jif3D
             //so we catch that and just signal that there are no more layers
             try
               {
-                line = FindToken(infile, "dzA(m)");
+                line = FindToken(infile, "dzA(m)", critical, reset);
               } catch (FatalException &e)
               {
                 havelayer = false;
@@ -101,11 +103,11 @@ namespace jif3D
                 //but we assume that these numbers are the same for each layer
                 //In the file these numbers can vary, but we do not perform
                 //any checking as this case is not interesting for us
-                line = FindToken(infile, "cells_in_X-direction");
+                line = FindToken(infile, "cells_in_X-direction", critical, reset);
                 infile >> startx >> endx;
-                FindToken(infile, "cells_in_Y-direction");
+                FindToken(infile, "cells_in_Y-direction", critical, reset);
                 infile >> starty >> endy;
-                FindToken(infile, "ARRAY");
+                FindToken(infile, "ARRAY", critical, reset);
                 //calculate how many cells in a layer
                 const unsigned int nelements = (endx - startx + 1) * (endy - starty + 1);
                 //and read them in the order they were written

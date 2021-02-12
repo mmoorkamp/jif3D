@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_SUITE( Magnetic_Test_Suite )
           for (size_t j = 0; j < ncells; ++j)
             for (size_t k = 0; k < ncells; ++k)
               {
-                MagneticTest.SetSusceptibilities()[i][j][k] = 0.2;
+                MagneticTest.SetSusceptibilities()[i][j][k] = susceptibility;
 
               }
         const size_t nmeas = 200;
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_SUITE( Magnetic_Test_Suite )
             boost::shared_ptr<jif3D::TotalFieldAnomaly>(
                 new jif3D::TotalFieldAnomaly(inclination, declination)));
         jif3D::rvec magtotal(Calculator->Calculate(MagneticTest, Data));
-        for (int i = 0; i < magtotal.size(); ++i)
+        for (size_t i = 0; i < magtotal.size(); ++i)
           {
             BOOST_CHECK_CLOSE(magtotal(i), magt.at(i), 0.2);
           }

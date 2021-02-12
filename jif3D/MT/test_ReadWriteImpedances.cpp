@@ -276,7 +276,7 @@ BOOST_AUTO_TEST_SUITE (ReadWriteImpedances_Suite)
         std::vector<double> JImpedances, JError, JTipper, JTipErr;
         double XC, YC, ZC;
         jif3D::ReadImpedancesFromJ("testJ.j", JFrequencies, XC, YC, ZC, JImpedances,
-            JError, JTipper, JTipErr);
+            JError);
         jif3D::ReadImpedancesFromMTT("testJ.mtt", MttFrequencies, MttImpedances, MttError,
             MttTipper, MttTipErr);
         for (size_t i = 0; i < MttFrequencies.size(); ++i)

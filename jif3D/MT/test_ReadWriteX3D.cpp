@@ -80,24 +80,5 @@ BOOST_AUTO_TEST_SUITE( ReadWriteX3D_Suite )
           }
 
       }
-    BOOST_AUTO_TEST_CASE (test_read_emo)
-      {
-        std::string filename("csmt010a.emo");
-        std::vector<std::complex<double> > Ex, Ey, Hx, Hy, Hz;
-        jif3D::ReadEMO(filename, Ex, Ey, Hx, Hy, Hz);
-        BOOST_CHECK(Ex.size() == 7200 * 2);
-        BOOST_CHECK(Ex.size() == Ey.size());
-        BOOST_CHECK(Ex.size() == Hx.size());
-        BOOST_CHECK(Ex.size() == Hy.size());
-      }
-
-    BOOST_AUTO_TEST_CASE (test_read_ema)
-      {
-        std::string filename("csmt010a.ema");
-        std::vector<std::complex<double> > Ex, Ey, Ez;
-        jif3D::ReadEMA(filename, Ex, Ey, Ez, 80, 90, 14);
-        BOOST_CHECK(Ex.size() == 7200 * 14);
-        BOOST_CHECK(Ex.size() == Ey.size());
-      }
 
     BOOST_AUTO_TEST_SUITE_END()
