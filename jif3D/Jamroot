@@ -45,7 +45,7 @@ project
     	<toolset>msvc:<define>NOMINMAX
 		<toolset>msvc:<define>BOOST_ALL_DYN_LINK
     	<toolset>msvc:<cxxflags>" /openmp /wd4101 /wd4244 /wd4068 /wd4305 /wd4267 "
-    	<toolset>intel:<cxxflags>" -qopenmp  -std=c++14 "
+    	<toolset>intel:<cxxflags>" -qopenmp  -std=c++14 -Wall "
     	<toolset>intel:<define>TESTR
     	#<toolset>intel:<define>BOOST_NO_CXX11_SCOPED_ENUMS
     	<toolset>intel:<linkflags>" -qopenmp -std=c++14 "
