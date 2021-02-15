@@ -108,7 +108,7 @@ namespace jif3D
         // Compute initial R1212 polarization for large period below fundamental mode
         double R1212 = compute_R1212(w.back() / 10.0, c_lim[0], vp_1D, vs_1D, depth,
             dens_1D);
-        const bool pol0 = signbit(R1212);
+        const bool pol0 = std::signbit(R1212);
 
         double c_last = c_lim[0]; //initial value for c to start search
 
@@ -128,7 +128,7 @@ namespace jif3D
 
             // Check polarization of R1212 for the upper bracket
             R1212 = compute_R1212(w[freqindex], c1, vp_1D, vs_1D, depth, dens_1D);
-            pol1 = signbit(R1212);
+            pol1 = std::signbit(R1212);
 
             // If a sign change is found check for mode skipping
             if (pol0 != pol1 && (c1 - c0) > (2.0 * tolerance))
@@ -141,7 +141,7 @@ namespace jif3D
                 while (tolerance < (c2 - c0))
                   {
                     R1212 = compute_R1212(w[freqindex], c2, vp_1D, vs_1D, depth, dens_1D);
-                    const bool pol2 = signbit(R1212);
+                    const bool pol2 = std::signbit(R1212);
                     // if mode skipping detected increase precision (-> decrease step ratio) and return to bracket search
                     if (pol2 == pol1)
                       {
