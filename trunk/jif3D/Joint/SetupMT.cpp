@@ -22,7 +22,7 @@ namespace jif3D
   {
 
     SetupMT::SetupMT() :
-        relerr(0.02), DistCorr(0.0)
+        relerr(0.02), tiprelerr(0.02), tipperr(0.0), DistCorr(0.0), tiplambda(0.0)
       {
       }
 

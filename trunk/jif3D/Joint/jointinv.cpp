@@ -77,6 +77,8 @@ double xorigin, yorigin;
 double coolingfactor = 1.0;
 int saveinterval = 1;
 double CovWidth = 3.0;
+double Cov_nu = 1.0;
+double Cov_sigma = 1.0;
 
 int hpx_main(boost::program_options::variables_map &vm)
   {
@@ -407,8 +409,8 @@ int hpx_main(boost::program_options::variables_map &vm)
 
         boost::shared_ptr<jif3D::GeneralCovariance> StochCov = boost::make_shared<
             jif3D::StochasticCovariance>(CovModVec, StartModel->GetModelShape()[0],
-            StartModel->GetModelShape()[1], StartModel->GetModelShape()[2], CovWidth, 1.0,
-            1.0);
+            StartModel->GetModelShape()[1], StartModel->GetModelShape()[2], CovWidth,
+            Cov_nu, Cov_sigma);
         CovObj->AddSection(0, ngrid, StochCov);
         CovObj->AddSection(ngrid, 2 * ngrid, StochCov);
         CovObj->AddSection(2 * ngrid, 3 * ngrid, StochCov);
@@ -613,16 +615,15 @@ int hpx_main(boost::program_options::variables_map &vm)
     if (havemt)
       {
         SaveModel(InvModel, *MTTransform.get(), MTModel, modelfilename + ".mt.inv");
-
-        std::vector<double> C;
+        auto MTData = MTSetup.GetMTObjective().GetObservedData();
         if (MTSetup.GetDistCorr() > 0.0)
           {
+            std::vector<double> C;
             jif3D::rvec tmp = DistRegTrans->GeneralizedToPhysical(InvModel);
             std::copy(tmp.begin(), tmp.end(), std::back_inserter(C));
+            MTData.SetDistortion(C);
           }
-        auto MTData = MTSetup.GetMTObjective().GetObservedData();
         //calculate MT inversion result
-        MTData.SetDistortion(C);
         MTData.WriteNetCDF(modelfilename + ".dist_imp.nc");
         jif3D::rvec MTInvData(MTSetup.GetMTObjective().GetSyntheticData());
         MTData.SetDataAndErrors(std::vector<double>(MTInvData.begin(), MTInvData.end()),
@@ -732,7 +733,11 @@ int main(int argc, char *argv[])
         "saveinterval", po::value(&saveinterval)->default_value(1),
         "The interval in iterations at which intermediate models are saved.")("stochcov",
         po::value(&CovWidth)->default_value(0),
-        "Width of stochastic regularization, enabled if > 0, EXPERIMENTAL");
+        "Width of stochastic regularization, enabled if > 0")("stoch_nu",
+        po::value(&Cov_nu)->default_value(1.00),
+        "The value of nu for the stochastic covariance")("stoch_a",
+        po::value(&Cov_sigma)->default_value(1.0),
+        "The value of a for the stochastic covariance");
 //we need to add the description for each part to the boost program options object
 //that way the user can get a help output and the parser object recongnizes these options
     desc.add(TomoSetup.SetupOptions());

@@ -30,7 +30,6 @@ BOOST_AUTO_TEST_CASE(constructors_test)
     BOOST_CHECK_EQUAL(ConstBaseTest.GetZCellSizes().size(), (size_t )0);
   }
 
-
 BOOST_AUTO_TEST_CASE(equal_geometry_test)
   {
     jif3D::ThreeDGravityModel Model1;
@@ -65,6 +64,30 @@ BOOST_AUTO_TEST_CASE(equal_geometry_test)
     ZCS[rand() % zsize] += 0.1;
     DiffZ.SetZCellSizes(ZCS);
     BOOST_CHECK(!jif3D::EqualGridGeometry(Model1, DiffZ));
+
+    //check differences in x-origin
+    jif3D::ThreeDGravityModel OriginX(Model1);
+    auto XCoord = Model1.GetXCoordinates();
+    std::transform(XCoord.begin(), XCoord.end(), XCoord.begin(), [](double val)
+      { return val + 1.0;});
+    OriginX.SetXCoordinates(XCoord);
+    BOOST_CHECK(!jif3D::EqualGridGeometry(Model1, OriginX));
+
+    //check differences in y-origin
+    jif3D::ThreeDGravityModel OriginY(Model1);
+    auto YCoord = Model1.GetYCoordinates();
+    std::transform(YCoord.begin(), YCoord.end(), YCoord.begin(), [](double val)
+      { return val + 2.0;});
+    OriginY.SetYCoordinates(YCoord);
+    BOOST_CHECK(!jif3D::EqualGridGeometry(Model1, OriginY));
+
+    //check differences in origin
+    jif3D::ThreeDGravityModel OriginZ(Model1);
+    auto ZCoord = Model1.GetZCoordinates();
+    std::transform(ZCoord.begin(), ZCoord.end(), ZCoord.begin(), [](double val)
+      { return val + 3.0;});
+    OriginZ.SetZCoordinates(ZCoord);
+    BOOST_CHECK(!jif3D::EqualGridGeometry(Model1, OriginZ));
   }
 
 BOOST_AUTO_TEST_CASE(concurrent_coordinates_test)
