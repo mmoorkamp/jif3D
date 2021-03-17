@@ -98,6 +98,9 @@ namespace jif3D
                 const double xmax = TomoModel.GetXCoordinates().back();
                 const double ymax = TomoModel.GetYCoordinates().back();
                 const double zmax = TomoModel.GetZCoordinates().back();
+                const double xmin = TomoModel.GetXCoordinates().front();
+                const double ymin = TomoModel.GetYCoordinates().front();
+                const double zmin = TomoModel.GetZCoordinates().front();
                 const double xextent = xmax - TomoModel.GetXCoordinates().front();
                 const double yextent = ymax - TomoModel.GetYCoordinates().front();
                 const double zextent = zmax - TomoModel.GetZCoordinates().front();
@@ -106,17 +109,17 @@ namespace jif3D
                 const int nz = round(zextent / CellSize);
                 //if the finely discretized grid does not fit into the inversion grid
                 //with a tolerance of more than 10cm
-                if (std::abs(nx * CellSize - xmax) > 0.1)
+                if (std::abs(xmin + nx * CellSize - xmax) > 0.1)
                   {
                     throw jif3D::FatalException(
                         "Refined grid does not fit in x-direction", __FILE__, __LINE__);
                   }
-                if (std::abs(ny * CellSize - ymax) > 0.1)
+                if (std::abs(ymin + ny * CellSize - ymax) > 0.1)
                   {
                     throw jif3D::FatalException(
                         "Refined grid does not fit in y-direction", __FILE__, __LINE__);
                   }
-                if (std::abs(nz * CellSize - zmax) > 0.1)
+                if (std::abs(zmin + nz * CellSize - zmax) > 0.1)
                   {
                     throw jif3D::FatalException(
                         "Refined grid does not fit in x-direction", __FILE__, __LINE__);

@@ -33,6 +33,7 @@
 #include "../Magnetics/ReadWriteMagneticData.h"
 #include "../Magnetics/MagneticTransforms.h"
 #include "../Magnetics/MagneticData.h"
+#include "../MI/MutualInformationConstraint.h"
 #include "../Joint/SetupRegularization.h"
 #include "../Joint/SetupInversion.h"
 #include "../Joint/SetupGravity.h"
@@ -53,6 +54,7 @@ int main(int argc, char *argv[])
   {
 
     double mindens, maxdens, minsus, maxsus;
+    int mibins = 10;
     po::options_description desc("General options");
     desc.add_options()("help", "produce help message")("threads", po::value<int>(),
         "The number of openmp threads")("dens_covmod", po::value<std::string>(),
@@ -62,7 +64,8 @@ int main(int argc, char *argv[])
         po::value(&mindens)->default_value(-1000.0))("maxdens",
         po::value(&maxdens)->default_value(1000.0))("minsus",
         po::value(&minsus)->default_value(-1.0))("maxsus",
-        po::value(&maxsus)->default_value(1.0));
+        po::value(&maxsus)->default_value(1.0))("mutual_information", po::value(&mibins),
+        "Use mutual information coupling, specify number of bins in histogram");
 
     jif3D::SetupRegularization RegSetup;
     jif3D::SetupInversion InversionSetup;
@@ -282,13 +285,30 @@ int main(int argc, char *argv[])
             "MagReg", jif3D::JointObjective::regularization);
       }
 
-    double crosslambda = 10.0;
-    std::cout << "Cross-gradient weight: ";
-    std::cin >> crosslambda;
-    if (crosslambda > 0.0)
+    if (vm.count("mutual_information"))
       {
-        Objective->AddObjective(GravMagCross, GravMagTrans, crosslambda, "Cross",
-            jif3D::JointObjective::coupling);
+        boost::shared_ptr<jif3D::MutualInformationConstraint> GravMagMI =
+            boost::make_shared<jif3D::MutualInformationConstraint>(-2.0, 2.0, -2.0, 2.0,
+                mibins);
+        double milambda = 10.0;
+        std::cout << "MI weight: ";
+        std::cin >> milambda;
+        if (milambda > 0.0)
+          {
+            Objective->AddObjective(GravMagMI, GravMagTrans, milambda, "MI",
+                jif3D::JointObjective::coupling);
+          }
+      }
+    else
+      {
+        double crosslambda = 10.0;
+        std::cout << "Cross-gradient weight: ";
+        std::cin >> crosslambda;
+        if (crosslambda > 0.0)
+          {
+            Objective->AddObjective(GravMagCross, GravMagTrans, crosslambda, "Cross",
+                jif3D::JointObjective::coupling);
+          }
       }
     std::cout << "Performing inversion." << std::endl;
 
@@ -363,7 +383,7 @@ int main(int argc, char *argv[])
 
     //calculate the predicted data
     std::cout << "Calculating response of inversion model." << std::endl;
-       if (GravitySetup.GetHaveScal())
+    if (GravitySetup.GetHaveScal())
       {
         auto ObsData = GravitySetup.GetScalGravObjective().GetObservedData();
         jif3D::rvec ScalGravInvData(
