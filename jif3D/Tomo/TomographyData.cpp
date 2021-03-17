@@ -81,7 +81,7 @@ namespace jif3D
           }
         SetDataAndErrors(Data, Error);
       }
-    void TomographyData::WriteNetCDF(const std::string &filename)
+    void TomographyData::WriteNetCDF(const std::string &filename) const
       {
         //make sure all vectors have consistent sizes
         const size_t ndata = GetData().size();
@@ -133,7 +133,7 @@ namespace jif3D
 
       }
 
-    void TomographyData::WriteSourcePoints(const std::string &filename)
+    void TomographyData::WriteSourcePoints(const std::string &filename) const
       {
         std::vector<double> SourceNum(GetSourcePosX().size());
         std::iota(SourceNum.begin(), SourceNum.end(), 1);

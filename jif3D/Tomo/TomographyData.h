@@ -143,9 +143,9 @@ namespace jif3D
           SourcePosY = ycoords;
           SourcePosZ = zcoords;
         }
-      void WriteSourcePoints(const std::string &filename);
+      void WriteSourcePoints(const std::string &filename) const;
       virtual void ReadNetCDF(const std::string &filename) override;
-      virtual void WriteNetCDF(const std::string &filename) override;
+      virtual void WriteNetCDF(const std::string &filename) const override;
       TomographyData();
       virtual ~TomographyData();
       };
