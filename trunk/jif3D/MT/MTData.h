@@ -99,10 +99,10 @@ namespace jif3D
       virtual ~MTData();
       //! Write all information to a netcdf file
       virtual void ReadNetCDF(const std::string &filename) override;
-      virtual void WriteNetCDF(const std::string &filename) override;
+      virtual void WriteNetCDF(const std::string &filename) const override;
       void ReadModEM(const std::string &filename);
-      void WriteModEM(const std::string &filename);
-      void PlotMeasurementConfiguration(const std::string &filename);
+      void WriteModEM(const std::string &filename) const;
+      void PlotMeasurementConfiguration(const std::string &filename) const;
       };
 
   } /* namespace jif3D */

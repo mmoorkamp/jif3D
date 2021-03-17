@@ -35,7 +35,7 @@ namespace jif3D
         SetMeasurementPoints(PosX, PosY, PosZ);
         SetDataAndErrors(D, E);
       }
-    void TipperData::WriteNetCDF(const std::string &filename)
+    void TipperData::WriteNetCDF(const std::string &filename) const
       {
         WriteTipperToNetCDF(filename, GetFrequencies(), GetMeasPosX(), GetMeasPosY(),
             GetMeasPosZ(), HxIndices, HyIndices, HzIndices, GetData(), GetErrors(),
@@ -101,13 +101,13 @@ namespace jif3D
         CompleteObject();
       }
 
-    void TipperData::WriteModEM(const std::string &filename)
+    void TipperData::WriteModEM(const std::string &filename) const
       {
         WriteTipperToModEM(filename, GetFrequencies(), GetMeasPosX(), GetMeasPosY(),
             GetMeasPosZ(), GetData(), GetErrors());
       }
 
-    void TipperData::PlotMeasurementConfiguration(const std::string &filename)
+    void TipperData::PlotMeasurementConfiguration(const std::string &filename) const
       {
         std::vector<double> FirstFreq(GetMeasPosX().size());
 

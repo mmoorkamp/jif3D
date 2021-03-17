@@ -187,7 +187,7 @@ namespace jif3D
         }
 
       virtual void ReadNetCDF(const std::string &filename) override;
-      virtual void WriteNetCDF(const std::string &filename) override;
+      virtual void WriteNetCDF(const std::string &filename) const override;
       DCResistivityData();
       virtual ~DCResistivityData();
       };

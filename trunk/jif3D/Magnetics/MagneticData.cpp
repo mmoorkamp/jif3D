@@ -7,10 +7,17 @@
 
 #include "MagneticData.h"
 #include "ReadWriteMagneticData.h"
+#include "../ModelBase/VTKTools.h"
+
 
 namespace jif3D
   {
 
+    void MagneticData::WriteVTK(const std::string &filename) const
+      {
+        jif3D::Write3DDataToVTK(filename + ".vtk", "T", GetData(), GetMeasPosX(),
+            GetMeasPosY(), GetMeasPosZ());
+      }
     void MagneticData::ReadNetCDF(const std::string &filename)
       {
         std::vector<double> Data, Error, MeasX, MeasY, MeasZ;
@@ -19,7 +26,7 @@ namespace jif3D
         SetDataAndErrors(Data, Error);
 
       }
-    void MagneticData::WriteNetCDF(const std::string &filename)
+    void MagneticData::WriteNetCDF(const std::string &filename) const
       {
         SaveTotalFieldMagneticMeasurements(filename, GetData(), GetMeasPosX(),
             GetMeasPosY(), GetMeasPosZ(), GetErrors());

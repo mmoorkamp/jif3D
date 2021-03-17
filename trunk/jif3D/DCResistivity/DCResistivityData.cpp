@@ -117,7 +117,7 @@ namespace jif3D
       }
 
 
-    void DCResistivityData::WriteNetCDF(const std::string &filename)
+    void DCResistivityData::WriteNetCDF(const std::string &filename) const
       {
         //make sure all vectors have consistent sizes
         const size_t ndata = GetData().size();
