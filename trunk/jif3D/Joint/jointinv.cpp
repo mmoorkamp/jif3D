@@ -16,6 +16,7 @@
 #include <boost/program_options.hpp>
 #include <boost/program_options/config.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/filesystem.hpp>
 
 #include "../Global/FileUtil.h"
 #include "../ModelBase/VTKTools.h"
@@ -142,6 +143,12 @@ int hpx_main(boost::program_options::variables_map &vm)
         //we store the covariances in a seismic model file
         //but we do not have to have an equidistant grid
         std::string Filename(vm["covmod"].as<std::string>());
+        if (!boost::filesystem::exists(Filename))
+          {
+            std::cerr << "Covariance model has been specified but file: " << Filename
+                << " does not exist " << std::endl;
+            return 100;
+          }
         CovModel = *jif3D::ReadAnyModel(Filename).get();
         const size_t ncovmod = CovModel.GetData().num_elements();
         if (ncovmod != ngrid)

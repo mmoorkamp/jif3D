@@ -110,18 +110,6 @@ namespace jif3D
           const jif3D::ThreeDGravityModel &GravMod, const jif3D::ThreeDMTModel &MTMod,
           jif3D::JointObjective &Objective,
           boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart);
-      //! Internal function to setup coupling and regularization when using a fixed parameter relationship
-      void SetupFixedCouplingModel(jif3D::rvec &InvModel,
-          const jif3D::ThreeDModelBase &ModelGeometry, const SeisModel &SeisMod,
-          const jif3D::ThreeDGravityModel &GravMod, const jif3D::ThreeDMTModel &MTMod,
-          jif3D::JointObjective &Objective,
-          boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart);
-      //! Internal function to setup coupling and regularization when using a parameter relationship designed for salt (unstable at the moment)
-      void SetupSaltModel(const po::variables_map &vm, jif3D::rvec &InvModel,
-          const jif3D::ThreeDModelBase &ModelGeometry, const SeisModel &SeisMod,
-          const jif3D::ThreeDGravityModel &GravMod, const jif3D::ThreeDMTModel &MTMod,
-          jif3D::JointObjective &Objective,
-          boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart);
     public:
       //! Return an options descriptions object for boost::program_options that contains information about options for coupling the methods
       po::options_description SetupOptions();

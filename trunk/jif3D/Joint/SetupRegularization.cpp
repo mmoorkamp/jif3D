@@ -16,6 +16,7 @@
 #include "../Tomo/ThreeDSeismicModel.h"
 #include "../ModelBase/ReadAnyModel.h"
 #include <boost/make_shared.hpp>
+#include <boost/filesystem.hpp>
 #include <algorithm>
 
 namespace jif3D
@@ -29,23 +30,33 @@ namespace jif3D
             //we use a seismic model file as a container for the tear information
             //but this model does not have to obey the gridding rules
             std::string Filename(vm[OptionName].as<std::string>());
+            if (!boost::filesystem::exists(Filename))
+              {
+                throw jif3D::FatalException(
+                    "Tear model has been specified but file: " + Filename
+                        + " does not exist ", __FILE__, __LINE__);
+
+              }
             TearModel = *ReadAnyModel(Filename).get();
             if (TearModel.GetModelShape()[0] != StartModel.GetModelShape()[0])
               {
                 throw jif3D::FatalException(
-                    Filename + ": X-dimensions of TearModel do not match x-dimensions of starting model ",
+                    Filename
+                        + ": X-dimensions of TearModel do not match x-dimensions of starting model ",
                     __FILE__, __LINE__);
               }
             if (TearModel.GetModelShape()[1] != StartModel.GetModelShape()[1])
               {
                 throw jif3D::FatalException(
-                    Filename + ": Y-dimensions of TearModel do not match y-dimensions of starting model ",
+                    Filename
+                        + ": Y-dimensions of TearModel do not match y-dimensions of starting model ",
                     __FILE__, __LINE__);
               }
             if (TearModel.GetModelShape()[2] != StartModel.GetModelShape()[2])
               {
                 throw jif3D::FatalException(
-                    Filename + ": Z-dimensions of TearModel do not match z-dimensions of starting model ",
+                    Filename
+                        + ": Z-dimensions of TearModel do not match z-dimensions of starting model ",
                     __FILE__, __LINE__);
               }
           }

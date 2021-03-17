@@ -77,6 +77,7 @@ namespace jif3D
             std::string magdatafilename = jif3D::AskFilename(
                 "Total field magnetic Data Filename: ");
             MagData.ReadNetCDF(magdatafilename);
+            MagData.WriteVTK(magdatafilename);
             std::string magmodelfilename = jif3D::AskFilename(
                 "Magnetics Model Filename: ");
             Model.ReadNetCDF(magmodelfilename);
