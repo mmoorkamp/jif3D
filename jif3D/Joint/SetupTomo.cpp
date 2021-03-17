@@ -127,6 +127,7 @@ namespace jif3D
 
                 jif3D::ThreeDSeismicModel TomoFineGeometry;
                 TomoFineGeometry.SetCellSize(CellSize, nx, ny, nz);
+                TomoFineGeometry.SetOrigin(xmin,ymin,zmin);
                 std::cout << "Refined Model has " << nx << " * " << ny << " * " << nz
                     << "cells\n";
                 //copy measurement configuration to refined model
