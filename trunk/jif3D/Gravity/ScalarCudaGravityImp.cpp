@@ -20,25 +20,24 @@ namespace jif3D
 
     // Calculate the effect of a single measurement, it returns the gridded part of the sensitivities
     extern "C" void SingleScalarMeas(const double x_meas, const double y_meas,
-        const double z_meas, double *d_xcoord, double *d_ycoord,
-        double *d_zcoord, double *d_xsize, double *d_ysize, double *d_zsize,
-        double *d_result, const unsigned int nx, const unsigned int ny,
-        const unsigned int nz, double *returnvalue, const unsigned int BLOCK_SIZE);
+        const double z_meas, double *d_xcoord, double *d_ycoord, double *d_zcoord,
+        double *d_xsize, double *d_ysize, double *d_zsize, double *d_result,
+        const unsigned int nx, const unsigned int ny, const unsigned int nz,
+        double *returnvalue, const unsigned int BLOCK_SIZE);
     //Perform the allocation of arrays on the GPU and copy the values
-    extern "C" void PrepareData(double **d_xcoord, double **d_ycoord,
-        double **d_zcoord, double **d_xsize, double **d_ysize,
-        double **d_zsize, double **d_result, const double *xcoord,
-        const double *ycoord, const double *zcoord, const double *xsize,
-        const double *ysize, const double *zsize, unsigned int nx,
+    extern "C" void PrepareData(double **d_xcoord, double **d_ycoord, double **d_zcoord,
+        double **d_xsize, double **d_ysize, double **d_zsize, double **d_result,
+        const double *xcoord, const double *ycoord, const double *zcoord,
+        const double *xsize, const double *ysize, const double *zsize, unsigned int nx,
         unsigned int ny, unsigned int nz);
     // Free the allocated data on the GPU
-    extern "C" void FreeData(double **d_xcoord, double **d_ycoord,
-        double **d_zcoord, double **d_xsize, double **d_ysize,
-        double **d_zsize, double **d_result);
+    extern "C" void FreeData(double **d_xcoord, double **d_ycoord, double **d_zcoord,
+        double **d_xsize, double **d_ysize, double **d_zsize, double **d_result);
 
     ScalarCudaGravityImp::ScalarCudaGravityImp() :
-      d_xcoord(NULL), d_ycoord(NULL), d_zcoord(NULL), d_xsize(NULL), d_ysize(
-          NULL), d_zsize(NULL), d_result(NULL), currsens(NULL), currsenssize(0), blocksize(128)
+        d_xcoord(NULL), d_ycoord(NULL), d_zcoord(NULL), d_xsize(NULL), d_ysize(
+        NULL), d_zsize(NULL), d_result(NULL), currsens(NULL), currsenssize(0), blocksize(
+            128)
       {
         // we have to do some raw pointer operations for handling sensitivities with CUDA
       }
@@ -50,7 +49,8 @@ namespace jif3D
           {
             cudaFreeHost(currsens);
           }
-        cudaThreadExit();
+        cudaDeviceReset();
+
         currsens = NULL;
       }
 
@@ -63,11 +63,11 @@ namespace jif3D
      * @param Sensitivities If the matrix passed here holds \f$ 1 \times nbg+ngrid \f$ or more elements, store sensitivity information in the right fields
      * @return A vector with a single component that contains the gravitational effect of the background
      */
-    rvec ScalarCudaGravityImp::CalcBackground(const size_t measindex,
-        const double xwidth, const double ywidth, const double zwidth,
-        const ThreeDGravityModel &Model, rmat &Sensitivities)
+    rvec ScalarCudaGravityImp::CalcBackground(const size_t measindex, const double xwidth,
+        const double ywidth, const double zwidth, const ThreeDGravityModel &Model,
+        const ScalarGravityData &Data, rmat &Sensitivities)
       {
-        return CalcScalarBackground(measindex, xwidth, ywidth, zwidth, Model,
+        return CalcScalarBackground(measindex, xwidth, ywidth, zwidth, Model, Data,
             Sensitivities);
       }
 
@@ -78,12 +78,13 @@ namespace jif3D
      * @return A single component vector with the accelerational effect of the gridded domain
      */
     rvec ScalarCudaGravityImp::CalcGridded(const size_t measindex,
-        const ThreeDGravityModel &Model, rmat &Sensitivities)
+        const ThreeDGravityModel &Model, const ScalarGravityData &Data,
+        rmat &Sensitivities)
       {
         //first we define some constants and abbreviations
-        const double x_meas = Model.GetMeasPosX()[measindex];
-        const double y_meas = Model.GetMeasPosY()[measindex];
-        const double z_meas = Model.GetMeasPosZ()[measindex];
+        const double x_meas = Data.GetMeasPosX()[measindex];
+        const double y_meas = Data.GetMeasPosY()[measindex];
+        const double z_meas = Data.GetMeasPosZ()[measindex];
         const size_t nbglayers = Model.GetBackgroundThicknesses().size();
         const size_t ngrid = Model.GetDensities().num_elements();
         // we determine whether there are enough elements in the sensitivity matrix
@@ -103,10 +104,10 @@ namespace jif3D
           }
         std::fill_n(currsens, currsenssize, 0.0);
         //This call goes into the GPU, implementation in gravcuda.cu
-        SingleScalarMeas(x_meas, y_meas, z_meas, d_xcoord, d_ycoord, d_zcoord,
-            d_xsize, d_ysize, d_zsize, d_result,
-            Model.GetDensities().shape()[0], Model.GetDensities().shape()[1],
-            Model.GetDensities().shape()[2], currsens, blocksize);
+        SingleScalarMeas(x_meas, y_meas, z_meas, d_xcoord, d_ycoord, d_zcoord, d_xsize,
+            d_ysize, d_zsize, d_result, Model.GetDensities().shape()[0],
+            Model.GetDensities().shape()[1], Model.GetDensities().shape()[2], currsens,
+            blocksize);
         rvec result(ndatapermeas);
         //the GPU only calculates the sensitivities, we calculate the acceleration with the densities
         result(0) = std::inner_product(currsens, currsens + ngrid,
@@ -124,20 +125,22 @@ namespace jif3D
      * @return The vector holding the gravitational acceleration at each measurement site
      */
     rvec ScalarCudaGravityImp::Calculate(const ThreeDGravityModel &Model,
-        ThreeDGravMagCalculator<ThreeDGravityModel> &Calculator)
+        const ScalarGravityData &Data,
+        ThreeDGravMagCalculator<ScalarGravityData> &Calculator)
       {
 
         const unsigned int nx = Model.GetDensities().shape()[0];
         const unsigned int ny = Model.GetDensities().shape()[1];
         const unsigned int nz = Model.GetDensities().shape()[2];
         //allocate memory
-        PrepareData(&d_xcoord, &d_ycoord, &d_zcoord, &d_xsize, &d_ysize,
-            &d_zsize, &d_result, Model.GetXCoordinates().data(),
-            Model.GetYCoordinates().data(), Model.GetZCoordinates().data(),
-            Model.GetXCellSizes().data(), Model.GetYCellSizes().data(),
-            Model.GetZCellSizes().data(), nx, ny, nz);
+        PrepareData(&d_xcoord, &d_ycoord, &d_zcoord, &d_xsize, &d_ysize, &d_zsize,
+            &d_result, Model.GetXCoordinates().data(), Model.GetYCoordinates().data(),
+            Model.GetZCoordinates().data(), Model.GetXCellSizes().data(),
+            Model.GetYCellSizes().data(), Model.GetZCellSizes().data(), nx, ny, nz);
         // call the base class that coordinates the calculation of gridded and background parts
-        rvec result(ThreeDGravMagImplementation::Calculate(Model, Calculator));
+        rvec result(
+            ThreeDGravMagImplementation<ScalarGravityData>::Calculate(Model, Data,
+                Calculator));
         // free memory
         FreeData(&d_xcoord, &d_ycoord, &d_zcoord, &d_xsize, &d_ysize, &d_zsize,
             &d_result);

@@ -30,7 +30,7 @@ namespace jif3D
         SetDataAndErrors(Data, Error);
       }
 
-    void ScalarGravityData::WriteNetCDF(const std::string &filename)
+    void ScalarGravityData::WriteNetCDF(const std::string &filename) const
       {
         SaveScalarGravityMeasurements(filename, GetData(), GetMeasPosX(), GetMeasPosY(),
             GetMeasPosZ(), GetErrors());

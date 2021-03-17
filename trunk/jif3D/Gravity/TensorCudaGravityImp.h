@@ -12,6 +12,7 @@
 #include "../Global/Jif3DGlobal.h"
 #include "../Gravity/ThreeDGravityModel.h"
 #include "../GravMag/ThreeDGravMagImplementation.h"
+#include "TensorGravityData.h"
 
 namespace jif3D
   {
@@ -32,7 +33,7 @@ namespace jif3D
      * This class cannot be copied as this would make a mess with management
      * of cuda resources.
      */
-    class J3DEXPORT TensorCudaGravityImp: public jif3D::ThreeDGravMagImplementation<ThreeDGravityModel>
+    class J3DEXPORT TensorCudaGravityImp: public jif3D::ThreeDGravMagImplementation<TensorGravityData>
       {
     private:
       /*! These pointers hold the memory on the graphics card as allocated
@@ -73,10 +74,10 @@ namespace jif3D
       //! Calculate the response of the background, currently this is done on the CPU
       virtual rvec CalcBackground(const size_t measindex, const double xwidth,
           const double ywidth, const double zwidth, const ThreeDGravityModel &Model,
-          rmat &Sensitivities) override;
+          const TensorGravityData &Data, rmat &Sensitivities) override;
       //! Calculate the response of the gridded part, this is done on the GPU with CUDA
       virtual rvec CalcGridded(const size_t measindex, const ThreeDGravityModel &Model,
-          rmat &Sensitivities) override;
+          const TensorGravityData &Data, rmat &Sensitivities) override;
       //! This class cannot be copied, so copy constructor and assignment are private
       jif3D::TensorCudaGravityImp &operator=(const jif3D::TensorCudaGravityImp&);
       //! This class cannot be copied, so copy constructor and assignment are private
@@ -93,8 +94,8 @@ namespace jif3D
           blocksize = s;
         }
       //! We reimplement the Calculate method to accommodate some specific CUDA issues
-      virtual rvec Calculate(const ThreeDGravityModel &Model,
-          ThreeDGravMagCalculator<ThreeDGravityModel> &Calculator) override;
+      virtual rvec Calculate(const ThreeDGravityModel &Model, const TensorGravityData &Data,
+          ThreeDGravMagCalculator<TensorGravityData> &Calculator) override;
       TensorCudaGravityImp();
       virtual ~TensorCudaGravityImp();
       };
