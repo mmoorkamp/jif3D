@@ -135,8 +135,8 @@ namespace jif3D
         }
       //! Write all information to a netcdf file
       virtual void ReadNetCDF(const std::string &filename) = 0;
-      virtual void WriteNetCDF(const std::string &filename) = 0;
-      void WriteMeasurementPoints(const std::string &filename);
+      virtual void WriteNetCDF(const std::string &filename) const = 0;
+      void WriteMeasurementPoints(const std::string &filename) const;
       GeneralData();
       virtual ~GeneralData();
               };

@@ -24,7 +24,8 @@ namespace jif3D
           ar & base_object<GeneralData>(*this);
         }
       virtual void ReadNetCDF(const std::string &filename) override;
-      virtual void WriteNetCDF(const std::string &filename) override;
+      virtual void WriteNetCDF(const std::string &filename) const override;
+      void WriteVTK(const std::string &filename) const;
       MagneticData();
       virtual ~MagneticData();
       };

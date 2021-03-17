@@ -155,7 +155,7 @@ namespace jif3D
       {
       }
 
-    void SurfaceWaveData::WriteNetCDF(const std::string &filename)
+    void SurfaceWaveData::WriteNetCDF(const std::string &filename) const
       {
         const size_t sr = 2;
         const size_t nevents = GetEventPosLat().size();
@@ -249,7 +249,7 @@ namespace jif3D
 
       }
 
-    void SurfaceWaveData::WriteStationLocations(const std::string &filename)
+    void SurfaceWaveData::WriteStationLocations(const std::string &filename) const
       {
         std::vector<double> SourceNum(GetMeasPosX().size());
         std::iota(SourceNum.begin(), SourceNum.end(), 1);

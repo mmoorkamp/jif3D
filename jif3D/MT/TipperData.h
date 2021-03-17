@@ -70,10 +70,10 @@ namespace jif3D
       void CompleteObject();
       //! Write all information to a netcdf file
       virtual void ReadNetCDF(const std::string &filename) override;
-      virtual void WriteNetCDF(const std::string &filename) override;
+      virtual void WriteNetCDF(const std::string &filename) const override;
       void ReadModEM(const std::string &filename);
-      void WriteModEM(const std::string &filename);
-      void PlotMeasurementConfiguration(const std::string &filename);
+      void WriteModEM(const std::string &filename) const;
+      void PlotMeasurementConfiguration(const std::string &filename) const;
       TipperData();
       virtual ~TipperData();
       };

@@ -99,8 +99,8 @@ namespace jif3D
                       std::make_tuple(EventInd[ndata], PeriodInd[ndata])));
             }
         }
-      virtual void WriteNetCDF(const std::string &filename) override;
-      void WriteStationLocations(const std::string &filename);
+      virtual void WriteNetCDF(const std::string &filename) const override;
+      void WriteStationLocations(const std::string &filename) const;
       void WriteRayPaths(const std::vector<std::vector<double>> &pathmap_e,
           const std::vector<std::vector<double>> &pathmap_n) const;
       bool CompareGeometry(const SurfaceWaveData &b) const;

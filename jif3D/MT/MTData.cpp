@@ -28,7 +28,7 @@ namespace jif3D
         SetMeasurementPoints(PosX, PosY, PosZ);
         SetDataAndErrors(Imp, Err);
       }
-    void MTData::WriteNetCDF(const std::string &filename)
+    void MTData::WriteNetCDF(const std::string &filename) const
       {
         WriteTitanDataToNetCDF(filename, GetFrequencies(), GetMeasPosX(), GetMeasPosY(),
             GetMeasPosZ(), ExIndices, EyIndices, HxIndices, GetData(), GetErrors(),
@@ -108,13 +108,13 @@ namespace jif3D
         CompleteObject();
       }
 
-    void MTData::WriteModEM(const std::string &filename)
+    void MTData::WriteModEM(const std::string &filename) const
       {
         WriteImpedancesToModEM(filename, GetFrequencies(), GetMeasPosX(), GetMeasPosY(),
             GetMeasPosZ(), GetData(), GetErrors(), GetNames());
       }
 
-    void MTData::PlotMeasurementConfiguration(const std::string &filename)
+    void MTData::PlotMeasurementConfiguration(const std::string &filename) const
       {
         std::vector<double> FirstFreq(GetMeasPosX().size());
 

@@ -25,7 +25,7 @@ namespace jif3D
         // TODO Auto-generated destructor stub
       }
 
-    void GeneralData::WriteMeasurementPoints(const std::string &filename)
+    void GeneralData::WriteMeasurementPoints(const std::string &filename) const
       {
         std::vector<double> RecNum(GetMeasPosX().size());
         std::iota(RecNum.begin(), RecNum.end(), 1);
