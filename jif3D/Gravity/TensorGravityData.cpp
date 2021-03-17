@@ -29,7 +29,7 @@ namespace jif3D
         SetDataAndErrors(Data, Error);
       }
 
-    void TensorGravityData::WriteNetCDF(const std::string &filename)
+    void TensorGravityData::WriteNetCDF(const std::string &filename) const
       {
         SaveTensorGravityMeasurements(filename, GetData(), GetMeasPosX(), GetMeasPosY(),
             GetMeasPosZ(), GetErrors());

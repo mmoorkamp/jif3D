@@ -53,7 +53,7 @@ namespace jif3D
           {
             cudaFreeHost(currsens);
           }
-        cudaThreadExit();
+        cudaDeviceReset();
         currsens = NULL;
       }
 
@@ -63,13 +63,13 @@ namespace jif3D
      * @param Sensitivities If this parameters has \f$ 1 \times nbg+ngrid \f$ or more elements, store sensitivity information
      * @return A single component vector with the accelerational effect of the gridded domain
      */
-    rvec TensorCudaGravityImp::CalcGridded(const size_t measindex,
-        const ThreeDGravityModel &Model, rmat &Sensitivities)
+    rvec TensorCudaGravityImp::CalcGridded(const size_t measindex, const ThreeDGravityModel &Model,
+              const TensorGravityData &Data, rmat &Sensitivities)
       {
         //first we define some constants and abbreviations
-        const double x_meas = Model.GetMeasPosX()[measindex];
-        const double y_meas = Model.GetMeasPosY()[measindex];
-        const double z_meas = Model.GetMeasPosZ()[measindex];
+        const double x_meas = Data.GetMeasPosX()[measindex];
+        const double y_meas = Data.GetMeasPosY()[measindex];
+        const double z_meas = Data.GetMeasPosZ()[measindex];
         const size_t nbglayers = Model.GetBackgroundThicknesses().size();
         const size_t ngrid = Model.GetDensities().num_elements();
         //the CUDA routines return the 6 independent elements of the FTG tensor (we consider Uzz independent)
@@ -143,8 +143,8 @@ namespace jif3D
      * @param Calculator The calculator object
      * @return The vector holding the gravitational acceleration at each measurement site
      */
-    rvec TensorCudaGravityImp::Calculate(const ThreeDGravityModel &Model,
-        ThreeDGravMagCalculator<ThreeDGravityModel> &Calculator)
+    rvec TensorCudaGravityImp::Calculate(const ThreeDGravityModel &Model, const TensorGravityData &Data,
+        ThreeDGravMagCalculator<TensorGravityData> &Calculator)
       {
 
         const unsigned int nx = Model.GetDensities().shape()[0];
@@ -157,7 +157,7 @@ namespace jif3D
             Model.GetXCellSizes().data(), Model.GetYCellSizes().data(),
             Model.GetZCellSizes().data(), nx, ny, nz);
         // call the base class that coordinates the calculation of gridded and background parts
-        rvec result(ThreeDGravMagImplementation::Calculate(Model, Calculator));
+        rvec result(ThreeDGravMagImplementation<TensorGravityData>::Calculate(Model, Data, Calculator));
         // free memory
         FreeData(&d_xcoord, &d_ycoord, &d_zcoord, &d_xsize, &d_ysize, &d_zsize,
             &d_result);
@@ -173,11 +173,11 @@ namespace jif3D
      * @param Sensitivities The \f$ 9 \times m\f$ matrix of sensitivities for the current measurement
      * @return The gravitational tensor due to the background
      */
-    rvec TensorCudaGravityImp::CalcBackground(const size_t measindex,
-        const double xwidth, const double ywidth, const double zwidth,
-        const ThreeDGravityModel &Model, rmat &Sensitivities)
+    rvec TensorCudaGravityImp::CalcBackground(const size_t measindex, const double xwidth,
+              const double ywidth, const double zwidth, const ThreeDGravityModel &Model,
+              const TensorGravityData &Data, rmat &Sensitivities)
       {
-        return CalcTensorBackground(measindex, xwidth, ywidth, zwidth, Model,
+        return CalcTensorBackground(measindex, xwidth, ywidth, zwidth, Model, Data,
             Sensitivities);
       }
 

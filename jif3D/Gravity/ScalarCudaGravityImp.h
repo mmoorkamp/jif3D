@@ -27,7 +27,8 @@ namespace jif3D
      * This class cannot be copied as this would make a mess with management
      * of cuda resources.
      */
-    class J3DEXPORT ScalarCudaGravityImp: public jif3D::ThreeDGravMagImplementation<ScalarGravityData>
+    class J3DEXPORT ScalarCudaGravityImp: public jif3D::ThreeDGravMagImplementation<
+        ScalarGravityData>
       {
     private:
       // These pointers hold the memory on the graphics card as allocated
@@ -49,7 +50,7 @@ namespace jif3D
       friend class access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
-      void serialize(Archive & ar, const unsigned int version)
+      void serialize(Archive &ar, const unsigned int version)
         {
           ar & boost::serialization::base_object<ThreeDGravMagImplementation>(*this);
           ar & d_xcoord;
@@ -65,13 +66,13 @@ namespace jif3D
         }
       //! Calculate the response of the background, currently this is done on the CPU
       virtual rvec CalcBackground(const size_t measindex, const double xwidth,
-          const double ywidth, const double zwidth,
-          const ThreeDGravityModel &Model, rmat &Sensitivities) override;
-      //! Calculate the response of the gridded part, this is done on the GPU with CUDA
-      virtual rvec CalcGridded(const size_t measindex,
-          const ThreeDGravityModel &Model, rmat &Sensitivities) override;
+          const double ywidth, const double zwidth, const ThreeDGravityModel &Model,
+          const ScalarGravityData &Data, rmat &Sensitivities) override;
+      //! Calculate the response of the gridded part
+      virtual rvec CalcGridded(const size_t measindex, const ThreeDGravityModel &Model,
+          const ScalarGravityData &Data, rmat &Sensitivities) override;
       //! This class cannot be copied, so copy constructor and assignment are private
-      jif3D::ScalarCudaGravityImp &operator=(const jif3D::ScalarCudaGravityImp&);
+      jif3D::ScalarCudaGravityImp& operator=(const jif3D::ScalarCudaGravityImp&);
       ScalarCudaGravityImp(const jif3D::ScalarCudaGravityImp&);
     public:
       //! How many data do we return before any transformation
@@ -86,7 +87,8 @@ namespace jif3D
         }
       //! We reimplement the Calculate method to accommodate some specific CUDA issues
       virtual rvec Calculate(const ThreeDGravityModel &Model,
-          ThreeDGravMagCalculator<ThreeDGravityModel> &Calculator);
+          const ScalarGravityData &Data,
+          ThreeDGravMagCalculator<ScalarGravityData> &Calculator) override;
       ScalarCudaGravityImp();
       virtual ~ScalarCudaGravityImp();
       };
