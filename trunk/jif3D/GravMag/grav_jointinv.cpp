@@ -439,6 +439,66 @@ int main(int argc, char *argv[])
         MagModel.WriteVTK(modelfilename + ".mag.inv.vtk");
         MagModel.WriteNetCDF(modelfilename + ".mag.inv.nc");
       }
+
+    if (vm.count("mutual_information"))
+      {
+
+      }
+    else
+      {
+
+        auto ObjectiveTypes = Objective->GetObjectiveTypes();
+        std::vector<std::string> Names = Objective->GetObjectiveNames();
+        for (size_t i = 0; i < ObjectiveTypes.size(); ++i)
+          {
+            if (ObjectiveTypes.at(i) == jif3D::JointObjective::coupling)
+              {
+                jif3D::rvec CG(Objective->GetObjective(i).GetIndividualMisfit());
+                const size_t nx = Mesh->GetData().shape()[0];
+                const size_t ny = Mesh->GetData().shape()[1];
+                const size_t nz = Mesh->GetData().shape()[2];
+                const size_t nmod = nx * ny * nz;
+                jif3D::ThreeDModelBase::t3DModelData XGrad(boost::extents[nx][ny][nz]);
+                jif3D::ThreeDModelBase::t3DModelData YGrad(boost::extents[nx][ny][nz]);
+                jif3D::ThreeDModelBase::t3DModelData ZGrad(boost::extents[nx][ny][nz]);
+                std::copy(CG.begin(), CG.begin() + nmod, XGrad.origin());
+                std::copy(CG.begin() + nmod, CG.begin() + 2 * nmod, YGrad.origin());
+                std::copy(CG.begin() + 2 * nmod, CG.begin() + 3 * nmod, ZGrad.origin());
+                std::string Name = Names.at(i);
+                jif3D::Write3DVectorModelToVTK(Name + ".vtk", Name,
+                    Mesh->GetXCoordinates(), Mesh->GetYCoordinates(),
+                    Mesh->GetZCoordinates(), XGrad, YGrad, ZGrad);
+                jif3D::ThreeDGravityModel CGModel(GravitySetup.GetScalModel());
+                jif3D::ThreeDModelBase::t3DModelData AbsCG(boost::extents[nx][ny][nz]);
+
+                std::transform(CG.begin(), CG.begin() + nmod, AbsCG.origin(),
+                    [](double val)
+                      { return val*val;});
+                std::transform(CG.begin() + nmod, CG.begin() + 2 * nmod, AbsCG.origin(),
+                    AbsCG.origin(), [](double val1, double val2)
+                      { return val2 + val1*val1;});
+                std::transform(CG.begin() + 2 * nmod, CG.begin() + 3 * nmod,
+                    AbsCG.origin(), AbsCG.origin(), [](double val1, double val2)
+                      { return val2 + val1*val1;});
+                std::transform(AbsCG.origin(), AbsCG.origin() + nmod, AbsCG.origin(),
+                    [](double val)
+                      { return std::sqrt(val);});
+                CGModel.SetDensities() = AbsCG;
+                CGModel.WriteNetCDF(Name+".cg_abs.nc");
+                CGModel.WriteVTK(Name+".cg_abs.vtk");
+                std::vector<double> CG_Cov(Objective->GetObjective(i).GetDataError());
+                std::copy(CG_Cov.begin(), CG_Cov.begin() + nmod, XGrad.origin());
+                std::copy(CG_Cov.begin() + nmod, CG_Cov.begin() + 2 * nmod,
+                    YGrad.origin());
+                std::copy(CG_Cov.begin() + 2 * nmod, CG_Cov.begin() + 3 * nmod,
+                    ZGrad.origin());
+                jif3D::Write3DVectorModelToVTK(Name + "_cov.vtk", Name,
+                    Mesh->GetXCoordinates(), Mesh->GetYCoordinates(),
+                    Mesh->GetZCoordinates(), XGrad, YGrad, ZGrad);
+              }
+          }
+
+      }
     //and write out the data and model
     //here we have to distinguish again between scalar and ftg data
     std::cout << "Writing out inversion results." << std::endl;
@@ -452,5 +512,6 @@ int main(int argc, char *argv[])
         MagModel.WriteVTK(modelfilename + ".mag.inv.vtk");
         MagModel.WriteNetCDF(modelfilename + ".mag.inv.nc");
       }
+    std::cout << std::endl;
     std::cout << std::endl;
   }
