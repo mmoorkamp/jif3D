@@ -104,28 +104,24 @@ void InterpolateError(const std::vector<double> &xvalues,
         if (currindex == 0 && InterpX[i] == xvalues[currindex])
           {
             InterpY.push_back(yvalues[currindex]);
-            std::cout << " Case 1" << std::endl;
           }
         else
           {
             if (currindex == 0 && InterpX[i] != xvalues[currindex])
               {
                 InterpY.push_back(largeerr);
-                std::cout  << " Case 2" << std::endl;
               }
             else
               {
                 if (currindex == xvalues.size() && InterpX[i] != xvalues[currindex - 1])
                   {
                     InterpY.push_back(largeerr);
-                    std::cout  << " Case 3" << std::endl;
                   }
                 else
                   {
                     if (InterpX[i] == xvalues[currindex - 1])
                       {
                         InterpY.push_back(yvalues[currindex - 1]);
-                        std::cout  << " Case 4" << std::endl;
                       }
                     else
                       {
@@ -136,14 +132,13 @@ void InterpolateError(const std::vector<double> &xvalues,
                                 * (InterpX[i] - xvalues[currindex - 1]);
                         if (std::isnan(curry))
                           {
-                            std::cout << " Encountered nan, setting large error " << std::endl;
+                            std::cout << " Encountered nan, setting large error "
+                                << std::endl;
                             InterpY.push_back(largeerr);
-                            std::cout  << " Case 5" << std::endl;
                           }
                         else
                           {
                             InterpY.push_back(curry);
-                            std::cout  << " Case 6" << std::endl;
                           }
 
                       }
@@ -178,16 +173,20 @@ int main(int argc, char *argv[])
     std::string DistFilename, FreqFilename;
     int utmzone = -1;
     double minfreq, maxfreq;
+    double depth;
     po::options_description desc("General options");
     desc.add_options()("help", "produce help message")("distfile",
         po::value(&DistFilename),
         "Read in ascii file with distortion estimates for each station (4 values per line)")(
         "toutm", po::value(&utmzone)->default_value(-1),
-        "Project coordinates to utm zone, -1 means no projection")("freqfile",
-        po::value(&FreqFilename), "File with frequencies for interpolation")("minfreq",
-        po::value(&minfreq)->default_value(-1),
+        "Project coordinates to utm zone, -1 means no projection, 0 automatic zone detection")(
+        "freqfile", po::value(&FreqFilename), "File with frequencies for interpolation")(
+        "minfreq", po::value(&minfreq)->default_value(-1),
         "Minimum frequency kept for interpolation")("maxfreq",
-        po::value(&maxfreq)->default_value(1e32), "Max frequency kept for interpolation");
+        po::value(&maxfreq)->default_value(1e32), "Max frequency kept for interpolation")(
+        "depth", po::value(&depth)->default_value(1e5),
+        "Set depth (negative of elevation) to a fixed value. "
+            "If >= 100,000 keep elevations from input files");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -458,6 +457,10 @@ int main(int argc, char *argv[])
                 StatYCoord.at(i) = x;
               }
 
+          }
+        if (depth < 1e5)
+          {
+            std::fill(StatZCoord.begin(), StatZCoord.end(), depth);
           }
         std::string outfilename = jif3D::AskFilename("Output file: ", false);
         jif3D::MTData MTData;
