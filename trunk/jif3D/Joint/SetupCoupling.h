@@ -43,6 +43,7 @@ namespace jif3D
       typedef jif3D::SurfaceWaveModel SeisModel;
 #endif
     private:
+      bool seisano;
       //! The transformation between generalized model parameters and slowness including selecting the right range from the model vector
       boost::shared_ptr<jif3D::GeneralModelTransform> SlowTrans;
       //! The transformation between generalized model parameters and conductivity including selecting the right range from the model vector

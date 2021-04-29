@@ -171,9 +171,12 @@ namespace jif3D
         double H = 0;
 
         H = MIGauss(x, y, xmin, xmax, ymin, ymax, nbins, CountsX, CountsY, CountsXY);
-        std::string name = "mi.nc";
-        plothist(name, xmin, xmax, ymin, ymax, nbins, CountsXY);
-
+        //std::string name = "mi.nc";
+        //plothist(name, xmin, xmax, ymin, ymax, nbins, CountsXY);
+        //std::cout << "Min x: " << *std::min_element(x.begin(),x.end()) << std::endl;
+        //std::cout << "Max x: " << *std::max_element(x.begin(),x.end()) << std::endl;
+        //std::cout << "Min y: " << *std::min_element(y.begin(),y.end()) << std::endl;
+        //std::cout << "Max y: " << *std::max_element(y.begin(),y.end()) << std::endl;
         Diff(0) = H;
       }
 

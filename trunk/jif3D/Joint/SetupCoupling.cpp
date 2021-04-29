@@ -82,7 +82,8 @@ namespace jif3D
             "DensReplace", po::value(&DensReplace)->default_value(0.0),
             "Value to use for Density where relationship is not valid")("CondReplace",
             po::value(&CondReplace)->default_value(3.3),
-            "Value to use for Conductivity where relationship is not valid");
+            "Value to use for Conductivity where relationship is not valid")("seisano",
+            "Use only the seismic anomaly for coupling");
 
         return desc;
       }
@@ -93,6 +94,7 @@ namespace jif3D
         boost::shared_ptr<jif3D::GeneralModelTransform> &GravityTransform,
         boost::shared_ptr<jif3D::GeneralModelTransform> &MTTransform, bool Wavelet)
       {
+        seisano = vm.count("seisano");
 
         const std::size_t ngrid = GeometryModel.GetNModelElements();
 
@@ -459,6 +461,9 @@ namespace jif3D
         boost::shared_ptr<jif3D::GeneralModelTransform> Copier(
             new jif3D::ModelCopyTransform);
 
+        boost::shared_ptr<jif3D::GeneralModelTransform> Anomaly(
+            new jif3D::Anomalator(InvModel));
+
         //then we construct the three cross gradient terms
         //the double section transform takes two sections of the model
         //and feeds them to the objective function
@@ -467,7 +472,14 @@ namespace jif3D
                 mibins);
         boost::shared_ptr<jif3D::MultiSectionTransform> SeisGravTrans(
             new jif3D::MultiSectionTransform(3 * ngrid));
-        SeisGravTrans->AddSection(0, ngrid, Copier);
+        if (seisano)
+          {
+            SeisGravTrans->AddSection(0, ngrid, Anomaly);
+          }
+        else
+          {
+            SeisGravTrans->AddSection(0, ngrid, Copier);
+          }
         SeisGravTrans->AddSection(ngrid, 2 * ngrid, Copier);
 
         //for each cross-gradient term we ask for a weight
@@ -485,7 +497,14 @@ namespace jif3D
 
         boost::shared_ptr<jif3D::MultiSectionTransform> SeisMTTrans(
             new jif3D::MultiSectionTransform(3 * ngrid));
-        SeisMTTrans->AddSection(0, ngrid, Copier);
+        if (seisano)
+          {
+            SeisGravTrans->AddSection(0, ngrid, Anomaly);
+          }
+        else
+          {
+            SeisGravTrans->AddSection(0, ngrid, Copier);
+          }
         SeisMTTrans->AddSection(2 * ngrid, 3 * ngrid, Copier);
 
         double seismtlambda = 1.0;

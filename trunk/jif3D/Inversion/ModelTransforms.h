@@ -8,6 +8,7 @@
 #ifndef MODELTRANSFORMS_H_
 #define MODELTRANSFORMS_H_
 
+#include "../ModelTransforms/Anomalator.h"
 #include "../ModelTransforms/ChainedTransform.h"
 #include "../ModelTransforms/ConductivityTransform.h"
 #include "../ModelTransforms/DensityTransform.h"
