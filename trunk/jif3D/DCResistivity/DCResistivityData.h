@@ -24,23 +24,23 @@ namespace jif3D
       typedef std::vector<int> tIndexVec;
     private:
       //! The x-position of the positive-sources
-      std::vector<double> SourcePosPosX;
+      GeneralData::tMeasPosVec SourcePosPosX;
       //! The y-position of the positive-sources
-      std::vector<double> SourcePosPosY;
+      GeneralData::tMeasPosVec SourcePosPosY;
       //! The z-position of the positive-sources
-      std::vector<double> SourcePosPosZ;
+      GeneralData::tMeasPosVec SourcePosPosZ;
       //! The x-position of the negative-sources
-      std::vector<double> SourceNegPosX;
+      GeneralData::tMeasPosVec SourceNegPosX;
       //! The y-position of the negative-sources
-      std::vector<double> SourceNegPosY;
+      GeneralData::tMeasPosVec SourceNegPosY;
       //! The z-position of the negative-sources
-      std::vector<double> SourceNegPosZ;
+      GeneralData::tMeasPosVec SourceNegPosZ;
       //! The x-position of the second receivers
-      std::vector<double> MeasSecPosX;
+      GeneralData::tMeasPosVec MeasSecPosX;
       //! The y-position of the second receivers
-      std::vector<double> MeasSecPosY;
+      GeneralData::tMeasPosVec MeasSecPosY;
       //! The z-position of the second receivers
-      std::vector<double> MeasSecPosZ;
+      GeneralData::tMeasPosVec MeasSecPosZ;
       //! Each source can correspond to a number of measurements with different receivers
       //! here we record for each datum the index of the source position in the above arrays
       tIndexVec SourceIndices;
@@ -50,7 +50,7 @@ namespace jif3D
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
         {
-    	  ar & base_object<GeneralData>(*this);
+    	  ar & boost::serialization::base_object<GeneralData>(*this);
           ar & SourcePosPosX;
           ar & SourcePosPosY;
           ar & SourcePosPosZ;
@@ -76,7 +76,7 @@ namespace jif3D
         }
 
       //! Add a the second receiver electrode to the model
-      void AddMeasurementPoint(const double xcoord, const double ycoord,
+      void AddAllMeasurementPoint(const double xcoord, const double ycoord,
           const double zcoord, double negxcoord, double negycoord, double negzcoord,
           int sourceindex)
         {
@@ -87,32 +87,32 @@ namespace jif3D
           SourceIndices.push_back(sourceindex);
         }
       //! read only access to the x-positions of the Positive sources in m
-      const std::vector<double> &GetSourcePosPosX() const
+      const GeneralData::tMeasPosVec &GetSourcePosPosX() const
         {
           return SourcePosPosX;
         }
       //! read only access to the y-positions of the Positive sources in m
-      const std::vector<double> &GetSourcePosPosY() const
+      const GeneralData::tMeasPosVec &GetSourcePosPosY() const
         {
           return SourcePosPosY;
         }
       //! read only access to the z-positions of the Positive sources in m
-      const std::vector<double> &GetSourcePosPosZ() const
+      const GeneralData::tMeasPosVec &GetSourcePosPosZ() const
         {
           return SourcePosPosZ;
         }
       //! read only access to the x-positions of the Negative sources in m
-      const std::vector<double> &GetSourceNegPosX() const
+      const GeneralData::tMeasPosVec &GetSourceNegPosX() const
         {
           return SourceNegPosX;
         }
       //! read only access to the y-positions of the Negative sources in m
-      const std::vector<double> &GetSourceNegPosY() const
+      const GeneralData::tMeasPosVec &GetSourceNegPosY() const
         {
           return SourceNegPosY;
         }
       //! read only access to the z-positions of the Negative sources in m
-      const std::vector<double> &GetSourceNegPosZ() const
+      const GeneralData::tMeasPosVec &GetSourceNegPosZ() const
         {
           return SourceNegPosZ;
         }
@@ -122,17 +122,17 @@ namespace jif3D
           return SourceIndices;
         }
       //! read only access to the x-positions of the second receiver electrode in m
-      const std::vector<double> &GetMeasSecPosX() const
+      const GeneralData::tMeasPosVec &GetMeasSecPosX() const
         {
           return MeasSecPosX;
         }
       //! read only access to the y-positions of the second receiver electrode in m
-      const std::vector<double> &GetMeasSecPosY() const
+      const GeneralData::tMeasPosVec &GetMeasSecPosY() const
         {
           return MeasSecPosY;
         }
       //! read only access to the z-positions of the second receiver electrode in m
-      const std::vector<double> &GetMeasSecPosZ() const
+      const GeneralData::tMeasPosVec &GetMeasSecPosZ() const
         {
           return MeasSecPosZ;
         }
@@ -188,6 +188,7 @@ namespace jif3D
 
       virtual void ReadNetCDF(const std::string &filename) override;
       virtual void WriteNetCDF(const std::string &filename) const override;
+
       DCResistivityData();
       virtual ~DCResistivityData();
       };

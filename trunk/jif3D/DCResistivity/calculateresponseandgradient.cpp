@@ -11,7 +11,7 @@
 #include "../Global/FileUtil.h"
 #include "ThreeDDCResistivityModel.h"
 #include "DCResistivityCalculator.h"
-#include "../DCResistivity/DCResistivityData.h"
+#include "DCResistivityData.h"
 
 int main()
   {
@@ -48,7 +48,7 @@ int main()
             >> receiverposy2 >> receiverposz2 >> sourceindics;
         if (inreceiverfile.good())
           {
-        	DCData.AddMeasurementPoint(receiverposx1, receiverposy1, receiverposz1,
+        	DCData.AddAllMeasurementPoint(receiverposx1, receiverposy1, receiverposz1,
                 receiverposx2, receiverposy2, receiverposz2, sourceindics);
           }
       }

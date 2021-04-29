@@ -39,8 +39,8 @@
 #include "../Gravity/ReadWriteGravityData.h"
 #include "../Gravity/ThreeDGravityFactory.h"
 #include "../DCResistivity/ThreeDDCResistivityModel.h"
-#include "../DCResistivity/DCResistivityData.h"
-#include "../DCResistivity/DCResistivityCalculator.h"
+#include "DCResistivityData.h"
+#include "DCResistivityCalculator.h"
 #include "../Joint/SetupSW.h"
 #include "../Joint/SetupTomo.h"
 #include "../Joint/SetupGravity.h"
@@ -81,6 +81,8 @@ double xorigin, yorigin;
 double coolingfactor = 1.0;
 int saveinterval = 1;
 double CovWidth = 3.0;
+
+
 
 int hpx_main(boost::program_options::variables_map &vm)
   {
@@ -244,7 +246,7 @@ int hpx_main(boost::program_options::variables_map &vm)
       }
     //setup the DCRes part of the joint inversion
     bool havedc = DCSetup.SetupObjective(vm, *Objective.get(), DCResTransform, xorigin,
-        yorigin, TempDir);
+        yorigin);
     //if we have a seismic and a DC objective function, we have
     //to make sure that the starting models have the same geometry (not considering refinement)
     if (havedc && !EqualGridGeometry(DCSetup.GetModel(), *StartModel))
@@ -322,17 +324,25 @@ int hpx_main(boost::program_options::variables_map &vm)
     CovModVec = CVec;
 
 
-
     std::cout << "Calculating initial misfit." << std::endl;
     size_t iteration = 0;
     std::ofstream misfitfile("misfit.out");
     std::ofstream rmsfile("rms.out");
     std::ofstream weightfile("weights.out");
+
+    std::cout << "Performing inversion." << std::endl;
+
     //calculate initial misfit
     double InitialMisfit = Objective->CalcMisfit(InvModel);
+
+
+
     StoreMisfit(misfitfile, 0, InitialMisfit, *Objective);
     StoreRMS(rmsfile, 0, *Objective);
     StoreWeights(weightfile, 0, *Objective);
+
+
+
     jif3D::ThreeDGravityModel GravModel(GravitySetup.GetScalModel());
     jif3D::ThreeDDCResistivityModel DCResModel(DCSetup.GetModel());
     auto SWModel(TomoSetup.GetModel());
@@ -344,7 +354,7 @@ int hpx_main(boost::program_options::variables_map &vm)
     if (!havegrav)
       GravModel = *StartModel;
 
-    std::cout << "Performing inversion." << std::endl;
+    //std::cout << "Performing inversion." << std::endl;
 
     boost::shared_ptr<jif3D::MultiSectionCovariance> CovObj = boost::make_shared<
         jif3D::MultiSectionCovariance>(InvModel.size());
