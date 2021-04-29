@@ -5,8 +5,6 @@
  *      Author: zhanjie
  */
 
-#include "../DCResistivity/DCResistivityData.h"
-
 #include "../Global/NetCDFTools.h"
 #include "../Global/NetCDFPortHelper.h"
 #include "../Global/VecMat.h"
@@ -15,12 +13,13 @@
 
 #include <fstream>
 #include <netcdf>
+#include "DCResistivityData.h"
 
-using netCDF::NcFile;
-using netCDF::NcVar;
-using netCDF::NcDim;
-using netCDF::NcVarAtt;
-using netCDF::ncInt;
+using netCDF::NcFile; // @suppress("Symbol is not resolved")
+using netCDF::NcVar; // @suppress("Symbol is not resolved")
+using netCDF::NcDim; // @suppress("Symbol is not resolved")
+using netCDF::NcVarAtt; // @suppress("Symbol is not resolved")
+using netCDF::ncInt; // @suppress("Symbol is not resolved")
 
 
 namespace jif3D
@@ -48,7 +47,7 @@ namespace jif3D
     void DCResistivityData::ReadNetCDF(const std::string &filename)
       {
         //create the netcdf file object
-        NcFile DataFile(filename, NcFile::read);
+        NcFile DataFile(filename, NcFile::read); // @suppress("Type cannot be resolved") // @suppress("Symbol is not resolved")
         //delete any old values in the model object
         ClearMeasurementPoints();
         ClearSecMeasurementPoint();
@@ -57,59 +56,51 @@ namespace jif3D
         ClearSourceIndices();
 
         //read the positions of the sources
-        ReadVec(DataFile, DCSourcePosXName, SourcePosPosX);
-        ReadVec(DataFile, DCSourcePosYName, SourcePosPosY);
-        ReadVec(DataFile, DCSourcePosZName, SourcePosPosZ);
-        ReadVec(DataFile, DCSourceNegXName, SourceNegPosX);
-        ReadVec(DataFile, DCSourceNegYName, SourceNegPosY);
-        ReadVec(DataFile, DCSourceNegZName, SourceNegPosZ);
-        const size_t nsource = SourcePosPosX.size();
-//and add them to the data object
-        for (size_t i = 0; i < nsource; ++i)
-          {
-            AddSource(SourcePosPosX[i], SourcePosPosY[i], SourcePosPosZ[i], SourceNegPosX[i], SourceNegPosY[i],
-            		SourceNegPosZ[i]);
-          }
+        ReadVec(DataFile, DCSourcePosXName, SourcePosPosX); // @suppress("Invalid arguments")
+        ReadVec(DataFile, DCSourcePosYName, SourcePosPosY); // @suppress("Invalid arguments")
+        ReadVec(DataFile, DCSourcePosZName, SourcePosPosZ); // @suppress("Invalid arguments")
+        ReadVec(DataFile, DCSourceNegXName, SourceNegPosX); // @suppress("Invalid arguments")
+        ReadVec(DataFile, DCSourceNegYName, SourceNegPosY); // @suppress("Invalid arguments")
+        ReadVec(DataFile, DCSourceNegZName, SourceNegPosZ); // @suppress("Invalid arguments")
 
         std::vector<double> MeasFirPosX, MeasFirPosY, MeasFirPosZ;
         //read the positions of the receivers
-        ReadVec(DataFile, DCReceiverFirXName, MeasFirPosX);
-        ReadVec(DataFile, DCReceiverFirYName, MeasFirPosY);
-        ReadVec(DataFile, DCReceiverFirZName, MeasFirPosZ);
-        ReadVec(DataFile, DCReceiverSecXName, MeasSecPosX);
-        ReadVec(DataFile, DCReceiverSecYName, MeasSecPosY);
-        ReadVec(DataFile, DCReceiverSecZName, MeasSecPosZ);
+        ReadVec(DataFile, DCReceiverFirXName, MeasFirPosX); // @suppress("Invalid arguments")
+        ReadVec(DataFile, DCReceiverFirYName, MeasFirPosY); // @suppress("Invalid arguments")
+        ReadVec(DataFile, DCReceiverFirZName, MeasFirPosZ); // @suppress("Invalid arguments")
+        ReadVec(DataFile, DCReceiverSecXName, MeasSecPosX); // @suppress("Invalid arguments")
+        ReadVec(DataFile, DCReceiverSecYName, MeasSecPosY); // @suppress("Invalid arguments")
+        ReadVec(DataFile, DCReceiverSecZName, MeasSecPosZ); // @suppress("Invalid arguments")
 
 
         //and configure the data object for these measurement point
-        ReadVec(DataFile, DCSourceIndexName, SourceIndices);
+        ReadVec(DataFile, DCSourceIndexName, SourceIndices); // @suppress("Invalid arguments")
 
         const size_t nmeas = MeasFirPosX.size();
 //and add them as measurement positions to the data object
         for (size_t i = 0; i < nmeas; ++i)
           {
-            AddMeasurementPoint(MeasFirPosX[i], MeasFirPosY[i], MeasFirPosZ[i], MeasSecPosX[i], MeasSecPosY[i], MeasSecPosZ[i],
-                SourceIndices[i]);
+        	GeneralData::AddMeasurementPoint(MeasFirPosX[i], MeasFirPosY[i], MeasFirPosZ[i]);
           }
 
         //finally read in the apparent resistivities
         std::vector<double> Data, Error;
-        ReadVec(DataFile, DCAppResistivityName, Data);
+        ReadVec(DataFile, DCAppResistivityName, Data); // @suppress("Invalid arguments")
 
         // it is possible that there is no error information in the file
         // so we don't want to crash the program if not but set it to zero
         try
           {
-            if (!DataFile.getVar(DCAppResistivityErrorName.c_str()).isNull())
+            if (!DataFile.getVar(DCAppResistivityErrorName.c_str()).isNull()) // @suppress("Method cannot be resolved")
               {
-                ReadVec(DataFile, DCAppResistivityErrorName, Error);
+                ReadVec(DataFile, DCAppResistivityErrorName, Error); // @suppress("Invalid arguments")
               }
             else
               {
                 Error.resize(Data.size());
                 std::fill(Error.begin(), Error.end(), 0.0);
               }
-          } catch (netCDF::exceptions::NcException &ex)
+          } catch (netCDF::exceptions::NcException &ex) // @suppress("Type cannot be resolved")
           {
             // ignore
           }
@@ -126,43 +117,42 @@ namespace jif3D
 
         const size_t nsourcepos = GetSourcePosPosX().size();
         //create a netcdf file
-        NcFile DataFile(filename, NcFile::replace);
+        NcFile DataFile(filename, NcFile::replace); // @suppress("Type cannot be resolved") // @suppress("Symbol is not resolved")
 
         //we use the source sequence number as a dimension
-        NcDim SourceNumDim = DataFile.addDim(DCSourceNumberName, nsourcepos);
+        NcDim SourceNumDim = DataFile.addDim(DCSourceNumberName, nsourcepos); // @suppress("Type cannot be resolved") // @suppress("Method cannot be resolved")
 
         //this is just an index over the source vector
         //and does not have any special meaning
-        std::vector<int> SourcePosNumber(nsourcepos,0);
+        std::vector<int> SourcePosNumber(nsourcepos);
         std::iota(SourcePosNumber.begin(),SourcePosNumber.end(),0);
-
-        NcVar SourceNumVar = DataFile.addVar(DCSourceNumberName, ncInt, SourceNumDim);
-        cxxport::put_legacy_ncvar(SourceNumVar, SourcePosNumber.data(), nsourcepos);
+        NcVar SourceNumVar = DataFile.addVar(DCSourceNumberName, netCDF::ncInt, SourceNumDim); // @suppress("Type cannot be resolved") // @suppress("Symbol is not resolved") // @suppress("Method cannot be resolved")
+        cxxport::put_legacy_ncvar(SourceNumVar, SourcePosNumber.data(), nsourcepos); // @suppress("Invalid arguments")
 
         //write out the source coordinates
-        WriteVec(DataFile, DCSourcePosXName, GetSourcePosPosX(), SourceNumDim, "m");
-        WriteVec(DataFile, DCSourcePosYName, GetSourcePosPosY(), SourceNumDim, "m");
-        WriteVec(DataFile, DCSourcePosZName, GetSourcePosPosZ(), SourceNumDim, "m");
-        WriteVec(DataFile, DCSourceNegXName, GetSourceNegPosX(), SourceNumDim, "m");
-        WriteVec(DataFile, DCSourceNegYName, GetSourceNegPosY(), SourceNumDim, "m");
-        WriteVec(DataFile, DCSourceNegZName, GetSourceNegPosZ(), SourceNumDim, "m");
+        WriteVec(DataFile, DCSourcePosXName, GetSourcePosPosX(), SourceNumDim, "m"); // @suppress("Invalid arguments")
+        WriteVec(DataFile, DCSourcePosYName, GetSourcePosPosY(), SourceNumDim, "m"); // @suppress("Invalid arguments")
+        WriteVec(DataFile, DCSourcePosZName, GetSourcePosPosZ(), SourceNumDim, "m"); // @suppress("Invalid arguments")
+        WriteVec(DataFile, DCSourceNegXName, GetSourceNegPosX(), SourceNumDim, "m"); // @suppress("Invalid arguments")
+        WriteVec(DataFile, DCSourceNegYName, GetSourceNegPosY(), SourceNumDim, "m"); // @suppress("Invalid arguments")
+        WriteVec(DataFile, DCSourceNegZName, GetSourceNegPosZ(), SourceNumDim, "m"); // @suppress("Invalid arguments")
 
         //write the index of the source for each measurement
-        NcDim MeasIndexDim = DataFile.addDim(MeasIndexName, ndata);
-        NcVar SourceIndexVar = DataFile.addVar(DCSourceIndexName, ncInt, MeasIndexDim);
-        cxxport::put_legacy_ncvar(SourceIndexVar, GetSourceIndices().data(), ndata);
+        NcDim MeasIndexDim = DataFile.addDim(MeasIndexName, ndata); // @suppress("Type cannot be resolved") // @suppress("Method cannot be resolved")
+        NcVar SourceIndexVar = DataFile.addVar(DCSourceIndexName, netCDF::ncInt, MeasIndexDim); // @suppress("Type cannot be resolved") // @suppress("Symbol is not resolved") // @suppress("Method cannot be resolved")
+        cxxport::put_legacy_ncvar(SourceIndexVar, GetSourceIndices().data(), ndata); // @suppress("Invalid arguments")
 
         //write out the positions of the receivers, i.e. measurement positions
-        WriteVec(DataFile, DCReceiverFirXName, GetMeasPosX(), MeasIndexDim, "m");
-        WriteVec(DataFile, DCReceiverFirYName, GetMeasPosY(), MeasIndexDim, "m");
-        WriteVec(DataFile, DCReceiverFirZName, GetMeasPosZ(), MeasIndexDim, "m");
-        WriteVec(DataFile, DCReceiverSecXName, GetMeasSecPosX(), MeasIndexDim, "m");
-        WriteVec(DataFile, DCReceiverSecYName, GetMeasSecPosY(), MeasIndexDim, "m");
-        WriteVec(DataFile, DCReceiverSecZName, GetMeasSecPosZ(), MeasIndexDim, "m");
+        WriteVec(DataFile, DCReceiverFirXName, GetMeasPosX(), MeasIndexDim, "m"); // @suppress("Invalid arguments")
+        WriteVec(DataFile, DCReceiverFirYName, GetMeasPosY(), MeasIndexDim, "m"); // @suppress("Invalid arguments")
+        WriteVec(DataFile, DCReceiverFirZName, GetMeasPosZ(), MeasIndexDim, "m"); // @suppress("Invalid arguments")
+        WriteVec(DataFile, DCReceiverSecXName, GetMeasSecPosX(), MeasIndexDim, "m"); // @suppress("Invalid arguments")
+        WriteVec(DataFile, DCReceiverSecYName, GetMeasSecPosY(), MeasIndexDim, "m"); // @suppress("Invalid arguments")
+        WriteVec(DataFile, DCReceiverSecZName, GetMeasSecPosZ(), MeasIndexDim, "m"); // @suppress("Invalid arguments")
 
         //Write the apparent resistivity data and the error
-        WriteVec(DataFile, DCAppResistivityName, GetData(), MeasIndexDim, "ohm.m");
-        WriteVec(DataFile, DCAppResistivityErrorName, GetErrors(), MeasIndexDim, "ohm.m");
+        WriteVec(DataFile, DCAppResistivityName, GetData(), MeasIndexDim, "ohm.m"); // @suppress("Invalid arguments")
+        WriteVec(DataFile, DCAppResistivityErrorName, GetErrors(), MeasIndexDim, "ohm.m"); // @suppress("Invalid arguments")
 
       }
 

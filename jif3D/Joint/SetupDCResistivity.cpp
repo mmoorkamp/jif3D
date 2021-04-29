@@ -1,16 +1,16 @@
 //============================================================================
-// Name        : SetupDCResistivity.cpp
-// Author      : 4 Jun 2014
-// Version     : 
-// Copyright   : 2014, mm489
+// Name        : SetupDCResistivity.h
+// Author      : 12 Wen 2021
+// Version     :
+// Copyright   : 2021, zhanjie and mm489
 //============================================================================
 
-#include "SetupDCResistivity.h"
 #include "../Global/FileUtil.h"
 #include "../Global/Noise.h"
-#include "../DCResistivity/DCResistivityData.h"
 #include <iostream>
 #include <boost/make_shared.hpp>
+#include "SetupDCResistivity.h"
+#include "../DCResistivity/DCResistivityData.h"
 
 namespace jif3D
   {
@@ -22,6 +22,8 @@ namespace jif3D
     SetupDCResistivity::~SetupDCResistivity()
       {
       }
+
+
 
     po::options_description SetupDCResistivity::SetupOptions()
       {
@@ -40,22 +42,33 @@ namespace jif3D
       }
 
     bool SetupDCResistivity::SetupObjective(const po::variables_map &vm,
-        jif3D::JointObjective &Objective,
-        boost::shared_ptr<jif3D::GeneralModelTransform> &Transform, double xorigin,
-        double yorigin, boost::filesystem::path TempDir)
+       jif3D::JointObjective &Objective,
+       boost::shared_ptr<jif3D::GeneralModelTransform> Transform, double xorigin,
+	   double yorigin)
       {
     	jif3D::DCResistivityData DCData;
 
         dclambda = 1.0;
-        if (!vm.count("dclambda"))
+        if (!vm.count("dclamda"))
           {
             std::cout << "DCResistivity Lambda: ";
             std::cin >> dclambda;
           }
-        //if the weight is different from zero
-        //we have to read in DC data
         if (dclambda > 0.0)
           {
+            if (!vm.count("dcmodelfilename"))
+              {
+                //first we read in the starting model of DCResisitivity
+            	dcmodelfilename = jif3D::AskFilename(
+                    "DC Resistivity Model Filename: ");
+              }
+            //we read in the starting modelfile
+            //the starting model does not necessarily obey the gridding rules for seismic data
+            //we can fix this with a grid refinement model
+            DCModel.ReadNetCDF(dcmodelfilename);
+            //write out the starting model as a .vtk file for plotting
+            DCModel.WriteVTK(dcmodelfilename + ".vtk");
+
             if (!vm.count("dcdata"))
               {
                 //get the name of the file containing the data and read it in
@@ -64,29 +77,14 @@ namespace jif3D
             //read in data
             DCData.ReadNetCDF(dcdatafilename);
 
-
-            if (!vm.count("dcmodelfilename"))
-              {
-                //we read in the starting model
-            	dcmodelfilename = jif3D::AskFilename(
-                    "DC Resistivity Model Filename: ");
-              }
-            //we read in the starting modelfile
-            //we can fix this with a grid refinement model
-            DCModel.ReadNetCDF(dcmodelfilename);
-            //write out the starting model as a .vtk file for plotting
-            DCModel.WriteVTK(dcmodelfilename + ".vtk");
-
-
             if (xorigin != 0.0 || yorigin != 0.0)
               {
             	DCModel.SetOrigin(xorigin, yorigin, 0.0);
               }
 
-
             jif3D::DCResistivityCalculator DCCalculator;
             DCObjective = boost::make_shared<
-                jif3D::ThreeDModelObjective<jif3D::DCResistivityCalculator>>(DCCalculator);
+            		jif3D::ThreeDModelObjective<jif3D::DCResistivityCalculator>>(DCCalculator);
 
             DCObjective->SetObservedData(DCData);
             DCObjective->SetCoarseModelGeometry(DCModel);
@@ -98,7 +96,7 @@ namespace jif3D
 
             if (vm.count("dcfine") && CellSize > 0.0)
               {
-                const double xmax = DCModel.GetXCoordinates().back();
+            	const double xmax = DCModel.GetXCoordinates().back();
                 const double ymax = DCModel.GetYCoordinates().back();
                 const double zmax = DCModel.GetZCoordinates().back();
                 const double xextent = xmax - DCModel.GetXCoordinates().front();
@@ -128,20 +126,17 @@ namespace jif3D
                 jif3D::ThreeDDCResistivityModel DCFineGeometry;
                 DCFineGeometry.SetCellSize(CellSize, nx, ny, nz);
                 std::cout << "Refined Model has " << nx << " * " << ny << " * " << nz
-                    << "cells\n";
+                		<< "cells\n";
                 //copy measurement configuration to refined model
                 DCObjective->SetFineModelGeometry(DCFineGeometry);
               }
             Objective.AddObjective(DCObjective, Transform, dclambda, "DC Resistivity",
-                JointObjective::datafit);
+            		JointObjective::datafit);
             std::cout << "Resistivity ndata: " << DCData.GetData().size() << std::endl;
             std::cout << "Resistivity lambda: " << dclambda << std::endl;
-
           }
-
-        //indicate whether we added a Magnetics objective function
-        //this way the caller can do additional consistency checks
+        //indicate whether we added a tomography objective
         return (dclambda > 0.0);
       }
 
-  } /* namespace jif3D */
+  }

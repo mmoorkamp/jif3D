@@ -19,7 +19,7 @@ namespace ublas = boost::numeric::ublas;
 
 namespace jif3D
   {
-    void SetupResCModelCovar(jif3D::rvec &Covar, const jif3D::rvec &InvModel,
+    void SetupResModelCovar(jif3D::rvec &Covar, const jif3D::rvec &InvModel,
         const std::vector<double> &OldCov, size_t ngrid)
       {
         assert(Covar.size() == 3 * ngrid);
@@ -44,8 +44,8 @@ namespace jif3D
       }
 
     SetupResCoupling::SetupResCoupling() :
-        minres(0.0), maxres(0.0), minslow(0.0), maxslow(0.0), mindens(0.0), maxdens(
-            0.0), density_a(0.0), density_b(0.0), res_a(0.0), res_b(0.0), res_c(0.0), vpvs(
+        mibins(0.0), minres(0.0), maxres(0.0), minslow(0.0), maxslow(0.0), mindens(0.0), maxdens(
+            0.0), minvel(0.0), maxvel(0.0), density_a(0.0), density_b(0.0), res_a(0.0), res_b(0.0), res_c(0.0), vpvs(
             std::sqrt(3.0)), DensReplace(0.0), ResReplace(3.0)
       {
       }
@@ -379,7 +379,7 @@ namespace jif3D
         std::cin >> seisreglambda;
         boost::shared_ptr<jif3D::RegularizationFunction> SeisReg(Regularization->clone());
         jif3D::rvec TomoCovar(3 * ngrid);
-        SetupResCModelCovar(TomoCovar, TomoCovVec, SeisReg->GetDataError(), ngrid);
+        SetupResModelCovar(TomoCovar, TomoCovVec, SeisReg->GetDataError(), ngrid);
         SeisReg->SetDataError(std::vector<double>(TomoCovar.begin(), TomoCovar.end()));
 
         //then the regularization of densities
@@ -402,7 +402,7 @@ namespace jif3D
         boost::shared_ptr<jif3D::RegularizationFunction> GravReg(Regularization->clone());
         jif3D::rvec GravCovar(3 * ngrid);
 
-        SetupResCModelCovar(GravCovar, GravCovVec, GravReg->GetDataError(), ngrid);
+        SetupResModelCovar(GravCovar, GravCovVec, GravReg->GetDataError(), ngrid);
         GravReg->SetDataError(std::vector<double>(GravCovar.begin(), GravCovar.end()));
 
         //and finally resistivities
@@ -423,7 +423,7 @@ namespace jif3D
         std::cin >> dcreglambda;
         boost::shared_ptr<jif3D::RegularizationFunction> DCReg(Regularization->clone());
         jif3D::rvec ResCovar(3 * ngrid);
-        SetupResCModelCovar(ResCovar, ResCovVec, DCReg->GetDataError(), ngrid);
+        SetupResModelCovar(ResCovar, ResCovVec, DCReg->GetDataError(), ngrid);
         DCReg->SetDataError(std::vector<double>(ResCovar.begin(), ResCovar.end()));
         //if we specify on the command line that we want to subtract the
         //starting model, we set the corresponding reference model
@@ -706,7 +706,7 @@ namespace jif3D
         std::cin >> seisreglambda;
         boost::shared_ptr<jif3D::RegularizationFunction> SeisReg(Regularization->clone());
         jif3D::rvec TomoCovar(3 * ngrid);
-        SetupResCModelCovar(TomoCovar, Ones, SeisReg->GetDataError(), ngrid);
+        SetupResModelCovar(TomoCovar, Ones, SeisReg->GetDataError(), ngrid);
         SeisReg->SetDataError(std::vector<double>(TomoCovar.begin(), TomoCovar.end()));
 
         //then the regularization of densities
@@ -715,7 +715,7 @@ namespace jif3D
         std::cin >> gravreglambda;
         boost::shared_ptr<jif3D::RegularizationFunction> GravReg(Regularization->clone());
         jif3D::rvec GravCovar(3 * ngrid);
-        SetupResCModelCovar(GravCovar, Ones, GravReg->GetDataError(), ngrid);
+        SetupResModelCovar(GravCovar, Ones, GravReg->GetDataError(), ngrid);
         GravReg->SetDataError(std::vector<double>(GravCovar.begin(), GravCovar.end()));
 
         //and finally conductivities
@@ -724,7 +724,7 @@ namespace jif3D
         std::cin >> dcreglambda;
         boost::shared_ptr<jif3D::RegularizationFunction> DCReg(Regularization->clone());
         jif3D::rvec DCResCovar(3 * ngrid);
-        SetupResCModelCovar(DCResCovar, Ones, DCReg->GetDataError(), ngrid);
+        SetupResModelCovar(DCResCovar, Ones, DCReg->GetDataError(), ngrid);
         DCReg->SetDataError(std::vector<double>(DCResCovar.begin(), DCResCovar.end()));
 
         //if we specify on the command line that we want to subtract the
@@ -781,7 +781,7 @@ namespace jif3D
         if (reglambda > 0.0)
           {
             jif3D::rvec TomoCovar(3 * ngrid);
-            SetupResCModelCovar(TomoCovar, InvModel, Regularization->GetDataError(), ngrid);
+            SetupResModelCovar(TomoCovar, InvModel, Regularization->GetDataError(), ngrid);
             Regularization->SetDataError(
                 std::vector<double>(TomoCovar.begin(), TomoCovar.end()));
           }

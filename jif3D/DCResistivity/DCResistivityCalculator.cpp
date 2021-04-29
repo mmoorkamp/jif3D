@@ -5,61 +5,12 @@
 // Copyright   : 2014, Zhanjie Shi, Max Moorkamp and Richard.W Hobbs
 //============================================================================
 
-#include "../DCResistivity/DCResistivityCalculator.h"
-
 #include <boost/numeric/conversion/cast.hpp>
 #include <algorithm>
+#include "DCResistivityCalculator.h"
 
 namespace jif3D
   {
-    DCResistivityCalculator::DCResistivityCalculator() :
-        geo(), grid()
-      {
-      }
-
-    DCResistivityCalculator::~DCResistivityCalculator()
-      {
-
-      }
-
-
-    void DCResistivityCalculator::Allocate(const size_t ngrid, const size_t nshot,
-        const size_t nmeaspoint, const size_t ndata)
-      {
-
-        //the actual size of the forward grid
-        const size_t oldngrid = (grid.nx + 1) * (grid.ny + 1)
-                    * (grid.nz + 1);
-        //if the grid size changed we have to (re)allocate
-        if (oldngrid != ngrid)
-          {
-            grid.rho.resize(ngrid);
-          }
-
-
-        //if the geometry size changed we have to (re)allocate
-        if (geo.nsource != nshot)
-          {
-            geo.PosSx.resize(nshot);
-            geo.PosSy.resize(nshot);
-            geo.PosSz.resize(nshot);
-            geo.NegSx.resize(nshot);
-            geo.NegSy.resize(nshot);
-            geo.NegSz.resize(nshot);
-          }
-
-        if (geo.sno.size() != nmeaspoint)
-          {
-            geo.rx1.resize(nmeaspoint);
-            geo.ry1.resize(nmeaspoint);
-            geo.rz1.resize(nmeaspoint);
-            geo.rx2.resize(nmeaspoint);
-            geo.ry2.resize(nmeaspoint);
-            geo.rz2.resize(nmeaspoint);
-            geo.sno.resize(nmeaspoint);
-          }
-
-      }
 
 
     void DCResistivityCalculator::ModelToStruct(const ThreeDDCResistivityModel &Model,
@@ -69,6 +20,35 @@ namespace jif3D
         const size_t nmeaspoint = Data.GetMeasPosX().size();
         const size_t nshot = Data.GetSourcePosPosX().size();
 
+        grid.nx = Model.GetModelShape()[0];
+        grid.ny = Model.GetModelShape()[1];
+        grid.nz = Model.GetModelShape()[2];
+        grid.dx = Model.GetXCellSizes()[0];
+        grid.dy = Model.GetYCellSizes()[0];
+        grid.dz.resize(Model.GetZCellSizes().size());
+        std::copy(Model.GetZCellSizes().begin(), Model.GetZCellSizes().end(),
+            grid.dz.begin());
+        //grid.dz = Model.GetZCellSizes()[0];
+
+        //we calculate the size of the actual forward modeling grid
+        const size_t ngrid = grid.nx * grid.ny * grid.nz;
+        //allocate the arrays
+        Allocate(ngrid, nshot, nmeaspoint, ndata);
+        //now we can start to fill the different structures for the forward code
+        //first we do the resistivity grid
+        //the extra cells have to be zero, it is easier to initialize everything
+        //std::fill_n(grid.rho.begin(), ngrid, 0.0);
+        //fill the real model with resistivity values
+        //we use physical resistivity in ohm.m
+        //The layerindex is given according to the sequence in DCResForwardBase code
+        for (size_t i = 0; i < grid.nz; ++i)
+          for (size_t j = 0; j < grid.ny; ++j)
+            for (size_t k = 0; k < grid.nx; ++k)
+              {
+                const size_t layerindex = i * grid.nx * grid.ny + j * grid.nx + k;
+                grid.rho[layerindex] = Model.GetResistivities()[k][j][i];
+              }
+        grid.avg_cond = 1/grid.rho[0];
         //fill the geometry
         //In DCResForwardBase code, the coordinate system is base on zero-centred in x and y direction, but actual data's coordinate is not so,
         //we have to adjust source and receiver's coordinate to accord with coordinate system in DCResForwardBase.
@@ -104,37 +84,6 @@ namespace jif3D
 
         const double xshift = -minx - (maxx - minx) / 2.0;
         const double yshift = -miny - (maxy - miny) / 2.0;
-
-        grid.nx = Model.GetModelShape()[0];
-        grid.ny = Model.GetModelShape()[1];
-        grid.nz = Model.GetModelShape()[2];
-        grid.dx = Model.GetXCellSizes()[0];
-        grid.dy = Model.GetYCellSizes()[0];
-        grid.dz.resize(Model.GetZCellSizes().size());
-        std::copy(Model.GetZCellSizes().begin(), Model.GetZCellSizes().end(),
-            grid.dz.begin());
-        //grid.dz = Model.GetZCellSizes()[0];
-
-        //we calculate the size of the actual forward modeling grid
-        const size_t ngrid = grid.nx * grid.ny * grid.nz;
-        //allocate the arrays
-        Allocate(ngrid, nshot, nmeaspoint, ndata);
-        //now we can start to fill the different structures for the forward code
-        //first we do the resistivity grid
-        //the extra cells have to be zero, it is easier to initialize everything
-        //std::fill_n(grid.rho.begin(), ngrid, 0.0);
-        //fill the real model with resistivity values
-        //we use physical resistivity in ohm.m
-        //The layerindex is given according to the sequence in DCResForwardBase code
-        for (size_t i = 0; i < grid.nz; ++i)
-          for (size_t j = 0; j < grid.ny; ++j)
-            for (size_t k = 0; k < grid.nx; ++k)
-              {
-                const size_t layerindex = i * grid.nx * grid.ny + j * grid.nx + k;
-                grid.rho[layerindex] = Model.GetResistivities()[k][j][i];
-              }
-        grid.avg_cond = 1/grid.rho[0];
-
         std::transform(Data.GetSourcePosPosX().begin(), Data.GetSourcePosPosX().end(),
             geo.PosSx.begin(), [xshift](double pos)
               { return pos+xshift;});
@@ -191,9 +140,60 @@ namespace jif3D
       }
 
 
+    DCResistivityCalculator::DCResistivityCalculator() :
+        geo(), grid()
+      {
+      }
 
-    rvec DCResistivityCalculator::Calculate(const ModelType &Model,
-            const DataType &Data)
+
+    DCResistivityCalculator::~DCResistivityCalculator()
+      {
+
+      }
+
+
+    void DCResistivityCalculator::Allocate(const size_t ngrid, const size_t nshot,
+        const size_t nmeaspoint, const size_t ndata)
+      {
+
+        //the actual size of the forward grid
+    	const size_t oldngrid = grid.rho.size();
+        //if the grid size changed we have to (re)allocate
+        if (oldngrid != ngrid)
+          {
+            grid.rho.resize(ngrid);
+          }
+
+
+        //if the geometry size changed we have to (re)allocate
+        if (geo.nsource != nshot)
+          {
+            geo.PosSx.resize(nshot);
+            geo.PosSy.resize(nshot);
+            geo.PosSz.resize(nshot);
+            geo.NegSx.resize(nshot);
+            geo.NegSy.resize(nshot);
+            geo.NegSz.resize(nshot);
+          }
+        if (geo.sno.size() != nmeaspoint)
+          {
+            geo.rx1.resize(nmeaspoint);
+            geo.ry1.resize(nmeaspoint);
+            geo.rz1.resize(nmeaspoint);
+            geo.rx2.resize(nmeaspoint);
+            geo.ry2.resize(nmeaspoint);
+            geo.rz2.resize(nmeaspoint);
+            geo.sno.resize(nmeaspoint);
+          }
+
+      }
+
+
+
+
+
+    rvec DCResistivityCalculator::Calculate(const ThreeDDCResistivityModel &Model,
+            const jif3D::DCResistivityData &Data)
       {
         const size_t ndatadc = Data.GetSourceIndices().size();
         ModelToStruct(Model, Data, geo, grid);
@@ -205,8 +205,8 @@ namespace jif3D
 
       }
 
-    rvec DCResistivityCalculator::LQDerivative(const ModelType &Model,
-    		const DataType &Data, const rvec &Misfit)
+    rvec DCResistivityCalculator::LQDerivative(const ThreeDDCResistivityModel &Model,
+    		const jif3D::DCResistivityData &Data, const rvec &Misfit)
       {
 
         ModelToStruct(Model, Data, geo, grid);

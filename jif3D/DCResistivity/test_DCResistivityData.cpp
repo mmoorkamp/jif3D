@@ -1,8 +1,8 @@
 //============================================================================
-// Name        : test_ReadWriteDCResistivity.cpp
-// Author      : May, 2014
+// Name        : test_DCResistivityData.cpp
+// Author      : Mar, 2021
 // Version     :
-// Copyright   : 2014, zhanjie shi
+// Copyright   : 2021, zhanjie
 //============================================================================
 
 #define BOOST_TEST_MODULE DCResistivityData test
@@ -12,7 +12,7 @@
 #endif
 #include <boost/test/included/unit_test.hpp>
 #include <boost/test/tools/floating_point_comparison.hpp>
-#include "../DCResistivity/DCResistivityData.h"
+#include "DCResistivityData.h"
 #include "ThreeDDCResistivityModel.h"
 #include "../Global/VecMat.h"
 
@@ -92,54 +92,54 @@ BOOST_AUTO_TEST_SUITE( DCResistivity_Suite )
 
         for (size_t i = 0; i < ndata; ++i)
           {
-        	DcData.AddMeasurementPoint(drand48(), drand48(), drand48(), drand48(),
+        	DcData.AddAllMeasurementPoint(drand48(), drand48(), drand48(), drand48(),
                 drand48(), drand48(), rand() % nsources);
           }
 
+        DcData.SetDataAndErrors(std::vector<double>(Data.begin(),Data.end()),std::vector<double>(Error.begin(),Error.end()));
+
         DcData.WriteNetCDF(filename);
 
+        jif3D::DCResistivityData InDcData;
+        InDcData.ReadNetCDF(filename);
 
-        jif3D::rvec InData, InError;
-        jif3D::DCResistivityData InModel;
-        DcData.ReadNetCDF(filename);
-
-        BOOST_CHECK(Data.size() == InData.size());
-        BOOST_CHECK(Error.size() == InError.size());
+        BOOST_CHECK(Data.size() == DcData.GetData().size());
+        BOOST_CHECK(Error.size() == DcData.GetErrors().size());
         double precision = 0.001;
         for (size_t i = 0; i < ndata; ++i)
           {
-            BOOST_CHECK_CLOSE(Data(i), InData(i), precision);
-            BOOST_CHECK_CLOSE(Error(i), InError(i), precision);
-            BOOST_CHECK_CLOSE(DcData.GetMeasPosX()[i], InModel.GetMeasPosX()[i],
+            BOOST_CHECK_CLOSE(Data(i), DcData.GetData()[i], precision);
+            BOOST_CHECK_CLOSE(Error(i), DcData.GetErrors()[i], precision);
+            BOOST_CHECK_CLOSE(DcData.GetMeasPosX()[i], InDcData.GetMeasPosX()[i],
                 precision);
-            BOOST_CHECK_CLOSE(DcData.GetMeasPosY()[i], InModel.GetMeasPosY()[i],
+            BOOST_CHECK_CLOSE(DcData.GetMeasPosY()[i], InDcData.GetMeasPosY()[i],
                 precision);
-            BOOST_CHECK_CLOSE(DcData.GetMeasPosZ()[i], InModel.GetMeasPosZ()[i],
+            BOOST_CHECK_CLOSE(DcData.GetMeasPosZ()[i], InDcData.GetMeasPosZ()[i],
                 precision);
 
-            BOOST_CHECK_CLOSE(DcData.GetMeasSecPosX()[i], InModel.GetMeasSecPosX()[i],
+            BOOST_CHECK_CLOSE(DcData.GetMeasSecPosX()[i], InDcData.GetMeasSecPosX()[i],
                 precision);
-            BOOST_CHECK_CLOSE(DcData.GetMeasSecPosY()[i], InModel.GetMeasSecPosY()[i],
+            BOOST_CHECK_CLOSE(DcData.GetMeasSecPosY()[i], InDcData.GetMeasSecPosY()[i],
                 precision);
-            BOOST_CHECK_CLOSE(DcData.GetMeasSecPosZ()[i], InModel.GetMeasSecPosZ()[i],
+            BOOST_CHECK_CLOSE(DcData.GetMeasSecPosZ()[i], InDcData.GetMeasSecPosZ()[i],
                 precision);
-            BOOST_CHECK_EQUAL(DcData.GetSourceIndices()[i], InModel.GetSourceIndices()[i]);
+            BOOST_CHECK_EQUAL(DcData.GetSourceIndices()[i], InDcData.GetSourceIndices()[i]);
           }
 
         for (size_t i = 0; i < nsources; ++i)
           {
-            BOOST_CHECK_CLOSE(DcData.GetSourcePosPosX()[i], InModel.GetSourcePosPosX()[i],
+            BOOST_CHECK_CLOSE(DcData.GetSourcePosPosX()[i], InDcData.GetSourcePosPosX()[i],
                 precision);
-            BOOST_CHECK_CLOSE(DcData.GetSourcePosPosY()[i], InModel.GetSourcePosPosY()[i],
+            BOOST_CHECK_CLOSE(DcData.GetSourcePosPosY()[i], InDcData.GetSourcePosPosY()[i],
                 precision);
-            BOOST_CHECK_CLOSE(DcData.GetSourcePosPosZ()[i], InModel.GetSourcePosPosZ()[i],
+            BOOST_CHECK_CLOSE(DcData.GetSourcePosPosZ()[i], InDcData.GetSourcePosPosZ()[i],
                 precision);
 
-            BOOST_CHECK_CLOSE(DcData.GetSourceNegPosX()[i], InModel.GetSourceNegPosX()[i],
+            BOOST_CHECK_CLOSE(DcData.GetSourceNegPosX()[i], InDcData.GetSourceNegPosX()[i],
                 precision);
-            BOOST_CHECK_CLOSE(DcData.GetSourceNegPosY()[i], InModel.GetSourceNegPosY()[i],
+            BOOST_CHECK_CLOSE(DcData.GetSourceNegPosY()[i], InDcData.GetSourceNegPosY()[i],
                 precision);
-            BOOST_CHECK_CLOSE(DcData.GetSourceNegPosZ()[i], InModel.GetSourceNegPosZ()[i],
+            BOOST_CHECK_CLOSE(DcData.GetSourceNegPosZ()[i], InDcData.GetSourceNegPosZ()[i],
                 precision);
           }
 

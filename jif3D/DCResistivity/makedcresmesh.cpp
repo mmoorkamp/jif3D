@@ -12,8 +12,8 @@
 #include <iostream>
 #include <string>
 #include "../Global/FileUtil.h"
+#include "DCResistivityData.h"
 #include "ThreeDDCResistivityModel.h"
-#include "../DCResistivity/DCResistivityData.h"
 
 using namespace std;
 

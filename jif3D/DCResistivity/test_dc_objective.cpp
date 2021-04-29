@@ -1,3 +1,4 @@
+
 #define BOOST_TEST_MODULE DCObjective test
 #define BOOST_TEST_MAIN ...
 #ifdef HAVEHPX
@@ -14,6 +15,10 @@
 #include <boost/random/linear_congruential.hpp>
 #include <boost/random/uniform_real.hpp>
 #include <boost/random/variate_generator.hpp>
+#include "../DCResistivity/ThreeDDCResistivityModel.h"
+#include "DCResistivityData.h"
+
+
 
 BOOST_AUTO_TEST_SUITE( DC_Objective_Test_Suite )
 
@@ -79,7 +84,7 @@ BOOST_AUTO_TEST_SUITE( DC_Objective_Test_Suite )
                 int sourceindex = lrand48() % (nmeasx * nmeasy);
                 DCData.AddSource(sourcex, sourcey, sourcez, sourcex + 0.1, sourcey + 0.1,
                     sourcez);
-                DCData.AddMeasurementPoint(sourcex + 0.2, sourcey, sourcez, sourcex + 0.2,
+                DCData.AddAllMeasurementPoint(sourcex + 0.2, sourcey, sourcez, sourcex + 0.2,
                     sourcey + 0.2, sourcez, sourceindex);
               }
           }
@@ -91,15 +96,22 @@ BOOST_AUTO_TEST_SUITE( DC_Objective_Test_Suite )
         jif3D::DCResistivityCalculator Calculator;
         jif3D::rvec AppRes(Calculator.Calculate(DCModel, DCData));
 
+        jif3D::rvec DCCovar(AppRes.size());
+        std::fill(DCCovar.begin(), DCCovar.end(), 0.5);
+
         jif3D::ThreeDModelObjective<jif3D::DCResistivityCalculator> DCObjective(
             Calculator);
-        DCObjective.SetObservedData(AppRes);
+
+
+        DCData.SetDataAndErrors(std::vector<double>(AppRes.begin(),AppRes.end()),std::vector<double>(DCCovar.begin(),DCCovar.end()));
+
+
+
+        DCObjective.SetObservedData(DCData);
         DCObjective.SetCoarseModelGeometry(DCModel);
         DCModel.WriteVTK("DCtest.vtk");
-        jif3D::rvec DCCovar(AppRes.size());
 
-        std::fill(DCCovar.begin(), DCCovar.end(), 0.5);
-        DCObjective.SetDataError(DCCovar);
+        DCObjective.SetDataError(std::vector<double>(DCCovar.begin(),DCCovar.end()));
         //TomoObjective->SetPrecondDiag(PreCond);
         double ZeroMisfit = DCObjective.CalcMisfit(InvModel);
         //we used the same model to calculate the observed data so the misfit should be 0
@@ -111,7 +123,9 @@ BOOST_AUTO_TEST_SUITE( DC_Objective_Test_Suite )
         BOOST_CHECK(std::equal(AppRes.begin(), AppRes.end(), SynthData.begin()));
         //check the gradient by perturbing the resistivities times
         AppRes *= 1.1;
-        DCObjective.SetObservedData(AppRes);
+        DCData.SetDataAndErrors(std::vector<double>(AppRes.begin(),AppRes.end()),std::vector<double>(DCCovar.begin(),DCCovar.end()));
+
+        DCObjective.SetObservedData(DCData);
         double Misfit = DCObjective.CalcMisfit(InvModel);
         BOOST_CHECK(Misfit > 0.0);
 
