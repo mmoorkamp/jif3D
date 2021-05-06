@@ -88,8 +88,8 @@ namespace jif3D
                     const double dist = std::sqrt(distx * distx + disty * disty)
                         / binwidth;
 
-                    //const double val2 = boost::math::pdf(norm, dist);
-                    const double val = InterGauss(dist);
+                    const double val = boost::math::pdf(norm, dist);
+                    //const double val = InterGauss(dist);
 
                     CountsXY(j * nbins + k) += val;
                     CountsX(j) += val;
@@ -124,9 +124,9 @@ namespace jif3D
                   {
                     const double disty = y(i) - (ymin + (k + 0.5) * yw);
                     const double dist = std::sqrt(distx * distx + disty * disty)/ binwidth;;
-                    //const double val = boost::math::pdf(norm, dist / binwidth)
-                    //    / (binwidth * binwidth);
-                    const double val = InterGauss(dist)/ (binwidth * binwidth);
+                    const double val = boost::math::pdf(norm, dist)
+                        / (binwidth * binwidth);
+                    //const double val = InterGauss(dist)/ (binwidth * binwidth);
                     Result(i) -= 2.0 * distx * val * dsxy(j * nbins + k);
                     Result(i + nparm) -= 2.0 * disty * val * dsxy(j * nbins + k);
                     Result(i) += distx * val * dsx(j);
