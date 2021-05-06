@@ -964,14 +964,25 @@ namespace jif3D
         char dummy[1024];
         //swallow up the first 7 lines with header information
         for (size_t i = 0; i < 7; ++i)
+          {
           infile.getline(dummy, 1024);
+          std::cout << dummy << "\n";
+          }
         //ignore the fist character (>) of the last header line
-        infile.ignore(1);
+        string line;
+        std::getline(infile, line);
+        typedef std::vector<std::string> split_vector_type;
+        boost::algorithm::trim(line);
+        split_vector_type SplitVec; // #2: Search for tokens
+        split(SplitVec, line, boost::is_any_of("> "),
+            boost::token_compress_on);
         size_t nfreq = 0;
         size_t nsites = 0;
-        infile >> nfreq >> nsites;
+        jif3D::convert(SplitVec[1], nfreq);
+        jif3D::convert(SplitVec[2], nsites);
+        //infile >> nfreq >> nsites;
         //swallow up the rest of the line
-        infile.getline(dummy, 1024);
+        //infile.getline(dummy, 1024);
         Imp.resize(nfreq * nsites * 8);
         std::fill(Imp.begin(), Imp.end(), 1.0);
         Err.resize(Imp.size());
@@ -988,11 +999,9 @@ namespace jif3D
           {
             try
               {
-                string line;
                 std::getline(infile, line);
-                typedef std::vector<std::string> split_vector_type;
                 boost::algorithm::trim(line);
-                split_vector_type SplitVec; // #2: Search for tokens
+                //split_vector_type SplitVec; // #2: Search for tokens
                 split(SplitVec, line, boost::is_any_of(" \n\r\t"),
                     boost::token_compress_on);
 
