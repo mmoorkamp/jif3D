@@ -1,12 +1,3 @@
-First, a word of warning.: THIS IS AN BETA RELEASE. This doesn't mean so much that the codes 
-will permanently crash, we use them all the time and a lot of them already for a few years, 
-but mostly that there is hardly any documentation, if at all. We plan to include some  more 
-tutorial  examples in a later release, but for now you have to read the help texts that 
-appear at the  start of some programs, look at the source code, or ask us to figure 
-out what is happening. A good idea is usually to call a program with the --help option.
-If you are prepared to put up with it, you're most welcome to use the codes and send me 
-feedback through the Sourceforge project sites at http://sourceforge.net/projects/jif3d
-
 PREPARATION
 
 Make sure you have the following libraries installed and in the default search path for your 
@@ -31,10 +22,10 @@ Optional libraries include
 gravity gpu computations
 
 
-We are using boost-build as a build system. It is included in any distribution of boost, can be
-installed through the package manager on ubuntu or can be obtained separately 
-from http://www.boost.org/boost-build2/ where 
-you also find some instructions.
+We are using boost-build as a build system. It is included in any distribution of boost or can be
+installed through the package manager on ubuntu or can be obtained separately. If you use the version included
+with the downloaded boost package, you might to have a look at the boost-build.jam file and adjust the path there
+to the location where you downloaded boost.
 
 
 
@@ -62,14 +53,15 @@ with g++, clang and intel c++ on linux. Note that compiling without the release 
 which are good for finding problems but can be orders of magnitude slower.
 
 Each compilation run executes a number of automatic tests that check for correctness
-of program behaviour. A few tests occassionally fail randomly as I have not checked for
+of program behaviour. A few tests occasionally fail randomly as I have not checked for
 some rare pathological cases. Usually running the compilation again should fix this.
 If failures in the tests persist, let me know and we will look into it.
 
 
 FINISH
 
-At the moment the compiled executable are scattered in different sub-directories 
+There will be a bin directory under the main jif3D directory where the most used executables can be found.
+In addtion, some of the compiled executable are scattered in different sub-directories 
 created by the build system. The main joint inversion executable will be placed
 in a sub-directory of Joint/bin other tools will be in the bin directories of
 the MT, Gravity and Tomo directories. The Hacks directory contains various
@@ -84,10 +76,8 @@ doxygen Doxyfile.manual (for a pdf manual)
 The style of this documentation is currently aimed at C++ developers. 
 A more detailed user manual is in preparation. 
 
-A good place to start at the moment is to have a look at the example in the Examples directory.
-You will need to have the netcdf operators http://nco.sourceforge.net/ installed for this
-to run. This example will generate simple models, calculate synthetic data and run a
-seismic/gravity joint inversion on it. It will give you a first idea about the file formats
-and options for the joint inversion program.
+A good place to start at the moment is to have a look at the jupyter notebooks in the Tutorials directory.
+These will guide you through converting gravity and magnetic data and performing individual and joint inversions
+with these datasets.
 
 Have fun
