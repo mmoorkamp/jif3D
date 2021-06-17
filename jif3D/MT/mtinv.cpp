@@ -44,6 +44,7 @@
 #include "../Joint/SetupRegularization.h"
 #include "../Joint/SetupInversion.h"
 #include "../Joint/InversionOutput.h"
+#include "../MI/MutualInformationConstraint.h"
 
 namespace ublas = boost::numeric::ublas;
 namespace po = boost::program_options;
@@ -70,7 +71,7 @@ bool CleanFiles = true;
 double CovWidth = 3.0;
 double zshift = 0.0;
 
-int hpx_main(boost::program_options::variables_map& vm)
+int hpx_main(boost::program_options::variables_map &vm)
   {
 
     boost::shared_ptr<jif3D::JointObjective> Objective(new jif3D::JointObjective(true));
@@ -339,7 +340,7 @@ int hpx_main(boost::program_options::variables_map& vm)
         std::copy(OldCov.begin(), OldCov.end(), CovModVec.begin());
       }
 
-    if (vm.count("crossmodel"))
+    if (vm.count("crossmodel") || vm.count("mimodel"))
       {
         boost::shared_ptr<jif3D::ThreeDModelBase> CrossModel(
             jif3D::ReadAnyModel(CrossModelName));
@@ -351,7 +352,7 @@ int hpx_main(boost::program_options::variables_map& vm)
             return 100;
           }
         double cgweight = 1.0;
-        std::cout << "Cross-gradient weight: ";
+        std::cout << "Constraint weight: ";
         std::cin >> cgweight;
 
         jif3D::rvec OldInv(InvModel);
@@ -366,13 +367,24 @@ int hpx_main(boost::program_options::variables_map& vm)
         boost::shared_ptr<jif3D::MultiSectionTransform> CrossTrans(
             new jif3D::MultiSectionTransform(InvModel.size(), 0, ngrid, Copier));
         CrossTrans->AddSection(OldInv.size(), InvModel.size(), Copier);
+        if (vm.count("crossmodel"))
+          {
+            boost::shared_ptr<jif3D::CrossGradient> CrossConstr(
+                new jif3D::CrossGradient(Model, TearModX, TearModY, TearModZ));
+            Objective->AddObjective(CrossConstr, CrossTrans, cgweight, "Cross",
+                jif3D::JointObjective::coupling);
+          }
+        else
+          {
+            const size_t mibins = 100;
+            boost::shared_ptr<jif3D::MutualInformationConstraint> MIConstr =
+                boost::make_shared<jif3D::MutualInformationConstraint>(-2.0, 2.0, -2.0,
+                    2.0, mibins);
+            Objective->AddObjective(MIConstr, CrossTrans, cgweight, "MI",
+                jif3D::JointObjective::coupling);
+          }
 
-        boost::shared_ptr<jif3D::CrossGradient> CrossConstr(
-            new jif3D::CrossGradient(Model, TearModX, TearModY, TearModZ));
-        Objective->AddObjective(CrossConstr, CrossTrans, cgweight, "Cross",
-            jif3D::JointObjective::coupling);
       }
-
     auto TipperTransform = boost::shared_ptr<jif3D::MultiSectionTransform>(
         MTTransform->clone());
     if (WantDistCorr)
@@ -397,8 +409,9 @@ int hpx_main(boost::program_options::variables_map& vm)
         X3DObjective->SetDataTransform(boost::make_shared<jif3D::ComplexLogTransform>());
         std::transform(ZError.begin(), ZError.end(), DataMT.GetData().begin(),
             ZError.begin(),
-            [](double err, double dat)
-              { return err/std::max(std::numeric_limits<double>::epsilon(),std::abs(dat));});
+            [](double err,
+                double dat)
+                  { return err/std::max(std::numeric_limits<double>::epsilon(),std::abs(dat));});
       }
     X3DObjective->SetObservedData(DataMT);
     X3DObjective->SetCoarseModelGeometry(Model);
@@ -710,12 +723,12 @@ int hpx_main(boost::program_options::variables_map& vm)
     Model.WriteUBC(modelfilename + ".inv.ubc");
     std::cout << std::endl;
 #ifdef HAVEHPX
-    return hpx::finalize();
+        return hpx::finalize();
 #endif
     return 0;
   }
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
   {
 
     po::options_description desc("General options");
