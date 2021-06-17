@@ -17,17 +17,18 @@
 using netCDF::NcFile;
 using netCDF::NcVar;
 using netCDF::NcDim;
+using netCDF::NcGroupAtt;
 
 namespace jif3D
   {
 
     ThreeDModelBase::ThreeDModelBase() :
-        Data(), XCellSizes(), YCellSizes(), ZCellSizes(), GridXCoordinates(), GridYCoordinates(), GridZCoordinates()
+        UTMZone(), Data(), XCellSizes(), YCellSizes(), ZCellSizes(), GridXCoordinates(), GridYCoordinates(), GridZCoordinates()
       {
 
       }
 
-    ThreeDModelBase::ThreeDModelBase(const ThreeDModelBase& source) :
+    ThreeDModelBase::ThreeDModelBase(const ThreeDModelBase &source) :
         Data(source.Data)
       {
         SetXCoordinates(source.GridXCoordinates);
@@ -40,7 +41,7 @@ namespace jif3D
 
       }
 
-    ThreeDModelBase& ThreeDModelBase::operator=(const ThreeDModelBase& source)
+    ThreeDModelBase& ThreeDModelBase::operator=(const ThreeDModelBase &source)
       {
         if (this == &source)
           return *this;
@@ -162,13 +163,13 @@ namespace jif3D
         double OldZ = GridZCoordinates.empty() ? 0.0 : GridZCoordinates[0];
         //copy the information about the new origin
         std::transform(GridXCoordinates.begin(), GridXCoordinates.end(),
-            GridXCoordinates.begin(), [x,OldX](double val)
+            GridXCoordinates.begin(), [x, OldX](double val)
               { return val +x - OldX;});
         std::transform(GridYCoordinates.begin(), GridYCoordinates.end(),
-            GridYCoordinates.begin(), [y,OldY](double val)
+            GridYCoordinates.begin(), [y, OldY](double val)
               { return val +y - OldY;});
         std::transform(GridZCoordinates.begin(), GridZCoordinates.end(),
-            GridZCoordinates.begin(), [z,OldZ](double val)
+            GridZCoordinates.begin(), [z, OldZ](double val)
               { return val +z - OldZ;});
         //cell sizes do not change when shifting the origin, so nothing
         //needs to be done for those
@@ -191,6 +192,12 @@ namespace jif3D
             throw jif3D::FatalException("Cell size specification does not match data !",
             __FILE__, __LINE__);
           }
+
+        NcGroupAtt att = NetCDFFile.getAtt("UTMZone");
+        if (!att.isNull())
+          {
+            att.getValues(UTMZone);
+          }
       }
 
     void ThreeDModelBase::WriteDataToNetCDF(NcFile &NetCDFFile,
@@ -198,6 +205,10 @@ namespace jif3D
       {
         Write3DModelToNetCDF(NetCDFFile, DataName, UnitsName, GetXCoordinates(),
             GetYCoordinates(), GetZCoordinates(), Data);
+        if (!UTMZone.empty())
+          {
+            NetCDFFile.putAtt("UTMZone", UTMZone);
+          }
       }
 
     void ThreeDModelBase::WriteVTK(std::string filename,
