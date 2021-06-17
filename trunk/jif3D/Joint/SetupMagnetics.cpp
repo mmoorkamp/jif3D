@@ -71,13 +71,30 @@ namespace jif3D
         std::cin >> maglambda;
 
         //if the weight is different from zero
-        //we have to read in scalar Magnetics data
+        //we have to deal with magnetics
         if (maglambda > 0.0)
           {
-            std::string magdatafilename = jif3D::AskFilename(
-                "Total field magnetic Data Filename: ");
-            MagData.ReadNetCDF(magdatafilename);
-            MagData.WriteVTK(magdatafilename);
+            //if the weight is really small we use this as a "secret setting"
+            //for constrained inversion, so we only read in data when the
+            //weight is larger than 1e-32, otherwise we create a single point
+            //dummy dataset, the joint objective class is set that
+            //objective functions with such a small weight are not evaluated anyway
+            if (maglambda > 1e-32)
+              {
+                //read in data file
+                std::string magdatafilename = jif3D::AskFilename(
+                    "Total field magnetic Data Filename: ");
+                MagData.ReadNetCDF(magdatafilename);
+                MagData.WriteVTK(magdatafilename);
+              }
+            else
+              {
+                //create dummy dataset to make constrained inversion more convenient
+                //otherwise the user would have to do this or we would have to create extra settings
+                MagData.AddMeasurementPoint(0.0,0.0,0.0);
+                std::vector<double> dummy(1,1.0);
+                MagData.SetDataAndErrors(dummy,dummy);
+              }
             std::string magmodelfilename = jif3D::AskFilename(
                 "Magnetics Model Filename: ");
             Model.ReadNetCDF(magmodelfilename);
