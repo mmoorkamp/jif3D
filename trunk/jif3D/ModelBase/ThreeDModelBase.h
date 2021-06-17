@@ -50,7 +50,8 @@ namespace jif3D
       //! A shorthand for the dimensions, i.e. cell-sizes for the 3D models
       typedef std::vector<double> t3DModelDim;
     private:
-
+      //! The UTM zone in which the cartesian coordinates are located in if empty no assumption is made and coordinate interpretation is left to the user
+      std::string UTMZone;
       //! The object containing the actual value, e.g. conductivity, velocity
       t3DModelData Data;
       //! The size of the cells in x-direction
