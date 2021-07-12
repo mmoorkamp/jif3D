@@ -28,7 +28,7 @@ namespace jif3D
       //typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> MatrixXd;
     private:
       Eigen::ConjugateGradient<Eigen::SparseMatrix<double>, Eigen::Lower | Eigen::Upper,
-      		Eigen::IncompleteCholesky<double>> cg;
+          Eigen::IncompleteCholesky<double>> cg;
       //Eigen::SparseQR<Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int>> cg;
       SpMat A;
       int nx, ny, nz;
@@ -42,7 +42,8 @@ namespace jif3D
       bool HaveInv;
       std::vector<double> values;
       jif3D::rvec CovDiag;
-
+      //Make sure covariance sums to 1
+      bool Normalize;
       //Eigen::LDLT<MatrixXd > solver;
       jif3D::cvec Cmv, Cmf;
       //boost::math::cubic_b_spline<double> spline;
@@ -64,8 +65,8 @@ namespace jif3D
       //  }
       virtual jif3D::rvec ApplyCovar(const jif3D::rvec &vector) const override;
       virtual jif3D::rvec ApplyInvCovar(const jif3D::rvec &vector) const override;
-      StochasticCovariance(const jif3D::rvec &CD,size_t x, size_t y, size_t z, double ma, double mnu,
-          double msigma);
+      StochasticCovariance(const jif3D::rvec &CD, size_t x, size_t y, size_t z, double ma,
+          double mnu, double msigma, bool Norm = false);
       virtual ~StochasticCovariance();
       };
 
