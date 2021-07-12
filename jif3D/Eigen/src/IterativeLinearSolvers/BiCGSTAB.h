@@ -39,6 +39,7 @@ bool bicgstab(const MatrixType& mat, const Rhs& rhs, Dest& x,
   Index maxIters = iters;
 
   Index n = mat.cols();
+  x = precond.solve(x);
   VectorType r  = rhs - mat * x;
   VectorType r0 = r;
   
@@ -69,11 +70,10 @@ bool bicgstab(const MatrixType& mat, const Rhs& rhs, Dest& x,
     Scalar rho_old = rho;
 
     rho = r0.dot(r);
-    if (abs(rho) < eps2*r0_sqnorm)
+    if (internal::isMuchSmallerThan(rho,r0_sqnorm))
     {
-      // The new residual vector became too orthogonal to the arbitrarily chosen direction r0
+      // The new residual vector became too orthogonal to the arbitrarily choosen direction r0
       // Let's restart with a new r0:
-      r  = rhs - mat * x;
       r0 = r;
       rho = r0_sqnorm = r.squaredNorm();
       if(restarts++ == 0)
