@@ -75,7 +75,8 @@ namespace jif3D
               }
             //read in data
             TomoData.ReadNetCDF(datafilename);
-
+            TomoData.WriteMeasurementPoints(modelfilename + ".rec.vtk");
+            TomoData.WriteSourcePoints(modelfilename + ".sor.vtk");
             if (xorigin != 0.0 || yorigin != 0.0)
               {
                 TomoModel.SetOrigin(xorigin, yorigin, 0.0);

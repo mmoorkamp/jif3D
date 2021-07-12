@@ -10,6 +10,7 @@
 #include <fstream>
 #include <string>
 #include <boost/program_options.hpp>
+#include <boost/math/special_functions/relative_difference.hpp>
 #include <GeographicLib/UTMUPS.hpp>
 #include "../Global/FileUtil.h"
 #include "../Global/FatalException.h"
