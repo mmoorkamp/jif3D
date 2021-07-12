@@ -74,11 +74,13 @@ namespace jif3D
 //        SizeVar.get(&CellCoordinates[0], nvalues);
         //check whether the cell coordinates are sorted
         //otherwise we will have a problem
-        if (!std::is_sorted(CellCoord.begin(),
-            CellCoord.end()))
+        if (!std::is_sorted(CellCoord.begin(), CellCoord.end()))
           {
+            std::copy(CellCoord.begin(), CellCoord.end(),std::ostream_iterator<double>(std::cerr, " "));
+            std::cerr << "\n";
             throw jif3D::FatalException(
-                "Cell coordinates in netcdf file are not in increasing order.", __FILE__,
+                "Cell coordinates in netcdf file are not in increasing order: "
+                    + CoordName, __FILE__,
                 __LINE__);
           }
 
@@ -128,7 +130,7 @@ namespace jif3D
         for (size_t i = 0; i < CellCoord.size() - 1; ++i)
           {
             BoundaryValues.at(2 * i) = CellCoord[i];
-            BoundaryValues.at(2 * i + 1) = CellCoord[i+1];
+            BoundaryValues.at(2 * i + 1) = CellCoord[i + 1];
           }
 //        BoundaryVar->put(&BoundaryValues[0], nvalues, 2); // old
         cxxport::put_legacy_ncvar(BoundaryVar, BoundaryValues.data(), nvalues, 2);
@@ -180,7 +182,8 @@ namespace jif3D
             // if the units in the file are different from what we expect|
             if (unitInFile.compare(UnitsName) != 0)
               {
-                throw jif3D::FatalException("Units in file do not match expected units !");
+                throw jif3D::FatalException(
+                    "Units in file do not match expected units !");
               }
 
             //read netcdf data from file
@@ -273,9 +276,8 @@ namespace jif3D
         NetCDFFile.putAtt("Conventions", "CF-1.3");
       }
 
-    void ReadMeasPosNetCDF(const std::string &filename,
-        std::vector<double> &PosX, std::vector<double> &PosY,
-        std::vector<double> &PosZ)
+    void ReadMeasPosNetCDF(const std::string &filename, std::vector<double> &PosX,
+        std::vector<double> &PosY, std::vector<double> &PosZ)
       {
 
         //open the file
