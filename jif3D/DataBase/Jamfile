@@ -1,6 +1,6 @@
 import testing ; 
 lib database : GeneralData.cpp
-                ..//netcdf ..//netcdf_c++ ..//boost_core ;
+                ../ModelBase//modelbase ..//netcdf ..//netcdf_c++ ..//boost_core ;
                 
                
 # unit-test base_test : test_ThreeDModelBase.cpp modelbase ../Gravity//gravity ../Global//global ..//netcdf_c++ ..//netcdf ..//boost_core ;
