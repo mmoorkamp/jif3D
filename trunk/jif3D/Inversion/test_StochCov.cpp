@@ -62,13 +62,14 @@ public:
     }
   template<typename Rhs>
   Eigen::Product<MatrixReplacement, Rhs, Eigen::AliasFreeProduct> operator*(
-      const Eigen::MatrixBase<Rhs>& x) const
+      const Eigen::MatrixBase<Rhs> &x) const
     {
       return Eigen::Product<MatrixReplacement, Rhs, Eigen::AliasFreeProduct>(*this,
           x.derived());
     }
   // Custom API:
-  MatrixReplacement(const jif3D::rvec &CD,size_t x, size_t y, size_t z, double ma, double mnu, double msigma) :
+  MatrixReplacement(const jif3D::rvec &CD, size_t x, size_t y, size_t z, double ma,
+      double mnu, double msigma) :
       Cov(CD, x, y, z, ma, mnu, msigma)
     {
       nelem = x * y * z;
@@ -92,12 +93,12 @@ namespace Eigen
           {
           typedef typename Product<MatrixReplacement, Rhs>::Scalar Scalar;
           template<typename Dest>
-          static void scaleAndAddTo(Dest& dst, const MatrixReplacement& lhs,
-              const Rhs& rhs, const Scalar& alpha)
+          static void scaleAndAddTo(Dest &dst, const MatrixReplacement &lhs,
+              const Rhs &rhs, const Scalar &alpha)
             {
               // This method should implement "dst += alpha * lhs * rhs" inplace,
               // however, for iterative solvers, alpha is always equal to 1, so let's not bother about it.
-              assert(alpha == Scalar(1) && "scaling is not implemented"); EIGEN_ONLY_USED_FOR_DEBUG(alpha);
+              assert(alpha == Scalar(1) && "scaling is not implemented");EIGEN_ONLY_USED_FOR_DEBUG(alpha);
               jif3D::rvec in(rhs.size());
               std::copy(rhs.data(), rhs.data() + rhs.size(), in.begin());
               jif3D::rvec out = lhs.Cov.ApplyCovar(in);
@@ -171,8 +172,8 @@ BOOST_AUTO_TEST_SUITE( StochCov_Test_Suite )
         double a = 1.0;
         double nu = 1.0;
         double sigma = 1.0;
-        jif3D::rvec Diag(nx*ny*nz,1.0);
-        jif3D::StochasticCovariance Cov(Diag,nx, ny, nz, a, nu, sigma);
+        jif3D::rvec Diag(nx * ny * nz, 1.0);
+        jif3D::StochasticCovariance Cov(Diag, nx, ny, nz, a, nu, sigma);
         jif3D::rvec m(nx * ny * nz, 0.0);
         //std::generate(m.begin(), m.end(), drand48);
         //std::iota( m.begin(), m.end(),1);
@@ -190,13 +191,31 @@ BOOST_AUTO_TEST_SUITE( StochCov_Test_Suite )
               BOOST_CHECK_CLOSE(m(i), mCmi(i), 0.1);
             }
 
-        const size_t ntries = 0;
-        for (size_t i = 0; i < ntries; ++i)
-          {
-            std::generate(m.begin(), m.end(), drand48);
-            jif3D::rvec mCm = Cov.ApplyCovar(m);
-            jif3D::rvec mCmi = Cov.ApplyInvCovar(mCm);
-          }
+      }
+
+    BOOST_AUTO_TEST_CASE (StochCov_test_ones)
+      {
+        jif3D::X3DModel Model;
+        const size_t nx = 20;
+        const size_t ny = 20;
+        const size_t nz = 10;
+        Model.SetMeshSize(nx, ny, nz);
+        Model.SetHorizontalCellSize(1.0, 1.0, nx, ny);
+        jif3D::ThreeDModelBase::t3DModelDim ZCS(nz, 1.0);
+        Model.SetZCellSizes(ZCS);
+
+        double a = 1.0;
+        double nu = 1.0;
+        double sigma = 1.0;
+        jif3D::rvec Diag(nx * ny * nz, 1.0);
+        jif3D::StochasticCovariance Cov(Diag, nx, ny, nz, a, nu, sigma);
+        jif3D::rvec m(nx * ny * nz, 1.0);
+        //std::generate(m.begin(), m.end(), drand48);
+        //std::iota( m.begin(), m.end(),1);
+
+        jif3D::rvec mCm = Cov.ApplyCovar(m);
+        std::ofstream covfile("test_cov_ones.out");
+        std::copy(mCm.begin(), mCm.end(), std::ostream_iterator<double>(covfile, "\n"));
       }
 
     BOOST_AUTO_TEST_CASE (DiagCov_test)

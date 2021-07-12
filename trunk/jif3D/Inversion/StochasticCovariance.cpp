@@ -114,9 +114,9 @@ namespace jif3D
   {
 
     StochasticCovariance::StochasticCovariance(const jif3D::rvec &CD, size_t x, size_t y,
-        size_t z, double ma, double mnu, double msigma) :
+        size_t z, double ma, double mnu, double msigma, bool Norm) :
         A(x * y * z, x * y * z), nx(x), ny(y), nz(z), a(ma), nu(mnu), sigma(msigma), HaveInv(
-            false), CovDiag(CD)
+            false), CovDiag(CD), Normalize(Norm)
       {
         distindex = 0;
         double factor = sigma * sigma / (std::pow(2, nu - 1) * boost::math::tgamma(nu));
@@ -131,13 +131,12 @@ namespace jif3D
         double delta = (max - min) / steps;
         double aa = std::abs(a);
 
-        for (double currval = 0; currval <= max; currval += delta)
+        values.push_back(1.0);
+
+        for (double currval = delta; currval <= max; currval += delta)
           {
-            double res =
-                (currval == 0.0) ?
-                    1.0 :
-                    factor * std::pow(currval / aa, nu)
-                        * boost::math::cyl_bessel_k(nu, currval / aa);
+            const double caa = currval / aa;
+            double res = factor * std::pow(caa, nu) * boost::math::cyl_bessel_k(nu, caa);
             values.push_back(res);
           }
         const double threshold = 0.001;
@@ -151,6 +150,7 @@ namespace jif3D
           }
         distindex = std::ceil(distindex * delta);
         std::cout << "Index for correlation distance is " << distindex << std::endl;
+
         boost::posix_time::ptime starttime =
             boost::posix_time::microsec_clock::local_time();
         std::vector<T> coefficients; // list of non-zeros coefficients
@@ -302,6 +302,7 @@ namespace jif3D
               {
                 int xi, yi, zi;
                 OffsetToIndex(i, xi, yi, zi);
+                double sum = 0.0;
                 //double currx = Model.GetXCoordinates()[xi] + Model.GetXCellSizes()[xi] / 2.0;
                 //double curry = Model.GetYCoordinates()[yi] + Model.GetYCellSizes()[yi] / 2.0;
                 //double currz = Model.GetZCoordinates()[zi] + Model.GetZCellSizes()[zi] / 2.0;
@@ -325,11 +326,15 @@ namespace jif3D
                             double inter = values[index];
                             //+ (values[index + 1] - values[index]) / delta
                             //		* (r - index * delta);
+                            sum += inter;
                             previous_result(i) += inter * vec(offset);
                           }
                       }
                   }
-
+                if (Normalize)
+                  {
+                    previous_result(i) /= sum;
+                  }
               }
             previous_vec = vector;
           }
@@ -344,7 +349,7 @@ namespace jif3D
             r = A * v;
 
             //boost::posix_time::ptime endtime =
-             //   boost::posix_time::microsec_clock::local_time();
+            //   boost::posix_time::microsec_clock::local_time();
             //double time = (endtime - starttime).total_seconds();
           }
         std::transform(previous_result.begin(), previous_result.end(), CovDiag.begin(),
