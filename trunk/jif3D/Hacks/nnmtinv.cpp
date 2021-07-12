@@ -23,6 +23,7 @@
 #include "../Inversion/LimitedMemoryQuasiNewton.h"
 #include "../Inversion/JointObjective.h"
 #include "../Inversion/ModelTransforms.h"
+#include "../Inversion/StochasticCovariance.h"
 #include "../Regularization/OneDRegularization.h"
 #include "../ModelBase/VTKTools.h"
 
@@ -51,6 +52,7 @@ int main(int argc, char *argv[])
     double mincond = 1e-6;
     double maxcond = 10;
     double fitthreshold = 1e6;
+    double width = 1.0;
     po::options_description desc("General options");
     desc.add_options()("help", "produce help message")("threads", po::value<int>(),
         "The number of openmp threads")("mincond",
@@ -59,7 +61,7 @@ int main(int argc, char *argv[])
         po::value(&maxcond)->default_value(10),
         "The maximum value for conductivity in S/m")("fitthreshold",
         po::value(&fitthreshold)->default_value(1e6),
-        "Only sites that fit below this value will be used in the model");
+        "Only sites that fit below this value will be used in the model")("width",po::value(&width)->default_value(1.0));
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -238,6 +240,16 @@ int main(int argc, char *argv[])
       {
         misfitfile << i << " " << RMS.at(i) << "\n";
       }
+
+    const size_t nmod = Model.GetNModelElements();
+    jif3D::rvec ModVec(nmod, 0.0);
+    std::copy(Model.GetData().origin(), Model.GetData().origin() + nmod, ModVec.begin());
+
+    jif3D::rvec CM(nmod, 1.0);
+    jif3D::StochasticCovariance StochCov(CM, Model.GetXCellSizes().size(),
+        Model.GetYCellSizes().size(), Model.GetZCellSizes().size(), width, 1.0, 1.0);
+
+    jif3D::rvec SmoothMod = StochCov.ApplyCovar(ModVec);
     //calculate the predicted data
     /*    std::cout << "Calculating response of inversion model." << std::endl;
      jif3D::rvec InvData(jif3D::OneDMTCalculator().Calculate(Model));
@@ -267,5 +279,8 @@ int main(int argc, char *argv[])
     Data.WriteMeasurementPoints(datafilename + ".vtk");
     Model.WriteVTK(modelfilename + ".inv.vtk");
     Model.WriteNetCDF(modelfilename + ".inv.nc");
+    std::copy(SmoothMod.begin(), SmoothMod.end(), Model.SetData().origin());
+    Model.WriteVTK(modelfilename + "_smooth.inv.vtk");
+    Model.WriteNetCDF(modelfilename + "_smooth.inv.nc");
     std::cout << std::endl;
   }
