@@ -251,6 +251,11 @@ int main(int argc, char *argv[])
         std::ofstream weightfile("weights.out");
         std::copy(WeightVector.begin(), WeightVector.end(),
             std::ostream_iterator<double>(weightfile, "\n"));
+        jif3D::ThreeDGravityModel DepthModel(MagneticSetup.GetModel());
+        std::copy(CovModVec.begin() + ngrid, CovModVec.begin() + 2* ngrid,
+            DepthModel.SetDensities().origin());
+        DepthModel.WriteNetCDF("depth_mag_cov.nc");
+        DepthModel.WriteVTK("depth_mag_cov.vtk");
       }
 
     if (vm.count("gravdepth"))
@@ -291,6 +296,11 @@ int main(int argc, char *argv[])
         std::ofstream weightfile("weights.out");
         std::copy(WeightVector.begin(), WeightVector.end(),
             std::ostream_iterator<double>(weightfile, "\n"));
+        jif3D::ThreeDGravityModel DepthModel(GravitySetup.GetScalModel());
+        std::copy(CovModVec.begin(), CovModVec.begin() + ngrid,
+            DepthModel.SetDensities().origin());
+        DepthModel.WriteNetCDF("depth_grav_cov.nc");
+        DepthModel.WriteVTK("depth_grav_cov.vtk");
       }
 
     double gravreglambda = 1.0;
