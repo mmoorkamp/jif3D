@@ -8,8 +8,12 @@
 #include "../Global/FileUtil.h"
 #include "../ModelBase/ModelRefiner.h"
 #include "../Tomo/ThreeDSeismicModel.h"
-#include <limits>
+#include "../ModelBase/ReadAnyModel.h"
 
+#include <limits>
+#include <boost/program_options.hpp>
+
+namespace po = boost::program_options;
 
 /*! \file refinemodel.cpp
  * Refine the grid of input model. You can specify a new grid size. The old
@@ -18,13 +22,28 @@
  * the tomography forward calculation object.
  */
 
-int main()
+int main(int argc, char *argv[])
   {
+    bool refinez = true;
+    po::options_description desc("General options");
+    desc.add_options()("help", "produce help message")("threads", po::value<int>(),
+        "The number of openmp threads")("refinez",
+        po::value<bool>(&refinez)->default_value(false));
+
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::notify(vm);
+    if (vm.count("help"))
+      {
+        std::cout << desc << "\n";
+        return 1;
+      }
+
     //read in the name of the original model
     std::string modelfilename = jif3D::AskFilename("Model Filename: ");
     //and then create an object containing the old model
-    jif3D::ThreeDSeismicModel TomoModel;
-    TomoModel.ReadNetCDF(modelfilename,false);
+    jif3D::ThreeDModelBase CoarseModel;
+    CoarseModel = *jif3D::ReadAnyModel(modelfilename).get();
 
     //seismic models have to have an equally spaced grid in all directions
     //so we only read in one grid size in m
@@ -35,21 +54,14 @@ int main()
     //check that grid size is positive
     if (NewDelta <= 0.0)
       {
-        std::cerr << "Negative grid size " << NewDelta << " is not possible !" << std::endl;
+        std::cerr << "Negative grid size " << NewDelta << " is not possible !"
+            << std::endl;
         return 100;
       }
     //get the extend of the modeling domain in all three directions
-    const double oldxmax =
-        TomoModel.GetXCoordinates()[TomoModel.GetXCoordinates().size() - 1]
-            + TomoModel.GetXCellSizes()[TomoModel.GetXCoordinates().size() - 1];
-
-    const double oldymax =
-        TomoModel.GetYCoordinates()[TomoModel.GetYCoordinates().size() - 1]
-            + TomoModel.GetYCellSizes()[TomoModel.GetYCoordinates().size() - 1];
-
-    const double oldzmax =
-        TomoModel.GetZCoordinates()[TomoModel.GetZCoordinates().size() - 1]
-            + TomoModel.GetZCellSizes()[TomoModel.GetZCoordinates().size() - 1];
+    const double oldxmax = CoarseModel.GetXCoordinates().back();
+    const double oldymax = CoarseModel.GetYCoordinates().back();
+    const double oldzmax = CoarseModel.GetZCoordinates().back();
     //calculate how many new cells we need to fill the modeling domain
     //this can be problematic if NewDelta does not divide the extend of the domain;
     const size_t newnx = oldxmax / NewDelta;
@@ -58,26 +70,36 @@ int main()
     //so we check that equally spaced cells fill the modeling domain to reasonable precision
     //we are guaranteed that a seismic grid has equal cell sizes in all directions, so
     //we only need to test one direction;
-    if (std::fabs(newnx * NewDelta - oldxmax) > std::numeric_limits<float>::epsilon() )
+    if (std::fabs(newnx * NewDelta - oldxmax) > std::numeric_limits<float>::epsilon())
       {
-        std::cerr << "Refinement coordinates do not equally divide old grid !" << std::endl;
+        std::cerr << "Refinement coordinates do not equally divide old grid !"
+            << std::endl;
         return 100;
       }
     //setup the coordinates for the refined axes
     jif3D::ThreeDModelBase::t3DModelDim XRefiner(newnx);
-    jif3D::ThreeDModelBase::t3DModelDim YRefiner(newny);
-    jif3D::ThreeDModelBase::t3DModelDim ZRefiner(newnz);
     for (size_t i = 0; i < newnx; ++i)
       {
         XRefiner[i] = NewDelta * i;
       }
+
+    jif3D::ThreeDModelBase::t3DModelDim YRefiner(newny);
     for (size_t i = 0; i < newny; ++i)
       {
         YRefiner[i] = NewDelta * i;
       }
-    for (size_t i = 0; i < newnz; ++i)
+    jif3D::ThreeDModelBase::t3DModelDim ZRefiner;
+    if (refinez)
       {
-        ZRefiner[i] = NewDelta * i;
+        ZRefiner.resize(newnz);
+        for (size_t i = 0; i < newnz; ++i)
+          {
+            ZRefiner[i] = NewDelta * i;
+          }
+      }
+    else
+      {
+        ZRefiner = CoarseModel.GetZCoordinates();
       }
     //now pass this information to the model refiner object
     jif3D::ModelRefiner Refiner;
@@ -86,7 +108,7 @@ int main()
     Refiner.SetZCoordinates(ZRefiner);
     //and create the refined model
     jif3D::ThreeDSeismicModel FineModel;
-    Refiner.RefineModel(TomoModel, FineModel);
+    Refiner.RefineModel(CoarseModel, FineModel);
     //finally write out the refined model with an appropriate filename;
-    FineModel.WriteNetCDF(modelfilename+".fine.nc");
+    FineModel.WriteNetCDF(modelfilename + ".fine.nc");
   }
