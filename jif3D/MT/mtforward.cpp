@@ -136,6 +136,7 @@ int main(int argc, char *argv[])
     //! Write scalar data with 3D coordinate information into a .vtk file for plotting
     jif3D::Write3DDataToVTK(outfilename + ".vtk", "MTStats", StatNum,
         DataMT.GetMeasPosX(), DataMT.GetMeasPosY(), DataMT.GetMeasPosZ());
+    DataMT.CompleteObject();
     std::cout << "Calculating forward response " << std::endl;
     jif3D::X3DMTCalculator Calculator(TempDir, X3DName);
     if (vm.count("opt"))
@@ -171,7 +172,7 @@ int main(int argc, char *argv[])
 
     jif3D::AddNoise(Impedances, relnoise, Errors);
     std::vector<double> C, NoC;
-    std::vector<std::string> Names;
+    std::vector<std::string> Names(DataMT.GetMeasPosX().size(),"");
     if (DistDeviation > 0.0)
       {
         boost::lagged_fibonacci607 generator(static_cast<unsigned int>(std::time(0)));

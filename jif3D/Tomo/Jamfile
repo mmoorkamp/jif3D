@@ -14,7 +14,7 @@ unit-test tomo_types_test :  test_tomo_types.cpp  ..//boost_serialization ..//bo
 
 exe makeseismesh : makeseismesh.cpp tomo  core :  ;
 exe tomogrid : tomogrid.cpp tomo  core :  ;
-exe refinemodel : refinemodel.cpp tomo  core :  ;
+exe refinemodel : refinemodel.cpp tomo  core ../ModelBase//anymodel :  ;
 exe reldiff : reldiff.cpp tomo  core :  ;
 
 install $(TOP)/bin : makeseismesh tomogrid :

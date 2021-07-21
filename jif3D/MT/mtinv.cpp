@@ -445,6 +445,7 @@ int hpx_main(boost::program_options::variables_map &vm)
         if (tipext == ".nc")
           {
             DataTip.ReadNetCDF(TipperName);
+            DataTip.WriteModEM(TipperName+".dat");
           }
         else
           {
