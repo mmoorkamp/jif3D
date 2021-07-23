@@ -19,6 +19,9 @@
 #include "../Inversion/NonLinearConjugateGradient.h"
 #include "../Inversion/JointObjective.h"
 #include "../Inversion/DiagonalCovariance.h"
+#include "../Inversion/StochasticCovariance.h"
+#include "../Inversion/MultiSectionCovariance.h"
+
 #include "../Regularization/MinDiffRegularization.h"
 #include "../Regularization/CrossGradient.h"
 #include "../Inversion/ModelTransforms.h"
@@ -49,6 +52,7 @@
 #include <boost/program_options.hpp>
 namespace ublas = boost::numeric::ublas;
 namespace po = boost::program_options;
+double CovWidth = 3.0;
 
 int main(int argc, char *argv[])
   {
@@ -67,7 +71,9 @@ int main(int argc, char *argv[])
         po::value(&maxdens)->default_value(1000.0))("minsus",
         po::value(&minsus)->default_value(-1.0))("maxsus",
         po::value(&maxsus)->default_value(1.0))("mutual_information", po::value(&mibins),
-        "Use mutual information coupling, specify number of bins in histogram");
+        "Use mutual information coupling, specify number of bins in histogram")(
+            "stochcov", po::value(&CovWidth)->default_value(0),
+            "Width of stochastic regularization, enabled if > 0");;
 
     jif3D::SetupRegularization RegSetup;
     jif3D::SetupInversion InversionSetup;
@@ -251,9 +257,9 @@ int main(int argc, char *argv[])
         std::ofstream weightfile("weights.out");
         std::copy(WeightVector.begin(), WeightVector.end(),
             std::ostream_iterator<double>(weightfile, "\n"));
-        jif3D::ThreeDGravityModel DepthModel(MagneticSetup.GetModel());
+        jif3D::ThreeDMagneticModel DepthModel(MagneticsSetup.GetModel());
         std::copy(CovModVec.begin() + ngrid, CovModVec.begin() + 2* ngrid,
-            DepthModel.SetDensities().origin());
+            DepthModel.SetSusceptibilities().origin());
         DepthModel.WriteNetCDF("depth_mag_cov.nc");
         DepthModel.WriteVTK("depth_mag_cov.vtk");
       }
@@ -349,7 +355,21 @@ int main(int argc, char *argv[])
 
     //jif3D::rvec Ones(CovModVec);
     //std::fill(Ones.begin(),Ones.end(),1.0);
-    auto CovObj = boost::make_shared<jif3D::DiagonalCovariance>(CovModVec);
+    auto CovObj = boost::make_shared<jif3D::MultiSectionCovariance>(InvModel.size());
+    if (CovWidth != 0.0)
+      {
+        boost::shared_ptr<jif3D::GeneralCovariance> StochCov = boost::make_shared<
+            jif3D::StochasticCovariance>(CovModVec, Mesh->GetModelShape()[0],
+            Mesh->GetModelShape()[1], Mesh->GetModelShape()[2], CovWidth, 1.0, 1.0);
+        CovObj->AddSection(0, ngrid, StochCov);
+        CovObj->AddSection(0, ngrid, StochCov);
+
+      }
+    else
+      {
+        CovObj->AddSection(0, InvModel.size(),
+            boost::make_shared<jif3D::DiagonalCovariance>(CovModVec));
+      }
 
     boost::shared_ptr<jif3D::GradientBasedOptimization> Optimizer =
         InversionSetup.ConfigureInversion(vm, Objective, InvModel, CovObj);

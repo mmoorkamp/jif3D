@@ -784,7 +784,7 @@ int main(int argc, char *argv[])
         "The relative error for the tipper data")("mtlambda",
         po::value(&MTWeight)->default_value(1.0), "The weight for the MT data")(
         "stochcov", po::value(&CovWidth)->default_value(0),
-        "Width of stochastic regularization, enabled if > 0, EXPERIMENTAL");
+        "Width of stochastic regularization, enabled if > 0");
 
     desc.add(RegSetup.SetupOptions());
     desc.add(InversionSetup.SetupOptions());
