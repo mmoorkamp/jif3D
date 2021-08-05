@@ -766,7 +766,10 @@ int main(int argc, char *argv[])
         po::value(&RefModelName),
         "The name of the reference model to substract before calculating smoothness")(
         "crossmodel", po::value(&CrossModelName),
-        "The name of a model to use as a cross-gradient constraint")("regcheck",
+        "The name of a model to use as a cross-gradient constraint")
+        ( "mimodel", po::value(&CrossModelName),
+                "The name of a model to use as a mutual information constraint")
+        ("regcheck",
         "Only perform a regularization calculation")("writegrad",
         "Write out the gradient for the data and quit")("conddelta",
         po::value(&conddelta)->default_value(0.001),
