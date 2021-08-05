@@ -17,7 +17,7 @@
 #include <boost/program_options/config.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/filesystem.hpp>
-
+#include <boost/numeric/ublas/vector_proxy.hpp>
 #include "../Global/FileUtil.h"
 #include "../ModelBase/VTKTools.h"
 #include "../ModelBase/NetCDFModelTools.h"
@@ -304,27 +304,7 @@ int hpx_main(boost::program_options::variables_map &vm)
     const size_t ncovmod = CovModVec.size();
     std::cout << nparm << " Inversion parameters " << ncovmod << " Covariance values "
         << std::endl;
-    jif3D::rvec CVec(nparm, 1.0);
-    if (!CovModVec.empty())
-      {
 
-        if (nparm % ncovmod != 0)
-          throw jif3D::FatalException(
-              "Size of inversion model vector: " + jif3D::stringify(nparm)
-                  + " is not a multiple of covariance model size: "
-                  + jif3D::stringify(ncovmod) + "!", __FILE__, __LINE__);
-
-        const size_t nsections = nparm / ncovmod;
-        for (size_t i = 0; i < nsections; ++i)
-          {
-            for (size_t j = 0; j < ncovmod; ++j)
-              {
-                CVec(j + i * ncovmod) = std::abs(CovModVec(j));
-              }
-
-          }
-      }
-    CovModVec = CVec;
 
     boost::shared_ptr<jif3D::MultiSectionTransform> DistRegTrans;
     if (havemt)
@@ -413,14 +393,25 @@ int hpx_main(boost::program_options::variables_map &vm)
         jif3D::MultiSectionCovariance>(InvModel.size());
     if (CovWidth != 0.0)
       {
-
-        boost::shared_ptr<jif3D::GeneralCovariance> StochCov = boost::make_shared<
-            jif3D::StochasticCovariance>(CovModVec, StartModel->GetModelShape()[0],
+        ublas::vector_range<jif3D::rvec> TomoCov(CovModVec, ublas::range (0, ngrid));
+        ublas::vector_range<jif3D::rvec> GravCov(CovModVec, ublas::range (ngrid, 2*ngrid));
+        ublas::vector_range<jif3D::rvec> MTCov(CovModVec, ublas::range (2*ngrid, 3*ngrid));
+        boost::shared_ptr<jif3D::GeneralCovariance> StochCovTomo = boost::make_shared<
+            jif3D::StochasticCovariance>(TomoCov, StartModel->GetModelShape()[0],
             StartModel->GetModelShape()[1], StartModel->GetModelShape()[2], CovWidth,
             Cov_nu, Cov_sigma);
-        CovObj->AddSection(0, ngrid, StochCov);
-        CovObj->AddSection(ngrid, 2 * ngrid, StochCov);
-        CovObj->AddSection(2 * ngrid, 3 * ngrid, StochCov);
+        boost::shared_ptr<jif3D::GeneralCovariance> StochCovGrav = boost::make_shared<
+                    jif3D::StochasticCovariance>(GravCov, StartModel->GetModelShape()[0],
+                    StartModel->GetModelShape()[1], StartModel->GetModelShape()[2], CovWidth,
+                    Cov_nu, Cov_sigma);
+        boost::shared_ptr<jif3D::GeneralCovariance> StochCovMT = boost::make_shared<
+                    jif3D::StochasticCovariance>(MTCov, StartModel->GetModelShape()[0],
+                    StartModel->GetModelShape()[1], StartModel->GetModelShape()[2], CovWidth,
+                    Cov_nu, Cov_sigma);
+
+        CovObj->AddSection(0, ngrid, StochCovTomo);
+        CovObj->AddSection(ngrid, 2 * ngrid, StochCovGrav);
+        CovObj->AddSection(2 * ngrid, 3 * ngrid, StochCovMT);
         if (MTSetup.GetDistCorr() > 0)
           {
             boost::shared_ptr<jif3D::GeneralCovariance> DistCov = boost::make_shared<
