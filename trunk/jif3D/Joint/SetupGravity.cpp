@@ -74,7 +74,7 @@ namespace jif3D
 
         //if the weight is different from zero
         //we have to read in scalar gravity data
-        if (scalgravlambda > 0.0)
+        if (scalgravlambda > JointObjective::MinWeight)
           {
             std::string scalgravdatafilename = jif3D::AskFilename(
                 "Scalar Gravity Data Filename: ");
@@ -86,7 +86,7 @@ namespace jif3D
 
         //if the weight is different from zero
         //we have to read in ftg data
-        if (ftglambda > 0.0)
+        if (ftglambda > JointObjective::MinWeight)
           {
             std::string ftgdatafilename = jif3D::AskFilename("FTG Data Filename: ");
             FTGData.ReadNetCDF(ftgdatafilename);
@@ -118,7 +118,7 @@ namespace jif3D
         //set the observed data, model geometry and data error
         //finally output some basic information about the data to the screen
         //to signal the user that something happened.
-        if (scalgravlambda > 0.0)
+        if (scalgravlambda > JointObjective::MinWeight)
           {
             //we want to set the path for temporary file storage
             //the factory function cannot perform this, so we
@@ -156,7 +156,7 @@ namespace jif3D
             std::cout << "Scalar Gravity ndata: " << ScalGravData.GetData().size() << std::endl;
             std::cout << "Scalar Gravity lambda: " << scalgravlambda << std::endl;
           }
-        if (ftglambda > 0.0)
+        if (ftglambda > JointObjective::MinWeight)
           {
             //we want to set the path for temporary file storage
             //the factory function cannot perform this, so we
@@ -196,6 +196,6 @@ namespace jif3D
           }
         //indicate whether we added a gravity objective function
         //this way the caller can do additional consistency checks
-        return (ftglambda > 0.0) || (scalgravlambda > 0.0);
+        return (ftglambda > JointObjective::MinWeight) || (scalgravlambda > JointObjective::MinWeight);
       }
   }

@@ -79,7 +79,7 @@ namespace jif3D
             //weight is larger than 1e-32, otherwise we create a single point
             //dummy dataset, the joint objective class is set that
             //objective functions with such a small weight are not evaluated anyway
-            if (maglambda > 1e-32)
+            if (maglambda > JointObjective::MinWeight)
               {
                 //read in data file
                 std::string magdatafilename = jif3D::AskFilename(
@@ -142,6 +142,6 @@ namespace jif3D
 
         //indicate whether we added a Magnetics objective function
         //this way the caller can do additional consistency checks
-        return (maglambda > 0.0);
+        return (maglambda > JointObjective::MinWeight);
       }
   }
