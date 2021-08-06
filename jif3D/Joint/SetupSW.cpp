@@ -67,49 +67,55 @@ namespace jif3D
             //write out the starting model as a .vtk file for plotting
             SWModel.WriteVTK(modelfilename + ".vtk");
 
-            if (!vm.count("swdata"))
+            if (swlambda > JointObjective::MinWeight)
               {
-                //get the name of the file containing the data and read it in
-                datafilename = jif3D::AskFilename(
-                    "Surface wave tomography Data Filename: ");
+                if (!vm.count("swdata"))
+                  {
+                    //get the name of the file containing the data and read it in
+                    datafilename = jif3D::AskFilename(
+                        "Surface wave tomography Data Filename: ");
+                  }
+                //read in data
+                SurfaceWaveData.ReadNetCDF(datafilename);
+
+                if (xorigin != 0.0 || yorigin != 0.0)
+                  {
+                    SWModel.SetOrigin(xorigin, yorigin, 0.0);
+                  }
+                //dynamic_cast<jif3D::DensPVelTransform*>(Transform.get())->SetBGDens(
+                //    SWModel.GetBGDens());
+                std::vector<double> SurfaceWaveError = ConstructError(
+                    SurfaceWaveData.GetData(), SurfaceWaveData.GetErrors(), relerr,
+                    minerr);
+                jif3D::SurfaceWaveCalculator Calculator;
+                Calculator.set_distance_tolerance(1.0);
+                Calculator.set_vel_tolerance(0.001);
+                Calculator.set_false_east(500000.0);
+                Calculator.set_root_search_iterations(50);
+                Calculator.set_mode_skip_iterations(2);
+                SurfaceWaveData.SetDataAndErrors(SurfaceWaveData.GetData(),
+                    SurfaceWaveError);
+
+                SurfaceWaveObjective = boost::make_shared<
+                    jif3D::ThreeDModelObjective<jif3D::SurfaceWaveCalculator>>(
+                    Calculator);
+
+                SurfaceWaveObjective->SetObservedData(SurfaceWaveData);
+                SurfaceWaveObjective->SetCoarseModelGeometry(SWModel);
+                //we assume the same error for all measurements
+                //this is either the default value set in the constructor
+                //or set by the user
+                SurfaceWaveObjective->SetDataError(SurfaceWaveError);
+
+                Objective.AddObjective(SurfaceWaveObjective, Transform, swlambda,
+                    "SWTomo", JointObjective::datafit);
+                std::cout << "SurfaceWave tomo ndata: "
+                    << SurfaceWaveData.GetData().size() << std::endl;
+                std::cout << "SurfaceWave tomo lambda: " << swlambda << std::endl;
               }
-            //read in data
-            SurfaceWaveData.ReadNetCDF(datafilename);
-
-            if (xorigin != 0.0 || yorigin != 0.0)
-              {
-                SWModel.SetOrigin(xorigin, yorigin, 0.0);
-              }
-            //dynamic_cast<jif3D::DensPVelTransform*>(Transform.get())->SetBGDens(
-            //    SWModel.GetBGDens());
-            std::vector<double> SurfaceWaveError = ConstructError(
-                SurfaceWaveData.GetData(), SurfaceWaveData.GetErrors(), relerr, minerr);
-            jif3D::SurfaceWaveCalculator Calculator;
-            Calculator.set_distance_tolerance(1.0);
-            Calculator.set_vel_tolerance(0.001);
-            Calculator.set_false_east(500000.0);
-            Calculator.set_root_search_iterations(50);
-            Calculator.set_mode_skip_iterations(2);
-            SurfaceWaveData.SetDataAndErrors(SurfaceWaveData.GetData(), SurfaceWaveError);
-
-            SurfaceWaveObjective = boost::make_shared<
-                jif3D::ThreeDModelObjective<jif3D::SurfaceWaveCalculator>>(Calculator);
-
-            SurfaceWaveObjective->SetObservedData(SurfaceWaveData);
-            SurfaceWaveObjective->SetCoarseModelGeometry(SWModel);
-            //we assume the same error for all measurements
-            //this is either the default value set in the constructor
-            //or set by the user
-            SurfaceWaveObjective->SetDataError(SurfaceWaveError);
-
-            Objective.AddObjective(SurfaceWaveObjective, Transform, swlambda, "SWTomo",
-                JointObjective::datafit);
-            std::cout << "SurfaceWave tomo ndata: " << SurfaceWaveData.GetData().size()
-                << std::endl;
-            std::cout << "SurfaceWave tomo lambda: " << swlambda << std::endl;
           }
         //indicate whether we added a tomography objective
-        return (swlambda > 0.0);
+        return (swlambda > JointObjective::MinWeight);
       }
 
   }

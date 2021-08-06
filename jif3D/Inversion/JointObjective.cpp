@@ -18,7 +18,6 @@ using boost::numeric::ublas::subrange;
 
 namespace jif3D
   {
-    static const double MinWeight = 1e-32;
     static const std::string MisfitFormat = " %15s ";
     /*! We want to stop the inversion when all of the data misfits are below
      * the expected chi-squared value. If the convergence limit for each individual

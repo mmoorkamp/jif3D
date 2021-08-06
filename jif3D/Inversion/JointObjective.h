@@ -35,6 +35,8 @@ namespace jif3D
     class J3DEXPORT JointObjective : public ObjectiveFunction
       {
     public:
+      constexpr static const double MinWeight = 1e-32;
+
       //! For each objective function we keep track of its general purpose
       enum ObjectiveType
         {
