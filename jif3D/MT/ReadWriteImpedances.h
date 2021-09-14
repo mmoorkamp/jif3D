@@ -248,7 +248,8 @@ namespace jif3D
     J3DEXPORT void WriteTipperToModEM(const std::string &filename,
         const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
-        const std::vector<double> &Tip, const std::vector<double> &Err);
+        const std::vector<double> &Tip, const std::vector<double> &Err,
+        const std::vector<std::string> &Names);
 
     //! Read magnetotelluric impedances from a .j file
     /*!

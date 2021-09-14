@@ -104,7 +104,7 @@ namespace jif3D
     void TipperData::WriteModEM(const std::string &filename) const
       {
         WriteTipperToModEM(filename, GetFrequencies(), GetMeasPosX(), GetMeasPosY(),
-            GetMeasPosZ(), GetData(), GetErrors());
+            GetMeasPosZ(), GetData(), GetErrors(),GetNames());
       }
 
     void TipperData::PlotMeasurementConfiguration(const std::string &filename) const

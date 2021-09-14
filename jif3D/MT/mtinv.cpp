@@ -694,6 +694,7 @@ int hpx_main(boost::program_options::variables_map &vm)
             X3DObjective->GetSyntheticData().end());
         DataMT.SetDataAndErrors(SData, X3DObjective->GetDataError());
         DataMT.WriteNetCDF(modelfilename + ".inv_imp.nc");
+        DataMT.WriteModEM(modelfilename + ".inv_imp.modem");
         std::vector<double> Misfit(X3DObjective->GetIndividualMisfit().begin(),
             X3DObjective->GetIndividualMisfit().end());
         DataMT.SetDataAndErrors(Misfit, X3DObjective->GetDataError());
@@ -707,6 +708,7 @@ int hpx_main(boost::program_options::variables_map &vm)
         std::vector<double> TippE = TipperObjective->GetDataError();
         DataTip.SetDataAndErrors(STipper, TippE);
         DataTip.WriteNetCDF(modelfilename + ".inv_tip.nc");
+        DataTip.WriteModEM(modelfilename + ".inv_tip.modem");
         DataTip.PlotMeasurementConfiguration(modelfilename + ".tip.");
         std::vector<double> TippFit(TipperObjective->GetIndividualMisfit().begin(),
             TipperObjective->GetIndividualMisfit().end());
