@@ -45,6 +45,8 @@ exe nnmtinv : nnmtinv.cpp   common ../MT//mt  ;
 exe mergemodels : mergemodels.cpp   common ../MT//mt  ;
 
 exe writemtt : writemtt.cpp  common ../MT//mt ../Global//global  ;
+exe writemodem : writemodem.cpp  common ../MT//mt ../Global//global  ;
+
 exe mergemtdata : mergemtdata.cpp  common ../MT//mt ../Global//global ;
 
 exe rotatemt : rotatemt.cpp   ../MT//mt common  ;
