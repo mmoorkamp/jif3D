@@ -362,7 +362,7 @@ int main(int argc, char *argv[])
             jif3D::StochasticCovariance>(CovModVec, Mesh->GetModelShape()[0],
             Mesh->GetModelShape()[1], Mesh->GetModelShape()[2], CovWidth, 1.0, 1.0);
         CovObj->AddSection(0, ngrid, StochCov);
-        CovObj->AddSection(0, ngrid, StochCov);
+        CovObj->AddSection(ngrid, 2*ngrid, StochCov);
 
       }
     else
