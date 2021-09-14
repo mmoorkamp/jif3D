@@ -1219,7 +1219,8 @@ namespace jif3D
     J3DEXPORT void WriteTipperToModEM(const std::string &filename,
         const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
-        const std::vector<double> &Tip, const std::vector<double> &Err)
+        const std::vector<double> &Tip, const std::vector<double> &Err,
+        const std::vector<std::string> &Names)
       {
         std::ofstream outfile(filename.c_str());
         outfile.precision(6);
@@ -1238,9 +1239,8 @@ namespace jif3D
         outfile.setf(std::ios::scientific);
         for (size_t i = 0; i < nsites; ++i)
           {
-            std::string SiteName = "Site" + std::to_string(i);
             std::ostringstream SiteLine;
-            SiteLine << " " << SiteName << "  0.0  0.0 " << StatXCoord.at(i) << " "
+            SiteLine << " " << Names.at(i) << "  0.0  0.0 " << StatXCoord.at(i) << " "
                 << StatYCoord.at(i) << " " << StatZCoord.at(i) << " ";
             for (size_t j = 0; j < nfreqs; ++j)
               {
