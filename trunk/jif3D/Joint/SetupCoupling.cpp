@@ -597,16 +597,17 @@ namespace jif3D
         //so we separate it into different functions even though it means
         //passing around many parameters
 
-        if (vm.count("mutual_information"))
-          {
-            SetupMIModel(InvModel, ModelGeometry, SeisMod, GravMod, MTMod, Objective,
-                Regularization, substart);
-          }
-        else
+        if (vm.count("crossgrad"))
           {
             SetupCrossGradModel(InvModel, ModelGeometry, SeisMod, GravMod, MTMod,
                 Objective, Regularization, substart, TearModelX, TearModelY, TearModelZ,
                 CovVec);
+          }
+        else
+          {
+            SetupMIModel(InvModel, ModelGeometry, SeisMod, GravMod, MTMod, Objective,
+                Regularization, substart);
+
           }
 
       }
