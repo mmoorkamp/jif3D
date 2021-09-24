@@ -167,15 +167,28 @@ int main(int argc, char *argv[])
     bool HaveMag = MagneticsSetup.SetupObjective(vm, *Objective.get(),
         MagneticsTransform);
 
-    if (HaveMag)
+    if (MagneticsSetup.GetModel().GetSusceptibilities().num_elements() > 0)
       {
         if (ngrid != MagneticsSetup.GetModel().GetSusceptibilities().num_elements())
           {
-            std::cerr << "Gravity model and magnetic model have different size ! "
+            std::cerr << "Magnetic model does not match grid size ! "
+                << MagneticsSetup.GetModel().GetSusceptibilities().num_elements() << " " << ngrid
                 << std::endl;
             return 100;
           }
       }
+
+    if (GravitySetup.GetScalModel().GetDensities().num_elements()  > 0)
+          {
+            if (ngrid != GravitySetup.GetScalModel().GetDensities().num_elements() )
+              {
+                std::cerr << "Gravity model does not match grid size ! "
+                    << GravitySetup.GetScalModel().GetDensities().num_elements() << " " << ngrid
+                    << std::endl;
+                return 100;
+              }
+          }
+
 
     boost::shared_ptr<jif3D::CrossGradient> GravMagCross(new jif3D::CrossGradient(*Mesh));
     boost::shared_ptr<jif3D::MultiSectionTransform> GravMagTrans(
@@ -183,7 +196,7 @@ int main(int argc, char *argv[])
     GravMagTrans->AddSection(0, ngrid, Copy);
     GravMagTrans->AddSection(ngrid, 2 * ngrid, Copy);
 
-    if (HaveGrav)
+    if (GravitySetup.GetScalModel().GetDensities().num_elements() > 0)
       {
         jif3D::rvec GravMod(GravitySetup.GetScalModel().GetDensities().num_elements());
         std::copy(GravitySetup.GetScalModel().GetDensities().origin(),
@@ -196,7 +209,7 @@ int main(int argc, char *argv[])
         std::fill_n(InvModel.begin(), ngrid, 0.0);
       }
 
-    if (HaveMag)
+    if (MagneticsSetup.GetModel().GetSusceptibilities().num_elements() > 0)
       {
         jif3D::rvec MagMod(
             MagneticsSetup.GetModel().GetSusceptibilities().num_elements());
