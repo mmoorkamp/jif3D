@@ -136,7 +136,7 @@ int hpx_main(boost::program_options::variables_map &vm)
         geometryfilename);
     const size_t ngrid = StartModel->GetData().num_elements();
 
-    jif3D::rvec CovModVec;
+    jif3D::rvec CovModVec(3 * ngrid,1.0);
     if (vm.count("covmod"))
       {
         jif3D::ThreeDModelBase CovModel;
@@ -157,9 +157,12 @@ int hpx_main(boost::program_options::variables_map &vm)
                 << std::endl;
             return 100;
           }
-        CovModVec.resize(ncovmod);
         std::copy(CovModel.GetData().origin(), CovModel.GetData().origin() + ncovmod,
             CovModVec.begin());
+        std::copy(CovModel.GetData().origin(), CovModel.GetData().origin() + ncovmod,
+            CovModVec.begin() + ngrid);
+        std::copy(CovModel.GetData().origin(), CovModel.GetData().origin() + ncovmod,
+            CovModVec.begin() + 2*ngrid);
       }
 
     if (vm.count("tomocov") || vm.count("gravcov") || vm.count("mtcov"))
@@ -167,7 +170,6 @@ int hpx_main(boost::program_options::variables_map &vm)
         std::cout
             << "Setting individual covariances currently only works with cross-gradient or mutual information coupling !"
             << std::endl;
-        CovModVec.resize(3 * ngrid);
         std::fill(CovModVec.begin(), CovModVec.end(), 1.0);
       }
 
