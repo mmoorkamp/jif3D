@@ -89,7 +89,6 @@ These two libraries are optional and have to be activated in the code through ap
  * <table>
  * <tr> <td>TESTR </td> <td>Run the unit tests for the R interface. Some versions of the boost unit-test system have  problems with the system call necessary for this test, so it is optional. </td></tr>
  * <tr> <td>HAVEUBCCODE </td> <td>Is the UBC gravity code present on the system. If defined we run a unit test that compares our results with that code.  </td></tr>
- * <tr> <td>HAVEATLAS </td> <td>This flag only affects FullSensitivityGravityCalculator.h This is to avoid dependency on blas etc. for the gravity code and makes using it on other machines easier. </td></tr>
  * </table>
  *
  *

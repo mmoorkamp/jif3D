@@ -12,6 +12,8 @@
 #include "../Inversion/ThreeDModelObjective.h"
 #include "../Inversion/JointObjective.h"
 #include "../GravMag/DiskGravMagCalculator.h"
+#include "../GravMag/MinMemGravMagCalculator.h"
+#include "../GravMag/FullSensitivityGravMagCalculator.h"
 #include "../Gravity/ThreeDGravityModel.h"
 #include "../Gravity/ScalarGravityData.h"
 #include "../Gravity/TensorGravityData.h"
@@ -31,10 +33,19 @@ namespace jif3D
      */
     class J3DEXPORT SetupGravity
       {
-    public:
+    private:
+#ifdef GRAVDISK
       typedef typename jif3D::DiskGravMagCalculator<jif3D::ScalarGravityData> ScalarCalculatorType;
       typedef typename jif3D::DiskGravMagCalculator<jif3D::TensorGravityData> TensorCalculatorType;
-    private:
+#endif
+#ifdef GRAVMEM
+      typedef typename jif3D::FullSensitivityGravMagCalculator<jif3D::ScalarGravityData> ScalarCalculatorType;
+      typedef typename jif3D::FullSensitivityGravMagCalculator<jif3D::TensorGravityData> TensorCalculatorType;
+#endif
+#ifdef GRAVCALC
+      typedef typename jif3D::MinMemGravMagCalculator<jif3D::ScalarGravityData> ScalarCalculatorType;
+      typedef typename jif3D::MinMemGravMagCalculator<jif3D::TensorGravityData> TensorCalculatorType;
+#endif
       //! The relative error for the scalar data to assume for construction of the data variance
       double scalrelerr;
       //! The relative error for the ftg data to assume for construction of the data variance

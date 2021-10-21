@@ -140,11 +140,13 @@ namespace jif3D
                     jif3D::ThreeDGravMagImplementation<jif3D::ScalarGravityData> >(
                     new jif3D::ScalarOMPGravityImp);
               }
-            boost::shared_ptr<ScalarCalculatorType> ScalarCalculator(
-                new ScalarCalculatorType(Implementation, TempDir));
-
+#ifdef GRAVDISK
+            ScalarCalculatorType ScalarCalculator(Implementation, TempDir);
+#else
+            ScalarCalculatorType ScalarCalculator(Implementation);
+#endif
             ScalGravObjective = boost::make_shared<
-                jif3D::ThreeDModelObjective<ScalarCalculatorType> >(*ScalarCalculator);
+                jif3D::ThreeDModelObjective<ScalarCalculatorType> >(ScalarCalculator);
             ScalGravObjective->SetObservedData(ScalGravData);
             ScalGravObjective->SetCoarseModelGeometry(ScalGravModel);
             ScalGravObjective->SetDataError(
@@ -153,7 +155,8 @@ namespace jif3D
 
             Objective.AddObjective(ScalGravObjective, Transform, scalgravlambda,
                 "ScalGrav", JointObjective::datafit);
-            std::cout << "Scalar Gravity ndata: " << ScalGravData.GetData().size() << std::endl;
+            std::cout << "Scalar Gravity ndata: " << ScalGravData.GetData().size()
+                << std::endl;
             std::cout << "Scalar Gravity lambda: " << scalgravlambda << std::endl;
           }
         if (ftglambda > JointObjective::MinWeight)
@@ -178,11 +181,13 @@ namespace jif3D
                     jif3D::ThreeDGravMagImplementation<jif3D::TensorGravityData> >(
                     new jif3D::TensorOMPGravityImp);
               }
-            boost::shared_ptr<TensorCalculatorType> TensorCalculator(
-                new TensorCalculatorType(Implementation, TempDir));
-
+#ifdef GRAVDISK
+            TensorCalculatorType TensorCalculator(Implementation, TempDir);
+#else
+            TensorCalculatorType TensorCalculator(Implementation);
+#endif
             FTGObjective = boost::make_shared<
-                jif3D::ThreeDModelObjective<TensorCalculatorType> >(*TensorCalculator);
+                jif3D::ThreeDModelObjective<TensorCalculatorType> >(TensorCalculator);
             FTGObjective->SetObservedData(FTGData);
             FTGObjective->SetCoarseModelGeometry(FTGGravModel);
             FTGObjective->SetDataError(
@@ -196,6 +201,7 @@ namespace jif3D
           }
         //indicate whether we added a gravity objective function
         //this way the caller can do additional consistency checks
-        return (ftglambda > JointObjective::MinWeight) || (scalgravlambda > JointObjective::MinWeight);
+        return (ftglambda > JointObjective::MinWeight)
+            || (scalgravlambda > JointObjective::MinWeight);
       }
   }

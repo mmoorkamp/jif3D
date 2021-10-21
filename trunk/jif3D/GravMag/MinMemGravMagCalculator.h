@@ -32,7 +32,7 @@ namespace jif3D
       friend class access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
-      void serialize(Archive & ar, const unsigned int version)
+      void serialize(Archive &ar, const unsigned int version)
         {
           ar & base_object<ThreeDGravMagCalculator<PotentialDataType> >(*this);
         }
@@ -55,13 +55,13 @@ namespace jif3D
         boost::shared_ptr<ThreeDGravMagImplementation<PotentialDataType> > TheImp) :
         ThreeDGravMagCalculator<PotentialDataType>(TheImp)
       {
-
+        std::cout << " Minimum memory calculator " << std::endl;
       }
 
     template<class PotentialDataType>
     MinMemGravMagCalculator<PotentialDataType>::~MinMemGravMagCalculator()
       {
-
+      std::cout << " Minimum memory calculator " << std::endl;
       }
 
     /*! For this simple case the calculator class only checks the model for consistency,
