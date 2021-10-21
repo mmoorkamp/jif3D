@@ -12,6 +12,11 @@ feature.compose <optpp>on : <define>HAVEOPTPP ;
 feature.feature hpx : off on : composite incidental ;
 feature.compose <hpx>on : <define>HAVEHPX ; 
 
+feature.feature gravcache : disk mem none : composite incidental propagated ;
+feature.compose <gravcache>disk : <define>GRAVDISK ;
+feature.compose <gravcache>mem : <define>GRAVMEM ;
+feature.compose <gravcache>none : <define>GRAVCALC ; 
+
 feature.feature seismic : surface traveltime  : composite propagated symmetric ;
 feature.compose <seismic>traveltime : <define>HAVETRAVELTIME  ;
 

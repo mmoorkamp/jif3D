@@ -34,17 +34,17 @@ namespace ublas = boost::numeric::ublas;
 namespace jif3D
   {
     //! A matrix with complex entries
-    typedef boost::numeric::ublas::matrix<std::complex<double>,boost::numeric::ublas::column_major>
+    typedef boost::numeric::ublas::matrix<std::complex<double>,boost::numeric::ublas::row_major>
         cmat;
     //! A matrix with real entries
-    typedef boost::numeric::ublas::matrix<double,boost::numeric::ublas::column_major>
+    typedef boost::numeric::ublas::matrix<double,boost::numeric::ublas::row_major>
         rmat;
     //! A sparse matrix with real valued entries
-    typedef boost::numeric::ublas::mapped_matrix<double,boost::numeric::ublas::column_major>
+    typedef boost::numeric::ublas::mapped_matrix<double,boost::numeric::ublas::row_major>
         map_mat;
     //! The operator matrix for the spatial derivatives is sparse so we provide a typedef for convenience
     typedef boost::numeric::ublas::compressed_matrix<double,
-        boost::numeric::ublas::column_major> comp_mat;
+        boost::numeric::ublas::row_major> comp_mat;
     //! A complex vector
     typedef boost::numeric::ublas::vector<std::complex<double> > cvec;
     //! A real vector

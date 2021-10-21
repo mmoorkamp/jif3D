@@ -15,6 +15,7 @@
 #include "../Global/FatalException.h"
 #include "../Global/Jif3DPlatformHelper.h"
 #include <fstream>
+#include <iostream>
 #include <boost/filesystem.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
@@ -204,6 +205,7 @@ namespace jif3D
         boost::filesystem::path TDir) :
         FullSensitivityGravMagCalculator<PotentialDataType>(TheImp)
       {
+        std::cout << "Storing sensitivities on disk " << std::endl;
         if (!boost::filesystem::is_directory(TDir))
           throw FatalException("TDir is not a directory: " + TDir.string(), __FILE__,
           __LINE__);

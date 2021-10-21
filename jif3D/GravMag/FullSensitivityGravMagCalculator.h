@@ -13,6 +13,7 @@
 #include "../Global/FatalException.h"
 #include "CachedGravMagCalculator.h"
 
+#include <iostream>
 namespace jif3D
   {
     /** \addtogroup gravity Gravity forward modeling, display and inversion */
@@ -80,16 +81,12 @@ namespace jif3D
           boost::shared_ptr<ThreeDGravMagImplementation<PotentialDataType> > TheImp);
       virtual ~FullSensitivityGravMagCalculator();
       };
-
-#ifdef HAVEATLAS
-    namespace atlas = boost::numeric::bindings::atlas;
-#endif
     template<class PotentialDataType>
     FullSensitivityGravMagCalculator<PotentialDataType>::FullSensitivityGravMagCalculator(
         boost::shared_ptr<ThreeDGravMagImplementation<PotentialDataType> > TheImp) :
         CachedGravMagCalculator<PotentialDataType>(TheImp), Sensitivities()
       {
-
+std::cout << "Storing sensitivities in memory " << std::endl;
       }
 
     template<class PotentialDataType>
@@ -150,18 +147,8 @@ namespace jif3D
                 "Size of sensitivity matrix does not match model configuration ! ",
                 __FILE__, __LINE__);
           }
-        rvec Vector = Model.GetModelParameters();
         //perform the vector matrix product to get the raw data
-        //depending on whether atlas is available on the system
-        //we use the fast atlas version or the slower native ublas code
-#ifdef HAVEATLAS
-        rvec result(nmeas);
-        atlas::gemv(1.0, Sensitivities, Vector, 0.0, result);
-        return result;
-#else
-        return boost::numeric::ublas::prod(Sensitivities, Vector);
-#endif
-
+        return boost::numeric::ublas::prec_prod(Sensitivities, Model.GetModelParameters());
       }
 
     template<class PotentialDataType>
@@ -229,16 +216,8 @@ namespace jif3D
         const ThreeDModelType &Model, const PotentialDataType &Data, const rvec &Misfit)
       {
         //when we have the sensitivities, the derivative of the objective function
-        //is simply J^T * delta d, as above we use the fast atlas matrix
-        //vector operation when available and the slower ublas version otherwise
-        assert(Misfit.size() == Sensitivities.size1());
-#ifdef HAVEATLAS
-        rvec result(Misfit.size());
-        atlas::gemv(CblasTrans, 2.0, Sensitivities, Misfit, 0.0, result);
-        return result;
-#else
+        //is simply J^T * delta d
         return 2.0 * boost::numeric::ublas::prod(trans(Sensitivities), Misfit);
-#endif
       }
   /* @} */
   }
