@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
         po::value(&maxsus)->default_value(1.0))("mutual_information", po::value(&mibins),
         "Use mutual information coupling, specify number of bins in histogram")(
             "stochcov", po::value(&CovWidth)->default_value(0),
-            "Width of stochastic regularization, enabled if > 0");;
+            "Width of stochastic regularization, enabled if > 0")("logsus","Use a logarithmic transform for susceptibility");
 
     jif3D::SetupRegularization RegSetup;
     jif3D::SetupInversion InversionSetup;
@@ -154,8 +154,18 @@ int main(int argc, char *argv[])
 
     boost::shared_ptr<jif3D::GeneralModelTransform> DensTrans = boost::make_shared<
         jif3D::TanhTransform>(mindens, maxdens);
-    boost::shared_ptr<jif3D::GeneralModelTransform> SusTrans = boost::make_shared<
-        jif3D::TanhTransform>(minsus, maxsus);
+    boost::shared_ptr<jif3D::GeneralModelTransform> SusTrans;
+    if (vm.count("logsus"))
+      {
+        jif3D::rvec Ref(ngrid,1.0);
+        SusTrans = boost::make_shared<jif3D::LogTransform>(Ref);
+      }
+    else
+      {
+        SusTrans =  boost::make_shared<jif3D::TanhTransform>(minsus, maxsus);
+      }
+
+
     boost::shared_ptr<jif3D::GeneralModelTransform> GravityTransform = boost::make_shared<
         jif3D::MultiSectionTransform>(2 * ngrid, 0, ngrid, DensTrans);
     boost::shared_ptr<jif3D::GeneralModelTransform> MagneticsTransform =
