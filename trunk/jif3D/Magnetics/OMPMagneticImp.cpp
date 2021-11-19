@@ -7,10 +7,107 @@
 
 #include "OMPMagneticImp.h"
 #include "../Gravity/BasicGravElements.h"
+#include "../Gravity/GravityBackground.h"
 #include <boost/math/constants/constants.hpp>
 
 namespace jif3D
   {
+
+
+  /*! Calculate the effect of the background layers for a single magnetic measurement.
+   * tThe general structure of this function is very similar to CalcTensorBackground
+   * in GravityBackground.cpp however there are enough subtle differences in types and functions being called
+   * that it does not make too much sense to try to combine the two, particularly because
+   * the function is relatively short and simple
+   * @param measindex The index of the measurement in the Model
+   * @param xwidth The total width of the gridded domain in x-direction in m
+   * @param ywidth The total width of the gridded domain in y-direction in m
+   * @param zwidth The total width of the gridded domain in z-direction in m
+   * @param Model The Susceptibility model
+   * @param Sensitivities If the matrix passed here holds \f$ 1 \times nbg+ngrid \f$ or more elements, store sensitivity information in the right fields
+   * @return A vector with a 3 components that contains the magnetic field
+   */
+  rvec OMPMagneticImp::CalcMagneticBackground(const size_t measindex, const double xwidth,
+      const double ywidth, const double zwidth, const ThreeDMagneticModel &Model,
+      const MagneticData &Data, rmat &Sensitivities)
+    {
+      //make sure we have thicknesses and susceptibilities for all layers
+      assert(
+          Model.GetBackgroundSusceptibilities().size()
+              == Model.GetBackgroundThicknesses().size());
+      const size_t nbglayers = Model.GetBackgroundSusceptibilities().size();
+      const double x_meas = Data.GetMeasPosX()[measindex];
+      const double y_meas = Data.GetMeasPosY()[measindex];
+      const double z_meas = Data.GetMeasPosZ()[measindex];
+      //calculate the directional angles
+      const double BxComp = cos(Inclination) * cos(Declination);
+      const double ByComp = cos(Inclination) * sin(Declination);
+      const double BzComp = sin(Inclination);
+      //the conversion factor to go from tensor gravity sensitivities to magnetics
+      const double factor = 1.0 / ( 4 * boost::math::constants::pi<double>()   * jif3D::Grav_const);
+
+      rvec result(3, 0.0);
+      rmat currvalue(3, 3, 0.0);
+      double currtop = Model.GetZOrigin();
+      double currbottom = currtop;
+      const size_t nmod = Model.GetSusceptibilities().num_elements();
+      const bool storesens = (Sensitivities.size1() >= ndatapermeas)
+          && (Sensitivities.size2() >= nmod);
+      // for all layers of the background
+      for (size_t j = 0; j < nbglayers; ++j)
+        {
+          //reset current sensitivity values
+          std::fill(currvalue.data().begin(), currvalue.data().end(), 0.0);
+          const double currthick = Model.GetBackgroundThicknesses()[j];
+          currbottom = currtop + currthick;
+          //if we are inside the layer we might have a contribution to the zz-component
+          currvalue(2, 2) = CalcUzzInfSheetTerm(z_meas, currtop, currbottom);
+          //most of the times and possible contribution comes from the interface between the grid and the background
+          if (currtop < zwidth && (currbottom <= zwidth)) // if the background layer complete coincides with the discretized area
+            {
+              currvalue -= CalcTensorBoxTerm(x_meas, y_meas, z_meas,  Model.GetXOrigin(), Model.GetYOrigin(), currtop,
+                  xwidth, ywidth, currthick);
+            }
+          if (currtop < zwidth && currbottom > zwidth) //if some of the background coincides and some is below
+            {
+              currvalue -= CalcTensorBoxTerm(x_meas, y_meas, z_meas,  Model.GetXOrigin(), Model.GetYOrigin(), currtop,
+                  xwidth, ywidth, (zwidth - currtop));
+            }
+          //project the tensor sensitivities to magnetic field components
+          const double BxSens = (currvalue(0, 0) * BxComp + currvalue(0, 1) * ByComp
+              + currvalue(0, 2) * BzComp) * FieldStrength * factor;
+          const double BySens = (currvalue(1, 0) * BxComp + currvalue(1, 1) * ByComp
+              + currvalue(1, 2) * BzComp) * FieldStrength * factor;
+          const double BzSens = (currvalue(2, 0) * BxComp + currvalue(2, 1) * ByComp
+              + currvalue(2, 2) * BzComp) * FieldStrength * factor;
+          // store in the sensitivity matrix if necessary
+          if (storesens)
+            {
+              Sensitivities(0, nmod + j) = BxSens;
+              Sensitivities(1, nmod + j) = BySens;
+              Sensitivities(2, nmod + j) = BzSens;
+
+            }
+          //calculate resultant field components
+          const double bgsus = Model.GetBackgroundSusceptibilities()[j];
+          result(0) += BxSens * bgsus;
+          result(1) += BySens * bgsus;
+          result(2) += BzSens * bgsus;
+          currtop += currthick;
+        }
+
+      return result;
+    }
+
+ rvec OMPMagneticImp::CalcBackground(const size_t measindex, const double xwidth,
+      const double ywidth, const double zwidth, const ThreeDMagneticModel &Model,
+      const MagneticData &Data,
+      rmat &Sensitivities)
+    {
+
+      return CalcMagneticBackground(measindex, xwidth, ywidth, zwidth, Model, Data,
+          Sensitivities);
+    }
 
     rvec OMPMagneticImp::CalcGridded(const size_t measindex,
         const ThreeDMagneticModel &Model, const MagneticData &Data, rmat &Sensitivities)
@@ -60,7 +157,7 @@ namespace jif3D
                 const double Susceptibility =
                     Model.GetSusceptibilities()[xindex][yindex][zindex];
                 // we have to convert the units of the FTG calculation to magnetics
-                //using poisson's relationship 1/(4 pi) gamma
+                //using poisson's relationship 1/(4 pi gamma)
                 const double factor = 1.0 / ( 4 * boost::math::constants::pi<double>()   * jif3D::Grav_const);
                 //the sensitivity element for the current grid cell and the x-component
                 //of the magnetic field is the vector product of the FTG geometric terms

@@ -13,6 +13,7 @@
 #include "../Gravity/DepthWeighting.h"
 #include "../Global/FileUtil.h"
 #include "../Global/Noise.h"
+#include <boost/make_shared.hpp>
 
 namespace jif3D
   {
@@ -91,9 +92,9 @@ namespace jif3D
               {
                 //create dummy dataset to make constrained inversion more convenient
                 //otherwise the user would have to do this or we would have to create extra settings
-                MagData.AddMeasurementPoint(0.0,0.0,0.0);
-                std::vector<double> dummy(1,1.0);
-                MagData.SetDataAndErrors(dummy,dummy);
+                MagData.AddMeasurementPoint(0.0, 0.0, 0.0);
+                std::vector<double> dummy(1, 1.0);
+                MagData.SetDataAndErrors(dummy, dummy);
               }
             std::string magmodelfilename = jif3D::AskFilename(
                 "Magnetics Model Filename: ");
@@ -117,16 +118,18 @@ namespace jif3D
                     jif3D::ThreeDGravMagImplementation<jif3D::MagneticData> >(
                     new jif3D::OMPMagneticImp(inclination, declination, fieldstrength));
               }
-            Calculator = boost::shared_ptr<CalculatorType>(
-                new CalculatorType(Implementation, TempDir));
-
+#ifdef MAGDISK
+            Calculator = boost::make_shared<MagCalculatorType>(Implementation, TempDir);
+#else
+            Calculator = boost::make_shared<MagCalculatorType>(Implementation);
+#endif
             Calculator->SetDataTransform(
                 boost::shared_ptr<jif3D::TotalFieldAnomaly>(
                     new jif3D::TotalFieldAnomaly(inclination, declination)));
 
             MagObjective =
-                boost::shared_ptr<jif3D::ThreeDModelObjective<CalculatorType> >(
-                    new jif3D::ThreeDModelObjective<CalculatorType>(*Calculator));
+                boost::shared_ptr<jif3D::ThreeDModelObjective<MagCalculatorType> >(
+                    new jif3D::ThreeDModelObjective<MagCalculatorType>(*Calculator));
             MagObjective->SetObservedData(MagData);
             MagObjective->SetCoarseModelGeometry(Model);
             std::vector<double> Error(

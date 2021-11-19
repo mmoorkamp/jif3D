@@ -17,6 +17,12 @@ feature.compose <gravcache>disk : <define>GRAVDISK ;
 feature.compose <gravcache>mem : <define>GRAVMEM ;
 feature.compose <gravcache>none : <define>GRAVCALC ; 
 
+feature.feature magcache : disk mem none : composite incidental propagated ;
+feature.compose <magcache>disk : <define>MAGDISK ;
+feature.compose <magcache>mem : <define>MAGMEM ;
+feature.compose <magcache>none : <define>MAGCALC ; 
+
+
 feature.feature seismic : surface traveltime  : composite propagated symmetric ;
 feature.compose <seismic>traveltime : <define>HAVETRAVELTIME  ;
 

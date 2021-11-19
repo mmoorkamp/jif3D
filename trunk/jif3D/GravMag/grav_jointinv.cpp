@@ -159,6 +159,18 @@ int main(int argc, char *argv[])
       {
         jif3D::rvec Ref(ngrid,1.0);
         SusTrans = boost::make_shared<jif3D::LogTransform>(Ref);
+
+        /*boost::shared_ptr<jif3D::ChainedTransform> sSusTransform =  boost::make_shared<jif3D::ChainedTransform>();
+        jif3D::rvec RefModel(ngrid, 1.0);
+
+        SusTransform->AppendTransform(
+            boost::shared_ptr<jif3D::GeneralModelTransform>(
+                new jif3D::TanhTransform(std::log(minsus), std::log(maxsus))));
+        SusTransform->AppendTransform(
+            boost::shared_ptr<jif3D::GeneralModelTransform>(
+                new jif3D::LogTransform(RefModel)));
+
+        SusTrans = SusTransform;*/
       }
     else
       {

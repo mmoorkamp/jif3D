@@ -150,6 +150,10 @@ namespace jif3D
         {
           return bg_densities;
         }
+      const tBackgroundVec &GetBackgroundValues() const
+        {
+          return bg_densities;
+        }
       //! Set the thicknesses of the background layers, the individual thicknesses are given in m the total thickness of the background layers does not need to coincide with the gridded domain
       void SetBackgroundThicknesses(const tBackgroundVec &value)
         {

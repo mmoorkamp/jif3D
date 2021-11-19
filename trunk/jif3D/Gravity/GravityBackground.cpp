@@ -31,9 +31,9 @@ namespace jif3D
         const double z_meas = Data.GetMeasPosZ()[measindex];
         const size_t nbglayers = Model.GetBackgroundThicknesses().size();
         double result = 0.0;
-        double currtop = 0.0;
+        double currtop = Model.GetZOrigin();
         double currvalue = 0.0;
-        double currbottom = 0.0;
+        double currbottom = currtop;
         const size_t modelsize = Model.GetDensities().num_elements();
         const bool storesens = (Sensitivities.size1() >= ndatapermeas)
             && (Sensitivities.size2() >= modelsize + nbglayers);
@@ -49,14 +49,14 @@ namespace jif3D
             if (currtop < zwidth && (currbottom <= zwidth))
 
               {
-                currvalue -= CalcGravBoxTerm(x_meas, y_meas, z_meas, 0.0, 0.0, currtop,
+                currvalue -= CalcGravBoxTerm(x_meas, y_meas, z_meas, Model.GetXOrigin(), Model.GetYOrigin(), currtop,
                     xwidth, ywidth, currthick);
               }
             //if some of the background coincides and some is below
             if (currtop < zwidth && currbottom > zwidth)
 
               {
-                currvalue -= CalcGravBoxTerm(x_meas, y_meas, z_meas, 0.0, 0.0, currtop,
+                currvalue -= CalcGravBoxTerm(x_meas, y_meas, z_meas,  Model.GetXOrigin(), Model.GetYOrigin(), currtop,
                     xwidth, ywidth, (zwidth - currtop));
               }
             if (storesens)
@@ -101,8 +101,8 @@ namespace jif3D
         rmat currvalue(3, 3);
         std::fill_n(result.data().begin(), ndatapermeas, 0.0);
         std::fill_n(currvalue.data().begin(), ndatapermeas, 0.0);
-        double currtop = 0.0;
-        double currbottom = 0.0;
+        double currtop = Model.GetZOrigin();
+        double currbottom = currtop;
         const size_t nmod = Model.GetDensities().num_elements();
         const bool storesens = (Sensitivities.size1() >= ndatapermeas)
             && (Sensitivities.size2() >= nmod);
@@ -115,12 +115,12 @@ namespace jif3D
             currvalue(2, 2) = CalcUzzInfSheetTerm(z_meas, currtop, currbottom);
             if (currtop < zwidth && (currbottom <= zwidth)) // if the background layer complete coincides with the discretized area
               {
-                currvalue -= CalcTensorBoxTerm(x_meas, y_meas, z_meas, 0.0, 0.0, currtop,
+                currvalue -= CalcTensorBoxTerm(x_meas, y_meas, z_meas,  Model.GetXOrigin(), Model.GetYOrigin(), currtop,
                     xwidth, ywidth, currthick);
               }
             if (currtop < zwidth && currbottom > zwidth) //if some of the background coincides and some is below
               {
-                currvalue -= CalcTensorBoxTerm(x_meas, y_meas, z_meas, 0.0, 0.0, currtop,
+                currvalue -= CalcTensorBoxTerm(x_meas, y_meas, z_meas,  Model.GetXOrigin(), Model.GetYOrigin(), currtop,
                     xwidth, ywidth, (zwidth - currtop));
               }
             if (storesens)
