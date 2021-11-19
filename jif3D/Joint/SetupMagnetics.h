@@ -11,6 +11,8 @@
 #include "../Global/Jif3DGlobal.h"
 #include "../Inversion/ThreeDModelObjective.h"
 #include "../GravMag/DiskGravMagCalculator.h"
+#include "../GravMag/MinMemGravMagCalculator.h"
+#include "../GravMag/FullSensitivityGravMagCalculator.h"
 #include "../Magnetics/ThreeDMagneticModel.h"
 #include "../Magnetics/MagneticData.h"
 #include "../Inversion/JointObjective.h"
@@ -31,12 +33,20 @@ namespace jif3D
     class J3DEXPORT SetupMagnetics
       {
     public:
-      typedef typename jif3D::DiskGravMagCalculator<jif3D::MagneticData> CalculatorType;
+#ifdef MAGDISK
+      typedef typename jif3D::DiskGravMagCalculator<jif3D::MagneticData> MagCalculatorType;
+#endif
+#ifdef MAGMEM
+      typedef typename jif3D::FullSensitivityGravMagCalculator<jif3D::MagneticData> MagCalculatorType;
+#endif
+#ifdef MAGCALC
+      typedef typename jif3D::MinMemGravMagCalculator<jif3D::MagneticData> MagCalculatorType;
+#endif
     private:
       double inclination;
       double declination;
       double fieldstrength;
-      boost::shared_ptr<CalculatorType> Calculator;
+      boost::shared_ptr<MagCalculatorType> Calculator;
       //! The relative error for the scalar data to assume for construction of the data variance
       double relerr;
       //! The minimum error for the scalar data to assume for construction of the data variance
@@ -44,10 +54,10 @@ namespace jif3D
       //! Stores the grid for the scalar Magnetics model and the starting model
       jif3D::ThreeDMagneticModel Model;
       //! Possible pointer to the scalar Magnetics objective function, gets assigned below depending on user input
-      boost::shared_ptr<jif3D::ThreeDModelObjective<CalculatorType> > MagObjective;
+      boost::shared_ptr<jif3D::ThreeDModelObjective<MagCalculatorType> > MagObjective;
 
     public:
-      boost::shared_ptr<CalculatorType> GetCalculator()
+      boost::shared_ptr<MagCalculatorType> GetCalculator()
         {
           return Calculator;
         }
@@ -64,7 +74,7 @@ namespace jif3D
           return fieldstrength;
         }
       //! read-only access to the objective function for scalar Magnetics data
-      const jif3D::ThreeDModelObjective<CalculatorType> &GetObjective()
+      const jif3D::ThreeDModelObjective<MagCalculatorType> &GetObjective()
         {
           return *MagObjective;
         }

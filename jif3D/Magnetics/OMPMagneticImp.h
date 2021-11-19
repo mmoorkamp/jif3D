@@ -11,6 +11,7 @@
 #include "../Global/Serialization.h"
 #include "../Global/Jif3DGlobal.h"
 #include "../GravMag/ThreeDGravMagImplementation.h"
+
 #include "ThreeDMagneticModel.h"
 #include "MagneticData.h"
 
@@ -26,11 +27,10 @@ namespace jif3D
       virtual rvec CalcBackground(const size_t measindex, const double xwidth,
           const double ywidth, const double zwidth, const ThreeDMagneticModel &Model,
           const MagneticData &Data,
-          rmat &Sensitivities) override
-        {
-          rvec returnvector(ndatapermeas, 0.0);
-          return returnvector;
-        }
+          rmat &Sensitivities) override;
+      rvec CalcMagneticBackground(const size_t measindex, const double xwidth,
+          const double ywidth, const double zwidth, const ThreeDMagneticModel &Model,
+          const MagneticData &Data, rmat &Sensitivities);
       //! Calculate the response of the gridded part
       virtual rvec CalcGridded(const size_t measindex, const ThreeDMagneticModel &Model, const MagneticData &Data,
           rmat &Sensitivities) override;

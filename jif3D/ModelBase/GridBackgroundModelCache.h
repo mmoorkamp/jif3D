@@ -50,15 +50,15 @@ namespace jif3D
         // by default we assume a change
         bool change = true;
         //check if either the size of the background densities or the thicknesses changed
-        change = (OldBackgroundDens.size() != Model.GetBackgroundDensities().size()
+        change = (OldBackgroundDens.size() != Model.GetBackgroundValues().size()
             || OldBackgroundThick.size() != Model.GetBackgroundThicknesses().size());
         //check if one size changed copy the new values
         if (change)
           {
-            OldBackgroundDens.resize(Model.GetBackgroundDensities().size(), 0.0);
+            OldBackgroundDens.resize(Model.GetBackgroundValues().size(), 0.0);
             OldBackgroundThick.resize(Model.GetBackgroundThicknesses().size(), 0.0);
-            std::copy(Model.GetBackgroundDensities().begin(),
-                Model.GetBackgroundDensities().end(), OldBackgroundDens.begin());
+            std::copy(Model.GetBackgroundValues().begin(),
+                Model.GetBackgroundValues().end(), OldBackgroundDens.begin());
             std::copy(Model.GetBackgroundThicknesses().begin(),
                 Model.GetBackgroundThicknesses().end(), OldBackgroundThick.begin());
             return change;
@@ -66,7 +66,7 @@ namespace jif3D
         //if the sizes are the same, we check whether the vectors still contain the same values
         //for densities
         bool denssame = std::equal(OldBackgroundDens.begin(), OldBackgroundDens.end(),
-            Model.GetBackgroundDensities().begin());
+            Model.GetBackgroundValues().begin());
         //and for thickness
         bool thicksame = std::equal(OldBackgroundThick.begin(), OldBackgroundThick.end(),
             Model.GetBackgroundThicknesses().begin());
@@ -74,10 +74,10 @@ namespace jif3D
         //if the content changed we copy the new values
         if (change)
           {
-            OldBackgroundDens.resize(Model.GetBackgroundDensities().size(), 0.0);
+            OldBackgroundDens.resize(Model.GetBackgroundValues().size(), 0.0);
             OldBackgroundThick.resize(Model.GetBackgroundThicknesses().size(), 0.0);
-            std::copy(Model.GetBackgroundDensities().begin(),
-                Model.GetBackgroundDensities().end(), OldBackgroundDens.begin());
+            std::copy(Model.GetBackgroundValues().begin(),
+                Model.GetBackgroundValues().end(), OldBackgroundDens.begin());
             std::copy(Model.GetBackgroundThicknesses().begin(),
                 Model.GetBackgroundThicknesses().end(), OldBackgroundThick.begin());
           }
