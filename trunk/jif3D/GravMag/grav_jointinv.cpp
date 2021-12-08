@@ -72,8 +72,9 @@ int main(int argc, char *argv[])
         po::value(&minsus)->default_value(-1.0))("maxsus",
         po::value(&maxsus)->default_value(1.0))("mutual_information", po::value(&mibins),
         "Use mutual information coupling, specify number of bins in histogram")(
-            "stochcov", po::value(&CovWidth)->default_value(0),
-            "Width of stochastic regularization, enabled if > 0")("logsus","Use a logarithmic transform for susceptibility");
+        "stochcov", po::value(&CovWidth)->default_value(0),
+        "Width of stochastic regularization, enabled if > 0")("logsus",
+        "Use a logarithmic transform for susceptibility");
 
     jif3D::SetupRegularization RegSetup;
     jif3D::SetupInversion InversionSetup;
@@ -117,6 +118,10 @@ int main(int argc, char *argv[])
                 << ncovmod << " as inversion model " << ngrid << std::endl;
             return 100;
           }
+        else
+          {
+            std::cout << " Setting covariance for density from file. " << std::endl;
+          }
         std::copy(CovModel->GetData().origin(), CovModel->GetData().origin() + ncovmod,
             CovModVec.begin());
       }
@@ -133,6 +138,11 @@ int main(int argc, char *argv[])
                 << " Susceptibility covariance does not have the same number of parameters "
                 << ncovmod << " as inversion model " << ngrid << std::endl;
             return 100;
+          }
+        else
+          {
+            std::cout << " Setting covariance for susceptibility from file. "
+                << std::endl;
           }
         std::copy(CovModel->GetData().origin(), CovModel->GetData().origin() + ncovmod,
             CovModVec.begin() + ngrid);
@@ -157,26 +167,25 @@ int main(int argc, char *argv[])
     boost::shared_ptr<jif3D::GeneralModelTransform> SusTrans;
     if (vm.count("logsus"))
       {
-        jif3D::rvec Ref(ngrid,1.0);
+        jif3D::rvec Ref(ngrid, 1.0);
         SusTrans = boost::make_shared<jif3D::LogTransform>(Ref);
 
         /*boost::shared_ptr<jif3D::ChainedTransform> sSusTransform =  boost::make_shared<jif3D::ChainedTransform>();
-        jif3D::rvec RefModel(ngrid, 1.0);
+         jif3D::rvec RefModel(ngrid, 1.0);
 
-        SusTransform->AppendTransform(
-            boost::shared_ptr<jif3D::GeneralModelTransform>(
-                new jif3D::TanhTransform(std::log(minsus), std::log(maxsus))));
-        SusTransform->AppendTransform(
-            boost::shared_ptr<jif3D::GeneralModelTransform>(
-                new jif3D::LogTransform(RefModel)));
+         SusTransform->AppendTransform(
+         boost::shared_ptr<jif3D::GeneralModelTransform>(
+         new jif3D::TanhTransform(std::log(minsus), std::log(maxsus))));
+         SusTransform->AppendTransform(
+         boost::shared_ptr<jif3D::GeneralModelTransform>(
+         new jif3D::LogTransform(RefModel)));
 
-        SusTrans = SusTransform;*/
+         SusTrans = SusTransform;*/
       }
     else
       {
-        SusTrans =  boost::make_shared<jif3D::TanhTransform>(minsus, maxsus);
+        SusTrans = boost::make_shared<jif3D::TanhTransform>(minsus, maxsus);
       }
-
 
     boost::shared_ptr<jif3D::GeneralModelTransform> GravityTransform = boost::make_shared<
         jif3D::MultiSectionTransform>(2 * ngrid, 0, ngrid, DensTrans);
@@ -194,23 +203,22 @@ int main(int argc, char *argv[])
         if (ngrid != MagneticsSetup.GetModel().GetSusceptibilities().num_elements())
           {
             std::cerr << "Magnetic model does not match grid size ! "
-                << MagneticsSetup.GetModel().GetSusceptibilities().num_elements() << " " << ngrid
-                << std::endl;
+                << MagneticsSetup.GetModel().GetSusceptibilities().num_elements() << " "
+                << ngrid << std::endl;
             return 100;
           }
       }
 
-    if (GravitySetup.GetScalModel().GetDensities().num_elements()  > 0)
+    if (GravitySetup.GetScalModel().GetDensities().num_elements() > 0)
+      {
+        if (ngrid != GravitySetup.GetScalModel().GetDensities().num_elements())
           {
-            if (ngrid != GravitySetup.GetScalModel().GetDensities().num_elements() )
-              {
-                std::cerr << "Gravity model does not match grid size ! "
-                    << GravitySetup.GetScalModel().GetDensities().num_elements() << " " << ngrid
-                    << std::endl;
-                return 100;
-              }
+            std::cerr << "Gravity model does not match grid size ! "
+                << GravitySetup.GetScalModel().GetDensities().num_elements() << " "
+                << ngrid << std::endl;
+            return 100;
           }
-
+      }
 
     boost::shared_ptr<jif3D::CrossGradient> GravMagCross(new jif3D::CrossGradient(*Mesh));
     boost::shared_ptr<jif3D::MultiSectionTransform> GravMagTrans(
@@ -293,7 +301,7 @@ int main(int argc, char *argv[])
         std::copy(WeightVector.begin(), WeightVector.end(),
             std::ostream_iterator<double>(weightfile, "\n"));
         jif3D::ThreeDMagneticModel DepthModel(MagneticsSetup.GetModel());
-        std::copy(CovModVec.begin() + ngrid, CovModVec.begin() + 2* ngrid,
+        std::copy(CovModVec.begin() + ngrid, CovModVec.begin() + 2 * ngrid,
             DepthModel.SetSusceptibilities().origin());
         DepthModel.WriteNetCDF("depth_mag_cov.nc");
         DepthModel.WriteVTK("depth_mag_cov.vtk");
@@ -393,11 +401,18 @@ int main(int argc, char *argv[])
     auto CovObj = boost::make_shared<jif3D::MultiSectionCovariance>(InvModel.size());
     if (CovWidth != 0.0)
       {
-        boost::shared_ptr<jif3D::GeneralCovariance> StochCov = boost::make_shared<
-            jif3D::StochasticCovariance>(CovModVec, Mesh->GetModelShape()[0],
+        jif3D::rvec DensCovModVec(ngrid, 1.0);
+        jif3D::rvec MagCovModVec(ngrid, 1.0);
+        std::copy(CovModVec.begin(), CovModVec.begin() + ngrid, DensCovModVec.begin());
+        std::copy(CovModVec.begin() + ngrid, CovModVec.end(), MagCovModVec.begin());
+        boost::shared_ptr<jif3D::GeneralCovariance> StochCovDens = boost::make_shared<
+            jif3D::StochasticCovariance>(DensCovModVec, Mesh->GetModelShape()[0],
             Mesh->GetModelShape()[1], Mesh->GetModelShape()[2], CovWidth, 1.0, 1.0);
-        CovObj->AddSection(0, ngrid, StochCov);
-        CovObj->AddSection(ngrid, 2*ngrid, StochCov);
+        boost::shared_ptr<jif3D::GeneralCovariance> StochCovMag = boost::make_shared<
+            jif3D::StochasticCovariance>(MagCovModVec, Mesh->GetModelShape()[0],
+            Mesh->GetModelShape()[1], Mesh->GetModelShape()[2], CovWidth, 1.0, 1.0);
+        CovObj->AddSection(0, ngrid, StochCovDens);
+        CovObj->AddSection(ngrid, 2 * ngrid, StochCovMag);
 
       }
     else
