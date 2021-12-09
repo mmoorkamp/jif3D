@@ -417,6 +417,12 @@ int main(int argc, char *argv[])
       }
     else
       {
+        double min = *std::min_element(CovModVec.begin(),CovModVec.end());
+        if (min <= 0.0)
+          {
+            std::cerr << "Covariance vector contains non-positive element: " << min << " Aborting!" << std::endl;
+            return 100;
+          }
         CovObj->AddSection(0, InvModel.size(),
             boost::make_shared<jif3D::DiagonalCovariance>(CovModVec));
       }
