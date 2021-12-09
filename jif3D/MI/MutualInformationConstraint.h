@@ -32,14 +32,6 @@ namespace jif3D
       double xw;
       double yw;
       double binwidth;
-      double step;
-      const size_t ngauss = 100000;
-      jif3D::rvec GaussVals;
-      inline double InterGauss(double val)
-        {
-          const int index = std::round(val / step);
-          return index >= ngauss ? 0 : GaussVals(index);
-        }
       double MIGauss(const jif3D::rvec &x, const jif3D::rvec &y, double xmin, double xmax,
           double ymin, double ymax, size_t nbins, jif3D::rvec &CountsX,
           jif3D::rvec &CountsY, jif3D::rvec &CountsXY);

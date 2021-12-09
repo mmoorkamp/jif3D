@@ -303,6 +303,7 @@ namespace jif3D
                 int xi, yi, zi;
                 OffsetToIndex(i, xi, yi, zi);
                 double sum = 0.0;
+                double val = 0.0;
                 //double currx = Model.GetXCoordinates()[xi] + Model.GetXCellSizes()[xi] / 2.0;
                 //double curry = Model.GetYCoordinates()[yi] + Model.GetYCellSizes()[yi] / 2.0;
                 //double currz = Model.GetZCoordinates()[zi] + Model.GetZCellSizes()[zi] / 2.0;
@@ -327,10 +328,11 @@ namespace jif3D
                             //+ (values[index + 1] - values[index]) / delta
                             //		* (r - index * delta);
                             sum += inter;
-                            previous_result(i) += inter * vec(offset);
+                            val += inter * vec(offset);
                           }
                       }
                   }
+                previous_result(i) = val;
                 if (Normalize)
                   {
                     previous_result(i) /= sum;
