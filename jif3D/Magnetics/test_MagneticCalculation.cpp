@@ -168,9 +168,16 @@ BOOST_AUTO_TEST_SUITE( Magnetic_Test_Suite )
             std::back_inserter(magz));
         std::copy(std::istream_iterator<double>(tinfile), std::istream_iterator<double>(),
             std::back_inserter(magt));
+
+        std::ofstream xoutfile("magx.jif3d");
+        std::ofstream youtfile("magy.jif3d");
+        std::ofstream zoutfile("magz.jif3d");
+
         for (size_t i = 0; i < magx.size(); ++i)
           {
-
+            xoutfile << magmeas(i * 3) << "\n";
+            youtfile << magmeas(i * 3 + 1) << "\n";
+            zoutfile << magmeas(i * 3 +2) << "\n";
             BOOST_CHECK_CLOSE(magmeas(i * 3), magx.at(i), 0.2);
             BOOST_CHECK_CLOSE(magmeas(i * 3 + 1), magy.at(i), 0.2);
             BOOST_CHECK_CLOSE(magmeas(i * 3 + 2), magz.at(i), 0.2);
