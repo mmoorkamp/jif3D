@@ -203,13 +203,7 @@ namespace jif3D
         xw = (xmax - xmin) / nbins;
         yw = (ymax - ymin) / nbins;
         binwidth = std::min(xw, yw) / 2.0;
-        step = 10.0 / ngauss;
-        GaussVals.resize(ngauss);
-        for (size_t i = 0; i < ngauss; ++i)
-          {
-            GaussVals(i) = boost::math::pdf(norm, i * step);
-          }
-        // TODO Auto-generated constructor stub
+               // TODO Auto-generated constructor stub
         //mine = boost::make_shared<MINE>(0.6, 15, EST_MIC_APPROX);
       }
 
