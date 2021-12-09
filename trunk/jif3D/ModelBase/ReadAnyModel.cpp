@@ -22,6 +22,7 @@
 #include <boost/mpl/at.hpp>
 #include <boost/mpl/range_c.hpp>
 #include <boost/mpl/for_each.hpp>
+#include <boost/filesystem.hpp>
 #include <netcdf>
 #include <typeinfo>
 
@@ -76,6 +77,10 @@ namespace jif3D
 
     boost::shared_ptr<jif3D::ThreeDModelBase> ReadAnyModel(const std::string &Filename)
       {
+        if (!boost::filesystem::exists(Filename))
+          {
+            throw jif3D::FatalException("File " + Filename + " does not exists", __FILE__, __LINE__);
+          }
         using boost::mpl::for_each;
         using boost::mpl::range_c;
 
