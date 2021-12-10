@@ -115,7 +115,21 @@ int main(int argc, char *argv[])
     jif3D::MTData Data;
     if (vm.count("center"))
       {
-        Data.ReadNetCDF(DataName);
+        std::string extension = jif3D::GetFileExtension(DataName);
+        //read in MT data, the position of the measurement sites, frequencies and impedances
+        // we also try to read in the parameters of the distortion Matrix C
+        //if these are not present they will be set to identity matrix for each site
+        //in the forward calculation, otherwise the synthetic responses will be multiplied
+
+        if (extension.compare(".dat") == 0)
+          {
+            Data.ReadModEM(DataName);
+            Data.WriteNetCDF(DataName + ".nc");
+          }
+        else
+          {
+            Data.ReadNetCDF(DataName);
+          }
 
         auto mmx = boost::minmax_element(Data.GetMeasPosX().begin(),
             Data.GetMeasPosX().end());
@@ -285,7 +299,7 @@ int main(int argc, char *argv[])
                 jif3D::TipperData Tipper;
                 Tipper.ReadNetCDF(TipperName);
                 Tipper.SetMeasurementPoints(Data.GetMeasPosX(), Data.GetMeasPosY(), newz);
-                Tipper.WriteNetCDF(TipperName+ ".adjusted.nc");
+                Tipper.WriteNetCDF(TipperName + ".adjusted.nc");
               }
 
           }
