@@ -36,11 +36,17 @@ namespace jif3D
         const std::complex<double> &Hz2, std::complex<double> &Tx,
         std::complex<double> &Ty);
     //! Rotate the impedance tensor elements by the given angle in radian
-    J3DEXPORT void RotateImpedance(const double angle, std::complex<double> & Zxx,
+    J3DEXPORT void RotateImpedance(const double angle, std::complex<double> &Zxx,
         std::complex<double> &Zxy, std::complex<double> &Zyx, std::complex<double> &Zyy);
+    //! Rotate the impedance tensor elements by the given angle in radian
+    J3DEXPORT void RotateTipper(const double angle, std::complex<double> &Tx,
+        std::complex<double> &Ty);
     //! Rotate several impedance values stored in a vector as we use for inversion
-    J3DEXPORT  std::vector<double> RotateImpedanceVector(const double angle,
-        const  std::vector<double> &Impedance);
+        J3DEXPORT std::vector<double> RotateTipperVector(const double angle,
+            const std::vector<double> &Tipper);
+    //! Rotate several impedance values stored in a vector as we use for inversion
+    J3DEXPORT std::vector<double> RotateImpedanceVector(const double angle,
+        const std::vector<double> &Impedance);
     //! Given a complex impedance value in S.I. units, and the Frequency in Hz calculate the corresponding apparent resistivity
     inline double AppRes(const std::complex<double> &Z, const double Frequency)
       {

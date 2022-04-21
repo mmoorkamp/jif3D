@@ -166,13 +166,13 @@ int main(int argc, char *argv[])
               { return std::abs(a) < std::abs(b);});
         double threshold = std::max(absnoise, std::abs(range * maximp));
         std::transform(Impedances.begin() + i, Impedances.begin() + i + 8,
-            Errors.begin() + i, [&] (double d) -> double
+            Errors.begin() + i, [&](double d) -> double
               { return std::max(std::abs(d * relnoise),threshold);});
       }
 
     jif3D::AddNoise(Impedances, relnoise, Errors);
     std::vector<double> C, NoC;
-    std::vector<std::string> Names(DataMT.GetMeasPosX().size(),"");
+    std::vector<std::string> Names(DataMT.GetMeasPosX().size(), "");
     if (DistDeviation > 0.0)
       {
         boost::lagged_fibonacci607 generator(static_cast<unsigned int>(std::time(0)));
@@ -222,20 +222,11 @@ int main(int argc, char *argv[])
             NoC.push_back(0.0);
             NoC.push_back(1.0);
           }
-        jif3D::WriteImpedancesToNetCDF(outfilename + "dist.nc", DataMT.GetFrequencies(),
-            DataMT.GetMeasPosX(), DataMT.GetMeasPosY(), DataMT.GetMeasPosZ(),
-            std::vector<double>(Impedances.begin(), Impedances.end()),
-            std::vector<double>(Errors.begin(), Errors.end()), NoC, Names);
-      }
+        DataMT.WriteNetCDF(outfilename + "dist.nc");
 
-    jif3D::WriteImpedancesToNetCDF(outfilename, DataMT.GetFrequencies(),
-        DataMT.GetMeasPosX(), DataMT.GetMeasPosY(), DataMT.GetMeasPosZ(),
-        std::vector<double>(Impedances.begin(), Impedances.end()),
-        std::vector<double>(Errors.begin(), Errors.end()), C, Names);
-    jif3D::WriteImpedancesToModEM(outfilename + ".dat", DataMT.GetFrequencies(),
-        DataMT.GetMeasPosX(), DataMT.GetMeasPosY(), DataMT.GetMeasPosZ(),
-        std::vector<double>(Impedances.begin(), Impedances.end()),
-        std::vector<double>(Errors.begin(), Errors.end()),Names);
+      }
+    DataMT.WriteNetCDF(outfilename);
+    DataMT.WriteModEM(outfilename + ".dat");
 
     jif3D::X3DTipperCalculator TipCalc(TempDir, X3DName);
     jif3D::rvec Tipper = TipCalc.Calculate(MTModel, DataTipper);
@@ -250,7 +241,7 @@ int main(int argc, char *argv[])
               { return std::abs(a) < std::abs(b);});
         double threshold = std::max(absnoise, std::abs(range * maxtip));
         std::transform(Tipper.begin() + i, Tipper.begin() + i + 4, TipErrors.begin() + i,
-            [&] (double d) -> double
+            [&](double d) -> double
               { return std::max(std::abs(d * relnoise),threshold);});
       }
 

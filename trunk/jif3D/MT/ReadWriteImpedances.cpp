@@ -202,7 +202,8 @@ namespace jif3D
         const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
         const std::vector<double> &Impedances, const std::vector<double> &Errors,
-        const std::vector<double> &Distortion, const std::vector<std::string> &Names)
+        const std::vector<double> &Distortion, const std::vector<std::string> &Names,
+        const std::vector<double> &RotationAngles)
       {
         const size_t nstats = StatXCoord.size();
         const size_t nfreqs = Frequencies.size();
@@ -222,6 +223,8 @@ namespace jif3D
         //write out the frequencies that we store
         NcDim FreqDim = DataFile.addDim(FreqDimName, Frequencies.size());
         NcVar FreqVar = DataFile.addVar(FreqDimName, netCDF::ncDouble, FreqDim);
+        //write out RotationAngles
+        WriteVec(DataFile, RotationAngleName, RotationAngles, StatNumDim, " ");
 
 //        FreqVar->put(&Frequencies[0], nfreqs);
         cxxport::put_legacy_ncvar(FreqVar, Frequencies.data(), nfreqs);
@@ -282,7 +285,8 @@ namespace jif3D
         std::vector<double> &Frequencies, std::vector<double> &StatXCoord,
         std::vector<double> &StatYCoord, std::vector<double> &StatZCoord,
         std::vector<double> &Impedances, std::vector<double> &ImpError,
-        std::vector<double> &Distortion, std::vector<std::string> &Names)
+        std::vector<double> &Distortion, std::vector<std::string> &Names,
+        std::vector<double> &RotationAngles)
       {
         //open the netcdf file readonly
         NcFile DataFile(filename, NcFile::read);
@@ -292,6 +296,7 @@ namespace jif3D
         ReadVec(DataFile, MeasPosZName, StatZCoord);
         //read in the frequencies
         ReadVec(DataFile, FreqDimName, Frequencies);
+        ReadVec(DataFile, RotationAngleName, RotationAngles);
         //for each frequency and each station we have 8 impedances
         //currently it is not possible to have a different number of frequencies
         //at each site
@@ -387,7 +392,8 @@ namespace jif3D
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
         const std::vector<int> &HxIndices, const std::vector<int> &HyIndices,
         const std::vector<int> &HzIndices, const std::vector<double> &Tipper,
-        const std::vector<double> &Errors, const std::vector<std::string> &Names)
+        const std::vector<double> &Errors, const std::vector<std::string> &Names,
+        const std::vector<double> &RotationAngles)
       {
         const size_t nfreqs = Frequencies.size();
         const size_t nstats = HxIndices.size() / nfreqs;
@@ -405,6 +411,8 @@ namespace jif3D
         WriteVec(DataFile, MeasPosXName, StatXCoord, MeasNumDim, "m");
         WriteVec(DataFile, MeasPosYName, StatYCoord, MeasNumDim, "m");
         WriteVec(DataFile, MeasPosZName, StatZCoord, MeasNumDim, "m");
+
+        WriteVec(DataFile, RotationAngleName, RotationAngles, StatNumDim, " ");
 
         //write out the frequencies that we store
         NcDim FreqDim = DataFile.addDim(FreqDimName, Frequencies.size());
@@ -448,7 +456,8 @@ namespace jif3D
         std::vector<double> &StatYCoord, std::vector<double> &StatZCoord,
         std::vector<int> &HxIndices, std::vector<int> &HyIndices,
         std::vector<int> &HzIndices, std::vector<double> &Tipper,
-        std::vector<double> &Error, std::vector<std::string> &Names)
+        std::vector<double> &Error, std::vector<std::string> &Names,
+        std::vector<double> &RotationAngles)
       {
         //open the netcdf file readonly
         NcFile DataFile(filename, NcFile::read);
@@ -458,6 +467,8 @@ namespace jif3D
         ReadVec(DataFile, MeasPosZName, StatZCoord);
         //read in the frequencies
         ReadVec(DataFile, FreqDimName, Frequencies);
+
+        ReadVec(DataFile, RotationAngleName, RotationAngles);
         //for each frequency and each station we have 4 tipper values
         //currently it is not possible to have a different number of frequencies
         //at each site
@@ -965,8 +976,8 @@ namespace jif3D
         //swallow up the first 7 lines with header information
         for (size_t i = 0; i < 7; ++i)
           {
-          infile.getline(dummy, 1024);
-          std::cout << dummy << "\n";
+            infile.getline(dummy, 1024);
+            std::cout << dummy << "\n";
           }
         //ignore the fist character (>) of the last header line
         string line;
@@ -974,8 +985,7 @@ namespace jif3D
         typedef std::vector<std::string> split_vector_type;
         boost::algorithm::trim(line);
         split_vector_type SplitVec; // #2: Search for tokens
-        split(SplitVec, line, boost::is_any_of("> "),
-            boost::token_compress_on);
+        split(SplitVec, line, boost::is_any_of("> "), boost::token_compress_on);
         size_t nfreq = 0;
         size_t nsites = 0;
         jif3D::convert(SplitVec[1], nfreq);
@@ -1262,7 +1272,7 @@ namespace jif3D
 
     void ReadImpComp(std::ifstream &infile, const std::string &Name, const int baseindex,
         const std::map<double, int, std::greater<double> > &FreqMap,
-        std::vector<double> &Imp, std::vector<double> &Err)
+        std::vector<double> &Imp, std::vector<double> &Err, std::vector<double> &Weight)
       {
         jif3D::FindToken(infile, Name);
         int nfreq;
@@ -1282,13 +1292,16 @@ namespace jif3D
             Imp.at(freqindex * 8 + baseindex + 1) = NumVec.at(2);
             Err.at(freqindex * 8 + baseindex) = NumVec.at(3);
             Err.at(freqindex * 8 + baseindex + 1) = NumVec.at(3);
+            Weight.at(freqindex * 8 + baseindex) = NumVec.at(4);
+            Weight.at(freqindex * 8 + baseindex + 1) = NumVec.at(4);
           }
 
       }
 
     J3DEXPORT void ReadImpedancesFromJ(const std::string &filename,
         std::vector<double> &Frequencies, double &StatXCoord, double &StatYCoord,
-        double &StatZCoord, std::vector<double> &Imp, std::vector<double> &Err)
+        double &StatZCoord, std::vector<double> &Imp, std::vector<double> &Err,
+        std::vector<double> &Weight, double &RotAngle)
       {
         std::ifstream infile;
         infile.open(filename.c_str());
@@ -1303,9 +1316,22 @@ namespace jif3D
         split(SplitVec, line, boost::is_any_of("="), boost::token_compress_on);
         StatYCoord = std::stod(SplitVec.at(1));
         infile.seekg(0);
+        //we work with z-positive down, so we have to take the negative of elevation
         line = jif3D::FindToken(infile, ">ELEVATION");
         split(SplitVec, line, boost::is_any_of("="), boost::token_compress_on);
-        StatZCoord = std::stod(SplitVec.at(1));
+        StatZCoord = -1.0 * std::stod(SplitVec.at(1));
+
+        line = jif3D::FindToken(infile, ">AZIMUTH");
+        split(SplitVec, line, boost::is_any_of("="), boost::token_compress_on);
+        RotAngle = std::stod(SplitVec.at(1));
+
+        if (std::abs(RotAngle) > 360.0)
+          {
+            std::cout << "Rotation angle outside +/- 360 degree range, setting to 0! "
+                << std::endl;
+            RotAngle = 0.0;
+          }
+
         bool HasZ = false;
         bool HasRhoPhi = false;
         try
@@ -1338,6 +1364,8 @@ namespace jif3D
 
             Imp.resize(nfreq * 8);
             Err.resize(nfreq * 8);
+            Weight.resize(nfreq * 8);
+
             for (size_t i = 0; i < nfreq; ++i)
               {
                 NumVec = ExtractNumbers(infile);
@@ -1355,10 +1383,10 @@ namespace jif3D
                 [](auto it)
                   { return it.first;});
             //now we actually read ZXX
-            ReadImpComp(infile, "ZXX", 0, FreqMap, Imp, Err);
-            ReadImpComp(infile, "ZXY", 2, FreqMap, Imp, Err);
-            ReadImpComp(infile, "ZYX", 4, FreqMap, Imp, Err);
-            ReadImpComp(infile, "ZYY", 6, FreqMap, Imp, Err);
+            ReadImpComp(infile, "ZXX", 0, FreqMap, Imp, Err, Weight);
+            ReadImpComp(infile, "ZXY", 2, FreqMap, Imp, Err, Weight);
+            ReadImpComp(infile, "ZYX", 4, FreqMap, Imp, Err, Weight);
+            ReadImpComp(infile, "ZYY", 6, FreqMap, Imp, Err, Weight);
             //std::transform(Imp.begin(), Imp.end(), Imp.begin(), [convfactor](double val)
             //  { return val/convfactor;});
             //std::transform(Err.begin(), Err.end(), Err.begin(), [convfactor](double val)
@@ -1383,7 +1411,8 @@ namespace jif3D
 
     J3DEXPORT void ReadTipperFromJ(const std::string &filename,
         std::vector<double> &Frequencies, double &StatXCoord, double &StatYCoord,
-        double &StatZCoord, std::vector<double> &Tipper, std::vector<double> &TippErr)
+        double &StatZCoord, std::vector<double> &Tipper, std::vector<double> &TippErr,
+        double &RotAngle)
       {
         std::ifstream infile;
         infile.open(filename.c_str());
@@ -1398,9 +1427,22 @@ namespace jif3D
         split(SplitVec, line, boost::is_any_of("="), boost::token_compress_on);
         StatYCoord = std::stod(SplitVec.at(1));
         infile.seekg(0);
+        //we work with z-positive down, so we have to take the negative of elevation
         line = jif3D::FindToken(infile, ">ELEVATION");
         split(SplitVec, line, boost::is_any_of("="), boost::token_compress_on);
-        StatZCoord = std::stod(SplitVec.at(1));
+        StatZCoord = -1.0 * std::stod(SplitVec.at(1));
+
+        line = jif3D::FindToken(infile, ">AZIMUTH");
+        split(SplitVec, line, boost::is_any_of("="), boost::token_compress_on);
+        RotAngle = std::stod(SplitVec.at(1));
+
+        if (std::abs(RotAngle) > 360.0)
+          {
+            std::cout << "Rotation angle outside +/- 360 degree range, setting to 0! "
+                << std::endl;
+            RotAngle = 0.0;
+          }
+
         bool HasT = false;
         double dummy;
         try
