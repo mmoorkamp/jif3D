@@ -46,7 +46,7 @@ namespace jif3D
 
       }
 
-    ThreeDGravityModel& ThreeDGravityModel::operator=(const ThreeDGravityModel& source)
+    ThreeDGravityModel& ThreeDGravityModel::operator=(const ThreeDGravityModel &source)
       {
         if (&source != this)
           {
@@ -63,7 +63,7 @@ namespace jif3D
         return *this;
       }
 
-    ThreeDGravityModel& ThreeDGravityModel::operator=(const ThreeDModelBase& source)
+    ThreeDGravityModel& ThreeDGravityModel::operator=(const ThreeDModelBase &source)
       {
         if (&source != this)
           {
@@ -111,12 +111,15 @@ namespace jif3D
         NcVar DensVar = DataFile.getVar(DensityName);
         std::string unitstring;
         DensVar.getAtt("units").getValues(unitstring);
+        double factor = 1.0;
         if (unitstring.compare(OldDensityUnit) == 0)
           {
+            factor = 1000.0;
             ReadDataFromNetCDF(DataFile, DensityName, OldDensityUnit);
-            std::transform(SetData().origin(), SetData().origin() + SetData().num_elements(),
-                SetData().origin(), [](double val)
-                  { return 1000.0 * val;});
+            std::transform(SetData().origin(),
+                SetData().origin() + SetData().num_elements(), SetData().origin(),
+                [factor](double val)
+                  { return factor * val;});
           }
         else
           {
@@ -144,6 +147,9 @@ namespace jif3D
                 jif3D::cxxport::get_legacy_ncvar(bgThickVar, bg_thicknesses.data(),
                     nbglayers);
 
+                std::transform(bg_densities.begin(), bg_densities.end(),
+                    bg_densities.begin(), [factor](double val)
+                      { return factor * val;});
 //              bgDensVar.getVar(&bg_densities[0], nbglayers);
 //              bgThickVar.getVar(&bg_thicknesses[0], nbglayers);
               }
