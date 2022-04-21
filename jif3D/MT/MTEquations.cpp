@@ -88,7 +88,7 @@ namespace jif3D
      * @param Zyx Zyx element of the impedance tensor
      * @param Zyy Zyy element of the impedance tensor
      */
-    void RotateImpedance(const double angle, std::complex<double> & Zxx,
+    void RotateImpedance(const double angle, std::complex<double> &Zxx,
         std::complex<double> &Zxy, std::complex<double> &Zyx, std::complex<double> &Zyy)
       {
         //we need the old impedance elements in all 4 equations
@@ -121,7 +121,8 @@ namespace jif3D
      * @param Impedance The vector with the impedance values in the form Re(Zxx), Im(Zxx), Re(Zxy), ...
      * @return The impedances in the rotated coordinate system.
      */
-    std::vector<double> RotateImpedanceVector(const double angle, const std::vector<double> &Impedance)
+    std::vector<double> RotateImpedanceVector(const double angle,
+        const std::vector<double> &Impedance)
       {
         std::vector<double> Result(Impedance.size());
         const size_t nelem = 8;
@@ -134,10 +135,14 @@ namespace jif3D
         const size_t ntensors = Impedance.size() / nelem;
         for (size_t i = 0; i < ntensors; ++i)
           {
-            std::complex<double> Zxx(Impedance.at(i * nelem), Impedance.at(i * nelem + 1));
-            std::complex<double> Zxy(Impedance.at(i * nelem + 2), Impedance.at(i * nelem + 3));
-            std::complex<double> Zyx(Impedance.at(i * nelem + 4), Impedance.at(i * nelem + 5));
-            std::complex<double> Zyy(Impedance.at(i * nelem + 6), Impedance.at(i * nelem + 7));
+            std::complex<double> Zxx(Impedance.at(i * nelem),
+                Impedance.at(i * nelem + 1));
+            std::complex<double> Zxy(Impedance.at(i * nelem + 2),
+                Impedance.at(i * nelem + 3));
+            std::complex<double> Zyx(Impedance.at(i * nelem + 4),
+                Impedance.at(i * nelem + 5));
+            std::complex<double> Zyy(Impedance.at(i * nelem + 6),
+                Impedance.at(i * nelem + 7));
             RotateImpedance(angle, Zxx, Zxy, Zyx, Zyy);
             Result.at(i * nelem) = Zxx.real();
             Result.at(i * nelem + 1) = Zxx.imag();
@@ -151,4 +156,44 @@ namespace jif3D
         return Result;
       }
 
+    J3DEXPORT void RotateTipper(const double angle, std::complex<double> &Tx,
+        std::complex<double> &Ty)
+      {
+        //we create some temporary variables
+        std::complex<double> newx, newy;
+        //do the rotation R T
+        newx = Tx * cos(angle) + Ty * sin(angle);
+        newy = -Tx * sin(angle) + Ty * cos(angle);
+
+        //assign temporary values to tipper elements
+        Tx = newx;
+        Ty = newy;
+
+      }
+    //! Rotate several impedance values stored in a vector as we use for inversion
+    J3DEXPORT std::vector<double> RotateTipperVector(const double angle,
+        const std::vector<double> &Tipper)
+      {
+        std::vector<double> Result(Tipper.size());
+        const size_t nelem = 4;
+        if (Tipper.size() % nelem != 0)
+          {
+            throw jif3D::FatalException(
+                "Size of tipper vector: " + stringify(Tipper.size())
+                    + " is not a multiple of 4!", __FILE__, __LINE__);
+          }
+        const size_t ntensors = Tipper.size() / nelem;
+        for (size_t i = 0; i < ntensors; ++i)
+          {
+            std::complex<double> Tx(Tipper.at(i * nelem), Tipper.at(i * nelem + 1));
+            std::complex<double> Ty(Tipper.at(i * nelem + 2), Tipper.at(i * nelem + 3));
+
+            RotateTipper(angle, Tx, Ty);
+            Result.at(i * nelem) = Tx.real();
+            Result.at(i * nelem + 1) = Tx.imag();
+            Result.at(i * nelem + 2) = Ty.real();
+            Result.at(i * nelem + 3) = Ty.imag();
+          }
+        return Result;
+      }
   }

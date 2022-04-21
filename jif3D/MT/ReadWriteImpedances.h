@@ -66,7 +66,8 @@ namespace jif3D
         const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
         const std::vector<double> &Impedances, const std::vector<double> &Errors,
-        const std::vector<double> &Distortion, const std::vector<std::string> &Names);
+        const std::vector<double> &Distortion, const std::vector<std::string> &Names,
+        const std::vector<double> &RotationAngles);
 
     //! Read magnetotelluric impedances from a netcdf file
     /*! Read MT impedances for several stations from a netcdf file.
@@ -86,7 +87,8 @@ namespace jif3D
         std::vector<double> &Frequencies, std::vector<double> &StatXCoord,
         std::vector<double> &StatYCoord, std::vector<double> &StatZCoord,
         std::vector<double> &Impedances, std::vector<double> &ImpError,
-        std::vector<double> &Distortion, std::vector<std::string> &Names);
+        std::vector<double> &Distortion, std::vector<std::string> &Names,
+        std::vector<double> &RotationAngles);
 
     //! Write tipper to a netcdf file
     /*! We can save tipper for several stations in a netcdf file for storage
@@ -107,7 +109,8 @@ namespace jif3D
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
         const std::vector<int> &HxIndices, const std::vector<int> &HyIndices,
         const std::vector<int> &HzIndices, const std::vector<double> &Tipper,
-        const std::vector<double> &Errors, const std::vector<std::string> &Names);
+        const std::vector<double> &Errors, const std::vector<std::string> &Names,
+        const std::vector<double> &RotationAngles);
 
     //! Read magnetotelluric tipper from a netcdf file
     /*! Read MT tipper for several stations from a netcdf file.
@@ -128,7 +131,8 @@ namespace jif3D
         std::vector<double> &StatYCoord, std::vector<double> &StatZCoord,
         std::vector<int> &HxIndices, std::vector<int> &HyIndices,
         std::vector<int> &HzIndices, std::vector<double> &Tipper,
-        std::vector<double> &Error, std::vector<std::string> &Names);
+        std::vector<double> &Error, std::vector<std::string> &Names,
+        std::vector<double> &RotationAngles);
 
     //! A very basic routine to read impedances at a single site from a .mtt file in the format used by University of Goettingen
     /*! A very basic routine to read impedances at a single site from a .mtt file in the
@@ -263,15 +267,17 @@ namespace jif3D
      *        all impedances for one frequency and all stations form a contiguous block, the frequencies vary slowest.
      * @param Err Impedance errors with the same number of Elements with Impedances.
      *        As we only have one error estimate per element we write only the components corresponding to the real parts.
+     *
+     * @param Additional weighting information that can be used to adjust errors
      * @param Tipper The tipper for the same frequencies as the impedances, convention Txr,Txi,Tyr,Tyi,... with same convention as impedances, i.e. frequency varies slowest
      * @param TippErr The error for the tipper
      */
     J3DEXPORT void ReadImpedancesFromJ(const std::string &filename,
         std::vector<double> &Frequencies, double &StatXCoord, double &StatYCoord,
-        double &StatZCoord, std::vector<double> &Imp, std::vector<double> &Err);
+        double &StatZCoord, std::vector<double> &Imp, std::vector<double> &Err, std::vector<double> &Weight,  double &RotAngle);
     J3DEXPORT void ReadTipperFromJ(const std::string &filename,
         std::vector<double> &Frequencies, double &StatXCoord, double &StatYCoord,
-        double &StatZCoord, std::vector<double> &Tipper, std::vector<double> &TippErr);
+        double &StatZCoord, std::vector<double> &Tipper, std::vector<double> &TippErr, double &RotAngle);
     void WriteImpedancesToJ(const std::string &filenamebase,
         const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
