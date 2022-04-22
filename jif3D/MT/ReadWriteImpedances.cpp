@@ -977,7 +977,7 @@ namespace jif3D
         for (size_t i = 0; i < 7; ++i)
           {
             infile.getline(dummy, 1024);
-            std::cout << dummy << "\n";
+            //std::cout << dummy << "\n";
           }
         //ignore the fist character (>) of the last header line
         string line;
@@ -993,14 +993,7 @@ namespace jif3D
         //infile >> nfreq >> nsites;
         //swallow up the rest of the line
         //infile.getline(dummy, 1024);
-        Imp.resize(nfreq * nsites * 8);
-        std::fill(Imp.begin(), Imp.end(), 1.0);
-        Err.resize(Imp.size());
-        std::fill(Err.begin(), Err.end(), 100.0);
-        Frequencies.resize(nfreq);
-        StatXCoord.resize(nsites);
-        StatYCoord.resize(nsites);
-        StatZCoord.resize(nsites);
+
         bool CanConvert = true;
 
         std::vector<double> AllFreq, AllX, AllY, AllZ, AllImpReal, AllImpImag, AllErr;
@@ -1048,8 +1041,32 @@ namespace jif3D
             Frequencies.end());
         std::vector<std::string> Comps =
           { "ZXX", "ZXY", "ZYX", "ZYY" };
+        if (nfreq != Frequencies.size())
+          {
+            std::cout << "Number of frequencies in header: " << nfreq
+                << " does not match found number of unique frequencies: "
+                << Frequencies.size() << "\n";
+            std::cout << "Using number of found frequencies! " << std::endl;
+            nfreq = Frequencies.size();
+          }
+        if (nsites != UniqStats.size())
+          {
+            std::cout << "Number of stations in header: " << nsites
+                << " does not match found number of unique sites: " << UniqStats.size()
+                << "\n";
+            std::cout << "Using number of found sites! " << std::endl;
+            nsites = UniqStats.size();
+          }
         size_t ndata = AllFreq.size();
         StatNames.resize(nsites);
+        Imp.resize(nfreq * nsites * 8);
+        std::fill(Imp.begin(), Imp.end(), 1.0);
+        Err.resize(Imp.size());
+        std::fill(Err.begin(), Err.end(), 100.0);
+        Frequencies.resize(nfreq);
+        StatXCoord.resize(nsites);
+        StatYCoord.resize(nsites);
+        StatZCoord.resize(nsites);
         for (size_t i = 0; i < ndata; ++i)
           {
             auto FreqIter = std::find(Frequencies.begin(), Frequencies.end(), AllFreq[i]);
