@@ -47,8 +47,9 @@ int main(int argc, char *argv[])
     double rangle = dangle / 180.0 * boost::math::constants::pi<double>();
     std::vector<double> RotImp = jif3D::RotateImpedanceVector(rangle, Data.GetData());
     const size_t nelem = 8;
-    const size_t ntensor = Data.GetData().size() / nelem;
-    jif3D::comp_mat InvCov(ntensor, ntensor);
+    const size_t ndata = Data.GetData().size();
+    const size_t ntensor =  ndata / nelem;
+    jif3D::comp_mat InvCov(ndata, ndata);
     std::vector<double> Errors(Data.GetErrors());
     for (size_t i = 0; i < ntensor; ++i)
       {
@@ -102,7 +103,7 @@ int main(int argc, char *argv[])
       }
 
     jif3D::WriteSparseMatrixToNetcdf(ncfilename + "_invcov.nc", InvCov, "InvCovariance");
-    Data.SetMeasurementPoints(StatX, StatY, Data.GetMeasPosZ());
+    //Data.SetMeasurementPoints(StatX, StatY, Data.GetMeasPosZ());
     Data.SetDataAndErrors(RotImp, Errors);
     Data.WriteNetCDF(ncfilename + "_rot" + jif3D::stringify(dangle) + ".nc");
     Data.WriteMeasurementPoints(ncfilename + "_rot.statpos.vtk");

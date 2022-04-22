@@ -25,8 +25,6 @@ exe plotgrav : plotgrav.cpp  joint ;
 exe text2grav : text2grav.cpp  joint ;
 exe qqfit : qqfit.cpp  ../MT//mt common ;
 exe qqtip : qqtip.cpp  ../MT//mt common ;
-exe avgmt : avgmt.cpp  ../MT//mt common ;
-exe mtshift : mtshift.cpp  ../MT//mt common ;
 
 exe smoothmodel : smoothmodel.cpp  ../MT//mt joint ;
 exe parrun : parrun.cpp ..//boost_filesystem ..//boost_system ;

@@ -31,7 +31,9 @@ int main()
         Data1.GetMeasPosX().size() + Data2.GetMeasPosX().size()), StatY(
         Data1.GetMeasPosY().size() + Data2.GetMeasPosY().size()), StatZ(
         Data1.GetMeasPosZ().size() + Data2.GetMeasPosZ().size()), C(
-        Data1.GetDistortion().size() + Data2.GetDistortion().size());
+        Data1.GetDistortion().size() + Data2.GetDistortion().size()),
+        Angles(
+                Data1.GetMeasPosX().size() + Data2.GetMeasPosX().size());
 
     std::copy(Data1.GetMeasPosX().begin(), Data1.GetMeasPosX().end(), StatX.begin());
     std::copy(Data2.GetMeasPosX().begin(), Data2.GetMeasPosX().end(),
@@ -44,6 +46,10 @@ int main()
     std::copy(Data1.GetMeasPosZ().begin(), Data1.GetMeasPosZ().end(), StatZ.begin());
     std::copy(Data2.GetMeasPosZ().begin(), Data2.GetMeasPosZ().end(),
         StatZ.begin() + Data1.GetMeasPosZ().size());
+
+    std::copy(Data1.GetRotAngles().begin(), Data1.GetRotAngles().end(), Angles.begin());
+        std::copy(Data2.GetRotAngles().begin(), Data2.GetRotAngles().end(),
+            Angles.begin() + Data1.GetRotAngles().size());
 
     std::copy(Data1.GetDistortion().begin(), Data1.GetDistortion().end(), C.begin());
     std::copy(Data2.GetDistortion().begin(), Data2.GetDistortion().end(),
@@ -67,5 +73,5 @@ int main()
       }
     std::vector<std::string> Names;
     jif3D::WriteImpedancesToNetCDF(ncfilename1 + ".merged.nc", Frequencies, StatX, StatY,
-        StatZ, Impedances, Errors, C, Names);
+        StatZ, Impedances, Errors, C, Names, Angles);
   }
