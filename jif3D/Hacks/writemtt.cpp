@@ -19,12 +19,12 @@ int main()
   {
     std::string ncfilename = jif3D::AskFilename("Name of netcdf file: ");
 
-    std::vector<double> Impedances, Errors;
+    std::vector<double> Impedances, Errors, Angles;
     std::vector<double> Frequencies, StatX, StatY, StatZ, C;
     std::vector<std::string> Names;
 
     jif3D::ReadImpedancesFromNetCDF(ncfilename, Frequencies, StatX, StatY, StatZ,
-        Impedances, Errors, C, Names);
+        Impedances, Errors, C, Names, Angles);
     jif3D::WriteImpedancesToMtt(ncfilename, Frequencies, Impedances, Errors);
 
     jif3D::WriteImpedancesToJ(ncfilename, Frequencies, StatX, StatY, StatZ, Impedances,

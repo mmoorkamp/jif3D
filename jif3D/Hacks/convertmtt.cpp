@@ -17,6 +17,7 @@
 #include "../MT/ReadWriteImpedances.h"
 #include "../MT/MTData.h"
 #include "../MT/TipperData.h"
+#include "../MT/MTEquations.h"
 
 using namespace GeographicLib;
 namespace po = boost::program_options;
@@ -95,34 +96,34 @@ void InterpolateError(const std::vector<double> &xvalues,
     const size_t ninter = InterpX.size();
     size_t currindex = 0;
     const double largeerr = 1e10;
-    std::fill(InterpY.begin(), InterpY.end(), largeerr);
 
     for (size_t i = 0; i < ninter; ++i)
       {
+        double error = largeerr;
         while (xvalues[currindex] >= InterpX[i] && currindex < xvalues.size())
           ++currindex;
 
         if (currindex == 0 && InterpX[i] == xvalues[currindex])
           {
-            InterpY.push_back(yvalues[currindex]);
+            error = yvalues[currindex];
           }
         else
           {
             if (currindex == 0 && InterpX[i] != xvalues[currindex])
               {
-                InterpY.push_back(largeerr);
+                error = largeerr;
               }
             else
               {
                 if (currindex == xvalues.size() && InterpX[i] != xvalues[currindex - 1])
                   {
-                    InterpY.push_back(largeerr);
+                    error = largeerr;
                   }
                 else
                   {
                     if (InterpX[i] == xvalues[currindex - 1])
                       {
-                        InterpY.push_back(yvalues[currindex - 1]);
+                        error = yvalues[currindex - 1];
                       }
                     else
                       {
@@ -135,11 +136,11 @@ void InterpolateError(const std::vector<double> &xvalues,
                           {
                             std::cout << " Encountered nan, setting large error "
                                 << std::endl;
-                            InterpY.push_back(largeerr);
+                            error = largeerr;
                           }
                         else
                           {
-                            InterpY.push_back(curry);
+                            error = curry;
                           }
 
                       }
@@ -147,11 +148,12 @@ void InterpolateError(const std::vector<double> &xvalues,
               }
           }
 
-        if (InterpY.back() == 0.0)
+        if (error <= 0.0)
           {
             std::cerr << "Zero error" << std::endl;
-            InterpY.back() = largeerr;
+            error = largeerr;
           }
+        InterpY.push_back(error);
       }
 
   }
@@ -175,6 +177,9 @@ int main(int argc, char *argv[])
     int utmzone = -1;
     double minfreq, maxfreq;
     double depth;
+    double weightlevel1, weightlevel2;
+    bool rotate;
+    bool rotangle;
     po::options_description desc("General options");
     desc.add_options()("help", "produce help message")("distfile",
         po::value(&DistFilename),
@@ -185,9 +190,16 @@ int main(int argc, char *argv[])
         "minfreq", po::value(&minfreq)->default_value(-1),
         "Minimum frequency kept for interpolation")("maxfreq",
         po::value(&maxfreq)->default_value(1e32), "Max frequency kept for interpolation")(
-        "depth", po::value(&depth)->default_value(1e5),
-        "Set depth (negative of elevation) to a fixed value. "
-            "If >= 100,000 keep elevations from input files");
+        "depth", po::value(&depth)->default_value(0.0),
+        "Set depth in m (negative of elevation) to a fixed value. "
+            "If >= 100,000 keep elevations from input files")("weightlevel1",
+        po::value(&weightlevel1)->default_value(0.3),
+        "The threshold for the weight in the j-file, error will be multiplied by inverse")(
+        "weightlevel2", po::value(&weightlevel2)->default_value(0.2),
+        "The threshold for the weight in the j-file, error will be set extremely high")(
+        "rotate", po::value(&rotate)->default_value(true),
+        "Rotate all data to a consistent angle")("rotangle",
+        po::value(&rotangle)->default_value(0.0), "The angle to rotate to");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -241,7 +253,8 @@ int main(int argc, char *argv[])
     if (nstats > 0)
       {
         std::vector<double> MasterFreqs;
-        std::vector<double> StatXCoord(nstats), StatYCoord(nstats), StatZCoord(nstats);
+        std::vector<double> StatXCoord(nstats), StatYCoord(nstats), StatZCoord(nstats),
+            Angles(nstats);
         std::vector<std::string> Names;
         StationFile.open(filename.c_str());
         std::string StationName;
@@ -254,13 +267,15 @@ int main(int argc, char *argv[])
         while (StationFile.good() && stationindex < nstats)
           {
             std::vector<double> CurrFrequencies, TipCurrFrequencies;
-            std::vector<double> CurrImpedances, CurrErrors, CurrTip, CurrTipErr;
-            StationFile >> XC >> YC >> ZC >> StationName;
+            std::vector<double> CurrImpedances, CurrErrors, CurrTip, CurrTipErr,
+                CurrWeight;
+            double CurrAngle;
+            StationFile >> StationName;
 
             if (StationFile.good())
               {
                 std::cout << stationindex << " " << StationName << " "
-                    << CurrFrequencies.size() << std::endl;
+                    << CurrFrequencies.size() << " " << CurrAngle << std::endl;
                 Names.push_back(StationName);
                 std::string extension = jif3D::GetFileExtension(StationName);
                 if (extension == ".mtt")
@@ -271,13 +286,41 @@ int main(int argc, char *argv[])
                 else
                   {
                     jif3D::ReadImpedancesFromJ(StationName, CurrFrequencies, XC, YC, ZC,
-                        CurrImpedances, CurrErrors);
+                        CurrImpedances, CurrErrors, CurrWeight, CurrAngle);
+                    for (size_t i = 0; i < CurrErrors.size(); ++i)
+                      {
+                        if (CurrWeight.at(i) > 0.0)
+                          {
+                            if (CurrWeight.at(i) < weightlevel1)
+                              {
+                                std::cout << " Reweighting level 1: " << CurrWeight.at(i)
+                                    << std::endl;
+                                CurrErrors.at(i) /= CurrWeight.at(i);
+                              }
+                            if (CurrWeight.at(i) < weightlevel2)
+                              {
+                                std::cout << " Reweighting level 2 " << CurrWeight.at(i)
+                                    << std::endl;
+                                CurrErrors.at(i) *= 1e6;
+                              }
+                          }
+                      }
                     jif3D::ReadTipperFromJ(StationName, TipCurrFrequencies, XC, YC, ZC,
-                        CurrTip, CurrTipErr);
+                        CurrTip, CurrTipErr, CurrAngle);
+                  }
+                if (rotate)
+                  {
+                    double rangle = rotangle - CurrAngle;
+                    std::cout << "Rotating by " << rangle << "  degrees." << std::endl;
+                    rangle = rangle / 180.0 * boost::math::constants::pi<double>();
+                    CurrImpedances = jif3D::RotateImpedanceVector(rangle, CurrImpedances);
+                    CurrTip = jif3D::RotateTipperVector(rangle, CurrTip);
+                    CurrAngle = rotangle;
                   }
                 StatXCoord.at(stationindex) = XC;
                 StatYCoord.at(stationindex) = YC;
                 StatZCoord.at(stationindex) = ZC;
+                Angles.at(stationindex) = CurrAngle;
                 std::copy(CurrFrequencies.begin(), CurrFrequencies.end(),
                     std::back_inserter(MasterFreqs));
                 AllFreqs.push_back(CurrFrequencies);
@@ -463,11 +506,13 @@ int main(int argc, char *argv[])
           {
             std::fill(StatZCoord.begin(), StatZCoord.end(), depth);
           }
+
         std::string outfilename = jif3D::AskFilename("Output file: ", false);
         jif3D::MTData MTData;
         MTData.SetMeasurementPoints(StatXCoord, StatYCoord, StatZCoord);
         MTData.SetDataAndErrors(Impedances, Errors);
         MTData.SetFrequencies(MasterFreqs);
+        MTData.SetRotAngles(Angles);
         MTData.SetNames(Names);
         MTData.CompleteObject();
         MTData.WriteNetCDF(outfilename);

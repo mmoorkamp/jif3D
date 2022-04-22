@@ -327,11 +327,12 @@ int main(int argc, char *argv[])
     std::vector<double> C =
       { 1, 0, 0, 1 };
     std::vector<std::string> Names;
+    std::vector<double> Angles(Coord.size(),0.0);
     jif3D::WriteImpedancesToNetCDF(modelfilename + ".inv_imp.nc", Data.GetFrequencies(),
-        Coord, Coord, Coord, FullImp, FullErr, C, Names);
+        Coord, Coord, Coord, FullImp, FullErr, C, Names, Angles);
 
     jif3D::WriteImpedancesToNetCDF(modelfilename + ".avg_imp.nc", Data.GetFrequencies(),
-        Coord, Coord, Coord, Averaged, AvgErr, C, Names);
+        Coord, Coord, Coord, Averaged, AvgErr, C, Names, Angles);
 
     //and write out the data and model
     //here we have to distinguish again between scalar and ftg data
