@@ -13,11 +13,9 @@
 
 #include <iostream>
 #include <string>
-#include "ThreeDMagneticModel.h"
 #include "ReadWriteMagneticData.h"
 #include "MagneticTransforms.h"
 #include "OMPMagneticImp.h"
-#include "MagneticData.h"
 #include "../GravMag/MinMemGravMagCalculator.h"
 #include "../GravMag/ThreeDGravMagImplementation.h"
 #include "../ModelBase/VTKTools.h"
@@ -25,6 +23,9 @@
 #include "../Global/Noise.h"
 #include <boost/cast.hpp>
 #include <boost/program_options.hpp>
+
+#include "ThreeDSusceptibilityModel.h"
+#include "TotalFieldMagneticData.h"
 
 using namespace std;
 namespace po = boost::program_options;
@@ -44,8 +45,8 @@ int main(int argc, char *argv[])
         return 1;
       }
 
-    jif3D::ThreeDMagneticModel MagModel;
-    jif3D::MagneticData Data;
+    jif3D::ThreeDSusceptibilityModel MagModel;
+    jif3D::TotalFieldMagneticData Data;
     double minx, miny, maxx, maxy, deltax, deltay, z;
     double inclination, declination, fieldstrength;
     //ask for the measurement grid specifications
@@ -87,8 +88,8 @@ int main(int argc, char *argv[])
 
     MagModel.ReadNetCDF(ModelFilename);
 
-    typedef typename jif3D::MinMemGravMagCalculator<jif3D::MagneticData> CalculatorType;
-    boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::MagneticData> > Implementation(
+    typedef typename jif3D::MinMemGravMagCalculator<jif3D::TotalFieldMagneticData> CalculatorType;
+    boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::TotalFieldMagneticData> > Implementation(
         new jif3D::OMPMagneticImp(inclination, declination, fieldstrength));
 
     boost::shared_ptr<CalculatorType> Calculator(new CalculatorType(Implementation));

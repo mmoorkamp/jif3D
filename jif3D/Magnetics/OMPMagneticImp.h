@@ -11,35 +11,35 @@
 #include "../Global/Serialization.h"
 #include "../Global/Jif3DGlobal.h"
 #include "../GravMag/ThreeDGravMagImplementation.h"
+#include "ThreeDSusceptibilityModel.h"
 
-#include "ThreeDMagneticModel.h"
-#include "MagneticData.h"
+#include "TotalFieldMagneticData.h"
 
 namespace jif3D
   {
 
-    class J3DEXPORT OMPMagneticImp: public jif3D::ThreeDGravMagImplementation<MagneticData>
+    class J3DEXPORT OMPMagneticImp: public jif3D::ThreeDGravMagImplementation<
+        TotalFieldMagneticData>
       {
     private:
       double Inclination;
       double Declination;
       double FieldStrength;
       virtual rvec CalcBackground(const size_t measindex, const double xwidth,
-          const double ywidth, const double zwidth, const ThreeDMagneticModel &Model,
-          const MagneticData &Data,
-          rmat &Sensitivities) override;
+          const double ywidth, const double zwidth, const ThreeDSusceptibilityModel &Model,
+          const TotalFieldMagneticData &Data, rmat &Sensitivities) override;
       rvec CalcMagneticBackground(const size_t measindex, const double xwidth,
-          const double ywidth, const double zwidth, const ThreeDMagneticModel &Model,
-          const MagneticData &Data, rmat &Sensitivities);
+          const double ywidth, const double zwidth, const ThreeDSusceptibilityModel &Model,
+          const TotalFieldMagneticData &Data, rmat &Sensitivities);
       //! Calculate the response of the gridded part
-      virtual rvec CalcGridded(const size_t measindex, const ThreeDMagneticModel &Model, const MagneticData &Data,
-          rmat &Sensitivities) override;
+      virtual rvec CalcGridded(const size_t measindex, const ThreeDSusceptibilityModel &Model,
+          const TotalFieldMagneticData &Data, rmat &Sensitivities) override;
       //! We have three magnetic field components
       static const size_t ndatapermeas = 3;
       friend class access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
-      void serialize(Archive & ar, const unsigned int version)
+      void serialize(Archive &ar, const unsigned int version)
         {
           ar & base_object<ThreeDGravMagImplementation>(*this);
           ar & Inclination;

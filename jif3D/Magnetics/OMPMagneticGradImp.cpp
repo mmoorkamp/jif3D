@@ -11,7 +11,7 @@
 namespace jif3D
   {
     rvec OMPMagneticGradImp::CalcGridded(const size_t measindex,
-        const ThreeDMagneticModel &Model, const MagneticData &Data,rmat &Sensitivities)
+        const ThreeDSusceptibilityModel &Model, const TotalFieldMagneticData &Data,rmat &Sensitivities)
       {
         //we want to return vertical gradient of z component of magnetic field.
         //firstly, calculate the z magnetic component of the two sensor with vertical distance of 1m.

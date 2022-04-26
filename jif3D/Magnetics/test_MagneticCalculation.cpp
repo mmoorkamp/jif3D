@@ -7,10 +7,10 @@
 
 #include "../GravMag/MinMemGravMagCalculator.h"
 #include "OMPMagneticImp.h"
-#include "MagneticData.h"
 #include "MagneticTransforms.h"
 #include <boost/math/constants/constants.hpp>
 #include <cmath>
+#include "TotalFieldMagneticData.h"
 
 #define BOOST_TEST_MODULE ThreeDGravityModel test
 #define BOOST_TEST_MAIN ...
@@ -39,8 +39,8 @@ BOOST_AUTO_TEST_SUITE( Magnetic_Test_Suite )
         const double measy = 10.0;
         const double measz = -1.0;
 
-        jif3D::ThreeDMagneticModel MagneticTest;
-        jif3D::MagneticData Data;
+        jif3D::ThreeDSusceptibilityModel MagneticTest;
+        jif3D::TotalFieldMagneticData Data;
         //create a model of 10x10x10 cells with 2m length in each dimension
         const size_t ncells = 10;
         const double cellsize = 2.0;
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_SUITE( Magnetic_Test_Suite )
         double inclination = 90 / 180.0 * boost::math::constants::pi<double>();
         double declination = 0.0 / 180.0 * boost::math::constants::pi<double>();
         double fieldstrength = 50000;
-        typedef typename jif3D::MinMemGravMagCalculator<jif3D::MagneticData> CalculatorType;
+        typedef typename jif3D::MinMemGravMagCalculator<jif3D::TotalFieldMagneticData> CalculatorType;
         boost::shared_ptr<jif3D::OMPMagneticImp> Imp(
             new jif3D::OMPMagneticImp(inclination, declination, fieldstrength));
         boost::shared_ptr<CalculatorType> Calculator(new CalculatorType(Imp));
@@ -107,8 +107,8 @@ BOOST_AUTO_TEST_SUITE( Magnetic_Test_Suite )
         const double measy = 10.0;
         const double measz = -1.0;
 
-        jif3D::ThreeDMagneticModel MagneticTest;
-        jif3D::MagneticData Data;
+        jif3D::ThreeDSusceptibilityModel MagneticTest;
+        jif3D::TotalFieldMagneticData Data;
         //create a model of 10x10x10 cells with 2m length in each dimension
         const size_t ncells = 10;
         const double cellsize = 2.0;
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_SUITE( Magnetic_Test_Suite )
         double inclination = 15 / 180.0 * boost::math::constants::pi<double>();
         double declination = 10.0 / 180.0 * boost::math::constants::pi<double>();
         double fieldstrength = 50000;
-        typedef typename jif3D::MinMemGravMagCalculator<jif3D::MagneticData> CalculatorType;
+        typedef typename jif3D::MinMemGravMagCalculator<jif3D::TotalFieldMagneticData> CalculatorType;
         boost::shared_ptr<jif3D::OMPMagneticImp> Imp(
             new jif3D::OMPMagneticImp(inclination, declination, fieldstrength));
         boost::shared_ptr<CalculatorType> Calculator(new CalculatorType(Imp));

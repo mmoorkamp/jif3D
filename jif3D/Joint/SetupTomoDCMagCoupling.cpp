@@ -192,7 +192,7 @@ namespace jif3D
         const jif3D::ThreeDModelBase &ModelGeometry,
         const jif3D::ThreeDSeismicModel &SeisMod,
         const jif3D::ThreeDDCResistivityModel &DCMod,
-        const jif3D::ThreeDMagneticModel &MagMod, jif3D::JointObjective &Objective,
+        const jif3D::ThreeDSusceptibilityModel &MagMod, jif3D::JointObjective &Objective,
         boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart)
       {
         const size_t ngrid = ModelGeometry.GetNModelElements();
@@ -339,7 +339,7 @@ namespace jif3D
         jif3D::rvec &InvModel, const jif3D::ThreeDModelBase &ModelGeometry,
         const jif3D::ThreeDSeismicModel &SeisMod,
         const jif3D::ThreeDDCResistivityModel &DCMod,
-        const jif3D::ThreeDMagneticModel &MagMod, jif3D::JointObjective &Objective,
+        const jif3D::ThreeDSusceptibilityModel &MagMod, jif3D::JointObjective &Objective,
         boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart)
       {
 

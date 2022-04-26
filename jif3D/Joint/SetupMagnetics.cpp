@@ -63,7 +63,7 @@ namespace jif3D
             wantcuda = true;
           }
 
-        jif3D::MagneticData MagData;
+        jif3D::TotalFieldMagneticData MagData;
         double maglambda = 1.0;
 
         //we first ask for the weights for scalar and tensor Magnetics
@@ -107,7 +107,7 @@ namespace jif3D
             //we want to set the path for temporary file storage
             //the factory function cannot perform this, so we
             //have to assemble the calculator object ourselves
-            boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::MagneticData> > Implementation;
+            boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::TotalFieldMagneticData> > Implementation;
             if (wantcuda)
               {
                 throw jif3D::FatalException("No GPU support, yet !", __FILE__, __LINE__);
@@ -115,7 +115,7 @@ namespace jif3D
             else
               {
                 Implementation = boost::shared_ptr<
-                    jif3D::ThreeDGravMagImplementation<jif3D::MagneticData> >(
+                    jif3D::ThreeDGravMagImplementation<jif3D::TotalFieldMagneticData> >(
                     new jif3D::OMPMagneticImp(inclination, declination, fieldstrength));
               }
 #ifdef MAGDISK

@@ -28,8 +28,8 @@ namespace jif3D
    * @return A vector with a 3 components that contains the magnetic field
    */
   rvec OMPMagneticImp::CalcMagneticBackground(const size_t measindex, const double xwidth,
-      const double ywidth, const double zwidth, const ThreeDMagneticModel &Model,
-      const MagneticData &Data, rmat &Sensitivities)
+      const double ywidth, const double zwidth, const ThreeDSusceptibilityModel &Model,
+      const TotalFieldMagneticData &Data, rmat &Sensitivities)
     {
       //make sure we have thicknesses and susceptibilities for all layers
       assert(
@@ -100,8 +100,8 @@ namespace jif3D
     }
 
  rvec OMPMagneticImp::CalcBackground(const size_t measindex, const double xwidth,
-      const double ywidth, const double zwidth, const ThreeDMagneticModel &Model,
-      const MagneticData &Data,
+      const double ywidth, const double zwidth, const ThreeDSusceptibilityModel &Model,
+      const TotalFieldMagneticData &Data,
       rmat &Sensitivities)
     {
 
@@ -110,7 +110,7 @@ namespace jif3D
     }
 
     rvec OMPMagneticImp::CalcGridded(const size_t measindex,
-        const ThreeDMagneticModel &Model, const MagneticData &Data, rmat &Sensitivities)
+        const ThreeDSusceptibilityModel &Model, const TotalFieldMagneticData &Data, rmat &Sensitivities)
       {
         const double BxComp = cos(Inclination) * cos(Declination);
         const double ByComp = cos(Inclination) * sin(Declination);

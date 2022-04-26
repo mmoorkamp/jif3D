@@ -10,10 +10,10 @@
  * The susceptibilities in this file are all identical to the specified value.
  */
 
-#include "ThreeDMagneticModel.h"
 #include <iostream>
 #include <string>
 #include "../Global/FileUtil.h"
+#include "ThreeDSusceptibilityModel.h"
 
 
 using namespace std;
@@ -21,7 +21,7 @@ using namespace std;
 int main()
   {
 
-    jif3D::ThreeDMagneticModel Model;
+    jif3D::ThreeDSusceptibilityModel Model;
     int nx, ny, nz;
     double deltax, deltay, deltaz;
     cout << "Nx: ";
