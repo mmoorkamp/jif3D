@@ -11,30 +11,30 @@
 #include "../Global/Serialization.h"
 #include "../Global/Jif3DGlobal.h"
 #include "../GravMag/ThreeDGravMagImplementation.h"
-#include "ThreeDMagneticModel.h"
-#include "MagneticData.h"
+#include "ThreeDSusceptibilityModel.h"
+#include "TotalFieldMagneticData.h"
 
 namespace jif3D
   {
 
     class J3DEXPORT OMPMagneticGradImp : public jif3D::ThreeDGravMagImplementation<
-        MagneticData>
+    TotalFieldMagneticData>
       {
     private:
       double Inclination;
       double Declination;
       double FieldStrength;
       virtual rvec CalcBackground(const size_t measindex, const double xwidth,
-          const double ywidth, const double zwidth, const ThreeDMagneticModel &Model,
-          const MagneticData &Data,
+          const double ywidth, const double zwidth, const ThreeDSusceptibilityModel &Model,
+          const TotalFieldMagneticData &Data,
           rmat &Sensitivities) override
         {
           rvec returnvector(ndatapermeas, 0.0);
           return returnvector;
         }
       //! Calculate the response of the gridded part
-      virtual rvec CalcGridded(const size_t measindex, const ThreeDMagneticModel &Model,
-          const MagneticData &Data,
+      virtual rvec CalcGridded(const size_t measindex, const ThreeDSusceptibilityModel &Model,
+          const TotalFieldMagneticData &Data,
           rmat &Sensitivities)  override;
       //! We chose vertical gradient of Z magnetic component from three magnetic field components
       static const size_t ndatapermeas = 1;
@@ -43,7 +43,7 @@ namespace jif3D
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version)
         {
-          ar & base_object<ThreeDGravMagImplementation<ThreeDMagneticModel>>(*this);
+          ar & base_object<ThreeDGravMagImplementation<ThreeDSusceptibilityModel>>(*this);
           ar & Inclination;
           ar & Declination;
           ar & FieldStrength;

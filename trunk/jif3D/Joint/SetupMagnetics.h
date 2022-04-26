@@ -13,11 +13,12 @@
 #include "../GravMag/DiskGravMagCalculator.h"
 #include "../GravMag/MinMemGravMagCalculator.h"
 #include "../GravMag/FullSensitivityGravMagCalculator.h"
-#include "../Magnetics/ThreeDMagneticModel.h"
-#include "../Magnetics/MagneticData.h"
 #include "../Inversion/JointObjective.h"
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
+
+#include "../Magnetics/ThreeDSusceptibilityModel.h"
+#include "../Magnetics/TotalFieldMagneticData.h"
 
 namespace jif3D
   {
@@ -34,13 +35,13 @@ namespace jif3D
       {
     public:
 #ifdef MAGDISK
-      typedef typename jif3D::DiskGravMagCalculator<jif3D::MagneticData> MagCalculatorType;
+      typedef typename jif3D::DiskGravMagCalculator<jif3D::TotalFieldMagneticData> MagCalculatorType;
 #endif
 #ifdef MAGMEM
-      typedef typename jif3D::FullSensitivityGravMagCalculator<jif3D::MagneticData> MagCalculatorType;
+      typedef typename jif3D::FullSensitivityGravMagCalculator<jif3D::TotalFieldMagneticData> MagCalculatorType;
 #endif
 #ifdef MAGCALC
-      typedef typename jif3D::MinMemGravMagCalculator<jif3D::MagneticData> MagCalculatorType;
+      typedef typename jif3D::MinMemGravMagCalculator<jif3D::TotalFieldMagneticData> MagCalculatorType;
 #endif
     private:
       double inclination;
@@ -52,7 +53,7 @@ namespace jif3D
       //! The minimum error for the scalar data to assume for construction of the data variance
       double minerr;
       //! Stores the grid for the scalar Magnetics model and the starting model
-      jif3D::ThreeDMagneticModel Model;
+      jif3D::ThreeDSusceptibilityModel Model;
       //! Possible pointer to the scalar Magnetics objective function, gets assigned below depending on user input
       boost::shared_ptr<jif3D::ThreeDModelObjective<MagCalculatorType> > MagObjective;
 
@@ -83,7 +84,7 @@ namespace jif3D
       /*! The model object also contains the measurement positions.
        * @return The model object containing the starting model and measurement positions.
        */
-      const jif3D::ThreeDMagneticModel &GetModel() const
+      const jif3D::ThreeDSusceptibilityModel &GetModel() const
         {
           return Model;
         }

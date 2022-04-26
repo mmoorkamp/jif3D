@@ -11,11 +11,12 @@
 #include "../Global/Jif3DGlobal.h"
 #include "../Inversion/ThreeDModelObjective.h"
 #include "../GravMag/DiskGravMagCalculator.h"
-#include "../Magnetics/ThreeDMagneticModel.h"
-#include "../Magnetics/MagneticData.h"
 #include "../Inversion/JointObjective.h"
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
+
+#include "../Magnetics/ThreeDSusceptibilityModel.h"
+#include "../Magnetics/TotalFieldMagneticData.h"
 
 namespace jif3D
   {
@@ -31,7 +32,7 @@ namespace jif3D
     class J3DEXPORT SetupMagneticGrad
       {
     public:
-      typedef typename jif3D::DiskGravMagCalculator<jif3D::MagneticData> CalculatorType;
+      typedef typename jif3D::DiskGravMagCalculator<jif3D::TotalFieldMagneticData> CalculatorType;
     private:
       double inclination;
       double declination;
@@ -42,7 +43,7 @@ namespace jif3D
       //! The minimum error for the scalar data to assume for construction of the data variance
       double minerr;
       //! Stores the grid for the scalar Magnetics model and the starting model
-      jif3D::ThreeDMagneticModel Model;
+      jif3D::ThreeDSusceptibilityModel Model;
       //! Possible pointer to the scalar Magnetics objective function, gets assigned below depending on user input
       boost::shared_ptr<jif3D::ThreeDModelObjective<CalculatorType> > MagObjective;
 
@@ -73,7 +74,7 @@ namespace jif3D
       /*! The model object also contains the measurement positions.
        * @return The model object containing the starting model and measurement positions.
        */
-      const jif3D::ThreeDMagneticModel &GetModel() const
+      const jif3D::ThreeDSusceptibilityModel &GetModel() const
         {
           return Model;
         }

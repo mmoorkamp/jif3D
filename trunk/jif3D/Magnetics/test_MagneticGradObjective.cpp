@@ -16,10 +16,10 @@
 #include "../Global/Jif3DTesting.h"
 #include "../Gravity/test_common.h"
 #include "../Inversion/ThreeDModelObjective.h"
-#include "ThreeDMagneticModel.h"
+#include "ThreeDSusceptibilityModel.h"
 #include "OMPMagneticGradImp.h"
 #include "MagneticTransforms.h"
-#include "MagneticData.h"
+#include "TotalFieldMagneticData.h"
 
 #include "../GravMag/FullSensitivityGravMagCalculator.h"
 #include "../GravMag/MinMemGravMagCalculator.h"
@@ -57,8 +57,8 @@ void CheckGradient(jif3D::ObjectiveFunction &Objective, const jif3D::rvec &Model
 
 BOOST_AUTO_TEST_CASE (vertical_gradient_field_deriv_test)
   {
-    jif3D::ThreeDMagneticModel MagTest;
-    jif3D::MagneticData Data;
+    jif3D::ThreeDSusceptibilityModel MagTest;
+    jif3D::TotalFieldMagneticData Data;
     const size_t nmeas = 3;
     const size_t ncells = 5;
     MakeRandomModel(MagTest, Data, ncells, nmeas, false);
@@ -66,8 +66,8 @@ BOOST_AUTO_TEST_CASE (vertical_gradient_field_deriv_test)
     double declination = jif3D::platform::drand48();
     double fieldstrength = 1.0 + jif3D::platform::drand48();
 
-    typedef typename jif3D::MinMemGravMagCalculator<jif3D::MagneticData> CalculatorType;
-    boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::MagneticData> > Implementation(
+    typedef typename jif3D::MinMemGravMagCalculator<jif3D::TotalFieldMagneticData> CalculatorType;
+    boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::TotalFieldMagneticData> > Implementation(
         new jif3D::OMPMagneticGradImp(inclination, declination, fieldstrength));
 
     boost::shared_ptr<CalculatorType> Calculator(

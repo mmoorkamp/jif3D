@@ -177,7 +177,7 @@ namespace jif3D
      * @param PosZ The z-coordinate (Depth) of each measurement in m
      * @param Error The error estimate for each measurement
      */
-    void SaveTensorMagneticMeasurements(const std::string &filename,
+    void SaveMagneticComponentMeasurements(const std::string &filename,
         const jif3D::rvec &Data, const std::vector<double> &PosX,
         const std::vector<double> &PosY, const std::vector<double> &PosZ,
         const jif3D::rvec &Error)

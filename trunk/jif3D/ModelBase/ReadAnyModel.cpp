@@ -12,7 +12,6 @@
 #include "../MT/X3DModel.h"
 #include "../Tomo/ThreeDSeismicModel.h"
 #include "../Gravity/ThreeDGravityModel.h"
-#include "../Magnetics/ThreeDMagneticModel.h"
 #include "../SurfaceWaves/SurfaceWaveModel.h"
 #include "../DCResistivity/ThreeDDCResistivityModel.h"
 
@@ -25,11 +24,12 @@
 #include <boost/filesystem.hpp>
 #include <netcdf>
 #include <typeinfo>
+#include "../Magnetics/ThreeDSusceptibilityModel.h"
 
 namespace jif3D
   {
 
-    typedef boost::mpl::vector<jif3D::SurfaceWaveModel, jif3D::ThreeDMagneticModel, jif3D::X3DModel,
+    typedef boost::mpl::vector<jif3D::SurfaceWaveModel, jif3D::ThreeDSusceptibilityModel, jif3D::X3DModel,
         jif3D::ThreeDSeismicModel, jif3D::ThreeDGravityModel, jif3D::ThreeDDCResistivityModel> vecModelType;
 //boost::mpl::at_c<vecType, 3>::type hi = 3;
     typedef boost::make_variant_over<vecModelType>::type data_type;

@@ -392,7 +392,7 @@ int main(int argc, char *argv[])
     std::string modelfilename = "result";
     jif3D::ThreeDSeismicModel TomoModel(TomoSetup.GetModel());
     jif3D::ThreeDDCResistivityModel DCModel(DCSetup.GetModel());
-    jif3D::ThreeDMagneticModel MagModel(MagGradSetup.GetModel());
+    jif3D::ThreeDSusceptibilityModel MagModel(MagGradSetup.GetModel());
     //write out the seismic source and receiver positions for plotting
     //and general quality control
     if (havetomo)

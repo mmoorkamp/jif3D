@@ -34,7 +34,7 @@
 #include "../DCResistivity/ThreeDDCResistivityModel.h"
 #include "../DCResistivity/ReadWriteDCResistivityData.h"
 #include "../DCResistivity/DCResistivityCalculator.h"
-#include "../Magnetics/ThreeDMagneticModel.h"
+#include "../Magnetics/ThreeDSusceptibilityModel.h"
 #include "../Magnetics/ReadWriteMagneticData.h"
 #include "../Magnetics/OMPMagneticImp.h"
 #include "../GravMag/ThreeDGravMagImplementation.h"
@@ -256,7 +256,7 @@ int main(int argc, char *argv[])
     StoreRMS(rmsfile, 0, *Objective);
     StoreWeights(weightfile, 0, *Objective);
     jif3D::ThreeDDCResistivityModel DCModel(DCResistivitySetup.GetModel());
-    jif3D::ThreeDMagneticModel MagModel(MagneticSetup.GetModel());
+    jif3D::ThreeDSusceptibilityModel MagModel(MagneticSetup.GetModel());
     jif3D::ThreeDSeismicModel TomoModel(TomoSetup.GetModel());
 
     if (!havetomo)

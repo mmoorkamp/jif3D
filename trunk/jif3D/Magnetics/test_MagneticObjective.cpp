@@ -1,3 +1,4 @@
+
 //============================================================================
 // Name        : test_GravityObjective.cpp
 // Author      : Jun 6, 2009
@@ -16,8 +17,8 @@
 #include "../Global/Jif3DTesting.h"
 #include "../Gravity/test_common.h"
 #include "../Inversion/ThreeDModelObjective.h"
-#include "ThreeDMagneticModel.h"
-#include "MagneticData.h"
+#include "ThreeDSusceptibilityModel.h"
+#include "TotalFieldMagneticData.h"
 #include "OMPMagneticImp.h"
 #include "MagneticTransforms.h"
 #include "../GravMag/FullSensitivityGravMagCalculator.h"
@@ -57,8 +58,8 @@ BOOST_AUTO_TEST_SUITE( MagneticObjective_Test_Suite )
 
     BOOST_AUTO_TEST_CASE (full_field_deriv_test)
       {
-        jif3D::ThreeDMagneticModel MagTest;
-        jif3D::MagneticData Data;
+        jif3D::ThreeDSusceptibilityModel MagTest;
+        jif3D::TotalFieldMagneticData Data;
         const size_t nmeas = 3;
         const size_t ncells = 5;
         MakeRandomModel(MagTest, Data, ncells, nmeas, false);
@@ -66,8 +67,8 @@ BOOST_AUTO_TEST_SUITE( MagneticObjective_Test_Suite )
         double declination = jif3D::platform::drand48();
         double fieldstrength = 1.0 + jif3D::platform::drand48();
 
-        typedef typename jif3D::MinMemGravMagCalculator<jif3D::MagneticData> CalculatorType;
-        boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::MagneticData> > Implementation(
+        typedef typename jif3D::MinMemGravMagCalculator<jif3D::TotalFieldMagneticData> CalculatorType;
+        boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::TotalFieldMagneticData> > Implementation(
             new jif3D::OMPMagneticImp(inclination, declination, fieldstrength));
 
         boost::shared_ptr<CalculatorType> Calculator(new CalculatorType(Implementation));
@@ -91,8 +92,8 @@ BOOST_AUTO_TEST_SUITE( MagneticObjective_Test_Suite )
 
     BOOST_AUTO_TEST_CASE (T_deriv_test)
       {
-        jif3D::ThreeDMagneticModel MagTest;
-        jif3D::MagneticData Data;
+        jif3D::ThreeDSusceptibilityModel MagTest;
+        jif3D::TotalFieldMagneticData Data;
 
         const size_t nmeas = 3;
         const size_t ncells = 5;
@@ -101,8 +102,8 @@ BOOST_AUTO_TEST_SUITE( MagneticObjective_Test_Suite )
         double declination = jif3D::platform::drand48();
         double fieldstrength = 1.0 + jif3D::platform::drand48();
 
-        typedef typename jif3D::MinMemGravMagCalculator<jif3D::MagneticData> CalculatorType;
-        boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::MagneticData> > Implementation(
+        typedef typename jif3D::MinMemGravMagCalculator<jif3D::TotalFieldMagneticData> CalculatorType;
+        boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::TotalFieldMagneticData> > Implementation(
             new jif3D::OMPMagneticImp(inclination, declination, fieldstrength));
 
         boost::shared_ptr<CalculatorType> Calculator(new CalculatorType(Implementation));
@@ -128,8 +129,8 @@ BOOST_AUTO_TEST_SUITE( MagneticObjective_Test_Suite )
 
     BOOST_AUTO_TEST_CASE (deltaT_deriv_test)
       {
-        jif3D::ThreeDMagneticModel MagTest;
-        jif3D::MagneticData Data;
+        jif3D::ThreeDSusceptibilityModel MagTest;
+        jif3D::TotalFieldMagneticData Data;
 
         const size_t nmeas = 3;
         const size_t ncells = 5;
@@ -138,8 +139,8 @@ BOOST_AUTO_TEST_SUITE( MagneticObjective_Test_Suite )
         double declination = jif3D::platform::drand48();
         double fieldstrength = 1.0 + jif3D::platform::drand48();
 
-        typedef typename jif3D::MinMemGravMagCalculator<jif3D::MagneticData> CalculatorType;
-        boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::MagneticData> > Implementation(
+        typedef typename jif3D::MinMemGravMagCalculator<jif3D::TotalFieldMagneticData> CalculatorType;
+        boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::TotalFieldMagneticData> > Implementation(
             new jif3D::OMPMagneticImp(inclination, declination, fieldstrength));
 
         boost::shared_ptr<CalculatorType> Calculator(new CalculatorType(Implementation));

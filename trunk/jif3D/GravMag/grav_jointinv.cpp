@@ -35,7 +35,7 @@
 #include "../Magnetics/OMPMagneticImp.h"
 #include "../Magnetics/ReadWriteMagneticData.h"
 #include "../Magnetics/MagneticTransforms.h"
-#include "../Magnetics/MagneticData.h"
+#include "../Magnetics/TotalFieldMagneticData.h"
 #include "../MI/MutualInformationConstraint.h"
 #include "../Joint/SetupRegularization.h"
 #include "../Joint/SetupInversion.h"
@@ -261,10 +261,10 @@ int main(int argc, char *argv[])
 
     if (vm.count("magdepth"))
       {
-        boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::MagneticData> > Implementation(
+        boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::TotalFieldMagneticData> > Implementation(
             new jif3D::OMPMagneticImp(MagneticsSetup.GetInclination(),
                 MagneticsSetup.GetDeclination(), MagneticsSetup.GetFielStrength()));
-        jif3D::FullSensitivityGravMagCalculator<jif3D::MagneticData> FullCalc(
+        jif3D::FullSensitivityGravMagCalculator<jif3D::TotalFieldMagneticData> FullCalc(
             Implementation);
         FullCalc.SetDataTransform(
             boost::shared_ptr<jif3D::TotalFieldAnomaly>(
@@ -300,7 +300,7 @@ int main(int argc, char *argv[])
         std::ofstream weightfile("weights.out");
         std::copy(WeightVector.begin(), WeightVector.end(),
             std::ostream_iterator<double>(weightfile, "\n"));
-        jif3D::ThreeDMagneticModel DepthModel(MagneticsSetup.GetModel());
+        jif3D::ThreeDSusceptibilityModel DepthModel(MagneticsSetup.GetModel());
         std::copy(CovModVec.begin() + ngrid, CovModVec.begin() + 2 * ngrid,
             DepthModel.SetSusceptibilities().origin());
         DepthModel.WriteNetCDF("depth_mag_cov.nc");
@@ -442,7 +442,7 @@ int main(int argc, char *argv[])
     StoreMisfit(misfitfile, 0, InitialMisfit, *Objective);
 
     jif3D::ThreeDGravityModel GravModel(GravitySetup.GetScalModel());
-    jif3D::ThreeDMagneticModel MagModel(MagneticsSetup.GetModel());
+    jif3D::ThreeDSusceptibilityModel MagModel(MagneticsSetup.GetModel());
     bool terminate = false;
     while (iteration < maxiter && !terminate)
       {

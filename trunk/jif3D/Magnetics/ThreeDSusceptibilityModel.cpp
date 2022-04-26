@@ -5,27 +5,27 @@
 // Copyright   : 2013, mm489
 //============================================================================
 
-#include "ThreeDMagneticModel.h"
+#include "ThreeDSusceptibilityModel.h"
 
 
 
 namespace jif3D
   {
 
-    ThreeDMagneticModel::ThreeDMagneticModel()
+    ThreeDSusceptibilityModel::ThreeDSusceptibilityModel()
       {
         // TODO Auto-generated constructor stub
 
       }
 
 
-    ThreeDMagneticModel::~ThreeDMagneticModel()
+    ThreeDSusceptibilityModel::~ThreeDSusceptibilityModel()
       {
         // TODO Auto-generated destructor stub
       }
 
 
-    ThreeDMagneticModel& ThreeDMagneticModel::operator=(const ThreeDModelBase& source)
+    ThreeDSusceptibilityModel& ThreeDSusceptibilityModel::operator=(const ThreeDModelBase& source)
       {
         if (&source != this)
           {

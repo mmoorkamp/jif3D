@@ -14,10 +14,10 @@
 #include "../Regularization/RegularizationFunction.h"
 #include "../Tomo/ThreeDSeismicModel.h"
 #include "../DCResistivity/ThreeDDCResistivityModel.h"
-#include "../Magnetics/ThreeDMagneticModel.h"
 #include <boost/program_options.hpp>
 #include <boost/shared_ptr.hpp>
 #include <string>
+#include "../Magnetics/ThreeDSusceptibilityModel.h"
 
 namespace jif3D
   {
@@ -67,7 +67,7 @@ namespace jif3D
       void SetupCrossGradModel(jif3D::rvec &InvModel,
           const jif3D::ThreeDModelBase &ModelGeometry,
           const jif3D::ThreeDSeismicModel &SeisMod,
-          const jif3D::ThreeDDCResistivityModel &DCMod, const jif3D::ThreeDMagneticModel &MagMod,
+          const jif3D::ThreeDDCResistivityModel &DCMod, const jif3D::ThreeDSusceptibilityModel &MagMod,
           jif3D::JointObjective &Objective,
           boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart);
 
@@ -106,7 +106,7 @@ namespace jif3D
       void SetupModelVector(const po::variables_map &vm, jif3D::rvec &InvModel,
           const jif3D::ThreeDModelBase &ModelGeometry,
           const jif3D::ThreeDSeismicModel &SeisMod,
-          const jif3D::ThreeDDCResistivityModel &DCMod, const jif3D::ThreeDMagneticModel &MagMod,
+          const jif3D::ThreeDDCResistivityModel &DCMod, const jif3D::ThreeDSusceptibilityModel &MagMod,
           jif3D::JointObjective &Objective,
           boost::shared_ptr<jif3D::RegularizationFunction> Regularization, bool substart);
 

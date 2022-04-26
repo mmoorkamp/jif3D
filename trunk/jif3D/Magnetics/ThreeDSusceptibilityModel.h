@@ -22,16 +22,16 @@ namespace jif3D
   {
 
     class MagneticsExtraParameterSetter;
-    class MagneticData;
+    class TotalFieldMagneticData;
 
     static const std::string SusceptibilityName = "Susceptibility";
     static const std::string SusceptibilityUnit = " ";
-    class J3DEXPORT ThreeDMagneticModel: public jif3D::ThreeDModelBase
+    class J3DEXPORT ThreeDSusceptibilityModel: public jif3D::ThreeDModelBase
       {
     public:
       //! The type of the background thickness and susceptibility vector, this is a std::vector because we want to easily append elements
       typedef std::vector<double> tBackgroundVec;
-      typedef jif3D::GridBackgroundModelCache<ThreeDMagneticModel> ModelCacheType;
+      typedef jif3D::GridBackgroundModelCache<ThreeDSusceptibilityModel> ModelCacheType;
     private:
       //! The susceptibilities of the background layers
       tBackgroundVec bg_susceptibilities;
@@ -53,10 +53,10 @@ namespace jif3D
         {
           return GetData().num_elements() + bg_susceptibilities.size();
         }
-      ThreeDMagneticModel();
+      ThreeDSusceptibilityModel();
       //! Other models will be copied by the copy operator for the base class
-      ThreeDMagneticModel& operator=(const ThreeDModelBase &source);
-      virtual ~ThreeDMagneticModel();
+      ThreeDSusceptibilityModel& operator=(const ThreeDModelBase &source);
+      virtual ~ThreeDSusceptibilityModel();
       //! Set the sizes of the grid cells in x-direction in m
       void SetXCellSizes(ThreeDModelBase::t3DModelDim &XCS)
         {
@@ -199,7 +199,7 @@ namespace jif3D
     class J3DEXPORT MagneticsExtraParameterSetter
       {
     public:
-      void operator()(ThreeDMagneticModel &Model, MagneticData &Data,
+      void operator()(ThreeDSusceptibilityModel &Model, TotalFieldMagneticData &Data,
           const std::vector<double> &Sus)
         {
           Model.SetBackgroundSusceptibilities(Sus);
