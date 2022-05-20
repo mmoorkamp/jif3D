@@ -19,7 +19,7 @@ namespace jif3D
   {
 
     //! Read a component of the magnetic field for all measurement positions
-    void ReadMagComp(NcFile &NetCDFFile, const std::string &CompName, rvec &MatVec,
+    void ReadMagComp(NcFile &NetCDFFile, const std::string &CompName, std::vector<double> &MatVec,
         size_t n)
       {
         //read in the component from the netcdf file
@@ -27,17 +27,17 @@ namespace jif3D
         ReadVec(NetCDFFile, CompName, tempdata);
         //copy to the right location in the matrix
         for (size_t i = 0; i < tempdata.size(); ++i)
-          MatVec(i * 3 + n) = tempdata(i);
+          MatVec.at(i * 3 + n) = tempdata(i);
       }
 
     //! Write one component of the magnetic field for all measurement positions
-    void WriteMagComp(NcFile &NetCDFFile, const std::string &CompName, const rvec &MatVec,
+    void WriteMagComp(NcFile &NetCDFFile, const std::string &CompName, const std::vector<double> &MatVec,
         const size_t n, NcDim &Dimension)
       {
         rvec tempdata(MatVec.size() / 3);
         for (size_t i = 0; i < tempdata.size(); ++i)
           {
-            tempdata(i) = MatVec(i * 3 + n);
+            tempdata(i) = MatVec.at(i * 3 + n);
           }
 
         WriteVec(NetCDFFile, CompName, tempdata, Dimension, "1/s2");
@@ -133,9 +133,9 @@ namespace jif3D
      * @param PosZ The z-coordinate (Depth) of each measurement in m
      * @param Error The error estimate for each measurement
      */
-    void ReadMagneticComponentMeasurements(const std::string &filename, jif3D::rvec &Data,
+    void ReadMagneticComponentMeasurements(const std::string &filename, std::vector<double> &Data,
         std::vector<double> &PosX, std::vector<double> &PosY, std::vector<double> &PosZ,
-        jif3D::rvec &Error)
+        std::vector<double> &Error)
       {
         NcFile DataFile(filename, NcFile::read);
 
@@ -147,8 +147,7 @@ namespace jif3D
         assert(PosX.size() == PosZ.size());
 
         Data.resize(PosX.size() * 3);
-        Error.resize(Data.size());
-        Error.clear();
+        Error.resize(Data.size(), 0.0);
         for (size_t i = 0; i < 3; ++i)
           {
             ReadMagComp(DataFile, ComponentNames.at(i), Data, i);
@@ -178,9 +177,9 @@ namespace jif3D
      * @param Error The error estimate for each measurement
      */
     void SaveMagneticComponentMeasurements(const std::string &filename,
-        const jif3D::rvec &Data, const std::vector<double> &PosX,
+        const std::vector<double> &Data, const std::vector<double> &PosX,
         const std::vector<double> &PosY, const std::vector<double> &PosZ,
-        const jif3D::rvec &Error)
+        const std::vector<double> &Error)
       {
         const size_t nmeas = PosX.size();
 

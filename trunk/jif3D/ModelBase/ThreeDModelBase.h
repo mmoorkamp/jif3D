@@ -143,7 +143,7 @@ namespace jif3D
           return GridZCoordinates.empty() ? 0.0 : GridZCoordinates.at(0);
         }
       //! Set the size of the mesh and the coordinate axes
-      void SetMeshSize(const size_t nx, const size_t ny, const size_t nz)
+      virtual void SetMeshSize(const size_t nx, const size_t ny, const size_t nz)
         {
           XCellSizes.resize(nx);
           YCellSizes.resize(ny);

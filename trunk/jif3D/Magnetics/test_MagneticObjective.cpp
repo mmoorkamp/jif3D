@@ -19,7 +19,7 @@
 #include "../Inversion/ThreeDModelObjective.h"
 #include "ThreeDSusceptibilityModel.h"
 #include "TotalFieldMagneticData.h"
-#include "OMPMagneticImp.h"
+#include "OMPMagneticSusceptibilityImp.h"
 #include "MagneticTransforms.h"
 #include "../GravMag/FullSensitivityGravMagCalculator.h"
 #include "../GravMag/MinMemGravMagCalculator.h"
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_SUITE( MagneticObjective_Test_Suite )
 
         typedef typename jif3D::MinMemGravMagCalculator<jif3D::TotalFieldMagneticData> CalculatorType;
         boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::TotalFieldMagneticData> > Implementation(
-            new jif3D::OMPMagneticImp(inclination, declination, fieldstrength));
+            new jif3D::OMPMagneticSusceptibilityImp(inclination, declination, fieldstrength));
 
         boost::shared_ptr<CalculatorType> Calculator(new CalculatorType(Implementation));
         jif3D::rvec Observed(Calculator->Calculate(MagTest, Data));
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_SUITE( MagneticObjective_Test_Suite )
 
         typedef typename jif3D::MinMemGravMagCalculator<jif3D::TotalFieldMagneticData> CalculatorType;
         boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::TotalFieldMagneticData> > Implementation(
-            new jif3D::OMPMagneticImp(inclination, declination, fieldstrength));
+            new jif3D::OMPMagneticSusceptibilityImp(inclination, declination, fieldstrength));
 
         boost::shared_ptr<CalculatorType> Calculator(new CalculatorType(Implementation));
         Calculator->SetDataTransform(boost::make_shared<jif3D::TotalField>());
@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_SUITE( MagneticObjective_Test_Suite )
 
         typedef typename jif3D::MinMemGravMagCalculator<jif3D::TotalFieldMagneticData> CalculatorType;
         boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::TotalFieldMagneticData> > Implementation(
-            new jif3D::OMPMagneticImp(inclination, declination, fieldstrength));
+            new jif3D::OMPMagneticSusceptibilityImp(inclination, declination, fieldstrength));
 
         boost::shared_ptr<CalculatorType> Calculator(new CalculatorType(Implementation));
         Calculator->SetDataTransform(
