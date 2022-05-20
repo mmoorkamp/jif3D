@@ -1,6 +1,8 @@
 import testing ; 
 lib magnetics : ThreeDSusceptibilityModel.cpp TotalFieldMagneticData.cpp
-              OMPMagneticImp.cpp  OMPMagneticGradImp.cpp ReadWriteMagneticData.cpp
+              ThreeComponentMagneticData.cpp ThreeDMagnetizationModel.cpp
+              OMPMagnetizationImp.cpp
+              OMPMagneticSusceptibilityImp.cpp  OMPMagneticGradImp.cpp ReadWriteMagneticData.cpp
                  ../Global//global ../Gravity//gravity  ../ModelBase//modelbase
                  ..//boost_core ..//netcdf_c++ ..//netcdf
                ;
@@ -8,6 +10,8 @@ lib magnetics : ThreeDSusceptibilityModel.cpp TotalFieldMagneticData.cpp
                     
 alias core : ../DataBase//database ../ModelBase//modelbase ../Global//global ..//netcdf_c++ ..//netcdf  ..//boost_core ;
 
+unit-test rw_test : test_readwritedata.cpp magnetics core  ;
+unit-test rw_models_test : test_readwritemodels.cpp magnetics core  ;
 unit-test Calc_test : test_MagneticCalculation.cpp magnetics core  ;
 unit-test Objective_test : test_MagneticObjective.cpp magnetics core ../Inversion//inversion  ;
 unit-test Grad_Objective_test : test_MagneticGradObjective.cpp magnetics core ../Inversion//inversion  ;

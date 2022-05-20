@@ -15,7 +15,6 @@
 #include <string>
 #include "ReadWriteMagneticData.h"
 #include "MagneticTransforms.h"
-#include "OMPMagneticImp.h"
 #include "../GravMag/MinMemGravMagCalculator.h"
 #include "../GravMag/ThreeDGravMagImplementation.h"
 #include "../ModelBase/VTKTools.h"
@@ -24,6 +23,7 @@
 #include <boost/cast.hpp>
 #include <boost/program_options.hpp>
 
+#include "OMPMagneticSusceptibilityImp.h"
 #include "ThreeDSusceptibilityModel.h"
 #include "TotalFieldMagneticData.h"
 
@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
 
     typedef typename jif3D::MinMemGravMagCalculator<jif3D::TotalFieldMagneticData> CalculatorType;
     boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::TotalFieldMagneticData> > Implementation(
-        new jif3D::OMPMagneticImp(inclination, declination, fieldstrength));
+        new jif3D::OMPMagneticSusceptibilityImp(inclination, declination, fieldstrength));
 
     boost::shared_ptr<CalculatorType> Calculator(new CalculatorType(Implementation));
 

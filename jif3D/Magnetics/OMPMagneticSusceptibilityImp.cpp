@@ -5,7 +5,8 @@
 // Copyright   : 2013, mm489
 //============================================================================
 
-#include "OMPMagneticImp.h"
+#include "OMPMagneticSusceptibilityImp.h"
+
 #include "../Gravity/BasicGravElements.h"
 #include "../Gravity/GravityBackground.h"
 #include <boost/math/constants/constants.hpp>
@@ -27,7 +28,7 @@ namespace jif3D
    * @param Sensitivities If the matrix passed here holds \f$ 1 \times nbg+ngrid \f$ or more elements, store sensitivity information in the right fields
    * @return A vector with a 3 components that contains the magnetic field
    */
-  rvec OMPMagneticImp::CalcMagneticBackground(const size_t measindex, const double xwidth,
+  rvec OMPMagneticSusceptibilityImp::CalcMagneticBackground(const size_t measindex, const double xwidth,
       const double ywidth, const double zwidth, const ThreeDSusceptibilityModel &Model,
       const TotalFieldMagneticData &Data, rmat &Sensitivities)
     {
@@ -99,7 +100,7 @@ namespace jif3D
       return result;
     }
 
- rvec OMPMagneticImp::CalcBackground(const size_t measindex, const double xwidth,
+ rvec OMPMagneticSusceptibilityImp::CalcBackground(const size_t measindex, const double xwidth,
       const double ywidth, const double zwidth, const ThreeDSusceptibilityModel &Model,
       const TotalFieldMagneticData &Data,
       rmat &Sensitivities)
@@ -109,7 +110,7 @@ namespace jif3D
           Sensitivities);
     }
 
-    rvec OMPMagneticImp::CalcGridded(const size_t measindex,
+    rvec OMPMagneticSusceptibilityImp::CalcGridded(const size_t measindex,
         const ThreeDSusceptibilityModel &Model, const TotalFieldMagneticData &Data, rmat &Sensitivities)
       {
         const double BxComp = cos(Inclination) * cos(Declination);
@@ -126,15 +127,13 @@ namespace jif3D
         const bool storesens = (Sensitivities.size1() >= ndatapermeas)
             && (Sensitivities.size2() >= size_t(nmod));
 
-        rmat currvalue(3, 3);
-
         //we cannot add up a user defined quantity in parallel
         //so break up the tensor into its component with different variables
         //and assign the results after the parallel loop
         double Bx = 0.0, By = 0.0, Bz = 0.0;
 
         //sum up the contributions of all prisms
-#pragma omp parallel default(shared) private(currvalue) reduction(+:Bx,By,Bz)
+#pragma omp parallel default(shared)  reduction(+:Bx,By,Bz)
           {
             //instead of nested loops over each dimension, we have one big
             //loop over all elements, this allows for a large number
@@ -149,7 +148,7 @@ namespace jif3D
                 // we reuse the calculation for the FTG matrix, as the equations are
                 //identical
                 //currvalue contains the geometric term times the gravitational constant
-                currvalue = CalcTensorBoxTerm(x_meas, y_meas, z_meas,
+                rmat currvalue = CalcTensorBoxTerm(x_meas, y_meas, z_meas,
                     Model.GetXCoordinates()[xindex], Model.GetYCoordinates()[yindex],
                     Model.GetZCoordinates()[zindex], Model.GetXCellSizes()[xindex],
                     Model.GetYCellSizes()[yindex], Model.GetZCellSizes()[zindex]);
@@ -194,14 +193,14 @@ namespace jif3D
 
       }
 
-    OMPMagneticImp::OMPMagneticImp(double Inc, double Dec, double Fs) :
+    OMPMagneticSusceptibilityImp::OMPMagneticSusceptibilityImp(double Inc, double Dec, double Fs) :
         Inclination(Inc), Declination(Dec), FieldStrength(Fs)
       {
         // TODO Auto-generated constructor stub
 
       }
 
-    OMPMagneticImp::~OMPMagneticImp()
+    OMPMagneticSusceptibilityImp::~OMPMagneticSusceptibilityImp()
       {
         // TODO Auto-generated destructor stub
       }

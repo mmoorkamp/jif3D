@@ -18,7 +18,7 @@
 namespace jif3D
   {
 
-    class J3DEXPORT OMPMagneticImp: public jif3D::ThreeDGravMagImplementation<
+    class J3DEXPORT OMPMagneticSusceptibilityImp: public jif3D::ThreeDGravMagImplementation<
         TotalFieldMagneticData>
       {
     private:
@@ -52,8 +52,8 @@ namespace jif3D
         {
           return ndatapermeas;
         }
-      OMPMagneticImp(double Inc = 0, double Dec = 0, double Fs = 1.0);
-      virtual ~OMPMagneticImp();
+      OMPMagneticSusceptibilityImp(double Inc = 0, double Dec = 0, double Fs = 1.0);
+      virtual ~OMPMagneticSusceptibilityImp();
       };
 
   } /* namespace jif3D */

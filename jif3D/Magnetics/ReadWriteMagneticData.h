@@ -30,14 +30,14 @@ namespace jif3D
         const std::vector<double> &PosY, const std::vector<double> &PosZ,
         const std::vector<double> &Error);
     //! Read three component magnetic data
-    void ReadMagneticComponentMeasurements(const std::string &filename, jif3D::rvec &Data,
-        std::vector<double> &PosX, std::vector<double> &PosY, std::vector<double> &PosZ,
-        jif3D::rvec &Error);
+    void ReadMagneticComponentMeasurements(const std::string &filename,
+        std::vector<double> &Data, std::vector<double> &PosX, std::vector<double> &PosY,
+        std::vector<double> &PosZ, std::vector<double> &Error);
     //! Write three component magnetic data
     void SaveMagneticComponentMeasurements(const std::string &filename,
-        const jif3D::rvec &Data, const std::vector<double> &PosX,
+        const std::vector<double> &Data, const std::vector<double> &PosX,
         const std::vector<double> &PosY, const std::vector<double> &PosZ,
-        const jif3D::rvec &Error);
+        const std::vector<double> &Error);
 
   /* @} */
   }

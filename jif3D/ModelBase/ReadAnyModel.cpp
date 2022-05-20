@@ -14,7 +14,8 @@
 #include "../Gravity/ThreeDGravityModel.h"
 #include "../SurfaceWaves/SurfaceWaveModel.h"
 #include "../DCResistivity/ThreeDDCResistivityModel.h"
-
+#include "../Magnetics/ThreeDSusceptibilityModel.h"
+#include "../Magnetics/ThreeDMagnetizationModel.h"
 
 #include <boost/variant.hpp>
 #include <boost/mpl/vector.hpp>
@@ -24,13 +25,13 @@
 #include <boost/filesystem.hpp>
 #include <netcdf>
 #include <typeinfo>
-#include "../Magnetics/ThreeDSusceptibilityModel.h"
 
 namespace jif3D
   {
 
-    typedef boost::mpl::vector<jif3D::SurfaceWaveModel, jif3D::ThreeDSusceptibilityModel, jif3D::X3DModel,
-        jif3D::ThreeDSeismicModel, jif3D::ThreeDGravityModel, jif3D::ThreeDDCResistivityModel> vecModelType;
+    typedef boost::mpl::vector<jif3D::SurfaceWaveModel, jif3D::ThreeDSusceptibilityModel,
+        jif3D::ThreeDMagnetizationModel, jif3D::X3DModel, jif3D::ThreeDSeismicModel,
+        jif3D::ThreeDGravityModel, jif3D::ThreeDDCResistivityModel> vecModelType;
 //boost::mpl::at_c<vecType, 3>::type hi = 3;
     typedef boost::make_variant_over<vecModelType>::type data_type;
     data_type Model;
@@ -51,7 +52,8 @@ namespace jif3D
             } catch (const jif3D::FatalException &e)
             {
               // ignore
-            } catch(const netCDF::exceptions::NcException &ex) {
+            } catch (const netCDF::exceptions::NcException &ex)
+            {
               // ignore
             }
 
@@ -67,7 +69,7 @@ namespace jif3D
       {
     public:
       template<typename T>
-      void operator()(T & MyModel) const
+      void operator()(T &MyModel) const
         {
           ReturnModel = boost::shared_ptr<jif3D::ThreeDModelBase>(
               new jif3D::ThreeDModelBase(MyModel));
@@ -79,7 +81,8 @@ namespace jif3D
       {
         if (!boost::filesystem::exists(Filename))
           {
-            throw jif3D::FatalException("File " + Filename + " does not exists", __FILE__, __LINE__);
+            throw jif3D::FatalException("File " + Filename + " does not exists", __FILE__,
+                __LINE__);
           }
         using boost::mpl::for_each;
         using boost::mpl::range_c;
