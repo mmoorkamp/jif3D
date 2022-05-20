@@ -35,7 +35,7 @@ namespace jif3D
     public:
       //! Provide serialization to be able to store objects and, more importantly for simpler  parallelization
       template<class Archive>
-      void serialize(Archive & ar, const unsigned int version)
+      void serialize(Archive &ar, const unsigned int version)
         {
           ar & MeasPosX;
           ar & MeasPosY;
@@ -92,25 +92,25 @@ namespace jif3D
        * three coordinate values for all points.
        * @return A vector with the x-coordinates of all measurement points in m
        */
-      const tMeasPosVec &GetMeasPosX() const
+      const tMeasPosVec& GetMeasPosX() const
         {
           return MeasPosX;
         }
       //! Return the y-coordinates (Easting)of all measurement points read-only
-      const tMeasPosVec &GetMeasPosY() const
+      const tMeasPosVec& GetMeasPosY() const
         {
           return MeasPosY;
         }
       //! Return the z-coordinates (Depth) of all measurement points read-only
-      const tMeasPosVec &GetMeasPosZ() const
+      const tMeasPosVec& GetMeasPosZ() const
         {
           return MeasPosZ;
         }
-      const std::vector<double> &GetData() const
+      const std::vector<double>& GetData() const
         {
           return Data;
         }
-      const std::vector<double> &GetErrors() const
+      const std::vector<double>& GetErrors() const
         {
           return Errors;
         }
@@ -139,7 +139,7 @@ namespace jif3D
       void WriteMeasurementPoints(const std::string &filename) const;
       GeneralData();
       virtual ~GeneralData();
-              };
+      };
 
   } /* namespace jif3D */
 
