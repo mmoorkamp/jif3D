@@ -9,10 +9,10 @@
 #include <hpx/include/actions.hpp>
 #include <hpx/include/util.hpp>
 #include <hpx/include/lcos.hpp>
-#include <hpx/hpx_fwd.hpp>
+#include <hpx/hpx.hpp>
 #include <hpx/parallel/numeric.hpp>
 #include <hpx/parallel/algorithms/transform.hpp>
-#include <hpx/parallel/execution_policy.hpp>
+#include <hpx/execution.hpp>
 #include <vector>
 #include <algorithm>
 #include <parallel/algorithm>
@@ -91,7 +91,7 @@ std::vector<int> fractals_chunk(int i, int max_iteration)
 int hpx_main()
   {
 
-    hpx::util::high_resolution_timer t;
+    hpx::chrono::high_resolution_timer t;
 
       {
         using namespace std;
@@ -107,7 +107,7 @@ int hpx_main()
 
         hpx::id_type const here = hpx::find_here();
         fractals_action fractal_line;
-        std::vector<hpx::naming::id_type> localities = hpx::find_all_localities();
+        std::vector<hpx::id_type> localities = hpx::find_all_localities();
 
         std::cout << "Running on " << localities.size() << " locations \n";
         std::cout << "Using " << hpx::get_num_worker_threads() << " threads \n";
@@ -155,7 +155,7 @@ int hpx_main()
             << "s. \n";
 
         t.restart();
-        hpx::parallel::transform(hpx::parallel::parallel_execution_policy(),
+        hpx::transform(hpx::execution::parallel_policy(),
             InValues.begin(), InValues.end(), OutValues.begin(),
             [max_iteration](my_complex P) -> int
               { return fractals_complex(P,max_iteration);});
