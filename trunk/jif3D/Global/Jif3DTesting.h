@@ -15,7 +15,7 @@
 #include <hpx/hpx.hpp>
 #endif
 
-#if BOOST_ALL_DYN_LINK
+#ifdef BOOST_ALL_DYN_LINK
 	#include <boost/test/unit_test.hpp>
 #else
 	#include <boost/test/included/unit_test.hpp>
