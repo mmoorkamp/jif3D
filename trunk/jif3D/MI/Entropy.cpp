@@ -21,6 +21,7 @@ namespace jif3D
         double H = 0;
         const size_t nx = x.size();
         const double sum = ublas::sum(x);
+        //std::cout << "Sum: " << sum << std::endl;
 #pragma omp parallel for reduction(-:H)
         for (size_t i = 0; i < nx; ++i)
           {
@@ -29,7 +30,7 @@ namespace jif3D
             // at 1e-100, experiments show that this avoids all problems
             if (x(i) > 1e-100)
               {
-                const double val = x(i) / sum;
+                const double val = x(i); // / sum;
                 H -= val * std::log(val);
               }
           }
@@ -48,22 +49,22 @@ namespace jif3D
         // (%o14)  log(x/(x+b+a))/(x+b+a)-(x*log(x/(x+b+a)))/(x+b+a)^2+1/(x+b+a)-x/(x+b+a)^2
 
         const size_t nx = x.size();
-        const double sum = ublas::sum(x);
+        //const double sum = ublas::sum(x);
         jif3D::rvec result(nx, 0.0);
         for (size_t i = 0; i < nx; ++i)
           {
             //see explanation in shannon_entropy for this cut off
             if (x(i) > 1e-100)
               {
-                const double val = x(i) / sum;
+                const double val = x(i);// / sum;
                 //we have to do a chain rule here and consider
                 //that for the derivative from the sum we get terms for all x_i
                 //as the the variable sum depends on x
-                result(i) -= (std::log(val) + 1.0) / sum;
-                for (size_t j = 0; j < nx; ++j)
-                  {
-                    result(j) += (x(i) * std::log(val) + x(i)) / (sum * sum);
-                  }
+                result(i) -= (std::log(val) + 1.0); // / sum;
+                //for (size_t j = 0; j < nx; ++j)
+                //  {
+                //    result(j) += (x(i) * std::log(val) + x(i)) / (sum * sum);
+                //  }
               }
           }
         return result;

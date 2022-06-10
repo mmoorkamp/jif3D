@@ -24,6 +24,7 @@ namespace jif3D
       jif3D::rvec CountsXY;
       jif3D::rvec CountsX;
       jif3D::rvec CountsY;
+      jif3D::rvec ValidityVector;
       double xmin;
       double xmax;
       double ymin;
@@ -31,7 +32,7 @@ namespace jif3D
       size_t nbins;
       double xw;
       double yw;
-      double binwidth;
+      double stddev;
       double MIGauss(const jif3D::rvec &x, const jif3D::rvec &y, double xmin, double xmax,
           double ymin, double ymax, size_t nbins, jif3D::rvec &CountsX,
           jif3D::rvec &CountsY, jif3D::rvec &CountsXY);
@@ -55,7 +56,7 @@ namespace jif3D
         }
 
       MutualInformationConstraint(double min1, double max1, double min2, double max2,
-          size_t nb);
+          size_t nb, const jif3D::rvec &ValVec = jif3D::rvec());
       virtual ~MutualInformationConstraint();
       };
 
