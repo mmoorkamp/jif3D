@@ -13,12 +13,15 @@
 #include "../GravMag/DiskGravMagCalculator.h"
 #include "../GravMag/MinMemGravMagCalculator.h"
 #include "../GravMag/FullSensitivityGravMagCalculator.h"
+#include "../Magnetics/ThreeDSusceptibilityModel.h"
+#include "../Magnetics/TotalFieldMagneticData.h"
 #include "../Inversion/JointObjective.h"
+#include "GeneralDataSetup.h"
+
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 
-#include "../Magnetics/ThreeDSusceptibilityModel.h"
-#include "../Magnetics/TotalFieldMagneticData.h"
+
 
 namespace jif3D
   {
@@ -31,9 +34,10 @@ namespace jif3D
     /*! This class reads the information about grid sizes, measurement configuration etc.
      * from the command line and through interactive input.
      */
-    class J3DEXPORT SetupMagnetics
+    class J3DEXPORT SetupMagnetics : public GeneralDataSetup
       {
     public:
+
 #ifdef MAGDISK
       typedef typename jif3D::DiskGravMagCalculator<jif3D::TotalFieldMagneticData> MagCalculatorType;
 #endif
@@ -44,6 +48,9 @@ namespace jif3D
       typedef typename jif3D::MinMemGravMagCalculator<jif3D::TotalFieldMagneticData> MagCalculatorType;
 #endif
     private:
+      double minsus;
+      double maxsus;
+      double maglambda;
       double inclination;
       double declination;
       double fieldstrength;
@@ -56,7 +63,6 @@ namespace jif3D
       jif3D::ThreeDSusceptibilityModel Model;
       //! Possible pointer to the scalar Magnetics objective function, gets assigned below depending on user input
       boost::shared_ptr<jif3D::ThreeDModelObjective<MagCalculatorType> > MagObjective;
-
     public:
       boost::shared_ptr<MagCalculatorType> GetCalculator()
         {
@@ -75,7 +81,7 @@ namespace jif3D
           return fieldstrength;
         }
       //! read-only access to the objective function for scalar Magnetics data
-      const jif3D::ThreeDModelObjective<MagCalculatorType> &GetObjective()
+      const jif3D::ThreeDModelObjective<MagCalculatorType>& GetObjective()
         {
           return *MagObjective;
         }
@@ -84,13 +90,13 @@ namespace jif3D
       /*! The model object also contains the measurement positions.
        * @return The model object containing the starting model and measurement positions.
        */
-      const jif3D::ThreeDSusceptibilityModel &GetModel() const
+      const jif3D::ThreeDSusceptibilityModel& GetModel() const
         {
           return Model;
         }
 
       //! Return an options descriptions object for boost::program_options that contains information about Magnetics options
-      po::options_description SetupOptions();
+      virtual po::options_description SetupOptions() override;
       //! Setup the objective function and add to the joint objective
       /*! Setup the objective function for inverting scalar and tensorial data based on
        * the program options.
@@ -102,11 +108,17 @@ namespace jif3D
        * @param TempDir A directory to store temporary files with sensitivity information
        * @return True if the weight for one of the Magnetics objectives is greater zero, i.e. we added an objective function to JointObjective, false otherwise
        */
-      bool
+      virtual bool
       SetupObjective(const po::variables_map &vm, jif3D::JointObjective &Objective,
-          boost::shared_ptr<jif3D::GeneralModelTransform> &Transform,
-          double xorigin = 0.0, double yorigin = 0.0, boost::filesystem::path TempDir =
-              boost::filesystem::current_path());
+          jif3D::ThreeDModelBase &InversionMesh, jif3D::rvec &CovModVec,
+          std::vector<size_t> &startindices,
+          std::vector<std::string> &SegmentNames,
+          std::vector<parametertype> &SegmentTypes,
+          boost::filesystem::path TempDir =
+              boost::filesystem::current_path()) override;
+      virtual void IterationOutput(const std::string &filename, const jif3D::rvec &ModelVector) override;
+      virtual void FinalOutput(const jif3D::rvec &FinalModelVector) override;
+
       SetupMagnetics();
       virtual ~SetupMagnetics();
       };

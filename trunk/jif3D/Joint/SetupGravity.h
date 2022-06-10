@@ -8,6 +8,7 @@
 #ifndef SETUPGRAVITY_H_
 #define SETUPGRAVITY_H_
 
+#include "GeneralDataSetup.h"
 #include "../Global/Jif3DGlobal.h"
 #include "../Inversion/ThreeDModelObjective.h"
 #include "../Inversion/JointObjective.h"
@@ -17,6 +18,7 @@
 #include "../Gravity/ThreeDGravityModel.h"
 #include "../Gravity/ScalarGravityData.h"
 #include "../Gravity/TensorGravityData.h"
+
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 
@@ -31,7 +33,7 @@ namespace jif3D
     /*! This class reads the information about grid sizes, measurement configuration etc.
      * from the command line and through interactive input.
      */
-    class J3DEXPORT SetupGravity
+    class J3DEXPORT SetupGravity : public GeneralDataSetup
       {
     private:
 #ifdef GRAVDISK
@@ -46,6 +48,10 @@ namespace jif3D
       typedef typename jif3D::MinMemGravMagCalculator<jif3D::ScalarGravityData> ScalarCalculatorType;
       typedef typename jif3D::MinMemGravMagCalculator<jif3D::TensorGravityData> TensorCalculatorType;
 #endif
+      //! The minimum density limit in the inversion
+      double mindens;
+      //! The maximum density limit in the inversion
+      double maxdens;
       //! The relative error for the scalar data to assume for construction of the data variance
       double scalrelerr;
       //! The relative error for the ftg data to assume for construction of the data variance
@@ -56,8 +62,6 @@ namespace jif3D
       double ftgminerr;
       //! Stores the grid for the scalar gravity model and the starting model
       jif3D::ThreeDGravityModel ScalGravModel;
-      //! Stores the grid for the FTG gravity model and the starting model
-      jif3D::ThreeDGravityModel FTGGravModel;
       //! Possible pointer to the scalar gravity objective function, gets assigned below depending on user input
       boost::shared_ptr<jif3D::ThreeDModelObjective<ScalarCalculatorType> > ScalGravObjective;
       //! Possible pointer to the tensor gravity objective function, gets assigned below depending on user input
@@ -67,48 +71,9 @@ namespace jif3D
       //! Does the user want tensor gravity calculations and have we set up everything?
       bool HaveFTG;
     public:
-      //! Does the user want scalar gravity calculations and have we set up everything?
-      bool GetHaveScal() const
-        {
-          return HaveScal;
-        }
-      //! Does the user want tensor gravity calculations and have we set up everything?
-      bool GetHaveFTG() const
-        {
-          return HaveFTG;
-        }
-      //! read-only access to the objective function for scalar gravity data
-      const jif3D::ThreeDModelObjective<ScalarCalculatorType> &GetScalGravObjective()
-        {
-          return *ScalGravObjective;
-        }
-      //! read-only access to the objective function for tensor gravity data
-      const jif3D::ThreeDModelObjective<TensorCalculatorType> &GetFTGObjective()
-        {
-          return *FTGObjective;
-        }
-      //! Return the scalar gravity starting model and measurement positions  that were read in
-      /*! The model object also contains the measurement positions. As
-       * we might have different stations for scalar and FTG gravity
-       * data, we return two model objects. The densities will be identical for both of them.
-       * @return The model object containing the starting model and measurement positions.
-       */
-      const jif3D::ThreeDGravityModel &GetScalModel() const
-        {
-          return ScalGravModel;
-        }
-      //! Return the FTG gravity starting model and measurement positions  that were read in
-      /*! The model object also contains the measurement positions. As
-       * we might have different stations for scalar and FTG gravity
-       * data, we return two model objects. The densities will be identical for both of them.
-       * @return The model object containing the starting model and measurement positions.
-       */
-      const jif3D::ThreeDGravityModel &GetFTGModel() const
-        {
-          return FTGGravModel;
-        }
+
       //! Return an options descriptions object for boost::program_options that contains information about gravity options
-      po::options_description SetupOptions();
+      virtual po::options_description SetupOptions() override;
       //! Setup the objective function and add to the joint objective
       /*! Setup the objective function for inverting scalar and tensorial data based on
        * the program options.
@@ -120,11 +85,15 @@ namespace jif3D
        * @param TempDir A directory to store temporary files with sensitivity information
        * @return True if the weight for one of the gravity objectives is greater zero, i.e. we added an objective function to JointObjective, false otherwise
        */
-      bool
+      virtual bool
       SetupObjective(const po::variables_map &vm, jif3D::JointObjective &Objective,
-          boost::shared_ptr<jif3D::GeneralModelTransform> &Transform, double xorigin = 0.0,
-          double yorigin = 0.0, boost::filesystem::path TempDir =
-              boost::filesystem::current_path());
+          jif3D::ThreeDModelBase &InversionMesh, jif3D::rvec &CovModVec, std::vector<size_t> &startindices,
+          std::vector<std::string> &SegmentNames,
+          std::vector<parametertype> &SegmentTypes,
+          boost::filesystem::path TempDir =
+              boost::filesystem::current_path()) override;
+      virtual void IterationOutput(const std::string &filename, const jif3D::rvec &ModelVector) override;
+      virtual void FinalOutput(const jif3D::rvec &FinalModelVector) override;
       SetupGravity();
       virtual ~SetupGravity();
       };

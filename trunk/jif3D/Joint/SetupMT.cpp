@@ -12,6 +12,7 @@
 #include "../Global/FileUtil.h"
 #include "../Global/Noise.h"
 #include "../Global/ReadWriteSparseMatrix.h"
+#include "../Inversion/ModelTransforms.h"
 
 #include "SetupMT.h"
 #include <boost/make_shared.hpp>
@@ -21,8 +22,11 @@
 namespace jif3D
   {
 
+    const std::string Name = "Conductivity";
+
     SetupMT::SetupMT() :
-        relerr(0.02), tiprelerr(0.02), tipperr(0.0), DistCorr(0.0), tiplambda(0.0)
+        GeneralDataSetup(Name), relerr(0.02), tiprelerr(0.02), tipperr(0.0), DistCorr(
+            0.0), tiplambda(0.0)
       {
       }
 
@@ -34,8 +38,10 @@ namespace jif3D
       {
         //set the program option description for the MT part of the inversion
         po::options_description desc("MT options");
-        desc.add_options()("mtrelerr", po::value(&relerr)->default_value(0.02),
-            "The relative error for the MT data")("mtfine", po::value(&FineModelName),
+        desc.add_options()("mincond", po::value(&mincond)->default_value(1e-6))("maxcond",
+            po::value(&maxcond)->default_value(5))("mtrelerr",
+            po::value(&relerr)->default_value(0.02), "The relative error for the MT data")(
+            "mtfine", po::value(&FineModelName),
             "The name for the model with the MT forward geometry")("mtinvcovar",
             po::value<std::string>(&MTInvCovarName),
             "Inverse covariance matrix to use in MT misfit calculation.")("inderrors",
@@ -52,16 +58,18 @@ namespace jif3D
         return desc;
       }
 
-    bool SetupMT::SetupObjective(const po::variables_map &vm,
-        jif3D::JointObjective &Objective,
-        boost::shared_ptr<jif3D::GeneralModelTransform> Transform, double xorigin,
-        double yorigin, boost::filesystem::path TempDir)
+    bool SetupMT::SetupObjective(const boost::program_options::variables_map &vm,
+        jif3D::JointObjective &Objective, jif3D::ThreeDModelBase &InversionMesh,
+        jif3D::rvec &CovModVec, std::vector<size_t> &startindices,
+        std::vector<std::string> &SegmentNames, std::vector<parametertype> &SegmentTypes,
+        boost::filesystem::path TempDir)
       {
+        const size_t ngrid = InversionMesh.GetNModelElements();
+
         //first we ask the user a few questions
         //these are all values that are likely to change from run to run
         // so we do not want them as command line arguments or in the
         //configuration file
-        double mtlambda = 1.0;
         std::cout << "MT Lambda: ";
         std::cin >> mtlambda;
         //if lambda is negative we assume that no MT inversion is wanted
@@ -111,10 +119,12 @@ namespace jif3D
                   {
                     MTModel.SetConductivities()[0][0][i] *= (1 + 0.0001 * (i + 1));
                   }
-                if (xorigin != 0.0 || yorigin != 0.0)
-                  {
-                    MTModel.SetOrigin(xorigin, yorigin, 0.0);
-                  }
+
+                StartingParameters.resize(ngrid);
+                std::copy(MTModel.GetConductivities().origin(),
+                    MTModel.GetConductivities().origin() + ngrid,
+                    StartingParameters.begin());
+
                 bool WantDistCorr = (DistCorr > 0.0);
                 //setup the objective function for the MT data
                 boost::shared_ptr<jif3D::X3DFieldCalculator> FC = boost::make_shared<
@@ -170,6 +180,25 @@ namespace jif3D
                           { return std::max(a,b);});
                     MTObjective->SetDataError(MinErr);
                   }
+
+                size_t start = startindices.back();
+                size_t end = start + ngrid;
+                boost::shared_ptr<jif3D::ChainedTransform> ConductivityTransform(
+                    new jif3D::ChainedTransform);
+                jif3D::rvec RefModel(ngrid);
+                std::fill(RefModel.begin(), RefModel.end(), 1.0);
+                ConductivityTransform->AppendTransform(
+                    boost::shared_ptr<jif3D::GeneralModelTransform>(
+                        new jif3D::TanhTransform(std::log(mincond), std::log(maxcond))));
+                ConductivityTransform->AppendTransform(
+                    boost::shared_ptr<jif3D::GeneralModelTransform>(
+                        new jif3D::LogTransform(RefModel)));
+                Transform = boost::make_shared<jif3D::MultiSectionTransform>(2 * ngrid,
+                    start, end, ConductivityTransform);
+                startindices.push_back(end);
+                SegmentNames.push_back(Name);
+                SegmentTypes.push_back(GeneralDataSetup::gridparameter);
+
                 //add the MT part to the JointObjective that will be used
                 //for the inversion
                 Objective.AddObjective(MTObjective, Transform, mtlambda, "MT",
@@ -233,5 +262,42 @@ namespace jif3D
           }
         //return true if we added an MT objective function
         return (mtlambda > JointObjective::MinWeight);
+      }
+
+    void SetupMT::IterationOutput(const std::string &filename,
+        const jif3D::rvec &ModelVector)
+      {
+        if (mtlambda > JointObjective::MinWeight)
+          {
+            jif3D::rvec CondInvModel = Transform->GeneralizedToPhysical(ModelVector);
+            std::copy(CondInvModel.begin(), CondInvModel.end(),
+                MTModel.SetConductivities().origin());
+            MTModel.WriteVTK(filename + ".mt.inv.vtk");
+            MTModel.WriteNetCDF(filename + ".mt.inv.nc");
+          }
+      }
+
+    void SetupMT::FinalOutput(const jif3D::rvec &FinalModelVector)
+      {
+        if (mtlambda > JointObjective::MinWeight)
+          {
+            std::cout << "Writing final conductivity models " << std::endl;
+            std::string modelfilename = "result";
+            jif3D::rvec CondInvModel = Transform->GeneralizedToPhysical(FinalModelVector);
+            std::copy(CondInvModel.begin(), CondInvModel.end(),
+                MTModel.SetConductivities().origin());
+
+            auto MTData = MTObjective->GetObservedData();
+            auto MTDataVec = MTObjective->GetSyntheticData();
+            auto MTErrVec = MTObjective->GetDataError();
+            if (MTDataVec.size() > 0)
+              {
+                MTData.SetDataAndErrors(
+                    std::vector<double>(MTDataVec.begin(), MTDataVec.end()), MTErrVec);
+                MTData.WriteNetCDF(modelfilename + ".inv_imp.nc");
+              }
+            MTModel.WriteVTK(modelfilename + ".mt.inv.vtk");
+            MTModel.WriteNetCDF(modelfilename + ".mt.inv.nc");
+          }
       }
   }
