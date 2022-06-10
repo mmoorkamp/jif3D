@@ -19,6 +19,8 @@
 
 namespace jif3D
   {
+    class MagnetizationExtraParameterSetter;
+    class ThreeComponentMagneticData;
 
     class ThreeDMagnetizationModel: public ThreeDModelBase
       {
@@ -26,6 +28,7 @@ namespace jif3D
       //! The type of the background thickness and susceptibility vector, this is a std::vector because we want to easily append elements
       typedef std::vector<double> tBackgroundVec;
       typedef jif3D::GridOnlyModelCache<ThreeDMagnetizationModel> ModelCacheType;
+      typedef MagnetizationExtraParameterSetter ExtraParameterSetter;
     private:
       //! The susceptibilities of the background layers
       tBackgroundVec bg_susceptibilities;
@@ -34,18 +37,30 @@ namespace jif3D
       ThreeDModelBase::t3DModelData Magnetization_Y;
       ThreeDModelBase::t3DModelData Magnetization_Z;
     public:
+      ThreeDMagnetizationModel& operator=(const ThreeDModelBase& source);
+      ThreeDMagnetizationModel& operator=(const ThreeDMagnetizationModel& source);
+
       ThreeDMagnetizationModel();
       virtual ~ThreeDMagnetizationModel();
-      jif3D::rvec GetModelParameters() const
+      void SetModelParameter(const jif3D::rvec &ModelVec)
+        {
+          const size_t ngrid = GetData().num_elements();
+          std::copy(ModelVec.begin(), ModelVec.begin() + ngrid, SetData().origin());
+          std::copy(ModelVec.begin() + ngrid, ModelVec.begin() + 2 * ngrid,
+              Magnetization_Y.origin());
+          std::copy(ModelVec.begin() + 2 * ngrid, ModelVec.end(),
+              Magnetization_Z.origin());
+        }
+
+       jif3D::rvec GetModelParameters() const
         {
           const size_t ngrid = GetData().num_elements();
           jif3D::rvec parms(3 * ngrid);
-          std::copy(GetData().origin(), GetData().origin() + ngrid,
-              parms.begin());
+          std::copy(GetData().origin(), GetData().origin() + ngrid, parms.begin());
           std::copy(Magnetization_Y.origin(), Magnetization_Y.origin() + ngrid,
               parms.begin() + ngrid);
           std::copy(Magnetization_Z.origin(), Magnetization_Z.origin() + ngrid,
-                        parms.begin() + 2 * ngrid);
+              parms.begin() + 2 * ngrid);
           return parms;
         }
       //! The implementation class for magnetic and gravity data needs to know the number of model parameters
@@ -67,11 +82,11 @@ namespace jif3D
               boost::extents[nx.size() - 1][ny.size() - 1][nz.size() - 1]);
         }
       virtual void SetMeshSize(const size_t nx, const size_t ny, const size_t nz) override
-      {
+        {
           ThreeDModelBase::SetMeshSize(nx, ny, nz);
           Magnetization_Y.resize(boost::extents[nx][ny][nz]);
           Magnetization_Z.resize(boost::extents[nx][ny][nz]);
-      }
+        }
       t3DModelData& SetMagnetization_X()
         {
           return SetData();
@@ -117,6 +132,14 @@ namespace jif3D
 
       };
 
+    class J3DEXPORT MagnetizationExtraParameterSetter
+      {
+    public:
+      void operator()(ThreeDMagnetizationModel &Model, ThreeComponentMagneticData &Data,
+          const std::vector<double> &Sus)
+        {
+        }
+      };
   } /* namespace jif3D */
 
 #endif /* MAGNETICS_THREEDMAGNETIZATIONMODEL_H_ */

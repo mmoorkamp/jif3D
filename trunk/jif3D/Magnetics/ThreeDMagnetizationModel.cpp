@@ -33,7 +33,6 @@ namespace jif3D
         const ThreeDModelBase::t3DModelDim YCellCoords = GetYCoordinates();
         const ThreeDModelBase::t3DModelDim ZCellCoords = GetZCoordinates();
 
-
         //Make sure our data has the right dimensions and we have size information for each cell
         assert(GetData().num_dimensions() == 3);
         assert(GetData().shape()[0] == XCellCoords.size() - 1);
@@ -98,8 +97,7 @@ namespace jif3D
         //        DataVar.put(databuffer, zsize, ysize, xsize);
         cxxport::put_legacy_ncvar(DataVar, databuffer.data(), zsize, ysize, xsize);
         cxxport::put_legacy_ncvar(VpDataVar, databuffer_y.data(), zsize, ysize, xsize);
-        cxxport::put_legacy_ncvar(DensDataVar, databuffer_z.data(), zsize, ysize,
-            xsize);
+        cxxport::put_legacy_ncvar(DensDataVar, databuffer_z.data(), zsize, ysize, xsize);
 
         NetCDFFile.putAtt("Conventions", "CF-1.3");
       }
@@ -125,7 +123,6 @@ namespace jif3D
         Magnetization_Y.resize(boost::extents[NX][NY][NZ]);
         Magnetization_Z.resize(boost::extents[NX][NY][NZ]);
 
-
         // Read model from nc file
         std::vector<double> tmp_data_y(NX * NY * NZ), tmp_data_z(NX * NY * NZ);
         NcVar densIn = ModelFile.getVar("My");
@@ -144,6 +141,32 @@ namespace jif3D
                   }
               }
           }
+      }
+
+    ThreeDMagnetizationModel& ThreeDMagnetizationModel::operator=(
+        const ThreeDModelBase &source)
+      {
+        if (&source != this)
+          {
+            ThreeDModelBase::operator=(source);
+          }
+        return *this;
+      }
+
+    ThreeDMagnetizationModel& ThreeDMagnetizationModel::operator=(
+        const ThreeDMagnetizationModel &source)
+      {
+        if (&source != this)
+          {
+            ThreeDModelBase::operator=(source);
+            Magnetization_Y.resize(
+                boost::extents[source.Magnetization_Y.shape()[0]][source.Magnetization_Y.shape()[1]][source.Magnetization_Y.shape()[2]]);
+            Magnetization_Z.resize(
+                boost::extents[source.Magnetization_Z.shape()[0]][source.Magnetization_Z.shape()[1]][source.Magnetization_Z.shape()[2]]);
+            Magnetization_Y = source.Magnetization_Y;
+            Magnetization_Z = source.Magnetization_Z;
+          }
+        return *this;
       }
 
     ThreeDMagnetizationModel::ThreeDMagnetizationModel()
