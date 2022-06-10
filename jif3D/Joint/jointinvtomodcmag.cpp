@@ -36,7 +36,7 @@
 #include "../DCResistivity/DCResistivityCalculator.h"
 #include "../Magnetics/ThreeDSusceptibilityModel.h"
 #include "../Magnetics/ReadWriteMagneticData.h"
-#include "../Magnetics/OMPMagneticImp.h"
+#include "../Magnetics/OMPMagneticSusceptibilityImp.h"
 #include "../GravMag/ThreeDGravMagImplementation.h"
 #include "../GravMag/ThreeDGravMagCalculator.h"
 #include "SetupTomo.h"

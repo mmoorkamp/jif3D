@@ -8,7 +8,7 @@ alias joint : ../Regularization//regularization
               ../ModelBase//modelbase ../DataBase//database ../SurfaceWaves//surfwave
               ..//netcdf ..//netcdf_c++ ../ModelBase//anymodel ../MI//mi ..//boost_core ;
 	
-lib setup : SaltRelConstraint.cpp SetupGravity.cpp SetupMagnetics.cpp SetupMagneticGrad.cpp
+lib setup : GeneralDataSetup.cpp SaltRelConstraint.cpp SetupMagnetization.cpp SetupGravity.cpp SetupMagnetics.cpp SetupMagneticGrad.cpp
             SetupInversion.cpp SetupMT.cpp SetupRegularization.cpp SetupSW.cpp
             SetupTomo.cpp SetupCoupling.cpp SetupDCResistivity.cpp SetupResCoupling.cpp joint ;
 

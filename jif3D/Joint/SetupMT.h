@@ -9,6 +9,7 @@
 #define SETUPMT_H_
 
 #include "../Global/Jif3DGlobal.h"
+#include "GeneralDataSetup.h"
 #include "../MT/X3DModel.h"
 #include "../MT/X3DMTCalculator.h"
 #include "../MT/X3DTipperCalculator.h"
@@ -29,13 +30,12 @@ namespace jif3D
      * from the command line and through interactive input. It configures the objective
      * function for MT data and adds it to the joint objective.
      */
-    class J3DEXPORT SetupMT
+    class J3DEXPORT SetupMT: public GeneralDataSetup
       {
     private:
       //! The objective function object for magnetotelluric data using X3D as a forward engine
       boost::shared_ptr<jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator> > MTObjective;
       boost::shared_ptr<jif3D::ThreeDModelObjective<jif3D::X3DTipperCalculator> > TipObjective;
-
       //! The relative data error to assume for construction of the data variance
       double relerr;
       //! The relative error for the tipper
@@ -51,15 +51,19 @@ namespace jif3D
       //! The name of the executable for x3d
       std::string X3DName;
       double DistCorr;
+      double mtlambda;
       //! Weight for tipper data
       double tiplambda;
+      double mincond;
+      double maxcond;
+
     public:
       //! Get read-only access to the objective function object, for example to output misfit information
-      const jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator> &GetMTObjective()
+      const jif3D::ThreeDModelObjective<jif3D::X3DMTCalculator>& GetMTObjective()
         {
           return *MTObjective;
         }
-      const jif3D::ThreeDModelObjective<jif3D::X3DTipperCalculator> &GetTipObjective()
+      const jif3D::ThreeDModelObjective<jif3D::X3DTipperCalculator>& GetTipObjective()
         {
           return *TipObjective;
         }
@@ -80,21 +84,25 @@ namespace jif3D
        * @param TempDir Set the directory to which all temporary files are written, this directory must exist
        * @return True if the weight for  the MT objective is greater zero, i.e. we added an objective function to JointObjective, false otherwise
        */
-      bool
-      SetupObjective(const po::variables_map &vm, jif3D::JointObjective &Objective,
-          boost::shared_ptr<jif3D::GeneralModelTransform> Transform, double xorigin = 0.0,
-          double yorigin = 0.0, boost::filesystem::path TempDir =
-              boost::filesystem::current_path());
-          //! Return the MT model that has been set for the inversion
-          const
-      jif3D::X3DModel &GetModel() const
+      virtual bool
+      SetupObjective(const boost::program_options::variables_map &vm,
+          jif3D::JointObjective &Objective, jif3D::ThreeDModelBase &InversionMesh,
+          jif3D::rvec &CovModVec, std::vector<size_t> &startindices,
+          std::vector<std::string> &SegmentNames,
+          std::vector<parametertype> &SegmentTypes, boost::filesystem::path TempDir =
+              boost::filesystem::current_path()) override;
+      virtual void IterationOutput(const std::string &filename,
+          const jif3D::rvec &ModelVector) override;
+      virtual void FinalOutput(const jif3D::rvec &FinalModelVector) override;
+      //! Return the MT model that has been set for the inversion
+      const jif3D::X3DModel& GetModel() const
         {
           return MTModel;
         }
-       double GetDistCorr() const
-         {
-           return DistCorr;
-         }
+      double GetDistCorr() const
+        {
+          return DistCorr;
+        }
       SetupMT();
       virtual ~SetupMT();
       };

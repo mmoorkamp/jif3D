@@ -8,6 +8,7 @@
 #ifndef SETUPTOMO_H_
 #define SETUPTOMO_H_
 
+#include "GeneralDataSetup.h"
 #include "../Global/Jif3DGlobal.h"
 #include "../Inversion/JointObjective.h"
 #include "../Inversion/ThreeDModelObjective.h"
@@ -29,7 +30,7 @@ namespace jif3D
      * Also for the joint inversion the tomography model is always considered the starting model in
      * terms of geometry.
      */
-    class J3DEXPORT SetupTomo
+    class J3DEXPORT SetupTomo: public GeneralDataSetup
       {
     private:
       //! A shared pointer to the objective function object for seismic tomography data
@@ -46,17 +47,21 @@ namespace jif3D
       double tomolambda;
       //! The tomography starting model
       jif3D::ThreeDSeismicModel TomoModel;
+      double minslow;
+      double maxslow;
+      jif3D::TomographyData TomoData;
+      bool WriteRays;
     public:
       //! Read only access to the starting model for seismic tomography
       /*! Read only access to the starting model for seismic tomography
        * @return The object containing the starting model.
        */
-      const jif3D::ThreeDSeismicModel &GetModel() const
+      const jif3D::ThreeDSeismicModel& GetModel() const
         {
           return TomoModel;
         }
       //! read only access to the objective function object for seismic tomography data
-      const jif3D::ThreeDModelObjective<jif3D::TomographyCalculator> &GetTomoObjective()
+      const jif3D::ThreeDModelObjective<jif3D::TomographyCalculator>& GetTomoObjective()
         {
           return *TomoObjective;
         }
@@ -72,10 +77,16 @@ namespace jif3D
        * @param yorigin The origin for the inversion grid in y-direction
        * @return True if the weight the tomography objective is greater zero, i.e. we added an objective function to JointObjective, false otherwise
        */
-      bool
-      SetupObjective(const po::variables_map &vm, jif3D::JointObjective &Objective,
-          boost::shared_ptr<jif3D::GeneralModelTransform> Transform, double xorigin = 0.0,
-          double yorigin = 0.0);
+      virtual bool
+      SetupObjective(const boost::program_options::variables_map &vm,
+          jif3D::JointObjective &Objective, jif3D::ThreeDModelBase &InversionMesh,
+          jif3D::rvec &CovModVec, std::vector<size_t> &startindices,
+          std::vector<std::string> &SegmentNames,
+          std::vector<parametertype> &SegmentTypes, boost::filesystem::path TempDir =
+              boost::filesystem::current_path()) override;
+      virtual void IterationOutput(const std::string &filename,
+          const jif3D::rvec &ModelVector) override;
+      virtual void FinalOutput(const jif3D::rvec &FinalModelVector) override;
       SetupTomo();
       virtual ~SetupTomo();
       };
