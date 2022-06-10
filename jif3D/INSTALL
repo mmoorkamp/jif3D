@@ -1,18 +1,30 @@
+GETTING jif3D
+
+Currently the code is only available through the subversion version control system (subversion.tigris.org/) which can be installed easily on most Linux distributions (e.g. package subversion on Ubuntu). The command to get the code is
+
+svn checkout https://svn.code.sf.net/p/jif3d/jif3dsvn/trunk/jif3D jif3d
+
+This should create a directory jif3d with all source files in it.
+If you want to update to the latest version at a later point, go to the main jif3d directory and type
+
+svn up
+
+
 PREPARATION
 
 Make sure you have the following libraries installed and in the default search path for your 
 compiler. Under linux you might be able to install them as part of your distribution. One of
 the things still missing is some sort of autoconfiguration that enables and disables features
-with the availability of libraries. So at the moment you have to install all dependencies
-even if you do not plan to use the features (e.g. GPU computing) or work through compiler error
-messages.
+with the availability of libraries. Some parts of the compilation can be disabled though (see below).
 
-* Boost 1.65 or later from www.boost.org, in case of doubt use the latest version
-* netcdf from http://www.unidata.ucar.edu/software/netcdf/
-* netcdf-4 C++ from https://www.unidata.ucar.edu/downloads/netcdf/
+You need the following libraries:
+
+* Boost 1.70 or later from www.boost.org, in case of doubt use the latest version (package libboost-dev on Ubuntu)
+* netcdf from http://www.unidata.ucar.edu/software/netcdf/ (package libnetcdf-dev)
+* netcdf-4 C++ from https://www.unidata.ucar.edu/downloads/netcdf/ (package libnetcdf-c++4-dev)
 
 You can either download these packages from source and follow the compilation instructions or on
-Ubuntu these packages are part of the distribution. Just make sure you install the -dev versions as
+Ubuntu these packages are part of the distribution (others might have some or all of them). Just make sure you install the -dev versions as
 well, as these contain the necessary header files. 
 
 Optional libraries include 
@@ -20,11 +32,12 @@ Optional libraries include
   news.tiker.net/filebrowser/software/boost-bindings (rarely used now)
 * Nvidia's CUDA version 4.0 or higher from https://developer.nvidia.com/what-cuda, for
 gravity gpu computations
+By default the usage of these libraries is turned off. You can turn on gpu calculations for gravity and magnetic by setting <gpu>on in the Jamroot file.
 
 
 We are using boost-build as a build system. It is included in any distribution of boost or can be
-installed through the package manager on ubuntu or can be obtained separately. If you use the version included
-with the downloaded boost package, you might to have a look at the boost-build.jam file and adjust the path there
+installed through the package manager on ubuntu (libboost-tools-dev) or can be obtained separately (https://github.com/boostorg/build). 
+If you use the version included with the downloaded boost package, you might to have a look at the boost-build.jam file and adjust the path there
 to the location where you downloaded boost.
 
 
