@@ -282,6 +282,11 @@ namespace jif3D
         const std::vector<double> &Frequencies, const std::vector<double> &StatXCoord,
         const std::vector<double> &StatYCoord, const std::vector<double> &StatZCoord,
         const std::vector<double> &Imp, const std::vector<double> &Err);
+
+    J3DEXPORT void ReadImpedancesFromXML(const std::string &filename,
+        std::vector<double> &Frequencies, double &StatXCoord, double &StatYCoord,
+        double &StatZCoord, std::vector<double> &Imp, std::vector<double> &Err, std::vector<double> &Weight, std::vector<double> &Tipper, std::vector<double> &TippErr,  double &RotAngle);
+
   /* @} */
   }
 

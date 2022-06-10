@@ -24,6 +24,8 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/xml_parser.hpp>
 
 using netCDF::NcVar;
 using netCDF::NcFile;
@@ -1535,5 +1537,82 @@ namespace jif3D
               }
           }
       }
+
+    void ReadImpedancesFromXML(const std::string &filename,
+        std::vector<double> &Frequencies, double &StatXCoord, double &StatYCoord,
+        double &StatZCoord, std::vector<double> &Imp, std::vector<double> &Err,
+        std::vector<double> &Weight, std::vector<double> &Tipper,
+        std::vector<double> &TippErr, double &RotAngle)
+      {
+        namespace pt = boost::property_tree;
+        pt::ptree tree;
+        pt::read_xml(filename, tree);
+        RotAngle = 0.0;
+
+        const double convfactor = (4.0 * 1e-4 * acos(-1.0));
+
+        StatXCoord = tree.get<double>("EM_TF.Site.Location.Latitude", 0.0);
+        StatYCoord = tree.get<double>("EM_TF.Site.Location.Longitude", 0.0);
+        StatZCoord = -1.0 * tree.get<double>("EM_TF.Site.Location.Elevation", 0.0);
+        for (pt::ptree::value_type &v : tree.get_child("EM_TF.Data"))
+          {
+            if (v.first == "Period")
+              {
+                // The data function is used to access the data stored in a node.
+                double period = v.second.get<double>("<xmlattr>.value", 0.0);
+                std::cout << v.first << " " << period << std::endl;
+                Frequencies.push_back(1.0 / period);
+                for (auto Z : v.second)
+                  {
+                    if (Z.first == "Z")
+                      {
+                        for (auto Y : Z.second)
+                          {
+                            if (Y.first == "value")
+                              {
+                                std::cout << " " << Y.second.data() << std::endl;
+                                std::string s = Y.second.data();
+                                std::vector<std::string> SplitVec; // #2: Search for tokens
+                                boost::algorithm::trim(s);
+
+                                boost::algorithm::split(SplitVec, s,
+                                    boost::is_any_of(" "), boost::token_compress_on);
+                                Imp.push_back(std::stod(SplitVec.at(0)) * convfactor);
+                                Imp.push_back(std::stod(SplitVec.at(1)) * convfactor);
+                              }
+                          }
+                      }
+                    if (Z.first == "Z.VAR")
+                      {
+                        for (auto Y : Z.second)
+                          {
+                            if (Y.first == "value")
+                              {
+                                std::cout << " " << Y.second.data() << std::endl;
+                                std::string s = Y.second.data();
+                                boost::algorithm::trim(s);
+                                Err.push_back(std::stod(s) * convfactor);
+                                Err.push_back(std::stod(s) * convfactor);
+                              }
+                          }
+                      }
+
+                  }
+              }
+          }
+        if (Imp.size() != Err.size())
+          {
+            throw jif3D::FatalException(
+                "File: " + filename + " Number of impedances: "
+                    + std::to_string(Imp.size()) + " does not match number of Errors"
+                    + std::to_string(Err.size()), __FILE__,
+                __LINE__);
+          }
+        Weight.resize(Imp.size());
+        Tipper.resize(Imp.size() / 2);
+        TippErr.resize(Imp.size() / 2);
+        std::fill(Weight.begin(), Weight.end(), 0.0);
+      }
+
   }
 
