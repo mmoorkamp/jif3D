@@ -9,6 +9,7 @@
 #include <iomanip>
 #include <fstream>
 #include <string>
+#include <map>
 #include <boost/program_options.hpp>
 #include <boost/math/special_functions/relative_difference.hpp>
 #include <GeographicLib/UTMUPS.hpp>
@@ -158,6 +159,45 @@ void InterpolateError(const std::vector<double> &xvalues,
 
   }
 
+void ResortData(std::vector<double> &CurrFrequencies, std::vector<double> &CurrImpedances,
+    std::vector<double> &CurrErrors, std::vector<double> &CurrTip,
+    std::vector<double> &CurrTipErr, std::vector<double> &CurrWeight)
+  {
+    std::map<double, int, std::greater<double>> FreqMap;
+    for (size_t i = 0; i < CurrFrequencies.size(); ++i)
+      {
+        FreqMap.insert(std::make_pair(CurrFrequencies.at(i), i));
+      }
+
+    std::vector<double> NewFreq(CurrFrequencies.size()), NewImp(CurrImpedances.size()),
+        NewImpErr(CurrErrors.size()), NewTip(CurrTip.size()), NewTipErr(
+            CurrTipErr.size()), NewWeight(CurrWeight.size());
+    auto curr = FreqMap.begin();
+    for (size_t i = 0; i < FreqMap.size(); ++i)
+      {
+        NewFreq.at(i) = curr->first;
+        for (size_t j = 0; j < 8; ++j)
+          {
+            NewImp.at(i * 8 + j) = CurrImpedances.at(curr->second * 8 + j);
+            NewImpErr.at(i * 8 + j) = CurrErrors.at(curr->second * 8 + j);
+            NewWeight.at(i * 8 + j) = CurrWeight.at(curr->second * 8 + j);
+          }
+        for (size_t j = 0; j < 4; ++j)
+          {
+            NewTip.at(i * 4 + j) = CurrTip.at(curr->second * 4 + j);
+            NewTipErr.at(i * 4 + j) = CurrTipErr.at(curr->second * 4 + j);
+
+          }
+        curr++;
+      }
+    CurrFrequencies = NewFreq;
+    CurrImpedances = NewImp;
+    CurrErrors = NewImpErr;
+    CurrTip = NewTip;
+    CurrTipErr = NewTipErr;
+    CurrWeight = NewWeight;
+  }
+
 void SetMissing(std::complex<double> &value, double &error)
   {
     value = std::complex<double>(1.0, 1.0);
@@ -285,28 +325,36 @@ int main(int argc, char *argv[])
                   }
                 else
                   {
-                    jif3D::ReadImpedancesFromJ(StationName, CurrFrequencies, XC, YC, ZC,
-                        CurrImpedances, CurrErrors, CurrWeight, CurrAngle);
-                    for (size_t i = 0; i < CurrErrors.size(); ++i)
+                    if (extension == ".xml")
                       {
-                        if (CurrWeight.at(i) > 0.0)
+                        jif3D::ReadImpedancesFromXML(StationName, CurrFrequencies, XC, YC,
+                            ZC, CurrImpedances, CurrErrors, CurrWeight, CurrTip, CurrTipErr, CurrAngle);
+                      }
+                    else
+                      {
+                        jif3D::ReadImpedancesFromJ(StationName, CurrFrequencies, XC, YC,
+                            ZC, CurrImpedances, CurrErrors, CurrWeight, CurrAngle);
+                        for (size_t i = 0; i < CurrErrors.size(); ++i)
                           {
-                            if (CurrWeight.at(i) < weightlevel1)
+                            if (CurrWeight.at(i) > 0.0)
                               {
-                                std::cout << " Reweighting level 1: " << CurrWeight.at(i)
-                                    << std::endl;
-                                CurrErrors.at(i) /= CurrWeight.at(i);
-                              }
-                            if (CurrWeight.at(i) < weightlevel2)
-                              {
-                                std::cout << " Reweighting level 2 " << CurrWeight.at(i)
-                                    << std::endl;
-                                CurrErrors.at(i) *= 1e6;
+                                if (CurrWeight.at(i) < weightlevel1)
+                                  {
+                                    std::cout << " Reweighting level 1: "
+                                        << CurrWeight.at(i) << std::endl;
+                                    CurrErrors.at(i) /= CurrWeight.at(i);
+                                  }
+                                if (CurrWeight.at(i) < weightlevel2)
+                                  {
+                                    std::cout << " Reweighting level 2 "
+                                        << CurrWeight.at(i) << std::endl;
+                                    CurrErrors.at(i) *= 1e6;
+                                  }
                               }
                           }
+                        jif3D::ReadTipperFromJ(StationName, TipCurrFrequencies, XC, YC,
+                            ZC, CurrTip, CurrTipErr, CurrAngle);
                       }
-                    jif3D::ReadTipperFromJ(StationName, TipCurrFrequencies, XC, YC, ZC,
-                        CurrTip, CurrTipErr, CurrAngle);
                   }
                 if (rotate)
                   {
@@ -321,6 +369,7 @@ int main(int argc, char *argv[])
                 StatYCoord.at(stationindex) = YC;
                 StatZCoord.at(stationindex) = ZC;
                 Angles.at(stationindex) = CurrAngle;
+                ResortData(CurrFrequencies, CurrImpedances, CurrErrors, CurrTip, CurrTipErr, CurrWeight);
                 std::copy(CurrFrequencies.begin(), CurrFrequencies.end(),
                     std::back_inserter(MasterFreqs));
                 AllFreqs.push_back(CurrFrequencies);

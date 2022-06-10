@@ -57,19 +57,19 @@ namespace jif3D
       friend class access;
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
-      void serialize(Archive & ar, const unsigned int version)
+      void serialize(Archive &ar, const unsigned int version)
         {
           ar & base_object<ThreeDGravMagCalculator>(*this);
           ar & Sensitivities;
         }
     public:
       //! return a read only copy of the sensitivity matrix, this guarantees that cache information is preserved
-      const rmat &GetSensitivities() const
+      const rmat& GetSensitivities() const
         {
           return Sensitivities;
         }
       //! For efficiency we sometimes operate directly on the sensitivities, as we don't have guaranteed cache information, we enforce recalculation
-      rmat &SetSensitivities()
+      rmat& SetSensitivities()
         {
           CachedGravMagCalculator<PotentialDataType>::InvalidateCache();
           return Sensitivities;
@@ -86,7 +86,7 @@ namespace jif3D
         boost::shared_ptr<ThreeDGravMagImplementation<PotentialDataType> > TheImp) :
         CachedGravMagCalculator<PotentialDataType>(TheImp), Sensitivities()
       {
-std::cout << "Storing sensitivities in memory " << std::endl;
+        std::cout << "Storing sensitivities in memory " << std::endl;
       }
 
     template<class PotentialDataType>
