@@ -53,6 +53,8 @@ BOOST_AUTO_TEST_CASE (se_diff_test)
     const size_t nx = 20;
     jif3D::rvec x(nx);
     std::generate(x.begin(),x.end(),drand48);
+    const double sum = ublas::sum(x);
+    std::transform(x.begin(), x.end(), x.begin(),[sum](double a){return a/sum;});
     jif3D::rvec dx = jif3D::diff_shan_entropy(x);
     const double delta = 0.001;
     for (size_t i = 0; i < nx; ++i)
@@ -79,7 +81,7 @@ BOOST_AUTO_TEST_CASE (random_test)
     jif3D::rvec StartModel(msize);
     std::generate(StartModel.begin(), StartModel.end(), drand48);
 
-    jif3D::MutualInformationConstraint MI(0.0, 1.0, 0.0, 1.0, 50);
+    jif3D::MutualInformationConstraint MI(0.0, 1.2, 0.0, 1.3, 50);
 
     double mi = MI.CalcMisfit(StartModel);
     std::cout << "Random MI: " << mi << std::endl;
@@ -103,7 +105,7 @@ BOOST_AUTO_TEST_CASE (depend_test)
         StartModel(i) = StartModel(i-msize/2);
       }
 
-    jif3D::MutualInformationConstraint MI(0.0, 1.0, 0.0, 1.0, 50);
+    jif3D::MutualInformationConstraint MI(0.0, 1.2, 0.0, 1.3, 50);
     double mi = MI.CalcMisfit(StartModel);
     std::cout << "Depend MI: " << mi << std::endl;
 
@@ -125,7 +127,7 @@ BOOST_AUTO_TEST_CASE (depend_noise_test)
         StartModel(i) = StartModel(i-msize/2) + 0.1 * drand48();
       }
 
-    jif3D::MutualInformationConstraint MI(0.0, 1.0, 0.0, 2.0, 50);
+    jif3D::MutualInformationConstraint MI(0.0, 1.2, 0.0, 1.3, 50);
     double mi = MI.CalcMisfit(StartModel);
     std::cout << "Noise MI: " << mi << std::endl;
 
