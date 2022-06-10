@@ -18,13 +18,13 @@ using boost::numeric::ublas::subrange;
 
 namespace jif3D
   {
-    static const std::string MisfitFormat = " %15s ";
+    static const std::string MisfitFormat = " %25s ";
     /*! We want to stop the inversion when all of the data misfits are below
      * the expected chi-squared value. If the convergence limit for each individual
      * objective function. If it is positive, this objective function is checked
      * for convergence.
      * @param Objective A joint objective containing one or more individual objective functions
-     * @return True when converged, fals otherwise.
+     * @return True when converged, false otherwise.
      */
     bool CheckConvergence(const jif3D::JointObjective &Objective)
       {
