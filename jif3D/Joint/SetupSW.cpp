@@ -1,14 +1,13 @@
-/*
- * SetupSW.cpp
- *
- *  Created on: 29 Oct 2019
- *      Author: bweise
- */
+//
+// Created by wangchao on 2022/4/14.
+//
 
 #include "../SurfaceWaves/SurfaceWaveData.h"
 #include "../Global/FileUtil.h"
 #include "../Global/Noise.h"
 #include "../ModelTransforms/DensPVelTransform.h"
+#include "../Inversion/ModelTransforms.h"
+
 #include "SetupSW.h"
 #include <iostream>
 #include <vector>
@@ -17,30 +16,46 @@
 namespace jif3D
   {
 
-    const std::string Name = "Vs";
+    const std::string Name = "S-velocity";
 
     SetupSW::SetupSW() :
-        GeneralDataSetup(Name), relerr(2.0e-2), minerr(1), swlambda(0.0)
+        GeneralDataSetup(Name), relerr(2.0e-2), minerr(0.0), dswlambda(0.0)
       {
+
       }
 
     SetupSW::~SetupSW()
       {
+
       }
 
     po::options_description SetupSW::SetupOptions()
       {
         po::options_description desc("Surface wave tomography options");
         desc.add_options()("swmodel", po::value(&modelfilename),
-            "The name of the starting model for the surface wave tomography")("swdata",
+            "The name of the starting model for the surface wave tomography")("dswdata",
             po::value(&datafilename),
-            "The name of the data for the surface wave tomography")("swlambda",
-            po::value(&swlambda), "The weight for the surface wave tomography data")(
+            "The name of the data for the surface wave tomography")("dswlambda",
+            po::value(&dswlambda), "The weight for the surface wave tomography data")(
+            "minvs", po::value(&minvs)->default_value(1.5),
+            "The minimum shear wave velocivty")("maxvs",
+            po::value(&maxvs)->default_value(6.5), "The maximum shear wave velocivty")(
             "relerr", po::value(&relerr)->default_value(2.0e-2),
             "The relative error for the phase delay data")("minerr",
-            po::value(&minerr)->default_value(1),
-            "The minimal error for the phase delay data");
+            po::value(&minerr)->default_value(0.0),
+            "The picker error for the phase delay data");
         return desc;
+      }
+
+    void SetupSW::IterationOutput(const std::string &filename,
+        const jif3D::rvec &ModelVector)
+      {
+
+      }
+
+    void SetupSW::FinalOutput(const jif3D::rvec &FinalModelVector)
+      {
+
       }
 
     bool SetupSW::SetupObjective(const boost::program_options::variables_map &vm,
@@ -50,115 +65,68 @@ namespace jif3D
         boost::filesystem::path TempDir)
       {
 
-        const size_t ngrid = InversionMesh.GetNModelElements();
+        jif3D::SurfaceWaveData DSurfaceWaveData;
+        const size_t ngrid = InversionMesh.GetData().num_elements();
 
-        jif3D::SurfaceWaveData SurfaceWaveData;
-
-        swlambda = 1.0;
-        if (!vm.count("swlamda"))
+        dswlambda = 0.0;
+        if (!vm.count("dswlambda"))
           {
             std::cout << "Surface wave tomography Lambda: ";
-            std::cin >> swlambda;
+            std::cin >> dswlambda;
           }
-        if (swlambda > 0.0)
+
+        if (dswlambda > 0.0)
           {
             if (!vm.count("modelfilename"))
               {
-                //first we read in the starting model and the measured data
                 modelfilename = jif3D::AskFilename(
                     "Surface wave tomography inversion model Filename: ");
               }
-            //we read in the starting modelfile
-            SWModel.ReadNetCDF(modelfilename);
-            //write out the starting model as a .vtk file for plotting
-            SWModel.WriteVTK(modelfilename + ".vtk");
+            DSurfaceWaveModel.ReadNetCDF(modelfilename);
+            DSurfaceWaveModel.WriteVTK(modelfilename + ".vtk");
 
-            if (swlambda > JointObjective::MinWeight)
+            StartingParameters.resize(ngrid);
+            std::copy(DSurfaceWaveModel.GetData().origin(),
+                DSurfaceWaveModel.GetData().origin() + ngrid, StartingParameters.begin());
+
+            if (!vm.count("swdata"))
               {
-                if (!vm.count("swdata"))
-                  {
-                    //get the name of the file containing the data and read it in
-                    datafilename = jif3D::AskFilename(
-                        "Surface wave tomography Data Filename: ");
-                  }
-                //read in data
-                SurfaceWaveData.ReadNetCDF(datafilename);
-
-                size_t start = startindices.back();
-                size_t end = start + ngrid;
-
-                std::vector<double> SurfaceWaveError = ConstructError(
-                    SurfaceWaveData.GetData(), SurfaceWaveData.GetErrors(), relerr,
-                    minerr);
-                jif3D::SurfaceWaveCalculator Calculator;
-                Calculator.set_distance_tolerance(1.0);
-                Calculator.set_vel_tolerance(0.001);
-                Calculator.set_false_east(500000.0);
-                Calculator.set_root_search_iterations(50);
-                Calculator.set_mode_skip_iterations(2);
-                SurfaceWaveData.SetDataAndErrors(SurfaceWaveData.GetData(),
-                    SurfaceWaveError);
-
-                SurfaceWaveObjective = boost::make_shared<
-                    jif3D::ThreeDModelObjective<jif3D::SurfaceWaveCalculator>>(
-                    Calculator);
-
-                SurfaceWaveObjective->SetObservedData(SurfaceWaveData);
-                SurfaceWaveObjective->SetCoarseModelGeometry(SWModel);
-                //we assume the same error for all measurements
-                //this is either the default value set in the constructor
-                //or set by the user
-                SurfaceWaveObjective->SetDataError(SurfaceWaveError);
-
-                Objective.AddObjective(SurfaceWaveObjective, Transform, swlambda,
-                    "SWTomo", JointObjective::datafit);
-                startindices.push_back(end);
-
-                std::cout << "SurfaceWave tomo ndata: "
-                    << SurfaceWaveData.GetData().size() << std::endl;
-                std::cout << "SurfaceWave tomo lambda: " << swlambda << std::endl;
+                datafilename = jif3D::AskFilename(
+                    "Surface wave tomography Data Filename: ");
               }
+            DSurfaceWaveData.ReadNetCDF(datafilename);
+
+            std::vector<double> DSurfaceWaveError = ConstructError(
+                DSurfaceWaveData.GetData(), DSurfaceWaveData.GetErrors(), relerr, minerr);
+            DSurfaceWaveData.SetDataAndErrors(DSurfaceWaveData.GetData(),
+                DSurfaceWaveError);
+
+            jif3D::SurfaceWaveCalculator Calculator;
+            DSurfaceWaveObjective = boost::make_shared<
+                jif3D::ThreeDModelObjective<jif3D::SurfaceWaveCalculator>>(Calculator);
+
+            size_t start = startindices.back();
+            size_t end = start + ngrid;
+            boost::shared_ptr<jif3D::GeneralModelTransform> SWTrans = boost::make_shared<
+                jif3D::TanhTransform>(minvs, maxvs);
+            Transform = boost::make_shared<jif3D::MultiSectionTransform>(2 * ngrid, start,
+                end, SWTrans);
+            startindices.push_back(end);
+            SegmentNames.push_back(Name);
+            SegmentTypes.push_back(GeneralDataSetup::gridparameter);
+
+            DSurfaceWaveObjective->SetObservedData(DSurfaceWaveData);
+            DSurfaceWaveObjective->SetCoarseModelGeometry(DSurfaceWaveModel);
+            DSurfaceWaveObjective->SetDataError(DSurfaceWaveError);
+
+            Objective.AddObjective(DSurfaceWaveObjective, Transform, dswlambda, "DSWTomo",
+                JointObjective::datafit);
+            std::cout << "DSurfaceWave tomo ndata: " << DSurfaceWaveData.GetData().size()
+                << std::endl;
+            std::cout << "DSurfaceWave tomo lambda: " << dswlambda << std::endl;
+
           }
-        //indicate whether we added a tomography objective
-        return (swlambda > JointObjective::MinWeight);
-      }
-
-
-    void SetupSW::IterationOutput(const std::string &filename,
-        const jif3D::rvec &ModelVector)
-      {
-        if (swlambda > JointObjective::MinWeight)
-          {
-            jif3D::rvec CondInvModel = Transform->GeneralizedToPhysical(ModelVector);
-            std::copy(CondInvModel.begin(), CondInvModel.end(),
-                SWModel.SetData().origin());
-            SWModel.WriteVTK(filename + ".mt.inv.vtk");
-            SWModel.WriteNetCDF(filename + ".mt.inv.nc");
-          }
-      }
-
-    void SetupSW::FinalOutput(const jif3D::rvec &FinalModelVector)
-      {
-        if (swlambda > JointObjective::MinWeight)
-          {
-            std::string modelfilename = "result";
-            jif3D::rvec CondInvModel = Transform->GeneralizedToPhysical(FinalModelVector);
-            std::copy(CondInvModel.begin(), CondInvModel.end(),
-                SWModel.SetData().origin());
-
-            auto SWData = SurfaceWaveObjective->GetObservedData();
-            auto SWDataVec = SurfaceWaveObjective->GetSyntheticData();
-            auto SWErrVec = SurfaceWaveObjective->GetDataError();
-            if (SWDataVec.size() > 0)
-              {
-                SWData.SetDataAndErrors(
-                    std::vector<double>(SWDataVec.begin(), SWDataVec.end()), SWErrVec);
-                SWData.WriteNetCDF(modelfilename + "inv_imp.nc");
-              }
-            SWModel.WriteVTK(modelfilename + ".mt.inv.vtk");
-            SWModel.WriteNetCDF(modelfilename + ".mt.inv.nc");
-          }
+        return (dswlambda > 0.0);
       }
 
   }
-

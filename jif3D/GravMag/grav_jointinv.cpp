@@ -29,6 +29,7 @@
 #include "../Joint/SetupMagnetization.h"
 #include "../Joint/SetupMT.h"
 #include "../Joint/SetupTomo.h"
+#include "../Joint/SetupSW.h"
 #include "../Joint/InversionOutput.h"
 #include "../Joint/GeneralDataSetup.h"
 #include <iostream>
@@ -66,6 +67,7 @@ int main(int argc, char *argv[])
     DataSetups.push_back(boost::make_shared<jif3D::SetupMagnetization>());
     DataSetups.push_back(boost::make_shared<jif3D::SetupMT>());
     DataSetups.push_back(boost::make_shared<jif3D::SetupTomo>());
+    DataSetups.push_back(boost::make_shared<jif3D::SetupSW>());
 
 
     const size_t nDataSetups = DataSetups.size();
@@ -165,7 +167,7 @@ int main(int argc, char *argv[])
     else
       {
         Coupling = boost::make_shared<jif3D::CrossGradient>(*Mesh);
-        CouplingName = "Cross-gradient";
+        CouplingName = "CG";
       }
 
     for (size_t i = 0; i < SegmentNames.size(); ++i)
@@ -189,7 +191,7 @@ int main(int argc, char *argv[])
                         Copy);
                     auto CurrCoupling = boost::shared_ptr<jif3D::ObjectiveFunction>(
                         Coupling->clone());
-                    std::string SegmentDisplay = CouplingName + " " + SegmentNames.at(i)
+                    std::string SegmentDisplay = CouplingName + "-" + SegmentNames.at(i)
                         + "-" + SegmentNames.at(j);
                     Objective->AddObjective(CurrCoupling, CouplingTrans, couplinglambda,
                         SegmentDisplay, jif3D::JointObjective::coupling);
