@@ -100,14 +100,6 @@ namespace jif3D
                 MagData.ReadNetCDF(magdatafilename);
                 MagData.WriteVTK(magdatafilename);
               }
-            else
-              {
-                //create dummy dataset to make constrained inversion more convenient
-                //otherwise the user would have to do this or we would have to create extra settings
-                MagData.AddMeasurementPoint(0.0, 0.0, 0.0);
-                std::vector<double> dummy(1, 1.0);
-                MagData.SetDataAndErrors(dummy, dummy);
-              }
             std::string magmodelfilename = jif3D::AskFilename(
                 "Susceptibility Model Filename: ");
             Model.ReadNetCDF(magmodelfilename);
