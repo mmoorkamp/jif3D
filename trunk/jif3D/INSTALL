@@ -1,6 +1,6 @@
 GETTING jif3D
 
-Currently the code is only available through the subversion version control system (subversion.tigris.org/) which can be installed easily on most Linux distributions (e.g. package subversion on Ubuntu). The command to get the code is
+Currently the code is only available through the subversion version control system (https://subversion.apache.org/) which can be installed easily on most Linux distributions (e.g. package subversion on Ubuntu). The command to get the code is
 
 svn checkout https://svn.code.sf.net/p/jif3d/jif3dsvn/trunk/jif3D jif3d
 
@@ -30,12 +30,12 @@ well, as these contain the necessary header files.
 Optional libraries include 
 * The boost bindings for Lapack and Atlas from 
   news.tiker.net/filebrowser/software/boost-bindings (rarely used now)
-* Nvidia's CUDA version 4.0 or higher from https://developer.nvidia.com/what-cuda, for
+* Nvidia's CUDA version 4.0 or higher from https://developer.nvidia.com/cuda-toolkit, for
 gravity gpu computations
 By default the usage of these libraries is turned off. You can turn on gpu calculations for gravity and magnetic by setting <gpu>on in the Jamroot file.
 
 
-We are using boost-build as a build system. It is included in any distribution of boost or can be
+We are using boost-build as a build system. It is included in any distribution of boost, can be
 installed through the package manager on ubuntu (libboost-tools-dev) or can be obtained separately (https://github.com/boostorg/build). 
 If you use the version included with the downloaded boost package, you might to have a look at the boost-build.jam file and adjust the path there
 to the location where you downloaded boost.

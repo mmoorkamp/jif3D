@@ -8,10 +8,10 @@
 #ifndef SURFACEWAVES_SURFACEWAVECALCULATOR_H_
 #define SURFACEWAVES_SURFACEWAVECALCULATOR_H_
 
+#include "../Global/Serialization.h"
 #include "../SurfaceWaves/SurfaceWaveModel.h"
 #include "../SurfaceWaves/SurfaceWaveData.h"
 #include "../SurfaceWaves/SurfaceWaveFunctions.h"
-#include <boost/math/tools/roots.hpp>
 
 namespace jif3D
   {

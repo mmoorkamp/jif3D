@@ -23,9 +23,6 @@ feature.compose <magcache>mem : <define>MAGMEM ;
 feature.compose <magcache>none : <define>MAGCALC ; 
 
 
-feature.feature seismic : surface traveltime  : composite propagated symmetric ;
-feature.compose <seismic>traveltime : <define>HAVETRAVELTIME  ;
-
 feature.feature parallelization : openmp hpx  : composite propagated symmetric ;
 feature.compose <parallelization>openmp : <define>HAVEOPENMP <cflags>" -fopenmp  " <linkflags>" -fopenmp  " ;
 feature.compose <parallelization>hpx : <define>HAVEHPX <hpx>on <cflags>"-fopenmp `pkg-config --cflags hpx_application`" <linkflags>"-fopenmp  `pkg-config --libs hpx_application` " ;
@@ -113,7 +110,6 @@ alias boost_core : boost_program_options boost_filesystem  boost_system ;
 
 build-project Global ;
 build-project Gravity ;
-build-project GravMag ;
 build-project Magnetics ;
 build-project MT ;
 build-project Tomo ;

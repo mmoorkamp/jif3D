@@ -53,12 +53,12 @@ namespace jif3D
 
       }
 
-    void SetupSW::FinalOutput(const jif3D::rvec &FinalModelVector)
+    void SetupSW::FinalOutput(const std::string &filename ,const jif3D::rvec &FinalModelVector)
       {
 
       }
 
-    bool SetupSW::SetupObjective(const boost::program_options::variables_map &vm,
+    bool SetupSW::SetupObjective(const po::variables_map &vm,
         jif3D::JointObjective &Objective, jif3D::ThreeDModelBase &InversionMesh,
         jif3D::rvec &CovModVec, std::vector<size_t> &startindices,
         std::vector<std::string> &SegmentNames, std::vector<parametertype> &SegmentTypes,

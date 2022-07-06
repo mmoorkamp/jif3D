@@ -11,11 +11,15 @@
 #include <boost/make_shared.hpp>
 #include "SetupDCResistivity.h"
 #include "../DCResistivity/DCResistivityData.h"
+#include "../Inversion/ModelTransforms.h"
 
 namespace jif3D
   {
+const std::string Name = "Resistivity";
+
     SetupDCResistivity::SetupDCResistivity() :
-		relerr(0.02), minerr(1e-3), CellSize(), dclambda(0.0)
+    		GeneralDataSetup(Name),
+		relerr(0.02), minerr(1e-3), maxres(1e6), minres(0.1),CellSize(), dclambda(0.0)
       {
       }
 
@@ -36,17 +40,57 @@ namespace jif3D
             "The relative error for the DC resistivity data")("dcminerr",
             po::value(&minerr)->default_value(1e-3))("dclambda", po::value(&dclambda),
                     "The weight for the DCResistivity data")("dcfine",
-            po::value(&CellSize), "The cell size in m for the refined DC model");
+            po::value(&CellSize), "The cell size in m for the refined DC model")("maxres",po::value(&maxres)->default_value(1e6),"The maximum resistivity for DC resistivity")("minres",po::value(&minres)->default_value(0.1),"The maximum resistivity for DC resistivity");
 
         return desc;
       }
 
-    bool SetupDCResistivity::SetupObjective(const po::variables_map &vm,
-       jif3D::JointObjective &Objective,
-       boost::shared_ptr<jif3D::GeneralModelTransform> Transform, double xorigin,
-	   double yorigin)
+
+    void SetupDCResistivity::IterationOutput(const std::string &filename, const jif3D::rvec &ModelVector)
+    {
+        if (dclambda > JointObjective::MinWeight)
+          {
+            jif3D::rvec DCInvModel = Transform->GeneralizedToPhysical(ModelVector);
+            std::copy(DCInvModel.begin(), DCInvModel.end(),
+            		DCModel.SetResistivities().origin());
+
+            DCModel.WriteVTK(filename + ".dc.inv.vtk");
+            DCModel.WriteNetCDF(filename + ".dc.inv.nc");
+
+          }
+    }
+    void SetupDCResistivity::FinalOutput(const std::string &filename ,const jif3D::rvec &FinalModelVector)
+    {
+        if (dclambda > JointObjective::MinWeight)
+          {
+            std::cout << "Writing final resistivity models " << std::endl;
+            jif3D::rvec DCInvModel = Transform->GeneralizedToPhysical(FinalModelVector);
+
+            std::copy(DCInvModel.begin(), DCInvModel.end(),
+                DCModel.SetResistivities().origin());
+
+            auto DCDataVec = DCObjective->GetSyntheticData();
+            auto DCErrVec = DCObjective->GetDataError();
+            if (DCDataVec.size() > 0)
+              {
+                DCData.SetDataAndErrors(
+                    std::vector<double>(DCDataVec.begin(), DCDataVec.end()),
+                    DCErrVec);
+                DCData.WriteNetCDF(filename + ".inv_tt.nc");
+              }
+            DCModel.WriteVTK(filename + ".tomo.inv.vtk");
+            DCModel.WriteNetCDF(filename + ".tomo.inv.nc");
+          }
+    }
+
+
+    bool SetupDCResistivity::SetupObjective(const po::variables_map &vm, jif3D::JointObjective &Objective,
+            jif3D::ThreeDModelBase &InversionMesh, jif3D::rvec &CovModVec, std::vector<size_t> &startindices,
+            std::vector<std::string> &SegmentNames,
+            std::vector<parametertype> &SegmentTypes,
+            boost::filesystem::path TempDir)
       {
-    	jif3D::DCResistivityData DCData;
+        const size_t ngrid = InversionMesh.GetData().num_elements();
 
         dclambda = 1.0;
         if (!vm.count("dclamda"))
@@ -76,11 +120,6 @@ namespace jif3D
               }
             //read in data
             DCData.ReadNetCDF(dcdatafilename);
-
-            if (xorigin != 0.0 || yorigin != 0.0)
-              {
-            	DCModel.SetOrigin(xorigin, yorigin, 0.0);
-              }
 
             jif3D::DCResistivityCalculator DCCalculator;
             DCObjective = boost::make_shared<
@@ -130,6 +169,17 @@ namespace jif3D
                 //copy measurement configuration to refined model
                 DCObjective->SetFineModelGeometry(DCFineGeometry);
               }
+
+            size_t start = startindices.back();
+            size_t end = start + ngrid;
+            boost::shared_ptr<jif3D::GeneralModelTransform> DCTrans =
+                boost::make_shared<jif3D::TanhTransform>(minres, maxres);
+            Transform = boost::make_shared<jif3D::MultiSectionTransform>(2 * ngrid, start,
+                end, DCTrans);
+            startindices.push_back(end);
+            SegmentNames.push_back(Name);
+            SegmentTypes.push_back(GeneralDataSetup::gridparameter);
+
             Objective.AddObjective(DCObjective, Transform, dclambda, "DC Resistivity",
             		JointObjective::datafit);
             std::cout << "Resistivity ndata: " << DCData.GetData().size() << std::endl;

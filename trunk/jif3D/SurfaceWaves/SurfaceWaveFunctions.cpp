@@ -5,6 +5,10 @@
  *      Author: bweise
  */
 
+#include "../SurfaceWaves/SurfaceWaveFunctions.h"
+#include "../ModelBase/ThreeDModelBase.h"
+#include "../Global/NumUtil.h"
+
 #include <vector>
 #include <complex>
 #include <tuple>
@@ -15,9 +19,6 @@
 #include <GeographicLib/Rhumb.hpp>
 #include <GeographicLib/Constants.hpp>
 #include <boost/math/special_functions/sign.hpp>
-#include "../SurfaceWaves/SurfaceWaveFunctions.h"
-#include "../ModelBase/ThreeDModelBase.h"
-#include "../Global/NumUtil.h"
 
 namespace jif3D
   {

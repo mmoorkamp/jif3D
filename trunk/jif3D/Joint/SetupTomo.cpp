@@ -49,7 +49,7 @@ namespace jif3D
         return desc;
       }
 
-    bool SetupTomo::SetupObjective(const boost::program_options::variables_map &vm,
+    bool SetupTomo::SetupObjective(const po::variables_map &vm,
         jif3D::JointObjective &Objective, jif3D::ThreeDModelBase &InversionMesh,
         jif3D::rvec &CovModVec, std::vector<size_t> &startindices,
         std::vector<std::string> &SegmentNames, std::vector<parametertype> &SegmentTypes,
@@ -183,12 +183,11 @@ namespace jif3D
           }
       }
 
-    void SetupTomo::FinalOutput(const jif3D::rvec &FinalModelVector)
+    void SetupTomo::FinalOutput(const std::string &filename, const jif3D::rvec &FinalModelVector)
       {
         if (tomolambda > JointObjective::MinWeight)
           {
             std::cout << "Writing final slowness models " << std::endl;
-            std::string modelfilename = "result";
             jif3D::rvec TomoInvModel = Transform->GeneralizedToPhysical(FinalModelVector);
 
             std::copy(TomoInvModel.begin(), TomoInvModel.end(),
@@ -201,10 +200,10 @@ namespace jif3D
                 TomoData.SetDataAndErrors(
                     std::vector<double>(TomoDataVec.begin(), TomoDataVec.end()),
                     TomoErrVec);
-                TomoData.WriteNetCDF(modelfilename + ".inv_tt.nc");
+                TomoData.WriteNetCDF(filename + ".inv_tt.nc");
               }
-            TomoModel.WriteVTK(modelfilename + ".tomo.inv.vtk");
-            TomoModel.WriteNetCDF(modelfilename + ".tomo.inv.nc");
+            TomoModel.WriteVTK(filename + ".tomo.inv.vtk");
+            TomoModel.WriteNetCDF(filename + ".tomo.inv.nc");
           }
       }
 

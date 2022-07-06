@@ -25,8 +25,6 @@
 
 namespace jif3D
   {
-    namespace po = boost::program_options;
-
     /** \addtogroup joint Joint inversion routines */
     /* @{ */
 
@@ -117,7 +115,7 @@ namespace jif3D
           boost::filesystem::path TempDir =
               boost::filesystem::current_path()) override;
       virtual void IterationOutput(const std::string &filename, const jif3D::rvec &ModelVector) override;
-      virtual void FinalOutput(const jif3D::rvec &FinalModelVector) override;
+      virtual void FinalOutput(const std::string &filename ,const jif3D::rvec &FinalModelVector) override;
 
       SetupMagnetics();
       virtual ~SetupMagnetics();

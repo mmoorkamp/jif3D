@@ -13,11 +13,27 @@
 #include "../ModelBase/ThreeDModelBase.h"
 #include "../Inversion/JointObjective.h"
 #include <boost/filesystem.hpp>
-#include <boost/program_options.hpp>
 #include <boost/shared_ptr.hpp>
 #include <string>
+
+#ifdef HAVEHPX
+#include <hpx/modules/program_options.hpp>
+#endif
+#ifdef HAVEOPENMP
+#include <boost/program_options.hpp>
+#endif
+
+#ifdef HAVEHPX
+namespace po = hpx::program_options;
+#endif
+#ifdef HAVEOPENMP
+namespace po = boost::program_options;
+#endif
+
 namespace jif3D
   {
+
+
 
     class GeneralDataSetup
       {
@@ -44,9 +60,9 @@ namespace jif3D
         {
           return StartingParameters;
         }
-      virtual boost::program_options::options_description SetupOptions() = 0;
+      virtual po::options_description SetupOptions() = 0;
       virtual bool
-      SetupObjective(const boost::program_options::variables_map &vm,
+      SetupObjective(const po::variables_map &vm,
           jif3D::JointObjective &Objective, jif3D::ThreeDModelBase &InversionMesh,
           jif3D::rvec &CovModVec, std::vector<size_t> &startindices,
           std::vector<std::string> &SegmentNames,
@@ -54,7 +70,7 @@ namespace jif3D
               boost::filesystem::current_path()) = 0;
       virtual void IterationOutput(const std::string &filename,
           const jif3D::rvec &ModelVector) = 0;
-      virtual void FinalOutput(const jif3D::rvec &FinalModelVector) =0;
+      virtual void FinalOutput(const std::string &filename ,const jif3D::rvec &FinalModelVector) =0;
       GeneralDataSetup(std::string Name);
       virtual ~GeneralDataSetup();
       };

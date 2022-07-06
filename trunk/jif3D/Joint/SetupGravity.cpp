@@ -316,9 +316,8 @@ namespace jif3D
           }
       }
 
-    void SetupGravity::FinalOutput(const jif3D::rvec &FinalModelVector)
+    void SetupGravity::FinalOutput(const std::string &filename ,const jif3D::rvec &FinalModelVector)
       {
-        std::string modelfilename("result");
 
         const size_t ngrid = ScalGravModel.GetNModelElements();
 
@@ -328,8 +327,8 @@ namespace jif3D
             jif3D::rvec DensVec = Transform->GeneralizedToPhysical(FinalModelVector);
             std::copy(DensVec.begin(), DensVec.begin() + ngrid,
                 ScalGravModel.SetDensities().origin());
-            ScalGravModel.WriteVTK(modelfilename + ".grav.inv.vtk");
-            ScalGravModel.WriteNetCDF(modelfilename + ".grav.inv.nc");
+            ScalGravModel.WriteVTK(filename + ".grav.inv.vtk");
+            ScalGravModel.WriteNetCDF(filename + ".grav.inv.nc");
 
           }
         if (HaveScal)
@@ -338,15 +337,15 @@ namespace jif3D
             jif3D::rvec ScalGravInvData(ScalGravObjective->GetSyntheticData());
             if (ScalGravInvData.size() > 0)
               {
-                jif3D::SaveScalarGravityMeasurements(modelfilename + ".inv_sgd.nc",
+                jif3D::SaveScalarGravityMeasurements(filename + ".inv_sgd.nc",
                     std::vector<double>(ScalGravInvData.begin(), ScalGravInvData.end()),
                     ObsData.GetMeasPosX(), ObsData.GetMeasPosY(), ObsData.GetMeasPosZ(),
                     ScalGravObjective->GetDataError());
-                jif3D::Write3DDataToVTK(modelfilename + ".inv_sgd.vtk", "grav_accel",
+                jif3D::Write3DDataToVTK(filename + ".inv_sgd.vtk", "grav_accel",
                     std::vector<double>(ScalGravInvData.begin(), ScalGravInvData.end()),
                     ObsData.GetMeasPosX(), ObsData.GetMeasPosY(), ObsData.GetMeasPosZ());
                 jif3D::rvec ScalDiff(ScalGravObjective->GetIndividualMisfit());
-                jif3D::SaveScalarGravityMeasurements(modelfilename + ".diff_sgd.nc",
+                jif3D::SaveScalarGravityMeasurements(filename + ".diff_sgd.nc",
                     std::vector<double>(ScalDiff.begin(), ScalDiff.end()),
                     ObsData.GetMeasPosX(), ObsData.GetMeasPosY(), ObsData.GetMeasPosZ(),
                     ScalGravObjective->GetDataError());
@@ -359,11 +358,11 @@ namespace jif3D
             jif3D::rvec FTGInvData(FTGObjective->GetSyntheticData());
             if (FTGInvData.size() > 0)
               {
-                jif3D::SaveTensorGravityMeasurements(modelfilename + ".inv_ftg.nc",
+                jif3D::SaveTensorGravityMeasurements(filename + ".inv_ftg.nc",
                     std::vector<double>(FTGInvData.begin(), FTGInvData.end()),
                     ObsData.GetMeasPosX(), ObsData.GetMeasPosY(), ObsData.GetMeasPosZ(),
                     FTGObjective->GetDataError());
-                jif3D::Write3DTensorDataToVTK(modelfilename + ".inv_ftg.vtk", "U",
+                jif3D::Write3DTensorDataToVTK(filename + ".inv_ftg.vtk", "U",
                     std::vector<double>(FTGInvData.begin(), FTGInvData.end()),
                     ObsData.GetMeasPosX(), ObsData.GetMeasPosY(), ObsData.GetMeasPosZ());
               }

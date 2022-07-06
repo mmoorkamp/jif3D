@@ -10,13 +10,12 @@ alias joint : ../Regularization//regularization
 	
 lib setup : GeneralDataSetup.cpp SaltRelConstraint.cpp SetupMagnetization.cpp SetupGravity.cpp SetupMagnetics.cpp SetupMagneticGrad.cpp
             SetupInversion.cpp SetupMT.cpp SetupRegularization.cpp SetupSW.cpp
-            SetupTomo.cpp SetupCoupling.cpp SetupDCResistivity.cpp SetupResCoupling.cpp joint ;
+            SetupTomo.cpp SetupCoupling.cpp SetupDCResistivity.cpp  joint ;
 
 
 
 unit-test saltrel_test :  test_saltrel_objective.cpp joint setup  ;
 exe jointinv : jointinv.cpp  joint setup  ;
-#exe jointinvtomodcmag : jointinvtomodcmag.cpp  ../DCResistivity//dcresistivity joint setup ..//netcdf ..//netcdf_c++ : <eigen>off:<build>no  ;
 
 install $(TOP)/bin : jointinv :
     <install-dependencies>on <install-type>EXE

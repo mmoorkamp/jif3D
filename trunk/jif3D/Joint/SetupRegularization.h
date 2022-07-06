@@ -9,6 +9,7 @@
 #define SETUPREGULARIZATION_H_
 
 #include "../Global/Jif3DGlobal.h"
+#include "GeneralDataSetup.h"
 #include "../Inversion/ModelTransforms.h"
 #include "../Regularization/RegularizationFunction.h"
 #include "../ModelBase/ThreeDModelBase.h"
@@ -17,7 +18,6 @@
 
 namespace jif3D
   {
-    namespace po = boost::program_options;
 
     /** \addtogroup joint Joint inversion routines */
     /* @{ */
