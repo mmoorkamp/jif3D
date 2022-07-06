@@ -76,7 +76,8 @@ namespace jif3D
         //otherwise we will have a problem
         if (!std::is_sorted(CellCoord.begin(), CellCoord.end()))
           {
-            std::copy(CellCoord.begin(), CellCoord.end(),std::ostream_iterator<double>(std::cerr, " "));
+            std::copy(CellCoord.begin(), CellCoord.end(),
+                std::ostream_iterator<double>(std::cerr, " "));
             std::cerr << "\n";
             throw jif3D::FatalException(
                 "Cell coordinates in netcdf file are not in increasing order: "
@@ -182,8 +183,9 @@ namespace jif3D
             // if the units in the file are different from what we expect|
             if (unitInFile.compare(UnitsName) != 0)
               {
-                throw jif3D::FatalException(
-                    "Units in file do not match expected units !");
+                throw jif3D::FatalException("Units in file do not match expected units !",
+                    __FILE__,
+                    __LINE__);
               }
 
             //read netcdf data from file

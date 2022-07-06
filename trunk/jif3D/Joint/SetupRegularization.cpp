@@ -117,8 +117,7 @@ namespace jif3D
       }
 
     boost::shared_ptr<jif3D::RegularizationFunction> SetupRegularization::SetupObjective(
-        const po::variables_map &vm, const ThreeDModelBase &StartModel,
-        const jif3D::rvec &CovModVec)
+        const po::variables_map &vm, const ThreeDModelBase &StartModel)
       {
         //if we only want to use a minimum model, we do not
         //have to worry about tear models etc. so we create the object
@@ -183,28 +182,6 @@ namespace jif3D
                         TearModZ, beta, vm.count("considersize")));
               }
           }
-        //We either pass an empty covariance vector then the regularization class
-        //takes care of setting the covariance to 1
-        //or we set a covariance vector that has one value for each model cell
-        if (!CovModVec.empty())
-          {
-            //as we treat each direction separately, the covariance
-            //vector has to have a length 3 times the length of the model vector
-            //here we copy the covariances to the appropriate position
-            const size_t ngrid = StartModel.GetNModelElements();
-            if (CovModVec.size() != ngrid)
-              {
-                throw jif3D::FatalException(
-                    "Size of model covariance: " + jif3D::stringify(CovModVec.size())
-                        + " does not match model size: " + jif3D::stringify(ngrid),
-                    __FILE__, __LINE__);
-              }
-            jif3D::rvec Cov(ngrid * 3);
-            ublas::subrange(Cov, 0, ngrid) = CovModVec;
-            ublas::subrange(Cov, ngrid, 2 * ngrid) = CovModVec;
-            ublas::subrange(Cov, 2 * ngrid, 3 * ngrid) = CovModVec;
-            Regularization->SetDataError(std::vector<double>(Cov.begin(), Cov.end()));
-          }
 
         //we can directly use the values for the weights without checking
         //the options because we set the default value to 1
@@ -223,7 +200,7 @@ namespace jif3D
         SetTearModel(vm, "tearmodx", StartModel, TearModelX);
         SetTearModel(vm, "tearmody", StartModel, TearModelY);
         SetTearModel(vm, "tearmodz", StartModel, TearModelZ);
-        return SetupObjective(vm, StartModel, CovModVec);
+        return SetupObjective(vm, StartModel);
 
       }
 

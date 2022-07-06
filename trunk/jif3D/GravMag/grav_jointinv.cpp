@@ -5,6 +5,15 @@
 // Copyright   : 2008, MM
 //============================================================================
 
+#ifdef HAVEHPX
+#include <hpx/hpx.hpp>
+#include <hpx/hpx_init.hpp>
+#endif
+
+#ifdef HAVEOPENMP
+#include <omp.h>
+#endif
+
 #include "../Global/Serialization.h"
 #include "../Global/convert.h"
 #include "../Global/FatalException.h"
@@ -36,56 +45,22 @@
 #include <fstream>
 #include <string>
 #include <cmath>
-#ifdef HAVEOPENMP
-#include <omp.h>
-#endif
 #include <boost/program_options.hpp>
 
 namespace ublas = boost::numeric::ublas;
 namespace po = boost::program_options;
 double CovWidth = 3.0;
+double Cov_nu = 1.0;
+double Cov_sigma = 1.0;
+jif3D::SetupRegularization RegSetup;
+jif3D::SetupInversion InversionSetup;
+std::vector<boost::shared_ptr<jif3D::GeneralDataSetup>> DataSetups;
+int mibins = 10;
 
-int main(int argc, char *argv[])
+int hpx_main(boost::program_options::variables_map &vm)
   {
-
-    int mibins = 10;
-    po::options_description desc("General options");
-    desc.add_options()("help", "produce help message")("threads", po::value<int>(),
-        "The number of openmp threads")("mutual_information", po::value(&mibins),
-        "Use mutual information coupling, specify number of bins in histogram")(
-        "stochcov", po::value(&CovWidth)->default_value(0),
-        "Width of stochastic regularization, enabled if > 0")("tempdir",
-        po::value<std::string>(),
-        "The name of the directory to store temporary files in");
-
-    jif3D::SetupRegularization RegSetup;
-    jif3D::SetupInversion InversionSetup;
-
-    std::vector<boost::shared_ptr<jif3D::GeneralDataSetup>> DataSetups;
-    DataSetups.push_back(boost::make_shared<jif3D::SetupGravity>());
-    DataSetups.push_back(boost::make_shared<jif3D::SetupMagnetics>());
-    DataSetups.push_back(boost::make_shared<jif3D::SetupMagnetization>());
-    DataSetups.push_back(boost::make_shared<jif3D::SetupMT>());
-    DataSetups.push_back(boost::make_shared<jif3D::SetupTomo>());
-    DataSetups.push_back(boost::make_shared<jif3D::SetupSW>());
-
-
     const size_t nDataSetups = DataSetups.size();
 
-    desc.add(RegSetup.SetupOptions());
-    desc.add(InversionSetup.SetupOptions());
-    for (size_t i = 0; i < nDataSetups; ++i)
-      desc.add(DataSetups.at(i)->SetupOptions());
-
-    po::variables_map vm;
-    po::store(po::parse_command_line(argc, argv, desc), vm);
-    po::notify(vm);
-
-    if (vm.count("help"))
-      {
-        std::cout << desc << "\n";
-        return 1;
-      }
 #ifdef HAVEOPENMP
     if (vm.count("threads"))
       {
@@ -109,7 +84,6 @@ int main(int argc, char *argv[])
 
     std::string meshfilename = jif3D::AskFilename("Mesh filename: ");
     boost::shared_ptr<jif3D::ThreeDModelBase> Mesh = jif3D::ReadAnyModel(meshfilename);
-    const size_t ngrid = Mesh->GetNModelElements();
 
     std::vector<size_t> startindices(
       { 0 });
@@ -134,10 +108,9 @@ int main(int argc, char *argv[])
     const size_t ninv = startindices.back();
     jif3D::rvec InvModel(ninv, 0.0);
     jif3D::rvec CovModVec(ninv, 1.0);
-    jif3D::rvec RegCov(ngrid, 1.0);
 
     boost::shared_ptr<jif3D::ObjectiveFunction> Regularization = RegSetup.SetupObjective(
-        vm, *Mesh, RegCov);
+        vm, *Mesh);
 
     size_t currsegment = 0;
     for (size_t i = 0; i < nDataSetups; ++i)
@@ -224,10 +197,10 @@ int main(int argc, char *argv[])
               {
                 jif3D::rvec CurrCov = ublas::subrange(CovModVec, startindices.at(i),
                     startindices.at(i + 1));
-                boost::shared_ptr<jif3D::GeneralCovariance> StochCov =
-                    boost::make_shared<jif3D::StochasticCovariance>(CurrCov,
-                        Mesh->GetModelShape()[0], Mesh->GetModelShape()[1],
-                        Mesh->GetModelShape()[2], CovWidth, 1.0, 1.0);
+                boost::shared_ptr<jif3D::GeneralCovariance> StochCov = boost::make_shared<
+                    jif3D::StochasticCovariance>(CurrCov, Mesh->GetModelShape()[0],
+                    Mesh->GetModelShape()[1], Mesh->GetModelShape()[2], CovWidth, 1.0,
+                    1.0);
                 CovObj->AddSection(startindices.at(i), startindices.at(i + 1), StochCov);
               }
           }
@@ -248,7 +221,6 @@ int main(int argc, char *argv[])
     boost::shared_ptr<jif3D::GradientBasedOptimization> Optimizer =
         InversionSetup.ConfigureInversion(vm, Objective, InvModel, CovObj);
 
-
     size_t iteration = 0;
     size_t maxiter = 30;
     std::cout << "Maximum number of iterations: ";
@@ -256,7 +228,6 @@ int main(int argc, char *argv[])
     std::string modelfilename("result");
     std::ofstream misfitfile("misfit.out");
     std::ofstream rmsfile("rms.out");
-
 
     std::cout << "Performing inversion." << std::endl;
     double InitialMisfit = Objective->CalcMisfit(InvModel);
@@ -360,4 +331,59 @@ int main(int argc, char *argv[])
 
       }
 
+#ifdef HAVEHPX
+    return hpx::finalize();
+#endif
+    return 0;
+
   }
+
+int main(int argc, char *argv[])
+  {
+
+    po::options_description desc("General options");
+    desc.add_options()("help", "produce help message")("iterations", po::value<int>(),
+        "The maximum number of iterations")("geometrygrid", po::value<std::string>(),
+        "A file containing the model geometry of the inversion grid")("threads",
+        po::value<int>(), "The number of openmp threads")("mutual_information",
+        po::value(&mibins),
+        "Use mutual information coupling, specify number of bins in histogram")(
+        "stochcov", po::value(&CovWidth)->default_value(0),
+        "Width of stochastic regularization, enabled if > 0")("tempdir",
+        po::value<std::string>(), "The name of the directory to store temporary files in")(
+        "stoch_nu", po::value(&Cov_nu)->default_value(1.00),
+        "The value of nu for the stochastic covariance")("stoch_a",
+        po::value(&Cov_sigma)->default_value(1.0),
+        "The value of a for the stochastic covariance");
+
+    DataSetups.push_back(boost::make_shared<jif3D::SetupGravity>());
+    DataSetups.push_back(boost::make_shared<jif3D::SetupMagnetics>());
+    DataSetups.push_back(boost::make_shared<jif3D::SetupMagnetization>());
+    DataSetups.push_back(boost::make_shared<jif3D::SetupMT>());
+    DataSetups.push_back(boost::make_shared<jif3D::SetupTomo>());
+    DataSetups.push_back(boost::make_shared<jif3D::SetupSW>());
+
+    desc.add(RegSetup.SetupOptions());
+    desc.add(InversionSetup.SetupOptions());
+    const size_t nDataSetups = DataSetups.size();
+
+    for (size_t i = 0; i < nDataSetups; ++i)
+      desc.add(DataSetups.at(i)->SetupOptions());
+
+#ifdef HAVEHPX
+    return hpx::init(desc, argc, argv);
+#endif
+
+//set up the command line options
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::notify(vm);
+    if (vm.count("help"))
+      {
+        std::cout << desc << "\n";
+        return 1;
+      }
+    return hpx_main(vm);
+
+  }
+

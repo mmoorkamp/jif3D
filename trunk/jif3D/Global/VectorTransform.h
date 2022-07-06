@@ -8,10 +8,10 @@
 #ifndef VECTORTRANSFORM_H_
 #define VECTORTRANSFORM_H_
 
-#include <cassert>
 #include "../Global/Serialization.h"
 #include "../Global/VecMat.h"
 #include "../Global/FatalException.h"
+#include <cassert>
 
 #include "Jif3DGlobal.h"
 

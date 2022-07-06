@@ -11,7 +11,6 @@
 #include <hpx/include/util.hpp>
 #include <hpx/include/lcos.hpp>
 #include <hpx/parallel/algorithms/transform_reduce.hpp>
-#include <hpx/parallel/execution_policy.hpp>
 #endif
 
 #include <numeric>
