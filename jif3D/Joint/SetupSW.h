@@ -5,7 +5,6 @@
 #ifndef JOINT_SETUPDSW_H_
 #define JOINT_SETUPDSW_H_
 
-#include <boost/program_options.hpp>
 #include "GeneralDataSetup.h"
 
 #include "../Global/Jif3DGlobal.h"
@@ -16,7 +15,6 @@
 
 namespace jif3D
   {
-    namespace po = boost::program_options;
 
     class J3DEXPORT SetupSW : public GeneralDataSetup
       {
@@ -43,7 +41,7 @@ namespace jif3D
       //! Setup the program options for the tomography part of the inversion
       po::options_description SetupOptions();
       virtual bool
-      SetupObjective(const boost::program_options::variables_map &vm,
+      SetupObjective(const po::variables_map &vm,
           jif3D::JointObjective &Objective, jif3D::ThreeDModelBase &InversionMesh,
           jif3D::rvec &CovModVec, std::vector<size_t> &startindices,
           std::vector<std::string> &SegmentNames,
@@ -51,7 +49,7 @@ namespace jif3D
               boost::filesystem::current_path()) override;
       virtual void IterationOutput(const std::string &filename,
           const jif3D::rvec &ModelVector) override;
-      virtual void FinalOutput(const jif3D::rvec &FinalModelVector) override;
+      virtual void FinalOutput(const std::string &filename ,const jif3D::rvec &FinalModelVector) override;
       SetupSW();
       virtual ~SetupSW();
 

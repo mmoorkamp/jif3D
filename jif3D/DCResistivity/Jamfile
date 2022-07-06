@@ -11,11 +11,9 @@ unit-test objective_test :  test_dc_objective.cpp dcresistivity  core ../Inversi
 exe makedcresmesh : makedcresmesh.cpp dcresistivity core ;
 exe calculateresponseandgradient : calculateresponseandgradient.cpp dcresistivity core ;
 exe DCResForward : DCResForward.cpp dcresistivity  core   ;
-exe dcjoint : dcjoint.cpp dcresistivity ../Joint//joint ../Joint//setup ;
-# exe TomoDcMagJoint : TomoDcMagJoint.cpp dcresistivity ../Joint//setup ../Inversion//inversion ../Regularization//regularization ../Tomo//tomo ../Magnetics//magnetics core 
-#       ..//boost_program_options  ;
 
-install $(TOP)/bin : makedcresmesh dcjoint :
+
+install $(TOP)/bin : makedcresmesh  :
     <install-dependencies>on <install-type>EXE
     <install-type>LIB <dll-path>$(TOP)/bin
     ;

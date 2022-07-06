@@ -8,8 +8,8 @@
 #ifndef DC_DCRESISTIVITYDATA_H_
 #define DC_DCRESISTIVITYDATA_H_
 
-#include "../DCResistivity/ThreeDDCResistivityModel.h"
 #include "../Global/Serialization.h"
+#include "../DCResistivity/ThreeDDCResistivityModel.h"
 #include "../DataBase/GeneralData.h"
 
 namespace jif3D

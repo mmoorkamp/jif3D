@@ -198,8 +198,8 @@ namespace jif3D
             hpx::naming::id_type const locality_id = localities.at(c % localities.size());
             //create a hpx future
             ChunkResult.push_back(async(GravityChunks, locality_id, startindex,endindex,x_meas,y_meas,z_meas,
-                    XCoord, YCoord, ZCoord,
-                    XSizes, YSizes, ZSizes));
+                Model.GetXCoordinates(), Model.GetYCoordinates(), Model.GetZCoordinates(),
+                Model.GetXCellSizes(), Model.GetYCellSizes(), Model.GetZCellSizes()));
           }
 
         //all futures have been created, now we just wait for all of them to finish

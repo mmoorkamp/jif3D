@@ -47,9 +47,9 @@ namespace jif3D
       boost::shared_ptr<jif3D::ThreeDModelObjective<MagCalculatorType> > MagObjective;
 
     public:
-      virtual boost::program_options::options_description SetupOptions() override;
+      virtual po::options_description SetupOptions() override;
       virtual bool
-      SetupObjective(const boost::program_options::variables_map &vm,
+      SetupObjective(const po::variables_map &vm,
           jif3D::JointObjective &Objective, jif3D::ThreeDModelBase &InversionMesh,
           jif3D::rvec &CovModVec, std::vector<size_t> &startindices,
           std::vector<std::string> &SegmentNames,
@@ -57,7 +57,7 @@ namespace jif3D
           boost::filesystem::path TempDir = boost::filesystem::current_path()) override;
       virtual void IterationOutput(const std::string &filename,
           const jif3D::rvec &ModelVector) override;
-      virtual void FinalOutput(const jif3D::rvec &FinalModelVector) override;
+      virtual void FinalOutput(const std::string &filename ,const jif3D::rvec &FinalModelVector) override;
       SetupMagnetization();
       virtual ~SetupMagnetization();
       };

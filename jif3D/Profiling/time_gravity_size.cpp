@@ -1,14 +1,20 @@
 #ifdef HAVEHPX
 #include <hpx/hpx.hpp>
 #include <hpx/hpx_init.hpp>
+#include <hpx/hpx_init_params.hpp>
+#include <hpx/modules/program_options.hpp>
+namespace po = hpx::program_options;
+
 #endif
 #ifdef HAVEOPENMP
 #include <omp.h>
+#include <boost/program_options.hpp>
+namespace po = boost::program_options;
+
 #endif
 #include <iostream>
 #include <fstream>
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/program_options.hpp>
 #include "../Global/convert.h"
 #include "../Gravity/ThreeDGravityModel.h"
 #include "../GravMag/ThreeDGravMagCalculator.h"
@@ -26,7 +32,6 @@
  * time_gravity_size --help.
  */
 
-namespace po = boost::program_options;
 int caching = 0;
 po::options_description desc("Allowed options");
 
@@ -111,7 +116,7 @@ void RunCalculation(CalculatorType &Calculator, const std::string &filename)
       }
   }
 
-int hpx_main(boost::program_options::variables_map& vm)
+int hpx_main(po::variables_map &vm)
   {
 
     if (vm.count("help"))
@@ -213,7 +218,7 @@ int hpx_main(boost::program_options::variables_map& vm)
     return 0;
   }
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
   {
 
     desc.add_options()("help", "produce help message")("scalar",
@@ -223,12 +228,15 @@ int main(int argc, char* argv[])
         "0 = no caching, 1 = disk, 2 = memory")("threads", po::value<int>(),
         "The number of openmp threads");
 #ifdef HAVEHPX
-    return hpx::init(desc, argc, argv);
-#else
+    hpx::init_params initparms;
+    initparms.desc_cmdline = desc;
+    return hpx::init(argc, argv, initparms);
+#endif
+
 //set up the command line options
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
     return hpx_main(vm);
-#endif
+
   }

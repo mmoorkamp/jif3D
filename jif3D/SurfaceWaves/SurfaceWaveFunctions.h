@@ -7,17 +7,18 @@
 
 #ifndef SURFACEWAVES_SURFACEWAVEFUNCTIONS_H_
 #define SURFACEWAVES_SURFACEWAVEFUNCTIONS_H_
-#include <vector>
-#include <complex>
-#include <tuple>
-#include <fstream>
-#include <iomanip>
+#include "../Global/Serialization.h"
 #include "../ModelBase/ThreeDModelBase.h"
 #include <GeographicLib/TransverseMercatorExact.hpp>
 #include <GeographicLib/Geodesic.hpp>
 #include <GeographicLib/GeodesicLine.hpp>
 #include <GeographicLib/Rhumb.hpp>
 #include <GeographicLib/Constants.hpp>
+#include <vector>
+#include <complex>
+#include <tuple>
+#include <fstream>
+#include <iomanip>
 
 namespace jif3D
   {

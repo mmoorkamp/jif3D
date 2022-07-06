@@ -8,7 +8,6 @@
 #ifndef DCRESISTIVITYCALCULATOR_H_
 #define DCRESISTIVITYCALCULATOR_H_
 
-#include <boost/serialization/export.hpp>
 #include "../Global/Serialization.h"
 #include "../Global/VecMat.h"
 #include "../Global/Jif3DGlobal.h"
@@ -70,7 +69,5 @@ namespace jif3D
       };
   /* @} */
   }
-
-BOOST_CLASS_EXPORT_KEY(jif3D::DCResistivityCalculator)
 
 #endif /* DCRESISTIVITYCALCULATOR_H_ */

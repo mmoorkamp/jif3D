@@ -80,7 +80,7 @@ namespace jif3D
 
         //we first ask for the weights for scalar and tensor Magnetics
         //as we might not have to do very much if the weights are zero
-        std::cout << "Magnetics Lambda: ";
+        std::cout << "Total field magnetics Lambda: ";
         std::cin >> maglambda;
 
         //if the weight is different from zero
@@ -275,11 +275,11 @@ namespace jif3D
           }
       }
 
-    void SetupMagnetics::FinalOutput(const jif3D::rvec &FinalModelVector)
+    void SetupMagnetics::FinalOutput(const std::string &filename,
+        const jif3D::rvec &FinalModelVector)
       {
         if (maglambda > JointObjective::MinWeight)
           {
-            std::string modelfilename = "result";
             jif3D::rvec MagInvModel = Transform->GeneralizedToPhysical(FinalModelVector);
             std::cout << "Writing final susceptibility models " << std::endl;
             std::copy(MagInvModel.begin(), MagInvModel.end(),
@@ -288,22 +288,22 @@ namespace jif3D
             jif3D::rvec MagInvData = GetObjective().GetSyntheticData();
             if (MagInvData.size() > 0)
               {
-                jif3D::SaveTotalFieldMagneticMeasurements(modelfilename + ".inv_mag.nc",
+                jif3D::SaveTotalFieldMagneticMeasurements(filename + ".inv_mag.nc",
                     std::vector<double>(MagInvData.begin(), MagInvData.end()),
                     ObservedData.GetMeasPosX(), ObservedData.GetMeasPosY(),
                     ObservedData.GetMeasPosZ(), GetObjective().GetDataError());
-                jif3D::Write3DDataToVTK(modelfilename + ".inv_mag.vtk", "T",
+                jif3D::Write3DDataToVTK(filename + ".inv_mag.vtk", "T",
                     std::vector<double>(MagInvData.begin(), MagInvData.end()),
                     ObservedData.GetMeasPosX(), ObservedData.GetMeasPosY(),
                     ObservedData.GetMeasPosZ());
                 jif3D::rvec MagDiff(GetObjective().GetIndividualMisfit());
-                jif3D::SaveTotalFieldMagneticMeasurements(modelfilename + ".diff_mag.nc",
+                jif3D::SaveTotalFieldMagneticMeasurements(filename + ".diff_mag.nc",
                     std::vector<double>(MagDiff.begin(), MagDiff.end()),
                     ObservedData.GetMeasPosX(), ObservedData.GetMeasPosY(),
                     ObservedData.GetMeasPosZ(), GetObjective().GetDataError());
               }
-            Model.WriteVTK(modelfilename + ".mag.inv.vtk");
-            Model.WriteNetCDF(modelfilename + ".mag.inv.nc");
+            Model.WriteVTK(filename + ".mag.inv.vtk");
+            Model.WriteNetCDF(filename + ".mag.inv.nc");
           }
       }
   }

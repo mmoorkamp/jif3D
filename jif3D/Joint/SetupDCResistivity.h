@@ -9,9 +9,13 @@
 #define SETUPDCRESISTIVITY_H_
 
 #include "../Global/Jif3DGlobal.h"
+#include "GeneralDataSetup.h"
+
 #include "../Inversion/ThreeDModelObjective.h"
 #include "../Inversion/JointObjective.h"
 #include "../DCResistivity/ThreeDDCResistivityModel.h"
+#include "../DCResistivity/DCResistivityData.h"
+
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 
@@ -19,8 +23,6 @@
 
 namespace jif3D
   {
-    namespace po = boost::program_options;
-
     /** \addtogroup joint Joint inversion routines */
     /* @{ */
 
@@ -31,13 +33,15 @@ namespace jif3D
      * Also for the joint inversion the DC model is always considered the starting model in
      * terms of geometry.
      */
-    class J3DEXPORT SetupDCResistivity
+    class J3DEXPORT SetupDCResistivity  : public GeneralDataSetup
       {
     private:
       //! A shared pointer to the objective function object for DC data
       boost::shared_ptr<jif3D::ThreeDModelObjective<jif3D::DCResistivityCalculator> > DCObjective;
       //! The data error in ohm.m to assume for construction of the data variance
       double relerr, minerr;
+      double maxres;
+      double minres;
       //! Cell size in m for  the refinement model, can optionally be set on the command line
       double CellSize;
       //! The name of the starting model
@@ -46,6 +50,8 @@ namespace jif3D
       std::string dcdatafilename;
       //! The weight for the DC data in the joint inversion
       double dclambda;
+    	jif3D::DCResistivityData DCData;
+
       //! The resistivity starting model
       jif3D::ThreeDDCResistivityModel DCModel;
     public:
@@ -63,22 +69,28 @@ namespace jif3D
           return *DCObjective;
         }
 
-      //! Setup the program options for the DCResistivity part of the inversion
-      po::options_description SetupOptions();
-      //! Setup the DCResistivity objective function
-      /*! Setup the objective function for inverting DCResistivity data based on
+      //! Return an options descriptions object for boost::program_options that contains information about gravity options
+      virtual po::options_description SetupOptions() override;
+      //! Setup the objective function and add to the joint objective
+      /*! Setup the objective function for inverting scalar and tensorial data based on
        * the program options.
        * @param vm The variable map from boost::program_options that contains the actually set options
-       * @param Objective An existing JointObjective object that the newly created DCResistivity objective is added to
+       * @param Objective An existing JointObjective object that the newly created gravity objective(s) are added to
        * @param Transform A transformation object to transform generalized to physical parameters
        * @param xorigin The origin for the inversion grid in x-direction
        * @param yorigin The origin for the inversion grid in y-direction
-       * @return True if the weight the DCResistivity objective is greater zero, i.e. we added an objective function to JointObjective, false otherwise
+       * @param TempDir A directory to store temporary files with sensitivity information
+       * @return True if the weight for one of the gravity objectives is greater zero, i.e. we added an objective function to JointObjective, false otherwise
        */
-      bool
+      virtual bool
       SetupObjective(const po::variables_map &vm, jif3D::JointObjective &Objective,
-          boost::shared_ptr<jif3D::GeneralModelTransform> Transform, double xorigin = 0.0,
-          double yorigin = 0.0);
+          jif3D::ThreeDModelBase &InversionMesh, jif3D::rvec &CovModVec, std::vector<size_t> &startindices,
+          std::vector<std::string> &SegmentNames,
+          std::vector<parametertype> &SegmentTypes,
+          boost::filesystem::path TempDir =
+              boost::filesystem::current_path()) override;
+      virtual void IterationOutput(const std::string &filename, const jif3D::rvec &ModelVector) override;
+      virtual void FinalOutput(const std::string &filename ,const jif3D::rvec &FinalModelVector) override;
       SetupDCResistivity();
       virtual ~SetupDCResistivity();
       };

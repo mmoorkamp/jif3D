@@ -10,11 +10,11 @@
  * The susceptibilities in this file are all identical to the specified value.
  */
 
-#include <iostream>
-#include <string>
+#include "../Global/Serialization.h"
 #include "../Global/FileUtil.h"
 #include "ThreeDSusceptibilityModel.h"
-
+#include <iostream>
+#include <string>
 
 using namespace std;
 

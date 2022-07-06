@@ -59,7 +59,7 @@ namespace jif3D
         return desc;
       }
 
-    bool SetupMT::SetupObjective(const boost::program_options::variables_map &vm,
+    bool SetupMT::SetupObjective(const po::variables_map &vm,
         jif3D::JointObjective &Objective, jif3D::ThreeDModelBase &InversionMesh,
         jif3D::rvec &CovModVec, std::vector<size_t> &startindices,
         std::vector<std::string> &SegmentNames, std::vector<parametertype> &SegmentTypes,
@@ -324,19 +324,19 @@ namespace jif3D
         if (mtlambda > JointObjective::MinWeight)
           {
             jif3D::rvec CondInvModel = Transform->GeneralizedToPhysical(ModelVector);
-            std::copy(CondInvModel.begin(), CondInvModel.end(),
+            const size_t ngrid = MTModel.GetNModelElements();
+            std::copy(CondInvModel.begin(), CondInvModel.begin() + ngrid,
                 MTModel.SetConductivities().origin());
             MTModel.WriteVTK(filename + ".mt.inv.vtk");
             MTModel.WriteNetCDF(filename + ".mt.inv.nc");
           }
       }
 
-    void SetupMT::FinalOutput(const jif3D::rvec &FinalModelVector)
+    void SetupMT::FinalOutput(const std::string &filename ,const jif3D::rvec &FinalModelVector)
       {
         if (mtlambda > JointObjective::MinWeight)
           {
             std::cout << "Writing final conductivity models " << std::endl;
-            std::string modelfilename = "result";
             const size_t ngrid = MTModel.GetNModelElements();
             jif3D::rvec CondInvModel = Transform->GeneralizedToPhysical(FinalModelVector);
             std::copy(CondInvModel.begin(), CondInvModel.begin() + ngrid,
@@ -349,10 +349,10 @@ namespace jif3D
               {
                 MTData.SetDataAndErrors(
                     std::vector<double>(MTDataVec.begin(), MTDataVec.end()), MTErrVec);
-                MTData.WriteNetCDF(modelfilename + ".inv_imp.nc");
+                MTData.WriteNetCDF(filename + ".inv_imp.nc");
               }
-            MTModel.WriteVTK(modelfilename + ".mt.inv.vtk");
-            MTModel.WriteNetCDF(modelfilename + ".mt.inv.nc");
+            MTModel.WriteVTK(filename + ".mt.inv.vtk");
+            MTModel.WriteNetCDF(filename + ".mt.inv.nc");
           }
       }
   }

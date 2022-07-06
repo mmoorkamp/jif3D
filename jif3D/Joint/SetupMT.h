@@ -20,7 +20,6 @@
 
 namespace jif3D
   {
-    namespace po = boost::program_options;
 
     /** \addtogroup joint Joint inversion routines */
     /* @{ */
@@ -85,7 +84,7 @@ namespace jif3D
        * @return True if the weight for  the MT objective is greater zero, i.e. we added an objective function to JointObjective, false otherwise
        */
       virtual bool
-      SetupObjective(const boost::program_options::variables_map &vm,
+      SetupObjective(const po::variables_map &vm,
           jif3D::JointObjective &Objective, jif3D::ThreeDModelBase &InversionMesh,
           jif3D::rvec &CovModVec, std::vector<size_t> &startindices,
           std::vector<std::string> &SegmentNames,
@@ -93,7 +92,7 @@ namespace jif3D
               boost::filesystem::current_path()) override;
       virtual void IterationOutput(const std::string &filename,
           const jif3D::rvec &ModelVector) override;
-      virtual void FinalOutput(const jif3D::rvec &FinalModelVector) override;
+      virtual void FinalOutput(const std::string &filename ,const jif3D::rvec &FinalModelVector) override;
       //! Return the MT model that has been set for the inversion
       const jif3D::X3DModel& GetModel() const
         {

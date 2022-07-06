@@ -47,8 +47,12 @@ BOOST_AUTO_TEST_SUITE (MagneticModelReadWrite_Test_Suite)
         Model.WriteNetCDF("sus.nc");
         jif3D::ThreeDSusceptibilityModel CompModel;
         CompModel.ReadNetCDF("sus.nc");
-        BOOST_TEST(Model.GetData() == CompModel.GetData(),
-            boost::test_tools::per_element());
+        size_t ngrid = Model.GetNModelElements();
+        for (size_t i = 0; i < ngrid; ++i)
+          {
+            BOOST_CHECK_EQUAL(*(Model.GetData().origin() + i),
+                *(CompModel.GetData().origin() + i));
+          }
         BOOST_TEST(Model.GetXCellSizes() == CompModel.GetXCellSizes(),
             boost::test_tools::per_element());
         BOOST_TEST(Model.GetYCellSizes() == CompModel.GetYCellSizes(),
@@ -102,12 +106,17 @@ BOOST_AUTO_TEST_SUITE (MagneticModelReadWrite_Test_Suite)
         Model.WriteNetCDF("mag.nc");
         jif3D::ThreeDMagnetizationModel CompModel;
         CompModel.ReadNetCDF("mag.nc");
-        BOOST_TEST(Model.GetMagnetization_X() == CompModel.GetMagnetization_X(),
-            boost::test_tools::per_element());
-        BOOST_TEST(Model.GetMagnetization_Y() == CompModel.GetMagnetization_Y(),
-            boost::test_tools::per_element());
-        BOOST_TEST(Model.GetMagnetization_Z() == CompModel.GetMagnetization_Z(),
-            boost::test_tools::per_element());
+        size_t ngrid = Model.GetNModelElements();
+        for (size_t i = 0; i < ngrid; ++i)
+          {
+            BOOST_CHECK_EQUAL(*(Model.GetMagnetization_X().origin() + i),
+                *(CompModel.GetMagnetization_X().origin() + i));
+            BOOST_CHECK_EQUAL(*(Model.GetMagnetization_Y().origin() + i),
+                *(CompModel.GetMagnetization_Y().origin() + i));
+            BOOST_CHECK_EQUAL(*(Model.GetMagnetization_Z().origin() + i),
+                *(CompModel.GetMagnetization_Z().origin() + i));
+          }
+
         BOOST_TEST(Model.GetXCellSizes() == CompModel.GetXCellSizes(),
             boost::test_tools::per_element());
         BOOST_TEST(Model.GetYCellSizes() == CompModel.GetYCellSizes(),

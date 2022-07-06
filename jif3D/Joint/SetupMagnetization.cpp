@@ -20,11 +20,9 @@
 namespace jif3D
   {
 
-    namespace po = boost::program_options;
-
     const std::string Name = "Magnetization";
 
-    boost::program_options::options_description SetupMagnetization::SetupOptions()
+    po::options_description SetupMagnetization::SetupOptions()
       {
         po::options_description desc("Magnetization options");
 
@@ -42,14 +40,14 @@ namespace jif3D
       }
 
     bool SetupMagnetization::SetupObjective(
-        const boost::program_options::variables_map &vm, jif3D::JointObjective &Objective,
+        const po::variables_map &vm, jif3D::JointObjective &Objective,
         jif3D::ThreeDModelBase &InversionMesh, jif3D::rvec &CovModVec,
         std::vector<size_t> &startindices, std::vector<std::string> &SegmentNames,
         std::vector<parametertype> &SegmentTypes, boost::filesystem::path TempDir)
       {
 
         const size_t ngrid = InversionMesh.GetData().num_elements();
-        std::cout << "Magnetization Lambda: ";
+        std::cout << "3-component magnetization Lambda: ";
         std::cin >> maglambda;
         if (maglambda > 0.0)
           {
@@ -187,11 +185,10 @@ namespace jif3D
           }
       }
 
-    void SetupMagnetization::FinalOutput(const jif3D::rvec &FinalModelVector)
+    void SetupMagnetization::FinalOutput(const std::string &filename ,const jif3D::rvec &FinalModelVector)
       {
         if (maglambda > JointObjective::MinWeight)
           {
-            std::string modelfilename = "result";
             jif3D::rvec MagInvModel = Transform->GeneralizedToPhysical(FinalModelVector);
             std::cout << "Writing final magnetization models " << std::endl;
             Model.SetModelParameter(MagInvModel);
@@ -200,22 +197,22 @@ namespace jif3D
             jif3D::rvec MagInvData = MagObjective->GetSyntheticData();
             if (MagInvData.size() > 0)
               {
-                jif3D::SaveMagneticComponentMeasurements(modelfilename + ".inv_mag.nc",
+                jif3D::SaveMagneticComponentMeasurements(filename + ".inv_mag.nc",
                     std::vector<double>(MagInvData.begin(), MagInvData.end()),
                     ObservedData.GetMeasPosX(), ObservedData.GetMeasPosY(),
                     ObservedData.GetMeasPosZ(), MagObjective->GetDataError());
-                jif3D::Write3DVectorDataToVTK(modelfilename + ".inv_mag.vtk", "T",
+                jif3D::Write3DVectorDataToVTK(filename + ".inv_mag.vtk", "T",
                     std::vector<double>(MagInvData.begin(), MagInvData.end()),
                     ObservedData.GetMeasPosX(), ObservedData.GetMeasPosY(),
                     ObservedData.GetMeasPosZ());
                 jif3D::rvec MagDiff(MagObjective->GetIndividualMisfit());
-                jif3D::SaveMagneticComponentMeasurements(modelfilename + ".diff_mag.nc",
+                jif3D::SaveMagneticComponentMeasurements(filename + ".diff_mag.nc",
                     std::vector<double>(MagDiff.begin(), MagDiff.end()),
                     ObservedData.GetMeasPosX(), ObservedData.GetMeasPosY(),
                     ObservedData.GetMeasPosZ(), MagObjective->GetDataError());
               }
-            Model.WriteVTK(modelfilename + ".mag.inv.vtk");
-            Model.WriteNetCDF(modelfilename + ".mag.inv.nc");
+            Model.WriteVTK(filename + ".mag.inv.vtk");
+            Model.WriteNetCDF(filename + ".mag.inv.nc");
           }
       }
 

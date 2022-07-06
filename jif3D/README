@@ -39,9 +39,11 @@ structured description of file formats, requirements etc. in a tutorial style ma
 
 Examples
 
-The Examples directory contains several scripts to build example models, calculate
-synthetic data and invert it. It is a good starting point, but you will need an
-understanding of bash scripts and netcdf files to make the most of it.
+The Tutorials directory contains several jupyter notebooks (https://jupyter.org/) to build example models, calculate
+synthetic data and invert them. Jupyter notebooks are part of the python universe and can be installed through the package
+manager under Linux or as part of Anaconda  (https://www.anaconda.com/products/distribution)
+The tutorials a good starting point and also explains some of the general concepts,
+file formats, etc..
 
 Support
 
@@ -57,4 +59,33 @@ The initial development of the framework was sponsored by Chevron, ExxonMobil, N
 Shell, Statoil and Wintershall within the jiba consortium. P. Podvin kindly made his eikonal
 solver publicly available. A. Avdeeva supported us with implementing the gradient calculation
 for the MT part of the joint inversion.
+
+jif3D also contains parts of code from the following open-source projects:
+
+- TIME_3D (not available online any more), described in Podvin & Lecomte, Geophys.J.Intern. 105, 271-284, 1991.  GPL license
+- Eigen (https://eigen.tuxfamily.org/), MPL2 license
+- GeographicLib (https://geographiclib.sourceforge.io/), MIT license
+- MBA (https://github.com/ddemidov/mba/blob/master/README.md), MIT license
+- KissFFT (https://github.com/mborgerding/kissfft), BSD License
+- libmine (https://minepy.readthedocs.io/en/latest/libmine.html), GPL
+
    
+License
+
+/***************************************************************************
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License along
+    with this program; if not, write to the Free Software Foundation, Inc.,
+    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+***************************************************************************/

@@ -8,6 +8,7 @@
 #ifndef NOISE_H_
 #define NOISE_H_
 
+#include "Serialization.h"
 #include "FatalException.h"
 #include "VecMat.h"
 #include "NumUtil.h"

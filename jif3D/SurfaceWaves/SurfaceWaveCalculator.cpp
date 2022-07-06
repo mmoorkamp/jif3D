@@ -4,7 +4,11 @@
  *  Created on: 20 Sep 2019
  *      Author: bweise
  */
-
+#include "../SurfaceWaves/SurfaceWaveCalculator.h"
+#include "../Global/NumUtil.h"
+#include "../Global/FatalException.h"
+#include "../SurfaceWaves/SurfaceWaveFunctions.h"
+#include "../ModelBase/VTKTools.h"
 #include <string>
 #include <iostream>
 #include <vector>
@@ -23,11 +27,8 @@
 #include <boost/math/tools/roots.hpp>
 #include <boost/format.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include "../Global/NumUtil.h"
-#include "../Global/FatalException.h"
-#include "../SurfaceWaves/SurfaceWaveCalculator.h"
-#include "../SurfaceWaves/SurfaceWaveFunctions.h"
-#include "../ModelBase/VTKTools.h"
+#include <boost/math/tools/roots.hpp>
+
 
 namespace jif3D
   {

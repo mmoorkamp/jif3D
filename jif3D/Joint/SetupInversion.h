@@ -10,6 +10,7 @@
 #define SETUPINVERSION_H_
 
 #include "../Global/Jif3DGlobal.h"
+#include "GeneralDataSetup.h"
 #include "../Inversion/ObjectiveFunction.h"
 #include "../Inversion/GradientBasedOptimization.h"
 #include "../Inversion/GeneralCovariance.h"
@@ -18,7 +19,6 @@
 
 namespace jif3D
   {
-    namespace po = boost::program_options;
 
     /** \addtogroup joint Joint inversion routines */
     /* @{ */
