@@ -63,12 +63,10 @@ namespace jif3D
        * have been set.
        * @param vm The variable map from boost::program_options that contains the actually set options
        * @param StartModel The starting model containing a description of the cell geometry
-       * @param CovModVec The model covariance vector, can be empty if covariance is assumed 1 or has to have one value for each cell in StartModel
        * @return A shared pointer to the configured regularization objective function object
        */
       boost::shared_ptr<jif3D::RegularizationFunction> SetupObjective(
-          const po::variables_map &vm, const ThreeDModelBase &StartModel,
-          const jif3D::rvec &CovModVec);
+          const po::variables_map &vm, const ThreeDModelBase &StartModel);
       //! Setup the regularization objective function depending on the program options
       /*! This function creates a new Regularization objective depending on the options that
        * have been set. It also returns the tear models that are useful for cross-gradient calculations

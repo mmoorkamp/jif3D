@@ -13,7 +13,7 @@
 #include "../Global/Noise.h"
 #include "../Global/ReadWriteSparseMatrix.h"
 #include "../Inversion/ModelTransforms.h"
-
+#include "../Regularization/MinDiffRegularization.h"
 #include "SetupMT.h"
 #include <boost/make_shared.hpp>
 #include <algorithm>
@@ -22,10 +22,11 @@
 namespace jif3D
   {
 
-    const std::string Name = "Conductivity";
+    const std::string GridName = "Conductivity";
+    const std::string DistName = "C";
 
     SetupMT::SetupMT() :
-        GeneralDataSetup(Name), relerr(0.02), tiprelerr(0.02), tipperr(0.0), DistCorr(
+        GeneralDataSetup(GridName), relerr(0.02), tiprelerr(0.02), tipperr(0.0), DistCorr(
             0.0), tiplambda(0.0)
       {
       }
@@ -102,7 +103,10 @@ namespace jif3D
                   {
                     MTData.ReadNetCDF(mtdatafilename);
                   }
+                MTData.WriteMeasurementPoints(mtdatafilename + ".mt_sites.vtk");
               }
+            const size_t nmtsites = MTData.GetMeasPosX().size();
+
             const size_t ndata = MTData.GetData().size();
             std::string mtmodelfilename = jif3D::AskFilename("MT Model Filename: ");
             //read in the model and check whether the geometry matches the one
@@ -119,11 +123,6 @@ namespace jif3D
                   {
                     MTModel.SetConductivities()[0][0][i] *= (1 + 0.0001 * (i + 1));
                   }
-
-                StartingParameters.resize(ngrid);
-                std::copy(MTModel.GetConductivities().origin(),
-                    MTModel.GetConductivities().origin() + ngrid,
-                    StartingParameters.begin());
 
                 bool WantDistCorr = (DistCorr > 0.0);
                 //setup the objective function for the MT data
@@ -181,8 +180,8 @@ namespace jif3D
                     MTObjective->SetDataError(MinErr);
                   }
 
-                size_t start = startindices.back();
-                size_t end = start + ngrid;
+                size_t startgrid = startindices.back();
+                size_t endgrid = startgrid + ngrid;
                 boost::shared_ptr<jif3D::ChainedTransform> ConductivityTransform(
                     new jif3D::ChainedTransform);
                 jif3D::rvec RefModel(ngrid);
@@ -193,21 +192,76 @@ namespace jif3D
                 ConductivityTransform->AppendTransform(
                     boost::shared_ptr<jif3D::GeneralModelTransform>(
                         new jif3D::LogTransform(RefModel)));
-                Transform = boost::make_shared<jif3D::MultiSectionTransform>(2 * ngrid,
-                    start, end, ConductivityTransform);
-                startindices.push_back(end);
-                SegmentNames.push_back(Name);
+                startindices.push_back(endgrid);
+                SegmentNames.push_back(GridName);
                 SegmentTypes.push_back(GeneralDataSetup::gridparameter);
 
                 //add the MT part to the JointObjective that will be used
                 //for the inversion
-                Objective.AddObjective(MTObjective, Transform, mtlambda, "MT",
-                    JointObjective::datafit);
+                Transform = boost::make_shared<jif3D::MultiSectionTransform>(2 * ngrid,
+                    startgrid, endgrid, ConductivityTransform);
+
                 //output some information to the screen
                 //to signal that we added the MT data
                 std::cout << "MT ndata: " << ndata << std::endl;
                 std::cout << "MT lambda: " << mtlambda << std::endl;
 
+                //if we want to correct for distortion within the inversion
+                boost::shared_ptr<jif3D::GeneralModelTransform> Copier(
+                    new jif3D::ModelCopyTransform);
+                if (WantDistCorr)
+                  {
+
+                    jif3D::rvec CRef(nmtsites * 4);
+                    for (size_t i = 0; i < nmtsites; ++i)
+                      {
+                        CRef(i * 4) = 1.0;
+                        CRef(i * 4 + 1) = 0.0;
+                        CRef(i * 4 + 2) = 0.0;
+                        CRef(i * 4 + 3) = 1.0;
+                      }
+                    size_t startdist = endgrid;
+                    size_t enddist = startdist + CRef.size();
+
+                    //this transformation only becomes active if we use distortion correction with MT data
+                    //in this case we add extra inversion parameters beyond the current ones
+                    //so we set it up here that we can access it later, but with a parameter setting that only
+                    //works if we actually have distortion correction, so we have to be careful later
+                    auto DistRegTrans = boost::make_shared<jif3D::MultiSectionTransform>(
+                        enddist, startdist, enddist, Copier);
+
+                    std::vector<double> C = MTData.GetDistortion();
+
+                    jif3D::X3DModel DistModel;
+                    DistModel.SetMeshSize(nmtsites * 4, 1, 1);
+                    boost::shared_ptr<jif3D::RegularizationFunction> DistReg(
+                        new jif3D::MinDiffRegularization(DistModel));
+                    DistReg->SetReferenceModel(CRef);
+
+                    Objective.AddObjective(DistReg, DistRegTrans, DistCorr, "DistReg",
+                        jif3D::JointObjective::regularization);
+                    startindices.push_back(enddist);
+                    SegmentNames.push_back(DistName);
+                    SegmentTypes.push_back(GeneralDataSetup::other);
+
+                    Transform->AddSection(ngrid, ngrid + CRef.size(), Copier);
+                    StartingParameters.resize(ngrid + CRef.size());
+                    std::copy(MTModel.GetConductivities().origin(),
+                        MTModel.GetConductivities().origin() + ngrid,
+                        StartingParameters.begin());
+                    std::copy(C.begin(), C.end(), StartingParameters.begin() + ngrid);
+
+                  }
+                else
+                  {
+                    StartingParameters.resize(ngrid);
+                    std::copy(MTModel.GetConductivities().origin(),
+                        MTModel.GetConductivities().origin() + ngrid,
+                        StartingParameters.begin());
+                  }
+
+                Objective.AddObjective(MTObjective, Transform, mtlambda, "MT",
+                    JointObjective::datafit);
                 //ask for Tipper, currently it only works in conjunction with MT
                 //otherwise we would need to check for x3d and conductivity models
 
@@ -283,8 +337,9 @@ namespace jif3D
           {
             std::cout << "Writing final conductivity models " << std::endl;
             std::string modelfilename = "result";
+            const size_t ngrid = MTModel.GetNModelElements();
             jif3D::rvec CondInvModel = Transform->GeneralizedToPhysical(FinalModelVector);
-            std::copy(CondInvModel.begin(), CondInvModel.end(),
+            std::copy(CondInvModel.begin(), CondInvModel.begin() + ngrid,
                 MTModel.SetConductivities().origin());
 
             auto MTData = MTObjective->GetObservedData();
