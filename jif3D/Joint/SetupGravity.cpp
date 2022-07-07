@@ -77,6 +77,12 @@ namespace jif3D
             wantcuda = true;
           }
 
+        //we initially assume that we do not want to change the density model
+        //but use it only as a constraint, if the weight is below the minimal threshold
+        //and we read in data, we set it to one below, also it gets overwritten if we specify a covariance file
+        CovModVec.resize(ngrid);
+        std::fill(CovModVec.begin(), CovModVec.end(), 1e-10);
+
         jif3D::ScalarGravityData ScalGravData;
         jif3D::TensorGravityData FTGData;
         double scalgravlambda = 1.0;
@@ -98,6 +104,8 @@ namespace jif3D
             ScalGravData.ReadNetCDF(scalgravdatafilename);
             ScalGravData.WriteVTK(scalgravdatafilename);
             HaveScal = true;
+            std::fill(CovModVec.begin(), CovModVec.end(), 1.0);
+
           }
 
         //if the weight is different from zero
@@ -107,6 +115,7 @@ namespace jif3D
             std::string ftgdatafilename = jif3D::AskFilename("FTG Data Filename: ");
             FTGData.ReadNetCDF(ftgdatafilename);
             HaveFTG = true;
+            std::fill(CovModVec.begin(), CovModVec.end(), 1.0);
           }
         //if the inversion includes any type of gravity data
         //we need the model geometry
@@ -128,8 +137,6 @@ namespace jif3D
                 ScalGravModel.GetDensities().origin() + ngrid,
                 StartingParameters.begin());
 
-            CovModVec.resize(ngrid);
-            std::fill(CovModVec.begin(), CovModVec.end(), 1.0);
             if (vm.count("dens_covmod"))
               {
                 boost::shared_ptr<jif3D::ThreeDModelBase> CovModel = jif3D::ReadAnyModel(

@@ -28,10 +28,10 @@ namespace jif3D
 
         desc.add_options()("totalmagrelerr", po::value(&relerr)->default_value(0.02),
             "The relative error for the Magnetics data")("totalmagminerr",
-            po::value(&minerr)->default_value(0.0),
+            po::value(&minerr)->default_value(1.0),
             "The minimum absolute error for the Magnetics data")("magnetization_covmod",
             po::value<std::string>(),
-            "A file containing the model covariance for susceptibilities")("magdepth",
+            "A file containing the model covariance for magnetization")("magdepth",
             "Counteract the decay in sensitivities of magnetic data with depth")("minmag",
             po::value(&minmag)->default_value(-1.0))("maxmag",
             po::value(&maxmag)->default_value(1.0));
@@ -47,6 +47,8 @@ namespace jif3D
       {
 
         const size_t ngrid = InversionMesh.GetData().num_elements();
+        CovModVec.resize(3 * ngrid);
+        std::fill(CovModVec.begin(), CovModVec.end(), 1e-10);
         std::cout << "3-component magnetization Lambda: ";
         std::cin >> maglambda;
         if (maglambda > 0.0)
@@ -55,9 +57,9 @@ namespace jif3D
 
             //if the weight is really small we use this as a "secret setting"
             //for constrained inversion, so we only read in data when the
-            //weight is larger than 1e-32, otherwise we create a single point
-            //dummy dataset, the joint objective class is set that
-            //objective functions with such a small weight are not evaluated anyway
+            //weight is larger than 1e-32, otherwise we only read in the model
+            //and assume that is supposed to be a constraint for the other datasets
+            //which can be used in the coupling
             if (maglambda > JointObjective::MinWeight)
               {
                 //read in data file
@@ -65,6 +67,7 @@ namespace jif3D
                     "Three component magnetic Data Filename: ");
                 MagData.ReadNetCDF(magdatafilename);
                 MagData.WriteVTK(magdatafilename);
+                std::fill(CovModVec.begin(), CovModVec.end(), 1.0);
               }
 
             std::string magmodelfilename = jif3D::AskFilename(
@@ -106,12 +109,11 @@ namespace jif3D
             Transform = boost::make_shared<jif3D::MultiSectionTransform>(2 * ngrid, start,
                 end, MagTrans);
 
-            CovModVec.resize(3 * ngrid);
-            std::fill(CovModVec.begin(), CovModVec.end(), 1.0);
-            if (vm.count("mag_covmod"))
+
+            if (vm.count("magnetization_covmod"))
               {
                 boost::shared_ptr<jif3D::ThreeDModelBase> CovModel = jif3D::ReadAnyModel(
-                    vm["mag_covmod"].as<std::string>());
+                    vm["magnetization_covmod"].as<std::string>());
 
                 const size_t ncovmod = CovModel->GetData().num_elements();
                 if (ncovmod != ngrid)
@@ -217,7 +219,7 @@ namespace jif3D
       }
 
     SetupMagnetization::SetupMagnetization() :
-        GeneralDataSetup(Name)
+        GeneralDataSetup(Name), minmag(-1.0), maxmag(1.0), maglambda(0.0), relerr(0.01), minerr(1.0)
       {
         // TODO Auto-generated constructor stub
 

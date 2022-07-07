@@ -269,6 +269,7 @@ int hpx_main(po::variables_map &vm)
     std::ofstream misfitfile("misfit.out");
     std::ofstream rmsfile("rms.out");
 
+    jif3D::rvec StartModel = InvModel;
     std::cout << "Performing inversion." << std::endl;
     double InitialMisfit = Objective->CalcMisfit(InvModel);
     StoreMisfit(misfitfile, 0, InitialMisfit, *Objective);
@@ -306,6 +307,12 @@ int hpx_main(po::variables_map &vm)
 
     for (auto DS : DataSetups)
       DS->FinalOutput(modelfilename, InvModel);
+
+    std::ofstream paramfile("modparam.info");
+    for (size_t i = 0; i < InvModel.size(); ++i)
+      {
+        paramfile << StartModel(i) << " " << InvModel(i) << " " << CovModVec(i) << "\n";
+      }
 
     if (vm.count("mutual_information"))
       {
