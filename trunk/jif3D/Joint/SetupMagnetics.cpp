@@ -69,6 +69,11 @@ namespace jif3D
         //that information to the screen
         bool wantcuda = false;
         const size_t ngrid = InversionMesh.GetNModelElements();
+        //we initially assume that we do not want to change the density model
+        //but use it only as a constraint, if the weight is below the minimal threshold
+        //and we read in data, we set it to one below, also it gets overwritten if we specify a covariance file
+        CovModVec.resize(ngrid);
+        std::fill(CovModVec.begin(), CovModVec.end(), 1e-10);
 
         if (vm.count("gpu"))
           {
@@ -99,6 +104,7 @@ namespace jif3D
                     "Total field magnetic Data Filename: ");
                 MagData.ReadNetCDF(magdatafilename);
                 MagData.WriteVTK(magdatafilename);
+                std::fill(CovModVec.begin(), CovModVec.end(), 1.0);
               }
             std::string magmodelfilename = jif3D::AskFilename(
                 "Susceptibility Model Filename: ");
@@ -154,8 +160,6 @@ namespace jif3D
                     new jif3D::OMPMagneticSusceptibilityImp(inclination, declination,
                         fieldstrength));
               }
-            CovModVec.resize(ngrid);
-            std::fill(CovModVec.begin(), CovModVec.end(), 1.0);
             if (vm.count("sus_covmod"))
               {
                 boost::shared_ptr<jif3D::ThreeDModelBase> CovModel = jif3D::ReadAnyModel(
@@ -168,7 +172,6 @@ namespace jif3D
                         " Susceptibility covariance does not have the same number of parameters "
                             + std::to_string(ncovmod) + " as inversion model "
                             + std::to_string(ngrid), __FILE__, __LINE__);
-
                   }
                 else
                   {

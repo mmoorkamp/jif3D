@@ -6,6 +6,8 @@
 //============================================================================
 
 #include "SetupTomo.h"
+#include "../ModelBase/ReadAnyModel.h"
+
 #include "../Tomo/ReadWriteTomographyData.h"
 #include "../Tomo/TomographyData.h"
 #include "../Inversion/ModelTransforms.h"
@@ -45,7 +47,9 @@ namespace jif3D
             "writerays", po::value(&WriteRays)->default_value(false),
             "Write out the rays for each seismic forward modelling")("minslow",
             po::value(&minslow)->default_value(1e-4))("maxslow",
-            po::value(&maxslow)->default_value(0.005));
+            po::value(&maxslow)->default_value(0.005))("slowness_covmod",
+            po::value<std::string>(),
+            "A file containing the model covariance for seismic slowness");
         return desc;
       }
 
@@ -56,6 +60,8 @@ namespace jif3D
         boost::filesystem::path TempDir)
       {
         const size_t ngrid = InversionMesh.GetData().num_elements();
+        CovModVec.resize(ngrid);
+        std::fill(CovModVec.begin(), CovModVec.end(), 1e-10);
 
         tomolambda = 1.0;
         if (!vm.count("tomolamda"))
@@ -80,86 +86,116 @@ namespace jif3D
 
             StartingParameters.resize(ngrid);
             std::copy(TomoModel.GetSlownesses().origin(),
-                TomoModel.GetSlownesses().origin() + ngrid,
-                StartingParameters.begin());
+                TomoModel.GetSlownesses().origin() + ngrid, StartingParameters.begin());
 
-            if (!vm.count("tomodata"))
+            if (tomolambda > JointObjective::MinWeight)
               {
-                //get the name of the file containing the data and read it in
-                datafilename = jif3D::AskFilename("Tomography Data Filename: ");
+                std::fill(CovModVec.begin(), CovModVec.end(), 1.0);
+
+                if (!vm.count("tomodata"))
+                  {
+                    //get the name of the file containing the data and read it in
+                    datafilename = jif3D::AskFilename("Tomography Data Filename: ");
+                  }
+                //read in data
+                TomoData.ReadNetCDF(datafilename);
+                TomoData.WriteMeasurementPoints(modelfilename + ".rec.vtk");
+                TomoData.WriteSourcePoints(modelfilename + ".sor.vtk");
+
+                jif3D::TomographyCalculator Calculator;
+                TomoObjective = boost::make_shared<
+                    jif3D::ThreeDModelObjective<jif3D::TomographyCalculator>>(Calculator);
+
+                TomoObjective->SetObservedData(TomoData);
+                TomoObjective->SetCoarseModelGeometry(TomoModel);
+                //we assume the same error for all measurements
+                //this is either the default value set in the constructor
+                //or set by the user
+                std::vector<double> TomoError = ConstructError(TomoData.GetData(),
+                    TomoData.GetErrors(), 0.0, pickerr);
+                TomoObjective->SetDataError(TomoError);
+
+                if (vm.count("slow_covmod"))
+                  {
+                    boost::shared_ptr<jif3D::ThreeDModelBase> CovModel =
+                        jif3D::ReadAnyModel(vm["slow_covmod"].as<std::string>());
+
+                    const size_t ncovmod = CovModel->GetData().num_elements();
+                    if (ncovmod != ngrid)
+                      {
+                        throw jif3D::FatalException(
+                            " Slowness covariance does not have the same number of parameters "
+                                + std::to_string(ncovmod) + " as inversion model "
+                                + std::to_string(ngrid), __FILE__, __LINE__);
+                      }
+                    else
+                      {
+                        std::cout << " Setting covariance for Slowness from file. "
+                            << std::endl;
+                      }
+                    std::copy(CovModel->GetData().origin(),
+                        CovModel->GetData().origin() + ncovmod, CovModVec.begin());
+
+                  }
+
+                if (vm.count("tomofine") && CellSize > 0.0)
+                  {
+                    const double xmax = TomoModel.GetXCoordinates().back();
+                    const double ymax = TomoModel.GetYCoordinates().back();
+                    const double zmax = TomoModel.GetZCoordinates().back();
+                    const double xmin = TomoModel.GetXCoordinates().front();
+                    const double ymin = TomoModel.GetYCoordinates().front();
+                    const double zmin = TomoModel.GetZCoordinates().front();
+                    const double xextent = xmax - TomoModel.GetXCoordinates().front();
+                    const double yextent = ymax - TomoModel.GetYCoordinates().front();
+                    const double zextent = zmax - TomoModel.GetZCoordinates().front();
+                    const int nx = round(xextent / CellSize);
+                    const int ny = round(yextent / CellSize);
+                    const int nz = round(zextent / CellSize);
+                    //if the finely discretized grid does not fit into the inversion grid
+                    //with a tolerance of more than 10cm
+                    if (std::abs(xmin + nx * CellSize - xmax) > 0.1)
+                      {
+                        throw jif3D::FatalException(
+                            "Refined grid does not fit in x-direction", __FILE__,
+                            __LINE__);
+                      }
+                    if (std::abs(ymin + ny * CellSize - ymax) > 0.1)
+                      {
+                        throw jif3D::FatalException(
+                            "Refined grid does not fit in y-direction", __FILE__,
+                            __LINE__);
+                      }
+                    if (std::abs(zmin + nz * CellSize - zmax) > 0.1)
+                      {
+                        throw jif3D::FatalException(
+                            "Refined grid does not fit in x-direction", __FILE__,
+                            __LINE__);
+                      }
+
+                    jif3D::ThreeDSeismicModel TomoFineGeometry;
+                    TomoFineGeometry.SetCellSize(CellSize, nx, ny, nz);
+                    TomoFineGeometry.SetOrigin(xmin, ymin, zmin);
+                    std::cout << "Refined Model has " << nx << " * " << ny << " * " << nz
+                        << "cells\n";
+                    //copy measurement configuration to refined model
+                    TomoObjective->SetFineModelGeometry(TomoFineGeometry);
+                  }
+                size_t start = startindices.back();
+                size_t end = start + ngrid;
+                boost::shared_ptr<jif3D::GeneralModelTransform> TomoTrans =
+                    boost::make_shared<jif3D::TanhTransform>(minslow, maxslow);
+                Transform = boost::make_shared<jif3D::MultiSectionTransform>(2 * ngrid,
+                    start, end, TomoTrans);
+                startindices.push_back(end);
+                SegmentNames.push_back(Name);
+                SegmentTypes.push_back(GeneralDataSetup::gridparameter);
+
+                Objective.AddObjective(TomoObjective, Transform, tomolambda, "Tomo",
+                    JointObjective::datafit);
+                std::cout << "Tomo ndata: " << TomoData.GetData().size() << std::endl;
+                std::cout << "Tomo lambda: " << tomolambda << std::endl;
               }
-            //read in data
-            TomoData.ReadNetCDF(datafilename);
-            TomoData.WriteMeasurementPoints(modelfilename + ".rec.vtk");
-            TomoData.WriteSourcePoints(modelfilename + ".sor.vtk");
-
-            jif3D::TomographyCalculator Calculator;
-            TomoObjective = boost::make_shared<
-                jif3D::ThreeDModelObjective<jif3D::TomographyCalculator>>(Calculator);
-
-            TomoObjective->SetObservedData(TomoData);
-            TomoObjective->SetCoarseModelGeometry(TomoModel);
-            //we assume the same error for all measurements
-            //this is either the default value set in the constructor
-            //or set by the user
-            std::vector<double> TomoError = ConstructError(TomoData.GetData(),
-                TomoData.GetErrors(), 0.0, pickerr);
-            TomoObjective->SetDataError(TomoError);
-
-            if (vm.count("tomofine") && CellSize > 0.0)
-              {
-                const double xmax = TomoModel.GetXCoordinates().back();
-                const double ymax = TomoModel.GetYCoordinates().back();
-                const double zmax = TomoModel.GetZCoordinates().back();
-                const double xmin = TomoModel.GetXCoordinates().front();
-                const double ymin = TomoModel.GetYCoordinates().front();
-                const double zmin = TomoModel.GetZCoordinates().front();
-                const double xextent = xmax - TomoModel.GetXCoordinates().front();
-                const double yextent = ymax - TomoModel.GetYCoordinates().front();
-                const double zextent = zmax - TomoModel.GetZCoordinates().front();
-                const int nx = round(xextent / CellSize);
-                const int ny = round(yextent / CellSize);
-                const int nz = round(zextent / CellSize);
-                //if the finely discretized grid does not fit into the inversion grid
-                //with a tolerance of more than 10cm
-                if (std::abs(xmin + nx * CellSize - xmax) > 0.1)
-                  {
-                    throw jif3D::FatalException(
-                        "Refined grid does not fit in x-direction", __FILE__, __LINE__);
-                  }
-                if (std::abs(ymin + ny * CellSize - ymax) > 0.1)
-                  {
-                    throw jif3D::FatalException(
-                        "Refined grid does not fit in y-direction", __FILE__, __LINE__);
-                  }
-                if (std::abs(zmin + nz * CellSize - zmax) > 0.1)
-                  {
-                    throw jif3D::FatalException(
-                        "Refined grid does not fit in x-direction", __FILE__, __LINE__);
-                  }
-
-                jif3D::ThreeDSeismicModel TomoFineGeometry;
-                TomoFineGeometry.SetCellSize(CellSize, nx, ny, nz);
-                TomoFineGeometry.SetOrigin(xmin, ymin, zmin);
-                std::cout << "Refined Model has " << nx << " * " << ny << " * " << nz
-                    << "cells\n";
-                //copy measurement configuration to refined model
-                TomoObjective->SetFineModelGeometry(TomoFineGeometry);
-              }
-            size_t start = startindices.back();
-            size_t end = start + ngrid;
-            boost::shared_ptr<jif3D::GeneralModelTransform> TomoTrans =
-                boost::make_shared<jif3D::TanhTransform>(minslow, maxslow);
-            Transform = boost::make_shared<jif3D::MultiSectionTransform>(2 * ngrid, start,
-                end, TomoTrans);
-            startindices.push_back(end);
-            SegmentNames.push_back(Name);
-            SegmentTypes.push_back(GeneralDataSetup::gridparameter);
-
-            Objective.AddObjective(TomoObjective, Transform, tomolambda, "Tomo",
-                JointObjective::datafit);
-            std::cout << "Tomo ndata: " << TomoData.GetData().size() << std::endl;
-            std::cout << "Tomo lambda: " << tomolambda << std::endl;
           }
         //indicate whether we added a tomography objective
         return (tomolambda > 0.0);
@@ -183,7 +219,8 @@ namespace jif3D
           }
       }
 
-    void SetupTomo::FinalOutput(const std::string &filename, const jif3D::rvec &FinalModelVector)
+    void SetupTomo::FinalOutput(const std::string &filename,
+        const jif3D::rvec &FinalModelVector)
       {
         if (tomolambda > JointObjective::MinWeight)
           {

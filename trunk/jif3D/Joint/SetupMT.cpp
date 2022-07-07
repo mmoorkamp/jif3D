@@ -5,6 +5,7 @@
 // Copyright   : 2010, mmoorkamp
 //============================================================================
 
+#include "SetupMT.h"
 #include "../MT/ReadWriteImpedances.h"
 #include "../MT/MTData.h"
 #include "../MT/TipperData.h"
@@ -14,7 +15,8 @@
 #include "../Global/ReadWriteSparseMatrix.h"
 #include "../Inversion/ModelTransforms.h"
 #include "../Regularization/MinDiffRegularization.h"
-#include "SetupMT.h"
+#include "../ModelBase/ReadAnyModel.h"
+
 #include <boost/make_shared.hpp>
 #include <algorithm>
 #include <string>
@@ -44,10 +46,10 @@ namespace jif3D
             po::value(&relerr)->default_value(0.02), "The relative error for the MT data")(
             "mtfine", po::value(&FineModelName),
             "The name for the model with the MT forward geometry")("mtinvcovar",
-            po::value<std::string>(&MTInvCovarName),
+            po::value < std::string > (&MTInvCovarName),
             "Inverse covariance matrix to use in MT misfit calculation.")("inderrors",
             "Use the individual errors for each element instead of the same for all elements")(
-            "x3dname", po::value<std::string>(&X3DName)->default_value("x3d"),
+            "x3dname", po::value < std::string > (&X3DName)->default_value("x3d"),
             "The name of the executable for x3d")("opt",
             "Use opt for Green's function calculation in x3d.")("distcorr",
             po::value(&DistCorr)->default_value(0),
@@ -55,7 +57,9 @@ namespace jif3D
             "tiprelerr", po::value(&tiprelerr)->default_value(0.02),
             "The relative error for the Tipper data")("tiperr",
             po::value(&tipperr)->default_value(0.01),
-            "The absolute minimum error for the Tipper data");
+            "The absolute minimum error for the Tipper data")("cond_covmod",
+            po::value<std::string>(),
+            "A file containing the model covariance for conductivity");
         return desc;
       }
 
@@ -66,6 +70,9 @@ namespace jif3D
         boost::filesystem::path TempDir)
       {
         const size_t ngrid = InversionMesh.GetNModelElements();
+
+        CovModVec.resize(ngrid);
+        std::fill(CovModVec.begin(), CovModVec.end(), 1e-10);
 
         //first we ask the user a few questions
         //these are all values that are likely to change from run to run
@@ -114,6 +121,8 @@ namespace jif3D
             MTModel.ReadNetCDF(mtmodelfilename);
             if (mtlambda > JointObjective::MinWeight)
               {
+                std::fill(CovModVec.begin(), CovModVec.end(), 1.0);
+
                 //if x3d sees that a layer is completely homogeneous with the background
                 //it optimizes this layer away which messes up our gradient calculation
                 // as it does not output the field values for this layer
@@ -206,6 +215,28 @@ namespace jif3D
                 std::cout << "MT ndata: " << ndata << std::endl;
                 std::cout << "MT lambda: " << mtlambda << std::endl;
 
+                if (vm.count("cond_covmod"))
+                  {
+                    boost::shared_ptr<jif3D::ThreeDModelBase> CovModel =
+                        jif3D::ReadAnyModel(vm["cond_covmod"].as<std::string>());
+
+                    const size_t ncovmod = CovModel->GetData().num_elements();
+                    if (ncovmod != ngrid)
+                      {
+                        throw jif3D::FatalException(
+                            " Conductivity covariance does not have the same number of parameters "
+                                + std::to_string(ncovmod) + " as inversion model "
+                                + std::to_string(ngrid), __FILE__, __LINE__);
+                      }
+                    else
+                      {
+                        std::cout << " Setting covariance for conductivity from file. "
+                            << std::endl;
+                      }
+                    std::copy(CovModel->GetData().origin(),
+                        CovModel->GetData().origin() + ncovmod, CovModVec.begin());
+
+                  }
                 //if we want to correct for distortion within the inversion
                 boost::shared_ptr<jif3D::GeneralModelTransform> Copier(
                     new jif3D::ModelCopyTransform);
@@ -332,7 +363,8 @@ namespace jif3D
           }
       }
 
-    void SetupMT::FinalOutput(const std::string &filename ,const jif3D::rvec &FinalModelVector)
+    void SetupMT::FinalOutput(const std::string &filename,
+        const jif3D::rvec &FinalModelVector)
       {
         if (mtlambda > JointObjective::MinWeight)
           {
