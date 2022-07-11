@@ -2,6 +2,7 @@
 #include <hpx/hpx.hpp>
 #include <hpx/hpx_init.hpp>
 #include <hpx/hpx_init_params.hpp>
+#include <hpx/runtime_distributed.hpp>
 #include <hpx/modules/program_options.hpp>
 namespace po = hpx::program_options;
 
