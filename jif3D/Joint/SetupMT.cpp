@@ -70,6 +70,7 @@ namespace jif3D
         boost::filesystem::path TempDir)
       {
         const size_t ngrid = InversionMesh.GetNModelElements();
+        StartingParameters.resize(ngrid);
 
         CovModVec.resize(ngrid);
         std::fill(CovModVec.begin(), CovModVec.end(), 1e-10);
@@ -92,8 +93,10 @@ namespace jif3D
               {
                 if (!boost::filesystem::exists(X3DName))
                   {
-                    std::cerr << X3DName << " is not accessible or  does not exist ! \n";
-                    return 500;
+                    jif3D::FatalException(
+                        X3DName + " is not accessible or  does not exist ! \n", __FILE__,
+                        __LINE__);
+
                   }
 
                 //for inversion we need some data, so we ask for the filename
@@ -121,6 +124,23 @@ namespace jif3D
             //read in the model and check whether the geometry matches the one
             //of the tomography starting model
             MTModel.ReadNetCDF(mtmodelfilename);
+
+            boost::shared_ptr<jif3D::ChainedTransform> ConductivityTransform(
+                new jif3D::ChainedTransform);
+            jif3D::rvec RefModel(ngrid);
+            std::fill(RefModel.begin(), RefModel.end(), 1.0);
+            ConductivityTransform->AppendTransform(
+                boost::shared_ptr<jif3D::GeneralModelTransform>(
+                    new jif3D::TanhTransform(std::log(mincond), std::log(maxcond))));
+            ConductivityTransform->AppendTransform(
+                boost::shared_ptr<jif3D::GeneralModelTransform>(
+                    new jif3D::LogTransform(RefModel)));
+
+            //add the MT part to the JointObjective that will be used
+            //for the inversion
+            Transform = boost::make_shared<jif3D::MultiSectionTransform>(2 * ngrid,
+                startgrid, endgrid, ConductivityTransform);
+
             if (mtlambda > JointObjective::MinWeight)
               {
                 std::fill(CovModVec.begin(), CovModVec.end(), 1.0);
@@ -190,24 +210,6 @@ namespace jif3D
                           { return std::max(a,b);});
                     MTObjective->SetDataError(MinErr);
                   }
-
-
-                boost::shared_ptr<jif3D::ChainedTransform> ConductivityTransform(
-                    new jif3D::ChainedTransform);
-                jif3D::rvec RefModel(ngrid);
-                std::fill(RefModel.begin(), RefModel.end(), 1.0);
-                ConductivityTransform->AppendTransform(
-                    boost::shared_ptr<jif3D::GeneralModelTransform>(
-                        new jif3D::TanhTransform(std::log(mincond), std::log(maxcond))));
-                ConductivityTransform->AppendTransform(
-                    boost::shared_ptr<jif3D::GeneralModelTransform>(
-                        new jif3D::LogTransform(RefModel)));
-
-
-                //add the MT part to the JointObjective that will be used
-                //for the inversion
-                Transform = boost::make_shared<jif3D::MultiSectionTransform>(2 * ngrid,
-                    startgrid, endgrid, ConductivityTransform);
 
                 //output some information to the screen
                 //to signal that we added the MT data
@@ -282,13 +284,6 @@ namespace jif3D
                     std::copy(C.begin(), C.end(), StartingParameters.begin() + ngrid);
 
                   }
-                else
-                  {
-                    StartingParameters.resize(ngrid);
-                    std::copy(MTModel.GetConductivities().origin(),
-                        MTModel.GetConductivities().origin() + ngrid,
-                        StartingParameters.begin());
-                  }
 
                 Objective.AddObjective(MTObjective, Transform, mtlambda, "MT",
                     JointObjective::datafit);
@@ -344,10 +339,11 @@ namespace jif3D
                   }
               }
 
-
             startindices.push_back(endgrid);
             SegmentNames.push_back(GridName);
             SegmentTypes.push_back(GeneralDataSetup::gridparameter);
+            std::copy(MTModel.GetConductivities().origin(),
+                MTModel.GetConductivities().origin() + ngrid, StartingParameters.begin());
           }
         //return true if we added an MT objective function
         return (mtlambda > JointObjective::MinWeight);

@@ -83,7 +83,7 @@ namespace jif3D
 
         jif3D::TotalFieldMagneticData MagData;
 
-        //we first ask for the weights for scalar and tensor Magnetics
+        //we first ask for the weights for Magnetics
         //as we might not have to do very much if the weights are zero
         std::cout << "Total field magnetics Lambda: ";
         std::cin >> maglambda;
@@ -235,6 +235,7 @@ namespace jif3D
               {
 #ifdef MAGDISK
             Calculator = boost::make_shared<MagCalculatorType>(Implementation, TempDir);
+            std::cout << "Magnetics will take " << ngrid * MagData.GetData().size() * 8 / 1e9 * 9 << " GB disk space " << std::endl;
 #else
                 Calculator = boost::make_shared<MagCalculatorType>(Implementation);
 #endif
