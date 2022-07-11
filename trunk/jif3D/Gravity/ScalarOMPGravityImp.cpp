@@ -11,6 +11,8 @@
 #include <hpx/include/util.hpp>
 #include <hpx/include/lcos.hpp>
 #include <hpx/parallel/algorithms/transform_reduce.hpp>
+#include <hpx/runtime_distributed.hpp>
+
 #endif
 
 #include <numeric>
@@ -173,17 +175,17 @@ namespace jif3D
 #endif
 #ifdef HAVEHPX
 
-        using hpx::lcos::future;
+        using hpx::future;
         using hpx::async;
         using hpx::wait_all;
-        std::vector<hpx::naming::id_type> localities = hpx::find_all_localities();
+        std::vector<hpx::id_type> localities = hpx::find_all_localities();
         const size_t nthreads = hpx::get_num_worker_threads();
         const size_t nlocs = localities.size();
 
         //calculate how many chunks we have to divide the work into
         //assuming 1 chunk per thread and node, this might need adjustment
         size_t nchunks = nthreads * nlocs;
-        std::vector<hpx::lcos::future<std::vector<double>>> ChunkResult;
+        std::vector<hpx::future<std::vector<double>>> ChunkResult;
         Gravity_Action GravityChunks;
         const size_t cellsperchunk = nmod / nchunks +1;
 
@@ -195,7 +197,7 @@ namespace jif3D
             //the last element of the chunk, considering that we the last chunk might be a bit too big
             size_t endindex = std::min(size_t(nmod), (c+1) * cellsperchunk);
             // simple round robin allocation to different localities, not sure this makes much sense
-            hpx::naming::id_type const locality_id = localities.at(c % localities.size());
+            hpx::id_type const locality_id = localities.at(c % localities.size());
             //create a hpx future
             ChunkResult.push_back(async(GravityChunks, locality_id, startindex,endindex,x_meas,y_meas,z_meas,
                 Model.GetXCoordinates(), Model.GetYCoordinates(), Model.GetZCoordinates(),
