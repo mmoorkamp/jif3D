@@ -74,6 +74,8 @@ namespace jif3D
         CovModVec.resize(ngrid);
         std::fill(CovModVec.begin(), CovModVec.end(), 1e-10);
 
+        size_t startgrid = startindices.back();
+        size_t endgrid = startgrid + ngrid;
         //first we ask the user a few questions
         //these are all values that are likely to change from run to run
         // so we do not want them as command line arguments or in the
@@ -189,8 +191,7 @@ namespace jif3D
                     MTObjective->SetDataError(MinErr);
                   }
 
-                size_t startgrid = startindices.back();
-                size_t endgrid = startgrid + ngrid;
+
                 boost::shared_ptr<jif3D::ChainedTransform> ConductivityTransform(
                     new jif3D::ChainedTransform);
                 jif3D::rvec RefModel(ngrid);
@@ -201,9 +202,7 @@ namespace jif3D
                 ConductivityTransform->AppendTransform(
                     boost::shared_ptr<jif3D::GeneralModelTransform>(
                         new jif3D::LogTransform(RefModel)));
-                startindices.push_back(endgrid);
-                SegmentNames.push_back(GridName);
-                SegmentTypes.push_back(GeneralDataSetup::gridparameter);
+
 
                 //add the MT part to the JointObjective that will be used
                 //for the inversion
@@ -344,6 +343,11 @@ namespace jif3D
 
                   }
               }
+
+
+            startindices.push_back(endgrid);
+            SegmentNames.push_back(GridName);
+            SegmentTypes.push_back(GeneralDataSetup::gridparameter);
           }
         //return true if we added an MT objective function
         return (mtlambda > JointObjective::MinWeight);
