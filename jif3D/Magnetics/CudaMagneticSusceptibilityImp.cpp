@@ -120,8 +120,7 @@ namespace jif3D
                         + currsens[offset + 4 * ngrid] * ByComp
                         + currsens[offset + 5 * ngrid]) * fs * factor;
                 //times the Susceptibility
-                const double Susceptibility = 1000.0;
-                    //Model.GetSusceptibilities().origin()[offset];
+                const double Susceptibility = Model.GetSusceptibilities().origin()[offset];
                 Bx += BxSens * Susceptibility;
                 By += BySens * Susceptibility;
                 Bz += BzSens * Susceptibility;
