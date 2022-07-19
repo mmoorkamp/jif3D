@@ -33,27 +33,28 @@ const size_t defaultblocksize = 128;
 namespace jif3D
   {
 
-  rvec CudaMagneticSusceptibilityImp::Calculate(const ThreeDSusceptibilityModel &Model, const TotalFieldMagneticData &Data,
-      ThreeDGravMagCalculator<TotalFieldMagneticData> &Calculator)
-    {
+    rvec CudaMagneticSusceptibilityImp::Calculate(const ThreeDSusceptibilityModel &Model,
+        const TotalFieldMagneticData &Data,
+        ThreeDGravMagCalculator<TotalFieldMagneticData> &Calculator)
+      {
 
-      const unsigned int nx = Model.GetSusceptibilities().shape()[0];
-      const unsigned int ny = Model.GetSusceptibilities().shape()[1];
-      const unsigned int nz = Model.GetSusceptibilities().shape()[2];
-      //allocate memory
-      PrepareData(&d_xcoord, &d_ycoord, &d_zcoord, &d_xsize, &d_ysize,
-          &d_zsize, &d_result, Model.GetXCoordinates().data(),
-          Model.GetYCoordinates().data(), Model.GetZCoordinates().data(),
-          Model.GetXCellSizes().data(), Model.GetYCellSizes().data(),
-          Model.GetZCellSizes().data(), nx, ny, nz);
-      // call the base class that coordinates the calculation of gridded and background parts
-      rvec result(ThreeDGravMagImplementation<TotalFieldMagneticData>::Calculate(Model, Data, Calculator));
-      // free memory
-      FreeData(&d_xcoord, &d_ycoord, &d_zcoord, &d_xsize, &d_ysize, &d_zsize,
-          &d_result);
-      return result;
-    }
-
+        const unsigned int nx = Model.GetSusceptibilities().shape()[0];
+        const unsigned int ny = Model.GetSusceptibilities().shape()[1];
+        const unsigned int nz = Model.GetSusceptibilities().shape()[2];
+        //allocate memory
+        PrepareData(&d_xcoord, &d_ycoord, &d_zcoord, &d_xsize, &d_ysize, &d_zsize,
+            &d_result, Model.GetXCoordinates().data(), Model.GetYCoordinates().data(),
+            Model.GetZCoordinates().data(), Model.GetXCellSizes().data(),
+            Model.GetYCellSizes().data(), Model.GetZCellSizes().data(), nx, ny, nz);
+        // call the base class that coordinates the calculation of gridded and background parts
+        rvec result(
+            ThreeDGravMagImplementation<TotalFieldMagneticData>::Calculate(Model, Data,
+                Calculator));
+        // free memory
+        FreeData(&d_xcoord, &d_ycoord, &d_zcoord, &d_xsize, &d_ysize, &d_zsize,
+            &d_result);
+        return result;
+      }
 
     rvec CudaMagneticSusceptibilityImp::CalcGridded(const size_t measindex,
         const ThreeDSusceptibilityModel &Model, const TotalFieldMagneticData &Data,
@@ -92,13 +93,19 @@ namespace jif3D
             currsenssize = ngrid;
           }
 
-
-        std::fill_n(currsens, ngrid * nreturnelements, 0.0);
+        std::fill_n(currsens, ngrid * nreturnelements, 1.0);
         //This call goes into the GPU, implementation in gravcuda.cu
         SingleFTGMeas(x_meas, y_meas, z_meas, d_xcoord, d_ycoord, d_zcoord, d_xsize,
             d_ysize, d_zsize, d_result, Model.GetSusceptibilities().shape()[0],
-            Model.GetSusceptibilities().shape()[1], Model.GetSusceptibilities().shape()[2], currsens,
-            blocksize);
+            Model.GetSusceptibilities().shape()[1],
+            Model.GetSusceptibilities().shape()[2], currsens, blocksize);
+
+        cudaDeviceSynchronize();
+        cudaError_t error = cudaGetLastError();
+        if(error!=cudaSuccess)
+        {
+            throw jif3D::FatalException(cudaGetErrorString(error),__FILE__,__LINE__);
+        }
 
         double Bx = 0.0, By = 0.0, Bz = 0.0;
         const double fs = GetFieldStrength();
@@ -118,7 +125,7 @@ namespace jif3D
                 const double BzSens =
                     (currsens[offset + 2 * ngrid] * BxComp
                         + currsens[offset + 4 * ngrid] * ByComp
-                        + currsens[offset + 5 * ngrid]) * fs * factor;
+                        + currsens[offset + 5 * ngrid]* BzComp) * fs * factor;
                 //times the Susceptibility
                 const double Susceptibility = Model.GetSusceptibilities().origin()[offset];
                 Bx += BxSens * Susceptibility;
@@ -150,8 +157,7 @@ namespace jif3D
         NULL), d_zsize(NULL), d_result(NULL), currsens(NULL), currsenssize(0), blocksize(
             defaultblocksize)
       {
-        // TODO Auto-generated constructor stub
-
+        std::cout << "Cuda computations for magnetics " << std::endl;
       }
 
     CudaMagneticSusceptibilityImp::~CudaMagneticSusceptibilityImp()

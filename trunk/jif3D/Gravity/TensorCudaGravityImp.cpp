@@ -96,6 +96,12 @@ namespace jif3D
             d_xsize, d_ysize, d_zsize, d_result,
             Model.GetDensities().shape()[0], Model.GetDensities().shape()[1],
             Model.GetDensities().shape()[2], currsens, blocksize);
+        cudaDeviceSynchronize();
+        cudaError_t error = cudaGetLastError();
+        if(error!=cudaSuccess)
+        {
+            throw jif3D::FatalException(cudaGetErrorString(error),__FILE__,__LINE__);
+        }
         rvec result(ndatapermeas);
         //the GPU only calculates the sensitivities, we calculate the acceleration with the densities
         result(0) = std::inner_product(currsens, currsens + ngrid,

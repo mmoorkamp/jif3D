@@ -279,20 +279,7 @@ BOOST_AUTO_TEST_SUITE (TensorGravity_Test_Suite)
                 std::numeric_limits<float>::epsilon());
           }
       }
-    BOOST_AUTO_TEST_CASE(tensor_cuda_resize_test)
-      {
-        jif3D::ThreeDGravityModel GravityTest;
-        jif3D::TensorGravityData TensorData;
 
-        const size_t ncells =11;
-        const size_t nmeas = 20;
-        MakeRandomModel(GravityTest, TensorData, ncells, nmeas);
-        typedef typename jif3D::FullSensitivityGravMagCalculator<jif3D::TensorGravityData> CalculatorType;
-        boost::shared_ptr<CalculatorType> Calculator(jif3D::CreateGravityCalculator<CalculatorType>::MakeTensor(true));
-        jif3D::rvec meas1(Calculator->Calculate(GravityTest,TensorData));
-        MakeRandomModel(GravityTest, TensorData, ncells, nmeas);
-        BOOST_CHECK_NO_THROW( jif3D::rvec meas2(Calculator->Calculate(GravityTest,TensorData)));
-      }
 #endif
 
     BOOST_AUTO_TEST_CASE (lqderivative_test)

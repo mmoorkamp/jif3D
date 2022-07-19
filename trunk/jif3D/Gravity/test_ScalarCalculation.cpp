@@ -211,9 +211,9 @@ BOOST_AUTO_TEST_CASE(model_gravity_1danaly_test)
     boost::shared_ptr<ScalarCalculatorType> ScalarCalculator(
         jif3D::CreateGravityCalculator<ScalarCalculatorType>::MakeScalar());
 #ifdef HAVEGPU
-    boost::shared_ptr<ScalarCalculatorType> CudaCalculator(jif3D::CreateGravityCalculator<TensorCalculatorType>::MakeScalar(true));
+    auto CudaCalculator(jif3D::CreateGravityCalculator<ScalarCalculatorType>::MakeScalar(true));
     std::cout << "Calculating CUDA " << std::endl;
-    jif3D::rvec cudameas(CudaCalculator->Calculate(GravityTest));
+    jif3D::rvec cudameas(CudaCalculator->Calculate(GravityTest, SCData));
     std::cout << "Finished CUDA " << std::endl;
 #endif
     jif3D::rvec scalarmeas(ScalarCalculator->Calculate(GravityTest, SCData));

@@ -18,40 +18,35 @@ using namespace boost::assign;
  * using CUDA for a fixed model size, but different CUDA thread block sizes.
  */
 
-void MakeTestModel(jif3D::ThreeDGravityModel &Model, const size_t size)
+void MakeTestModel(jif3D::ThreeDGravityModel &Model, jif3D::GeneralData &Data,
+    const size_t size)
   {
-    Model.SetXCellSizes().resize(size);
-    Model.SetYCellSizes().resize(size);
-    Model.SetZCellSizes().resize(size);
+    Model.SetMeshSize(size, size, size);
+    jif3D::ThreeDModelBase::t3DModelDim XCS(size), YCS(size), ZCS(size, 500);
+    Model.SetZCellSizes(ZCS);
+    std::generate(XCS.begin(), XCS.end(), []() -> double
+      { return rand() % 10000 + 1000;});
+    std::generate(YCS.begin(), YCS.end(), []() -> double
+      { return rand() % 10000 + 1000;});
+    Model.SetXCellSizes(XCS);
+    Model.SetYCellSizes(YCS);
+    //fill the grid with some random values that are in a similar range
+    // as densities
+    std::generate_n(Model.SetDensities().origin(), Model.SetDensities().num_elements(),
+        []() -> double
+          { return 0.1 + double(rand() % 1000) / 300.0;});
 
-    for (size_t i = 0; i < size; ++i) // set the values of the inner cells
-      {
-        Model.SetXCellSizes()[i] = rand() % 10000 + 1000;
-        Model.SetYCellSizes()[i] = rand() % 10000 + 1000;
-        Model.SetZCellSizes()[i] = 500;
-      }
-    Model.SetDensities().resize(boost::extents[size][size][size]);
-    for (size_t i = 0; i < size; ++i)
-      for (size_t j = 0; j < size; ++j)
-        for (size_t k = 0; k < size; ++k)
-          {
-            Model.SetDensities()[i][j][k] = 0.1 + double(rand() % 1000) / 300.0;
-          }
     const size_t nmeas = 30;
     for (size_t i = 0; i < nmeas; ++i)
-      Model.AddMeasurementPoint(rand() % 50000 + 2e4, rand() % 50000 + 2e4, 0.0);
-    std::vector<double> bg_dens, bg_thick;
-    bg_dens.push_back(1.0);
-    bg_dens.push_back(1.0);
-    bg_dens.push_back(5.0);
-    bg_dens.push_back(5.0);
-    bg_thick.push_back(200.0);
-    bg_thick.push_back(300.0);
-    bg_thick.push_back(3500.0);
-    bg_thick.push_back(1000.0);
+      Data.AddMeasurementPoint(rand() % 50000 + 2e4, rand() % 50000 + 2e4, 0.0);
+    std::vector<double> bg_dens =
+      { 1.0, 1.0, 5.0, 5.0 };
+    std::vector<double> bg_thick =
+      { 200.0, 300.0, 3500.0, 1000.0 };
     Model.SetBackgroundDensities(bg_dens);
     Model.SetBackgroundThicknesses(bg_thick);
   }
+
 
 int main()
   {
@@ -61,7 +56,7 @@ int main()
     std::string filename = "blocksize.time";
     //we create a calculator and implementation object manually
     //we do not use the factory function to have maximum control
-    boost::shared_ptr<jif3D::ThreeDGravMagCalculator<jif3D::ThreeDGravityModel> > Calculator;
+    boost::shared_ptr<jif3D::ThreeDGravMagCalculator<jif3D::TensorGravityData> > Calculator;
     boost::shared_ptr<jif3D::TensorCudaGravityImp> Implementation(
         new jif3D::TensorCudaGravityImp);
 
@@ -69,6 +64,9 @@ int main()
     //64 and 256 are recommended values from the NVidia documentation
     std::vector<double> blocksizes;
     blocksizes += 64, 76, 90, 107, 128, 152, 181, 192, 215, 256;
+
+    typename jif3D::TensorGravityData Data;
+
 
     const size_t nruns = blocksizes.size();
     std::ofstream outfile(filename.c_str());
@@ -85,7 +83,7 @@ int main()
         Implementation->SetCUDABlockSize(blocksizes.at(i));
         //and assemble the calculator object
         Calculator =
-            boost::make_shared<jif3D::MinMemGravMagCalculator<jif3D::ThreeDGravityModel> >(
+            boost::make_shared<jif3D::MinMemGravMagCalculator<jif3D::TensorGravityData> >(
                 Implementation);
         double rawruntime = 0.0;
         //now we perform several runs and measure the time
@@ -93,12 +91,12 @@ int main()
           {
             rawruntime = 0.0;
             //create a random test model
-            MakeTestModel(GravityTest, modelsize);
+            MakeTestModel(GravityTest, Data, modelsize);
             //save the time when we started
             boost::posix_time::ptime firststarttime =
                 boost::posix_time::microsec_clock::local_time();
             //perform the calculation
-            jif3D::rvec gravmeas(Calculator->Calculate(GravityTest));
+            jif3D::rvec gravmeas(Calculator->Calculate(GravityTest, Data));
             //and the time we stop
             boost::posix_time::ptime firstendtime =
                 boost::posix_time::microsec_clock::local_time();

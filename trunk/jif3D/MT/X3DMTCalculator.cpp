@@ -200,18 +200,18 @@ namespace jif3D
 #endif
 
 #ifdef HAVEHPX
-        using hpx::lcos::future;
+        using hpx::future;
         using hpx::async;
         using hpx::wait_all;
-        std::vector<hpx::naming::id_type> localities =
+        std::vector<hpx::id_type> localities =
         hpx::find_all_localities();
-        std::vector<hpx::lcos::future<ForwardResult>> FreqResult;
+        std::vector<hpx::future<ForwardResult>> FreqResult;
         FreqResult.reserve(nfreq);
         CalculateFrequency_action FreqCalc;
         for (size_t i = minfreqindex; i < maxfreqindex; ++i)
           {
             ForwardInfo Info(Model,C,i,TempDir.string(),X3DName, NameRoot, GreenType1, GreenType4);
-            hpx::naming::id_type const locality_id = localities.at(i % localities.size());
+            hpx::id_type const locality_id = localities.at(i % localities.size());
             //std::cout << "Sending frequency: " << i << " to node " << locality_id << std::endl;
             //rvec freqresult = CalculateFrequency(Model, i, TempDir);
             FreqResult.push_back(async(FreqCalc, locality_id, Info, Data, FieldCalculator));
@@ -354,19 +354,19 @@ namespace jif3D
 #endif
 
 #ifdef HAVEHPX
-        using hpx::lcos::future;
+        using hpx::future;
         using hpx::async;
         using hpx::wait_all;
-        std::vector<hpx::naming::id_type> localities =
+        std::vector<hpx::id_type> localities =
         hpx::find_all_localities();
-        std::vector<hpx::lcos::future<GradResult>> FreqResult;
+        std::vector<hpx::future<GradResult>> FreqResult;
         FreqResult.reserve(nfreq);
         LQDerivativeFreq_action LQDerivativeFreq;
         for (size_t i = minfreqindex; i < maxfreqindex; ++i)
           {
             ForwardInfo Info(Model,C,i,TempDir.string(),X3DName, NameRoot, GreenType1, GreenType4);
 
-            hpx::naming::id_type const locality_id = localities.at(i % localities.size());
+            hpx::id_type const locality_id = localities.at(i % localities.size());
             //rvec freqresult = CalculateFrequency(Model, i, TempDir);
             FreqResult.push_back(async(LQDerivativeFreq, locality_id, Info, Data, GradInfo(ProjMisfit, RawImpedance),FieldCalculator));
 
