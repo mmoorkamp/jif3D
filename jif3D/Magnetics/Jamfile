@@ -2,9 +2,10 @@ import testing ;
 lib magnetics : ThreeDSusceptibilityModel.cpp TotalFieldMagneticData.cpp
               ThreeComponentMagneticData.cpp ThreeDMagnetizationModel.cpp
               OMPMagnetizationImp.cpp
-              OMPMagneticSusceptibilityImp.cpp  OMPMagneticGradImp.cpp ReadWriteMagneticData.cpp
+              OMPMagneticSusceptibilityImp.cpp  OMPMagneticGradImp.cpp ReadWriteMagneticData.cpp               
                  ../Global//global ../Gravity//gravity  ../ModelBase//modelbase
-                 ..//boost_core ..//netcdf_c++ ..//netcdf
+                 ..//boost_core ..//netcdf_c++ ..//netcdf :
+                               <gpu>on:<source>CudaMagneticSusceptibilityImp.cpp
                ;
                
                     

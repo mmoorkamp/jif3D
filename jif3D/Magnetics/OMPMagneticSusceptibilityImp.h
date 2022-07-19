@@ -26,14 +26,17 @@ namespace jif3D
       double Declination;
       double FieldStrength;
       virtual rvec CalcBackground(const size_t measindex, const double xwidth,
-          const double ywidth, const double zwidth, const ThreeDSusceptibilityModel &Model,
-          const TotalFieldMagneticData &Data, rmat &Sensitivities) override;
+          const double ywidth, const double zwidth,
+          const ThreeDSusceptibilityModel &Model, const TotalFieldMagneticData &Data,
+          rmat &Sensitivities) override;
       rvec CalcMagneticBackground(const size_t measindex, const double xwidth,
-          const double ywidth, const double zwidth, const ThreeDSusceptibilityModel &Model,
-          const TotalFieldMagneticData &Data, rmat &Sensitivities);
+          const double ywidth, const double zwidth,
+          const ThreeDSusceptibilityModel &Model, const TotalFieldMagneticData &Data,
+          rmat &Sensitivities);
       //! Calculate the response of the gridded part
-      virtual rvec CalcGridded(const size_t measindex, const ThreeDSusceptibilityModel &Model,
-          const TotalFieldMagneticData &Data, rmat &Sensitivities) override;
+      virtual rvec CalcGridded(const size_t measindex,
+          const ThreeDSusceptibilityModel &Model, const TotalFieldMagneticData &Data,
+          rmat &Sensitivities) override;
       //! We have three magnetic field components
       static const size_t ndatapermeas = 3;
       friend class access;
@@ -47,6 +50,18 @@ namespace jif3D
           ar & FieldStrength;
         }
     public:
+      double GetInclination()
+        {
+          return Inclination;
+        }
+      double GetDeclination()
+        {
+          return Declination;
+        }
+      double GetFieldStrength()
+        {
+          return FieldStrength;
+        }
       //! How many data do we return before any transformation
       virtual size_t RawDataPerMeasurement() override
         {

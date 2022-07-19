@@ -228,20 +228,21 @@ BOOST_AUTO_TEST_SUITE (TensorGravity_Test_Suite)
 #ifdef HAVEGPU
     BOOST_AUTO_TEST_CASE(tensor_cuda_test)
       {
+        std::cout << " Running CUDA test " << std::endl;
         jif3D::ThreeDGravityModel GravityTest;
         jif3D::TensorGravityData TensorData;
 
         const size_t nmeas = 7;
         const size_t ncells = 7;
-        MakeRandomModel(GravityTest,TenbsorData, ncells, nmeas);
+        MakeRandomModel(GravityTest,TensorData, ncells, nmeas);
         typedef typename jif3D::MinMemGravMagCalculator<jif3D::TensorGravityData> CalculatorType;
         boost::shared_ptr<CalculatorType> CPUCalculator(jif3D::CreateGravityCalculator<CalculatorType>::MakeTensor());
         boost::shared_ptr<CalculatorType> CudaCalculator(jif3D::CreateGravityCalculator<CalculatorType>::MakeTensor(true));
 
         jif3D::rvec cpumeas(
-            CPUCalculator->Calculate(GravityTest,TenbsorData));
+            CPUCalculator->Calculate(GravityTest,TensorData));
         jif3D::rvec cudameas(
-            CudaCalculator->Calculate(GravityTest));
+            CudaCalculator->Calculate(GravityTest,TensorData));
         BOOST_CHECK(cpumeas.size() == cudameas.size());
         for (size_t i = 0; i < cpumeas.size(); ++i)
           {
@@ -252,7 +253,7 @@ BOOST_AUTO_TEST_SUITE (TensorGravity_Test_Suite)
         const size_t nruns = 10;
         for (size_t i = 0; i < nruns; ++i)
           {
-            jif3D::rvec newcuda(CudaCalculator->Calculate(GravityTest,TenbsorData));
+            jif3D::rvec newcuda(CudaCalculator->Calculate(GravityTest,TensorData));
             BOOST_CHECK(std::equal(newcuda.begin(),newcuda.end(),cudameas.begin()));
           }
       }
@@ -289,8 +290,7 @@ BOOST_AUTO_TEST_SUITE (TensorGravity_Test_Suite)
         typedef typename jif3D::FullSensitivityGravMagCalculator<jif3D::TensorGravityData> CalculatorType;
         boost::shared_ptr<CalculatorType> Calculator(jif3D::CreateGravityCalculator<CalculatorType>::MakeTensor(true));
         jif3D::rvec meas1(Calculator->Calculate(GravityTest,TensorData));
-        GravityTest.ClearMeasurementPoints();
-        MakeRandomModel(GravityTest,nmeas*2);
+        MakeRandomModel(GravityTest, TensorData, ncells, nmeas);
         BOOST_CHECK_NO_THROW( jif3D::rvec meas2(Calculator->Calculate(GravityTest,TensorData)));
       }
 #endif
