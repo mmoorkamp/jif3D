@@ -90,7 +90,7 @@ namespace jif3D
                 * nreturnelements);
             currsenssize = ngrid;
           }
-        std::fill_n(currsens, currsenssize, 0.0);
+        std::fill_n(currsens, currsenssize * nreturnelements, 0.0);
         //This call goes into the GPU, implementation in gravcuda.cu
         SingleFTGMeas(x_meas, y_meas, z_meas, d_xcoord, d_ycoord, d_zcoord,
             d_xsize, d_ysize, d_zsize, d_result,

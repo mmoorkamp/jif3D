@@ -12,6 +12,7 @@
 #include <cmath>
 
 #include "OMPMagneticSusceptibilityImp.h"
+#include "CudaMagneticSusceptibilityImp.h"
 #include "TotalFieldMagneticData.h"
 #include "OMPMagnetizationImp.h"
 #include "ThreeDMagnetizationModel.h"
@@ -188,7 +189,21 @@ BOOST_AUTO_TEST_SUITE( Magnetic_Test_Suite )
             BOOST_CHECK_CLOSE(magmeas(i * 3 + 1), magy.at(i), 0.2);
             BOOST_CHECK_CLOSE(magmeas(i * 3 + 2), magz.at(i), 0.2);
           }
-
+#ifdef HAVEGPU
+        typedef typename jif3D::MinMemGravMagCalculator<jif3D::TotalFieldMagneticData> CalculatorType;
+        boost::shared_ptr<jif3D::CudaMagneticSusceptibilityImp> CudaImp(
+            new jif3D::CudaMagneticSusceptibilityImp(inclination, declination,
+                fieldstrength));
+        boost::shared_ptr<CalculatorType> CudaCalculator(new CalculatorType(CudaImp));
+        jif3D::rvec cudameas(CudaCalculator->Calculate(MagneticTest, Data));
+        for (size_t i = 0; i < magx.size(); ++i)
+                 {
+            std::cout << magmeas(i * 3) << " " << cudameas(i * 3) << std::endl;
+                   BOOST_CHECK_CLOSE(magmeas(i * 3), cudameas(i * 3), 0.2);
+                   BOOST_CHECK_CLOSE(magmeas(i * 3 + 1), magmeas(i * 3 +1), 0.2);
+                   BOOST_CHECK_CLOSE(magmeas(i * 3 + 2), magmeas(i * 3 +2), 0.2);
+                 }
+#endif
         Calculator->SetDataTransform(
             boost::shared_ptr<jif3D::TotalFieldAnomaly>(
                 new jif3D::TotalFieldAnomaly(inclination, declination)));
@@ -262,7 +277,7 @@ BOOST_AUTO_TEST_SUITE( Magnetic_Test_Suite )
         jif3D::rvec magmeas2(Calculator->Calculate(MagneticTest, Data));
         for (size_t i = 0; i < magmeas.size(); ++i)
           {
-            BOOST_CHECK_CLOSE(magmeas(i), magmeas2(i),0.01);
+            BOOST_CHECK_CLOSE(magmeas(i), magmeas2(i), 0.01);
           }
         BOOST_CHECK_EQUAL(nmeas * 3, magmeas.size());
 
