@@ -190,6 +190,7 @@ BOOST_AUTO_TEST_SUITE( Magnetic_Test_Suite )
             BOOST_CHECK_CLOSE(magmeas(i * 3 + 2), magz.at(i), 0.2);
           }
 #ifdef HAVEGPU
+        std::cout << "Running CUDA" << std::endl;
         typedef typename jif3D::MinMemGravMagCalculator<jif3D::TotalFieldMagneticData> CalculatorType;
         boost::shared_ptr<jif3D::CudaMagneticSusceptibilityImp> CudaImp(
             new jif3D::CudaMagneticSusceptibilityImp(inclination, declination,
