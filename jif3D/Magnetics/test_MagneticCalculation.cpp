@@ -191,6 +191,7 @@ BOOST_AUTO_TEST_SUITE( Magnetic_Test_Suite )
           }
 #ifdef HAVEGPU
         std::cout << "Running CUDA" << std::endl;
+
         typedef typename jif3D::MinMemGravMagCalculator<jif3D::TotalFieldMagneticData> CalculatorType;
         boost::shared_ptr<jif3D::CudaMagneticSusceptibilityImp> CudaImp(
             new jif3D::CudaMagneticSusceptibilityImp(inclination, declination,
@@ -199,10 +200,9 @@ BOOST_AUTO_TEST_SUITE( Magnetic_Test_Suite )
         jif3D::rvec cudameas(CudaCalculator->Calculate(MagneticTest, Data));
         for (size_t i = 0; i < magx.size(); ++i)
                  {
-            std::cout << magmeas(i * 3) << " " << cudameas(i * 3) << std::endl;
                    BOOST_CHECK_CLOSE(magmeas(i * 3), cudameas(i * 3), 0.2);
-                   BOOST_CHECK_CLOSE(magmeas(i * 3 + 1), magmeas(i * 3 +1), 0.2);
-                   BOOST_CHECK_CLOSE(magmeas(i * 3 + 2), magmeas(i * 3 +2), 0.2);
+                   BOOST_CHECK_CLOSE(magmeas(i * 3 + 1), cudameas(i * 3 +1), 0.2);
+                   BOOST_CHECK_CLOSE(magmeas(i * 3 + 2), cudameas(i * 3 +2), 0.2);
                  }
 #endif
         Calculator->SetDataTransform(

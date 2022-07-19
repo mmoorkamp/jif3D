@@ -11,7 +11,6 @@
 #include "../Global/Jif3DGlobal.h"
 #include "../Global/Serialization.h"
 #include "../Global/VecMat.h"
-#include "../Global/VectorTransform.h"
 #include "X3DModel.h"
 
 #include <string>

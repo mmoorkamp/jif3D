@@ -8,6 +8,7 @@
 #ifndef GRAVITYTRANSFORMS_H_
 #define GRAVITYTRANSFORMS_H_
 
+#include "../Global/Serialization.h"
 #include "../Global/Jif3DGlobal.h"
 #include "../Global/VectorTransform.h"
 #include "../Global/FatalException.h"
@@ -35,6 +36,11 @@ namespace jif3D
               - Data(3) * Data(1) - Data(7) * Data(5) - Data(2) * Data(6);
         }
     public:
+      template<class Archive>
+      void serialize(Archive &ar, const unsigned int version)
+        {
+          ar & base_object<VectorTransform>(*this);
+        }
       //! Return the size of the input vector this class expects
       virtual size_t GetInputSize() const override
         {
