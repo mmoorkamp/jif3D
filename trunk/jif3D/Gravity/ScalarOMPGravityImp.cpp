@@ -62,9 +62,9 @@ std::vector<double> GravityChunk(size_t start, size_t end, double x_meas, double
     // with a storage order z,y,x. This is compatible with the storage order for densities
     //that we need for calculation elsewhere
     //The number of prisms in y-direction
-    const size_t ysize = YCoord.size();
+    const size_t ysize = YSizes.size();
     //The number of prisms in z-direction
-    const size_t zsize = ZCoord.size();
+    const size_t zsize = ZSizes.size();
     //check that the specified range of elements makes sense
     if (end > start)
       {
@@ -184,10 +184,10 @@ namespace jif3D
 
         //calculate how many chunks we have to divide the work into
         //assuming 1 chunk per thread and node, this might need adjustment
-        size_t nchunks = nthreads * nlocs;
+        size_t nchunks = nthreads * nlocs * 2;
         std::vector<hpx::future<std::vector<double>>> ChunkResult;
         Gravity_Action GravityChunks;
-        const size_t cellsperchunk = nmod / nchunks +1;
+        const size_t cellsperchunk = nmod / nchunks  +1;
 
         //create the individual chunks of work
         for (size_t c = 0; c < nchunks; ++c)
@@ -219,7 +219,6 @@ namespace jif3D
             //can just add each value to the back
             std::copy(CurrSens.begin(),CurrSens.end(),back_inserter(Sens));
           }
-
         for (int offset = 0; offset < nmod; ++offset)
           {
             //we store the current value for possible sensitivity calculations

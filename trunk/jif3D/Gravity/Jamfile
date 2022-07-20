@@ -26,10 +26,7 @@ unit-test transform_test : test_transforms.cpp  gravity core  ;
 unit-test readwrite_test : test_readwritedata.cpp gravity  ../Inversion//inversion core   ;
 
 exe gravgrid : gravgrid.cpp gravity  core  ;
-exe gravinv : gravinv.cpp  ../Inversion/LinearInversion.cpp ../Inversion/MatrixTools.cpp gravity  core ../Inversion//inversion
-              ..//vecopt : <lapack>off:<build>no  ;
-exe gravsens : gravsens.cpp gravity  core ../Inversion//inversion ../Inversion//lininv
-              ..//vecopt :  <lapack>off:<build>no ;              
+          
 exe gravnoise : gravnoise.cpp gravity   core ;
 
 exe makegravmesh : makegravmesh.cpp gravity  core  ;

@@ -171,7 +171,7 @@ namespace jif3D
               {
                 //we want to alternate between items at the beginning of the map and at the end of the map
                 ForwardInfo Info(Model, C,i,TempDir.string(),X3DName, NameRoot, GreenType1, GreenType4);
-                ForwardResult freqresult = CalculateFrequency(Info,Data, FieldCalculator);
+                ForwardResult freqresult = CalculateFrequency(Info,Data, *FieldCalculator);
                 const size_t currindex = i - minfreqindex;
                 const size_t startindex = nstats * currindex * 8;
 
@@ -214,7 +214,7 @@ namespace jif3D
             hpx::id_type const locality_id = localities.at(i % localities.size());
             //std::cout << "Sending frequency: " << i << " to node " << locality_id << std::endl;
             //rvec freqresult = CalculateFrequency(Model, i, TempDir);
-            FreqResult.push_back(async(FreqCalc, locality_id, Info, Data, FieldCalculator));
+            FreqResult.push_back(async(FreqCalc, locality_id, Info, Data, *FieldCalculator));
 
           }
         wait_all(FreqResult);
@@ -318,7 +318,7 @@ namespace jif3D
                 ForwardInfo Info(Model,C,calcindex,TempDir.string(),X3DName, NameRoot, GreenType1, GreenType4);
                 //calculate the gradient for each frequency
                 std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
-                GradResult tmp = LQDerivativeFreq(Info, Data, GradInfo(ProjMisfit, RawImpedance),FieldCalculator);
+                GradResult tmp = LQDerivativeFreq(Info, Data, GradInfo(ProjMisfit, RawImpedance),*FieldCalculator);
                 std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
                 size_t duration = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
 
@@ -368,7 +368,7 @@ namespace jif3D
 
             hpx::id_type const locality_id = localities.at(i % localities.size());
             //rvec freqresult = CalculateFrequency(Model, i, TempDir);
-            FreqResult.push_back(async(LQDerivativeFreq, locality_id, Info, Data, GradInfo(ProjMisfit, RawImpedance),FieldCalculator));
+            FreqResult.push_back(async(LQDerivativeFreq, locality_id, Info, Data, GradInfo(ProjMisfit, RawImpedance),*FieldCalculator));
 
           }
         wait_all(FreqResult);
@@ -440,7 +440,7 @@ namespace jif3D
             ForwardInfo Info(Model, C, freqindex, TempDir.string(), X3DName, NameRoot,
                 GreenType1, GreenType4);
             GradResult CurrGrad = LQDerivativeFreq(Info, Data,
-                GradInfo(CurrMisfit, RawImpedance), FieldCalculator);
+                GradInfo(CurrMisfit, RawImpedance), *FieldCalculator);
 
             boost::numeric::ublas::matrix_row<rmat> CurrRow(Result, i);
 

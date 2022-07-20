@@ -21,7 +21,7 @@ namespace fs = boost::filesystem;
 
 using namespace jif3D;
 ForwardResult CalculateFrequency(const ForwardInfo &Info, const jif3D::MTData &Data,
-    boost::shared_ptr<jif3D::X3DFieldCalculator> Calc)
+    const jif3D::X3DFieldCalculator &Calc)
   {
     //  const size_t nmeas = Info.Model.GetMeasPosX().size();
     const size_t nfreq = Data.GetFrequencies().size();
@@ -52,14 +52,14 @@ ForwardResult CalculateFrequency(const ForwardInfo &Info, const jif3D::MTData &D
     std::complex<double> ZxxEx, ZxyEx, ZyxEx, ZyyEx;
     std::complex<double> ZxxEy, ZxyEy, ZyxEy, ZyyEy;
 
-    std::vector<std::complex<double>> Hx1(Calc->GetHx1(CurrFreq)), Hx2(
-        Calc->GetHx2(CurrFreq));
-    std::vector<std::complex<double>> Hy1(Calc->GetHy1(CurrFreq)), Hy2(
-        Calc->GetHy2(CurrFreq));
-    std::vector<std::complex<double>> Ex1(Calc->GetEx1(CurrFreq)), Ex2(
-        Calc->GetEx2(CurrFreq));
-    std::vector<std::complex<double>> Ey1(Calc->GetEy1(CurrFreq)), Ey2(
-        Calc->GetEy2(CurrFreq));
+    std::vector<std::complex<double>> Hx1(Calc.GetHx1(CurrFreq)), Hx2(
+        Calc.GetHx2(CurrFreq));
+    std::vector<std::complex<double>> Hy1(Calc.GetHy1(CurrFreq)), Hy2(
+        Calc.GetHy2(CurrFreq));
+    std::vector<std::complex<double>> Ex1(Calc.GetEx1(CurrFreq)), Ex2(
+        Calc.GetEx2(CurrFreq));
+    std::vector<std::complex<double>> Ey1(Calc.GetEy1(CurrFreq)), Ey2(
+        Calc.GetEy2(CurrFreq));
 
     //calculate impedances from the field spectra for all stations
     for (size_t j = 0; j < nstats; ++j)
@@ -184,7 +184,7 @@ ForwardResult CalculateFrequency(const ForwardInfo &Info, const jif3D::MTData &D
   }
 
 GradResult LQDerivativeFreq(const ForwardInfo &Info, const jif3D::MTData &Data,
-    const GradInfo &GI, boost::shared_ptr<jif3D::X3DFieldCalculator> Calc)
+    const GradInfo &GI, const jif3D::X3DFieldCalculator &Calc)
   {
     //a few commonly used quantities for shorter notation
     const size_t nmodx = Info.Model.GetConductivities().shape()[0];
@@ -227,14 +227,14 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const jif3D::MTData &Data,
             0), HxSourceYIndex(nstats, 0), HySourceXIndex(nstats, 0), HySourceYIndex(
             nstats, 0), ZeroIndex(2 * nstats, 0);
 
-    std::vector<std::complex<double>> Hx1(Calc->GetHx1(CurrFreq)), Hx2(
-        Calc->GetHx2(CurrFreq));
-    std::vector<std::complex<double>> Hy1(Calc->GetHy1(CurrFreq)), Hy2(
-        Calc->GetHy2(CurrFreq));
-    std::vector<std::complex<double>> Ex1(Calc->GetEx1(CurrFreq)), Ex2(
-        Calc->GetEx2(CurrFreq));
-    std::vector<std::complex<double>> Ey1(Calc->GetEy1(CurrFreq)), Ey2(
-        Calc->GetEy2(CurrFreq));
+    std::vector<std::complex<double>> Hx1(Calc.GetHx1(CurrFreq)), Hx2(
+        Calc.GetHx2(CurrFreq));
+    std::vector<std::complex<double>> Hy1(Calc.GetHy1(CurrFreq)), Hy2(
+        Calc.GetHy2(CurrFreq));
+    std::vector<std::complex<double>> Ex1(Calc.GetEx1(CurrFreq)), Ex2(
+        Calc.GetEx2(CurrFreq));
+    std::vector<std::complex<double>> Ey1(Calc.GetEy1(CurrFreq)), Ey2(
+        Calc.GetEy2(CurrFreq));
     //make the sources for the electric dipoles
     for (size_t j = 0; j < nstats; ++j)
       {
@@ -478,10 +478,10 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const jif3D::MTData &Data,
     //for the gradient calculation we also need the electric fields
     //at all cells in the model for the two source polarizations of
     //the forward calculations
-    std::vector<std::complex<double> > Ex1_all(Calc->GetEx1_all(CurrFreq)), Ex2_all(
-        Calc->GetEx2_all(CurrFreq)), Ey1_all(Calc->GetEy1_all(CurrFreq)), Ey2_all(
-        Calc->GetEy2_all(CurrFreq)), Ez1_all(Calc->GetEz1_all(CurrFreq)), Ez2_all(
-        Calc->GetEz2_all(CurrFreq));
+    std::vector<std::complex<double> > Ex1_all(Calc.GetEx1_all(CurrFreq)), Ex2_all(
+        Calc.GetEx2_all(CurrFreq)), Ey1_all(Calc.GetEy1_all(CurrFreq)), Ey2_all(
+        Calc.GetEy2_all(CurrFreq)), Ez1_all(Calc.GetEz1_all(CurrFreq)), Ez2_all(
+        Calc.GetEz2_all(CurrFreq));
 #pragma omp taskwait
     for (size_t j = 0; j < nmod; ++j)
       {
@@ -499,7 +499,7 @@ GradResult LQDerivativeFreq(const ForwardInfo &Info, const jif3D::MTData &Data,
   }
 
 GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::TipperData &Data,
-    const jif3D::rvec &Misfit, boost::shared_ptr<jif3D::X3DFieldCalculator> Calc)
+    const jif3D::rvec &Misfit,const jif3D::X3DFieldCalculator &Calc)
   {
     //a few commonly used quantities for shorter notation
     const size_t nmodx = Info.Model.GetConductivities().shape()[0];
@@ -577,12 +577,12 @@ GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::TipperData
                 * boost::math::constants::pi<double>()
                 * Data.GetFrequencies()[Info.freqindex]);
 
-    std::vector<std::complex<double>> Hx1(Calc->GetHx1(CurrFreq)), Hx2(
-        Calc->GetHx2(CurrFreq));
-    std::vector<std::complex<double>> Hy1(Calc->GetHy1(CurrFreq)), Hy2(
-        Calc->GetHy2(CurrFreq));
-    std::vector<std::complex<double>> Hz1(Calc->GetHz1(CurrFreq)), Hz2(
-        Calc->GetHz2(CurrFreq));
+    std::vector<std::complex<double>> Hx1(Calc.GetHx1(CurrFreq)), Hx2(
+        Calc.GetHx2(CurrFreq));
+    std::vector<std::complex<double>> Hy1(Calc.GetHy1(CurrFreq)), Hy2(
+        Calc.GetHy2(CurrFreq));
+    std::vector<std::complex<double>> Hz1(Calc.GetHz1(CurrFreq)), Hz2(
+        Calc.GetHz2(CurrFreq));
     for (size_t j = 0; j < nstats; ++j)
       {
         const size_t hxind = Data.GetHxIndices()[j + ind_shift];
@@ -665,10 +665,10 @@ GradResult TipperDerivativeFreq(const ForwardInfo &Info, const jif3D::TipperData
     //for the gradient calculation we also need the electric fields
     //at all cells in the model for the two source polarizations of
     //the forward calculations
-    std::vector<std::complex<double> > Ex1_all(Calc->GetEx1_all(CurrFreq)), Ex2_all(
-        Calc->GetEx2_all(CurrFreq)), Ey1_all(Calc->GetEy1_all(CurrFreq)), Ey2_all(
-        Calc->GetEy2_all(CurrFreq)), Ez1_all(Calc->GetEz1_all(CurrFreq)), Ez2_all(
-        Calc->GetEz2_all(CurrFreq));
+    std::vector<std::complex<double> > Ex1_all(Calc.GetEx1_all(CurrFreq)), Ex2_all(
+        Calc.GetEx2_all(CurrFreq)), Ey1_all(Calc.GetEy1_all(CurrFreq)), Ey2_all(
+        Calc.GetEy2_all(CurrFreq)), Ez1_all(Calc.GetEz1_all(CurrFreq)), Ez2_all(
+        Calc.GetEz2_all(CurrFreq));
 #pragma omp taskwait
     for (size_t j = 0; j < nmod; ++j)
       {

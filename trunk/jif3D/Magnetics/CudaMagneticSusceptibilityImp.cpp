@@ -157,7 +157,7 @@ namespace jif3D
         NULL), d_zsize(NULL), d_result(NULL), currsens(NULL), currsenssize(0), blocksize(
             defaultblocksize)
       {
-        std::cout << "Cuda computations for magnetics " << std::endl;
+        std::cout << "CUDA computations for magnetics " << std::endl;
       }
 
     CudaMagneticSusceptibilityImp::~CudaMagneticSusceptibilityImp()

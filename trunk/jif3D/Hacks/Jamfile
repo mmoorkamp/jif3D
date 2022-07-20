@@ -57,8 +57,6 @@ exe eikonal : eikonal.cpp  ../Tomo//tomo  ../Global//global ../ModelBase//modelb
 exe eikonal2D : eikonal2D.cpp  ../Tomo//tomo  ../Global//global ../ModelBase//modelbase ;
 exe modelwave : modelwave.cpp  ../Tomo//tomo  ../Global//global ../ModelBase//modelbase ..//boost_filesystem ..//boost_system ;
 
-exe opttest : opttest.cpp  ../Joint//joint ../Joint//setup ../MT//mt ..//optpp ..//newmat joint ..//boost_program_options : 
-              <include>/usr/local/include/opt++ <define>use_namespace <define>HAVE_STD <optpp>off:<build>no  ;
 
 install $(TOP)/bin : qqfit qqtip convertmtt text2grav :
     <install-dependencies>on <install-type>EXE

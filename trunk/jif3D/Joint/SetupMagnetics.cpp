@@ -10,6 +10,7 @@
 #include "../Magnetics/ReadWriteMagneticData.h"
 #include "../Magnetics/MagneticTransforms.h"
 #include "../Magnetics/OMPMagneticSusceptibilityImp.h"
+#include "../Magnetics/CudaMagneticSusceptibilityImp.h"
 #include "../Gravity/DepthWeighting.h"
 #include "../Global/FileUtil.h"
 #include "../Global/Noise.h"
@@ -37,7 +38,7 @@ namespace jif3D
       {
         po::options_description desc("Magnetics options");
 
-        desc.add_options()("gpu", "Perform Magnetics calculation on GPU")("magrelerr",
+        desc.add_options()("gpumag", "Perform Magnetics calculation on GPU")("magrelerr",
             po::value(&relerr)->default_value(0.02),
             "The relative error for the Magnetics data")("magminerr",
             po::value(&minerr)->default_value(0.0),
@@ -75,7 +76,7 @@ namespace jif3D
         CovModVec.resize(ngrid);
         std::fill(CovModVec.begin(), CovModVec.end(), 1e-10);
 
-        if (vm.count("gpu"))
+        if (vm.count("gpumag"))
           {
             std::cout << "Using GPU" << "\n";
             wantcuda = true;
@@ -148,10 +149,19 @@ namespace jif3D
             //have to assemble the calculator object ourselves
             boost::shared_ptr<
                 jif3D::ThreeDGravMagImplementation<jif3D::TotalFieldMagneticData> > Implementation;
+
             if (wantcuda)
               {
-                throw jif3D::FatalException("No GPU support, yet !", __FILE__,
-                __LINE__);
+#ifdef HAVEGPU
+                Implementation = boost::shared_ptr<
+                    jif3D::ThreeDGravMagImplementation<jif3D::TotalFieldMagneticData> >(
+                    new jif3D::CudaMagneticSusceptibilityImp(inclination, declination,
+                        fieldstrength));
+#else
+                throw jif3D::FatalException(
+                    "Code has been compiled without GPU support !", __FILE__, __LINE__);
+#endif
+
               }
             else
               {
@@ -160,6 +170,7 @@ namespace jif3D
                     new jif3D::OMPMagneticSusceptibilityImp(inclination, declination,
                         fieldstrength));
               }
+
             if (vm.count("sus_covmod"))
               {
                 boost::shared_ptr<jif3D::ThreeDModelBase> CovModel = jif3D::ReadAnyModel(
@@ -185,12 +196,12 @@ namespace jif3D
             if (vm.count("magdepth"))
               {
                 boost::shared_ptr<
-                    jif3D::ThreeDGravMagImplementation<jif3D::TotalFieldMagneticData> > Implementation =
+                    jif3D::ThreeDGravMagImplementation<jif3D::TotalFieldMagneticData> > DImplementation =
                     boost::make_shared<jif3D::OMPMagneticSusceptibilityImp>(
                         GetInclination(), GetDeclination(), GetFielStrength());
 
                 jif3D::FullSensitivityGravMagCalculator<jif3D::TotalFieldMagneticData> FullCalc(
-                    Implementation);
+                    DImplementation);
                 FullCalc.SetDataTransform(
                     boost::shared_ptr<jif3D::TotalFieldAnomaly>(
                         new jif3D::TotalFieldAnomaly(GetInclination(),
@@ -235,7 +246,7 @@ namespace jif3D
               {
 #ifdef MAGDISK
             Calculator = boost::make_shared<MagCalculatorType>(Implementation, TempDir);
-            std::cout << "Magnetics will take " << ngrid * MagData.GetData().size() * 8 / 1e9 * 9 << " GB disk space " << std::endl;
+            std::cout << "Magnetics will take " << ngrid * MagData.GetData().size() * 8 / 1e9 * 3 << " GB disk space " << std::endl;
 #else
                 Calculator = boost::make_shared<MagCalculatorType>(Implementation);
 #endif

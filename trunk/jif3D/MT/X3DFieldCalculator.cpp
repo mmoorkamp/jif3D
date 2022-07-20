@@ -38,7 +38,7 @@ namespace jif3D
           }
       }
 
-    const std::vector<std::complex<double> > &X3DFieldCalculator::ReturnField(double Freq,
+    const std::vector<std::complex<double> >& X3DFieldCalculator::ReturnField(double Freq,
         const std::vector<std::vector<std::complex<double>>> &Field) const
       {
         size_t index = FrequencyMap.at(Freq);
@@ -126,8 +126,8 @@ namespace jif3D
                 HaveCurrentFields.at(calcindex) = true;
                 std::chrono::system_clock::time_point end =
                     std::chrono::system_clock::now();
-                size_t duration = std::chrono::duration_cast < std::chrono::seconds
-                    > (end - start).count();
+                size_t duration = std::chrono::duration_cast<std::chrono::seconds>(
+                    end - start).count();
 
                 omp_set_lock(&lck);
                 NewExecTime.push_back(std::make_pair(duration, calcindex));
@@ -248,6 +248,21 @@ namespace jif3D
         ForwardTimesFile.open("mtforward" + NameRoot + ".out");
       }
 
+    X3DFieldCalculator::X3DFieldCalculator(const jif3D::X3DFieldCalculator &source) :
+
+        Ex1(source.Ex1), Ex2(source.Ex2), Ey1(source.Ey1), Ey2(source.Ey2), Hx1(
+            source.Hx1), Hx2(source.Hx2), Hy1(source.Hy1), Hy2(source.Hy2), Hz1(
+            source.Hz1), Hz2(source.Hz2), Ex1_all(source.Ex1_all), Ex2_all(
+            source.Ex2_all), Ey1_all(source.Ey1_all), Ey2_all(source.Ey2_all), Ez1_all(
+            source.Ez1_all), Ez2_all(source.Ez2_all), HaveCurrentFields(source.HaveCurrentFields), FrequencyMap(source.FrequencyMap),
+            TempDir(source.TempDir),
+             X3DName(source.X3DName), CleanFiles(source.CleanFiles), zshift(source.zshift), GreenStage1(
+            source.GreenStage1), GreenStage4(source.GreenStage4), OldModel(
+            source.OldModel)
+      {
+        NameRoot = ObjectID();
+        ForwardTimesFile.open("mtforward" + NameRoot + ".out");
+      }
     X3DFieldCalculator::~X3DFieldCalculator()
       {
         ForwardTimesFile.close();
