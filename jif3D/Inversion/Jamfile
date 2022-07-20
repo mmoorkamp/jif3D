@@ -12,9 +12,8 @@ lib inversion : NonLinearOptimization.cpp
 				../ModelBase//modelbase
                  ;
 
-lib lininv : LinearInversion.cpp  : <lapack>on:<library>..//vecopt  <lapack>on:<source>GeneralizedInverse.cpp ;
+lib lininv : LinearInversion.cpp   ;
 
-unit-test inversion_test : test_inversion.cpp inversion lininv : <lapack>off:<build>no ;
 unit-test optstep_test : test_optstep.cpp  inversion ..//boost_core ;
 unit-test stochcov_test : test_StochCov.cpp  inversion ../ModelBase//modelbase ../MT//mt ;
 

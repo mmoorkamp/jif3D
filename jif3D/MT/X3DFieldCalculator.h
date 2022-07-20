@@ -91,11 +91,9 @@ namespace jif3D
           ar & CleanFiles;
           ar & zshift;
           ar & X3DName;
-          ar & NameRoot;
           ar & GreenStage1;
           ar & GreenStage4;
           ar & OldModel;
-          ar & ForwardDirName;
         }
       template<class Archive>
       void load(Archive &ar, unsigned int version)
@@ -122,11 +120,10 @@ namespace jif3D
           ar & CleanFiles;
           ar & zshift;
           ar & X3DName;
-          ar & NameRoot;
+          NameRoot = ObjectID();
           ar & GreenStage1;
           ar & GreenStage4;
           ar & OldModel;
-          ar & ForwardDirName;
         }
 #ifdef HAVEHPX
       HPX_SERIALIZATION_SPLIT_MEMBER()
@@ -207,6 +204,7 @@ namespace jif3D
       X3DFieldCalculator(boost::filesystem::path TDir = boost::filesystem::current_path(),
           std::string x3d = "x3d", double zs = 0.0, bool Clean = true,
           jif3D::GreenCalcType GS1 = hst, jif3D::GreenCalcType GS4 = hst);
+      X3DFieldCalculator(const jif3D::X3DFieldCalculator &source);
       virtual ~X3DFieldCalculator();
       };
 

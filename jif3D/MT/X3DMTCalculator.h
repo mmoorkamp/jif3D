@@ -10,19 +10,16 @@
 #include "../Global/Serialization.h"
 #include "../Global/VecMat.h"
 #include "../Global/VectorTransform.h"
-#include <limits>
-#include <vector>
-#include <utility>
-#include <fstream>
+#include "../Global/Jif3DGlobal.h"
+#include "../Global/convert.h"
+#include "../Global/Jif3DPlatformHelper.h"
 
 #include <boost/filesystem.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
-#include "../Global/Jif3DGlobal.h"
-#include "../Global/convert.h"
-#include "../Global/Jif3DPlatformHelper.h"
+
 #include "ReadWriteX3D.h"
 #include "X3DModel.h"
 #include "X3DFieldCalculator.h"
@@ -85,7 +82,6 @@ namespace jif3D
       bool CleanFiles;
       //! Store the previous execution time for different frequencies to optimize speed
       std::vector<std::pair<size_t, size_t>> DerivExecTime;
-      friend class access;
       boost::shared_ptr<jif3D::X3DFieldCalculator> FieldCalculator;
       //create a unique ID that we can use to name things and still
       //perform parallel calculations
@@ -114,7 +110,7 @@ namespace jif3D
           ar & WantDistCorr;
           std::vector<double> v(RawImpedance.begin(), RawImpedance.end());
           ar & v;
-          ar & DataTransform;
+          //ar & DataTransform;
           ar & CleanFiles;
           //ar & ForwardExecTime;
         }
@@ -132,7 +128,7 @@ namespace jif3D
           ar & v;
           RawImpedance.resize(v.size());
           std::copy(v.begin(), v.end(), RawImpedance.begin());
-          ar & DataTransform;
+          //ar & DataTransform;
           ar & CleanFiles;
           //ar & ForwardExecTime;
         }

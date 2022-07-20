@@ -39,7 +39,7 @@ namespace jif3D
         NULL), d_zsize(NULL), d_result(NULL), currsens(NULL), currsenssize(0), blocksize(
             128)
       {
-        // we have to do some raw pointer operations for handling sensitivities with CUDA
+        std::cout << "CUDA computations for scalar gravity " << std::endl;
       }
 
     ScalarCudaGravityImp::~ScalarCudaGravityImp()

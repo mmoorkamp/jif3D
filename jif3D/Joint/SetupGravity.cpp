@@ -43,7 +43,7 @@ namespace jif3D
         po::options_description desc("Gravity options");
 
         desc.add_options()("mindens", po::value(&mindens)->default_value(-1000.0))(
-            "maxdens", po::value(&maxdens)->default_value(1000.0))("gpu",
+            "maxdens", po::value(&maxdens)->default_value(1000.0))("gpugrav",
             "Perform gravity calculation on GPU")("scalrelerr",
             po::value(&scalrelerr)->default_value(0.01),
             "The relative error for the scalar gravity data")("scalminerr",
@@ -71,7 +71,7 @@ namespace jif3D
         //that information to the screen
         const size_t ngrid = InversionMesh.GetNModelElements();
         bool wantcuda = false;
-        if (vm.count("gpu"))
+        if (vm.count("gpugrav"))
           {
             std::cout << "Using GPU" << "\n";
             wantcuda = true;

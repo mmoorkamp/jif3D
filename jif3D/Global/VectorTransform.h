@@ -11,7 +11,6 @@
 #include "../Global/Serialization.h"
 #include "../Global/VecMat.h"
 #include "../Global/FatalException.h"
-#include <cassert>
 
 #include "Jif3DGlobal.h"
 
@@ -41,11 +40,14 @@ namespace jif3D
      */
     class J3DEXPORT VectorTransform
       {
+      private:
+      char dummy;
     public:
       //! Provide serialization to be able to store objects and, more importantly for simpler MPI parallelization
       template<class Archive>
       void serialize(Archive &ar, const unsigned int version)
         {
+        ar & dummy;
         }
       //! How many consecutive elements in the input vector form a logical block of data that this transform works on
       virtual size_t GetInputSize() const

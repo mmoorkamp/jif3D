@@ -8,10 +8,11 @@
 #ifndef MAGNETICTRANSFORMS_H_
 #define MAGNETICTRANSFORMS_H_
 
-#include <cassert>
+#include "../Global/Serialization.h"
 
 #include "../Global/VectorTransform.h"
 #include "../Global/Jif3DGlobal.h"
+#include <cassert>
 
 namespace jif3D
   {
@@ -28,6 +29,11 @@ namespace jif3D
           return sqrt(Data(0) * Data(0) + Data(1) * Data(1) + Data(2) * Data(2));
         }
     public:
+      template<class Archive>
+      void serialize(Archive &ar, const unsigned int version)
+        {
+          ar & base_object<VectorTransform>(*this);
+        }
       //! Return the size of the input vector this class expects
       virtual size_t GetInputSize() const override
         {
@@ -88,6 +94,16 @@ namespace jif3D
       //! we return one invariant as output at each call
       static const size_t noutput = 1;
     public:
+      template<class Archive>
+      void serialize(Archive &ar, const unsigned int version)
+        {
+          ar & base_object<VectorTransform>(*this);
+          ar & inclination;
+          ar & declination;
+          ar & BxComp;
+          ar & ByComp;
+          ar & BzComp;
+        }
       //! Return the size of the input vector this class expects
       virtual size_t GetInputSize() const override
         {

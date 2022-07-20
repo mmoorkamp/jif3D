@@ -296,7 +296,7 @@ namespace jif3D
                 std::chrono::system_clock::time_point start =
                     std::chrono::system_clock::now();
                 GradResult tmp = TipperDerivativeFreq(Info, Data, Misfit,
-                    FieldCalculator);
+                    *FieldCalculator);
                 std::chrono::system_clock::time_point end =
                     std::chrono::system_clock::now();
                 size_t duration = std::chrono::duration_cast<std::chrono::seconds>(
