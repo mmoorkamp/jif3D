@@ -162,14 +162,14 @@ namespace jif3D
 #endif
 
 #ifdef HAVEHPX
-        using hpx::lcos::future;
+        using hpx::future;
         using hpx::async;
         using hpx::wait_all;
-        std::vector<hpx::naming::id_type> localities = hpx::find_all_localities();
+        std::vector<hpx::id_type> localities = hpx::find_all_localities();
         const size_t nthreads = hpx::get_num_worker_threads();
         const size_t nlocs = localities.size();
         size_t nchunks = nthreads * nlocs;
-        std::vector<hpx::lcos::future<RayResult>> ShotResult;
+        std::vector<hpx::future<RayResult>> ShotResult;
         ShotResult.reserve(nchunks);
         ForwardModShotArray_action ForwardModShotArray;
         const size_t shotsperchunk = nshot / nchunks +1;
@@ -204,7 +204,7 @@ namespace jif3D
                 geo_tmp[index].nrec = count;
               }
 
-            hpx::naming::id_type const locality_id = localities.at(c % localities.size());
+            hpx::id_type const locality_id = localities.at(c % localities.size());
             ShotResult.push_back(async(ForwardModShotArray, locality_id, geo_tmp, grid));
           }
         wait_all(ShotResult);

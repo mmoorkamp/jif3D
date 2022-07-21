@@ -5,12 +5,7 @@
 #include "../Global/Serialization.h"
 #include <boost/test/included/unit_test.hpp>
 #include <fstream>
-#ifdef HAVEHPX
-#include <hpx/runtime/serialization/serialize.hpp>
-#else
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/text_iarchive.hpp>
-#endif
+
 #include "../Tomo/tomo_types.h"
 #include <boost/test/tools/floating_point_comparison.hpp>
 #include <boost/random/linear_congruential.hpp>
