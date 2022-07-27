@@ -208,6 +208,20 @@ namespace jif3D
                     std::transform(MTData.GetErrors().begin(), MTData.GetErrors().end(),
                         MinErr.begin(), MinErr.begin(), [](double a, double b)
                           { return std::max(a,b);});
+                    for (size_t i = 0; i < MinErr.size(); ++i)
+                      {
+                        if (MinErr.at(i) <= 0.0)
+                          throw jif3D::FatalException(
+                              "MT data error is not strictly positive "
+                                  + std::to_string(i) + " "
+                                  + std::to_string(MinErr.at(i)), __FILE__, __LINE__);
+                        if (std::isnan(MinErr.at(i)))
+                          {
+                            std::cerr << "MT data error is NaN " + std::to_string(i) << std::endl;
+                            MinErr.at(i) =  1e32;
+                          }
+
+                      }
                     MTObjective->SetDataError(MinErr);
                   }
 
@@ -377,11 +391,17 @@ namespace jif3D
             auto MTData = MTObjective->GetObservedData();
             auto MTDataVec = MTObjective->GetSyntheticData();
             auto MTErrVec = MTObjective->GetDataError();
+            auto MTMisVec = MTObjective->GetIndividualMisfit();
+
             if (MTDataVec.size() > 0)
               {
                 MTData.SetDataAndErrors(
                     std::vector<double>(MTDataVec.begin(), MTDataVec.end()), MTErrVec);
                 MTData.WriteNetCDF(filename + ".inv_imp.nc");
+
+                MTData.SetDataAndErrors(
+                    std::vector<double>(MTMisVec.begin(), MTMisVec.end()), MTErrVec);
+                MTData.WriteNetCDF(filename + ".diff_imp.nc");
               }
             MTModel.WriteVTK(filename + ".mt.inv.vtk");
             MTModel.WriteNetCDF(filename + ".mt.inv.nc");
