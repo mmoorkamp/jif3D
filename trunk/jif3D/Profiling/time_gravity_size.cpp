@@ -8,7 +8,7 @@ namespace po = hpx::program_options;
 
 #endif
 #ifdef HAVEOPENMP
-#include <omp.h> 
+#include <omp.h>
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
 
@@ -22,7 +22,7 @@ namespace po = boost::program_options;
 #include "../GravMag/FullSensitivityGravMagCalculator.h"
 #include "../GravMag/MinMemGravMagCalculator.h"
 #include "../GravMag/DiskGravMagCalculator.h"
-#include "../Gravity/ThreeDGravityFactory.h" 
+#include "../Gravity/ThreeDGravityFactory.h"
 #include "../Gravity/ScalarGravityData.h"
 #include "../Gravity/TensorGravityData.h"
 
@@ -152,11 +152,7 @@ void RunCalculation(CalculatorType &Calculator, const std::string &filename)
         rawruntime /= nrunspersize;
         cachedruntime /= nrunspersize;
         outfile << modelsize * modelsize * modelsize << " " << rawruntime << " "
-        << cachedruntime << std::endl;
-        if (nruns == 9) 
-        {
-            std::cout << "The model in size " << modelsize * modelsize * modelsize << " takes " << rawruntime << " to finish" <<std::endl;
-        }
+             << cachedruntime << std::endl;
       }
   }
 
@@ -201,7 +197,6 @@ int hpx_main(po::variables_map &vm)
         const size_t nthreads = hpx::get_num_worker_threads();
         const size_t nlocs = localities.size();
         filename += "l" + jif3D::stringify(nlocs) + "t" + jif3D::stringify(nthreads);
-        std::cout << "used hpx here" << std::endl;
 #endif
       }
 
@@ -279,7 +274,6 @@ int main(int argc, char *argv[])
     hpx::init_params initparms;
     initparms.desc_cmdline = desc;
     return hpx::init(argc, argv, initparms);
-      std::cout << "Have HPX installed" << std::endl;
 #endif
 
 //set up the command line options
