@@ -8,7 +8,7 @@ namespace po = hpx::program_options;
 
 #endif
 #ifdef HAVEOPENMP
-#include <omp.h>
+#include <omp.h> 
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
 
@@ -22,7 +22,7 @@ namespace po = boost::program_options;
 #include "../GravMag/FullSensitivityGravMagCalculator.h"
 #include "../GravMag/MinMemGravMagCalculator.h"
 #include "../GravMag/DiskGravMagCalculator.h"
-#include "../Gravity/ThreeDGravityFactory.h"
+#include "../Gravity/ThreeDGravityFactory.h" 
 #include "../Gravity/ScalarGravityData.h"
 #include "../Gravity/TensorGravityData.h"
 
@@ -42,21 +42,60 @@ void MakeTestModel(jif3D::ThreeDGravityModel &Model, jif3D::GeneralData &Data,
     Model.SetMeshSize(size, size, size);
     jif3D::ThreeDModelBase::t3DModelDim XCS(size), YCS(size), ZCS(size, 500);
     Model.SetZCellSizes(ZCS);
-    std::generate(XCS.begin(), XCS.end(), []() -> double
-      { return rand() % 10000 + 1000;});
-    std::generate(YCS.begin(), YCS.end(), []() -> double
-      { return rand() % 10000 + 1000;});
+    // Here we keep the same model size to check if the result is the same
+    if (size == 2) 
+    {
+        double temp_val = 5000.0;
+    
+        std::generate(XCS.begin(), XCS.end(), [&temp_val]() -> double
+            { temp_val += rand() / 100000 + 1000; return temp_val; });
+        std::generate(YCS.begin(), YCS.end(), [&temp_val]() -> double
+            { temp_val += rand() / 100000 + 1000; return temp_val; });
+    }
+    else 
+    {
+        std::generate(XCS.begin(), XCS.end(), []() -> double
+            { return rand() % 10000 + 1000; });
+        std::generate(YCS.begin(), YCS.end(), []() -> double
+            { return rand() % 10000 + 1000; });
+    }
+
     Model.SetXCellSizes(XCS);
     Model.SetYCellSizes(YCS);
     //fill the grid with some random values that are in a similar range
-    // as densities
-    std::generate_n(Model.SetDensities().origin(), Model.SetDensities().num_elements(),
-        []() -> double
-          { return 0.1 + double(rand() % 1000) / 300.0;});
+    // as densities, here we also divide it in two different model size  
 
-    const size_t nmeas = 30;
-    for (size_t i = 0; i < nmeas; ++i)
-      Data.AddMeasurementPoint(rand() % 50000 + 2e4, rand() % 50000 + 2e4, 0.0);
+    if (size == 2) 
+    {
+        double temp_val = 0.2;
+        std::generate_n(Model.SetDensities().origin(), Model.SetDensities().num_elements(),
+            [&temp_val]() -> double
+            { temp_val += 0.1; return temp_val; });
+    }
+    else 
+    {
+        std::generate_n(Model.SetDensities().origin(), Model.SetDensities().num_elements(),
+            []() -> double
+            { return 0.1 + double(rand() % 1000) / 300.0; });
+    }
+
+    if (size == 2) 
+    {
+        size_t temp_val = 21000;
+        const size_t nmeas = 30;
+        for (size_t i = 0; i < nmeas; ++i) 
+        {
+            Data.AddMeasurementPoint(temp_val, temp_val + 500, 0.0);
+            temp_val += 1000;
+        }
+    }
+    else 
+    {
+        const size_t nmeas = 30;
+        for (size_t i = 0; i < nmeas; ++i)
+            Data.AddMeasurementPoint(rand() % 50000 + 2e4, rand() % 50000 + 2e4, 0.0);
+    }
+
     std::vector<double> bg_dens =
       { 1.0, 1.0, 5.0, 5.0 };
     std::vector<double> bg_thick =
@@ -113,7 +152,11 @@ void RunCalculation(CalculatorType &Calculator, const std::string &filename)
         rawruntime /= nrunspersize;
         cachedruntime /= nrunspersize;
         outfile << modelsize * modelsize * modelsize << " " << rawruntime << " "
-            << cachedruntime << std::endl;
+        << cachedruntime << std::endl;
+        if (nruns == 9) 
+        {
+            std::cout << "The model in size " << modelsize * modelsize * modelsize << " takes " << rawruntime << " to finish" <<std::endl;
+        }
       }
   }
 
@@ -150,6 +193,7 @@ int hpx_main(po::variables_map &vm)
         else
           {
             filename += jif3D::stringify(omp_get_max_threads());
+            std::cout << "used openmp in " << jif3D::stringify(omp_get_max_threads()) << " threads" << std::endl;
           }
 #endif
 #ifdef HAVEHPX
@@ -157,11 +201,13 @@ int hpx_main(po::variables_map &vm)
         const size_t nthreads = hpx::get_num_worker_threads();
         const size_t nlocs = localities.size();
         filename += "l" + jif3D::stringify(nlocs) + "t" + jif3D::stringify(nthreads);
+        std::cout << "used hpx here" << std::endl;
 #endif
       }
 
     if (vm.count("ftg"))
       {
+        std::cout << "Use Tensor for calculation" << std::endl;
         boost::shared_ptr<jif3D::ThreeDGravMagCalculator<jif3D::TensorGravityData> > Calculator;
         filename += "ftg.time";
         switch (caching)
@@ -223,15 +269,17 @@ int main(int argc, char *argv[])
   {
 
     desc.add_options()("help", "produce help message")("scalar",
-        "Perform scalar calculation [default]")("ftg", "Perform FTG calculation ")("cpu",
+        "Perform scalar calculation ")("ftg", "Perform FTG calculation [default]")("cpu",
         "Perform calculation on CPU [default]")("gpu", "Perform calculation on GPU")(
-        "cachetype", po::value<int>(&caching)->default_value(0),
+        "cachetype", po::value<int>(&caching)->default_value(2),
         "0 = no caching, 1 = disk, 2 = memory")("threads", po::value<int>(),
         "The number of openmp threads");
+
 #ifdef HAVEHPX
     hpx::init_params initparms;
     initparms.desc_cmdline = desc;
     return hpx::init(argc, argv, initparms);
+      std::cout << "Have HPX installed" << std::endl;
 #endif
 
 //set up the command line options
