@@ -195,7 +195,7 @@ namespace jif3D
                   {
                     if (uniqueshots[i] == data.sno[j])
                       {
-                        geo_tmp[index].x.push_back(geo.x[data.rno[j] -1 ]);
+                        geo_tmp[index].x.push_back(geo.x[data.rno[j] -1]);
                         geo_tmp[index].y.push_back(geo.y[data.rno[j] -1]);
                         geo_tmp[index].z.push_back(geo.z[data.rno[j] -1]);
                         count++;
@@ -207,31 +207,29 @@ namespace jif3D
             hpx::id_type const locality_id = localities.at(c % localities.size());
             ShotResult.push_back(async(ForwardModShotArray, locality_id, geo_tmp, grid));
           }
-        wait_all(ShotResult);
 
-        for (size_t c = 0; c < nchunks; ++c)
-          {
-
-            size_t startindex = c * shotsperchunk;
-            size_t endindex = std::min(size_t(nshot), (c+1) * shotsperchunk);
-            RayResult Rays = ShotResult[c].get();
+        // For each process finished its work, filling the result to data and raypath
+        auto filling = [&data, &raypath, &uniqueshots, &shotsperchunk, &nshot](std::size_t i, hpx::lcos::future<RayResult>&& f) {
+            size_t startindex = i * shotsperchunk;
+            size_t endindex = std::min(size_t(nshot), (i + 1) * shotsperchunk);
+            RayResult Rays = f.get();
             size_t dataindex = 0;
             for (size_t i = startindex; i < endindex; i++)
-              {
+            {
                 size_t count = 0;
                 std::vector<size_t> nact_rec; /*active receiver-numbers for the used shot*/
                 std::vector<size_t> nact_datapos; /*Position of the active receivers in the data structure*/
                 for (size_t j = 0; j < data.ndata_seis; j++)
-                  {
+                {
                     if (uniqueshots[i] == data.sno[j])
-                      {
+                    {
                         nact_rec.push_back(data.rno[j]);
                         nact_datapos.push_back(j);
                         count++;
-                      }
-                  }
+                    }
+                }
                 for (size_t j = 0; j < count; j++)
-                  {
+                {
                     data.tcalc[nact_datapos[j]] = Rays.tcalc[dataindex + j];
                     raypath[nact_datapos[j]].nray = Rays.raypath[dataindex + j].nray;
 
@@ -240,13 +238,11 @@ namespace jif3D
                     raypath[nact_datapos[j]].x = Rays.raypath[dataindex + j].x;
                     raypath[nact_datapos[j]].y = Rays.raypath[dataindex + j].y;
                     raypath[nact_datapos[j]].z = Rays.raypath[dataindex + j].z;
-
-                  }
+                }
                 dataindex += count;
-              }
-          }
-        /*End of the loop over all shots*/
-
+            }
+        };
+        hpx::wait_each(filling, ShotResult);
 #endif
         /*******************************************************************************************/
         /*******************************************************************************************/
