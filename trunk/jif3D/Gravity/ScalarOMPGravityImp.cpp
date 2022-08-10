@@ -12,6 +12,10 @@
 #include <hpx/include/lcos.hpp>
 #include <hpx/parallel/algorithms/transform_reduce.hpp>
 #include <hpx/runtime_distributed.hpp>
+#include <hpx/parallel/algorithms/transform.hpp>
+#include <hpx/execution.hpp>
+#include <parallel/algorithm>
+#include <hpx/iostream.hpp>
 
 #endif
 
@@ -34,7 +38,7 @@
  * @param YCoord The Y-Coordinates of the grid cell boundaries in m
  * @param ZCoord The Z-Coordinates of the grid cell boundaries in m
  * @param XSizes The size of the grid cell in x-direction in m
- * @param YSizes The size of the grid cell in y-direction in m
+ * @param YSizes The size of the grid cell in y-direction in m 
  * @param ZSizes The size of the grid cell in z-direction in m
  * @return The vector of geometric factors for each of the grid cells.
  */
@@ -51,7 +55,8 @@ std::vector<double> GravityChunk(size_t start, size_t end, double x_meas, double
     const std::vector<double> &ZCoord,
     const std::vector<double> &XSizes,
     const std::vector<double> &YSizes,
-    const std::vector<double> &ZSizes)
+    const std::vector<double> &ZSizes
+    )
   {
     //The basis for the calculation is a rectilinear grid of cells
     //For these calculations we do not need the density for each of the grid cells
@@ -62,40 +67,41 @@ std::vector<double> GravityChunk(size_t start, size_t end, double x_meas, double
     // with a storage order z,y,x. This is compatible with the storage order for densities
     //that we need for calculation elsewhere
     //The number of prisms in y-direction
+
+    //const size_t ysize = YCoord.size();
     const size_t ysize = YSizes.size();
     //The number of prisms in z-direction
+    //const size_t zsize = ZCoord.size();
     const size_t zsize = ZSizes.size();
-    //check that the specified range of elements makes sense
-    if (end > start)
-      {
-        //we will generate end- start geometric factors that we will return
-        std::vector<double> Result;
-        Result.reserve(end - start);
-        //go through all the elements included in this chunk
-        for (size_t i = start; i < end; ++i)
-          {
-            //calculate the indices the current element would correspond to
-            //in a grid with storage order z,y,x
-            size_t zi = i % zsize;
-            size_t xi = (i - zi) / zsize;
-            size_t yi = xi % ysize;
-            xi = (xi - yi) / ysize;
-            //calculate the geometric factor based on the position of the measurement
-            //sites and the parameters of the currrent grid cells
-            double c = jif3D::CalcGravBoxTerm(x_meas, y_meas, z_meas, XCoord[xi], YCoord[yi],
-                ZCoord[zi], XSizes[xi], YSizes[yi], ZSizes[zi]);
-            //store result in vector
-            Result.push_back(c);
-          }
-        return Result;
-      }
-    return std::vector<double>();
+    //we will generate end- start geometric factors that we will return
+    std::vector<double> Result;
+    // Record the start and end position of the job allocated, which are used in the wait_each process
+    Result.push_back(start);
+    Result.push_back(end);
+
+    //go through all the elements included in this chunk
+    for (size_t i = start; i < end; ++i)
+        {
+        //calculate the indices the current element would correspond to 
+        //in a grid with storage order z,y,x
+        size_t zi = i % zsize; 
+        size_t xi = (i - zi) / zsize; 
+        size_t yi = xi % ysize;
+        xi = (xi - yi) / ysize; 
+
+        //calculate the geometric factor based on the position of the measurement
+        //sites and the parameters of the currrent grid cells
+        double c = jif3D::CalcGravBoxTerm(x_meas, y_meas, z_meas, XCoord[xi], YCoord[yi],
+            ZCoord[zi], XSizes[xi], YSizes[yi], ZSizes[zi]);
+        //store result in vector
+        Result.push_back(c);
+        }
+    return Result;
   }
 #endif
 
 namespace jif3D
-  {
-
+{
     ScalarOMPGravityImp::ScalarOMPGravityImp()
       {
 
@@ -144,8 +150,8 @@ namespace jif3D
         const bool storesens = (Sensitivities.size1() >= ndatapermeas)
             && (Sensitivities.size2() >= size_t(nmod));
         double returnvalue = 0.0;
-        double currvalue = 0.0;
 #ifdef HAVEOPENMP
+        double currvalue = 0.0;
         //sum up the contributions of all prisms in an openmp parallel loop
 #pragma omp parallel default(shared) private(currvalue) reduction(+:returnvalue)
           {
@@ -170,72 +176,108 @@ namespace jif3D
                     Sensitivities(0, offset) = currvalue;
                   }
               }
-
-          } //end of parallel section
+          } //end of parallel section 
 #endif
 #ifdef HAVEHPX
 
         using hpx::future;
         using hpx::async;
-        using hpx::wait_all;
         std::vector<hpx::id_type> localities = hpx::find_all_localities();
         const size_t nthreads = hpx::get_num_worker_threads();
         const size_t nlocs = localities.size();
-
+        
         //calculate how many chunks we have to divide the work into
         //assuming 1 chunk per thread and node, this might need adjustment
-        size_t nchunks = nthreads * nlocs * 2;
-        std::vector<hpx::future<std::vector<double>>> ChunkResult;
-        Gravity_Action GravityChunks;
-        const size_t cellsperchunk = nmod / nchunks  +1;
+        size_t nchunks = nthreads * nlocs;
 
+        // Here I change the way of dividing the work, initializing the ChunkResult so that it can work in the correct order
+        std::vector<hpx::future<std::vector<double>>> ChunkResult;
+
+        Gravity_Action GravityChunks;
+        size_t cellsperchunk = 0;
+        if (nmod % nchunks == 0) 
+        {
+            cellsperchunk = nmod / nchunks;
+        }
+        else 
+        {
+            cellsperchunk = nmod / nchunks + 1;
+        }
+        
         //create the individual chunks of work
         for (size_t c = 0; c < nchunks; ++c)
-          {
+        {
+            if (c * cellsperchunk >= size_t(nmod))
+            {
+                break;
+            }
             //find the address of the first element of the current chunk
             size_t startindex = c * cellsperchunk;
             //the last element of the chunk, considering that we the last chunk might be a bit too big
-            size_t endindex = std::min(size_t(nmod), (c+1) * cellsperchunk);
+            size_t endindex = std::min(size_t(nmod), (c + 1) * cellsperchunk);
             // simple round robin allocation to different localities, not sure this makes much sense
-            hpx::id_type const locality_id = localities.at(c % localities.size());
+            hpx::id_type locality_id;
+
+            locality_id = localities.at(c % localities.size());
             //create a hpx future
             ChunkResult.push_back(async(GravityChunks, locality_id, startindex,endindex,x_meas,y_meas,z_meas,
                 Model.GetXCoordinates(), Model.GetYCoordinates(), Model.GetZCoordinates(),
                 Model.GetXCellSizes(), Model.GetYCellSizes(), Model.GetZCellSizes()));
           }
 
-        //all futures have been created, now we just wait for all of them to finish
-        //a fancy version might use when_any and variants to interlace work
-        wait_all(ChunkResult);
-        //we assemble the vector of sensitivies (aka geometric factors) for the whole model
-        //from the calculations made for the indivdual chunks
-        std::vector<double> Sens;
-        Sens.reserve(nmod);
-        for (size_t c = 0; c < nchunks; ++c)
-          {
-            //collect result from each chunk
-            std::vector<double> CurrSens = ChunkResult.at(c).get();
-            //as we do them in the same storage order as our grid, we
-            //can just add each value to the back
-            std::copy(CurrSens.begin(),CurrSens.end(),back_inserter(Sens));
-          }
-        for (int offset = 0; offset < nmod; ++offset)
-          {
-            //we store the current value for possible sensitivity calculations
-            //currvalue contains the geometric term, i.e. the sensitivity
-            returnvalue += Sens[offset] * Model.GetDensities().data()[offset];
-            //if we want to keep the sensitivity for further analysis
-            //we copy the values into the right structure
-            if (storesens)
-              {
-                Sensitivities(0, offset) = Sens[offset];
-              }
-          }
+        // Create Sens before wait_all to save some time
+        std::vector<double> Sens(nmod);
+        std::vector<double> Densities;
+
+        // Store the densities to calculate returnvalue in parallel
+        for(int offset=0;offset<nmod;offset++)
+        {
+            Densities.push_back(Model.GetDensities().data()[offset]);
+        }
+
+        // When each future finished, call this function to record the value to Sens
+        // Set two situations if we need to store the value calculated
+
+        auto f = [&Sens, &Sensitivities, &storesens](std::size_t i, hpx::future<std::vector<double>>&& f) {
+            std::vector<double> CurrSens = f.get();
+            // Copy the result to Sens from the start position to the end position
+            int copy_index = 2;
+            if (storesens) 
+            {
+                for (int t = CurrSens[0]; t < CurrSens[1]; t++)
+                {
+                    Sens[t] = CurrSens[copy_index];
+                    Sensitivities(t) = Sens[t];
+                    copy_index++;
+                }
+            }
+            else 
+            {
+                for (int t = CurrSens[0]; t < CurrSens[1]; t++)
+                {
+                    Sens[t] = CurrSens[copy_index];
+                    copy_index++;
+                }
+            }
+        };
+
+        // When a process is finished, copy it to the correct position
+        hpx::wait_each(f, ChunkResult);
+
+        // Use parallel transform and resuce to get the return value
+        returnvalue = hpx::transform_reduce(hpx::execution::parallel_policy(),
+            Sens.begin(), Sens.end(),
+            Densities.begin(),
+            0.0L,
+            std::plus<>(),
+            [](double Sen_val, double Den_val) {
+                return Sen_val * Den_val;
+            });
 
 #endif
+
         rvec returnvector(1);
         returnvector(0) = returnvalue;
         return returnvector;
-
       }
   }
