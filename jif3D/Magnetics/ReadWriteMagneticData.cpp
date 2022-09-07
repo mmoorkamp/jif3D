@@ -40,7 +40,7 @@ namespace jif3D
             tempdata(i) = MatVec.at(i * 3 + n);
           }
 
-        WriteVec(NetCDFFile, CompName, tempdata, Dimension, "1/s2");
+        WriteVec(NetCDFFile, CompName, tempdata, Dimension, "nT");
       }
 
     static const std::string BxName = "Bx";
