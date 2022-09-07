@@ -3,10 +3,6 @@ import feature ;
 feature.feature gpu : off on : composite incidental ;
 feature.compose <gpu>on : <define>HAVEGPU ; 
 
-
-feature.feature hpx : off on : composite incidental ;
-feature.compose <hpx>on : <define>HAVEHPX ; 
-
 feature.feature gravcache : disk mem none : composite incidental propagated ;
 feature.compose <gravcache>disk : <define>GRAVDISK ;
 feature.compose <gravcache>mem : <define>GRAVMEM ;
@@ -33,7 +29,7 @@ project
     	<include>$(TOP)
         <include>/usr/local/cuda/include
         <threading>multi 
-        <gpu>on
+        <gpu>off
     	<variant>release:<define>NDEBUG
     	<variant>profile:<define>NDEBUG  
     	<variant>debug:<define>BOOST_TEST_TOOLS_UNDER_DEBUGGER
@@ -52,8 +48,6 @@ project
     	<toolset>sun:<define>BOOST_UBLAS_UNSUPPORTED_COMPILER=0
     	<toolset>sun:<cflags>" -library=stlport4" 
     	<toolset>sun:<linkflags>" -library=stlport4" 
-    	#<linkflags>"`pkg-config --cflags --libs hpx_application_debug ` -liostreamsd "
-        #<cflags>"`pkg-config --cflags hpx_application_debug `"
     ;
 	
 # notes on MSVC warnings:
