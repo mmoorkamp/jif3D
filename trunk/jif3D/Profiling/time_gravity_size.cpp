@@ -193,7 +193,7 @@ int hpx_main(po::variables_map &vm)
           }
 #endif
 #ifdef HAVEHPX
-        std::vector<hpx::naming::id_type> localities = hpx::find_all_localities();
+        std::vector<hpx::id_type> localities = hpx::find_all_localities();
         const size_t nthreads = hpx::get_num_worker_threads();
         const size_t nlocs = localities.size();
         filename += "l" + jif3D::stringify(nlocs) + "t" + jif3D::stringify(nthreads);
