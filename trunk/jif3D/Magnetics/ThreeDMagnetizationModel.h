@@ -37,8 +37,8 @@ namespace jif3D
       ThreeDModelBase::t3DModelData Magnetization_Y;
       ThreeDModelBase::t3DModelData Magnetization_Z;
     public:
-      ThreeDMagnetizationModel& operator=(const ThreeDModelBase& source);
-      ThreeDMagnetizationModel& operator=(const ThreeDMagnetizationModel& source);
+      ThreeDMagnetizationModel& operator=(const ThreeDModelBase &source);
+      ThreeDMagnetizationModel& operator=(const ThreeDMagnetizationModel &source);
 
       ThreeDMagnetizationModel();
       virtual ~ThreeDMagnetizationModel();
@@ -52,7 +52,7 @@ namespace jif3D
               Magnetization_Z.origin());
         }
 
-       jif3D::rvec GetModelParameters() const
+      jif3D::rvec GetModelParameters() const
         {
           const size_t ngrid = GetData().num_elements();
           jif3D::rvec parms(3 * ngrid);
@@ -136,8 +136,19 @@ namespace jif3D
       {
     public:
       void operator()(ThreeDMagnetizationModel &Model, ThreeComponentMagneticData &Data,
-          const std::vector<double> &Sus)
+          const std::vector<double> &Mag)
         {
+          const size_t ngrid = Model.GetNModelElements();
+          if (Mag.size() != 2 * ngrid)
+            {
+              throw jif3D::FatalException(
+                  "Extra magnetization values " + std::to_string(Mag.size())
+                      + " do not match number of required values "
+                      + std::to_string(2 * ngrid), __FILE__, __LINE__);
+            }
+          std::copy(Mag.begin(), Mag.begin() + ngrid, Model.SetMagnetization_Y().origin());
+          std::copy(Mag.begin() + ngrid, Mag.end(), Model.SetMagnetization_Z().origin());
+
         }
       };
   } /* namespace jif3D */

@@ -12,8 +12,11 @@
 #include "../Gravity/test_common.h"
 #include "../Inversion/ThreeDModelObjective.h"
 #include "ThreeDSusceptibilityModel.h"
+#include "ThreeDMagnetizationModel.h"
 #include "TotalFieldMagneticData.h"
+#include "ThreeComponentMagneticData.h"
 #include "OMPMagneticSusceptibilityImp.h"
+#include "OMPMagnetizationImp.h"
 #include "MagneticTransforms.h"
 #include "../GravMag/FullSensitivityGravMagCalculator.h"
 #include "../GravMag/MinMemGravMagCalculator.h"
@@ -54,6 +57,7 @@ BOOST_AUTO_TEST_SUITE( MagneticObjective_Test_Suite )
             else
               {
                 BOOST_CHECK(std::abs(Gradient(i)) < 1e-10);
+                std::cout << FDGrad << " " << Gradient(i) << std::endl;
               }
           }
       }
@@ -168,4 +172,40 @@ BOOST_AUTO_TEST_SUITE( MagneticObjective_Test_Suite )
 
         CheckGradient(Objective, InvModel);
       }
+
+
+    BOOST_AUTO_TEST_CASE (vector_deriv_test)
+      {
+        jif3D::ThreeDMagnetizationModel MagTest;
+        jif3D::ThreeComponentMagneticData Data;
+        const size_t nmeas = 3;
+        const size_t ncells = 5;
+        MakeRandomModel(MagTest, Data, ncells, nmeas, false);
+        MagTest.SetMagnetization_Y() = MagTest.GetMagnetization_X();
+        MagTest.SetMagnetization_Z() = MagTest.GetMagnetization_X();
+
+
+        typedef typename jif3D::MinMemGravMagCalculator<jif3D::ThreeComponentMagneticData> CalculatorType;
+        boost::shared_ptr<jif3D::ThreeDGravMagImplementation<jif3D::ThreeComponentMagneticData> > Implementation(
+            new jif3D::OMPMagnetizationImp());
+
+        boost::shared_ptr<CalculatorType> Calculator(new CalculatorType(Implementation));
+        jif3D::rvec Observed(Calculator->Calculate(MagTest, Data));
+        std::cout << Observed << std::endl;
+        Observed *= 1.1;
+        std::vector<double> d(Observed.size()), e(Observed.size(), 1.0);
+        std::copy(Observed.begin(), Observed.end(), d.begin());
+        Data.SetDataAndErrors(d, e);
+
+        jif3D::ThreeDModelObjective<CalculatorType> Objective(*Calculator.get());
+        Objective.SetObservedData(Data);
+        Objective.SetCoarseModelGeometry(MagTest);
+        jif3D::rvec InvModel(MagTest.GetModelParameters());
+        std::cout << MagTest.GetModelShape() << std::endl;
+
+        std::cout << InvModel << std::endl;
+
+        CheckGradient(Objective, InvModel);
+      }
+
     BOOST_AUTO_TEST_SUITE_END()

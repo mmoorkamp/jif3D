@@ -15,6 +15,8 @@ using hpx::serialization::base_object;
 using hpx::serialization::access;
 using hpx::serialization::make_array;
 #else
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/vector.hpp>

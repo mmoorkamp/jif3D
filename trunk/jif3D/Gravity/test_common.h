@@ -5,7 +5,6 @@
 // Copyright   : 2009, mmoorkamp
 //============================================================================
 
-
 #ifndef TEST_COMMON_H_
 #define TEST_COMMON_H_
 
@@ -30,11 +29,11 @@ jif3D::ThreeDModelBase::t3DModelDim GenerateDimension(const size_t maxcells)
   }
 
 //create a random density model
-template <typename ModelType, typename DataType>
+template<typename ModelType, typename DataType>
 void MakeRandomModel(ModelType &Model, DataType &Data, const size_t maxcells,
     const size_t nmeas = 10, const bool withbackground = true)
   {
-    srand( (unsigned int)time(NULL));
+    srand((unsigned int) time(NULL));
     //make three random axis, each with possibly different lengths and cell sizes
     jif3D::ThreeDModelBase::t3DModelDim XDim = GenerateDimension(maxcells);
     jif3D::ThreeDModelBase::t3DModelDim YDim = GenerateDimension(maxcells);
@@ -42,19 +41,21 @@ void MakeRandomModel(ModelType &Model, DataType &Data, const size_t maxcells,
     const size_t xsize = XDim.size();
     const size_t ysize = YDim.size();
     const size_t zsize = ZDim.size();
+    Model.SetMeshSize(xsize, ysize, zsize);
     //copy the generated sizes to the model object
     Model.SetXCellSizes(XDim);
     Model.SetYCellSizes(YDim);
     Model.SetZCellSizes(ZDim);
     //get the horizontal dimensions of the model
-    int xlength = boost::numeric_cast<int>(floor(std::accumulate(XDim.begin(),
-        XDim.end(), 0.0)));
-    int ylength = boost::numeric_cast<int>(floor(std::accumulate(YDim.begin(),
-        YDim.end(), 0.0)));
+    int xlength = boost::numeric_cast<int>(
+        floor(std::accumulate(XDim.begin(), XDim.end(), 0.0)));
+    int ylength = boost::numeric_cast<int>(
+        floor(std::accumulate(YDim.begin(), YDim.end(), 0.0)));
     //allocate the grid
     Model.SetData().resize(boost::extents[xsize][ysize][zsize]);
     //and fill the grid with random values
-    std::generate_n(Model.SetData().origin(), xsize * ysize * zsize,[](){
+    std::generate_n(Model.SetData().origin(), xsize * ysize * zsize, []()
+      {
         return jif3D::platform::drand48() * 10 + 1.0;});
     //generate measurement  points
     //the z-axis is positive down, so we choose negative z-coordinates
