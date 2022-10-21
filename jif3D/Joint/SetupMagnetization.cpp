@@ -39,11 +39,11 @@ namespace jif3D
         return desc;
       }
 
-    bool SetupMagnetization::SetupObjective(
-        const po::variables_map &vm, jif3D::JointObjective &Objective,
-        jif3D::ThreeDModelBase &InversionMesh, jif3D::rvec &CovModVec,
-        std::vector<size_t> &startindices, std::vector<std::string> &SegmentNames,
-        std::vector<parametertype> &SegmentTypes, boost::filesystem::path TempDir)
+    bool SetupMagnetization::SetupObjective(const po::variables_map &vm,
+        jif3D::JointObjective &Objective, jif3D::ThreeDModelBase &InversionMesh,
+        jif3D::rvec &CovModVec, std::vector<size_t> &startindices,
+        std::vector<std::string> &SegmentNames, std::vector<parametertype> &SegmentTypes,
+        boost::filesystem::path TempDir)
       {
 
         const size_t ngrid = InversionMesh.GetData().num_elements();
@@ -89,7 +89,7 @@ namespace jif3D
 
             boost::shared_ptr<jif3D::GeneralModelTransform> MagTrans;
             MagTrans = boost::make_shared<jif3D::TanhTransform>(minmag, maxmag);
-
+            //MagTrans = boost::make_shared<jif3D::ModelCopyTransform>();
             size_t start = startindices.back();
             size_t end = start + ngrid;
             startindices.push_back(end);
@@ -106,9 +106,8 @@ namespace jif3D
             SegmentNames.push_back(Name + "_Z");
             SegmentTypes.push_back(GeneralDataSetup::gridparameter);
 
-            Transform = boost::make_shared<jif3D::MultiSectionTransform>(2 * ngrid, start,
+            Transform = boost::make_shared<jif3D::MultiSectionTransform>(3 * ngrid, start,
                 end, MagTrans);
-
 
             if (vm.count("magnetization_covmod"))
               {
@@ -146,7 +145,8 @@ namespace jif3D
                     jif3D::ThreeDGravMagImplementation<jif3D::ThreeComponentMagneticData> > Implementation =
                     boost::make_shared<jif3D::OMPMagnetizationImp>();
 #ifdef MAGDISK
-                  Calculator = boost::make_shared<MagCalculatorType>(Implementation, TempDir);
+                Calculator = boost::make_shared<MagCalculatorType>(Implementation, TempDir);
+                std::cout << "Magnetization will take " << ngrid * MagData.GetData().size() * 8 * 3/ 1e9 << " GB disk space " << std::endl;
 #else
                 Calculator = boost::make_shared<MagCalculatorType>(Implementation);
 #endif
@@ -187,7 +187,8 @@ namespace jif3D
           }
       }
 
-    void SetupMagnetization::FinalOutput(const std::string &filename ,const jif3D::rvec &FinalModelVector)
+    void SetupMagnetization::FinalOutput(const std::string &filename,
+        const jif3D::rvec &FinalModelVector)
       {
         if (maglambda > JointObjective::MinWeight)
           {
@@ -219,7 +220,8 @@ namespace jif3D
       }
 
     SetupMagnetization::SetupMagnetization() :
-        GeneralDataSetup(Name), minmag(-1.0), maxmag(1.0), maglambda(0.0), relerr(0.01), minerr(1.0)
+        GeneralDataSetup(Name), minmag(-1.0), maxmag(1.0), maglambda(0.0), relerr(0.01), minerr(
+            1.0)
       {
         // TODO Auto-generated constructor stub
 

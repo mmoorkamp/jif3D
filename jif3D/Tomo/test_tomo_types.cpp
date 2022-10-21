@@ -1,8 +1,8 @@
 
 #define BOOST_TEST_MODULE TomoTypes test
 #define BOOST_TEST_MAIN ...
-#include "../Global/Jif3DTesting.h"
 #include "../Global/Serialization.h"
+#include "../Global/Jif3DTesting.h"
 #include <boost/test/included/unit_test.hpp>
 #include <fstream>
 

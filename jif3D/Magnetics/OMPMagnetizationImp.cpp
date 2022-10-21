@@ -26,6 +26,7 @@ namespace jif3D
         const ThreeDMagnetizationModel &Model, const ThreeComponentMagneticData &Data,
         rmat &Sensitivities)
       {
+        const double mag_mu = 4e-7 * boost::math::constants::pi<double>();
 
         const size_t xsize = Model.GetMagnetization_X().shape()[0];
         const size_t ysize = Model.GetMagnetization_X().shape()[1];
@@ -59,11 +60,12 @@ namespace jif3D
 
                 // we have to convert the units of the FTG calculation to magnetics
                 //using poisson's relationship 1/(4 pi gamma)
-                const double factor = 1.0
+                const double factor =  1.0e9 * mag_mu
                     / (4 * boost::math::constants::pi<double>() * jif3D::Grav_const);
                 // we reuse the calculation for the FTG matrix, as the equations are
                 //identical
                 //currvalue contains the geometric term times the gravitational constant
+                // the factor translates magnetization to an equivalent magnetic field
                 rmat currvalue = factor
                     * CalcTensorBoxTerm(x_meas, y_meas, z_meas,
                         Model.GetXCoordinates()[xindex], Model.GetYCoordinates()[yindex],

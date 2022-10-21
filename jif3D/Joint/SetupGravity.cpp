@@ -286,7 +286,7 @@ namespace jif3D
               }
 #ifdef GRAVDISK
             TensorCalculatorType TensorCalculator(Implementation, TempDir);
-            std::cout << "Tensor gravity will take " << ngrid * ScalGravData.GetData().size() * 8 * 9/ 1e9 << " GB disk space " << std::endl;
+            std::cout << "Tensor gravity will take " << ngrid * ScalGravData.GetData().size() * 8 * 6/ 1e9 << " GB disk space " << std::endl;
 #else
             TensorCalculatorType TensorCalculator(Implementation);
 #endif

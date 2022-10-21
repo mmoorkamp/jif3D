@@ -240,15 +240,10 @@ BOOST_AUTO_TEST_SUITE( Magnetic_Test_Suite )
         std::cout << " Width x: " << widthx << " Width y: " << widthy << " Height: "
             << height << std::endl;
 
-        double inclination = 15 / 180.0 * boost::math::constants::pi<double>();
-        double declination = 10.0 / 180.0 * boost::math::constants::pi<double>();
-        double fieldstrength = 50000;
-        double susceptibility = 0.2;
-        const double BxComp = cos(inclination) * cos(declination) * fieldstrength
-            * susceptibility;
-        const double ByComp = cos(inclination) * sin(declination) * fieldstrength
-            * susceptibility;
-        const double BzComp = sin(inclination) * fieldstrength * susceptibility;
+
+        const double BxComp = 2.0;
+        const double ByComp = 3.0;
+        const double BzComp = 5.0;
 
         MagneticTest.SetXCellSizes(XCS);
         MagneticTest.SetYCellSizes(YCS);
@@ -282,10 +277,10 @@ BOOST_AUTO_TEST_SUITE( Magnetic_Test_Suite )
           }
         BOOST_CHECK_EQUAL(nmeas * 3, magmeas.size());
 
-        std::ifstream xinfile("magx.simpeg");
-        std::ifstream yinfile("magy.simpeg");
-        std::ifstream zinfile("magz.simpeg");
-        std::ifstream tinfile("magt.simpeg");
+        std::ifstream xinfile("magx_vector.simpeg");
+        std::ifstream yinfile("magy_vector.simpeg");
+        std::ifstream zinfile("magz_vector.simpeg");
+
 
         std::vector<double> magx, magy, magz, magt;
         std::copy(std::istream_iterator<double>(xinfile), std::istream_iterator<double>(),
@@ -294,12 +289,10 @@ BOOST_AUTO_TEST_SUITE( Magnetic_Test_Suite )
             std::back_inserter(magy));
         std::copy(std::istream_iterator<double>(zinfile), std::istream_iterator<double>(),
             std::back_inserter(magz));
-        std::copy(std::istream_iterator<double>(tinfile), std::istream_iterator<double>(),
-            std::back_inserter(magt));
 
-        std::ofstream xoutfile("magx2.jif3d");
-        std::ofstream youtfile("magy2.jif3d");
-        std::ofstream zoutfile("magz2.jif3d");
+        std::ofstream xoutfile("magx_vector.jif3d");
+        std::ofstream youtfile("magy_vector.jif3d");
+        std::ofstream zoutfile("magz_vector.jif3d");
 
         for (size_t i = 0; i < magx.size(); ++i)
           {
@@ -311,14 +304,6 @@ BOOST_AUTO_TEST_SUITE( Magnetic_Test_Suite )
             BOOST_CHECK_CLOSE(magmeas(i * 3 + 2), magz.at(i), 0.2);
           }
 
-        Calculator->SetDataTransform(
-            boost::shared_ptr<jif3D::TotalFieldAnomaly>(
-                new jif3D::TotalFieldAnomaly(inclination, declination)));
-        jif3D::rvec magtotal(Calculator->Calculate(MagneticTest, Data));
-        for (size_t i = 0; i < magtotal.size(); ++i)
-          {
-            BOOST_CHECK_CLOSE(magtotal(i), magt.at(i), 0.2);
-          }
 
       }
     BOOST_AUTO_TEST_SUITE_END()
