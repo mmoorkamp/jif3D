@@ -16,6 +16,7 @@
 #include <boost/math/distributions/normal.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
 #include <algorithm>
+#include <numeric>
 #include <cmath>
 #include <fstream>
 
@@ -75,7 +76,8 @@ namespace jif3D
         std::fill(CountsY.begin(), CountsY.end(), 0.0);
         std::fill(CountsXY.begin(), CountsXY.end(), 0.0);
 
-        double factor = 1.0 / nparm;
+        double factor = 1.0
+            / std::accumulate(ValidityVector.begin(), ValidityVector.end(), 0.0);
         //int xc = std::floor(std::min((x(i) - xmin) / xw, nbins - 1));
         //int yc = std::floor(std::min((y(i) - ymin) / yw, nbins - 1));
 #pragma omp parallel for
@@ -117,7 +119,8 @@ namespace jif3D
         jif3D::rvec dsx = diff_shan_entropy(CountsX);
         jif3D::rvec dsy = diff_shan_entropy(CountsY);
         jif3D::rvec dsxy = diff_shan_entropy(CountsXY);
-        double factor = 1.0 / nparm;
+        double factor = 1.0
+            / std::accumulate(ValidityVector.begin(), ValidityVector.end(), 0.0);
 
 #pragma omp parallel for
         for (size_t i = 0; i < nparm; ++i)
@@ -219,12 +222,12 @@ namespace jif3D
 
     MutualInformationConstraint::MutualInformationConstraint(double min1, double max1,
         double min2, double max2, size_t nb, const jif3D::rvec &ValVec) :
-        CountsXY(), CountsX(), CountsY(), ValidityVector(ValVec), xmin(min1), xmax(max1), ymin(min2), ymax(max2), nbins(
-            nb)
+        CountsXY(), CountsX(), CountsY(), ValidityVector(ValVec), xmin(min1), xmax(max1), ymin(
+            min2), ymax(max2), nbins(nb)
       {
         boost::math::normal norm;
-        const double maxdist = std::sqrt(
-            jif3D::pow2(xmax - xmin) + jif3D::pow2(ymax - ymin));
+        //const double maxdist = std::sqrt(
+        //    jif3D::pow2(xmax - xmin) + jif3D::pow2(ymax - ymin));
         xw = (xmax - xmin) / nbins;
         yw = (ymax - ymin) / nbins;
         stddev = std::min(xw, yw) / 2.0;
