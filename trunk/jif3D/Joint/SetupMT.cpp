@@ -252,6 +252,16 @@ namespace jif3D
                         CovModel->GetData().origin() + ncovmod, CovModVec.begin());
 
                   }
+
+                startindices.push_back(endgrid);
+                SegmentNames.push_back(GridName);
+                SegmentTypes.push_back(GeneralDataSetup::gridparameter);
+                std::copy(MTModel.GetConductivities().origin(),
+                    MTModel.GetConductivities().origin() + ngrid, StartingParameters.begin());
+
+                Objective.AddObjective(MTObjective, Transform, mtlambda, "MT",
+                    JointObjective::datafit);
+
                 //if we want to correct for distortion within the inversion
                 boost::shared_ptr<jif3D::GeneralModelTransform> Copier(
                     new jif3D::ModelCopyTransform);
@@ -268,7 +278,6 @@ namespace jif3D
                       }
                     size_t startdist = endgrid;
                     size_t enddist = startdist + CRef.size();
-
                     //this transformation only becomes active if we use distortion correction with MT data
                     //in this case we add extra inversion parameters beyond the current ones
                     //so we set it up here that we can access it later, but with a parameter setting that only
@@ -290,7 +299,7 @@ namespace jif3D
                     SegmentNames.push_back(DistName);
                     SegmentTypes.push_back(GeneralDataSetup::other);
 
-                    Transform->AddSection(ngrid, ngrid + CRef.size(), Copier);
+                    Transform->AddSection(startdist, enddist, Copier);
                     StartingParameters.resize(ngrid + CRef.size());
                     std::copy(MTModel.GetConductivities().origin(),
                         MTModel.GetConductivities().origin() + ngrid,
@@ -299,8 +308,6 @@ namespace jif3D
 
                   }
 
-                Objective.AddObjective(MTObjective, Transform, mtlambda, "MT",
-                    JointObjective::datafit);
                 //ask for Tipper, currently it only works in conjunction with MT
                 //otherwise we would need to check for x3d and conductivity models
 
@@ -353,11 +360,7 @@ namespace jif3D
                   }
               }
 
-            startindices.push_back(endgrid);
-            SegmentNames.push_back(GridName);
-            SegmentTypes.push_back(GeneralDataSetup::gridparameter);
-            std::copy(MTModel.GetConductivities().origin(),
-                MTModel.GetConductivities().origin() + ngrid, StartingParameters.begin());
+
           }
         //return true if we added an MT objective function
         return (mtlambda > JointObjective::MinWeight);
