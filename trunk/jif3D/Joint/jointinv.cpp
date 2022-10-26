@@ -115,7 +115,13 @@ int hpx_main(po::variables_map &vm)
         jif3D::rvec CurrCov;
         DataSetups.at(i)->SetupObjective(vm, *Objective.get(), *Mesh.get(), CurrCov,
             startindices, SegmentNames, SegmentTypes, TempDir);
-        Covs.push_back(CurrCov);
+        if ((DataSetups.at(i)->GetTransform() != nullptr)
+            && (DataSetups.at(i)->GetStartingParameters().size() > 0))
+          {
+            std::cout << "Setting global covariance for " << SegmentNames.back()
+                << std::endl;
+            Covs.push_back(CurrCov);
+          }
       }
 
     boost::shared_ptr<jif3D::GeneralModelTransform> Copy = boost::make_shared<
@@ -134,9 +140,22 @@ int hpx_main(po::variables_map &vm)
         if ((DataSetups.at(i)->GetTransform() != nullptr)
             && (DataSetups.at(i)->GetStartingParameters().size() > 0))
           {
+            std::cout << "Working on segment " << currsegment << std::endl;
+
+            std::cout << "Assigned inversion parameters for "
+                << SegmentNames.at(currsegment) << ", startindex: "
+                << startindices.at(currsegment) << std::endl;
             DataSetups.at(i)->GetTransform()->SetLength(ninv);
-            std::copy(Covs.at(i).begin(), Covs.at(i).end(),
+            std::copy(Covs.at(currsegment).begin(), Covs.at(currsegment).end(),
                 CovModVec.begin() + startindices.at(currsegment));
+            std::string filename = "ModCov_" + std::to_string(currsegment) + ".vtk";
+
+            jif3D::ThreeDModelBase::t3DModelData CovMesh(
+                boost::extents[Mesh->GetModelShape()[0]][Mesh->GetModelShape()[1]][Mesh->GetModelShape()[2]]);
+            std::copy(Covs.at(currsegment).begin(), Covs.at(currsegment).end(),
+                CovMesh.origin());
+            jif3D::Write3DModelToVTK(filename, filename, Mesh->GetXCoordinates(),
+                Mesh->GetYCoordinates(), Mesh->GetZCoordinates(), CovMesh);
             jif3D::rvec CurrParm =
                 DataSetups.at(i)->GetTransform()->PhysicalToGeneralized(
                     DataSetups.at(i)->GetStartingParameters());
@@ -237,6 +256,14 @@ int hpx_main(po::variables_map &vm)
               {
                 jif3D::rvec CurrCov = ublas::subrange(CovModVec, startindices.at(i),
                     startindices.at(i + 1));
+                double min = *std::min_element(CurrCov.begin(), CurrCov.end());
+                if (min <= 0.0)
+                  {
+                    std::cerr << "Covariance vector contains non-positive element: "
+                        << min << " in segment " << i << " " << SegmentNames.at(i)
+                        << ". Aborting!" << std::endl;
+                    return 100;
+                  }
                 boost::shared_ptr<jif3D::GeneralCovariance> StochCov = boost::make_shared<
                     jif3D::StochasticCovariance>(CurrCov, Mesh->GetModelShape()[0],
                     Mesh->GetModelShape()[1], Mesh->GetModelShape()[2], CovWidth, Cov_nu,
@@ -419,8 +446,6 @@ int main(int argc, char *argv[])
 
     for (size_t i = 0; i < nDataSetups; ++i)
       desc.add(DataSetups.at(i)->SetupOptions());
-
-
 
 #ifdef HAVEHPX
     hpx::init_params initparms;
