@@ -173,8 +173,9 @@ namespace jif3D
 
             if (vm.count("sus_covmod"))
               {
+                std::string covfilename = vm["sus_covmod"].as<std::string>();
                 boost::shared_ptr<jif3D::ThreeDModelBase> CovModel = jif3D::ReadAnyModel(
-                    vm["sus_covmod"].as<std::string>());
+                    covfilename);
 
                 const size_t ncovmod = CovModel->GetData().num_elements();
                 if (ncovmod != ngrid)
@@ -186,7 +187,7 @@ namespace jif3D
                   }
                 else
                   {
-                    std::cout << " Setting covariance for susceptibility from file. "
+                    std::cout << " Setting covariance for susceptibility from file: " << covfilename
                         << std::endl;
                   }
                 std::copy(CovModel->GetData().origin(),
