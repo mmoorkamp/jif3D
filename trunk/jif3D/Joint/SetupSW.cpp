@@ -40,8 +40,8 @@ namespace jif3D
             "minvs", po::value(&minvs)->default_value(1.5),
             "The minimum shear wave velocivty")("maxvs",
             po::value(&maxvs)->default_value(6.5), "The maximum shear wave velocivty")(
-            "relerr", po::value(&relerr)->default_value(2.0e-2),
-            "The relative error for the phase delay data")("minerr",
+            "swrelerr", po::value(&relerr)->default_value(2.0e-2),
+            "The relative error for the phase delay data")("swminerr",
             po::value(&minerr)->default_value(0.0),
             "The picker error for the phase delay data");
         return desc;
@@ -50,12 +50,45 @@ namespace jif3D
     void SetupSW::IterationOutput(const std::string &filename,
         const jif3D::rvec &ModelVector)
       {
-
+        if (dswlambda > JointObjective::MinWeight)
+          {
+            jif3D::rvec VsInvModel = Transform->GeneralizedToPhysical(ModelVector);
+            const size_t ngrid = DSurfaceWaveModel.GetNModelElements();
+            std::copy(VsInvModel.begin(), VsInvModel.begin() + ngrid,
+                DSurfaceWaveModel.SetData().origin());
+            DSurfaceWaveModel.WriteVTK(filename + ".sw.inv.vtk");
+            DSurfaceWaveModel.WriteNetCDF(filename + ".sw.inv.nc");
+          }
       }
 
     void SetupSW::FinalOutput(const std::string &filename ,const jif3D::rvec &FinalModelVector)
       {
+        if (dswlambda > JointObjective::MinWeight)
+          {
+            std::cout << "Writing final surface wave models " << std::endl;
+            const size_t ngrid = DSurfaceWaveModel.GetNModelElements();
+            jif3D::rvec VsInvModel = Transform->GeneralizedToPhysical(FinalModelVector);
+            std::copy(VsInvModel.begin(), VsInvModel.begin() + ngrid,
+                DSurfaceWaveModel.SetData().origin());
 
+            auto SWData = DSurfaceWaveObjective->GetObservedData();
+            auto SWDataVec = DSurfaceWaveObjective->GetSyntheticData();
+            auto SWErrVec = DSurfaceWaveObjective->GetDataError();
+            auto SWMisVec = DSurfaceWaveObjective->GetIndividualMisfit();
+
+            if (SWDataVec.size() > 0)
+              {
+                SWData.SetDataAndErrors(
+                    std::vector<double>(SWDataVec.begin(), SWDataVec.end()), SWErrVec);
+                SWData.WriteNetCDF(filename + ".inv_sw.nc");
+
+                SWData.SetDataAndErrors(
+                    std::vector<double>(SWMisVec.begin(), SWMisVec.end()), SWErrVec);
+                SWData.WriteNetCDF(filename + ".diff_sw.nc");
+              }
+            DSurfaceWaveModel.WriteVTK(filename + ".sw.inv.vtk");
+            DSurfaceWaveModel.WriteNetCDF(filename + ".sw.inv.nc");
+          }
       }
 
     bool SetupSW::SetupObjective(const po::variables_map &vm,
