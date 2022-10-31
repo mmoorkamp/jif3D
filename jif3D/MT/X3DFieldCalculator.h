@@ -16,6 +16,7 @@
 
 #include <vector>
 #include <map>
+#include <fstream>
 #include <boost/filesystem.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
