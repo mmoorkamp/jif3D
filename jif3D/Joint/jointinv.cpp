@@ -236,6 +236,10 @@ int hpx_main(po::variables_map &vm)
 
     for (size_t i = 0; i < SegmentNames.size(); ++i)
       {
+        const size_t startind = startindices.at(i);
+        const size_t endind = startindices.at(i + 1);
+        jif3D::rvec CurrCov = ublas::subrange(CovModVec, startind, endind);
+
         if (SegmentTypes.at(i) == jif3D::GeneralDataSetup::gridparameter)
           {
             double lambda = 0.0;
@@ -245,17 +249,20 @@ int hpx_main(po::variables_map &vm)
               {
                 std::string DispName = SegmentNames.at(i) + "Reg";
                 boost::shared_ptr<jif3D::GeneralModelTransform> RegTransform =
-                    boost::make_shared<jif3D::MultiSectionTransform>(ninv,
-                        startindices.at(i), startindices.at(i + 1), Copy);
+                    boost::make_shared<jif3D::MultiSectionTransform>(ninv, startind,
+                        endind, Copy);
                 auto CurrReg = boost::shared_ptr<jif3D::ObjectiveFunction>(
                     Regularization->clone());
                 Objective->AddObjective(CurrReg, RegTransform, lambda, DispName,
                     jif3D::JointObjective::regularization);
               }
+
             if (CovWidth != 0.0)
               {
-                jif3D::rvec CurrCov = ublas::subrange(CovModVec, startindices.at(i),
-                    startindices.at(i + 1));
+                std::cout << " Setting up stochastic covariance for segment " << i << " "
+                    << SegmentNames.at(i) << std::endl;
+                std::cout << " Segment start: " << startind << " Segment end: " << endind
+                    << std::endl;
                 double min = *std::min_element(CurrCov.begin(), CurrCov.end());
                 if (min <= 0.0)
                   {
@@ -268,8 +275,15 @@ int hpx_main(po::variables_map &vm)
                     jif3D::StochasticCovariance>(CurrCov, Mesh->GetModelShape()[0],
                     Mesh->GetModelShape()[1], Mesh->GetModelShape()[2], CovWidth, Cov_nu,
                     Cov_sigma);
-                CovObj->AddSection(startindices.at(i), startindices.at(i + 1), StochCov);
+                CovObj->AddSection(startind, endind, StochCov);
               }
+          }
+        else
+          {
+            CovObj->AddSection(startind, endind,
+                boost::make_shared<jif3D::DiagonalCovariance>(CurrCov));
+            std::cout << " Found non-grid model parameters " << SegmentNames.at(i)
+                << " at segment " << i << std::endl;
           }
       }
     if (CovWidth == 0)
