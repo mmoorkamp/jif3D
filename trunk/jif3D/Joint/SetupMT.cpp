@@ -217,8 +217,9 @@ namespace jif3D
                                   + std::to_string(MinErr.at(i)), __FILE__, __LINE__);
                         if (std::isnan(MinErr.at(i)))
                           {
-                            std::cerr << "MT data error is NaN " + std::to_string(i) << std::endl;
-                            MinErr.at(i) =  1e32;
+                            std::cerr << "MT data error is NaN " + std::to_string(i)
+                                << std::endl;
+                            MinErr.at(i) = 1e32;
                           }
 
                       }
@@ -257,7 +258,8 @@ namespace jif3D
                 SegmentNames.push_back(GridName);
                 SegmentTypes.push_back(GeneralDataSetup::gridparameter);
                 std::copy(MTModel.GetConductivities().origin(),
-                    MTModel.GetConductivities().origin() + ngrid, StartingParameters.begin());
+                    MTModel.GetConductivities().origin() + ngrid,
+                    StartingParameters.begin());
 
                 Objective.AddObjective(MTObjective, Transform, mtlambda, "MT",
                     JointObjective::datafit);
@@ -360,7 +362,6 @@ namespace jif3D
                   }
               }
 
-
           }
         //return true if we added an MT objective function
         return (mtlambda > JointObjective::MinWeight);
@@ -377,6 +378,11 @@ namespace jif3D
                 MTModel.SetConductivities().origin());
             MTModel.WriteVTK(filename + ".mt.inv.vtk");
             MTModel.WriteNetCDF(filename + ".mt.inv.nc");
+            auto MTData = MTObjective->GetObservedData();
+            if (MTData.GetData().size() > 0)
+              {
+                MTData.WriteNetCDF(filename + ".dist_imp.nc");
+              }
           }
       }
 
@@ -398,6 +404,7 @@ namespace jif3D
 
             if (MTDataVec.size() > 0)
               {
+                MTData.WriteNetCDF(filename + ".dist_imp.nc");
                 MTData.SetDataAndErrors(
                     std::vector<double>(MTDataVec.begin(), MTDataVec.end()), MTErrVec);
                 MTData.WriteNetCDF(filename + ".inv_imp.nc");

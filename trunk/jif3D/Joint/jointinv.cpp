@@ -131,8 +131,9 @@ int hpx_main(po::variables_map &vm)
     jif3D::rvec InvModel(ninv, 0.0);
     jif3D::rvec CovModVec(ninv, 1.0);
 
+    jif3D::ThreeDSeismicModel TearModX, TearModY, TearModZ;
     boost::shared_ptr<jif3D::ObjectiveFunction> Regularization = RegSetup.SetupObjective(
-        vm, *Mesh);
+        vm, *Mesh, CovModVec, TearModX, TearModY, TearModZ);
 
     size_t currsegment = 0;
     for (size_t i = 0; i < nDataSetups; ++i)
@@ -198,7 +199,7 @@ int hpx_main(po::variables_map &vm)
       }
     else
       {
-        Coupling = boost::make_shared<jif3D::CrossGradient>(*Mesh);
+        Coupling = boost::make_shared<jif3D::CrossGradient>(*Mesh, TearModX, TearModY, TearModZ);
         CouplingName = "CG";
       }
 
